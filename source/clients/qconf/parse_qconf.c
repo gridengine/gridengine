@@ -330,6 +330,17 @@ DPRINTF(("ep: %s %s\n",
             hep = lCreateElem(EH_Type);
             lSetHost(hep, EH_name, host);
 
+#ifdef ENABLE_NGC
+            switch (sge_resolve_host(hep, EH_name)) {
+            case CL_RETVAL_OK:
+               break;
+            default:
+               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
+               lFreeElem(hep);
+               SGE_EXIT(1);
+               break;
+            }
+#else
             switch (sge_resolve_host(hep, EH_name)) {
             case 0:
                break;
@@ -345,6 +356,7 @@ DPRINTF(("ep: %s %s\n",
                SGE_EXIT(1);
                break;
             }
+#endif
             
             host = sge_strdup(host, lGetHost(hep, EH_name));
          }
@@ -384,6 +396,17 @@ DPRINTF(("ep: %s %s\n",
             continue;
          }
 
+#ifdef ENABLE_NGC
+         switch (sge_resolve_host(ep, EH_name)) {
+         case CL_RETVAL_OK:
+            break;
+         default:
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
+            lFreeElem(ep);
+            SGE_EXIT(1);
+            break;
+         }
+#else
          switch (sge_resolve_host(ep, EH_name)) {
          case 0:
             break;
@@ -399,6 +422,7 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          }
+#endif
 
          host = sge_strdup(host, lGetHost(ep, EH_name));
          lFreeList(arglp);
@@ -447,6 +471,18 @@ DPRINTF(("ep: %s %s\n",
          }
          lAppendElem(lp, ep);
 
+#ifdef ENABLE_NGC
+         /* test host name */
+         switch (sge_resolve_host(ep, EH_name)) {
+         case CL_RETVAL_OK:
+            break;
+         default:
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
+            lFreeElem(ep);
+            SGE_EXIT(1);
+            break;
+         }
+#else
          /* test host name */
          switch (sge_resolve_host(ep, EH_name)) {
          case 0:
@@ -463,6 +499,7 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          }
+#endif
 
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
@@ -1721,6 +1758,18 @@ DPRINTF(("ep: %s %s\n",
 
          lAppendElem(lp, ep);
 
+#ifdef ENABLE_NGC
+         /* test host name */
+         switch (sge_resolve_host(ep, EH_name)) {
+         case CL_RETVAL_OK:
+            break;
+         default:
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
+            lFreeElem(ep);
+            SGE_EXIT(1);
+            break;
+         }
+#else
          /* test host name */
          switch (sge_resolve_host(ep, EH_name)) {
          case 0:
@@ -1737,6 +1786,7 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          }
+#endif
 
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
@@ -1762,6 +1812,18 @@ DPRINTF(("ep: %s %s\n",
             *spp);
 
          for_each (argep, arglp) {
+#ifdef ENABLE_NGC
+            /* resolve hostname */
+            switch (sge_resolve_host(argep, EH_name)) {
+            case CL_RETVAL_OK:
+               break;
+            default:
+               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, EH_name));
+               lFreeElem(argep);
+               SGE_EXIT(1);
+               break;
+            }
+#else
             /* resolve hostname */
             switch (sge_resolve_host(argep, EH_name)) {
             case 0:
@@ -1779,6 +1841,7 @@ DPRINTF(("ep: %s %s\n",
                SGE_EXIT(1);
                break;
             }
+#endif
             host = lGetHost(argep, EH_name);
 
             /* get the existing host entry .. */
@@ -3009,6 +3072,18 @@ DPRINTF(("ep: %s %s\n",
                lSetHost(hep, EH_name, cp);
             }
             
+#ifdef ENABLE_NGC
+            switch ((ret=sge_resolve_host(hep, EH_name))) {
+            case CL_RETVAL_OK:
+               break;
+            default:
+               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_SS, lGetHost(hep, EH_name), cl_get_error_text(ret));
+               FREE(host_list);
+               lFreeElem(hep);
+               SGE_EXIT(1);
+               break;
+            }
+#else
             switch ((ret=sge_resolve_host(hep, EH_name))) {
             case 0:
                break;
@@ -3027,6 +3102,7 @@ DPRINTF(("ep: %s %s\n",
                SGE_EXIT(1);
                break;
             }
+#endif
             host = lGetHost(hep, EH_name);
 
             if (action == 0)
@@ -3117,6 +3193,18 @@ DPRINTF(("ep: %s %s\n",
                
                lSetHost(hep, EH_name, cp);
                
+#ifdef ENABLE_NGC
+               switch (sge_resolve_host(hep, EH_name)) {
+               case CL_RETVAL_OK:
+                  break;
+               default:
+                  fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, cp);
+                  FREE(host_list);
+                  lFreeElem(hep);
+                  SGE_EXIT(1);
+                  break;
+               }
+#else
                switch (sge_resolve_host(hep, EH_name)) {
                case 0:
                   break;
@@ -3134,6 +3222,7 @@ DPRINTF(("ep: %s %s\n",
                   SGE_EXIT(1);
                   break;
                }
+#endif
                host = lGetHost(hep, EH_name);
                ret = delete_config(host);
                /*
@@ -3163,6 +3252,17 @@ DPRINTF(("ep: %s %s\n",
          hep = lCreateElem(EH_Type);
          lSetHost(hep, EH_name, *spp);
          
+#ifdef ENABLE_NGC
+         switch (sge_resolve_host(hep, EH_name)) {
+         case CL_RETVAL_OK:
+            break;
+         default:
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
+            lFreeElem(hep);
+            SGE_EXIT(1);
+            break;
+         }
+#else
          switch (sge_resolve_host(hep, EH_name)) {
          case 0:
             break;
@@ -3178,6 +3278,7 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          }
+#endif
 
          host = lGetHost(hep, EH_name);
         
@@ -4461,12 +4562,21 @@ u_long32 target
    
    for_each (argep, arglp) {
 
+#ifdef ENABLE_NGC
+      /* resolve hostname */
+      if (sge_resolve_host(argep, nm) != CL_RETVAL_OK) {
+         ret |= 1;
+         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
+         continue;
+      }
+#else
       /* resolve hostname */
       if (sge_resolve_host(argep, nm)) {
          ret |= 1;
          fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
          continue;
       }
+#endif
       host = lGetHost(argep, nm);
 
       /* make a new host element */
@@ -4524,11 +4634,19 @@ u_long32 target
 
    for_each (argep, arglp) {
 
+#ifdef ENABLE_NGC
+      /* resolve hostname */
+      if (sge_resolve_host(argep, nm) != CL_RETVAL_OK) {
+         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
+         continue;
+      }
+#else
       /* resolve hostname */
       if (sge_resolve_host(argep, nm)) {
          fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
          continue;
       }
+#endif
 
       /* make a new host element */
       lp = lCreateList("host to add", type);

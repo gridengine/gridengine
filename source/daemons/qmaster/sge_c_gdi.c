@@ -1486,16 +1486,22 @@ int sub_command
 
    /* resolve host name in case of objects with hostnames as key 
       before searching for the objects */
-   if ((object->key_nm == EH_name||
-          object->key_nm == AH_name||
-          object->key_nm == SH_name) && 
-          sge_resolve_host(instructions, object->key_nm)) {
-      const char *host = lGetHost(instructions, object->key_nm);    
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-            host ? host : "NULL"));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+   
+   if ( object->key_nm == EH_name || 
+        object->key_nm == AH_name || 
+        object->key_nm == SH_name ) {
+#ifdef ENABLE_NGC
+      if ( sge_resolve_host(instructions, object->key_nm) != CL_RETVAL_OK )
+#else
+      if ( sge_resolve_host(instructions, object->key_nm) ) 
+#endif
+      {
+         const char *host = lGetHost(instructions, object->key_nm);    
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host ? host : "NULL"));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    pos = lGetPosViaElem(instructions,  object->key_nm );

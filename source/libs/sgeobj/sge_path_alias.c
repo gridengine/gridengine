@@ -48,6 +48,7 @@
 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
+#include "cl_errors.h"
 
 /****** sgeobj/path_alias/-PathAlias *******************************************
 *  NAME
@@ -217,7 +218,13 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
        * set the values of the element
        */
       lSetHost(pal, PA_submit_host, submit_host);
-      if (strcmp(submit_host, "*") && sge_resolve_host(pal, PA_submit_host)) {
+      if ( strcmp(submit_host, "*") && 
+#ifdef ENABLE_NGC
+           (sge_resolve_host(pal, PA_submit_host) != CL_RETVAL_OK)
+#else
+           (sge_resolve_host(pal, PA_submit_host) )
+#endif
+         ) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = -1;
@@ -409,7 +416,12 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
          if (*exec_host != '*') {
             /* no '*', so we have to look closer   */
             /* resolv the exec host from the alias */
-            if (sge_resolve_host(pap, PA_exec_host)) {
+#ifdef ENABLE_NGC
+            if (sge_resolve_host(pap, PA_exec_host) != CL_RETVAL_OK) 
+#else
+            if (sge_resolve_host(pap, PA_exec_host)) 
+#endif
+            {
                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, exec_host)); 
                continue;
             }

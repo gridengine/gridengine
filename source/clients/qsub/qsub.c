@@ -92,8 +92,11 @@ char **argv
 
    sge_setup_sig_handlers(QSUB);
 
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
+#endif
 
    /*
     * read switches from the various defaults files
@@ -168,6 +171,7 @@ char **argv
       fprintf(stderr, MSG_SEC_SETJOBCRED);
       SGE_EXIT(1);
    }
+
 
    just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
 

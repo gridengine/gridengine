@@ -63,7 +63,6 @@
 #include "sge_feature.h"
 #include "sge_bootstrap.h"
 
-
 static void default_exit_func(int i);
 #if defined(SGE_MT)
 static void gdi_init_mt(void);
@@ -110,8 +109,11 @@ void gdi_once_init(void) {
    bootstrap_mt_init();
    feature_mt_init();
 
+#ifdef ENABLE_NGC
+#else
    /* commlib */
    commlib_mt_init();
+#endif
 
    /* sec */
 #ifdef SECURE
@@ -351,8 +353,16 @@ int sge_gdi_setup(const char *programname, lList **alpp)
 
    /* check if master is alive */
    if (gdi_state_get_isalive()) {
-      DEXIT;
+      DEXIT;  /* TODO: shall we rework the gdi function return values ? CR */
+#ifdef ENABLE_NGC
+      if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
+         return AE_QMASTER_DOWN;
+      } else {
+         return AE_OK;
+      }
+#else      
       return check_isalive(sge_get_master(0));
+#endif
    }
 
    DEXIT;
@@ -434,8 +444,12 @@ int sge_gdi_param(int param, int intval, char *strval)
 static void default_exit_func(int i) 
 {
    sge_security_exit(i); 
-
+#ifdef ENABLE_NGC
+   cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+   cl_com_cleanup_commlib();
+#else
    leave_commd();  /* tell commd we're going */
+#endif
 }
 
 /****** gdi/setup/sge_gdi_shutdown() ******************************************

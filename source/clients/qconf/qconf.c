@@ -70,11 +70,18 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QCONF);
 
+#ifdef ENABLE_NGC
+   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+      fprintf(stderr, cl_get_error_text(ret));
+      SGE_EXIT(1);
+   }
+#else
    if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
       SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
       fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
-   }   
+   }  
+#endif 
 
    if (argc == 1) {
       sge_usage(stderr);

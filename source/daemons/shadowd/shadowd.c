@@ -111,6 +111,17 @@ static int host_in_file(const char *, const char *);
 static void parse_cmdline_shadowd(int argc, char **argv);
 static int shadowd_is_old_master_enrolled(char *oldqmaster);
 
+#ifdef ENABLE_NGC
+static int shadowd_is_old_master_enrolled(char *oldqmaster)
+{
+   DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
+   CRITICAL((SGE_EVENT, "shadowd_is_old_master_enrolled() is not implemented"));
+   /* TODO: check if old qmaster is running OR build new shadowd with
+            SIM / SIRM messages */
+   DEXIT;
+   return 1;
+}
+#else
 static int shadowd_is_old_master_enrolled(char *oldqmaster)
 {
    unsigned int alive = 0;
@@ -119,8 +130,7 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
 
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
 
-   DPRINTF(("Try to enroll to previous master commd on host "SFQ"\n",
-            oldqmaster));
+   DPRINTF(("Try to enroll to previous master commd on host "SFQ"\n", oldqmaster));
    set_commlib_param(CL_P_COMMDHOST, 0, oldqmaster, NULL);
    set_commlib_param(CL_P_NAME, 0, prognames[SHADOWD], NULL);
    set_commlib_param(CL_P_ID, 1, NULL, NULL);
@@ -175,6 +185,7 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
    DEXIT;
    return ret;
 }
+#endif
 
 /*----------------------------------------------------------------------------*/
 int main(
@@ -186,7 +197,6 @@ char **argv
    time_t now, last;
    const char *cp;
    fd_set fds;
-   int fd;
    char err_str[1024];
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
@@ -295,10 +305,19 @@ char **argv
    log_state_set_log_file(shadow_err_file);
 
    FD_ZERO(&fds);
+#ifdef ENABLE_NGC
+   if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &fds) == CL_RETVAL_OK) {
+      INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
+      sge_daemonize(&fds);
+   } else {
+      sge_daemonize(NULL);
+   }
+#else
    if ((fd=commlib_state_get_sfd())>=0) {
       FD_SET(fd, &fds);
    }
    sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
+#endif
    sge_write_pid(shadowd_pidfile);
 
    starting_up();

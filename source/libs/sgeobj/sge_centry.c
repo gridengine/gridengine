@@ -205,6 +205,17 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
       case TYPE_HOST:
          /* resolve hostname and store it */
          ret = sge_resolve_host(this_elem, CE_stringval);
+#ifdef ENABLE_NGC
+         if (ret != CL_RETVAL_OK) {
+            if (ret == CL_RETVAL_GETHOSTNAME_ERROR) {
+               ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
+            } else {
+               ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
+            }
+            DEXIT;
+            return -1;
+         }
+#else
          if (ret) {
             if (ret == COMMD_NACK_UNKNOWN_HOST) {
                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
@@ -214,6 +225,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
             DEXIT;
             return -1;
          }
+#endif
          break;
       case TYPE_STR:
       case TYPE_CSTR:

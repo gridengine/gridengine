@@ -1474,7 +1474,7 @@ spool_flatfile_default_verify_func(lList **answer_list,
             char *old_name = strdup(lGetHost(object, key_nm));
 
             /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, key_nm);
+            cl_ret = TODO: new return values sge_resolve_host(object, key_nm);
 
             /* if hostname resolving failed: create error */
             if (cl_ret != CL_OK) {
@@ -1626,7 +1626,7 @@ spool_flatfile_default_verify_func(lList **answer_list,
             char *old_name = strdup(lGetHost(object, CONF_hname));
 
             /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, CONF_hname);
+            cl_ret = TODO: new return values sge_resolve_host(object, CONF_hname);
 
             /* if hostname resolving failed: create error */
             if (cl_ret != CL_OK) {

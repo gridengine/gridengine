@@ -1214,11 +1214,16 @@ lList *ticket_orders
    const char *master_host_name;
    lListElem *jep, *other_jep, *ep, *ep2, *next, *other, *jatask = NULL, *other_jatask;
    sge_pack_buffer pb;
-   int cl_err = 0;
    u_long32 dummymid;
    int n;
    u_long32 now;
+#ifdef ENABLE_NGC
+   int cl_err = CL_RETVAL_OK;
+   unsigned long last_heard_from;
+#else
+   int cl_err = 0;
    static u_short number_one = 1;
+#endif
 
    DENTER(TOP_LAYER, "distribute_ticket_orders");
 
@@ -1275,10 +1280,15 @@ lList *ticket_orders
       hep = host_list_locate(Master_Exechost_List, master_host_name);
       n = lGetNumberOfElem(to_send);
 
-      if (  hep && 
-            last_heard_from(prognames[EXECD], &number_one, 
-            master_host_name) 
-            +10*conf.load_report_time > now) {
+#ifdef ENABLE_NGC
+      cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+                                        (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
+      if (  hep &&  last_heard_from + 10 * conf.load_report_time > now)
+#else
+      if (  hep && last_heard_from(prognames[EXECD], &number_one, master_host_name) 
+            + 10 * conf.load_report_time > now) 
+#endif
+         {
 
          /* should have now all ticket orders for 'host' in 'to_send' */ 
          if (init_packbuffer(&pb, sizeof(u_long32)*3*n, 0)==PACK_SUCCESS) {
@@ -1287,11 +1297,16 @@ lList *ticket_orders
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
-            cl_err = gdi_send_message_pb(0, prognames[EXECD], 0,
-                  master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
+
+#ifdef ENABLE_NGC
+            cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
             clear_packbuffer(&pb);
-            DPRINTF(("%s %d ticket changings to execd@%s\n", 
-               cl_err?"failed sending":"sent", n, master_host_name));
+            DPRINTF(("%s %d ticket changings to execd@%s\n", (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));
+#else
+            cl_err = gdi_send_message_pb(0, prognames[EXECD], 0, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
+            clear_packbuffer(&pb);
+            DPRINTF(("%s %d ticket changings to execd@%s\n", cl_err?"failed sending":"sent", n, master_host_name));
+#endif
          }
       } else {
          DPRINTF(("     skipped sending of %d ticket changings to "

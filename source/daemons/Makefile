@@ -33,7 +33,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 include $(SDIR)/daemons/common/Makefile
-include $(SDIR)/daemons/commd/Makefile
 include $(SDIR)/daemons/execd/Makefile
 include $(SDIR)/daemons/qmaster/Makefile
 include $(SDIR)/daemons/schedd/Makefile
@@ -43,10 +42,10 @@ include $(SDIR)/daemons/shepherd/Makefile
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-daemons: daemons_common commd execd qmaster schedd shadowd shepherd
+daemons: daemons_common execd qmaster schedd shadowd shepherd
 
-daemons_clean: daemons_common_clean commd_clean execd_clean qmaster_clean schedd_clean shadowd_clean shepherd_clean
+daemons_clean: daemons_common_clean ngclib_clean ngclistslib_clean execd_clean qmaster_clean schedd_clean shadowd_clean shepherd_clean
 
-daemons_depend: daemons_common_depend commd_depend execd_depend qmaster_depend schedd_depend shadowd_depend shepherd_depend
+daemons_depend: daemons_common_depend execd_depend qmaster_depend schedd_depend shadowd_depend shepherd_depend
 
 daemons_messages: daemons_common_messages commd_messages execd_messages qmaster_messages schedd_messages shadowd_messages shepherd_messages

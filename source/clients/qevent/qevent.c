@@ -157,6 +157,22 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 /*         lWriteElemTo(event, stdout); 
          fflush(stdout); */
       }
+      if (type == sgeE_JATASK_DEL) { 
+/*
+         lList *jat = lGetList(event,ET_new_version);
+*/
+         u_long job_id  = lGetUlong(event, ET_intkey);
+         u_long task_id = lGetUlong(event, ET_intkey2);
+/*
+         lListElem *ep = lFirst(jat);
+*/
+
+         fprintf(stdout,"JA_TASK  JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id, u32c(timestamp));
+         Global_jobs_running--;
+         fflush(stdout);  
+/*         lWriteElemTo(event, stdout); 
+         fflush(stdout);  */
+      }
       if (type == sgeE_JOB_FINAL_USAGE) { 
          /* lList *jat = lGetList(event,ET_new_version); */
          u_long job_id = lGetUlong(event, ET_intkey);
@@ -522,10 +538,17 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
+#ifdef ENABLE_NGC
+   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+      sge_dstring_free(enabled_options.error_message);
+      SGE_EXIT(1);
+   }
+#else
    if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(1);
-   }   
+   } 
+#endif  
 
    /* ok, start over ... */
 
@@ -636,7 +659,26 @@ void qevent_testsuite_mode(void)
    u_long32 timestamp;
    lCondition *where =NULL;
    lEnumeration *what = NULL;
-   
+ 
+      const int job_nm[] = {       
+            JB_job_number, 
+            JB_project, 
+            JB_ja_tasks,
+            JB_ja_structure,
+            JB_ja_n_h_ids,
+            JB_ja_u_h_ids,
+            JB_ja_s_h_ids,
+            JB_ja_o_h_ids,   
+            JB_ja_template,
+            NoName
+         };
+
+      const int jat_nm[] = {     
+         JAT_status, 
+         JAT_task_number,
+         NoName
+      };  
+
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
@@ -645,30 +687,24 @@ void qevent_testsuite_mode(void)
    sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 
 #else
    where = NULL; 
-   what = lWhat("%T(%I%I)", JB_Type, JB_job_number, JB_project);
+    what =  lIntVector2What(JB_Type, job_nm); 
+
    sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
    where = lFreeWhere(where);
    what = lFreeWhat(what);
    
    where = NULL; 
-   what = lWhat("%T(%I)", JAT_Type, JAT_status);
+   what = lIntVector2What(JAT_Type, jat_nm); 
+
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
    where = lFreeWhere(where);
    what = lFreeWhat(what);
    
    ec_set_flush(sgeE_JATASK_MOD, true, 0);
-   ec_unsubscribe(sgeE_JATASK_ADD);
-   ec_unsubscribe(sgeE_JATASK_DEL);
-   
    ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
    ec_set_flush(sgeE_JOB_ADD, true, 0);
    ec_set_flush(sgeE_JOB_DEL, true, 0);
 
-   ec_unsubscribe(sgeE_JOB_LIST);
-   ec_unsubscribe(sgeE_JOB_MOD);
-   ec_unsubscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
-   ec_unsubscribe(sgeE_JOB_USAGE);
-   
 #endif
    
    while(!shut_me_down) {

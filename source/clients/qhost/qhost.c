@@ -121,9 +121,11 @@ char **argv
       SGE_EXIT(1);
    }
 
-
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
+#endif
 
    sge_setup_sig_handlers(QHOST);
 
@@ -705,7 +707,12 @@ lListElem *ep;
          ** resolve hostnames and replace them in list
          */
          for_each(ep, *pphost) {
-            if (sge_resolve_host(ep, ST_name)) {
+#ifdef ENABLE_NGC
+            if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) 
+#else
+            if (sge_resolve_host(ep, ST_name)) 
+#endif
+            {
                char buf[BUFSIZ];
                sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
                answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);

@@ -1,3 +1,15 @@
+CR-2004-01-13-0: Enhancem.: - Added new communication library
+                            - Changed system to use new communication lib
+                            - Modified install scripts
+                            - WARNINGS: 
+                               o sec_lib not yet supported
+                               o not all features are tested
+                               o compile only tested for SOLARIS64 and LINUX
+                 Changed:   all binaries, install script, aimk, ...
+
+===============================================================================
+CR-2004-01-12-0:            CR_COMMD_TAG created
+
 DT-2004-01-12-1: Bugfix:    Added DLLIB for 3rdParty files
                  Changed:   aimk
 

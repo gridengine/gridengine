@@ -707,11 +707,14 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                         break;
                      }
                      if (!sge_is_hgroup_ref(hostname)) {
-                        char resolved_name[500];
-                        int back = getuniquehostname(hostname, 
-                                                     resolved_name, 0);
-
-                        if (back == 0) {
+                        char resolved_name[MAXHOSTLEN+1];
+                        int back = getuniquehostname(hostname, resolved_name, 0);
+#ifdef ENABLE_NGC
+                        if (back == CL_RETVAL_OK)
+#else
+                        if (back == 0)
+#endif
+                        {
                            lSetHost(elem, 
                                     cqueue_attribute_array[index].href_attr, 
                                     resolved_name);

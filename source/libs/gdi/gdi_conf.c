@@ -122,6 +122,16 @@ lListElem **lepp
       lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
+#ifdef ENABLE_NGC
+      if (ret != CL_RETVAL_OK) {
+         DPRINTF(("get_configuration: error %d resolving host %s: %s\n", ret, config_name, cl_get_error_text(ret)));
+         lFreeElem(hep);
+         /* TODO: COMMD_NACK_CONFLICT error will not happen anymore, check behavior */
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
+         DEXIT;
+         return -2;
+      }
+#else
       if (ret) {
          DPRINTF(("get_configuration: error %d resolving host %s: %s\n", 
                   ret, config_name, cl_errstr(ret)));
@@ -135,6 +145,7 @@ lListElem **lepp
             return -2;
          }
       }
+#endif
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
    }
 

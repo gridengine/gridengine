@@ -219,6 +219,20 @@ String name
 /*-------------------------------------------------------------------------*/
 void qmonInitSge( char *progname) 
 {
+#ifdef ENABLE_NGC
+   int error = 0;
+   DENTER(GUI_LAYER, "qmonInitSge");
+   
+   log_state_set_log_gui(True);
+   sge_gdi_param(SET_MEWHO, QMON, NULL);
+   sge_gdi_param(SET_ISALIVE, 1, NULL);
+   if ((error=sge_gdi_setup(prognames[QMON], NULL))) {
+      fprintf(stderr,"error setting up gdi lib\n");
+      SGE_EXIT(1);
+   }
+   log_state_set_log_gui(False);
+   DEXIT;
+#else
    int error = 0;
    DENTER(GUI_LAYER, "qmonInitSge");
    
@@ -241,6 +255,7 @@ void qmonInitSge( char *progname)
    log_state_set_log_gui(False);
 
    DEXIT;
+#endif
 }
 
 /*-------------------------------------------------------------------------
@@ -251,7 +266,11 @@ void qmonExitFunc(
 int i 
 ) {
    DENTER(GUI_LAYER, "qmonExitFunc");
+#ifdef ENABLE_NGC
+   cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+#else
    leave_commd();  /* tell commd we're going */
+#endif
    DCLOSE;
    exit(i);
 }

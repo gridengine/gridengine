@@ -1228,8 +1228,11 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(my_who);
 
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
+#endif
 
    /*
    ** begin to work
@@ -1532,10 +1535,13 @@ int main(int argc, char **argv)
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
-      /* if we had a connection to qmaster commd (to get configuration), 
-       * close it and reset commproc id */
+#ifdef ENABLE_NGC
+      cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+#else
+      /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       leave_commd();
       set_commlib_param(CL_P_ID, 0, NULL, NULL);
+#endif
    
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 
@@ -1639,10 +1645,14 @@ int main(int argc, char **argv)
 
          DPRINTF(("random polling set to %d\n", random_poll));
 
+#ifdef ENABLE_NGC
+         cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+#else
          /* leave commd while waiting for connection / sleeping while polling */
          leave_commd();
          /* next enroll will _not_ ask commd to get same client id as before  */
          set_commlib_param(CL_P_ID, 0, NULL, NULL);
+#endif
    
          if(is_qlogin) {
             /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */

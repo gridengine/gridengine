@@ -52,7 +52,6 @@
 #include "config_file.h"
 #include "qlogin_starter.h"
 #include "sge_unistd.h"
-#include "sge_dstring.h"
 
 static int sh_str2file(char *header_str, const char *str, char *file);
 

@@ -78,7 +78,6 @@ struct rusage {
 #include "sge_unistd.h"
 #include "config_file.h"
 #include "sge_uidgid.h"
-#include "sge_stdlib.h"
 
 /* static functions */
 static char **read_job_args(char **args, int extra_args);

@@ -49,7 +49,7 @@ JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c \
 							 sge_qtcsh.c
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
 JAPI_ADD_LIBS = -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd \
-								$(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck $(DLLIB)
+								$(SECLIB) $(KRBLIB) -lcull -lrmon -lngc -lngclists -luti -llck $(DLLIB)
 JAPI_LIB_DEPENDS = $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
                    $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB)

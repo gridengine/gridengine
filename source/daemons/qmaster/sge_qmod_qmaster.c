@@ -1058,10 +1058,18 @@ lListElem *jatep
                           &pb, &dummy);
          clear_packbuffer(&pb);
       } else {
+#ifdef ENABLE_NGC
+         i = CL_RETVAL_MALLOC;  /* an error */
+#else
          i = CL_MALLOC;
+#endif
       }
-
-      if (i) {
+#ifdef ENABLE_NGC
+      if (i != CL_RETVAL_OK)
+#else
+      if (i) 
+#endif
+      {
          ERROR((SGE_EVENT, MSG_COM_NOUPDATEQSTATE_IS, how, lGetString(qep, QU_qname)));
          DEXIT;
          return i;

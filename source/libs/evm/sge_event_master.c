@@ -1295,7 +1295,12 @@ ck_4_deliver_events(u_long32 now)
             ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
             /* on failure retry is triggered automatically */
-            if (ret == 0) {
+#ifdef ENABLE_NGC
+            if (ret == CL_RETVAL_OK)
+#else
+            if (ret == 0) 
+#endif
+            {
                switch (busy_handling) {
                case EV_THROTTLE_FLUSH:
                   /* increase busy counter */

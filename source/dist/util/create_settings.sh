@@ -43,7 +43,7 @@ ErrUsage()
    echo
    echo "usage: `basename $0` outdir"
    echo "       \$SGE_ROOT must be set"
-   echo "       \$SGE_CELL and \$COMMD_PORT must be set if used in your environment"
+   echo "       \$SGE_CELL and \$SGE_QMASTER_PORT must be set if used in your environment"
    exit 1
 }
 
@@ -72,10 +72,10 @@ else
    echo "unsetenv SGE_CELL"                              >> $SP_CSH
 fi
 
-if [ "$COMMD_PORT" != "" ]; then
-   echo "setenv COMMD_PORT $COMMD_PORT"                  >> $SP_CSH
+if [ "$SGE_QMASTER_PORT" != "" ]; then
+   echo "setenv SGE_QMASTER_PORT $SGE_QMASTER_PORT"                  >> $SP_CSH
 else
-   echo "unsetenv COMMD_PORT"                            >> $SP_CSH
+   echo "unsetenv SGE_QMASTER_PORT"                            >> $SP_CSH
 fi
 
 echo ""                                                          >> $SP_CSH
@@ -111,18 +111,18 @@ else
    echo "unset SGE_CELL"                                         >> $SP_SH
 fi
 
-if [ "$COMMD_PORT" != "" ]; then
-   echo "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
+if [ "$SGE_QMASTER_PORT" != "" ]; then
+   echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"              >> $SP_SH
 else
-   echo "unset COMMD_PORT"                                       >> $SP_SH              
+   echo "unset SGE_QMASTER_PORT"                                       >> $SP_SH              
 fi
 
 if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
    echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
 fi
 
-if [ "$COMMD_PORT" != "" ]; then
-   echo "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
+if [ "$SGE_QMASTER_PORT" != "" ]; then
+   echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"              >> $SP_SH
 fi
 
 echo ""                                                          >> $SP_SH

@@ -43,7 +43,7 @@
 # pe request
 #$ -pe pvm 16-1
 #$ -S /bin/sh
-#$ -v COMMD_PORT,DISPLAY
+#$ -v SGE_QMASTER_PORT,DISPLAY
 # ---------------------------
 
 echo "Got $NSLOTS slots."

@@ -606,10 +606,10 @@ if [ "$SGE_CELL" = "" ]; then
    SGE_CELL=default
 fi
 
-if [ "$COMMD_PORT" != "" ]; then
-   CA_PORT=port$COMMD_PORT
+if [ "$SGE_QMASTER_PORT" != "" ]; then
+   CA_PORT=port$SGE_QMASTER_PORT
 else
-   CA_PORT=sge_commd
+   CA_PORT=sge_qmaster
 fi
 
 

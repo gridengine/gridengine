@@ -329,8 +329,11 @@ char *rhost
       sge_show_conf();
 
       /* pass new max_unheard value to commlib */
-      set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, 
-         NULL, NULL);
+#ifdef ENABLE_NGC
+      cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[QMASTER],1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+#else
+      set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
+#endif
    }
  
    if (reschedule_unknown_changed) { 
@@ -560,6 +563,15 @@ lListElem **cepp
       lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
+#ifdef ENABLE_NGC
+      if (ret != CL_RETVAL_OK) {
+         DPRINTF(("get_configuration: error %s resolving host %s\n", cl_get_error_text(ret), config_name));
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
+         lFreeElem(hep);
+         DEXIT;
+         return -2;
+      }
+#else
       if (ret) {
          DPRINTF(("get_configuration: error %s resolving host %s\n", cl_errstr(ret), config_name));
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
@@ -567,6 +579,7 @@ lListElem **cepp
          DEXIT;
          return -2;
       }
+#endif
 /*       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name))); */
    }
    
@@ -654,3 +667,6 @@ lList *to_check_list
    DEXIT;
    return 1;
 }
+
+
+

@@ -127,7 +127,7 @@ int main(
 int argc,
 char **argv 
 ) {
-   int i, ret, suc, dispatch_timeout;
+   int i, dispatch_timeout;
    char err_str[1024];
    int priority_tags[10];
 #ifdef PW   
@@ -135,6 +135,7 @@ char **argv
 #endif
 
    DENTER_MAIN(TOP_LAYER, "execd");
+
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
@@ -146,7 +147,6 @@ char **argv
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
    sge_mt_init();
-
 #ifdef PW
    if ((mode_guess = product_mode_guess(argv[0])) == M_INVALID) {
       fprintf(stderr, MSG_EXECD_PROGINVALIDNAME_S,
@@ -193,6 +193,9 @@ char **argv
 
    parse_cmdline_execd(argv);   
 
+#ifdef ENABLE_NGC
+   INFO((SGE_EVENT,"enroll to commd not implemented!!!\n"));
+#else
    /* check for running execd - ignore $COMMD_HOST */
    if (start_commd) {
       set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_unqualified_hostname(), NULL);
@@ -248,17 +251,22 @@ char **argv
       }            
    }
    
+#endif
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd();
 
    if (!getenv("SGE_ND"))
       daemonize_execd();
 
+#ifdef ENABLE_NGC
+   CRITICAL((SGE_EVENT,"---> remove pending messages not implemented!!!\n"));
+#else
    /* don't wanna get old messages */
    remove_pending_messages(NULL, 0, 0, 0);
 
    /* commlib call to mark all commprocs as unknown */
    reset_last_heard();
+#endif
 
    /* are we using qidle or not */
    sge_ls_qidle(use_qidle);
@@ -311,11 +319,23 @@ char **argv
 
       if (sigpipe_received) {
           sigpipe_received = 0;
-          INFO((SGE_EVENT, "SIGPIPE received"));
+          INFO((SGE_EVENT, "SIGPIPE received\n"));
       }
 
       if (i) {             
+#ifdef ENABLE_NGC
+         if ( strcmp(cl_get_error_text(i), CL_RETVAL_UNDEFINED_STR) != 0 ) {
+            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
+         } else {
+            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
+         }
+         if (i == CL_RETVAL_CONNECTION_NOT_FOUND) {
+            WARNING((SGE_EVENT, "reregister at qmaster\n"));
+            execd_register();
+         }
+#else
          WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
+#endif
 
          if (shut_me_down == 1) {
             sge_shutdown();
@@ -328,7 +348,11 @@ char **argv
          DEXIT;
          return 0;
       }
+#ifdef ENABLE_NGC
+      cl_commlib_trigger(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0));
+#else
       sleep(1);	/* If there is an error dont kill the system */
+#endif
    }
 }
 

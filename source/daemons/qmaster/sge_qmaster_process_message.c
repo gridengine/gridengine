@@ -50,6 +50,16 @@
 #include "qmaster.h"
 
 
+#ifdef ENABLE_NGC
+typedef struct {
+   char snd_host[MAXHOSTLEN];      /* sender hostname; NULL -> all */
+   char snd_name[MAXHOSTLEN];      /* sender name (aka 'commproc'); NULL -> all */
+   u_short snd_id;                 /* sender identifier; 0 -> all */
+   int tag;                        /* message tag; TAG_NONE -> all */
+   u_long32 request_mid;           /* message id of request */
+   sge_pack_buffer buf;            /* message buffer */
+} struct_msg_t;
+#else
 typedef struct {
    char snd_host[MAXHOSTLEN];      /* sender hostname; NULL -> all */
    char snd_name[MAXCOMPONENTLEN]; /* sender name (aka 'commproc'); NULL -> all */
@@ -57,6 +67,7 @@ typedef struct {
    int tag;                        /* message tag; TAG_NONE -> all */
    sge_pack_buffer buf;            /* message buffer */
 } struct_msg_t;
+#endif
 
 static int determine_timeout(void);
 static void do_gdi_request(struct_msg_t *aMsg);
@@ -95,7 +106,11 @@ static void do_report_request(struct_msg_t *aMsg);
 *******************************************************************************/
 void *sge_qmaster_process_message(void *anArg)
 {
-   int old, new; /* timeout values */
+   int new; /* timeout values */
+#ifdef ENABLE_NGC
+#else
+   int old;
+#endif
    int res;
    struct_msg_t msg;
 
@@ -103,24 +118,37 @@ void *sge_qmaster_process_message(void *anArg)
    
    memset((void*)&msg, 0, sizeof(struct_msg_t));
    
-   old = commlib_state_get_timeout_srcv();
    new = determine_timeout();
 
+#ifdef ENABLE_NGC
+#else
+   old = commlib_state_get_timeout_srcv();
+
    DPRINTF(("setting sync receive timeout to %d seconds\n", new));
-      
    set_commlib_param(CL_P_TIMEOUT_SRCV, new, NULL, NULL);
-   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1);
+#endif
+   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid);
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, old, NULL, NULL);
+#endif
 
    if (sigpipe_received) {
       sigpipe_received = 0;
       INFO((SGE_EVENT, "SIGPIPE received"));
    }
    
+#ifdef ENABLE_NGC
+   if (res != CL_RETVAL_OK) {
+      DPRINTF(("sge_get_any_request returned: %s\n", cl_get_error_text(res)));
+      return anArg;              
+   }
+#else
    if (res != CL_OK) {
       DPRINTF(("sge_get_any_request returned: %s\n", cl_errstr(res)));
       return anArg;              
    }
+#endif
 
    switch (msg.tag)
    {
@@ -252,7 +280,7 @@ static void do_gdi_request(struct_msg_t *aMsg)
       sge_c_gdi(aMsg->snd_host, req, resp);
    }
 
-   sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name, (int)aMsg->snd_id, resp_head);
+   sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name, (int)aMsg->snd_id, resp_head,NULL,aMsg->request_mid);
 
    free_gdi_request(resp_head);
    free_gdi_request(req_head);

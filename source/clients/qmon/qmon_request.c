@@ -622,6 +622,19 @@ int maxlen
          if (status && stringval[0] != '\0') {
             /* try to resolve hostname */
             ret=sge_resolve_hostname(stringval, unique, EH_name);
+#ifdef ENABLE_NGC
+            switch ( ret ) {
+               case CL_RETVAL_GETHOSTNAME_ERROR:
+                  qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
+                  status = False;
+                  break;
+               case CL_RETVAL_OK:
+                  strcpy(stringval, unique);
+                  break; 
+               default:
+                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+            }
+#else
             switch ( ret ) {
                case COMMD_NACK_UNKNOWN_HOST:
                   qmonMessageShow(w, True, "Can't resolve host '%s'", 
@@ -635,6 +648,7 @@ int maxlen
                   DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
                   cl_errstr(ret)));
             }
+#endif
          }
          else
             status = False;

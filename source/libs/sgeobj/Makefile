@@ -116,7 +116,7 @@ libsgeobj.a:	$(SGEOBJLIB_OBJS)
 	$(RANLIB) libsgeobj.a
 
 libsgeobj$(SHAREDEXT): $(SGEOBJLIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsgeobj$(SHAREDEXT) $(SGEOBJLIB_OBJS) -lsgeobjd -lcom -lcull -luti -lrmon $(LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsgeobj$(SHAREDEXT) $(SGEOBJLIB_OBJS) -lsgeobjd -lngc -lngclists -lcull -luti -lrmon $(LIBS) -lc
 
 libsgeobjd.a:	$(SGEOBJDLIB_OBJS)
 	$(AR) $(ARFLAGS) libsgeobjd.a $(SGEOBJDLIB_OBJS) 

@@ -335,7 +335,11 @@ static void sec_crypto_locking_callback(int mode, int type, char *file, int line
 static void sge_thread_setup(void);
 static void sec_thread_cleanup(void);
 
+#ifdef ENABLE_NGC
+#else
 static int sec_alloc_key_mat(void);
+#endif
+
 #ifdef SEC_RECONNECT
 static void sec_dealloc_key_mat(void);
 #endif
@@ -343,18 +347,47 @@ static void sec_dealloc_key_mat(void);
 /* 
 ** prototypes for per thread data access functions
 */
+#ifdef ENABLE_NGC
+#else
 static void sec_state_set_key_mat(u_char *);
+#endif
+
+#ifdef ENABLE_NGC
+#else
 static u_char *sec_state_get_key_mat(void);
+#endif
+
+#ifdef ENABLE_NGC
+#else
 static void sec_state_set_key_mat_len(u_long32);
+#endif
+
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_key_mat_len(void);
+#endif
+
 static void sec_state_set_connid(u_long32);
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_connid(void);
+#endif
 static void sec_state_set_connect(int);
+#ifdef ENABLE_NGC
+#else
 static int sec_state_get_connect(void);
+#endif
+
 static void sec_state_set_seq_receive(u_long32);
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_seq_receive(void);
+#endif
 static void sec_state_set_seq_send(u_long32);
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_seq_send(void);
+#endif
 static void sec_state_set_refresh_time(ASN1_UTCTIME *);
 static ASN1_UTCTIME *sec_state_get_refresh_time(void);
 static char *sec_state_get_unique_identifier(void);
@@ -363,16 +396,23 @@ static char *sec_state_get_unique_identifier(void);
 ** prototypes
 */
 
+#ifdef ENABLE_NGC
+#else
 static int sec_set_encrypt(int tag);
+#endif
 static int sec_files(void);
 static int sec_is_daemon(const char *progname);
 static int sec_is_master(const char *progname);
 
+
+#ifdef ENABLE_NGC
+#else
 static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
 static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
 static int sec_handle_announce(char *comproc, u_short id, char *host, char *buffer, u_long32 buflen);
 static int sec_encrypt(sge_pack_buffer *pb, const char *buf, int buflen);
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id);
+#endif
 static int sec_verify_certificate(X509 *cert);
 
 /* #define SEC_RECONNECT */
@@ -403,17 +443,31 @@ static int sec_unpack_reconnect(sge_pack_buffer *pb,
 
 
 static void sec_error(void);
+#ifdef ENABLE_NGC
+#else
 static int sec_send_err(char *commproc, int id, char *host, sge_pack_buffer *pb, const char *err_msg);
 static int sec_set_connid(char **buffer, int *buflen);
 static int sec_get_connid(char **buffer, u_long32 *buflen);
 static int sec_update_connlist(const char *host, const char *commproc, int id);
 static int sec_set_secdata(const char *host, const char *commproc, int id);
 static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier);
+#endif
+
+
+#ifdef ENABLE_NGC
+#else
 static void sec_keymat2list(lListElem *element);
+#endif
+
+#ifdef ENABLE_NGC
+#else
 static void sec_list2keymat(lListElem *element);
+#endif
 static int sec_verify_callback(int ok, X509_STORE_CTX *ctx);
 static void sec_setup_path(int is_daemon, int is_master);
 
+#ifdef ENABLE_NGC
+#else
 static int sec_pack_announce(u_long32 len, u_char *buf, u_char *chall, sge_pack_buffer *pb);
 static int sec_unpack_announce(u_long32 *len, u_char **buf, u_char **chall, sge_pack_buffer *pb);
 static int sec_pack_response(u_long32 len, u_char *buf, 
@@ -432,6 +486,7 @@ static int sec_unpack_response(u_long32 *len, u_char **buf,
                         sge_pack_buffer *pb);
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len);
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg);
+#endif
 static int sec_build_symbol_table(void);
 
 /****** security/sec_lib/debug_print_ASN1_UTCTIME() *************************************
@@ -560,15 +615,22 @@ static pthread_mutex_t sec_initialized_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ---- sec_connid_counter -- a consecutive number for connections -- */
 
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_connid_counter = 0;
+#endif
 
 
 /* 
 ** MT-NOTE: sec_connid_counter_mutex guards access to sec_connid_counter 
 ** MT-NOTE: that must be synchronized in case of a MT qmaster
 */
-
+#ifdef ENABLE_NGC
+#else
 static pthread_mutex_t sec_connid_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
+
 #define SEC_LOCK_CONNID_COUNTER()   sge_mutex_lock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
 #define SEC_UNLOCK_CONNID_COUNTER() sge_mutex_unlock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
 /* ---- sec_conn_list --------------------------------- */
@@ -586,11 +648,14 @@ static pthread_mutex_t sec_conn_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ---- *_file --------------------------------- */
 
+#ifdef ENABLE_NGC
+#else
 static char *ca_key_file;
+static char *reconnect_file;
+#endif
 static char *ca_cert_file;
 static char *key_file;
 static char *cert_file;
-static char *reconnect_file;
 static char *rand_file;
 
 /* 
@@ -761,6 +826,8 @@ static void sec_thread_cleanup(void)
 *  NOTES
 *     MT-NOTE: sec_alloc_key_mat() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_alloc_key_mat(void)
 {
    /* must be done per thread on demand before accessing key_mat */
@@ -772,6 +839,7 @@ static int sec_alloc_key_mat(void)
       
    return 0;
 }
+#endif
 
 #ifdef SEC_RECONNECT
 /****** sec_lib/sec_dealloc_key_mat() ******************************************
@@ -797,7 +865,6 @@ static void sec_dealloc_key_mat(void)
 }
 #endif
 
-
 /****** sec_lib/sec_state_set_key_mat() ****************************************
 *  NAME
 *     sec_state_{s|g}et_*() -- Per thread global variables setter/getter funcs
@@ -812,29 +879,41 @@ static void sec_dealloc_key_mat(void)
 *     See definition of 'struct sec_state_t' for information about purpose
 *     of these variables.
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static void sec_state_set_key_mat(u_char *key_mat)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat");
    sec_state->key_mat = key_mat;
 }
+#endif
 
+#ifdef ENABLE_NGC
+#else
 static u_char *sec_state_get_key_mat(void)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
    return sec_state->key_mat;
 }
+#endif
 
+#ifdef ENABLE_NGC
+#else
 static void sec_state_set_key_mat_len(u_long32 key_mat_len)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat_len");
    sec_state->key_mat_len = key_mat_len;
 }
+#endif
 
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_key_mat_len(void)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
    return sec_state->key_mat_len;
 }
+#endif
 
 static void sec_state_set_connid(u_long32 connid)
 {
@@ -842,11 +921,14 @@ static void sec_state_set_connid(u_long32 connid)
    sec_state->connid = connid;
 }
 
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_connid(void)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
    return sec_state->connid;
 }
+#endif
 
 static void sec_state_set_connect(int connect)
 {
@@ -854,11 +936,14 @@ static void sec_state_set_connect(int connect)
    sec_state->connect = connect;
 }
 
+#ifdef ENABLE_NGC
+#else
 static int sec_state_get_connect(void)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
    return sec_state->connect;
 }
+#endif
 
 static void sec_state_set_seq_receive(u_long32 seq_receive)
 {
@@ -866,11 +951,14 @@ static void sec_state_set_seq_receive(u_long32 seq_receive)
    sec_state->seq_receive = seq_receive;
 }
 
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_seq_receive(void)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
    return sec_state->seq_receive;
 }
+#endif
 
 static void sec_state_set_seq_send(u_long32 seq_send)
 {
@@ -878,11 +966,14 @@ static void sec_state_set_seq_send(u_long32 seq_send)
    sec_state->seq_send = seq_send;
 }
 
+#ifdef ENABLE_NGC
+#else
 static u_long32 sec_state_get_seq_send(void)
 {
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
    return sec_state->seq_send;
 }
+#endif
 
 static void sec_state_set_refresh_time(ASN1_UTCTIME *refresh_time)
 {
@@ -907,7 +998,6 @@ static char *sec_state_get_unique_identifier(void)
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
    return sec_state->unique_identifier;
 }
-
 
 /****** security/sec_lib/sec_init() ******************************************
 *  NAME
@@ -1146,6 +1236,8 @@ int sec_exit(void)
 *  NOTES
 *     MT-NOTE: sec_send_message() is not MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 int sec_send_message(
 int synchron,
 const char *tocomproc,
@@ -1218,6 +1310,7 @@ int compressed
    DEXIT;
    return i;
 }
+#endif
 
 /****** security/sec_lib/sec_receive_message() *******************************
 *  NAME
@@ -1249,6 +1342,8 @@ int compressed
 *  NOTES
 *     MT-NOTE: sec_receive_message() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
                         int *tag, char **buffer, u_long32 *buflen, 
                         int synchron, u_short* compressed)
@@ -1299,6 +1394,7 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    DEXIT;
    return 0;
 }
+#endif
 
 
 /****** security/sec_lib/sec_set_encrypt() ***********************************
@@ -1326,6 +1422,8 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 *  NOTES
 *     MT-NOTE: sec_set_encrypt() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_set_encrypt(
 int tag 
 ) {
@@ -1339,6 +1437,7 @@ int tag
          return 1; 
    }
 }
+#endif
 
 /****** sec_lib/sec_files() ****************************************************
 *  NAME
@@ -1610,6 +1709,8 @@ static int sec_undump_connlist()
 *  NOTES
 *     MT-NOTE: sec_announce_connection() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_announce_connection(
 GlobalSecureData *gsd,
 const char *tocomproc,
@@ -1889,6 +1990,7 @@ const char *tohost
    DEXIT;
    return i;
 }
+#endif
 
 /****** sec_lib/sec_respond_announce() *****************************************
 *  NAME
@@ -1915,6 +2017,8 @@ const char *tohost
 *  NOTES
 *     MT-NOTE: sec_respond_announce() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_respond_announce(char *commproc, u_short id, char *host, 
                          char *buffer, u_long32 buflen)
 {
@@ -2157,6 +2261,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       return i;
 }
 
+#endif
+
 /****** sec_lib/sec_encrypt() **************************************************
 *  NAME
 *     sec_encrypt() -- encrypt a message buffer 
@@ -2179,6 +2285,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
 *  NOTES
 *     MT-NOTE: sec_encrypt() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_encrypt(
 sge_pack_buffer *pb,
 const char *inbuf,
@@ -2305,6 +2413,7 @@ int inbuflen
       DEXIT;
       return i;
 }
+#endif
 
 /****** security/sec_lib/sec_handle_announce() *******************************
 *  NAME
@@ -2332,6 +2441,8 @@ int inbuflen
 *  NOTES
 *     MT-NOTE: sec_handle_announce() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_handle_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen)
 {
    int i;
@@ -2388,6 +2499,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
       DEXIT;
       return i;
 }
+#endif
 
 /****** security/sec_lib/sec_decrypt() **************************************
 *  NAME
@@ -2413,6 +2525,8 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
 *  NOTES 
 *     MT-NOTE: sec_decrypt() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id)
 {
    int i;
@@ -2624,6 +2738,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       DEXIT;
       return i;
 }
+#endif
 
 #ifdef SEC_RECONNECT
 /****** security/sec_lib/sec_reconnect() *************************************
@@ -2885,6 +3000,8 @@ static void sec_error(void)
 **    MT-NOTES: sec_send_err() is MT safe
 */
 
+#ifdef ENABLE_NGC
+#else
 static int sec_send_err(
 char *commproc,
 int id,
@@ -2908,6 +3025,7 @@ const char *err_msg
    DEXIT;
    return(-1);
 }
+#endif
 
 /*
 ** NAME
@@ -2929,7 +3047,8 @@ const char *err_msg
 ** NOTES
 **      MT-NOTE: sec_set_connid() is MT safe
 */
-
+#ifdef ENABLE_NGC
+#else
 static int sec_set_connid(char **buffer, int *buflen)
 {
    u_long32 i, new_buflen;
@@ -2956,6 +3075,7 @@ static int sec_set_connid(char **buffer, int *buflen)
    DEXIT;
    return(i);
 }
+#endif
 
 /*
 ** NAME
@@ -2978,6 +3098,8 @@ static int sec_set_connid(char **buffer, int *buflen)
 **    MT-NOTE: sec_get_connid() is MT safe
 */
 
+#ifdef ENABLE_NGC
+#else
 static int sec_get_connid(char **buffer, u_long32 *buflen)
 {
    int i;
@@ -3007,6 +3129,7 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
      DEXIT;
      return(i);
 }
+#endif
 
 /*
 ** NAME
@@ -3031,6 +3154,8 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
 **    MT-NOTE: sec_update_connlist() is MT safe
 */
 
+#ifdef ENABLE_NGC
+#else
 static int sec_update_connlist(const char *host, const char *commproc, int id)
 {
    lListElem *element = NULL;
@@ -3055,6 +3180,7 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
    DEXIT;
    return 0;
 }
+#endif
 
 /*
 ** NAME
@@ -3079,6 +3205,8 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
 **    MT-NOTE: Caller must own sec_conn_list_mutex
 **    MT-NOTE: sec_set_secdata() is not MT safe
 */
+#ifdef ENABLE_NGC
+#else
 static int sec_set_secdata(const char *host, const char *commproc, int id)
 {
    lListElem *element=NULL;
@@ -3118,6 +3246,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    DEXIT;
    return 0;
 }
+#endif
 
 /*
 ** NAME
@@ -3140,6 +3269,8 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
 ** NOTES
 **      MT-NOTE: sec_insert_conn2list() is MT safe
 */
+#ifdef ENABLE_NGC
+#else
 static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier)
 {
    lListElem *element;
@@ -3231,6 +3362,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    DEXIT;
    return 0;   
 }
+#endif
 
 
 /*
@@ -3250,6 +3382,8 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 **    MT-NOTE: sec_keymat2list() is MT safe
 */
 
+#ifdef ENABLE_NGC
+#else
 static void sec_keymat2list(lListElem *element)
 {
    int i;
@@ -3269,6 +3403,7 @@ static void sec_keymat2list(lListElem *element)
    lSetUlong(element,SEC_KeyPart6,ul[6]);
    lSetUlong(element,SEC_KeyPart7,ul[7]);
 }
+#endif
 
 /*
 ** NAME
@@ -3287,6 +3422,8 @@ static void sec_keymat2list(lListElem *element)
 **   MT-NOTE: sec_list2keymat() is MT safe
 */
 
+#ifdef ENABLE_NGC
+#else
 static void sec_list2keymat(lListElem *element)
 {
    int i;
@@ -3307,6 +3444,7 @@ static void sec_list2keymat(lListElem *element)
    memcpy(sec_state_get_key_mat(), working_buf, sec_state_get_key_mat_len());
 
 }
+#endif
 
 /*==========================================================================*/
 /*
@@ -3318,6 +3456,16 @@ static void sec_list2keymat(lListElem *element)
 ** NOTES
 **    MT-NOTE: sec_setup_path() is not MT safe
 */
+#ifdef ENABLE_NGC
+static void sec_setup_path(
+int is_daemon,
+int is_master
+) {
+  DENTER(GDI_LAYER, "sec_setup_path");
+  ERROR((SGE_EVENT,"NOT YET IMPLEMENTED\n"));
+  DEXIT;
+}
+#else
 static void sec_setup_path(
 int is_daemon,
 int is_master
@@ -3508,6 +3656,7 @@ int is_master
    DEXIT;
    return;
 }
+#endif
 
 
 /*
@@ -3530,6 +3679,8 @@ int is_master
 **      MT-NOTE: sec_pack_announce() is MT safe 
 **      MT-NOTE: sec_unpack_announce() is MT safe 
 */
+#ifdef ENABLE_NGC
+#else
 static int sec_pack_announce(u_long32 certlen, u_char *x509_buf, u_char *challenge, sge_pack_buffer *pb)
 {
    int   i;
@@ -3544,7 +3695,10 @@ static int sec_pack_announce(u_long32 certlen, u_char *x509_buf, u_char *challen
    error:
       return(i);
 }
+#endif
 
+#ifdef ENABLE_NGC
+#else
 static int sec_unpack_announce(u_long32 *certlen, u_char **x509_buf, u_char **challenge, sge_pack_buffer *pb)
 {
    int i;
@@ -3559,8 +3713,11 @@ static int sec_unpack_announce(u_long32 *certlen, u_char **x509_buf, u_char **ch
    error:   
       return(i);
 }
+#endif
 
 /* MT-NOTE: sec_pack_response() is MT safe */
+#ifdef ENABLE_NGC
+#else
 static int sec_pack_response(u_long32 certlen, u_char *x509_buf, 
                       u_long32 chall_enc_len, u_char *enc_challenge, 
                       u_long32 connid, 
@@ -3597,8 +3754,11 @@ static int sec_pack_response(u_long32 certlen, u_char *x509_buf,
    error:
       return(i);
 }
+#endif
 
 /* MT-NOTE: sec_unpack_response() is MT safe */
+#ifdef ENABLE_NGC
+#else
 static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf, 
                         u_long32 *chall_enc_len, u_char **enc_challenge, 
                         u_long32 *connid, 
@@ -3636,8 +3796,11 @@ static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf,
    error:
       return(i);
 }
+#endif
 
 /* MT-NOTE: sec_pack_message() is MT safe */
+#ifdef ENABLE_NGC
+#else
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len)
 {
    int i;
@@ -3656,8 +3819,11 @@ static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_m
    error:
       return(i);
 }
+#endif
 
 /* MT-NOTE: sec_unpack_message() is MT safe */
+#ifdef ENABLE_NGC
+#else
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg)
 {
    int i;
@@ -3676,6 +3842,7 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
    error:
       return(i);
 }
+#endif
 
 #ifdef SEC_RECONNECT
 

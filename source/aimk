@@ -177,7 +177,7 @@ usage:
    echo "-D*               -> include a macro definition in CFLAGS"
    echo "-catman           -> generate man pages in catman format"
    echo "-cc               -> use cc/CC to compile c/c++ code"
-   echo "-compress         -> enable compression of commd communication"
+   echo "-compress         -> enable compression of communication"
    echo "-dce              -> enable dce security"
    echo "-debug            -> compile with debug information"
    echo "-f                -> specify other Makefile instead of common/Makefile"
@@ -207,9 +207,9 @@ usage:
    echo "-no-qtcsh         -> don't compile qtcsh"
    echo "-no-remote        -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
    echo "-no-rmon          -> disable rmon debug output"
-   echo "-no-commd-fifo    -> disable commd fifo bugfix"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
+   echo "-only-ngc         -> build only next generation communication"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
@@ -255,7 +255,7 @@ else
 endif
 
 set   CFLAGS       = "$INP_CFLAGS"
-set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/commlib_v1.0 -I../libs/commlib_v1.0/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
 set   ADOC              = 0
@@ -307,6 +307,9 @@ set   MT          = 1
 set   MESSAGES    = "../dist/locale/gridenginenotuniq.pot"
 set   MESSAGES_BIN = "gridengine.mo"
 set   SGE_DEPEND  = 0
+set   NGC         = 0
+set   NGC_DIR     = "$SOURCE/libs/commlib_v1.0"
+set   NGC_INCLUDE = "-I$NGC_DIR -I$NGC_DIR/lists"
 set   QMON        = 1
 set   CORE        = 1
 set   REMOTE      = 1
@@ -417,7 +420,6 @@ setenv RMONLIB     "librmon.a"
 set COMPILE_DC = 0
 unset nomk
 
-set commd_fifo_flag = 1
 
 set found
 while ($#argv >= 1 && $?found)
@@ -615,9 +617,6 @@ while ($#argv >= 1 && $?found)
       setenv RMONINC  ""
       setenv RMONLIB  ""
       breaksw
-   case "-no-commd-fifo":
-      set commd_fifo_flag = 0
-      breaksw
    case "-only-core":
       set CORE   = 1
       set MAKEZLIB = 0
@@ -635,6 +634,15 @@ while ($#argv >= 1 && $?found)
       set REMOTE     = 0
       set SGE_DEPEND = 1
       set MT = 0
+      breaksw
+   case "-only-ngc":
+      set CORE       = 0
+      set MAKEZLIB   = 0
+      set QMAKE      = 0
+      set QMON       = 0
+      set QTCSH      = 0
+      set REMOTE     = 0
+      set NGC        = 1
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -836,7 +844,7 @@ if ( $SPOOLING_METHOD == "dynamic" && $SHAREDLIBS == 0 ) then
    exit 1
 endif
 
-set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD"
+set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC"
 # end spooling
 
 #----------------------------------------------------------------------
@@ -1772,6 +1780,8 @@ else
    set XGETTEXT = ""
 endif
 
+set LFLAGS = "-L$SOURCE/libs/commlib_v1.0/$BUILDARCH $LFLAGS"
+
 #
 # for usermapping
 #
@@ -1779,9 +1789,6 @@ if ( $WITH_USERMAPPING == 0 ) then
    set CFLAGS = "$CFLAGS -D__SGE_NO_USERMAPPING__"
 endif
 
-if ( $commd_fifo_flag == 1 ) then
-   set CFLAGS = "$CFLAGS -DENABLE_COMMD_FIFO_BUGFIX"
-endif
 
 echo making in $COMPILE_ARCH/ for $COMPILE_ARCH
 
@@ -1852,6 +1859,40 @@ if ( "$BUILDGETTEXT" == 1 ) then
 
 endif   
 
+if ( "$NGC" == 1 ) then
+   echo ________N_G_C_______
+
+#   cd $SOURCE/libs/commlib_v1.0
+
+   set CFLAGS = "$CFLAGS -D_REENTRANT -D__USE_REENTRANT"
+
+   if ( ! -d $COMPILE_ARCH ) then
+      echo " INFO: Architecture dir $COMPILE_ARCH not existing for ngc. Making"
+      mkdir $COMPILE_ARCH
+   endif
+
+   cd $COMPILE_ARCH
+   $MAKE $MAKEOPT -f $SOURCE/libs/commlib_v1.0/Makefile "MAKE=$MAKE" "CC=$CC" \
+      "COMPILE_ARCH=$COMPILE_ARCH" \
+      "CFLAGS=$CFLAGS $NGC_INCLUDE" "SOURCE=$SOURCE" \
+      "KRBLIBS=$KRBLIBS" \
+      "LIBS=$LIBS" \
+      "SDIR=$SDIR" \
+      "MTCFLAGS=$MTCFLAGS" \
+      "MTLFLAGS=$MTLFLAGS" \
+      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "DEPEND_FLAGS=$DEPEND_FLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
 
 if ( "$SGE_DEPEND" == 1 ) then
    echo ________S_G_E__D_E_P_E_N_D_______
@@ -2125,7 +2166,7 @@ if ( "$QTCSH" == 1) then
       setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}:${ZLIBBASE}/${COMPILE_ARCH}
    endif
 
-   set SGE_LIBS = "-lsge -lpthread"
+   set SGE_LIBS = "-lsge -lpthread -lngc -lngclists"
 
    if ( "$BUILDARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"
@@ -2138,7 +2179,7 @@ if ( "$QTCSH" == 1) then
    endif
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \
+         "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS $DLLIB" \
          "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then
@@ -2188,7 +2229,7 @@ if ( "$ADOC" == 1) then
    set REVISION = `grep GDI_VERSION libs/gdi/version.* | cut -f 2 -d '"'`
 
    echo "Creating documentation for libs: libcomm.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Communication Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/comm/*.h libs/comm/*.c -o $COMPILE_ARCH/libcomm.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Communication Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/commlib_v1.0/*.h libs/commlib_v1.0/*.c -o $COMPILE_ARCH/libcomm.texi
 
    echo "Creating documentation for libs: libcull.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine CULL Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/cull/*.h libs/cull/*.c -o $COMPILE_ARCH/libcull.texi

@@ -74,7 +74,6 @@
 #include "setjoblimit.h"
 #include "sge_uidgid.h"
 #include "sge_os.h"
-#include "sge_parse_num_par.h"
 
 #ifndef CRAY
 static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);

@@ -82,9 +82,9 @@ PreCheckForFastInstall()
 {
 
    if [ $resport = true ]; then
-      commd_port_max=1023
+      qmaster_port_max=1023
    else
-      commd_port_max=65500
+      qmaster_port_max=65500
    fi
 
    # must be first check - sets variable $euid
@@ -101,12 +101,12 @@ PreCheckForFastInstall()
    $V5UTILBIN/getservbyname $QSYST_SERVICE  >/dev/null 2>&1
    ret=$?
 
-   if [ $ret = 1 -a "$COMMD_PORT" = "" ]; then
+   if [ $ret = 1 -a "$SGE_QMASTER_PORT" = "" ]; then
       return 1
    fi
 
-   if [ "$COMMD_PORT" != "" ]; then
-      if [ "$COMMD_PORT" -le 1 -o $COMMD_PORT -ge $commd_port_max ]; then
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
+      if [ "$SGE_QMASTER_PORT" -le 1 -o $SGE_QMASTER_PORT -ge $qmaster_port_max ]; then
          return 1
       fi
    fi
@@ -148,7 +148,7 @@ SelectHostNameResolving()
 {
    $CLEAR
    $INFOTEXT -u "\nSelect default Grid Engine hostname resolving method"
-   $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If thisis\n" \
+   $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If this is\n" \
              "the case the hostnames\n\n" \
              "   >hostA< and >hostA.foo.com<\n\n" \
              "would be treated as eqal, because the DNS domain name >foo.com<\n" \
@@ -338,8 +338,8 @@ AskIfDefaultOkAndSetVariables()
    $INFOTEXT "\nThe following default settings can be used for an accelerated\n" \
              "installation procedure:\n\n" \
              "      \$SGE_ROOT          = %s" $QSYST_ROOT_VAL
-   if [ "$COMMD_PORT" != "" ]; then
-      $INFOTEXT "      \$COMMD_PORT        = %s" $COMMD_PORT
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
+      $INFOTEXT "      \$SGE_QMASTER_PORT  = %s" $SGE_QMASTER_PORT
    else
       $INFOTEXT "      service            = %s" $QSYST_SERVICE
    fi
@@ -1048,11 +1048,12 @@ GiveHints()
                 "This will set or expand the following environment variables:\n\n" \
                 "   - \$SGE_ROOT    (always necessary)\n" \
                 "   - \$SGE_CELL    (if you are using a cell other than >default<)\n" \
-                "   - \$COMMD_PORT   (if you haven't added the service >sge_commd<)\n" \
+                "   - \$SGE_QMASTER_PORT   (if you haven't added the service >%s<)\n" \
                 "   - \$PATH/\$path (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH     (to access the manual pages)\n" \
                 $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.csh \
-                $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.sh
+                $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.sh  \
+                $QSYST_SERVICE
 
       $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to see where Grid Engine logs messages >> "
       $CLEAR
@@ -1201,47 +1202,47 @@ CheckForCommdPort()
 {
    host_type=$1
    if [ $resport = true ]; then
-      commd_port_max=1023
+      qmaster_port_max=1023
    else
-      commd_port_max=65500
+      qmaster_port_max=65500
    fi
 
    $V5UTILBIN/getservbyname $QSYST_SERVICE  >/dev/null 2>&1
    ret=$?
 
-   if [ "$COMMD_PORT" != "" ]; then
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
-      if [ $COMMD_PORT -ge 1 -a $COMMD_PORT -le $commd_port_max ]; then
+      if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $qmaster_port_max ]; then
          $INFOTEXT "\nUsing the environment variable\n\n" \
-                   "   \$COMMD_PORT=%s\n\n" \
-                     "as port for communication with >sge_commd<.\n\n" $COMMD_PORT
+                   "   \$SGE_QMASTER_PORT=%s\n\n" \
+                     "as port for communication with >sge_qmaster<.\n\n" $SGE_QMASTER_PORT
          if [ $ret = 0 ]; then
-            $INFOTEXT "This overrides the preset TCP/IP service >sge_commd<.\n"
+            $INFOTEXT "This overrides the preset TCP/IP service >%s<.\n" $QSYST_SERVICE
          fi
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
          return
       else
          $INFOTEXT "\nThe environment variable\n\n" \
-                   "   \$COMMD_PORT=%s\n\n" \
+                   "   \$SGE_QMASTER_PORT=%s\n\n" \
                    "has an invalid value (it must be in range 1..%s).\n\n" \
-                   "Please set the environment variable \$COMMD_PORT and restart\n" \
-                   "the installation or configure the service >sge_commd<." $COMMD_PORT $commd_port_max
+                   "Please set the environment variable \$SGE_QMASTER_PORT and restart\n" \
+                   "the installation or configure the service >%s<." $SGE_QMASTER_PORT $qmaster_port_max $QSYST_SERVICE
       fi
    fi
 
-   $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_commd<"
+   $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<" $QSYST_SERVICE
    if [ $ret != 0 ]; then
-      $INFOTEXT "\nThere is no service >sge_commd< available in your >/etc/services< file\n" \
+      $INFOTEXT "\nThere is no service >%s< available in your >/etc/services< file\n" \
                 "or in your NIS/NIS+ database.\n\n" \
                 "You may add this service now to your services database or choose a port number.\n" \
                 "It is recommended to add the service now. If you are using NIS/NIS+ you should\n" \
                 "add the service at your NIS/NIS+ server and not to the local >/etc/services<\n" \
                 "file.\n\n" \
                 "Please add an entry in the form\n\n" \
-                "   sge_commd <port_number>/tcp\n\n" \
-                "to your services database and make sure to use an unused port number.\n"
+                "   %s <port_number>/tcp\n\n" \
+                "to your services database and make sure to use an unused port number.\n" $QSYST_SERVICE $QSYST_SERVICE
 
       if [ "$host_type" = "exec" ]; then
 
@@ -1256,13 +1257,13 @@ CheckForCommdPort()
          $V5UTILBIN/getservbyname $QSYST_SERVICE 2>/dev/null
          if [ $? != 0 ]; then
             $CLEAR
-            $INFOTEXT -u "\nNo TCP/IP service >sge_commd< yet"
-            $INFOTEXT "\nThere is still no service for >sge_commd< available.\n\n" \
+            $INFOTEXT -u "\nNo TCP/IP service >%s< yet" $QSYST_SERVICE
+            $INFOTEXT "\nThere is still no service for >%s< available.\n\n" \
                       "If you have just added the service it may take a while until the service\n" \
                       "propagates in your network. If this is true we can again check for\n" \
-                      "the service >sge_commd<. If you don't want to add this service or if\n" \
+                      "the service >%s<. If you don't want to add this service or if\n" \
                       "you want to install Grid Engine just for testing purposes you can enter\n" \
-                      "a port number.\n"
+                      "a port number.\n" $QSYST_SERVICE $QSYST_SERVICE
 
             $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
                       "Check again (if not you need to enter a port number later) (y/n) [y] >> "
@@ -1276,8 +1277,8 @@ CheckForCommdPort()
                digits=`expr $INP : "[0-9][0-9]*"`
                if [ "$chars" != "$digits" ]; then
                   $INFOTEXT "\nInvalid input. Must be a number."
-               elif [ $INP -le 1 -o $INP -ge $commd_port_max ]; then
-                  $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $commd_port_max
+               elif [ $INP -le 1 -o $INP -ge $qmaster_port_max ]; then
+                  $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $qmaster_port_max
                elif [ $INP -le 1024 -a $euid != 0 ]; then
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
@@ -1299,21 +1300,21 @@ CheckForCommdPort()
       done
 
       if [ $service_available = false ]; then
-         COMMD_PORT=$INP
-         export COMMD_PORT
-         $INFOTEXT "\nUsing port >%s<. No service >sge_commd< available.\n" $COMMD_PORT
+         SGE_QMASTER_PORT=$INP
+         export SGE_QMASTER_PORT
+         $INFOTEXT "\nUsing port >%s<. No service >%s< available.\n" $SGE_QMASTER_PORT $QSYST_SERVICE
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
-         unset COMMD_PORT
-         $INFOTEXT "\nService >sge_commd< is now available.\n"
+         unset SGE_QMASTER_PORT
+         $INFOTEXT "\nService >%s< is now available.\n" $QSYST_SERVICE
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
       fi
    else
       $INFOTEXT "\nUsing the service\n\n" \
-                "   sge_commd\n\n" \
-                "for communication with Grid Engine.\n"
+                "   %s\n\n" \
+                "for communication with Grid Engine.\n" $QSYST_SERVICE
       $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi
@@ -1481,11 +1482,11 @@ AddQsystStartUpScript()
                   -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                   util/startup_template > ${TMP_V5_STARTUP_FILE}.0
 
-      if [ "$COMMD_PORT" != "" ]; then
-         Execute sed -e "s/=GENCOMMD_PORT/=$COMMD_PORT/" \
+      if [ "$SGE_QMASTER_PORT" != "" ]; then
+         Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
                      ${TMP_V5_STARTUP_FILE}.0 > $TMP_V5_STARTUP_FILE
       else
-         Execute sed -e "/GENCOMMD_PORT/d" \
+         Execute sed -e "/GENSGE_QMASTER_PORT/d" \
                      ${TMP_V5_STARTUP_FILE}.0 > $TMP_V5_STARTUP_FILE
       fi
 
@@ -1872,10 +1873,10 @@ StartExecd()
 CheckBinaries()
 {
 
-BINFILES="sge_commd sge_coshepherd \
+BINFILES="sge_coshepherd \
           sge_execd sge_qmaster  \
           sge_schedd sge_shadowd \
-          sge_shepherd sgecommdcntl qacct qalter qconf qdel qhold \
+          sge_shepherd qacct qalter qconf qdel qhold \
           qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh qstat qsub qtcsh"
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
@@ -1911,8 +1912,8 @@ THIRD_PARTY_FILES=openssl
    if [ $missing = true ]; then
       $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
       "A complete installation needs the following binaries in >%s<:\n\n" \
-      "qacct           qlogin          qrsh            sge_commd       sge_shepherd\n" \
-      "qalter          qmake           qselect         sge_coshepherd  sgecommdcntl\n" \
+      "qacct           qlogin          qrsh            sge_shepherd\n" \
+      "qalter          qmake           qselect         sge_coshepherd  \n" \
       "qconf           qmod            qsh             sge_execd\n" \
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
@@ -2056,10 +2057,10 @@ CheckCSP()
       return
    fi
 
-   if [ "$COMMD_PORT" != "" ]; then
-      CA_PORT=port$COMMD_PORT
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
+      CA_PORT=port$SGE_QMASTER_PORT
    else
-      CA_PORT=sge_commd
+      CA_PORT=$QSYST_SERVICE
    fi
 
    $V5UTILBIN/adminrun $ADMINUSER test -f $HOME/.sge/$CA_PORT/$SGE_CELL
@@ -2235,9 +2236,7 @@ QSYST_EXECD_NAME=sge_execd
 QSYST_SCHEDD_NAME=sge_schedd
 QSYST_SHEPHERD_NAME=sge_shepherd
 QSYST_SHADOWD_NAME=sge_shadowd
-QSYST_COMMD_NAME=sge_commd
-QSYST_COMMDCNTL_NAME=sgecommdcntl
-QSYST_SERVICE=sge_commd
+QSYST_SERVICE=sge_qmaster
 
 if [ ! -f util/arch_variables ]; then
    echo "missing shell script \"util/arch_variables\""

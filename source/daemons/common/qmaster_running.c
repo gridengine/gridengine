@@ -53,7 +53,11 @@
 #include "sge_hostname.h"
 
 #define ENROLL_ERROR_DO_RETRY -50
+
+#ifdef ENABLE_NGC
+#else
 static int qmaster_running(char *, bool *);
+#endif
 
 /*-----------------------------------------------------------------------
  * qmaster_running
@@ -66,10 +70,10 @@ static int qmaster_running(char *, bool *);
  * enrolled: 1 if we stay enrolled to a local commd
  *           0 if we are not enrolled to a commd
  *-----------------------------------------------------------------------*/
-static int qmaster_running(
-char *err_str,
-bool *enrolled 
-) {
+
+#ifdef ENABLE_NGC
+#else
+static int qmaster_running( char *err_str, bool *enrolled ) {
    char master[MAXHOSTLEN];
    pid_t pid;
    char pidfile[SGE_PATH_MAX];
@@ -188,6 +192,7 @@ bool *enrolled
    DEXIT;
    return ret; 
 }
+#endif
 
 /*-----------------------------------------------------------------------
  * check_for_running_qmaster
@@ -196,6 +201,16 @@ bool *enrolled
  *         1 if we are enrolled (since we found a commd on local host)
  *         0 we didn't check yet for a commd on local host
  *-----------------------------------------------------------------------*/
+#ifdef ENABLE_NGC
+bool check_for_running_qmaster()
+{
+   DENTER(TOP_LAYER, "check_for_running_qmaster");
+   CRITICAL((SGE_EVENT, "check_for_running_qmaster() not implemented"));
+
+   DEXIT;
+   return 1;          
+}
+#else
 bool check_for_running_qmaster()
 {
    char err_str[512];
@@ -233,3 +248,4 @@ bool check_for_running_qmaster()
    DEXIT;
    return enrolled;          
 }
+#endif

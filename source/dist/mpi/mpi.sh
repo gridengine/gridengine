@@ -41,7 +41,7 @@
 #$ -pe mpi 2-8
 #
 # MPIR_HOME from submitting environment
-#$ -v MPIR_HOME=/vol2/tools/mpi/mpich,COMMD_PORT
+#$ -v MPIR_HOME=/vol2/tools/mpi/mpich,SGE_QMASTER_PORT
 # ---------------------------
 
 #

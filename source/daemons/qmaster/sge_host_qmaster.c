@@ -292,7 +292,12 @@ u_long32 target
    else {
       /* may be host was not the unique hostname.
          Get the unique hostname and try to find it again. */
-      if (getuniquehostname(host, unique, 0)!=CL_OK) {
+#ifdef ENABLE_NGC
+      if (getuniquehostname(host, unique, 0)!=CL_RETVAL_OK)
+#else
+      if (getuniquehostname(host, unique, 0)!=CL_OK)
+#endif
+      {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -605,6 +610,10 @@ const char *target    /* prognames[QSTD|EXECD] */
 
    host = lGetHost(hep, EH_name);
 
+#ifdef ENABLE_NGC
+   /* TODO: check this */
+   CRITICAL((SGE_EVENT,"set_last_heard_from() not suppored by NGC"));
+#else
    /* tell commlib, that this guys will vanish */
    if (target)
       set_last_heard_from(target, 1, host, 0);
@@ -612,6 +621,7 @@ const char *target    /* prognames[QSTD|EXECD] */
       set_last_heard_from(prognames[EXECD], 1, host, 0);
       set_last_heard_from(prognames[QSTD], 1, host, 0);
    }
+#endif
 
    host_trash_nonstatic_load_values(hep);
    cqueue_list_set_unknown_state(
@@ -821,6 +831,9 @@ u_long32 now
    static u_long32 next_garbage_collection = 0;
    lListElem *global_host_elem   = NULL;
    lListElem *template_host_elem = NULL;
+#ifdef ENABLE_NGC
+   unsigned long last_heard_from;
+#endif
 
    const void *iterator = NULL;
 
@@ -860,9 +873,14 @@ u_long32 now
       }
 
       timeout = MAX(load_report_interval(hep)*3, conf.max_unheard); 
-
-      if ( (hep != global_host_elem )  && 
-           (now > last_heard_from(comproc, &id, host) + timeout)) {
+#ifdef ENABLE_NGC
+      cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+                                        (char*)host, (char*)comproc,id, &last_heard_from);
+      if ( (hep != global_host_elem )  && (now > last_heard_from + timeout))
+#else
+      if ( (hep != global_host_elem )  && (now > last_heard_from(comproc, &id, host) + timeout)) 
+#endif
+      {
          host_unheard = 1;
 #if 0
          DPRINTF(("id = %d, comproc = %s, host = %s, timeout = "u32", "
@@ -1124,7 +1142,12 @@ sge_gdi_request *answer
       
       /* walk over list with execd's to kill */
       for_each(rep, request->lp) {
-         if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_OK) {
+#ifdef ENABLE_NGC
+         if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_RETVAL_OK)
+#else
+         if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_OK)
+#endif
+         {
             WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(rep, ID_str)));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
@@ -1161,7 +1184,6 @@ int force
 ) {
    const char *hostname;
    u_long execd_alive;
-   static u_short number_one = 1;
    const char *action_str;
    u_long32 state;
    lListElem *jep;
@@ -1169,6 +1191,12 @@ int force
    int mail_options;
    char sge_mail_subj[1024];
    char sge_mail_body[1024];
+#ifdef ENABLE_NGC
+   unsigned long last_heard_from;
+#else
+   static u_short number_one = 1;
+#endif
+
 
    DENTER(TOP_LAYER, "notify");
 
@@ -1176,7 +1204,13 @@ int force
 
    hostname = lGetHost(lel, EH_name);
 
+#ifdef ENABLE_NGC
+   cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+                                        (char*)hostname, (char*)prognames[EXECD],1, &last_heard_from);
+   execd_alive = last_heard_from;
+#else
    execd_alive = last_heard_from(prognames[EXECD], &number_one, hostname);
+#endif
 
    if (!force && !execd_alive) {
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));

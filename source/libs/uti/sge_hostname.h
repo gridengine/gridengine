@@ -48,7 +48,9 @@
 #include "sge_unistd.h"
 
 /* compare hosts with FQDN or not */
+#ifndef MAXHOSTLEN
 #define MAXHOSTLEN 256
+#endif
 
 /* char introducing a hostgroup name */
 #define HOSTGROUP_INITIAL_CHAR '@'

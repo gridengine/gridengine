@@ -185,13 +185,22 @@ char *argv[]
    strncpy(initial_qmaster_host, master_host, sizeof(initial_qmaster_host)-1);
 
    if (!getenv("SGE_ND")) {
-      int fd;
       fd_set fds;
+#ifdef ENABLE_NGC
+      FD_ZERO(&fds);
+      if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &fds) == CL_RETVAL_OK) {
+         INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
+         sge_daemonize(&fds);
+      } else {
+         sge_daemonize(NULL);
+      }
+#else
       FD_ZERO(&fds);
       if ((fd=commlib_state_get_sfd())>=0) {
          FD_SET(fd, &fds);
       }
       sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
+#endif
    }
 
    starting_up();
@@ -206,8 +215,11 @@ char *argv[]
    /* this is necessary if the master has to send LOTS of data
     * to the schedd. would timout otherwise.
    */
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, 4*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
+#endif
 
    while (!done) {
       if (shut_me_down) {
@@ -307,7 +319,7 @@ static int parse_cmdline_schedd(int argc, char *argv[])
 static int sge_ck_qmaster(const char *former_master_host)
 {
    lList *alp, *lp = NULL;
-   int success, old_timeout;
+   int success;
    lEnumeration *what;
    lCondition *where;
    const char *current_master;
@@ -322,11 +334,19 @@ static int sge_ck_qmaster(const char *former_master_host)
       return -1;
    }
 
+#ifdef ENABLE_NGC
+   if (check_isalive(current_master) != CL_RETVAL_OK) {
+      DPRINTF(("qmaster is not alive\n"));
+      DEXIT;
+      return 1;
+   }
+#else
    if (check_isalive(current_master)) {
       DPRINTF(("qmaster is not alive\n"));
       DEXIT;
       return 1;
    }
+#endif
 
 /*---------------------------------------------------------------*/
    DPRINTF(("Checking if user \"%s\" is manager\n", uti_state_get_user_name()));
@@ -336,11 +356,17 @@ static int sge_ck_qmaster(const char *former_master_host)
                   MO_Type,
                   MO_name, uti_state_get_user_name());
                   
+#ifdef ENABLE_NGC
+#else
    old_timeout = commlib_state_get_timeout_ssnd();
    set_commlib_param(CL_P_TIMEOUT_SRCV, 20, NULL, NULL);
+#endif
                         
    alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, old_timeout, NULL, NULL);
+#endif
    
    where = lFreeWhere(where);
    what = lFreeWhat(what);
@@ -465,6 +491,7 @@ static int sge_setup_sge_schedd()
    char err_str[1024];
    lList *schedd_config_list = NULL;
 
+
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
    if (get_conf_and_daemonize(daemonize_schedd, &schedd_config_list)) {
@@ -519,16 +546,25 @@ static int sge_setup_sge_schedd()
 int daemonize_schedd()
 {
    fd_set keep_open;
-   int ret, fd;
+   int ret = 0;
 
    DENTER(TOP_LAYER, "daemonize_schedd");
 
    FD_ZERO(&keep_open);
+#ifdef ENABLE_NGC
+   if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &keep_open) == CL_RETVAL_OK) {
+      INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
+      sge_daemonize(&keep_open);
+   } else {
+      sge_daemonize(NULL);
+   }
+#else
    if ((fd = commlib_state_get_sfd()) >= 0) {
       FD_SET(fd, &keep_open);
    }
    sge_daemonize(commlib_state_get_closefd()?NULL:&keep_open);
    ret = sge_daemonize(&keep_open);
+#endif
 
    DEXIT;
    return ret;

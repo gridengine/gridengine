@@ -208,6 +208,30 @@ lList **alpp
 *  NOTES
 *     MT-NOTE: reresolve_me_qualified_hostname() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+int reresolve_me_qualified_hostname(void)
+{
+   int ret;
+   char unique_hostname[MAXHOSTLEN];
+
+   DENTER(TOP_LAYER, "reresolve_me_qualified_hostname");
+
+   /*
+   ** get aliased hostname from commd
+   */
+   if ((ret=getuniquehostname(uti_state_get_qualified_hostname(), unique_hostname, 0))!=CL_RETVAL_OK) {
+      WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, 
+               uti_state_get_qualified_hostname(), cl_get_error_text(ret)));
+      DEXIT;
+      return ret;
+   }
+
+   uti_state_set_qualified_hostname(unique_hostname);
+   DPRINTF(("me.qualified_hostname: %s\n", uti_state_get_qualified_hostname()));
+   DEXIT;
+   return CL_RETVAL_OK;
+}
+#else
 int reresolve_me_qualified_hostname(void)
 {
    int ret;
@@ -230,4 +254,5 @@ int reresolve_me_qualified_hostname(void)
    DEXIT;
    return CL_OK;
 }
+#endif
 

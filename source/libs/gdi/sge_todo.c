@@ -141,8 +141,7 @@ int report_list_send(const lList *rlp, const char *rhost,
       return -1;
    }
 
-   ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb,
-                              TAG_REPORT_REQUEST);
+   ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST,0);
    clear_packbuffer(&pb);
 
    DEXIT;

@@ -79,14 +79,72 @@
 
 static void qmaster_init(char **anArgv);
 static void communication_setup(char **anArgv);
+#ifdef ENABLE_NGC
+#else
 static void set_message_priorities(const char* thePriorities);
+#endif
 static void daemonize_qmaster(void);
 static void qmaster_shutdown(int anExitValue);
 static void qmaster_lock_and_shutdown(int anExitValue);
 static void process_cmdline(char **anArgv);
 static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline);
 static lList *parse_qmaster(lList **ppcmdline, lList **ppreflist, u_long32 *help);
+static int qmaster_log_flush_func(cl_raw_list_t* list_p);
 
+
+
+static int qmaster_log_flush_func(cl_raw_list_t* list_p) {
+   int ret_val;
+   cl_log_list_elem_t* elem = NULL;
+   DENTER(TOP_LAYER, "qmaster_log_flush_func");
+
+   if (list_p == NULL) {
+      DEXIT;
+      return CL_RETVAL_LOG_NO_LOGLIST;
+   }
+
+   if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   }
+
+   while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL) {
+      char* param;
+      char* module;
+      if (elem->log_parameter == NULL) {
+         param = "";
+      } else {
+         param = elem->log_parameter;
+      }
+      if (elem->log_module_name == NULL) {
+         module = "";
+      } else {
+         module = elem->log_module_name;
+      }
+      switch(elem->log_type) {
+         case CL_LOG_ERROR: 
+            ERROR((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_WARNING:
+            WARNING((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_INFO:
+            INFO((SGE_EVENT,   "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_DEBUG:
+            DEBUG((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+      }
+      cl_log_list_del_log(list_p);
+   }
+   
+   if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   } 
+   DEXIT;
+   return CL_RETVAL_OK;
+}
 
 /****** main() ***************************************************************
 *  NAME
@@ -117,7 +175,10 @@ int main(int argc, char **argv)
 #endif 
 
    sge_mt_init();
+#ifdef ENABLE_NGC
+#else
    commlib_mt_init(); /* shall be removed with new comm system */
+#endif
 
    sge_getme(QMASTER);
    uti_state_set_exit_func(qmaster_shutdown);
@@ -174,7 +235,6 @@ int main(int argc, char **argv)
       sge_stopwatch_start(TIMELEVEL);
       sge_qmaster_process_message(NULL);
    }
-
    DEXIT;
    return 0;
 } /* main() */
@@ -215,6 +275,76 @@ static void qmaster_init(char **anArgv)
 } /* qmaster_init() */
 
 
+
+#ifdef ENABLE_NGC
+static void communication_setup(char **anArgv)
+{
+   const char *msg_prio = NULL;
+   const char *host = NULL;
+   int enrolled = 0;
+   cl_com_handle_t* com_handle = NULL;
+   int ret_val = CL_RETVAL_OK;
+   char* qmaster_port = NULL;
+
+
+
+   DENTER(TOP_LAYER, "communication_setup");
+
+   WARNING((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
+   ERROR((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
+
+   ret_val = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, qmaster_log_flush_func );
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
+   }
+
+   
+
+   if ((msg_prio = getenv("SGE_PRIORITY_TAGS")) != NULL) {
+      /* TODO: message priority flags ?*/
+      ERROR((SGE_EVENT, "SGE_PRIORITY_TAGS not supported by NGC\n"));
+   }
+
+   qmaster_port = getenv("SGE_QMASTER_PORT");   
+   if (qmaster_port == NULL) {
+      /* TODO: */
+      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
+      SGE_EXIT(1);
+   }
+   
+
+   
+
+   /* to ensure SGE host_aliasing is considered when resolving
+    * me.qualified_hostname before commd might be available
+    */
+   if ((host = sge_host_resolve_name_local(uti_state_get_qualified_hostname()))) {
+      uti_state_set_qualified_hostname(host);
+   }
+
+   com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
+   if (com_handle != NULL) {
+      cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[QMASTER],1));
+   } else {
+      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,atoi(qmaster_port), 0,(char*)prognames[QMASTER], 1, 1 , 0 );
+      if (com_handle == NULL) {
+         ERROR((SGE_EVENT, "could not create communication handle\n"));
+         SGE_EXIT(1);
+      }
+   }
+   
+   if (com_handle) {
+      cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);
+   }
+
+   if ((enrolled = check_for_running_qmaster())> 0) {
+      cl_commlib_remove_messages(com_handle);
+   }
+
+   DEXIT;
+   return;
+} /* communication_setup() */
+#else
 static void communication_setup(char **anArgv)
 {
    const char *msg_prio = NULL;
@@ -268,6 +398,7 @@ static void communication_setup(char **anArgv)
    DEXIT;
    return;
 } /* communication_setup() */
+#endif
 
 /****** qmaster/set_message_priorities() *********************************************
 *  NAME
@@ -305,6 +436,8 @@ static void communication_setup(char **anArgv)
 *
 *     void
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static void set_message_priorities(const char* thePriorities)
 {
    enum { NUM_OF_PRIORITIES = 10 };
@@ -332,7 +465,9 @@ static void set_message_priorities(const char* thePriorities)
 
    DEXIT;
    return;
-} /* set_message_priorities */
+}
+ /* set_message_priorities */
+#endif
 
 
 static void daemonize_qmaster(void)
@@ -341,17 +476,31 @@ static void daemonize_qmaster(void)
 
    if (!getenv("SGE_ND")) {
       fd_set fds;
+#ifdef ENABLE_NGC
+#else
       int fd;
+#endif
       lList *answer_list = NULL;
 
       /* close database and reopen it in child */
       spool_shutdown_context(&answer_list, spool_get_default_context());
       answer_list_output(&answer_list);
-
+#ifdef ENABLE_NGC
+      FD_ZERO(&fds);
+      if ( cl_commlib_set_handle_fds(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0), &fds) == CL_RETVAL_OK) {
+         INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
+         sge_daemonize(&fds);
+      } else {
+         sge_daemonize(NULL);
+      }
+#else
       FD_ZERO(&fds);
       fd = commlib_state_get_sfd();
-      if (fd>=0) { FD_SET(fd, &fds); }
+      if ( fd >= 0 ) { 
+         FD_SET(fd, &fds); 
+      }
       sge_daemonize((commlib_state_get_closefd() ? NULL : &fds));
+#endif
 
       spool_startup_context(&answer_list, spool_get_default_context(), true);
       answer_list_output(&answer_list);

@@ -803,9 +803,15 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
             /* send a task exit message to the submitter of this task */
             ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
+#ifdef ENABLE_NGC
+            DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
+                  (ret==CL_RETVAL_OK)?"failed":"success", pe_task_id, 
+                  lGetString(petep, PET_source), (ret==CL_RETVAL_OK)?cl_get_error_text(ret):""));
+#else
             DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
                   ret?"failed":"success", pe_task_id, 
                   lGetString(petep, PET_source), ret?cl_errstr(ret):""));
+#endif
             clear_packbuffer(&pb);
          }
       }

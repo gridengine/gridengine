@@ -53,7 +53,7 @@ include $(SDIR)/common/Makefile
 include $(SDIR)/clients/common/Makefile   
 include $(SDIR)/daemons/common/Makefile   
 include $(SDIR)/daemons/qmaster/Makefile   
-include $(SDIR)/libs/comm/Makefile
+include $(SDIR)/libs/commlib_v1.0/Makefile
 include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/gdi/Makefile
 include $(SDIR)/libs/rmon/Makefile
@@ -117,7 +117,7 @@ QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
 QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o)
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck $(DLLIB)
+                -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lngc -lngclists -luti -llck $(DLLIB)
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) \

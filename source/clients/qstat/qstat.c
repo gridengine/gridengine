@@ -236,8 +236,11 @@ char **argv
       SGE_EXIT(1);
    }
 
+#ifdef ENABLE_NGC
+#else
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
+#endif
 
    /* if -j, then only print job info and leave */
    if (job_info) {

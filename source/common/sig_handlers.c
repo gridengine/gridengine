@@ -192,7 +192,12 @@ static void sge_alarmclock(int dummy)
 static void sge_terminate(int dummy)
 {
    if (!in_main_loop) {
+#ifdef ENABLE_NGC
+      cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0);
+      cl_com_cleanup_commlib();
+#else
       leave_commd();
+#endif
       exit(1);
    }
    else {

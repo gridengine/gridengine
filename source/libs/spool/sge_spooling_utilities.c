@@ -361,8 +361,7 @@ spool_free_spooling_fields(spooling_field *fields)
 *
 *  SEE ALSO
 *******************************************************************************/
-bool
-spool_default_validate_func(lList **answer_list, 
+bool spool_default_validate_func(lList **answer_list, 
                           const lListElem *type, 
                           const lListElem *rule,
                           lListElem *object,
@@ -385,8 +384,28 @@ spool_default_validate_func(lList **answer_list,
             if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
                cl_ret = sge_resolve_host(object, key_nm);
 
+#ifdef ENABLE_NGC
                /* if hostname resolving failed: create error */
-               if (cl_ret != CL_OK) {
+               if (cl_ret != CL_RETVAL_OK) 
+#else
+               /* if hostname resolving failed: create error */
+               if (cl_ret != CL_OK) 
+#endif
+               {
+#ifdef ENABLE_NGC
+                  if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_ERROR, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_get_error_text(ret)); 
+                     ret = false;
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_WARNING, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_get_error_text(ret));
+                  }
+#else
                   if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
                       cl_ret != COMMD_NACK_TIMEOUT) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -400,6 +419,7 @@ spool_default_validate_func(lList **answer_list,
                                              MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
                                              old_name, cl_errstr(ret));
                   }
+#endif
                } else {
                   /* if hostname resolving changed hostname: spool */
                   const char *new_name;
@@ -532,9 +552,28 @@ spool_default_validate_func(lList **answer_list,
             /* try hostname resolving */
             if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
                cl_ret = sge_resolve_host(object, CONF_hname);
-
+#ifdef ENABLE_NGC
                /* if hostname resolving failed: create error */
-               if (cl_ret != CL_OK) {
+               if (cl_ret != CL_RETVAL_OK) 
+#else
+               /* if hostname resolving failed: create error */
+               if (cl_ret != CL_OK) 
+#endif
+               {
+#ifdef ENABLE_NGC
+                  if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_ERROR, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_get_error_text(ret)); 
+                     ret = false;
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_WARNING, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_get_error_text(ret));
+                  }
+#else
                   if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
                       cl_ret != COMMD_NACK_TIMEOUT) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -548,6 +587,7 @@ spool_default_validate_func(lList **answer_list,
                                              MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
                                              old_name, cl_errstr(ret));
                   }
+#endif
                } else {
                   /* if hostname resolving changed hostname: spool */
                   const char *new_name = lGetHost(object, CONF_hname);

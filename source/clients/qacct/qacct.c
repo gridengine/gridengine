@@ -270,12 +270,19 @@ char **argv
          if (argv[ii+1]) {
             if (*(argv[ii+1])=='-') {
                hostflag = 1;
-            }
-            else {
+            } else {
                u_short id = 0;
                int ret;
                prepare_enroll("qacct", id, NULL);
                ret = getuniquehostname(argv[++ii], host, 0);
+#ifdef ENABLE_NGC
+               if (ret != CL_RETVAL_OK) {
+                  fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
+                       argv[ii], cl_get_error_text(ret));
+                  show_the_way(stderr);
+                  return 1;
+               }
+#else
                leave_commd();
                if (ret) {
                   fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
@@ -283,6 +290,7 @@ char **argv
                   show_the_way(stderr);
                   return 1;
                }
+#endif
             }
          }
          else
@@ -514,7 +522,12 @@ char **argv
         SGE_EXIT(1);
      }
      DPRINTF(("checking if qmaster is alive ...\n"));
-     if (check_isalive(sge_get_master(0))) {
+#ifdef ENABLE_NGC
+     if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) 
+#else
+     if (check_isalive(sge_get_master(0))) 
+#endif
+     {
         ERROR((SGE_EVENT, MSG_HISTORY_QMASTERISNOTALIVE ));
         SGE_EXIT(1);
      }
@@ -582,7 +595,12 @@ char **argv
             SGE_EXIT(1);
          }
          DPRINTF(("checking if qmaster is alive ...\n"));
-         if (check_isalive(sge_get_master(0))) {
+#ifdef ENABLE_NGC
+         if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) 
+#else
+         if (check_isalive(sge_get_master(0))) 
+#endif
+         {
             ERROR((SGE_EVENT, "qmaster is not alive"));
             SGE_EXIT(1);
          }

@@ -47,8 +47,66 @@
 
 #include "msg_gdilib.h"
 
+static int gdi_log_flush_func(cl_raw_list_t* list_p);
+#ifdef ENABLE_NGC
+#else
 static void sge_log_commd_state_transition(int cl_err);
 static int commd_monitor(int cl_err);
+#endif
+
+static int gdi_log_flush_func(cl_raw_list_t* list_p) {
+   int ret_val;
+   cl_log_list_elem_t* elem = NULL;
+   DENTER(TOP_LAYER, "gdi_log_flush_func");
+
+   if (list_p == NULL) {
+      DEXIT;
+      return CL_RETVAL_LOG_NO_LOGLIST;
+   }
+
+   if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   }
+
+   while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL) {
+      char* param;
+      char* module;
+      if (elem->log_parameter == NULL) {
+         param = "";
+      } else {
+         param = elem->log_parameter;
+      }
+      if (elem->log_module_name == NULL) {
+         module = "";
+      } else {
+         module = elem->log_module_name;
+      }
+      /* TODO: all communication errors are only INFO's ???  CR */
+      switch(elem->log_type) {
+         case CL_LOG_ERROR: 
+            INFO((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_WARNING:
+            INFO((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_INFO:
+            INFO((SGE_EVENT,   "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_DEBUG:
+            DEBUG((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+      }
+      cl_log_list_del_log(list_p);
+   }
+   
+   if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   } 
+   DEXIT;
+   return CL_RETVAL_OK;
+}
 
 /*-----------------------------------------------------------------------
  * prepare_enroll
@@ -57,13 +115,77 @@ static int commd_monitor(int cl_err);
  * NOTES
  *    MT-NOTE: prepare_enroll() is MT safe
  *-----------------------------------------------------------------------*/
+#ifdef ENABLE_NGC
+void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
+{
+   int ret_val;
+   char* qmaster_port = NULL;
+
+   DENTER(BASIS_LAYER, "prepare_enroll");
+
+   /* TODO: setup security for NGC */
+   if (sge_security_initialize(name)) {
+      CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
+      SGE_EXIT(1);
+   }
+   
+   /* TODO: get port via service */
+   qmaster_port = getenv("SGE_QMASTER_PORT");
+   if (qmaster_port == NULL) {
+      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
+      SGE_EXIT(1);
+   }
+
+   /* TODO: call to cleanup commlib */
+   INFO((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
+   INFO((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
+   ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_DEBUG,gdi_log_flush_func);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
+   }
+   
+   /*
+   set_commlib_param(CL_P_COMMDSERVICE, 0, SGE_COMMD_SERVICE, NULL);
+   set_commlib_param(CL_P_NAME, 0, name, NULL);
+   set_commlib_param(CL_P_ID, id, NULL, NULL);
+   set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
+   */
+
+   /* TODO: check this timeout values */
+   if (uti_state_get_mewho() == QCONF) {
+      INFO((SGE_EVENT, "TODO: set timeouts for syncron rcv/snd of qconf client to 3600 !\n"));
+      /*
+      set_commlib_param(CL_P_TIMEOUT_SRCV, 3600, NULL, NULL);
+      set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
+      */
+   }
+
+   /* TODO: we don't need to get the qmaster name at this point (check this)*/
+   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD 
+      || uti_state_get_mewho() == SCHEDD || uti_state_get_mewho() == COMMDCNTL)) {
+      const char *masterhost; 
+
+      if ((masterhost = sge_get_master(0))) {
+      /*
+         set_commlib_param(CL_P_COMMDHOST, 0, masterhost, NULL);
+      */
+      }  
+   }
+   
+   /* TODO: implement reserved port security */
+   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
+      CRITICAL((SGE_EVENT, "reserved port security not implemented\n"));
+      /*
+      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
+      */
+   }
+   DEXIT;
+}
+#else
 void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 {
    DENTER(BASIS_LAYER, "prepare_enroll");
 
-   /*
-   ** initialize security context (skip if COMMDCNTL)
-   */
    if (uti_state_get_mewho() != COMMDCNTL) { 
       if (sge_security_initialize(name)) {
          CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
@@ -96,6 +218,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 
    DEXIT;
 }
+#endif
 
 /*----------------------------------------------------------
  * sge_log_commd_state_transition
@@ -103,6 +226,8 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
  * NOTES
  *    MT-NOTE: sge_log_commd_state_transition() is MT safe
  *----------------------------------------------------------*/
+#ifdef ENABLE_NGC
+#else
 static void sge_log_commd_state_transition(int cl_err) 
 {
    DENTER(BASIS_LAYER, "sge_log_commd_state_transition");
@@ -121,6 +246,7 @@ static void sge_log_commd_state_transition(int cl_err)
    DEXIT;
    return;
 }
+#endif
 
 /*----------------------------------------------------------
  *  commd_monitor()
@@ -132,6 +258,8 @@ static void sge_log_commd_state_transition(int cl_err)
  * NOTES
  *    MT-NOTE: commd_monitor() is MT safe
  *----------------------------------------------------------*/
+#ifdef ENABLE_NGC
+#else
 static int commd_monitor(int cl_err) 
 {
    int state = gdi_state_get_commd_state();
@@ -156,6 +284,7 @@ static int commd_monitor(int cl_err)
 
    return 0;
 }
+#endif
 
 /*---------------------------------------------------------
  *  sge_send_any_request
@@ -166,6 +295,67 @@ static int commd_monitor(int cl_err)
  *  NOTES
  *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
+#ifdef ENABLE_NGC
+int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
+                         const char *commproc, int id, sge_pack_buffer *pb, 
+                         int tag,u_long32  response_id)
+{
+   int i;
+   u_long32 me_who;
+   cl_xml_ack_type_t ack_type;
+   cl_com_handle_t* handle = NULL;
+   unsigned long dummy_mid = 0;
+
+   DENTER(GDI_LAYER, "sge_send_any_request");
+
+   ack_type = CL_MIH_MAT_NAK;
+
+   if (!rhost) {
+      ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORSENDREQUEST ));
+      DEXIT;
+      return CL_RETVAL_PARAMS;
+   }
+   
+
+
+   me_who = uti_state_get_mewho();
+   handle = cl_com_get_handle((char*)prognames[me_who] ,0);
+   if (handle == NULL) {
+      int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
+      if ( uti_state_get_mewho() == QMASTER ||
+           uti_state_get_mewho() == EXECD   ||
+           uti_state_get_mewho() == SCHEDD  ) {
+         my_component_id = 1;   
+      }
+
+      handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0,atoi(getenv("SGE_QMASTER_PORT")), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+      if (handle == NULL) {
+         CRITICAL((SGE_EVENT,"can't create handle\n"));
+      }
+   }
+   if (synchron) {
+      ack_type = CL_MIH_MAT_ACK;
+   }
+
+   INFO((SGE_EVENT,"sending to id: %s,%d, size of message: %ld\n",commproc,id, (unsigned long) pb->bytes_used));
+
+   i = cl_commlib_send_message( handle,(char*)rhost,(char*)commproc , id, ack_type , (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , &dummy_mid ,response_id,tag,1 , synchron);
+   
+   if (mid) {
+      *mid = dummy_mid;
+   }
+   if (i != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS ,
+                   (synchron ? "" : "a"),
+                   commproc, 
+                   id, 
+                   rhost, 
+                   cl_get_error_text(i)));
+   }
+   DEXIT;
+   return i;
+}
+#else
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
                          int tag) 
@@ -187,9 +377,15 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
     */
    i = 0;
    if (gdi_state_get_first_time() && synchron) {
+#ifdef ENABLE_NGC
+      if (check_isalive(rhost) != CL_RETVAL_OK) {
+         i = -4;
+      }
+#else
       if (check_isalive(rhost)) {
          i = -4;
       }
+#endif
       gdi_state_set_first_time(0);
    }
 
@@ -229,6 +425,8 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    DEXIT;
    return i;
 }
+#endif
+
 
 /*----------------------------------------------------------
  * sge_get_any_request
@@ -240,6 +438,95 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
  * NOTES
  *    MT-NOTE: sge_get_any_request() is MT safe (assumptions)
  *----------------------------------------------------------*/
+#ifdef ENABLE_NGC
+int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron, u_long32 for_request_mid, u_long32* mid) 
+{
+   int i;
+   ushort usid=0;
+   char host[MAXHOSTLEN+1];
+   cl_com_message_t* message = NULL;
+   cl_com_endpoint_t* sender = NULL;
+   cl_com_handle_t* handle = NULL;
+
+
+   DENTER(GDI_LAYER, "sge_get_any_request");
+
+   PROF_START_MEASUREMENT(SGE_PROF_GDI);
+
+   if (id)
+      usid = (ushort)*id;
+
+   if (!rhost) {
+      ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORGETANYREQUEST ));
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
+      DEXIT;
+      return -1;
+   }
+   
+   strcpy(host, rhost);
+
+   handle = cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0);
+   cl_commlib_trigger(handle);
+   i = cl_commlib_receive_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
+   if (i != CL_RETVAL_OK) {
+      if (i != CL_RETVAL_NO_MESSAGE) {
+         /* This if for errors */
+         INFO((SGE_EVENT, MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS , 
+               (commproc[0] ? commproc : "any"), 
+               (unsigned int) usid, 
+               (host[0] ? host : "any"),
+                cl_get_error_text(i)));
+      }
+      cl_com_free_message(&message);
+      cl_com_free_endpoint(&sender);
+      /* This is if no message is there */
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
+      DEXIT;
+      return i;
+   }    
+
+   /* ok, we received a message */
+   if (message != NULL ) {
+      if (sender != NULL && id) {
+         *id = sender->comp_id;
+      }
+      if (tag) 
+        *tag = message->message_tag;
+      if (mid)
+        *mid = message->message_id;
+
+
+      /* fill it in the packing buffer */
+      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length , 0);
+
+
+      /* TODO: the packbuffer must be hold, not deleted !!! */
+      message->message = NULL;
+
+      if(i != PACK_SUCCESS) {
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(i)));
+         PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
+         DEXIT;
+         return CL_RETVAL_READ_ERROR;
+      } 
+
+      if (sender != NULL ) {
+         if (rhost[0] == '\0') {
+            strcpy(rhost, sender->comp_host); /* If we receive from anybody return the sender */
+         }
+         if (commproc[0] == '\0') {
+            strcpy(commproc , sender->comp_name); /* If we receive from anybody return the sender */
+         }
+      }
+
+      cl_com_free_endpoint(&sender);
+      cl_com_free_message(&message);
+   }
+   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
+   DEXIT;
+   return CL_RETVAL_OK;
+}
+#else
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, 
                         sge_pack_buffer *pb, int *tag, int synchron) 
 {
@@ -331,6 +618,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id,
    DEXIT;
    return CL_OK;
 }
+#endif
 
 
 /**********************************************************************
@@ -388,6 +676,26 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
  *  NOTES
  *     MT-NOTE: check_isalive() is MT safe
  *-------------------------------------------------------------------------*/
+#ifdef ENABLE_NGC
+int check_isalive(const char *masterhost) 
+{
+   int alive = CL_RETVAL_OK;
+ 
+   DENTER(TOP_LAYER, "check_isalive");
+
+   /* TODO: check this alive check!! */
+   INFO((SGE_EVENT,"TODO: MAKE alive test is this alive check ok?\n"));
+
+   if (!masterhost) {
+      DPRINTF(("can't get masterhost\n"));
+      DEXIT;
+      return CL_RETVAL_UNKNOWN_ENDPOINT;
+   }
+   
+   DEXIT;
+   return alive;
+}
+#else
 int check_isalive(const char *masterhost) 
 {
    int alive = 0;
@@ -418,4 +726,5 @@ int check_isalive(const char *masterhost)
  
    DEXIT;
    return alive;
-} 
+}
+#endif 

@@ -219,7 +219,6 @@ lListElem *hep,
 int master 
 ) {
    int len, failed;
-   int execd_enrolled;  
    u_long32 now;
    sge_pack_buffer pb;
    u_long32 dummymid;
@@ -227,9 +226,15 @@ int master
    lListElem *ckpt = NULL, *tmp_ckpt;
    lList *qlp;
    const char *ckpt_name;
-   static u_short number_one = 1;
    lListElem *gdil_ep;
    char *str;
+#ifdef ENABLE_NGC
+   unsigned long last_heard_from;
+#else
+   static u_short number_one = 1;
+   int execd_enrolled;  
+#endif
+
 
    DENTER(TOP_LAYER, "send_job");
 
@@ -247,8 +252,17 @@ int master
 
    /* do ask_commproc() only if we are missing load reports */
    now = sge_get_gmt();
-   if (last_heard_from(target, &number_one, rhost)+
-      load_report_interval(hep)*2 <= now) {
+#ifdef ENABLE_NGC
+   cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+                                        (char*)rhost, (char*)target,1, &last_heard_from);
+   if (last_heard_from + load_report_interval(hep)*2 <= now) {
+      ERROR((SGE_EVENT, MSG_COM_NOTENROLLEDONHOST_SSU, target, rhost, u32c(lGetUlong(jep, JB_job_number))));
+      sge_mark_unheard(hep, target);
+      DEXIT;
+      return -1;
+   }
+#else
+   if (last_heard_from(target, &number_one, rhost)+ load_report_interval(hep)*2 <= now) {
 
       execd_enrolled = ask_commproc(rhost, target, 0);
       if (execd_enrolled) {
@@ -260,6 +274,7 @@ int master
          return -1;
       }
    }
+#endif
 
    /* load script into job structure for sending to execd */
    /*
@@ -418,9 +433,11 @@ int master
    */
    tgt2cc(jep, rhost, target);
 
-   failed = gdi_send_message_pb(0, target, 0, rhost, 
-             master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, 
-             &pb, &dummymid);
+#ifdef ENABLE_NGC
+   failed = gdi_send_message_pb(0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
+#else
+   failed = gdi_send_message_pb(0, target, 0, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
+#endif
 
    /*
    ** security hook
@@ -439,7 +456,12 @@ int master
       lSetUlong(jep, JB_script_size, 0);
    }
 
-   if (failed) { /* we failed sending the job to the execd */
+#ifdef ENABLE_NGC
+   if (failed != CL_RETVAL_OK)
+#else
+   if (failed) 
+#endif
+   { /* we failed sending the job to the execd */
       ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US,   
             u32c(lGetUlong(jep, JB_job_number)), rhost));
       sge_mark_unheard(hep, target);
@@ -447,7 +469,9 @@ int master
       return -1;
    } else {
       DPRINTF(("successfully sent %sjob "u32" to host \"%s\"\n", 
-            master?"":"SLAVE ", lGetUlong(jep, JB_job_number), rhost));
+               master?"":"SLAVE ", 
+               lGetUlong(jep, JB_job_number), 
+               rhost));
    }
 
    DEXIT;

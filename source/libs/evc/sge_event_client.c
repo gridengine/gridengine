@@ -805,8 +805,7 @@ ec_need_new_registration(void)
 *  SEE ALSO
 *     Eventclient/Client/ec_get_edtime()
 *******************************************************************************/
-int 
-ec_set_edtime(int interval) 
+int ec_set_edtime(int interval) 
 {
    int ret = 0;
 
@@ -818,7 +817,11 @@ ec_set_edtime(int interval)
       ret = (lGetUlong(ec, EV_d_time) != interval);
 
       if (ret > 0) {
+#ifdef ENABLE_NGC
+         lSetUlong(ec, EV_d_time, MIN(interval, CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5));
+#else
          lSetUlong(ec, EV_d_time, MIN(interval, COMMPROC_TIMEOUT-5));
+#endif
          ec_config_changed();
       }
    }
@@ -1150,6 +1153,7 @@ bool
 ec_register(bool exit_on_qmaster_down, lList** alpp)
 {
    bool ret = false;
+   cl_com_handle_t* com_handle = NULL;
 
    DENTER(TOP_LAYER, "ec_register");
 
@@ -1181,11 +1185,19 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       lp = lCreateList("registration", EV_Type);
       lAppendElem(lp, lCopyElem(ec));
 
+
+#ifdef ENABLE_NGC
+      com_handle = cl_com_get_handle((char*)prognames[uti_state_get_mewho()], 0);
+      if (com_handle != NULL) {
+         cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[uti_state_get_mewho()],0));
+      }
+#else
       /* remove possibly pending messages */
       remove_pending_messages(NULL, 0, 0, TAG_REPORT_REQUEST);
       /* commlib call to mark all commprocs as unknown */
       reset_last_heard();
-      
+#endif
+
       /*
        *  to add may also means to modify
        *  - if this event client is already enrolled at qmaster
@@ -1285,15 +1297,16 @@ ec_deregister(void)
 
          packint(&pb, lGetUlong(ec, EV_id));
 
-         send_ret = sge_send_any_request(0, NULL, sge_get_master(0), 
-                                         prognames[QMASTER], 1, &pb, 
-                                         TAG_EVENT_CLIENT_EXIT);
+         send_ret = sge_send_any_request(0, NULL, sge_get_master(0), prognames[QMASTER], 1, &pb, TAG_EVENT_CLIENT_EXIT,0);
          
          clear_packbuffer(&pb);
-
-         if (send_ret == CL_OK) {
+#ifdef ENABLE_NGC
+         if (send_ret == CL_RETVAL_OK) 
+#else
+         if (send_ret == CL_OK) 
+#endif
+         {
             /* error message is output from sge_send_any_request */
-
             /* clear state of this event client instance */
             ec = lFreeElem(ec);
             need_register = true;
@@ -2436,8 +2449,11 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          ret = false;
       } else {
          /* send an ack to the qmaster for all received events */
-         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, 
-                                     lGetUlong(ec, EV_id))) {
+#ifdef ENABLE_NGC
+         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, lGetUlong(ec, EV_id)) != CL_RETVAL_OK) {
+#else
+         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, lGetUlong(ec, EV_id))) {
+#endif
             WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
          } else {
             DPRINTF(("Sent ack for all events lower or equal %d\n", 
@@ -2615,6 +2631,7 @@ get_event_list(int sync, lList **report_list)
    bool ret = true;
    u_short id;
    sge_pack_buffer pb;
+   int help;
 
    DENTER(TOP_LAYER, "get_event_list");
 
@@ -2623,11 +2640,19 @@ get_event_list(int sync, lList **report_list)
    id = 0;
    tag = TAG_REPORT_REQUEST;
    /* FIX_CONST */
+#ifdef ENABLE_NGC
+   if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,0)) != CL_RETVAL_OK) {
+      DPRINTF(("commlib returns %s (%d)\n", cl_get_error_text(help), help ));
+      ret = false;
+
+
+#else
    if (sge_get_any_request((char*)sge_get_master(0), 
                            (char*)prognames[QMASTER], &id, &pb, &tag, sync) 
                            != CL_OK) {
       DPRINTF(("commlib returns %s (%d)\n", cl_errstr(ret), ret));
       ret = false;
+#endif
    } else {
       if (cull_unpack_list(&pb, report_list)) {
          ERROR((SGE_EVENT, MSG_LIST_FAILEDINCULLUNPACKREPORT ));

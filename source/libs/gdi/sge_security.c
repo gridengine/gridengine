@@ -168,6 +168,42 @@ void sge_security_exit(int i)
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
+#ifdef ENABLE_NGC
+int gdi_send_message(
+int synchron,
+const char *tocomproc,
+int toid,
+const char *tohost,
+int tag,
+char *buffer,
+int buflen,
+u_long32 *mid,
+int compressed 
+) {
+   int ret;
+   cl_com_handle_t* handle = NULL;
+   cl_xml_ack_type_t ack_type;
+   u_long32 me_who;
+   unsigned long dummy_mid;
+   DENTER(TOP_LAYER, "gdi_send_message");
+
+   /* TODO: handle Kerberos and SECURE send message */
+   me_who = uti_state_get_mewho();
+   handle = cl_com_get_handle((char*)prognames[me_who] ,0);
+   ack_type = CL_MIH_MAT_NAK;
+   if (synchron) {
+      ack_type = CL_MIH_MAT_ACK;
+   }
+   if (mid) {
+      dummy_mid = *mid;
+   }
+
+   ret = cl_commlib_send_message( handle, (char*)tohost ,(char*)tocomproc ,toid , ack_type , (cl_byte_t*)buffer ,(unsigned long)buflen  , &dummy_mid , 0 ,tag,1 , synchron);
+
+   DEXIT;
+   return ret;
+}
+#else
 int gdi_send_message(
 int synchron,
 const char *tocomproc,
@@ -214,6 +250,7 @@ int compressed
    DEXIT;
    return ret;
 }
+#endif
 
 
 /* 
@@ -222,6 +259,58 @@ int compressed
  *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
+#ifdef ENABLE_NGC
+int gdi_receive_message(
+char *fromcommproc,
+u_short *fromid,
+char *fromhost,
+int *tag,
+char **buffer,
+u_long32 *buflen,
+int synchron,
+u_short *compressed 
+) {
+   int ret;
+   cl_com_handle_t* handle = NULL;
+   cl_com_message_t* message = NULL;
+   cl_com_endpoint_t* sender = NULL;
+
+   DENTER(TOP_LAYER, "gdi_receive_message");
+   /* TODO: handle Kerberos and SECURE send message */
+
+
+   handle = cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0);
+   ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,fromid , synchron, 0 ,&message, &sender );
+   if (message != NULL) {
+      *buffer = message->message;
+      message->message = NULL;
+      *buflen = message->message_length;
+      if (tag) {
+         *tag = message->message_tag;
+      }
+      if (compressed) {
+         *compressed = 0;
+      }
+
+      if (sender != NULL) {
+         if (fromcommproc != NULL) {
+            strcpy(fromcommproc, sender->comp_name);
+         }
+         if (fromhost != NULL) {
+            strcpy(fromhost, sender->comp_host);
+         }
+         if (fromid != NULL) {
+            *fromid = sender->comp_id;
+         }
+      }
+   }
+   cl_com_free_message(&message);
+   cl_com_free_endpoint(&sender);
+
+   DEXIT;
+   return ret;
+}
+#else
 int gdi_receive_message(
 char *fromcommproc,
 u_short *fromid,
@@ -266,6 +355,7 @@ u_short *compressed
    DEXIT;
    return ret;
 }
+#endif
 
 
 /****** gdi/security/set_sec_cred() *******************************************

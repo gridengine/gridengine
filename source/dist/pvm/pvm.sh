@@ -42,7 +42,7 @@
 #$ -N PVM_Job
 # pe request
 #$ -pe pvm 16,8,4-1
-#$ -v COMMD_PORT,DISPLAY
+#$ -v SGE_QMASTER_PORT,DISPLAY
 #$ -S /bin/csh
 # ---------------------------
 

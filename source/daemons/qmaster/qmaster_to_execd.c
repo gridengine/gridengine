@@ -95,14 +95,23 @@ static int host_notify_about_X(lListElem *host,
    const char *hostname = NULL;
    sge_pack_buffer pb;
    int ret = 0;
+#ifdef ENABLE_NGC
+   unsigned long last_heard_from;
+#endif
    DENTER(TOP_LAYER, "host_notify_about_X");
 
    hostname = lGetHost(host, EH_name);
    if (progname_id == EXECD) {
       u_short id = 1;
       const char *commproc = prognames[progname_id];
-
-      if (!last_heard_from(commproc, &id, hostname)) {
+#ifdef ENABLE_NGC
+      cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0)),
+                                        (char*)hostname, (char*)commproc,id, &last_heard_from);
+      if (!last_heard_from)
+#else
+      if (!last_heard_from(commproc, &id, hostname)) 
+#endif
+      {
          ERROR((SGE_EVENT, MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS,
                 commproc, hostname));
          ret = -2;
@@ -114,8 +123,12 @@ static int host_notify_about_X(lListElem *host,
       u_long32 dummy;
 
       packint(&pb, x);
-      if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, tag,
-                              &pb, &dummy)) {
+#ifdef ENABLE_NGC
+      if (gdi_send_message_pb(0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK)
+#else
+      if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, tag, &pb, &dummy))
+#endif
+      {
          ret = -1;
       } else {
          ret = 0;

@@ -126,9 +126,12 @@ int main(int argc, char **argv) {
       goto default_exit;
    }
 
+#ifdef ENABLE_NGC
+#else
    /* set timeout */
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);   
+#endif
 
    /* prepare gdi request for 'all' and '-uall' parameters */
    cmd = SGE_GDI_DEL;

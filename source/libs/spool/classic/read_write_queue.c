@@ -119,7 +119,26 @@ _Insight_set_option("suppress", "PARM_NULL");
       } 
       else {
          /* build unique hostname when it comes in */
-         if ((ret = getuniquehostname(str, unique, 0)) != CL_OK) {
+         ret = getuniquehostname(str, unique, 0);
+#ifdef ENABLE_NGC
+         if (ret != CL_RETVAL_OK) {
+            if ( ret != CL_RETVAL_GETHOSTNAME_ERROR) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
+                  str, cl_errstr(ret)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return -1;
+            }
+         } 
+         if (ret == CL_RETVAL_OK) {
+            lSetHost(ep, QU_qhostname, unique);
+         } else {
+            /* ignore NACK_UNKNOWN_HOST error */
+            lSetHost(ep, QU_qhostname, str);
+         }
+ 
+#else
+         if (ret != CL_OK) {
             if (ret != COMMD_NACK_UNKNOWN_HOST) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
                   str, cl_errstr(ret)));
@@ -128,11 +147,13 @@ _Insight_set_option("suppress", "PARM_NULL");
                return -1;
             }
          }
-         if (ret == CL_OK)
+         if (ret == CL_OK) {
             lSetHost(ep, QU_qhostname, unique);
-         else
+         } else {
             /* ignore NACK_UNKNOWN_HOST error */
             lSetHost(ep, QU_qhostname, str);
+         }
+#endif
       }
 
       lDelElemStr(clpp, CF_name, "hostname");

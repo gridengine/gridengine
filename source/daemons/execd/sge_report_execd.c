@@ -80,10 +80,17 @@ report_source *report_sources
       DPRINTF(("ALIVE TEST OF MASTER\n"));
       next_alive_time = now + ALIVE_INTERVAL;
      
+#ifdef ENABLE_NGC
+      state = STATE_OK;
+      if (check_isalive(sge_get_master(state == STATE_ERROR)) != CL_RETVAL_OK) {
+         state = STATE_ERROR;
+      }
+#else
       if (check_isalive(sge_get_master(state == STATE_ERROR)))
          state = STATE_ERROR;
       else 
          state = STATE_OK;
+#endif
    }
 
    if (state == STATE_OK) {
@@ -106,15 +113,20 @@ report_source *report_sources
        *  so let him send this empty list for having an alive protocol
        */
       /* send load report asynchron to qmaster */
+#ifdef ENABLE_NGC
+      ret = report_list_send(report_list, sge_get_master(0), 
+                             prognames[QMASTER], 1, 0, NULL);
+
+#else
       ret = report_list_send(report_list, sge_get_master(0), 
                              prognames[QMASTER], 0, 0, NULL);
+#endif
 
       lFreeList(report_list);
    }
    DEXIT;
    return ret;
 }
-
 /* ----------------------------------------
  
    add a double value to the load report list lpp 

@@ -221,7 +221,12 @@ int sub_command
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;            
       }
-      if (sge_resolve_host(qep, QU_qhostname)!=0) {
+#ifdef ENABLE_NGC
+      if (sge_resolve_host(qep, QU_qhostname) != CL_RETVAL_OK)
+#else
+      if (sge_resolve_host(qep, QU_qhostname) != 0) 
+#endif
+      {
          const char *hname = lGetHost(qep, QU_qhostname);
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hname ? hname : ""));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

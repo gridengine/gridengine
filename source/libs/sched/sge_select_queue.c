@@ -1133,7 +1133,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
    const char *load_value = NULL; 
    const char *limit_value = NULL;
    double lc_host = 0, lc_global = 0;
-   int load_is_value;
+   int load_is_value = 0;
    
    DENTER(TOP_LAYER, "sge_load_alarm");
 

@@ -822,6 +822,12 @@ proc setup_execd_conf {} {
      if { [info exists elements] } {
         unset elements
      }
+
+     if {! [info exists tmp_config]} {
+        puts $CHECK_OUTPUT "couldn't get conf - skipping $host"
+        continue
+     }
+     
      set elements [array names tmp_config]
      set counter 0
      set output ""

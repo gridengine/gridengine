@@ -46,6 +46,7 @@ global env
 
 set check_root_access_needs "yes"
 
+# JG: TODO: we have to create an own queue for this test!
 
 # define a level initialization procedure:
 set check_init_level_procedure "error_states_init_level"

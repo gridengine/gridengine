@@ -261,7 +261,7 @@ proc setup_queues {} {
    }
 
    # start event client (if compiled)
-   set up_arch [resolve_upper_arch $CHECK_HOST]
+   set up_arch [resolve_build_arch $CHECK_HOST]
    set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"

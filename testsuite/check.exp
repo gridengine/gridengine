@@ -226,7 +226,7 @@ global CHECK_MAX_LEVEL             ;# highest level number of all subtests
 global CHECK_ACT_PATH              ;# actual checkpath (while switching in menu mode)
 global arch_cache                  ;# cache for architecture names (lower case) e.g. solaris64
 global pe_for_version_check_result ;# cache for pe/checkpnt version
-global upper_arch_cache            ;# cache for architecture names (upper case) e.g. SOLARIS64
+global build_arch_cache            ;# cache for architecture names (upper case) e.g. SOLARIS64
 global l10n_raw_cache              ;# chche for l10n translation strings
 global l10n_install_cache          ;# cache for l10n installation script strings
 global set_error_proc_called       ;# flag

@@ -52,6 +52,8 @@ lappend check_functions  "qstat_option_U"
 set check_errno          "-1"                    ;# 0 -> OK , != 0 means error
 set check_errstr         "was never running"     ;# string for error description
 
+# JG: TODO: we have to create an own queue for this test!
+
 
 #                                                             max. column:     |
 #****** qstat/get_numb_proc() ******

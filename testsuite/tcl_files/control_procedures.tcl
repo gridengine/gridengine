@@ -1232,13 +1232,13 @@ proc resolve_arch { { host "none" } } {
 }
 
 #                                                             max. column:     |
-#****** control_procedures/resolve_upper_arch() ******
+#****** control_procedures/resolve_build_arch() ******
 # 
 #  NAME
-#     resolve_upper_arch -- ??? 
+#     resolve_build_arch -- ??? 
 #
 #  SYNOPSIS
-#     resolve_upper_arch { host } 
+#     resolve_build_arch { host } 
 #
 #  FUNCTION
 #     ??? 
@@ -1261,11 +1261,11 @@ proc resolve_arch { { host "none" } } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc resolve_upper_arch { host } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT upper_arch_cache CHECK_SOURCE_DIR
+proc resolve_build_arch { host } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT build_arch_cache CHECK_SOURCE_DIR
   global CHECK_USER
-  if { [info exists upper_arch_cache($host) ] } {
-     return $upper_arch_cache($host)
+  if { [info exists build_arch_cache($host) ] } {
+     return $build_arch_cache($host)
   }
 
   set result [ start_remote_prog $host $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0]
@@ -1276,13 +1276,13 @@ proc resolve_upper_arch { host } {
   set result [join $result ""]
 
   if { $prg_exit_state != 0 } {
-     add_proc_error "resolve_upper_arch" "-1" "architecture not found or aimk not found in $CHECK_SOURCE_DIR"
+     add_proc_error "resolve_build_arch" "-1" "architecture not found or aimk not found in $CHECK_SOURCE_DIR"
      return ""
   }
-  set upper_arch_cache($host) $result
-  puts $CHECK_OUTPUT "upper arch is \"$result\""
+  set build_arch_cache($host) $result
+  puts $CHECK_OUTPUT "build arch is \"$result\""
 
-  return $upper_arch_cache($host)
+  return $build_arch_cache($host)
 }
 
 

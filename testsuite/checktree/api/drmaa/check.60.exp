@@ -149,7 +149,7 @@ proc drmaa_check {} {
          }
       }   
 
-      set compile_arch_mt "[resolve_upper_arch $host]"
+      set compile_arch_mt "[resolve_build_arch $host]"
       set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
 

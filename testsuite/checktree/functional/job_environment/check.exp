@@ -136,12 +136,12 @@ proc job_environment_qsub_job { jobname array arguments } {
       set ret 0
    }
 
-   if {$ret && [wait_for_jobstart $job_id $jobname 60 1 1] != 0} {
+   if {$ret && [wait_for_jobstart $job_id $jobname 120 1 1] != 0} {
       set ret 0
       delete_all_jobs
    }
 
-   if {$ret && [wait_for_jobend $job_id $jobname 60] != 0} {
+   if {$ret && [wait_for_jobend $job_id $jobname 120] != 0} {
       set ret 0
       delete_all_jobs
    }

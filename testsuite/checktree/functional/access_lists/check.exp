@@ -99,7 +99,17 @@ proc access_lists_setup  {} {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_PRODUCT_ROOT
 
-   set access_lists_queue "all.q"
+   # setup an own queue - we change a lot of config params - better not touch all.q
+   set access_lists_queue "access.q"
+   set queue_values(load_thresholds)       "np_load_avg=11.00"
+   set queue_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
+   add_queue $access_lists_queue "@allhosts" queue_values 1
+   # ... and disable all.q
+   foreach host $CHECK_CORE_EXECD {
+      disable_queue [get_queue_instance "all.q" $host]
+   }
+
+   # we'll use this execd as test host
    set access_lists_host  [lindex $CHECK_CORE_EXECD 0]
 
    puts $CHECK_OUTPUT "using queue $access_lists_queue"
@@ -145,23 +155,23 @@ proc test_job_run { id_string job_id } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
 
    set had_error 0
+
+   # we need to see the job either pending or already running
    if { [wait_for_jobpending $job_id "leeper" 30 1] != 0 } {
       set had_error 1
    }
 
-   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
-
-
+   # wait until the job is running, do a qconf -tsm before
    if { [wait_for_jobstart $job_id "leeper" 120 1 1] != 0 } {
       set had_error 1
    }
+
    if {  $had_error == 1 } {
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } catch_result
       puts $CHECK_OUTPUT $catch_result
       add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched:\n$catch_result"
    } 
+
    delete_job $job_id 1 1
 }
 
@@ -214,33 +224,49 @@ proc check_user_job_info { job_id } {
   
   global CHECK_OUTPUT  CHECK_HOST CHECK_L10N
 
-  if { $CHECK_L10N == 1 } {
-      set  HASNOPERMISSION [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*" ]
-      set  NOACCESSTOPE1   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOACCESSTOPE] ]
-      set  NOACCESSTOPE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOACCESSTOPE_S] "*" ]
+   set had_error 0
 
+   # was the submit successfull?
+   if { [wait_for_jobpending $job_id "leeper" 30 1] != 0 } {
+      add_proc_error "check_user_job_info" "-1" "no pending job $job_id"
+      set had_error 1
+   }
+
+   # the job shall not start - do a qconf -tsm and wait 10 secs
+   if { [wait_for_jobstart $job_id "leeper" 10 0 1] == 0 } {
+      add_proc_error "check_user_job_info" "-1" "job $job_id shouldn't have started"
+      set had_error 1
+   }
+
+   if {  $had_error == 0 } {
+      # if job is pending as expected, analyze scheduling info
       set scheduling_info_text [get_scheduling_info $job_id]
 
-      set match1 [string match "*$HASNOPERMISSION*" $scheduling_info_text ]
-      set match2 [string match "*$NOACCESSTOPE1*"   $scheduling_info_text ]
-      set match3 [string match "*$NOACCESSTOPE2*"   $scheduling_info_text ]
+      if { $CHECK_L10N == 1 } {
+         set  HASNOPERMISSION [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*" ]
+         set  NOACCESSTOPE1   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOACCESSTOPE] ]
+         set  NOACCESSTOPE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOACCESSTOPE_S] "*" ]
 
-      puts $CHECK_OUTPUT $match1
-      puts $CHECK_OUTPUT $match2
-      puts $CHECK_OUTPUT $match2
 
-      if { $match1 != 1 && $match2 != 1 && $match3 != 1 } {
-         return 1
-      }
-      return 0
+         set match1 [string match "*$HASNOPERMISSION*" $scheduling_info_text ]
+         set match2 [string match "*$NOACCESSTOPE1*"   $scheduling_info_text ]
+         set match3 [string match "*$NOACCESSTOPE2*"   $scheduling_info_text ]
+
+         puts $CHECK_OUTPUT $match1
+         puts $CHECK_OUTPUT $match2
+         puts $CHECK_OUTPUT $match2
+
+         if { $match1 != 1 && $match2 != 1 && $match3 != 1 } {
+            set had_error 1
+         }
+     } else {
+        if { [string first "no permission" $scheduling_info_text ] < 0 && [string first "no access" $scheduling_info_text ] < 0 } {
+           set had_error 1
+        }
+     }
   }
 
-
-  set schedd_info_text [get_scheduling_info $job_id]
-  if { [string first "no permission" $schedd_info_text ] < 0 && [string first "no access" $schedd_info_text ] < 0 } {
-     return 1
-  }
-  return 0
+  return $had_error
 }
 
 proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
@@ -932,7 +958,7 @@ proc access_lists_pe {} {
 
 
 proc access_lists_cleanup  {} {
-   global access_lists_schedd_conf
+   global access_lists_schedd_conf access_lists_queue
    global CHECK_CORE_EXECD CHECK_OUTPUT
 
    set_schedd_config access_lists_schedd_conf
@@ -941,6 +967,14 @@ proc access_lists_cleanup  {} {
    del_access_list "userB_group"
    del_access_list "userA_name"
    del_access_list "userB_name"
+
+   # delete the test queue
+   del_queue $access_lists_queue "" 0 1
+   
+   # enable all.q
+   foreach host $CHECK_CORE_EXECD {
+      enable_queue [get_queue_instance "all.q" $host]
+   }
 
    set_error 0 "ok"
 }

@@ -1,3 +1,6 @@
+JG-2004-06-03-0: Testsuite: Improved tests functional/access_lists.
+                            Cleanup.
+
 MD-2004-06-02-1: Bugfix:    - added comment to autoinst template
                  Changed:   inst_template.conf
 

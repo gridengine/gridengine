@@ -104,7 +104,7 @@ proc communication_setup {} {
    set remote_host1 [lindex $CHECK_CORE_EXECD 1]
 
    puts $CHECK_OUTPUT "host: $remote_host1"
-   set up_arch [resolve_upper_arch $remote_host1]
+   set up_arch [resolve_build_arch $remote_host1]
    set send_binary $CHECK_SOURCE_DIR/$up_arch/testsuite_snd
 
    if { [wait_for_remote_file $remote_host1 $CHECK_USER $send_binary] != 0 } {
@@ -124,7 +124,7 @@ proc communication_setup {} {
 
 
    puts $CHECK_OUTPUT "host: $remote_host2"
-   set up_arch [resolve_upper_arch $remote_host2]
+   set up_arch [resolve_build_arch $remote_host2]
    set send_remote_binary $CHECK_SOURCE_DIR/$up_arch/testsuite_snd
 
    if { [wait_for_remote_file $remote_host2 $CHECK_USER $send_remote_binary] != 0 } {

@@ -68,6 +68,7 @@
 #include "sge_host.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
+#include "sge_object.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
@@ -116,7 +117,7 @@ static int resource_cmp(u_long32 relop, double req, double src_dl);
 static bool
 job_is_forced_centry_missing(const lListElem *job,
                              const lList *master_centry_list,
-                             const char *queuename);
+                             const lListElem *queue_or_host);
 
 static int sge_check_load_alarm(char *reason, const char *name, const char *load_value,
                                 const char *limit_value, u_long32 relop,
@@ -456,7 +457,7 @@ static int fulfilled(lListElem *rep, lList *given_attr, char *reason,
 
       DEXIT;
       return 0;
-   }
+   } 
 
    /* check whether attrib is requestable */
    if (!allow_non_requestable && 
@@ -704,7 +705,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       return 4;
    }
 
-   if (job_is_forced_centry_missing(job, centry_list, queue_name)) {
+   if (job_is_forced_centry_missing(job, centry_list, queue)) {
       DEXIT;
       return 8;
    }
@@ -717,26 +718,41 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 static bool 
 job_is_forced_centry_missing(const lListElem *job, 
                              const lList *master_centry_list, 
-                             const char *queuename)
+                             const lListElem *queue_or_host)
 {
    bool ret = false;
    lListElem *centry;
 
    DENTER(TOP_LAYER, "job_is_forced_centry_missing");
-   if (job != NULL && master_centry_list != NULL) {
+   if (job != NULL && master_centry_list != NULL && queue_or_host != NULL) {
       lList *res_list = lGetList(job, JB_hard_resource_list);   
 
       for_each(centry, master_centry_list) {
          const char *name = lGetString(centry, CE_name);
          bool is_requ = is_requested(res_list, name);
          bool is_forced = (lGetUlong(centry, CE_requestable) == REQU_FORCED);
+         const char *object_name = NULL;
+
+         if (is_forced) {
+            if (object_has_type(queue_or_host, QU_Type)) {
+               is_forced = queue_is_centry_a_complex_value(queue_or_host, centry);
+               object_name = lGetString(queue_or_host, QU_qname);
+            } else if (object_has_type(queue_or_host, EH_Type)) {
+               is_forced = host_is_centry_a_complex_value(queue_or_host, centry);
+               object_name = lGetHost(queue_or_host, EH_name);
+            } else {
+               DTRACE;
+               is_forced = false;
+            }
+         }
 
          if (is_forced && !is_requ) {
             u_long32 job_id = lGetUlong(job, JB_job_number);
 
-            DPRINTF(("job "u32" does not request 'forced' resource "SFQ" of "SFN"\n", 
-                     job_id, name, queuename));
-            schedd_mes_add(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, name, queuename);
+            DPRINTF(("job "u32" does not request 'forced' resource "SFQ" of "
+                     SFN"\n", job_id, name, object_name));
+            schedd_mes_add(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, name, 
+                           object_name);
             ret = true;
             break;
          }
@@ -877,7 +893,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
       }
   } 
 
-   if (job_is_forced_centry_missing(job, centry_list, eh_name)) {
+   if (job_is_forced_centry_missing(job, centry_list, host)) {
       DEXIT;
       return 8;
    }
@@ -1121,7 +1137,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
    }
 
    for_each (tep, threshold) {
-      lListElem *hlep = NULL, *glep = NULL, *cep  = NULL;
+      lListElem *hlep = NULL, *glep = NULL, *queue_ep = NULL, *cep  = NULL;
       const char *name;
       u_long32 relop, type;
 
@@ -1152,16 +1168,24 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
          }
       } 
       if (glep == NULL && hlep == NULL) {
-         /* use complex default as value */
-         load_value = lGetString(cep, CE_stringval);
-         load_is_value = 1;
+         queue_ep = lGetSubStr(qep, CE_name, name, QU_consumable_config_list);
+         if (queue_ep != NULL) {
+            load_value = lGetString(queue_ep, CE_stringval);
+            load_is_value = 1;
+         } else { 
+            if (reason) {
+               sprintf(reason, MSG_SCHEDD_NOVALUEFORATTR_S, name);
+            }
+            DEXIT;
+            return 1;
+         }
       }
 
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(sge_check_load_alarm(reason, name, load_value, limit_value, relop, type,
-                              hep, hlep, lc_host, lc_global, 
+      if(sge_check_load_alarm(reason, name, load_value, limit_value, relop, 
+                              type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
          DEXIT;
          return 1;

@@ -284,3 +284,16 @@ host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
    DEXIT;
    return ret;
 }
+
+bool
+host_is_centry_a_complex_value(const lListElem *this_elem, 
+                               const lListElem *centry)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "host_is_centry_a_complex_value");
+   ret = host_is_centry_referenced(this_elem, centry);
+   DEXIT;
+   return ret;
+}
+

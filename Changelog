@@ -1,3 +1,13 @@
+EB-2003-07-11-0: Enhancem.: Bugfixes for Enhancem. EB-2003-07-09-0
+                            * handle attributes only as forced attributes if
+                              forced is specified in centry definition
+                              AND if a value is given in complex_values of
+                              host or queue
+                            * missing complex attribute value (no load value,
+                              no host/queue-complex_value) will result in
+                              load alarm
+                 Changed:   sge_schedd, qstat
+
 JG-2003-07-11-0: Testsuite: Enhanced tight_integration test to
                             - check setting of NSLOTS and NHOSTS in tasks 
                               environment (issue 578)

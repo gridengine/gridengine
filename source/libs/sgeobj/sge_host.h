@@ -52,6 +52,9 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm);
 bool
 host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
 
+bool
+host_is_centry_a_complex_value(const lListElem *this_elem, 
+                               const lListElem *centry);
 
 #endif /* __SGE_HOST_H */
 

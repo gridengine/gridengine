@@ -100,4 +100,8 @@ queue_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt);
 bool
 queue_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
 
+bool
+queue_is_centry_a_complex_value(const lListElem *this_elem, 
+                                const lListElem *name);
+
 #endif /* __SGE_QUEUE_H */

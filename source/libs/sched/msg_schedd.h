@@ -429,4 +429,9 @@
  */
 #define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47286, _("denied: attribute "SFQ" is no complex attribute\n"))
 
+/*
+ *  
+ */
+#define MSG_SCHEDD_NOVALUEFORATTR_S                       _MESSAGE(47287, _("no value for complex attribute "SFQ))
+
 #endif /* __MSG_SCHEDD_H */

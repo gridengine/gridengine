@@ -831,3 +831,14 @@ queue_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
    return ret;
 }
 
+bool
+queue_is_centry_a_complex_value(const lListElem *this_elem, 
+                                const lListElem *centry)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "queue_is_centry_a_complex_value");
+   ret = queue_is_centry_referenced(this_elem, centry);
+   DEXIT;
+   return ret;
+}

@@ -1,6 +1,7 @@
 CR-2002-07-29-0: Bugfix:    CLI: invalid option "-jid jid" for qconf in 
                             qconf -help
                  Bugtraq:   #4722060
+                 Changed:   qalter, qconf, qsh, qrsh, qlogin, qsub
 
 CR-2002-07-26-1: Bugfix:    Wrong path for qmaster messages file in exe host 
                             installation

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20010703;18513700">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010704;11340800">
+</HEAD>
+<BODY BGCOLOR="#ffffff">
+<H2>Changing the Master Host in Grid Engine</H2>
+<P><BR><BR>
+</P>
+<P><U>Overview</U><BR><BR>1. Stop the daemons on the current master
+host<BR>2. Edit $SGE_ROOT/default/common/act_qmaster<BR>3. Run sge5
+on the new master host</P>
+<P><U>1) Stop all daemons on the current master host</U><BR><BR>Stop
+the master and scheduler daemon on the current master by running the
+following command: 
+</P>
+<PRE STYLE="margin-bottom: 0.2in">qconf -ks -km</PRE><P>
+<U>2) Edit $SGE_ROOT/default/common/act_qmaster</U><BR><BR>In the
+act_qmaster file, the current hostname will need to be replaced with
+the new master host's name. This name should be the same as the name
+returned by the utility, gethostname. Run the following command on
+the new master host: 
+</P>
+<PRE STYLE="margin-bottom: 0.2in">$SGE_ROOT/utilbin//gethostname</PRE><P>
+Put this name in the act_qmaster file in place of the old name.</P>
+<P><U>3) Run sge5 on the new master host</U><BR><BR>On the new master
+host, run the following script: 
+</P>
+<PRE STYLE="margin-bottom: 0.2in">$SGE_ROOT/default/common/sge5</PRE><P>
+This will start up sge_qmaster and sge_schedd on the new master host.</P>
+</BODY>
+</HTML>

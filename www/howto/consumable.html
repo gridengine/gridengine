@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20010703;18463800">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010704;11163900">
+</HEAD>
+<BODY BGCOLOR="#ffffff">
+<H2>Setting Up A Global Consumable Resource in Grid Engine</H2>
+<P><BR><BR>
+</P>
+<P><B><U>Step 1: Configure the &quot;global&quot; complex</U></B><BR><BR>First
+create/modify a complex called &quot;global&quot; (the name is
+reserved, like the complexes which are managing resources on a per
+host/queue basis are called &quot;host&quot; and &quot;queue&quot;).
+This can be found by clicking the &quot;Complexes Configuration&quot;
+button in qmon.<BR><BR>Enter the following values for the complex
+(verilog is used in this example):</P>
+<PRE><BR>#<SPAN STYLE="text-decoration: none">name   shortcut type value relop requestable consumable default</SPAN>
+#-------------------------------------------------------------
+verilog vl       INT  0     &lt;=    YES         YES        0 </PRE><P>
+<BR>The above says: there is a complex attribute called &quot;verilog&quot;
+with the shortcut name &quot;vl&quot; and it is of type integer. The
+&quot;value&quot; for consumable resources has no meaning here
+(therefore it is 0). This resource is requestable (YES), and it is
+consumable (YES).<BR><BR>The &quot;default&quot; field should be set
+to 0 (it is a default value for users who don't request anything, but
+for a global value it is not useful here).<BR><BR>When using qmon, do
+not forget to press the &quot;Add&quot; button to add the new complex
+definition to the table below before applying with the &quot;Ok&quot;
+button.<BR><BR>After the complex is configured, it can be viewed by
+running the following command at the prompt:</P>
+<PRE>% qconf -sc global
+</PRE><P>
+<B><U>Step 2: Configure the &quot;global&quot; host</U></B><BR><BR>Since
+a global consumable resource is being created (all hosts have access
+to this resource), the pseudo host &quot;global&quot; must be
+configured. <BR><BR>Using qmon:<BR><BR>qmon -&gt; Host Configuration
+-&gt; Execution host<BR><BR>Select the &quot;global&quot; host and
+click on &quot;Modify&quot;. Select the tab titled &quot;Consumable/Fixed
+Attributes&quot;. It is correct that the &quot;global&quot; complex
+does not show in the window (the global host has it by default, just
+as a host has the &quot;host&quot; complex by default).<BR><BR>Now
+click on the &quot;Name/Value&quot; title bar on the right (above the
+trash bin icon). A window pops up and there will be the resource
+&quot;verilog&quot;. Select OK and verilog will be added to the first
+column of the table. Now enter the number of licenses of verilog in
+the second column.<BR><BR>Press &quot;Ok&quot; and the new resource
+and number in the will appear in the &quot;Consumables/Fixed
+Attributes&quot; window. Click the &quot;Done&quot; button to close
+this window.</P>
+<P><B><U>Step 3: View the consumable attribute</U></B><BR><BR>To view
+the attribute, type the following:</P>
+<PRE>% qstat -F verilog
+   
+   queuename   qtype   used/tot.   load_avg    arch             states
+   ---------------------------------------------------------------------------
+   balrog.q     BIC      0/4         0.45    solaris64    gc:verilog=10.000000
+
+   ---------------------------------------------------------------------------
+   bilbur.q     BIC      0/4         0.46     solaris     gc:verilog=10.000000
+   ---------------------------------------------------------------------------
+   dwain.q      BIC      0/4         0.82      irix6      gc:verilog=10.000000</PRE><P>
+See qstat(1) for the various meanings of &quot;gc&quot;, etc. (Try
+&quot;qstat -F&quot; to see a long list of attributes associated with
+each queue).<BR><BR>&quot;gc&quot; means it is a (g)lobal
+(c)onsumable resource<BR><BR>Since it is global, all queues have
+inherited this value.</P>
+<P><B><U>Step 4: Use the consumable attribute</U></B><BR><BR>The
+following submits a job, and requests the verilog resource:</P>
+<PRE>% qsub -l vl=1 myjob.sh</PRE><P>
+<BR>When the job is running, the effect can be seen by running qstat:</P>
+<PRE>% qstat -F vl
+   
+   queuename      qtype    used/tot.   load_avg    arch      states
+   ----------------------------------------------------------------------------
+   balrog.q        BIC       0/4         0.40    solaris64  gc:verilog=9.000000
+   ----------------------------------------------------------------------------
+   gloin.q2        BIC       0/4         0.02      osf4     gc:verilog=9.000000
+   ----------------------------------------------------------------------------
+   lis.q           BIC       0/4         0.35     glinux    gc:verilog=9.000000
+   ----------------------------------------------------------------------------
+   ori.q           BIC       1/4         0.15     glinux    gc:verilog=9.000000
+   
+     3026     0 sleeper.sh andy         t     11/02/1999 15:55:25 MASTER           </PRE><P>
+To see which running job requested which resources:</P>
+<PRE>% qstat -F vl -r -s r
+
+   queuename      qtype    used/tot.    load_avg    arch     states
+   ----------------------------------------------------------------------------
+   [...]
+   ----------------------------------------------------------------------------
+   ori.q           BIC       1/4          0.12      glinux  gc:verilog=9.000000
+   
+     3026     0 sleeper.sh andy         r     11/02/1999 15:55:25 MASTER           
+          Full jobname:     sleeper.sh
+          Hard Resources:   verilog=1
+          h_fsize=0 (default)</PRE>
+</BODY>
+</HTML>

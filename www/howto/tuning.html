@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20010703;19103200">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010704;15194100">
+</HEAD>
+<BODY BGCOLOR="#ffffff">
+<H1>Tuning guide</H1>
+<P>Grid Engine is a common purpose tool. The scheduler supports a
+wide range of different compute farm scenarios. To get the maximum
+from your compute environment it can be worth to review which
+features are in effect and which are really needed to solve your load
+management problem. Disabling some of these features can have a
+noticeably positive effect on the throughput of your cluster:</P>
+<UL>
+	<LI><P>scheduler monitoring</P>
+	<P>Scheduler monitoring can be helpful to find out the reason why
+	certain jobs are not dispatched. However providing this information
+	for all jobs at any time can be resource consuming and is usually
+	not needed. To disable scheduler monitoring set 'schedd_job_info' to
+	'false' in scheduler configuration sched_conf(5).</P>
+	<LI><P>finished jobs</P>
+	<P>In case of array jobs the finished job list in qmaster can become
+	quite big. Switching it off will save memory and speed up qstat
+	commands, because qstat also fetches the finished jobs list. Set
+	'finished_jobs' to '0' in global confiugration sge_conf(5).</P>
+	<LI><P>job verification</P>
+	<P>Forcing a validation at jobs submission time can be valuable tool
+	to prevent non dispatchable jobs in pending state. Especially in
+	heterogenous environments with a varity of different execution nodes
+	and consumable resources and every user having it's own job profile
+	it can be a time consuming job to handle non dispatchable jobs. In
+	homogenous environments with only a couple of different jobs a
+	general expensive job validation usually can be omitted. Job
+	verification is disabled by adding the qsub(1) option &quot;-w n&quot;
+	in the cluster wide default requests (see sge_request(5)).</P>
+	<LI><P>load thresholds and suspend thresholds</P>
+	<P>The load thresholds are needed if you consciously oversubscribe
+	your machines and you need mechanism to limit oversubscription and
+	also suspend thresholds are used in connection with
+	oversubscription. The other case in which load thresholds are needed
+	is when the execution node is still open for interactive load which
+	is not under control of Grid Engine and you wan't to prevent the
+	node from being overloaded. If a compute farm is that easy, that
+	each CPU at a compute node is represended by only one queue slot and
+	no interactive load is expected at these nodes then
+	'load_thresholds' can be omitted. To disable both thresholds set
+	'load_thresholds' to 'none' and 'suspend_thresholds' to 'none' (see
+	queue_conf(5)).</P>
+	<LI><P>load adjustments</P>
+	<P>The load adjustments are used to virually increase the measured
+	load after a job has been dispachted. This mechanism is helpful in
+	case of oversubscribed machines to align with load thresholds. Load
+	adjustments should be switched off if they are not needed because
+	they impose the scheduler some additional work in connection sorting
+	hosts and load thresholds verification. To disable load adjustments
+	set 'job_load_adjustments' to 'none' and
+	'load_adjustment_decay_time' to '0' in the scheduler configuration
+	sched_conf(5).</P>
+</UL>
+</BODY>
+</HTML>

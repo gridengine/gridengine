@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20010703;18473600">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010704;11241500">
+</HEAD>
+<BODY BGCOLOR="#ffffff">
+<H2>Attaching A Resource To A Host in Grid Engine</H2>
+<P><BR><BR>
+</P>
+<P><U>Overview</U><BR><BR>There are times when it is necessary to
+attach a particular resource to a host or group of hosts. Then, when
+submitting a job, this resource can be requested and only those hosts
+that are tagged with this resource will be candidates for running the
+job. A good example of this is a node-locked license.<BR><BR>The
+following steps outline the procedure to attach a resource to a host
+using Qmon.</P>
+<P><U>1) Define the resource</U><BR><BR>In the main qmon window,
+click &quot;Complexes Configuration&quot;. Highlight host in the
+lefthand box. A list of built-in resources appears in the main
+window. Click &quot;Modify&quot;. In the next screen, the resource
+needs to be defined. For example:</P>
+<PRE>#Name   Shortcut Type   Value   Relation Requestable Consumable Default
+#------------------------------------------------------------------------
+build   build    bool   false   ==       YES         NO         0
+
+  Name: The name of this resource
+  Shortcut: Each resource may have a unique shortcut assigned to it
+  Type: The type of resource (boolean, integer, char, etc)
+  Value: The default value for this resource
+  Relation: == since a boolean value.
+  Requestable: Allow users to request the resource
+  Consumable: This resource is not consumed when requested
+  Default: Not used</PRE><P>
+<BR>After adding the resource, be sure to click &quot;Add&quot; to
+add the new resource to the table below. Then click &quot;Ok&quot;.</P>
+<P><U>2) Attach the resource to specific hosts</U><BR><BR>In the main
+qmon window, click &quot;Host Configuration&quot;. Click on the
+&quot;Execution Host&quot; tab. Highlight the host that the resource
+should be attached to, and click &quot;Modify&quot;.<BR><BR>Click on
+&quot;Name&quot; on the right-side of the window. A list of available
+resources appears. Choose or type in the new resource and click &quot;OK&quot;.
+Type in 'true' for the &quot;Value&quot;. 
+</P>
+<P><U>3) Request the resource</U><BR><BR>Any job submitted requesting
+this resource will be scheduled on the hosts specified in the above
+step. To request the resource, use the -l switch:<BR><BR>qsub -l
+build=true myjob.sh<BR><BR>note: '-l build' is equivalent to '-l
+build=true'</P>
+</BODY>
+</HTML>

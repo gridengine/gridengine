@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20010703;18435300">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010706;15163400">
+</HEAD>
+<BODY BGCOLOR="#ffffff">
+<H2>Common Administrative Tasks for Grid Engine</H2>
+<P>Qconf is the command used for most administrative tasks. This
+HOWTO contains a selection of the most frequently used options. Have
+a look to qconf(1) for more details. 
+</P>
+<P><U>Adding and removing administrative privileges from a host</U></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -ah # gives host
+	administrative privileges 
+	</P>
+	<LI><P>qconf -dh # removes administrative privileges from host</P>
+</UL>
+<P><U>Adding an execution host</U></P>
+<UL>
+	<LI><P>Make the new host an administrative host<BR><BR>qconf -ah 
+	</P>
+	<LI><P>As root on this new host, run the following script from
+	$SGE_ROOT<BR><BR>install_execd</P>
+</UL>
+<P><U>Removing an execution host</U></P>
+<UL>
+	<LI><P>First, delete the queues associated with this host<BR><BR>qconf
+	-dq 
+	</P>
+	<LI><P>Delete the host<BR><BR>qconf -de 
+	</P>
+</UL>
+<P><U>Adding and removing submit hosts</U></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -as # host is now a submit
+	host 
+	</P>
+	<LI><P>qconf -ds # jobs may not be submitted from host</P>
+</UL>
+<P><U>Displaying current administrative/submit/execution hosts</U></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -sh # show current
+	administrative hosts 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -ss # show current submit
+	hosts 
+	</P>
+	<LI><P>qconf -sel # show current execution host list 
+	</P>
+</UL>
+<P><U>Administering queues</U></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -aq # adding a queue</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -dq # delete a queue 
+	</P>
+	<LI><P>qconf -mq # modify a queue 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -Aq # adding a queue from
+	file</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -mqattr # change single
+	attributes of more than one queue</P>
+</UL>
+</BODY>
+</HTML>

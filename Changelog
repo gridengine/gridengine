@@ -1,3 +1,5 @@
+AS-2002-03-08-0: Change:    set version string to "5.3beta2_2"
+
 JG-2002-03-08-0  Testsuite: Make testsuite work for users that use a csh as
                             login shell (open_remote_spawn_process).
 
@@ -135,11 +137,29 @@ EB-2002-02-18-0: Bugfix:    Attempt to unlink directory + bogus error message
                                  ... xx/yyyy/zzzz (zzzz is a file)
                  Issue:    #149  
 
+AS-2002-02-13-3: CVS:       Created V53_beta2_sx6_TAG and V53_beta2_sx6_BRANCH
+------------------------------------------------------------------------------
+
+AS-2002-02-13-3: CVS:       Created V53_beta2_1_TAG
+---------------------------------------------------
+
+AS-2002-02-13-2: Bugfix:    install "UPGRADE" file and shared libraries with
+                            "mk_dist" and "distinst"
+
+AS-2002-02-13-1: Enhancem.:  added README.inst_sgeee to SGE_ROOT to explain how to
+                             install SGE as SGEEE
+
+AS-2002-02-13-0: Change:    set version string to "5.3beta2_1"
+
 EB-2002-02-12-0: Bugfix:    - step size will be ignored from qdel command
                             - qmaster will core if task id range comprises
                               not existing task at the end 
 
-AS-2002-02-04-1: CVS        Created V53_beta2_BRANCH
+AS-2002-02-12-0: Bugfix:    Sun HPC installation script failed since default
+                            queue type now is already PARALLEL
+
+AS-2002-02-04-1: CVS        Created V53_beta2_Tag and V53_beta2_BRANCH
+----------------------------------------------------------------------
 
 AS-2002-02-04-0: Doc:       updated courtesy download pages to reflect
                             changes for Grid Engine 5.3beta2 download

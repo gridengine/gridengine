@@ -89,12 +89,12 @@ if ( $MANMODE == "ge" ) then
    set xxQS_NAMExx = "Grid Engine" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "GE 6.0Beta2"
+   set xxRELxx = "GE 6.0"
 else if ( $MANMODE == "sge" ) then
    set xxQS_NAMExx = "N1 Grid Engine"
    set xxQS_NAME_Sxx = "SGE"
    set xxqs_name_sxx = "sge"
-   set xxRELxx = "N1GE 6.0Beta2"
+   set xxRELxx = "N1GE 6"
 else
    echo error wrong MANMODE=$MANMODE. Exit
    exit 1

@@ -39,7 +39,6 @@
 
 #include "sge_all_listsL.h"
 #include "sge_object.h"
-#include "sge_queue.h"
 #include "sge_job.h"
 
 static void 

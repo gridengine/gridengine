@@ -55,8 +55,8 @@
 #include "sge_feature.h"
 #include "qmon_init.h"
 #include "sge_job.h"
+#include "sge_id.h"
 #include "gdi_tsm.h"
-#include "gdi_qmod.h"
 
 #define for_each2(ep1, lp1, ep2, lp2) \
    for (ep1=lFirst(lp1), ep2=lFirst(lp2); ep1 && ep2;\
@@ -73,7 +73,6 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_ADMINHOST_LIST, ADMINHOST_T, NULL, 0, NULL, NULL },
    { 0, SGE_SUBMITHOST_LIST, SUBMITHOST_T, NULL, 0, NULL, NULL },
    { 0, SGE_EXECHOST_LIST, EXECHOST_T, NULL, 0, NULL, NULL },
-   { 0, SGE_QUEUE_LIST, QUEUE_T, NULL, 0, NULL, NULL },
    { 0, SGE_CQUEUE_LIST, CQUEUE_T, NULL, 0, NULL, NULL },
    { 0, SGE_JOB_LIST, JOB_T, NULL, 0, NULL, NULL },
    { 0, SGE_EVENT_LIST, EVENT_T, NULL, 0, NULL, NULL },
@@ -137,7 +136,6 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_ADMINHOST_LIST].what = lWhat("%T(ALL)", AH_Type);
    QmonMirrorList[SGE_SUBMITHOST_LIST].what = lWhat("%T(ALL)", SH_Type);
    QmonMirrorList[SGE_EXECHOST_LIST].what = lWhat("%T(ALL)", EH_Type);
-   QmonMirrorList[SGE_QUEUE_LIST].what = lWhat("%T(ALL)", QU_Type);
    QmonMirrorList[SGE_CQUEUE_LIST].what = lWhat("%T(ALL)", CQ_Type);
    QmonMirrorList[SGE_JOB_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_EVENT_LIST].what = lWhat("%T(ALL)", EV_Type);
@@ -573,7 +571,7 @@ lList *lp,
 int force,
 int action 
 ) {
-
+   lList *id_list = NULL;
    lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonChangeStateList");
@@ -589,8 +587,11 @@ int action
     * alp contains several answer elements for 
     */
    sge_stopwatch_start(0);
-   
-   alp = gdi_qmod(lp, force, action);
+  
+   if (id_list_build_from_str_list(&id_list, &alp, lp, action, force)) {
+      alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
+      id_list = lFreeList(id_list);
+   }
 
    qmonMirrorMultiAnswer(l2s(type), &alp);
    

@@ -37,7 +37,6 @@
 #include "sge_ja_task.h"
 #include "sge_job_refL.h"
 #include "sge_job_qmaster.h"
-#include "sge_queue_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_host.h"
 #include "job_log.h"
@@ -45,7 +44,8 @@
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
-#include "subordinate_qmaster.h"
+#include "sge_cqueue_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "execution_states.h"
 #include "sge_feature.h"
 #include "sge_rusage.h"
@@ -63,13 +63,14 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_hostname.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_report_execd.h"
 #include "sge_userset.h"
 #include "sge_todo.h"
+#include "sge_cqueue.h"
 
 #include "sge_reporting_qmaster.h"
 
@@ -97,7 +98,7 @@ lListElem *jr,
 lListElem *jep,
 lListElem *jatep 
 ) {
-   lListElem *qep, *queueep;
+   lListElem *queueep;
    const char *err_str;
    const char *qname; 
    u_long32 jobid, jataskid;
@@ -132,7 +133,7 @@ lListElem *jatep
    DPRINTF(("reaping job "u32"."u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
-   if (!(queueep = queue_list_locate(Master_Queue_List, qname))) {
+   if (!(queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname))) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
    }
 
@@ -274,37 +275,46 @@ lListElem *jatep
       if (general_failure == GFSTATE_HOST) {
          spool_queueep = true;
          hep = host_list_locate(Master_Exechost_List, 
-                  lGetHost(queueep, QU_qhostname));
-         if (hep) {
-            const char *host;
-            lListElem *next_qep;
-            const void *iterator;
+                                lGetHost(queueep, QU_qhostname));
+         if (hep != NULL) {
+            lListElem *cqueue = NULL;
+            const char *host = lGetHost(hep, EH_name);
 
-            host = lGetHost(hep, EH_name);
-            next_qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, 
-                                         host, &iterator);
+            for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+               lListElem *qinstance = NULL;
+               lListElem *next_qinstance = NULL;
+               const void *iterator = NULL;
 
-            while((qep = next_qep) != NULL) {
-               next_qep = lGetElemHostNext(Master_Queue_List, QU_qhostname,
-                                           host, &iterator);
-               qinstance_state_set_error(qep, true);
+               next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+                                                  host, &iterator);
+               while((qinstance = next_qinstance) != NULL) {
+                  next_qinstance = lGetElemHostNext(qinstance_list,
+                                                    QU_qhostname,
+                                                    host, 
+                                                    &iterator);
+                  qinstance_state_set_error(qinstance, true);
 
-               ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, 
-                      lGetString(qep, QU_qname), u32c(jobid), host));    
-              
-               /* queueep will be spooled anyway below */
-               if (qep != queueep) {
-                  sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                                  0, 0, lGetString(qep, QU_qname), NULL, NULL,
-                                  qep, NULL, NULL, true, true);
+                  ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, 
+                         lGetString(qinstance, QU_qname), u32c(jobid), host));
+                  if (qinstance != queueep) {
+                     sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+                                     0, 0, lGetString(qinstance, QU_qname), 
+                                     lGetHost(qinstance, QU_qhostname), NULL,
+                                     qinstance, NULL, NULL, true, true);
+                  }
                }
             }
          }
       }
 
-      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                      0, 0, lGetString(queueep, QU_qname), NULL, NULL,
+      sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+                      0, 0, lGetString(queueep, QU_qname), 
+                      lGetHost(queueep, QU_qhostname), NULL,
                       queueep, NULL, NULL, true, spool_queueep);
+
+      cqueue_list_del_all_orphaned(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), &answer_list);
+
       answer_list_output(&answer_list);
    }
 

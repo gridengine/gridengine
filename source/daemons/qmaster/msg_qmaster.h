@@ -204,7 +204,6 @@
 */
 #define MSG_OBJ_CALENDAR              _MESSAGE(33132, _("calendar"))
 #define MSG_EVE_TE4CAL_S              _MESSAGE(33133, _("got timer event for unknown calendar "SFQ"\n"))
-#define MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS _MESSAGE(33134, _("denied: calendar "SFQ" is still referenced in queue "SFQ"\n") ) 
 #define MSG_SGETEXT_REMOVEDFROMLIST_SSSS        _MESSAGE(33135, _(""SFN"@"SFN" removed "SFQ" from "SFN" list\n"))
 #define MSG_INVALID_CENTRY_DEL_S                _MESSAGE(33136, _("The build-in complex "SFQ" cannot be deleted\n"))
 
@@ -312,8 +311,6 @@
 #define MSG_JOB_GID2LOW_II            _MESSAGE(33206, _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration\n"))
 #define MSG_JOB_ALLOWEDJOBSPERUSER_UU  _MESSAGE(33207, _("job rejected: Only "U32CFormat" jobs are allowed per user (current job count: "U32CFormat")\n"))
 #define MSG_JOB_ALLOWEDJOBSPERCLUSTER _MESSAGE(33208, _("job rejected: Only "U32CFormat" jobs are allowed per cluster\n"))
-#define MSG_JOB_QNOTREQUESTABLE       _MESSAGE(33209, _("job was rejected because job requests a queue while queues are not configured as requestable\n"))
-#define MSG_JOB_QUNKNOWN_S            _MESSAGE(33210, _("job was rejected because job requests unknown queue "SFQ"\n"))
 #define MSG_JOB_NOSCRIPT              _MESSAGE(33211, _("job rejected: no script in your request\n"))
 #define MSG_JOB_PEUNKNOWN_S           _MESSAGE(33212, _("job rejected: the requested parallel environment "SFQ" does not exist\n"))
 #define MSG_JOB_CKPTUNKNOWN_S         _MESSAGE(33213, _("job rejected: the requested checkpointing environment "SFQ" does not exist\n"))
@@ -598,8 +595,8 @@
 #define MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS _MESSAGE(33490, _("project "SFQ" is still referenced by user "SFQ"\n"))
 #define MSG_UP_NOADDDEFAULT_S          _MESSAGE(33491, _("denied: not allowed add a "SFN" with name \"default\"\n") ) 
 #define MSG_UP_ALREADYEXISTS_SS        _MESSAGE(33492, _("denied: shared namespace between project and user: there is already a "SFN" which is named "SFQ"\n"))
-#define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not guilty\n"))
-#define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not guilty\n"))
+#define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not valid\n"))
+#define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not valid\n"))
 #define MSG_UM_ERRORWRITESPOOLFORUSER_S _MESSAGE(33507, _("error writing spoolfile for cluster user "SFQ))
 #define MSG_HGRP_ERRORWRITESPOOLFORGROUP_S  _MESSAGE(33508, _("error writing spoolfile for host group "SFQ))
 #define MSG_OBJ_PRJ                    _MESSAGE(33509, _("project"))
@@ -742,11 +739,8 @@
 /*
 ** subordinate_qmaster.c
 */
-#define MSG_JOB_SOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US       _MESSAGE(33657, _("sos_using_gdil for job "U32CFormat": can't find referenced queue "SFQ))
 #define MSG_JOB_USOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US       _MESSAGE(33658, _("usos_using_gdil for job "U32CFormat": can't find referenced queue "SFQ))
-#define MSG_SGETEXT_SUBITSELF_S                 _MESSAGE(33659, _("queue "SFQ" can't get subordinated by itself\n"))
 #define MSG_SGETEXT_UNKNOWNSUB_SS               _MESSAGE(33660, _("subordinated queue "SFQ" referenced in queue "SFQ" does not exist\n"))
-#define MSG_SGETEXT_SUBTHRESHOLD_EXCEEDS_SLOTS_SUSU   _MESSAGE(33661, _("queue "SFQ": threshold of "U32CFormat" for subordinated " "queue "SFQ" exceeds job slots of "U32CFormat"\n"))
 #define MSG_SGETEXT_SUBHOSTDIFF_SSS                   _MESSAGE(33662, _("queue "SFQ": subordinated queue "SFQ" resides on other host "SFQ"\n"))
 
 
@@ -779,7 +773,7 @@
 
 #define MSG_JOB_MASTERTASKFAILED_S       _MESSAGE(33686, _("master task of job "SFN" failed - killing job\n"))
 
-#define MSG_CQUEUE_NAMENOTGUILTY_S       _MESSAGE(33687, _("cluster queue name "SFQ" is not guilty\n"))
+#define MSG_CQUEUE_NAMENOTGUILTY_S       _MESSAGE(33687, _("cluster queue name "SFQ" is not valid\n"))
 #define MSG_CQUEUE_NONAMECHANGE          _MESSAGE(33688, _("unable to change cluster queue name\n"))
 #define MSG_CQUEUE_ERRORWRITESPOOLFILE_S _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
 
@@ -792,8 +786,21 @@
 #define MSG_QINSTANCE_NOSADM_S          _MESSAGE(33695, _("Administrator suspension prevents unsuspension due to calendar for queue "SFQ"\n"))
 #define MSG_QINSTANCE_NOUSSOS_S         _MESSAGE(33696, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
 #define MSG_QINSTANCE_NOUSADM_S         _MESSAGE(33697, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
+#define MSG_QINSTANCE_ERRORWRITESPOOLFILE_S _MESSAGE(33698, _("error writing spoolfile for queue instance"SFQ))
 
-#define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33698, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
+#define MSG_QINSTANCE_STATENOTMOD_S     _MESSAGE(33720, _("Queue instance state of "SFQ" not modified: Spooling framework failed\n"))
+#define MSG_QINSTANCE_STATENOTMODPERM_S _MESSAGE(33721, _("Queue instance state of "SFQ" not modified: No permission\n") ) 
+#define MSG_QINSTANCE_HASSTATE_SS       _MESSAGE(33722, _("Queue instance "SFQ" has already this state ("SFN")\n"))
+#define MSG_QINSTANCE_FORCEDSTATE_SSSS  _MESSAGE(33723, _(SFN"@"SFN" forced state change of "SFQ" ("SFN")\n"))
+#define MSG_QINSTANCE_CHANGEDST_SSSS    _MESSAGE(33724, _(SFN"@"SFN" changed state of "SFQ" ("SFN")\n"))
+#define MSG_QINSTANCE_QIALREADYHERE_S   _MESSAGE(33725, _("Should create queue instance "SFQ" which is already here\n"))
 
-#endif /* __MSG_QMASTER_H */
+#if 0
+#define MSG_JOB_SOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US       _MESSAGE(33657, _("sos_using_gdil for job "U32CFormat": can't find referenced queue "SFQ))
+#endif
+
+#define MSG_QINSTANCE_NQIFOUND_SS      _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ"\n"))
+#define MSG_JOB_WILD_RANGE_AMBIGUOUS   _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
+
+#endif
 

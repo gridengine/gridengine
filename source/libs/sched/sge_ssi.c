@@ -39,13 +39,14 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-#include "sge_queue.h"
+#include "sge_object.h"
+#include "sge_qinstance.h"
 #include "sge_range.h"
-#include "sge_answer.h"
 
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_orderL.h"
 
 #include "sge_orders.h"
@@ -213,15 +214,16 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
       }
 
       DPRINTF(("job requests %d slots on host %s\n", tasks[i].procs, tasks[i].host_name));
-
-      queue = lGetElemHost(Master_Queue_List, QU_qhostname, tasks[i].host_name);
+  
+      queue = lGetElemHost(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                           QU_qhostname, tasks[i].host_name);
       if(queue == NULL) {
          ERROR((SGE_EVENT, MSG_SSI_COULDNOTFINDQUEUEFORHOST_S, tasks[i].host_name));
          DEXIT;
          return false;
       }
 
-      granted_queue = lAddElemStr(&granted, JG_qname, lGetString(queue, QU_qname), JG_Type);
+      granted_queue = lAddElemStr(&granted, JG_qname, lGetString(queue, QU_full_name), JG_Type);
       lSetUlong(granted_queue, JG_qversion, lGetUlong(queue, QU_version));
       lSetHost(granted_queue, JG_qhostname, lGetHost(queue, QU_qhostname));
       lSetUlong(granted_queue, JG_slots, tasks[i].procs);

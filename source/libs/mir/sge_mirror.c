@@ -51,7 +51,6 @@
 #include "sge_pe_task.h"
 #include "sge_manop.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
 #include "sge_schedd_conf.h"
 #include "sge_sharetree.h"
 #include "sge_cuser.h"
@@ -137,9 +136,8 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, sharetree_update_master_list,           NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
-   { NULL, queue_update_master_list,               NULL, NULL },
-   { NULL, generic_update_master_list,             NULL, NULL },
-   { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, cqueue_update_master_list,              NULL, NULL },
+   { NULL, qinstance_update_cqueue_list,           NULL, NULL },
    { NULL, schedd_conf_update_master_list,         NULL, NULL },
    { NULL, NULL,                                   NULL, NULL },
    { NULL, sge_mirror_process_shutdown,            NULL, NULL },
@@ -522,22 +520,6 @@ lListElem *where_el = lWhereToElem(where);
             ec_mod_subscription_where(sgeE_PROJECT_MOD, what_el, where_el); 
          }
          break;
-      case SGE_TYPE_QUEUE:
-         ec_subscribe(sgeE_QUEUE_LIST);
-         ec_subscribe(sgeE_QUEUE_ADD);
-         ec_subscribe(sgeE_QUEUE_DEL);
-         ec_subscribe(sgeE_QUEUE_MOD);
-         ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
-         ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
-         if (what_el && where_el){
-            ec_mod_subscription_where(sgeE_QUEUE_LIST, what_el, where_el);
-            ec_mod_subscription_where(sgeE_QUEUE_ADD, what_el, where_el);
-            ec_mod_subscription_where(sgeE_QUEUE_DEL, what_el, where_el); 
-            ec_mod_subscription_where(sgeE_QUEUE_MOD, what_el, where_el); 
-            ec_mod_subscription_where(sgeE_QUEUE_SUSPEND_ON_SUB, what_el, where_el); 
-            ec_mod_subscription_where(sgeE_QUEUE_UNSUSPEND_ON_SUB, what_el, where_el);
-         }
-         break;
       case SGE_TYPE_CQUEUE:
          ec_subscribe(sgeE_CQUEUE_LIST);
          ec_subscribe(sgeE_CQUEUE_ADD);
@@ -554,10 +536,14 @@ lListElem *where_el = lWhereToElem(where);
          ec_subscribe(sgeE_QINSTANCE_ADD);
          ec_subscribe(sgeE_QINSTANCE_DEL);
          ec_subscribe(sgeE_QINSTANCE_MOD);
+         ec_subscribe(sgeE_QINSTANCE_SOS);
+         ec_subscribe(sgeE_QINSTANCE_USOS);
          if (what_el && where_el){
             ec_mod_subscription_where(sgeE_QINSTANCE_ADD, what_el, where_el);
             ec_mod_subscription_where(sgeE_QINSTANCE_DEL, what_el, where_el); 
             ec_mod_subscription_where(sgeE_QINSTANCE_MOD, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_QINSTANCE_SOS, what_el, where_el);
+            ec_mod_subscription_where(sgeE_QINSTANCE_USOS, what_el, where_el);
          }
          break;
       case SGE_TYPE_SCHEDD_CONF:
@@ -818,14 +804,6 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_PROJECT_DEL);
          ec_unsubscribe(sgeE_PROJECT_MOD);
          break;
-      case SGE_TYPE_QUEUE:
-         ec_unsubscribe(sgeE_QUEUE_LIST);
-         ec_unsubscribe(sgeE_QUEUE_ADD);
-         ec_unsubscribe(sgeE_QUEUE_DEL);
-         ec_unsubscribe(sgeE_QUEUE_MOD);
-         ec_unsubscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
-         ec_unsubscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
-         break;
       case SGE_TYPE_CQUEUE:
          ec_unsubscribe(sgeE_CQUEUE_LIST);
          ec_unsubscribe(sgeE_CQUEUE_ADD);
@@ -836,6 +814,8 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_QINSTANCE_ADD);
          ec_unsubscribe(sgeE_QINSTANCE_DEL);
          ec_unsubscribe(sgeE_QINSTANCE_MOD);
+         ec_unsubscribe(sgeE_QINSTANCE_SOS);
+         ec_unsubscribe(sgeE_QINSTANCE_USOS);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          ec_unsubscribe(sgeE_SCHED_CONF);
@@ -1229,26 +1209,7 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
          case sgeE_QMASTER_GOES_DOWN:
             ret = sge_mirror_process_event(SGE_TYPE_QMASTER_GOES_DOWN, SGE_EMA_TRIGGER, event);
             break;
-                                    
-         case sgeE_QUEUE_LIST:
-            ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_LIST, event);
-            break;
-         case sgeE_QUEUE_ADD:
-            ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_ADD, event);
-            break;
-         case sgeE_QUEUE_DEL:
-            ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_DEL, event);
-            break;
-         case sgeE_QUEUE_MOD:
-            ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_MOD, event);
-            break;
-         case sgeE_QUEUE_SUSPEND_ON_SUB:
-            ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_MOD, event);
-            break;
-         case sgeE_QUEUE_UNSUSPEND_ON_SUB:
-            ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_MOD, event);
-            break;
-
+         
          case sgeE_CQUEUE_LIST:
             ret = sge_mirror_process_event(SGE_TYPE_CQUEUE, SGE_EMA_LIST, event);
             break;
@@ -1271,6 +1232,13 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
          case sgeE_QINSTANCE_MOD:
             ret = sge_mirror_process_event(SGE_TYPE_QINSTANCE, SGE_EMA_MOD, event);
             break;
+         case sgeE_QINSTANCE_SOS:
+            ret = sge_mirror_process_event(SGE_TYPE_QINSTANCE, SGE_EMA_MOD, event);
+            break;
+         case sgeE_QINSTANCE_USOS:
+            ret = sge_mirror_process_event(SGE_TYPE_QINSTANCE, SGE_EMA_MOD, event);
+            break;
+
 
          case sgeE_SCHED_CONF:
             ret = sge_mirror_process_event(SGE_TYPE_SCHEDD_CONF, SGE_EMA_MOD, event);
@@ -1392,7 +1360,8 @@ static sge_mirror_error sge_mirror_process_event(sge_object_type type, sge_event
    if(mirror_base[type].callback_default != NULL) {
       ret = mirror_base[type].callback_default(type, action, event, NULL);
       if(!ret) {
-         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
+         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, 
+                event_text(event, &buffer_wrapper)));
          DEXIT;
          return SGE_EM_CALLBACK_FAILED;
       }
@@ -1600,9 +1569,10 @@ sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDes
 *     Eventmirror/sge_mirror_update_master_list_str_key()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-sge_mirror_error sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
-                                               lListElem *ep, const char *key, 
-                                               sge_event_action action, lListElem *event)
+sge_mirror_error 
+sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
+                              lListElem *ep, const char *key, 
+                              sge_event_action action, lListElem *event)
 {
    lList *data_list;
 
@@ -1623,7 +1593,7 @@ sge_mirror_error sge_mirror_update_master_list(lList **list, const lDescr *list_
    
          /* if neccessary, create list */
          if(*list == NULL) {
-            *list = lCreateList("new master list", list_descr);
+            *list = lCreateList("", list_descr);
          }
 
          /* insert element */

@@ -45,7 +45,6 @@
 #include "ck_to_do_qmaster.h"
 #include "sgermon.h"
 #include "sge_time.h"
-#include "slots_used.h"
 #include "sge_log.h"
 #include "time_event.h"
 #include "sge_calendar_qmaster.h"
@@ -54,9 +53,11 @@
 #include "reschedule.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
+#include "sge_object.h"
+#include "sge_cqueue.h"
 #include "sge_centry.h"
-
+#include "sge_qinstance_state.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_persistence_qmaster.h"
 
@@ -116,3 +117,106 @@ int had_free_epoch
    return;
 }
 
+#if 0 /* EB: Might this function be removed */
+static void log_stat_file(
+u_long32 now 
+) {
+   stringT str;
+   FILE *fp;
+   static u_long32 last_stat_log_time = 0;
+   double load_avg = 0.0, vmem = 0.0;
+   SGE_STRUCT_STAT statbuf;
+   lListElem *hep, *ep;
+
+   DENTER(TOP_LAYER, "log_stat_file");
+
+   if (!last_stat_log_time || now > (last_stat_log_time + conf.stat_log_time)) {
+      if (SGE_STAT(path_state_get_stat_file(), &statbuf)) {
+         close(creat(path_state_get_stat_file(), 0644));
+      }
+      fp = fopen(path_state_get_stat_file(), "a");
+      if (fp) {
+         lListElem *cqueue;
+
+         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance;
+
+            for_each(qinstance, qinstance_list) {
+               memset(str, 0, sizeof(str));
+
+               if (( hep = host_list_locate(Master_Exechost_List, 
+                                        lGetHost(qinstance, QU_qhostname)))) {
+                   /* use load avg */
+                   if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
+                      load_avg = strtod(lGetString(ep, HL_value), NULL);
+                   /* use vmem */
+                   if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_VIRTUAL_USED, EH_load_list)))
+                      vmem = strtod(lGetString(ep, HL_value), NULL);
+               }
+
+               fprintf(fp, "%u:%s:%s:%.2f:%.2f:", 
+                        (unsigned) now,
+                        lGetHost(qinstance, QU_qhostname), 
+                        lGetString(qinstance, QU_qname),
+                        load_avg, 
+                        vmem);
+
+               /* states */
+               {
+                  dstring state_string_buffer = DSTRING_INIT;
+
+                  qinstance_state_append_to_dstring(qinstance, &state_string_buffer);
+                  fprintf(fp, "%s:", sge_dstring_get_string(&state_string_buffer));
+                  sge_dstring_free(&state_string_buffer);
+               }
+
+               /* queue consumables */
+               log_consumables(fp, lGetList(qinstance, QU_consumable_actual_list), lGetList(qinstance, QU_consumable_config_list));
+               fprintf(fp, ":");
+
+               /* host consumables */
+               log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
+               fprintf(fp, ":");
+
+               /* global consumables */
+               if ((hep = host_list_locate(Master_Exechost_List, "global")))
+                  log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
+               fprintf(fp, "\n");
+            }
+         }
+         fclose(fp);
+      }
+      else {
+         ERROR((SGE_EVENT, MSG_FILE_OPEN_S, path_state_get_stat_file()));
+      }
+      last_stat_log_time = now;
+   }
+
+   DEXIT;
+   return;
+}
+
+static void log_consumables(FILE *fp, lList *actual, lList *total) 
+{
+   lListElem *cep; 
+
+   for_each (cep, actual) {
+      lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
+      dstring act_string = DSTRING_INIT;
+      dstring tot_dstring = DSTRING_INIT;
+
+      centry_print_resource_to_dstring(cep, &act_string);
+      centry_print_resource_to_dstring(tep, &tot_dstring);
+      fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), 
+              sge_dstring_get_string(&tot_dstring),
+              sge_dstring_get_string(&act_string)); 
+      sge_dstring_free(&act_string);
+      sge_dstring_free(&tot_dstring);
+      if (lNext(cep)) {
+         fprintf(fp, ","); 
+      }
+   }
+}
+
+#endif

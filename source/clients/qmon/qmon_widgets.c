@@ -53,6 +53,7 @@
 #include "sge_time.h"
 #include "sge_mailrec.h"
 #include "sge_range.h"
+#include "sge_qinstance.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"

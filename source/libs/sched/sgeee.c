@@ -65,12 +65,11 @@
 #include "msg_schedd.h"
 #include "sge_language.h"
 #include "sge_string.h"
-#include "slots_used.h"
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_range.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_host.h"
 #include "sge_userprj.h"
 
@@ -700,7 +699,7 @@ locate_jobclass( lList *job_class_list,
     * Look up the job class object by name
     *-------------------------------------------------------------*/
 
-   return queue_list_locate(job_class_list, name);
+   return qinstance_list_locate2(job_class_list, name);
 }
 
 #if 0
@@ -2981,7 +2980,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       }
 
    for_each(qep, lists->queue_list)
-      free_qslots += MAX(0, lGetUlong(qep, QU_job_slots) - qslots_used(qep));
+      free_qslots += MAX(0, lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep));
 
    /*-----------------------------------------------------------------
     * Create and build job reference array.  The job reference array
@@ -4206,7 +4205,7 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
       last_max_queued_ticket_orders = max_queued_ticket_orders;
       norders = lGetNumberOfElem(order_list);
       for_each(qep, lists->queue_list)
-         free_qslots += MAX(0, lGetUlong(qep, QU_job_slots) - qslots_used(qep));
+         free_qslots += MAX(0, lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep));
       for_each(job, queued_jobs) {
          lListElem *ja_task;
          int tasks=0;
@@ -4930,13 +4929,13 @@ main(int argc, char **argv)
    lAddElemHost(&(lists->host_list), EH_name, "fritz", EH_Type); 
 
    /* build queue list */
-   ep = lAddElemStr(&(lists->all_queue_list), QU_qname, "racerx.q", QU_Type); 
+   ep = lAddElemStr(&(lists->all_queue_list), QU_full_name, "racerx.q", QU_Type); 
    lSetHost(ep, QU_qhostname, "racerx");
 
-   ep = lAddElemStr(&(lists->all_queue_list), QU_qname, "yosemite_sam.q", QU_Type); 
+   ep = lAddElemStr(&(lists->all_queue_list), QU_full_name, "yosemite_sam.q", QU_Type); 
    lSetHost(ep, QU_qhostname, "yosemite_sam");
 
-   ep = lAddElemStr(&(lists->all_queue_list), QU_qname, "fritz.q", QU_Type); 
+   ep = lAddElemStr(&(lists->all_queue_list), QU_full_name, "fritz.q", QU_Type); 
    lSetHost(ep, QU_qhostname, "fritz");
    
    /* build configuration */

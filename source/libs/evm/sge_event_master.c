@@ -48,7 +48,7 @@
 #include "sge_conf.h"
 #include "sge_security.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_report.h"
 #include "sge_ckpt.h"
 #include "sge_pe.h"
@@ -64,6 +64,7 @@
 #include "sge_cuser.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
@@ -413,7 +414,6 @@ total_update(lListElem *event_client)
    sge_total_update_event(event_client, sgeE_MANAGER_LIST);
    sge_total_update_event(event_client, sgeE_OPERATOR_LIST);
    sge_total_update_event(event_client, sgeE_PE_LIST);
-   sge_total_update_event(event_client, sgeE_QUEUE_LIST);
    sge_total_update_event(event_client, sgeE_CQUEUE_LIST);
    sge_total_update_event(event_client, sgeE_SCHED_CONF);
    sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST);
@@ -796,8 +796,6 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
                                      event_client, sgeE_PE_LIST);
       check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_PROJECT_LIST);
-      check_send_new_subscribed_list(old_sub, new_sub, 
-                                     event_client, sgeE_QUEUE_LIST);
       check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CQUEUE_LIST);
       check_send_new_subscribed_list(old_sub, new_sub, 
@@ -1715,11 +1713,8 @@ sge_total_update_event(lListElem *event_client, ev_event type)
          case sgeE_PROJECT_LIST:
             lp = Master_Project_List;
             break;
-         case sgeE_QUEUE_LIST:
-            lp = Master_Queue_List;
-            break;
          case sgeE_CQUEUE_LIST:
-            lp = Master_CQueue_List;
+            lp = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
             break;
          case sgeE_SCHED_CONF:
             lp = *sconf_get_config_list();

@@ -72,12 +72,13 @@
 #include "qmon_message.h"
 #include "sge_range.h"
 #include "sge_job.h"
-#include "sge_queue.h"
 #include "sge_host.h"
 #include "sge_parse_num_par.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 
 /*-------------------------------------------------------------------------*/
@@ -1072,7 +1073,8 @@ int nm
 
       /* check suspension of queue */
       if (n>0) {
-         qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), 
+         /* EB: TODO: */
+         qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), 
                                  lGetString(lFirst(ql), JG_qname));
          if (qep && 
              (qinstance_state_is_manual_suspended(qep) ||

@@ -36,7 +36,7 @@
 #include "sge_ja_task.h"
 #include "sge_str.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_string.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"
@@ -59,6 +59,7 @@
 #include "sge_userset.h"
 #include "sge_mailrec.h"
 #include "sge_centry.h"
+#include "sge_qref.h"
 
 #include "msg_daemons_common.h"
 

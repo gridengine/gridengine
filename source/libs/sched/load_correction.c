@@ -40,10 +40,10 @@
 #include "sge_time.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
-#include "sge_queue.h"
 #include "sge_host.h"
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
+#include "sge_qinstance.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 
@@ -93,7 +93,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
             u_long32 slots;
             
             qnm = lGetString(granted_queue, JG_qname);
-            qep = queue_list_locate(queue_list, qnm);
+            qep = qinstance_list_locate2(queue_list, qnm);
             if (qep == NULL) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
                         "list of job "u32"."u32"\n", qnm, job_id, ja_task_id));

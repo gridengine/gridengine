@@ -57,7 +57,6 @@
 #include "commlib.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
-#include "slots_used.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_util.h"
@@ -80,7 +79,7 @@
 #include "sge_host.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_cqueue.h"
 #include "sge_qinstance_state.h"
 
 /*-------------------------------------------------------------------------*/
@@ -976,7 +975,8 @@ XtPointer cld, cad;
       return;
    }
 
-   ql = qmonMirrorList(SGE_QUEUE_LIST);
+   /* EB: TODO: */
+   ql = qmonMirrorList(SGE_CQUEUE_LIST);
    n = lGetNumberOfElem(ql);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -1090,8 +1090,8 @@ XtPointer cld, cad;
   
 
    if (lFirst(lp) && qmonQCToCull(&current_entry, lFirst(lp))) {
-
-      alp = qmonAddList(SGE_QUEUE_LIST, qmonMirrorListRef(SGE_QUEUE_LIST), 
+      /* EB: TODO: */
+      alp = qmonAddList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST), 
                         QU_qname, &lp, NULL, what);
       
       qmonMessageBox(w, alp, 0);
@@ -1141,7 +1141,8 @@ XtPointer cld, cad;
    XmtDialogGetDialogValues(qc_dialog, &current_entry);
 
    if (current_entry.qname) {
-      moq = lCopyElem(queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST),  
+      /* EB: TODO: */
+      moq = lCopyElem(cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST),  
                                         current_entry.qname));
    }
 
@@ -1154,8 +1155,9 @@ XtPointer cld, cad;
          lWriteListTo(lp, stdout);
          printf("________________________________________\n");
       }
-      
-      alp = qmonModList(SGE_QUEUE_LIST, qmonMirrorListRef(SGE_QUEUE_LIST),
+     
+      /* EB: TODO: */ 
+      alp = qmonModList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST),
                            QU_qname, &lp, NULL, what);
 
       qmonMessageBox(w, alp, 0);
@@ -1203,7 +1205,8 @@ XtPointer cld, cad;
                      False, &answer, NULL);
          
       if (answer) { 
-         alp = qmonDelList(SGE_QUEUE_LIST, qmonMirrorListRef(SGE_QUEUE_LIST),
+         /* EB: TODO: */
+         alp = qmonDelList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST),
                                  QU_qname, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
@@ -1237,8 +1240,9 @@ int how
    }
    
    qmonMirrorMulti(QUEUE_T);
-   ql = qmonMirrorList(SGE_QUEUE_LIST);
-   qep = queue_list_locate(ql, qname);
+   /* EB: TODO: */
+   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   qep = cqueue_list_locate_qinstance(ql, qname);
    qmonCullToQC(qep, data, how);
 
    DEXIT;
@@ -1562,7 +1566,7 @@ lListElem *qep
    lSetString(qep, QU_priority, buf);
    lSetUlong(qep, QU_job_slots, data->job_slots);
    /* initialize QU_job_slots_used */
-   set_qslots_used(qep, 0);
+   qinstance_set_slots_used(qep, 0);
    lSetBool(qep, QU_rerun, data->rerun);
    lSetUlong(qep, QU_seq_no, data->seq_no);
 
@@ -2014,7 +2018,8 @@ XtPointer cld, cad;
    
    if (cbs->column == 0) {
       qmonMirrorMulti(QUEUE_T);
-      ql = qmonMirrorList(SGE_QUEUE_LIST);
+      /* EB: TODO: */
+      ql = qmonMirrorList(SGE_CQUEUE_LIST);
       n = lGetNumberOfElem(ql);
       if (n>0) {
          strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -2275,7 +2280,8 @@ void updateQCQ(void)
       /* disable/enable redisplay while updating */
       XmtLayoutDisableLayout(qc_dialog);
       /* list with template sorted alphabetically */
-      qlf = lCopyList("qlf", qmonMirrorList(SGE_QUEUE_LIST));
+      /* EB: TODO: */
+      qlf = lCopyList("qlf", qmonMirrorList(SGE_CQUEUE_LIST));
       lPSortList(qlf, "%I+", QU_qname);
       UpdateXmListFromCull(qc_queue_list, XmFONTLIST_DEFAULT_TAG, qlf, 
                               QU_qname);

@@ -33,9 +33,10 @@
 /*___INFO__MARK_END__*/
 
 /* Group Option Constants */
-#define GROUP_TASK_GROUPS              0x00000000
-#define GROUP_NO_TASK_GROUPS           0x00000001
-#define GROUP_NO_PETASK_GROUPS         0x00000002
+#define GROUP_DEFAULT            0x00000000
+#define GROUP_NO_TASK_GROUPS     0x00000001
+#define GROUP_NO_PETASK_GROUPS   0x00000002
+#define GROUP_CQ_SUMMARY         0x00000004
 
 char **parse_noopt(char **sp, const char *shortopt, const char *longopt, lList **ppcmdline, lList **alpp);
 

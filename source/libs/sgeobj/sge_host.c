@@ -34,7 +34,7 @@
 #include "sge.h"
 #include "sge_object.h"
 #include "sge_host.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -49,7 +49,8 @@ lList *Master_Exechost_List = NULL;
 lList *Master_Adminhost_List = NULL;
 lList *Master_Submithost_List = NULL;
 
-lListElem *host_list_locate(lList *host_list, const char *hostname) 
+lListElem *
+host_list_locate(const lList *host_list, const char *hostname) 
 {
    lListElem *ret = NULL;
    DENTER(TOP_LAYER, "host_list_locate");

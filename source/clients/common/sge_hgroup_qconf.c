@@ -38,11 +38,13 @@
 #include "sge_unistd.h"
 
 #include "sge_answer.h"
+#include "sge_object.h"
 #include "sge_edit.h"
 #include "sge_hgroup.h"
 #include "sge_hgroup_qconf.h"
 
 #include "msg_common.h"
+#include "msg_clients_common.h"
 
 bool 
 hgroup_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
@@ -97,7 +99,8 @@ lListElem *hgroup_get_via_gdi(lList **answer_list, const char *name)
    return ret;
 }
 
-bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list)
+bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
+                                   bool ignore_unchanged_message)
 {
    bool ret = false;
    int status = 0;
@@ -112,9 +115,16 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list)
 
          hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
          if (hgroup != NULL) {
-            *this_elem = lFreeElem(*this_elem);
-            *this_elem = hgroup; 
-            ret = true;
+            if (object_has_differences(*this_elem, answer_list,
+                                       hgroup, false) || 
+                ignore_unchanged_message) {
+               *this_elem = lFreeElem(*this_elem);
+               *this_elem = hgroup; 
+               ret = true;
+            } else {
+               answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
+                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+            }
          } else {
             answer_list_add(answer_list, MSG_FILE_ERRORREADINGINFILE,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);
@@ -141,7 +151,7 @@ bool hgroup_add(lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
-         ret &= hgroup_provide_modify_context(&hgroup, answer_list);
+         ret &= hgroup_provide_modify_context(&hgroup, answer_list, true);
       }
       if (ret) {
          ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, 
@@ -183,14 +193,13 @@ bool hgroup_modify(lList **answer_list, const char *name)
       lListElem *hgroup = hgroup_get_via_gdi(answer_list, name);
 
       if (hgroup == NULL) {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Host group "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
       }
       if (ret) {
-         ret &= hgroup_provide_modify_context(&hgroup, answer_list);
+         ret &= hgroup_provide_modify_context(&hgroup, answer_list, false);
       }
       if (ret) {
          ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
@@ -214,8 +223,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
 
       hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL); 
       if (hgroup == NULL) {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Host group file "SFQ" is not correct\n", filename);
+         sprintf(SGE_EVENT, MSG_HGROUP_FILEINCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -260,8 +268,7 @@ bool hgroup_show(lList **answer_list, const char *name)
          write_host_group(0, 0, hgroup);
          hgroup = lFreeElem(hgroup);
       } else {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Host group "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
          ret = false;
@@ -270,5 +277,3 @@ bool hgroup_show(lList **answer_list, const char *name)
    DEXIT;
    return ret;
 }
-
-

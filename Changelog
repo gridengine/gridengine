@@ -1,3 +1,24 @@
+EB-2003-13-12-0: Enhancem.: Cluster Queue (merged from CQ_BRANCH)
+                 Changed:   all
+
+                 All changes applied to the CQ_BRANCH have been merged to
+                 MAINTRUNC. This also means that (nearly) all work packeges 
+                 for the second milestone of CQs have been realized. 
+
+                 Following part are still missing. They will be done till
+                 mid/end of january:
+         
+                 *   "qconf -cq" does not work anymore
+                 *   "qconf -explain E" does not show result for queues
+                     error state
+                 *   "\" can't be used as continuation character until now
+                 *   qacct has not been changed accordingly
+                 *   help output for all commands has not been changed
+                 *   GUI
+                 *   Testsuite
+                 *   man-pages and how-to's are still missing
+                     ...
+
 JG-2003-12-10-2: Testsuite: Cleanup
 
 SG-2003-12-10-3: Enhancem.: Added a cycle check for job dependencies, when an

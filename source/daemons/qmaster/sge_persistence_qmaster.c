@@ -202,7 +202,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
                 lListElem *sub_object2, bool send_event, bool spool)
 {
    bool ret = true;
-  
+   dstring key_buffer = DSTRING_INIT; 
    const char *key = NULL;
    sge_object_type object_type;
    lListElem *element = NULL;
@@ -340,16 +340,6 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          /* nothing to spool for this event */
          object_type = SGE_TYPE_ALL;
          break;
-      case sgeE_QUEUE_LIST:
-      case sgeE_QUEUE_ADD:
-      case sgeE_QUEUE_DEL:
-      case sgeE_QUEUE_MOD:
-      case sgeE_QUEUE_SUSPEND_ON_SUB:
-      case sgeE_QUEUE_UNSUSPEND_ON_SUB:
-         key = strkey;
-         element = object;
-         object_type = SGE_TYPE_QUEUE;
-         break;
       case sgeE_CQUEUE_LIST:
       case sgeE_CQUEUE_ADD:
       case sgeE_CQUEUE_DEL:
@@ -358,8 +348,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          element = object;
          object_type = SGE_TYPE_CQUEUE;
          break;
+      case sgeE_QINSTANCE_ADD:
       case sgeE_QINSTANCE_DEL:
-         key = strkey;
+      case sgeE_QINSTANCE_MOD:
+      case sgeE_QINSTANCE_SOS:
+      case sgeE_QINSTANCE_USOS:
+         sge_dstring_sprintf(&key_buffer, SFN"/"SFN, strkey, strkey2);
+         key = sge_dstring_get_string(&key_buffer);
          element = object;
          object_type = SGE_TYPE_QINSTANCE;
          break;
@@ -447,7 +442,6 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_OPERATOR_DEL:
          case sgeE_PE_DEL:
          case sgeE_PROJECT_DEL:
-         case sgeE_QUEUE_DEL:
          case sgeE_CQUEUE_DEL:
          case sgeE_QINSTANCE_DEL:
          case sgeE_SUBMITHOST_DEL:
@@ -491,6 +485,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       /* clear the changed bits */
       lListElem_clear_changed_info(object);
    }
+   sge_dstring_free(&key_buffer);
 
    sge_dstring_free(&buffer);
    return ret;

@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdlib.h>
+
 #include "sge_lock.h"
 
 #include <stdio.h>

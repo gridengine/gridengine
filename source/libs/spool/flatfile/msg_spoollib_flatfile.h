@@ -40,5 +40,6 @@
 #define MSG_PARSINGLISTEXPECTEDBUTGOT_DSSD _MESSAGE(62002, _("reading list (%d): expected "SFQ", but got "SFQ" in line %d\n"))
 #define MSG_UNKNOWNATTRIBUTENAME_S _MESSAGE(62003, _("unknown attribute name "SFQ"\n"))
 #define MSG_DONTKNOWHOWTOHANDLELIST_S  _MESSAGE(62006, _("don't know how to handle sublist "SFQ"\n"))
+#define MSG_FLATFILE_HOSTNOTEXISTS_SS  _MESSAGE(62007, _("Host object "SFQ"for queue instance "SFQ" does not exist\n"))
 
 #endif /* __MSG_SPOOLLIB_FLATFILE_H */

@@ -38,7 +38,6 @@ GDILIB = libgdi$(QIDLEXT)$(LIBEXT)
 
 GDILIB_SRC = gdi_setup.c \
          gdi_tsm.c \
-         gdi_qmod.c \
          gdi_checkpermissions.c \
          gdi_conf.c \
          pack_job_delivery.c \
@@ -98,9 +97,6 @@ gdi_conf.o:	$(GDILIB_DIR)/gdi_conf.c
 
 gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_setup.c
-
-gdi_qmod.o:	$(GDILIB_DIR)/gdi_qmod.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_qmod.c
 
 sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ack.c

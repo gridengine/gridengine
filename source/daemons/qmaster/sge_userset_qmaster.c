@@ -36,7 +36,6 @@
 #include "sge_log.h"
 #include "sgermon.h"
 #include "sge_pe.h"
-#include "sge_queue_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_userset.h"
 #include "sge_userset_qmaster.h"
@@ -45,11 +44,12 @@
 #include "valid_queue_user.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_job.h"
 #include "sge_userprj.h"
 #include "sge_host.h"
 #include "sge_utility.h"
+#include "sge_cqueue.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -354,26 +354,37 @@ char *rhost
    having changed a complex we have to increase the versions
    of all queues containing this complex;
  **********************************************************************/
-static void sge_change_queue_version_acl(
-const char *acl_name 
-) {
-   lListElem *qep;
+static void 
+sge_change_queue_version_acl(const char *acl_name) 
+{
+   lListElem *cqueue = NULL;
 
    DENTER(TOP_LAYER, "sge_change_queue_version_acl");
 
-   for_each(qep, Master_Queue_List) {
-      if (lGetElemStr(lGetList(qep, QU_acl), US_name, acl_name) ||
-          lGetElemStr(lGetList(qep, QU_xacl), US_name, acl_name)) {
-         lList *answer_list = NULL;
-         sge_change_queue_version(qep, 0, 0);
-      
-         /* event has already been sent in sge_change_queue_version */
-         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), NULL, NULL,
-                         qep, NULL, NULL, false, true);
-         answer_list_output(&answer_list);
-         DPRINTF(("increasing version of queue "SFQ" because acl "
-                       SFQ" changed\n", lGetString(qep, QU_qname), acl_name));
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+
+      for_each(qinstance, qinstance_list) {
+         lList *acl_list = lGetList(qinstance, QU_acl);
+         lList *xacl_list = lGetList(qinstance, QU_xacl);
+         lListElem *acl = lGetElemStr(acl_list, US_name, acl_name);
+         lListElem *xacl = lGetElemStr(xacl_list, US_name, acl_name);
+         bool is_used = ((acl != NULL) || (xacl != NULL));
+
+         if (is_used) {
+            lList *answer_list = NULL;
+
+            DPRINTF(("increasing version of queue "SFQ" because acl "SFQ
+                     " changed\n", lGetString(qinstance, QU_full_name), 
+                     acl_name));
+            qinstance_increase_qversion(qinstance);
+            sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+                            0, 0, lGetString(qinstance, QU_qname), 
+                            lGetHost(qinstance, QU_qhostname), NULL,
+                            qinstance, NULL, NULL, false, true);
+            answer_list_output(&answer_list);
+         }
       }
    }
 
@@ -668,21 +679,31 @@ const char *userset_name
 ) {
    int ret = STATUS_OK;
    lListElem *ep;
+   lListElem *cqueue;
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
-   for_each (ep, Master_Queue_List) {
-      if (lGetElemStr(lGetList(ep, QU_acl), US_name, userset_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = STATUS_EUNKNOWN;
-      }
-      if (lGetElemStr(lGetList(ep, QU_xacl), US_name, userset_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = STATUS_EUNKNOWN;
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance;
+
+      for_each(qinstance, qinstance_list) {
+         if (lGetElemStr(lGetList(qinstance, QU_acl), US_name, userset_name)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
+                   userset_name, MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, 
+                   lGetString(qinstance, QU_qname)));
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
+         if (lGetElemStr(lGetList(qinstance, QU_xacl), US_name, userset_name)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
+                   userset_name, MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, 
+                   lGetString(qinstance, QU_qname)));
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
       }
    }
 

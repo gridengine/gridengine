@@ -44,8 +44,5 @@ void sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 
 int sge_signal_queue(int how, lListElem *qep, lListElem *jep, lListElem *jatep);
 
-bool
-qinstance_signal_on_calendar(lListElem *this_elem, const lListElem *calendar);
-
 #endif /* __SGE_QMOD_QMASTER_H */
 

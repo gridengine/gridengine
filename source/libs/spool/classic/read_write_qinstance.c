@@ -53,6 +53,7 @@
 #include "sge_feature.h"
 #include "sge_href.h"
 #include "sge_qinstance.h"
+#include "sge_subordinate.h"
 #include "sge_centry.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -64,14 +65,14 @@ lListElem *cull_read_in_qinstance(const char *dirname, const char *filename,
                                   int spool, int flag, int *tag, int fields[]) 
 {  
    lListElem *ep;
-   struct read_object_args args = { QI_Type, "", read_qinstance_work };
+   struct read_object_args args = { QU_Type, "", read_qinstance_work };
    int intern_tag = 0;
 
    DENTER(TOP_LAYER, "cull_read_in_qinstance");
 
    ep = read_object(dirname, filename, spool, 0, 0,&args, 
                     tag?tag:&intern_tag, NULL);
-  
+
    DEXIT;
    return ep;
 }
@@ -96,44 +97,44 @@ int parsing_type
 
    DENTER(TOP_LAYER, "read_qinstance_work");
 
-   /* --------- QI_name */
+   /* --------- QU_qname */
    if (ret == 0) {
-      ret = (!set_conf_string(alpp, clpp, fields, "qname", ep, QI_name)) ? -1 : 0;
+      ret = (!set_conf_string(alpp, clpp, fields, "qname", ep, QU_qname)) ? -1 : 0;
    }
 
-   /* --------- QI_hostlist */
+   /* --------- QU_qhostlist */
    if (ret == 0) {
-      ret = (!set_conf_string(alpp, clpp, fields, "hostname", ep, QI_hostname)) ? -1 : 0;
+      ret = (!set_conf_string(alpp, clpp, fields, "hostname", ep, QU_qhostname)) ? -1 : 0;
    }
 
    /* --------- QU_state */
-   if (!set_conf_ulong(alpp, clpp, fields, "state", ep, QI_state)) {
+   if (!set_conf_ulong(alpp, clpp, fields, "state", ep, QU_state)) {
       DEXIT;
       return -1;
    }
 
    /* --------- QU_pending_signal */
    if (!set_conf_ulong(alpp, clpp, fields, "pending_signal",
-            ep, QI_pending_signal)) {
+            ep, QU_pending_signal)) {
       DEXIT;
       return -1;
    }
 
    /* --------- QU_pending_signal_delivery_time */
    if (!set_conf_ulong(alpp, clpp, fields, "pending_signal_del", ep,
-            QI_pending_signal_delivery_time)) {
+            QU_pending_signal_delivery_time)) {
       DEXIT;
       return -1;
    }
 
    /* --------- QU_version */
-   if (!set_conf_ulong(alpp, clpp, fields, "version", ep, QI_version)) {
+   if (!set_conf_ulong(alpp, clpp, fields, "version", ep, QU_version)) {
       DEXIT;
       return -1;
    }
 
    /* --------- QU_queue_number */
-   if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QI_queue_number)) {
+   if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QU_queue_number)) {
       DEXIT;
       return -1;
    }
@@ -143,51 +144,58 @@ int parsing_type
 }
 
 char *
-write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1) 
+write_qinstance(int spool, int how, const lListElem *ep) 
 {
    FILE *fp;
    char filename[SGE_PATH_MAX];
+   char real_filename[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "write_qinstance");
- 
+
    switch (how) {
    case 0:
       fp = stdout;
       break;
    case 1:
-      if (!sge_tmpnam(filename)) {
-         CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
-         DEXIT;
-         return NULL;
+   case 2:
+      if (how==1) {
+         if (!sge_tmpnam(filename)) {
+            CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
+            DEXIT;
+            return NULL;
+         }
+      } else {
+         sprintf(filename, "%s/%s/.%s", QINSTANCES_DIR, 
+                 lGetString(ep, QU_qname), lGetHost(ep, QU_qhostname));
+         sprintf(real_filename, "%s/%s/%s", QINSTANCES_DIR, 
+                 lGetString(ep, QU_qname), lGetHost(ep, QU_qhostname));
       }
 
       fp = fopen(filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, 
+                   strerror(errno)));
          DEXIT;
          return NULL;
       }
-      break;
-   case 4:
-      fp = fp1;
       break;
    default:
       DEXIT;
       return NULL;
    }
 
-   if (how == 0 || how == 4) {
-      FPRINTF((fp, "qname              %s\n", lGetString(ep, QI_name)));
-      FPRINTF((fp, "hostname           %s\n", lGetHost(ep, QI_hostname)));
+   if (how == 0 || how == 2) {
+      FPRINTF((fp, "qname              %s\n", lGetString(ep, QU_qname)));
+      FPRINTF((fp, "hostname           %s\n", lGetHost(ep, QU_qhostname)));
    }
    if (how == 0) {
       {
          FPRINTF((fp, "seq_no             %d\n", 
-                  (int) lGetUlong(ep, QI_seq_no)));
+                  (int) lGetUlong(ep, QU_seq_no)));
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_load_thresholds);
+         const lList *list = lGetList(ep, QU_load_thresholds);
 
          centry_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "load_thresholds    %s\n", 
@@ -196,7 +204,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_suspend_thresholds);
+         const lList *list = lGetList(ep, QU_suspend_thresholds);
 
          centry_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "suspend_thresholds %s\n", 
@@ -205,27 +213,27 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          FPRINTF((fp, "nsuspend           %d\n",
-                  (int) lGetUlong(ep, QI_nsuspend)));
+                  (int) lGetUlong(ep, QU_nsuspend)));
       }
       {
          FPRINTF((fp, "suspend_interval   %s\n",
-                  lGetString(ep, QI_suspend_interval)));
+                  lGetString(ep, QU_suspend_interval)));
       }
       {
          FPRINTF((fp, "priority           %s\n",
-                  lGetString(ep, QI_suspend_interval)));
+                  lGetString(ep, QU_priority)));
       }
       {
          FPRINTF((fp, "min_cpu_interval   %s\n",
-                  lGetString(ep, QI_min_cpu_interval)));
+                  lGetString(ep, QU_min_cpu_interval)));
       }
       {
          FPRINTF((fp, "processors         %s\n",
-                  lGetString(ep, QI_processors)));
+                  lGetString(ep, QU_processors)));
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         u_long32 qtype = lGetUlong(ep, QI_qtype);
+         u_long32 qtype = lGetUlong(ep, QU_qtype);
 
          qtype_append_to_dstring(qtype, &tmp_string);
          FPRINTF((fp, "qtype              %s\n", 
@@ -234,7 +242,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_ckpt_list);
+         const lList *list = lGetList(ep, QU_ckpt_list);
 
          str_list_append_to_dstring(list, &tmp_string, ' ');
          FPRINTF((fp, "ckpt_list          %s\n", 
@@ -243,7 +251,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_pe_list);
+         const lList *list = lGetList(ep, QU_pe_list);
 
          str_list_append_to_dstring(list, &tmp_string, ' ');
          FPRINTF((fp, "pe_list            %s\n", 
@@ -252,55 +260,55 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          FPRINTF((fp, "rerun              %s\n",
-                  lGetBool(ep, QI_rerun) ? "TRUE" : "FALSE"));
+                  lGetBool(ep, QU_rerun) ? "TRUE" : "FALSE"));
       }
       {
          FPRINTF((fp, "slots              "u32"\n",
-                  lGetUlong(ep, QI_job_slots)));
+                  lGetUlong(ep, QU_job_slots)));
       }
       {
          FPRINTF((fp, "tmpdir             %s\n",
-                  lGetString(ep, QI_tmpdir)));
+                  lGetString(ep, QU_tmpdir)));
       }
       {
          FPRINTF((fp, "shell              %s\n",
-                  lGetString(ep, QI_shell)));
+                  lGetString(ep, QU_shell)));
       }
       {
          FPRINTF((fp, "prolog             %s\n",
-                  lGetString(ep, QI_prolog)));
+                  lGetString(ep, QU_prolog)));
       }
       {
          FPRINTF((fp, "epilog             %s\n",
-                  lGetString(ep, QI_epilog)));
+                  lGetString(ep, QU_epilog)));
       }
       {
          FPRINTF((fp, "shell_start_mode   %s\n",
-                  lGetString(ep, QI_shell_start_mode)));
+                  lGetString(ep, QU_shell_start_mode)));
       }
       {
          FPRINTF((fp, "starter_method     %s\n",
-                  lGetString(ep, QI_starter_method)));
+                  lGetString(ep, QU_starter_method)));
       }
       {
          FPRINTF((fp, "suspend_method     %s\n",
-                  lGetString(ep, QI_suspend_method)));
+                  lGetString(ep, QU_suspend_method)));
       }
       {
          FPRINTF((fp, "resume_method      %s\n",
-                  lGetString(ep, QI_resume_method)));
+                  lGetString(ep, QU_resume_method)));
       }
       {
          FPRINTF((fp, "terminate_method   %s\n",
-                  lGetString(ep, QI_terminate_method)));
+                  lGetString(ep, QU_terminate_method)));
       }
       {
          FPRINTF((fp, "notify             %s\n",
-                  lGetString(ep, QI_notify)));
+                  lGetString(ep, QU_notify)));
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_owner_list);
+         const lList *list = lGetList(ep, QU_owner_list);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "owner_list         %s\n", 
@@ -309,7 +317,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_acl);
+         const lList *list = lGetList(ep, QU_acl);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "user_lists         %s\n", 
@@ -318,7 +326,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_xacl);
+         const lList *list = lGetList(ep, QU_xacl);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xuser_lists        %s\n", 
@@ -327,7 +335,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_subordinate_list);
+         const lList *list = lGetList(ep, QU_subordinate_list);
 
          so_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "subordinate_list   %s\n", 
@@ -336,7 +344,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_consumable_config_list);
+         const lList *list = lGetList(ep, QU_consumable_config_list);
 
          centry_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "complex_values     %s\n", 
@@ -345,7 +353,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_projects);
+         const lList *list = lGetList(ep, QU_projects);
 
          userprj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "projects           %s\n", 
@@ -354,7 +362,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
          dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QI_xprojects);
+         const lList *list = lGetList(ep, QU_xprojects);
 
          userprj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xprojects          %s\n", 
@@ -363,57 +371,61 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       }
       {
          FPRINTF((fp, "calendar           %s\n",
-                  lGetString(ep, QI_calendar)));
+                  lGetString(ep, QU_calendar)));
       }
       {
          FPRINTF((fp, "initial_state      %s\n",
-                  lGetString(ep, QI_initial_state)));
+                  lGetString(ep, QU_initial_state)));
       }
       if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
          FPRINTF((fp, "fshare             "u32"\n",
-                  lGetUlong(ep, QI_fshare)));
+                  lGetUlong(ep, QU_fshare)));
          FPRINTF((fp, "oticket            "u32"\n",
-                  lGetUlong(ep, QI_oticket)));
+                  lGetUlong(ep, QU_oticket)));
       }
       {
-         FPRINTF((fp, "s_rt               %s\n", lGetString(ep, QI_s_rt)));
-         FPRINTF((fp, "h_rt               %s\n", lGetString(ep, QI_h_rt)));
-         FPRINTF((fp, "s_cpu              %s\n", lGetString(ep, QI_s_cpu)));
-         FPRINTF((fp, "h_cpu              %s\n", lGetString(ep, QI_h_cpu)));
-         FPRINTF((fp, "s_fsize            %s\n", lGetString(ep, QI_s_fsize)));
-         FPRINTF((fp, "h_fsize            %s\n", lGetString(ep, QI_h_fsize)));
-         FPRINTF((fp, "s_data             %s\n", lGetString(ep, QI_s_data)));
-         FPRINTF((fp, "h_data             %s\n", lGetString(ep, QI_h_data)));
-         FPRINTF((fp, "s_stack            %s\n", lGetString(ep, QI_s_stack)));
-         FPRINTF((fp, "h_stack            %s\n", lGetString(ep, QI_h_stack)));
-         FPRINTF((fp, "s_core             %s\n", lGetString(ep, QI_s_core)));
-         FPRINTF((fp, "h_core             %s\n", lGetString(ep, QI_h_core)));
-         FPRINTF((fp, "s_rss              %s\n", lGetString(ep, QI_s_rss)));
-         FPRINTF((fp, "h_rss              %s\n", lGetString(ep, QI_h_rss)));
-         FPRINTF((fp, "s_vmem             %s\n", lGetString(ep, QI_s_vmem)));
-         FPRINTF((fp, "h_vmem             %s\n", lGetString(ep, QI_h_vmem)));
+         FPRINTF((fp, "s_rt               %s\n", lGetString(ep, QU_s_rt)));
+         FPRINTF((fp, "h_rt               %s\n", lGetString(ep, QU_h_rt)));
+         FPRINTF((fp, "s_cpu              %s\n", lGetString(ep, QU_s_cpu)));
+         FPRINTF((fp, "h_cpu              %s\n", lGetString(ep, QU_h_cpu)));
+         FPRINTF((fp, "s_fsize            %s\n", lGetString(ep, QU_s_fsize)));
+         FPRINTF((fp, "h_fsize            %s\n", lGetString(ep, QU_h_fsize)));
+         FPRINTF((fp, "s_data             %s\n", lGetString(ep, QU_s_data)));
+         FPRINTF((fp, "h_data             %s\n", lGetString(ep, QU_h_data)));
+         FPRINTF((fp, "s_stack            %s\n", lGetString(ep, QU_s_stack)));
+         FPRINTF((fp, "h_stack            %s\n", lGetString(ep, QU_h_stack)));
+         FPRINTF((fp, "s_core             %s\n", lGetString(ep, QU_s_core)));
+         FPRINTF((fp, "h_core             %s\n", lGetString(ep, QU_h_core)));
+         FPRINTF((fp, "s_rss              %s\n", lGetString(ep, QU_s_rss)));
+         FPRINTF((fp, "h_rss              %s\n", lGetString(ep, QU_h_rss)));
+         FPRINTF((fp, "s_vmem             %s\n", lGetString(ep, QU_s_vmem)));
+         FPRINTF((fp, "h_vmem             %s\n", lGetString(ep, QU_h_vmem)));
       }
-   } else if (how == 4) {
+   } else if (how == 2) {
       /*
        * Spool only non-CQ attributes
        */
       FPRINTF((fp, "state              %d\n", 
-               (int)lGetUlong(ep, QI_state)));
+               (int)lGetUlong(ep, QU_state)));
       FPRINTF((fp, "pending_signal     %d\n",
-               (int)lGetUlong(ep, QI_pending_signal)));
+               (int)lGetUlong(ep, QU_pending_signal)));
       FPRINTF((fp, "pending_signal_del %d\n",
-               (int)lGetUlong(ep, QI_pending_signal_delivery_time)));
+               (int)lGetUlong(ep, QU_pending_signal_delivery_time)));
       FPRINTF((fp, "version            %d\n",
-               (int)lGetUlong(ep, QI_version)));
+               (int)lGetUlong(ep, QU_version)));
       FPRINTF((fp, "queue_number       %d\n",
-               (int)lGetUlong(ep, QI_queue_number)));
+               (int)lGetUlong(ep, QU_queue_number)));
    }
-   if (how == 0) {
-      FPRINTF((fp, "\n"));
-   }
-
-   if (how > 0 && how < 4) {
+   if (how != 0) {
       fclose(fp);
+   } 
+   if (how == 2) {
+      if (rename(filename, real_filename) == -1) {
+         DEXIT;
+         return NULL;
+      } else {
+         strcpy(filename, real_filename);
+      }
    }
    DEXIT;
    return how==1?sge_strdup(NULL, filename):filename;

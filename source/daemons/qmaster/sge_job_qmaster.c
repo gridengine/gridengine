@@ -53,25 +53,25 @@
 #include "sge_job_refL.h"
 #include "sge_host.h"
 #include "sge_job_qmaster.h"
+#include "sge_cqueue_qmaster.h"
 #include "sge_give_jobs.h"
 #include "job_log.h"
 #include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_queue_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
 #include "job_report_qmaster.h"
 #include "sge_parse_num_par.h"
 #include "sge_event_master.h"
 #include "sge_signal.h"
-#include "subordinate_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_userset.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_prog.h"
 #include "cull_parse_util.h"
 #include "schedd_monitor.h"
 #include "sge_messageL.h"
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_afsutil.h"
 #include "sge_ulongL.h"
 #include "setup_path.h"
@@ -86,10 +86,12 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
+#include "sge_qref.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -120,7 +122,6 @@ static void get_rid_of_schedd_job_messages(u_long32 job_number);
 static int changes_consumables(lList **alpp, lList* new, lList* old);
 static int deny_soft_consumables(lList **alpp, lList *srl);
 
-
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
@@ -129,7 +130,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                     char *rhost, sge_gdi_request *request) 
 {
    int ckpt_err;
-   lListElem *qep;
    const char *pe_name, *project, *ckpt_name;
    u_long32 ckpt_attr, ckpt_inter;
    u_long32 job_number;
@@ -310,50 +310,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lFreeList(temp);
    }
 
-   /* attribute "qname" in queue complex must be requestable for -q */
-   if (lGetList(jep, JB_hard_queue_list)) {
-      const char *qname;
-      lListElem *ep;
-
-      if (!centry_list_are_queues_requestable(Master_CEntry_List)) {
-         ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE)); 
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-
-      for_each (ep, lGetList(jep, JB_hard_queue_list)) {
-         qname = lGetString(ep, QR_name);
-         if (!queue_list_locate(Master_Queue_List, qname)) {
-            ERROR((SGE_EVENT, MSG_JOB_QUNKNOWN_S, qname));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-      }
+   if (!qref_list_is_valid(lGetList(jep, JB_hard_queue_list), alpp)) {
+      DEXIT; 
+      return STATUS_EUNKNOWN;
    }
 
-   /* attribute "qname" in queue complex must be requestable for -masterq */
-   if (lGetList(jep, JB_master_hard_queue_list)) {
-      const char *qname;
-      lListElem *ep;
-
-      if (!centry_list_are_queues_requestable(Master_CEntry_List)) {
-         ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE)); 
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-
-      for_each (ep, lGetList(jep, JB_master_hard_queue_list)) {
-         qname = lGetString(ep, QR_name);
-         if (!queue_list_locate(Master_Queue_List, qname)) {
-            ERROR((SGE_EVENT, MSG_JOB_QUNKNOWN_S, qname));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-      }
+   if (!qref_list_is_valid(lGetList(jep, JB_master_hard_queue_list), alpp)) {
+      DEXIT; 
+      return STATUS_EUNKNOWN;
    }
 
    if ((!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) && 
@@ -440,13 +404,20 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    
    /* first check user permissions */
    { 
+      lListElem *cqueue;
       int has_permissions = 0;
-      for_each (qep, Master_Queue_List) {
-         if (sge_has_access(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
-               qep, Master_Userset_List)) {
-            DPRINTF(("job has access to queue "SFQ"\n", lGetString(qep, QU_qname)));      
-            has_permissions = 1;
-            break;
+
+      for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance;
+
+         for_each(qinstance, qinstance_list) {
+            if (sge_has_access(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
+                  qinstance, Master_Userset_List)) {
+               DPRINTF(("job has access to queue "SFQ"\n", lGetString(qinstance, QU_qname)));      
+               has_permissions = 1;
+               break;
+            }
          }
       }
       if (!has_permissions) {
@@ -1111,6 +1082,8 @@ int sub_command
       return STATUS_EEXIST;
    }    
 
+   cqueue_list_del_all_orphaned(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
+
    DEXIT;
    return STATUS_OK;
 }
@@ -1397,7 +1370,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
 
    job_number = lGetUlong(j, JB_job_number);
    task_number = lGetUlong(t, JAT_task_number);
-   qep = queue_list_locate(Master_Queue_List, lGetString(t, JAT_master_queue));
+   qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(t, JAT_master_queue));
    if (!qep) {
       ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDQOFJOB_S,
              lGetString(t, JAT_master_queue)));
@@ -3377,6 +3350,7 @@ int *trigger
 
          if (try_it) {
             int prev_dipatch_type = DISPATCH_TYPE_NONE;
+            lListElem *cqueue;
 
             /* imagine qs is empty */
             set_qs_state(QS_STATE_EMPTY);
@@ -3385,12 +3359,17 @@ int *trigger
             if (verify_mode==JUST_VERIFY)
                set_monitor_alpp(&talp);
 
-            granted = sge_replicate_queues_suitable4job(Master_Queue_List, 
+            ngranted = 0;
+            for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+               granted = sge_replicate_queues_suitable4job(qinstance_list, 
                   jep, NULL, pep, ckpt_ep, sconf_get_queue_sort_method(),
                   Master_CEntry_List, Master_Exechost_List, 
                   Master_Userset_List, NULL, 0, &prev_dipatch_type, 0);
-            ngranted = nslots_granted(granted, NULL);
-            granted = lFreeList(granted);
+               ngranted += nslots_granted(granted, NULL);
+               granted = lFreeList(granted);
+            }
 
             /* stop redirection of scheduler monitoring messages */
             if (verify_mode==JUST_VERIFY)

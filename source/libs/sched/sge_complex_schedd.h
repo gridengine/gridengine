@@ -64,8 +64,10 @@ int host_complexes2scheduler(lList **new_complex_list, lListElem *host,
 int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue, 
                               lList *host_list, lList *complex_list); 
 
-lListElem *get_attribute_by_name(lListElem *global, lListElem *host, lListElem *queue, const char *attrname, lList *centry_list, 
-                                     char *reason, int reason_size);
+lListElem *
+get_attribute_by_name(lListElem *global, lListElem *host, 
+                      lListElem *queue, const char *attrname, 
+                      const lList *centry_list, char *reason, int reason_size);
 
 int compare_complexes(int slots, lListElem *complex1, 
                       lListElem *complex2, char *availability_text, 
@@ -81,8 +83,14 @@ bool is_attr_prior(lListElem *upper_el, lListElem *lower_el);
 
 bool get_queue_resource(lListElem *queue_elem, lListElem *queue, const char *attrname);
 
-lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr,lList *centry_list,
-                                lListElem *queue, u_long32 layer, double lc_factor, char *reason, int reason_size);
+lListElem* 
+get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, 
+              lList *load_attr, const lList *centry_list, lListElem *queue, 
+              u_long32 layer, double lc_factor, char *reason, int reason_size);
+/*
+void load_value( lListElem *target_load_value, lListElem *source_load_value, int nproc,
+                const char *hostname, u_long32 layer, double lc_factor ); 
+*/
 
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 

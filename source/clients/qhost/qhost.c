@@ -53,7 +53,6 @@
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_host.h"
-#include "slots_used.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
@@ -68,16 +67,14 @@
 #include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_ulong.h"
-#include "sge_queue.h"
 #include "sge_centry.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
 #define QHOST_DISPLAY_RESOURCES  (1<<2)
-
 
 static lList *sge_parse_cmdline_qhost(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show);
@@ -360,79 +357,83 @@ lList *pel,
 u_long32 show 
 ) {
    lList *load_thresholds, *suspend_thresholds;
-   lListElem *qep;
+   lListElem *qep, *cqueue;
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
-   for_each(qep, qlp) {
-      if (!sge_hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
-         char buf[80];
+   for_each(cqueue, qlp) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
-         if (show & QHOST_DISPLAY_QUEUES) { 
-            /*
-            ** Header/indent
-            */
-            printf("   ");
-            /*
-            ** qname
-            */
-            printf("%-20s ", lGetString(qep, QU_qname));
-            /*
-            ** qtype
-            */
-            {
-               dstring type_string = DSTRING_INIT;
+      for_each(qep, qinstance_list) {
+         if (!sge_hostcmp(lGetHost(qep, QU_qhostname), 
+                          lGetHost(host, EH_name))) {
+            char buf[80];
 
-               queue_print_qtype_to_dstring(qep, &type_string, true);
-               printf("%-5.5s ", sge_dstring_get_string(&type_string));
-               sge_dstring_free(&type_string);
+            if (show & QHOST_DISPLAY_QUEUES) { 
+               /*
+               ** Header/indent
+               */
+               printf("   ");
+               /*
+               ** qname
+               */
+               printf("%-20s ", lGetString(qep, QU_qname));
+               /*
+               ** qtype
+               */
+               {
+                  dstring type_string = DSTRING_INIT;
+
+                  qinstance_print_qtype_to_dstring(qep, &type_string, true);
+                  printf("%-5.5s ", sge_dstring_get_string(&type_string));
+                  sge_dstring_free(&type_string);
+               }
+
+               /* 
+               ** number of used/free slots 
+               */
+               sprintf(buf, "%d/%d ",
+                  qinstance_slots_used(qep),
+                  (int)lGetUlong(qep, QU_job_slots));
+               printf("%-9.9s", buf);
+               /*
+               ** state of queue
+               */
+               load_thresholds = lGetList(qep, QU_load_thresholds);
+               suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
+               if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL)) {
+                  qinstance_state_set_alarm(qep, true);
+               }
+               if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL)) {
+                  qinstance_state_set_suspend_alarm(qep, true);
+               }
+               {
+                  dstring state_string = DSTRING_INIT;
+
+                  qinstance_state_append_to_dstring(qep, &state_string);
+                  printf("%s", sge_dstring_get_string(&state_string));
+                  sge_dstring_free(&state_string);
+               }
+               
+               /*
+               ** newline
+               */
+               printf("\n");
             }
 
-            /* 
-            ** number of used/free slots 
-            */
-            sprintf(buf, "%d/%d ",
-               qslots_used(qep),
-               (int)lGetUlong(qep, QU_job_slots));
-            printf("%-9.9s", buf);
             /*
-            ** state of queue
+            ** tag all jobs, we have only fetched running jobs, so every job
+            ** should be visible (necessary for the qstat printing functions)
             */
-            load_thresholds = lGetList(qep, QU_load_thresholds);
-            suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
-            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL)) {
-               qinstance_state_set_alarm(qep, true);
+            if (show & QHOST_DISPLAY_JOBS) {
+               sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
+                                    QSTAT_DISPLAY_ALL | 
+                                    ( (show & QHOST_DISPLAY_QUEUES) ?
+                                     QSTAT_DISPLAY_FULL : 0), "   ", 
+                                     GROUP_NO_PETASK_GROUPS);
             }
-            if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL)) {
-               qinstance_state_set_suspend_alarm(qep, true);
-            }
-            {
-               dstring state_string = DSTRING_INIT;
-
-               qinstance_state_append_to_dstring(qep, &state_string);
-               printf("%s", sge_dstring_get_string(&state_string));
-               sge_dstring_free(&state_string);
-            }
-            
-            /*
-            ** newline
-            */
-            printf("\n");
-         }
-
-         /*
-         ** tag all jobs, we have only fetched running jobs, so every job
-         ** should be visible (necessary for the qstat printing functions)
-         */
-         if (show & QHOST_DISPLAY_JOBS) {
-            sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
-                                 QSTAT_DISPLAY_ALL | 
-                                 ( (show & QHOST_DISPLAY_QUEUES) ?
-                                  QSTAT_DISPLAY_FULL : 0), "   ", 
-                                  GROUP_NO_PETASK_GROUPS);
          }
       }
-      
    }
    DEXIT;
 }
@@ -618,11 +619,10 @@ char **argv,
 char **envp,
 lList **ppcmdline 
 ) {
-char **sp;
-char **rp;
-stringT str;
-lList *alp = NULL;
- 
+   char **sp;
+   char **rp;
+   stringT str;
+   lList *alp = NULL;
    DENTER(TOP_LAYER, "sge_parse_cmdline_qhost");
 
    rp = ++argv;
@@ -875,25 +875,9 @@ lWriteListTo(ehl, stdout);
       SGE_EXIT(1);
    }
 
-   /* 
-   ** queue 
-   ** depending on the hosts to display get the attached queues
-   */
-   for_each(ep, hostref_list) {
-      nw = lWhere("%T(%I == %s)", QU_Type, QU_qhostname, lGetString(ep, ST_name));
-      if (!qw)
-         qw = nw;
-      else
-         qw = lOrWhere(qw, nw);
-   }
-   nw = lWhere("%T(%I != %s)", QU_Type, QU_qname, SGE_TEMPLATE_NAME);
-   if (qw)
-      qw = lAndWhere(qw, nw);
-   else
-      qw = nw; 
    q_all = lWhat("%T(ALL)", QU_Type);
-   q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_QUEUE_LIST, SGE_GDI_GET, 
-                        NULL, qw, q_all, NULL, &state);
+   q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
+                        NULL, NULL, q_all, NULL, &state);
    q_all = lFreeWhat(q_all);
    qw = lFreeWhere(qw);
 
@@ -1030,7 +1014,8 @@ lWriteListTo(ehl, stdout);
    alp = lFreeList(alp);
 
    /* --- queue */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_QUEUE_LIST, q_id, 
+   /* EB: TODO: */
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (!alp) {
       printf(MSG_GDI_QUEUESGEGDIFAILED);

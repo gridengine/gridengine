@@ -48,7 +48,6 @@
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
 #include "sge_range.h"
 #include "sge_answer.h"
 #include "sge_strL.h"
@@ -175,7 +174,7 @@ static void get_workload_info()
       job_id = lGetUlong(job, JB_job_number);
       user   = lGetString(job, JB_owner);
       group  = lGetString(job, JB_group);
-      ep     = explicit_job_request(job, "h_rt");
+      ep     = queue_or_job_get_states(job, "h_rt");
       if(ep != NULL) {
          wclock = lGetDouble(ep, CE_doubleval);
       }
@@ -299,14 +298,15 @@ static void get_policy_info()
          const char *qname = lGetString(queue_ref, QR_name);
          
          if(strcmp(qname, "all") == 0) {  
-            for_each(queue, Master_Queue_List) {
+            /* EB: TODO: CQ_Type not QU_Type */
+            for_each(queue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
                const char *host_name = lGetHost(queue, QU_qhostname);
                if(lGetElemStr(host_list, STR, host_name) == NULL) {
                   lAddElemStr(&host_list, STR, host_name, ST_Type);
                }
             }
          } else {
-            const char *host_name = lGetHost(lGetElemStr(Master_Queue_List, QU_qname, qname), QU_qhostname);
+            const char *host_name = lGetHost(lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), QU_full_name, qname), QU_qhostname);
             if(lGetElemStr(host_list, STR, host_name) == NULL) {  
                lAddElemStr(&host_list, STR, host_name, ST_Type);
             }
@@ -363,7 +363,7 @@ static int queue_get_free_slots(lListElem *queue)
    const char *name;
    lListElem *job;
 
-   name  = lGetString(queue, QU_qname);
+   name  = lGetString(queue, QU_full_name);
    slots = lGetUlong(queue, QU_job_slots);
 
    for_each(job, Master_Job_List) {
@@ -393,7 +393,7 @@ static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_l
       lListElem *granted_queue;
       const char *queue_name;
 
-      queue_name = lGetString(queue, QU_qname);
+      queue_name = lGetString(queue, QU_full_name);
       DPRINTF(("found %d slots in queue %s\n", queue_free_slots, queue_name));
 
       slots = MIN(*procs, queue_free_slots);
@@ -401,7 +401,7 @@ static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_l
       DPRINTF(("allocating %d slots in queue %s, still %d slots to allocate\n", 
                slots, queue_name, *procs));
 
-      granted_queue = lAddElemStr(allocated_queues, JG_qname, lGetString(queue, QU_qname), 
+      granted_queue = lAddElemStr(allocated_queues, JG_qname, lGetString(queue, QU_full_name), 
                                   JG_Type);
       lSetHost(granted_queue, JG_qhostname, lGetHost(queue, QU_qhostname));
       lSetUlong(granted_queue, JG_slots, slots);
@@ -450,7 +450,7 @@ static void simple_scheduler()
    if(pe == NULL || 
       strcmp("all", lGetString(lFirst(lGetList(pe, PE_queue_list)), QR_name)) == 0) {
       /* find suited queue(s) */
-      for_each(queue, Master_Queue_List) {
+      for_each(queue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
          allocate_queue_slots(&allocated_queues, queue, &procs);
          if(procs <= 0) {
             break;
@@ -459,7 +459,7 @@ static void simple_scheduler()
    } else {
       lListElem *queue_ref;
       for_each(queue_ref, lGetList(pe, PE_queue_list)) {
-         lListElem *queue = lGetElemStr(Master_Queue_List, QU_qname, lGetString(queue_ref, QR_name));
+         lListElem *queue = lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), QU_full_name, lGetString(queue_ref, QR_name));
          if(queue != NULL) {
             allocate_queue_slots(&allocated_queues, queue, &procs);
             if(procs <= 0) {

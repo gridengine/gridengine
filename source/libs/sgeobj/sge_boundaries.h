@@ -39,11 +39,11 @@
  * 	is included by every file of group 2 
  * 	defines boundaries of all lists
  * 
- * 2. sge_jobL.h sge_queueL.h
+ * 2. sge_jobL.h ...
  * 
  * 	is used to define a specific list like:
  * 	- job list
- * 	- queue list
+ * 	- ... 
  * 
  *--------------------------------------------------*/
 
@@ -486,19 +486,22 @@ enum NameSpaceBoundaries {
    FCAT_LOWERBOUND = QI_UPPERBOUND + 1,
    FCAT_UPPERBOUND = FCAT_LOWERBOUND + 1 * BASIC_UNIT - 1,     
 
-   CTI_LOWERBOUND = FCAT_UPPERBOUND +1,
-   CTI_UPPERBOUND = CTI_LOWERBOUND +1 * BASIC_UNIT -1,
+   CTI_LOWERBOUND = FCAT_UPPERBOUND + 1,
+   CTI_UPPERBOUND = CTI_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-   CTQV_LOWERBOUND = CTI_UPPERBOUND +1,
-   CTQV_UPPERBOUND = CTQV_LOWERBOUND +1 * BASIC_UNIT -1,
+   CTQV_LOWERBOUND = CTI_UPPERBOUND + 1,
+   CTQV_UPPERBOUND = CTQV_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-   PARA_LOWERBOUND = CTQV_UPPERBOUND +1,
-   PARA_UPPERBOUND = PARA_LOWERBOUND +1 * BASIC_UNIT -1,
+   PARA_LOWERBOUND = CTQV_UPPERBOUND + 1,
+   PARA_UPPERBOUND = PARA_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-   PACK_LOWERBOUND = PARA_UPPERBOUND +1,
-   PACK_UPPERBOUND = PACK_LOWERBOUND +1 * BASIC_UNIT -1
+   PACK_LOWERBOUND = PARA_UPPERBOUND + 1,
+   PACK_UPPERBOUND = PACK_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-#  define LAST_UPPERBOUND PACK_UPPERBOUND 
+   QIM_LOWERBOUND = PACK_UPPERBOUND + 1,
+   QIM_UPPERBOUND = QIM_LOWERBOUND + 1 * BASIC_UNIT - 1
+
+#  define LAST_UPPERBOUND QIM_UPPERBOUND
 
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */

@@ -45,7 +45,7 @@
 #define MSG_PE_NOSUCHPARALLELENVIRONMENT    _MESSAGE(19008, _("error: no such parallel environment\n"))
 #define MSG_OPTIONS_WRONGARGUMENTTOSOPT    _MESSAGE(19009, _("ERROR! wrong argument to -s option\n"))
 #define MSG_QSTAT_USAGE_SHOWREASONFORQUEUEALARMSTATE    _MESSAGE(19010, _("show reason for queue alarm state\n"))
-#define MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES    _MESSAGE(19011, _("view also scheduling attributes\n"))
+#define MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES    _MESSAGE(19011, _("view additional attributes\n"))
 #define MSG_QSTAT_USAGE_FULLOUTPUT    _MESSAGE(19012, _("full output\n"))
 #define MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES    _MESSAGE(19013, _("full output and show (selected) resources of queue(s)\n"))
 #define MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS    _MESSAGE(19014, _("display all job-array tasks (do not group)\n"))

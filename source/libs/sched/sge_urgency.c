@@ -253,12 +253,12 @@ static void sge_normalize_urgency(lList *job_list, double min_urgency,
 }
 
 
-/****** sge_job_schedd/job_slot_request() **************************************
+/****** sge_job_schedd/sge_job_slot_request() **********************************
 *  NAME
-*     job_slot_request() -- return static urgency jobs slot request
+*     sge_job_slot_request() -- return static urgency jobs slot request
 *
 *  SYNOPSIS
-*     int job_slot_request(lListElem *job, lList *pe_list)
+*     int sge_job_slot_request(lListElem *job, lList *pe_list)
 *
 *  FUNCTION
 *     For sequential jobs the static urgency job slot request is always 1.

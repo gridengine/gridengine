@@ -38,6 +38,8 @@ extern lList *Master_HGroup_List;
 
 void correct_hgroup_name(dstring *string, const char *name);
 
+bool is_hgroup_name(const char *name);
+
 /* --- */
 
 bool hgroup_correct_name(lListElem *this_elem);
@@ -83,10 +85,14 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
                    const lList *href_list);
 
 bool
-hgroup_list_find_all_matching_references(const lList *this_list,
-                                         lList **answer_list,
-                                         const char *hgroup_pattern,
-                                         lList **used_hosts);
+hgroup_list_find_matching_and_resolve(const lList *this_list,
+                                      lList **answer_list,
+                                      const char *hgroup_pattern,
+                                      lList **used_hosts);
+
+bool
+hgroup_list_find_matching(const lList *this_list, lList **answer_list,
+                          const char *hgroup_pattern, lList **used_hosts);
 
 #endif /* __SGE_GROUPS_H__ */
 

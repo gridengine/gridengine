@@ -39,20 +39,109 @@
 extern const char *queue_types[];
 
 const char *
-so_list_append_to_dstring(const lList *this_list, dstring *string);
-
-const char *
 qtype_append_to_dstring(u_long32 dtype, dstring *string);
 
 lListElem *
-qinstance_create(const lListElem *cqueue, lList **answer_list,
-                 const char *hostname, bool *is_ambiguous);
+qinstance_list_locate(const lList *this_list, const char *hostname,
+                      const char *cqueue_name);
+
+const char *
+qinstance_get_name(const lListElem *this_elem, dstring *string_buffer);
 
 bool
-qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
-                           const lListElem *cqueue, int attribute_name,
-                           int cqueue_attibute_name, int sub_host_name, 
-                           int sub_value_name, int subsub_key, 
-                           bool *is_ambiguous, bool *has_changed);
+qinstance_reinit_consumable_actual_list(lListElem *this_elem,
+                                        lList **answer_list);
+
+void
+qinstance_list_set_tag(lList *this_list, u_long32 tag_value);
+
+lListElem *
+qinstance_list_locate2(const lList *qinstance_list, const char *full_name);
+
+void
+qinstance_increase_qversion(lListElem *this_elem);
+
+bool 
+qinstance_check_owner(const lListElem *queue, const char *user_name);
+
+bool qinstance_is_batch_queue(const lListElem *this_elem);
+
+bool qinstance_is_interactive_queue(const lListElem *this_elem);
+
+bool qinstance_is_checkointing_queue(const lListElem *this_elem);
+
+bool qinstance_is_parallel_queue(const lListElem *this_elem);
+
+bool
+qinstance_print_qtype_to_dstring(const lListElem *this_elem,
+                                 dstring *string, bool only_first_char);
+
+bool
+qinstance_parse_qtype_from_string(lListElem *queue, lList **answer_list,
+                                  const char *value);
+
+bool
+qinstance_is_pe_referenced(const lListElem *this_elem, 
+                           const lListElem *pe);
+
+bool
+qinstance_is_ckpt_referenced(const lListElem *this_elem, 
+                             const lListElem *ckpt);
+
+bool
+qinstance_is_centry_referenced(const lListElem *this_elem, 
+                               const lListElem *centry);
+
+bool
+qinstance_is_centry_a_complex_value(const lListElem *this_elem,
+                                    const lListElem *name);
+
+int
+qinstance_slots_used(const lListElem *this_elem);
+
+void
+qinstance_set_slots_used(lListElem *this_elem, int new_slots);
+
+int
+qinstance_slots_used(const lListElem *this_elem);
+
+void
+qinstance_set_conf_slots_used(lListElem *this_elem);
+
+bool
+qinstance_is_calendar_referenced(const lListElem *this_elem, 
+                                 const lListElem *calendar);
+
+int
+qinstance_debit_consumable(lListElem *jep, lListElem *qep, lList *centry_list,
+                           int slots);
+
+void
+qinstance_check_unknown_state(lListElem *this_elem);
+
+
+/* EB: TODO: queue -> qinstance */
+
+extern const char *queue_types[];
+
+extern lList *Master_Queue_List;
+
+int queue_reference_list_validate(lList **alpp, lList *qr_list,
+                                  const char *attr_name, const char *obj_descr,
+                                  const char *obj_name);
+
+bool
+gqueue_is_suspended(const lList *this_list, const lList *qinstance_list);
+
+int
+debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
+                 int config_nm, int actual_nm, const char *obj_name);
+
+lListElem *
+explicit_job_request(lListElem *jep, const char *name);
+
+bool
+qinstance_list_find_matching(const lList *this_list, lList **answer_list,
+                             const char *hostname_pattern, lList **qref_list);
 
 #endif /* __SGE_QINSTANCE_H */

@@ -53,30 +53,34 @@ SGEOBJLIB_SRC = \
          sge_conf.c \
          sge_cqueue.c \
          sge_ckpt.c \
+         sge_cuser.c \
          sge_event.c \
          sge_host.c \
          sge_hgroup.c \
          sge_href.c \
+         sge_id.c \
          sge_ja_task.c \
          sge_job.c \
+         sge_load.c \
          sge_mailrec.c \
          sge_manop.c \
          sge_object.c \
          sge_path_alias.c \
          sge_pe.c \
          sge_pe_task.c \
-         sge_queue.c \
          sge_qinstance.c \
+         sge_qinstance_message.c \
          sge_qinstance_state.c \
+         sge_qref.c \
          sge_range.c \
          sge_report.c \
          sge_schedd_conf.c \
          sge_sharetree.c \
          sge_str.c \
+         sge_subordinate.c \
          sge_sub_object.c \
          sge_suser.c \
          sge_usage.c \
-         sge_cuser.c \
          sge_ulong.c \
          sge_userprj.c \
          sge_userset.c \
@@ -153,6 +157,9 @@ sge_conf.o: $(SGEOBJLIB_DIR)/sge_conf.c
 sge_cqueue.o: $(SGEOBJLIB_DIR)/sge_cqueue.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cqueue.c
 
+sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c
+
 sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ckpt.c
 
@@ -168,11 +175,17 @@ sge_hgroup.o: $(SGEOBJLIB_DIR)/sge_hgroup.c
 sge_href.o: $(SGEOBJLIB_DIR)/sge_href.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_href.c
 
+sge_id.o: $(SGEOBJLIB_DIR)/sge_id.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_id.c
+
 sge_ja_task.o: $(SGEOBJLIB_DIR)/sge_ja_task.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ja_task.c
 
 sge_job.o: $(SGEOBJLIB_DIR)/sge_job.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_job.c
+
+sge_load.o: $(SGEOBJLIB_DIR)/sge_load.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_load.c
 
 sge_mailrec.o: $(SGEOBJLIB_DIR)/sge_mailrec.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_mailrec.c
@@ -192,14 +205,17 @@ sge_pe.o: $(SGEOBJLIB_DIR)/sge_pe.c
 sge_pe_task.o: $(SGEOBJLIB_DIR)/sge_pe_task.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_pe_task.c
 
-sge_queue.o: $(SGEOBJLIB_DIR)/sge_queue.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_queue.c
-
 sge_qinstance.o: $(SGEOBJLIB_DIR)/sge_qinstance.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance.c
 
+sge_qinstance_message.o: $(SGEOBJLIB_DIR)/sge_qinstance_message.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_message.c
+
 sge_qinstance_state.o: $(SGEOBJLIB_DIR)/sge_qinstance_state.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_state.c
+
+sge_qref.o: $(SGEOBJLIB_DIR)/sge_qref.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qref.c
 
 sge_range.o: $(SGEOBJLIB_DIR)/sge_range.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_range.c
@@ -216,6 +232,9 @@ sge_sharetree.o: $(SGEOBJLIB_DIR)/sge_sharetree.c
 sge_str.o: $(SGEOBJLIB_DIR)/sge_str.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_str.c
 
+sge_subordinate.o: $(SGEOBJLIB_DIR)/sge_subordinate.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_subordinate.c
+
 sge_sub_object.c: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
 		$(CC) $(CFLAGS) -E -c $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c
 
@@ -224,9 +243,6 @@ sge_sub_object.o: sge_sub_object.c
 
 sge_suser.o: $(SGEOBJLIB_DIR)/sge_suser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_suser.c
-
-sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c
 
 sge_ulong.o: $(SGEOBJLIB_DIR)/sge_ulong.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ulong.c

@@ -48,13 +48,12 @@
 #include "config.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usage.h"
 #include "sge_any_request.h"
 #include "sge_time.h"
-#include "slots_used.h"
 #include "admin_mail.h"
 #include "mail.h"
 #include "exec_job.h"
@@ -924,8 +923,8 @@ lListElem *jr
 
       /* increment # of free slots. In case no slot is used any longer 
          we have to remove queues tmpdir for this job */
-      used_slots = qslots_used(master_q) - 1;
-      set_qslots_used(master_q, used_slots);
+      used_slots = qinstance_slots_used(master_q) - 1;
+      qinstance_set_slots_used(master_q, used_slots);
       if (!used_slots) {
          sge_switch2start_user();
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
@@ -1511,9 +1510,17 @@ int usage_mul_factor
    }
 
    if (failed != ESSTATE_NO_CONFIG) {
+      dstring buffer = DSTRING_INIT;
+      const char *qinstance_name = NULL;
       char *owner;
+   
+      qinstance_name = sge_dstring_sprintf(&buffer, SFN"@"SFN,
+                                           get_conf_val("queue"),
+                                           get_conf_val("host"));
+      lSetString(jr, JR_queue_name, qinstance_name);
+      qinstance_name = NULL;
+      sge_dstring_free(&buffer);
 
-      lSetString(jr, JR_queue_name, get_conf_val("queue"));
       lSetHost(jr, JR_host_name, get_conf_val("host"));
       lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
       if (owner) {

@@ -54,10 +54,12 @@
 #include "sge_prog.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
-#include "sge_queue.h"
+#include "sge_centry.h"
+#include "sge_qinstance.h"
 #include "sge_host.h"
-
+#include "symbols.h"
 #include "sge_messageL.h"
+#include "sge_parse_num_par.h"
 
 #include "msg_sgeobjlib.h"
 #include "msg_gdilib.h"
@@ -613,7 +615,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 
    object_delete_range_id(job, answer_list, JB_ja_n_h_ids, ja_task_number);
 
-   /* EB: should we add a new CULL function? */
+   /* EB: CLEANUP: should we add a new CULL function? */
    ja_task = lGetSubUlong(job, JAT_task_number, ja_task_number, JB_ja_tasks);
    if (ja_task == NULL) {
       lListElem *template_task = NULL;
@@ -2419,5 +2421,113 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
       return STATUS_EUNKNOWN;
    else
       return STATUS_OK;
+}
+
+lListElem *
+job_get_request(const lListElem *this_elem, const char *centry_name) 
+{
+   lList *hard_centry_list = NULL;
+   lListElem *ret = NULL; 
+
+   DENTER(TOP_LAYER, "job_get_request");
+   hard_centry_list = lGetList(this_elem, JB_hard_resource_list);
+   ret = lGetElemStr(hard_centry_list, CE_name, centry_name);
+   if (ret == NULL) {
+      lList *soft_centry_list = lGetList(this_elem, JB_soft_resource_list);
+
+      ret = lGetElemStr(soft_centry_list, CE_name, centry_name);
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+job_get_contribution(const lListElem *this_elem, lList **answer_list,
+                     const char *name, double *value,
+                     const lListElem *implicit_centry)
+{
+   bool ret = true;
+   lListElem *centry = NULL;
+   const char *value_string = NULL;
+   char error_str[256];
+   
+   DENTER(TOP_LAYER, "job_get_contribution");
+   centry = job_get_request(this_elem, name);
+   if (centry != NULL) {
+      value_string = lGetString(centry, CE_stringval);
+   }
+   if (value_string == NULL) {
+      value_string = lGetString(implicit_centry, CE_default); 
+   }
+   if (!(parse_ulong_val(value, NULL, TYPE_INT, value_string, 
+                         error_str, sizeof(error_str)-1))) {
+      sprintf(SGE_EVENT, MSG_ATTRIB_PARSATTRFAILED_SS, name, error_str);
+      answer_list_add(answer_list, SGE_EVENT, 
+                      STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
+      ret = false; 
+   }
+   
+   DEXIT;
+   return ret;
+}
+
+
+/* EB: TODO: rename */
+
+void queue_or_job_get_states(int nm, char *str, u_long32 op)
+{
+   int count = 0;
+
+   DENTER(TOP_LAYER, "queue_or_job_get_states");
+
+   if (nm==JB_job_number) {
+      if (VALID(JDELETED, op))
+         str[count++] = DISABLED_SYM;
+      if (VALID(JERROR, op))
+         str[count++] = ERROR_SYM;
+      if (VALID(JSUSPENDED_ON_SUBORDINATE, op))
+         str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
+   }
+   
+   if (VALID(JSUSPENDED_ON_THRESHOLD, op)) {
+      str[count++] = SUSPENDED_ON_THRESHOLD_SYM;
+   }
+
+   if (VALID(JHELD, op)) {
+      str[count++] = HELD_SYM;
+   }
+
+   if (VALID(JMIGRATING, op)) {
+      str[count++] = RESTARTING_SYM;
+   }
+
+   if (VALID(JQUEUED, op)) {
+      str[count++] = QUEUED_SYM;
+   }
+
+   if (VALID(JRUNNING, op)) {
+      str[count++] = RUNNING_SYM;
+   }
+
+   if (VALID(JSUSPENDED, op)) {
+      str[count++] = SUSPENDED_SYM;
+   }
+
+   if (VALID(JTRANSFERING, op)) {
+      str[count++] = TRANSISTING_SYM;
+   }
+
+   if (VALID(JWAITING, op)) {
+      str[count++] = WAITING_SYM;
+   }
+
+   if (VALID(JEXITING, op)) { 
+      str[count++] = EXITING_SYM;
+   }
+
+   str[count++] = '\0';
+
+   DEXIT;
+   return;
 }
 

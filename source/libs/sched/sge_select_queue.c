@@ -46,7 +46,6 @@
 #include "subordinate_schedd.h"
 #include "sge_range_schedd.h"
 #include "sge_pe_schedd.h"
-#include "slots_used.h"
 
 #include "sge_orderL.h"
 #include "sge_pe.h"
@@ -61,15 +60,17 @@
 #include "msg_schedd.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
-#include "sge_schedd_conf.h"
-#include "sge_job.h"
-#include "sge_queue.h"
-#include "sge_qinstance.h"
-#include "sge_userprj.h"
 #include "sge_host.h"
+#include "sge_job.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_object.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
+#include "sge_schedd_conf.h"
+#include "sge_subordinate.h"
+#include "sge_userprj.h"
+#include "sge_qref.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
@@ -207,7 +208,7 @@ void trace_resources(lList *resources)
 *     int slots                 - number of requested slots
 *
 *  RESULT
-*     int - 1, if okay, QU_tagged will be set if a queue is selected
+*     int - 1, if okay, QU_tag will be set if a queue is selected
 *           0, if not okay 
 *  
 *  NOTES
@@ -418,7 +419,7 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
                      lSetUlong(attr, CE_tagged, tag);
             break;
          case 1 : /* the requested element does not exist */
-                  if (tag == QUEUE_TAG) {
+                  if (tag == QUEUE_TAG){
                      if (lGetUlong(attr, CE_tagged) == NO_TAG) {
                         if (reason){
                            char tmp_reason[2048];
@@ -427,7 +428,7 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
                            sprintf(tmp_reason, " (%s)\n", lGetString(attr, CE_name));
                            strncpy(reason, MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE, reason_size-1);
                            strncat(reason, tmp_reason, reason_size-1);
-                        }
+                        }                     
                         DEXIT;
                         return 0 ;
                      }
@@ -594,7 +595,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    reason[0] = buff[0] = '\0';
 
    job_id = lGetUlong(job, JB_job_number);
-   queue_name = lGetString(queue, QU_qname);
+   queue_name = lGetString(queue, QU_full_name);
    /* check if job owner has access rights to the queue */
    if (!sge_has_access(lGetString(job, JB_owner), lGetString(job, JB_group), queue, acl_list)) {
       DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, queue_name));
@@ -630,53 +631,89 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       }
    }
 
-   /* is there a hard queue list ? */
-   if (lGetList(job, JB_hard_queue_list)) {
-
+   if (lGetList(job, JB_hard_queue_list) ||
+       lGetList(job, JB_master_hard_queue_list)) {
       if (!centry_list_are_queues_requestable(centry_list)) {
-         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
-            queue_name);
-         DEXIT;
-         return 5;
-      }
-
-      if (!lGetSubStr(job, QR_name, lGetString(queue, QU_qname), JB_hard_queue_list)) {
-         DPRINTF(("Queue \"%s\" is not contained in the hard "
-           "queue list (-q) that was requested by job %d\n",
-               queue_name, (int) job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,
             queue_name);
          DEXIT;
          return 5;
       }
    }
 
-   /* is this queue a candidate for being the master queue? */
-   if (lGetList(job, JB_master_hard_queue_list)) {
-      if (!centry_list_are_queues_requestable(centry_list)) {
-         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
-            queue_name);
-         DEXIT;
+   /* 
+    * is queue contained in hard queue list ? 
+    */
+   if (lGetList(job, JB_hard_queue_list)) {
+      lList *master_cqueue_list = NULL;
+      lList *master_hgroup_list = NULL;
+      lList *qref_list = lGetList(job, JB_hard_queue_list);
+      lList *resolved_qref_list = NULL;
+      lListElem *resolved_qref = NULL;
+      const char *qinstance_name = NULL;
+      bool found_something = false;
+      bool is_in_list = true;
+
+      master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+      master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+      qinstance_name = lGetString(queue, QU_full_name);
+      qref_list_resolve(qref_list, NULL, &resolved_qref_list,
+                        &found_something, master_cqueue_list,
+                        master_hgroup_list, true, true);
+      resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name); 
+      is_in_list = (resolved_qref != NULL);
+      resolved_qref_list = lFreeList(resolved_qref_list);
+      if (!is_in_list) {
+         DPRINTF(("Queue \"%s\" is not contained in the hard "
+                  "queue list (-q) that was requested by job %d\n",
+                  qinstance_name, (int) job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, 
+                        qinstance_name);
+         DEXIT; 
          return 5;
       }
+   }
 
-      if (!lGetSubStr(job, QR_name, lGetString(queue, QU_qname), JB_master_hard_queue_list)) {
-         lSetUlong(queue, QU_tagged4schedule, 0);
-      } else {
+   /* 
+    * is this queue a candidate for being the master queue? 
+    */
+   if (lGetList(job, JB_master_hard_queue_list)) {
+      lList *master_cqueue_list = NULL;
+      lList *master_hgroup_list = NULL;
+      lList *qref_list = lGetList(job, JB_master_hard_queue_list);
+      lList *resolved_qref_list = NULL;
+      lListElem *resolved_qref = NULL;
+      const char *qinstance_name = NULL;
+      bool found_something = false;
+      bool is_in_list = true;
+
+      master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+      master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+      qinstance_name = lGetString(queue, QU_full_name);
+      qref_list_resolve(qref_list, NULL, &resolved_qref_list,
+                        &found_something, master_cqueue_list,
+                        master_hgroup_list, true, true);
+      resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name);
+      is_in_list = (resolved_qref != NULL);
+      resolved_qref_list = lFreeList(resolved_qref_list);
+   
+      /*
+       * Tag queue
+       */
+      lSetUlong(queue, QU_tagged4schedule, is_in_list ? 1 : 0);
+      if (!is_in_list) {
          DPRINTF(("Queue \"%s\" is contained in the master hard "
-           "queue list (-masterq) that was requested by job %d\n",
-               queue_name, (int) job_id));
-         lSetUlong(queue, QU_tagged4schedule, 1);
+                  "queue list (-masterq) that was requested by job %d\n",
+                  queue_name, (int) job_id));
       }
-   } else
-      lSetUlong(queue, QU_tagged4schedule, 0);
+   }
 
    /*
    ** different checks for different job types:
    */
 
    if (pe) { /* parallel job */
-      if (!queue_is_parallel_queue(queue)) {
+      if (!qinstance_is_parallel_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
                   "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S, queue_name);
@@ -687,7 +724,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       /*
        * check if the requested PE is named in the PE reference list of Queue
        */
-      if (!queue_is_pe_referenced(queue, pe)) {
+      if (!qinstance_is_pe_referenced(queue, pe)) {
          DPRINTF(("Queue "SFQ" does not reference PE "SFQ"\n",
                   queue_name, lGetString(pe, PE_name)));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,
@@ -699,7 +736,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 
    if (ckpt) { /* ckpt job */
       /* is it a ckpt queue ? */
-      if (!queue_is_checkointing_queue(queue)) {
+      if (!qinstance_is_checkointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
@@ -710,7 +747,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       /*
        * check if the requested CKPT is named in the CKPT ref list of Queue
        */
-      if (!queue_is_ckpt_referenced(queue, ckpt)) {
+      if (!qinstance_is_ckpt_referenced(queue, ckpt)) {
          DPRINTF(("Queue \"%s\" does not reference checkpointing object "SFQ
                   "\n", queue_name, lGetString(ckpt, CK_name)));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
@@ -722,16 +759,20 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 
    /* to be activated as soon as immediate jobs are available */
    if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
-      /* is it an interactve job and an interactive queue ? */
+      /* 
+       * is it an interactve job and an interactive queue? 
+       * or
+       * is it a batch job and a batch or transfer queue?
+       */
       if (!lGetString(job, JB_script_file) && 
-          !queue_is_checkointing_queue(queue)) {
+          !qinstance_is_interactive_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
          DEXIT;
          return 7;
-      } else /* is it a batch job and a batch or transfer queue ? */
-      if (lGetString(job, JB_script_file) && !queue_is_batch_queue(queue)) {
+      } else if (lGetString(job, JB_script_file) && 
+                 !qinstance_is_batch_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a serial batch queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
@@ -742,7 +783,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
 
    if (!pe && !ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* serial (batch) job */
       /* is it a batch or transfer queue */
-      if (!queue_is_batch_queue(queue)) {
+      if (!qinstance_is_batch_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a serial batch queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
@@ -752,7 +793,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    }
 
    if (ckpt && !pe && lGetString(job, JB_script_file) &&
-       queue_is_parallel_queue(queue) && !queue_is_batch_queue(queue)) {
+       qinstance_is_parallel_queue(queue) && !qinstance_is_batch_queue(queue)) {
       DPRINTF(("Queue \"%s\" is not a serial batch queue as "
                "requested by job %d\n", queue_name, (int)job_id));
       schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
@@ -790,8 +831,8 @@ job_is_forced_centry_missing(const lListElem *job,
 
          if (is_forced) {
             if (object_has_type(queue_or_host, QU_Type)) {
-               is_forced = queue_is_centry_a_complex_value(queue_or_host, centry);
-               object_name = lGetString(queue_or_host, QU_qname);
+               is_forced = qinstance_is_centry_a_complex_value(queue_or_host, centry);
+               object_name = lGetString(queue_or_host, QU_full_name);
             } else if (object_has_type(queue_or_host, EH_Type)) {
                is_forced = host_is_centry_a_complex_value(queue_or_host, centry);
                object_name = lGetHost(queue_or_host, EH_name);
@@ -865,7 +906,7 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
 
    job_id = lGetUlong(job, JB_job_number);
    if(queue)
-      queue_name = lGetString(queue, QU_qname);
+      queue_name = lGetString(queue, QU_full_name);
 
    /* count number of soft violations for _one_ slot of this job */
 
@@ -886,15 +927,37 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
 
    }
 
-   if(queue){
+   if (queue) {
       DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
          queue_name, soft_violation, reason));
 
-      if (lGetList(job, JB_soft_queue_list)) {  /* check whether queue fulfills soft queue request of the job (-q) */
-         if (!lGetSubStr(job, QR_name, queue_name, JB_soft_queue_list)) {
+      /* 
+       * check whether queue fulfills soft queue request of the job (-q) 
+       */
+      if (lGetList(job, JB_soft_queue_list)) {
+         lList *master_cqueue_list = NULL;
+         lList *master_hgroup_list = NULL;
+         lList *qref_list = lGetList(job, JB_soft_queue_list);
+         lList *resolved_qref_list = NULL;
+         lListElem *resolved_qref = NULL;
+         const char *qinstance_name = NULL;
+         bool found_something = false;
+         bool is_in_list = true;
+
+         master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+         master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+         qinstance_name = lGetString(queue, QU_full_name);
+         qref_list_resolve(qref_list, NULL, &resolved_qref_list,
+                           &found_something, master_cqueue_list,
+                           master_hgroup_list, true, true);
+         resolved_qref = lGetElemStr(resolved_qref_list, QR_name, 
+                                     qinstance_name); 
+         is_in_list = (resolved_qref != NULL);
+         resolved_qref_list = lFreeList(resolved_qref_list);
+         if (!is_in_list) {
             DPRINTF(("Queue \"%s\" is not contained in the soft "
-            "queue list (-q) that was requested by job %d\n",
-                  queue_name, (int) job_id));
+                     "queue list (-q) that was requested by job %d\n",
+                     qinstance_name, (int) job_id));
             soft_violation++;
          }
       }
@@ -1439,12 +1502,12 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
             load_alarm = 1;
             if (ttype==QU_suspend_thresholds) {
                DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
-                     lGetString(qep, QU_qname), reason));
-               schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_qname), reason);
+                     lGetString(qep, QU_full_name), reason));
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_full_name), reason);
             } else {
                DPRINTF(("queue %s tagged to be overloaded: %s\n", 
-                     lGetString(qep, QU_qname), reason));
-               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname), reason);
+                     lGetString(qep, QU_full_name), reason));
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_full_name), reason);
             }
          }
       }
@@ -1504,7 +1567,7 @@ int nslots
    }
 
    for (this=lFirst(*free); ((next=lNext(this))), this ; this = next) {
-      if ((qslots_used(this)+nslots) > (int) lGetUlong(this, QU_job_slots)) {
+      if ((qinstance_slots_used(this)+nslots) > (int) lGetUlong(this, QU_job_slots)) {
          /* chain 'this' into 'full' list */
          this = lDechainElem(*free, this);
          if (full) {
@@ -1520,9 +1583,9 @@ int nslots
       lListElem* mes_queue;
 
       for_each(mes_queue, *full)
-         schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_full_name));
 
-      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , *full, QU_qname);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , *full, QU_full_name);
       if (do_free_list) {
          lFreeList(*full);
          *full = NULL;
@@ -1569,9 +1632,9 @@ lList **suspended         /* QU_Type */
    /* split queues */
    where = lWhere("%T(!(%I m= %u) && !(%I m= %u) && !(%I m= %u))", 
       lGetListDescr(*queue_list), 
-         QU_state, QSUSPENDED,
-         QU_state, QCAL_SUSPENDED,
-         QU_state, QSUSPENDED_ON_SUBORDINATE);
+         QU_state, QI_SUSPENDED,
+         QU_state, QI_CAL_SUSPENDED,
+         QU_state, QI_SUSPENDED_ON_SUBORDINATE);
    ret = lSplit(queue_list, suspended, "full queues", where);
    lFreeWhere(where);
 
@@ -1579,9 +1642,9 @@ lList **suspended         /* QU_Type */
       lListElem* mes_queue;
 
       for_each(mes_queue, *suspended)
-         schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_full_name));
  
-      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , *suspended, QU_qname);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , *suspended, QU_full_name);
       if (do_free_list) {
          lFreeList(*suspended);
          *suspended = NULL;
@@ -1628,7 +1691,7 @@ lList **disabled         /* QU_Type */
 
    /* split queues */
    where = lWhere("%T(!(%I m= %u) && !(%I m= %u))", lGetListDescr(*queue_list), 
-                  QU_state, QDISABLED, QU_state, QCAL_DISABLED);
+                  QU_state, QI_DISABLED, QU_state, QI_CAL_DISABLED);
    ret = lSplit(queue_list, disabled, "full queues", where);
    lFreeWhere(where);
 
@@ -1636,9 +1699,9 @@ lList **disabled         /* QU_Type */
       lListElem* mes_queue;
 
       for_each(mes_queue, *disabled)
-         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_full_name));
  
-      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_qname);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
       if (do_free_list) {
          lFreeList(*disabled);
          *disabled = NULL;
@@ -1702,9 +1765,7 @@ int host_order_changed) {
       int have_master_host, suited_as_master_host;
       const char *eh_name, *qname;
 
-
-      /* untag all queues */
-      queue_list_clear_tags(queues);
+      qinstance_list_set_tag(queues, 0);
 
       global_hep = host_list_locate(host_list, "global");
 
@@ -1787,7 +1848,7 @@ int host_order_changed) {
      
          { 
          lListElem *category = lGetRef(job, JB_category);
-         bool use_category = (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
+         bool use_category = ((category != NULL) && (lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY));
 
          if (use_category){
             schedd_mes_set_tmp_list(category, CT_job_messages, lGetUlong(job,JB_job_number ));
@@ -1809,13 +1870,20 @@ int host_order_changed) {
                }
 
                if (available_slots_at_host(job, ja_task, hep, host_list, 1, 1, 1, centry_list, acl_list, NULL)){
+
+#if 0 /* EB: Bug: finds only first element in list */
                   const void *queue_iterator = NULL;
                   lListElem *next_queue = NULL;
+
                   next_queue = lGetElemHostFirst(queues, QU_qhostname, eh_name, &queue_iterator); 
                   while ((qep = next_queue) != NULL) {
                      next_queue = lGetElemHostNext(queues, QU_qhostname, eh_name, &queue_iterator); 
+#else
+                  for_each(qep, queues) 
+                     if (!sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name)) {
+#endif
 
-                     qname = lGetString(qep, QU_qname);
+                     qname = lGetString(qep, QU_full_name);
 
                      if (use_category){
                         lList *skip_queue_list = lGetList(category, CT_ignore_queues);
@@ -1827,7 +1895,7 @@ int host_order_changed) {
                      }
                         
                      if (available_slots_at_queue(job, qep, pe, ckpt, host_list, centry_list, acl_list,
-                              load_adjustments, 1, ndispatched, global_hep, 1, hep, NULL)){
+                              load_adjustments, 1, ndispatched, global_hep, 1, hep, NULL)) {
                   
                         lListElem *gdil_ep;
                         lList *gdil = NULL;
@@ -1855,8 +1923,6 @@ int host_order_changed) {
                      if (use_category){
                         lAddSubStr(category, CTI_name , qname ,CT_ignore_queues, CTI_Type);
                      }
-
-
                   }          
                }
                
@@ -1934,7 +2000,7 @@ int host_order_changed) {
           * ------------------------------------------------------------------ */
          int global_soft_violations = 0;
          lListElem *category = lGetRef(job, JB_category);
-         bool use_category = category != NULL && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
+         bool use_category = ((category != NULL) && (lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY));
          bool use_cviolation = use_category && lGetNumberOfElem(lGetList(category, CT_queue_violations)) > 0; 
           
          *last_dispatch_type = DISPATCH_TYPE_COMPREHENSIVE;
@@ -2019,8 +2085,7 @@ int host_order_changed) {
                      next_queue = lGetElemHostFirst(queues, QU_qhostname, eh_name, &queue_iterator); 
                      while ((qep = next_queue) != NULL) {
                         next_queue = lGetElemHostNext(queues, QU_qhostname, eh_name, &queue_iterator); 
-
-                        qname = lGetString(qep, QU_qname);
+                        qname = lGetString(qep, QU_full_name);
                         lSetUlong(qep, QU_soft_violation, MAX_ULONG32);
 
                         if (use_category){
@@ -2069,7 +2134,7 @@ int host_order_changed) {
                            /* prepare sort by sequence number of queues */ 
                            lSetUlong(qep, QU_host_seq_no, host_seqno);
                            accu_queue_slots += queue_slots;
-                           lSetUlong(qep, QU_tagged, queue_slots);
+                           lSetUlong(qep, QU_tag, queue_slots);
                         }
                         else {
                            lAddSubStr(category, CTI_name , qname ,CT_ignore_queues, CTI_Type);
@@ -2135,7 +2200,7 @@ int host_order_changed) {
           *     (QU_soft_violation)
           *   - the sequence number of the host in the sorted host list 
           *     (QU_host_seq_no)
-          *   - the number of tagged slots in the queue (QU_tagged)
+          *   - the number of tagged slots in the queue (QU_tag)
           *     (-> We prefer queues with many slots because we dont want 
           *     to distribute the slots to multiple queues if not necessary.
           *     If this is not convenient then it will be possible to use
@@ -2149,20 +2214,20 @@ int host_order_changed) {
           *      1. QU_soft_violation
           *      2. QU_host_seq_no 
           *      3. QU_seq_no 
-          *      4. QU_tagged
+          *      4. QU_tag
           * 
           *    QSM_SEQNUM
           *      1. QU_soft_violation
           *      2. QU_seq_no 
           *      3. QU_host_seq_no 
-          *      4. QU_tagged
+          *      4. QU_tag
           *------------------------------------------------------------------*/
         
          if (get_qs_state()!=QS_STATE_EMPTY) {
             if (queue_sort_method == QSM_LOAD)
-               lPSortList(queues, "%I+ %I+ %I+ %I-", QU_soft_violation, QU_host_seq_no, QU_seq_no, QU_tagged);
+               lPSortList(queues, "%I+ %I+ %I+ %I-", QU_soft_violation, QU_host_seq_no, QU_seq_no, QU_tag);
             else
-               lPSortList(queues, "%I+ %I+ %I+ %I-", QU_soft_violation, QU_seq_no, QU_host_seq_no, QU_tagged);
+               lPSortList(queues, "%I+ %I+ %I+ %I-", QU_soft_violation, QU_seq_no, QU_host_seq_no, QU_tag);
 
 #if 0
             /* monitor queue sorting */
@@ -2171,23 +2236,23 @@ int host_order_changed) {
             else
                DPRINTF(("QUEUE               \tMASTER\tSOFT\tSEQNO\tLOAD\tTAGGED\n"));
             for_each (qep, queues)
-               if (lGetUlong(qep, QU_tagged)) {
+               if (lGetUlong(qep, QU_tag)) {
                   if (queue_sort_method == QSM_LOAD)
                      DPRINTF(("%-20.20s\t%s\t%d\t%d\t%d\t%d\n", 
-                        lGetString(qep, QU_qname),
+                        lGetString(qep, QU_full_name),
                         lGetUlong(qep, QU_tagged4schedule)?"master":"slave",
                         lGetUlong(qep, QU_soft_violation),
                         lGetUlong(qep, QU_host_seq_no),
                         lGetUlong(qep, QU_seq_no),
-                        lGetUlong(qep, QU_tagged)));
+                        lGetUlong(qep, QU_tag)));
                   else
                      DPRINTF(("%s %s %d %d %d %d\n", 
-                        lGetString(qep, QU_qname),
+                        lGetString(qep, QU_full_name),
                         lGetUlong(qep, QU_tagged4schedule)?"master":"slave",
                         lGetUlong(qep, QU_soft_violation),
                         lGetUlong(qep, QU_seq_no),
                         lGetUlong(qep, QU_host_seq_no),
-                        lGetUlong(qep, QU_tagged)));
+                        lGetUlong(qep, QU_tag)));
                }         
 #endif
          }
@@ -2230,7 +2295,7 @@ int host_order_changed) {
       /* change host sort order */
       for_each (qep, queues) {
 
-         if (!lGetUlong(qep, QU_tagged)) 
+         if (!lGetUlong(qep, QU_tag)) 
             continue;
 
          /* ensure host of this queue has enough slots */
@@ -2282,7 +2347,7 @@ int host_order_changed) {
          lInsertElem(queues, NULL, qep);
 
          DPRINTF(("MASTER HOST %s MASTER QUEUE %s\n", 
-               master_eh_name, lGetString(qep, QU_qname)));
+               master_eh_name, lGetString(qep, QU_full_name)));
          /* this will cause the master host to be selected first */
          lSetUlong(master_hep, EH_seq_no, 0);
          start_seq_no = 0;
@@ -2323,9 +2388,9 @@ int host_order_changed) {
                if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                   continue;
 
-               qname = lGetString(qep, QU_qname);
+               qname = lGetString(qep, QU_full_name);
                /* how many slots ? */
-               qtagged = lGetUlong(qep, QU_tagged);
+               qtagged = lGetUlong(qep, QU_tag);
                slots = MIN(total_slots-accu_host_slots, 
                   MIN(host_slots, qtagged));
                accu_host_slots += slots;
@@ -2343,7 +2408,7 @@ int host_order_changed) {
                   lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
 
                /* untag */
-               lSetUlong(qep, QU_tagged, qtagged - slots);
+               lSetUlong(qep, QU_tag, qtagged - slots);
 
                if (!host_slots) 
                   break; 
@@ -2412,7 +2477,7 @@ int available_slots_at_queue(
    }
 
    job_id = lGetUlong(job, JB_job_number);
-   qname = lGetString(qep, QU_qname);
+   qname = lGetString(qep, QU_full_name);
 
    /* ensure we are causing no load alarm - but only if 
       we are thinking about more than one slot 
@@ -2721,7 +2786,8 @@ int *violations)
 */      
 int 
 sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q, 
-                     lList *exechost_list, lList *centry_list, bool *has_value_from_object) 
+                     const lList *exechost_list, const lList *centry_list, 
+                     bool *has_value_from_object) 
 {
    int ret = -1;
    lListElem *ep;
@@ -2860,20 +2926,16 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
       if (tagged) {
          /* find queue */
          qname = lGetString(gel, JG_qname);
-         qep=lGetElemStr(global_queue_list, QU_qname, qname);
+         qep=lGetElemStr(global_queue_list, QU_full_name, qname);
 
          /* increase used slots */
-         qslots = qslots_used(qep);
+         qslots = qinstance_slots_used(qep);
 
          /* precompute suspensions for subordinated queues */
          total = lGetUlong(qep, QU_job_slots);
          for_each (so, lGetList(qep, QU_subordinate_list)) {
-            /*
-               suppose we are not suspended on subordinate
-               (therefore used 0 for own_sos parameter of tst_sos())
-            */
-            if (!tst_sos(qslots,        total, 0, so)  &&  /* not suspended till now */
-                 tst_sos(qslots+tagged, total, 0, so)) {   /* but now                */
+            if (!tst_sos(qslots,        total, so)  &&  /* not suspended till now */
+                 tst_sos(qslots+tagged, total, so)) {   /* but now                */
                ret |= sos_schedd(lGetString(so, SO_name), global_queue_list);
 
                /* warn on jobs that were dispatched into that queue in
@@ -2897,7 +2959,7 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
 
          DPRINTF(("REDUCING SLOTS OF QUEUE %s BY %d\n", qname, tagged));
 
-         debit_queue_consumable(job, qep, centry_list, tagged);
+         qinstance_debit_consumable(job, qep, centry_list, tagged);
       }
    }
 
@@ -2912,15 +2974,5 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
 
    DEXIT;
    return ret;
-}
-
-int 
-debit_queue_consumable(lListElem *jep, lListElem *qep, lList *centry_list,
-                       int slots) 
-{
-   return debit_consumable(jep, qep, centry_list, slots,
-                           QU_consumable_config_list, 
-                           QU_consumable_actual_list,
-                           lGetString(qep, QU_qname));
 }
 

@@ -42,7 +42,8 @@
 
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_queue.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_utility.h"
 #include "sge_ckpt.h"
 #include "symbols.h"
@@ -60,26 +61,26 @@ lList *Master_Ckpt_List = NULL;
 *  SYNOPSIS
 *     bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list, 
 *                             const lList *master_job_list,
-*                             const lList *master_queue_list) 
+*                             const lList *master_cqueue_list) 
 *
 *  FUNCTION
 *     This function returns true if the given "ckpt" is referenced
 *     in at least one of the objects contained in "master_job_list" or
-*     "master_queue_list". If this is the case than
+*     "master_cqueue_list". If this is the case than
 *     a corresponding message will be added to the "answer_list". 
 *
 *  INPUTS
-*     const lListElem *ckpt          - CK_Type object 
-*     lList **answer_list            - AN_Type list 
-*     const lList *master_job_list   - JB_Type list 
-*     const lList *master_queue_list - QU_Type list
+*     const lListElem *ckpt           - CK_Type object 
+*     lList **answer_list             - AN_Type list 
+*     const lList *master_job_list    - JB_Type list 
+*     const lList *master_cqueue_list - CQ_Type list
 *
 *  RESULT
 *     bool - true or false  
 ******************************************************************************/
 bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
                         const lList *master_job_list, 
-                        const lList *master_queue_list)
+                        const lList *master_cqueue_list)
 {
    bool ret = false;
 
@@ -102,16 +103,22 @@ bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
    if (!ret) {
       lListElem *queue = NULL;
 
-      for_each(queue, master_queue_list) {
-         if (queue_is_ckpt_referenced(queue, ckpt)) {
-            const char *ckpt_name = lGetString(ckpt, CK_name);
-            const char *queue_name = lGetString(queue, QU_qname);
+      for_each(queue, master_cqueue_list) {
+         lList *qinstance_list = lGetList(queue, CQ_qinstances);
+         lListElem *qinstance = NULL;
 
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                    ANSWER_QUALITY_INFO, MSG_CKPTREFINQUEUE_SS,
-                                    ckpt_name, queue_name);
-            ret = true;
-            break;
+         for_each(qinstance, qinstance_list) {
+            if (qinstance_is_ckpt_referenced(qinstance, ckpt)) {
+               const char *ckpt_name = lGetString(ckpt, CK_name);
+               const char *name = lGetString(qinstance, QU_full_name);
+
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_INFO, 
+                                       MSG_CKPTREFINQUEUE_SS,
+                                       ckpt_name, name);
+               ret = true;
+               break;
+            }
          }
       }
    }

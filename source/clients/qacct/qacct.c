@@ -61,10 +61,11 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
-#include "sge_queue.h"
 #include "sge_stdlib.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_qinstance.h"
+#include "sge_cqueue.h"
 
 typedef struct {
    int host;
@@ -695,7 +696,7 @@ char **argv
          lListElem *queue;
          int selected;
       
-         queue = queue_list_locate(queue_list, dusage.qname);
+         queue = cqueue_list_locate_qinstance(queue_list, dusage.qname);
          if (!queue) {
             WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
                       (int)dusage.job_number, dusage.qname));
@@ -1514,8 +1515,9 @@ lList **ppexechosts
    /*
    ** GET SGE_QUEUE_LIST 
    */
+   /* EB: TODO: qacct */
    what = lWhat("%T(ALL)", QU_Type);
-   q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_QUEUE_LIST, SGE_GDI_GET,
+   q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state);
    what = lFreeWhat(what);
 
@@ -1554,7 +1556,8 @@ lList **ppexechosts
    alp = lFreeList(alp);
 
    /* --- queue */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_QUEUE_LIST, q_id, 
+   /* EB: TODO: qacct */
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, ppqueues);
    if (!alp) {
       ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED ));

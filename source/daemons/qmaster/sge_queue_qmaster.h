@@ -38,8 +38,6 @@ int sge_gdi_add_mod_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost
 
 int sge_gdi_delete_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost);
 
-int sge_change_queue_version(lListElem *qep, int add, int write_history);
-
 /* old functions underlaying the gdi functions */
 int sge_del_queue(const char *qname);
 
@@ -55,6 +53,8 @@ void queue_list_set_unknown_state_to(lList *queue_list,
                                      const char *hostname,
                                      int send_events,
                                      int new_state);
+
+bool queue_list_add_queue(lListElem *queue);
 
 #endif /* __SGE_QUEUE_QMASTER_H */
 

@@ -43,10 +43,12 @@
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_calendar.h"
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
@@ -121,7 +123,6 @@ calendar_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 int 
 sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost) 
 {
-   lListElem *qep;
    const char *cal_name;
 
    DENTER(TOP_LAYER, "sge_del_calendar");
@@ -152,14 +153,17 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* prevent deletion of a still referenced calendar */
-   for_each (qep, Master_Queue_List) {
-      const char *s;
+   {
+      lList *local_answer_list = NULL;
 
-      if ((s=lGetString(qep, QU_calendar)) && !strcmp(cal_name, s)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS, 
-                cal_name, lGetString(qep, QU_qname)));
-         answer_list_add(alpp, SGE_EVENT, 
-                         STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      if (calendar_is_referenced(cep, &local_answer_list, 
+                            *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
+                         ANSWER_QUALITY_ERROR);
+         local_answer_list = lFreeList(local_answer_list);
          DEXIT;
          return STATUS_ESEMANTIC;
       }
@@ -203,7 +207,7 @@ int
 calendar_update_queue_states(lListElem *cep, lListElem *old_cep, 
                              gdi_object_t *object) {
    const char *cal_name = lGetString(cep, CAL_name);
-   lListElem *qep;
+   lListElem *cqueue = NULL;
 
    DENTER(TOP_LAYER, "calendar_update_queue_states");
 
@@ -211,11 +215,16 @@ calendar_update_queue_states(lListElem *cep, lListElem *old_cep,
                  0, 0, cal_name, NULL, NULL, cep);
    lListElem_clear_changed_info(cep);
 
-   for_each (qep, Master_Queue_List) {
-      const char *queue_calendar = lGetString(qep, QU_calendar);
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
 
-      if (queue_calendar && !strcmp(queue_calendar, cal_name)) {
-         qinstance_signal_on_calendar(qep, cep);
+      for_each(qinstance, qinstance_list) {
+         const char *queue_calendar = lGetString(qinstance, QU_calendar);
+
+         if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
+            qinstance_change_state_on_calendar(qinstance, cep);
+         }
       }
    }
 

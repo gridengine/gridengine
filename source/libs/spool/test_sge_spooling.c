@@ -59,7 +59,6 @@
 #include "sge_manop.h"
 #include "sge_sharetree.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -165,9 +164,9 @@ static bool read_spooled_data(void)
 #endif
 
    /* queues */
-   spool_read_list(&answer_list, context, &Master_Queue_List, SGE_TYPE_QUEUE);
+   spool_read_list(&answer_list, context, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), SGE_TYPE_CQUEUE);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_Queue_List\n", lGetNumberOfElem(Master_Queue_List)));
+   DPRINTF(("read %d entries to Master_CQueue_List\n", lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)))));
 
    /* pes */
    spool_read_list(&answer_list, context, &Master_Pe_List, SGE_TYPE_PE);
@@ -259,7 +258,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
          case SGE_TYPE_OPERATOR:
          case SGE_TYPE_PE:
          case SGE_TYPE_PROJECT:
-         case SGE_TYPE_QUEUE:
+         case SGE_TYPE_CQUEUE:
          case SGE_TYPE_USER:
          case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
@@ -447,7 +446,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_OPERATOR:
             case SGE_TYPE_PE:
             case SGE_TYPE_PROJECT:
-            case SGE_TYPE_QUEUE:
+            case SGE_TYPE_CQUEUE:
             case SGE_TYPE_USER:
             case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
@@ -489,7 +488,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_OPERATOR:
             case SGE_TYPE_PE:
             case SGE_TYPE_PROJECT:
-            case SGE_TYPE_QUEUE:
+            case SGE_TYPE_CQUEUE:
             case SGE_TYPE_USER:
             case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__

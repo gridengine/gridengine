@@ -38,7 +38,6 @@
 #include "commlib.h"
 #include "sge_gdi_request.h"
 #include "sge_answer.h"
-#include "read_write_queue.h"
 #include "read_object.h"
 #include "config.h"
 #include "sgermon.h"
@@ -50,12 +49,10 @@
 #include "sge_answer.h"
 #include "sched_conf.h"
 #include "sge_range.h"
-#include "sge_queue.h"
 #include "sge_qinstance.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_conf.h"
-#include "sge_queue.h"
 #include "sge_str.h"
 #include "sge_centry.h"
 
@@ -670,7 +667,7 @@ const lListElem *qep
    {
       dstring qtype_buffer = DSTRING_INIT;
 
-      queue_print_qtype_to_dstring(qep, &qtype_buffer, false);
+      qinstance_print_qtype_to_dstring(qep, &qtype_buffer, false);
       FPRINTF((fp, "qtype                "));
       FPRINTF((fp,"%s\n", sge_dstring_get_string(&qtype_buffer)));
       sge_dstring_free(&qtype_buffer);

@@ -60,6 +60,8 @@ PREFIX##_list_find(const lList *this_list, const char *href);                 \
 bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
                          const char *hostname, INTERNAL_TYPE *value,          \
+                         const char **matching_host_or_group,                 \
+                         const char **matching_group,                         \
                          bool *is_ambiguous);                                 \
                                                                               \
 bool                                                                          \
@@ -73,7 +75,7 @@ PREFIX##_has_hgroup_reference(const lList *this_list,                         \
                               const char *host_or_group);                     \
                                                                               \
 lListElem *                                                                   \
-PREFIX##_list_locate(const lList *this_list, const char *host_or_group);      
+PREFIX##_list_locate(const lList *this_list, const char *host_or_group);
                                                                               
 TEMPLATE_ATTR_PROTO(str_attr, const char *, const char *)
 
@@ -100,6 +102,10 @@ TEMPLATE_ATTR_PROTO(celist_attr, const char *, lList *)
 
 TEMPLATE_ATTR_PROTO(solist_attr, const char *, lList *)                    
 
+bool
+attr_list_append_to_dstring(const lList *this_list, dstring *string,
+                            const lDescr *descriptor, int href_nm, 
+                            int value_nm);
 
 #undef ATTR_TYPE_PROTOTYPES 
 

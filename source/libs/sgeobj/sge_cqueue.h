@@ -37,9 +37,26 @@
 
 enum {
    SGE_QI_TAG_DEFAULT = 0,
-   SGE_QI_TAG_DEL     = 1,
-   SGE_QI_TAG_ADD     = 2,
-   SGE_QI_TAG_MOD     = 4
+
+   /*
+    * send delete event and remove from spool area
+    */
+   SGE_QI_TAG_DEL = 1,
+
+   /*
+    * send add events and make persistent
+    */
+   SGE_QI_TAG_ADD = 2,
+
+   /*
+    * send mod event and make persistent
+    */
+   SGE_QI_TAG_MOD = 4,
+
+   /*
+    * send mod event but skip spooling (no state value changed!)
+    */
+   SGE_QI_TAG_MOD_ONLY_CONFIG = 8
 };
 
 typedef struct _list_attribute_struct {
@@ -68,9 +85,6 @@ cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
 lListElem *
 cqueue_create(lList **answer_list, const char *name);
 
-lList **
-cqueue_list_get_master_list(void);
-
 bool 
 cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href);
 
@@ -86,7 +100,11 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list);
 lListElem *
 cqueue_list_locate(const lList *this_list, const char *name);
 
+lListElem *
+cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname);
+
 bool
+
 cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                    lListElem *reduced_elem, int sub_command,
                    int attribute_name, int sublist_host_name,
@@ -110,33 +128,16 @@ bool
 cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list);
 
 bool
-cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
-                         lListElem *reduced_elem, lList *add_hosts,
-                         lList *rem_hosts);
-
-bool
-cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, int sub_command);
-bool 
-cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool refresh_all_value,
-                      bool *is_ambiguous, bool *has_changed);
-
-bool
-cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts,
-                      bool *is_ambiguous);
-
-bool
-cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, 
-                       lList *del_hosts);
-
-bool
 cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem, bool in_master);
 
 bool
 cqueue_verify_priority(lListElem *cqueue, lList **answer_list,
                        lListElem *attr_elem);
+
+bool
+cqueue_verify_processors(lListElem *cqueue, lList **answer_list,
+                         lListElem *attr_elem);
 
 bool
 cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list,
@@ -165,5 +166,15 @@ cqueue_verify_initial_state(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
                                lListElem *attr_elem);
+
+bool
+cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
+                               lListElem *attr_elem);
+
+void
+cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances);
+
+lListElem *
+cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name);
 
 #endif /* __SGE_CQUEUE_H */

@@ -55,13 +55,14 @@
 #include "config.h"
 #include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_userprj.h"
 #include "sge_host.h"
 #include "sge_userset.h"
 #include "sge_sharetree.h"
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
+#include "sge_cqueue.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -279,23 +280,33 @@ int user        /* =1 user, =0 project */
    }
 
    if (user==0) { /* ensure this project is not referenced in any queue */
+      lListElem *cqueue;
       lListElem *ep;
 
       /* check queues */
-      for_each (ep, Master_Queue_List) {
-         if (userprj_list_locate(lGetList(ep, QU_projects), name)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
-                  MSG_OBJ_PRJS, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EEXIST;
-         }
-         if (userprj_list_locate(lGetList(ep, QU_xprojects), name)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
-                  MSG_OBJ_XPRJS, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EEXIST;
+      for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance;
+
+         for_each(qinstance, qinstance_list) {
+            if (userprj_list_locate(lGetList(qinstance, QU_projects), name)) {
+               ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
+                     MSG_OBJ_PRJS, MSG_OBJ_QUEUE, 
+                     lGetString(qinstance, QU_qname)));
+               answer_list_add(alpp, SGE_EVENT, 
+                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return STATUS_EEXIST;
+            }
+            if (userprj_list_locate(lGetList(qinstance, QU_xprojects), name)) {
+               ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
+                     MSG_OBJ_XPRJS, MSG_OBJ_QUEUE, 
+                     lGetString(qinstance, QU_qname)));
+               answer_list_add(alpp, SGE_EVENT, 
+                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return STATUS_EEXIST;
+            }
          }
       }
 

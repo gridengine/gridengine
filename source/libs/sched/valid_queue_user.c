@@ -38,7 +38,7 @@
 #include "valid_queue_user.h"
 #include "sge_string.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_userset.h"
 
 #include "msg_schedd.h"

@@ -72,5 +72,9 @@ int host_notify_about_X(lListElem *host,
                         int tag,
                         int progname_id);
 
+bool
+host_list_add_missing_href(lList *this_list, 
+                           lList **answer_list, const lList *href_list);
+
 #endif /* __SGE_HOST_QMASTER_H */
 

@@ -49,10 +49,13 @@
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 #include "sge_calendar.h"
 
 #include "msg_common.h"
+#include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"
 
 #ifdef QIDL
@@ -79,9 +82,9 @@ typedef struct {
 
 
 static token_set_t statev[] = {
-   { QENABLED,   "on" },
-   { QDISABLED,  "off" },
-   { QSUSPENDED, "suspended" },
+   { QI_DO_ENABLE,   "on" },
+   { QI_DO_DISABLE,  "off" },
+   { QI_DO_SUSPEND, "suspended" },
    { -1, NULL },
 };
 
@@ -365,21 +368,21 @@ state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_event)
 
    lFreeElem(tm);
 
-   if ((state & QENABLED)) {
+   if ((state & QI_DO_ENABLE)) {
       DEXIT;
-      return QENABLED;
+      return QI_DO_ENABLE;
    }
-   if ((state & QSUSPENDED)) {
+   if ((state & QI_DO_SUSPEND)) {
       DEXIT;
-      return QSUSPENDED;
+      return QI_DO_SUSPEND;
    }
-   if ((state & QDISABLED)) {
+   if ((state & QI_DO_DISABLE)) {
       DEXIT;
-      return QDISABLED;
+      return QI_DO_DISABLE;
    }
 
    DEXIT;
-   return QENABLED;
+   return QI_DO_ENABLE;
 }
 
 /* returns state and time when state changes acording this entry */
@@ -437,7 +440,7 @@ is_year_entry_active(lListElem *tm, lListElem *year_entry, time_t *limit)
       state = lGetUlong(year_entry, CA_state);
    } else {
       /* DPRINTF(("in_range_list(yday) = %d in_range_list(daytime) = %d\n", in_yday_range, in_daytime_range)); */
-      state = in_daytime_range?QENABLED:0;
+      state = in_daytime_range?QI_DO_ENABLE:0;
    }
 
    if (limit) {  
@@ -761,7 +764,7 @@ disabled_year_entry(lListElem **cal)
 {
    lList *ydrl = NULL,
          *dtrl = NULL;
-   int state = QDISABLED;
+   int state = QI_DO_DISABLE;
   
    DENTER(TOP_LAYER, "disabled_year_entry");
 
@@ -1384,7 +1387,7 @@ disabled_week_entry(lListElem **cal)
    /* default values */
    lList *wdrl = NULL,
          *dtrl = NULL;
-       int state = QDISABLED;
+       int state = QI_DO_DISABLE;
 
    DENTER(TOP_LAYER, "disabled_week_entry");
 
@@ -1892,18 +1895,46 @@ calendar_get_current_state_and_end(const lListElem *cep, time_t *then)
       then);
    
    switch (new_state) {
-   case QDISABLED:
-      new_state = QCAL_DISABLED;
+   case QI_DO_DISABLE:
+      new_state = QI_DO_CAL_DISABLE;
       break;
-   case QSUSPENDED:
-      new_state = QCAL_SUSPENDED;
+   case QI_DO_SUSPEND:
+      new_state = QI_DO_CAL_SUSPEND;
       break;
    default:
-      new_state = 0;
+      new_state = QI_DO_NOTHING;
       break;
    }
 
    DEXIT;
    return new_state;
+}
+
+bool 
+calendar_is_referenced(const lListElem *calendar, lList **answer_list,
+                       const lList *master_cqueue_list)
+{
+   bool ret = false;
+   lListElem *cqueue = NULL;
+
+   for_each(cqueue, master_cqueue_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+
+      for_each(qinstance, qinstance_list) {
+         if (qinstance_is_calendar_referenced(qinstance, calendar)) {
+            const char *calendar_name = lGetString(calendar, CAL_name);
+            const char *name = lGetString(qinstance, QU_full_name);
+
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, 
+                                    MSG_CALENDAR_REFINQUEUE_SS, 
+                                    calendar_name, name);
+            ret = true;
+            break;
+         }
+      }
+   }
+   return ret;
 }
 

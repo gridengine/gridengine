@@ -1,5 +1,5 @@
-   #ifndef __SGE_SELECT_QUEUE_H
-   #define __SGE_SELECT_QUEUE_H
+#ifndef __SGE_SELECT_QUEUE_H
+#define __SGE_SELECT_QUEUE_H
    /*___INFO__MARK_BEGIN__*/
    /*************************************************************************
     * 
@@ -103,7 +103,9 @@ int sge_get_ulong_qattr(u_long32 *uvalp, char *attrname, lListElem *q, lList *ex
  * which double value has the following attribute
  * 
  */
-int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list, bool *has_value_from_object);
+int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q, 
+                         const lList *exechost_list, const lList *complex_list,
+                         bool *has_value_from_object);
 
 /* 
  * which string value has the following attribute
@@ -117,8 +119,6 @@ int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, l
  *
  */
 int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, lList *complex_list, u_long32 *total_slotsp, lList *orders_list);
-
-int debit_queue_consumable(lListElem *jep, lListElem *qep, lList *complex_list, int slots);
 
 char *trace_resource(lListElem *rep);
 

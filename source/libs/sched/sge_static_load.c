@@ -39,18 +39,9 @@
 #include "sge_all_listsL.h"
 #include "sge_static_load.h"
 
-/*
-** NAME
-**   sge_is_static_load_value
-** PARAMETER
-**   name      - name of load value
-**
-** RETURN
-**
-** DESCRIPTION
-**   determines if a load value is configured as static
-**   
-*/
+/* EB: TODO: CLEANUP: remove this file */
+
+#if 0
 
 int sge_is_static_load_value(const char *name) 
 {
@@ -73,3 +64,5 @@ int sge_is_static_load_value(const char *name)
    DEXIT;
    return 0;
 }
+
+#endif

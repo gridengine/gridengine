@@ -105,13 +105,14 @@ enum {
 
    CQ_subordinate_list,
 
-   CQ_qtype
+   CQ_qtype,
+   CQ_tag
 };
 
 ILISTDEF(CQ_Type, CQueue, SGE_QUEUE_LIST)
    SGE_STRING(CQ_name, CULL_SPOOL | CULL_CONFIGURE | CULL_PRIMARY_KEY)
    SGE_LIST(CQ_hostlist, HR_Type, CULL_SPOOL | CULL_CONFIGURE)
-   SGE_LIST(CQ_qinstances, QI_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(CQ_qinstances, QU_Type, CULL_SPOOL | CULL_CONFIGURE)
 
    SGE_LIST(CQ_seq_no, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_LIST(CQ_nsuspend, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE)
@@ -173,6 +174,8 @@ ILISTDEF(CQ_Type, CQueue, SGE_QUEUE_LIST)
    SGE_LIST(CQ_subordinate_list, ASOLIST_Type, CULL_SPOOL | CULL_CONFIGURE)
 
    SGE_LIST(CQ_qtype, AQTLIST_Type, CULL_SPOOL | CULL_CONFIGURE)  
+
+   SGE_ULONG(CQ_tag, CULL_SPOOL | CULL_CONFIGURE)
 LISTEND 
 
 NAMEDEF(CQN)
@@ -240,6 +243,7 @@ NAMEDEF(CQN)
    NAME("CQ_subordinate_list")
 
    NAME("CQ_qtype")
+   NAME("CQ_tag")
 NAMEEND
 
 #define CQS sizeof(CQN)/sizeof(char*)

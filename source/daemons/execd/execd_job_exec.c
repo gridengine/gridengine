@@ -42,7 +42,6 @@
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "slots_used.h"
 #include "dispatcher.h"
 #include "sge_string.h"
 #include "sge_parse_num_par.h"
@@ -64,7 +63,7 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_var.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "get_path.h"
 
 #include "msg_common.h"
@@ -285,7 +284,7 @@ int slave
    /* store queues as sub elems of gdil */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       qnm=lGetString(gdil_ep, JG_qname);
-      if (!(qep=queue_list_locate(qlp, qnm))) {
+      if (!(qep=qinstance_list_locate2(qlp, qnm))) {
          sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, 
                              u32c(lGetUlong(jelem, JB_job_number)));
          DEXIT;
@@ -299,7 +298,7 @@ int slave
       /* store number of slots we got in this queue for this job */
       slots = lGetUlong(gdil_ep, JG_slots);
       lSetUlong(qep, QU_job_slots, slots);
-      set_qslots_used(qep, 0);
+      qinstance_set_slots_used(qep, 0);
       lSetObject(gdil_ep, JG_queue, qep);
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
@@ -581,28 +580,46 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
 *  SEE ALSO
 *     execd/job/job_set_queue_info_in_task()
 ******************************************************************************/
-static lList *job_get_queue_for_task(lListElem *jatep, lListElem *petep, const char *queuename) 
+static lList *
+job_get_queue_for_task(lListElem *jatep, lListElem *petep, 
+                       const char *queuename) 
 {
    lListElem *this_q, *gdil_ep;
 
+   DENTER(TOP_LAYER, "job_get_queue_for_task");
+
+#if 1 /* EB: TODO: debug */
+   lWriteListTo(lGetList(jatep, JAT_granted_destin_identifier_list), stderr);
+#endif
+
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       /* if a certain queuename is requested, check only this queue */
-      if(queuename != NULL && strcmp(queuename, lGetString(gdil_ep, JG_qname)) != 0) {
+      if (queuename != NULL && 
+          strcmp(queuename, lGetString(gdil_ep, JG_qname)) != 0) {
+         DTRACE;
          continue;
       } 
 
       this_q = lGetObject(gdil_ep, JG_queue);
 
+      DTRACE;
+
       /* Queue must exist and be on this host */
-      if(this_q != NULL && 
-         sge_hostcmp(lGetHost(gdil_ep, JG_qhostname), uti_state_get_qualified_hostname()) == 0) {
+      if (this_q != NULL && 
+                     sge_hostcmp(lGetHost(gdil_ep, JG_qhostname), 
+                     uti_state_get_qualified_hostname()) == 0) {
+
+         DTRACE;
+
          /* Queue must have free slots */
-         if(qslots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
-            return job_set_queue_info_in_task(lGetString(gdil_ep, JG_qname), petep);
+         if(qinstance_slots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
+            DEXIT;
+            return job_set_queue_info_in_task(lGetString(gdil_ep, JG_qname), 
+                                              petep);
          } 
       }
    }
-
+   DEXIT;
    return NULL;
 }
 

@@ -36,7 +36,6 @@
 
 #include "sge.h"
 #include "cull.h"
-#include "sge_queue.h"         
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_ckpt.h"

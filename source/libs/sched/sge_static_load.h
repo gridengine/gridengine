@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#if 0
 int sge_is_static_load_value(const char *name);
+#endif
 
 #endif /*  __SGE_STATIC_LOAD_H */
 

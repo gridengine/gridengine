@@ -53,7 +53,7 @@
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_schedd.h"
 #include "sge_process_events.h"
 #include "sge_prog.h"
@@ -82,9 +82,12 @@
 #include "sge_host.h"
 #include "sge_userset.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_sharetree.h"
 #include "sge_answer.h"
 #include "sge_parse_num_par.h"
+#include "sge_qinstance_state.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -201,12 +204,36 @@ int event_handler_default_scheduler()
    /* the scheduler functions have to work with a reduced copy .. */
    copy.host_list = lSelect("", Master_Exechost_List,
                             where_host, what_host);
+   /* 
+    * Within the scheduler we do only need QIs
+    */
+   {
+      lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+      lListElem *cqueue = NULL;
 
-   copy.queue_list = lSelect("", Master_Queue_List,
-                             where_queue, what_queue2);
+      copy.queue_list = NULL;
+      for_each(cqueue, master_list) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lList *selected = NULL;
+         lList *all_selected = NULL;
 
-   /* name all queues not suitable for scheduling in tsm-logging */
-   copy.all_queue_list = lCopyList("", Master_Queue_List);
+         selected = lSelect("", qinstance_list, where_queue, what_queue);
+         if (copy.queue_list == NULL) {
+            copy.queue_list = selected;
+         } else {
+            lAddList(copy.queue_list, selected);
+         }
+
+         /* name all queues not suitable for scheduling in tsm-logging */
+         all_selected = lSelect("", qinstance_list, 
+                                where_all_queue, what_queue);
+         if (copy.all_queue_list == NULL) {
+            copy.all_queue_list = all_selected;
+         } else {
+            lAddList(copy.all_queue_list, all_selected);
+         }
+      }
+   }
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
@@ -230,9 +257,11 @@ int event_handler_default_scheduler()
    DPRINTF(("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
             "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
-            lGetNumberOfElem(Master_Queue_List),
+            /* EB: TODO: */
+            lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
             lGetNumberOfElem(copy.all_queue_list),
-            lGetNumberOfElem(Master_Queue_List),
+            /* EB: TODO: */
+            lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
             lGetNumberOfElem(copy.job_list),
             lGetNumberOfElem(Master_Job_List),
             lGetNumberOfElem(copy.host_list),
@@ -253,9 +282,11 @@ int event_handler_default_scheduler()
       printf("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
          "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
-         lGetNumberOfElem(Master_Queue_List),
+         /* EB: TODO: */
+         lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
          lGetNumberOfElem(copy.all_queue_list),
-         lGetNumberOfElem(Master_Queue_List),
+         /* EB: TODO: */
+         lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE))),
          lGetNumberOfElem(copy.job_list),
          lGetNumberOfElem(Master_Job_List),
          lGetNumberOfElem(copy.host_list),
@@ -349,6 +380,43 @@ static void ensure_valid_what_and_where(void)
 
    called = 1;
 
+   if (where_queue == NULL) {
+      where_queue = lWhere("%T("
+         "!(%I m= %u) "
+         "&& !(%I m= %u) "
+         "&& !(%I m= %u) "
+         "&& !(%I m= %u) "
+         "&& !(%I m= %u) "
+         "&& !(%I m= %u) "
+         "&& !(%I m= %u))",
+         QU_Type,    
+         QU_state, QI_SUSPENDED,        /* only not suspended queues      */
+         QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
+         QU_state, QI_CAL_SUSPENDED,
+         QU_state, QI_ERROR,            /* no queues in error state       */
+         QU_state, QI_AMBIGUOUS,
+         QU_state, QI_ORPHANED,
+         QU_state, QI_UNKNOWN);         /* only known queues              */
+   }
+    
+   if (where_queue == NULL) {
+      CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
+   }
+
+   /* ---------------------------------------- */
+
+   if (where_all_queue == NULL) {
+      where_all_queue = lWhere("%T(%I!=%s)", QU_Type,
+            QU_qname, SGE_TEMPLATE_NAME); /* do not select queue "template" */
+   }
+
+   if (where_all_queue == NULL) {
+      CRITICAL((SGE_EVENT,
+                MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED ));
+   }
+
+   DTRACE;
+
    /* ---------------------------------------- */
 
    if (where_host == NULL) {
@@ -361,7 +429,6 @@ static void ensure_valid_what_and_where(void)
 
    /* ---------------------------------------- */
 
-DTRACE;
    if (!where_dept) {
       where_dept = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
    }
@@ -372,7 +439,6 @@ DTRACE;
 
    /* ---------------------------------------- */
 
-DTRACE;
    if (!where_acl) {
       where_acl = lWhere("%T(%I m= %u)", US_Type, US_type, US_ACL);
    }
@@ -381,157 +447,104 @@ DTRACE;
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED));
    }   
 
-DTRACE;
-
-   /* ---------------------------------------- */
-   if (what_host == NULL) {
-      what_host = lWhat("%T(ALL)", EH_Type);
-   }
-
+#if 0
    /* ---------------------------------------- */
    if (what_queue == NULL) {
+
       #define NM10 "%I%I%I%I%I%I%I%I%I%I"
       #define NM9 "%I%I%I%I%I%I%I%I%I"
       #define NM5  "%I%I%I%I%I"
       #define NM3  "%I%I%I"
       #define NM1  "%I"
-/*    what_queue = lWhat("%T(ALL)", QU_Type); */
-      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM10 ")", QU_Type,
-            QU_qname,
-            QU_qhostname,
-         /*   QU_tmpdir,
-            QU_shell,
-         */
-            QU_seq_no,
-         /*   QU_queue_number, */
-            QU_load_thresholds,
-            QU_suspend_thresholds,
-            QU_nsuspend,
-            QU_suspend_interval,
-         /*   QU_priority,
-            QU_rerun, */
-            QU_qtype,
-/*            QU_processors,*/
-            QU_job_slots,
 
-            QU_calendar,
+      lDescr *queue_des = NULL;
+      int index = 0;
+      int n = 0;
 
-         /*   QU_prolog,
-            QU_epilog,
-            QU_shell_start_mode,
-            QU_initial_state,
-         */
-            QU_s_rt,
-            QU_h_rt,
-            QU_s_cpu,
-            QU_h_cpu,
-            QU_s_fsize,
-            QU_h_fsize,
-            QU_s_data,
-            QU_h_data,
-            QU_s_stack,
-            QU_h_stack,
-            QU_s_core,
-            QU_h_core,
-            QU_s_rss,
-            QU_h_rss,
-            QU_s_vmem,
-            QU_h_vmem,
+      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5 NM3 NM1 ")", QU_Type,
+         QU_qname,
+         QU_qhostname,
+         QU_full_name,
+         QU_seq_no,
+         QU_load_thresholds,
+         QU_suspend_thresholds,
+         QU_nsuspend,
+         QU_suspend_interval,
+         QU_qtype,
+         QU_job_slots,
 
-            QU_min_cpu_interval,
+         QU_calendar,
+         QU_s_rt,
+         QU_h_rt,
+         QU_s_cpu,
+         QU_h_cpu,
+         QU_s_fsize,
+         QU_h_fsize,
+         QU_s_data,
+         QU_h_data,
+         QU_s_stack,
 
-            QU_state,
-            QU_notify,
+         QU_h_stack,
+         QU_s_core,
+         QU_h_core,
+         QU_s_rss,
+         QU_h_rss,
+         QU_s_vmem,
+         QU_h_vmem,
+         QU_min_cpu_interval,
+         QU_state,
+         QU_notify,
 
-            QU_acl,
-            QU_xacl,
-         /*   QU_owner_list, */
-            QU_subordinate_list,
-            QU_consumable_config_list,
-            QU_projects,
-            QU_xprojects,
+         QU_acl,
+         QU_xacl,
+         QU_subordinate_list,
+         QU_consumable_config_list,
+         QU_projects,
+         QU_xprojects,
+         QU_fshare,
+         QU_oticket,
+         QU_consumable_actual_list,
+         QU_tagged4schedule,
 
-            QU_fshare,
-            QU_oticket,
+         QU_version,
+         QU_suspended_on_subordinate,
+         QU_last_suspend_threshold_ckeck,
+         QU_job_cnt,
+         QU_pending_job_cnt,
+         QU_soft_violation,
+         QU_host_seq_no,
+         QU_pe_list,
+         QU_ckpt_list
+      );
 
-            QU_consumable_actual_list,
-            QU_suitable,
-            QU_tagged,
-            QU_tagged4schedule,
-            QU_version,
-            QU_suspended_on_subordinate,
-            QU_last_suspend_threshold_ckeck,
-            QU_job_cnt,
-            QU_pending_job_cnt,
-            QU_soft_violation,
-            QU_host_seq_no,
-#if 0
-            QU_starter_method,
-            QU_suspend_method,
-            QU_resume_method,
-            QU_terminate_method,
-            QU_pending_signal,
-            QU_pending_signal_delivery_time,
+      /* create new lList with partial descriptor */
+      if ((n = lCountWhat(what_queue, QU_Type)) <= 0) {
+         CRITICAL((SGE_EVENT, "empty descriptor\n"));
+      }
+
+
+      if (!(queue_des = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
+         CRITICAL((SGE_EVENT, "error memory allocation\n"));
+      }
+      if (lPartialDescr(what_queue, QU_Type, queue_des, &index) != 0){
+         CRITICAL((SGE_EVENT, "partial queue descriptor failed\n"));
+      }
+      else {
+         what_queue2 = lWhat("%T(ALL)", queue_des );
+
+         cull_hash_free_descr(queue_des);
+         free(queue_des);
+      }
+   }
+#else
+   if (what_queue == NULL) {
+      what_queue = lWhat("%T(ALL)", QU_Type);
+   }
 #endif
-            QU_pe_list,
-            QU_ckpt_list);
 
-         {
-            lDescr *queue_des = NULL;
-            int index = 0;
-            int n = 0;
-            
-               /* create new lList with partial descriptor */
-            if ((n = lCountWhat(what_queue, QU_Type)) <= 0) {
-               CRITICAL((SGE_EVENT, "empty descriptor\n"));
-            }
-
-            
-            if (!(queue_des = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-               CRITICAL((SGE_EVENT, "error memory allocation\n")); 
-            }
-            if (lPartialDescr(what_queue, QU_Type, queue_des, &index) != 0){
-               CRITICAL((SGE_EVENT, "partial queue descriptor failed\n")); 
-            }
-            else {
-               what_queue2 = lWhat("%T(ALL)", queue_des );
-
-               where_queue = lWhere("%T("
-                  " !(%I m= %u) &&" 
-                  " !(%I m= %u) &&"
-                  " !(%I m= %u) &&"
-                  " !(%I m= %u) &&"
-                  " !(%I m= %u))",
-                  queue_des,    
-                  QU_state, QSUSPENDED,        /* only not suspended queues      */
-                  QU_state, QSUSPENDED_ON_SUBORDINATE, 
-                  QU_state, QCAL_SUSPENDED, 
-                  QU_state, QERROR,            /* no queues in error state       */
-                  QU_state, QUNKNOWN);         /* only known queues              */
-                  
-               if (where_queue == NULL) {
-                  CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
-               }
-             
-               cull_hash_free_descr(queue_des);
-               free(queue_des);
-             
-               DTRACE;
-               
-              /* ---------------------------------------- */
-
-               where_all_queue = lWhere("%T(%I!=%s)", QU_Type,    
-                        QU_qname, SGE_TEMPLATE_NAME); /* do not select queue "template" */
-
-               if (where_all_queue == NULL) {
-                  CRITICAL((SGE_EVENT, 
-                            MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED ));
-               }
-
-               DTRACE;
-            }
-         }
-
+   /* ---------------------------------------- */
+   if (what_host == NULL) {
+      what_host = lWhat("%T(ALL)", EH_Type);
    }
 
    /* ---------------------------------------- */
@@ -717,7 +730,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    new = lFirst(lGetList(event, ET_new_version));
 
    if (new == NULL) {
-      ERROR((SGE_EVENT, ">>>>> no scheduler configuration available <<<<<<<<\n"));
+      ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
       return false;
    }
@@ -1167,8 +1180,8 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_QUEUE,          NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */

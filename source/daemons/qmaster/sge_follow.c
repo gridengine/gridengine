@@ -36,7 +36,7 @@
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_any_request.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_time.h"
 #include "sge_log.h"
@@ -48,8 +48,6 @@
 #include "sge_host.h"
 #include "sge_signal.h"
 #include "sge_job_qmaster.h"
-#include "slots_used.h"
-#include "sge_queue_qmaster.h"
 #include "sge_follow.h"
 #include "sge_sched.h"
 #include "scheduler.h"
@@ -58,7 +56,7 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "subordinate_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_sharetree_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
@@ -79,6 +77,7 @@
 #include "sge_userset.h"
 #include "sge_sharetree.h"
 #include "sge_todo.h"
+#include "sge_cqueue.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -225,8 +224,9 @@ lList **topp  /* ticket orders ptr ptr */
       }
 
 
-      /* untag all queues */
-      queue_list_clear_tags(Master_Queue_List);
+      /* EB: TODO: untag all queues */
+      cqueue_list_set_tag(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                          0, true);
 
       if (lGetString(jep, JB_pe)) {
          pe = pe_list_locate(Master_Pe_List, or_pe);
@@ -282,7 +282,7 @@ lList **topp  /* ticket orders ptr ptr */
                (int)q_version, 
                (feature_is_enabled(FEATURE_SGEEE) ? opt_sge : "") ));
 
-         qep = queue_list_locate(Master_Queue_List, q_name);
+         qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), q_name);
          if (!qep) {
             ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -303,7 +303,7 @@ lList **topp  /* ticket orders ptr ptr */
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
             /* try to repair schedd data */
-            sge_add_queue_event(sgeE_QUEUE_MOD, qep);
+            qinstance_add_event(qep, sgeE_QINSTANCE_MOD);
 
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
@@ -331,7 +331,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
          /* ensure that this queue has enough free slots */
-         if (lGetUlong(qep, QU_job_slots) - qslots_used(qep) < q_slots) {
+         if (lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep) < q_slots) {
             ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_US, u32c(q_slots), q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
@@ -367,7 +367,7 @@ lList **topp  /* ticket orders ptr ptr */
 
          /* set tagged field in queue; this is needed for building */
          /* up job_list in the queue after successful job sending */
-         lSetUlong(qep, QU_tagged, q_slots); 
+         lSetUlong(qep, QU_tag, q_slots); 
 
          /* ---------------------- 
           *  find and check host 
@@ -451,7 +451,7 @@ lList **topp  /* ticket orders ptr ptr */
       }
 
       /* fill in master_queue */
-      lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_qname));
+      lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
 
       if (sge_give_job(jep, jatp, master_qep, pe, master_host)) {
@@ -484,7 +484,12 @@ lList **topp  /* ticket orders ptr ptr */
 
       /* now after successfully (we hope) sent the job to execd 
          suspend all subordinated queues that need suspension */
-      sos_using_gdil(lGetList(jatp, JAT_granted_destin_identifier_list), job_number);
+      {
+         lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+         lList *gdil = lGetList(jatp, JAT_granted_destin_identifier_list);
+
+         cqueue_list_x_on_subordinate_gdil(master_list, true, gdil);
+      }
    }    
       break;
 
@@ -750,7 +755,7 @@ lList **topp  /* ticket orders ptr ptr */
 
                   while((oep=lFirst(oeql))) {          
                      if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
-                         ((oep_qep = queue_list_locate(Master_Queue_List,
+                         ((oep_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                                                        oep_qname))) &&
                          ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
 
@@ -762,7 +767,7 @@ lList **topp  /* ticket orders ptr ptr */
                         for(curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
                            next_oep = lNext(curr_oep);
                            if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
-                               ((curr_oep_qep = queue_list_locate(Master_Queue_List, curr_oep_qname))) &&
+                               ((curr_oep_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), curr_oep_qname))) &&
                                ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
                                !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
                               job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
@@ -1083,7 +1088,7 @@ lList **topp  /* ticket orders ptr ptr */
             WARNING((SGE_EVENT, MSG_JOB_SUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
          } else {
             const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
-            queueep = queue_list_locate(Master_Queue_List, qnm);
+            queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU,
                      qnm, u32c(jobid)));
@@ -1114,7 +1119,7 @@ lList **topp  /* ticket orders ptr ptr */
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
-            sge_add_queue_event(sgeE_QUEUE_MOD, queueep);
+            qinstance_add_event(queueep, sgeE_QINSTANCE_MOD);
          }
       }
       break;
@@ -1137,7 +1142,7 @@ lList **topp  /* ticket orders ptr ptr */
          } 
          else {
             const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
-            queueep = queue_list_locate(Master_Queue_List, qnm);
+            queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, qnm, u32c(jobid)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1165,7 +1170,7 @@ lList **topp  /* ticket orders ptr ptr */
             }
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
-            sge_add_queue_event(sgeE_QUEUE_MOD, queueep);
+            qinstance_add_event(queueep, sgeE_QINSTANCE_MOD);
          }
       }
       break;

@@ -43,7 +43,8 @@
 #include "sge_schedd_conf.h"
 #include "sge_parse_num_par.h"
 #include "sge_host.h"
-#include "sge_queue.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
 
@@ -346,7 +347,7 @@ centry_create(lList **answer_list, const char *name)
 *     bool 
 *     centry_is_referenced(const lListElem *centry, 
 *                          lList **answer_list, 
-*                          const lList *master_queue_list, 
+*                          const lList *master_cqueue_list, 
 *                          const lList *master_exechost_list, 
 *                          const lList *master_sconf_list) 
 *
@@ -358,7 +359,7 @@ centry_create(lList **answer_list, const char *name)
 *  INPUTS
 *     const lListElem *centry           - CE_Type 
 *     lList **answer_list               - AN_Type 
-*     const lList *master_queue_list    - QU_Type 
+*     const lList *master_cqueue_list   - CQ_Type 
 *     const lList *master_exechost_list - EH_Type 
 *     const lList *master_sconf_list    - SC_Type 
 *
@@ -367,8 +368,9 @@ centry_create(lList **answer_list, const char *name)
 *******************************************************************************/
 bool 
 centry_is_referenced(const lListElem *centry, lList **answer_list,
-                     const lList *master_queue_list,
-                     const lList *master_exechost_list)
+                     const lList *master_cqueue_list,
+                     const lList *master_exechost_list,
+                     const lList *master_sconf_list)
 {
    bool ret = false;
 
@@ -377,18 +379,22 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
       const char *centry_name = lGetString(centry, CE_name);
 
       if (!ret) {
-         lListElem *queue = NULL;   /* QU_Type */
+         lListElem *cqueue = NULL; 
 
-         for_each(queue, master_queue_list) {
-            if (queue_is_centry_referenced(queue, centry)) {
-               const char *queue_name = lGetString(queue, QU_qname);
+         for_each(cqueue, master_cqueue_list) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance = NULL;
 
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                       ANSWER_QUALITY_INFO, 
-                                       MSG_CENTRYREFINQUEUE_SS,
-                                       centry_name, queue_name);
-               ret = true;
-               break;
+            for_each(qinstance, qinstance_list) {
+               if (qinstance_is_centry_referenced(qinstance, centry)) {
+                  const char *name = lGetString(qinstance, QU_full_name);
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                          ANSWER_QUALITY_INFO, 
+                                          MSG_CENTRYREFINQUEUE_SS,
+                                          centry_name, name);
+                  ret = true;
+                  break;
+               }
             }
          }
       }
@@ -409,7 +415,6 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
          }
       }
       if (!ret) {
-      
          if (sconf_is_centry_referenced(sconf_get_config(), centry)) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
@@ -584,6 +589,7 @@ centry_list_init_double(lList *this_list)
 {
    bool ret = true;
 
+   DENTER(CENTRY_LAYER, "centry_list_init_double");
    if (this_list != NULL) {
       lListElem *centry;
 
@@ -597,6 +603,7 @@ centry_list_init_double(lList *this_list)
          lSetDouble(centry, CE_doubleval, new_val);
       }
    }
+   DEXIT;
    return ret;
 }
 

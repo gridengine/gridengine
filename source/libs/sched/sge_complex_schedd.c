@@ -48,11 +48,12 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_schedd_conf.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_host.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_load.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -263,8 +264,10 @@ u_long32 layer
 *     static lListElem* - the element one was looking for or NULL
 *
 *******************************************************************************/
-lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr,lList *centry_list,  
-                                lListElem *queue, u_long32 layer, double lc_factor, char *reason, int reason_size ){
+lListElem* 
+get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, 
+              lList *load_attr, const lList *centry_list, lListElem *queue, 
+              u_long32 layer, double lc_factor, char *reason, int reason_size) {
    lListElem *actual_el=NULL;
    lListElem *load_el=NULL;
    lListElem *cplx_el=NULL;
@@ -314,8 +317,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             sge_dstring_init(&ds, as_str, sizeof(as_str));
             sge_dstring_sprintf(&ds, "%8.3f", (float)lGetDouble(cplx_el, CE_pj_doubleval));
             lSetString(cplx_el,CE_pj_stringval, as_str);
-         }
-         else{
+         } else{
             if (reason) {
                dstring ds;
                sge_dstring_init(&ds, reason, reason_size);
@@ -325,8 +327,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             DEXIT;
             return NULL;
          }
-      }
-      else{
+      } else{
          lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el, CE_doubleval)); 
          lSetString(cplx_el,CE_pj_stringval, lGetString(cplx_el, CE_stringval));
       }
@@ -1241,7 +1242,6 @@ static void build_name_filter(const char **filter, lList *list, int t_name, int 
       }
 }
 
-
 /* wrapper for strcmp() of all string types */ 
 /* s1 is the pattern */
 /* s2 the string that should be matched against the pattern */
@@ -1257,7 +1257,7 @@ int string_base_cmp(u_long32 type, const char *s1, const char *s2)
       case TYPE_HOST:  match = sge_hostcmp(s1, s2);
          break;
       case TYPE_RESTR:  {
-                           char *s = NULL; 
+                           char *s = NULL;
                            struct saved_vars_s *context=NULL;
                            for (s=sge_strtok_r(s1, "|", &context); s; s=sge_strtok_r(NULL, "|", &context)) {
                               match |= fnmatch(s, s2, 0);
@@ -1304,10 +1304,10 @@ const char *offer) {
 static int resource_cmp(
 u_long32 relop,
 double req,
-double src_dl 
+double src_dl
 ) {
    int match;
-   switch(relop) { 
+   switch(relop) {
    case CMPLXEQ_OP :
       match = ( req==src_dl);
       break;
@@ -1330,8 +1330,134 @@ double src_dl
       match = 0; /* default -> no match */
    }
 
-   return match;      
+   return match;
 }
+
+#if 0
+void load_value( lListElem *target_load_value, lListElem *source_load_value, int nproc,
+                const char *hostname, u_long32 layer, double lc_factor ) {
+   const char *name, *load_value;
+   lListElem *job_load;
+   u_long32 type, dom_type;
+   double dval;
+   char err_str[256], sval[100];
+
+   DENTER(TOP_LAYER, "load_value");
+
+      name = lGetString(source_load_value, HL_name);
+
+      /* get load correction for this load value ? */
+      job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, name);
+
+      /* load values are accepted only in case they are static */
+      if (get_qs_state()==QS_STATE_EMPTY && !sge_is_static_load_value(name)){
+         DEXIT;
+         return;
+      }
+
+      load_value = lGetString(source_load_value, HL_value);
+      dom_type = DOMINANT_TYPE_LOAD;
+
+      switch (type = lGetUlong(target_load_value, CE_valtype)) {
+         case TYPE_INT:
+         case TYPE_TIM:
+         case TYPE_MEM:
+         case TYPE_BOO:
+         case TYPE_DOUBLE:
+            if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
+
+               strcpy(sval, load_value);
+               /* --------------------------------
+                  look for 'name' in our load_adjustments list
+               */
+               if (job_load) {
+                  const char *s;
+                  double load_correction;
+
+                  s = lGetString(job_load, CE_stringval);
+                  if (!parse_ulong_val(&load_correction, NULL, type, s,
+                     err_str, 255)) {
+                     ERROR((SGE_EVENT, MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S , name));
+                  }
+                  else {
+                     if (lc_factor) {
+                        double old_dval;
+
+                        if (!strncmp(name, "np_", 3)) {
+                           if (nproc != 1) {
+                              DPRINTF(("fillComplexFromHost: dividing lc_factor for \"%s\" with value %f by %d to %f\n",
+                                       name, lc_factor, nproc, lc_factor / nproc));
+                              lc_factor /= nproc;
+                           }
+                        }
+
+                        load_correction *= lc_factor;
+
+                        /* it depends on relop in complex config
+                           whether load_correction is pos/neg */
+                        switch (lGetUlong(target_load_value, CE_relop)) {
+                        case CMPLXGE_OP:
+                        case CMPLXGT_OP:
+                           old_dval = dval;
+                           dval += load_correction;
+                           break;
+
+                        case CMPLXNE_OP:
+                        case CMPLXEQ_OP:
+                        case CMPLXLT_OP:
+                        case CMPLXLE_OP:
+                        default:
+                           old_dval = dval;
+                           dval -= load_correction;
+                           break;
+                        }
+
+                        sprintf(sval, "%8.3f", dval);
+                        DPRINTF(("%s@%s: uc: %f c(%f): %f\n",
+                           name, hostname, old_dval,
+                           lc_factor, dval));
+                     }
+                     dom_type = DOMINANT_TYPE_CLOAD;
+                  }
+               }
+
+               decide_dominance(target_load_value, dval, sval, layer|dom_type);
+            } /* in case of errors we let the complexes unchanged */
+            break;
+
+         case TYPE_STR:
+         case TYPE_CSTR:
+         case TYPE_HOST:
+            lSetString(target_load_value, CE_stringval, load_value);
+            lSetUlong(target_load_value, CE_dominant, layer|DOMINANT_TYPE_LOAD);
+            break;
+      }
+   DEXIT;
+}
+#endif
+
+/**********************************************************************
+ make a complex out of the default queue complex and a queue.
+ **********************************************************************/
+#if 0 
+lList** new_complex;                /* here we collect resulting attributes  */
+lListElem *complex;                 /* the "queue" complex */
+lListElem *queue;                   /* the queue itself */
+int recompute_debitation_dependent; /* recompute only attribute types which  */
+                                    /* depend on the amount of debited jobs  */
+                                    /* these types are:                      */
+                                    /* - load corrected load values          */
+                                    /*   (-> scheddconf.job_load_adjustments)*/
+                                    /* - consumable attributes               */
+                                    /*   (-> CE_consumable)                  */
+#endif
+#if 0
+static int 
+fillComplexFromQueue(lList** new_complex, 
+                     lList *complex, lListElem *queue)
+}
+#endif
+
 
 /*********************************************************************
  compare two complex entries (attributes)
@@ -1608,8 +1734,10 @@ int force_existence
 *     void lListElem* - the element one is looking for or NULL.
 *
 *******************************************************************************/
-lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, const char* attrname, lList *centry_list, 
-                                     char * reason, int reason_size){
+lListElem *
+get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, 
+                      const char* attrname, const lList *centry_list, 
+                      char * reason, int reason_size){
    lListElem *global_el=NULL;
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
@@ -1633,8 +1761,9 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
          if ((ulc_factor=lGetUlong(global, EH_load_correction_factor)))
             lc_factor = ((double)ulc_factor)/100;
       }
-      global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
-                               lc_factor, reason, reason_size );
+      global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
+                                centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
+                                lc_factor, reason, reason_size );
       ret_el = global_el;
    } 
 
@@ -1721,6 +1850,7 @@ int main(int argc, char *argv[], char *envp[])
 }
 #endif
 
+#if 0
 /****** schedlib/debit_consumable() **********************************************
 *  NAME
 *     debit_consumable() -- Debit/Undebit consumables.
@@ -1803,11 +1933,15 @@ debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
       }
    
       if (jep) {
-         if (!get_job_contribution(&dval, name, jep, dcep)) {
+         bool tmp_ret = job_get_contribution(jep, NULL, name, &dval, dcep);
+
+         if (tmp_ret && &dval != 0.0) {
             DPRINTF(("debiting %f of %s on %s %s for %d slots\n",
-                  dval, name, (config_nm==QU_consumable_config_list)?"queue":"host",
+                     dval, name, 
+                     (config_nm==QU_consumable_config_list)?"queue":"host",
                      obj_name, slots));
-            lSetDouble(cr, CE_doubleval, lGetDouble(cr, CE_doubleval) + slots * dval);
+            lSetDouble(cr, CE_doubleval, 
+                       lGetDouble(cr, CE_doubleval) + slots * dval);
             mods++;
          }
       }
@@ -1816,6 +1950,7 @@ debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
    DEXIT;
    return mods;
 }
+#endif
 
 int 
 ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 

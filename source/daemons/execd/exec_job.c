@@ -55,14 +55,13 @@
 #include "sge_str.h"
 #include "sge_answer.h"
 #include "sge_range.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "parse.h"
 #include "get_path.h"
 #include "sge_job_qmaster.h"
 #include "tmpdir.h"
 #include "exec_job.h"
 #include "sge_path_alias.h"
-#include "slots_used.h"
 #include "sge_parse_num_par.h"
 #include "show_job.h"
 #include "mail.h"
@@ -302,7 +301,7 @@ char *err_str
 
    /* prepare complex of master_q */
    if (!(cplx = lGetList( lGetElemStr( lGetList(jatep, JAT_granted_destin_identifier_list), 
-         JG_qname, lGetString(master_q, QU_qname)), JG_complex))) {
+         JG_qname, lGetString(master_q, QU_full_name)), JG_complex))) {
       DEXIT;
       return -2;
    } 
@@ -322,7 +321,7 @@ char *err_str
    /* make tmpdir only when this is the first task that gets started 
       in this queue. QU_job_slots_used holds actual number of used 
       slots for this job in the queue */
-   if (!(used_slots=qslots_used(master_q))) {
+   if (!(used_slots=qinstance_slots_used(master_q))) {
       if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
           pw->pw_uid, pw->pw_gid, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTMAKETMPDIR);
@@ -338,9 +337,9 @@ char *err_str
    }
 
    /* increment used slots */
-   DPRINTF(("%s: used slots increased from %d to %d\n", lGetString(master_q, QU_qname), 
+   DPRINTF(("%s: used slots increased from %d to %d\n", lGetString(master_q, QU_full_name), 
          used_slots, used_slots+1));
-   set_qslots_used(master_q, used_slots+1);
+   qinstance_set_slots_used(master_q, used_slots+1);
 
    nhosts = get_nhosts(lGetList(jatep, JAT_granted_destin_identifier_list));
    pe_slots = 0;
@@ -1418,20 +1417,20 @@ lWriteListTo(environmentList, stderr);
       strcasecmp(conf.shepherd_cmd, "none")) {
       DPRINTF(("CHILD - About to exec shepherd wrapper job ->%s< under queue -<%s<\n", 
               lGetString(jep, JB_job_name), 
-              lGetString(master_q, QU_qname)));
+              lGetString(master_q, QU_full_name)));
       execlp(conf.shepherd_cmd, ps_name, NULL);
    }
    else if (do_credentials && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       DPRINTF(("CHILD - About to exec DCE shepherd wrapper job ->%s< under queue -<%s<\n", 
               lGetString(jep, JB_job_name), 
-              lGetString(master_q, QU_qname)));
+              lGetString(master_q, QU_full_name)));
       execlp(dce_wrapper_cmd, ps_name, NULL);
    }
    else if (!feature_is_enabled(FEATURE_AFS_SECURITY) || !conf.pag_cmd ||
             !strlen(conf.pag_cmd) || !strcasecmp(conf.pag_cmd, "none")) {
       DPRINTF(("CHILD - About to exec ->%s< under queue -<%s<\n",
               lGetString(jep, JB_job_name), 
-              lGetString(master_q, QU_qname)));
+              lGetString(master_q, QU_full_name)));
 
       if (ISTRACE)
          execlp(shepherd_path, ps_name, NULL);
@@ -1442,7 +1441,7 @@ lWriteListTo(environmentList, stderr);
       char commandline[2048];
 
       DPRINTF(("CHILD - About to exec PAG command job ->%s< under queue -<%s<\n",
-              lGetString(jep, JB_job_name), lGetString(master_q, QU_qname)));
+              lGetString(jep, JB_job_name), lGetString(master_q, QU_full_name)));
       if (ISTRACE)
          sprintf(commandline, "exec %s", shepherd_path);
       else

@@ -59,7 +59,7 @@
 #include "mail.h"
 #include "admin_mail.h"
 #include "get_path.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"

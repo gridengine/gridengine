@@ -39,16 +39,15 @@
 #include "sge.h"
 #include "sge_conf.h"
 #include "commlib.h"
-#include "subordinate_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_sched.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_pe_qmaster.h"
-#include "sge_queue_qmaster.h"
+#include "sge_cqueue_qmaster.h"
 #include "sge_manop_qmaster.h"
-#include "slots_used.h"
 #include "sge_job_qmaster.h"
 #include "configuration_qmaster.h"
 #include "qmaster_heartbeat.h"
@@ -84,7 +83,7 @@
 #include "sge_sharetree_qmaster.h"
 #include "sge_answer.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_cqueue.h"
 #include "sge_ckpt.h"
@@ -327,18 +326,13 @@ int sge_setup_qmaster()
    answer_list_output(&answer_list);
 #endif
 
-   DPRINTF(("queue_list---------------------------------\n"));
-   spool_read_list(&answer_list, spooling_context, &Master_Queue_List, SGE_TYPE_QUEUE);
-   answer_list_output(&answer_list);
-   queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
-
    DPRINTF(("cluster_queue_list---------------------------------\n"));
-   spool_read_list(&answer_list, spooling_context, &Master_CQueue_List, SGE_TYPE_CQUEUE);
+   spool_read_list(&answer_list, spooling_context, object_type_get_master_list(SGE_TYPE_CQUEUE), SGE_TYPE_CQUEUE);
    answer_list_output(&answer_list);
-#if 0 /* EB: TODO: APIBASE */
-   queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
-#endif
-
+   cqueue_list_set_unknown_state(
+            *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+            NULL, false, true);
+   
    DPRINTF(("pe_list---------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, &Master_Pe_List, SGE_TYPE_PE);
    answer_list_output(&answer_list);
@@ -381,28 +375,24 @@ int sge_setup_qmaster()
    debit_all_jobs_from_pes(Master_Pe_List); 
          
    /* clear suspend on subordinate flag in QU_state */ 
-   for_each(tmpqep, Master_Queue_List) {
-      qinstance_state_set_susp_on_sub(tmpqep, false);
-   }
+   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
+      lListElem *qinstance;
 
-   /* recompute suspend on subordinate caching fields */
-   /* here we assume that all jobs are debited on all queues */
-   for_each(tmpqep, Master_Queue_List) {
-      lList *to_suspend;
-
-      if (check_subordinate_list(NULL, lGetString(tmpqep, QU_qname), lGetHost(tmpqep, QU_qhostname), 
-            lGetUlong(tmpqep, QU_job_slots), lGetList(tmpqep, QU_subordinate_list), 
-            CHECK4SETUP)!=STATUS_OK) {
-         DEXIT; /* inconsistent subordinates */
-         return -1;
+      for_each(qinstance, qinstance_list) {
+         qinstance_state_set_susp_on_sub(qinstance, false);
       }
-      to_suspend = NULL;
-      copy_suspended(&to_suspend, lGetList(tmpqep, QU_subordinate_list), 
-         qslots_used(tmpqep), lGetUlong(tmpqep, QU_job_slots), 0);
-      suspend_all(to_suspend, 1); /* just recompute */
-      lFreeList(to_suspend);
    }
 
+   /* 
+    * Initialize
+    *    - suspend on subordinate state 
+    *    - cached QI values.
+    */
+   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true);
+   }
+        
    /* calendar */
    {
       lListElem *cep;
@@ -597,7 +587,7 @@ static int debit_all_jobs_from_qs()
             queue_name = lGetString(gdi, JG_qname);
             slots = lGetUlong(gdi, JG_slots);
             
-            if (!(qep = queue_list_locate(Master_Queue_List, queue_name))) {
+            if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
                   queue_name, u32c(lGetUlong(jep, JB_job_number))));
                lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);   
@@ -609,7 +599,7 @@ static int debit_all_jobs_from_qs()
             debit_host_consumable(jep, hep = host_list_locate(
                      Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
                      Master_CEntry_List, slots);
-            debit_queue_consumable(jep, qep, Master_CEntry_List, slots);
+            qinstance_debit_consumable(jep, qep, Master_CEntry_List, slots);
             if (!master_hep)
                master_hep = hep;
          }

@@ -77,7 +77,6 @@
 #define MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES        _MESSAGE(47024, _("jobs dropped because of job dependencies: "))
 /* #define MSG_LOG_JOBSDROPPEDBECAUSEUSRGRPLIMIT         _message(47025, _("jobs dropped because of user limitations: ")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_EVENT_CKPTOBJXFORJOBYNOTFOUND_SI          _message(47026, _("can't find requested CKPT object "SFQ" for job %d\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_ATTRIB_PARSINGATTRIBUTEXFAILED_SS         _MESSAGE(47027, _("failed parsing attribute "SFQ": "SFN"\n"))
 
 /* 
 ** schedd/sge_schedd_text.c
@@ -366,11 +365,6 @@
 ** schedd/schedd_message.c
 */ 
 #define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "U32CFormat"\n"))
-
-/* 
-** schedd/slots_used.c
-*/ 
-#define MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S      _MESSAGE(47280, _("missing \"slots\" entry in consumable actual list of queue "SFQ"\n"  ) )  
 
 /* 
 ** schedd/sort_hosts.c

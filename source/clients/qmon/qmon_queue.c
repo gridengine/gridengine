@@ -71,12 +71,10 @@
 #include "qmon_qcustom.h"
 #include "qmon_jobcustom.h"
 #include "sge_feature.h"
-#include "sge_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_host.h"
 #include "sge_complex_schedd.h"
-#include "slots_used.h"
 #include "Matrix.h"
 #include "load_correction.h"
 
@@ -123,13 +121,13 @@ static XmtMenuItem queue_popup_items[] = {
    {XmtMenuItemPushButton, "@{Delete}", 'D', "Meta<Key>D", "Meta+D",
          qmonQueueDeleteQuick, NULL},
    {XmtMenuItemPushButton, "@{Suspend}", 'S', "Meta<Key>S", "Meta+S",
-         qmonQueueChangeState, (XtPointer)QSUSPENDED},
+         qmonQueueChangeState, (XtPointer)QI_DO_SUSPEND},
    {XmtMenuItemPushButton, "@{Resume}", 'R', "Meta<Key>R", "Meta+R",
-         qmonQueueChangeState, (XtPointer)QRUNNING},
+         qmonQueueChangeState, (XtPointer)QI_DO_UNSUSPEND},
    {XmtMenuItemPushButton, "@{Disable}", 'i', "Meta<Key>I", "Meta+I",
-         qmonQueueChangeState, (XtPointer)QDISABLED},
+         qmonQueueChangeState, (XtPointer)QI_DO_DISABLE},
    {XmtMenuItemPushButton, "@{Enable}", 'E', "Meta<Key>E", "Meta+E",
-         qmonQueueChangeState, (XtPointer)QENABLED}
+         qmonQueueChangeState, (XtPointer)QI_DO_ENABLE}
 };
 
 
@@ -227,7 +225,8 @@ void updateQueueList(void)
    */
    where = lWhere("%T(%I!=%s)", QU_Type, QU_qname, QU_TEMPLATE);
    whatall = lWhat("%T(ALL)", QU_Type);
-   qlp = lSelect("SQL", qmonMirrorList(SGE_QUEUE_LIST), where, whatall); 
+   /* EB: TODO: */
+   qlp = lSelect("SQL", qmonMirrorList(SGE_CQUEUE_LIST), where, whatall); 
    lFreeWhere(where);
    lFreeWhat(whatall);
 
@@ -392,17 +391,17 @@ Widget parent
    XtAddCallback(queue_delete, XmNactivateCallback, 
                      qmonQueueDeleteQuick, NULL);
    XtAddCallback(queue_suspend, XmNactivateCallback, 
-                     qmonQueueChangeState, (XtPointer)QSUSPENDED);
+                     qmonQueueChangeState, (XtPointer)QI_DO_SUSPEND);
    XtAddCallback(queue_unsuspend, XmNactivateCallback, 
-                     qmonQueueChangeState, (XtPointer)QRUNNING);
+                     qmonQueueChangeState, (XtPointer)QI_DO_UNSUSPEND);
    XtAddCallback(queue_disable, XmNactivateCallback, 
-                     qmonQueueChangeState, (XtPointer)QDISABLED);
+                     qmonQueueChangeState, (XtPointer)QI_DO_DISABLE);
    XtAddCallback(queue_enable, XmNactivateCallback, 
-                     qmonQueueChangeState, (XtPointer)QENABLED);
+                     qmonQueueChangeState, (XtPointer)QI_DO_ENABLE);
    XtAddCallback(queue_reschedule, XmNactivateCallback, 
-                     qmonQueueChangeState, (XtPointer)QRESCHEDULED);
+                     qmonQueueChangeState, (XtPointer)QI_DO_RESCHEDULE);
    XtAddCallback(queue_error, XmNactivateCallback, 
-                     qmonQueueChangeState, (XtPointer)QERROR);
+                     qmonQueueChangeState, (XtPointer)QI_DO_CLEARERROR);
 /*    XtAddCallback(queue_load, XmNvalueChangedCallback,  */
 /*                      qmonQueueToggleLoad, NULL); */
 
@@ -927,7 +926,7 @@ lListElem *qep
    {
       dstring type_buffer = DSTRING_INIT;
 
-      queue_print_qtype_to_dstring(qep, &type_buffer, false);
+      qinstance_print_qtype_to_dstring(qep, &type_buffer, false);
       sprintf(info, WIDTH"%s\n", info, "Type:", 
               sge_dstring_get_string(&type_buffer));
       sge_dstring_free(&type_buffer);
@@ -941,7 +940,7 @@ lListElem *qep
    sprintf(info, WIDTH"%s\n", info, "Shell:", str ? str : ""); 
    sprintf(info, WIDTH"%d\n", info, "Job Slots:", 
                      (int)lGetUlong(qep, QU_job_slots));
-   sprintf(info, WIDTH"%d\n", info, "Job Slots Used:", qslots_used(qep));
+   sprintf(info, WIDTH"%d\n", info, "Job Slots Used:", qinstance_slots_used(qep));
    str = lGetString(qep, QU_priority);
    sprintf(info, WIDTH"%s\n", info, "Priority:", str?str:"");
    sprintf(info, WIDTH"", info, "Load Thresholds:");
@@ -1150,7 +1149,7 @@ XtPointer cld, cad;
          qname     = lGetString(q, QU_qname);
          qhostname = lGetHost(q, QU_qhostname);
          job_slots = lGetUlong(q, QU_job_slots);
-         job_slots_used = qslots_used(q);
+         job_slots_used = qinstance_slots_used(q);
          if ( sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
             alarm_set = 1;
          if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
@@ -1415,7 +1414,8 @@ XtPointer cld, cad;
                      False, &answer, NULL);
          
       if (answer) { 
-         alp = qmonDelList(SGE_QUEUE_LIST, qmonMirrorListRef(SGE_QUEUE_LIST), 
+         /* EB: TODO: */
+         alp = qmonDelList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST), 
                            QU_qname, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
@@ -1469,7 +1469,8 @@ XtPointer cld, cad;
    }
 
    if (ql) {
-      alp = qmonChangeStateList(SGE_QUEUE_LIST, ql, force, action); 
+      /* EB: TODO: */
+      alp = qmonChangeStateList(SGE_CQUEUE_LIST, ql, force, action); 
    
       qmonMessageBox(w, alp, 0);
 

@@ -35,7 +35,6 @@
 
 #include "sge.h"
 #include "cull.h"
-#include "read_write_queue.h"
 #include "read_write_host.h"
 #include "config.h"
 #include "read_object.h"
@@ -53,6 +52,7 @@
 #include "sge_host.h"
 #include "sge_centry.h"
 #include "sge_str.h"
+#include "sge_load.h"
 
 #include "sge_static_load.h"
 

@@ -45,7 +45,7 @@
 #include "sge_c_gdi.h"
 #include "sge_host_qmaster.h"
 #include "sge_queue_qmaster.h"
-#include "subordinate_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_select_queue.h"
 #include "sge_calendar_qmaster.h"
@@ -64,7 +64,6 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
@@ -118,8 +117,6 @@ static u_long32 queue_get_queue_number(void);
 static void queue_clear_unknown(lListElem *queue) 
 {
    lListElem *ep, *hep;
-   const char *hostname = lGetHost(queue, QU_qhostname);
-   const char *queue_name = lGetString(queue, QU_qname);
 
    DENTER(TOP_LAYER, "queue_clear_unknown");
 
@@ -187,69 +184,6 @@ static u_long32 queue_get_queue_number(void)
          return 0; 
       }
    }
-}
-
-/****** qmaster/queue/queue_set_initial_state() *******************************
-*  NAME
-*     queue_set_initial_state() -- set "initial" state 
-*
-*  SYNOPSIS
-*     int queue_set_initial_state(lListElem *queue, char *rhost) 
-*
-*  FUNCTION
-*     Change the "queue" state according to the "initial" state 
-*     configuration (QU_initial_state).
-*
-*  INPUTS
-*     lListElem *queue - QU_Type element 
-*     char *rhost      - hostname (used to write to SGE_EVENT)
-*
-*  RESULT
-*     int - was the queue changed?
-*        0 - no queue change
-*        1 - queue state was changed due to initial state
-*******************************************************************************/
-int queue_set_initial_state(lListElem *queue, char *rhost)
-{
-   const char *is = lGetString(queue, QU_initial_state);
-   int changed = 0;
-
-   DENTER(TOP_LAYER, "queue_set_initial_state");
-
-   if (is != NULL && strcmp(is, "default")) {
-      int enable = !strcmp(is, "enabled");
-
-      if ((enable && qinstance_state_is_manual_disabled(queue)) ||
-          (!enable && !qinstance_state_is_manual_disabled(queue))) {
-         const char *queue_name = lGetString(queue, QU_qname);
-
-         if (!rhost) {
-            if (enable) {
-               WARNING((SGE_EVENT, MSG_QUEUE_ADDENABLED_S, queue_name));
-            } else {
-               WARNING((SGE_EVENT, MSG_QUEUE_ADDDISABLED_S, queue_name));
-            }
-         } else {
-            if (enable) {
-               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTENABLEQ_SS,
-                        rhost, queue_name));
-            } else {
-               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTDISABLEQ_SS,
-                        rhost, queue_name));
-            }
-         }
-
-         if (enable) {
-            qinstance_state_set_manual_disabled(queue, false);
-         } else {
-            qinstance_state_set_manual_disabled(queue, true);
-         }
-         changed = 1;
-      }
-   }
-
-   DEXIT;
-   return changed;
 }
 
 static int mod_queue_attributes(
@@ -570,9 +504,9 @@ int sub_command
          qinstance_state_set_cal_disabled(new_queue, false);
          qinstance_state_set_cal_suspended(new_queue, false);
          cal_state = calendar_get_current_state_and_end(new_cal, NULL);
-         if (cal_state == QCAL_SUSPENDED) {
+         if (cal_state == QI_DO_CAL_SUSPEND) {
             qinstance_state_set_cal_suspended(new_queue, true);
-         } else if (cal_state == QCAL_DISABLED) {
+         } else if (cal_state == QI_DO_CAL_DISABLE) {
             qinstance_state_set_cal_disabled(new_queue, true);
          }
       }
@@ -821,14 +755,14 @@ int sub_command
       /* create a list of subordinates that are susupended actually */
       copy_suspended(&unsuspend, 
             lGetList(old_queue, QU_subordinate_list), 
-            qslots_used(old_queue), 
+            qinstance_slots_used(old_queue), 
             lGetUlong(old_queue, QU_job_slots), 
             lGetUlong(old_queue, QU_suspended_on_subordinate));
 
       /* create a list of subordinates that must be susupended with the new queue */
       copy_suspended(&suspend, 
             lGetList(new_queue, QU_subordinate_list), 
-            qslots_used(new_queue), 
+            qinstance_slots_used(new_queue), 
             lGetUlong(new_queue, QU_job_slots), 
             lGetUlong(new_queue, QU_suspended_on_subordinate));
 
@@ -860,11 +794,16 @@ int sub_command
    }
                
    /* write on file */
-   if (sge_change_queue_version(new_queue, add, 1) ||
+   if (sge_change_queue_version(new_queue, add, 1) 
+
+#if 0 /* EB: TODO: send QI mod event */
+      ||
       /* event has already been sent in sge_change_queue_version */
       !sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
                        0, 0, lGetString(new_queue, QU_qname), NULL, NULL,
-                       new_queue, NULL, NULL, false, true)) {
+                       new_queue, NULL, NULL, false, true)
+#endif
+      ) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -891,6 +830,7 @@ int sub_command
       NOW ALL CRITICAL THINGS ARE DONE 
       ------------------------------------------------------------ */
 
+   /* EB: TODO: add to cqueue */
 
    /* ------------------------------------------------------------
       (0) handle job_slots as a consumble attribute of queue
@@ -906,8 +846,8 @@ int sub_command
 
       lSetList(new_queue, QU_consumable_actual_list, NULL);
 
-      slots2config_list(new_queue);
-      debit_queue_consumable(NULL, new_queue, Master_CEntry_List, 0); 
+      qinstance_set_conf_slots_used(new_queue);
+      qinstance_debit_consumable(NULL, new_queue, Master_CEntry_List, 0); 
       for_each (jep, Master_Job_List) {
          int slots = 0;
          lListElem *jatep;
@@ -919,7 +859,7 @@ int sub_command
             slots += lGetUlong(gdil_ep, JG_slots);
          }
          if (slots)
-            debit_queue_consumable(jep, new_queue, Master_CEntry_List, slots); 
+            qinstance_debit_consumable(jep, new_queue, Master_CEntry_List, slots); 
       }
    }
 
@@ -937,7 +877,7 @@ int sub_command
       */
       copy_suspended(&sos_list_after,
             lGetList(new_queue, QU_subordinate_list),
-            qslots_used(new_queue), 
+            qinstance_slots_used(new_queue), 
             lGetUlong(new_queue, QU_job_slots),
             lGetUlong(new_queue, QU_suspended_on_subordinate));
       suspend_all(sos_list_after, 0);
@@ -997,9 +937,11 @@ int sub_command
     *           been cleared since first spooling.
     *           Perhaps simply spool later?
     */
+#if 0 /* EB: TODO: send QI mod event */
    sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
                    0, 0, lGetString(new_queue, QU_qname), NULL, NULL,
                    new_queue, NULL, NULL, true, false);
+#endif
 
    INFO((SGE_EVENT, add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
       MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, qname, MSG_OBJ_QUEUE));
@@ -1079,7 +1021,7 @@ char *rhost
       DEXIT;
       return STATUS_EEXIST;
    }
-   running_jobs = qslots_used(oqep);
+   running_jobs = qinstance_slots_used(oqep);
    if (running_jobs) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ACTIVEUNITS_SSIS,
          MSG_OBJ_QUEUE, qname, running_jobs, MSG_OBJ_JOBS));
@@ -1092,7 +1034,7 @@ char *rhost
       that were in the subordinate list */
    copy_suspended(&sos_list_before,
          lGetList(oqep, QU_subordinate_list),
-         qslots_used(oqep),
+         qinstance_slots_used(oqep),
          lGetUlong(oqep, QU_job_slots),
          lGetUlong(oqep, QU_suspended_on_subordinate));
 
@@ -1103,9 +1045,11 @@ char *rhost
       return STATUS_EEXIST;
    }
 
+#if 0 /* EB: TODO: send QI event */
    sge_event_spool(alpp, 0, sgeE_QUEUE_DEL, 
                    0, 0, qname, NULL, NULL,
                    NULL, NULL, NULL, true, true);
+#endif
 
    unsuspend_all(sos_list_before, 0);
    lFreeList(sos_list_before); 
@@ -1116,33 +1060,6 @@ char *rhost
    DEXIT;
    return STATUS_OK;
 
-}
-
-/* ----------------------------------------
-
-   written for: qmaster
-
-   increase version of queue 
-   generate an queue modify event
-
-*/
-int sge_change_queue_version(
-lListElem *qep,
-int add,
-int write_history 
-) {
-   DENTER(TOP_LAYER, "sge_change_queue_version");
-
-   /*
-   ** problem: error handling missing here
-   */
-
-   lSetUlong(qep, QU_version, add ? 0 : lGetUlong(qep, QU_version) + 1);
-
-   sge_add_queue_event(add?sgeE_QUEUE_ADD:sgeE_QUEUE_MOD, qep);
-
-   DEXIT;
-   return 0;
 }
 
 /* -------------------------------------------------------
@@ -1179,66 +1096,52 @@ const char *qname
    return 0;
 }
 
-
-/****** qmaster/queue/queue_list_set_unknown_state_to() ********************
+/****** sgeobj/queue/queue_list_add_queue() ***********************************
 *  NAME
-*     queue_list_set_unknown_state_to() -- set/clear u state of queues
+*     queue_list_add_queue() -- add a new queue to the queue masterlist
 *
 *  SYNOPSIS
-*     void queue_list_set_unknown_state_to(lList *queue_list,
-*                                          const char *hostname,
-*                                          int send_events,
-*                                          int new_state)
+*     bool queue_list_add_queue(lListElem *qep) 
 *
 *  FUNCTION
-*     Clears or sets the unknown state of all queues in "queue_list" which
-*     reside on host "hostname". If "hostname" is NULL than all queues
-*     mentioned in "queue_list" will get the new unknown state.
-*
-*     Modify events for all modified queues will be generated if
-*     "send_events" is 1 (true).
+*     Adds the queue to the queue masterlist. The queue is inserted 
+*     in the sort order of the queue (by queue name).
 *
 *  INPUTS
-*     lList *queue_list    - QU_Type list
-*     const char *hostname - valid hostname or NULL
-*     int send_events      - 0 or 1
-*     int new_state        - new unknown state (0 or 1)
+*     lListElem *qep - the queue to insert
 *
 *  RESULT
-*     void - None
-*******************************************************************************/
-void queue_list_set_unknown_state_to(lList *queue_list,
-                                     const char *hostname,
-                                     int send_events,
-                                     int new_state)
+*     bool - true, if the queue could be inserted, else false
+*
+*  NOTES
+*     Appending the queue and quick sorting the queue list would 
+*     probably be much faster in systems with many queues.
+******************************************************************************/
+bool queue_list_add_queue(lListElem *queue)
 {
-   const void *iterator = NULL;
-   lListElem *queue = NULL;
-   lListElem *next_queue = NULL;
+   static lSortOrder *so = NULL;
 
-   if (hostname != NULL) {
-      next_queue = lGetElemHostFirst(queue_list, QU_qhostname,
-                                     hostname, &iterator);
-   } else {
-      next_queue = lFirst(queue_list);
+   DENTER(TOP_LAYER, "queue_list_add_queue");
+
+   if (queue == NULL) {
+      ERROR((SGE_EVENT, MSG_QUEUE_NULLPTR));
+      DEXIT;
+      return false;
    }
-   while ((queue = next_queue)) {
-      if (hostname != NULL) {
-         next_queue = lGetElemHostNext(queue_list, QU_qhostname,
-                                       hostname, &iterator);
-      } else {
-         next_queue = lNext(queue);
-      }
-      if ((qinstance_state_is_unknown(queue)) != (new_state > 0)) {
-         if (new_state) {
-            qinstance_state_set_unknown(queue, true);
-         } else {
-            qinstance_state_set_unknown(queue, false);
-         }
-         if (send_events) {
-            sge_add_queue_event(sgeE_QUEUE_MOD, queue);
-         }
-      }
+
+   /* create SortOrder: */
+   if(so == NULL) {
+      so = lParseSortOrderVarArg(QU_Type, "%I+", QU_qname);
+   };
+
+   /* insert Element: */
+   if(Master_Queue_List == NULL) {
+      Master_Queue_List = lCreateList("Master_Queue_List", QU_Type);
    }
+
+   lInsertSorted(so, queue, Master_Queue_List);
+
+   DEXIT;
+   return true;
 }
 

@@ -189,6 +189,7 @@ usage:
    echo "-htmlman          -> generate man and html pages"
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks (en ensure ; glinux, ..)"
+   echo "-efence           -> compile in debug mode and detect memory leaks"
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
@@ -534,6 +535,10 @@ while ($#argv >= 1 && $?found)
       #set DEBUG_FLAG = "$DEBUG_FLAG -Zsl"
       set INSURE_FLAG = "-Zsl -Zvm"
       set LFLAGS     = "-Zsl $LFLAGS"
+      set DEBUGGED   = 1
+      breaksw
+   case "-efence"
+      set LFLAGS     = "-lefence $LFLAGS"
       set DEBUGGED   = 1
       breaksw
    case  "-intl"

@@ -254,12 +254,7 @@ typedef enum {
    sgeE_QMASTER_GOES_DOWN,          /* + qmaster notifies all event clients, before
                                          it exits */
 
-   sgeE_QUEUE_LIST,                 /* + send queue list at registration */
-   sgeE_QUEUE_ADD,                  /* + event queue add */
-   sgeE_QUEUE_DEL,                  /* + event queue delete */
-   sgeE_QUEUE_MOD,                  /* + event queue modify */
-   sgeE_QUEUE_SUSPEND_ON_SUB,       /* + queue is suspended by subordinate mechanism */
-   sgeE_QUEUE_UNSUSPEND_ON_SUB,     /* + queue is unsuspended by subordinate mechanism */
+   /* EB: TODO: QI event */
 
    sgeE_CQUEUE_LIST,                /* + send cluster queue list at registration */
    sgeE_CQUEUE_ADD,                 /* + event cluster queue add */
@@ -269,6 +264,8 @@ typedef enum {
    sgeE_QINSTANCE_ADD,              /* + event queue instance add */
    sgeE_QINSTANCE_DEL,              /* + event queue instance delete */
    sgeE_QINSTANCE_MOD,              /* + event queue instance mod */
+   sgeE_QINSTANCE_SOS,              /* + event queue instance sos */
+   sgeE_QINSTANCE_USOS,             /* + event queue instance usos */
 
    sgeE_SCHED_CONF,                 /* + replace existing (sge) scheduler configuration */
 
@@ -319,7 +316,7 @@ typedef enum {
   ((x)==sgeE_OPERATOR_LIST) || \
   ((x)==sgeE_PE_LIST) || \
   ((x)==sgeE_PROJECT_LIST) || \
-  ((x)==sgeE_QUEUE_LIST) || \
+  ((x)==sgeE_CQUEUE_LIST) || \
   ((x)==sgeE_SUBMITHOST_LIST) || \
   ((x)==sgeE_USER_LIST) || \
   ((x)==sgeE_USERSET_LIST) || \

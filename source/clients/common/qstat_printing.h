@@ -65,12 +65,36 @@
 #define TAG_FOUND_IT      0x02
 #define TAG_SELECT_IT     0x04
 
-int sge_print_queue(lListElem *queue, lList *exechost_list, lList *complex_list, u_long32 full_listing, lList *resources);
-void sge_print_jobs_queue(lListElem *qep, lList *job_list, const lList *pe_list, lList *user_list, lList *ehl, lList *cl, int print_jobs_of_queue, u_long32 full_listing, char *indent, u_long32 group_opt);
-void sge_print_jobs_pending(lList *job_list, const lList *pe_list, lList *user_list, lList *ehl, lList *cl, lSortOrder *so, u_long32 full_listing, u_long32 group_opt);
-void sge_print_jobs_finished(lList *job_list, const lList *pe_list, lList *user_list, lList *ehl, lList *cl, u_long32 full_listing, u_long32 group_opt);
-void sge_print_jobs_error(lList *job_list, const lList *pe_list, lList *user_list, lList *ehl, lList *cl, u_long32 full_listing, u_long32 group_opt);
+int 
+sge_print_queue(lListElem *queue, lList *exechost_list, lList *complex_list, 
+                u_long32 full_listing, lList *resources, u_long32 explain_bits);
 
-void sge_print_jobs_zombie(lList *zombie_list, const lList *pe_list, lList *user_list, lList *ehl, lList *cl, u_long32 full_listing, u_long32 group_opt);
+void 
+sge_print_jobs_queue(lListElem *qep, lList *job_list, const lList *pe_list, 
+                     lList *user_list, lList *ehl, lList *cl, 
+                     int print_jobs_of_queue, u_long32 full_listing, 
+                     char *indent, u_long32 group_opt);
+
+void 
+sge_print_jobs_pending(lList *job_list, const lList *pe_list,
+                       lList *user_list, lList *ehl, lList *cl,  
+                       lSortOrder *so, u_long32 full_listing, 
+                       u_long32 group_opt);
+
+void 
+sge_print_jobs_finished(lList *job_list, const lList *pe_list,
+                        lList *user_list, lList *ehl, 
+                        lList *cl, u_long32 full_listing,
+                        u_long32 group_opt);
+
+void 
+sge_print_jobs_error(lList *job_list, const lList *pe_list,
+                     lList *user_list, lList *ehl, lList *cl, 
+                     u_long32 full_listing, u_long32 group_opt);
+
+void 
+sge_print_jobs_zombie(lList *zombie_list, const lList *pe_list, 
+                      lList *user_list, lList *ehl, lList *cl, 
+                      u_long32 full_listing, u_long32 group_opt);
 
 #endif /* __QSTAT_PRINTING_H */

@@ -1259,24 +1259,26 @@ write_cqueue(int spool, int how, const lListElem *ep)
    }
 
    if (how == 2) {
+      dstring qi_dir = DSTRING_INIT;
+
+      sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR, 
+                          lGetString(ep, CQ_name));
+      sge_mkdir(sge_dstring_get_string(&qi_dir), 0755, 0, 0);
+      sge_dstring_free(&qi_dir);
+#if 0
       lList *qinstances = lGetList(ep, CQ_qinstances);
       lListElem *qinstance = NULL;
-      bool file_renamed = false;
       bool do_mkdir = true;
 
       /* Spool QIs into tmp files */
       for_each(qinstance, qinstances) {
-         u_long32 tag = lGetUlong(qinstance, QI_tag);
+         u_long32 tag = lGetUlong(qinstance, QU_tag);
          dstring qi_dir = DSTRING_INIT;
-         dstring qi_file = DSTRING_INIT;
-         FILE *qi_fp = NULL;
 
-         if (how == 2 && tag != SGE_QI_TAG_DEL) {
+         DPRINTF(("QU_tag == "u32"\n", tag));
+         if (how == 2 && (tag == SGE_QI_TAG_MOD || tag == SGE_QI_TAG_ADD)) {
             sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR, 
-                                lGetString(qinstance, QI_name));
-            sge_dstring_sprintf(&qi_file, "%s/%s/.%s", QINSTANCES_DIR, 
-                                lGetString(qinstance, QI_name), 
-                                lGetHost(qinstance, QI_hostname));
+                                lGetString(qinstance, QU_qname));
 
             if (tag == SGE_QI_TAG_ADD) {
                if (do_mkdir) {
@@ -1286,51 +1288,10 @@ write_cqueue(int spool, int how, const lListElem *ep)
             } else if (tag == SGE_QI_TAG_MOD) {
                do_mkdir = false;
             }
-            qi_fp = fopen(sge_dstring_get_string(&qi_file), "w");
-            if (qi_fp == NULL) {
-               CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, 
-                         sge_dstring_get_string(&qi_file), strerror(errno)));
-               DEXIT;
-               return NULL;
-            } 
-
-            write_qinstance(0, 4, qinstance, qi_fp);
-
-            fclose(qi_fp);
          }
          sge_dstring_free(&qi_dir);
-         sge_dstring_free(&qi_file);
       } 
-      /* rename all tmp files and remove obsolete qinstance files */
-      for_each(qinstance, qinstances) {
-         u_long32 tag = lGetUlong(qinstance, QI_tag);
-         dstring qi_file = DSTRING_INIT;
-         dstring qi_realfile = DSTRING_INIT;
-
-         if (how == 2) {
-            sge_dstring_sprintf(&qi_file, "%s/%s/.%s", QINSTANCES_DIR, 
-                                lGetString(qinstance, QI_name), 
-                                lGetHost(qinstance, QI_hostname));
-            sge_dstring_sprintf(&qi_realfile, "%s/%s/%s", QINSTANCES_DIR, 
-                                lGetString(qinstance, QI_name), 
-                                lGetHost(qinstance, QI_hostname));
-            if (tag != SGE_QI_TAG_DEL) {
-               if (rename(sge_dstring_get_string(&qi_file),
-                          sge_dstring_get_string(&qi_realfile)) == -1) {
-                  CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, 
-                            sge_dstring_get_string(&qi_realfile), 
-                            strerror(errno)));
-                  DEXIT;
-                  return NULL;
-               }
-               file_renamed = true;
-            } else {
-               sge_unlink(NULL, sge_dstring_get_string(&qi_realfile));
-            }
-         } 
-         sge_dstring_free(&qi_realfile);
-         sge_dstring_free(&qi_file);
-      } 
+#endif
    }
 
    if (how != 0) {

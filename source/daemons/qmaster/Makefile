@@ -50,8 +50,8 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_pe_qmaster.c \
               sge_ckpt_qmaster.c \
               sge_cqueue_qmaster.c \
+              sge_qinstance_qmaster.c \
               sge_qmod_qmaster.c \
-              sge_queue_qmaster$(QIDLEXT).c \
               sge_rusage.c \
               sge_sharetree_qmaster.c \
               sge_calendar_qmaster.c \
@@ -152,6 +152,9 @@ sge_job_qmaster.o:	$(QMASTER_DIR)/sge_job_qmaster.c
 sge_cqueue_qmaster.o:	$(QMASTER_DIR)/sge_cqueue_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_cqueue_qmaster.c
 
+sge_qinstance_qmaster.o:	$(QMASTER_DIR)/sge_qinstance_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_qinstance_qmaster.c
+
 sge_manop_qmaster.o:	$(QMASTER_DIR)/sge_manop_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_manop_qmaster.c
 
@@ -172,9 +175,6 @@ sge_pe_qmaster.o: $(QMASTER_DIR)/sge_pe_qmaster.c
 
 sge_ckpt_qmaster.o: $(QMASTER_DIR)/sge_ckpt_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_ckpt_qmaster.c
-
-sge_queue_qmaster$(QIDLEXT).o: $(QMASTER_DIR)/sge_queue_qmaster.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_queue_qmaster.c
 
 sge_rusage.o:	$(QMASTER_DIR)/sge_rusage.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_rusage.c

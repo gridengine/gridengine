@@ -34,19 +34,44 @@
 
 #include "sge_c_gdi.h"
 
-int cqueue_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+bool
+cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
+                      lListElem *reduced_elem, bool refresh_all_values);
 
-int cqueue_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
-               const char *ruser, const char *rhost, gdi_object_t *object,
-               int sub_command);
+bool
+cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
+                         lListElem *reduced_elem, lList *add_hosts,
+                         lList *rem_hosts, bool refresh_all_values);
 
-int cqueue_spool(lList **alpp, lListElem *this_elem, gdi_object_t *object);
+void 
+cqueue_commit(lListElem *cqueue);
 
-int cqueue_del(lListElem *this_elem, lList **alpp, char *ruser, char *rhost);
+void 
+cqueue_rollback(lListElem *cqueue);
 
-void cqueue_commit(lListElem *cqueue);
+int 
+cqueue_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
-void cqueue_rollback(lListElem *cqueue);
+int 
+cqueue_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
+           const char *ruser, const char *rhost, gdi_object_t *object,
+           int sub_command);
+
+int 
+cqueue_spool(lList **alpp, lListElem *this_elem, gdi_object_t *object);
+
+int 
+cqueue_del(lListElem *this_elem, lList **alpp, char *ruser, char *rhost);
+
+bool
+cqueue_del_all_orphaned(lListElem *this_elem, lList **answer_list);
+
+bool
+cqueue_list_del_all_orphaned(lList *this_list, lList **answer_list);
+
+void
+cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
+                              bool send_events, bool is_unknown);
 
 #endif /* _SGE_CQUEUE_QMASTER_H_ */
 

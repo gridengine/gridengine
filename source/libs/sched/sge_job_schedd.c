@@ -51,10 +51,10 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_time.h"
-#include "sge_queue.h"
 #include "sge_userset.h"
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
+#include "sge_qinstance.h"
 
 #include "cull_hash.h"
 
@@ -587,8 +587,9 @@ void split_jobs(lList **job_list, lList **answer_list,
                 * Jobs in suspended queues are not in suspend state.
                 * Therefore we have to take this info from the queue state.
                 */
-               if (queue_list_suspends_ja_task(queue_list, 
-                        lGetList(ja_task, JAT_granted_destin_identifier_list))) {
+               if (gqueue_is_suspended( 
+                        lGetList(ja_task, JAT_granted_destin_identifier_list),
+                        queue_list)) {
 #ifdef JOB_SPLIT_DEBUG
                   DPRINTF(("Task "u32" is in suspended state\n",ja_task_id));
 #endif
@@ -1111,56 +1112,6 @@ lSortOrder *so
 }
 
 
-/*---------------------------------------------------------*/
-lListElem *explicit_job_request(
-lListElem *jep,
-const char *name 
-) {
-   lListElem *ep = NULL;
-
-   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, name))) 
-      return ep;
-
-   if ((ep=lGetElemStr(lGetList(jep, JB_soft_resource_list), CE_name, name))) 
-      return ep;
-
-   return NULL;
-}
-
-
-/*---------------------------------------------------------*/
-int get_job_contribution(
-double *dvalp,
-const char *name,
-lListElem *jep,
-lListElem *dcep 
-) {
-   const char *strval;
-   char error_str[256];
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "get_job_contribution");
-
-   /* explicit job request */
-   ep = explicit_job_request(jep, name);
-
-   /* implicit job request */
-   if (!ep || !(strval=lGetString(ep, CE_stringval))) {
-      strval = lGetString(dcep, CE_default);
-   }
-   if (!(parse_ulong_val(dvalp, NULL, TYPE_INT, strval,
-            error_str, sizeof(error_str)-1))) {
-      DEXIT;
-      ERROR((SGE_EVENT, MSG_ATTRIB_PARSINGATTRIBUTEXFAILED_SS , name, error_str));
-      return -1;
-   }
-
-   if (dvalp && *dvalp == 0.0)
-      return 1;
-
-   DEXIT;
-   return 0;
-}
 
 
 

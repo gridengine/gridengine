@@ -1102,6 +1102,7 @@
 #define MSG_OBJ_USERLIST                   _MESSAGE(60605, _("user list"))
 #define MSG_OBJ_XUSERLIST                  _MESSAGE(60606, _("xuser list"))
 #define MSG_QCONF_ONLYONERANGE             _MESSAGE(60607, _("ERROR! -t option only allows one range specification\n"))
+#define MSG_FILE_NOTCHANGED                _MESSAGE(60608, _("Object has not been changed\n"))
 
 /*
 ** sge_conf.c

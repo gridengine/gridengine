@@ -46,6 +46,7 @@
 #include "qm_name.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
+#include "sge_load.h"
 
 #ifndef NO_SGE_COMPILE_DEBUG
 static char* report_types[] = {

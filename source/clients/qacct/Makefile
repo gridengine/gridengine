@@ -43,7 +43,6 @@ QACCT_ADD_SRC = \
             read_write_complex.c \
             read_object.c \
             read_write_host.c \
-            read_write_queue.c \
             execution_states.c \
             sig_handlers.c
 

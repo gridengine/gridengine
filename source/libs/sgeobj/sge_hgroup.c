@@ -576,21 +576,21 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/hgroup/hgroup_list_find_all_matching_references() **************
+/****** sgeobj/hgroup/hgroup_list_find_matching_and_resolve() *****************
 *  NAME
-*     hgroup_list_find_all_matching_references() -- Finds hostnames 
+*     hgroup_list_find_matching_and_resolve() -- Finds hostnames 
 *
 *  SYNOPSIS
 *     bool 
-*     hgroup_list_find_all_matching_references(const lList *this_list, 
-*                                              lList **answer_list, 
-*                                              const char *hgroup_pattern, 
-*                                              lList **used_hosts) 
+*     hgroup_list_find_matching_and_resolve(const lList *this_list, 
+*                                           lList **answer_list, 
+*                                           const char *hgroup_pattern, 
+*                                           lList **used_hosts) 
 *
 *  FUNCTION
 *    Selects all hostgroups of "this_list" which match the pattern 
 *    "hgroup_pattern". All hostnames which are directly or indirectly
-*     rferenced will be added to "used_hosts"
+*     referenced will be added to "used_hosts"
 *      
 *
 *  INPUTS
@@ -605,14 +605,14 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
 *        false - Error
 *******************************************************************************/
 bool
-hgroup_list_find_all_matching_references(const lList *this_list,
-                                         lList **answer_list,
-                                         const char *hgroup_pattern,
-                                         lList **used_hosts) 
+hgroup_list_find_matching_and_resolve(const lList *this_list,
+                                      lList **answer_list,
+                                      const char *hgroup_pattern,
+                                      lList **used_hosts) 
 {
    bool ret = true;
 
-   DENTER(HGROUP_LAYER, "hgroup_list_find_all_matching_references");
+   DENTER(HGROUP_LAYER, "hgroup_list_find_matching_and_resolve");
    if (this_list != NULL && hgroup_pattern != NULL) {
       lListElem *hgroup;
 
@@ -633,6 +633,30 @@ hgroup_list_find_all_matching_references(const lList *this_list,
                }
             }
             tmp_used_hosts = lFreeList(tmp_used_hosts);
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+hgroup_list_find_matching(const lList *this_list, lList **answer_list,
+                          const char *hgroup_pattern, lList **used_hosts) 
+{
+   bool ret = true;
+
+   DENTER(HGROUP_LAYER, "hgroup_list_find_matching");
+   if (this_list != NULL && hgroup_pattern != NULL) {
+      lListElem *hgroup;
+
+      for_each(hgroup, this_list) {
+         const char *hgroup_name = lGetHost(hgroup, HGRP_name);
+
+         if (!fnmatch(hgroup_pattern, hgroup_name, 0)) {
+            if (used_hosts != NULL) {
+               lAddElemHost(used_hosts, HR_name, hgroup_name, HR_Type);
+            }
          }
       }
    }

@@ -59,7 +59,7 @@
 #include "sge_hostname.h"
 #include "sge_os.h"
 #include "sge_job.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_pe.h"
 #include "sge_report.h"
 

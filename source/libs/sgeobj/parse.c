@@ -43,7 +43,7 @@
 #include "sge_parse_num_par.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_job.h"
@@ -511,18 +511,25 @@ char **str
 }
 
 
-u_long32 parse_group_options(
-lList *string_list 
-) {
-   u_long32 group_opt = GROUP_TASK_GROUPS;
+u_long32 parse_group_options(lList *string_list) 
+{
+   u_long32 group_opt = GROUP_DEFAULT;
    lListElem *str_elem;
 
    DENTER(TOP_LAYER, "sge_parse_group_options");
+
    for_each(str_elem, string_list) {
-      if ((char) lGetString(str_elem, ST_name)[0] == 'd')
-         group_opt = GROUP_NO_TASK_GROUPS;
-      if ((char) lGetString(str_elem, ST_name)[0] == 't')
-         group_opt = GROUP_NO_PETASK_GROUPS;
+      const char *letter_string = lGetString(str_elem, ST_name);
+  
+      if (strchr(letter_string, (int)'d') != NULL) {
+         group_opt |= GROUP_NO_TASK_GROUPS;
+      } 
+      if (strchr(letter_string, (int)'c') != NULL) {
+         group_opt |= GROUP_CQ_SUMMARY;
+      } 
+      if (strchr(letter_string, (int)'t') != NULL) {
+         group_opt |= GROUP_NO_PETASK_GROUPS;
+      } 
    }
    DEXIT; 
    return (group_opt);

@@ -46,7 +46,6 @@ SCHEDLIB_SRC = sge_select_queue.c \
               debit.c \
               subordinate_schedd.c \
               slots_used.c \
-              sge_static_load.c \
               load_correction.c \
               suspend_thresholds.c \
               schedd_monitor.c \
@@ -122,9 +121,6 @@ sge_pe_schedd.o : $(SCHEDLIB_DIR)/sge_pe_schedd.c
 
 sge_range_schedd.o : $(SCHEDLIB_DIR)/sge_range_schedd.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_range_schedd.c
-
-sge_static_load.o:	$(SCHEDLIB_DIR)/sge_static_load.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_static_load.c
 
 debit.o : $(SCHEDLIB_DIR)/debit.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/debit.c

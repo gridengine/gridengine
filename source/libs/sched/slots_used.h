@@ -32,9 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#if 0 /* EB: TODO: remove */
 int qslots_used(lListElem *qep);
 void set_qslots_used(lListElem *qep, int slots);
-void slots2config_list(lListElem *qep);
+#endif
 
 #endif /* __SLOTS_USED_H */
 

@@ -38,7 +38,6 @@ extern lList *Master_Exechost_List;
 extern lList *Master_Adminhost_List;
 extern lList *Master_Submithost_List;
 
-lListElem *host_list_locate(lList *host_list, const char *hostname);
 
 bool host_is_referenced(const lListElem *host, lList **answer_list,
                         const lList *queue_list);
@@ -55,6 +54,10 @@ host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
 bool
 host_is_centry_a_complex_value(const lListElem *this_elem, 
                                const lListElem *centry);
+
+
+lListElem *
+host_list_locate(const lList *this_list, const char *hostname);
 
 #endif /* __SGE_HOST_H */
 

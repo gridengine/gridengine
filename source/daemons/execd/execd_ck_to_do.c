@@ -44,7 +44,7 @@
 #include "sge_job.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_usageL.h"
@@ -266,7 +266,7 @@ void force_job_rlimit()
             cpu_exceeded = (h_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDHLIM_USSFF, 
                      u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
-                     q?lGetString(q, QU_qname) : "-",
+                     q?lGetString(q, QU_full_name) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? h_cpu : h_vmem));
             signal_job(jobid, jataskid, SGE_SIGKILL);
@@ -278,7 +278,7 @@ void force_job_rlimit()
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDSLIM_USSFF,
                      u32c(jobid),
                      cpu_exceeded ? "s_cpu" : "s_vmem",
-                     q?lGetString(q, QU_qname) : "-",
+                     q?lGetString(q, QU_full_name) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? s_cpu : s_vmem));
             signal_job(jobid, jataskid, SGE_SIGXCPU);
@@ -409,7 +409,7 @@ int answer_error
                      " queue  %s to %d\n", 
                      lGetUlong(job, JB_job_number), 
                      lGetUlong(jatask, JAT_task_number),
-                     lGetString(master_queue, QU_qname), priority));
+                     lGetString(master_queue, QU_full_name), priority));
                   ptf_reinit_queue_priority(
                      lGetUlong(job, JB_job_number),
                      lGetUlong(jatask, JAT_task_number),
@@ -425,7 +425,7 @@ int answer_error
                         lGetUlong(job, JB_job_number), 
                         lGetUlong(jatask, JAT_task_number),
                         lGetString(petask, PET_id),
-                        lGetString(master_queue, QU_qname), priority));
+                        lGetString(master_queue, QU_full_name), priority));
                      ptf_reinit_queue_priority(
                         lGetUlong(job, JB_job_number),
                         lGetUlong(jatask, JAT_task_number),

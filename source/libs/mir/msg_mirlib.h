@@ -54,5 +54,7 @@
 #define MSG_JOB_CANTFINDJOBFORUPDATEIN_SS          _MESSAGE(64025, _("can't find job "SFN" for update in function "SFN"\n"))
 #define MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS       _MESSAGE(64026, _("can't find array task "SFN" for update in function "SFN"\n"))
 #define MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS       _MESSAGE(64027, _("can't find parallel task "SFN" for update in function "SFN"\n"))
+#define MSG_CQUEUE_CANTFINDFORUPDATEIN_SS          _MESSAGE(64029, _("can't find cluster queue "SFN" for update in function "SFN"\n"))
+#define MSG_QINSTANCE_CANTFINDFORUPDATEIN_SS       _MESSAGE(64030, _("can't find queue instance "SFN" for update in function "SFN"\n"))
 
 #endif /* __MSG_MIRLIB_H */

@@ -44,7 +44,8 @@
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_queue.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_range.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
@@ -146,26 +147,26 @@ lListElem *pe_list_locate(const lList *pe_list, const char *pe_name)
 *  SYNOPSIS
 *     bool pe_is_referenced(const lListElem *pe, lList **answer_list, 
 *                           const lList *master_job_list,
-*                           const lList *master_queue_list) 
+*                           const lList *master_cqueue_list) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given "pe" is referenced
 *     in at least one of the objects contained in "master_job_list"
-*     or "master_queue_list". If this is the case than
+*     or "master_cqueue_list". If this is the case than
 *     a corresponding message will be added to the "answer_list".
 *
 *  INPUTS
-*     const lListElem *pe            - PE_Type object 
-*     lList **answer_list            - AN_Type list 
-*     const lList *master_job_list   - JB_Type list 
-*     const lList *master_queue_list - QU_Type list
+*     const lListElem *pe             - PE_Type object 
+*     lList **answer_list             - AN_Type list 
+*     const lList *master_job_list    - JB_Type list 
+*     const lList *master_cqueue_list - CQ_Type list
 *
 *  RESULT
 *     bool - true or false  
 ******************************************************************************/
 bool pe_is_referenced(const lListElem *pe, lList **answer_list,
                       const lList *master_job_list,
-                      const lList *master_queue_list)
+                      const lList *master_cqueue_list)
 {
    bool ret = false;
 
@@ -186,18 +187,24 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
       } 
    }
    if (!ret) {
-      lListElem *queue = NULL;
+      lListElem *cqueue = NULL;
 
-      for_each(queue, master_queue_list) {
-         if (queue_is_pe_referenced(queue, pe)) {
-            const char *pe_name = lGetString(pe, PE_name);
-            const char *queue_name = lGetString(queue, QU_qname);
+      for_each(cqueue, master_cqueue_list) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
 
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                    ANSWER_QUALITY_INFO, MSG_PEREFINQUEUE_SS, 
-                                    pe_name, queue_name);
-            ret = true;
-            break;
+         for_each(qinstance, qinstance_list) {
+            if (qinstance_is_pe_referenced(qinstance, pe)) {
+               const char *pe_name = lGetString(pe, PE_name);
+               const char *name = lGetString(qinstance, QU_qname);
+
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_INFO, 
+                                       MSG_PEREFINQUEUE_SS, 
+                                       pe_name, name);
+               ret = true;
+               break;
+            }
          }
       }
    }

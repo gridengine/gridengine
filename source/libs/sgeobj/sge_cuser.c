@@ -54,7 +54,7 @@
 
 lList *Master_Cuser_List = NULL;
 
-/* EB: TODO: add ADOC comments */
+/* EB: TODO: ADOC: add comments */
 
 lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user)
@@ -97,9 +97,14 @@ cuser_get_remote_user(const lListElem *this_elem, lList **answer_list,
       attr_list = lGetList(this_elem, CU_ruser_list);
       if (attr_list != NULL) {
          bool is_ambiguous = false;
+         const char *matching_host_or_group = NULL;
+         const char *matching_group = NULL;
 
          ret &= str_attr_list_find_value(attr_list, answer_list,
-                                         hostname, remote_user, &is_ambiguous); 
+                                         hostname, remote_user, 
+                                         &matching_host_or_group,
+                                         &matching_group,
+                                         &is_ambiguous); 
       } else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                 MSG_CUSER_NOREMOTE_USER_S, "remote_user"));

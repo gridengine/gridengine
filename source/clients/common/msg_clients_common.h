@@ -64,6 +64,9 @@
 #define MSG_CENTRY_NOTCHANGED         _MESSAGE(1018, _("Complex attribute configuartion has not been changed\n"))
 #define MSG_CENTRY_DOESNOTEXIST_S     _MESSAGE(1019, _("Complex attribute "SFQ" does not exist\n"))
 #define MSG_CENTRY_FILENOTCORRECT_S   _MESSAGE(1020, _("Complex attribute file "SFQ" is not correct\n"))
+#define MSG_QINSTANCE_NOQUEUES        _MESSAGE(1021, _("No queues remaining after -q queue selection\n"))
+#define MSG_HGROUP_NOTEXIST_S         _MESSAGE(1022, _("Host group "SFQ" does not exist\n"))
+#define MSG_HGROUP_FILEINCORRECT_S    _MESSAGE(1023, _("Host group file "SFQ" is not correct\n"))
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

@@ -38,7 +38,7 @@
 #include "sge_answerL.h"
 #include "sge_ckptL.h"
 #include "sge_eventL.h"
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_jobL.h"
 #include "sge_job_refL.h"
 #include "sge_krbL.h"
@@ -68,11 +68,11 @@
 #include "sge_loadsensorL.h"
 #include "sge_featureL.h"
 #include "sge_suserL.h"
+#include "sge_subordinateL.h"
 #include "sge_secL.h"
 #include "sge_pe_taskL.h"
 #include "sge_varL.h"
 #include "sge_rangeL.h"
-#include "sge_queueL.h"
 #include "sge_userprjL.h"
 #include "sge_hostL.h"
 #include "sge_centryL.h"
@@ -88,6 +88,7 @@
 #include "sge_helperL.h"
 #include "sge_cqueueL.h"
 #include "sge_qinstanceL.h"
+#include "sge_qref.h"
 #include "cull_packL.h"
 
 #ifdef  __cplusplus
@@ -111,7 +112,6 @@ extern "C" {
           1.        2.           3.
 */
       {JB_LOWERBOUND, JBS, JBN},        /* job */
-      {QU_LOWERBOUND, QUS, QUN},        /* queue */
       {EH_LOWERBOUND, EHS, EHN},        /* exec host */
       {AH_LOWERBOUND, AHS, AHN},        /* admin host */
       {SH_LOWERBOUND, SHS, SHN},        /* submit host */
@@ -223,7 +223,7 @@ extern "C" {
       {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
       {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */
       {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
-      {QI_LOWERBOUND, QIS, QIN},                /* Queue Instance list */
+      {QU_LOWERBOUND, QUS, QUN},                /* Queue Instance list */
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
       {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
       {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */

@@ -47,9 +47,13 @@ calendar_parse_week(lListElem *this_elem, lList **answer_list);
 u_long32 
 calendar_get_current_state_and_end(const lListElem *this_elem, time_t *then);
 
+bool 
+calendar_is_referenced(const lListElem *calendar, lList **answer_list,
+                       const lList *master_cqueue_list);
 /* */
 
 lListElem *
 calendar_list_locate(lList *this_list, const char *cal_name);
+
 
 #endif /* __SGE_CALENDAR_H */

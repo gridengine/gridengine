@@ -256,7 +256,7 @@ XtPointer cad
          qmonJobPopup(w, NULL, NULL); 
          break;
 
-      case SGE_QUEUE_LIST:
+      case SGE_CQUEUE_LIST:
          qmonQueuePopup(w, NULL, NULL); 
          break;
    }
@@ -289,7 +289,7 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
-   if (fticket_info.list_type == SGE_QUEUE_LIST) {
+   if (fticket_info.list_type == SGE_CQUEUE_LIST) {
       where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
       what = lWhat("%T(ALL)", QU_Type);
       lp = lSelect("Queues without template", lp, where, what);
@@ -766,7 +766,7 @@ XtPointer cad
       case FOT_JOBCLASS:
          fticket_info.field0 = QU_qname;
          fticket_info.field1 = QU_fshare;
-         fticket_info.list_type = SGE_QUEUE_LIST;
+         fticket_info.list_type = SGE_CQUEUE_LIST;
          fticket_info.dp = QU_Type;
          break;
    }
@@ -814,7 +814,7 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
-   if (fticket_info.list_type == SGE_QUEUE_LIST) {
+   if (fticket_info.list_type == SGE_CQUEUE_LIST) {
       where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
       what = lWhat("%T(ALL)", QU_Type);
       lp = lSelect("Queues without template", lp, where, what);
@@ -825,7 +825,7 @@ XtPointer cld, cad;
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
    if (fticket_info.list_type == SGE_USERSET_LIST || 
-         fticket_info.list_type == SGE_QUEUE_LIST)
+         fticket_info.list_type == SGE_CQUEUE_LIST)
       lp = lFreeList(lp);
 
    /*
@@ -860,7 +860,7 @@ XtPointer cld, cad;
       case SGE_USERSET_LIST:
          selector = USERSET_T;
          break;
-      case SGE_QUEUE_LIST:
+      case SGE_CQUEUE_LIST:
          selector = QUEUE_T;
          break;
          
@@ -900,7 +900,7 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
-   if (oticket_info.list_type == SGE_QUEUE_LIST) {
+   if (oticket_info.list_type == SGE_CQUEUE_LIST) {
       where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
       what = lWhat("%T(ALL)", QU_Type);
       lp = lSelect("Queues without template", lp, where, what);
@@ -911,7 +911,7 @@ XtPointer cld, cad;
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
    if (oticket_info.list_type == SGE_USERSET_LIST || 
-         oticket_info.list_type == SGE_QUEUE_LIST)
+         oticket_info.list_type == SGE_CQUEUE_LIST)
       lp = lFreeList(lp);
 
    DEXIT;
@@ -941,7 +941,7 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
-   if (oticket_info.list_type == SGE_QUEUE_LIST) {
+   if (oticket_info.list_type == SGE_CQUEUE_LIST) {
       where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
       what = lWhat("%T(ALL)", QU_Type);
       lp = lSelect("Queues without template", lp, where, what);
@@ -1085,7 +1085,7 @@ XtPointer cad
       case FOT_JOBCLASS:
          oticket_info.field0 = QU_qname;
          oticket_info.field1 = QU_oticket;
-         oticket_info.list_type = SGE_QUEUE_LIST;
+         oticket_info.list_type = SGE_CQUEUE_LIST;
          oticket_info.dp = QU_Type;
          break;
    }

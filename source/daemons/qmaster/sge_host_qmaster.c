@@ -37,7 +37,7 @@
 #include "sge_prog.h"
 #include "sge_time.h"
 #include "sge_feature.h"
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_ja_task.h"
 #include "commlib.h"
 #include "sge_host.h"
@@ -45,7 +45,6 @@
 #include "sge_host_qmaster.h"
 #include "sge_gdi_request.h"
 #include "sge_host_qmaster.h"
-#include "sge_queue_qmaster.h"
 #include "sge_utility.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
@@ -59,6 +58,7 @@
 #include "sge_parse_num_par.h"
 #include "configuration_qmaster.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_cqueue_qmaster.h"
 #include "sort_hosts.h"
 #include "sge_userset_qmaster.h"
 #include "sge_userprj_qmaster.h"
@@ -70,19 +70,21 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_queue.h"
-#include "sge_queue_qmaster.h"
 #include "sge_utility_qmaster.h"
 #include "qmaster_to_execd.h"
 #include "sge_todo.h"
 #include "sge_centry.h"
+#include "sge_host.h"
+#include "sge_href.h"
+#include "sge_cqueue.h"
 #include "sge_str.h"
+#include "sge_load.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -184,6 +186,26 @@ u_long32 target
 
    DEXIT;
    return (ret == STATUS_OK) ? 0 : -1;
+}
+
+bool
+host_list_add_missing_href(lList *this_list, 
+                           lList **answer_list, const lList *href_list)
+{
+   bool ret = true;
+   lListElem *href = NULL;
+
+   DENTER(TOP_LAYER, "host_list_add_missing_href");
+   for_each(href, href_list) {
+      const char *hostname = lGetHost(href, HR_name);
+      lListElem *host = host_list_locate(this_list, hostname);
+
+      if (host == NULL) {
+         ret &= (sge_add_host_of_type(hostname, SGE_EXECHOST_LIST) == 0);
+      }
+   }
+   DEXIT;
+   return ret;
 }
 
 /* ------------------------------------------------------------
@@ -299,8 +321,9 @@ u_long32 target
       return STATUS_EEXIST;
    }
 
-   if (target==SGE_EXECHOST_LIST && 
-       host_is_referenced(hep, NULL, Master_Queue_List)) {
+   if (target == SGE_EXECHOST_LIST && 
+       host_is_referenced(hep, NULL, 
+                          *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELEXECACTIVQ_S, unique));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -591,7 +614,9 @@ const char *target    /* prognames[QSTD|EXECD] */
    }
 
    host_trash_nonstatic_load_values(hep);
-   queue_list_set_unknown_state_to(Master_Queue_List, host, 1, 1);
+   cqueue_list_set_unknown_state(
+         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+         host, true, true);
 
    DEXIT;
    return;
@@ -672,7 +697,9 @@ lList *lp
 
 
             tmp_hostname = lGetHost(host_ep, EH_name);
-            queue_list_set_unknown_state_to(Master_Queue_List, tmp_hostname, 1, 0);
+            cqueue_list_set_unknown_state(
+                  *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                  tmp_hostname, true, false);
          }
 
          sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), NULL, *hepp);
@@ -741,7 +768,9 @@ lList *lp
       const char* tmp_hostname;
 
       tmp_hostname = lGetHost(host_ep, EH_name);
-      queue_list_set_unknown_state_to(Master_Queue_List, tmp_hostname, 1, 0);
+      cqueue_list_set_unknown_state(
+         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+         tmp_hostname, true, false);
    }
 
    if (global_ep) {
@@ -781,7 +810,7 @@ void sge_load_value_garbage_collector(
 u_long32 now 
 ) {
    extern int new_config;
-   lListElem *qep, *hep, *ep, *nextep; 
+   lListElem *hep, *ep, *nextep; 
    lList *h_list;
    const char *host;
    int host_unheard;
@@ -869,21 +898,30 @@ u_long32 now
       h_list   = lGetList(hep, EH_load_list);
       if ( (nstatics == lGetNumberOfElem(h_list)) &&
            (nbefore   > lGetNumberOfElem(h_list))    ) {
+         lListElem *cqueue;
+
          /* load reports were trashed and only the 
             static load values remained: 
             set all queues residing at this host in unknown state */
- 
-         qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, host, &iterator);
-         while (qep != NULL) {
-            qinstance_state_set_unknown(qep, true);
-            sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-            DPRINTF(("%s: trashed all (%d) non-static load values -> unknown\n", 
-                     lGetString(qep, QU_qname), 
-                     nbefore - lGetNumberOfElem(lGetList(hep, EH_load_list))));
+         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance;
 
-            /* initiate timer for this host because they turn into 'unknown' state */
-            reschedule_unknown_trigger(hep); 
-            qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, host, &iterator); 
+            qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+                                          host, &iterator);
+            while (qinstance != NULL) {
+               qinstance_state_set_unknown(qinstance, true);
+               qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
+
+               DPRINTF(("%s: trashed all (%d) non-static load values -> unknown\n", 
+                        lGetString(qinstance, QU_qname), 
+                        nbefore - lGetNumberOfElem(lGetList(hep, EH_load_list))));
+
+               /* initiate timer for this host because they turn into 'unknown' state */
+               reschedule_unknown_trigger(hep); 
+               qinstance = lGetElemHostNext(qinstance_list, QU_qhostname, 
+                                            host, &iterator); 
+            }
          }
       } 
    }
@@ -954,54 +992,48 @@ const char *name
    return NULL;
 }
 
-void sge_change_queue_version_exechost(
-const char *exechost_name 
-) {
-   int change_all = 0;
-   lListElem *qep;
-   const void *iterator = NULL;
-
+void 
+sge_change_queue_version_exechost(const char *exechost_name) 
+{
+   lListElem *cqueue = NULL; 
+   bool change_all = (strcasecmp(exechost_name, SGE_GLOBAL_NAME) == 0);
 
    DENTER(TOP_LAYER, "sge_change_queue_version_exechost");
 
-   /*
-      in case of global host
-      all queues get a new version
-   */
-   if (!strcasecmp(exechost_name, SGE_GLOBAL_NAME)) {
-      change_all = 1;
-      DPRINTF(("increasing version of all queues "
-            "because host "SGE_GLOBAL_NAME" changed\n"));
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+      lListElem *next_qinstance = NULL;
+      const void *iterator = NULL;
+
+      if (change_all) {
+         next_qinstance = lFirst(qinstance_list);
+      } else {
+         next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+                                            exechost_name, &iterator);
+      }
+      while ((qinstance = next_qinstance)) {
+         const char *name = NULL;
+         lList *answer_list = NULL;
+
+         if (change_all) {
+            next_qinstance = lNext(qinstance);
+            name = SGE_GLOBAL_NAME;
+         } else {
+            next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname, 
+                                              exechost_name, &iterator); 
+            name = exechost_name;
+         }
+         DPRINTF((SFQ" has changed. Increasing qversion of"SFQ"\n",
+                  name, lGetString(qinstance, QU_full_name)));
+         qinstance_increase_qversion(qinstance);
+         sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+                         0, 0, lGetString(qinstance, QU_qname), 
+                         lGetHost(qinstance, QU_qhostname), NULL,
+                         qinstance, NULL, NULL, false, true);
+         answer_list_output(&answer_list);
+      }
    }
-
-   if (change_all) {
-      for_each(qep, Master_Queue_List) {   
-         lList *answer_list = NULL;
-         sge_change_queue_version(qep, 0, 0);
-
-         /* event has already been sent in sge_change_queue_version */
-         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), NULL, NULL,
-                         qep, NULL, NULL, false, true);
-         answer_list_output(&answer_list);
-      }
-   } else {
-      qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
-      while (qep != NULL) {
-         lList *answer_list = NULL;
-         DPRINTF(("increasing version of queue "SFQ" because exec host "
-                  SFQ" changed\n", lGetString(qep, QU_qname), exechost_name));
-         sge_change_queue_version(qep, 0, 0);
-
-         /* event has already been sent in sge_change_queue_version */
-         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), NULL, NULL,
-                         qep, NULL, NULL, false, true);
-         answer_list_output(&answer_list);
-         qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
-      }
-   } 
-
 
    DEXIT;
    return;
@@ -1242,8 +1274,7 @@ lList **alpp,
 char *ruser,
 char *rhost,
 u_long32 target) {
-   lListElem *hep, *qep;
-   const void *iterator = NULL;
+   lListElem *hep, *cqueue;
    dstring ds;
    char buffer[256];
 
@@ -1278,24 +1309,34 @@ u_long32 target) {
    lSetUlong(hep, EH_featureset_id, lGetUlong(host, EH_featureset_id));
    lSetUlong(hep, EH_report_seqno, 0);
 
+   /*
+    * reinit state of all qinstances at this host according to initial_state
+    */
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+      const void *iterator = NULL;
 
-   /* reinit state of all queues at this host according to initial_state */
+      qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+                                    rhost, &iterator);
+      while (qinstance != NULL) {
+         bool state_changed = qinstance_set_initial_state(qinstance);
 
-   qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, rhost, &iterator); 
-   while (qep != NULL) {
-      if (queue_set_initial_state(qep, rhost)) {
-         lList *answer_list = NULL;
-         sge_change_queue_version(qep, 0, 0);
+         if (state_changed) {
+            lList *answer_list = NULL;
 
-         /* event has already been sent in sge_change_queue_version */
-         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), NULL, NULL,
-                         qep, NULL, NULL, false, true);
-         answer_list_output(&answer_list);
-      } 
-      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, rhost, &iterator);
+            qinstance_increase_qversion(qinstance);
+            sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+                            0, 0, lGetString(qinstance, QU_qname), 
+                            lGetHost(qinstance, QU_qhostname), NULL,
+                            qinstance, NULL, NULL, false, true);
+            answer_list_output(&answer_list); 
+         }
+         qinstance = lGetElemHostNext(qinstance_list, QU_qhostname,
+                                      rhost, &iterator);
+      }
    }
-
+   
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 
       feature_get_product_name(FS_SHORT_VERSION, &ds), "execd", rhost));
 

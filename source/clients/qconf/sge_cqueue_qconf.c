@@ -40,11 +40,12 @@
 #include "sge_hostname.h"
 
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_cqueue.h"
+#include "sge_object.h"
 #include "sge_qinstance.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
+#include "sge_qref.h"
 #include "sge_cqueue_qconf.h"
 #include "parse_qconf.h"
 #include "spool/classic/read_write_cqueue.h"
@@ -225,9 +226,15 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list)
 
          cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
          if (cqueue != NULL) {
-            *this_elem = lFreeElem(*this_elem);
-            *this_elem = cqueue; 
-            ret = true;
+            if (object_has_differences(*this_elem, answer_list, 
+                                       cqueue, false)) {
+               *this_elem = lFreeElem(*this_elem);
+               *this_elem = cqueue; 
+               ret = true;
+            } else {
+               answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
+                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+            }
          } else {
             answer_list_add(answer_list, MSG_FILE_ERRORREADINGINFILE,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);
@@ -385,6 +392,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       local_ret = cqueue_hgroup_get_via_gdi(answer_list, qref_pattern_list,
                                             &hgroup_list, &cqueue_list);
       if (local_ret) {
+
          for_each(qref_pattern, qref_pattern_list) {
             dstring cqueue_name = DSTRING_INIT;
             dstring host_domain = DSTRING_INIT;
@@ -405,10 +413,10 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
             if (has_domain) {
                const char *d_pattern = sge_dstring_get_string(&host_domain);
                lList *href_list = NULL;
+               bool is_first = true;
 
-               hgroup_list_find_all_matching_references(hgroup_list, NULL,
-                                                        d_pattern,
-                                                        &href_list);
+               hgroup_list_find_matching_and_resolve(hgroup_list, NULL,
+                                                     d_pattern, &href_list);
                for_each(qref, qref_list) {
                   const char *cqueue_name = lGetString(qref, QR_name);
                   const lListElem *cqueue = NULL;
@@ -424,10 +432,15 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         const lListElem *qinstance;
 
                         qinstance = lGetElemHost(qinstance_list,
-                                                 QI_hostname, hostname);
+                                                 QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
-                           write_qinstance(0, 0, qinstance, NULL);
+                           if (is_first) {
+                              is_first = false; 
+                           } else {
+                              fprintf(stdout, "\n");
+                           }
+                           write_qinstance(0, 0, qinstance);
                            found_something = true;
                         }
                      }
@@ -438,6 +451,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                qref_list = lFreeList(qref_list);
             } else if (has_hostname) {
                const char *h_pattern = sge_dstring_get_string(&host_domain);
+               bool is_first = true;
 
                for_each(qref, qref_list) {
                   const char *cqueue_name = NULL;
@@ -453,22 +467,34 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                      for_each(qinstance, qinstance_list) {
                         const char *hostname = NULL;
 
-                        hostname = lGetHost(qinstance, QI_hostname);
+                        hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
-                           write_qinstance(0, 0, qinstance, NULL);
+                           if (is_first) {
+                              is_first = false; 
+                           } else {
+                              fprintf(stdout, "\n");
+                           }
+                           write_qinstance(0, 0, qinstance);
                            found_something = true;
                         }
                      }
                   }
                }
             } else {
+               bool is_first = true;
+
                for_each(qref, qref_list) {
                   const char *cqueue_name = lGetString(qref, QR_name);
                   lListElem *cqueue = NULL;
 
                   cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
                   if (cqueue != NULL) {
+                     if (is_first) {
+                        is_first = false; 
+                     } else {
+                        fprintf(stdout, "\n");
+                     }
                      write_cqueue(0, 0, cqueue);
                      found_something = true;
                   }
@@ -484,6 +510,12 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
             sge_dstring_free(&cqueue_name);
          }
       } 
+   } else {
+      lListElem *cqueue = cqueue_create(answer_list, "template");
+
+      DTRACE;
+      ret &= cqueue_set_template_attributes(cqueue, answer_list);
+      write_cqueue(0, 0, cqueue);
    }
    DEXIT;
    return ret;

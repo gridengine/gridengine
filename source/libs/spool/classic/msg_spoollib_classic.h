@@ -53,7 +53,7 @@
 #define MSG_CONFIG_QUEUEXUPDATED_S              _MESSAGE(61014, _("Queue "SFN" updated\n"))
 #define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED _MESSAGE(61015, _("obsolete queue template file deleted\n"))
 #define MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT    _MESSAGE(61016, _("found queue 'template', but not in file 'template'; ignoring it!\n"))
-#define MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
+#define MSG_CONFIG_CANTRECREATEQEUEUE_SS        _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
 #define MSG_CONFIG_READINGINPROJECTS            _MESSAGE(61019, _("Reading in projects:\n"))
 #define MSG_SETUP_PROJECT_S                     _MESSAGE(61020, _("\tProject "SFQ".\n"))
 #define MSG_CONFIG_READINGINUSERSETS            _MESSAGE(61021, _("Reading in usersets:\n"))
@@ -110,5 +110,6 @@
  */
 #define MSG_SETUP_COMPLEX_ATTR_S         _MESSAGE(61049, _("\tComplex attribute "SFQ".\n"))
 #define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes:\n"))
+#define MSG_HGROUP_INCFILE_S             _MESSAGE(61051, _("Incorrect spoolfile for hostgroup "SFQ"\n"))
 
 #endif /* __MSG_SPOOLLIB_CLASSIC_H */

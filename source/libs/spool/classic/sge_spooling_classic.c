@@ -56,7 +56,6 @@
 #include "sge_manop.h"
 #include "sge_sharetree.h"
 #include "sge_pe.h"
-#include "sge_queue.h"
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -71,8 +70,8 @@
 #include "rw_configuration.h"
 #include "read_write_job.h"
 #include "read_write_manop.h"
-#include "read_write_queue.h"
 #include "read_write_cqueue.h"
+#include "read_write_qinstance.h"
 #include "read_write_sharetree.h"
 #include "read_write_pe.h"
 #include "read_write_userprj.h"
@@ -681,11 +680,6 @@ spool_classic_default_list_func(lList **answer_list,
             ret = false;
          }
          break;
-      case SGE_TYPE_QUEUE:
-         if (sge_read_queue_list_from_disk() != 0) {
-            ret = false;
-         }
-         break;
       case SGE_TYPE_CQUEUE:
          if (sge_read_cqueue_list_from_disk() != 0) {
             ret = false;
@@ -847,9 +841,6 @@ spool_classic_default_read_func(lList **answer_list,
          break;
       case SGE_TYPE_PROJECT:
          ep = cull_read_in_userprj(PROJECT_DIR, key, 1, 0, NULL);
-         break;
-      case SGE_TYPE_QUEUE:
-         ep = cull_read_in_qconf(QUEUE_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_CQUEUE:
          ep = cull_read_in_cqueue(CQUEUE_DIR, key, 1, 0, NULL, NULL);
@@ -1077,13 +1068,11 @@ spool_classic_default_write_func(lList **answer_list,
             }
          }
          break;
-      case SGE_TYPE_QUEUE:
-         if (cull_write_qconf(1, 0, QUEUE_DIR, key, NULL, object) != 0) {
-            ret = false;
-         }
-         break;
       case SGE_TYPE_CQUEUE:
          write_cqueue(1, 2, object);
+         break;
+      case SGE_TYPE_QINSTANCE:
+         write_qinstance(1, 2, object);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          write_sched_configuration(1, 2, lGetString(rule, SPR_url), object);
@@ -1265,9 +1254,6 @@ spool_classic_default_delete_func(lList **answer_list,
          break;
       case SGE_TYPE_PROJECT:
          ret = sge_unlink(PROJECT_DIR, key) == 0;
-         break;
-      case SGE_TYPE_QUEUE:
-         ret = sge_unlink(QUEUE_DIR, key) == 0;
          break;
       case SGE_TYPE_CQUEUE:
          ret = sge_unlink(CQUEUE_DIR, key) == 0;

@@ -96,7 +96,6 @@
 *        SGE_TYPE_SHARETREE
 *        SGE_TYPE_PE
 *        SGE_TYPE_PROJECT
-*        SGE_TYPE_QUEUE
 *        SGE_TYPE_CQUEUE
 *        SGE_TYPE_QINSTANCE
 *        SGE_TYPE_SCHEDD_CONF
@@ -130,7 +129,6 @@ typedef enum {
    SGE_TYPE_SHARETREE,
    SGE_TYPE_PE,
    SGE_TYPE_PROJECT,
-   SGE_TYPE_QUEUE,
    SGE_TYPE_CQUEUE,
    SGE_TYPE_QINSTANCE,
    SGE_TYPE_SCHEDD_CONF,
@@ -286,7 +284,7 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem);
 void
 object_get_any_type(lListElem *this_elem, int name, void *value);
 
-void 
+bool 
 attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem, 
                   int sub_command, const char *sub_list_name, 

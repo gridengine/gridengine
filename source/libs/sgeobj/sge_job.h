@@ -257,4 +257,14 @@ bool job_has_valid_account_string(const lListElem *job, lList **answer_list);
 
 int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name);
 
+lListElem *
+job_get_request(const lListElem *this_elem, const char *centry_name);
+
+bool
+job_get_contribution(const lListElem *this_elem, lList **answer_list,
+                     const char *name, double *value,
+                     const lListElem *implicit_centry);
+
+void queue_or_job_get_states(int nm, char *str, u_long32 op);
+
 #endif /* __SGE_JOB_H */    

@@ -40,7 +40,6 @@
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_job_qmaster.h"
-#include "sge_queue_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_manop_qmaster.h"
@@ -70,7 +69,7 @@
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_userprj.h"
 #include "sge_job.h"
 #include "sge_userset.h"
@@ -109,35 +108,34 @@ static int schedd_mod( lList **alpp, lListElem *modp, lListElem *ep, int add, co
 /* ------------------------------ generic gdi objects --------------------- */
 /* *INDENT-OFF* */
 static gdi_object_t gdi_object[] = {
-   { SGE_CALENDAR_LIST,     CAL_name,         CAL_Type, "calendar",                &Master_Calendar_List,          NULL,         calendar_mod, calendar_spool, calendar_update_queue_states },
-   { SGE_EVENT_LIST,        0,                NULL,     "event",                   &EV_Clients,                    NULL,         NULL,         NULL,           NULL },
-   { SGE_ADMINHOST_LIST,    AH_name,          AH_Type,  "adminhost",               &Master_Adminhost_List,         NULL,         host_mod,     host_spool,     host_success },
-   { SGE_SUBMITHOST_LIST,   SH_name,          SH_Type,  "submithost",              &Master_Submithost_List,        NULL,         host_mod,     host_spool,     host_success },
-   { SGE_EXECHOST_LIST,     EH_name,          EH_Type,  "exechost",                &Master_Exechost_List,          NULL,         host_mod,     host_spool,     host_success },
-   { SGE_QUEUE_LIST,        0,                NULL,     "queue",                   &Master_Queue_List,             NULL,         NULL,         NULL,           NULL },
-   { SGE_CQUEUE_LIST,       CQ_name,          CQ_Type,  "cluster queue",           &Master_CQueue_List,            NULL,         cqueue_mod,   cqueue_spool,   cqueue_success },
-   { SGE_JOB_LIST,          0,                NULL,     "job",                     &Master_Job_List,               NULL,         NULL,         NULL,           NULL },
-   { SGE_CENTRY_LIST,       CE_name,          CE_Type,  "complex entry",           &Master_CEntry_List,            NULL,         centry_mod,   centry_spool,   centry_success },
-   { SGE_ORDER_LIST,        0,                NULL,     "order",                   NULL,                           NULL,         NULL,         NULL,           NULL },
-   { SGE_MASTER_EVENT,      0,                NULL,     "master event",            NULL,                           NULL,         NULL,         NULL,           NULL },
-   { SGE_MANAGER_LIST,      0,                NULL,     "manager",                 &Master_Manager_List,           NULL,         NULL,         NULL,           NULL },
-   { SGE_OPERATOR_LIST,     0,                NULL,     "operator",                &Master_Operator_List,          NULL,         NULL,         NULL,           NULL },
-   { SGE_PE_LIST,           PE_name,          PE_Type,  "parallel environment",    &Master_Pe_List,                NULL,         pe_mod,       pe_spool,       pe_success },
-   { SGE_CONFIG_LIST,       0,                NULL,     "configuration",           &Master_Config_List,            NULL,         NULL,         NULL,           NULL },
-   { SGE_SC_LIST,           0,                NULL,     "scheduler configuration", NULL,                  sconf_get_config_list, schedd_mod,   NULL,           NULL},
-   { SGE_USER_LIST,         UP_name,          UP_Type,  "user",                    &Master_User_List,              NULL,         userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_USERSET_LIST,      0,                NULL,     "userset",                 &Master_Userset_List,           NULL,         NULL,         NULL,           NULL },
-   { SGE_PROJECT_LIST,      UP_name,          UP_Type,  "project",                 &Master_Project_List,           NULL,         userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_SHARETREE_LIST,    0,                NULL,     "sharetree",               &Master_Sharetree_List,         NULL,         NULL,         NULL,           NULL },
-   { SGE_CKPT_LIST,         CK_name,          CK_Type,  "checkpoint interface",    &Master_Ckpt_List,              NULL,         ckpt_mod,     ckpt_spool,     ckpt_success },
-   { SGE_JOB_SCHEDD_INFO,   0,                NULL,     "schedd info",             &Master_Job_Schedd_Info_List,   NULL,         NULL,         NULL,           NULL },
-   { SGE_ZOMBIE_LIST,       0,                NULL,     "job zombie list",         &Master_Zombie_List,            NULL,         NULL,         NULL,           NULL },
+   { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                &Master_Calendar_List,        NULL,                  calendar_mod, calendar_spool, calendar_update_queue_states },
+   { SGE_EVENT_LIST,        0,         NULL,      "event",                   &EV_Clients,                  NULL,                  NULL,         NULL,           NULL },
+   { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               &Master_Adminhost_List,       NULL,                  host_mod,     host_spool,     host_success },
+   { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              &Master_Submithost_List,      NULL,                  host_mod,     host_spool,     host_success },
+   { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                &Master_Exechost_List,        NULL,                  host_mod,     host_spool,     host_success },
+   { SGE_CQUEUE_LIST,       CQ_name,   CQ_Type,   "cluster queue",           &Master_CQueue_List,          NULL,                  cqueue_mod,   cqueue_spool,   cqueue_success },
+   { SGE_JOB_LIST,          0,         NULL,      "job",                     &Master_Job_List,             NULL,                  NULL,         NULL,           NULL },
+   { SGE_CENTRY_LIST,       CE_name,   CE_Type,   "complex entry",           &Master_CEntry_List,          NULL,                  centry_mod,   centry_spool,   centry_success },
+   { SGE_ORDER_LIST,        0,         NULL,      "order",                   NULL,                         NULL,                  NULL,         NULL,           NULL },
+   { SGE_MASTER_EVENT,      0,         NULL,      "master event",            NULL,                         NULL,                  NULL,         NULL,           NULL },
+   { SGE_MANAGER_LIST,      0,         NULL,      "manager",                 &Master_Manager_List,         NULL,                  NULL,         NULL,           NULL },
+   { SGE_OPERATOR_LIST,     0,         NULL,      "operator",                &Master_Operator_List,        NULL,                  NULL,         NULL,           NULL },
+   { SGE_PE_LIST,           PE_name,   PE_Type,   "parallel environment",    &Master_Pe_List,              NULL,                  pe_mod,       pe_spool,       pe_success },
+   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           &Master_Config_List,          NULL,                  NULL,         NULL,           NULL },
+   { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", NULL,                         sconf_get_config_list, schedd_mod,   NULL,           NULL },
+   { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    &Master_User_List,            NULL,                  userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_USERSET_LIST,      0,         NULL,      "userset",                 &Master_Userset_List,         NULL,                  NULL,         NULL,           NULL },
+   { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 &Master_Project_List,         NULL,                  userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               &Master_Sharetree_List,       NULL,                  NULL,         NULL,           NULL },
+   { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    &Master_Ckpt_List,            NULL,                  ckpt_mod,     ckpt_spool,     ckpt_success },
+   { SGE_JOB_SCHEDD_INFO,   0,         NULL,      "schedd info",             &Master_Job_Schedd_Info_List, NULL,                  NULL,         NULL,           NULL },
+   { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         &Master_Zombie_List,          NULL,                  NULL,         NULL,           NULL },
 #ifndef __SGE_NO_USERMAPPING__
-   { SGE_USER_MAPPING_LIST, CU_name,          CU_Type,  "user mapping entry",      &Master_Cuser_List,             NULL,         cuser_mod,    cuser_spool,    cuser_success },
+   { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      &Master_Cuser_List,           NULL,                  cuser_mod,    cuser_spool,    cuser_success },
 #endif
-   { SGE_HGROUP_LIST,       HGRP_name,        HGRP_Type,"host group",              &Master_HGroup_List,            NULL,           hgroup_mod,   hgroup_spool,   hgroup_success },
-   { SGE_DUMMY_LIST,        0,                NULL,     "general request",         NULL,                           NULL,           NULL,         NULL,           NULL },
-   { 0,                     0,                NULL,     NULL,                      NULL,                           NULL,           NULL,         NULL,           NULL }
+   { SGE_HGROUP_LIST,       HGRP_name, HGRP_Type, "host group",              &Master_HGroup_List,          NULL,                  hgroup_mod,   hgroup_spool,   hgroup_success },
+   { SGE_DUMMY_LIST,        0,         NULL,      "general request",         NULL,                         NULL,                  NULL,         NULL,           NULL },
+   { 0,                     0,         NULL,      NULL,                      NULL,                         NULL,                  NULL,         NULL,           NULL }
 };
 /* *INDENT-ON* */
 
@@ -401,8 +399,7 @@ sge_gdi_request *answer,
 int *before,
 int *after 
 ) {
-   const lList *lp = NULL;
-   lListElem *qep = NULL;
+   lList *lp = NULL;
    uid_t uid;
    gid_t gid;
    char user[128];
@@ -442,27 +439,6 @@ int *after
    }
 
    switch (request->target) {
-   case SGE_QUEUE_LIST:
-      qep = queue_create_template();
-      if (!qep) {
-         /* could not get queue template */
-         ERROR((SGE_EVENT, MSG_OBJ_GENQ));
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return;
-      }
-
-      if (!Master_Queue_List)
-         Master_Queue_List = lCreateList("QueueList", QU_Type);
-
-      if (Master_Queue_List && qep)
-         lAppendElem(Master_Queue_List, qep);
-      else {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTGET_SS, user, MSG_OBJ_QLIST));
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      }        
-      lp = Master_Queue_List;
-      break;
 #ifdef QHOST_TEST
    case SGE_QHOST:
 /* lWriteListTo(request->lp, stdout); */
@@ -492,11 +468,6 @@ int *after
 
    *after = lGetNumberOfElem(answer->lp);
 
-   /* remove template queue */
-   if (request->target == SGE_QUEUE_LIST) {
-      lDelElemStr(&Master_Queue_List, QU_qname, SGE_TEMPLATE_NAME);
-   }   
-         
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
    answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    
@@ -639,10 +610,6 @@ int sub_command
          }
          break;
 
-      case SGE_QUEUE_LIST:
-         sge_gdi_add_mod_queue(ep, &(answer->alp), user, host, 1, sub_command);
-         break;
-
       case SGE_MANAGER_LIST:
       case SGE_OPERATOR_LIST:
          sge_add_manop(ep, &(answer->alp), user, host, 
@@ -774,10 +741,6 @@ int sub_command
          case SGE_SUBMITHOST_LIST:
          case SGE_EXECHOST_LIST:
             sge_del_host(ep, &(answer->alp), user, host, request->target);
-            break;
-
-         case SGE_QUEUE_LIST:
-            sge_gdi_delete_queue(ep, &(answer->alp), user, host);
             break;
 
          case SGE_CQUEUE_LIST:
@@ -1051,7 +1014,7 @@ sge_gdi_request *answer
    }
 
    switch (request->target) {
-   case SGE_QUEUE_LIST: /* do no break here! */
+   case SGE_CQUEUE_LIST: /* do no break here! */
    case SGE_JOB_LIST:  /* en/dis/able un/suspend clean/clear job/queue */
       sge_gdi_qmod(host, request, answer);
       break;
@@ -1130,11 +1093,6 @@ int sub_command
       /* try to mod the element */
       switch (request->target) {
 
-      case SGE_QUEUE_LIST:
-         sge_gdi_add_mod_queue(ep, &(answer->alp), user, host, 0, 
-            sub_command);
-         break;
-
       case SGE_JOB_LIST:
          sge_gdi_mod_job(ep, &(answer->alp), user, host, sub_command);
          break;
@@ -1210,7 +1168,6 @@ char *user
    case SGE_ADMINHOST_LIST:
    case SGE_SUBMITHOST_LIST:
    case SGE_EXECHOST_LIST:
-   case SGE_QUEUE_LIST:
    case SGE_CQUEUE_LIST:
    case SGE_CENTRY_LIST:
    case SGE_OPERATOR_LIST:
@@ -1296,7 +1253,6 @@ lListElem *ep
    case SGE_OPERATOR_LIST:
    case SGE_MANAGER_LIST:
    case SGE_SUBMITHOST_LIST:
-   case SGE_QUEUE_LIST:
    case SGE_CQUEUE_LIST:
    case SGE_CENTRY_LIST:
    case SGE_PE_LIST:
@@ -1413,7 +1369,6 @@ sge_gdi_request *request
    case SGE_OPERATOR_LIST:
    case SGE_MANAGER_LIST:
    case SGE_SUBMITHOST_LIST:
-   case SGE_QUEUE_LIST:
    case SGE_CQUEUE_LIST:
    case SGE_CENTRY_LIST:
    case SGE_PE_LIST:
@@ -1695,7 +1650,7 @@ gdi_object_t *object,
 int sub_command 
 ) {
    int ret;
-   DENTER(TOP_LAYER, "schedd_success");
+   DENTER(TOP_LAYER, "schedd_mod");
 
    ret = sconf_validate_config_(alpp)?0:1;
    

@@ -57,6 +57,7 @@
 #include "sge_href.h"
 #include "sge_event_master.h"
 #include "sge_cqueue_qmaster.h"
+#include "sge_host_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -197,7 +198,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
 static void 
 hgroup_commit(lListElem *hgroup) 
 {
-   lList *cqueue_master_list = *(cqueue_list_get_master_list());
+   lList *cqueue_master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    lList *cqueue_list = lGetList(hgroup, HGRP_cqueue_list);
    lListElem *next_cqueue = NULL;
    lListElem *cqueue = NULL;
@@ -244,7 +245,8 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
 
          if (add) {
             /* Check groupname for new hostgroups */
-            if (!verify_str_key(answer_list, &name[1], "hostgroup")) {
+            if (name[0] == '@' &&
+                !verify_str_key(answer_list, &name[1], "hostgroup")) {
                lSetHost(hgroup, HGRP_name, name); 
             } else {
                ERROR((SGE_EVENT, MSG_HGRP_GROUPXNOTGUILTY_S, name));
@@ -290,26 +292,125 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                                        &occupant_groups);
          }
          if (ret) {
-            lList *cqueue_master_list = *(cqueue_list_get_master_list());
+            lList *cqueue_master_list = 
+                               *(object_type_get_master_list(SGE_TYPE_CQUEUE));
             lListElem *cqueue;
 
             for_each (cqueue, cqueue_master_list) {
                if (cqueue_is_a_href_referenced(cqueue, occupant_groups)) {
-                  lList *cqueue_list = lGetList(hgroup, HGRP_cqueue_list);
                   lListElem *new_cqueue = NULL;
+                  lList *real_add_hosts = NULL;
+                  lList *real_rem_hosts = NULL;
+                  lList *before_mod_list = NULL;
+                  lList *after_mod_list = NULL;
+                  const lList *href_list = NULL;
+                  const char *name = NULL;
+                  lListElem *org_hgroup = NULL;
+                  lList *master_list = NULL;
 
-                  if (cqueue_list == NULL) {
-                     cqueue_list = lCreateList("", CQ_Type);
-                     lSetList(hgroup, HGRP_cqueue_list, cqueue_list);
+                  /*
+                   * Find CQs lists of referenced hosts before and after
+                   * the hgroup modification
+                   */
+
+                  href_list = lGetList(cqueue, CQ_hostlist);
+                  name = lGetHost(hgroup, HGRP_name);
+                  master_list = *(hgroup_list_get_master_list());
+                  org_hgroup = lGetElemHost(master_list, HGRP_name, name);
+
+                  ret &= href_list_find_all_references(href_list, 
+                                                       answer_list,
+                                                       master_list, 
+                                                       &before_mod_list,
+                                                       NULL);
+
+                  /*
+                   * !!! Modify master list temorarily 
+                   *     (find rollback below)
+                   */
+                  if (org_hgroup != NULL) {
+                     lDechainElem(master_list, org_hgroup);
                   }
-                  new_cqueue = lCopyElem(cqueue);
-                  lAppendElem(cqueue_list, new_cqueue);
-                 
+                  lAppendElem(master_list, hgroup);
+                  ret &= href_list_find_all_references(href_list, 
+                                                       answer_list,
+                                                       master_list, 
+                                                       &after_mod_list,
+                                                       NULL);
+
+                  /*
+                   * Find the real set of hosts to be added/removed from
+                   * the list of QIs of the CQ
+                   */
                   if (ret) {
+                     ret &= href_list_compare(rem_hosts, answer_list,
+                                              after_mod_list, 
+                                              &real_rem_hosts,
+                                              NULL, NULL, NULL);
+                     ret &= href_list_compare(add_hosts, answer_list,
+                                              before_mod_list, 
+                                              &real_add_hosts,
+                                              NULL, NULL, NULL);
+#if 1 /* debug */
+                     if (ret) { 
+                        href_list_debug_print(real_add_hosts, "CQ add_host: ");
+                        href_list_debug_print(real_rem_hosts, "CQ rem_host: ");
+                     }
+#endif
+                  }
+
+                  /*
+                   * Make a copy of CQ
+                   */
+                  if (ret) {
+                     lList *cqueue_list = lGetList(hgroup, HGRP_cqueue_list);
+
+                     if (cqueue_list == NULL) {
+                        cqueue_list = lCreateList("", CQ_Type);
+                        lSetList(hgroup, HGRP_cqueue_list, cqueue_list);
+                     }
+                     new_cqueue = lCopyElem(cqueue);
+                     if (new_cqueue != NULL && cqueue_list != NULL) {
+                        lAppendElem(cqueue_list, new_cqueue);
+                     } else {
+                        /* EB: TODO: Add error message */
+                        ret = false;
+                     }
+                  }
+   
+                  /*
+                   * Mopdify QIs of CQ
+                   */
+                  if (ret) {
+                     bool refresh_all_values = ((add_hosts != NULL) ||
+                                                (rem_hosts != NULL));
+
                      ret &= cqueue_handle_qinstances(new_cqueue, answer_list, 
                                                      reduced_elem,
-                                                     add_hosts, rem_hosts);
+                                                     real_add_hosts, 
+                                                     real_rem_hosts,
+                                                     refresh_all_values);
                   }
+
+                  /*
+                   * Free all temorarily allocated memory
+                   */
+                  after_mod_list = lFreeList(after_mod_list);
+                  before_mod_list = lFreeList(before_mod_list);
+                  real_add_hosts = lFreeList(real_add_hosts);
+                  real_rem_hosts = lFreeList(real_rem_hosts);
+
+                  /*
+                   * !!! Rollback of masterlist modification
+                   */
+                  lDechainElem(master_list, hgroup);
+                  if (org_hgroup != NULL) {
+                     lAppendElem(master_list, org_hgroup);
+                  }
+
+                  /*
+                   * Skip other CQs if this failed
+                   */
                   if (!ret) {
                      break;
                   }
@@ -319,6 +420,18 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                hgroup_rollback(hgroup);
             }
          } 
+
+         /*
+          * EB:
+          *    Client and scheduler code expects existing EH_Type elements
+          *    for all hosts used in CQ_hostlist. Therefore it is neccessary
+          *    to create all not existing EH_Type elements.
+          */
+         if (ret) {
+            lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
+
+            ret &= host_list_add_missing_href(list, answer_list, add_hosts);
+         }
 
          add_hosts = lFreeList(add_hosts);
          rem_hosts = lFreeList(rem_hosts);
@@ -506,13 +619,23 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
     * Transactions within the spooling framework may solve this problem.
     */
    for_each (cqueue, cqueue_list) {
-      if (!spool_write_object(NULL, spool_get_default_context(), cqueue,
-                              name, SGE_TYPE_CQUEUE)) {
-         ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                         ANSWER_QUALITY_ERROR);
-         tmp_ret = false;
-         break;
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+
+      for_each(qinstance, qinstance_list) {
+         u_long32 tag = lGetUlong(qinstance, QU_tag);
+
+         if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
+            if (!spool_write_object(NULL, spool_get_default_context(), 
+                                    qinstance,
+                                    name, SGE_TYPE_QINSTANCE)) {
+               ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                               ANSWER_QUALITY_ERROR);
+               tmp_ret = false;
+               break;
+            }
+         }
       }
    }
 

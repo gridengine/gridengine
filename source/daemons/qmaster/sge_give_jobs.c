@@ -55,9 +55,8 @@
 #include "commlib.h"
 #include "job_log.h"
 #include "pack_job_delivery.h"
-#include "subordinate_qmaster.h" 
+#include "sge_subordinate_qmaster.h" 
 #include "sge_complex_schedd.h" 
-#include "sge_queue_qmaster.h" 
 #include "sge_ckpt_qmaster.h"
 #include "sge_job_qmaster.h" 
 #include "job_exit.h" 
@@ -67,8 +66,8 @@
 #include "sge_pe_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
+#include "sge_cqueue_qmaster.h"
 #include "sge_prog.h"
-#include "slots_used.h"
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
 #include "sge_afsutil.h"
@@ -90,13 +89,14 @@
 #include "sge_hostname.h"
 #include "sge_schedd_conf.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
 #include "sge_todo.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -151,10 +151,12 @@ lListElem *hep
       lListElem *ep1, *cep;
        
 
-      if ((q = queue_list_locate(Master_Queue_List, lGetString(gdil_ep, JG_qname)))) {
+      if ((q = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(gdil_ep, JG_qname)))) {
          resources = NULL;
          queue_complexes2scheduler(&resources, q, Master_Exechost_List, Master_CEntry_List);
          lSetList(gdil_ep, JG_complex, resources);
+      } else {
+         DTRACE;
       }
 
 
@@ -330,7 +332,7 @@ int master
     */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
-      lListElem *src_qep = queue_list_locate(Master_Queue_List, src_qname);
+      lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
       lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
       qep = lCopyElem(src_qep);
@@ -492,7 +494,9 @@ const char *queue
          return;
       }
 
-      if (!(mqep = lGetElemStr(Master_Queue_List, QU_qname, qnm))) {
+      mqep = cqueue_list_locate_qinstance(
+                     *(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
+      if (mqep == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_NOQUEUE4TJ_SUU,  
                qnm, u32c(jobid), u32c(jataskid)));
          lDelElemUlong(&jatasks, JAT_task_number, jataskid);
@@ -595,27 +599,6 @@ u_long now
    DEXIT;
 }
 
-/***********************************************************************
-
-   sge_commit_job - commits that a job has been started
-
-
-   Hearing about a jobs exit from execd there are two cases:
-
-
-   Input:
-   job we want to commit
-   Master_Queue_List with queues tagged which we want to be filled by the job.
-      (queue->tagged = number of job nodes to run in this queue)
-
-   Output:
- ***********************************************************************/
-
-
-
-
-
-
 /****** sge_give_jobs/sge_commit_job() *****************************************
 *  NAME
 *     sge_commit_job() -- Do job state transitions
@@ -629,8 +612,8 @@ u_long now
 *     order arrives from schedd the job is sent asynchonously to execd and 
 *     sge_commit_job() is called with mode==COMMIT_ST_SENT. When a job report 
 *     arrives from the execd mode is COMMIT_ST_ARRIVED. When the job failed
-*     or finished mode is COMMIT_ST_FINISHED_FAILED or COMMIT_ST_FINISHED_FAILED_EE
-*     depending on product mode:
+*     or finished mode is COMMIT_ST_FINISHED_FAILED or 
+*     COMMIT_ST_FINISHED_FAILED_EE depending on product mode:
 * 
 *     A SGE job can be removed immediately when it is finished 
 *     (mode==COMMIT_ST_FINISHED_FAILED). A SGEEE job may not be deleted 
@@ -662,7 +645,7 @@ lListElem *jr,
 sge_commit_mode_t mode,
 sge_commit_flags_t commit_flags
 ) {
-   lListElem *qep, *hep, *petask, *tmp_ja_task;
+   lListElem *cqueue, *hep, *petask, *tmp_ja_task;
    lListElem *global_host_ep;
    int slots;
    lUlong jobid, jataskid;
@@ -692,39 +675,44 @@ sge_commit_flags_t commit_flags
 
       /* should use jobs gdil instead of tagging queues */
       global_host_ep = host_list_locate(Master_Exechost_List, "global");
-      for_each(qep, Master_Queue_List) {     
-         if (lGetUlong(qep, QU_tagged)) {
-            const char* qep_QU_qhostname;
 
-            slots = lGetUlong(qep, QU_tagged);
-            lSetUlong(qep, QU_tagged, 0);
+      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {     
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance;
 
-            qep_QU_qhostname = lGetHost(qep, QU_qhostname);
+         for_each(qinstance, qinstance_list) {
+            if (lGetUlong(qinstance, QU_tag)) {
+               const char* qep_QU_qhostname;
 
-            /* debit in all layers */
-            if (debit_host_consumable(jep, global_host_ep, Master_CEntry_List, slots) > 0 ) {
+               slots = lGetUlong(qinstance, QU_tag);
+               lSetUlong(qinstance, QU_tag, 0);
+
+               qep_QU_qhostname = lGetHost(qinstance, QU_qhostname);
+
+               /* debit in all layers */
+               if (debit_host_consumable(jep, global_host_ep, Master_CEntry_List, slots) > 0 ) {
+                  /* this info is not spooled */
+                  sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                                "global", NULL, NULL, global_host_ep );
+                  reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+                  answer_list_output(&answer_list);
+                  lListElem_clear_changed_info(global_host_ep);
+               }
+
+               hep = host_list_locate(Master_Exechost_List, qep_QU_qhostname);
+               if ( debit_host_consumable(jep, hep, Master_CEntry_List, slots) > 0 ) {
+                  /* this info is not spooled */
+                  sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
+                                qep_QU_qhostname, NULL, NULL, hep);
+                  reporting_create_host_consumable_record(&answer_list, hep, now);
+                  answer_list_output(&answer_list);
+                  lListElem_clear_changed_info(hep);
+               }
+               qinstance_debit_consumable(jep, qinstance, Master_CEntry_List, slots);
                /* this info is not spooled */
-               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
-                             "global", NULL, NULL, global_host_ep );
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
-               answer_list_output(&answer_list);
-               lListElem_clear_changed_info(global_host_ep);
+               qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD); 
+               lListElem_clear_changed_info(qinstance);
             }
-
-            hep = host_list_locate(Master_Exechost_List, qep_QU_qhostname);
-            if ( debit_host_consumable(jep, hep, Master_CEntry_List, slots) > 0 ) {
-               /* this info is not spooled */
-               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
-                             qep_QU_qhostname, NULL, NULL, hep);
-               reporting_create_host_consumable_record(&answer_list, hep, now);
-               answer_list_output(&answer_list);
-               lListElem_clear_changed_info(hep);
-            }
-
-            debit_queue_consumable(jep, qep, Master_CEntry_List, slots);
-            /* this info is not spooled */
-            sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-            lListElem_clear_changed_info(qep);
          }
       }
 
@@ -1088,6 +1076,7 @@ lListElem *jep
 static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                                         int incslots) {
    int pe_slots = 0;
+   lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    u_long32 job_id = lGetUlong(job, JB_job_number);
    u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
    lList *gdi_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
@@ -1106,12 +1095,15 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
    now = sge_get_gmt();
 
    /* unsuspend queues on subordinate */
-   usos_using_gdil(gdi_list, job_id);
+   cqueue_list_x_on_subordinate_gdil(master_list, false, gdi_list);
+
 
    /* free granted resources of the queue */
    for_each(ep, gdi_list) {
       const char *queue_name = lGetString(ep, JG_qname);
-      lListElem *queue = lGetElemStr(Master_Queue_List, QU_qname, queue_name);
+      lListElem *queue = cqueue_list_locate_qinstance(
+                              *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                              queue_name);
 
       if (queue) {
          const char *queue_hostname = lGetHost(queue, QU_qhostname);
@@ -1143,11 +1135,11 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
-            debit_queue_consumable(job, queue, Master_CEntry_List, -tmp_slot);
+            qinstance_debit_consumable(job, queue, Master_CEntry_List, -tmp_slot);
          }
 
          /* this info is not spooled */
-         sge_add_queue_event(sgeE_QUEUE_MOD, queue);
+         qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
          lListElem_clear_changed_info(queue);
 
       } else {

@@ -34,401 +34,271 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_conf.h"
-#include "slots_used.h"
 #include "sge_sched.h"
 #include "sge_signal.h"
-#include "subordinate_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 #include "msg_qmaster.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
+#include "sge_cqueue.h"
+#include "sge_object.h"
+#include "sge_subordinate.h"
+#include "sge_qref.h"
 
-/* ------------------------------------------------
-
-   suspend on subordinate
-   using granted_destination_identifier_list (gdil)
-
-   use jobs granted_destin_identifier_list
-   to suspend queues on subordinate
+/*
+   (un)suspend on subordinate using granted_destination_identifier_list
 
    NOTE:
-      we assume the associated job is already
+      we assume the associated job is already/still
       debited on all the queues that are referenced in gdil
+*/
+bool
+cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
+                                  const lList *gdil)
+{
+   bool ret = true;
+   lListElem *gdi = NULL;
 
-   ------------------------------------------------ */
-int sos_using_gdil(
-lList *gdil,
-u_long32 jobid  /* just for logging in case of errors */
-) {
-   const char *qname;
-   lListElem *ep, *so, *qep, *subqep;
-   int ret = 0;
+   DENTER(TOP_LAYER, "cqueue_list_x_on_subordinate_gdil");
+   for_each(gdi, gdil) {
+      const char *full_name = lGetString(gdi, JG_qname);
+      lListElem *queue = cqueue_list_locate_qinstance(this_list, full_name);
 
-   DENTER(TOP_LAYER, "sos_using_gdil");
+      if (queue != NULL) {
+         lList *so_list = lGetList(queue, QU_subordinate_list);
+         lList *resolved_so_list = NULL;
+         lListElem *so = NULL;
 
-   for_each(ep, gdil) {
+         /*
+          * Resolve cluster queue names into qinstance names
+          */
+         so_list_resolve(so_list, NULL, &resolved_so_list, full_name);
 
-      qname = lGetString(ep, JG_qname);
-      if (!(qep = queue_list_locate(Master_Queue_List, qname))) {
-         ERROR((SGE_EVENT, MSG_JOB_SOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US, u32c(jobid), qname));
-         ret = -1;
-         continue; /* should never happen */
-      }
+         for_each(so, resolved_so_list) {
+            u_long32 slots = lGetUlong(queue, QU_job_slots);
+            u_long32 slots_used = qinstance_slots_used(queue);
+            u_long32 slots_granted = lGetUlong(gdi, JG_slots);
 
-      /* suspend subordinated queues in case of a state transition */
-      for_each (so, lGetList(qep, QU_subordinate_list)) {
+            /*
+             * suspend:
+             *    no sos before this job came on this queue AND
+             *    sos since job is on this queue
+             *
+             * unsuspend:
+             *    no sos after job gone from this queue AND
+             *    sos since job is on this queue
+             */
+            if (!tst_sos(slots_used - slots_granted, slots, so) && 
+                tst_sos(slots_used, slots, so)) {
+               const char *so_queue_name = lGetString(so, SO_name);
+               lListElem *so_queue = 
+                        cqueue_list_locate_qinstance(this_list, so_queue_name);
 
-         /* skip if sos before this job came on this queue ? */
-         if (tst_sos(qslots_used(qep) - (int)lGetUlong(ep, JG_slots), 
-               lGetUlong(qep, QU_job_slots), lGetUlong(qep, QU_suspended_on_subordinate), so)) 
-            continue;
+               if (so_queue != NULL) {
 
-         /* skip if not sos since job is on this queue ? */
-         if (!tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots), 
-                  lGetUlong(qep, QU_suspended_on_subordinate), so))
-            continue;
+                  /*
+                   * Suspend/unsuspend the subordinated queue
+                   */
+                  ret &= qinstance_x_on_subordinate(so_queue, suspend, false);
 
-         /* suspend it */
-         if (!(subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_name)))) {
-            DPRINTF(("WARNING: sos_using_gdil for job "u32": can't "
-                  "find subordinated queue "SFQ, 
-                  lGetString(qep, QU_qname), lGetString(so, SO_name)));
-            continue;
+               } else {
+                  ERROR((SGE_EVENT, MSG_QINSTANCE_NQIFOUND_SS, 
+                         so_queue_name, SGE_FUNC));
+                  ret = false;
+               }
+            }
          }
-         ret |= sos(subqep, 0);
-      }
+         resolved_so_list = lFreeList(resolved_so_list);
+      } else {
+         /* should never happen */
+         ERROR((SGE_EVENT, MSG_QINSTANCE_NQIFOUND_SS, full_name, SGE_FUNC));
+         ret = false;
+      } 
    }
-
    DEXIT;
    return ret;
 }
 
-/* -------------------------------------
-
-   suspend on subordinate 
-
-   suspends the given queue and 
-   recursivly its subordinated queues
-   
-*/
-int sos(
-lListElem *qep,
-int rebuild_cache 
-) {
+bool
+qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
+                           bool rebuild_cache)
+{
    int ret = 0;
+   u_long32 sos_counter;
+   bool do_action;
+   bool send_qinstance_signal;
+   const char *hostname;
+   const char *cqueue_name;
+   const char *full_name;
+   int signal;
+   ev_event event;
 
-   DENTER(TOP_LAYER, "sos");
+   DENTER(TOP_LAYER, "qinstance_x_on_subordinate");
 
    /* increment sos counter */
-   lSetUlong(qep, QU_suspended_on_subordinate, lGetUlong(qep, QU_suspended_on_subordinate) + 1);
-
-   /* first sos ? */
-   if (lGetUlong(qep, QU_suspended_on_subordinate)==1) { 
-      
-      DPRINTF(("QUEUE %s: suspend on subordinate\n", lGetString(qep, QU_qname)));
-      /* send a signal if it is not already suspended by admin or calendar */
-      if (!qinstance_state_is_manual_suspended(qep) &&
-          !qinstance_state_is_cal_suspended(qep) && !rebuild_cache) {
-         ret |= sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL);
-      }
-
-      qinstance_state_set_susp_on_sub(qep, true);
-
-      /* this info is not spooled */
-      sge_add_event(NULL, 0, sgeE_QUEUE_SUSPEND_ON_SUB, 0, 0, 
-                    lGetString(qep, QU_qname), NULL, NULL, NULL); 
-      lListElem_clear_changed_info(qep);
+   sos_counter = lGetUlong(this_elem, QU_suspended_on_subordinate);
+   if (suspend) {
+      sos_counter++;
    } else {
-      DPRINTF(("QUEUE %s: already suspended on subordinate\n", lGetString(qep, QU_qname)));
+      sos_counter--;
+   }
+   lSetUlong(this_elem, QU_suspended_on_subordinate, sos_counter);
+
+   /* 
+    * prepare for operation
+    *
+    * suspend:  
+    *    send a signal if it is not already suspended by admin or calendar 
+    *
+    * !suspend:
+    *    send a signal if not still suspended by admin or calendar
+    */
+   hostname = lGetHost(this_elem, QU_qhostname);
+   cqueue_name = lGetString(this_elem, QU_qname);
+   full_name = lGetString(this_elem, QU_full_name);
+   send_qinstance_signal = !(qinstance_state_is_manual_suspended(this_elem) ||
+                             qinstance_state_is_cal_suspended(this_elem));
+   if (suspend) {
+      do_action = (sos_counter == 1);
+      signal = SGE_SIGSTOP;
+      event = sgeE_QINSTANCE_SOS;
+   } else {
+      send_qinstance_signal = !send_qinstance_signal;
+      do_action = (sos_counter == 0);
+      signal = SGE_SIGCONT;
+      event = sgeE_QINSTANCE_USOS;
    }
 
-   DEXIT; 
-   return ret; 
-}
-
-
-
-/* ------------------------------------------------
-
-   unsuspend on subordinate
-   using granted_destination_identiefier_list (gdil)
-
-   use jobs granted_destin_identifier_list to 
-   unsuspend queues that were suspended on subordinate
-
-   NOTE:
-      we assume the associated job is still debited
-      on all the queues that are referenced in gdil
-
-   ------------------------------------------------ */
-int usos_using_gdil(
-lList *gdil,
-u_long32 jobid  /* just for logging in case of errors */
-) {
-   const char *qname;
-   int ret = 0;
-   lListElem *ep, *so, *qep, *subqep;
-
-   DENTER(TOP_LAYER, "usos_using_gdil");
-
-   for_each(ep, gdil) {
-
-      qname = lGetString(ep, JG_qname);
-      if (!(qep = queue_list_locate(Master_Queue_List, qname))) {
-         /* inconsistent data */
-         ERROR((SGE_EVENT, MSG_JOB_USOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US, u32c(jobid), qname));
-         ret = -1;
-         continue;
+   /*
+    * do operation
+    */
+   DPRINTF(("qinstance "SFQ" "SFN" "SFN" on subordinate\n", full_name,
+            (do_action ? "" : "already"),
+            (suspend ? "suspended" : "unsuspended")));
+   if (do_action) {
+      if (send_qinstance_signal && !rebuild_cache) {
+         ret |= sge_signal_queue(signal, this_elem, NULL, NULL);
       }
-
-      /* unsuspend subordinated queues if needed */
-      for_each (so, lGetList(qep, QU_subordinate_list)) {
-
-         /* skip if not sos since job is on this queue ? */
-         if (!tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots), 
-            lGetUlong(qep, QU_suspended_on_subordinate), so))
-            continue;
-
-         /* skip if sos after job gone from this queue ? */
-         if (tst_sos(qslots_used(qep) - (int)lGetUlong(ep, JG_slots), 
-            lGetUlong(qep, QU_job_slots), lGetUlong(qep, QU_suspended_on_subordinate), so))
-            continue;
-
-         subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_name));
-         if (!subqep) {
-            DPRINTF(("queue "SFQ": can't find "
-                  "subordinated queue "SFQ".\n", 
-                  lGetString(qep, QU_qname), lGetString(so, SO_name)));
-            continue;
-         }
-         ret |= usos(subqep, 0);
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-/* -------------------------------------
-
-   unsuspend on subordinate 
-
-   unsuspends the given queue and 
-   recursivly its subordinated queues
    
-*/
-int usos(
-lListElem *qep,
-int rebuild_cache 
-) {
-   int ret = 0;
+      qinstance_state_set_susp_on_sub(this_elem, suspend);
 
-   DENTER(TOP_LAYER, "usos");
-
-   /* decrement sos counter */
-   lSetUlong(qep, QU_suspended_on_subordinate, lGetUlong(qep, QU_suspended_on_subordinate) - 1);
-
-   /* last sos ? */
-   if (lGetUlong(qep, QU_suspended_on_subordinate)==0) { /* this also stops endless recursion */
-
-      DPRINTF(("QUEUE %s: unsuspend on subordinate\n", lGetString(qep, QU_qname)));
-      /* send a signal if it is not still suspended by admin or calendar */
-      if ((qinstance_state_is_manual_suspended(qep) ||
-           qinstance_state_is_cal_suspended(qep)) && 
-          !rebuild_cache) {
-         ret |= sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL);
-      }
-      qinstance_state_set_susp_on_sub(qep, false);
-
-      /* this info is not spooled */
-      sge_add_event(NULL, 0, sgeE_QUEUE_UNSUSPEND_ON_SUB, 0, 0, 
-                    lGetString(qep, QU_qname), NULL, NULL, NULL); 
-      lListElem_clear_changed_info(qep);
-   } else {
-      DPRINTF(("QUEUE %s: still suspended on subordinate\n", lGetString(qep, QU_qname)));
+      sge_add_event(NULL, 0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
+      lListElem_clear_changed_info(this_elem);
    }
 
    DEXIT; 
    return ret; 
 }
 
+bool
+cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
+                                bool suspend, const lList *resolved_so_list,
+                                bool do_recompute_caches)
+{
+   bool ret = true;
+   const lListElem *so = NULL;
 
-/* in case of setting up unknown references are allowed */
-int check_subordinate_list(
-lList **alpp,
-const char *qname,
-const char *host,
-u_long32 slots,
-lList *sol,
-int how 
-) {
-   lListElem *so;
+   DENTER(TOP_LAYER, "cqueue_list_x_on_subordinate_qref");
 
-   DENTER(TOP_LAYER, "check_subordinate_list");
+   /*
+    * Locate all qinstances which are mentioned in resolved_so_list and 
+    * (un)suspend them
+    */
+   for_each(so, resolved_so_list) {
+      const char *full_name = lGetString(so, SO_name);
 
-   for_each (so, sol) {
-      u_long32 so_threshold;
-      const char *so_qname;
-      lListElem *refqep;
+      lListElem *qinstance = cqueue_list_locate_qinstance(this_list, full_name);
 
-      so_qname = lGetString(so, SO_name);
-  
-      /* check for recursions to our self */
-      if (!strcmp(qname, so_qname)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_SUBITSELF_S, qname));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-
-      /* try to find a referenced queue which does not exist */
-      if (!(refqep=queue_list_locate(Master_Queue_List, so_qname))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNSUB_SS, so_qname, qname));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         if (how!=CHECK4SETUP) {
-            DEXIT;
-            return STATUS_EUNKNOWN; /* exit if not in SETUP case */
-         }
-         /* can't test if host of not found queue is same host  */
-         /* need to be done in case of suspend_at adding a queue */
-
-      } else {
-         if (sge_hostcmp(host, lGetHost(refqep, QU_qhostname))) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_SUBHOSTDIFF_SSS, 
-                  qname, so_qname, lGetHost(refqep, QU_qhostname)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-      }
-
-      /* hope this is not seen as pedantic */
-      so_threshold = lGetUlong(so, SO_threshold);
-      if (so_threshold && so_threshold>slots) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_SUBTHRESHOLD_EXCEEDS_SLOTS_SUSU, 
-               qname, u32c(so_threshold), so_qname, u32c(slots)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-
-   }
-
-   DEXIT;
-   return STATUS_OK;
-}
-
-/* ------------------------------------
-   count how often a queue must be 
-   suspended from superordinated queues 
-*/
-int count_suspended_on_subordinate(
-lListElem *queueep 
-) {
-   int n = 0;
-   lListElem *so, *qep;
-
-   DENTER(TOP_LAYER, "count_suspended_on_subordinate");
-
-   for_each(qep, Master_Queue_List) {
-      for_each(so, lGetList(qep, QU_subordinate_list)) {
-         if (!strcmp(lGetString(so, SO_name), lGetString(queueep, QU_qname))) {
-            /* suspend the queue if neccessary */
-            if (tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots),
-                  lGetUlong(qep, QU_suspended_on_subordinate), so))
-               sos(queueep, 0);
-               n++;
+      if (qinstance != NULL) {
+         ret &= qinstance_x_on_subordinate(qinstance, suspend,
+                                           do_recompute_caches);
+         if (!ret) {
+            break;
          }
       }
    }
-
-   lSetUlong(queueep, QU_suspended_on_subordinate, n);
-
-   DEXIT;
-   return n;
-}
-
-
-/* ---------------------------------------------------
-
-   This function has to copy all subordinated queues 
-   of sol_in that actually are suspended by this queue 
-
-   --------------------------------------------------- */
-int copy_suspended(
-lList **sol_out,
-lList *sol_in,
-int used,
-int total,
-int suspended_on_subordinate 
-) {
-   lListElem *so, *new_so;
-
-   DENTER(TOP_LAYER, "copy_suspended");
-
-   if (!sol_out)
-      return -1;
-
-   for_each (so, sol_in) {
-      if (tst_sos(used, total, suspended_on_subordinate, so)) {
-         if (!*sol_out)
-            *sol_out = lCreateList("sos", SO_Type);
-
-         new_so = lCopyElem(so);
-         lAppendElem(*sol_out, new_so);
-      }
-   }
-
-   DEXIT;
-   return 0;
-}
-
-
-int suspend_all(
-lList *sol,
-int recompute_caches 
-) {
-   const char *qnm;
-   lListElem *so, *qep;
-   int ret = 0;
-
-   DENTER(TOP_LAYER, "suspend_all");
-
-   for_each(so, sol) {
-      qnm = lGetString(so, SO_name);
-      qep = queue_list_locate(Master_Queue_List, qnm);
-      if (qep)
-         ret |=sos(qep, recompute_caches);
-   }
-
    DEXIT;
    return ret;
 }
 
-int unsuspend_all(
-lList *sol,
-int recompute_caches 
-) {
-   const char *qnm;
-   lListElem *so, *qep;
-   int ret = 0;
+bool
+qinstance_find_suspended_subordinates(const lListElem *this_elem,
+                                      lList **answer_list,
+                                      lList **resolved_so_list)
+{
+   bool ret = true;
 
-   DENTER(TOP_LAYER, "unsuspend_all");
+   DENTER(TOP_LAYER, "qinstance_find_suspended_subordinates");
+   if (this_elem != NULL && resolved_so_list != NULL) {
+      lList *so_list = lGetList(this_elem, QU_subordinate_list);
+      lListElem *next_so = NULL;
+      lListElem *so = NULL;
+      const char *full_name = lGetString(this_elem, QU_full_name);
 
-   for_each(so, sol) {
-      qnm = lGetString(so, SO_name);
-      qep = lGetElemStr(Master_Queue_List, QU_qname, qnm);
-      if (qep)
-         ret |=usos(qep, recompute_caches);
+      /*
+       * Resolve cluster queue names into qinstance names
+       */
+      so_list_resolve(so_list, NULL, resolved_so_list, full_name);
+
+      /*
+       * Remove all subordinated queues from "resolved_so_list" which
+       * are not actually suspended by "this_elem" 
+       */
+      next_so = lFirst(*resolved_so_list);
+      while ((so = next_so) != NULL) {
+         u_long32 slots = lGetUlong(this_elem, QU_job_slots);
+         u_long32 slots_used = qinstance_slots_used(this_elem);
+
+         next_so = lNext(so);
+         if (!tst_sos(slots_used, slots, so)) {
+            lRemoveElem(*resolved_so_list, so);
+         }
+      }
    }
-
    DEXIT;
    return ret;
 }
 
+bool
+qinstance_initialize_sos_attr(lListElem *this_elem) 
+{
+   bool ret = true;
+   lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+   lListElem *cqueue = NULL;
+
+   DENTER(TOP_LAYER, "qinstance_initialize_sos_attr");
+   for_each(cqueue, master_list) {
+      const char *full_name = lGetString(this_elem, QU_full_name);
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL; 
+
+      for_each(qinstance, qinstance_list) {
+         lList *so_list = lGetList(qinstance, QU_subordinate_list);
+         lList *resolved_so_list = NULL;
+         lListElem *so = NULL;
+
+         /*
+          * Resolve cluster queue names into qinstance names
+          */
+         so_list_resolve(so_list, NULL, &resolved_so_list, full_name);
+
+         for_each(so, resolved_so_list) {
+            const char *so_full_name = lGetString(so, SO_name);
+
+            if (!strcmp(full_name, so_full_name)) {
+               qinstance_x_on_subordinate(this_elem, true, false); 
+            } 
+         }
+         resolved_so_list = lFreeList(resolved_so_list);
+      }
+   }
+   DEXIT;
+   return ret;
+}

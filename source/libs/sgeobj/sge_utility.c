@@ -38,10 +38,9 @@
 #include "cull_list.h"
 #include "parse.h"
 #include "sge_str.h"
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_string.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_utility.h"
 
 #include "msg_common.h"

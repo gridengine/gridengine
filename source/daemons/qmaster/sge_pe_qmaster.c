@@ -38,7 +38,6 @@
 #include "sge_ja_task.h"
 #include "sge_pe_qmaster.h"
 #include "job_log.h"
-#include "sge_queue_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_event_master.h"
 #include "config_file.h"
@@ -51,7 +50,7 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
@@ -269,7 +268,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       lList *local_answer_list = NULL;
 
       if (pe_is_referenced(ep, &local_answer_list, Master_Job_List,
-                           Master_Queue_List)) {
+                           *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
          lListElem *answer = lFirst(local_answer_list);
 
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));

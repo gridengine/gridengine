@@ -39,14 +39,6 @@
 /*
 ** qmod.c
 */
-#define MSG_QMOD_CLEAR    _MESSAGE(11000, _("clear"))
-#define MSG_QMOD_DISABLE     _MESSAGE(11001, _("disable"))
-#define MSG_QMOD_RESCHEDULE  _MESSAGE(11002, _("reschedule"))
-#define MSG_QMOD_ENABLE     _MESSAGE(11003, _("enable"))
-#define MSG_QMOD_SUSPEND     _MESSAGE(11004, _("suspend"))
-#define MSG_QMOD_UNSUSPEND    _MESSAGE(11005, _("unsuspend"))
-#define MSG_QMOD_UNKNOWNACTION    _MESSAGE(11006, _("unknown action"))
-#define MSG_QMOD_XYOFJOBQUEUEZ_SSS    _MESSAGE(11007, _(SFN SFN" of job/queue "SFN"\n"))
 #define MSG_QMOD_c_OPT_USAGE    _MESSAGE(11008, _("clear error state\n"))
 #define MSG_QMOD_r_OPT_USAGE    _MESSAGE(11009, _("reschedule jobs (running in queue)\n"))
 #define MSG_QMOD_d_OPT_USAGE    _MESSAGE(11010, _("disable\n"))
@@ -55,8 +47,13 @@
 #define MSG_QMOD_help_OPT_USAGE _MESSAGE(11013, _("print this help\n"))
 #define MSG_QMOD_s_OPT_USAGE    _MESSAGE(11014, _("suspend\n"))
 #define MSG_QMOD_us_OPT_USAGE   _MESSAGE(11015, _("unsuspend\n"))
-#define MSG_QMOD_verify_OPT_USAGE _MESSAGE(11016, _("just print what would be done\n"))
-
+#define MSG_QMOD_err_OPT_ISAGE  _MESSAGE(11016, _("set error statei\n"))
+#define MSG_QMOD_o_OPT_ISAGE    _MESSAGE(11017, _("set orphaned state\n"))
+#define MSG_QMOD_do_OPT_ISAGE   _MESSAGE(11018, _("delete orphaned  state\n"))
+#define MSG_QMOD_u_OPT_ISAGE    _MESSAGE(11019, _("set unknown state\n"))
+#define MSG_QMOD_du_OPT_ISAGE   _MESSAGE(11020, _("delete unknown state\n"))
+#define MSG_QMOD_c_OPT_ISAGE    _MESSAGE(11021, _("set ambiguous state\n"))
+#define MSG_QMOD_dc_OPT_ISAGE   _MESSAGE(11022, _("delete ambiguous state\n"))
 
 #endif /* __MSG_QMOD_H */
 

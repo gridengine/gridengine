@@ -147,10 +147,10 @@
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
-
+#if 0 /* EB: TODO: remove */
 #define MSG_GDI_INVALIDACTION          _MESSAGE(43298, _("invalid action" ))
 #define MSG_GDI_INVALIDOPTIONFLAG      _MESSAGE(43299, _("invalid option flag"))
-#define MSG_GDI_INVALIDIDENCOUNTERED   _MESSAGE(43300, _("encountered invalid id"))
+#endif
 
 
 #endif /* __MSG_GDILIB_H */

@@ -80,11 +80,14 @@ PREFIX##_list_add(lList **this_list, lList **answer_list, lListElem **attr,   \
 bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
                          const char *hostname, INTERNAL_TYPE *value,          \
+                         const char **mastching_host_or_group,                \
+                         const char **matching_group,                         \
                          bool *is_ambiguous)                                  \
 {                                                                             \
    return attr_list_find_value(this_list, answer_list, hostname,              \
-                               value, is_ambiguous, DESCRIPTOR, HREF_NM,      \
-                               VALUE_NM);                                     \
+                               value, mastching_host_or_group,                \
+                               matching_group, is_ambiguous,                  \
+                               DESCRIPTOR, HREF_NM, VALUE_NM);                \
 }                                                                             \
                                                                               \
 bool                                                                          \
@@ -120,13 +123,10 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
                      const char *hostname, void *value_buffer, 
+                     const char **matching_host_or_group,
+                     const char **matching_group,
                      bool *is_ambiguous, const lDescr *descriptor, 
                      int href_nm, int value_nm);
-
-static bool
-attr_list_append_to_dstring(const lList *this_list, dstring *string,
-                            const lDescr *descriptor, int href_nm, 
-                            int value_nm);
 
 static bool
 attr_list_parse_from_string(lList **this_list, lList **answer_list,
@@ -318,6 +318,8 @@ value_nm          ASTR_value
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
                      const char *hostname, void *value_buffer,
+                     const char **matching_host_or_group,
+                     const char **matching_group,
                      bool *is_ambiguous, const lDescr *descriptor, 
                      int href_nm, int value_nm)
 {
@@ -334,7 +336,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
       href = attr_list_locate(this_list, hostname, href_nm);
       if (href != NULL) {  
          object_get_any_type(href, value_nm, value_buffer);
-         DTRACE;
+         DPRINTF(("Found value for host "SFQ"\n", hostname));
          ret = true;
       } else {
          bool already_found = false;
@@ -358,7 +360,6 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                lListElem *tmp_href = NULL;
                lList *host_list = NULL;
 
-               DTRACE;
                href_list_add(&tmp_href_list, NULL, href_name);
                lret &= href_list_find_all_references(tmp_href_list, NULL,
                                                      master_list, &host_list,
@@ -368,11 +369,14 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                   if (already_found == false) {
                      already_found = true;
                      object_get_any_type(href, value_nm, value_buffer);
-                     DTRACE;
+                     *matching_host_or_group = href_name;
+                     DPRINTF(("Found value for domain "SFQ"\n", href_name));
                      ret = true;
                   } else {
                      *is_ambiguous = true;
-                     DTRACE;
+                     *matching_group = href_name;
+                     DPRINTF(("Found ambiguous value in domain "SFQ"\n", 
+                               href_name));
                      ret = false;
                      break;
                   }
@@ -389,8 +393,8 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
              */
             tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
             if (tmp_href != NULL) {
+               DPRINTF(("Using default value\n"));
                object_get_any_type(tmp_href, value_nm, value_buffer);
-               DTRACE;
                ret = true;
             } else {
                /*
@@ -415,7 +419,7 @@ descriptor        ASTR_Type
 href_nm           ASTR_href
 value_nm          ASTR_value
 */
-static bool
+bool
 attr_list_append_to_dstring(const lList *this_list, dstring *string,
                             const lDescr *descriptor, int href_nm, int value_nm)
 {

@@ -76,29 +76,29 @@
 
 /* GDI */
 #include "sge_gdi.h"
-#include "gdi_qmod.h"
 #include "gdi_tsm.h"
 #include "sge_gdiP.h"
 
 /* SGEOBJ */
 #include "sge_event.h"
-#include "sge_queue.h"
-#include "sge_job.h"
-
-#include "sge_range.h"
-#include "sge_object.h"
 #include "sge_feature.h"
-#include "sge_usageL.h"
+#include "sge_id.h"
+#include "sge_job.h"
+#include "sge_object.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
+#include "sge_range.h"
 #include "msg_common.h"
 
 /* OBJ */
 #include "sge_jobL.h"
 #include "sge_ja_taskL.h"
 #include "sge_japiL.h"
-#include "sge_identL.h"
+#include "sge_idL.h"
 #include "sge_strL.h"
 #include "sge_answerL.h"
 #include "sge_reportL.h"
+#include "sge_usageL.h"
 
 /****** JAPI/--Job_API ********************************************************
 *  NAME
@@ -1529,11 +1529,20 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
          }
 
          if (ref_list) {
-            if (drmaa_action == DRMAA_CONTROL_SUSPEND)
-               alp = gdi_qmod(ref_list, 0, QSUSPENDED);
-            else
-               alp = gdi_qmod(ref_list, 0, QRUNNING);
-            lFreeList(ref_list);
+            bool tmp_ret;
+            lList *id_list = NULL;
+                                             
+            if (drmaa_action == DRMAA_CONTROL_SUSPEND) {
+               tmp_ret = id_list_build_from_str_list(&id_list, &alp, ref_list,
+                                                     QI_DO_SUSPEND, 0);
+            } else {
+               tmp_ret = id_list_build_from_str_list(&id_list, &alp, ref_list,
+                                                     QI_DO_UNSUSPEND, 0);
+            }
+            alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
+                          &id_list, NULL, NULL);
+            id_list = lFreeList(id_list);
+            ref_list = lFreeList(ref_list);
 
             for_each (aep, alp) {
                if (lGetUlong(aep, AN_status) != STATUS_OK) {
@@ -2671,8 +2680,9 @@ static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, bool
        *   - suspended because queue is suspended by calendar 
        */
       if ((ja_task_state & JSUSPENDED_ON_THRESHOLD) || 
-         queue_list_suspends_ja_task(queue_list, lGetList(ja_task, JAT_granted_destin_identifier_list)))
+          gqueue_is_suspended(lGetList(ja_task, JAT_granted_destin_identifier_list), queue_list)) {
          *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
+      }
 
       DEXIT; /* ???  */
       return DRMAA_ERRNO_SUCCESS;
@@ -2746,8 +2756,10 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_queue_list,
          return DRMAA_ERRNO_NO_MEMORY;
       }
 
-      qu_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_QUEUE_LIST, SGE_GDI_GET, NULL, 
-                  queue_selection, queue_fields, NULL, &state);
+      /* EB: TODO: get list of CQs instead of Qs */
+      qu_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
+                            SGE_GDI_GET, NULL, queue_selection, queue_fields, 
+                            NULL, &state);
 
       queue_selection = lFreeWhere(queue_selection);
       queue_fields = lFreeWhat(queue_fields);
@@ -2781,7 +2793,9 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_queue_list,
       job_fields = lFreeWhat(job_fields);
    }
 
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_QUEUE_LIST, qu_id, mal, retrieved_queue_list );
+   /* EB: TODO: get list of CQs instead of Qs */
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, qu_id, mal, 
+                                retrieved_queue_list);
 
    if (!(aep = lFirst(alp))) {
       sge_dstring_copy_string(diag, "sge_gdi() failed returning answer list");

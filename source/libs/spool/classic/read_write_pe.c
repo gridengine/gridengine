@@ -50,7 +50,8 @@
 #include "sge_spool.h"
 #include "sge_io.h"
 #include "sge_userset.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
+#include "sge_qref.h"
 
 /****
  **** cull_read_in_pe

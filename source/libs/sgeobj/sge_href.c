@@ -44,7 +44,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define HOSTREF_LAYER TOP_LAYER
+#define HOSTREF_LAYER BASIS_LAYER
 
 /****** sgeobj/href/href_list_add() *******************************************
 *  NAME

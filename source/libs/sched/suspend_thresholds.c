@@ -37,7 +37,7 @@
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_orderL.h"
 #include "sge_time.h"
@@ -109,7 +109,7 @@ lList **orderlist
 
       if (i==0 && !found) {
          DPRINTF(("found no jobs for sot in queue %s\n", 
-            lGetString(qep, QU_qname)));
+            lGetString(qep, QU_full_name)));
       }
    }
    
@@ -183,7 +183,7 @@ lList **orderlist
       
       if (i==0 && !found) {
          DPRINTF(("found no jobs for usot in queue %s\n", 
-            lGetString(qep, QU_qname)));
+            lGetString(qep, QU_full_name)));
       }
    }
 
@@ -202,7 +202,7 @@ select4suspension(lList *job_list, lListElem *qep, lListElem **jepp,
 
    DENTER(TOP_LAYER, "select4suspension");
 
-   qnm = lGetString(qep, QU_qname);
+   qnm = lGetString(qep, QU_full_name);
    if (qinstance_state_is_manual_suspended(qep) ||
        qinstance_state_is_susp_on_sub(qep) ||
        qinstance_state_is_cal_suspended(qep)) {
@@ -267,7 +267,7 @@ lListElem **ja_taskp
 
    DENTER(TOP_LAYER, "select4unsuspension");
 
-   qnm = lGetString(qep, QU_qname);
+   qnm = lGetString(qep, QU_full_name);
 
    for_each (jep, job_list) {
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {

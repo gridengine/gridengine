@@ -40,7 +40,6 @@
 #include "sge_suserL.h"
 #include "sge_job.h"
 #include "sge_suser.h"
-#include "sge_queue.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_todo.h"

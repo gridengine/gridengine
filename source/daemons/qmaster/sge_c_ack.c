@@ -49,7 +49,8 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_job.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
+#include "sge_cqueue.h"
 
 #include "spool/sge_spooling.h"
 
@@ -124,8 +125,11 @@ u_long32 ack_tag,
 u_long32 ack_ulong,
 u_long32 ack_ulong2 
 ) {
-   lListElem *qep, *jep = NULL, *jatep = NULL;
+   lListElem *qinstance = NULL;
+   lListElem *jep = NULL;
+   lListElem *jatep = NULL;
    lList *answer_list = NULL;
+   const char *qinstance_name = NULL;
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
@@ -147,30 +151,40 @@ u_long32 ack_ulong2
       }
       jatep = job_search_task(jep, NULL, ack_ulong2);
       if (jatep == NULL) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, 
+                u32c(ack_ulong2), u32c(ack_ulong)));
          DEXIT;
          return;
 
       }
-
-      if (!(qep = queue_list_locate(Master_Queue_List,  
-                        lGetString(jatep, JAT_master_queue)))) {
+      qinstance_name = lGetString(jatep, JAT_master_queue);
+      qinstance = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qinstance_name);
+      if (qinstance == NULL) {
          ERROR((SGE_EVENT, MSG_COM_ACK_US, u32c(ack_ulong), 
-                lGetString(jatep, JAT_master_queue) ?
-                           lGetString(jatep, JAT_master_queue) :
-                           MSG_COM_NOQUEUE));
+                qinstance_name ? qinstance_name : MSG_COM_NOQUEUE));
          DEXIT;
          return;
       }
       break;
 
    case TAG_SIGQUEUE:
-      /* ack_ulong is the queueid */
-/*       DPRINTF(("TAG_SIGQUEUE\n")); */
-      if (!(qep = lGetElemUlong(Master_Queue_List, QU_queue_number, ack_ulong))) {
-         ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, u32c(ack_ulong)));
-         DEXIT;
-         return;
+      {
+         lListElem *cqueue = NULL;
+
+         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+            qinstance = lGetElemUlong(qinstance_list, 
+                                      QU_queue_number, ack_ulong);
+            if (qinstance != NULL) {
+               break;
+            }
+         }
+         if (qinstance == NULL) {
+            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, u32c(ack_ulong)));
+            DEXIT;
+            return;
+         }
       }
       break;
 
@@ -182,11 +196,12 @@ u_long32 ack_ulong2
 
    switch (ack_tag) {
    case TAG_SIGQUEUE:
-      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qep, QU_qname)));
-      lSetUlong(qep, QU_pending_signal, 0);
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, lGetString(qep, QU_qname), 0, 0);
-      spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                         lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_qname)));
+               lSetUlong(qinstance, QU_pending_signal, 0);
+      te_delete(TYPE_SIGNAL_RESEND_EVENT, 
+                lGetString(qinstance, QU_qname), 0, 0);
+      spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
+                         lGetString(qinstance, QU_qname), SGE_TYPE_QINSTANCE);
       answer_list_output(&answer_list);
       break;
    case TAG_SIGJOB:

@@ -451,6 +451,15 @@ PrintLocalConf()
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
 }
 
+#-------------------------------------------------------------------------
+# PrintHostGroup:  print an empty hostgroup
+#
+PrintHostGroup()
+{
+   $ECHO "group_name  $1"
+   $ECHO "hostlist    NONE"
+}
+
 AddBootstrap()
 {
    $INFOTEXT -u "\nDumping bootstrapping information"
@@ -529,16 +538,9 @@ PrintConf()
    $ECHO "execd_params           none"
    $ECHO "finished_jobs          100"
    $ECHO "gid_range              $CFG_GID_RANGE"
-#   if [ $ADMINUSER != default ]; then
-#      $ECHO "admin_user             $ADMINUSER"
-#   else
-#      $ECHO "admin_user             none"
-#   fi
    $ECHO "qlogin_command         $QLOGIN_COMMAND"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
-#   $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
-#   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"
@@ -1691,6 +1693,26 @@ AddHosts()
 
    $INFOTEXT -wait -auto $autoinst -n "Finished adding hosts. Hit <RETURN> to continue >> "
    $CLEAR
+
+   $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
+   TMPL=/tmp/hostqueue$$
+   TMPL2=${TMPL}.q
+   rm -f $TMPL $TMPL2
+   if [ -f $TMPL -o -f $TMPL2 ]; then
+      $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
+   else
+      PrintHostGroup @allhosts > $TMPL
+      Execute $V5BIN/qconf -Ahgrp $TMPL
+      Execute $V5BIN/qconf -sq > $TMPL
+      Execute sed -e "/qname/s/template/all.q/" \
+                  -e "/hostlist/s/NONE/@allhosts/" \
+                  -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+      Execute $V5BIN/qconf -Aq $TMPL2
+      rm -f $TMPL $TMPL2        
+   fi
+
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -1704,38 +1726,24 @@ AddQueue()
 
    exechost=`$V5UTILBIN/gethostname -name | cut -f1 -d.`
 
-#   This does not work on solaris64 when running in locale en_FW.MBE
-#   because the tr -s " " doesn't work correctly :
-#
-#   slots=`$V5UTILBIN/loadcheck -loadval num_proc | tr -s " " | cut -f2 -d" "`
-#
-#  So let's do this:
-#
-   slots=`$V5UTILBIN/loadcheck -loadval num_proc | sed "s/num_proc *//"`
+   slots=`$V5UTILBIN/loadcheck -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
 
-   $INFOTEXT -u "\nAdding a default Grid Engine queue for this host"
-   $INFOTEXT "\nWe can now add a sample queue for this host with following attributes:\n\n" \
-             "   - the queue has the name >%s.q<\n" \
-             "   - the queue provides %s slot(s) for jobs\n" \
-             "   - the queue provides access for any user with an account on this machine\n" \
-             "   - the queue has no Unix resource limits\n\n" \
-             "You do not need to add a queue now, but before running jobs on this host\n" \
-             "need to add a queue with >qconf< or the GUI >qmon<.\n" $exechost $slots
+   $INFOTEXT -u "\nAdding a queue for this host"
+   $INFOTEXT "\nWe can now add a queue instance for this host:\n\n" \
+             "   - it is added to the >allhosts< hostgroup\n" \
+             "   - the queue provides %s slot(s) for jobs in all queues\n" \
+             "     referencing the >allhosts< hostgroup\n\n" \
+             "You do not need to add this host now, but before running jobs on this host\n" \
+             "it must be added to at least one queue.\n" $slots
 
    $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-             "Do you want to add a default queue for this host (y/n) [y] >> "
+             "Do you want to add a default queue instance for this host (y/n) [y] >> "
 
    if [ $? = 0 ]; then
-      TMPL=/tmp/queue_template.$$
-      rm -f $TMPL ${TMPL}.q
-      $V5BIN/qconf -sq > $TMPL
-      Execute sed -e "/qname/s/template/${exechost}.q/" \
-                  -e "/hostname/s/unknown/$exechost/" \
-                  -e "/slots/s/1/$slots/" $TMPL > ${TMPL}.q
-      $V5BIN/qconf -Aq ${TMPL}.q
-      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+      $V5BIN/qconf -aattr hostgroup hostlist $exechost @allhosts
+      $V5BIN/qconf -aattr cqueue slots "[$exechost=$slots]" all.q
+      $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
       $CLEAR
-      rm -f $TMPL ${TMPL}.q
    fi
 }
 

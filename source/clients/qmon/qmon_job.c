@@ -78,9 +78,11 @@
 #include "sge_job.h"
 #include "sge_range.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
 #include "sge_object.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -372,13 +374,13 @@ Widget parent
    XtAddCallback(job_pending_jobs, XmNselectCellCallback, 
                      qmonMatrixSelect, (XtPointer) pw);
    XtAddCallback(job_suspend, XmNactivateCallback, 
-                     qmonJobChangeState, (XtPointer)QSUSPENDED);
+                     qmonJobChangeState, (XtPointer)QI_DO_SUSPEND);
    XtAddCallback(job_unsuspend, XmNactivateCallback, 
-                     qmonJobChangeState, (XtPointer)QRUNNING);
+                     qmonJobChangeState, (XtPointer)QI_DO_UNSUSPEND);
    XtAddCallback(job_error, XmNactivateCallback, 
-                     qmonJobChangeState, (XtPointer)QERROR);
+                     qmonJobChangeState, (XtPointer)QI_DO_CLEARERROR);
    XtAddCallback(job_reschedule, XmNactivateCallback, 
-                     qmonJobChangeState, (XtPointer)QRESCHEDULED);
+                     qmonJobChangeState, (XtPointer)QI_DO_RESCHEDULE);
 
    /* Event Handler to display additional job info */
    XtAddEventHandler(job_running_jobs, PointerMotionMask, 
@@ -583,7 +585,8 @@ void updateJobList(void)
  
    jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
 
-   ql = lSelect("ql", qmonMirrorList(SGE_QUEUE_LIST), where_no_template, 
+   /* EB: TODO: get list of CQs instead of Qs */
+   ql = lSelect("ql", qmonMirrorList(SGE_CQUEUE_LIST), where_no_template, 
                   what_queue);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
    cl = qmonMirrorList(SGE_CENTRY_LIST);
@@ -713,7 +716,8 @@ void updateJobList(void)
                lList *ehl = qmonMirrorList(SGE_EXECHOST_LIST);
                lList *cl = qmonMirrorList(SGE_CENTRY_LIST);
                qnm = lGetString(lFirst(ql), JG_qname);
-               qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), qnm);
+               /* EB: TODO: find qinstance */
+               qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), qnm);
                if (qep) {
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
@@ -973,7 +977,7 @@ XtPointer cad
    
    DENTER(GUI_LAYER, "qmonJobChangeState");
 
-   if (action == QERROR) {
+   if (action == QI_DO_CLEARERROR) {
       rl = qmonJobBuildSelectedList(job_running_jobs, ST_Type, ST_name);
       
       jl = qmonJobBuildSelectedList(job_pending_jobs, ST_Type, ST_name);
@@ -1150,9 +1154,7 @@ XtPointer cad
    if (jl && status_ask) {
       for_each(jep, jl)
          lSetUlong(jep, JB_priority, BASE_PRIORITY + new_priority);
-      /*
-      ** call here gdi_qmod_job instead of qmonDelList
-      */
+
       alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
    
       qmonMessageBox(w, alp, 0);
@@ -1261,9 +1263,7 @@ XtPointer cld, cad;
                }
             }
          }
-         /*
-         ** call here gdi_qmod_job 
-         */
+
          alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
       
          qmonMessageBox(w, alp, 0);

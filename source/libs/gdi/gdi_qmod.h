@@ -36,11 +36,6 @@
 extern "C" {
 #endif
 
-/*
-** flags
-*/
-#define BIT_QMOD_FORCE 0x00000001
-
 lList *gdi_qmod(lList *ref_list, u_long32 option_flags, u_long32 action_flag);
 
 #ifdef  __cplusplus 

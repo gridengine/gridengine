@@ -80,6 +80,7 @@
 #include "sge_ckpt.h"
 #include "sge_host.h"
 #include "sge_schedd_conf.h"
+#include "sge_qinstance_state.h"
 
 /* profiling info */
 extern int scheduled_fast_jobs;
@@ -190,13 +191,17 @@ int scheduler(sge_Sdescr_t *lists) {
          "|| %I m= %u "
          "|| %I m= %u "
          "|| %I m= %u "
+         "|| %I m= %u "
+         "|| %I m= %u "
          "|| %I m= %u)",
          dp,
-         QU_state, QSUSPENDED,        /* only not suspended queues      */
-         QU_state, QSUSPENDED_ON_SUBORDINATE,
-         QU_state, QCAL_SUSPENDED,
-         QU_state, QERROR,            /* no queues in error state       */
-         QU_state, QUNKNOWN);         /* only known queues              */
+         QU_state, QI_SUSPENDED,        /* only not suspended queues      */
+         QU_state, QI_SUSPENDED_ON_SUBORDINATE,
+         QU_state, QI_CAL_SUSPENDED,
+         QU_state, QI_ERROR,            /* no queues in error state       */
+         QU_state, QI_AMBIGUOUS,
+         QU_state, QI_ORPHANED,
+         QU_state, QI_UNKNOWN);         /* only known queues              */
 
       if (!what || !where) {
          DPRINTF(("failed creating where or what describing non available queues\n")); 
@@ -205,10 +210,10 @@ int scheduler(sge_Sdescr_t *lists) {
 
       for_each(mes_queues, qlp)
          schedd_mes_add_global(SCHEDD_INFO_QUEUENOTAVAIL_, 
-                                   lGetString(mes_queues, QU_qname));
+                                   lGetString(mes_queues, QU_full_name));
 
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED, 
-                      qlp, QU_qname);
+                      qlp, QU_full_name);
       lFreeList(qlp);
       lFreeWhere(where);
       lFreeWhat(what);
@@ -852,7 +857,7 @@ SKIP_THIS_JOB:
             fprintf(fpdjp, " \n");
             fprintf(fpdjp, "QUEUE ORDER:\n");
             for_each(queue, lists->queue_list)  {
-               fprintf(fpdjp, "  queue %s\n", lGetString(queue, QU_qname));
+               fprintf(fpdjp, "  queue %s\n", lGetString(queue, QU_full_name));
             }
        }
        if (queue_sort_method == QSM_LOAD)  {
@@ -863,7 +868,7 @@ SKIP_THIS_JOB:
             fprintf(fpdjp, " \n");
             fprintf(fpdjp, "QUEUE ORDER:\n");
             for_each(queue, lists->queue_list)  {
-               fprintf(fpdjp, "  queue %s\n", lGetString(queue, QU_qname));
+               fprintf(fpdjp, "  queue %s\n", lGetString(queue, QU_full_name));
             }
         }
 #endif

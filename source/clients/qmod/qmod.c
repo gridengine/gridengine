@@ -44,14 +44,15 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "gdi_tsm.h"
-#include "gdi_qmod.h"
+#include "sge_id.h"
+#include "sge_qinstance_state.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qmod.h"
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
-static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, u_long32 *paction, u_long32 *pverify);
+static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, u_long32 *paction);
 static int qmod_usage(FILE *fp, char *what);
 
 extern char **environ;
@@ -63,11 +64,10 @@ int main(
 int argc,
 char **argv 
 ) {
-   u_long32 action = 0, force = 0, verify = 0;
+   u_long32 action = 0, force = 0;
    lList *ref_list = NULL;
    lList *alp = NULL, *pcmdline = NULL;
-   lListElem *aep, *rep;
-   const char *actionstr;
+   lListElem *aep;
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
@@ -81,7 +81,7 @@ char **argv
 
    /*
    ** static func for parsing all qmod specific switches
-   ** here we get action, force, ref_list, verify
+   ** here we get action, force, ref_list
    */
    alp = sge_parse_cmdline_qmod(++argv, environ, &pcmdline);
    if(alp) {
@@ -96,7 +96,7 @@ char **argv
       SGE_EXIT(1);
    }
    
-   alp = sge_parse_qmod(&pcmdline, &ref_list, &force, &action, &verify);
+   alp = sge_parse_qmod(&pcmdline, &ref_list, &force, &action);
    if(alp) {
       /*
       ** low level parsing error! show answer list
@@ -110,40 +110,15 @@ char **argv
       SGE_EXIT(1);
    }
 
-   /*
-   ** verify
-   */
-   if (verify) {
-      if (action == QERROR) {
-         actionstr = MSG_QMOD_CLEAR;
-      } else if (action == QDISABLED) {
-         actionstr = MSG_QMOD_DISABLE;
-      } else if (action == QENABLED) {
-         actionstr = MSG_QMOD_ENABLE;
-      } else if (action == QSUSPENDED) {
-         actionstr = MSG_QMOD_SUSPEND;
-      } else if (action == QRUNNING) {
-         actionstr = MSG_QMOD_UNSUSPEND;
-      } else if (action == QRUNNING) {
-         actionstr = MSG_QMOD_UNSUSPEND;
-      } else if (action == QRESCHEDULED) {
-         actionstr = MSG_QMOD_RESCHEDULE;
-      } else {
-         actionstr = MSG_QMOD_UNKNOWNACTION;
+   if (ref_list) {
+      lList *id_list = NULL;
+      
+      if (id_list_build_from_str_list(&id_list, &alp, 
+                                      ref_list, action, force)) {
+         alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       }
-
-      for_each(rep, ref_list) {
-         printf(MSG_QMOD_XYOFJOBQUEUEZ_SSS,force?MSG_FORCED:"", actionstr, lGetString(rep, ST_name));
-      }
-      SGE_EXIT(0);
+      id_list = lFreeList(id_list);
    }
-
-   /*
-   ** this is the interface to simulate the old behavior
-   ** gdilib/gdi_qmod.c
-   */
-   if(ref_list)
-      alp = gdi_qmod(ref_list, force, action);
 
    /*
    ** show answer list
@@ -190,10 +165,6 @@ lList *alp = NULL;
       if ((rp = parse_noopt(sp, "-f", "--force", ppcmdline, &alp)) != sp)
          continue;
          
-      /* -verify */
-      if ((rp = parse_noopt(sp, "-verify", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -c option */
       if ((rp = parse_until_next_opt(sp, "-c", "--clear", ppcmdline, &alp)) != sp)
          continue;
@@ -218,6 +189,23 @@ lList *alp = NULL;
       if ((rp = parse_until_next_opt(sp, "-e", "--enable", ppcmdline, &alp)) != sp)
          continue;
 
+#ifdef __SGE_QINSTANCE_STATE_DEBUG__
+      if ((rp = parse_until_next_opt(sp, "-_e", "--_error", ppcmdline, &alp)) != sp)
+         continue;
+      if ((rp = parse_until_next_opt(sp, "-_o", "--_orphaned", ppcmdline, &alp)) != sp)
+         continue;
+      if ((rp = parse_until_next_opt(sp, "-_do", "--_dorphaned", ppcmdline, &alp)) != sp)
+         continue;
+      if ((rp = parse_until_next_opt(sp, "-_u", "--_unknown", ppcmdline, &alp)) != sp)
+         continue;
+      if ((rp = parse_until_next_opt(sp, "-_du", "--_dunknown", ppcmdline, &alp)) != sp)
+         continue;
+      if ((rp = parse_until_next_opt(sp, "-_c", "--_confambiguous", ppcmdline, &alp)) != sp)
+         continue;
+      if ((rp = parse_until_next_opt(sp, "-_dc", "--_dconfambiguous", ppcmdline, &alp)) != sp)
+         continue;
+#endif
+
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qmod_usage(stderr, NULL);
@@ -236,13 +224,10 @@ lList *alp = NULL;
  **** ppcmdline, sets the force and action flags and puts the
  **** queue/job-names/numbers in ppreflist.
  ****/
-static lList *sge_parse_qmod(
-lList **ppcmdline,
-lList **ppreflist,
-u_long32 *pforce,
-u_long32 *paction,
-u_long32 *pverify 
-) {
+static lList *
+sge_parse_qmod(lList **ppcmdline, lList **ppreflist, 
+               u_long32 *pforce, u_long32 *paction) 
+{
 stringT str;
 lList *alp = NULL;
 u_long32 helpflag;
@@ -255,42 +240,62 @@ int usageshowed = 0;
    */
    while(lGetNumberOfElem(*ppcmdline))
    {
-      if(parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
+      static const char *options[] = {
+         "-c",
+         "-d",
+         "-r",
+         "-e",
+         "-s",
+         "-us",
+#ifdef __SGE_QINSTANCE_STATE_DEBUG__
+         "-_e",
+         "-_o",
+         "-_do",
+         "-_u",
+         "-_du",
+         "-_c",
+         "-_dc",
+#endif
+         NULL
+      };
+      static const u_long32 transitions[] = {
+         QI_DO_CLEARERROR,
+         QI_DO_DISABLE,
+         QI_DO_RESCHEDULE,
+         QI_DO_ENABLE,
+         QI_DO_SUSPEND,
+         QI_DO_UNSUSPEND, 
+#ifdef __SGE_QINSTANCE_STATE_DEBUG__
+         QI_DO_SETERROR,
+         QI_DO_SETORPHANED,
+         QI_DO_CLEARORPHANED,
+         QI_DO_SETUNKNOWN,
+         QI_DO_CLEARUNKNOWN,
+         QI_DO_SETAMBIGUOUS,
+         QI_DO_CLEARAMBIGUOUS,
+#endif
+         QI_DO_NOTHING
+      };
+      int i;
+
+      i = 0;
+      *paction = QI_DO_NOTHING;
+      while (options[i] != NULL) {
+         if (parse_multi_stringlist(ppcmdline, options[i], &alp, 
+                                    ppreflist, ST_Type, ST_name)) {
+            *paction = transitions[i];
+         }
+         i++;
+      }
+   
+      if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qmod_usage(stdout, NULL);
          break;
       }
-      if(parse_flag(ppcmdline, "-f", &alp, pforce))
-         continue;
-      
-      if(parse_flag(ppcmdline, "-verify", &alp, pverify))
-         continue;
-
-      if(parse_multi_stringlist(ppcmdline, "-c", &alp, ppreflist, ST_Type, ST_name)) {
-         *paction = QERROR;
-         break;
+      if (parse_flag(ppcmdline, "-f", &alp, pforce)) {
+         continue;      
       }
-
-      if(parse_multi_stringlist(ppcmdline, "-d", &alp, ppreflist, ST_Type, ST_name)) {
-         *paction = QDISABLED;
-         break;
-      }
-
-      if(parse_multi_stringlist(ppcmdline, "-r", &alp, ppreflist, ST_Type, ST_name)) {
-         *paction = QRESCHEDULED;
-         break;
-      }
-
-      if(parse_multi_stringlist(ppcmdline, "-e", &alp, ppreflist, ST_Type, ST_name)) {
-         *paction = QENABLED;
-         break;
-      }
-
-      if(parse_multi_stringlist(ppcmdline, "-s", &alp, ppreflist, ST_Type, ST_name)) {
-         *paction = QSUSPENDED;
-         break;
-      }
-      if(parse_multi_stringlist(ppcmdline, "-us", &alp, ppreflist, ST_Type, ST_name)) {
-         *paction = QRUNNING;
+      if (*paction != QI_DO_NOTHING) {
          break;
       }
    }
@@ -340,7 +345,15 @@ char *what
       fprintf(fp, "   [-r job_queue_list]  %s", MSG_QMOD_r_OPT_USAGE);
       fprintf(fp, "   [-s job_queue_list]  %s", MSG_QMOD_s_OPT_USAGE);
       fprintf(fp, "   [-us job_queue_list] %s", MSG_QMOD_us_OPT_USAGE);
-      fprintf(fp, "   [-verify]            %s", MSG_QMOD_verify_OPT_USAGE);
+#ifdef __SGE_QINSTANCE_STATE_DEBUG__
+      fprintf(fp, "   [-_e queue_list]     %s", MSG_QMOD_err_OPT_ISAGE);
+      fprintf(fp, "   [-_o queue_list]     %s", MSG_QMOD_o_OPT_ISAGE);
+      fprintf(fp, "   [-_do queue_list]    %s", MSG_QMOD_do_OPT_ISAGE);
+      fprintf(fp, "   [-_u queue_list]     %s", MSG_QMOD_u_OPT_ISAGE);
+      fprintf(fp, "   [-_du queue_list]    %s", MSG_QMOD_du_OPT_ISAGE);
+      fprintf(fp, "   [-_c queue_list]     %s", MSG_QMOD_c_OPT_ISAGE);
+      fprintf(fp, "   [-_dc queue_list]    %s", MSG_QMOD_dc_OPT_ISAGE);
+#endif
       fprintf(fp, "job_queue_list          {job_tasks|queue}[{,| }{job_tasks|queue}{,| }...]\n");
       fprintf(fp, "queue_list              {queue}[{,| }{queue}{,| }...]\n");
       fprintf(fp, "job_tasks               job_id['.'task_id_range]\n");

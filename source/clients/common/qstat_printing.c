@@ -44,7 +44,6 @@
 #include "sge_log.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
-#include "slots_used.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
@@ -63,7 +62,9 @@
 #include "get_path.h"
 #include "sge_var.h"
 #include "sge_answer.h"
-#include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_message.h"
 #include "sge_qinstance_state.h"
 #include "sge_urgency.h"
 #include "sge_pe.h"
@@ -86,7 +87,8 @@ static char hashes[] = "########################################################
 
 int 
 sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
-                u_long32 full_listing, lList *qresource_list) 
+                u_long32 full_listing, lList *qresource_list, 
+                u_long32 explain_bits) 
 {
    char to_print[80];
    char arch_string[80];
@@ -96,11 +98,14 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    char *load_avg_str;
    char load_alarm_reason[MAX_STRING_SIZE];
    char suspend_alarm_reason[MAX_STRING_SIZE];
+   dstring queue_name_buffer = DSTRING_INIT;
+   const char *queue_name = NULL;
 
    DENTER(TOP_LAYER, "sge_print_queue");
 
    *load_alarm_reason = 0;
    *suspend_alarm_reason = 0;
+   queue_name = qinstance_get_name(q, &queue_name_buffer);
 
    /* make it possible to display any load value in qstat output */
    if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
@@ -127,34 +132,35 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    printf("----------------------------------------------------------------------------%s\n", 
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
-   printf("%-20.20s ", lGetString(q, QU_qname));
+   printf("%-20.20s ", queue_name);
 
    {
       dstring type_string = DSTRING_INIT;
 
-      queue_print_qtype_to_dstring(q, &type_string, true);
+      qinstance_print_qtype_to_dstring(q, &type_string, true);
       printf("%-5.5s ", sge_dstring_get_string(&type_string)); 
       sge_dstring_free(&type_string);
    }
 
    /* number of used/free slots */
    sprintf(to_print, "%d/%d ", 
-      qslots_used(q),
+      qinstance_slots_used(q),
       (int)lGetUlong(q, QU_job_slots));
    printf("%-9.9s ", to_print);   
 
    /* load avg */
    {
       bool has_value_from_object; 
-   if (!sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object)) {
-      if (has_value_from_object) {
-         sprintf(to_print, "%2.2f ", load_avg);
+
+      if (!sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object)) {
+         if (has_value_from_object) {
+            sprintf(to_print, "%2.2f ", load_avg);
+         } else {
+            sprintf(to_print, "---  ");
+         }
       } else {
-         sprintf(to_print, "---  ");
+         sprintf(to_print, "-NA- ");
       }
-   }
-   else
-      sprintf(to_print, "-NA- ");
    }
    printf("%-8.8s ", to_print);   
 
@@ -168,11 +174,15 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
       qinstance_state_set_alarm(q, true);
-      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, load_alarm_reason, MAX_STRING_SIZE - 1, "load");
+      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
+                            centry_list, load_alarm_reason, 
+                            MAX_STRING_SIZE - 1, "load");
    }
    if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
       qinstance_state_set_suspend_alarm(q, true);
-     sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, suspend_alarm_reason, MAX_STRING_SIZE - 1, "suspend");
+      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
+                            exechost_list, centry_list, suspend_alarm_reason, 
+                            MAX_STRING_SIZE - 1, "suspend");
    }
 
    {
@@ -190,6 +200,33 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       }
       if(*suspend_alarm_reason) {
 	      printf(suspend_alarm_reason);
+      }
+   }
+
+   if ((explain_bits & QIM_LOAD_ALARM) > 0) {
+      if(*load_alarm_reason) {
+         printf(load_alarm_reason);
+      }
+   }
+   if ((explain_bits & QIM_SUSPEND_ALARM) > 0) {
+      if(*suspend_alarm_reason) {
+         printf(suspend_alarm_reason);
+      }
+   }
+   if (explain_bits != QIM_DEFAULT) {
+      lList *qim_list = lGetList(q, QU_message_list);
+      lListElem *qim = NULL;
+
+      for_each(qim, qim_list) {
+         u_long32 type = lGetUlong(qim, QIM_type);
+
+         if ((explain_bits & QIM_AMBIGUOUS) == type || 
+             (explain_bits & QIM_ERROR) == type) {
+            const char *message = lGetString(qim, QIM_message);
+
+            printf("\t");
+            printf(message);
+         }
       }
    }
 
@@ -422,21 +459,6 @@ int indent
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-
-#if 0
-{
-   lCondition *where = lWhere("%T(%I->%T(%I==%s))", lGetListDescr(job_list),
-                        JB_granted_destin_identifier_list, 
-                        JG_Type, JG_qname, lGetString(qep, QU_qname));
-   lEnumeration *what = lWhat("%T(ALL)", lGetListDescr(job_list)); 
-lWriteListTo(lSelect("trala", job_list, where, what), stdout);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
-}
-#endif
-
 /*-------------------------------------------------------------------------*/
 /* print jobs per queue                                                    */
 /*-------------------------------------------------------------------------*/
@@ -449,7 +471,7 @@ lList *ehl,
 lList *centry_list,
 int print_jobs_of_queue,
 u_long32 full_listing,
-char *indent ,
+char *indent,
 u_long32 group_opt
 ) {
    int first = 1;
@@ -459,12 +481,13 @@ u_long32 group_opt
    u_long32 job_tag;
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
+   dstring queue_name_buffer = DSTRING_INIT;
    const char *qnm;
    dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
 
-   qnm = lGetString(qep, QU_qname);
+   qnm = qinstance_get_name(qep, &queue_name_buffer);
 
    for_each(jlep, job_list) {
       int master, i;
@@ -607,6 +630,7 @@ u_long32 group_opt
          }
       }
    }
+   sge_dstring_free(&queue_name_buffer);
    sge_dstring_free(&dyn_task_str);
    DEXIT;
 }
@@ -676,7 +700,7 @@ u_long32 group_opt
                                  sge_ext);
 
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
-                   (group_opt&GROUP_NO_TASK_GROUPS)) {
+                   (group_opt & GROUP_NO_TASK_GROUPS) > 0) {
                   sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL,
@@ -693,8 +717,9 @@ u_long32 group_opt
          }
       }
       if ((full_listing & QSTAT_DISPLAY_PENDING)  && 
-            !(group_opt&GROUP_NO_TASK_GROUPS) && 
-            FoundTasks && ja_task_list) {
+          (group_opt & GROUP_NO_TASK_GROUPS) == 0 && 
+          FoundTasks && 
+          ja_task_list) {
          lList *task_group = NULL;
 
          while ((task_group = ja_task_list_split_group(&ja_task_list))) {
@@ -772,7 +797,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
          show = 1;
       }
       if (range_list[i] != NULL && show) { 
-         if (!(group_opt&GROUP_NO_TASK_GROUPS)) {
+         if ((group_opt & GROUP_NO_TASK_GROUPS) == 0) {
             range_list_print_to_string(range_list[i], &ja_task_id_string, 0);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {
@@ -1014,6 +1039,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    int is_zombie_job;
    dstring ds;
    char buffer[128];
+   dstring queue_name_buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_job");
 
@@ -1021,7 +1047,11 @@ int slots_per_line  /* number of slots to be printed in slots column
 
    is_zombie_job = job_is_zombie_job(job);
 
-   queue_name = qep ? lGetString(qep, QU_qname) : NULL;
+   if (qep != NULL) {
+      queue_name = qinstance_get_name(qep, &queue_name_buffer);
+   } else {
+      queue_name = NULL; 
+   }
 
    sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
@@ -1434,7 +1464,8 @@ int slots_per_line  /* number of slots to be printed in slots column
                double dval;
 
                name = lGetString(ce, CE_name);
-               if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || explicit_job_request(job, name))
+               if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || 
+                   job_get_request(job, name))
                   continue;
 
                parse_ulong_val(&dval, NULL, lGetUlong(ce, CE_valtype), lGetString(ce, CE_default), NULL, 0); 
@@ -1503,6 +1534,8 @@ int slots_per_line  /* number of slots to be printed in slots column
 
 #undef QSTAT_INDENT
 #undef QSTAT_INDENT2
+
+   sge_dstring_free(&queue_name_buffer);
 
    DEXIT;
    return 1;

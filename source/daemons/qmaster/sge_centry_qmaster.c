@@ -36,13 +36,13 @@
 #include <string.h>
 #include <errno.h>
 
+#include "sge_c_gdi.h"
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_ja_task.h"
 #include "sge_schedd_conf.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
-#include "sge_queue_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_log.h"
 #include "sge_complex_schedd.h"
@@ -54,9 +54,10 @@
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
-#include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_job.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
 #include "sge_utility.h"
 
 #include "spool/sge_spooling.h"
@@ -249,6 +250,7 @@ int
 centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
 {
    lListElem *jep, *gdil, *qep, *hep;
+   lListElem *cqueue;
    int slots, qslots;
 
    DENTER(TOP_LAYER, "centry_success");
@@ -260,9 +262,14 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    lListElem_clear_changed_info(ep);
 
    /* throw away all old actual values lists and rebuild them from scratch */
-   for_each (qep, Master_Queue_List) {
-      lSetList(qep, QU_consumable_actual_list, NULL);
-      debit_queue_consumable(NULL, qep, Master_CEntry_List, 0);
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+
+      for_each(qinstance, qinstance_list) {
+         lSetList(qinstance, QU_consumable_actual_list, NULL);
+         qinstance_debit_consumable(NULL, qinstance, Master_CEntry_List, 0);
+      }
    }
    for_each (hep, Master_Exechost_List) {
       lSetList(hep, EH_consumable_actual_list, NULL);
@@ -282,14 +289,15 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          slots = 0;
          for_each (gdil, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
-            if (!(qep = queue_list_locate(Master_Queue_List, 
-                                          lGetString(gdil, JG_qname)))) 
+            if (!(qep = cqueue_list_locate_qinstance(
+                               *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                               lGetString(gdil, JG_qname)))) 
                continue;
 
             qslots = lGetUlong(gdil, JG_slots);
             debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
                   lGetHost(qep, QU_qhostname)), Master_CEntry_List, qslots);
-            debit_queue_consumable(jep, qep, Master_CEntry_List, qslots);
+            qinstance_debit_consumable(jep, qep, Master_CEntry_List, qslots);
             slots += qslots;
          }
          debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
@@ -341,21 +349,21 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
          }      
          if (ret) {
             if (tmp_centry != NULL) {
-
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
-                                       Master_Queue_List, Master_Exechost_List)) {
+                        *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                        Master_Exechost_List, 
+                        *(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)))) {
                   if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
-                                    0, 0, name, NULL, NULL,
-                                    NULL, NULL, NULL, true, true)) {
+                                      0, 0, name, NULL, NULL,
+                                      NULL, NULL, NULL, true, true)) {
 
                      sge_change_queue_version_centry(name);
-   
+
                      lRemoveElem(master_centry_list, tmp_centry);
-   
                      INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                            remote_user, remote_host, name, MSG_OBJ_CPLX));
-                     answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
-                                    ANSWER_QUALITY_INFO);
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_OK, ANSWER_QUALITY_INFO);
                   } else {
                      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
                            "complex entry", name ));
@@ -403,20 +411,24 @@ static void
 sge_change_queue_version_centry(const char *centry_name) 
 {
    lListElem *ep;
+   lListElem *cqueue;
    lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_change_queue_version_centry");
 
-   for_each(ep, Master_Queue_List) {
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
 
-      sge_change_queue_version(ep, 0, 0);
+      for_each(qinstance, qinstance_list) {
+         qinstance_increase_qversion(qinstance);
       
-      /* event has already been sent in sge_change_queue_version */
-      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                      0, 0, lGetString(ep, QU_qname), NULL, NULL,
-                      ep, NULL, NULL, false, true);
+         sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+                         0, 0, lGetString(qinstance, QU_qname), 
+                         lGetHost(qinstance, QU_qhostname), NULL,
+                         qinstance, NULL, NULL, false, true);
+      }
    }
-
    for_each(ep, Master_Exechost_List) {
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(ep, EH_name), NULL, NULL,

@@ -241,9 +241,9 @@ typedef struct drmaa_job_ids_s  drmaa_job_ids_t;
  * if no such exists 
  */
 
-int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len);
-int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int value_len);
-int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len);
+int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, size_t value_len);
+int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, size_t value_len);
+int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len);
 
 /* 
  * release opaque string vector 

@@ -1568,7 +1568,7 @@ const char *drmaa_strerror(int drmaa_errno)
 *     drmaa_get_next_attr_value() -- Get next entry from attribute name vector.
 *
 *  SYNOPSIS
-*     int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int 
+*     int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, size_t 
 *     value_len) 
 *
 *  FUNCTION
@@ -1579,7 +1579,7 @@ const char *drmaa_strerror(int drmaa_errno)
 *
 *  OUTPUTS
 *     char *value                - Buffer for the entry.
-*     int value_len              - Buffer length.
+*     size_t value_len              - Buffer length.
 *
 *  RESULT
 *     int - DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no more entries
@@ -1588,7 +1588,7 @@ const char *drmaa_strerror(int drmaa_errno)
 *  NOTES
 *     MT-NOTE: drmaa_get_next_attr_value() is MT safe
 *******************************************************************************/
-int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int value_len)
+int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, size_t value_len)
 {
    dstring val;
    if (value) 
@@ -1602,7 +1602,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int valu
 *     drmaa_get_next_attr_name() -- Get next entry from attribute name vector.
 *
 *  SYNOPSIS
-*     int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int 
+*     int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, size_t 
 *     value_len) 
 *
 *  FUNCTION
@@ -1613,7 +1613,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int valu
 *
 *  OUTPUTS
 *     char *value                - Buffer for the entry.
-*     int value_len              - Buffer length.
+*     size_t value_len           - Buffer length.
 *
 *  RESULT
 *     int - DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no more entries
@@ -1622,7 +1622,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int valu
 *  NOTES
 *     MT-NOTE: drmaa_get_next_attr_name() is MT safe
 *******************************************************************************/
-int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len)
+int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, size_t value_len)
 {
    dstring val;
    if (value) 
@@ -1636,7 +1636,7 @@ int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_
 *     drmaa_get_next_job_id() -- Get next entry from job id vector.
 *
 *  SYNOPSIS
-*     int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int 
+*     int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t 
 *     value_len) 
 *
 *  FUNCTION
@@ -1647,7 +1647,7 @@ int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_
 *
 *  OUTPUTS
 *     char *value                - Buffer for the entry.
-*     int value_len              - Buffer length.
+*     size_t value_len           - Buffer length.
 *
 *  RESULT
 *     int - DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no more entries
@@ -1656,7 +1656,7 @@ int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_
 *  NOTES
 *     MT-NOTE: drmaa_get_next_job_id() is MT safe
 *******************************************************************************/
-int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len)
+int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len)
 {
    dstring val;
    if (value) 

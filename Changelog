@@ -1,3 +1,6 @@
+AH-2004-03-19-0: Bugfix:    Changed value_len of drmaa_get_next_*() from int
+                            to size_t.
+
 EB-2004-03-19-0  Bugfix:    Cleanup for the next main release
                             Still checks for $GRD_ROOT, "spoolinit" may fail 
                             silently

@@ -47,6 +47,7 @@
 
 #include "sge_mirror.h"
 #include "sge_event.h"
+#include "sge_c_event.h"
 
 
 u_long Global_jobs_running = 0;
@@ -54,8 +55,6 @@ u_long Global_jobs_running = 0;
 int print_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   int pos;
-
    DPRINTF(("%s\n", event_text(event)));
    /* create a callback error to test error handling */
    if(type == SGE_EMT_GLOBAL_CONFIG) {
@@ -90,7 +89,7 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
          fflush(stdout); */
       }
       if (type == sgeE_JOB_FINAL_USAGE) { 
-         lList *jat = lGetList(event,ET_new_version);
+         /* lList *jat = lGetList(event,ET_new_version); */
          u_long job_id = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
          /* lWriteElemTo(event, stdout); */

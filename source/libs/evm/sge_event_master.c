@@ -1046,21 +1046,22 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
       return EINVAL;
    }
    
-   if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
-      answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
-                      ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return EPERM;
-   }
-
-   /* This function will aquire the client lock on its own, as needed. */
-   sge_add_event_for_client(aClientID, 0, sgeE_SHUTDOWN, 0,0,NULL,NULL,NULL,NULL);
-
-   /* Print out a message about the event. */
    lock_client (aClientID, true);
    client = get_event_client (aClientID);
 
    if (client != NULL) {
+      if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
+         answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
+                         ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return EPERM;
+      }
+
+      /* This function will aquire the client lock on its own, as needed. */
+      add_list_event_for_client(aClientID, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
+                                NULL, NULL, true);
+
+      /* Print out a message about the event. */
       if (aClientID == EV_ID_SCHEDD) {
          SGE_ADD_MSG_ID(sprintf (SGE_EVENT, MSG_COM_KILLED_SCHEDULER_S,
                                  lGetHost(client, EV_host)));
@@ -1366,7 +1367,7 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
 *     lListElem *element   - object to be delivered with the event 
 *
 *  NOTES
-*     MT-NOTE: sge_add_event_for_client() is not MT safe 
+*     MT-NOTE: sge_add_event_for_client() is MT safe 
 *
 *******************************************************************************/
 bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event type, u_long32 anIntKey1, 
@@ -1392,7 +1393,7 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
       return false;
    }
    
-   if (element!= NULL) {
+   if (element != NULL) {
       /* ignore the sublist in case of the following events. We have
          extra events to handle the sub-lists */
       if (type == sgeE_JOB_MOD) {

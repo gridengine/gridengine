@@ -509,10 +509,10 @@ void cull_show_job(lListElem *job, int flags)
             continue;
 
          if (first_task) {
-            printf("usage %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("usage %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
             first_task = 0;
          } else
-            printf("      %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("      %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
 
          cpu = mem = io = vmem = maxvmem = 0.0;
 
@@ -529,7 +529,9 @@ void cull_show_job(lListElem *job, int flags)
             SUM_UP_PETASK_USAGE(pe_task_ep, vmem, USAGE_ATTR_VMEM);
             SUM_UP_PETASK_USAGE(pe_task_ep, mem, USAGE_ATTR_MEM);
             SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_IO);
-            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_MAXVMEM);
+/* SG: fix?? */            
+/*            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_MAXVMEM); */
+            SUM_UP_PETASK_USAGE(pe_task_ep, maxvmem, USAGE_ATTR_MAXVMEM);
          }
 
          {
@@ -545,6 +547,7 @@ void cull_show_job(lListElem *job, int flags)
             mem, io,
             (vmem == 0.0) ? "N/A": sge_dstring_get_string(&vmem_string),
             (maxvmem == 0.0) ? "N/A": sge_dstring_get_string(&maxvmem_string));
+
             sge_dstring_free(&cpu_string);
             sge_dstring_free(&vmem_string);
             sge_dstring_free(&maxvmem_string);

@@ -464,7 +464,6 @@ char **argv
       (full_listing&(QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL))) {
       SGE_EXIT(0);
    }
-     
    /* 
     *
     * step 2: we tag the jobs 
@@ -574,9 +573,11 @@ char **argv
          lXchgList(cqueue, CQ_qinstances, &qinstances);
          lAddList(tmp_queue_list, qinstances);
       }
+      
       queue_list = lFreeList(queue_list);
       queue_list = tmp_queue_list;
       tmp_queue_list = NULL;
+
       lPSortList(queue_list, "%I+ %I+ %I+", QU_seq_no, QU_qname, QU_qhostname);
 
    }
@@ -718,7 +719,6 @@ char **argv
       } 
 
    } else {
-
       for_each(qep, queue_list) {
          lList *xml_job_list = NULL; 
          lListElem *elem = NULL;

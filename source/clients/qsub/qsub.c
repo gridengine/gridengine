@@ -321,7 +321,7 @@ char **argv
                   if (signaled) {
                      dstring termsig = DSTRING_INIT;
                      japi_wtermsig(&termsig, stat, NULL);
-                     printf(MSG_QSUB_JOBRECEIVEDSIGNAL_U, jobid_strings[count], sge_dstring_get_string (&termsig));
+                     printf(MSG_QSUB_JOBRECEIVEDSIGNAL_SS, jobid_strings[count], sge_dstring_get_string (&termsig));
                      sge_dstring_free (&termsig);
                   }
                   else {

@@ -1,5 +1,10 @@
+SG-2004-01-30-0: Bugfix: - fixed qstat -j usage output for pe jobs
+                         - fixed qacct -j output. It parsed the acc. file
+                           wrong.
+                 Changed:  qstat, qacct
+
 DT-2004-01-30-2: Bugfix:		Minor compile bugs
-								 Changed:		qsub
+                 Changed:		qsub
 
 CR-2004-01-30-0: Bugfix:    host aliases file support (part III)
                                - host aliasing was not active when qmaster

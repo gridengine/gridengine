@@ -623,6 +623,8 @@ int sge_read_rusage(FILE *f, sge_rusage_type *d)
    d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip job category */
+   pc=strtok(NULL, ":");
+#if 0   
    while ((pc=strtok(NULL, ":")) &&
           strlen(pc) &&
           pc[strlen(pc)-1] != ' ' &&
@@ -634,7 +636,7 @@ int sge_read_rusage(FILE *f, sge_rusage_type *d)
        */
       ;
    }
-
+#endif
    d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip pe_taskid */

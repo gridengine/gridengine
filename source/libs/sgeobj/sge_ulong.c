@@ -133,10 +133,13 @@ bool double_print_memory_to_dstring(double value, dstring *string)
             value /= kilo_byte;
             unit = 'K';
          }
+         else {
+            unit = 'B';
+         }
          if (unit != '\0') {
-            sge_dstring_sprintf_append(string, "%.2f%c", value, unit);
+            sge_dstring_sprintf_append(string, "%.3f%c", value, unit);
          } else {
-            sge_dstring_sprintf_append(string, "%.2f", absolute_value);
+            sge_dstring_sprintf_append(string, "%.3f", absolute_value);
          }
       } 
    }

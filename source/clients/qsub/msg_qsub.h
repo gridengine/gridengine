@@ -44,7 +44,7 @@
 #define MSG_QSUB_COULDNOTRUNJOB_U    _MESSAGE(21006, _("\nUnable to run job because of error: %s.\nExiting.\n"))
 #define MSG_QSUB_COULDNOTWAITFORJOB_U    _MESSAGE(21007, _("\nUnable to wait for job because of error: %s\nExiting.\n"))
 #define MSG_QSUB_JOBNEVERRAN_U    _MESSAGE(21008, _("Unable to run job %s\n"))
-#define MSG_QSUB_JOBRECEIVEDSIGNAL_U    _MESSAGE(21009, _("Job %s exited because of signal %s\n"))
+#define MSG_QSUB_JOBRECEIVEDSIGNAL_SS    _MESSAGE(21009, _("Job %s exited because of signal %s\n"))
 #define MSG_QSUB_JOBFINISHUNCLEAR_U    _MESSAGE(21010, _("No information available on job %s's exit status.\n"))
 #define MSG_QSUB_COULDNOTFINALIZEENV_U    _MESSAGE(21011, _("\nUnable to finalize environment because of error: %s\nExiting.\n"))
 #define MSG_QSUB_YOURJOBHASBEENSUBMITTED_U    _MESSAGE(21012, _("Your job %s (\"%s\") has been submitted.\n"))

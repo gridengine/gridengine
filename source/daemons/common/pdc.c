@@ -195,9 +195,7 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
 }
 #endif
 
-lnk_link_t *
-find_job(JobID_t jid)
-{
+lnk_link_t * find_job(JobID_t jid) {
    lnk_link_t *curr;
 
    for (curr=job_list.next; curr != &job_list; curr=curr->next) {
@@ -1211,6 +1209,7 @@ get_numjobs(void)
 
 #ifdef IRIX6
 
+/* only used on IRIX 6 */
 typedef struct {
    lnk_link_t link;
    pdc_arsess_t arse;
@@ -1218,6 +1217,7 @@ typedef struct {
 
 #define ASHMAXINC 100
 
+/* only used on IRIX 6 */
 static int
 get_arsess_list(lnk_link_t *arsess_list)
 {
@@ -1271,6 +1271,8 @@ get_arsess_list(lnk_link_t *arsess_list)
    return num_ashes;
 }
 
+
+/* only used on IRIX 6 */
 static void
 free_arsess_list(lnk_link_t *arsess_list)
 {
@@ -1281,6 +1283,7 @@ free_arsess_list(lnk_link_t *arsess_list)
    }
 }
 
+/* only used on IRIX 6 */
 static arsess_elem_t *
 find_arsess(lnk_link_t *arsess_list, ash_t ash)
 {
@@ -1293,6 +1296,7 @@ find_arsess(lnk_link_t *arsess_list, ash_t ash)
    return NULL;
 }
 
+/* only used on IRIX 6 */
 static int
 in_pidlist(pid_t *pidlist, int max, pid_t pid)
 {
@@ -2175,8 +2179,7 @@ int psWatchJob(JobID_t JobID)
 }
 
 
-int             psIgnoreJob(JobID_t JobID)
-{
+int psIgnoreJob(JobID_t JobID) {
    lnk_link_t *curr;
 
    /* if job is in the list, remove it */

@@ -3,8 +3,8 @@ CR-2004-11-26-1: Testsuite: - fixed bug in system_tests/clients/qmake test
 AS-2004-11-26-0: CVS        Created V60u2_TAG
 ---------------------------------------------
 
-CR-2004-11-26-0: Testsuite: - fixed bug in path_alias test which caused errors
-                              on irix65
+CR-2004-11-26-0: Testsuite: - fixed bug in path_alias test which caused
+                              errors on irix65
                             - additional test output for migration test
                  Review:    JG
 
@@ -17,8 +17,8 @@ MD-2004-11-24-0: Bugfix:    arch script does not know about /lib64
                  Issue:     1357
                  Bugtraq:   6200013
 
-JG-2004-11-24-0: Bugfix:    sge_qmaster hit stack limit on aix43, aix51 and hp11
-                            with classic spooling.
+JG-2004-11-24-0: Bugfix:    sge_qmaster hit stack limit on aix43, aix51 and
+                            hp11 with classic spooling.
                  Review:    CR
 
 DT-2004-11-24-0: Bugfix:    o Fixed segfault in japi_synchronize()
@@ -26,10 +26,12 @@ DT-2004-11-24-0: Bugfix:    o Fixed segfault in japi_synchronize()
                  Changed:   JAPI
 
 MD-2004-11-23-0: Enhancm.:  60/60u1 to 60u2 BDB update script
-                 Changed:   inst_sge, inst_update, inst_common, set_fileperm.sh
+                 Changed:   inst_sge, inst_update, inst_common,
+                            set_fileperm.sh
                  Review:    CR
 
-AA-2004-11-23-0: Bugfix:    qmon segv when deleting sharetree Root node more than once
+AA-2004-11-23-0: Bugfix:    qmon segv when deleting sharetree Root node more 
+                            than once
                             - disallow editing of Root node
                             - disallow changing default node label
                  Issue:     1360
@@ -73,9 +75,9 @@ SG-2004-11-22-0: Bugfix:    fixed the scheduler messages for qstat -j.
 CR-2004-11-19-1: Testsuite  - new test: commlib deadlock test
                             - fixed bug in issue test 1270
 
-MD-2004-11-19-0: Bugfix:    Bugfix fix. backup/restore problem. compress/gzip
-                            is now supported. backup/restore checks, if host is
-                            mastermachine.
+MD-2004-11-19-0: Bugfix:    Bugfix fix. backup/restore problem.
+                            compress/gzip is now supported. backup/restore
+                            checks, if host is mastermachine.
                  Changed:   inst_common.sh
                  Review:    pending
 
@@ -112,8 +114,8 @@ MD-2004-11-17-0: Bugfix:    - backup fails if root is mapped to nobody
                  Bugtraq:   6196578
                  Changed:   inst_common.sh
 
-SG-2004-11-17-0: Bugfix:    - the deletion of the queue calendar did not reset
-                              the cal for the scheduler.
+SG-2004-11-17-0: Bugfix:    - the deletion of the queue calendar did not
+                              reset the cal for the scheduler.
                  Review:    EB
                  Changed:   qmaster
 
@@ -122,8 +124,9 @@ CR-2004-11-17-0: Testsuite: Fixed some problems for commlib performance tests
 
 DT-2004-11-17-0: Bugfix:    o Check drmaa_wait() and drmaa_synchronize() for
                               negative timeouts.
-                            o drmaa_synchronize() now waits for all tasks ids of
-                              all jobs with DRMAA_JOB_IDS_SESSION_ALL parameter.
+                            o drmaa_synchronize() now waits for all tasks
+                              ids of all jobs with DRMAA_JOB_IDS_SESSION_ALL
+                              parameter.
                             o drmaa_set_attribute() checks validity of
                               DRMAA_TRANFER_FILES value.
                             o drmaa_control() now recognizes held states.
@@ -131,8 +134,8 @@ DT-2004-11-17-0: Bugfix:    o Check drmaa_wait() and drmaa_synchronize() for
                  Changed:   japi, drmaa
                  Issue:     1339, 1340, 1341, 1343
 
-JG-2004-11-17-0: Testsuite: Fix and optimization of vi controlling and changing
-                            global config.
+JG-2004-11-17-0: Testsuite: Fix and optimization of vi controlling and
+                            changing global config.
                  Review:    CR
 
 AA-2004-11-16-0: Bugfix:    - label in Policy Dialog
@@ -145,14 +148,15 @@ AA-2004-11-16-0: Bugfix:    - label in Policy Dialog
 
 DT-2004-11-16-0: Bugfix:    o Increased profiling thread count to 256
                             o Added validity check for drmaa_transfer_files
-                            o Added abort to profiling if max number of threads
-                              is exceeded
+                            o Added abort to profiling if max number of
+                              threads is exceeded
                  Changed:   profiling, DRMAA
                  Review:    AH, MD
 
 CR-2004-11-16-3: Bugfix:    fixed duplicate message id: 33818
 
-MD-2004-11-16-0: Bugfix:    backup/restore does not work under Linux and others.
+MD-2004-11-16-0: Bugfix:    backup/restore does not work under Linux and 
+                            others.
                  Changed:   inst_commen.sh
                  Issue:     1328
                  Bugtraq:   6193866
@@ -199,9 +203,9 @@ MD-2004-11-15-0: Bugfix:    Confusing text
                  Issue:     790
                  Bugtraq:   5063315
 
-HP-2004-11-15-0: Bugfix:    Jobs fail on NFS drives mounted without root write
-                            privileges - fchown() doesn't work as expected on
-                            Irix and True64
+HP-2004-11-15-0: Bugfix:    Jobs fail on NFS drives mounted without root
+                            write privileges - fchown() doesn't work as
+                            expected on Irix and Tru64
                  Review:    AH
                  Changed:   daemons/common/err_trace.c
                  Issue:     1323
@@ -348,8 +352,8 @@ CR-2004-11-05-0: Enhancm.:  qping -dump (communication traffic) option
                  Changed:   qping
                  Review:    AA
 
-JG-2004-11-05-0: Bugfix:    Scheduler didn't respect usage of tightly integrated
-                            tasks and logged error messages.
+JG-2004-11-05-0: Bugfix:    Scheduler didn't respect usage of tightly
+                            integrated tasks and logged error messages.
                  Changed:   qmaster, scheduler
                  Bugtraq:   6191366
                  Review:    SG
@@ -983,7 +987,7 @@ SG-2004-08-30-0: Bugfix:    new algorithm for o-ticket
                  Changed:   man-page, scheduler
                  Review:    MD
                  Issue:     1224
-                 Bugtraq:   9094016
+                 Bugtraq:   5094016
 
 JG-2004-08-30-0: Enhancem.: Added module test for libs/uti/sge_bitfield.
 

@@ -1,4 +1,8 @@
-MD-2004-07-22-2  Bugfix:    reprioritize_interval descr in sched_conf(5) needs improvement
+CR-2004-07-23-0: Testsuite: modified /functional/tight_integration check to be more
+                            error tolerant
+                 Review:    AA
+
+MD-2004-07-22-2: Bugfix:    reprioritize_interval descr in sched_conf(5) needs improvement
                  Changed:   man5/sched_conf.5
                  Issue:     1040
                  Bugtraq:   5077165

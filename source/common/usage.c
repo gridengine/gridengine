@@ -174,6 +174,8 @@ void sge_usage(
 FILE *fp 
 ) {
 
+  char namebuf[128];
+  
 #define PRINTITD(o,d) print_option_syntax(fp,o,d)
 #define PRINTIT(o) print_option_syntax(fp,o,NULL)
 #define MARK(n) mark_argument_syntax(n)
@@ -181,7 +183,15 @@ FILE *fp
    DENTER(TOP_LAYER, "sge_usage");
 
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
-   fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , prognames[me.who]);
+   
+   if (!strcmp(prognames[me.who], "execd"))
+      strcpy(namebuf, "sge_execd");
+   else if (!strcmp(prognames[me.who], "qmaster"))
+      strcpy(namebuf, "sge_qmaster");
+   else
+      strcpy(namebuf, prognames[me.who]);
+         
+   fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , namebuf);
 
    /* reset all option markers */
    memset(marker, 0, sizeof(marker));

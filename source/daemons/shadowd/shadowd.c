@@ -573,7 +573,7 @@ char **argv
 
       fprintf(stdout, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
-      fprintf(stdout, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , prognames[me.who]);
+      fprintf(stdout, "%s sge_shadowd [options]\n", MSG_GDI_USAGE_USAGESTRING);
 
       PRINTITD(MSG_GDI_USAGE_help_OPT , MSG_GDI_UTEXT_help_OPT );
       SGE_EXIT(0);
@@ -581,4 +581,3 @@ char **argv
 
    DEXIT;
 }
-

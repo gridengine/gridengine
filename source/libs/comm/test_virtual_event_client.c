@@ -38,10 +38,9 @@
 #include <signal.h>
 #include <unistd.h>
 
-
-
 #include "cl_lists.h"
 #include "cl_commlib.h"
+#include "basis_types.h"
 
 /* counters */
 static int snd_messages = 0;
@@ -130,7 +129,8 @@ extern int main(int argc, char** argv)
 
      gettimeofday(&now,NULL);
      if (now.tv_sec != last_time) {
-        printf("virtual event client[%d] message count[sent |%d|] events[received |%d|]...\n", getpid(), snd_messages,events_received);
+        printf("virtual event client["pid_t_fmt"] message count[sent |%d|] events[received |%d|]...\n",
+           getpid(), snd_messages, events_received);
         last_time = now.tv_sec;
      }
 

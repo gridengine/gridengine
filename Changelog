@@ -1,3 +1,7 @@
+HP-2004-08-31-0: Bugfix:    Fixed some minor bugs: wrong format specifier, 
+                            Typo in man page, ...
+                 Changed:   man-page, commlib-testprogram
+
 SG-2004-08-30-0: Bugfix:    new algorithm for o-ticket 
                  Changed:   man-page, scheduler
                  Review:    MD

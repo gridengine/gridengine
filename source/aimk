@@ -882,7 +882,8 @@ case AIX43:
       set MT_FLAGS = "-DGETHOSTBYNAME $MTFLAGS"
    endif
 
-   set CXX      = xlC
+   set CC       = xlc_r
+   set CXX      = xlC_r
    set MAKE     = make
    set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $MT_FLAGS $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -911,7 +912,8 @@ case AIX51:
       set OFLAG = "-O3 -qstrict -qmaxmem=8192"
    endif
 
-   set CXX      = xlC
+   set CC       = xlc_r
+   set CXX      = xlC_r
    set MAKE     = make
    set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -927,7 +929,7 @@ case AIX51:
       set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
    endif
 
-   set SHAREDLD = "cc"
+   set SHAREDLD = "xlc_r"
    set SHARED_CFLAGS = ""
    set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry $LFLAGS"
 

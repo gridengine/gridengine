@@ -1,3 +1,9 @@
+JM-2004-01-20-3: Bugfix:    The aimk configurations for AIX4[123] and AIX51
+                            are changed to use CC=xlc_r and CXX=xlC_r.
+                            SHAREDLD (for AIX51) is also set to 'xlc_r'.
+                 Changed:   aimk
+                 Reviewed:  RH, AS
+
 JM-2004-01-20-2: Bugfix:    The setrlimitj() call under SUPER-UX must be surrounded
                             by sge_switch2start_user() and sge_switch2admin_user()
                             to be effective.

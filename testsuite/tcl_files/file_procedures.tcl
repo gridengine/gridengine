@@ -2075,7 +2075,7 @@ proc delete_file { filename } {
  
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   wait_for_file "$filename" 200 0 0 ;# wait for file, no error reporting!
+   wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
 
    if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
       file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"

@@ -478,7 +478,11 @@ proc suspend_queue { qname } {
  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
  global CHECK_OUTPUT
   log_user 0 
-  set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_SUSPENDQ_SSS] "*" "*" "*" ]
+   if { $ts_config(gridengine_version) == 53 } {
+      set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_SUSPENDQ_SSS] "*" "*" "*" ]
+   } else {
+      set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QINSTANCE_SUSPENDED]]
+   }
 
   
   # spawn process
@@ -497,7 +501,7 @@ proc suspend_queue { qname } {
      -i $sp_id "was suspended" {
          set result 0
      }
-      -i $sp_id $WAS_SUSPENDED {
+      -i $sp_id "*${WAS_SUSPENDED}*" {
          set result 0
      }
 
@@ -554,7 +558,11 @@ proc unsuspend_queue { queue } {
   set timeout 30
   log_user 0 
    
-  set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_UNSUSPENDQ_SSS] "*" "*" "*" ]
+   if { $ts_config(gridengine_version) == 53 } {
+      set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_UNSUSPENDQ_SSS] "*" "*" "*" ]
+   } else {
+      set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QINSTANCE_NSUSPENDED]]
+   }
 
   # spawn process
   set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
@@ -572,7 +580,7 @@ proc unsuspend_queue { queue } {
       -i $sp_id "unsuspended queue" {
          set result 0 
       }
-      -i $sp_id  $UNSUSP_QUEUE {
+      -i $sp_id  "*${UNSUSP_QUEUE}*" {
          set result 0 
       }
       -i $sp_id default {

@@ -1179,27 +1179,42 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          #    ...
          # } else {
 
-         set  position(17)  "156 160"           ; set   names(17)     slots
-         set  position(18)  "162 end"           ; set   names(18)    jatask
+         set  position(17)  "156 161"           ; set   names(17)     slots
+         set  position(18)  "163 end"           ; set   names(18)    jatask
          set     rules(18)  rule_list
 
          # }
       }
    } else {
-      set   position(0)  "0 6"               ; set    names(0)    id   
-      set   position(1)  "8 12"              ; set    names(1)    prior
-      set   position(2)  "14 23"             ; set    names(2)    name
-      set   position(3)  "25 36"             ; set    names(3)    user
-      set   position(4)  "38 42"             ; set    names(4)    state
-      set   position(5)  "44 62"             ; set    names(5)    time
-      set  transform(5)  transform_date_time
-      set      rules(7)  rule_min
-      set   position(6)  "64 73"             ; set    names(6)    queue
-      set      rules(6)  rule_list
-      set   position(7)  "75 81"             ; set    names(7)    master
-      set      rules(7)  rule_list
-      set   position(8)  "83 end"            ; set    names(8)    jatask
-      set      rules(8)  rule_list
+      if { $ts_config(gridengine_version) == 53 } {
+         set   position(0)  "0 6"               ; set    names(0)    id   
+         set   position(1)  "8 12"              ; set    names(1)    prior
+         set   position(2)  "14 23"             ; set    names(2)    name
+         set   position(3)  "25 36"             ; set    names(3)    user
+         set   position(4)  "38 42"             ; set    names(4)    state
+         set   position(5)  "44 62"             ; set    names(5)    time
+         set  transform(5)  transform_date_time
+         set   position(6)  "64 73"             ; set    names(6)    queue
+         set      rules(6)  rule_list
+         set   position(7)  "75 81"             ; set    names(7)    master
+         set      rules(7)  rule_list
+         set   position(8)  "83 end"            ; set    names(8)    jatask
+         set      rules(8)  rule_list
+      } else {
+         set   position(0)  "0 6"               ; set    names(0)    id   
+         set   position(1)  "8 14"              ; set    names(1)    prior
+         set   position(2)  "16 25"             ; set    names(2)    name
+         set   position(3)  "27 38"             ; set    names(3)    user
+         set   position(4)  "40 44"             ; set    names(4)    state
+         set   position(5)  "46 64"             ; set    names(5)    time
+         set  transform(5)  transform_date_time
+         set   position(6)  "66 75"             ; set    names(6)    queue
+         set      rules(6)  rule_list
+         set   position(7)  "77 82"             ; set    names(7)    master
+         set      rules(7)  rule_list
+         set   position(8)  "84 end"            ; set    names(8)    jatask
+         set      rules(8)  rule_list
+      }
    }
 
    # split text output of qstat to Array (list of lists)

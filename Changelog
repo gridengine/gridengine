@@ -1,3 +1,7 @@
+JG-2004-03-09-1: Testsuite: Adapted a number of changed messages and changed 
+                            qstat output format.
+                            Fixed test functional/usage.
+
 JG-2004-03-09-0: Bugfix:    Fixed memory access error in the deletion of 
                             automatic users.
                  Bugfix:    Writing of a job log entry in case of job error 

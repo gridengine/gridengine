@@ -453,7 +453,7 @@ proc usage_monitor_check {id test_name slots} {
       unset qstat_j_info
    }
    set now [clock seconds]
-   set end [expr $now + 100]
+   set end [expr $now + 300]
    while {$job_finished == 0 && $now < $end} {
       set job_state [usage_monitor_job $id started finished jobid info $my_timeout $timeout_error]
       puts $CHECK_OUTPUT "job state: $job_state"
@@ -514,7 +514,7 @@ proc usage_tight {} {
    puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command"
 
    set queue [get_queue_instance "all.q" $ts_config(master_host)]
-   set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 60"]
+   set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120"]
 
    usage_monitor_check $id "usage_tight" 5
    set_error 0 "ok"

@@ -150,6 +150,11 @@
 #define MSG_SPOOLDEFAULTS_PROJECTS              _MESSAGE(57117,         _("projects <template_dir>       create projects\n"))
 #define MSG_SPOOLDEFAULTS_CQUEUES               _MESSAGE(57118,         _("cqueues <template_dir>        create cluster queues\n"))
 #define MSG_SPOOLDEFAULTS_USERS                 _MESSAGE(57119,         _("users <template_dir>          create users\n"))
+#define MSG_SPOOLDEFAULTS_SHARETREE             _MESSAGE(57120,         _("sharetree <template>          create sharetree\n"))
+#define MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S  _MESSAGE(57125,         _("couldn't read global config file "SFN"\n"))
+#define MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S   _MESSAGE(57126,         _("couldn't read local config file "SFN"\n"))
+#define MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS  _MESSAGE(57127,         _("couldn't read sharetree from file "SFN": "SFN"\n"))
+#define MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ      _MESSAGE(57128,         _("can't read key of object - unknown type\n"))
 
 /*
  * utilbin/spoolinit.c

@@ -57,6 +57,7 @@
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/classic/read_list.h"
+#include "spool/classic/read_write_sharetree.h"
 #include "spool/classic/rw_configuration.h"
 #include "msg_utilbin.h"
 
@@ -84,6 +85,7 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_OPERATORS);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PES);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PROJECTS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SHARETREE);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SUBMITHOSTS);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERS);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
@@ -188,7 +190,7 @@ static int spool_configuration(int argc, char *argv[])
 
    conf = read_configuration(argv[2], SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
    if (conf == NULL) {
-      ERROR((SGE_EVENT, "couldn't read local config file "SFN"\n", argv[2]));
+      ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S, argv[2]));
       ret = EXIT_FAILURE;
    } else {
       /* put config into a list - we can't spool free objects */
@@ -211,7 +213,7 @@ static int spool_local_conf(int argc, char *argv[])
    lListElem *conf;
    lList *answer_list = NULL;
 
-   DENTER(TOP_LAYER, "spool_configuration");
+   DENTER(TOP_LAYER, "spool_local_conf");
 
    /* we get an additional argument: the config name */
    if (argc < 4) {
@@ -221,7 +223,7 @@ static int spool_local_conf(int argc, char *argv[])
       conf = read_configuration(argv[2], argv[3], FLG_CONF_SPOOL);
 
       if (conf == NULL) {
-         ERROR((SGE_EVENT, "couldn't read local config file "SFN"\n", argv[2]));
+         ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
          ret = EXIT_FAILURE;
       } else {
          /* put config into a list - we can't spool free objects */
@@ -234,6 +236,40 @@ static int spool_local_conf(int argc, char *argv[])
          }
          answer_list_output(&answer_list);
       }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static int spool_sharetree(int argc, char *argv[])
+{
+   int ret = EXIT_SUCCESS;
+   lListElem *stree;
+   lList *answer_list = NULL;
+   char err_str[1024];
+
+
+   DENTER(TOP_LAYER, "spool_sharetree");
+
+   /* we get an additional argument: the config name */
+   err_str[0] = '\0';
+   stree = read_sharetree(argv[2], NULL, 1, err_str, 1, NULL);
+
+   if (stree == NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS, 
+             argv[2], err_str));
+      ret = EXIT_FAILURE;
+   } else {
+      /* put config into a list - we can't spool free objects */
+      lList *list = lCreateList("sharetree", STN_Type);
+      lAppendElem(list, stree);
+      if (!spool_write_object(&answer_list, spool_get_default_context(), 
+                              stree, "sharetree", SGE_TYPE_SHARETREE)) {
+         /* error output has been done in spooling function */
+         ret = EXIT_FAILURE;
+      }
+      answer_list_output(&answer_list);
    }
 
    DEXIT;
@@ -335,7 +371,7 @@ static int spool_object_list(const char *directory,
             break;
          default:
             key = NULL;
-            ERROR((SGE_EVENT, "can't read key of object - unknown type\n"));
+            ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ));
             return EXIT_FAILURE;
       }
       if (!spool_write_object(&answer_list, spool_get_default_context(), ep, 
@@ -418,6 +454,8 @@ int main(int argc, char *argv[])
                   ret = spool_pes(argc, argv);
                } else if (strcmp(argv[1], "projects") == 0) {
                   ret = spool_projects(argc, argv);
+               } else if (strcmp(argv[1], "sharetree") == 0) {
+                  ret = spool_sharetree(argc, argv);
                } else if (strcmp(argv[1], "submithosts") == 0) {
                   ret = spool_submithosts(argc, argv);
                } else if (strcmp(argv[1], "users") == 0) {

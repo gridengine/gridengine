@@ -138,7 +138,7 @@ Qmon*cplx_ask_layout.layout: \
       Col { \
          Fixed Centered Caption l "@{@fBName of Complex}  " cplx_ask_name \
          # \
-         Etched Through Caption tc "@{@fB Attributes} " Col { \
+         Etched Through Caption tc "@{@fBAttributes} " Col { \
             Fixed Row { \
                FlushTop Caption tl "@{Name}" cplx_ask_aname \
                FlushTop Caption tl "@{Shortcut}" cplx_ask_ashort \

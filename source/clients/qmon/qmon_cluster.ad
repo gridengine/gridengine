@@ -186,6 +186,9 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_execd_spool_dir_label, \
                   cluster_admin_mail_label, \
                   cluster_login_shells_label, \
+                  cluster_max_aj_instances_label, \
+                  cluster_max_aj_tasks_label, \
+                  cluster_max_job_per_user_label, \
                   cluster_admin_user_label;
 
 
@@ -206,15 +209,15 @@ Qmon*cluster_global_layout.layout: \
          Row { cluster_login_shells_label  <> Fixed 25 em cluster_login_shells }\
          ### \
          Equal Row { \
-            Caption "@{Maximal Array\nJob Instances}" <> cluster_max_aj_instances \
+             cluster_max_aj_instances_label <> cluster_max_aj_instances \
          } \
          ## \
          Equal Row { \
-            Caption "@{Maximal Array\nJob Tasks}" <> cluster_max_aj_tasks \
+             cluster_max_aj_tasks_label <> cluster_max_aj_tasks \
          } \
          ## \
          Equal Row { \
-            Caption "@{Maximal Jobs\nPer User}" <> cluster_max_u_jobs \
+             cluster_max_job_per_user_label <> cluster_max_u_jobs \
          } \
          ### \
          Equal Row { \
@@ -285,6 +288,9 @@ Qmon*cluster_global_layout.cluster_execd_spool_dir_label.labelString: @{Execd Sp
 Qmon*cluster_global_layout.cluster_admin_user_label.labelString: @{Admin User}
 Qmon*cluster_global_layout.cluster_admin_mail_label.labelString: @{Admin Mail}
 Qmon*cluster_global_layout.cluster_login_shells_label.labelString: @{Login Shells}
+Qmon*cluster_global_layout.cluster_max_aj_instances_label.labelString: @{cluster.max_aj_instances.Maximal Array\nJob Instances}
+Qmon*cluster_global_layout.cluster_max_aj_tasks_label.labelString: @{cluster.max_aj_tasks.Maximal Array\nJob Tasks}
+Qmon*cluster_global_layout.cluster_max_job_per_user_label.labelString: @{cluster.max_job_per_user.Maximal Jobs\nPer User}
 
 Qmon*cluster_global_layout.cluster_min_uid*columns: 5
 Qmon*cluster_global_layout.cluster_min_gid*columns: 5

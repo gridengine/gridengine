@@ -113,23 +113,23 @@ static XmtHashTable QueueHashTable = NULL;
 static tQueueButton* QBG[QUEUE_MAX_VERT];
 
 static XmtMenuItem queue_popup_items[] = {
-   {XmtMenuItemLabel, "@fBQUEUE ACTIONS"},
+   {XmtMenuItemLabel, "@{@fBQUEUE ACTIONS}"},
    {XmtMenuItemSeparator},
-   {XmtMenuItemPushButton, "Add", 'A', "Meta<Key>A", "Meta+A",
+   {XmtMenuItemPushButton, "@{Add}", 'A', "Meta<Key>A", "Meta+A",
          qmonQCPopup, NULL },
-   {XmtMenuItemPushButton, "Modify", 'M', "Meta<Key>M", "Meta+M",
+   {XmtMenuItemPushButton, "@{Modify}", 'M', "Meta<Key>M", "Meta+M",
          qmonQueueModify, NULL},
 /*    {XmtMenuItemPushButton, "DeleteDialog", 'l', "Meta<Key>L", "Meta+L", */
 /*          qmonQCPopup, (XtPointer)QC_DELETE }, */
-   {XmtMenuItemPushButton, "Delete", 'D', "Meta<Key>D", "Meta+D",
+   {XmtMenuItemPushButton, "@{Delete}", 'D', "Meta<Key>D", "Meta+D",
          qmonQueueDeleteQuick, NULL},
-   {XmtMenuItemPushButton, "Suspend", 'S', "Meta<Key>S", "Meta+S",
+   {XmtMenuItemPushButton, "@{Suspend}", 'S', "Meta<Key>S", "Meta+S",
          qmonQueueChangeState, (XtPointer)QSUSPENDED},
-   {XmtMenuItemPushButton, "Resume", 'R', "Meta<Key>R", "Meta+R",
+   {XmtMenuItemPushButton, "@{Resume}", 'R', "Meta<Key>R", "Meta+R",
          qmonQueueChangeState, (XtPointer)QRUNNING},
-   {XmtMenuItemPushButton, "Disable", 'i', "Meta<Key>I", "Meta+I",
+   {XmtMenuItemPushButton, "@{Disable}", 'i', "Meta<Key>I", "Meta+I",
          qmonQueueChangeState, (XtPointer)QDISABLED},
-   {XmtMenuItemPushButton, "Enable", 'E', "Meta<Key>E", "Meta+E",
+   {XmtMenuItemPushButton, "@{Enable}", 'E', "Meta<Key>E", "Meta+E",
          qmonQueueChangeState, (XtPointer)QENABLED}
 };
 
@@ -241,7 +241,7 @@ void updateQueueList(void)
       lListElem *re;
 
       if (!filter_on) {
-         setButtonLabel(queue_customize, "Customize *");
+         setButtonLabel(queue_customize, "@{Customize +}");
          filter_on = True;
       }
       /* 
@@ -257,7 +257,7 @@ void updateQueueList(void)
    }  
    else {
       if (filter_on) {
-         setButtonLabel(queue_customize, "Customize");
+         setButtonLabel(queue_customize, "@{Customize}");
          filter_on = False;
       }
    }
@@ -852,9 +852,9 @@ lListElem *qep
    correct_capacities(ehl, cl);
    queue_complexes2scheduler(&ncl, qep, ehl, cl, 0);
 
-   sprintf(info, "Attributes for queue %s", lGetString(qep, QU_qname));
+   sprintf(info, "%s %s", XmtLocalize(matrix, "Attributes for queue", "Attributes for queue"), lGetString(qep, QU_qname));
 
-   xstr = XmtCreateLocalizedXmString(matrix, info);
+   xstr = XmtCreateXmString(info);
    XtVaSetValues(XtParent(matrix), XmNdialogTitle, xstr, NULL);
    XmStringFree(xstr);
 

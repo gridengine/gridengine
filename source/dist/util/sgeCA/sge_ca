@@ -291,7 +291,6 @@ MakeCAcert()
       C "$CA_C" ST "$CA_ST" L "$CA_L" O "$CA_O" OU "$CA_OU" emailAddress "$CA_EMAIL"
       $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
          "Do you want to use these data (y/n) [y] >> "
-
       if [ $? = 0 ]; then
          done=true
  

@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Lookup.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: Lookup.c,v 1.1.1.1.6.1 2002/08/01 14:39:48 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,12 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Lookup.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.1.1.1.6.1  2002/08/01 14:39:48  andre
+ * AA-2002-08-01-1  L10N:      Yun's bug list, XtResolvePathname fix in Lookup.c
+ *                             l10n fixes, sge_ca script
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -125,16 +129,64 @@ StringConst object;
 	/* figure out the components of the language string */
 	language = XtResolvePathname(dpy, NULL, NULL, NULL,
 				     "%l", NULL, 0, always_true);
+/* printf("++++++++++++ language: '%s'\n", language);                  */
 	territory = XtResolvePathname(dpy, NULL, NULL, NULL,
 				      "%t", NULL, 0, always_true);
+/* printf("++++++++++++ territory: '%s'\n", territory);                  */
 	codeset = XtResolvePathname(dpy, NULL, NULL, NULL,
 				    "%c", NULL, 0, always_true);
+/* printf("++++++++++++ codeset: '%s'\n", codeset);                  */
 	customization = XtResolvePathname(dpy, NULL, NULL, NULL,
 					  "%C", NULL, 0, always_true);
+/* printf("++++++++++++ customization: '%s'\n", customization);                  */
 	
-	if (language && *language) ql = XrmStringToQuark(language);
-	if (territory && *territory) qt = XrmStringToQuark(territory);
-	if (codeset && *codeset) qc = XrmStringToQuark(codeset);
+	if (language && *language) {
+      /*
+      ** FIXME
+      ** XtResolvePathname workaround for Solaris
+      */
+      if (strchr(language, '/')) {
+         int i;
+         static char trimmed_language[1024];
+         for (i=0; language[i+1] && i<1024; i++) {
+            if (language[i+1] == '/')
+               break;
+            trimmed_language[i] = language[i+1];
+         }   
+         trimmed_language[++i] = '\0';
+         ql = XrmStringToQuark(trimmed_language);
+       } else {   
+         ql = XrmStringToQuark(language);
+       }  
+   }      
+	if (territory && *territory) {
+      if (strchr(territory, '/')) {
+         int i;
+         static char trimmed_territory[1024];
+         for (i=0; territory[i] && i<1024; i++) {
+            trimmed_territory[i] = territory[i];
+         }   
+         trimmed_territory[++i] = '\0';
+         qt = XrmStringToQuark(trimmed_territory);
+      } else   
+         qt = XrmStringToQuark(territory);
+   }      
+	if (codeset && *codeset) {
+      /*
+      ** FIXME
+      ** XtResolvePathname workaround for Solaris
+      */
+      if (strchr(codeset, '/')) {
+         int i;
+         static char trimmed_codeset[1024];
+         for (i=0; codeset[i] && i<1024; i++) {
+            trimmed_codeset[i] = codeset[i];
+         }   
+         trimmed_codeset[++i] = '\0';
+         qc = XrmStringToQuark(trimmed_codeset);
+      } else   
+         qc = XrmStringToQuark(codeset);
+   }   
 	if (customization && *customization)
 	    qC = XrmStringToQuark(customization);
 

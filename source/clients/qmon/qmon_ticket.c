@@ -424,9 +424,9 @@ XtPointer cld, cad;
       qmonMessageBox(w, alp, 0);
 
       if (alp && lGetUlong(lFirst(alp), AN_status) != STATUS_OK)
-         XmtMsgLinePrintf(tov_message, "Failure");
+         XmtMsgLinePrintf(tov_message, XmtLocalize(w, "Failure", "Failure"));
       else
-         XmtMsgLinePrintf(tov_message, "Success");
+         XmtMsgLinePrintf(tov_message, XmtLocalize(w, "Success", "Success"));
       XmtMsgLineClear(tov_message, DISPLAY_MESSAGE_DURATION); 
 
       data_changed = False;

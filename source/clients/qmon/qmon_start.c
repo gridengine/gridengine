@@ -116,8 +116,36 @@ Widget parent
 ) {
    Widget StartupShell, StartupRC, StartupLabel;
    Position x, y;
+   static XmFontList defaultFontList = NULL;
 
    DENTER(TOP_LAYER, "qmonStartupWindow");
+
+   if (!defaultFontList) {
+      XmFontList theFontList = NULL;
+      XmFontContext fc = NULL;
+      XtVaGetValues(parent, XmNfontList, &theFontList, NULL);
+      if (XmFontListInitFontContext(&fc, theFontList)) {
+         XmFontListEntry entry;
+         while ((entry = XmFontListNextEntry(fc))) {
+            char *tag = XmFontListEntryGetTag(entry);
+            DPRINTF(("tag = %s\n", tag ? tag : ""));
+            if (!strcmp(tag, "QUEUEICON")){
+               defaultFontList = XmFontListAppendEntry(NULL, entry); 
+               break;
+            }   
+         }     
+         XmFontListFreeFontContext(fc);
+      }
+      if (!defaultFontList) {
+         XmFontListEntry entry = XmFontListEntryLoad(XtDisplay(parent),
+                                    "-*-helvetica-medium-r-*-*-*-60-*-*-*-*-*-*",
+                                    XmFONT_IS_FONT,
+                                    XmFONTLIST_DEFAULT_TAG);
+         DPRINTF(("Using font set: -*-helvetica-medium-r-*-*-*-60-*-*-*-*-*-*\n"));
+         defaultFontList = XmFontListAppendEntry(NULL, entry);
+         XmFontListEntryFree(&entry);
+      }   
+   }
 
 #if 0
 /*
@@ -161,6 +189,7 @@ Widget parent
                                         XmNwidth, 465,
                                         XmNheight, 700,
                                         NULL);
+   
    StartupLabel = XtVaCreateManagedWidget( "StartupLabel",
                                         xmLabelWidgetClass,
                                         StartupRC,
@@ -168,6 +197,7 @@ Widget parent
                                         XmNmarginWidth, 0,
                                         XmNmarginHeight, 0,
                                         XmNshadowThickness, 1,
+                                        XmNfontList, defaultFontList,
                                         NULL); 
    XtRealizeWidget(StartupShell);
    XtPopup(StartupShell, XtGrabNone);

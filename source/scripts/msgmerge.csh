@@ -41,6 +41,7 @@ set MSGUNIQ = ./3rdparty/gettext/${ARCH}/bin/msguniq
 #set MSGFMT = /usr/bin/msgfmt
 set LOCALEDIR = "./dist/locale"
 #set LANGUAGES = "de en en_FW.MBE en_FW.ASCII"
+#set LANGUAGES = "de en fr ja zh"
 set LANGUAGES = ""
 set MSGPO = "gridengine.po"
 set MSGMO = "gridengine.mo"

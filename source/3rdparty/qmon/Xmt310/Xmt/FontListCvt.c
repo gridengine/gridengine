@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: FontListCvt.c,v 1.1.1.1.6.1 2002/07/08 13:57:25 andre Exp $
+ * $Id: FontListCvt.c,v 1.1.1.1.6.2 2002/08/01 14:39:48 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,10 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: FontListCvt.c,v $
+ * Revision 1.1.1.1.6.2  2002/08/01 14:39:48  andre
+ * AA-2002-08-01-1  L10N:      Yun's bug list, XtResolvePathname fix in Lookup.c
+ *                             l10n fixes, sge_ca script
+ *
  * Revision 1.1.1.1.6.1  2002/07/08 13:57:25  andre
  * AA-2002-07-08-0  Enhancem.: I18N : fontlist converter for mb locales
  *                                    not complete, Qmon.i18n added
@@ -240,7 +244,7 @@ XtPointer *converter_data;
 
 #endif
 
-           entry = XmFontListEntryLoad(dpy, bs, font_type, tag);
+           entry = XmFontListEntryLoad(dpy, bs, font_type, tag ? tag : XmFONTLIST_DEFAULT_TAG);
            fontlist = XmFontListAppendEntry(fontlist, entry);
            XmFontListEntryFree(&entry);
 #if 0

@@ -87,6 +87,7 @@
 #define MSG_PARSE_INVALIDMINUTE       _MESSAGE(43035, _("Invalid minute specification."))
 #define MSG_PARSE_INVALIDSECOND       _MESSAGE(43036, _("Invalid seconds specification."))
 #define MSG_PARSE_NODATEFROMINPUT     _MESSAGE(43037, _("Couldn't generate date from input. Perhaps a date before 1970 was specified."))
+#define MSG_PARSE_NODATE              _MESSAGE(43038, _("no date specified"))
 
 /*
 ** parse.c

@@ -674,7 +674,7 @@ XtPointer cld, cad;
    ** check input 
    */
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_aname))) {
-      qmonMessageShow(matrix, True, "Name required !\n");
+      qmonMessageShow(matrix, True, "Name required !");
       DEXIT;
       return;
    }

@@ -592,13 +592,13 @@ void updateJobList(void)
 
    if (rl || ol) {
       if (!filter_on) {
-         setButtonLabel(job_customize, "Customize *");
+         setButtonLabel(job_customize, "@{Customize +}");
          filter_on = True;
       }
    }
    else {
       if (filter_on) {
-         setButtonLabel(job_customize, "Customize");
+         setButtonLabel(job_customize, "@{Customize}");
          filter_on = False;
       }
    }

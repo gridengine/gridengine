@@ -399,8 +399,8 @@ XtPointer cld, cad;
    ** set the dialog title
    */
    title = XmtCreateLocalizedXmString(qc_dialog, dialog_mode == QC_ADD ? 
-                              "@{@fBQueue Configuration: Add}" :
-                              "@{@fBQueue Configuration: Modify}");
+                              "@{@fBQueue Configuration - Add}" :
+                              "@{@fBQueue Configuration - Modify}");
    XtVaSetValues( qc_dialog,
                   XmNdialogTitle, title,
                   NULL);
@@ -973,7 +973,7 @@ XtPointer cld, cad;
 
    
    if (current_entry.qname[0] == '\0' || !check_qname(current_entry.qname)) {
-      qmonMessageShow(w, True, "@{No valid Queue name specified\n}");
+      qmonMessageShow(w, True, "@{No valid Queue name specified}");
       XmtChooserSetState(qc_subdialogs, 0, False);
       XmProcessTraversal(qc_qname, XmTRAVERSE_CURRENT);
       DEXIT;
@@ -1755,7 +1755,7 @@ XtPointer cld, cad;
    if (cbs->column == 1) {
       if (!parse_ulong_val(NULL, &uval, TYPE_TIM, cbs->value, buf, BUFSIZ-1)) {
          if (show_message)
-            qmonMessageShow(w, True, "@{No valid time format: hh:mm:ss or\nINFINITY required !}");
+            qmonMessageShow(w, True, "@{qaction.novalidtime.No valid time format: hh:mm:ss or\nINFINITY required !}");
          show_message = False;
          cbs->doit = False;
       }
@@ -1788,8 +1788,9 @@ XtPointer cld, cad;
    if (cbs->row < 2) {
       limit = XbaeMatrixGetCell(w, cbs->row, 0);
       value = XbaeMatrixGetCell(w, cbs->row, 1);
-      sprintf(buf, "Enter a time value for '@fB%s':", 
-                     limit);
+      sprintf(buf, "%s '@fB%s':", 
+              XmtLocalize(w, "Enter a time value for", 
+              "Enter a time value for"), limit);
       strncpy(stringval, value, BUFSIZ-1);
       status = XmtAskForTime(w, NULL, buf,
                   stringval, sizeof(stringval), NULL, True);
@@ -1800,7 +1801,7 @@ XtPointer cld, cad;
       limit = XbaeMatrixGetCell(w, cbs->row, 0);
       value = XbaeMatrixGetCell(w, cbs->row, 1);
       strncpy(stringval, value, BUFSIZ-1);
-      status = XmtAskForMemory(w, NULL, "@{Enter a memory value",
+      status = XmtAskForMemory(w, NULL, "@{Enter a memory value}",
                   stringval, sizeof(stringval), NULL);
       if (stringval[0] == '\0')
          status = False;

@@ -1530,8 +1530,9 @@ int sub_command
           object->key_nm == AH_name||
           object->key_nm == SH_name) && 
           sge_resolve_host(instructions, object->key_nm)) {
+      const char *host = lGetHost(instructions, object->key_nm);    
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-            lGetHost(instructions, object->key_nm)));
+            host ? host : "NULL"));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;

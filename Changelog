@@ -1,3 +1,6 @@
+AA-2002-08-01-1  L10N:      Yun's bug list, XtResolvePathname fix in Lookup.c
+                            l10n fixes, sge_ca script
+
 CR-2002-07-31-1  Bugfix:    English messages show up when running install 
                             in localized environment (fix for "fr" Solaris 8
                             and 9)   

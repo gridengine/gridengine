@@ -110,6 +110,7 @@ _Messages_.en.*.@fBName of Complex: @fBName of Complex
 _Messages_.en.*.@fBNode Attributes: @fBNode Attributes
 _Messages_.en.*.@fBNode Info: @fBNode Info
 _Messages_.en.*.@fBNotify Time: @fBNotify Time
+_Messages_.en.*.@fBObject Browser: @fBObject Browser
 _Messages_.en.*.@fBObjects: @fBObjects
 _Messages_.en.*.@fBOperations: @fBOperations
 _Messages_.en.*.@fBOperator: @fBOperator
@@ -124,8 +125,11 @@ _Messages_.en.*.@fBProject Access: @fBProject Access
 _Messages_.en.*.@fBProject Configuration: @fBProject Configuration
 _Messages_.en.*.@fBProjects: @fBProjects
 _Messages_.en.*.@fBProlog: @fBProlog
+_Messages_.en.*.@fBQueue Configuration - Add: @fBQueue Configuration - Add
+_Messages_.en.*.@fBQueue Configuration - Modify: @fBQueue Configuration - Modify
 _Messages_.en.*.@fBQueue Configuration: @fBQueue Configuration
 _Messages_.en.*.@fBQueue Control: @fBQueue Control
+_Messages_.en.*.@fBQUEUE ACTIONS: @fBQUEUE ACTIONS
 _Messages_.en.*.@fBRequested Resources: @fBRequested Resources
 _Messages_.en.*.@fBRerun Jobs: @fBRerun Jobs
 _Messages_.en.*.@fBResource Capability Factor: @fBResource Capability Factor
@@ -133,6 +137,7 @@ _Messages_.en.*.@fBResume Method: @fBResume Method
 _Messages_.en.*.@fBRunning Jobs: @fBRunning Jobs
 _Messages_.en.*.@fBScaling: @fBScaling
 _Messages_.en.*.@fBSchedule Interval: @fBSchedule Interval
+_Messages_.en.*.@fBSGEEE Schedule Interval: @fBSGEEE Schedule Interval
 _Messages_.en.*.@fBScheduler Configuration: @fBScheduler Configuration
 _Messages_.en.*.@fBSelect Job Fields: @fBSelect Job Fields
 _Messages_.en.*.@fBSelected Fields: @fBSelected Fields
@@ -152,6 +157,7 @@ _Messages_.en.*.@fBSuspend Thresholds: @fBSuspend Thresholds
 _Messages_.en.*.@fBTerminate Method: @fBTerminate Method
 _Messages_.en.*.@fBTicket Configuration: @fBTicket Configuration
 _Messages_.en.*.@fBTicket Overview: @fBTicket Overview
+_Messages_.en.*.@fBTasks: @fBTasks
 _Messages_.en.*.@fBUsage Scaling: @fBUsage Scaling
 _Messages_.en.*.@fBUser Access: @fBUser Access
 _Messages_.en.*.@fBUser Configuration: @fBUser Configuration
@@ -172,6 +178,13 @@ _Messages_.en.*.@f[BIG]Job Submission: @f[BIG]Job Submission
 _Messages_.en.*.@f[BIG]Message: @f[BIG]Message
 _Messages_.en.*.@f[BIG]Object Browser: @f[BIG]Object Browser
 _Messages_.en.*.@f[BIG]Queue Control: @f[BIG]Queue Control
+_Messages_.en.*.@f[SMALL]Alarm: @f[SMALL]Alarm
+_Messages_.en.*.@f[SMALL]Calendar Disable: @f[SMALL]Calendar Disable
+_Messages_.en.*.@f[SMALL]Calendar Suspend: @f[SMALL]Calendar Suspend
+_Messages_.en.*.@f[SMALL]Disabled: @f[SMALL]Disabled
+_Messages_.en.*.@f[SMALL]Error: @f[SMALL]Error
+_Messages_.en.*.@f[SMALL]Running: @f[SMALL]Running
+_Messages_.en.*.@f[SMALL]Suspended: @f[SMALL]Suspended
 _Messages_.en.*.APPLICATION-LEVEL: APPLICATION-LEVEL
 _Messages_.en.*.Abort of Job: Abort of Job
 _Messages_.en.*.About: About
@@ -180,11 +193,19 @@ _Messages_.en.*.Access Lists: Access Lists
 _Messages_.en.*.Account: Account
 _Messages_.en.*.AccountString: AccountString
 _Messages_.en.*.Actual Resource Share: Actual Resource Share
+_Messages_.en.*.Add: Add
+_Messages_.en.*.Modify: Modify
+_Messages_.en.*.Delete: Delete
+_Messages_.en.*.Suspend: Suspend
+_Messages_.en.*.Resume: Resume
+_Messages_.en.*.Disable: Disable
+_Messages_.en.*.Enable: Enable
 _Messages_.en.*.Add Leaf: Add Leaf
 _Messages_.en.*.Add Node: Add Node
 _Messages_.en.*.Add/Modify Calendar: Add/Modify Calendar
 _Messages_.en.*.Add/Modify Exec Host: Add/Modify Exec Host
 _Messages_.en.*.Add/Modify Project: Add/Modify Project
+_Messages_.en.*.Add/Modify PE: Add/Modify PE
 _Messages_.en.*.Add: Add
 _Messages_.en.*.Admin Mail: Admin Mail
 _Messages_.en.*.Admin User: Admin User
@@ -195,7 +216,7 @@ _Messages_.en.*.Allow Access: Allow Access
 _Messages_.en.*.Apply: Apply
 _Messages_.en.*.Attached Complexes: Attached Complexes
 _Messages_.en.*.Attribute: Attribute
-_Messages_.en.*.Attributes for queue %s: Attributes for queue %s
+_Messages_.en.*.Attributes for queue: Attributes for queue
 _Messages_.en.*.Attributes: Attributes
 _Messages_.en.*.Available Calendars: Available Calendars
 _Messages_.en.*.Available Complexes: Available Complexes
@@ -216,8 +237,10 @@ _Messages_.en.*.CPU: CPU
 _Messages_.en.*.CRAY-CKPT: CRAY-CKPT
 _Messages_.en.*.CSTRING: CSTRING
 _Messages_.en.*.CWD: CWD
+_Messages_.en.*.Can't resolve host '%s': Can't resolve host '%s'
 _Messages_.en.*.Calendar Configuration: Calendar Configuration
 _Messages_.en.*.Calendars: Calendars
+_Messages_.en.*.Calendar name required !: Calendar name required !
 _Messages_.en.*.Can't copy the whole tree !: Can't copy the whole tree !
 _Messages_.en.*.Can't cut the whole tree !: Can't cut the whole tree !
 _Messages_.en.*.Cancel: Cancel
@@ -231,12 +254,22 @@ _Messages_.en.*.Checkpoint Object: Checkpoint Object
 _Messages_.en.*.Checkpoint Objects: Checkpoint Objects
 _Messages_.en.*.Checkpoint Signal: Checkpoint Signal
 _Messages_.en.*.Checkpoint When: Checkpoint When
+_Messages_.en.*.Checkpoint name required !: Checkpoint name required !
+_Messages_.en.*.Checkpoint interface required !: Checkpoint interface required !
+_Messages_.en.*.Checkpoint ckpt_command required !: Checkpoint ckpt_command required !
+_Messages_.en.*.Checkpoint migr_command required !: Checkpoint migr_command required !
+_Messages_.en.*.Checkpoint rest_command required !: Checkpoint rest_command required !
+_Messages_.en.*.Checkpoint clean_command required !: Checkpoint clean_command required !
+_Messages_.en.*.Checkpoint ckpt_dir required !: Checkpoint ckpt_dir required !
+_Messages_.en.*.Checkpoint when required !: Checkpoint when required !
+_Messages_.en.*.Checkpoint signal required !: Checkpoint signal required !
 _Messages_.en.*.Checkpointing Configuration: Checkpointing Configuration
 _Messages_.en.*.Checkpointing Directory: Checkpointing Directory
 _Messages_.en.*.Checkpointing: Checkpointing
 _Messages_.en.*.Choose a script first !: Choose a script first !
 _Messages_.en.*.Clean Command: Clean Command
 _Messages_.en.*.Clear Error: Clear Error
+_Messages_.en.*.Clear Usage: Clear Usage
 _Messages_.en.*.Clear: Clear
 _Messages_.en.*.Click TRUE or FALSE: Click TRUE or FALSE
 _Messages_.en.*.Clone: Clone
@@ -256,14 +289,17 @@ _Messages_.en.*.Copy: Copy
 _Messages_.en.*.Credit Formula required!: Credit Formula required!
 _Messages_.en.*.Current Working Directory: Current Working Directory
 _Messages_.en.*.Customize: Customize
+_Messages_.en.*.Customize+: Customize+
 _Messages_.en.*.Cut: Cut
 _Messages_.en.*.DOUBLE: DOUBLE
 _Messages_.en.*.DTicket: DTicket
 _Messages_.en.*.Day: Day
 _Messages_.en.*.Days: Days
 _Messages_.en.*.Deadline: Deadline
+_Messages_.en.*.Default Domain: Default Domain
 _Messages_.en.*.Default Project: Default Project
 _Messages_.en.*.Default: Default
+_Messages_.en.*.Default required !: Default required !
 _Messages_.en.*.Delete: Delete
 _Messages_.en.*.Deny Access: Deny Access
 _Messages_.en.*.Department [%]: Department [%]
@@ -280,6 +316,7 @@ _Messages_.en.*.Enter a memory value: Enter a memory value
 _Messages_.en.*.Enter a new priority for the selected jobs: Enter a new priority for the selected jobs
 _Messages_.en.*.Enter a string value: Enter a string value
 _Messages_.en.*.Enter a time value: Enter a time value
+_Messages_.en.*.Enter a time value for: Enter a time value for
 _Messages_.en.*.Enter a uppercase string value: Enter a uppercase string value
 _Messages_.en.*.Enter a valid hostname: Enter a valid hostname
 _Messages_.en.*.Enter an integer value: Enter an integer value
@@ -293,18 +330,20 @@ _Messages_.en.*.Error: Error
 _Messages_.en.*.Execd Parameters: Execd Parameters
 _Messages_.en.*.Execd Spool Dir: Execd Spool Dir
 _Messages_.en.*.Exit: Exit
+_Messages_.en.*.Failure: Failure
 _Messages_.en.*.FORCED: FORCED
 _Messages_.en.*.FTicket: FTicket
 _Messages_.en.*.False: False
 _Messages_.en.*.File Selection: File Selection
 _Messages_.en.*.File: File
+_Messages_.en.*.File '%s' does not exist or is no regular file !: File '%s' does not exist or is no regular file !
 _Messages_.en.*.Find Next: Find Next
 _Messages_.en.*.Find: Find
 _Messages_.en.*.Finished Jobs: Finished Jobs
 _Messages_.en.*.Force: Force
 _Messages_.en.*.GByte (1024x1024x1024): GByte (1024x1024x1024)
 _Messages_.en.*.GID Range for Job Monitoring: GID Range for Job Monitoring
-_Messages_.en.*.GRD Schedule Interval required!: GRD Schedule Interval required!
+_Messages_.en.*.SGEEE Schedule Interval required!: SGEEE Schedule Interval required!
 _Messages_.en.*.Get Environment: Get Environment
 _Messages_.en.*.Get Queue Attributes from: Get Queue Attributes from
 _Messages_.en.*.Get Queue: Get Queue
@@ -328,6 +367,7 @@ _Messages_.en.*.Hours: Hours
 _Messages_.en.*.I/O [%]: I/O [%]
 _Messages_.en.*.INFINITY: INFINITY
 _Messages_.en.*.INT: INT
+_Messages_.en.*.Invalid script name '%s': Invalid script name '%s'
 _Messages_.en.*.IO: IO
 _Messages_.en.*.Id: Id
 _Messages_.en.*.Identifier: Identifier
@@ -344,17 +384,21 @@ _Messages_.en.*.Job Name: Job Name
 _Messages_.en.*.Job Range required!: Job Range required!
 _Messages_.en.*.Job Range: Job Range
 _Messages_.en.*.Job Script: Job Script
+_Messages_.en.*.Job Script required !: Job Script required !
 _Messages_.en.*.Job Submit: Job Submit
 _Messages_.en.*.Job Tasks: Job Tasks
 _Messages_.en.*.Job [%]: Job [%]
 _Messages_.en.*.Job: Job
+_Messages_.en.*.Job %d submitted: Job %d submitted
+_Messages_.en.*.Job %d failed: Job %d failed
+_Messages_.en.*.Job Submission failed: Job Submission failed
 _Messages_.en.*.JobArgs: JobArgs
 _Messages_.en.*.JobId: JobId
 _Messages_.en.*.JobName: JobName
 _Messages_.en.*.Jobclass: Jobclass
 _Messages_.en.*.Just verify: Just verify
 _Messages_.en.*.KByte (1024): KByte (1024)
-_Messages_.en.*.Key\: Key\
+_Messages_.en.*.Key: Key
 _Messages_.en.*.Level Percentage: Level Percentage
 _Messages_.en.*.Load Adjustment Decay Time required!: Load Adjustment Decay Time required!
 _Messages_.en.*.Load Formula required!: Load Formula required!
@@ -380,9 +424,9 @@ _Messages_.en.*.Master Queue List: Master Queue List
 _Messages_.en.*.Master Spool Dir: Master Spool Dir
 _Messages_.en.*.Max Slots: Max Slots
 _Messages_.en.*.Max Unheard: Max Unheard
-_Messages_.en.*.Maximal Array\nJob Instances: Maximal Array\nJob Instances
-_Messages_.en.*.Maximal Array\nJob Tasks: Maximal Array\nJob Tasks
-_Messages_.en.*.Maximal Jobs\nPer User: Maximal Jobs\nPer User
+_Messages_.en.*.cluster.max_aj_instances: Maximal Array\nJob Instances
+_Messages_.en.*.cluster.max_aj_tasks: Maximal Array\nJob Tasks
+_Messages_.en.*.cluster.max_job_per_user: Maximal Jobs\nPer User
 _Messages_.en.*.MaxMigrTime: MaxMigrTime
 _Messages_.en.*.MaxNoMigr: MaxNoMigr
 _Messages_.en.*.Merge Output: Merge Output
@@ -397,6 +441,8 @@ _Messages_.en.*.Minute: Minute
 _Messages_.en.*.Modify: Modify
 _Messages_.en.*.NO: NO
 _Messages_.en.*.Name: Name
+_Messages_.en.*.Name required !: Name required !
+_Messages_.en.*.Name of Complex required !: Name of Complex required !
 _Messages_.en.*.Netscape Help: Netscape Help
 _Messages_.en.*.No Job Name specified !: No Job Name specified !
 _Messages_.en.*.No Restart: No Restart
@@ -404,9 +450,10 @@ _Messages_.en.*.No calendars to select: No calendars to select
 _Messages_.en.*.No load attributes available: No load attributes available
 _Messages_.en.*.No queues to clone: No queues to clone
 _Messages_.en.*.No queues to select: No queues to select
-_Messages_.en.*.No valid Queue name specified\n: No valid Queue name specified\n
+_Messages_.en.*.No valid Queue name specified: No valid Queue name specified
 _Messages_.en.*.No valid filename specified !: No valid filename specified !
-_Messages_.en.*.No valid time format: No valid time format
+_Messages_.en.*.No valid load parameter name !: No valid load parameter name !
+_Messages_.en.*.qaction.novalidtime: No valid time format\: hh\:mm\:ss or \nINFINITY required !
 _Messages_.en.*.No: No
 _Messages_.en.*.Notify Job: Notify Job
 _Messages_.en.*.Notify: Notify
@@ -430,6 +477,7 @@ _Messages_.en.*.Path: Path
 _Messages_.en.*.Percentage: Percentage
 _Messages_.en.*.Please configure a checkpoint object first !: Please configure a checkpoint object first !
 _Messages_.en.*.Please configure a Parallel Environment first !: Please configure a Parallel Environment first !
+_Messages_.en.*.Please configure a project first.: Please configure a project first.
 _Messages_.en.*.Please type or select a filename: Please type or select a filename
 _Messages_.en.*.Predecessors: Predecessors
 _Messages_.en.*.Prefix: Prefix
@@ -481,6 +529,7 @@ _Messages_.en.*.Question: Question
 _Messages_.en.*.Queue Control: Queue Control
 _Messages_.en.*.Queue List: Queue List
 _Messages_.en.*.Queue: Queue
+_Messages_.en.*.Range required for Parallel Environment !: Range required for Parallel Environment !
 _Messages_.en.*.Refresh: Refresh
 _Messages_.en.*.Relation: Relation
 _Messages_.en.*.Reload: Reload
@@ -530,6 +579,7 @@ _Messages_.en.*.Shell on host: Shell on host
 _Messages_.en.*.Shell: Shell
 _Messages_.en.*.Shepherd Command: Shepherd Command
 _Messages_.en.*.Shortcut: Shortcut
+_Messages_.en.*.Shortcut required !: Shortcut required !
 _Messages_.en.*.Show Details ...: Show Details ...
 _Messages_.en.*.Shutdown: Shutdown
 _Messages_.en.*.Skip: Skip
@@ -558,6 +608,7 @@ _Messages_.en.*.Stop Proc Args: Stop Proc Args
 _Messages_.en.*.Submit Job: Submit Job
 _Messages_.en.*.Submit: Submit
 _Messages_.en.*.SubmitTime: SubmitTime
+_Messages_.en.*.Success: Success
 _Messages_.en.*.Sum: Sum
 _Messages_.en.*.Suspend Method: Suspend Method
 _Messages_.en.*.Suspend of Job: Suspend of Job
@@ -567,6 +618,7 @@ _Messages_.en.*.TIME: TIME
 _Messages_.en.*.TRANSPARENT: TRANSPARENT
 _Messages_.en.*.Targeted Resource Share: Targeted Resource Share
 _Messages_.en.*.Task: Task
+_Messages_.en.*.Tasks: Tasks
 _Messages_.en.*.TaskId(s): TaskId(s)
 _Messages_.en.*.Terminate Method: Terminate Method
 _Messages_.en.*.There are no jobs selected !: There are no jobs selected !
@@ -591,8 +643,10 @@ _Messages_.en.*.User/Group: User/Group
 _Messages_.en.*.User: User
 _Messages_.en.*.Users/Groups: Users/Groups
 _Messages_.en.*.Userset Name: Userset Name
+_Messages_.en.*.Userset List Name required !: Userset List Name required !
 _Messages_.en.*.Usersets: Usersets
 _Messages_.en.*.Value: Value
+_Messages_.en.*.Value required !: Value required !
 _Messages_.en.*.Variable: Variable
 _Messages_.en.*.Verify Mode: Verify Mode
 _Messages_.en.*.Warning: Warning
@@ -628,12 +682,13 @@ _Messages_.en.*.rlogin Daemon: rlogin Daemon
 _Messages_.en.*.rlogin Command: rlogin Command
 _Messages_.en.*.@fBInteractive Parameters: @fBInteractive Parameters
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-XmtDisplayMessage.warningTitle: Warning
-XmtDisplayMessage.errorTitle: Error
-XmtDisplayMessage.messageTitle: Message
-XmtDisplayMessage.helpTitle: Help
+Qmon*XmtDisplayMessage.warningTitle: Warning
+Qmon*XmtDisplayMessage.errorTitle: Error
+Qmon*XmtDisplayMessage.messageTitle: Message
+Qmon*XmtDisplayMessage.helpTitle: Help
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*about_msg.message: @fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s%s
+Qmon*mailto_msg.message: \nFor further information and feedback use: @fBge-feedback@@eng.sun.com@fR\n\n
 Qmon*cancelLabelString: Cancel
 Qmon*okLabelString: Ok
 Qmon*helpLabelString: Help
@@ -642,7 +697,17 @@ Qmon*fileListLabelString: Files
 Qmon*filterLabelString: Filter
 Qmon*applyLabelString: Apply
 Qmon*xmtBooleanDialog*title: Question
-Qmon*xmtAskForString*title: Enter a String
+_Messages_.en.*.XmtAskForInteger.title: Enter an integer 
+_Messages_.en.*.XmtAskForDouble.title: Enter a double
+_Messages_.en.*.XmtAskForString.title: Enter a String
+_Messages_.en.*.XmtAskForFile.title: Select a File
+_Messages_.en.*.XmtAskForTime.title: Time
+_Messages_.en.*.XmtAskForMemory.title: Memory
+_Messages_.en.*.XmtAskForItem.title: Select an Item
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_Messages_.en.*.XmtHelpDisplayContextHelp.noHelp: There is no help available there.
+_Messages_.en.*.XmtHelpDisplayContextHelp.dialogTitle: Help On Context
+_Messages_.en.*.XmtHelpBox.ok: Okay 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 _Messages_.en.*.qmon_fticket.Sum: Sum
 _Messages_.en.*.qmon_usage.usageTitle: usage: qmon\n

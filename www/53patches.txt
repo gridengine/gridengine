@@ -3,6 +3,7 @@ Bugs fixed in SGE 5.3p1 since release 5.3
 
 Issue	Sun BugId  Description
 ---------------------------------------------------------------------------------------------------
+182                allow arguments for *_command and *_daemon parameters in cluster config
 215     4673738    disallow "none" load formula and do additional tests for the correctness
 223 	4700286    complex default value not considered for load/suspend thresholds
 226	4665780    qmaster error message during startup: global configuration doesn't exist - creat

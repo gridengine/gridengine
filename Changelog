@@ -1,3 +1,5 @@
+CR-2001-12-06-0: Testsuite: modifications for new commdcntl -k enhancements.
+
 EB-2001-12-06-1: Enhancem.: 'max_aj_tasks' defines the maximum number of 
                             allowed tasks within an array job. (75,000)
                             changed default value for 'max_aj_instances' (2000)

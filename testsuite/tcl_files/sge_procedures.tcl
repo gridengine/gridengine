@@ -4989,19 +4989,23 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
    foreach elem $CHECK_CORE_EXECD { 
        puts $CHECK_OUTPUT "killing commd on host $elem"
 
-       if { $CHECK_COMMD_PORT < 1024 } {
-         if { [ have_root_passwd ] == -1 } {
-            set_root_passwd 
-         }
-         set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
-       } else {
-         set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
-       }
+       set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
        if { $prg_exit_state == 0 } {
           puts $CHECK_OUTPUT $result
        } else {
-          set do_ps_kill 1
-          puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
+          puts $CHECK_OUTPUT $result
+          if { $prg_exit_state != 4 } {
+             if { [ have_root_passwd ] == -1 } {
+                set_root_passwd 
+             }
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+          }
+          if { $prg_exit_state == 0 } {
+             puts $CHECK_OUTPUT $result
+          } else {
+             set do_ps_kill 1
+             puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
+          }
        }
    }
    

@@ -4847,9 +4847,9 @@ proc compile_source {} {
         puts "could not copy defaults file"
         return -1
    }
-   do_wait 10
+#   do_wait 1
    setup 1 
-   do_wait 5
+#   do_wait 1
    return 0
 }
 

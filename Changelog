@@ -1,3 +1,6 @@
+CR-2002-07-19-0: Bugfix:    fixed broken build for some architectures 
+                            (CR-2002-07-18-4)
+
 JG-2002-07-19-0: Doc:       updated qmake manpage to reflect usage of the
                             ARCH environment variable.
                  Changed:   man/man1/qmake.1           

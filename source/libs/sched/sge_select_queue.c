@@ -4156,6 +4156,8 @@ static int ri_time_by_slots(lListElem *rep, lList *load_attr, lList *config_attr
    actual_el = lGetElemStr(actual_attr, RUE_name, attrname);
    ready_time = *start_time;
 
+DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
+
    /*
     * Consumables are treated futher below in schedule based mode 
     * thus we always assume zero consumable utilization here 

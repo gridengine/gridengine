@@ -152,9 +152,11 @@ static sge_task_ref_t *task_ref_get_first_job_entry(void);
 static sge_task_ref_t *task_ref_get_next_job_entry(void);
 static void task_ref_copy_to_ja_task(sge_task_ref_t *tref, lListElem *ja_task);
 
-static void sge_do_sgeee_priority(lList *job_list, double min_tix, double max_tix);
-static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu, double npri, double min_tix, double max_tix);
-static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double uc, double npri);
+static void sge_do_sgeee_priority(lList *job_list, double min_tix, double max_tix,
+            bool do_nprio, bool do_nurg, bool do_ntix);
+static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu, double npri, 
+            double min_tix, double max_tix, bool do_ntix);
+static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double uc, double npri, bool do_ntix);
 
 static void get_max_ptix(double *min, double *max, lList *job_list);
 
@@ -527,7 +529,7 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
       double prio;
 
       if (tmp_task == NULL) {
-         double nurg, npri;
+         double nurg = 0.5, npri = 0.5;
          lList *range_list = lGetList(next_job, JB_ja_n_h_ids);
          u_long32 ja_task_id = range_list_get_first_id(range_list, NULL);
          sge_task_ref_t *tref = task_ref_get_first(job_id, ja_task_id);
@@ -548,14 +550,22 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
           * increase the 'max_pending_tasks_per_job' in sched_conf(5).
           */
          if (tref) {
+            bool report_priority = sconf_get_report_pjob_tickets();
+            bool do_nurg = (sconf_get_weight_urgency()!=0) || report_priority;
+            bool do_npri = (sconf_get_weight_priority()!=0) || report_priority;
+            bool do_ntix = (sconf_get_weight_ticket()!=0) || report_priority;
+
             tmp_task = ja_task_template;
 
             /*
              * job's normalized urgency and priority did not change,
              * but it's needed for updating prio
              */
-            nurg = lGetDouble(next_job, JB_nurg);
-            npri = lGetDouble(next_job, JB_nppri);
+
+            if (do_nurg)
+               nurg = lGetDouble(next_job, JB_nurg);
+            if (do_npri)
+               npri = lGetDouble(next_job, JB_nppri);
 
             /*
              * Update pending tickets in template element
@@ -563,7 +573,7 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
             DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", template_task = "u32")\n",
                tref->ja_task_number, lGetUlong(ja_task_template, JAT_task_number)));
             task_ref_copy_to_ja_task(tref, ja_task_template);
-            recompute_prio(tref, ja_task_template, nurg, npri);
+            recompute_prio(tref, ja_task_template, nurg, npri, do_ntix);
 
             /* 
              * Update pending tickets in ORT_ptickets-order which was
@@ -577,7 +587,7 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
                   DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", task = "u32")\n",
                      tref->ja_task_number, lGetUlong(order_task, JAT_task_number)));
                   task_ref_copy_to_ja_task(tref, order_task);
-                  recompute_prio(tref, order_task, nurg, npri);
+                  recompute_prio(tref, order_task, nurg, npri, do_ntix);
                   break;
                }
             }
@@ -630,13 +640,14 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
 *     lListElem *task      - The JAT_Type task element.
 *     double nurg          - The normalized urgency assumed for the job.
 *     double npri          - The normalized POSIX priority assumed for the job.
+*     bool do_ntix         - Indicates whether norm. ticket number needs be determined
 *
 *  NOTES
 *******************************************************************************/
-static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double nurg, double npri)
+static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double nurg, double npri, bool do_ntix)
 {
    double min_tix, max_tix, prio;
-   double ntix; 
+   double ntix = 0.5; 
    double weight_ticket = sconf_get_weight_ticket();
    double weight_urgency = sconf_get_weight_urgency();
    double weight_priority = sconf_get_weight_priority();
@@ -644,9 +655,11 @@ static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double nurg, d
    DENTER(TOP_LAYER, "recompute_prio");
 
    /* need to know min/max tix values to normalize new ticket value */
-   tix_range_get(&min_tix, &max_tix);
-   ntix = sge_normalize_value(tref->ja_task_ticket, min_tix, max_tix);
-   lSetDouble(task, JAT_ntix, ntix); 
+   if (do_ntix) {
+      tix_range_get(&min_tix, &max_tix);
+      ntix = sge_normalize_value(tref->ja_task_ticket, min_tix, max_tix);
+      lSetDouble(task, JAT_ntix, ntix); 
+   }
 
    /* prio changes, but only due to ntix update */
    prio = weight_urgency * nurg + weight_priority * npri + weight_ticket * ntix;
@@ -4053,31 +4066,19 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
 void sge_do_priority(lList *running_jobs, lList *pending_jobs)
 {
    lListElem *jep;
-   u_long32 min_priority = 2048;
-   u_long32 max_priority = 0;
-
-   for_each(jep, running_jobs) {
-      min_priority = MIN(lGetUlong(jep, JB_priority), min_priority);
-      max_priority = MAX(lGetUlong(jep, JB_priority), max_priority);
-   }
-
-   for_each(jep, pending_jobs) {
-      min_priority = MIN(lGetUlong(jep, JB_priority), min_priority);
-      max_priority = MAX(lGetUlong(jep, JB_priority), max_priority);
-   }
+   const double min_priority = 0;
+   const double max_priority = 2048;
 
    for_each(jep, running_jobs) {
       lSetDouble(jep, JB_nppri,
                  sge_normalize_value((double)lGetUlong(jep, JB_priority),
-                                     (double)min_priority,
-                                     (double)max_priority));
+                                     min_priority, max_priority));
    }
 
    for_each(jep, pending_jobs) {
       lSetDouble(jep, JB_nppri,
                  sge_normalize_value((double)lGetUlong(jep, JB_priority),
-                                     (double)min_priority,
-                                     (double)max_priority));
+                                     min_priority, max_priority));
    }
 }
 
@@ -4136,45 +4137,58 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    double min_tix  = DBL_MAX;
    double max_tix  = DBL_MIN;
 
+   bool report_priority = sconf_get_report_pjob_tickets();
+   bool do_ntix, do_nurg, do_nprio;
+
    DENTER(TOP_LAYER, "sgeee_scheduler");
+
+   /* skip computation of ntix, nurg and nprio 
+      but only if it is irrelevant and not monitored */
+   do_ntix = (sconf_get_weight_ticket()!=0)    || report_priority;
+   do_nurg = (sconf_get_weight_urgency()!=0)   || report_priority;
+   do_nprio = (sconf_get_weight_priority()!=0) || report_priority;
 
    /* clear SGEEE fields for queued jobs */
    for_each(job, pending_jobs)
       sge_clear_job(job);
 
    /* calculate per job static urgency values */
-   sge_do_urgency(now, pending_jobs, running_jobs, lists);
+   if (do_nurg)
+      sge_do_urgency(now, pending_jobs, running_jobs, lists);
 
    /* calculate per job normalized priority values */
-   sge_do_priority(pending_jobs, running_jobs);
+   if (do_nprio)
+      sge_do_priority(pending_jobs, running_jobs);
 
-   /* calculate tickets for pending jobs */
-   seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
-                              pending_jobs, 1);
-         
-   /* calculate tickets for running jobs */
-   seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
+   if (do_ntix) {
+      /* calculate tickets for pending jobs */
+      seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
+                                 pending_jobs, 1);
+            
+      /* calculate tickets for running jobs */
+      seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
 
-   /* determine min/max tix */
-   get_max_ptix(&min_tix, &max_tix, running_jobs);
-   get_max_ptix(&min_tix, &max_tix, pending_jobs);
-   {
-      int i;
-      for (i = 0; i < task_ref_entries; i++) {
-         sge_task_ref_t *tref = task_ref_get_entry(i);
-         if (tref == NULL) {
-            break;
+      /* determine min/max tix */
+      get_max_ptix(&min_tix, &max_tix, running_jobs);
+      get_max_ptix(&min_tix, &max_tix, pending_jobs);
+      {
+         int i;
+         for (i = 0; i < task_ref_entries; i++) {
+            sge_task_ref_t *tref = task_ref_get_entry(i);
+            if (tref == NULL) {
+               break;
+            }
+            max_tix = MAX(max_tix, tref->ja_task_ticket);
+            min_tix = MIN(min_tix, tref->ja_task_ticket);
          }
-         max_tix = MAX(max_tix, tref->ja_task_ticket);
-         min_tix = MIN(min_tix, tref->ja_task_ticket);
       }
+
+
+      /* use min/max tix for normalizing 
+         - now to determine initial normalized ticket amount
+         - but also later on after tickets recomputation when a job was assigned */
+      tix_range_set(min_tix, max_tix);
    }
-
-
-   /* use min/max tix for normalizing 
-      - now to determine initial normalized ticket amount
-      - but also later on after tickets recomputation when a job was assigned */
-   tix_range_set(min_tix, max_tix);
 
 #ifdef DEBUG_TASK_REF
    task_ref_print_table();
@@ -4185,8 +4199,8 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
     * absolute priority
     */
    DPRINTF(("Normalizing tickets using %f/%f as min_tix/max_tix\n", min_tix, max_tix));
-   sge_do_sgeee_priority(running_jobs, min_tix, max_tix); 
-   sge_do_sgeee_priority(pending_jobs, min_tix, max_tix); 
+   sge_do_sgeee_priority(running_jobs, min_tix, max_tix, do_nprio, do_nurg, do_ntix); 
+   sge_do_sgeee_priority(pending_jobs, min_tix, max_tix, do_nprio, do_nurg, do_ntix); 
 
    /* 
     * Order Jobs in descending order according to tickets and 
@@ -4272,32 +4286,39 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
 *     lList *job_list - The job list
 *     double min_tix  - Minumum ticket amount
 *     double max_tix  - Maximum ticket amount
+*     bool do_nprio   - Needs norm. priority be determined
+*     bool do_nurg    - Needs norm. urgency be determined
+*     bool do_ntix    - Needs norm. ticket amount be determined
 *
 *  NOTES
 *     MT-NOTE: sge_do_sgeee_priority() is MT safe
 *******************************************************************************/
-static void sge_do_sgeee_priority(lList *job_list, double min_tix, double max_tix) 
+static void sge_do_sgeee_priority(lList *job_list, double min_tix, double max_tix,
+               bool do_nprio, bool do_nurg, bool do_ntix) 
 {
    lListElem *job, *task;
    u_long32 jobid;
    bool enrolled;
-   double nsu, npri;
+   double nsu = 0.5, npri = 0.5;
 
    for_each (job, job_list) {
       jobid = lGetUlong(job, JB_job_number);
-      nsu = lGetDouble(job, JB_nurg);
-      npri = lGetDouble(job, JB_nppri);
+
+      if (do_nurg)
+         nsu = lGetDouble(job, JB_nurg);
+      if (do_nprio)
+         npri = lGetDouble(job, JB_nppri);
    
       enrolled = false;
 
       for_each (task, lGetList(job, JB_ja_tasks)) {
-         sgeee_priority(task, jobid, nsu, npri, min_tix, max_tix);
+         sgeee_priority(task, jobid, nsu, npri, min_tix, max_tix, do_ntix);
          enrolled = true;
       }
 
       if (!enrolled) {
          task = lFirst(lGetList(job, JB_ja_template));
-         sgeee_priority(task, jobid, nsu, npri, min_tix, max_tix);
+         sgeee_priority(task, jobid, nsu, npri, min_tix, max_tix, do_ntix);
       }
    }
 }
@@ -4323,15 +4344,16 @@ static void sge_do_sgeee_priority(lList *job_list, double min_tix, double max_ti
 *                       tasks of the job.
 *     double min_tix  - minimum ticket amount 
 *     double max_tix  - maximum ticket amount 
+*     bool do_ntix    - Needs norm. ticket amount be determined
 *
 *  NOTES
 *     MT-NOTE: sgeee_priority() is MT safe
 *******************************************************************************/
 static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu, 
-      double npri, double min_tix, double max_tix)
+      double npri, double min_tix, double max_tix, bool do_ntix)
 {
 
-   double nta, geee_priority;
+   double nta = 0.5, geee_priority;
    double weight_ticket = sconf_get_weight_ticket();
    double weight_urgency = sconf_get_weight_urgency();
    double weight_priority = sconf_get_weight_priority();
@@ -4339,8 +4361,10 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
    DENTER(TOP_LAYER, "sgeee_priority");
 
    /* now compute normalized ticket amount (NTA) for each job/task */
-   nta = sge_normalize_value(lGetDouble(task, JAT_tix), min_tix, max_tix);
-   lSetDouble(task, JAT_ntix, nta);
+   if (do_ntix) {
+      nta = sge_normalize_value(lGetDouble(task, JAT_tix), min_tix, max_tix);
+      lSetDouble(task, JAT_ntix, nta);
+   }
 
    /* combine per task NTA with per job normalized static urgency 
       (NSU) and per job normalized POSIX priority (NPRI) into

@@ -922,6 +922,9 @@ double req,
 double src_dl
 ) {
    int match;
+
+   DENTER(CULL_LAYER, "resource_cmp");
+
    switch(relop) {
    case CMPLXEQ_OP :
       match = ( req==src_dl);
@@ -945,6 +948,9 @@ double src_dl
       match = 0; /* default -> no match */
    }
 
+   DPRINTF((" %f %s %f -> match = %d\n", req, map_op2str(relop), src_dl, match));
+
+   DEXIT;
    return match;
 }
 
@@ -1141,7 +1147,7 @@ int force_existence
             {
                dstring request_string = DSTRING_INIT;
 
-               double_print_time_to_dstring(req_dl, &request_string);
+               double_print_memory_to_dstring(req_dl, &request_string);
                DPRINTF(("per slot -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
                         name, sge_dstring_get_string(&request_string),
                         dom_str, name, map_op2str(used_relop),

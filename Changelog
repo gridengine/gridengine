@@ -1,3 +1,11 @@
+AH-2004-03-08-0: Optim.:    Skip computation of ntix/nurg/nprio if  
+                            corresponding weights are 0.0 and 
+                            report_pjob_tickets is set to 'false'.
+                            Assume fix range -1023 to 1024 when determining
+                            nprio.
+                 Changed:   scheduler
+                 Review:    EB
+
 MD-2004-03-08-0: Bugfix:    qmaster crash in csp mode, if unsecure execd's
                             are trying to connect to the qmaster
                  Issue:     801

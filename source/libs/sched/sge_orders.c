@@ -47,15 +47,14 @@
 #include "msg_common.h"
 
 
-lList *sge_add_schedd_info(
-lList *or_list 
-) {
+lList *sge_add_schedd_info(lList *or_list) 
+{
    lList *jlist;
    lListElem *sme, *ep;
 
    DENTER(TOP_LAYER, "sge_add_schedd_info");
 
-   sme = schedd_mes_get();
+   sme = schedd_mes_obtain_package();
    if (!sme || (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 
          && lGetNumberOfElem(lGetList(sme, SME_global_message_list))<1)) {
       DEXIT;
@@ -70,7 +69,7 @@ lList *or_list
    ep=lCreateElem(OR_Type);   
    
    jlist = lCreateList("", SME_Type);
-   lAppendElem(jlist, lCopyElem(sme));
+   lAppendElem(jlist, sme);
    lSetList(ep, OR_joker, jlist);
    
    lSetUlong(ep, OR_seq_no, get_seq_nr());

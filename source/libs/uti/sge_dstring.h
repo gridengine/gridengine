@@ -49,6 +49,7 @@
 ******************************************************************************/
 
 #include <stdarg.h>
+#include "sge_stdlib.h"
 
 #define DSTRING_INIT {NULL, 0}
 

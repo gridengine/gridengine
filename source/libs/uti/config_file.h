@@ -36,7 +36,7 @@
 int read_config(const char *fname);
 
 char *get_conf_val(char *name);
-char *search_conf_val(char *name);
+char *search_conf_val(const char *name);
 char *search_nonone_conf_val(char *name);
 
 int replace_params(const char *src, char *dst, int dst_len, char **alllowed);

@@ -2173,7 +2173,11 @@ proc setup_testcheckpointobject {} {
 
   set q_list ""
   foreach elem $CHECK_CORE_EXECD {
-    set q_list "$q_list,${elem}.q"
+    if [ string compare $q_list "" ] {
+      set q_list "$q_list,${elem}.q"
+    } else {
+      set q_list "${elem}.q"
+    }
   }
   set change(queue_list) "$q_list"
   set change(ckpt_name)  "testcheckpointobject"

@@ -41,6 +41,7 @@ SHEPHERD_SRC = shepherd.c \
            am_chdir.c \
            setrlimits.c \
            signal_queue.c \
+           sge_shepconf.c \
            setjoblimit.c \
            sge_pset.c
 
@@ -108,6 +109,9 @@ am_chdir.o:	$(SHEPHERD_DIR)/am_chdir.c
 
 signal_queue.o:	$(SHEPHERD_DIR)/signal_queue.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/signal_queue.c
+
+sge_shepconf.o:	$(SHEPHERD_DIR)/sge_shepconf.c
+		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/sge_shepconf.c
 
 setrlimits.o:	$(SHEPHERD_DIR)/setrlimits.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/setrlimits.c

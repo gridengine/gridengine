@@ -29,10 +29,13 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
+#include <ctype.h>
 
 #include "signal_queue.h"
 #include "err_trace.h"
+#include "sge_signal.h"
 
 #define MAXSIG 100
 
@@ -66,7 +69,14 @@ void report_signal_queue()
 
    return;
 }
-#endif 
+#endif
+
+int shepherd_sys_str2signal(char *override_signal)
+{
+   if (!isdigit(override_signal[0]))
+      override_signal = &override_signal[3];
+   return sge_sys_str2signal(override_signal);
+}
 
 /****** shepherd/signal/queue/add_signal() ************************************
 *  NAME
@@ -91,11 +101,15 @@ int add_signal(int signal)
    int ret = -1;
 
    if (n_sigs != MAXSIG) {
+      char err_str[256];
       ret = 0;
 
       n_sigs++;
       sig_queue[free_sig] = signal;
       free_sig = NEXT_INDEX(free_sig);
+
+      sprintf(err_str, "queued signal %s", sge_sys_sig2str(signal));
+      shepherd_trace(err_str);
    } 
    return ret;
 }  

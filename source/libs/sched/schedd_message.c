@@ -44,6 +44,7 @@
 #include "msg_schedd.h"
 #include "sge_range.h"
 #include "sge_job.h"
+   #include "schedd_conf.h"
 
 static void schedd_mes_find_others(lList *job_list, int category);
 
@@ -262,29 +263,42 @@ void schedd_mes_rollback(void)
    }
 }
 
-/****** schedd/schedd_mes/schedd_mes_get() ************************************
+/****** schedd/schedd_mes/schedd_mes_obtain_package() *************************
 *  NAME
-*     schedd_mes_get() -- Get message structure  
+*     schedd_mes_obtain_package() -- Get message structure  
 *
 *  SYNOPSIS
-*     lListElem* schedd_mes_get(void) 
+*     lListElem *schedd_mes_obtain_packagevoid) 
 *
 *  FUNCTION
-*     Returns message structure which containes all messages
+*     Returns message structure which containes all messages.
+*
+*  NOTES
+*     The calling function is responsible to free the returned
+*     message structure if it is not needed anymore.
 *
 *  RESULT
 *     lListElem* - SME_Type element
 *******************************************************************************/
-lListElem *schedd_mes_get(void)
+lListElem *schedd_mes_obtain_package(void)
 {
-#ifndef WIN32NATIVE
-   DENTER(TOP_LAYER, "schedd_get_messages");
+   lListElem *ret;
+   DENTER(TOP_LAYER, "schedd_mes_obtain_package");
 
-   if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_FALSE)
+#ifndef WIN32NATIVE
+   if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_FALSE) {
+      enum schedd_job_info_key old_val = scheddconf.schedd_job_info;
+
+      /*
+       * Temporaryly we enable schedd_job_info to add one
+       * message which says that schedd_job_info is disabled. 
+       */
+      scheddconf.schedd_job_info = SCHEDD_JOB_INFO_TRUE;
       schedd_mes_add_global(SCHEDD_INFO_TURNEDOFF);
-   else if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST)
+      scheddconf.schedd_job_info = old_val;
+   } else if (scheddconf.schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
       schedd_mes_add_global(SCHEDD_INFO_JOBLIST);
-   else if (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 &&
+   } else if (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 &&
             lGetNumberOfElem(lGetList(sme, SME_global_message_list))<1) {
       schedd_mes_add_global(SCHEDD_INFO_NOMESSAGE);
    }
@@ -294,11 +308,16 @@ lListElem *schedd_mes_get(void)
    lWriteElemTo(tmp_sme, stderr);
 #endif
 
-   DEXIT;
-   return sme;
+   ret = sme; /* calling function is responsible to free messages! */
+   sme = NULL; 
+   tmp_sme = lFreeElem(tmp_sme);
+
 #else
-   return 0;
+   ret = NULL;
 #endif
+
+   DEXIT;
+   return ret; 
 }
 
 /****** schedd/schedd_mes/schedd_mes_set_logging() ****************************
@@ -451,31 +470,34 @@ void schedd_mes_add_global(u_long32 message_number, ...)
 
    DENTER(TOP_LAYER, "schedd_mes_add_global");
 
-   /* Create error message */
-   fmt = sge_schedd_text(message_number);
-   va_start(args,message_number);
+   if (scheddconf.schedd_job_info != SCHEDD_JOB_INFO_FALSE) {
+      /* Create error message */
+      fmt = sge_schedd_text(message_number);
+      va_start(args,message_number);
 #if defined(LINUX)
-   nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
-   if (nchars == -1) {
-      ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
-         u32c(message_number)));
-      DEXIT;
-      return;
-   }
+      nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
+      if (nchars == -1) {
+         ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
+            u32c(message_number)));
+         DEXIT;
+         return;
+      }
 #else
-   vsprintf(msg, fmt, args);
+      vsprintf(msg, fmt, args);
 #endif
 
-   /* Add scheduling info to structure */
-   if (!sme)
-      schedd_mes_initialize();
-   mes = lCreateElem(MES_Type);
-   lSetUlong(mes, MES_message_number, message_number);
-   lSetString(mes, MES_message, msg);
-   lAppendElem(lGetList(sme, SME_global_message_list), mes);
+      /* Add scheduling info to structure */
+      if (!sme)
+         schedd_mes_initialize();
 
-   /* Write entry into log file */
-   SCHED_MON((log_string, msg));
+      mes = lCreateElem(MES_Type);
+      lSetUlong(mes, MES_message_number, message_number);
+      lSetString(mes, MES_message, msg);
+      lAppendElem(lGetList(sme, SME_global_message_list), mes);
+
+      /* Write entry into log file */
+      SCHED_MON((log_string, msg));
+   }
 
    DEXIT;
 }

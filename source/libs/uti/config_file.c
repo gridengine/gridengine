@@ -108,7 +108,7 @@ char *ctrl_method_variables[] = {
 };
 
 
-static config_entry *find_conf_entry(char *name, config_entry *ptr);
+static config_entry *find_conf_entry(const char *name, config_entry *ptr);
 
 void (*config_errfunc)(char *) = NULL;
 
@@ -179,10 +179,8 @@ char *name, *value;
 
 /****************************************************/
 
-static config_entry *find_conf_entry(
-char *name,
-config_entry *ptr 
-) {
+static config_entry *find_conf_entry(const char *name, config_entry *ptr) 
+{
    while (ptr) {
       if (!strcmp(ptr->name, name))
          return ptr;
@@ -212,7 +210,7 @@ char *name
 
 /***************************************************/
 char *search_conf_val(
-char *name 
+const char *name 
 ) {
    config_entry *ptr = config_list;
    

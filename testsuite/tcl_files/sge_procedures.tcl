@@ -876,7 +876,7 @@ proc set_exechost { change_array host } {
         lappend vi_commands [format "%c" 27]
      }
   } 
-  set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] $host ]
+  set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
   set result [handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
   if { $result == -2 } {
      set result 0

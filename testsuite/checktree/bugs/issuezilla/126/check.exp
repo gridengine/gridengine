@@ -179,7 +179,7 @@ proc issue_126_check {} {
       #
       # Bug #126 is present
       #   
-      add_proc_error "issue_126_check" "-1" "$state1 Bug #126 is present"
+      add_proc_error "issue_126_check" "-1" "Bug #126 is present"
    }
 
    #

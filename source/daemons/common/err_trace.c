@@ -51,8 +51,9 @@
 #include "config_file.h"
 #include "qlogin_starter.h"
 #include "sge_unistd.h"
+#include "sge_dstring.h"
 
-static int sh_str2file(char *header_str, char *str, char *file);
+static int sh_str2file(char *header_str, const char *str, char *file);
 
 extern int shepherd_state;  /* holds exit status for shepherd_error() */
 int foreground = 1;           /* usability of stderr/out */
@@ -70,16 +71,27 @@ void shepherd_log_as_admin_user(void)
 
 /*-----------------------------------------------------------------*/
 
-void shepherd_error(
-char *str 
-) {
+void shepherd_error_sprintf(char *format, ...)
+{
+   dstring message = DSTRING_INIT;
+   va_list ap;
+
+   va_start(ap, format);
+   if (format) {
+      sge_dstring_vsprintf(&message, format, ap);
+      shepherd_error_impl((char*)sge_dstring_get_string(&message), 1);
+      sge_dstring_free(&message);
+   }
+}
+
+
+void shepherd_error(char *str) 
+{
    shepherd_error_impl(str, 1);
 }
 
-void shepherd_error_impl(
-char *str,
-int do_exit 
-) {
+void shepherd_error_impl(char *str, int do_exit) 
+{
    char header_str[256];
      
    sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0), geteuid(), getpid());
@@ -114,10 +126,24 @@ int do_exit
 }
 
 
+int shepherd_trace_sprintf(const char *format, ...)
+{
+   int ret = 1;
+   dstring message = DSTRING_INIT;
+   va_list ap;
+
+   va_start(ap, format);
+   if (format) {
+      sge_dstring_vsprintf(&message, format, ap);
+      ret = shepherd_trace(sge_dstring_get_string(&message));
+      sge_dstring_free(&message);
+   }
+   return ret;
+}
+
 /*-----------------------------------------------------------------*/
-int shepherd_trace(
-char *str 
-) {
+int shepherd_trace(const char *str) 
+{
    int ret, switch_back = 0;
    char header_str[256];
 
@@ -143,11 +169,8 @@ char *str
 
 
 /*-----------------------------------------------------------------*/
-static int sh_str2file(
-char *header_str,
-char *str,
-char *file 
-) {
+static int sh_str2file(char *header_str, const char *str, char *file) 
+{
    static char path[SGE_PATH_MAX], tmppath[SGE_PATH_MAX];
    static int called = 0;
    FILE *fp;

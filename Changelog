@@ -1,3 +1,12 @@
+EB-2002-12-09-0  Bugfix:    qstat -j shows messages concerning queues although 
+                            schedd_job_info=false
+                            sge_schedd process consumes more memory than needed
+                            if schedd_job_info=true
+                            Job notification signals won't be delivered if 
+                            user redefines suspend_method or terminate_method
+                 IZ:        #432 #435 #436
+                 Bugtraq:   #4787598 #4790540 #4790547
+
 CR-2002-12-09-1  Testsuite: migration test now L10N compatible
 
 CR-2002-12-09-0  Testsuite: Removing evtl. existing access lists in 

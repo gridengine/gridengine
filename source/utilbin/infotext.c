@@ -537,7 +537,7 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
 
 
 #if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
-char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
+static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
    char* p2;

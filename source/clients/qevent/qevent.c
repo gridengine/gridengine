@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
 
       while(!shut_me_down) {
          sge_mirror_error error = sge_mirror_process_events();
-         if (error == SGE_EM_TIMEOUT) {
+         if (error == SGE_EM_TIMEOUT && !shut_me_down ) {
             sleep(10);
             continue;
          }
@@ -689,7 +689,7 @@ void qevent_testsuite_mode(void)
    
    while(!shut_me_down) {
       sge_mirror_error error = sge_mirror_process_events();
-      if (error == SGE_EM_TIMEOUT) {
+      if (error == SGE_EM_TIMEOUT && !shut_me_down) {
          sleep(10);
          continue;
       }

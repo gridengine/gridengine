@@ -1,3 +1,7 @@
+CR-2004-02-26-0: Bugfix:    don't sleep when qevent can't open connection to
+                            qmaster and signal TERM is sent
+                 Changed:   qevent
+
 SG-2004-02-26-0: Enhancem:  added halfelife_decay_list to the scheduler config
                             man page.
 

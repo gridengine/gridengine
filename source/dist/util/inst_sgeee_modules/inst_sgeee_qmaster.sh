@@ -249,7 +249,7 @@ SetPermissions()
 #
 SetSpoolingOptions()
 {
-   $INFOTEXT -u "\nSelect spooling method"
+   $INFOTEXT -u "\nSetup spooling"
    SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
    $INFOTEXT "The selected spooling method is: %s" $SPOOLING_METHOD
    $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
@@ -276,7 +276,15 @@ SetSpoolingOptions()
             #TODO: exec rcrpc script
          fi
          if [ $QMASTER = "install" -a $AUTO = "false" ]; then
-            $INFOTEXT -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
+            $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
+                         " 1) Local spooling:\n" \
+                         " The Berkely DB spools into a local directory on this host (qmaster host)\n" \
+                         " This setup is faster, but you can't setup a shadow master host\n\n"
+            $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
+                         " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
+                         " In this case you have to choose a host with a configured rpc service.\nThe qmaster host" \
+                         " connects via rpc to the Berkeley DB. This setup is more secure!\n\n" 
+            $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
             if [ $? = 0 ]; then
                $INFOTEXT -u "Berkely DB Setup"
                $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute < inst_sgeee -db >"
@@ -286,6 +294,7 @@ SetSpoolingOptions()
             else
                is_server="false"
                $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
+               $CLEAR
             fi
 
             if [ $is_server = "true" ]; then
@@ -299,7 +308,8 @@ SetSpoolingOptions()
                   if [ -d $SPOOLING_DIR ]; then
                      $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
                      if [ $? = 0 ]; then
-                           ExecuteAsAdmin `rm -r $SPOOLING_DIR`
+                           RM="rm -r"
+                           ExecuteAsAdmin $RM $SPOOLING_DIR
                            if [ -d $SPOOLING_DIR ]; then
                               $INFOTEXT "You are not the owner of this directory. You can't delete it!"
                            else
@@ -381,7 +391,7 @@ SelectHostNameResolving()
    else
      $CLEAR
      $INFOTEXT -u "\nSelect default Grid Engine hostname resolving method"
-     $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If thisis\n" \
+     $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If this is\n" \
                "the case the hostnames\n\n" \
                "   >hostA< and >hostA.foo.com<\n\n" \
                "would be treated as eqal, because the DNS domain name >foo.com<\n" \
@@ -470,10 +480,14 @@ MakeDirsMaster()
 #
 AddBootstrap()
 {
+   TOUCH=touch
    $INFOTEXT -u "\nDumping bootstrapping information"
    $INFOTEXT -log "Dumping bootstrapping information"
-
-   PrintBootstrap > $COMMONDIR/bootstrap
+   ExecuteAsAdmin $TOUCH $COMMONDIR/bootstrap
+   PrintBootstrap >> $COMMONDIR/bootstrap
+   FILEPERM=444
+   SetPerm $COMMONDIR/bootstrap
+   FILEPERM=644
 }
 
 #-------------------------------------------------------------------------
@@ -1069,7 +1083,7 @@ GetQmasterPort()
                 "   sge_qmaster <port_number>/tcp\n\n" \
                 "to your services database and make sure to use an unused port number.\n"
 
-      $INFOTEXT -wait -auto $AUTO -n "Please add the service now or continue to enter a port number >> "
+      $INFOTEXT -wait -auto $AUTO -n "Please add the service now or press <RETURN> to go to entering a port number >> "
 
       # Check if $SGE_SERVICE service is available now
       service_available=false
@@ -1079,16 +1093,15 @@ GetQmasterPort()
          if [ $? != 0 ]; then
             $CLEAR
             $INFOTEXT -u "\nNo TCP/IP service >sge_qmaster< yet"
-            $INFOTEXT "\nThere is still no service for >sge_qmaster< available.\n\n" \
-                      "If you have just added the service it may take a while until the service\n" \
-                      "propagates in your network. If this is true we can again check for\n" \
-                      "the service >sge_qmaster<. If you don't want to add this service or if\n" \
-                      "you want to install Grid Engine just for testing purposes you can enter\n" \
-                      "a port number.\n"
+            $INFOTEXT -n "\nIf you have just added the service it may take a while until the service\n" \
+                         "propagates in your network. If this is true we can again check for\n" \
+                         "the service >sge_qmaster<. If you don't want to add this service or if\n" \
+                         "you want to install Grid Engine just for testing purposes you can enter\n" \
+                         "a port number.\n"
 
               if [ $AUTO != "true" ]; then
                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                      "Check again (if not you need to enter a port number later) (y/n) [y] >> "
+                      "Check again (enter [n] to specify a port number) (y/n) [y] >> "
               else
                  $INFOTEXT -log "Setting SGE_QMASTER_PORT"
                  `false`
@@ -1214,7 +1227,7 @@ GetExecdPort()
                    "as on the qmaster machine\n"
          $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
       fi
-      $INFOTEXT -wait -auto $AUTO -n "Please add the service now or continue to enter a port number >> "
+      $INFOTEXT -wait -auto $AUTO -n "Please add the service now or press <RETURN> to go to entering a port number >> "
 
       # Check if $SGE_SERVICE service is available now
       service_available=false
@@ -1224,16 +1237,15 @@ GetExecdPort()
          if [ $? != 0 ]; then
             $CLEAR
             $INFOTEXT -u "\nNo TCP/IP service >sge_execd< yet"
-            $INFOTEXT "\nThere is still no service for >sge_execd< available.\n\n" \
-                      "If you have just added the service it may take a while until the service\n" \
-                      "propagates in your network. If this is true we can again check for\n" \
-                      "the service >sge_execd<. If you don't want to add this service or if\n" \
-                      "you want to install Grid Engine just for testing purposes you can enter\n" \
-                      "a port number.\n"
+            $INFOTEXT -n "\nIf you have just added the service it may take a while until the service\n" \
+                         "propagates in your network. If this is true we can again check for\n" \
+                         "the service >sge_execd<. If you don't want to add this service or if\n" \
+                         "you want to install Grid Engine just for testing purposes you can enter\n" \
+                         "a port number.\n"
 
               if [ $AUTO != "true" ]; then
                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                      "Check again (if not you need to enter a port number later) (y/n) [y] >> "
+                      "Check again (enter [n] to specify a port number) (y/n) [y] >> "
               else
                  $INFOTEXT -log "Setting SGE_EXECD_PORT"
                  `false`

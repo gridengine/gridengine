@@ -55,8 +55,7 @@ SpoolingQueryChange()
                 SPOOLING_DIR=`Enter $SGE_ROOT/$SGE_CELL/$SPOOLING_DIR`
    else
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
-     $INFOTEXT -n "Please enter the name of your Berkeley DB Spooling Server!\n" \
-               "For local spooling without Server, hit <RETURN> else enter the Servername! >> "
+     $INFOTEXT -n "Please enter the name of your Berkeley DB Spooling Server!\nFor locally spooling without Server, hit <RETURN> else enter the Servername! >>"
                SPOOLING_SERVER=`Enter none`
      $INFOTEXT -n "Please enter the Database Directory now, even if you want to spool local\n" \
                "it is necessary to enter this Database Directory. \nDefault: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"

@@ -44,6 +44,10 @@
 #
 BasicSettings()
 {
+
+  unset SGE_ND
+  unset SGE_DEBUG_LEVEL
+
   SGE_UTIL="./util"
   ARCH=`$SGE_UTIL/arch`
   SGE_UTILBIN="./utilbin/$ARCH"

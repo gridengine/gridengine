@@ -155,3 +155,12 @@ example2: $(EXAMPLE2_OBJS)
 
 example2.o: $(CULLLIB_DIR)/example2.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example2.c
+
+#---------------------------------------------------------------------
+#  Test programs
+#---------------------------------------------------------------------
+test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti $(LIBS)
+
+test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
+	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

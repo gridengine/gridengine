@@ -319,7 +319,6 @@ void cull_hash_insert(const lListElem *ep, const int pos, int check_presence)
    if(ep == NULL || pos < 0) {
       return;
    }
-
    descr = &ep->descr[pos];
 
    if(descr->hash == NULL || descr->hash->table == NULL) {
@@ -464,6 +463,7 @@ void cull_hash_remove(const lListElem *ep, const int pos)
                      non_unique_hash *found = nuh->next;
                      nuh->next = found->next;
                      free(found);
+                     break;
                   } else {
                      nuh = nuh->next;
                   }

@@ -1,3 +1,8 @@
+JG-2003-02-11-0  Enhancem.  Improved ineffective implementation of removing 
+                            entries in nonunique hashtables.
+                            Added a test program for cull_hash.
+                 Review:    EB
+
 AS-2003-02-10-1  Bugfix:    scripts/util/arch: backed out hp11-64 and aix51
                             detection since no port available yet
                  IZ:        #486

@@ -1,3 +1,5 @@
+CR-2004-02-16-1: Bugfix:    Disabled reconfigure in qmake/IRIX64/glob/Makefile
+
 CR-2004-02-16-0: Testsuite: Fixed still existing problem: 
                             don't send job start command
                             to a remote shell when a former job start is

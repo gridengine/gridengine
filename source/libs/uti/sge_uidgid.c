@@ -91,20 +91,6 @@ static void uidgid_state_set_last_username(const char *user);
 static void uidgid_state_set_last_gid(gid_t gid);
 static void uidgid_state_set_last_groupname(const char *group);
 
-#ifdef SGE_THREADSAFE_UTIL
-
-static pthread_mutex_t sge_passwd_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t sge_group_mutex  = PTHREAD_MUTEX_INITIALIZER;
-
-int getpwnam_r(char *, struct passwd *, char *, size_t, struct passwd **);
-int getgrnam_r(char *, struct group *,  char *, size_t, struct group **);
-int getpwuid_r(uid_t,  struct passwd *, char *, size_t, struct passwd **);
-int getgrgid_r(gid_t , struct group *,  char *, size_t, struct group **);
-
-
-#endif
-
-
 /****** uti/uidgid/uidgid_mt_init() ************************************************
 *  NAME
 *     uidgid_mt_init() -- Initialize user and group oriented functions for multi
@@ -1314,6 +1300,20 @@ static void uidgid_state_init(struct uidgid_state_t* theState)
 
 #ifdef SGE_THREADSAFE_UTIL
 
+/******************************************************************************
+* 20040108 - JM - Initial version intended to support
+*    SUPER-UX at least. The fields handled in pwd and
+*    grp are not necessarily exhaustive for other
+*    platforms--may need to add more to support them.
+*
+* 20050313 - RC - Checked into cvs
+*               - Used by the NetBSD port
+*
+******************************************************************************/
+
+static pthread_mutex_t sge_passwd_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t sge_group_mutex  = PTHREAD_MUTEX_INITIALIZER;
+
 static int
 copygrp(struct group *tgrp, struct group *grp, char *buffer, size_t bufsize)
 {
@@ -1374,7 +1374,7 @@ copypwd(struct passwd *tpwd, struct passwd *pwd, char *buffer, size_t bufsize)
 
 
 
-int getpwnam_r(char *name, struct passwd *pwd, char *buffer,
+int getpwnam_r(const char *name, struct passwd *pwd, char *buffer,
                size_t bufsize, struct passwd **result)
 {
    struct passwd *tpwd;
@@ -1396,7 +1396,7 @@ int getpwnam_r(char *name, struct passwd *pwd, char *buffer,
    return res;
 }
 
-int getgrnam_r(char *name, struct group *grp, char *buffer,
+int getgrnam_r(const char *name, struct group *grp, char *buffer,
       size_t bufsize, struct group **result)
 {
    struct group *tgrp;

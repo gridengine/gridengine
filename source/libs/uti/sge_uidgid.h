@@ -79,5 +79,17 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 
 struct passwd *sge_getpwnam(const char *name); 
 
+#ifdef SGE_THREADSAFE_UTIL
+
+#include <grp.h>
+
+int getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
+int getgrnam_r(const char *, struct group *,  char *, size_t, struct group **);
+int getpwuid_r(uid_t,  struct passwd *, char *, size_t, struct passwd **);
+int getgrgid_r(gid_t , struct group *,  char *, size_t, struct group **);
+
+#endif
+
+
 #endif /* __SGE_UIDGID_H */
 

@@ -1,8 +1,11 @@
+RC-2005-03-24-0: Enhancem.: moved function declarations into sge_uidgid.h
+                 Changed  : get*_r routines for BSD (and other OSes with
+                            them missing)
+
 RC-2005-03-24-0: Bugfix:   - fixed a typo (should be qtcsh instead of qtsch)
                            - qtcsh failed to compile on PPC Linux
                            - restored Changelog
                  Changed:  qtcsh
-
 
 CR-2005-03-24-0: Bugfix:    forgot to initalize connection response state at
                             connection setup.

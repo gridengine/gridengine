@@ -652,6 +652,7 @@ one command among "qconf -Au", "qconf -au", and "qmon".
 Copyright
 ---------
 
+___INFO__MARK_BEGIN__
 This following copyright statement applies to this file only. It does not
 imply that this statement covers other files of a Grid Engine distribution.
 See the directory '<sge_root>/3rdparty' for a summary of other copyrights of
@@ -683,3 +684,4 @@ The Initial Developer of the Original Code is: Sun Microsystems, Inc.
 Copyright: 2002 by Sun Microsystems, Inc.
 
 All Rights Reserved.
+___INFO__MARK_END__

@@ -155,6 +155,8 @@ proc submit_hosts_test {} {
  
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
       puts $CHECK_OUTPUT "testing host $submit_host"
+
+      puts $CHECK_OUTPUT "*** step 1 on $submit_host ***"
       set arguments "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 20"
       set output [ start_remote_prog $submit_host $CHECK_USER "qsub" $arguments ]
       puts $CHECK_OUTPUT $output
@@ -163,6 +165,7 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "submitting on host $submit_host should not work here"
       } 
  
+      puts $CHECK_OUTPUT "*** step 2 on $submit_host ***"
       set output [ start_remote_prog $submit_host $CHECK_USER "qstat" "-f" ]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "qstat exit state: $prg_exit_state"
@@ -170,6 +173,7 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "qstat -f on host $submit_host should not work here"
       }
 
+      puts $CHECK_OUTPUT "*** step 3 on $submit_host ***"
       set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "uname -n" ]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "qrsh exit state: $prg_exit_state"
@@ -177,6 +181,7 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host should not work here"
       }
 
+      puts $CHECK_OUTPUT "*** step 4 on $submit_host ***"
       set output [ start_remote_prog $submit_host $CHECK_USER "qconf" "-mconf" ]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "qconf exit state: $prg_exit_state"

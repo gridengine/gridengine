@@ -1,3 +1,7 @@
+CR-2002-11-22-0  Bugfix:    Uninitialized pointer caused segmentation fault in qsh/qrsh
+                            on submit only hosts.
+                 Testsuite: more info output for submit_hosts test
+
 CR-2002-11-21-1  Testsuite: new testsuite configuration parameter: add_compile_archs
                               - new ts_config_version is 1.2
                               - Forced compilation for specified architectures

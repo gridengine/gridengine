@@ -442,8 +442,8 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *prjl = NULL;
-   lList *alp;
-   lEnumeration *what;
+   lList *alp = NULL;
+   lEnumeration *what = NULL;
    Boolean status = False;
    XmString xprjname = NULL;
    StringConst prjname = NULL;

@@ -73,6 +73,28 @@ static void range_correct_end(lListElem *range);
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2);
 
+/****** gdi/range/range_correct_end() *****************************************
+*  NAME
+*     range_correct_end() -- correct end of a range element 
+*
+*  SYNOPSIS
+*     static void range_correct_end(lListElem *range) 
+*
+*  FUNCTION
+*     This function modifies the the 'end' id of the 'range' element if it is
+*     not correct. After the modification the 'end' id is the last valid
+*     id which is part of the range. 
+*
+*  INPUTS
+*     lListElem *range - RN_Type 
+*
+*  RESULT
+*     'range' will be modified 
+*
+*  EXAMPLE
+*     1-6:2 (1,3,5) will be modified to 1-5:2 
+*
+*******************************************************************************/
 static void range_correct_end(lListElem *range) 
 {
    if (range) {
@@ -89,6 +111,31 @@ static void range_correct_end(lListElem *range)
    }
 }
 
+/****** gdi/range/range_is_overlapping() ***************************************
+*  NAME
+*     range_is_overlapping() -- Do two ranges interleave? 
+*
+*  SYNOPSIS
+*     static int range_is_overlapping(const lListElem *range1, 
+*                                     const lListElem *range2) 
+*
+*  FUNCTION
+*     True (1) will be returned when the given ranges interleave. This
+*     does not necessaryly mean that certain ids exist in both ranges. 
+*
+*  INPUTS
+*     const lListElem *range1 - RN_Type 
+*     const lListElem *range2 - RN_Type 
+*
+*  RESULT
+*     static int - 0 or 1 
+*
+*  EXAMPLE
+*     1-5:3    4-10:7      => 1
+*     1-5:3    5-10:6      => 1
+*     1-5:3    6-10:4      => 0
+*
+*******************************************************************************/
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2)
 {
@@ -107,6 +154,25 @@ static int range_is_overlapping(const lListElem *range1,
    return ret;
 }
 
+/****** gdi/range/range_list_initialize() *************************************
+*  NAME
+*     range_list_initialize() -- (Re)initialize a range list 
+*
+*  SYNOPSIS
+*     void range_list_initialize(lList **range_list, lList **answer_list) 
+*
+*  FUNCTION
+*     'range_list' will be created if it does not exist. If it already
+*     exists all elements contained in this list will be removed. 
+*
+*  INPUTS
+*     lList **range_list  - Pointer to a RN_Type-list 
+*     lList **answer_list - Pointer to a AN_Type-list or NULL
+*
+*  RESULT
+*     *range_list will be an empty RN_Type list
+*     *answer_list may contain error messages 
+*******************************************************************************/
 void range_list_initialize(lList **range_list, lList **answer_list) 
 {
    if (range_list != NULL) {
@@ -130,6 +196,25 @@ void range_list_initialize(lList **range_list, lList **answer_list)
    }
 }
 
+/****** gdi/range/range_list_get_number_of_ids() ******************************
+*  NAME
+*     range_list_get_number_of_ids() -- Determines the number of ids 
+*
+*  SYNOPSIS
+*     u_long32 range_list_get_number_of_ids(const lList *range_list) 
+*
+*  FUNCTION
+*     This function determines the number of ids contained in 'range_list' 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list 
+*
+*  RESULT
+*     u_long32 - number of ids
+*
+*  EXAMPLE
+*     1-5:2, 7-10:3, 20-23:1 (1, 3, 5, 7, 10, 20, 21, 22, 23)   => 9
+*******************************************************************************/
 u_long32 range_list_get_number_of_ids(const lList *range_list)
 {
    u_long32 ret = 0;
@@ -141,6 +226,25 @@ u_long32 range_list_get_number_of_ids(const lList *range_list)
    return ret;
 }
 
+/****** gdi/range/range_get_number_of_ids() ************************************
+*  NAME
+*     range_get_number_of_ids() -- Determines the number of ids within a range
+*
+*  SYNOPSIS
+*     u_long32 range_list_get_number_of_ids(const lList *range_list) 
+*
+*  FUNCTION
+*     This function determines the number of ids contained in 'range' 
+*
+*  INPUTS
+*     const lList *range - RN_Type element 
+*
+*  RESULT
+*     u_long32 - number of ids
+*
+*  EXAMPLE
+*     1-5:2 (1, 3, 5)   => 3
+*******************************************************************************/
 u_long32 range_get_number_of_ids(const lListElem *range) 
 {
    u_long32 start, end, step;
@@ -149,7 +253,25 @@ u_long32 range_get_number_of_ids(const lListElem *range)
    return 1 + (end - start) / step;
 }
 
-void range_print_to_string(const lList *range_list, StringBufferT *string) 
+/****** gdi/range/range_list_print_to_string() *********************************
+*  NAME
+*     range_list_print_to_string() -- Print range list into the string 
+*
+*  SYNOPSIS
+*     void range_list_print_to_string(const lList *range_list, 
+*                                     StringBufferT *string) 
+*
+*  FUNCTION
+*     Print all ranges given in 'range_list' into the dynamic string 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type 
+*     StringBufferT *string   - dynamic string 
+*
+*  RESULT
+*     string will be modified
+*******************************************************************************/
+void range_list_print_to_string(const lList *range_list, StringBufferT *string) 
 {
    if (range_list != NULL && string != NULL) {
       lListElem *range;
@@ -162,18 +284,35 @@ void range_print_to_string(const lList *range_list, StringBufferT *string)
    }
 }
 
+/****** gdi/range/range_list_get_first_id() ***********************************
+*  NAME
+*     range_list_get_first_id() -- Returns first id contained in the list
+*
+*  SYNOPSIS
+*     u_long32 range_list_get_first_id(const lList *range_list, 
+*                                      lList **answer_list) 
+*
+*  FUNCTION
+*     The first id of the first range element of the list will be returned. 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list  
+*     lList **answer_list     - pointer to an AN_Type list 
+*
+*  RESULT
+*     u_long32 - first id
+******************************************************************************/
 u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list) 
 {
    u_long32 start = 0;
    lListElem *range = lFirst(range_list);
-   DENTER(BASIS_LAYER, "range_list_get_first_id");
 
+   DENTER(BASIS_LAYER, "range_list_get_first_id");
    if (range) {
       u_long32 end, step;
 
       range_get_all_ids(range, &start, &end, &step);
    } else {
-      DTRACE;
       sge_add_answer(answer_list, "range_list containes no elements",
                      STATUS_ERROR1, NUM_AN_ERROR);
    }
@@ -181,6 +320,24 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
    return start;
 }
 
+/****** gdi/range/range_list_get_last_id() ************************************
+*  NAME
+*     range_list_get_last_id() -- Returns last id contained in the list
+*
+*  SYNOPSIS
+*     u_long32 range_list_get_last_id(const lList *range_list, 
+*                                    lList **answer_list) 
+*
+*  FUNCTION
+*     The last id of the last range element of the list will be returned. 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list  
+*     lList **answer_list     - pointer to an AN_Type list 
+*
+*  RESULT
+*     u_long32 - last id
+******************************************************************************/
 u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list) 
 {
    u_long32 end = 0;
@@ -197,6 +354,30 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
    return end;
 }
 
+/****** gdi/range/range_sort_uniq_compress() **********************************
+*  NAME
+*     range_sort_uniq_compress() -- makes range lists fit as a fiddle 
+*
+*  SYNOPSIS
+*     void range_sort_uniq_compress(lList *range_list, lList **answer_list) 
+*
+*  FUNCTION
+*     After a call to this function 'range_list' fulfills following
+*     conditions:
+*        (1) all ids are in ascending order
+*        (2) each id is contained in the list only once
+*        (3) ids are grouped so that a minimum of range elements exist 
+*
+*  INPUTS
+*     lList *range_list   - RN_Type list 
+*     lList **answer_list - Pointer to an AN_Type list 
+*
+*  RESULT
+*     range_list will be modified 
+*
+*  EXAMPLE
+*     12-12:7,1-7:1,3-5:2,14-16:2   => 1-7:1,12-16:2
+******************************************************************************/
 void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 {
    if (range_list) {
@@ -204,6 +385,9 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
       lListElem *range2, *next_range2;
       lList *tmp_list;
 
+      /*
+       * Sort the incomming stuff
+       */
       lSortList2(range_list, "%I+", RN_min);
 
       /* 
@@ -241,6 +425,10 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
          }
 
          lFreeList(tmp_list);
+
+         /*
+          * Join sequenced ranges
+          */
          range_compress(range_list);
       } else {
          sge_add_answer(answer_list, "unable to create range list",
@@ -249,6 +437,30 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
    }
 }
 
+/****** gdi/range/range_compress() *********************************************
+*  NAME
+*     range_compress() -- Joins sequenced ranges within a list 
+*
+*  SYNOPSIS
+*     void range_compress(lList *range_list) 
+*
+*  FUNCTION
+*     Consecutive ranges within the list will be joined by this function. 
+*     Following pre-conditions have to be fulfilled, so that this function
+*     works correctly:
+*        (1) ids have to be in ascending order
+*        (2) Only the first/last id of a range may be contained
+*            in the predecessor/successor range
+*
+*  INPUTS
+*     lList *range_list - RN_Type list 
+*
+*  RESULT
+*     'range_list' will be modified 
+*
+*  EXAMPLE
+*     1-3:1,4-5:1,6-8:2,8-10:2   => 1-5:1,6-10:2 
+*******************************************************************************/
 void range_compress(lList *range_list) 
 {
    if (range_list != NULL) {
@@ -300,6 +512,24 @@ void range_compress(lList *range_list)
    }
 }
 
+/****** gdi/range/range_list_is_id_within() ***********************************
+*  NAME
+*     range_list_is_id_within() -- Is id contained in range list? 
+*
+*  SYNOPSIS
+*     int range_list_is_id_within(const lList *range_list, u_long32 id) 
+*
+*  FUNCTION
+*     True (1) is returned by this function if 'id' is part of at least
+*     one range element of 'range_list' 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list
+*     u_long32 id             - id 
+*
+*  RESULT
+*     int - 0 or 1 
+*******************************************************************************/
 int range_list_is_id_within(const lList *range_list, u_long32 id) 
 {
    lListElem *range = NULL;
@@ -314,6 +544,23 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
    return ret;
 }
 
+/****** gdi/range/range_is_id_within() *****************************************
+*  NAME
+*     range_is_id_within() -- Is id contained in range? 
+*
+*  SYNOPSIS
+*     int range_is_id_within(const lListElem *range, u_long32 id) 
+*
+*  FUNCTION
+*     True (1) is returned by this function if 'id' is part of 'range' 
+*
+*  INPUTS
+*     const lListElem *range - RN_Type element 
+*     u_long32 id            - id 
+*
+*  RESULT
+*     int - 0 or 1 
+*******************************************************************************/
 int range_is_id_within(const lListElem *range, u_long32 id) 
 {
    int ret = 0;
@@ -329,6 +576,25 @@ int range_is_id_within(const lListElem *range, u_long32 id)
    return ret;
 }
 
+/****** sge_range/range_list_remove_id() **************************************
+*  NAME
+*     range_list_remove_id() -- remove an id from a range list 
+*
+*  SYNOPSIS
+*     void range_list_remove_id(lList **range_list, lList **answer_list, 
+*                               u_long32 id) 
+*
+*  FUNCTION
+*     'id' will be removed from 'range_list'. 
+*
+*  INPUTS
+*     lList **range_list  - pointer to a RN_Type list 
+*     lList **answer_list - pointer to a AN_Type list 
+*     u_long32 id         - new id 
+*
+*  RESULT
+*     range_list and answer_list may be modified 
+*******************************************************************************/
 void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id) 
 {
    lListElem *range = NULL;
@@ -373,6 +639,27 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
    }
 }
 
+/****** gdi/range/range_list_move_first_n_ids() ********************************
+*  NAME
+*     range_list_move_first_n_ids() -- split a range list 
+*
+*  SYNOPSIS
+*     void range_list_move_first_n_ids(lList **range_list, lList **answer_list, 
+*                                      lList **range_list2, u_long32 n) 
+*
+*  FUNCTION
+*     The first 'n' ids within 'range_list' will be moved into 'range_list2'.
+*     Error messages may be found in 'answer_list' 
+*
+*  INPUTS
+*     lList **range_list  - pointer to a RN_Type list (source) 
+*     lList **answer_list - pointer to an AN_Type list 
+*     lList **range_list2 - pointer to a RN_Type list (destination) 
+*     u_long32 n          - number of ids 
+*
+*  RESULT
+*     range_list, range_list2, answer_list may be modified 
+*******************************************************************************/
 void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
                                  lList **range_list2, u_long32 n) 
 {
@@ -402,6 +689,25 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
    DEXIT;
 }
 
+/****** gdi/range/range_list_insert_id() ***************************************
+*  NAME
+*     range_list_insert_id() -- insert an id into a range list 
+*
+*  SYNOPSIS
+*     void range_list_insert_id(lList **range_list, lList **answer_list, 
+*                               u_long32 id) 
+*
+*  FUNCTION
+*     'id' will be inserted into 'range_list'. 
+*
+*  INPUTS
+*     lList **range_list  - pointer to a RN_Type list 
+*     lList **answer_list - pointer to a AN_Type list 
+*     u_long32 id         - new id 
+*
+*  RESULT
+*     range_list and answer_list may be modified 
+*******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
    lListElem *range, *prev_range, *next_range;
@@ -517,6 +823,23 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
    DEXIT;
 }
 
+/****** gdi/range/range_get_all_ids() *****************************************
+*  NAME
+*     range_get_all_ids() -- reads 'start', 'end' and 'step' 
+*
+*  SYNOPSIS
+*     void range_get_all_ids(const lListElem *range, u_long32 *min, 
+*                            u_long32 *max, u_long32 *step) 
+*
+*  FUNCTION
+*     Reads 'min' (start), 'max' (end) and 'step' from a range element 
+*
+*  INPUTS
+*     const lListElem *range - range element of type RN_Type 
+*     u_long32 *min          - start value 
+*     u_long32 *max          - end value 
+*     u_long32 *step         - step size 
+*******************************************************************************/
 void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
                        u_long32 *step)
 {
@@ -527,6 +850,26 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
    }
 }
 
+/****** sge_range/range_set_all_ids() *****************************************
+*  NAME
+*     range_set_all_ids() -- writes 'start', 'end' and 'step' 
+*
+*  SYNOPSIS
+*     void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max, 
+*                            u_long32 step) 
+*
+*  FUNCTION
+*     Writes 'min' (start), 'max' (end) and 'step' into a range element 
+*
+*  INPUTS
+*     lListElem *range - range element of type RN_Type 
+*     u_long32 min     - start value 
+*     u_long32 max     - end value 
+*     u_long32 step    - step size 
+*
+*  NOTES
+*     Step values will be nomalized. (e.g. 1-1:3 => 1-1:1)
+*******************************************************************************/
 void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
                        u_long32 step)
 {
@@ -537,7 +880,32 @@ void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
    }
 }     
 
-void range_list_calculate_union_set(lList **range_list, lList **answer_list,
+/****** gdi/range/range_list_calculate_union_set() *****************************
+*  NAME
+*     range_list_calculate_union_set() -- Compute union set of two range lists 
+*
+*  SYNOPSIS
+*     void range_list_calculate_union_set(lList **range_list, 
+*                                         lList **answer_list, 
+*                                         const lList *range_list1, 
+*                                         const lList *range_list2) 
+*
+*  FUNCTION
+*     All ids contained in 'range_list1' and 'range_list2' will be 
+*     contained in 'range_list' after a call of this function.
+*      
+*
+*  INPUTS
+*     lList **range_list       - pointer to union set RN_Type list 
+*     lList **answer_list      - pointer to AN_Type list 
+*     const lList *range_list1 - first source RN_Type list 
+*     const lList *range_list2 - second source RN_Type list 
+*
+*  RESULT
+*     range_list and answer_list may be modified 
+*******************************************************************************/
+void range_list_calculate_union_set(lList **range_list, 
+                                    lList **answer_list,
                                     const lList *range_list1,
                                     const lList *range_list2)
 {
@@ -576,6 +944,26 @@ error:
                   STATUS_ERROR1, NUM_AN_ERROR);
 }
 
+/****** gdi/range/range_calculate_difference_set() *****************************
+*  NAME
+*     range_calculate_difference_set() -- calculate difference set list 
+*
+*  SYNOPSIS
+*     void range_calculate_difference_set(lList **range_list, 
+*                                         lList **answer_list, 
+*                                         const lList *range_list1, 
+*                                         const lList *range_list2) 
+*
+*  FUNCTION
+*     'range_list' will contain all ids part of 'range_list1' but not
+*     contained in 'range_list2' 
+*
+*  INPUTS
+*     lList **range_list       - pointer to result RN_Type list 
+*     lList **answer_list      - pointer to AN_Type list 
+*     const lList *range_list1 - first source RN_Type list 
+*     const lList *range_list2 - second source RN_Type list 
+*******************************************************************************/
 void range_calculate_difference_set(lList **range_list, lList **answer_list,
                                     const lList *range_list1, 
                                     const lList *range_list2)
@@ -620,6 +1008,26 @@ error:
    DEXIT;
 }
 
+/****** gdi/range/range_calculate_intersection_set() **************************
+*  NAME
+*     range_calculate_intersection_set() -- compute intersection set 
+*
+*  SYNOPSIS
+*     void range_calculate_intersection_set(lList **range_list, 
+*                                           lList **answer_list, 
+*                                           const lList *range_list1, 
+*                                           const lList *range_list2) 
+*
+*  FUNCTION
+*     'range_list' will contain all ids which are contained in 'range_list1'
+*     and also in 'range_list2'.
+*
+*  INPUTS
+*     lList **range_list       - pointer to result RN_Type list 
+*     lList **answer_list      - pointer to AN_Type list 
+*     const lList *range_list1 - first source RN_Type list 
+*     const lList *range_list2 - second source RN_Type list 
+*******************************************************************************/
 void range_calculate_intersection_set(lList **range_list, lList **answer_list,
                                       const lList *range_list1, 
                                       const lList *range_list2)
@@ -661,8 +1069,24 @@ error:
                   STATUS_ERROR1, NUM_AN_ERROR);
 }
 
-
-void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str) {
+/****** gdi/range/get_taskrange_str() *****************************************
+*  NAME
+*     get_taskrange_str() -- print task id ranges into string 
+*
+*  SYNOPSIS
+*     void get_taskrange_str(lList* task_list, 
+*                            StringBufferT *dyn_taskrange_str) 
+*
+*  FUNCTION
+*     The ids of all tasks contained in 'task_list' will be printed
+*     into 'dyn_taskrange_str' 
+*
+*  INPUTS
+*     lList* task_list                 - JAT_Type list
+*     StringBufferT *dyn_taskrange_str - dynamic string 
+*******************************************************************************/
+void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str) 
+{
    lListElem *jatep, *nxt_jatep;
    u_long32 before_last_id = (u_long32)-1;
    u_long32 last_id = (u_long32)-1;
@@ -759,6 +1183,23 @@ void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str) {
 #endif
 } 
 
+/****** sge_range/add_taskrange_str() *****************************************
+*  NAME
+*     add_taskrange_str() -- Appends a range to a dynamic string 
+*
+*  SYNOPSIS
+*     static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
+*                                   StringBufferT *dyn_taskrange_str) 
+*
+*  FUNCTION
+*     Appends a range to a dynamic string 
+*
+*  INPUTS
+*     u_long32 start                   - min id 
+*     u_long32 end                     - max id 
+*     int step                         - step size 
+*     StringBufferT *dyn_taskrange_str - dynamic string 
+******************************************************************************/
 static void add_taskrange_str(
 u_long32 start,
 u_long32 end,
@@ -781,12 +1222,28 @@ StringBufferT *dyn_taskrange_str
    sge_string_append(dyn_taskrange_str, tail);
 }
 
-lList* split_task_group(
-lList **in_list 
-) {
+/****** gdi/range/split_task_group() *******************************************
+*  NAME
+*     split_task_group() -- Splits a list into two parts
+*
+*  SYNOPSIS
+*     lList* split_task_group(lList **in_list) 
+*
+*  FUNCTION
+*     All tasks which have the same state (JAT_status, JAT_state) like
+*     the first element of 'in_list' will be removed from 'in_list' and 
+*     returned by this function.
+*
+*  INPUTS
+*     lList **in_list - JAT_Type list 
+*
+*  RESULT
+*     lList* - JAT_Type list (elements with equivalent state)
+*******************************************************************************/
+lList* split_task_group(lList **in_list) 
+{
    lCondition *where = NULL;
    lList *out_list = NULL;
-/*    lListElem *jatep = NULL, *nxt_jatep = NULL; */
    u_long32 status = 0, state = 0;
 
    if (in_list && *in_list) {
@@ -798,28 +1255,6 @@ lList **in_list
       lSplit(in_list, &out_list, NULL, where);
 
       where = lFreeWhere(where);
-   
-#if 0
-   nxt_jatep = lFirst(*in_list);
-
-   /* Get status of first element and initialize */
-   if (lGetNumberOfElem(*in_list) > 0) {
-      status = lGetUlong(nxt_jatep, JAT_status);
-      state = lGetUlong(nxt_jatep, JAT_state);
-      out_list = lCreateList("", JAT_Type);
-   }
-
-   /* Move all elements with the same status from in- in out-list */
-   while((jatep = nxt_jatep)) {
-      nxt_jatep = lNext(nxt_jatep);
-      if (lGetUlong(jatep, JAT_status) == status &&
-          lGetUlong(jatep, JAT_state) == state) {
-         lDechainElem(*in_list, jatep);
-         lAppendElem(out_list, jatep);
-      } 
-   }
-#endif
-
    }
 
    return out_list;

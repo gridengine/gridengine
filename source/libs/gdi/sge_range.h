@@ -38,31 +38,6 @@
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
-#if 0
-
-/*
-   for_each(range, range_list) { 
-      for(id = lGetUlong(range, RN_min); 
-          id <= lGetUlong(range, RN_max); 
-          id += lGetUlong(range, RN_step)) {
-
-*/
-
-#define for_each_id_in_range_list(id, elem, list) \
-   if (list) \
-      for (id = ((elem = lFirst(list)) ? lGetUlong(elem, RN_min) : 0); \
-           (elem ? (id <= lGetUlong(elem, RN_max)) : 0); \
-           (elem ? (id += lGetUlong(elem, RN_step)) : \
-              ((elem = lNext(elem)) ? (id = lGetUlong(elem, RN_min)) : 0)))
-
-#endif
-
-void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
-
-lList* split_task_group(lList **in_list);
-
-/* *** */
-
 void range_list_calculate_union_set(lList **range_list, lList **answer_list,
                                     const lList *range_list1, 
                                     const lList *range_list2);
@@ -81,7 +56,7 @@ void range_get_all_ids(const lListElem *range_elem, u_long32 *min,
 void range_set_all_ids(lListElem *range_elem, u_long32 min, u_long32 max,
                        u_long32 step);
 
-void range_print_to_string(const lList *range_list, StringBufferT *string);
+void range_list_print_to_string(const lList *range_list, StringBufferT *string);
 
 void range_sort_uniq_compress(lList *range_list, lList **answer_list);  
 
@@ -109,5 +84,10 @@ void range_list_initialize(lList **range_list, lList **answer_list);
 u_long32 range_list_get_number_of_ids(const lList *range_list);
  
 u_long32 range_get_number_of_ids(const lListElem *range);
+
+void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
+
+lList* split_task_group(lList **in_list);
+
 
 #endif /* __SGE_RANGE_H */

@@ -671,7 +671,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
       }
 
       if (range_list[i] != NULL && show) { 
-         range_print_to_string(range_list[i], &ja_task_id_string);
+         range_list_print_to_string(range_list[i], &ja_task_id_string);
          first_id = range_list_get_first_id(range_list[i], &answer_list);
          if (answer_list_is_error_in_list(&answer_list) != 1) {
             lListElem *ja_task = job_get_ja_task_template_hold(job, first_id, 
@@ -837,7 +837,7 @@ u_long32 full_listing
                            (QSTAT_DISPLAY_ZOMBIES | QSTAT_DISPLAY_FULL), 
                            sge_ext);
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
-         range_print_to_string(z_ids, &dyn_task_str);
+         range_list_print_to_string(z_ids, &dyn_task_str);
          sge_print_job(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
                        full_listing, 0, 0, ehl, cl, NULL, "");
          sge_string_free(&dyn_task_str);

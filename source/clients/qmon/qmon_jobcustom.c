@@ -884,7 +884,7 @@ int nm
          if (is_obj_of_type(first_elem, JAT_Type)) {
             get_taskrange_str(eleml, &dyn_buf2);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            range_print_to_string(eleml, &dyn_buf2);
+            range_list_print_to_string(eleml, &dyn_buf2);
          }
       }
       if (dyn_buf2.s) {

@@ -470,25 +470,25 @@ void job_list_print(lList *job_list)
    for_each(job, job_list) {
       StringBufferT string = {NULL, 0};
 
-      range_print_to_string(lGetList(job, JB_ja_n_h_ids), &string);
+      range_list_print_to_string(lGetList(job, JB_ja_n_h_ids), &string);
       if(string.s) {
          fprintf(stderr, "job: "u32" n_h_list: %s\n", 
                  lGetUlong(job, JB_job_number), string.s);
       }
       sge_string_free(&string);
-      range_print_to_string(lGetList(job, JB_ja_u_h_ids), &string);
+      range_list_print_to_string(lGetList(job, JB_ja_u_h_ids), &string);
       if(string.s) {
          fprintf(stderr, "job: "u32" u_h_list: %s\n", 
                  lGetUlong(job, JB_job_number), string.s);
       }
       sge_string_free(&string);
-      range_print_to_string(lGetList(job, JB_ja_o_h_ids), &string);
+      range_list_print_to_string(lGetList(job, JB_ja_o_h_ids), &string);
       if(string.s) {
          fprintf(stderr, "job: "u32" o_h_list: %s\n", 
                  lGetUlong(job, JB_job_number), string.s);
       }
       sge_string_free(&string);
-      range_print_to_string(lGetList(job, JB_ja_s_h_ids), &string);
+      range_list_print_to_string(lGetList(job, JB_ja_s_h_ids), &string);
       if(string.s) {
          fprintf(stderr, "job: "u32" s_h_list: %s\n", 
                  lGetUlong(job, JB_job_number), string.s);

@@ -39,7 +39,6 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <stdarg.h>
 
 #include "basis_types.h"
@@ -50,8 +49,6 @@
 #include "config_file.h"
 #include "msg_daemons_common.h"
 #include "msg_qrsh.h"
-
-#define MAX_ENVIRONMENT_LENGTH 4096
 
 #define MAKEEXITSTATUS(x) (x << 8)
 
@@ -163,75 +160,103 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
 {
    char *envFileName = NULL;
    FILE *envFile = NULL;
-   char line[MAX_ENVIRONMENT_LENGTH];
+   char *line = NULL;
    char *command   = NULL;
+   SGE_STRUCT_STAT statbuf;
+   int size;
 
    *wrapper = NULL;
 
    /* build path of environmentfile */
    envFileName = (char *)malloc(strlen(jobdir) + strlen("environment") + 2);
 
-   if(envFileName == NULL) {
+   if (envFileName == NULL) {
       qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return 0;
+      return NULL;
    }
 
    sprintf(envFileName, "%s/environment", jobdir);
   
-   /* open sge environment file */
-   if((envFile = fopen(envFileName, "r")) == NULL) {
+   /* check if environment file exists and
+    * retrieve file size. We will take file size as maximum possible line length
+    */
+   if (SGE_STAT(envFileName, &statbuf) != 0) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
-      free(envFileName);
+      FREE(envFileName);
+      return NULL;
+   } 
+   
+   size = statbuf.st_size;
+   line = (char *)malloc(size + 1);
+   if (line == NULL) {
+      qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+      FREE(envFileName);
+      return NULL;
+   }
+
+   /* open sge environment file */
+   if ((envFile = fopen(envFileName, "r")) == NULL) {
+      qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
+      FREE(envFileName);
+      FREE(line);
       return NULL;
    }
 
    /* set all environment variables, change to directory named by PWD */
-   while(fgets(line, MAX_ENVIRONMENT_LENGTH, envFile) != NULL) {
+   while (fgets(line, size, envFile) != NULL) {
       /* clean trailing garbage (\n, \r, EOF ...) */
       char *c = &line[strlen(line)];
-      while(iscntrl(*(--c))) {
+      while (iscntrl(*(--c))) {
          *c = 0;
       }
 
-      if(strncmp(line, "QRSH_COMMAND=", 13) == 0) {
-         if((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+      if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
+         if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-            fclose(envFile); free(envFileName);
+            fclose(envFile);
+            FREE(envFileName);
+            FREE(line);
             return NULL;
          }
          strcpy(command, line + 13);
       } else {  
-         if(strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
-            if(*(line + 13) == 0) {
+         if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
+            if (*(line + 13) == 0) {
                fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
             } else {
-               if((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+               if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                   qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-                  fclose(envFile); free(envFileName);
+                  fclose(envFile); 
+                  FREE(envFileName);
+                  FREE(line);
                   return NULL;
                }
                strcpy(*wrapper, line + 13);
             }
          } else {
             /* set variable */
-            if(!sge_putenv(line)) {
-               fclose(envFile); free(envFileName);
+            if (!sge_putenv(line)) {
+               fclose(envFile); 
+               FREE(envFileName);
+               FREE(line);
                return NULL;
             }
          }
       }
    }
 
-   fclose(envFile); free(envFileName);
+   fclose(envFile); 
+   FREE(envFileName);
+   FREE(line);
 
    /* 
     * Use starter_method if it is supplied
     * and not overridden by QRSH_WRAPPER
     */
     
-   if(*wrapper == NULL) {
+   if (*wrapper == NULL) {
       char *starter_method = get_conf_val("starter_method");
-      if(starter_method != NULL && strcasecmp(starter_method, "none") != 0) { 
+      if (starter_method != NULL && strcasecmp(starter_method, "none") != 0) { 
          char buffer[128];
          *wrapper = starter_method;
          sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_PATH", ""); sge_putenv(buffer);

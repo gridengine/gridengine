@@ -1,3 +1,8 @@
+JG-2003-02-04-0: Bugfix:    qrsh silently truncated job arguments that 
+                            exceeded 4k in size.
+                 Review:    CR
+                 Changed:   qrsh_starter
+
 CR-2003-02-04-0: Testsuite: - Throughput performance test:
                               Event client works only for maintrunc ->
                                  added version check

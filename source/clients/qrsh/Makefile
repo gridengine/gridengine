@@ -81,4 +81,4 @@ include $(QRSH_DIR)/qrsh_dependencies
 # rules to build object codes
 ###############################################################################
 qrsh_starter.o: $(QRSH_DIR)/qrsh_starter.c
-		$(CC) $(CFLAGS) -I$(SDIR)/utilbin -c $(QRSH_DIR)/qrsh_starter.c
+		$(CC) $(CFLAGS) $(MEMCFLAG) -I$(SDIR)/utilbin -c $(QRSH_DIR)/qrsh_starter.c

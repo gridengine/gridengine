@@ -3816,16 +3816,6 @@ proc config_build_ts_config {} {
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
 
-   set parameter "shadowd_hosts"
-   set ts_config($parameter)            ""
-   set ts_config($parameter,desc)       "Grid Engine shadow daemon hosts"
-   set ts_config($parameter,default)    ""
-   set ts_config($parameter,setup_func) "config_$parameter"
-   set ts_config($parameter,onchange)   "install"
-   set ts_config($parameter,pos)        $ts_pos
-   incr ts_pos 1
-
-
    set parameter "execd_hosts"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Grid Engine execution daemon hosts"

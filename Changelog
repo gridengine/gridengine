@@ -1,3 +1,5 @@
+JG-2004-07-19-0: Testsuite: Fixed testuite setup.
+
 AD-2004-07-19-0: Bugfix:    Did fix broken qmaster locking
                  Review:    SG
                  Changed:   qmaster

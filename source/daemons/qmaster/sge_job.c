@@ -688,8 +688,7 @@ sge_gdi_request *request
       lAppendElem(*lpp, lCopyElem(jep));
    }   
 
-   job_log(lGetUlong(jep, JB_job_number), MSG_LOG_NEWJOB, prognames[me.who], 
-           me.unqualified_hostname);
+   job_log(lGetUlong(jep, JB_job_number), 0, MSG_LOG_NEWJOB);
 
    DEXIT;
    return STATUS_OK;

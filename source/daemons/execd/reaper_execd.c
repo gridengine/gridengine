@@ -164,6 +164,12 @@ void sge_reap_children_execd()
          continue;
       }
 
+#ifdef WIFCONTINUED
+      if (WIFCONTINUED(status)) {
+         DPRINTF(("PID %d WIFCONTINUED\n", pid));
+         continue;
+      }
+#endif
 
       if (WIFSIGNALED(status)) {
          child_signal = WTERMSIG(status);
@@ -173,11 +179,14 @@ void sge_reap_children_execd()
          core_dumped = status & 80;
 #endif
          failed = ESSTATE_DIED_THRU_SIGNAL;
-      }
-      else {
+      } else if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);
          if (exit_status)
             failed = ESSTATE_SHEPHERD_EXIT;
+      } else {
+         /* not signaled and not exited - so what else happend with this guy? */
+         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_PI, pid, status));
+         continue;
       }
    
       /* search whether it was a job or one of its tasks */
@@ -423,8 +432,7 @@ int is_array
       lSetUlong(jr, JR_failed, ESSTATE_NO_CONFIG);
       lSetString(jr, JR_err_str, (char *) MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART);
 
-      job_log(jobid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER, prognames[me.who], 
-              me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
       DEXIT;
       return 0;
    }
@@ -732,8 +740,7 @@ int is_array
    DPRINTF(("job report for job "u32"."u32": general_failure = %ld\n", 
       jobid, jataskid, general_failure));
 
-   job_log(jobid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER, 
-      prognames[me.who], me.unqualified_hostname);
+   job_log(jobid, jataskid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
 
    /* Check whether a message about tasks exit has to be sent.
       We need job data to know whether an ack about exit status was requested */
@@ -855,7 +862,7 @@ lListElem *jr
       } else { job = jep;
          master_q = responsible_queue(jep, jatep, NULL, NULL);
       }   
-      job_log(jobid, MSG_SHEPHERD_GOTACKFORJOBEXIT, prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_SHEPHERD_GOTACKFORJOBEXIT);
      
       /* use mail list of job instead of tasks one */
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
@@ -945,8 +952,7 @@ lListElem *jr
       if (!pe_task_id_str) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
                 u32c(jobid),  u32c(jataskid), (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
-         job_log(jobid, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT, prognames[me.who], 
-            me.unqualified_hostname);
+         job_log(jobid, jataskid, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT);
 
       /*
       ** security hook
@@ -1081,10 +1087,9 @@ int failed
    lSetUlong(jr, JR_general_failure, general);
    lSetString(jr, JR_err_str, error_string);
    
-   job_log(jobid, (failed==SSTATE_FAILURE_BEFORE_JOB)?
+   job_log(jobid, jataskid, (failed==SSTATE_FAILURE_BEFORE_JOB)?
       MSG_SHEPHERD_REPORINGJOBSTARTFAILURETOQMASTER:
-      MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER, 
-      prognames[me.who], me.unqualified_hostname);
+      MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER);
 
    lSetUlong(jr, JR_state, JEXITING);
 
@@ -1121,8 +1126,7 @@ char *qname
       lSetUlong(jr, JR_state, JEXITING);
       lSetString(jr, JR_err_str, (char*) MSG_JR_ERRSTR_EXECDDONTKNOWJOB);
    
-      job_log(jobid, MSG_SHEPHERD_ACKINGUNKNWONJOB, prognames[me.who], 
-         me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_SHEPHERD_ACKINGUNKNWONJOB);
    }
 
    DEXIT;

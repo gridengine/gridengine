@@ -44,7 +44,7 @@ SCHEDD_SRC  = sge_schedd.c \
              sge_process_events.c \
              interactive_sched.c 
 
-SCHEDD_ADD_SRC = \
+SCHEDD_ADD_SRC = job_log.c \
              category.c \
              complex.c \
              job.c \

@@ -349,11 +349,6 @@ u_long32 job_id  /* needed for job logging */
    int n;
 
    DENTER(TOP_LAYER, "debit_job_from_pe");
-  
-   if (is_active_job_logging()) {
-      sprintf(SGE_EVENT, MSG_PE_DEBITSLOTS_IS, slots, lGetString(pep, PE_name));
-      job_log(job_id, SGE_EVENT, prognames[me.who], me.unqualified_hostname);
-   }
 
    if (pep) {
       n = (int)lGetUlong(pep, PE_used_slots);
@@ -374,11 +369,6 @@ u_long32 job_id  /* needed for job logging */
    int n;
 
    DENTER(TOP_LAYER, "reverse_job_from_pe");
-
-   if (is_active_job_logging()) {
-      sprintf(SGE_EVENT, MSG_PE_REVERSESLOTS_IS, slots, lGetString(pep, PE_name));
-      job_log(job_id, SGE_EVENT, prognames[me.who], me.unqualified_hostname);
-   }
 
    if (pep) {
       n = (int)lGetUlong(pep, PE_used_slots);

@@ -1,3 +1,10 @@
+AH-2001-07-26-0: - improved handling of waitpid() result in execd to trace into
+                   the problem of shepherds considered to be finished by failure
+                   (Origin 2000, Irix 6.5.10f)
+                 - cleaned up on job logging code
+                 - added job logging also to Schedd
+                 - fixed typo in setfileperm.sh
+
 CR-2001-07-26-1: Testsuite:
                     - create protocols directory on compile_source procedure
                       if it is not existing

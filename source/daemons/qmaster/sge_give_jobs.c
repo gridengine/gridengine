@@ -678,18 +678,20 @@ int spool_job
 ) {
    lListElem *qep, *hep, *task, *tmp_ja_task;
    int slots;
-   lUlong jid = 0;
+   lUlong jid, tid;
    int no_unlink = 0;
    time_t now = 0;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
+   jid = lGetUlong(jep, JB_job_number);
+   tid = jatep?lGetUlong(jatep, JAT_task_number):0;
+
    switch (mode) {
    case 0:
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSITING);
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_SENT2EXECD, 
-              prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_SENT2EXECD);
 
       /* should use jobs gdil instead of tagging queues */
       for_each(qep, Master_Queue_List) {
@@ -720,8 +722,7 @@ int spool_job
 
    case 1:
       lSetUlong(jatep, JAT_status, JRUNNING);
-      job_log(lGetUlong(jep, JB_job_number), "job received by execd", prognames[me.who], 
-              me.qualified_hostname);
+      job_log(jid, tid, "job received by execd");
       cull_write_job_to_disk(jep);
       break;
 
@@ -814,9 +815,7 @@ int spool_job
       break;
 
    case 3:
-      jid = lGetUlong(jep, JB_job_number);
-      job_log(jid, MSG_LOG_EXITED,
-         prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_EXITED);
       if (conf.zombie_jobs > 0)
          sge_to_zombies(jep, jatep, spool_job);
       sge_clear_granted_resources(jep, jatep, 1);
@@ -827,8 +826,7 @@ int spool_job
 
    case 4:
       jid = lGetUlong(jep, JB_job_number);
-      job_log(jid, MSG_LOG_WAIT4SGEDEL,
-         prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_WAIT4SGEDEL);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
       if (conf.zombie_jobs > 0)
@@ -863,9 +861,7 @@ int spool_job
 
    case 5: /* triggered by ORT_remove_job */
    case 6: /* triggered by ORT_remove_immediate_job */
-      job_log(lGetUlong(jep, JB_job_number), 
-              (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE,
-              prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jid = lGetUlong(jep, JB_job_number);
       sge_bury_job(jep, jid, jatep, spool_job);
       break;
@@ -1063,6 +1059,7 @@ u_long32 jid,
 lListElem *jatep,
 int spool_job 
 ) {
+   u_long32 tid;
    int RemoveJob;
 
    DENTER(TOP_LAYER, "sge_bury_job");
@@ -1075,13 +1072,13 @@ int spool_job
       RemoveJob = 1;
 
    jep = sge_locate_job(jid);
+   tid = lGetUlong(jatep, JAT_task_number);
 
-   te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, jid, lGetUlong(jatep, JAT_task_number));
+   te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, jid, tid);
 
    if (!RemoveJob) {
       /* Remove one ja task or move it into the Master_Zombie_List*/
-      job_log(jid, MSG_LOG_JATASKEXIT,
-              prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_JATASKEXIT);
       sge_add_event(sgeE_JATASK_DEL, jid, lGetUlong(jatep, JAT_task_number), 
                      NULL, NULL);
 
@@ -1100,8 +1097,7 @@ int spool_job
    
    } else {
       /* Remove the job with the last task */
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_EXITED,
-         prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_EXITED);
       release_successor_jobs(jep);
 
       /*

@@ -48,6 +48,9 @@
 #include "job_log.h"
 #include "sgermon.h"
 #include "sge_stat.h" 
+#include "sge_prognames.h"
+#include "sge_me.h"
+#include "sge_time.h"
 
 static char job_log_file[SGE_PATH_MAX]="";
 
@@ -97,26 +100,36 @@ char *fname
      1 = job logging disabled
     -1 = error
  ******************************************************************/
-int job_log(u_long32 job_number, const char *str, char *progname, 
-            char *hostname)
+int job_log(u_long32 job_number, u_long32 task_number, const char *str)
 {
    FILE *fp;
    time_t now;
    char dummy_str[256], date[256];
+   char *progname, *hostname;
 
    if (!job_log_file[0])
       return 1;
 
+   progname = prognames[me.who];
+   hostname = me.unqualified_hostname;
+
    if ((fp = fopen(job_log_file, "a"))) {
 
-      /* add host and programtype info to log message */
-
+#if 1
+      /* this date format is nice to read */
       now=time((time_t *)NULL);
       sprintf(dummy_str,"%s",ctime(&now));
       sscanf(dummy_str,"%[^\n]",date);
+#else
+      /* this date format is better for parsing */
+      sprintf(date, u32, sge_get_gmt());
+#endif
 
-      fprintf(fp, "%s:%s:%s:"u32" %s\n", date, progname, hostname, job_number,
-              str);
+      /* add host and programtype info to log message */
+      if (!task_number)
+         fprintf(fp, "%s:%s:%s:"u32" %s\n", date, progname, hostname, job_number, str);
+      else
+         fprintf(fp, "%s:%s:%s:"u32"."u32" %s\n", date, progname, hostname, job_number, task_number, str);
       fclose(fp);
       return 0;
    }

@@ -83,6 +83,7 @@
 #include "job.h"
 #include "msg_schedd.h"
 #include "scheduler.h"
+#include "job_log.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -638,6 +639,8 @@ int sge_process_all_events(lList *event_list) {
                      if (!sge_mode && user_sort)
                         at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                   }
+
+                  job_log(lGetUlong(ep, JB_job_number), lGetUlong(ja_task, JAT_task_number), "arrived at schedd");
                }
                /* put it in sort order into the list */
                lAppendElem(lists.job_list, ep);

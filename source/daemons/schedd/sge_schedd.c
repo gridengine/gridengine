@@ -76,6 +76,7 @@
 #include "sge_string.h"
 #include "setup_path.h" 
 #include "sge_time.h" 
+#include "job_log.h" 
 
 
 /* number of current scheduling alorithm in above array */
@@ -310,6 +311,12 @@ char *argv[]
             printf("\n");
             /* Let's go */
             exit(0);
+         }
+
+         /* -lj */
+         if (!strcmp("-lj", *argv)) {
+            enable_job_logging(*++argv);
+            continue;
          }
 
          if (!strcmp("-k", *argv)) {

@@ -205,5 +205,5 @@ chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
 chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
 
 $ECHO
-$ECHO "Your file permissions where set"
+$ECHO "Your file permissions were set"
 $ECHO

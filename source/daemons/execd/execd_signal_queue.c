@@ -125,8 +125,7 @@ int answer_error;
 
                   /* job signaling triggerd by a queue signal */
                   sprintf(tmpstr, "%s (%s)", sge_sig2str(signal), qnm);
-                  job_log(lGetUlong(jep, JB_job_number), tmpstr, 
-                     prognames[me.who], me.unqualified_hostname);
+                  job_log(lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), tmpstr);
                   /* if the queue gets suspended and the job is already suspended
                      we do not deliver a signal */
                   if (signal == SGE_SIGSTOP) {
@@ -413,7 +412,7 @@ u_long32 signal
 
    DENTER(TOP_LAYER, "signal_job");
 
-   job_log(jobid, sge_sig2str(signal), prognames[me.who], me.unqualified_hostname);
+   job_log(jobid, jataskid, sge_sig2str(signal));
 
    /* search appropriate array task and job */
    for_each (jep, Master_Job_List) {

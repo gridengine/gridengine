@@ -237,7 +237,7 @@ int slave
    else
       DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"<\n", jobid, jataskid));
 
-   job_log(jobid, MSG_COM_RECEIVED, prognames[me.who], me.unqualified_hostname);
+   job_log(jobid, jataskid, MSG_COM_RECEIVED);
 
    if (cull_unpack_list(pb, &qlp)) {
       sprintf(err_str, MSG_COM_UNPACKINGQ);
@@ -676,8 +676,6 @@ int *synchron;
       de->commproc, de->host, de->id, gdil?"with":"without"));
 
    DPRINTF(("===>TASK_EXECUTION: >" u32 "<\n", lGetUlong(jelem, JB_job_number)));
-
-   job_log(jobid, MSG_COM_RECEIVED, prognames[me.who], me.unqualified_hostname);
 
    { 
       lListElem *this_q; 

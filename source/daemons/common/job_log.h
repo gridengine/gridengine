@@ -38,8 +38,7 @@ int enable_job_logging(char *fname);
 
 int disable_job_logging(char *fname);
 
-int job_log(u_long32 job_number, const char *str, char *progname, 
-            char *hostname);
+int job_log(u_long32 job_number, u_long32 task_number, const char *str);
 
 #endif
 

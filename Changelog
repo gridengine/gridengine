@@ -1,3 +1,7 @@
+SG-2004-11-04-0: Bugfix:    fixed the event master error messages
+                 Changed:   qmaster
+                 Review:    DT
+
 CR-2004-11-04-0: Enhancm.:  commlib: added rresvport() (reserved port) support
                  Changed:   commlib
                  Review:    pending

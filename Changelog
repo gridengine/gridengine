@@ -192,9 +192,6 @@ EB-2002-02-18-0: Bugfix:    Attempt to unlink directory + bogus error message
 
 CR-2002-02-18-0: Testsuite: - alleviate testsuite setup
 
-AS-2002-02-13-3: CVS:       Created V53_beta2_sx6_TAG and V53_beta2_sx6_BRANCH
-------------------------------------------------------------------------------
-
 CR-2002-02-15-0: Testsuite: - compile option: handle eof and response timeout 
 
 CR-2002-02-14-0: Testsuite: - Bugfix: error on updating defaults file version
@@ -211,9 +208,6 @@ CR-2002-02-13-0: Testsuite: secure feature:
                                  job end waiting
                                - submit hosts test: wait for end of
                                  transfer before deleting job
-
-AS-2002-02-13-3: CVS:       Created V53_beta2_1_TAG
----------------------------------------------------
 
 AS-2002-02-13-2: Bugfix:    install "UPGRADE" file and shared libraries with
                             "mk_dist" and "distinst"

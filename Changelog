@@ -1,3 +1,14 @@
+CR-2002-04-11-5: Testsuite: (merge from maintrunc)
+                            - only produce warning when re_init core 
+                              system resets cluster/schedd configuration
+                            - removed DEMO category
+                            - new interactive menu points:
+                              (23) compile and pre install binaries
+                              (24) compile and pre install, then install 
+                                   and run not completed tests
+                              (25) set testsuite debug level
+
+
 CR-2002-04-11-3: Testsuite: Merge of CR-2002-04-11-2, CR-2002-04-11-1 and
                             CR-2002-04-11-0 from maintrunc
 

@@ -876,7 +876,9 @@ int string_base_cmp(u_long32 type, const char *s1, const char *s2)
                            char *s = NULL;
                            struct saved_vars_s *context=NULL;
                            for (s=sge_strtok_r(s1, "|", &context); s; s=sge_strtok_r(NULL, "|", &context)) {
-                              match |= fnmatch(s, s2, 0);
+                              if ((match = fnmatch(s, s2, 0)) == 0) {
+                                 break;
+                              }   
                            }
                         }
          break;

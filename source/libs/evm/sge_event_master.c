@@ -1762,8 +1762,11 @@ static void send_events(lListElem *report, lList *report_list) {
            && (busy_handling == EV_THROTTLE_FLUSH 
                || !lGetUlong(event_client, EV_busy))
          ) {
-         /* put only pointer in report - dont copy */
-         lSetList(report, REP_list, lGetList(event_client, EV_events));
+         lList *lp = NULL;
+            /* put only pointer in report - dont copy */
+            lXchgList(event_client, EV_events, &lp);
+            lXchgList(report, REP_list, &lp);
+
 
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
@@ -1789,11 +1792,9 @@ static void send_events(lListElem *report, lList *report_list) {
          }
 
          /* don't delete sent events - deletion is triggerd by ack's */
-         {
-            lList *lp = NULL;
-            lXchgList(report, REP_list, &lp);
-         }
-
+         lXchgList(report, REP_list, &lp);
+         lXchgList(event_client, EV_events, &lp);
+        
       }
       event_client = lNext(event_client);
    }

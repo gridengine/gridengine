@@ -936,9 +936,8 @@ sge_mirror_error sge_mirror_process_events(void)
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
       
       log_state_set_log_level(LOG_INFO); 
-      INFO((SGE_EVENT, "sge_mirror: processed %d events in %.3f s\n", 
-            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)
-          ));
+      INFO((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
+            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)));
       log_state_set_log_level(saved_logginglevel);          
    }
 

@@ -1,3 +1,11 @@
+SG-2004-04-07-0: Bugfix:    - The or operator for complex entries with the type
+                              RESTRING was broken.
+                            - a minor issue in event master. It might deliver
+                              the event envelop without events. 
+                 Changed:   scheduler
+                 Issue:     958
+                 Review:    AA
+
 JG-2004-04-06-1: Cleanup:   Some cleanup in berkeley db spooling.
 
 EB-2004-04-06-0: Bugfix:    Usage retrieval/logging problems with tight PE jobs

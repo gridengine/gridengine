@@ -1,3 +1,5 @@
+AH-2003-07-28-0: Doc.:      Initial revision of DRMAA man pages
+
 AA-2003-07-28-0: Enhancem.: - cq preparation: qmon adaption
 
 CR-2003-07-28-0: Testsuite: - fixed error in path_alias test, using

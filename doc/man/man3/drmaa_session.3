@@ -1,0 +1,110 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2003/07/28 16:13:39 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH drmaa_session 3 "$Date: 2003/07/28 16:13:39 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.\"
+.\"
+.\"
+.SH NAME
+drmaa_init, drmaa_exit \- Start/finish xxQS_NAMExx DRMAA session
+.PP
+.\"
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """drmaa.h"""
+.PP
+\fBint drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len);\fB
+.PP
+.nf
+\fBint drmaa_exit(char *error_diagnosis, size_t error_diag_len);\fB
+.PP
+.nf
+.\"
+.\"
+.\"
+.SH DESCRIPTION
+The drmaa_init() function initializes xxQS_NAMExx DRMAA API library for all threads 
+of the process and creates a new DRMAA Session. This routine must be called once before 
+any other DRMAA call, except for 
+.M drmaa_version 3 . 
+\fIContact\fP is an implementation dependent string which may be used to 
+specify which xxQS_NAMExx cell to use. If 
+\fIcontact\fP 
+is NULL, the default xxQS_NAMExx cell will be used. In the current implementation 
+setting \fIcontact\fP has no effect.
+.\" 
+.SS "drmaa_exit()"
+The drmaa_exit() function called by any thread finishes the process DRMAA session 
+for all threads and is necessary to perform DRMAA library internal clean up. Running 
+jobs are not effected. 
+.PP
+.\"
+.\"
+.\"
+.SH "RETURN VALUES"
+Upon successful completion, drmaa_init() and drmaa_exit() return DRMAA_ERRNO_SUCCESS.
+Other values indicate an error.
+Up to \fIerror_diag_len\fP characters of error related diagnosis 
+information is then provided in the buffer \fIerror_diagnosis\fP.
+.PP
+.\"
+.\"
+.\"
+.SH "ERRORS"
+The drmaa_init() and drmaa_exit() functions will fail if:
+.\" 
+.SS "DRMAA_ERRNO_INTERNAL_ERROR"
+Unexpected or internal DRMAA error like memory allocation, system call failure, etc.
+.\" 
+.SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
+Could not contact DRM system for this request.
+.\" 
+.SS "DRMAA_ERRNO_AUTH_FAILURE"
+The specified request is not processed successfully due to authorization failure.
+.\" 
+.SS "DRMAA_ERRNO_INVALID_ARGUMENT"
+The input value for an argument is invalid.
+.\" 
+.PP
+The drmaa_init() will fail if:
+.SS "DRMAA_ERRNO_INVALID_CONTACT_STRING"
+Initialization failed due to invalid contact string.
+.\" 
+.SS "DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR"
+Could not use the default contact string to connect to DRM system.
+.\" 
+.SS "DRMAA_ERRNO_DRMS_INIT_FAILED"
+Initialization failed due to failure to init DRM system.
+.\" 
+.SS "DRMAA_ERRNO_ALREADY_ACTIVE_SESSION"
+Initialization failed due to existing DRMAA session.
+.\" 
+.SS "DRMAA_ERRNO_NO_MEMORY"
+Failed allocating memory.
+.\" 
+.PP
+The drmaa_exit() will fail if:
+.SS "DRMAA_ERRNO_NO_ACTIVE_SESSION"
+Failed because there is no active session.
+.\" 
+.SS "DRMAA_ERRNO_DRMS_EXIT_ERROR"
+DRM system disengagement failed.
+.PP
+.\" 
+.\" 
+.\" 
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M list_intro 3 .

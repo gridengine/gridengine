@@ -1,0 +1,111 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: drmaa_misc.3,v $     Last Update: $Date: 2003/07/28 16:13:37 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH drmaa_misc 3 "$Date: 2003/07/28 16:13:37 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.\"
+.\"
+.\"
+.SH NAME
+drmaa_strerror, drmaa_get_contact, drmaa_version, drmaa_get_DRM_system \- Miscellaneous DRMAA functions.
+.PP
+.\"
+.\"
+.\"
+.SH SYNOPSIS
+.B #include """drmaa.h"""
+.PP
+\fBconst char *drmaa_strerror(int drmaa_errno);\fB
+.PP
+.nf
+\fBint drmaa_get_contact(char *contact, size_t contact_len, char *error_diagnosis, size_t error_diag_len);\fB
+.PP
+.nf
+\fBint drmaa_version(unsigned int *major, unsigned int *minor, char *error_diagnosis, size_t error_diag_len);\fB
+.PP
+.nf
+\fBint drmaa_get_DRM_system(char *drm_system, size_t drm_system_len, char *error_diagnosis, size_t error_diag_len);\fB
+.PP
+.nf
+.\"
+.\"
+.\"
+.SH DESCRIPTION
+The drmaa_strerror() function returns a message text associated with the DRMAA error number 
+\fIdrmaa_errno\fP. For invalid DRMAA error codes `NULL' is returned.
+.\" 
+.\" 
+.\" 
+.SS "drmaa_get_contact()"
+The drmaa_get_contact() is supposed to return an opaque string containing contact 
+information related to the current DRMAA session. As 
+.M drmaa_init 3
+parameter \fIcontact\fP has no effect in the current implementation also 
+.M drmaa_get_contact 3
+simply returns an empty string.
+.PP
+.\"
+.\" 
+.\" 
+.SS "drmaa_version()"
+The drmaa_version() function returns into the integers pointed to by \fImajor\fP 
+and \fIminor\fP version numbers of the DRMAA library. For a DRMAA 1.0 compliant 
+implementation `1' and `0' will be returned in \fImajor\fP and \fIminor\fP.
+.PP
+.\"
+.\" 
+.\" 
+.SS "drmaa_get_DRM_system()"
+The drmaa_get_DRM_system() function returns into \fIdrm_system\fP up to 
+\fIdrm_system_len\fP characters of a string containing xxQS_NAMExx product and 
+version information.
+.PP
+.\"
+.\"
+.\"
+.SH "RETURN VALUES"
+Upon successful completion, drmaa_get_contact(), drmaa_version(), and drmaa_get_DRM_system()
+return DRMAA_ERRNO_SUCCESS. Other values indicate an error.
+Up to \fIerror_diag_len\fP characters of error related diagnosis 
+information is then provided in the buffer \fIerror_diagnosis\fP. 
+.PP
+.\"
+.\"
+.\"
+.SH "ERRORS"
+The drmaa_get_contact(), drmaa_version(), and drmaa_get_DRM_system() will fail if:
+.\" 
+.SS "DRMAA_ERRNO_INTERNAL_ERROR"
+Unexpected or internal DRMAA error like memory allocation, system call failure, etc.
+.\" 
+.SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
+Could not contact DRM system for this request.
+.\" 
+.SS "DRMAA_ERRNO_AUTH_FAILURE"
+The specified request is not processed successfully due to authorization failure.
+.\" 
+.SS "DRMAA_ERRNO_INVALID_ARGUMENT"
+The input value for an argument is invalid.
+.\" 
+.SS "DRMAA_ERRNO_NO_MEMORY"
+Failed allocating memory.
+.PP
+The drmaa_get_contact() and drmaa_get_DRM_system() will fail if:
+.\" 
+.SS "DRMAA_ERRNO_NO_ACTIVE_SESSION"
+Failed because there is no active session.
+.\" 
+.\" 
+.\" 
+.SH "SEE ALSO"
+.M drmaa_session 3 .

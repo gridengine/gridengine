@@ -43,7 +43,7 @@ SG-2003-08-27-0: Bugfix:    scheduler handled hard requested string resource
                             overrode host level definition was ignored by
                             scheduler)
                  Changed:   sge_schedd
-                 Issue:     589
+                 Issue:     592
                  Review:    EB
 
 AH-2003-08-18-0: Enhancem.: Update on tight integration with Sun HPC
@@ -55,7 +55,6 @@ AH-2003-08-01-0: Enhancem.: Added integration package for tight integration
                  Review:    AA
 
 SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
-
                  Changed:   sge_schedd, qstat, qmon, qhost
                  Issue:     589
                  Review:    AH

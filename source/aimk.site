@@ -74,7 +74,7 @@ set GROFFPATH = /vol2/tools/SW/$buildarch/bin
 #
 # SWIG path 
 #
-set SWIG = /vol2/tools/SW/$buildarch/bin/swig
+set SWIG = /vol2/tools/SW/swig-1.3.22/$buildarch/bin/swig
 
 #
 # PERL path
@@ -116,3 +116,25 @@ switch ($BUILDARCH)
       set argv = ( -spool-berkeleydb $argv )
    breaksw
 endsw
+
+
+if ( ! $?JAVA_HOME ) then
+   set JAVA_HOME = /usr/lib/java
+endif   
+switch($buildarch)
+   case "lx24-x86":
+   case "lx26-x86":
+   case "lx24-amd64":
+   case "glinux":
+      set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
+      breaksw
+   case "sol-sparc":
+   case "sol-sparc64":
+   case "sol-x86":
+   case "solaris":
+      set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/solaris"
+      breaksw
+   default:
+      set JNI_INCLUDES = ""
+endsw
+

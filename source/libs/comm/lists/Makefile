@@ -115,17 +115,17 @@ cl_thread_list.o: $(COMMLISTSLIB_DIR)/cl_thread_list.c
 
 
 test_cl_raw_list: test_cl_raw_list.o $(COMMLISTSLIB)
-	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) $(LIBS)
+	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 test_cl_util: test_cl_util.o $(COMMLISTSLIB)
-	$(CC) -o test_cl_util $(LFLAGS) test_cl_util.o $(COMMLISTSLIB) $(LIBS)
+	$(CC) -o test_cl_util $(LFLAGS) test_cl_util.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 test_cl_errors: test_cl_errors.o $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
 	$(CC) -o test_cl_errors $(LFLAGS) test_cl_errors.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 test_cl_log_list: test_cl_log_list.o $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
 	$(CC) -o test_cl_log_list $(LFLAGS) test_cl_log_list.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 test_cl_thread: test_cl_thread.o $(COMMLISTSLIB)
-	$(CC) -o test_cl_thread $(LFLAGS) test_cl_thread.o $(COMMLISTSLIB) $(LIBS)
+	$(CC) -o test_cl_thread $(LFLAGS) test_cl_thread.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 test_cl_thread_list: test_cl_thread_list.o $(COMMLISTSLIB)
-	$(CC) -o test_cl_thread_list $(LFLAGS) test_cl_thread_list.o $(COMMLISTSLIB) $(LIBS)
+	$(CC) -o test_cl_thread_list $(LFLAGS) test_cl_thread_list.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 
 test_cl_raw_list.o: $(COMMLISTSLIB_DIR)/test_cl_raw_list.c
 	$(CC) $(CFLAGS) -c $(COMMLISTSLIB_DIR)/test_cl_raw_list.c

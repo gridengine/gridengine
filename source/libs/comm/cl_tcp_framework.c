@@ -1923,15 +1923,14 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
          if (connection->error_func != NULL) {
             CL_LOG(CL_LOG_WARNING,"calling application error function");
             switch(crm_message->cs_condition) {
-               case CL_CRM_CS_UNDEFINED: 
-               case CL_CRM_CS_UNSUPPORTED:
-                  connection->error_func(CL_RETVAL_UNKNOWN);
-                  break;
                case CL_CRM_CS_DENIED:
                   connection->error_func(CL_RETVAL_ACCESS_DENIED);
                   break;
                case CL_CRM_CS_ENDPOINT_NOT_UNIQUE:
                   connection->error_func(CL_RETVAL_ENDPOINT_NOT_UNIQUE);
+                  break;
+               default:
+                  connection->error_func(CL_RETVAL_UNKNOWN);
                   break;
             }
             CL_LOG(CL_LOG_WARNING,"application error function returns");

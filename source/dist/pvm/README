@@ -49,7 +49,7 @@ Environment Interface of Grid Engine/Grid Engine Enterprise Edition.
 
 Please note that there is a need to build some binaries for successful use
 of the prepared startup scripts and the job examples. To build these
-binaries ensure that both PVM_ROOT and SGE_ROOT are set in your
+binaries ensure that PVM_ROOT, PVM_ARCH  and SGE_ROOT are set in your
 environment. Change into $SGE_ROOT/pvm/src and start ./aimk. Then use 
 the script 'install.sh' to copy all necessary binaries to the places where 
 they are expected by the scripts described below.

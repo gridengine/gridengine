@@ -37,6 +37,11 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#
+# IMPORTANT NOTE: this script should be seen as a template - it will need to
+#                 be adjusted in most cases.
+#
+
 set noglob
 
 if (! $?PVM_ROOT) then
@@ -65,6 +70,8 @@ if (! -f $SGE_ROOT/util/arch ) then
    echo
    exit 1
 endif
+
+setenv ARCH `$SGE_ROOT/util/arch`
 
 # common compiler and linker settings 
 #
@@ -133,34 +140,16 @@ end
 set CTOR = ""
 set DTOR = ""
 
-set ARCH = `$SGE_ROOT/util/arch`
-
 switch ($ARCH)
 
-case aix41:
-case aix42:
-   set CFLAGS = "-DAIX41 -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+case aix43:
+case aix51:
+   set CFLAGS = "-DAIX -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set LFLAGS = "$DEBUG_FLAG $LFLAGS"
    set LIBS = "$LIBS"
    breaksw
 
-case cray:
-   set CFLAGS   = "-DCRAY $DEBUG_FLAG $CFLAGS"
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
-   set LIBS = "$LIBS"
-   breaksw
-
-case irix5:
-   if ( $CC == gcc ) then
-      set CFLAGS = "-Wall -Wstrict-prototypes -DIRIX5 $DEBUG_FLAG $CFLAGS"
-   else
-      set CFLAGS = "-DIRIX5 $DEBUG_FLAG $CFLAGS"
-   endif
-   set LFLAGS = "$DEBUG_FLAG $LFLAGS"
-   set LIBS = "$LIBS"
-   breaksw
-
-case irix6*:
+case irix65:
    set CFLAGS = "-DIRIX6 $DEBUG_FLAG $CFLAGS"
    set LFLAGS = "$DEBUG_FLAG $LFLAGS"
    set LIBS = "$LIBS"
@@ -169,7 +158,7 @@ case irix6*:
 	set STATIC   = "-nostartfiles"
    breaksw
 
-case hp:
+case hp11:
    if ( $CC == gcc ) then
       set CFLAGS = "-Wall -Wstrict-prototypes -DHPUX $DEBUG_FLAG $CFLAGS"
    else
@@ -179,18 +168,7 @@ case hp:
    set LIBS = "$LIBS"
    breaksw
 
-case hp10:
-   if ( $CC == gcc ) then
-      set CFLAGS = "-O -Wall -Wstrict-prototypes -DHP10 $DEBUG_FLAG $CFLAGS"
-   else
-      set CFLAGS = "-Ae -O -DHP10 $DEBUG_FLAG $CFLAGS"
-   endif
-   set LFLAGS = "$DEBUG_FLAG $LFLAGS"
-   set LIBS = "$LIBS"
-   breaksw
-
-
-case linux:
+case lx24-x86:
    set CC = gcc
    set CFLAGS = "-O -Wall -Werror -Wstrict-prototypes -DLINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS = "$DEBUG_FLAG $LFLAGS"
@@ -200,8 +178,6 @@ case linux:
    set DTOR = "/usr/lib/crtend.o /usr/lib/crtn.o"
    breaksw
 
-case osf:
-case osf4:
 case tru64:
    if ( $CC == gcc ) then
       set CFLAGS = "-Wall -Wstrict-prototypes -D_BSD -DALPHA $DEBUG_FLAG $CFLAGS"
@@ -212,17 +188,8 @@ case tru64:
    set LIBS = "$LIBS"
    breaksw
 
-case rs6000:
-   if ( $CC == gcc ) then
-      set CFLAGS = "-Wall -Wstrict-prototypes -DAIX32 $DEBUG_FLAG $CFLAGS"
-   else
-      set CFLAGS = "-DAIX32 -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
-   endif
-   set LFLAGS = "$DEBUG_FLAG $LFLAGS"
-   set LIBS = "$LIBS"
-   breaksw
-
-case solaris:
+case sol-sparc:
+case sol-sparc64:
 	set CC   = "gcc"
    if ( $CC == gcc ) then
       set CFLAGS   = "-DSOLARIS -O -Wall -Wstrict-prototypes -Werror $DEBUG_FLAG $CFLAGS"
@@ -233,16 +200,8 @@ case solaris:
 	set STATIC   = "-nostartfiles"
    breaksw
 
-case sun4:
-   set CC = gcc
-   set CFLAGS = "-Wall -Wstrict-prototypes -DSUN4 $DEBUG_FLAG $CFLAGS"
-   set LFLAGS = "-static $DEBUG_FLAG $LFLAGS"
-   set LIBS   = "$LIBS"
-   set RANLIB = ranlib
-   breaksw
-
 default:
-   echo "ERROR: Architecture not yet supported"
+   echo "ERROR: Architecture not supported"
    exit 1
 endsw
 

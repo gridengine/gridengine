@@ -362,7 +362,7 @@ char *buffer
    char c;
    static char text[100];
 
-   DENTER(TOP_LAYER, "resource_descr");
+   DENTER(GDI_LAYER, "resource_descr");
 
    if (!buffer)
       buffer = text;

@@ -1812,7 +1812,9 @@ int host_order_changed) {
                   (total_slots = available_slots_global(&global_resources, 
                         job, ja_task,
                         pe, host_list, complex_list, total_slots, ccl, acl_list))
-              ; total_slots = MIN(max_slots_all_hosts, total_slots-1)) {
+              ; total_slots = (max_slots_all_hosts!=0) ?  
+                  MIN(max_slots_all_hosts, total_slots-1):
+                  total_slots-1) {
 
 
             DPRINTF((u32": global %d slots\n", job_id, total_slots));
@@ -1967,6 +1969,7 @@ int host_order_changed) {
                      total_slots, need_master_host?"plus master host":""));
                break;
             }
+
          } /* for all slot amounts */
 
          if (get_qs_state()==QS_STATE_EMPTY) /* no caching */

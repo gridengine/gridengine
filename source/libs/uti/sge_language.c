@@ -354,7 +354,7 @@ const char *sge_gettext(
 char *x 
 ) {
    char *z;
-   DENTER(TOP_LAYER, "sge_gettext");
+   DENTER(GDI_LAYER, "sge_gettext");
 
    if ( (sge_language_functions.gettext_func != NULL) && 
         (sge_are_language_functions_installed == TRUE)   ) {

@@ -2422,7 +2422,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
                   ret_error=true;
                }
             } 
-            else if(strcmp(hostname, temp_hostname)==0){
+            else if( temp_hostname && strcmp(hostname, temp_hostname)==0){
                ERROR((SGE_EVENT, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                ret_error=true;

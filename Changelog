@@ -1,3 +1,6 @@
+HP-2004-02-19-1: Bugfix:    - qsub -S <host>:/<path> crashed sge_qmaster
+                 Issue:     682
+
 HP-2004-02-19-0: Enhance:   - filestaging for drmaa
                             - prolog handles application error
                  Changed:   all

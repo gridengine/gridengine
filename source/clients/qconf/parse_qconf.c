@@ -5678,7 +5678,8 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
          return 1;
       }
 
-      if (info_entry->pre_gdi_function(qlp, alpp)) {
+      if (info_entry->pre_gdi_function == NULL ||
+          info_entry->pre_gdi_function(qlp, alpp)) {
          *alpp = sge_gdi(info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
                          NULL, what);
       }

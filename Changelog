@@ -1,3 +1,5 @@
+EB-2003-10-16-0: Bugfix:    qconf -mattr ? produced core
+
 AA-2003-10-16-0: Bugfix:    In case that a deletion of a resource attribute 
                             failed, was the resource deleted anyway. This is
                             fixed now. 

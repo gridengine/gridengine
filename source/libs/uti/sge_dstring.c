@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include "sgermon.h"
 #include "sge_dstring.h"
 
 #define REALLOC_CHUNK   1024
@@ -61,17 +62,27 @@ char* sge_dstring_append(dstring *sb, const char *a)
    if (!sb) {
       return NULL;
    }
+
+   if (!a) {
+      return NULL;
+   }
    
-   if (!a || *a == '\0') {
+   /* only allow to append a string with length 0
+      for memory allocation */
+   if (strlen(a) == 0 && sb->s != NULL ) {
       return sb->s;
    }
 
-   n = strlen(a);
-   m = sb->s ? strlen(sb->s) : 0;
-   if (m + n > sb->size) {
+   n = strlen(a) + 1 ;
+   if (sb->s == NULL) {
+      m = 1;
+   } else {
+      m = strlen(sb->s) + 1;
+   }  
+   if ( (m + n - 1 ) > sb->size ) {
       if (n < REALLOC_CHUNK)
          n = REALLOC_CHUNK; 
-      sb->size += (n+1);
+      sb->size += n;
       if (sb->s)
          sb->s = realloc(sb->s, sb->size * sizeof(char)); 
       else {
@@ -114,6 +125,39 @@ char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
    vsprintf(buf, format, ap);
    return sge_dstring_append(sb, buf);
 }
+
+char* sge_dstring_copy_string(dstring *sb, char* str) 
+{
+   char* ret = NULL;
+   DENTER(TOP_LAYER, "sge_dstring_copy_string");
+   if (sb != NULL && sb->s != NULL) {
+      sb->s[0] = 0;
+   }  
+   if (sb != NULL && sb->s == NULL) {
+      sge_dstring_append(sb, "");
+   }
+
+   ret = sge_dstring_append(sb, str);
+   DEXIT;
+   return ret;
+}
+
+char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2) 
+{
+   char* ret = NULL;
+   DENTER(TOP_LAYER, "sge_dstring_copy_dstring");
+   if (sb1 != NULL && sb1->s != NULL) {
+      sb1->s[0] = 0;
+   }  
+   if (sb1 != NULL && sb1->s == NULL) {
+      sge_dstring_append(sb1, "");
+   }
+
+   ret = sge_dstring_append(sb1, sge_dstring_get_string(sb2));
+   DEXIT;
+   return ret;
+}
+
 
 /****** uti/dstring/sge_dstring_free() ****************************************
 *  NAME
@@ -159,6 +203,21 @@ const char *sge_dstring_get_string(const dstring *string)
 {
    return (string != NULL) ? string->s : NULL;
 }
+
+
+size_t sge_dstring_strlen(const dstring *string)
+{
+   
+   size_t len = 0;
+
+   DENTER(TOP_LAYER,"sge_dstring_strlen");
+   if (string != NULL && string->s != NULL) {
+      len = strlen(string->s);
+   }
+   DEXIT;
+   return len;
+}
+
 
 
 

@@ -62,5 +62,12 @@ void sge_dstring_free(dstring *sb);
 
 const char *sge_dstring_get_string(const dstring *string);
 
+char* sge_dstring_copy_string(dstring *sb, char* str);
+
+char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2);
+
+size_t sge_dstring_strlen(const dstring *string);
+
+
 #endif /* __SGE_STRING_APPEND_H */
 

@@ -1,3 +1,7 @@
+CR-2002-05-14-0: Cleanup:   - Using dstring in sge_printf 
+                            - some dstring function enhancements
+                            - fixed bug in sge_dstring_append()
+
 JG-2002-05-14-2: Doc:       Coding styleguide, format for special comments.
 
 JG-2002-05-14-1: Bugfix:    MPI tight integration rsh wrapper contained

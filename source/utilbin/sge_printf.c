@@ -31,12 +31,14 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include "sgermon.h" 
+#include <string.h>
 
+#include "sgermon.h" 
 #include "basis_types.h"
 #include "sge_language.h"
 #include "msg_utilbin.h"
-#include <strings.h>
+#include "sge_dstring.h"
+
 
 typedef struct sge_printf_opt {
       int e;   /* print to stderr */
@@ -52,40 +54,40 @@ typedef struct sge_printf_opt {
 static void  sge_printf_welcome(void);
 static void  sge_printf_usage(void);
 static int   sge_printf_get_nr_of_substrings(char* buffer, char* substring);
-static char* sge_printf_string_replace(char* arg, char* what, char* with, int only_first );
-static char* sge_printf_string_input_parsing(char* string);
-static char* sge_printf_string_output_parsing(char* string);
-static void  sge_printf_print_line(sge_printf_options* options, char* line);
-static void  sge_printf_format_output(sge_printf_options* options, char* text);
-static char* sge_printf_get_next_word(char* text);
-static char* sge_printf_build_dash(sge_printf_options* options);
+static char* sge_printf_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
+static char* sge_printf_string_input_parsing(dstring* buf,char* string);
+static char* sge_printf_string_output_parsing(dstring* buf,char* string);
+static void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstring* line);
+static void  sge_printf_format_output(dstring* dash_buf, sge_printf_options* options, char* text);
+static char* sge_printf_get_next_word(dstring* buf,char* text);
+static const char* sge_printf_build_dash(dstring* dash_buf, sge_printf_options* options);
 int main(int argc, char *argv[]);
 
-char* sge_printf_build_dash(sge_printf_options* options) {
-   char dash[500];
+const char* sge_printf_build_dash(dstring* dash_buf, sge_printf_options* options) {
    int i;
  
-   strcpy(dash,"");
+   sge_dstring_copy_string(dash_buf,"");
    for(i=0;i<options->S;i++) {
-      strcat(dash," ");
+      sge_dstring_append(dash_buf," ");
    }
    if (strlen(options->D) > 0) {
-      strcat(dash,_(options->D));
-      strcat(dash," ");
+      sge_dstring_append(dash_buf,_(options->D));
+      sge_dstring_append(dash_buf," ");
    }
-   return dash;
+   return sge_dstring_get_string(dash_buf);
 }
 
-char* sge_printf_get_next_word(char* text) {
-   char buf[2000];
+char* sge_printf_get_next_word(dstring* buf, char* text) {
    char* p1;
+   char* buffer;
    int i;
    int start;
 
-   strcpy(buf,text);
-   p1 = buf;
-   for (start=0;start<strlen(buf);start++) {
-      if ( buf[start] == ' ' ) {
+   sge_dstring_copy_string(buf,text);
+   buffer = (char*)sge_dstring_get_string(buf);
+   p1 = buffer;
+   for (start=0;start<strlen(buffer);start++) {
+      if ( buffer[start] == ' ' ) {
          p1++;
          continue;
       } else {
@@ -106,18 +108,25 @@ char* sge_printf_get_next_word(char* text) {
    return p1;
 }
 
-void  sge_printf_format_output(sge_printf_options* options, char* text) {
+void  sge_printf_format_output(dstring* dash_buf,sge_printf_options* options, char* text) {
    char* column_var = NULL;
    int max_column = 79;
-   char line[2000];
-   char line2[2000];
-   char dash[500];
    char* tp = NULL;
    int i;
    int nr_word = 0;
+   dstring dash = DSTRING_INIT;
+   dstring tmp_buf = DSTRING_INIT;
+   dstring line = DSTRING_INIT;
+   dstring line2 = DSTRING_INIT;
+   char* line_buf = NULL;
+   char* line2_buf = NULL;
    
    int new_line_opt = options->n;
 
+   DENTER(TOP_LAYER,"sge_printf_format_output" );
+
+
+   DPRINTF(("format 1\n"));
    options->n = 0;
 
    column_var = getenv("SGE_PRINTF_MAX_COLUMN");
@@ -126,105 +135,121 @@ void  sge_printf_format_output(sge_printf_options* options, char* text) {
    } 
 
    tp = text;
-  
-   strcpy(dash,sge_printf_build_dash(options));
-   strcpy(line,dash);
-   strcpy(dash,"");
-   for(i=0;i< strlen(line);i++) {
-      strcat(dash," ");
+   DPRINTF(("do strcpy"));
+   if (sge_dstring_get_string(dash_buf) == NULL) {
+      DPRINTF(("dash_buf is null"));
+   }
+   sge_dstring_copy_dstring(&line,dash_buf);
+   DPRINTF(("strcpy done"));
+   sge_dstring_copy_string(&dash,"");
+   DPRINTF(("copy done"));
+   for(i=0;i< sge_dstring_strlen(&line);i++) {
+      sge_dstring_append(&dash," ");
    }
    nr_word = 0;
+   DPRINTF(("while\n"));
+
    while(1) {
       char* next_word = NULL;
 
-      next_word = sge_printf_get_next_word(tp);
+      next_word = sge_printf_get_next_word(&tmp_buf, tp);
       if (strlen(next_word) == 0 ) {
          if (nr_word != 0) {
             options->n = new_line_opt;
-            sge_printf_print_line(options,line);
+            sge_printf_print_line(dash_buf,options,&line);
          }
          nr_word = 0;
          break;
       }
 
       if(nr_word != 0) {
-         strcat(line," ");
+         sge_dstring_append(&line," ");
       }
       
-      strcat(line,next_word);
+      sge_dstring_append(&line,next_word);
       nr_word++;
-      tp = strstr(tp,next_word);
+      tp = (char*)strstr(tp,next_word);
       for(i=0;i<strlen(next_word);i++) {
          tp++;
       }
       
 
-      if(strlen(line) > max_column || strstr(line,"\n") != NULL ) {
+      if(sge_dstring_strlen(&line) > max_column || strstr(sge_dstring_get_string(&line),"\n") != NULL ) {
          int z;
          int l;
-         strcpy(line2,line);
+         sge_dstring_copy_dstring(&line2,&line);
+         line_buf  = (char*) sge_dstring_get_string(&line);
+         line2_buf = (char*) sge_dstring_get_string(&line2);
          l=0;
-         for(z=0;z <= strlen(line);z++) {
-            line2[l++] = line[z];
+         for(z=0;z <= sge_dstring_strlen(&line);z++) {
+            line2_buf[l++] = line_buf[z];
             if (l >= max_column ) {
-               line2[l]=0;
-               sge_printf_print_line(options,line2);
-               strcpy(line2,dash);
-               l=strlen(dash);
+               line2_buf[l]=0;
+               sge_printf_print_line(dash_buf,options,&line2);
+               sge_dstring_copy_dstring(&line2, &dash);
+               l=sge_dstring_strlen(&dash);
             }
          }
          if (l>0) {
-            line2[l]=0;
-            sge_printf_print_line(options,line2);
+            line2_buf[l]=0;
+            sge_printf_print_line(dash_buf,options,&line2);
          }
 
          nr_word = 0;
-         strcpy(line,dash);
+         sge_dstring_copy_dstring(&line,&dash);
       } else {
-         next_word = sge_printf_get_next_word(tp);
+         next_word = sge_printf_get_next_word(&tmp_buf,tp);
          if (strlen(next_word) == 0) {
             options->n = new_line_opt;
-            sge_printf_print_line(options,line);
+            sge_printf_print_line(dash_buf,options,&line);
             nr_word = 0;
          break;
          }
-         if( strlen(line) + strlen(next_word) + 1 > max_column &&
+         if( sge_dstring_strlen(&line) + strlen(next_word) + 1 > max_column &&
             nr_word != 0 ) {
-            sge_printf_print_line(options,line);
+            sge_printf_print_line(dash_buf,options,&line);
             nr_word = 0;
-            strcpy(line,dash);
+            sge_dstring_copy_dstring(&line,&dash);
          }      
       }
    }
+   DPRINTF(("free strings\n"));
    options->n = new_line_opt;
+   sge_dstring_free(&dash);
+   sge_dstring_free(&tmp_buf);
+   sge_dstring_free(&line);
+   sge_dstring_free(&line2);
+   DEXIT;
 }
 
 
-void  sge_printf_print_line(sge_printf_options* options, char* line_arg) {
+void  sge_printf_print_line(dstring* dash_buf, sge_printf_options* options, dstring* line_arg) {
    int i;
    FILE* output;
-   char line[2000];
-   char dash[500];
    int line_length;
    int lc;
+   char* line_buf;
+   dstring line = DSTRING_INIT;
+   dstring dash = DSTRING_INIT;
+   dstring line_buf_buffer = DSTRING_INIT;
 
-   strcpy(dash,sge_printf_build_dash(options));
-   strcpy(line,dash);
-   strcpy(dash,"\n");
-   for(i=0;i< strlen(line);i++) {
-      strcat(dash," ");
+   sge_dstring_copy_dstring(&line,dash_buf);
+   sge_dstring_copy_string(&dash,"\n");
+   for(i=0;i< sge_dstring_strlen(&line);i++) {
+      sge_dstring_append(&dash," ");
    }
 
-   strcpy(line, sge_printf_string_replace(line_arg,"\n",dash,0));
+   line_buf = sge_printf_string_replace(&line_buf_buffer,(char*)sge_dstring_get_string(line_arg),"\n",(char*)sge_dstring_get_string(&dash),0);
+   sge_dstring_copy_string(&line, line_buf);
 
    line_length = 0;
    lc = 0;
-   for(i=0;i<strlen(line);i++) {
+   line_buf = (char*)sge_dstring_get_string(&line);
+   for(i=0;i<sge_dstring_strlen(&line);i++) {
       lc++;
-      if (line[i] == '\n') {
+      if (line_buf[i] == '\n') {
          lc=0;
       }
-
       if(line_length < lc) {
           line_length=lc;
       }
@@ -237,7 +262,7 @@ void  sge_printf_print_line(sge_printf_options* options, char* line_arg) {
       output=stderr;
    }
 
-   fprintf(output,"%s",line);
+   fprintf(output,"%s",sge_dstring_get_string(&line));
    if (options->n != 1 && line_length > 0 ) {
       fprintf(output,"\n");
    }
@@ -254,65 +279,74 @@ void  sge_printf_print_line(sge_printf_options* options, char* line_arg) {
       }
    }
 
+   sge_dstring_free(&line);  
+   sge_dstring_free(&dash);
+   sge_dstring_free(&line_buf_buffer);
 }
 
 
-char* sge_printf_string_input_parsing(char* string) {
-    char string_buffer[2000];
+char* sge_printf_string_input_parsing(dstring* string_buffer,char* string) {
+    
+    dstring tmp_buf = DSTRING_INIT;
 
-/*    printf("input : \"%s\"\n",string); */
-    strcpy(string_buffer, sge_printf_string_replace(string       , "\\n", "\n",0));
-    strcpy(string_buffer, sge_printf_string_replace(string_buffer, "\\r", " ",0));
-    strcpy(string_buffer, sge_printf_string_replace(string_buffer, "\\t", " ",0));
-/*    printf("output: \"%s\"\n",string_buffer); */
+    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, string       , "\\n", "\n",0));
+    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\r", " ",0));
+    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\t", " ",0));
 
-    return string_buffer;
+    sge_dstring_free(&tmp_buf);
+    return (char*)sge_dstring_get_string(string_buffer);
 }
 
-char* sge_printf_string_output_parsing(char* string) {
-    char string_buffer[2000];
+char* sge_printf_string_output_parsing(dstring* string_buffer,char* string) {
 
-    strcpy(string_buffer, sge_printf_string_replace(string       , "\n", "\\n",0));
+    dstring tmp_buf = DSTRING_INIT;
 
-    return string_buffer;
+
+    sge_dstring_copy_string(string_buffer, sge_printf_string_replace(&tmp_buf, string       , "\n", "\\n",0));
+
+    sge_dstring_free(&tmp_buf);
+
+    return (char*)sge_dstring_get_string(string_buffer);
 }
 
 
 
-char* sge_printf_string_replace(char* arg, char* what, char* with, int only_first) {
-   char tmp_buf[2000];
-   char arg_copy[2000];
+char* sge_printf_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
    char* p2;
 
-   strcpy(arg_copy,arg);
-   p2 = arg_copy;
+   dstring arg_copy = DSTRING_INIT;
+
+   sge_dstring_copy_string(&arg_copy,arg);
+   p2 = (char*) sge_dstring_get_string(&arg_copy);
 
    p1 = strstr(p2, what);
    if (p1 == NULL) {
-      strcpy(tmp_buf,arg);
-      return tmp_buf;
+      sge_dstring_copy_string(tmp_buf,arg);
+      sge_dstring_free(&arg_copy);
+      return (char*) sge_dstring_get_string(tmp_buf);
    }
-   strcpy(tmp_buf,"");
+   sge_dstring_copy_string(tmp_buf,"");
    while (p1 != NULL) {
       *p1 = 0;
-      strcat(tmp_buf,p2);
-      strcat(tmp_buf,with);
+      sge_dstring_append(tmp_buf,p2);
+      sge_dstring_append(tmp_buf,with);
       p2 = p1;
       for(i=0;i<strlen(what);i++) {
          p2++;
       }
       if (only_first == 1) {
-         strcat(tmp_buf,p2);
-         return tmp_buf;
+         sge_dstring_append(tmp_buf,p2);
+         sge_dstring_free(&arg_copy);
+         return (char*) sge_dstring_get_string(tmp_buf);
       } 
 
       p1 = strstr(p2, what);
    }
-   strcat(tmp_buf,p2);
-
-   return tmp_buf;
+   sge_dstring_append(tmp_buf,p2);
+   sge_dstring_free(&arg_copy);
+   return (char*) sge_dstring_get_string(tmp_buf);
 }
 
 int  sge_printf_get_nr_of_substrings(char* buffer, char* substring) {
@@ -321,10 +355,10 @@ int  sge_printf_get_nr_of_substrings(char* buffer, char* substring) {
    int nr = 0;
 
    buf=buffer;
-   p1 = strstr(buf, substring);
+   p1 = (char*)strstr(buf, substring);
    while (p1 != NULL) {
       buf = ++p1;
-      p1 = strstr(buf, substring);
+      p1 = (char*)strstr(buf, substring);
       nr++;
    }
    return nr;
@@ -379,17 +413,19 @@ char **argv
    int do_message_space = 0;
    int args_ok = 1;
    int i = 0;
-   int a = 0;
    int last_option = 0;
    int arg_start = 0;   
    int max_args = 0;
    int string_arguments = 0;
    int first_arg = 0;
    int real_args = 0;
+   char* help_str = NULL;
    sge_printf_options options;
-   char buffer[2000];
-   char buffer2[2000];
-   char D_opt_buf[500];
+   dstring buffer = DSTRING_INIT;
+   dstring buffer2 = DSTRING_INIT;
+   dstring sge_printf_dash_buffer = DSTRING_INIT;
+   dstring tmp_buf = DSTRING_INIT;
+
    DENTER_MAIN(TOP_LAYER, "sge_printf");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
@@ -455,7 +491,6 @@ char **argv
                continue;
             } 
             if ( option[h] == 'D' ) {
-/*               D_opt_buf */
                if ( (i+1) < argc) {
                   i++;
                   options.D = argv[i];
@@ -500,13 +535,14 @@ char **argv
       printf("no format string\n");
       args_ok = 0;
    }
+   DPRINTF(("pass 1\n"));
    /* first pass - get number of %s arguments */
-   strcpy(buffer,"");
+   sge_dstring_copy_string(&buffer,"");
    max_args = argc - arg_start;
    for(i=arg_start; i < (arg_start + max_args) ; i++) {
       char* arg = argv[i];
-      strcat(buffer, arg);
-      string_arguments = sge_printf_get_nr_of_substrings(buffer,"%s");
+      sge_dstring_append(&buffer, arg);
+      string_arguments = sge_printf_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s");
    }
 
    if (args_ok != 1) {
@@ -515,15 +551,17 @@ char **argv
       exit(1);
    }
 
-   
+   DPRINTF(("pass 2\n"));
+
    /* second pass - get format string */
-   strcpy(buffer,"");
-   for(i=arg_start; sge_printf_get_nr_of_substrings(buffer,"%s") < string_arguments ; i++) {
+   sge_dstring_copy_string(&buffer,"");
+
+   for(i=arg_start; sge_printf_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s") < string_arguments ; i++) {
       char* arg = argv[i];
       if (i > arg_start) {
-         strcat(buffer," ");
+         sge_dstring_append(&buffer," ");
       }
-      strcat(buffer, sge_printf_string_input_parsing(arg));
+      sge_dstring_append(&buffer, sge_printf_string_input_parsing(&tmp_buf,arg));
    }
    first_arg = i;
    real_args = 0;
@@ -540,59 +578,82 @@ char **argv
    /* if we have to much args add the rest to the string buffer */
    while(real_args > string_arguments) {
       char* arg = argv[first_arg];
-      if (strcmp(buffer,"") != 0) {
-         strcat(buffer," ");
+      if (strcmp((char*)sge_dstring_get_string(&buffer),"") != 0) {
+         sge_dstring_append(&buffer," ");
       }
-      strcat(buffer,sge_printf_string_input_parsing(arg));
+      sge_dstring_append(&buffer,sge_printf_string_input_parsing(&tmp_buf, arg));
       first_arg++;
       real_args--;
    }
 
+   DPRINTF(("pass 3\n"));
 
    /* 3rd pass - localize format string */
    if (do_message == 1) {
-      printf("\nmsgid  \"%s\"\n",sge_printf_string_output_parsing(buffer));
+      printf("\nmsgid  \"%s\"\n",sge_printf_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
       if(do_message_space == 0) { 
          printf("msgstr \"\"\n");
       } else {
          int h;
-         char help_buf[2000];
+         dstring help_buf = DSTRING_INIT;
+         char* help_b;
+         
          printf("msgstr \"");
-         strcpy(help_buf, sge_printf_string_output_parsing(buffer));
-         for( h=0 ; h < strlen(help_buf) ;h++) {
-            printf("%c", help_buf[h]);
-            if( h+1 < strlen(help_buf) && 
-                help_buf[h] != '\\'     && 
-                help_buf[h] != '%') {
+         
+         sge_dstring_copy_string(&help_buf, sge_printf_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
+         help_b = (char*) sge_dstring_get_string(&help_buf);
+         for( h=0 ; h < sge_dstring_strlen(&help_buf) ;h++) {
+            printf("%c", help_b[h]);
+            if( h+1 < sge_dstring_strlen(&help_buf) && 
+                help_b[h] != '\\'     && 
+                help_b[h] != '%') {
                printf("_");
             }
          }
          printf("\"\n");
+         sge_dstring_free(&sge_printf_dash_buffer);
+         sge_dstring_free(&tmp_buf);
+         sge_dstring_free(&help_buf);
       }
       exit(0);
    }
-   strcpy(buffer2, _(buffer));
+
+   help_str = (char*) sge_dstring_get_string(&buffer);
+   sge_dstring_copy_string(&buffer2, (char*)_(help_str));
 /*   printf("format string is: \"%s\"\n",buffer);
    printf("l10n string is: \"%s\"\n", buffer2);*/
 
    /* format output */
 /*   printf("options: %d %d %d \"%s\" %d\n", options.e, options.n, options.u, options.D, options.S);*/
 
- 
+  
    /* 4th pass - insert parameters */ 
+   DPRINTF(("pass 4\n"));
+
    if (real_args > 0) {
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
-         strcpy(buffer, sge_printf_string_replace(buffer2,"%s",argv[first_arg +i],1));
-         strcpy(buffer2,buffer); 
+         sge_dstring_copy_string(&buffer, sge_printf_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));
+         sge_dstring_copy_dstring(&buffer2,&buffer); 
       }  
    } else {
-      strcpy(buffer,buffer2);
+      sge_dstring_copy_dstring(&buffer,&buffer2);
    }
-
+      
    /* output */
-   sge_printf_format_output(&options,buffer);
-
+   DPRINTF(("build_dash\n"));
+   sge_dstring_append(&sge_printf_dash_buffer,"");
+   sge_printf_build_dash(&sge_printf_dash_buffer,&options);
+   if (sge_dstring_get_string(&sge_printf_dash_buffer) == NULL) {
+      DPRINTF(("sge_printf_dash_buffer is NULL"));
+   }
+   DPRINTF(("output\n"));
+   sge_printf_format_output(&sge_printf_dash_buffer,&options,(char*)sge_dstring_get_string(&buffer));
+   DPRINTF(("free strings\n"));
+   sge_dstring_free(&sge_printf_dash_buffer);
+   sge_dstring_free(&tmp_buf);
+   sge_dstring_free(&buffer);
+   sge_dstring_free(&buffer2);
    DEXIT;
    return 0;
 }

@@ -66,7 +66,7 @@ const char *pscommand
 
    DENTER(TOP_LAYER, "get_pids");
    
-   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, &fp_in, &fp_out, &fp_err);
+   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
 
    if (command_pid == -1) {
       DEXIT;
@@ -170,7 +170,7 @@ const char *pscommand
    }
 #endif
 
-   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, &fp_in, &fp_out, &fp_err);
+   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
 
    if (command_pid == -1) {
       DEXIT;

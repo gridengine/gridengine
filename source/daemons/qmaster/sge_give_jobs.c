@@ -82,7 +82,6 @@
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_user_mapping.h"
 #include "sge_switch_user.h"

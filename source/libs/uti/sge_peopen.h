@@ -36,9 +36,14 @@
 #include <stdio.h>
 #include <time.h>
 
-pid_t peopen(const char *shell, int login_shell, const char *command, const char *user, char **env, FILE **fp_in, FILE **fp_out, FILE **fp_err);
+pid_t 
+peopen(const char *shell, int login_shell, const char *command, 
+       const char *user, char **env, 
+       FILE **fp_in, FILE **fp_out, FILE **fp_err, int null_stderr);
 
-int peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, struct timeval *timeout); 
+int 
+peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, 
+        struct timeval *timeout);
 
 #endif /* __SGE_PEOPEN_H */
 

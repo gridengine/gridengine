@@ -320,7 +320,7 @@ int set_sec_cred(lListElem *job)
          SGE_EXIT(1);
       }   
       
-      command_pid = peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
+      command_pid = peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S, binary);
@@ -353,7 +353,7 @@ int set_sec_cred(lListElem *job)
 
       sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-      command_pid = peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
+      command_pid = peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S, binary);
@@ -396,7 +396,7 @@ int set_sec_cred(lListElem *job)
          if (get_token_cmd(binary, buf))
             goto error;
 
-         command_pid = peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
+         command_pid = peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
 
          if (command_pid == -1) {
             DPRINTF(("can't start command \"%s\" to get token\n",  binary));
@@ -434,7 +434,7 @@ int set_sec_cred(lListElem *job)
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
+         command_pid = peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
 
          if (command_pid == -1) {
             DPRINTF((buf, "can't start command \"%s\" to get credentials "
@@ -500,7 +500,7 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", rhost);
 
          switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, 0);
          switch2admin_user();
 
          if (command_pid == -1) {
@@ -566,7 +566,7 @@ void delete_credentials(lListElem *jep)
          sprintf(cmd, "%s -s %s", binary, "sge");
 
          switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, 0);
          switch2admin_user();
 
          if (command_pid == -1) {
@@ -644,7 +644,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
 
          switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, 0);
          switch2admin_user();
 
          if (command_pid == -1) {
@@ -764,7 +764,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
                  lGetString(jelem, JB_owner), lGetString(jelem, JB_owner));
 
          switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, 0);
          switch2admin_user();
 
          if (command_pid == -1) {

@@ -42,6 +42,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #include "sgermon.h"
 #include "sge_peopen.h"
@@ -74,7 +75,8 @@ const char *user,      /* user under which to start (for root only) */
 char **env,      /* environment variables to add to child */
 FILE **fp_in, 
 FILE **fp_out, 
-FILE **fp_err 
+FILE **fp_err,
+int null_stderr /* shall we redirect stderr to /dev/null? */
 ) {
    static pid_t pid;
    int pipefds[3][2];
@@ -92,8 +94,8 @@ FILE **fp_err
    DENTER(TOP_LAYER, "peopen");
 
    /* open pipes - close on failure */
-   for (i=0; i<3; i++)
-      if (pipe(pipefds[i])) {
+   for (i=0; i<3; i++) {
+      if (pipe(pipefds[i]) != 0) {
          while (--i >= 0) {
             close(pipefds[i][0]);
             close(pipefds[i][1]);
@@ -102,21 +104,45 @@ FILE **fp_err
          DEXIT;
          return -1;
       }
+   }
 
-   if (!(pid = fork())) {	/* son */
-
+   pid = fork();
+   if (pid == 0) {	/* child */
+      /* close parent ends of pipes */
       close(pipefds[0][1]);
       close(pipefds[1][0]);
       close(pipefds[2][0]);
+
+      /* shall we redirect stderr to /dev/null? */
+      if (null_stderr) {
+         /* open /dev/null */
+         int fd = open("/dev/null", O_WRONLY);
+         if (fd == -1) {
+            sprintf(err_str, MSG_FILE_OPENFAILED_SS, "/dev/null", 
+                    strerror(errno));
+            write(2, err_str, strlen(err_str));
+            SGE_EXIT(1);
+         }
+
+         /* set stderr to /dev/null */
+         close(2);
+         dup(fd);
+
+         /* we don't need the stderr the pipe - close it */
+         close(pipefds[2][1]);
+      } else {
+         /* redirect stderr to the pipe */
+         close(2);
+         dup(pipefds[2][1]);
+      }
+
+      /* redirect stdin and stdout to the pipes */
       close(0);
       close(1);
-      close(2);
       dup(pipefds[0][0]);
       dup(pipefds[1][1]);
-      dup(pipefds[2][1]);
 
       if (user) {
-
          pw = getpwnam(user);
          if (!pw) {
             sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));
@@ -191,12 +217,24 @@ FILE **fp_err
       return -1;
    }
 
-   *fp_in  = fdopen(pipefds[0][1], "a");
-   *fp_out = fdopen(pipefds[1][0], "r");
-   *fp_err = fdopen(pipefds[2][0], "r");
+   /* close the childs ends of the pipes */
    close(pipefds[0][0]);
    close(pipefds[1][1]);
    close(pipefds[2][1]);
+  
+   /* return filehandles for stdin and stdout */
+   *fp_in  = fdopen(pipefds[0][1], "a");
+   *fp_out = fdopen(pipefds[1][0], "r");
+
+   /* is stderr redirected to /dev/null? */
+   if (null_stderr) {
+      /* close the pipe and return NULL as filehandle */
+      close(pipefds[2][0]);
+      *fp_err = NULL;
+   } else {
+      /* return filehandle for stderr */
+      *fp_err = fdopen(pipefds[2][0], "r");
+   }
 
    DEXIT;
    return pid;

@@ -86,7 +86,6 @@
 #include "sge_rangeL.h"
 #include "sge_identL.h"
 #include "job.h"
-#include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
 #include "sge_afsutil.h"

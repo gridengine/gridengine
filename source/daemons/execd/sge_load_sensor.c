@@ -271,7 +271,7 @@ static void sge_ls_start_ls(lListElem *this_ls)
 
    /* we need fds for select() .. */
    pid = peopen("/bin/sh", 0, lGetString(this_ls, LS_command), NULL, envp,
-                &fp_in, &fp_out, &fp_err);
+                &fp_in, &fp_out, &fp_err, 1);
 
    if (envp) {
       free(envp);

@@ -115,7 +115,7 @@ char *err_str
    if (err_str)
       strcpy(err_str, cmdbuf);
 
-   command_pid = peopen("/bin/sh", 0, cmdbuf, NULL, NULL, &fp_in, &fp_out, &fp_err);
+   command_pid = peopen("/bin/sh", 0, cmdbuf, NULL, NULL, &fp_in, &fp_out, &fp_err, 0);
    if (command_pid == -1) {
       if (err_str)
          sprintf(err_str, MSG_TOKEN_NOSTART_S , cmdbuf);

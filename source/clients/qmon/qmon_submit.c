@@ -87,7 +87,6 @@
 #include "sge_feature.h"
 #include "utility.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
 #include "sge_range.h"

@@ -85,7 +85,6 @@
 #include "job.h"
 #include "sge_arch.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
 #include "sge_parse_num_par.h"
 #include "sge_conf.h"
 #include "setup_path.h"

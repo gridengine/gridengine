@@ -1,3 +1,10 @@
+JG-2004-01-29-0: Bugfix:    If a loadsensor did output to stderr, the loadsensor
+                            blocked when the pipe buffer between loadsensor and
+                            execd was full.
+                 Changed:   all (libuti)
+                 Issue:     632
+                 Review:    SG
+
 SG-2004-01-26-0: Bugfix:    fixed SG-2003-12-17-0. It was not possible to set
                             a hold on a job in the common way. One had to
                             specify the job task with the job id.

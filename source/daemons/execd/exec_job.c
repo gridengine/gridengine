@@ -78,7 +78,6 @@
 #include "sge_getpwnam.h"
 #include "commlib.h"
 #include "sge_copy_append.h"
-#include "sge_peopen.h"
 #include "basis_types.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"

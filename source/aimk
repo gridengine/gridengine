@@ -1726,7 +1726,7 @@ endif
 
 # suppress gcc 3.3 warnings
 if ( $CC == gcc ) then
-   if ( `gcc --version` == "3.3") then
+   if ( `gcc -dumpversion` == "3.3") then
       set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
    endif
 endif

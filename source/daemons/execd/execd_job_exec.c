@@ -62,7 +62,6 @@
 #include "sge_getpwnam.h"
 #include "execution_states.h"
 #include "job.h"
-#include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
 #include "sge_afsutil.h"

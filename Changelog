@@ -72,6 +72,10 @@ MD-2004-03-17-2  Bugfix:    fixed broken fs check on not solaris and linux
                  Issue:     846
                  Review:    CR
 
+JG-2004-03-22-0: Testsuite: fixed test system_tests/clients/qdel.
+                 Cleanup:   Checkin of some files missing from earlier checkins,
+                            some additional docs and comments.
+
 CR-2004-03-17-0: Bugfix:    CSP install failed on irix architecture
                  Issue:     851
                  Review:    MD

@@ -2493,7 +2493,8 @@ lListElem_clear_changed_info(lListElem *ep)
 
       for (i = 0; ep->descr[i].nm != NoName; i++) {
          int type = mt_get_type(descr[i].mt);
-
+         
+         /* JG: TODO: clear whole bitfield in one call */
          sge_bitfield_clear(ep->changed, i);
 
          if (type == lListT) {

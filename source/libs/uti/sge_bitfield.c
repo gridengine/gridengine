@@ -150,12 +150,13 @@ bitfield sge_bitfield_new(int size)
 *
 *******************************************************************************/
 bool sge_bitfield_copy(bitfield source, bitfield target){
-   
-   if (source->size == target->size) {
-      int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
-      memcpy(target->bf, source->bf, char_size);
+   if (source != NULL && target != NULL) {
+      if (source->size == target->size) {
+         int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+         memcpy(target->bf, source->bf, char_size);
 
-      return true;    
+         return true;    
+      }
    }
    
    return false;

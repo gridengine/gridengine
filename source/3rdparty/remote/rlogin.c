@@ -64,7 +64,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#if !defined(FREEBSD)
+#if !defined(FREEBSD) && !defined(DARWIN)
 #include <values.h>
 #endif
 
@@ -347,11 +347,15 @@ main(argc, argv)
 
 		if (len + len2 < sizeof(term)) {
 /*			(void)snprintf(term + len, len2 + 1, "/%d", ospeed); */
-         char Buffer[32];
-         sprintf(Buffer, "/%d", ospeed);
-         strncpy(term + len, Buffer, len2 + 1);
-	   }
-   }
+                        char Buffer[32];
+#ifdef DARWIN
+                        sprintf(Buffer, "/%ld", ospeed);
+#else
+                        sprintf(Buffer, "/%d", ospeed);
+#endif
+                        strncpy(term + len, Buffer, len2 + 1);
+	        }
+        }
 
 	(void)get_window_size(0, &winsize);
 

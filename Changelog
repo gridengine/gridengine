@@ -1,3 +1,9 @@
+AS-2004-04-20-0: Bugfix:    MPI PE description update
+                            SunHPCT reference update
+                            removed loose integration with HPCT
+                            moved tight integration scripts to mpi/SunHPCT5
+                            minor update to mpi/SunHPCT5/README
+
 SG-2004-04-20-0: Bugfix:    fixed the scheduler profiling
                  Changed:   scheduler
                  Review:    JG

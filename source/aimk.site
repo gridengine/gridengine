@@ -95,4 +95,4 @@ set COPYRIGHT_DIR = /off_home/codine/copyright
 # which is included in each binary part of Sun Grid Engine (the version
 # which Sun Microsystems is releasing
 #
-set SUN_COPYRIGHT_DIR  = /off_home/codine/sun-copyright
+set SUN_COPYRIGHT_DIR  = /off_home/codine/n1ge6-copyright

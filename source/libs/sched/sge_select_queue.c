@@ -2288,46 +2288,48 @@ int sge_split_queue_slots_free(lList **free, lList **full)
    lList *lp = NULL;
    int do_free_list = 0;
    lListElem *this, *next;
+   bool full_queues = false;
 
    DENTER(TOP_LAYER, "sge_split_queue_nslots_free");
 
-   if (!free) {
+   if (free == NULL) {
       DEXIT;
       return -1;
    }
 
-   if (!full) {
+   if (full == NULL) {
        full = &lp;
        do_free_list = 1;
    }
 
    for (this=lFirst(*free); ((next=lNext(this))), this ; this = next) {
       if ((qinstance_slots_used(this)+1) > (int) lGetUlong(this, QU_job_slots)) {
+
+         if (!qinstance_state_is_full(this)) {
+            schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(this, QU_full_name));
+            full_queues = true;
+         }   
+      
          /* chain 'this' into 'full' list */
          this = lDechainElem(*free, this);
          if (full) {
-            if (!*full)
+            if (!*full) {
                *full = lCreateList("full one", lGetListDescr(*free));
+            }   
             qinstance_state_set_full(this, true);
             lAppendElem(*full, this);
-         } else
+         } 
+         else {
             lFreeElem(this);
+         }   
       }
    }
 
    if (*full) {
-      lListElem* mes_queue;
-      bool full_queues = false;
 
-      for_each(mes_queue, *full) {
-         if (qinstance_state_is_full(mes_queue)) {
-            schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_full_name));
-            full_queues = true;
-         }
-      }
-
-      if (full_queues)  
+      if (full_queues) { 
          schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , *full, QU_full_name);
+      }   
 
       if (do_free_list) {
          lFreeList(*full);
@@ -2379,22 +2381,37 @@ lList **suspended         /* QU_Type */
          QU_state, QI_CAL_SUSPENDED,
          QU_state, QI_CAL_DISABLED,
          QU_state, QI_SUSPENDED_ON_SUBORDINATE);
-   ret = lSplit(queue_list, suspended, "full queues", where);
+
+   ret = lSplit(queue_list, &lp, "full queues", where);
    lFreeWhere(where);
 
-   if (*suspended) {
+   if (lp != NULL) {
       lListElem* mes_queue;
 
-      for_each(mes_queue, *suspended)
-         schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_full_name));
+      for_each(mes_queue, lp) {
+         if (!qinstance_state_is_manual_suspended(mes_queue)) {
+            qinstance_state_set_manual_suspended(mes_queue, true);
+            schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_full_name));
+         }
+      }   
  
-      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , *suspended, QU_full_name);
-      if (do_free_list) {
-         lFreeList(*suspended);
-         *suspended = NULL;
-      }
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , lp, QU_full_name);
    }
 
+   if (suspended != NULL) {
+      if (*suspended == NULL) {
+         *suspended = lp;
+         lp = NULL;
+      }
+      else {
+         lAddList(*suspended, lp);
+         lp = NULL;
+      }
+   }
+   else {
+      *suspended = lFreeList(*suspended);
+   }
+      
    DEXIT;
    return ret;
 }

@@ -130,10 +130,11 @@ char **argv
       SGE_EXIT(tmp_ret);
    }
 
-   if (opt_list_has_X(cmdline, "-help")) {
+   if ((lGetNumberOfElem (cmdline) == 0) || (opt_list_has_X(cmdline, "-help"))) {
       sge_usage(stdout);
       SGE_EXIT(1);
    }
+
    alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, 
                                     &all_users);
    

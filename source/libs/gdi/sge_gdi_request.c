@@ -66,7 +66,8 @@ static int sge_send_receive_gdi_request(int *commlib_error,
                                         const char *commproc, 
                                         u_short id, 
                                         sge_gdi_request *out, 
-                                        sge_gdi_request **in);
+                                        sge_gdi_request **in,
+                                        lList **alpp);
 
 static int sge_get_gdi_request(int *commlib_error,
                                char *rhost,
@@ -315,6 +316,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    char groupname[128];
    int status = 0;
    int commlib_error = CL_RETVAL_OK;
+   lListElem *aep = NULL;
 
    DENTER(GDI_LAYER, "sge_gdi_multi");
 
@@ -416,7 +418,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
             &commlib_error, 
             sge_get_master(gdi_state_get_reread_qmaster_file()), 
             prognames[QMASTER], 
-            1, state->first, &answer);
+            1, state->first, &answer, alpp);
 
 #ifdef KERBEROS
       /* clear the forward TGT request */
@@ -426,6 +428,15 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       }
 #endif
 
+      /* Print out non-error messages */
+      for_each (aep, *alpp) {
+         if (lGetUlong (aep, AN_quality) == ANSWER_QUALITY_INFO) {
+            INFO ((SGE_EVENT, lGetString (aep, AN_text)));
+         }
+      }
+      
+      *alpp = lFreeList (*alpp);
+      
       if (status != 0) {
 
          gdi_state_set_reread_qmaster_file(1);
@@ -615,7 +626,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
             &commlib_error, 
             sge_get_master(gdi_state_get_reread_qmaster_file()), 
             prognames[QMASTER], 
-            0, state->first, &answer);
+            0, state->first, &answer, alpp);
 
 #ifdef KERBEROS
       /* clear the forward TGT request */
@@ -624,6 +635,8 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
          krb_set_tgt_id(0);
       }
 #endif
+
+      answer_list_output (alpp);
 
       if (status != 0) {
 
@@ -815,7 +828,8 @@ static int sge_send_receive_gdi_request(int *commlib_error,
                                         const char *commproc, 
                                         u_short id, 
                                         sge_gdi_request *out,
-                                        sge_gdi_request **in)
+                                        sge_gdi_request **in,
+                                        lList **alpp)
 {
    int ret;
    char rcv_rhost[MAXHOSTLEN+1];
@@ -838,7 +852,8 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    }   
    
    /* we send a gdi request and store the request id */
-   ret = sge_send_gdi_request(1, rhost, commproc, id, out, &gdi_request_mid, 0);
+   ret = sge_send_gdi_request(1, rhost, commproc, id, out, &gdi_request_mid, 0,
+                              alpp);
    *commlib_error = ret;
 
 
@@ -997,7 +1012,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
 int sge_send_gdi_request(int sync, 
                          const char *rhost, const char *commproc, int id, 
                          sge_gdi_request *ar,
-                         u_long32 *mid, unsigned long response_id) 
+                         u_long32 *mid, unsigned long response_id, lList **alpp) 
 {
    sge_pack_buffer pb;
    int ret, size;
@@ -1044,7 +1059,8 @@ int sge_send_gdi_request(int sync,
       return -1;
    }
 
-   ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb, TAG_GDI_REQUEST, response_id);
+   ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb,
+                              TAG_GDI_REQUEST, response_id, alpp);
    clear_packbuffer(&pb);
 
    DEXIT;

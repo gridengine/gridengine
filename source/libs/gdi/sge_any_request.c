@@ -48,6 +48,7 @@
 #include "sge_hostname.h"
 #include "sge_bootstrap.h"
 #include "msg_gdilib.h"
+#include "sgeobj/sge_answer.h"
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
 
@@ -303,7 +304,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
  *---------------------------------------------------------*/
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
-                         int tag,u_long32  response_id)
+                         int tag, u_long32  response_id, lList **alpp)
 {
    int i;
    u_long32 me_who;
@@ -315,25 +316,28 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
 
    ack_type = CL_MIH_MAT_NAK;
 
-   if (!rhost) {
-      ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORSENDREQUEST ));
+   if (rhost == NULL) {
+      answer_list_add(alpp, MSG_GDI_RHOSTISNULLFORSENDREQUEST, STATUS_ESYNTAX,
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return CL_RETVAL_PARAMS;
    }
    
-
-
    me_who = uti_state_get_mewho();
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      CRITICAL((SGE_EVENT,"can't get communication handle\n"));
+      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
-
-   INFO((SGE_EVENT,"sending to id: %s,%d, size of message: %ld\n",commproc,id, (unsigned long) pb->bytes_used));
+   
+   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGMESSAGE_SIU, commproc,id,
+                          (unsigned long) pb->bytes_used));
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    i = gdi_send_sec_message( handle,
                                 (char*) rhost,(char*) commproc , id, 
@@ -352,14 +356,18 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    if (mid) {
       *mid = dummy_mid;
    }
+
    if (i != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS ,
-                   (synchron ? "" : "a"),
-                   commproc, 
-                   id, 
-                   rhost, 
-                   cl_get_error_text(i)));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
+                             MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS ,
+                             (synchron ? "" : "a"),
+                             commproc, 
+                             id, 
+                             rhost, 
+                             cl_get_error_text(i)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
    }
+
    DEXIT;
    return i;
 }

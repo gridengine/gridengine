@@ -371,6 +371,12 @@ char *argv[]
 
    DENTER(TOP_LAYER, "sge_parse_qconf");
 
+   /* If no arguments were given, output the help message. */
+   if (*argv == NULL) {
+      sge_usage(stdout);
+      SGE_EXIT(0);
+   }
+   
    spp = argv;
 
    while (*spp) {
@@ -805,8 +811,10 @@ DPRINTF(("ep: %s %s\n",
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, AH_Type, AH_name, *spp);
-         if ( add_host_of_type(lp, SGE_ADMINHOST_LIST) != 0)
-            sge_parse_return = 1; 
+         if ( add_host_of_type(lp, SGE_ADMINHOST_LIST) != 0) {
+            sge_parse_return = 1;
+         }
+         
          lp = lFreeList(lp);
 
          spp++;

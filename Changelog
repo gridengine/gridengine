@@ -1,3 +1,14 @@
+DT-2004-03-05-0: Bugfix:    o Added missing error message for missing SGE_ROOT
+                              in qmaster
+                            o Removed duplicate comm lib "can't connect" error
+                              messages
+                            o Cleaned up qsub error messages
+                            o Added help output for qconf, qstat, qmod, and
+                              qalter with no args
+                            o Converted sge_send_any_request to use answer lists
+                 Changed:   GDI, qsub, qconf, qalter, qmod, qstat, qmaster, evc
+                 Issue:     774
+
 SG-2004-03-05-1: Bugfix:    fixed a bug in changing build-in centries
                             from strings to an other string type
                  Issue:     759

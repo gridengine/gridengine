@@ -1296,12 +1296,16 @@ ec_deregister(void)
       if (init_packbuffer(&pb, sizeof(u_long32), 0) == PACK_SUCCESS) {
          /* error message is output from init_packbuffer */
          int send_ret; 
+         lList *alp = NULL;
 
          packint(&pb, lGetUlong(ec, EV_id));
 
-         send_ret = sge_send_any_request(0, NULL, sge_get_master(0), prognames[QMASTER], 1, &pb, TAG_EVENT_CLIENT_EXIT,0);
+         send_ret = sge_send_any_request(0, NULL, sge_get_master(0),
+                                         prognames[QMASTER], 1, &pb,
+                                         TAG_EVENT_CLIENT_EXIT, 0, &alp);
          
          clear_packbuffer(&pb);
+         answer_list_output (&alp);
 
          if (send_ret == CL_RETVAL_OK) {
             /* error message is output from sge_send_any_request */
@@ -2338,6 +2342,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
    bool ret = true;
    lList *report_list = NULL;
    u_long32 wrong_number;
+   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "ec_get");
 
@@ -2484,7 +2489,10 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          last_fetch_ok_time = sge_get_gmt();
 
          /* send an ack to the qmaster for all received events */
-         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, lGetUlong(ec, EV_id)) != CL_RETVAL_OK) {
+         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1,
+                                     lGetUlong(ec, EV_id), &alp)
+                                    != CL_RETVAL_OK) {
+            answer_list_output (&alp);
             WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
          } else {
             DPRINTF(("Sent ack for all events lower or equal %d\n", 

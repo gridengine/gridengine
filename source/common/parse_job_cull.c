@@ -768,8 +768,14 @@ u_long32 flags
       } else {
          /* no script file but input from stdin */
          filestrptr = sge_stream2string(stdin, &script_len);
-         if (!filestrptr) {
+         if (filestrptr == NULL) {
             answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+         else if (filestrptr[0] == '\0') {
+            answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;

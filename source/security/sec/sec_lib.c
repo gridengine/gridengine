@@ -83,7 +83,7 @@ static void *handle = NULL;
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
 #include "sge_mtutil.h"
-
+#include "sgeobj/sge_answer.h"
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
@@ -414,7 +414,8 @@ static int sec_get_connid(char **buffer, u_long32 *buflen);
 static int sec_update_connlist(const cl_com_endpoint_t *sender);
 
 static void sec_error(void);
-static int sec_send_err(const cl_com_endpoint_t *sender, sge_pack_buffer *pb, const char *err_msg, u_long32 request_mid);
+static int sec_send_err(const cl_com_endpoint_t *sender, sge_pack_buffer *pb,
+                        const char *err_msg, u_long32 request_mid, lList **alp);
 static int sec_insert_conn2list(u_long32 connid, const cl_com_endpoint_t *sender, const char *uniqueIdentifier);
 
 
@@ -2323,6 +2324,7 @@ u_long32 response_id)
    EVP_MD_CTX ctx;
    char uniqueIdentifier[BUFSIZ];
    int ngc_error;
+   lList *alp = NULL;
 
    DENTER(GDI_LAYER, "sec_respond_announce");
 
@@ -2339,7 +2341,8 @@ u_long32 response_id)
    */
    if ((i=init_packbuffer(&pb_respond, 0, 0)) != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
-      sec_send_err(sender, &pb_respond, SGE_EVENT, response_id);
+      sec_send_err(sender, &pb_respond, SGE_EVENT, response_id, &alp);
+      answer_list_output (&alp);
       goto error;
    }
 
@@ -2348,7 +2351,9 @@ u_long32 response_id)
    */
    if (sec_unpack_announce(&x509_len, &x509_buf, &challenge, &pb)) {
       ERROR((SGE_EVENT, MSG_SEC_UNPACKANNOUNCEFAILED));
-      sec_send_err(sender, &pb_respond, MSG_SEC_UNPACKANNOUNCEFAILED, response_id);
+      sec_send_err(sender, &pb_respond, MSG_SEC_UNPACKANNOUNCEFAILED,
+                   response_id, &alp);
+      answer_list_output (&alp);
       goto error;
    }
 
@@ -2365,16 +2370,20 @@ u_long32 response_id)
    if (!x509){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTREADFAILED));
       sec_error();
-      sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTREADFAILED, response_id);
+      sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTREADFAILED,
+                   response_id, &alp);
       i = -1;
+      answer_list_output (&alp);
       goto error;
    }
 
    if (!sec_verify_certificate(x509)) {
       ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTVERIFYFAILED));
       sec_error();
-      sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTVERIFYFAILED, response_id);
+      sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTVERIFYFAILED,
+                   response_id, &alp);
       i = -1;
+      answer_list_output (&alp);
       goto error;
    }
    DPRINTF(("Client certificate is ok\n"));
@@ -2400,8 +2409,10 @@ u_long32 response_id)
    if(!public_key[0]){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTGETPUBKEYFAILED));
       sec_error();
-      sec_send_err(sender,&pb_respond, MSG_SEC_CLIENTGETPUBKEYFAILED, response_id);
+      sec_send_err(sender,&pb_respond, MSG_SEC_CLIENTGETPUBKEYFAILED,
+                   response_id, &alp);
       i=-1;
+      answer_list_output (&alp);
       goto error;
    }
    public_key_size = sec_EVP_PKEY_size(public_key[0]);
@@ -2415,8 +2426,10 @@ u_long32 response_id)
 
    if (!enc_key_mat ||  !enc_challenge || sec_alloc_key_mat()) {
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
-      sec_send_err(sender,&pb_respond, MSG_MEMORY_MALLOCFAILED, response_id);
+      sec_send_err(sender,&pb_respond, MSG_MEMORY_MALLOCFAILED, response_id,
+                   &alp);
       i=-1;
+      answer_list_output (&alp);
       goto error;
    }
    
@@ -2442,8 +2455,10 @@ u_long32 response_id)
    if (!sec_EVP_SignFinal(&ctx, enc_challenge, (unsigned int*) &chall_enc_len, gsd.private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTCHALLENGEFAILED));
       sec_error();
-      sec_send_err(sender, &pb_respond, MSG_SEC_ENCRYPTCHALLENGEFAILED, response_id);
+      sec_send_err(sender, &pb_respond, MSG_SEC_ENCRYPTCHALLENGEFAILED,
+                   response_id, &alp);
       i = -1;
+      answer_list_output (&alp);
       goto error;
    }   
 
@@ -2462,16 +2477,20 @@ u_long32 response_id)
       ERROR((SGE_EVENT, MSG_SEC_SEALINITFAILED));;
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
-      sec_send_err(sender,&pb_respond, MSG_SEC_SEALINITFAILED, response_id);
+      sec_send_err(sender,&pb_respond, MSG_SEC_SEALINITFAILED, response_id,
+                   &alp);
       i = -1;
+      answer_list_output (&alp);
       goto error;
    }
    if (!sec_EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, sec_state_get_key_mat(), sec_state_get_key_mat_len())) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
-      sec_send_err(sender,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED, response_id);
+      sec_send_err(sender,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED, response_id,
+                   &alp);
       i = -1;
+      answer_list_output (&alp);
       goto error;
    }
    sec_EVP_SealFinal(&ectx, enc_key_mat, (int*) &enc_key_mat_len);
@@ -2495,7 +2514,9 @@ u_long32 response_id)
 
    if (i) {
       ERROR((SGE_EVENT, MSG_SEC_PACKRESPONSEFAILED));
-      sec_send_err(sender, &pb_respond, MSG_SEC_PACKRESPONSEFAILED, response_id);
+      sec_send_err(sender, &pb_respond, MSG_SEC_PACKRESPONSEFAILED, response_id,
+                   &alp);
+      answer_list_output (&alp);
       goto error;   
    }
 
@@ -2504,7 +2525,9 @@ u_long32 response_id)
    */
    if (sec_insert_conn2list(sec_state_get_connid(), sender, uniqueIdentifier)) {
       ERROR((SGE_EVENT, MSG_SEC_INSERTCONNECTIONFAILED));
-      sec_send_err(sender, &pb_respond, MSG_SEC_INSERTCONNECTIONFAILED, response_id);
+      sec_send_err(sender, &pb_respond, MSG_SEC_INSERTCONNECTIONFAILED,
+                   response_id, &alp);
+      answer_list_output (&alp);
       goto error;
    }
 
@@ -3287,23 +3310,24 @@ static int sec_send_err(
 const cl_com_endpoint_t *sender,
 sge_pack_buffer *pb,
 const char *err_msg,
-u_long32 request_id 
+u_long32 request_id,
+lList **alpp
 ) {
    int   i;
 
    DENTER(GDI_LAYER,"sec_send_error");
-   if((i=packstr(pb,err_msg))) 
-      goto error;
-   if((i=sge_send_any_request(0,NULL,sender->comp_host,sender->comp_name,sender->comp_id,pb,TAG_SEC_ERROR,request_id )))
-      goto error;
-   else{
+   
+   if (((i=packstr(pb,err_msg)) != 0) ||
+       ((i=sge_send_any_request(0, NULL, sender->comp_host, sender->comp_name,
+                                sender->comp_id, pb, TAG_SEC_ERROR, request_id,
+                                alpp)))) {
+      DEXIT;
+      return(-1);
+   }
+   else {
       DEXIT;
       return(0);
    }
-   error:
-   ERROR((SGE_EVENT, MSG_SEC_SENDERRFAILED));
-   DEXIT;
-   return(-1);
 }
 
 /*

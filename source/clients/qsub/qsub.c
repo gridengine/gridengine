@@ -105,7 +105,7 @@ char **argv
    DPRINTF (("Initializing JAPI\n"));
 
    if (japi_init(NULL, NULL, NULL, QSUB, false, &diag) != DRMAA_ERRNO_SUCCESS) {
-      printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, sge_dstring_get_string (&diag));
+      printf (MSG_QSUB_COULDNOTINITIALIZEENV_S, sge_dstring_get_string (&diag));
       DEXIT;
       exit (1);
    }
@@ -148,7 +148,8 @@ char **argv
    } else {
       opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
                                        opts_cmdline, environ);
-      tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+      tmp_ret = answer_list_print_err_warn(&alp, MSG_QSUB_COULDNOTREADSCRIPT_S,
+                                           MSG_WARNING);
       if (tmp_ret > 0) {
          SGE_EXIT(tmp_ret);
       }
@@ -204,7 +205,7 @@ char **argv
       qsub_setup_sig_handlers(); 
 
       if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
-         printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, " error preparing signal handling thread");
+         printf (MSG_QSUB_COULDNOTINITIALIZEENV_S, " error preparing signal handling thread");
          
          exit_status = 1;
          goto Error;
@@ -212,7 +213,7 @@ char **argv
       
       if (japi_enable_job_wait (NULL, &session_key_out, &diag) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
          const char *msg = sge_dstring_get_string (&diag);
-         printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, msg?msg:" error starting event client thread");
+         printf (MSG_QSUB_COULDNOTINITIALIZEENV_S, msg?msg:" error starting event client thread");
          
          exit_status = 1;
          goto Error;
@@ -226,7 +227,7 @@ char **argv
 
    if (num_tasks > 1) {
       if ((japi_run_bulk_jobs(&jobids, job, start, end, step, &diag) != DRMAA_ERRNO_SUCCESS)) {
-         printf (MSG_QSUB_COULDNOTRUNJOB_U, sge_dstring_get_string (&diag));
+         printf (MSG_QSUB_COULDNOTRUNJOB_S, sge_dstring_get_string (&diag));
          
          exit_status = 1;
          goto Error;
@@ -238,7 +239,7 @@ char **argv
    }
    else if (num_tasks == 1) {
       if (japi_run_job(&jobid, job, &diag) != DRMAA_ERRNO_SUCCESS) {
-         printf (MSG_QSUB_COULDNOTRUNJOB_U, sge_dstring_get_string (&diag));
+         printf (MSG_QSUB_COULDNOTRUNJOB_S, sge_dstring_get_string (&diag));
          
          exit_status = 1;
          goto Error;
@@ -250,7 +251,7 @@ char **argv
       sge_dstring_free (&jobid);
    }
    else {
-      printf (MSG_QSUB_COULDNOTRUNJOB_U, "invalid task structure");
+      printf (MSG_QSUB_COULDNOTRUNJOB_S, "invalid task structure");
       
       exit_status = 1;
       goto Error;
@@ -271,7 +272,7 @@ char **argv
                              NULL, &diag);
 
          if ((tmp_ret == DRMAA_ERRNO_SUCCESS) && (event == JAPI_JOB_START)) {
-            printf(MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U,
+            printf(MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S,
                   jobid_string);
          }
          /* A job finish event here means that the job was rejected. */
@@ -287,7 +288,7 @@ char **argv
              * a timeout, it's because it's been interrupted to exit, in which
              * case we don't complain. */
             if (tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
-               printf (MSG_QSUB_COULDNOTWAITFORJOB_U,
+               printf (MSG_QSUB_COULDNOTWAITFORJOB_S,
                        sge_dstring_get_string (&diag));
             }
 
@@ -308,7 +309,7 @@ char **argv
                           DRMAA_TIMEOUT_WAIT_FOREVER, JAPI_JOB_FINISH, &event,
                           NULL, &diag)) != DRMAA_ERRNO_SUCCESS) {
                if (tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
-                  printf (MSG_QSUB_COULDNOTWAITFORJOB_U, sge_dstring_get_string (&diag));
+                  printf (MSG_QSUB_COULDNOTWAITFORJOB_S, sge_dstring_get_string (&diag));
                }
                
                exit_status = 1;
@@ -328,7 +329,7 @@ Error:
    
    if ((tmp_ret = japi_exit (1, JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
       if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
-         printf (MSG_QSUB_COULDNOTFINALIZEENV_U, sge_dstring_get_string (&diag));
+         printf (MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
       }
       else {
          struct timespec ts;
@@ -385,11 +386,11 @@ static void qsub_terminate(void)
 {
    dstring diag = DSTRING_INIT;
    
-   fprintf (stderr, MSG_QSUB_INTERRUPTED_U);
-   fprintf (stderr, MSG_QSUB_TERMINATING_U);
+   fprintf (stderr, MSG_QSUB_INTERRUPTED);
+   fprintf (stderr, MSG_QSUB_TERMINATING);
 
    if (japi_exit (1, JAPI_EXIT_KILL_PENDING, &diag) != DRMAA_ERRNO_SUCCESS) {
-     fprintf (stderr, MSG_QSUB_COULDNOTFINALIZEENV_U, sge_dstring_get_string (&diag));
+     fprintf (stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
    }
 
    sge_dstring_free (&diag);
@@ -431,13 +432,13 @@ static int report_exit_status (int stat, const char *jobid)
    japi_wifaborted(&aborted, stat, NULL);
 
    if (aborted) {
-      printf(MSG_QSUB_JOBNEVERRAN_U, jobid);
+      printf(MSG_QSUB_JOBNEVERRAN_S, jobid);
    }
    else {
       japi_wifexited(&exited, stat, NULL);
       if (exited) {
          japi_wexitstatus(&exit_status, stat, NULL);
-         printf(MSG_QSUB_JOBEXITED_U, jobid, exit_status);
+         printf(MSG_QSUB_JOBEXITED_II, jobid, exit_status);
       } else {
          japi_wifsignaled(&signaled, stat, NULL);
          
@@ -449,7 +450,7 @@ static int report_exit_status (int stat, const char *jobid)
             sge_dstring_free (&termsig);
          }
          else {
-            printf(MSG_QSUB_JOBFINISHUNCLEAR_U, jobid);
+            printf(MSG_QSUB_JOBFINISHUNCLEAR_S, jobid);
          }
 
          exit_status = 1;

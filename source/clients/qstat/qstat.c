@@ -1473,6 +1473,13 @@ u_long32 *isXML
 
    DENTER(TOP_LAYER, "sge_parse_qstat");
 
+   /* Show help output if no arguments are given. */
+   if(lGetNumberOfElem (*ppcmdline) == 0) {
+      usageshowed = qstat_usage(stdout, NULL);
+      DEXIT;
+      SGE_EXIT(0);
+   }
+   
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */

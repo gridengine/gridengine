@@ -103,6 +103,7 @@ int report_list_send(const lList *rlp, const char *rhost,
 {
    sge_pack_buffer pb;
    int ret, size;
+   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "report_list_send");
 
@@ -140,8 +141,9 @@ int report_list_send(const lList *rlp, const char *rhost,
       return -1;
    }
 
-   ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST,0);
+   ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
    clear_packbuffer(&pb);
+   answer_list_output (&alp);
 
    DEXIT;
    return ret;

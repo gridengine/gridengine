@@ -49,6 +49,7 @@
 #include "sge_qmaster_main.h"
 #include "msg_qmaster.h"
 #include "msg_common.h"
+#include "sgeobj/sge_answer.h"
 
 
 typedef struct {
@@ -158,6 +159,7 @@ void *sge_qmaster_process_message(void *anArg)
 static void do_gdi_request(struct_msg_t *aMsg)
 {
    enum { ASYNC = 0, SYNC = 1 };
+   lList *alp = NULL;
 
    sge_pack_buffer *buf = &(aMsg->buf);
    sge_gdi_request *req_head = NULL;  /* head of request linked list */
@@ -192,7 +194,10 @@ static void do_gdi_request(struct_msg_t *aMsg)
       sge_c_gdi(aMsg->snd_host, req, resp);
    }
 
-   sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name, (int)aMsg->snd_id, resp_head,NULL,aMsg->request_mid);
+   sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,
+                        (int)aMsg->snd_id, resp_head, NULL, aMsg->request_mid,
+                        &alp);
+   answer_list_output (&alp);
 
    free_gdi_request(resp_head);
    free_gdi_request(req_head);

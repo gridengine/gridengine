@@ -166,6 +166,11 @@ lList *alp = NULL;
    DENTER(TOP_LAYER, "sge_parse_cmdline_qmod");
    
    rp = argv;
+   
+   if (*rp == NULL) {
+      sge_add_noarg(ppcmdline, 0, "-help", NULL);
+   }
+   
    while(*(sp=rp)) {
       /* -help */
       if ((rp = parse_noopt(sp, "-help", "--help", ppcmdline, &alp)) != sp)

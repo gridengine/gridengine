@@ -153,6 +153,9 @@ int main(int argc, char* argv[])
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
+   /* Make sure SGE_ROOT is given before we deamonize */
+   sge_get_root_dir (true, NULL, 0, true);
+   
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    sge_init_language_func((gettext_func_type)gettext, (setlocale_func_type)setlocale, (bindtextdomain_func_type)bindtextdomain, (textdomain_func_type)textdomain);
    sge_init_language(NULL,NULL);   

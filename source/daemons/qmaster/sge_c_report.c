@@ -178,8 +178,11 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
                process_job_report(report, hep, rhost, commproc, &pb);
 
                if (pb_filled(&pb)) {
+                  lList *alp = NULL;
                   /* send all stuff packed during processing to execd */
-                  sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST,0); 
+                  sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
+                  
+                  answer_list_output (&alp);
                }
                clear_packbuffer(&pb);
             }

@@ -496,6 +496,7 @@ int answer_error
             
                
                lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+               flush_jr = 1;
             }
          }
       }   

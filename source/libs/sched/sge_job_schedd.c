@@ -180,7 +180,8 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 {
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
    if (max_jobs_per_user != 0 && 
-       job_lists[SPLIT_PENDING] != NULL && job_lists[SPLIT_RUNNING] != NULL && 
+       job_lists[SPLIT_PENDING] != NULL && *(job_lists[SPLIT_PENDING]) != NULL &&
+       job_lists[SPLIT_RUNNING] != NULL && *(job_lists[SPLIT_RUNNING]) != NULL && 
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
       lListElem *job = NULL;                           
       lListElem *user = NULL;
@@ -191,8 +192,11 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       {
          const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
          int pos = lGetPosInDescr(descr, JB_owner);
-         if(descr[pos].hash == NULL)  {
-            cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, &template_hash);
+        
+         if(descr != NULL && pos >= 0) {
+            if(descr[pos].hash == NULL)  {
+               cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, &template_hash);
+            }
          }
       }
 

@@ -1,3 +1,11 @@
+AA-2005-03-23-0: Bugfix:    Certificate renewal in CSP mode broken
+                 Bugtraq:   6232120, 6245486
+                 Issue:     1515, 1395
+                 Changed:   sge_ca, sge_ssl.cnf, sge_ssl_template.cnf, renew_all_certs.csh
+                 Review:    CR
+
+RC-2005-03-24-0: Enhancem.: moved function declarations into sge_uidgid.h
+
 EB-2005-03-24-0: Bugfix:    qhost -h <hostname> does not show selected host
                  Changed:   qhost
                  Issue:     1524

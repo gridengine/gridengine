@@ -2272,7 +2272,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
 #*******************************
 
 proc delete_directory { path } { 
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_USER CHECK_HOST
 
    set return_value -1
    puts $CHECK_OUTPUT "path to delete: \"$path\""
@@ -2287,6 +2287,39 @@ proc delete_directory { path } {
    }
  
    if { [string length $path ] > 10 } {
+      
+      puts $CHECK_OUTPUT "delete_directory - testing file owner ..."
+      set del_files ""
+      set dirs [get_all_subdirectories $path ]
+      foreach dir $dirs {
+         set file_attributes [file attributes $path/$dir]
+         if { [string match "*owner $CHECK_USER*" $file_attributes] != 1 } {
+            puts $CHECK_OUTPUT "directory $path/$dir not owned by user $CHECK_USER"
+            start_remote_prog $CHECK_HOST "root" chown "-R $CHECK_USER $path/$dir" prg_exit_state 60 0 "" 1 0 0
+            if { $prg_exit_state == 0 } {
+               puts $CHECK_OUTPUT "set directory owner to $CHECK_USER"
+            } else {
+               puts $CHECK_OUTPUT "error setting directory permissions!"
+            }
+         }
+         set files [get_file_names $path/$dir "*"]
+         foreach file $files { 
+            lappend del_files $path/$dir/$file
+         }
+      }
+      
+      foreach file $del_files {
+         set file_attributes [file attributes $file]
+         if { [string match "*owner $CHECK_USER*" $file_attributes] != 1 } {
+            puts $CHECK_OUTPUT "$file not owned by user $CHECK_USER"
+            start_remote_prog $CHECK_HOST "root" chown "$CHECK_USER $file" prg_exit_state 60 0 "" 1 0 0
+            if { $prg_exit_state == 0 } {
+               puts $CHECK_OUTPUT "set file owner to $CHECK_USER"
+            } else {
+               puts $CHECK_OUTPUT "error setting file permissions!"
+            }
+         }
+      }
       puts $CHECK_OUTPUT "delete_directory - moving \"$path\" to trash folder ..."
       set new_name [ file tail $path ] 
       set catch_return [ catch { 
@@ -2295,11 +2328,13 @@ proc delete_directory { path } {
       if { $catch_return != 0 } {
          puts $CHECK_OUTPUT "delete_directory - mv error:\n$result"
          puts $CHECK_OUTPUT "delete_directory - try to copy the directory"
+         
          set catch_return [ catch { 
             eval exec "cp -r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" 
          } result ] 
          if { $catch_return != 0 } {
-            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder, $result"
+            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder!"
+            puts $CHECK_OUTPUT $result
             add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder, $result"
             set return_value -1
          } else { 

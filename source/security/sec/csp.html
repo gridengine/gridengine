@@ -487,11 +487,11 @@ Check subject
 subject= /C=DE/ST=Bavaria/L=Regensburg/O=Griders Org/OU=Testsystem at port 6789/CN=eddy donetti/Email=eddy@gridders.org
 
 Show email of cert
-% $SGE_ROOT/utilbin/$ARCH/openssl x509 -email -in ~/.sge/default/port6789/certs/cert.pem -noout
+% $SGE_ROOT/utilbin/$ARCH/openssl x509 -email -in ~/.sge/port6789/default/certs/cert.pem -noout
 eddy@griders.org
 
 Show validity
-% $SGE_ROOT/utilbin/$ARCH/openssl x509 -dates -in ~/.sge/default/port6789/certs/cert.pem -noout
+% $SGE_ROOT/utilbin/$ARCH/openssl x509 -dates -in ~/.sge/port6789/default/certs/cert.pem -noout
 notBefore=Sep 25 14:48:38 2001 GMT
 notAfter=Sep 25 14:48:38 2002 GMT
 

@@ -1,5 +1,5 @@
-Bugs fixed in SGE 5.3prep4 since release 5.3p3
-----------------------------------------------
+Bugs fixed in SGE 5.3p4 since release 5.3p3
+-------------------------------------------
 
 Issue   Sun BugId  Description
 ------- ---------- ---------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ Issue   Sun BugId  Description
 510     4835832    NOTIFY_SUSP signal only sent for first suspension of job
 511     4838595    maxujobs does not count suspended or held jobs
 513                qrsh (rshd) does not set limits after setting the osjobid (affects e.g. SUPER-UX/SX)
-514     4838549     maxujobs scheduler config functionality is broken
+514     4838549    maxujobs scheduler config functionality is broken
 515     4838636    sharetree can't be modified
 521     4869772    resource limits not correctly set for Linux x86
 522     4844838    sge_shepherd does not exit on SIGTERM (e.g. on "rcsge stop")
@@ -30,7 +30,8 @@ Issue   Sun BugId  Description
 532     4847814    SGEEE: scheduler dispatches wrong jobs when jobs were in error state
 540                enabled output file names to have a ":" inside for qsub
 541                qlogin/qlogind whitespace checking removed to allow ssh/sshd with optional arguments
-545                qstat crashed, when used with the options -r -s z
+544     4886017    qstat crashed, when used with the options -r -s z
+545     4859658    SGE: scheduler crashed when job priorities where changed with qalter
 547     4860391    qmake dumped core when starting recursive make calls
 555                queue name was truncated to 10 chars
 557     4866711    SGE_O_* variables for a task within a tightly integrated job set incorrect
@@ -41,6 +42,13 @@ Issue   Sun BugId  Description
         4822799    cannot install on Solaris 10
         4851939    unexpected output for qstat -j and qmon "Why?"
         4876169    An incomplete resource request (-l =1) caused qmaster to crash
+572     4883714    SGEEE: qmaster crashed on qdel of tightly integrated PE job with usage_scaling activated
+575     4881949    Slave tasks of tightly integrated PE jobs not killed when h_rt limit was exceeded
+576     4886026    max_u_jobs could count rejected jobs as submitted
+577     4885719    disabled infotext error output if SGE_ROOT is not set
+578     4885906    NSLOTS and NHOSTS incorrectly set in environment of tightly integrated tasks
+579     4885930    failure of master task of a tightly integrated PE job did not delete the job
+580                 *_RESERVED_USAGE gives wrong values for PE jobs
 
 
 Bugs fixed in SGE 5.3p3 since release 5.3p2
@@ -84,7 +92,6 @@ Issue   Sun BugId  Description
 493     4818737    SGEEE: huge scheduling times if maxujobs is set
         4811230    qconf -Muser and qconf -Auser report no success messages
 496                Functional policy pending ticket calculations are not intuitive
-
 
 Bugs fixed in SGE 5.3p2 since release 5.3p1
 -------------------------------------------

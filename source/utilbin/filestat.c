@@ -37,7 +37,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
+
 #include "basis_types.h"
+#include "sge_stat.h"
 #include "msg_utilbin.h"
 
 /*-------------------------------------------*/
@@ -50,13 +52,13 @@
 /*-------------------------------------------*/
 int main(int argc, char *argv[])
 {
- struct stat s;
+ SGE_STRUCT_STAT s;
  
  
  if (argc != 3)
     usage();
  
- if (stat(argv[2], &s)) {
+ if (SGE_STAT(argv[2], &s)) {
     perror(MSG_COMMAND_STATFAILED );
     exit(1);
  }

@@ -52,6 +52,7 @@
 #include "sge_stat.h" 
 #include "sge.h"
 #include "sge_arch.h"
+#include "sge_stat.h"
 
 #include "msg_utilib.h"
 #include "msg_common.h"
@@ -98,13 +99,13 @@ int read_product_mode_file(const char *filename)
 {
 
    FILE *fp = NULL;
-   struct stat file_info;
+   SGE_STRUCT_STAT file_info;
    char buf[128] = "";
 
    if (filename == NULL) {
       return -1;
    } 
-   if (stat(filename, &file_info) || !(fp=fopen(filename,"r"))) {
+   if (SGE_STAT(filename, &file_info) || !(fp=fopen(filename,"r"))) {
       return -1;
    }    
    fgets(buf, 127, fp);

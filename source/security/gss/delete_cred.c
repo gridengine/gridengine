@@ -50,6 +50,7 @@
 #endif
 #include "sge_gsslib.h"
 /* #include "sge_language.h" */
+#include "sge_stat.h"
 #include "msg_gss.h"
 
 int
@@ -81,10 +82,10 @@ main(int argc, char **argv)
           */
 
          {
-            struct stat st;
+            SGE_STRUCT_STAT st;
             char rname[MAXPATHLEN], fname[MAXPATHLEN];
 
-            if (lstat(&ccname[5], &st)<0) {
+            if (SGE_LSTAT(&ccname[5], &st)<0) {
                cc = 3;
                perror(MSG_GSS_PERROR_GETTINGFILESTATUS);
                goto error;

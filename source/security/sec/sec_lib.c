@@ -55,6 +55,7 @@
 #include "sge_arch.h"
 #include "sge_exit.h"
 #include "utility.h"
+#include "sge_stat.h"
 #include "msg_sec.h"
 #include "msg_gdilib.h"
 #include "msg_utilib.h"
@@ -1620,7 +1621,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
 {
    int i;
    u_long32 mid;
-   struct stat file_info;
+   SGE_STRUCT_STAT file_info;
    int compressed = 0;
 
    DENTER(GDI_LAYER, "sec_handle_announce");
@@ -1653,7 +1654,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
    else {
       printf("You should reconnect - please try command again!\n");
       gsd.connect = 0;
-      if (stat(reconnect_file,&file_info) < 0) {
+      if (SGE_STAT(reconnect_file,&file_info) < 0) {
          i = 0;
          goto error;
       }

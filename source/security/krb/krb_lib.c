@@ -47,6 +47,7 @@
 #include "sge_copy_append.h"
 #include "commlib.h"
 #include "sge_string.h"
+#include "sge_stat.h"
 
 #include "sge.h"
 #include "def.h"
@@ -1884,8 +1885,8 @@ krb5_creds **tgt_creds
        goto all_done;
 
    if ((rc = chown(ccname+5, uid, -1))) {
-       struct stat statbuf;
-       if (stat(ccname + 5, & statbuf) == 0) {
+       SGE_STRUCT_STAT statbuf;
+       if (SGE_STAT(ccname + 5, & statbuf) == 0) {
            if (statbuf.st_uid == uid)
                rc = 0;
        }

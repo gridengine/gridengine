@@ -46,7 +46,7 @@
 #include "sge_log.h"
 #include "rwfd.h"
 #include "msg_commd.h"
-
+#include "sge_stat.h"
 
 
 /* from reset_messages_for_commproc.c */
@@ -820,7 +820,7 @@ char *master_host,
 const char *master_file
 ) {
    FILE *fp;
-   struct stat file_info;
+   SGE_STRUCT_STAT file_info;
    char buf[MAXHOSTLEN*3+1], *cp, *first;
    int len;
  
@@ -831,7 +831,7 @@ const char *master_file
       return -1;
    }
 
-   if (stat(master_file, &file_info) || !(fp=fopen(master_file,"r"))) {
+   if (SGE_STAT(master_file, &file_info) || !(fp=fopen(master_file,"r"))) {
       DEBUG((SGE_EVENT, "fopen("SFQ") failed!", master_file ));
       DEXIT;
       return -1;

@@ -891,19 +891,21 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
                               const lListElem *object, const char *key)
 {
    bool ret = true;
+   lList *tmp_list = NULL;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_write_object");
 
-#if 0
-   /* JG: TODO: we shouldn't spool free elements */
+   /* do not spool free elems. If a free elem is passed, put a copy 
+    * into a temporary list and spool this copy.
+    */
    if (object->status == FREE_ELEM) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_CANTSPOOLFREEELEM_S,
-                              key);
-      ret = false;
-   } else 
-#endif
+      /* JG: TODO: do not copy elem */
+      lListElem *tmp_object = lCopyElem(object);
+      tmp_list = lCreateList("tmp", object->descr);
+      lAppendElem(tmp_list, tmp_object);
+      object = tmp_object;
+   }
+
    {
       sge_pack_buffer pb;
       int cull_ret;
@@ -976,6 +978,10 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
 
          clear_packbuffer(&pb);
       }
+   }
+
+   if (tmp_list != NULL) {
+      lFreeList(tmp_list);
    }
 
    DEXIT;

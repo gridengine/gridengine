@@ -31,7 +31,7 @@
 /*___INFO__MARK_END__*/
 
 /* #define HASH_STATISTICS */
-/* #define MALLINFO */
+#define MALLINFO
 
 #include <stdio.h>
 #include <stdlib.h>

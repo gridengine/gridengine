@@ -68,6 +68,8 @@
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"
 
+#include "uti/sge_spool.h"
+
 typedef struct {
    int host;
    int queue;
@@ -86,6 +88,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 static void showjob(sge_rusage_type *dusage);
 static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
                             lList **hgrp_l);
+static int sge_read_rusage(FILE *fp, sge_rusage_type *d);
 
 /*
 ** statics
@@ -1668,5 +1671,408 @@ lList **hgrp_l
    mal = lFreeList(mal);
    DEXIT;
    return;
+}
+
+static int 
+sge_read_rusage(FILE *f, sge_rusage_type *d) 
+{
+   static char szLine[4092] = "";
+   char  *pc;
+   int len;
+
+   DENTER(TOP_LAYER, "sge_read_rusage");
+
+   do {
+      pc = fgets(szLine, sizeof(szLine), f);
+      if (pc == NULL) 
+         return 2;
+      len = strlen(szLine);
+      if (szLine[len] == '\n')
+         szLine[len] = '\0';
+   } while (len <= 1 || szLine[0] == COMMENT_CHAR); 
+   
+   /*
+    * qname
+    */
+   pc = strtok(szLine, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->qname = sge_strdup(d->qname, pc);
+   
+   /*
+    * hostname
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->hostname = sge_strdup(d->hostname, pc);
+
+   /*
+    * group
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->group = sge_strdup(d->group, pc);
+          
+           
+   /*
+    * owner
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->owner = sge_strdup(d->owner, pc);
+
+   /*
+    * job_name
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->job_name = sge_strdup(d->job_name, pc);
+
+   /*
+    * job_number
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   
+   d->job_number = atol(pc);
+   
+   /*
+    * account
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->account = sge_strdup(d->account, pc);
+
+   /*
+    * priority
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->priority = atol(pc);
+
+   /*
+    * submission_time
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->submission_time = atol(pc);
+
+   /*
+    * start_time
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->start_time = atol(pc);
+
+   /*
+    * end_time
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->end_time = atol(pc);
+
+   /*
+    * failed
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->failed = atol(pc);
+
+   /*
+    * exit_status
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->exit_status = atol(pc);
+
+   /*
+    * ru_wallclock
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_wallclock = atol(pc); 
+
+   /*
+    * ru_utime
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_utime = atol(pc);
+
+   /*
+    * ru_stime
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_stime = atol(pc);
+
+   /*
+    * ru_maxrss
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_maxrss = atol(pc);
+
+   /*
+    * ru_ixrss
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_ixrss = atol(pc);
+
+   /*
+    * ru_ismrss
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_ismrss = atol(pc);
+
+   /*
+    * ru_idrss
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_idrss = atol(pc);
+
+   /*
+    * ru_isrss
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_isrss = atol(pc);
+   
+   /*
+    * ru_minflt
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_minflt = atol(pc);
+
+   /*
+    * ru_majflt
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_majflt = atol(pc);
+
+   /*
+    * ru_nswap
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_nswap = atol(pc);
+
+   /*
+    * ru_inblock
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_inblock = atol(pc);
+
+   /*
+    * ru_oublock
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_oublock = atol(pc);
+
+   /*
+    * ru_msgsnd
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_msgsnd = atol(pc);
+
+   /*
+    * ru_msgrcv
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_msgrcv = atol(pc);
+
+   /*
+    * ru_nsignals
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_nsignals = atol(pc);
+
+   /*
+    * ru_nvcsw
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_nvcsw = atol(pc);
+
+   /*
+    * ru_nivcsw
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->ru_nivcsw = atol(pc);
+
+   /*
+    * project
+    */
+   pc = strtok(NULL, ":");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->project = sge_strdup(d->project, pc);
+
+   /*
+    * department
+    */
+   pc = strtok(NULL, ":\n");
+   if (!pc) {
+      DEXIT;
+      return -1;
+   }
+   d->department = sge_strdup(d->department, pc);
+
+   /* PE name */
+   pc = strtok(NULL, ":");
+   if (pc)
+      d->granted_pe = sge_strdup(d->granted_pe, pc);
+   else
+      d->granted_pe = sge_strdup(d->granted_pe, "none");   
+
+   /* slots */
+   pc = strtok(NULL, ":");
+   if (pc)
+      d->slots = atol(pc);
+   else
+      d->slots = 0;
+
+   /* task number */
+   pc = strtok(NULL, ":");
+   if (pc)
+      d->task_number = atol(pc);
+   else
+      d->task_number = 0;
+
+   d->cpu = ((pc=strtok(NULL, ":")))?atof(pc):0;
+   d->mem = ((pc=strtok(NULL, ":")))?atof(pc):0;
+   d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
+
+   /* skip job category */
+   pc=strtok(NULL, ":");
+#if 0   
+   while ((pc=strtok(NULL, ":")) &&
+          strlen(pc) &&
+          pc[strlen(pc)-1] != ' ' &&
+          strcmp(pc, "none")) {
+      /*
+       * The job category field might contain colons (':').
+       * Therefore we have to skip all colons until we find a " :".
+       * Only if the category is "none" then ":" is the real delimiter.
+       */
+      ;
+   }
+#endif
+   d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
+
+   /* skip pe_taskid */
+   pc=strtok(NULL, ":");
+
+   d->maxvmem = ((pc=strtok(NULL, ":")))?atof(pc):0;
+
+   /* ... */ 
+
+   DEXIT;
+   return 0;
 }
 

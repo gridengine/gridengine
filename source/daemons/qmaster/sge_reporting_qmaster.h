@@ -84,7 +84,7 @@ reporting_create_job_log(lList **answer_list,
 bool
 reporting_create_acct_record(lList **answer_list, 
                        lListElem *job_report, 
-                       lListElem *job, lListElem *ja_task);
+                       lListElem *job, lListElem *ja_task, bool intermediate);
 
 bool
 reporting_create_host_record(lList **answer_list,
@@ -108,6 +108,11 @@ reporting_create_queue_consumable_record(lList **answer_list,
 
 bool
 reporting_create_sharelog_record(lList **answer_list);
+
+bool
+reporting_is_intermediate_acct_required(const lListElem *job, 
+                                        const lListElem *ja_task, 
+                                        const lListElem *pe_task);
 
 #endif /* _SGE_REPORTING_QMASTER_H_ */
 

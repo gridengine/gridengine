@@ -734,6 +734,8 @@
 #define MSG_JOBLOG_ACTION_FINISHED     _MESSAGE(33863, _("finished"))
 #define MSG_JOBLOG_ACTION_ERROR        _MESSAGE(33864, _("error"))
 
+#define MSG_REPORTING_INTERMEDIATE_SS  _MESSAGE(33870, _("write intermediate accounting record for job "SFQ" at "SFN"\n"))
+
 /*
  * other
  */

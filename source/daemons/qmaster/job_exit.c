@@ -175,7 +175,7 @@ lListElem *jatep
          (failed && !lGetString(jep, JB_exec_file)) ||
          (failed && general_failure==GFSTATE_JOB && JOB_TYPE_IS_NO_ERROR(lGetUlong(jep, JB_type)))) {
 /*       job_log(jobid, jataskid, MSG_LOG_JREMOVED); */
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
 
@@ -192,7 +192,7 @@ lListElem *jatep
 /*       job_log(jobid, jataskid, MSG_LOG_JERRORSET); */
       DPRINTF(("set job "u32"."u32" in ERROR state\n", 
                lGetUlong(jep, JB_job_number), jataskid));
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_ERROR, MSG_EXECD, hostname, 
                                jr, jep, jatep, NULL, MSG_LOG_JERRORSET);
@@ -213,7 +213,7 @@ lListElem *jatep
                                MSG_LOG_JNOSTARTRESCHEDULE);
       ja_task_message_add(jatep, 1, err_str);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       lSetUlong(jatep, JAT_start_time, 0);
    }
       /*
@@ -230,7 +230,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
@@ -247,7 +247,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_MIGRATE, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JCKPTRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
@@ -262,7 +262,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JNORESRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
@@ -272,7 +272,7 @@ lListElem *jatep
        */
    else {
 /*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
-      reporting_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_FINISHED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT);
    }

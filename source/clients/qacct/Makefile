@@ -39,7 +39,6 @@ QACCT_TARGETS = qacct
 QACCT_SRC = qacct.c
 
 QACCT_ADD_SRC = \
-            sge_rusage.c \
             read_write_complex.c \
             read_object.c \
             read_write_host.c \

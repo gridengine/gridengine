@@ -32,17 +32,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_ja_task.h"
-#include "sge_usage.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_time.h"
+
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_usage.h"
+
+#include "sched/sge_job_schedd.h"
+
 #include "sge_rusage.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_job_schedd.h"
-#include "sge_schedd.h"
-#include "sge_job.h"
-#include "sge_spool.h"
-#include "sge_report.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define ARCH_COLUMN "%c%s"
@@ -68,6 +72,9 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
 #define SET_HOST_DEFAULT(jr, nm, s) if (!lGetHost(jr, nm)) \
                                       lSetHost(jr, nm, s);
 
+static double 
+reporting_get_double_usage (lList *usage_list, lList *reported_list, 
+                            const char *name, const char *rname, double def);
 /* ------------------------------------------------------------
 
    write usage to a dstring buffer
@@ -79,11 +86,12 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
 */
 const char *
 sge_write_rusage(dstring *buffer, 
-                 lListElem *jr, lListElem *jep, lListElem *jatp, 
-                 const char *category_str, const char delimiter)
+                 lListElem *jr, lListElem *job, lListElem *ja_task, 
+                 const char *category_str, const char delimiter, 
+                 bool intermediate)
 {
-   lList *usage_list;
-   const char *s, *pe_task_id_str;
+   lList *usage_list, *reported_list;
+   const char *s, *pe_task_id;
 #ifdef NEC_ACCOUNTING_ENTRIES
    char arch_dep_usage_buffer[MAX_STRING_SIZE];
    dstring arch_dep_usage_dstring;
@@ -91,6 +99,7 @@ sge_write_rusage(dstring *buffer,
 #endif
    const char *ret = NULL;
    char *qname = NULL;
+   lListElem *pe_task = NULL;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
@@ -102,16 +111,50 @@ sge_write_rusage(dstring *buffer,
 
 #ifdef NEC_ACCOUNTING_ENTRIES
    sge_dstring_init(&arch_dep_usage_dstring, arch_dep_usage_buffer, 
-                    MAX_STRING_SIZE);
+                    sizeof(arch_dep_usage_buffer));
 #endif
 
    /* for tasks we take usage from job report */
-   if ((pe_task_id_str=lGetString(jr, JR_pe_task_id_str)))
-      usage_list = lGetList(jr, JR_usage);
-   else
-      usage_list = lGetList(jatp, JAT_usage_list);
+   if ((pe_task_id=lGetString(jr, JR_pe_task_id_str))) {
+      pe_task = lGetElemStr(lGetList(ja_task, JAT_task_list), 
+                                     PET_id, pe_task_id);
+      if (pe_task == NULL) {
+         ERROR((SGE_EVENT, "got usage report for unknown pe_task "SFN"\n",
+                           pe_task_id));
+         return ret;
+      }
+      usage_list = lGetList(pe_task, PET_usage);
+   } else {
+      usage_list = lGetList(ja_task, JAT_usage_list);
+   }
 
-#if 1
+   /* for intermediate usage reporting, we need a list containing the already
+    * reported usage. If it doesn't exist yet, create it
+    */
+   if (intermediate) {
+      if (pe_task != NULL) {
+         reported_list = lGetList(pe_task, PET_reported_usage);
+         if (reported_list == NULL) {
+            reported_list = lCreateList("reported usage", UA_Type);
+            lSetList(pe_task, PET_reported_usage, reported_list);
+         }
+      } else {
+         reported_list = lGetList(ja_task, JAT_reported_usage_list);
+         if (reported_list == NULL) {
+            reported_list = lCreateList("reported usage", UA_Type);
+            lSetList(ja_task, JAT_reported_usage_list, reported_list);
+         }
+      }
+
+      /* now set actual time as time of last intermediate usage report */
+      usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
+                                 sge_get_gmt());
+   } else {
+      reported_list = NULL;
+   }
+
+
+#if 0
    {
       lListElem *ep;
 
@@ -136,10 +179,10 @@ sge_write_rusage(dstring *buffer,
    
    /* job name and account get taken 
       from local job structure */
-   if (!lGetString(jep, JB_job_name)) 
-      lSetString(jep, JB_job_name, "UNKNOWN");
-   if (!lGetString(jep, JB_account)) 
-      lSetString(jep, JB_account, "UNKNOWN");
+   if (!lGetString(job, JB_job_name)) 
+      lSetString(job, JB_job_name, "UNKNOWN");
+   if (!lGetString(job, JB_account)) 
+      lSetString(job, JB_account, "UNKNOWN");
 
 #ifdef NEC_ACCOUNTING_ENTRIES
    /* values which will be written for a special architecture */
@@ -199,9 +242,9 @@ sge_write_rusage(dstring *buffer,
           lGetHost(jr, JR_host_name), delimiter,
           lGetString(jr, JR_group), delimiter,
           lGetString(jr, JR_owner), delimiter,
-          lGetString(jep, JB_job_name), delimiter,
+          lGetString(job, JB_job_name), delimiter,
           lGetUlong(jr, JR_job_number), delimiter,
-          lGetString(jep, JB_account), delimiter,
+          lGetString(job, JB_account), delimiter,
           usage_list_get_ulong_usage(usage_list, "priority", 0),  delimiter,
           usage_list_get_ulong_usage(usage_list, "submission_time", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "start_time", 0), delimiter,
@@ -226,18 +269,27 @@ sge_write_rusage(dstring *buffer,
           usage_list_get_ulong_usage(usage_list, "ru_nsignals", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_nvcsw", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_nivcsw", 0), delimiter,
-          lGetString(jep, JB_project) ? lGetString(jep, JB_project) : "none", delimiter,
-          lGetString(jep, JB_department) ? lGetString(jep, JB_department) : "none", delimiter,
-          (s = lGetString(jatp, JAT_granted_pe)) ? s : "none", delimiter,
-          sge_granted_slots(lGetList(jatp, JAT_granted_destin_identifier_list)), delimiter,
-          job_is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0, delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU_ACCT, 0), delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM_ACCT, 0), delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_IO_ACCT, 0), delimiter,
+          lGetString(job, JB_project) ? lGetString(job, JB_project) : "none", delimiter,
+          lGetString(job, JB_department) ? lGetString(job, JB_department) : "none", delimiter,
+          (s = lGetString(ja_task, JAT_granted_pe)) ? s : "none", delimiter,
+          sge_granted_slots(lGetList(ja_task, JAT_granted_destin_identifier_list)), delimiter,
+          job_is_array(job) ? lGetUlong(ja_task, JAT_task_number) : 0, delimiter,
+          reporting_get_double_usage(usage_list, reported_list, 
+            intermediate ? USAGE_ATTR_CPU : USAGE_ATTR_CPU_ACCT, 
+            USAGE_ATTR_CPU, 0), delimiter,
+          reporting_get_double_usage(usage_list, reported_list, 
+             intermediate ? USAGE_ATTR_MEM : USAGE_ATTR_MEM_ACCT,
+             USAGE_ATTR_MEM, 0), delimiter,
+          reporting_get_double_usage(usage_list, reported_list, 
+             intermediate ? USAGE_ATTR_IO : USAGE_ATTR_IO_ACCT, 
+             USAGE_ATTR_IO, 0), delimiter,
           category_str?category_str:"none", delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_IOW_ACCT, 0), delimiter,
-          pe_task_id_str?pe_task_id_str:"none", delimiter,
-          usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM_ACCT, 0)
+          reporting_get_double_usage(usage_list, reported_list, 
+             intermediate ? USAGE_ATTR_IOW : USAGE_ATTR_IOW_ACCT, 
+             USAGE_ATTR_IOW, 0), delimiter,
+          pe_task_id?pe_task_id:"none", delimiter,
+          usage_list_get_double_usage(usage_list,  
+             intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0) 
 #ifdef NEC_ACCOUNTING_ENTRIES
           , delimiter, arch_dep_usage_string
 #endif 
@@ -248,404 +300,33 @@ sge_write_rusage(dstring *buffer,
    return ret;
 }
 
-int sge_read_rusage(FILE *f, sge_rusage_type *d) 
+/*
+* NOTES
+*     MT-NOTE: reporting_get_double_usage() is MT-safe
+*/
+static double 
+reporting_get_double_usage (lList *usage_list, lList *reported_list, 
+                            const char *name, const char *rname, double def) 
 {
-   static char szLine[4092] = "";
-   char  *pc;
-   int len;
+   double usage;
 
-   DENTER(TOP_LAYER, "sge_read_rusage");
+   /* total usage */
+   usage = usage_list_get_double_usage(usage_list, name, def);
 
-   do {
-      pc = fgets(szLine, sizeof(szLine), f);
-      if (pc == NULL) 
-         return 2;
-      len = strlen(szLine);
-      if (szLine[len] == '\n')
-         szLine[len] = '\0';
-   } while (len <= 1 || szLine[0] == COMMENT_CHAR); 
-   
-   /*
-    * qname
-    */
-   pc = strtok(szLine, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->qname = sge_strdup(d->qname, pc);
-   
-   /*
-    * hostname
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->hostname = sge_strdup(d->hostname, pc);
+   if (reported_list != NULL) {
+      double reported;
 
-   /*
-    * group
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->group = sge_strdup(d->group, pc);
-          
-           
-   /*
-    * owner
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->owner = sge_strdup(d->owner, pc);
+      /* usage already reported */
+      reported = usage_list_get_double_usage(reported_list, rname, def);
 
-   /*
-    * job_name
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->job_name = sge_strdup(d->job_name, pc);
+      /* after this action, we'll have reported the total usage */
+      usage_list_set_double_usage(reported_list, rname, usage);
 
-   /*
-    * job_number
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   
-   d->job_number = atol(pc);
-   
-   /*
-    * account
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->account = sge_strdup(d->account, pc);
-
-   /*
-    * priority
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->priority = atol(pc);
-
-   /*
-    * submission_time
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->submission_time = atol(pc);
-
-   /*
-    * start_time
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->start_time = atol(pc);
-
-   /*
-    * end_time
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->end_time = atol(pc);
-
-   /*
-    * failed
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->failed = atol(pc);
-
-   /*
-    * exit_status
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->exit_status = atol(pc);
-
-   /*
-    * ru_wallclock
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_wallclock = atol(pc); 
-
-   /*
-    * ru_utime
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_utime = atol(pc);
-
-   /*
-    * ru_stime
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_stime = atol(pc);
-
-   /*
-    * ru_maxrss
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_maxrss = atol(pc);
-
-   /*
-    * ru_ixrss
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_ixrss = atol(pc);
-
-   /*
-    * ru_ismrss
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_ismrss = atol(pc);
-
-   /*
-    * ru_idrss
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_idrss = atol(pc);
-
-   /*
-    * ru_isrss
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_isrss = atol(pc);
-   
-   /*
-    * ru_minflt
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_minflt = atol(pc);
-
-   /*
-    * ru_majflt
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_majflt = atol(pc);
-
-   /*
-    * ru_nswap
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_nswap = atol(pc);
-
-   /*
-    * ru_inblock
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_inblock = atol(pc);
-
-   /*
-    * ru_oublock
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_oublock = atol(pc);
-
-   /*
-    * ru_msgsnd
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_msgsnd = atol(pc);
-
-   /*
-    * ru_msgrcv
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_msgrcv = atol(pc);
-
-   /*
-    * ru_nsignals
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_nsignals = atol(pc);
-
-   /*
-    * ru_nvcsw
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_nvcsw = atol(pc);
-
-   /*
-    * ru_nivcsw
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->ru_nivcsw = atol(pc);
-
-   /*
-    * project
-    */
-   pc = strtok(NULL, ":");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->project = sge_strdup(d->project, pc);
-
-   /*
-    * department
-    */
-   pc = strtok(NULL, ":\n");
-   if (!pc) {
-      DEXIT;
-      return -1;
-   }
-   d->department = sge_strdup(d->department, pc);
-
-   /* PE name */
-   pc = strtok(NULL, ":");
-   if (pc)
-      d->granted_pe = sge_strdup(d->granted_pe, pc);
-   else
-      d->granted_pe = sge_strdup(d->granted_pe, "none");   
-
-   /* slots */
-   pc = strtok(NULL, ":");
-   if (pc)
-      d->slots = atol(pc);
-   else
-      d->slots = 0;
-
-   /* task number */
-   pc = strtok(NULL, ":");
-   if (pc)
-      d->task_number = atol(pc);
-   else
-      d->task_number = 0;
-
-   d->cpu = ((pc=strtok(NULL, ":")))?atof(pc):0;
-   d->mem = ((pc=strtok(NULL, ":")))?atof(pc):0;
-   d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
-
-   /* skip job category */
-   pc=strtok(NULL, ":");
-#if 0   
-   while ((pc=strtok(NULL, ":")) &&
-          strlen(pc) &&
-          pc[strlen(pc)-1] != ' ' &&
-          strcmp(pc, "none")) {
-      /*
-       * The job category field might contain colons (':').
-       * Therefore we have to skip all colons until we find a " :".
-       * Only if the category is "none" then ":" is the real delimiter.
+      /* in this intermediate accounting record, we'll report the usage 
+       * consumed since the last intermediate accounting record.
        */
-      ;
+      usage -= reported;
    }
-#endif
-   d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
-   /* skip pe_taskid */
-   pc=strtok(NULL, ":");
-
-   d->maxvmem = ((pc=strtok(NULL, ":")))?atof(pc):0;
-
-   /* ... */ 
-
-   DEXIT;
-   return 0;
+   return usage;
 }

@@ -140,10 +140,30 @@ struct drusage {
 
 typedef struct drusage sge_rusage_type;
 
+/* 
+ * name of the usage record that will hold the time when the last intermediate 
+ * record has been written 
+ */
+#define LAST_INTERMEDIATE "im_acct_time"
+
+/* 
+ * time window in minutes after midnight in which intermediate usage will be 
+ * written - we needn't do all the checks for intermediate usage reporting
+ * at any time of the day.
+ */
+#define INTERMEDIATE_ACCT_WINDOW 10
+
+/*
+ * minimum runtime of a job in seconds as prerequisit for the writing of 
+ * intermediate usage reporting - it's not worth writing an intermediate usage 
+ * record for jobs that have started some seconds before midnight.
+ */
+#define INTERMEDIATE_MIN_RUNTIME 60
+
 const char *
 sge_write_rusage(dstring *buffer, 
-                 lListElem *jr, lListElem *jep, lListElem *jatp, 
-                 const char *category_str, const char delimiter);
+                 lListElem *jr, lListElem *job, lListElem *ja_task, 
+                 const char *category_str, const char delimiter,
+                 bool intermediate);
 
-int sge_read_rusage(FILE *fp, sge_rusage_type *d);
 #endif /* __SGE_RUSAGE_H */

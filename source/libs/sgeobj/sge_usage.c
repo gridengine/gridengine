@@ -108,3 +108,72 @@ double usage_list_get_double_usage(lList *usage_list, const char *name,
    }
 }
 
+/****** sgeobj/usage/usage_list_set_ulong_usage() ******************************
+*  NAME
+*     usage_list_set_ulong_usage() -- create/update a usage record
+*
+*  SYNOPSIS
+*     void
+*     usage_list_set_ulong_usage(lList *usage_list, const char *name, 
+*                                u_long32 value) 
+*
+*  FUNCTION
+*     Updates the value of a usage record. If no usage record exists with the
+*     given name in usage_list, a new record is created.
+*
+*  INPUTS
+*     lList *usage_list - list containing the usage record to update
+*     const char *name  - name of the usage record to update
+*     u_long32 value    - the new value
+*
+*  NOTES
+*     MT-NOTE: usage_list_set_ulong_usage() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/usage/usage_list_set_double_usage()
+*     sgeobj/usage/usage_list_get_ulong_usage()
+*     sgeobj/usage/usage_list_get_double_usage()
+*******************************************************************************/
+void
+usage_list_set_ulong_usage(lList *usage_list, const char *name, u_long32 value)
+{
+   usage_list_set_double_usage(usage_list, name, value);
+}
+
+/****** sgeobj/usage/usage_list_set_double_usage() ******************************
+*  NAME
+*     usage_list_set_double_usage() -- create/update a usage record
+*
+*  SYNOPSIS
+*     void
+*     usage_list_set_double_usage(lList *usage_list, const char *name, 
+*                                 double value) 
+*
+*  FUNCTION
+*     Updates the value of a usage record. If no usage record exists with the
+*     given name in usage_list, a new record is created.
+*
+*  INPUTS
+*     lList *usage_list - list containing the usage record to update
+*     const char *name  - name of the usage record to update
+*     double value      - the new value
+*
+*  NOTES
+*     MT-NOTE: usage_list_set_double_usage() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/usage/usage_list_set_ulong_usage()
+*     sgeobj/usage/usage_list_get_ulong_usage()
+*     sgeobj/usage/usage_list_get_double_usage()
+*******************************************************************************/
+void
+usage_list_set_double_usage(lList *usage_list, const char *name, double value)
+{
+   lListElem *ep = lGetElemStr(usage_list, UA_name, name);
+   if (ep == NULL) {
+      ep = lAddElemStr(&usage_list, UA_name, name, UA_Type);
+   }
+
+   lSetDouble(ep, UA_value, value);
+}
+

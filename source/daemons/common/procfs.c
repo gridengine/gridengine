@@ -474,6 +474,7 @@ int time_stamp
 
    /* find next valid entry in procfs */ 
    while ((dent = readdir(cwd))) {
+      char *pidname;
 
       if (!dent->d_name)
          continue;
@@ -483,7 +484,12 @@ int time_stamp
       if (!strcmp(dent->d_name, "..") || !strcmp(dent->d_name, "."))
          continue;
 
-      if (atoi(dent->d_name) == 0)
+      if (dent->d_name[0] == '.')
+          pidname = &dent->d_name[1];
+      else
+          pidname = dent->d_name;
+
+      if (atoi(pidname) == 0)
          continue;
 
 #if defined(LINUX)

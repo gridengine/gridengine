@@ -6,6 +6,9 @@ RC-2005-03-13-1: Bugfix:   fixed build (uninitialized variable)
 RC-2005-03-13-0: Enhancem.: created target depend for qmake
                  Review:    Reuti
 
+SD-2005-03-12-0: Enhancem.: Added support for tracking pthreads to the
+                            Linux PDC (portable data collector).
+
 RC-2005-03-12-1: Enhancem.: PPC Linux port
 
 RC-2005-03-12-0: Enhancem.: ignore warnings when calling configure

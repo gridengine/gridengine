@@ -1,3 +1,9 @@
+SG-2004-05-14-0: Bugfix:    - fixed the messages generation for jobs, which
+                              exceeded the user job limit.
+                            - added copyright statements to the xml-schemas
+                 Review:    RH, AH
+                 Changed:   scheduler, XML schemas
+
 DT-2004-05-14-2: Bugfix:    o Fixed core dump in event master
                  Changed:   EVM
                  Review:    pending
@@ -1209,7 +1215,7 @@ EB-2004-03-17-2: Bugfix:    cluster queue instances like all.q@hostname are
                  Issue:     850
                  Changed:   sge_qmaster
 
-JG-2003-03-17-1: Testsuite: Cleanup and workaround for issue 884
+JG-2004-03-17-1: Testsuite: Cleanup and workaround for issue 884
 
 EB-2004-03-17-1: Bugfix:    qstat shows queue in A state although 
                             suspend_threshold is disabled

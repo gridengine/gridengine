@@ -181,8 +181,6 @@ int scheduler(sge_Sdescr_t *lists) {
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
               conf.max_aj_instances, splitted_job_lists);
  
-/*   trash_splitted_jobs(splitted_job_lists); */
-
    {
       lList *qlp;
       lCondition *where;
@@ -255,13 +253,15 @@ int scheduler(sge_Sdescr_t *lists) {
                           
    }
    
-   
    orders.pendingOrderList = sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_PENDING]), NULL, 
                                                     orders.pendingOrderList, false, 0, false); 
    
    orders.pendingOrderList = sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_NOT_STARTED]), NULL, 
                                                     orders.pendingOrderList, false, 0, false); 
-   
+  
+   /* generated scheduler messages, thus we have to call it */
+   trash_splitted_jobs(splitted_job_lists); 
+  
    orders.jobStartOrderList= sge_add_schedd_info(orders.jobStartOrderList);
 
 

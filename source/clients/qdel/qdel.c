@@ -150,28 +150,24 @@ int main(int argc, char **argv) {
    /* Has the user the permission to use the the '-f' (forced) flag */
    have_master_privileges = FALSE;
    if (force == 1) {
-      lList *perm_alp = NULL; 
       have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
       if (have_master_privileges == -10) {
          /* -10 indicates no connection to qmaster */
 
          /* fills SGE_EVENT with diagnosis information */
-         if (perm_alp != NULL) {
-            lListElem *aep;
+         if (alp != NULL) {
             if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
             }
-         }
-         if (perm_alp != NULL) {
-            lFreeList(perm_alp);
-            perm_alp = NULL;
+            lFreeList(alp);
+            alp = NULL;
          }
          goto error_exit;
       }  
-      if (perm_alp != NULL) {
-         lFreeList(perm_alp);
-         perm_alp = NULL;
-     }
+      if (alp != NULL) {
+         lFreeList(alp);
+         alp = NULL;
+      }
    }
 
    /* delete the job */

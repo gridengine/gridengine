@@ -66,11 +66,23 @@
 #include "sge_security.h"
 #include "msg_common.h"
 
-static int sge_send_receive_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short id, sge_gdi_request *out, sge_gdi_request **in);
-static int sge_get_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short *id, sge_gdi_request **arp);
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        char *rhost, 
+                                        char *commproc, 
+                                        u_short id, 
+                                        sge_gdi_request *out, 
+                                        sge_gdi_request **in);
+
+static int sge_get_gdi_request(int *commlib_error,
+                               char *rhost,
+                               char *commproc,
+                               u_short *id,
+                               sge_gdi_request **arp);
+
 
 #ifdef QIDL
-static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **in);
+static int sge_handle_local_gdi_request(sge_gdi_request *out,
+                                        sge_gdi_request **in);
 #endif
 
 /****** sge_gdi_request/sge_gdi() **********************************************

@@ -1,3 +1,7 @@
+CR-2002-03-26-2  Bugfix:    - wrong error handling if qmaster is down and
+                              user tries qdel -f 
+                            - changed code formating
+
 JG-2002-03-26-0  Testsuite: Installation with many hosts did not work due to
                             some buffer (commandline?) being too small.
                             Pass hostnames to install_qmaster in a file.

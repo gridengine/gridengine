@@ -1,10 +1,13 @@
+AS-2003-09-29-0: CVS        Created V53p4_TAG (linkage with OpenSSL 0.9.7c)
+---------------------------------------------------------------------------
+
 AA-2003-11-13-0  Bugfix:    qmon dumps core if it gets an empty hold list
                  Review:    EB
                  Issue:     
                  Bugtraq:   4949917
                  Changed:   qmon
 
-EB-2003-11-13-0  Bugfix:    qmon cores if it should show qtch jobs which
+EB-2003-11-13-0  Bugfix:    qmon cores if it should show qtcsh jobs which
                             where submitted with -h parameter (qtask-file)
                  Review:    AA
                  Issue:
@@ -32,6 +35,8 @@ JG-2003-11-11-0: Bugfix:    -M options didn't work for interactive commands
 JG-2003-10-17-0: Bugfix:    Fixed the build for the new solaris x86 compiler.
 
 AA-2003-10-22-0: Security:  OpenSSL 0.9.7c replaces OpenSSL 0.9.7a 
+                 Bugtraq:   4957760
+                 Issue:     626
                  Changed:   all binaries
                  Review:    AS
 

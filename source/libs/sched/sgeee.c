@@ -3708,53 +3708,9 @@ sge_calc_node_targets( lListElem *root,
    return 0;
 }
 
-
-/*--------------------------------------------------------------------
- * sge_dump_list - dump list to stdout (for calling while in debugger)
- *--------------------------------------------------------------------*/
-
-void
-sge_dump_list( lList *list )
-{
-   FILE *f;
-
-   if (!(f=fdopen(1, "w"))) {
-      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED );
-      return;
-   }
-
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_SGE_UNABLETODUMPJOBLIST );
-   }
-}
-
-
-/*--------------------------------------------------------------------
- * sge_dump_list - dump list to file (for calling while in debugger)
- *--------------------------------------------------------------------*/
-
-void
-sge_dump_list_to_file(const char *file, lList *list)
-{
-   FILE *f;
-
-   if (!(f=fopen(file, "w+"))) {
-      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED );
-      return;
-   }
-
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_SGE_UNABLETODUMPJOBLIST );
-   }
-
-   fclose(f);
-}
-
-
 /*--------------------------------------------------------------------
  * get_mod_share_tree - return reduced modified share tree
  *--------------------------------------------------------------------*/
-
 
 static lListElem *
 get_mod_share_tree( lListElem *node,

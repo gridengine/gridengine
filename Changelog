@@ -1,3 +1,6 @@
+EB-2002-04-17-0: Cleanup:   multiply defined function 
+                 Issue:     #202
+
 EB-2002-04-16-0: Cleanup:   building range strings for enrolled tasks
 
 JG-2002-04-16-0: Enhancem.: In simulation mode (qmaster_param simulate_hosts=1)
@@ -46,6 +49,7 @@ EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
                               ckpt/pset code
                             - ADOC comments 
                  Issue:     #229, #174
+                 Bugtraq:   #4668148
 
 CR-2002-04-11-0: Testsuite: Added testsuite categories, modified framework
                  Enhancem.  

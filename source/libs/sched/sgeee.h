@@ -103,10 +103,6 @@ void sge_job_active ( lListElem *job,
 void sge_job_inactive ( lListElem *job,
                         sge_Sdescr_t *lists );
 
-void sge_dump_list ( lList *list );
-
-void dump_list_to_file ( lList *list, const char *file );
-
 void sge_clear_job ( lListElem *job );
 
 void sge_clear_ja_task ( lListElem *ja_task );

@@ -441,24 +441,6 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
 }
 
-void
-dump_list_to_file(lList *list, const char *file)
-{
-   FILE *f;
-
-   if (!(f=fopen(file, "w+"))) {
-      fprintf(stderr, MSG_ERROR_COULDNOTOPENSTDOUTASFILE);
-      exit(1);
-   }
-
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBLIST);
-   }
-
-   fclose(f);
-}
-
-
 /***************************************************
  Generate a Template for a user or project
  ***************************************************/

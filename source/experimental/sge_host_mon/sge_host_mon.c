@@ -1050,26 +1050,3 @@ int main(int argc, char **argv)
 
    return 0;
 }
-
-
-
-
-#ifdef notdef
-static void
-dump_list_to_file(lList *list, char *file)
-{
-   FILE *f;
-
-   if (!(f=fopen(file, "w+"))) {
-      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED);
-      exit(1);
-   }
-
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_ERROR_UNABLETODUMPLIST );
-   }
-
-   fclose(f);
-}
-#endif
-

@@ -324,6 +324,16 @@ void prepare_enroll(const char *name)
          INFO((SGE_EVENT, MSG_GDI_HANDLE_CREATED_FOR_S, uti_state_get_sge_formal_prog_name() ));
       }
    } 
+
+ 
+   /* this is for testsuite socket bind test (issue 1096 ) */
+   if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
+      /* if this environment variable is set, we wait 15 seconds after 
+         communication lib setup */
+      DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
+      sleep(15);   
+   }
+
    DEXIT;
 }
 

@@ -36,7 +36,7 @@ void sge_process_qmaster_cmdline(char**anArgv);
 
 int sge_setup_qmaster(char* anArgv[]);
 
-int sge_qmaster_thread_init(void);
+int sge_qmaster_thread_init(bool switch_to_admin_user);
 
 void sge_setup_job_resend(void);
 

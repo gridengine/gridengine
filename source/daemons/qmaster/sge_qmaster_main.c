@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
       sge_mt_init();
       sigfillset(&sig_set);
       pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
-      sge_qmaster_thread_init();
+      sge_qmaster_thread_init(true);
       sge_process_qmaster_cmdline(argv);
       SGE_EXIT(1);
    }
@@ -184,10 +184,14 @@ int main(int argc, char* argv[])
    sigfillset(&sig_set);
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
 
-   sge_qmaster_thread_init();
 
-   prepare_enroll(prognames[QMASTER]);
+   /* init qmaster threads without becomming admin user */
+   sge_qmaster_thread_init(false);
 
+   /* this must be done as root user to be able to bind ports < 1024 */
+   prepare_enroll(prognames[QMASTER]); 
+
+   /* now we become admin user */
    become_admin_user();
 
    sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
@@ -1015,7 +1019,7 @@ static void* signal_thread(void* anArg)
 
    DENTER(TOP_LAYER, "signal_thread");
 
-   sge_qmaster_thread_init();
+   sge_qmaster_thread_init(true);
 
    sigemptyset(&sig_set);
    sigaddset(&sig_set, SIGINT);
@@ -1068,7 +1072,7 @@ static void* message_thread(void* anArg)
 {
    DENTER(TOP_LAYER, "message_thread");
 
-   sge_qmaster_thread_init();
+   sge_qmaster_thread_init(true);
 
    while (should_terminate() == false)
    {

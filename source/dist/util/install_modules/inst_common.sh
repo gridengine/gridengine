@@ -71,7 +71,7 @@ BasicSettings()
   SGE_SHEPHERD_NAME=sge_shepherd
   SGE_SHADOWD_NAME=sge_shadowd
   SGE_SERVICE=sge_qmaster
-  SGE_MASTER_SRV=sge_qmaster
+  SGE_QMASTER_SRV=sge_qmaster
   SGE_EXECD_SRV=sge_execd
 
   unset SGE_NOMSG
@@ -410,6 +410,7 @@ CheckWhoInstallsSGE()
                   "This will allow you to run Grid Engine only under your user id for testing\n" \
                   "a limited functionality of Grid Engine.\n"
 
+      ADMINUSER=`whoami`
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
       $CLEAR
       return 0

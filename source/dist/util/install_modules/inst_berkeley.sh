@@ -171,8 +171,9 @@ CheckLocalFilesystem()
          ;;
       *)
          $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
-         $INFOTEXT -wait -n "\nPlease make sure that the directory $FS is on a local filesystem!\nHit <RETURN> to continue >> "
-         exit 1
+         $INFOTEXT -wait -n "\nPlease make sure that the directory %s is on a local filesystem!\n\n" \
+                            "Hit <RETURN> to continue >> " $FS
+         return 1
          ;;
    esac
 

@@ -127,22 +127,6 @@ int parsing_type
          }
       }
 
-      if (type == CULL_READ_SPOOL) {
-         /* --------- EH_num_running_jobs */
-         if (!set_conf_ulong(alpp, clpp, fields, "number_of_jobs", ep, 
-                  EH_num_running_jobs)) {
-            DEXIT;
-            return -1;
-         }
-
-         /* --------- EH_real_host_name */
-         if (!set_conf_string(alpp, clpp, fields, "real_host_name", ep, 
-                   EH_real_name)) {
-            DEXIT;
-            return -1;
-         }
-      }
-   
       if ((type == CULL_READ_SPOOL) || (type == CULL_READ_HISTORY)) {
          /* --------- EH_load_list */
          if (!set_conf_deflist(alpp, clpp, fields, "load_values", ep, 
@@ -410,22 +394,6 @@ char *file
       if (getenv("MORE_INFO"))
          fprint_thresholds(fp, "complex_values_actual ", 
             lGetList(ep, EH_consumable_actual_list), 1);
-
-      
-      if (spool) {
-
-         /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - */
-         /* No longer needed, but I dont wanna change the file format */
-         FPRINTF((fp, "number_of_jobs             %d\n", 0));
-         /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - */
-
-         /* real host name (for QSI)  only spooled */
-         if (!(hostname = lGetString(ep, EH_real_name))) {
-            hostname = "NONE";
-         }
-         FPRINTF((fp, "real_host_name             %s\n", hostname));
-
-      }
 
       if ((!spool && how==0) || (spool && how!=1) || (how==3)) {
          int printed = 0;

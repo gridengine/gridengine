@@ -1,4 +1,7 @@
-AH-2001-11-26-1: Bugfix:    qmaster logging "enrolled but leave_commd failed ..."
+AH-2001-11-29-2:            Removed unused exec host spool entries
+                            'number_of_jobs' and 'real_host_name'
+
+AH-2001-11-29-1: Bugfix:    qmaster logging "enrolled but leave_commd failed ..."
                  Bugtraq:   #4532798
                  Issue:     #108
 

@@ -52,11 +52,19 @@
 
 
 
-#define U32CFormat "%ld"
-#define u32c(x)  (unsigned long)(x)
+#if defined(FREEBSD)
+#  define U32CFormat "%u"
+#  define u32c(x)  (unsigned int)(x)
 
-#define X32CFormat "%lx"
-#define x32c(x)  (unsigned long)(x)
+#  define X32CFormat "%x"
+#  define x32c(x)  (unsigned int)(x)
+#else
+#  define U32CFormat "%ld"
+#  define u32c(x)  (unsigned long)(x)
+
+#  define X32CFormat "%lx"
+#  define x32c(x)  (unsigned long)(x)
+#endif
 
 
 #if defined(IRIX6) || defined(IRIX64)
@@ -84,13 +92,15 @@ extern "C" {
 #  define u_long32 u_int
 #elif defined(WIN32NATIVE)
 #  define u_long32 unsigned long
+#elif defined(FREEBSD)
+#  define u_long32 uint32_t
 #else
 #  define u_long32 u_long
 #endif
 
 /* set u32 and x32 for 64 or 32 bit machines */
 /* uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
-#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(IA64LINUX) || defined(LINUXAMD64)
+#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(IA64LINUX) || defined(LINUXAMD64) ||defined(FREEBSD)
 #  define u32    "%d"
 #  define uu32   "%u"
 #  define x32    "%x"
@@ -106,7 +116,11 @@ extern "C" {
    solaris (who else - it's IRIX?) uses long 
    variables for uid_t, gid_t and pid_t 
 */
-#define uid_t_fmt pid_t_fmt
+#if defined(FREEBSD)
+#  define uid_t_fmt "%u"
+#else 
+#  define uid_t_fmt pid_t_fmt
+#endif
 
 #if (defined(SOLARIS) && !defined(SOLARIS64)) || defined(IRIX6)
 #  define pid_t_fmt    "%ld"
@@ -118,7 +132,7 @@ extern "C" {
 #  define gid_t_fmt    "%ld"
 #elif defined(LINUX5)
 #  define gid_t_fmt    "%hu"
-#elif defined(LINUX6)
+#elif defined(LINUX6) || defined(FREEBSD)
 #  define gid_t_fmt    "%u"
 #else
 #  define gid_t_fmt    "%d"
@@ -171,7 +185,7 @@ typedef char stringTlong[4*MAX_STRING_SIZE];
 #define SN_UNLIMITED  "%s"
 
 /* used for shepherd and procfs */
-#if defined(LINUX) || defined(SUN4) || defined(AIX4) || defined(HP10) || defined(HP11)
+#if defined(LINUX) || defined(SUN4) || defined(AIX4) || defined(HP10) || defined(HP11) || defined(FREEBSD)
 #  define MAX_GROUPS NGROUPS
 #elif defined(IRIX6) || defined(SOLARIS)
 #  define MAX_GROUPS NGROUPS_UMAX

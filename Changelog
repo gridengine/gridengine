@@ -1,3 +1,6 @@
+BD-2004-01-14-1: Enhancem.: Cleanup basis_type.h for FreeBSD.
+                 Changed:   most binaries
+
 BD-2004-01-14-0: Bugfix:    Make it possiable to install on FreeBSD systems
                             other then alphas.
                  Changed:   scripts/distinst

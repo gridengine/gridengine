@@ -145,6 +145,8 @@ proc install_qmaster {} {
  set CELL_NAME_EXISTS             [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_EXISTS] ]
  set CELL_NAME_OVERWRITE          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_OVERWRITE] ]
 
+# dynamic spooling
+ set CHOOSE_SPOOLING_METHOD [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CHOOSE_SPOOLING_METHOD]]
 
 # berkeley db
  set DATABASE_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_LOCAL_SPOOLING]]
@@ -738,6 +740,21 @@ proc install_qmaster {} {
           send -i $sp_id "$ANSWER_NO\n"
           continue;
        }
+
+      # 
+      # SGE 6.0 Dynamic Spooling 
+      #
+      -i $sp_id $CHOOSE_SPOOLING_METHOD {
+         set spooling_method $ts_config(spooling_method)
+         puts $CHECK_OUTPUT "\n -->testsuite: sending $spooling_method"
+
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+         send -i $sp_id "$spooling_method\n"
+         continue;
+      }
 
       # 
       # SGE 6.0 Berkeley DB Spooling

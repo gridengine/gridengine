@@ -1,3 +1,10 @@
+JG-2004-04-15-0: Enhancem.: Allow the admin to choose the spooling method 
+                            (berkeleydb or classic) at installation time, if SGE
+                            was build with dynamic spooling 
+                            (aimk -spool-dynamic).
+                 Changed:   install scripts, testsuite
+                 Review:    MD
+
 CR-2004-04-15-0: Bugfix:    - output on qmaster clients when qmaster is 
                               not reachable
                             - qconf -ke <host> triggers "set_last_heard_from()

@@ -85,6 +85,7 @@ proc sge_macro { macro_name } {
       "DISTINST_INSTALL_GE_NOT_AS_ROOT" { set value "Do you want to install Grid Engine\nunder an user id other than >root< (y/n) \[y\] >> " }
       "DISTINST_IF_NOT_OK_STOP_INSTALLATION" { set value "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> " }
       "DISTINST_DNS_DOMAIN_QUESTION" { set value "Are all hosts of your cluster in a single DNS domain (y/n) \[y\] >> " }
+      "DISTINST_CHOOSE_SPOOLING_METHOD" { set value "Please choose spooling method *" }
       "DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET" { set value "If you will install shadow master hosts or if you want to be able to start\n the qmaster daemon on other hosts (see the corresponding sectionin the\n Grid Engine Installation and Administration Manual for details) the account\n on the shadow master hosts also needs read/write access to this directory.\n\n Enter spool directory or hit <RETURN> to use default\n \[%s\] >> " }
       "DISTINST_USING_GID_RANGE_HIT_RETURN" { set value "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " }
       "DISTINST_EXECD_INSTALL_COMPLETE" { set value "Your execution daemon installation is now completed." }

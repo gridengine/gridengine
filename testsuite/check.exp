@@ -2061,6 +2061,14 @@ proc update_ts_config_version {} {
       return 0
    }
    
+   if { $ts_config(version) == "1.4" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.4 to 1.5 ..."
+      config_build_ts_config_1_5
+      show_config ts_config
+      wait_for_enter
+      return 0
+   }
+   
    puts $CHECK_OUTPUT "\nunexpected version $ts_config(version), need version $actual_ts_config_version"
    return -1
 }

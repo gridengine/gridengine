@@ -3098,6 +3098,69 @@ proc config_testsuite_gridengine_version { only_check name config_array } {
    return $value
 }
 
+#****** config/config_testsuite_spooling_method() ***************************
+#  NAME
+#     config_testsuite_spooling_method() -- spooling method setup
+#
+#  SYNOPSIS
+#     config_testsuite_spooling_method { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_testsuite_spooling_method { only_check name config_array } {
+   global CHECK_OUTPUT CHECK_USER
+   global ts_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   # called from setup
+   if { $only_check == 0 } {
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please specify the spooling method that will be used"
+      puts $CHECK_OUTPUT "in case the binaries were build to support"
+      puts $CHECK_OUTPUT "dynamic spooling."
+      puts $CHECK_OUTPUT "Can be either \"berkeleydb\" or \"classic\""
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "Press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   } 
+
+   # check parameter
+   if { [string compare $value "berkeleydb"] != 0 && 
+        [string compare $value "classic"] != 0} {
+      puts $CHECK_OUTPUT "invalid spooling method $value"
+      return -1
+   }
+
+   return $value
+}
+
 #****** config/config_testsuite_bdb_server() ***************************
 #  NAME
 #     config_testsuite_bdb_server() -- bdb server setup
@@ -3719,7 +3782,7 @@ proc config_build_ts_config_1_3 {} {
 proc config_build_ts_config_1_4 {} {
    global ts_config
 
-   # insert new parameter after version parameter
+   # insert new parameter after product_feature parameter
    set insert_pos $ts_config(product_feature,pos)
    incr insert_pos 1
 
@@ -3755,9 +3818,37 @@ proc config_build_ts_config_1_4 {} {
    set ts_config(version) "1.4"
 }
 
+proc config_build_ts_config_1_5 {} {
+   global ts_config
+
+   # insert new parameter after product_feature parameter
+   set insert_pos $ts_config(product_feature,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   # new parameter spooling method
+   set parameter "spooling_method"
+   set ts_config($parameter)            "berkeleydb"
+   set ts_config($parameter,desc)       "Spooling method for dynamic spooling"
+   set ts_config($parameter,default)    "berkeleydb"
+   set ts_config($parameter,setup_func) "config_testsuite_spooling_method"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.5
+   set ts_config(version) "1.5"
+}
+
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.4"
+set actual_ts_config_version "1.5"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -3766,5 +3857,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_2
    config_build_ts_config_1_3
    config_build_ts_config_1_4
+   config_build_ts_config_1_5
 }
 

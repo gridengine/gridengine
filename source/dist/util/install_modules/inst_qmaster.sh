@@ -277,6 +277,153 @@ SetPermissions()
    $CLEAR
 }
 
+SetSpoolingOptionsBerkeleyDB()
+{
+   SPOOLING_LIB=$1
+   SPOOLING_SERVER=none
+   SPOOLING_DIR="$QMDIR/spooldb"
+   params_ok=0
+   if [ $AUTO = "true" ]; then
+      SPOOLING_SERVER=$DB_SPOOLING_SERVER
+      SPOOLING_DIR="$DB_SPOOLING_DIR"
+      if [ -d $SPOOLING_DIR ]; then
+         $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
+         MoveLog
+         exit 0 
+      fi
+      SpoolingCheckParams
+      params_ok=1
+   fi
+   if [ $QMASTER = "install" -a $AUTO = "false" ]; then
+      $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
+                   " 1) Local spooling:\n" \
+                   " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
+                   " This setup is faster, but you can't setup a shadow master host\n\n"
+      $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
+                   " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
+                   " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
+                   " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
+                   " but results in a clear potential security hole. RPC communication\n" \
+                   " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
+                   " alternative if your site is secure or if you are not concerned about\n" \
+                   " security. Check the installation guide for further advice on how to achieve\n" \
+                   " failsafety without compromising security.\n\n"
+
+      $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
+      if [ $? = 0 ]; then
+         $INFOTEXT -u "Berkeley DB Setup\n"
+         $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
+         $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
+                                        "\"inst_sge -db\" is completed, continue with <RETURN>"
+         is_server="true"
+      else
+         is_server="false"
+         $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
+         $CLEAR
+      fi
+
+      if [ $is_server = "true" ]; then
+         SpoolingQueryChange
+      else
+         done="false"
+         is_spool="false"
+
+         while [ $is_spool = "false" ] && [ $done = "false" ]; do
+            $CLEAR
+            SpoolingQueryChange
+            if [ -d $SPOOLING_DIR ]; then
+               $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
+               if [ $? = 0 ]; then
+                     RM="rm -r"
+                     ExecuteAsAdmin $RM $SPOOLING_DIR
+                     if [ -d $SPOOLING_DIR ]; then
+                        $INFOTEXT "You are not the owner of this directory. You can't delete it!"
+                     else
+                        is_spool="true"
+                     fi
+               else
+                  $INFOTEXT "Please choose any other spooling directory!"
+               fi
+             else
+                is_spool="true"
+             fi
+
+            CheckLocalFilesystem $SPOOLING_DIR
+            ret=$?
+            if [ $ret -eq 0 ]; then
+               $INFOTEXT "\nThe database directory\n\n" \
+                            "   %s\n\n" \
+                            "is not on a local filesystem. Please choose a local filesystem or\n" \
+                            "configure the RPC Client/Server mechanism." $SPOOLING_DIR
+               $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+            else
+               done="true" 
+            fi
+            
+            if [ $is_spool = "false" ]; then
+               done="false"
+            elif [ $done = "false" ]; then
+               is_spool="false"
+            fi
+
+         done
+       fi
+   else
+      ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+      if [ $ret -gt 1 ]; then
+         $INFOTEXT "We found a running berkeley db on this host!"
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
+         if [ $? = 1 ]; then
+            $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
+            TMP_STARTUP_SCRIPT=`Enter`
+            SpoolingQueryChange
+            EditStartupScript
+         else
+            exit 1
+         fi 
+      else
+         while [ $params_ok -eq 0 ]; do
+            SpoolingQueryChange
+            SpoolingCheckParams
+            params_ok=$?
+         done
+      fi
+   fi
+
+   if [ $SPOOLING_SERVER = "none" ]; then
+      $ECHO
+      Makedir $SPOOLING_DIR
+      SPOOLING_ARGS="$SPOOLING_DIR"
+   else
+      SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
+   fi
+}
+
+SetSpoolingOptionsClassic()
+{
+   SPOOLING_LIB=$1
+   SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
+}
+
+SetSpoolingOptionsDynamic()
+{
+   $INFOTEXT "\nPlease choose spooling method (berkeleydb|classic) [berkeleydb] >> "
+   INP=`Enter berkeleydb`
+
+   case $INP in 
+      classic)
+         SetSpoolingOptionsClassic libspoolc
+         ;;
+      berkeleydb)
+         SetSpoolingOptionsBerkeleyDB libspoolb
+         ;;
+      *)
+         $INFOTEXT "\nUnknown spooling method. Exit."
+         $INFOTEXT -log "\nUnknown spooling method. Exit."
+         exit 1
+         ;;
+   esac
+}
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
@@ -288,128 +435,13 @@ SetSpoolingOptions()
    $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
    case $SPOOLING_METHOD in 
       classic)
-         SPOOLING_LIB=none
-         SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
+         SetSpoolingOptionsClassic none
          ;;
       berkeleydb)
-         SPOOLING_LIB=none
-         SPOOLING_SERVER=none
-         SPOOLING_DIR="$QMDIR/spooldb"
-         params_ok=0
-         if [ $AUTO = "true" ]; then
-            SPOOLING_SERVER=$DB_SPOOLING_SERVER
-            SPOOLING_DIR="$DB_SPOOLING_DIR"
-            if [ -d $SPOOLING_DIR ]; then
-               $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
-               MoveLog
-               exit 0 
-            fi
-            SpoolingCheckParams
-            params_ok=1
-         fi
-         if [ $QMASTER = "install" -a $AUTO = "false" ]; then
-            $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
-                         " 1) Local spooling:\n" \
-                         " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
-                         " This setup is faster, but you can't setup a shadow master host\n\n"
-            $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
-                         " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
-                         " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
-                         " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
-                         " but results in a clear potential security hole. RPC communication\n" \
-                         " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
-                         " alternative if your site is secure or if you are not concerned about\n" \
-                         " security. Check the installation guide for further advice on how to achieve\n" \
-                         " failsafety without compromising security.\n\n"
- 
-            $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
-            if [ $? = 0 ]; then
-               $INFOTEXT -u "Berkeley DB Setup\n"
-               $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
-               $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
-                                              "\"inst_sge -db\" is completed, continue with <RETURN>"
-               is_server="true"
-            else
-               is_server="false"
-               $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
-               $CLEAR
-            fi
-
-            if [ $is_server = "true" ]; then
-               SpoolingQueryChange
-            else
-               done="false"
-               is_spool="false"
-
-               while [ $is_spool = "false" ] && [ $done = "false" ]; do
-                  $CLEAR
-                  SpoolingQueryChange
-                  if [ -d $SPOOLING_DIR ]; then
-                     $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
-                     if [ $? = 0 ]; then
-                           RM="rm -r"
-                           ExecuteAsAdmin $RM $SPOOLING_DIR
-                           if [ -d $SPOOLING_DIR ]; then
-                              $INFOTEXT "You are not the owner of this directory. You can't delete it!"
-                           else
-                              is_spool="true"
-                           fi
-                     else
-                        $INFOTEXT "Please choose any other spooling directory!"
-                     fi
-                   else
-                      is_spool="true"
-                   fi
-
-                  CheckLocalFilesystem $SPOOLING_DIR
-                  ret=$?
-                  if [ $ret -eq 0 ]; then
-                     $INFOTEXT "\nThe database directory\n\n" \
-                                  "   %s\n\n" \
-                                  "is not on a local filesystem. Please choose a local filesystem or\n" \
-                                  "configure the RPC Client/Server mechanism." $SPOOLING_DIR
-                     $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-                  else
-                     done="true" 
-                  fi
-                  
-                  if [ $is_spool = "false" ]; then
-                     done="false"
-                  elif [ $done = "false" ]; then
-                     is_spool="false"
-                  fi
-
-               done
-             fi
-         else
-            ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
-            if [ $ret -gt 1 ]; then
-               $INFOTEXT "We found a running berkeley db on this host!"
-               $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
-               if [ $? = 1 ]; then
-                  $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-                  TMP_STARTUP_SCRIPT=`Enter`
-                  SpoolingQueryChange
-                  EditStartupScript
-               else
-                  exit 1
-               fi 
-            else
-               while [ $params_ok -eq 0 ]; do
-                  SpoolingQueryChange
-                  SpoolingCheckParams
-                  params_ok=$?
-               done
-            fi
-         fi
-
-         if [ $SPOOLING_SERVER = "none" ]; then
-            $ECHO
-            Makedir $SPOOLING_DIR
-            SPOOLING_ARGS="$SPOOLING_DIR"
-         else
-            SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
-         fi
+         SetSpoolingOptionsBerkeleyDB none
+         ;;
+      dynamic)
+         SetSpoolingOptionsDynamic
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."

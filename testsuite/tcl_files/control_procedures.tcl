@@ -445,7 +445,6 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
    #puts "arch on host $host is $host_arch"
    
-
    switch -- $host_arch {
 
       "solaris64" - 

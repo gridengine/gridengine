@@ -5714,7 +5714,7 @@ proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
          set scheduler_pid -1
       }
    } else {
-      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed, pid=$scheduler_pid"
+      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed (1), pid=$scheduler_pid"
       set scheduler_pid -1
    }
 
@@ -5733,7 +5733,7 @@ proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
          set qmaster_pid -1
       }
    } else {
-      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed, pid=$qmaster_pid"
+      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed (2), pid=$qmaster_pid"
       set qmaster_pid -1
    }
    puts $CHECK_OUTPUT "done."

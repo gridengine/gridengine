@@ -94,7 +94,7 @@ proc path_alias_setup {} {
    global PATH_ALIAS_OUTPUT2
    global CHECK_PRODUCT_ROOT
    global path_alias_test
-   global env
+   global env CHECK_PROTOCOL_DIR
    global CHECK_CORE_EXECD
   
    set PATH_ALIAS_OUTPUT1 "$CHECK_JOB_OUTPUT_DIR/path_alias_output1"
@@ -146,15 +146,22 @@ proc path_alias_setup {} {
 
       }
       if { [ file isfile ${file_name}  ] != 1 } {
-         set data(src-path,0)     "$PATH_ALIAS_OUTPUT1"
+         set data(src-path,0)     "/tmp_mnt/"
          set data(sub-host,0)     "*"
          set data(exec-host,0)    "*" 
-         set data(replacement,0)  "$PATH_ALIAS_OUTPUT2"
-         create_path_aliasing_file ${file_name} data 1
+         set data(replacement,0)  "/"
+         set data(src-path,1)     "$PATH_ALIAS_OUTPUT1"
+         set data(sub-host,1)     "*"
+         set data(exec-host,1)    "*" 
+         set data(replacement,1)  "$PATH_ALIAS_OUTPUT2"
+
+         create_path_aliasing_file ${file_name} data 2
       }
    }
    set cat_output ""
    set old_cat_output ""
+   set cat_hostname ""
+   set last_host ""
    foreach elem $CHECK_CORE_EXECD {
       set counter 60
       while { $counter > 0 } {
@@ -168,15 +175,28 @@ proc path_alias_setup {} {
       if {  $prg_exit_state != 0 } {
          add_proc_error "path_alias_setup" "-1" "error reading file ${file_name} on host $elem"
       }
-       
+      lappend cat_hostname $elem 
       lappend cat_output $result
+      set last_host $elem
+   }
+   
+   set elem_nr 0
+   set orig [open "$CHECK_PROTOCOL_DIR/test1.txt" "w" ]
+   puts $orig $result
+   close $orig
+   foreach elem $cat_output {
+       set diff [open "$CHECK_PROTOCOL_DIR/test2.txt" "w" ]
+       puts $diff $elem 
+       close $diff
+
+       set catch_return [ catch { eval exec "diff -w /tmp/test1.txt /tmp/test2.txt" } diff_output ]
+       if { $catch_return != 0 } {
+          add_proc_error "path_alias_setup" "-1" "error compareing output of cat command:\n$diff_output"
+       }
    }
 
-   foreach elem $cat_output {
-      if { [string compare $elem $result] != 0 } {
-         add_proc_error "path_alias_setup" "-1" "error compareing output of cat command (file ${file_name})\n$result\n$elem\n"
-      }
-   }
+   delete_file "$CHECK_PROTOCOL_DIR/test1.txt"
+   delete_file "$CHECK_PROTOCOL_DIR/test2.txt"
 
    set_error 0 "ok"
 }
@@ -211,8 +231,13 @@ proc path_alias_main {} {
       set command     "qrsh -cwd -q ${elem}.q \"pwd\""
       create_shell_script $script_name "cd" "$PATH_ALIAS_OUTPUT1 ; $command "
       set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
-      if { [ string first "$PATH_ALIAS_OUTPUT2" $output  ] < 0 } {
-         add_proc_error "path_alias_main" -1 "qrsh -cwd directory is $output instead of $PATH_ALIAS_OUTPUT2" 
+      set output [ split $output "\n" ]
+      set output [ lindex $output 0 ]
+      set output [ split $output "\r" ]
+      set output [ lindex $output 0 ]
+      if { [ string first "$PATH_ALIAS_OUTPUT2" $output ] < 0 } {
+         add_proc_error "path_alias_main" -1 "host: $elem\nqrsh -cwd directory is\n\"$output\"\n instead of \n\"$PATH_ALIAS_OUTPUT2\""
+         wait_for_enter
       }
 
       puts $CHECK_OUTPUT "qsh ..."

@@ -1,3 +1,15 @@
+CR-2002-03-04-1: Testsuite: - sge/ee installation path (product root) should
+                              not be longer than 60 chars ( workaround, because
+                              output of ps -ef command is truncated on some
+                              machines )
+                            - fixed error in path_alias test: automounter 
+                              /tmp_dir/ problem !
+                            - submit_del (signal) test did not clear 
+                              queues in error state at cleanup 
+                            - modified error output in 
+                              shutdown_master_and_scheduler() procedure
+                              
+
 CR-2002-03-04-0: Bugfix:    hostname resolving check was executed even when
                             ignore_fqdn = true was set.
 

@@ -2680,8 +2680,9 @@ bool *previous_load_inited)
             eh_name, hslots, hslots_qend, min_host_slots));
    }
 
-   *slots      = hslots;
-   *slots_qend = hslots_qend;
+   *slots       = hslots;
+   *slots_qend  = hslots_qend;
+   *master_host = suited_as_master_host;
 
    DEXIT; 
    return 0;
@@ -3202,6 +3203,14 @@ sge_assignment_t *a
          if (lGetUlong(qep, QU_tagged4schedule))
             break;
       }
+
+      if (!qep) {
+         ERROR((SGE_EVENT, MSG_SCHEDD_NOMASTERQUEUE_SU, master_eh_name, 
+               lGetUlong(a->job, JB_job_number)));
+         DEXIT;
+         return MATCH_LATER;
+      }
+
       lDechainElem(a->queue_list, qep);
       lInsertElem(a->queue_list, NULL, qep);
 

@@ -1,3 +1,8 @@
+AD-2004-07-30-0: Cleanup:   The implementation of 'sge_add_auto_user()' made
+                            the use of recursive mutexes neccessary.
+                 Changed:   qmaster
+                 Review:    SG
+
 SG-2004-07-29-0: Bugfix:    Resending queue signals broken
                  Changed:   exed, qmaster
                  Issue:     1178

@@ -679,7 +679,7 @@ GiveHints()
                 "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
                 "After startup the daemons log their messages in their spool directories.\n\n" \
                 "   Qmaster:     %s\n" \
-                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/messages
+                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/qmaster/messages
 
       $INFOTEXT -u "\nGrid Engine startup scripts"
       $INFOTEXT "\nGrid Engine startup scripts can be found at:\n\n" \

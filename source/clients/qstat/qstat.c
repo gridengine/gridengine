@@ -424,6 +424,7 @@ char **argv
 /*               u_long32 now_time = DISPATCH_TIME_NOW;
                int dummy = 0;
 */
+
                if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
                   continue;
 
@@ -666,10 +667,10 @@ char **argv
          lListElem *elem = NULL;
          /* here we have the queue */
          if (lGetUlong(qep, QU_tag) & TAG_SHOW_IT) {
-            if ((full_listing & QSTAT_DISPLAY_NOEMPTYQ) && !qinstance_slots_used(qep)) {
+            if ((full_listing & QSTAT_DISPLAY_NOEMPTYQ) && 
+                     !qinstance_slots_used(qep)) {
                continue;
-            }
-            else {
+            } else {
                if (isXML) {
                   if ((elem = xml_print_queue(qep, exechost_list, centry_list,
                                   full_listing, qresource_list, explain_bits)) != NULL) {
@@ -683,28 +684,30 @@ char **argv
                }
                else{
                   sge_print_queue(qep, exechost_list, centry_list,
-                                  full_listing, qresource_list, explain_bits, longest_queue_length);
+                                  full_listing, qresource_list, 
+                                  explain_bits, longest_queue_length);
                }
             }
 
-         }
 
-         if (shut_me_down) {
-            SGE_EXIT(1);
-         }
-         if (isXML){
-            xml_print_jobs_queue(qep, job_list, pe_list, user_list,
-                              exechost_list, centry_list,
-                              1, full_listing, group_opt, elem?(&xml_job_list):(&XML_out));
-
-            if (elem && xml_job_list){
-               lSetList(elem, XMLE_List, xml_job_list);
+            if (shut_me_down) {
+               SGE_EXIT(1);
             }
-         }
-         else {
-            sge_print_jobs_queue(qep, job_list, pe_list, user_list,
-                              exechost_list, centry_list,
-                              1, full_listing, "", group_opt, longest_queue_length);
+
+            if (isXML){
+               xml_print_jobs_queue(qep, job_list, pe_list, user_list,
+                                 exechost_list, centry_list,
+                                 1, full_listing, group_opt, elem?(&xml_job_list):(&XML_out));
+
+               if (elem && xml_job_list){
+                  lSetList(elem, XMLE_List, xml_job_list);
+               }
+            }
+            else {
+               sge_print_jobs_queue(qep, job_list, pe_list, user_list,
+                                 exechost_list, centry_list,
+                                 1, full_listing, "", group_opt, longest_queue_length);
+            }
          }
       }
       if (XML_out != NULL) {

@@ -33,7 +33,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
+#include "uti/sge_string.h"
 #include "sge_all_listsL.h"
 #include "sge_bootstrap.h"
 #include "sgermon.h"
@@ -50,6 +52,8 @@
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/berkeleydb/sge_bdb.h"
+
+#include "msg_common.h"
 #include "msg_utilbin.h"
 
 
@@ -61,6 +65,7 @@ usage(const char *argv0)
    fprintf(stderr, "%s", MSG_DBSTAT_COMMANDINTRO2);
    fprintf(stderr, "%s", MSG_DBSTAT_LIST);
    fprintf(stderr, "%s", MSG_DBSTAT_DUMP);
+   fprintf(stderr, "%s", MSG_DBSTAT_LOAD);
    fprintf(stderr, "%s", MSG_DBSTAT_DELETE);
 }
 
@@ -84,6 +89,8 @@ init_framework(bdb_info *info)
       CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
    } else {
       spool_set_default_context(spooling_context);
+      spool_set_option(&answer_list, spooling_context, "recover=false");
+      answer_list_output(&answer_list);
 
       /* initialize spooling context */
       if (!spool_startup_context(&answer_list, spooling_context, true)) {
@@ -111,12 +118,44 @@ get_database_from_key(const char *key)
 {
    bdb_database database = BDB_CONFIG_DB;
 
-   if (strncmp(key, "J", 1) == 0 ||
-       strncmp(key, "PET", 3) == 0) {
-      database = BDB_JOB_DB;
+   if (key != NULL) {
+      if (strncmp(key, "J", 1) == 0 ||
+          strncmp(key, "PET", 3) == 0) {
+         database = BDB_JOB_DB;
+      }
    }
    
    return database;
+}
+
+static const lDescr *
+get_descr_from_key(const char *key) 
+{
+   const lDescr *descr = NULL;
+
+   DENTER(TOP_LAYER, "get_descr_from_key");
+
+   if (key != NULL) {
+      struct saved_vars_s *context = NULL;
+      const char *type_name;
+
+      type_name = sge_strtok_r(key, ":", &context);
+      if (type_name != NULL) {
+         sge_object_type type = object_name_get_type(type_name);
+         if (type != SGE_TYPE_ALL) {
+            descr = object_type_get_descr(type);
+         }
+      }
+
+      sge_free_saved_vars(context);
+
+      if (descr == NULL) {
+         ERROR((SGE_EVENT, MSG_DBSTAT_INVALIDKEY_S, key));
+      }
+   }
+
+   DEXIT;
+   return descr;
 }
 
 static int 
@@ -131,19 +170,19 @@ list_objects(bdb_info info, const char *key)
 
    database = get_database_from_key(key);
 
-   /* start a transaction */
-#if 0
-   dbret = spool_berkeleydb_start_transaction(&answer_list, info);
-   if (!dbret) {
-      answer_list_output(&answer_list);
-      ret = EXIT_FAILURE;
-   } else 
-#endif
    {
       /* read the list */
       lList *list = NULL;
       dbret = spool_berkeleydb_read_keys(&answer_list, info, database,
                                          &list, key);
+      if (dbret) {
+         /* if no key was given, read the job database as well */
+         if (strlen(key) == 0) {
+            dbret = spool_berkeleydb_read_keys(&answer_list, info, BDB_JOB_DB,
+                                               &list, key);
+         }
+      }
+
       if (dbret) {
          const lListElem *elem;
          for_each(elem, list) {
@@ -154,15 +193,7 @@ list_objects(bdb_info info, const char *key)
          ret = EXIT_FAILURE;
       }
    }
-#if 0
-   /* close the transaction */
-   dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                            ret == EXIT_SUCCESS);
-   if (!dbret) {
-      answer_list_output(&answer_list);
-      ret = EXIT_FAILURE;
-   }
-#endif
+
    DEXIT;
    return ret;
 }
@@ -175,7 +206,7 @@ dump_object(bdb_info info, const char *key)
    lList *answer_list = NULL;
    bdb_database database;
 
-   DENTER(TOP_LAYER, "list_objects");
+   DENTER(TOP_LAYER, "dump_object");
 
    database = get_database_from_key(key);
 
@@ -192,7 +223,7 @@ dump_object(bdb_info info, const char *key)
          answer_list_output(&answer_list);
          ret = EXIT_FAILURE;
       } else {
-         lWriteElemTo(object, stdout);
+         lDumpElemFp(stdout, object, 0);
       }
    }
 
@@ -209,6 +240,71 @@ dump_object(bdb_info info, const char *key)
 }
 
 static int 
+load_object(bdb_info info, const char *key, const char *fname) 
+{
+   int ret = EXIT_SUCCESS;
+   bool dbret;
+   lList *answer_list = NULL;
+   bdb_database database;
+   const lDescr *descr;
+   lListElem *object = NULL;
+
+   DENTER(TOP_LAYER, "load_object");
+
+   database = get_database_from_key(key);
+   descr    = get_descr_from_key(key);
+
+   if (descr == NULL) {
+      ret = EXIT_FAILURE;
+   }
+
+   if (ret == EXIT_SUCCESS) {
+      FILE *fd;
+
+      if((fd = fopen(fname, "r")) == NULL) {
+         ERROR((SGE_EVENT, MSG_ERROROPENINGFILEFORREADING_SS, fname, strerror(errno)));
+         ret = EXIT_FAILURE;
+      } else {
+         object = lUndumpElemFp(fd, descr);
+         fclose(fd);
+         if (object == NULL) {
+            ERROR((SGE_EVENT, MSG_DBSTAT_ERRORUNDUMPING_S, fname));
+            ret = EXIT_FAILURE;
+         }
+      }
+   }
+
+   if (object != NULL) {
+      /* start a transaction */
+      dbret = spool_berkeleydb_start_transaction(&answer_list, info);
+      if (!dbret) {
+         answer_list_output(&answer_list);
+         ret = EXIT_FAILURE;
+      } else {
+         /* read object */
+         dbret = spool_berkeleydb_write_object(&answer_list, info, database, object, key);
+         if (!dbret) {
+            answer_list_output(&answer_list);
+            ret = EXIT_FAILURE;
+         }
+
+         /* close the transaction */
+         dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
+                                                  ret == EXIT_SUCCESS);
+         if (!dbret) {
+            answer_list_output(&answer_list);
+            ret = EXIT_FAILURE;
+         }
+      }
+   }
+
+   object = lFreeElem(object);
+
+   DEXIT;
+   return ret;
+}
+
+static int 
 delete_object( bdb_info info, const char *key) 
 {
    int ret = EXIT_SUCCESS;
@@ -216,7 +312,7 @@ delete_object( bdb_info info, const char *key)
    lList *answer_list = NULL;
    bdb_database database;
 
-   DENTER(TOP_LAYER, "list_objects");
+   DENTER(TOP_LAYER, "delete_object");
 
    database = get_database_from_key(key);
 
@@ -290,6 +386,13 @@ main(int argc, char *argv[])
                } else {
                   ret = dump_object(info, argv[2]);
                }
+            } else if (strcmp(argv[1], "load") == 0) {
+               if (argc < 4) {
+                  usage(argv[0]);
+                  ret = EXIT_FAILURE;
+               } else {
+                  ret = load_object(info, argv[2], argv[3]);
+               }
             } else if (strcmp(argv[1], "delete") == 0) {
                if (argc < 3) {
                   usage(argv[0]);
@@ -306,12 +409,13 @@ main(int argc, char *argv[])
    }
 
    if (spool_get_default_context() != NULL) {
+#if 0
       time_t next_trigger = 0;
-
       if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
                                  0, &next_trigger)) {
          ret = EXIT_FAILURE;
       }
+#endif
       if (!spool_shutdown_context(&answer_list, spool_get_default_context())) {
          ret = EXIT_FAILURE;
       }

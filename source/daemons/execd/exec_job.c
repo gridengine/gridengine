@@ -600,6 +600,9 @@ char *err_str
       }
 
       var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
+      sprintf(fname, "%s/%s", bootstrap_get_binary_path(), arch);
+      var_list_set_string(&environmentList, "SGE_BINARY_PATH", fname);
+      
       /* JG: TODO (ENV): do we need REQNAME and REQUEST? */
       var_list_set_string(&environmentList, "REQUEST", petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name));
       var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));

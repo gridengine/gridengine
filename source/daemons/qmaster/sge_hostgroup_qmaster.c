@@ -60,6 +60,10 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 
+#include "msg_common.h"
+#include "msg_qmaster.h"
+#include "msg_utilib.h"
+
 extern lList *Master_Usermapping_Entry_List;
 extern lList *Master_Host_Group_List;
 
@@ -135,7 +139,7 @@ char *rhost,     /* host from where the request was started */
 gdi_object_t *object,
 int sub_command 
 ) {
-   char* groupName = NULL;
+   const char* groupName = NULL;
    lList* memberList = NULL;
    lList* newMemberList = NULL;
    lList* subgroupList = NULL;
@@ -215,7 +219,7 @@ int sub_command
    newMemberList = lGetList(ep, GRP_member_list);
    if (newMemberList != NULL) {
       for_each(tmp_ep, newMemberList ) {
-         char* tmpMember = NULL;
+         const char* tmpMember = NULL;
          tmpMember = lGetString(tmp_ep, STR);
          if (tmpMember != NULL) {
             if (sge_add_member2group(modp, tmpMember) != TRUE) {
@@ -232,7 +236,7 @@ int sub_command
    if (memberList != NULL) {
       tmp_ep = memberList->first;
       while (tmp_ep != NULL) {
-         char* actMember = NULL;
+         const char* actMember = NULL;
          actMember =  lGetString(tmp_ep,STR);
          if (actMember != NULL) { 
             if (lGetElemStr( newMemberList , STR , actMember ) == NULL) {
@@ -254,7 +258,7 @@ int sub_command
    /* GRP_subgroup_list */
    newSubgroupList = lGetList(ep, GRP_subgroup_list);
    for_each(tmp_ep, newSubgroupList ) {
-      char* tmpGroup = NULL;
+      const char* tmpGroup = NULL;
       tmpGroup = lGetString(tmp_ep, STR);
       if (tmpGroup != NULL) {
          /* do not make changes in Master_Host_Group_List, so we set param. 4 to FALSE */
@@ -269,7 +273,7 @@ int sub_command
       so we do it again */
 
    for_each(tmp_ep, newSubgroupList ) {
-      char* tmpGroup = NULL;
+      const char* tmpGroup = NULL;
       tmpGroup = lGetString(tmp_ep, STR);
       if (tmpGroup != NULL) {
          /* yes, now make changes in Master_Host_Group_List, so we set param. 4 to TRUE */
@@ -280,12 +284,12 @@ int sub_command
    if (subgroupList != NULL) {
       tmp_ep = subgroupList->first;
       while (tmp_ep != NULL) {
-         char* actSubgroup = NULL;
+         const char* actSubgroup = NULL;
          actSubgroup =  lGetString(tmp_ep,STR);
    
          if (lGetElemStr( newSubgroupList , STR , actSubgroup ) == NULL) {
             /* delete the element */
-            char* tmpSubgroup = NULL;
+            const char* tmpSubgroup = NULL;
             tmpSubgroup = lGetString(tmp_ep, STR);
             if (tmpSubgroup != NULL) {
                DPRINTF(("removing entry '%s' from subgroup_list\n", tmpSubgroup));
@@ -442,7 +446,7 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "hostgrp_spool");
  
    if (write_host_group( 1 , 2 , upe ) == NULL) {
-      char* groupName = NULL;
+      const char* groupName = NULL;
       groupName = lGetString(upe, GRP_group_name); 
       ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, groupName ));
       sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
@@ -506,7 +510,7 @@ lList **alpp,
 char *ruser,
 char *rhost 
 ) {
-   char* groupName = NULL;
+   const char* groupName = NULL;
    lListElem* ep = NULL;
    lListElem* tmp_ep = NULL;
    lList* subgroupList = NULL;
@@ -544,7 +548,7 @@ char *rhost
          
    /* check if group is referenced in user mapping */
    for_each(tmp_ep,Master_Usermapping_Entry_List ) {
-       char* clusterName = NULL;
+       const char* clusterName = NULL;
        lList* mapList = NULL;
        clusterName = lGetString(tmp_ep, UME_cluster_user);
        if (clusterName == NULL) {
@@ -578,7 +582,7 @@ char *rhost
    if (subgroupList != NULL) {
       tmp_ep = subgroupList->first;
       while (tmp_ep != NULL) {
-         char* tmpSubgroup = NULL;
+         const char* tmpSubgroup = NULL;
          tmpSubgroup = lGetString(tmp_ep, STR);
          if (tmpSubgroup != NULL) {
             DPRINTF(("remove subgroup entrie %s in subgroup list of %s\n", tmpSubgroup, groupName));
@@ -601,6 +605,7 @@ char *rhost
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    DEXIT;
    return STATUS_OK;
+
    
 }
 

@@ -1,3 +1,6 @@
+CR-2002-01-29-1: Bugfix:    broken aimk -umap build
+                 IssuZilla: #127
+
 JG-2002-01-29-1: Enhancem.: Updated qconf manpage to reflect changes
                             from JG-2002-01-10-0.
 

@@ -38,21 +38,21 @@
 
 
 
-const char* sge_getUserNameForHost(lList *hostGroupList, lList *mapList, char *hostName);
+const char* sge_getUserNameForHost(lList *hostGroupList, lList *mapList, const char *hostName);
 
 int   sge_map_gdi_request(lList *hostGroupList, lList *userMappingEntryList, sge_gdi_request *pApiRequest);
 
-char* sge_malloc_map_out_going_username(lList *hostGroupList, lList *userMappingEntryList, char *clusterName, char *hostName);
+char* sge_malloc_map_out_going_username(lList *hostGroupList, lList *userMappingEntryList, const char *clusterName, const char *hostName);
 
 int   sge_resolveMappingList(lList **alpp, lList *hostGroupList, lList *mapList);
 
-int   sge_addMappingEntry(lList **alpp, lList *hostGroupList, lList *mapList, char *actMapName, lList *actHostList, int doResolving);
+int   sge_addMappingEntry(lList **alpp, lList *hostGroupList, lList *mapList, const char *actMapName, lList *actHostList, int doResolving);
 
 int sge_removeOverstock(lList **alpp, lListElem *newListElem, lListElem *origListElem);
 
-lListElem* sge_getElementFromMappingEntryList(lList *userMappingEntryList, char *clusterName);
+lListElem* sge_getElementFromMappingEntryList(lList *userMappingEntryList, const char *clusterName);
 
-int sge_verifyMappingEntry(lList **alpp, lList *hostGroupList, lListElem *mapEntry, char *filename, lList *userMappingEntryList);
+int sge_verifyMappingEntry(lList **alpp, lList *hostGroupList, lListElem *mapEntry, const char *filename, lList *userMappingEntryList);
 
 int   sge_addHostToMappingList(lList *hostGroupList, lList *userMappingEntryList, char *clusterName, char *mapName, char *newHostName);
 

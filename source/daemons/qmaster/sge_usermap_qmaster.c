@@ -54,6 +54,8 @@
 #include "gdi_utility_qmaster.h"
 #include "sge_user_mapping.h"
 #include "sge_usermap_qmaster.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
 #include "msg_utilib.h"
 
 #ifndef __SGE_NO_USERMAPPING__
@@ -124,9 +126,10 @@ lListElem *ep,   /* element to add (UME_Type) */
 int add,         /* is 1 on ADD mode, 0 on MOD mode */
 char *ruser,     /* user name who starts request */
 char *rhost,     /* host from where the request was started */
-gdi_object_t *object 
+gdi_object_t *object,
+int sub_command
 ) {
-   char*  clusterUser = NULL;
+   const char*  clusterUser = NULL;
    lList* mapList = NULL;
    lListElem* mapElem = NULL;
    lList* tempMapList = NULL; 
@@ -217,7 +220,7 @@ gdi_object_t *object
      
      for_each(mapElem, tempMapList) {
         /* mapElem is UM_Type element from ep mapping list*/
-        char*  actMapName = NULL;
+        const char*  actMapName = NULL;
         lList* actHostList = NULL;
 
         actMapName  =  lGetString(mapElem, UM_mapped_user);
@@ -353,7 +356,7 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "usermap_spool");
  
    if (write_ume( 1 , 2 , upe ) == NULL) {
-      char* clusterUser = NULL;
+      const char* clusterUser = NULL;
       clusterUser = lGetString(upe, UME_cluster_user); 
       ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));
       sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
@@ -415,7 +418,7 @@ lList **alpp,
 char *ruser,
 char *rhost 
 ) {
-   char* clusterUser = NULL;
+   const char* clusterUser = NULL;
    lListElem* ep = NULL;
 
    DENTER(TOP_LAYER, "sge_del_usermap");

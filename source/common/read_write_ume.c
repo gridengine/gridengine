@@ -103,8 +103,8 @@ static int read_ume_work(lList **alpp, lList **clpp, int fields[], lListElem *ep
 ****************************************************************************
 */
 lListElem *cull_read_in_ume(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int flag,
 int *tag 

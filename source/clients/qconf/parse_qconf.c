@@ -132,8 +132,8 @@ static int edit_usersets(lList *arglp);
 static int add_chg_cmplx(char *cmplx_name, int add, char *fname);
 
 #ifndef __SGE_NO_USERMAPPING__
-static lList*     get_user_mapping_list_from_master(char *user);
-static lList*     get_host_group_list_from_master(char *group);
+static lList*     get_user_mapping_list_from_master(const char *user);
+static lList*     get_host_group_list_from_master(const char *group);
 
 static int add_user_map_entry(char *user, char *mapname, char *hostname);
 static int mod_user_map_entry(char *user);
@@ -6663,7 +6663,7 @@ struct object_info_entry *info_entry
 ****************************************************************************
 */
 lList* get_user_mapping_list_from_master(
-char *user 
+const char *user 
 ) {
    lList *alp = NULL; 
    lList *umlp = NULL;
@@ -6738,7 +6738,7 @@ char *user
 ****************************************************************************
 */
 lList*  get_host_group_list_from_master(
-char *group 
+const char *group 
 ) {
    lList *alp = NULL; 
    lList *umlp = NULL;

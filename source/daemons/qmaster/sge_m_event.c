@@ -55,6 +55,13 @@
 #include "qidl_c_gdi.h"
 #endif
 
+#ifndef __SGE_NO_USERMAPPING__
+extern lList *Master_Host_Group_List;
+extern lList *Master_Usermapping_Entry_List;
+#endif
+
+
+
 /****** Eventclient/Server/--Introduction *****************************************
 *  NAME
 *     Event Client Interface -- Server Functionality

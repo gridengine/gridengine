@@ -66,7 +66,7 @@ static char* sge_malloc_map_in_going_username(lList *hostGroupList, lList *userM
 static int   sge_addHostToHostList(lList* hostGroupList, lList* stringList, const char* newHostName, int doResolving);
 
 
-static lList* sge_getMappingListForUser(lList *userMappingEntryList, char *clusterName);
+static lList* sge_getMappingListForUser(lList *userMappingEntryList, const char *clusterName);
 static lList* sge_getHostListForMappedUser(lList *userMappingList, const char *mapName);
 static lList* sge_getHostListForUser(lList *userMappingEntryList, char *clusterName, char *mapName);
 static int    sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hostList);
@@ -419,8 +419,8 @@ char *hostName
 char* sge_malloc_map_out_going_username(
 lList *hostGroupList,
 lList *userMappingEntryList,
-char *clusterName,
-char *hostName 
+const char *clusterName,
+const char *hostName 
 ) { 
   /* malloc of a new string (with new user name) 
      if no user is found the function returns NULL */
@@ -599,7 +599,7 @@ sge_gdi_request *pApiRequest
 const char* sge_getUserNameForHost(
 lList *hostGroupList,
 lList *mapList,
-char *hostName 
+const char *hostName 
 ) {
   const char* returnUserName = NULL;
   int matches = 0;
@@ -684,7 +684,7 @@ char *hostName
 */
 static lList* sge_getMappingListForUser(
 lList *userMappingEntryList,
-char *clusterName 
+const char *clusterName 
 ) {
   lListElem* ep = NULL;
   DENTER(TOP_LAYER,"sge_getMappingListForUser" );
@@ -743,7 +743,7 @@ char *clusterName
 */
 lListElem* sge_getElementFromMappingEntryList(
 lList *userMappingEntryList,
-char *clusterName 
+const char *clusterName 
 ) {
   DENTER(TOP_LAYER,"sge_getElementFromMappingEntryList" );
 
@@ -1041,7 +1041,7 @@ int sge_addMappingEntry(
 lList **alpp,            /* Answer List pointer reference */
 lList *hostGroupList,
 lList *mapList,
-char *actMapName,
+const char *actMapName,
 lList *actHostList,
 int doResolving 
 ) {
@@ -1632,8 +1632,8 @@ int sge_verifyMappingEntry(alpp, hostGroupList,mapEntry, filename, userMappingEn
 lList **alpp;        /* answer list pointer reference */
 lList* hostGroupList;
 lListElem* mapEntry; /* pointer to UME_Type element */
+const char*      filename; /* filename for spooling (usermapping dir of qmaster) */
 lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
-char*      filename; /* filename for spooling (usermapping dir of qmaster) */
 {
   /* toDO: - resolve all hostnames                    ok
            - compare UME_Cluster_user with filename   ok

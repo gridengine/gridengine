@@ -128,11 +128,9 @@ extern lList *Master_Complex_List;
 extern lList *Master_Zombie_List;
 
 #ifndef __SGE_NO_USERMAPPING__
+#include "msg_common.h"
 extern lList *Master_Usermapping_Entry_List;
 extern lList *Master_Host_Group_List;
-#endif
-
-#ifndef __SGE_NO_USERMAPPING__
 static int sge_read_user_mapping_entries_from_disk(void);
 static int sge_read_host_group_entries_from_disk(void);
 #endif
@@ -813,7 +811,7 @@ static int sge_read_host_group_entries_from_disk()
   lList*     direntries = NULL; 
   lListElem* direntry = NULL;
   lListElem* ep = NULL;
-  char*      hostGroupEntry = NULL;
+  const char*      hostGroupEntry = NULL;
   int        ret = 0;  /* 0 means ok */
 
   DENTER(TOP_LAYER, "sge_read_host_group_entries_from_disk");
@@ -831,13 +829,12 @@ static int sge_read_host_group_entries_from_disk()
      for_each(direntry, direntries) {
         hostGroupEntry = lGetString(direntry, STR);
 
-        if (hostGroupEntry[0] != ".") {
+        if (hostGroupEntry[0] != '.') {
            if (!silent()) { 
               printf(MSG_SETUP_HOSTGROUPENTRIES_S, hostGroupEntry);
            }
 
-           ep = cull_read_in_host_group(HOSTGROUP_DIR, hostGroupEntry , 
-              1, 0, NULL); 
+           ep = cull_read_in_host_group(HOSTGROUP_DIR, hostGroupEntry , 1, 0, NULL); 
            lAppendElem(Master_Host_Group_List, ep);
         } else {
            char buffer[256];
@@ -879,7 +876,7 @@ static int sge_read_user_mapping_entries_from_disk()
   lList*     direntries = NULL; 
   lListElem* direntry = NULL;
   lListElem* ep = NULL;
-  char*      ume = NULL;
+  const char*      ume = NULL;
   int        ret = 0;  /* 0 means ok */
 
   DENTER(TOP_LAYER, "sge_read_user_mapping_entries_from_disk");

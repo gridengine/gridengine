@@ -103,8 +103,8 @@ static int read_host_group_work(lList **alpp, lList **clpp, int fields[], lListE
 ****************************************************************************
 */
 lListElem *cull_read_in_host_group(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int flag,
 int *tag 

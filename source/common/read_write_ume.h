@@ -34,7 +34,7 @@
 
 
 
-lListElem *cull_read_in_ume(char *dirname, char *filename, int spool, int flag, int *tag);
+lListElem *cull_read_in_ume(const char *dirname, const char *filename, int spool, int flag, int *tag);
 
 char *write_ume(int spool, int how, lListElem *umep);
 

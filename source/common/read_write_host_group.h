@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-lListElem *cull_read_in_host_group(char *dirname, char *filename, int spool, int flag, int *tag);
+lListElem *cull_read_in_host_group(const char *dirname, const char *filename, int spool, int flag, int *tag);
 char *write_host_group(int spool, int how, lListElem *hostGroupElement);
 
 #endif /* _READ_WRITE_HOST_GROUP_H */

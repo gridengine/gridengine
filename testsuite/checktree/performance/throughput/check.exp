@@ -914,7 +914,7 @@ proc compare_dump_directory { dir } {
    set first_data 0
    set test_info "FLUSH_FINISH_SEC"
    lappend test_info "FLUSH_SUBMIT_SEC"
-   lappend test_info "run_throughput_test_SCHEDULE_INTERVAL"
+   lappend test_info "SCHEDULE_INTERVAL"
    lappend test_info "enable_queues_job_count"
    lappend test_info "end_job_count"
    lappend test_info "global_job_run_time"
@@ -1080,11 +1080,11 @@ proc compare_dump_data_file { file1 file2 } {
    }
 
   
-   set run_throughput_test_SCHEDULE_INTERVAL1 $test_config1(run_throughput_test_SCHEDULE_INTERVAL)
-   set run_throughput_test_SCHEDULE_INTERVAL2 $test_config2(run_throughput_test_SCHEDULE_INTERVAL)
-   if { $run_throughput_test_SCHEDULE_INTERVAL1 != $run_throughput_test_SCHEDULE_INTERVAL2 } {
+   set SCHEDULE_INTERVAL1 $test_config1(SCHEDULE_INTERVAL)
+   set SCHEDULE_INTERVAL2 $test_config2(SCHEDULE_INTERVAL)
+   if { $SCHEDULE_INTERVAL1 != $SCHEDULE_INTERVAL2 } {
       incr error 1
-      append content [create_html_text "The test runs have different run_throughput_test_SCHEDULE_INTERVAL values"]
+      append content [create_html_text "The test runs have different SCHEDULE_INTERVAL values"]
    }
   
    read_array_from_file $file1 "execd list" host_list1
@@ -1217,7 +1217,7 @@ proc compare_dump_data_file { file1 file2 } {
 
    append content [ create_html_text "" ]
    set text ""
-   append text "The schedule interval parameters were set to $test_config1(run_throughput_test_SCHEDULE_INTERVAL)"
+   append text "The schedule interval parameters were set to $test_config1(SCHEDULE_INTERVAL)"
    append content [ create_html_text $text ]
    
    read_file $file1 file_data1
@@ -2013,7 +2013,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    set info_data(nr_slots_per_queue) $test_config(nr_slots_per_queue)
    set info_data(FLUSH_SUBMIT_SEC) $test_config(FLUSH_SUBMIT_SEC)
    set info_data(FLUSH_FINISH_SEC) $test_config(FLUSH_FINISH_SEC)
-   set info_data(run_throughput_test_SCHEDULE_INTERVAL) $test_config(run_throughput_test_SCHEDULE_INTERVAL)
+   set info_data(SCHEDULE_INTERVAL) $test_config(SCHEDULE_INTERVAL)
    set info_data(hostlist) $host_list(host_list)
    set info_data(nr_of_local_spool_directories) $nr_of_local_spool_directories   
    spool_array_to_file $output_dir/test_results_array.dat "test settings" info_data
@@ -2644,7 +2644,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    set test_config(global_job_run_time)     $global_job_run_time      ;# job sleep parameter
    set test_config(FLUSH_SUBMIT_SEC)        $FLUSH_SUBMIT_SEC         ;# -1 or 0,1,2,3 ...
    set test_config(FLUSH_FINISH_SEC)        $FLUSH_FINISH_SEC         ;# -1 or 0,1,2,3 ...
-   set test_config(run_throughput_test_SCHEDULE_INTERVAL)       $run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
+   set test_config(SCHEDULE_INTERVAL)       $run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
    set test_config(gridengine_version)      [get_version_info]
    set test_config(test_date)               [exec date]
    

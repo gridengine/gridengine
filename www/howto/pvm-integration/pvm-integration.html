@@ -1,5 +1,5 @@
 <HTML>
-<!--This file created 26.03.2005 16:50 Uhr by Claris Home Page version 3.0-->
+<!--This file created 26.03.2005 18:46 Uhr by Claris Home Page version 3.0-->
 <HEAD>
    <TITLE>Tight PVM Integration in Grid Engine</TITLE>
    <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
@@ -341,8 +341,8 @@ urgency_slots     min</PRE></BLOCKQUOTE>
    
    <BLOCKQUOTE><PRE>$rsh node18 ps -e f -o pid,ppid,pgrp,command --cols=100
   PID  PPID  PGRP COMMAND
-  788     1   788 /usr/CODINE/bin/glinux/sge_commd
-  791     1   791 /usr/CODINE/bin/glinux/sge_execd
+  788     1   788 /usr/sge/bin/glinux/sge_commd
+  791     1   791 /usr/sge/bin/glinux/sge_execd
  7147   791  7147  \_ sge_shepherd-11238 -bg
  7183  7147  7183  |   \_ /bin/sh /var/spool/sge/node18/job_scripts/11238
  7184  7183  7183  |       \_ ./hello

@@ -1,7 +1,20 @@
+EB-2002-08-23-0  Bugfix:    scheduler crashes if defaultuser has 0 shares in 
+                            sharetree
+                 Issues:    #363
+                 Bigtraq:   #4735972
+                 Review:    AS
+                 Changed:   sge_schedd
+
 AA-2002-08-22-0  I18N:      bunch of fixes for l10n
                  Bugtraq:   #4733802, #4733201, #4733089, #4733043,
                             #4731976, #4731990, #4731967, #4731958,
                             #4731944, #4731935, #4731273, #4729700
+
+EB-2002-08-22-0  Bugfix:    Userset "defaultdepartment" accepts users in CLI
+                 Bugtraq:   #4733859
+                 Issues:    #360
+                 Review:    AS
+                 Changed:   sge_qmaster, qconf
 
 AS-2002-08-22-0  Bugfix:    print correct progname in usage
                  Bugtraq:   #4735258
@@ -11,6 +24,7 @@ EB-2002-08-21-0  Bugfix:    qmaster error message during startup: global
                             configuration doesn't exist - creating
                  Bugtraq:   #4665780
                  Issues:    #226
+                 Review:    AS
                  Changed:   sge_qmaster, qconf, qmon
 
 AA-2002-08-21-0  Bugfix:    gid_range bugfix for SGE mode in qmon
@@ -40,6 +54,7 @@ EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is
                             not reached
                  Issue:     #345
                  Bugtraq:   #4727515
+                 Review:    AS
                  Changed:   sge_schedd
 
 CR-2002-08-02-0: Testsuite: delete_job: when wait_for_end is specified, delete

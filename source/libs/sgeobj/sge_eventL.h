@@ -320,7 +320,9 @@ typedef enum {
   ((x)==sgeE_SUBMITHOST_LIST) || \
   ((x)==sgeE_USER_LIST) || \
   ((x)==sgeE_USERSET_LIST) || \
-  ((x)==sgeE_HGROUP_LIST))
+  ((x)==sgeE_HGROUP_LIST) || \
+  ((x)==sgeE_SHUTDOWN) || \
+  ((x)==sgeE_QMASTER_GOES_DOWN))
 
 
 enum {

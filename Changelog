@@ -1,3 +1,7 @@
+SG-2004-03-10-1: Bugfix:    the japi event client does get qmaster goes down events
+                            and client shut down events. Part of issue: 788
+                 Changed:   qmaster
+
 SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket computation
                             on AMD64 - linux
                  Changed:   scheduler

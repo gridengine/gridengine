@@ -45,11 +45,9 @@
 /*
 ** sge_follow.c
 */
-#define MSG_IGNORE_ORDER_RETRY_I      _MESSAGE(33012, _("ignoring retry of recent order #%d\n"))
-#define MSG_UNKNOWN_ERROR_NL          _MESSAGE(33013, _("unknown error\n"))
 #define MSG_JOB_NOJOBID               _MESSAGE(33014, _("can't get job id\n"))
-#define MSG_JOB_NOTASKID              _MESSAGE(33015, _("can't get task id\n"))
-#define MSG_JOB_FINDJOB_U             _MESSAGE(33016, _("unable to find job "U32CFormat"\n"))
+#define MSG_JOB_NOORDERTASK_US        _MESSAGE(33015, _("invalid task number 0 for job "U32CFormat" in "SFQ" order\n"))
+#define MSG_JOB_FINDJOB_U             _MESSAGE(33016, _("unable to find job "U32CFormat" from the scheduler order package\n"))
 #define MSG_JOB_FINDJOBTASK_UU        _MESSAGE(33017, _("unable to find task "U32CFormat" of job "U32CFormat"\n"))
 
 #define MSG_ORD_OLDVERSION_UUU        _MESSAGE(33018, _("scheduler sent order for old version "U32CFormat" of job "U32CFormat"."U32CFormat"\n"))
@@ -79,7 +77,7 @@
 #define MSG_JOB_REMOVENONINTERACT_U   _MESSAGE(33038, _("scheduler tried to remove non interactive job "U32CFormat" by use of a ORT_remove_immediate_job order\n"))
 #define MSG_JOB_REMOVENONIMMEDIATE_U  _MESSAGE(33039, _("scheduler tried to remove non immediate job "U32CFormat" by use of a ORT_remove_immediate_job order\n"))
 #define MSG_JOB_REMOVENOTIDLEIA_U     _MESSAGE(33040, _("scheduler tried to remove interactive job "U32CFormat" but it is not in JIDLE state\n"))
-#define MSG_JOB_NOFREERESOURCEIA_UU   _MESSAGE(33041, _("no free resource for interactive job "U32CFormat"."U32CFormat"\n"))
+#define MSG_JOB_NOFREERESOURCEIA_UU   _MESSAGE(33041, _("no free resource for interactive job "U32CFormat"."U32CFormat" for user "SFQ"\n"))
 #define MSG_MAIL_CREDITLOWSUBJ_SUS    SFN": Credit low for job " U32CFormat " ("SFN")\n"
 /* #define MSG_MAIL_CREDITLOWBODY_USSFF  _message(33042, _("Your job " U32CFormat " ("SFN") attached to project "SFQ" has\nfallen below low credit limit.\nActual Credit: %.2f   Low Credit Limit: %.2f\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_SUSPOTNOTRUN_UU       _MESSAGE(33043, _("got ORT_suspend_on_threshold order for non running task "U32CFormat"."U32CFormat"\n"))
@@ -154,7 +152,8 @@
 #define MSG_GDI_KEYSTR_BRACKETS        _MESSAGE(33098, _("Brackets"))
 #define MSG_GDI_KEYSTR_BRACES          _MESSAGE(33099, _("Braces"))
 #define MSG_GDI_KEYSTR_PARENTHESIS     _MESSAGE(33100, _("Parenthesis"))
-#define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("AT"))
+#define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
+#define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
 
 /*
 ** ck_to_do_qmaster.c
@@ -274,7 +273,6 @@
 #define MSG_SGETEXT_ISNOEXECHOST_S              _MESSAGE(33194, _(SFQ" is not an execution host\n"))
 #define MSG_SGETEXT_NOEXECHOSTS                 _MESSAGE(33195, _("there are no execution hosts to kill\n"))
 #define MSG_SGETEXT_CANTDELADMINQMASTER_S       _MESSAGE(33197, _("denied: can't delete master host "SFQ" from admin host list\n") )   
-#define MSG_SGETEXT_CANTDELEXECACTIVQ_S         _MESSAGE(33198, _("denied: "SFQ" has an active queue - not deleted\n"))
 #define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33200, _("got load report from host "SFQ" - reports load value for host "SFQ"\n"))
 
 /*
@@ -452,7 +450,7 @@
 #define MSG_JOB_CLEARERRORJOB_SSU     _MESSAGE(33380, _(SFN"@"SFN" cleared error state of job "U32CFormat"\n"))
 #define MSG_JOB_NOERRORSTATETASK_UU   _MESSAGE(33381, _("Job-array task "U32CFormat"."U32CFormat" is not in error state\n"))
 #define MSG_JOB_NOERRORSTATEJOB_UU    _MESSAGE(33382, _("Job "U32CFormat" is not in error state\n"))
-#define MSG_QUEUE_NORESCHEDULEQPERMS_SS  _MESSAGE(33391, _(SFN" - you have no permission to reschedule jobs of queue "SFQ"\n"))
+#define MSG_QUEUE_NORESCHEDULEQPERMS_SS  _MESSAGE(33391, _(SFN" - you have no permission to reschedule jobs of queue instance "SFQ"\n"))
 #define MSG_QUEUE_NOCLEANQPERMS       _MESSAGE(33407, _("cleaning a queue requires manager privileges\n"))
 #define MSG_QUEUE_CLEANQ_SSS          _MESSAGE(33408, _(SFN"@"SFN" cleaned queue "SFQ"\n"))
 #define MSG_JOB_NOFORCESUSPENDTASK_SUU     _MESSAGE(33409, _(SFN" - can't force suspension job-array task "U32CFormat"."U32CFormat"\n"))
@@ -577,7 +575,6 @@
 #define MSG_LOG_JRERUNRESCHEDULE      _MESSAGE(33567, _("job rerun/checkpoint specified -> schedule it again"))
 #define MSG_LOG_JCKPTRESCHEDULE       _MESSAGE(33568, _("job was checkpointed -> schedule it again"))
 #define MSG_LOG_JNORESRESCHEDULE      _MESSAGE(33569, _("job didn't get resources -> schedule it again"))
-#define MSG_LOG_QERRORBYJOB_SU        _MESSAGE(33570, _("queue "SFN" marked QERROR as result of job "U32CFormat"'s failure\n") ) 
 #define MSG_LOG_QERRORBYJOBHOST_SUS   _MESSAGE(33571, _("queue "SFN" marked QERROR as result of job "U32CFormat"'s failure at host "SFN"\n"))
 
 
@@ -622,12 +619,13 @@
 ** setup_qmaster.c
 */
 #define MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP       _MESSAGE(33615, _("setup may be called only at startup"))
-#define MSG_CONFIG_ERRORXSELECTINGCONFIGY_S           _MESSAGE(33617, _("Error selecting configuration "SFQ"\n"))
 #define MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS     _MESSAGE(33618, _("Error %d merging configuration "SFQ"\n"))
 #define MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST   _MESSAGE(33619, _("adding host template to exechost_list\n"))
 #define MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST     _MESSAGE(33620, _("adding host global to exechost_list\n"))
 #define MSG_CONFIG_CANTWRITEMANAGERLIST               _MESSAGE(33621, _("can't write manager list\n"))
 #define MSG_CONFIG_CANTWRITEOPERATORLIST              _MESSAGE(33622, _("can't write operator list\n"))
+#define MSG_CONFIG_NOLOCAL_S                          _MESSAGE(33623, _("local configuration "SFN" not defined - using global configuration"))
+#define MSG_CONFIG_NOGLOBAL                           _MESSAGE(33624, _("global configuration not defined"))
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU  _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 
 /*
@@ -690,7 +688,7 @@
 #define MSG_COM_NOSCHEDDREGMASTER _MESSAGE(33816, _("no scheduler registered at qmaster\n"))
 #define MSG_COM_SCHEDMON_SS       _MESSAGE(33817, _(SFN"@"SFN" triggers scheduler monitoring\n"))
 #define MSG_QINSTANCE_STILLJOBS   _MESSAGE(33818, _("There are still running jobs in the queue. Deletion denied.\n"))
-
+#define MSG_CQUEUE_DEL_ISREFASSUBORDINATE_SS _MESSAGE(33819, _("Cluster queue "SFQ" is referenced in cluster queue "SFQ" as a subordinate. Deletion denied\n"))
 /*
  * sge_persistence_qmaster.c
  */
@@ -733,7 +731,12 @@
 
 #define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33904, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
 #define MSG_QMASTER_MAX_EVC_LIMIT_U              _MESSAGE(33905, _("qmaster will accept max. "U32CFormat" dynamic event clients\n"))
+#define MSG_QMASTER_COMMUNICATION_ERRORS  _MESSAGE(33906, _("abort qmaster startup due to communication errors\n"))
 
+#define MSG_QMASTER_APPL_STATE_OK                _MESSAGE(33907, _("ok"))
+#define MSG_QMASTER_APPL_STATE_TIMEOUT_WARNING   _MESSAGE(33908, _("thread timeout warning"))
+#define MSG_QMASTER_APPL_STATE_TIMEOUT_ERROR     _MESSAGE(33909, _("thread timeout error"))
+#define MSG_QMASTER_APPL_STATE_CFCFCFCFS         _MESSAGE(33910, _("EDT: %c (%.2f) | TET: %c (%.2f) | MT: %c (%.2f) | SIGT: %c (%.2f) | %s"))
 
 #endif
 

@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InvalidAttributeValueException.java
- *
- * Created on June 17, 2003, 11:03 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The value for the job attribute is invalid.
+/** The value for the attribute is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidAttributeValueException extends InvalidArgumentException {
+public class InvalidAttributeValueException extends InvalidAttributeException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidAttributeValueException</code> without detail message.

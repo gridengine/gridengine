@@ -96,7 +96,9 @@ int sge_get_qmaster_port(void) {
    /* check for reresolve timeout */
    gettimeofday(&now,NULL);
 
-   DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   if (next_timeout > 0 ) {
+      DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   }
    if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));
@@ -126,7 +128,7 @@ int sge_get_qmaster_port(void) {
    if (int_port < 0 ) {
       ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_QMASTER_PORT", "sge_qmaster"));
       if ( cached_port >= 0 ) {
-         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_qmaster", cached_port ));
+         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_qmaster", u32c(cached_port) ));
          int_port = cached_port; 
       } else {
          sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -164,7 +166,9 @@ int sge_get_execd_port(void) {
    /* check for reresolve timeout */
    gettimeofday(&now,NULL);
 
-   DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   if ( next_timeout > 0 ) {
+      DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   }
    if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));
@@ -194,7 +198,7 @@ int sge_get_execd_port(void) {
    if (int_port < 0 ) {
       ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_EXECD_PORT" , "sge_execd"));
       if ( cached_port >= 0 ) {
-         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_execd", cached_port ));
+         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_execd", u32c(cached_port) ));
          int_port = cached_port; 
       } else {
          sge_mutex_unlock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);
@@ -275,8 +279,8 @@ host *uti_state_get_localhost(void)
 *     return value must be released by function caller (don't forget the 
 *     char** array lists inside of struct hostent)
 *
-*     If possible (libngc linked) use getuniquehostname() or 
-*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libngc.
+*     If possible (libcomm linked) use getuniquehostname() or 
+*     cl_com_cached_gethostbyname() or cl_com_gethostname() from commlib.
 *
 *     This will return an sge aliased hostname.
 *
@@ -326,8 +330,8 @@ const char *name
 *     return value must be released by function caller (don't forget the 
 *     char* array lists inside of struct hostent)
 *
-*     If possible (libngc linked) use getuniquehostname() or 
-*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libngc.
+*     If possible (libcomm linked) use getuniquehostname() or 
+*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libcomm.
 *
 *     This will return an sge aliased hostname.
 *
@@ -597,8 +601,8 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
 *     return value must be released by function caller (don't forget the 
 *     char** array lists inside of struct hostent)
 *
-*     If possible (libngc linked) use  cl_com_cached_gethostbyaddr() 
-*     from libngc. This will return an sge aliased hostname.
+*     If possible (libcomm linked) use  cl_com_cached_gethostbyaddr() 
+*     from libcomm. This will return an sge aliased hostname.
 *
 *
 *  NOTES

@@ -275,14 +275,12 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
 
    set datarows 0
    set row_index ""
-   while { [info exists rows($datarows,0,x) ] } {
+   while { [info exists rows($datarows,show) ] } {
       lappend row_index $datarows
       incr datarows 1 
    }
 
    set command_file [get_tmp_file_name]
-   set cmd_file [open $command_file w]
-
 
    foreach row $row_index {
       if { $rows($row,show) == 0 } {
@@ -475,145 +473,113 @@ proc convert_spool_file_to_html { spoolfile htmlfile { just_return_content 0 }} 
 #  SEE ALSO
 #     file_procedures/read_array_from_file()
 #*******************************************************************************
-proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
-
+proc spool_array_to_file { filename obj_name array_name { write_comment 1 }} {
    global CHECK_OUTPUT 
+
    upvar $array_name data
 
    puts $CHECK_OUTPUT "saving object \"$obj_name\" ..."
-   set changes 0
-   
+  
+   spool_array_prepare $filename file_dat
+
+   spool_array_add_data $filename $obj_name data $write_comment file_dat
+
+   spool_array_finish $filename file_dat
+}
+
+
+proc spool_array_prepare {filename {data_array spool_array_data}} {
+   upvar $data_array data
+
+   # if file_dat exists - remove it
+   if {[info exists data]} {
+      unset data
+   }
 
    # read in file
-   read_file $filename file_dat
-   
+   read_file $filename data
+}
+
+proc spool_array_add_data {filename obj_name array_name {write_comment 0} {data_array spool_array_data}} {
+   global CHECK_OUTPUT
+
+   upvar $data_array data
+   upvar $array_name obj
+
    # get all stored obj_names
-   set obj_names [get_all_obj_names file_dat]
-   set new_file_dat ""
-   unset new_file_dat 
-   set new_file_dat(0) 0
-   set act_line 1
-   # store all objects in file_array
-   foreach obj $obj_names {
-      if { [string compare $obj $obj_name] == 0 } {
-         # here we ignore old object data, but load it into an array
-         # puts $CHECK_OUTPUT "ignoring old \"$obj_name\" object data ..."
-         set obj_start [search_for_obj_start file_dat $obj]
-         set obj_end   [search_for_obj_end file_dat $obj]
-         for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-            if { [string first "#" $file_dat($i) ] == 0 } {
-               incr i 1
-            }
-            set spec [unpack_data_line $file_dat($i)]
-            incr i 1
-            set spec_data [unpack_data_line $file_dat($i)]
-            set old_data($spec) $spec_data
-         }     
-      } else {
-         # here we save all other objects    
-         # puts $CHECK_OUTPUT "saving \"$obj\" object data ..."
-         set obj_start [search_for_obj_start file_dat $obj]
-         set obj_end   [search_for_obj_end file_dat $obj]
-         incr obj_start -1
-         incr obj_end 1
-         for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-            set new_file_dat($act_line) $file_dat($i)
-            set new_file_dat(0) $act_line
-            incr act_line 1
-         } 
+   set obj_names [get_all_obj_names data]
+
+   # if the object is already in data, we have to remove it.
+   if {[lsearch -exact $obj_names $obj_name] != -1} {
+      # search_for_obj... gives us the position of the object, we need
+      # the position of the OBJ_START/OBJ_END line
+      set obj_start [expr [search_for_obj_start data $obj_name] - 1]
+      set obj_end [expr [search_for_obj_end data $obj_name] + 1]
+
+      # delete the object from data
+      for {set i $obj_start} {$i <= $obj_end} {incr i} {
+         unset data($i)
       }
+
+      # now we have to move the following objects up
+      set last $data(0)
+      set new_idx $obj_start
+      for {set i [expr $obj_end + 1]} {$i <= $last} {incr i} {
+         set data($new_idx) $data($i)
+         unset data($i)
+         incr new_idx
+      }
+
+      # set new data size
+      set data(0) [expr $new_idx - 1]
    }
 
 
-   # puts $CHECK_OUTPUT "saving new data ..."
-   # here we store the new data
-   set data_count [array names data]
-   set data_count [llength $data_count]
+   # now append the object to data
+   set act_line [expr $data(0) + 1]
+   set data_specs [lsort [array names obj]]
+   set data_count [llength $data_specs]
    if { $data_count > 0 } {
-      set new_file_dat($act_line) "OBJ_START:$obj_name:"
+      set data($act_line) "OBJ_START:$obj_name:"
       incr act_line 1
-      set data_specs [array names data]
-      set data_specs [lsort $data_specs]
+
       foreach spec $data_specs {
-         # puts $CHECK_OUTPUT "saving \"$obj_name->$spec\" ..."
          if { $write_comment == 1 } {
-            set new_file_dat($act_line) "####### $spec #######"
+            set data($act_line) "####### $spec #######"
             incr act_line 1
          }
-         set new_file_dat($act_line) [pack_data_line $spec]
+         set data($act_line) [pack_data_line $spec]
          incr act_line 1
-         set new_file_dat($act_line) [pack_data_line $data($spec)]
+         set data($act_line) [pack_data_line $obj($spec)]
          incr act_line 1
       }
-      set new_file_dat($act_line) "OBJ_END:$obj_name:"
-      set new_file_dat(0) $act_line
+
+      set data($act_line) "OBJ_END:$obj_name:"
+      set data(0) $act_line
    }
+}
 
+proc spool_array_finish {filename {data_array spool_array_data}} {
+   upvar $data_array data
 
-   # now write tmp new file_dat
-   save_file $filename.tmp new_file_dat
+   # write data to a temp file
+   save_file $filename.tmp data
 
-   # shall we compare objects ? 
-   set new_elems ""
-   set removed_elems ""
-
-
-
-   if { [ info exists old_data] } {
-      set array_names_old [array names old_data]
-      set array_names_new [array names data]
-      set new_elems ""
-      set removed_elems ""
-
-      foreach new $array_names_new {
-         set found 0
-         foreach old $array_names_old {
-            if { [string compare $old $new] == 0 } {
-               set found 1
-            }
-         }
-         if { $found == 0 } {
-            lappend new_elems $new
-         }
-      }
-      foreach old $array_names_old {
-         set found 0
-         foreach new $array_names_new {
-            if { [string compare $old $new] == 0 } {
-               set found 1
-            }
-         }
-         if { $found == 0 } {
-            lappend removed_elems $old
-         }
-      }
-   } else {
-      set array_names_new [array names data]
-      foreach elem $array_names_new {
-         lappend new_elems $elem
-      }
-   }
-   
-#   puts $CHECK_OUTPUT "removed: $removed_elems"
-#   puts $CHECK_OUTPUT "added  : $new_elems"
-
-   incr changes [llength $removed_elems]
-   incr changes [llength $new_elems]
-
-
-
-   # delete old file, rename new file
+   # delete old backup
    if { [file isfile $filename.old] } {
       file delete $filename.old
    }
+
+   # save current as backup
    if { [file isfile $filename]} {
       file rename $filename $filename.old
    }
+
+   # make temp file current version
    if { [file isfile $filename.tmp]} {
       file rename $filename.tmp $filename
       file delete $filename.tmp
    }
-   return $changes
 }
 
 #****** file_procedures/save_file() ********************************************
@@ -1128,6 +1094,7 @@ proc generate_html_file { file headliner content { return_text 0 } } {
    lappend output "<html>"
    lappend output "<head>"
    lappend output "   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"
+   lappend output "   <meta http-equiv=\"expires\" content=\"0\">"
    lappend output "   <meta name=\"Author\" content=\"Grid Engine Testsuite - user ${CHECK_USER}\">"
    lappend output "   <meta name=\"GENERATOR\" content=\"unknown\">"
    lappend output "</head>"
@@ -1487,7 +1454,7 @@ proc create_shell_script { scriptfile
 
    set script "no_script"
    set catch_return [ catch {
-       set script [ open "$scriptfile" "w" ]
+       set script [ open "$scriptfile" "w" "0755" ]
    } ]
    if { $catch_return != 0 } {
       add_proc_error "create_shell_script" "-2" "could not open file $scriptfile for writing"
@@ -1576,10 +1543,10 @@ proc create_shell_script { scriptfile
          sleep 1
       }
    }
-   catch { exec "touch" "$scriptfile" } result
+#   catch { exec "touch" "$scriptfile" } result
 #   puts $CHECK_OUTPUT "touch result: $result"
   
-   catch { exec "chmod" "0755" "$scriptfile" } result
+#   catch { exec "chmod" "0755" "$scriptfile" } result
 #   puts $CHECK_OUTPUT "chmod result: $result"
 
 
@@ -1594,7 +1561,6 @@ proc create_shell_script { scriptfile
       if { $CHECK_DEBUG_LEVEL == 2 } {
          wait_for_enter
       }
-
    }
 }
 

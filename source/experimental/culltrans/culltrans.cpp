@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 // culltrans.cpp
-// code generator initially developed for qidl, now turned into
+// sgee generator initially developed for qidl, now turned into
 // a multi-purpose tool that translates cull definitions into
 // a metastructure, which can then be used to create anything you
 // want out of it, e.g. idl files, header files, java client stubs...
@@ -38,17 +38,14 @@
 #include <map>
 #include <set>
 #include <string>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "culltrans_repository.h"
 #include "culltrans.h"
 
-extern "C"
-{
 #include "cull.h"
-#include "cod_all_listsL.h"
-#include "cod_boundaries.h"
-}
+#include "sge_all_listsL.h"
+#include "sge_boundaries.h"
 
 #ifdef HAVE_STD
 using namespace std;
@@ -67,34 +64,34 @@ int yyparse(void);
 map<string, List>               lists;
 map<string, List>::iterator     active;
 map<int, string>                constants;
-int                             last_qidl_only = QIDL_LOWERBOUND;
+int                             last_qidl_only = CCT_LOWERBOUND;
 FILE*                           disthdr = NULL;
 const char*                     yyin_name;
 extern FILE*                    yyin;
 
 // string arrays to convert multitype
-const char *multiType2codType[] = {
+const char *multiType2sgeType[] = {
    "",   // lEntT undefined
-   "Codine_cod_float",
-   "Codine_cod_double",
-   "Codine_cod_ulong",
-   "Codine_cod_long",
-   "Codine_cod_char",
-   "Codine_cod_int",
-   "Codine_cod_string",
+   "GE_sge_float",
+   "GE_sge_double",
+   "GE_sge_ulong",
+   "GE_sge_long",
+   "GE_sge_char",
+   "GE_sge_int",
+   "GE_sge_string",
    "",   // lListT undefined
    "CORBA_Boolean"
 };
 
 const char *multiType2idlType[] = {
    "",   // lEntT undefined
-   "cod_float",
-   "cod_double",
-   "cod_ulong",
-   "cod_long",
-   "cod_char",
-   "cod_int",
-   "cod_string",
+   "sge_float",
+   "sge_double",
+   "sge_ulong",
+   "sge_long",
+   "sge_char",
+   "sge_int",
+   "sge_string",
    "",   // lListT undefined
    "boolean"
 };
@@ -125,7 +122,7 @@ enum arguments {
    ARG_HDR = 4,
    ARG_DISTHDR = 8,
    ARG_IMPL = 16,
-   ARG_ELEMCODES = 32
+   ARG_ELEMSGEES = 32
 };
 
 static int checkArgs(char**& argv) {
@@ -141,7 +138,7 @@ static int checkArgs(char**& argv) {
       else if(!strcmp(*argv, "-impl"))
          ret |= ARG_IMPL;
       else if(!strcmp(*argv, "-elemcodes"))
-         ret |= ARG_ELEMCODES;
+         ret |= ARG_ELEMSGEES;
       else if((*argv)[0] == '-') {
          ret |= ARG_ERROR;
          break;
@@ -191,7 +188,7 @@ static void usage() {
    cerr << "If -of or -oo are not given, culltrans produces output for all files or objects." << endl;
    cerr << "If specified, BOTH -oo and -of requirements must be met for an object." << endl;
    cerr << "That is that no output will be produced for the following command line:" << endl;
-   cout << "   culltrans -idl cod_calendarL.h cod_queue.h -of cod_calendar.h -oo Queue" << endl;
+   cout << "   culltrans -idl sge_calendarL.h sge_queue.h -of sge_calendar.h -oo Queue" << endl;
    cerr << "The order of the -oo and -of switches is not important unless they occur after" << endl;
    cerr << "the input file list. It is also valid to have multiple -of and -oo switches" << endl;
    cerr << "in one command line and to specify the same file or object more than once." <<endl;
@@ -213,7 +210,7 @@ int main(int argc, char** argv) {
    lInit(nmv);
 
    // Creating dummy ST_Type list ( == string sequence )
-   lists.insert(map<string, List>::value_type("ST_Type", List("ST_Type", "cod_string", NULL, NULL, false)));
+   lists.insert(map<string, List>::value_type("ST_Type", List("ST_Type", "sge_string", NULL, NULL, false)));
 
    // for all arguments until -of or -oo do
    for(; *argv && strcmp(*argv, "-of") && strcmp(*argv, "-oo"); argv++) {
@@ -301,7 +298,7 @@ int main(int argc, char** argv) {
    }
 
    // write enum file
-   if(args & ARG_ELEMCODES) 
+   if(args & ARG_ELEMSGEES) 
       if(!writeConsts()) {
          cerr << "Aborting..." << endl;
          return 1;

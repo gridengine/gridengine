@@ -357,10 +357,6 @@
 *        list of events - they will be spooled until the event client 
 *        acknowledges receipt
 *  
-*     SGE_ULONG(EV_clientdata)
-*        a 32bit ulong for use by the event client or special handling 
-*        for certain event clients
-*
 *  FUNCTION
 *     An event client creates and initializes such an object and passes
 *     it to qmaster for registration.
@@ -675,7 +671,7 @@ ec_prepare_registration(ev_registration_id id, const char *name)
          ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
          ec_subscribe_flush(sgeE_SHUTDOWN, 0);
 
-         ec_set_busy_handling(EV_BUSY_NO_HANDLING);
+         ec_set_busy_handling(EV_BUSY_UNTIL_ACK);
          lSetUlong(ec, EV_busy, 0);
 
          ret = true;
@@ -741,7 +737,14 @@ ec_is_initialized(void)
 void 
 ec_mark4registration(void)
 {
+   cl_com_handle_t* handle = NULL;
+
    DENTER(TOP_LAYER, "ec_mark4registration");
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   if (handle != NULL) {
+      cl_commlib_close_connection(handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1, CL_FALSE);
+      DPRINTF(("closed old connection to qmaster\n"));
+   }
    need_register = true;
    lSetBool(ec, EV_changed, true);
    DEXIT;
@@ -1034,87 +1037,6 @@ ec_get_busy_handling(void)
    return handling;
 }
 
-/****** Eventclient/Client/ec_set_clientdata() ********************************
-*  NAME
-*     ec_set_clientdata() -- set the clientdata value
-*
-*  SYNOPSIS
-*     #include "sge_event_client.h"
-*
-*     void 
-*     ec_set_clientdata(u_long32 data) 
-*
-*  FUNCTION
-*     An event client (the event client object) has a field EV_clientdata.
-*     It is of datatype u_long32 and can be used by the event client for
-*     any purpose.
-*
-*     The sge scheduler uses it to store the last order from scheduler processed
-*     by qmaster.
-*
-*  INPUTS
-*     u_long32 data - the clientdata to set 
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Client/ec_get_clientdata()
-*     Eventclient/--EV_Type
-*     documentation of scheduler <-> qmaster mechanisms
-*******************************************************************************/
-void 
-ec_set_clientdata(u_long32 data)
-{
-   DENTER(TOP_LAYER, "ec_set_clientdata");
-
-   if (ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-   } else {
-      lSetUlong(ec, EV_clientdata, data);
-   }
-
-   DEXIT;
-}
-
-/****** Eventclient/Client/ec_get_clientdata() ********************************
-*  NAME
-*     ec_get_clientdata() -- get the clientdata value
-*
-*  SYNOPSIS
-*     #include "sge_event_client.h"
-*
-*     u_long32 
-*     ec_get_clientdata() 
-*
-*  FUNCTION
-*     Get the current value of the clientdata for the event client.
-*
-*  RESULT
-*     u_long32 - current value
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Client/ec_get_clientdata()
-*     Eventclient/EV_Type
-*******************************************************************************/
-u_long32 
-ec_get_clientdata(void)
-{
-   u_long32 clientdata = 0;
-
-   DENTER(TOP_LAYER, "ec_get_clientdata");
-
-   if (ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-   } else {
-      clientdata = lGetUlong(ec, EV_clientdata);
-   }
-
-   DEXIT;
-   return clientdata;
-}
-
 /****** Eventclient/Client/ec_register() ***************************************
 *  NAME
 *     ec_register() -- register at the event server
@@ -1182,13 +1104,13 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
       if (com_handle != NULL) {
          int ngc_error;
-         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
+         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1, CL_FALSE);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("closed old connection to qmaster\n"));
          } else {
             INFO((SGE_EVENT, "error closing old connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
          }
-         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1 );
+         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("opened new connection to qmaster\n"));
          } else {
@@ -2270,8 +2192,10 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
        *  - if this event client is already enrolled at qmaster
        */
       commit_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_EVENT_LIST, SGE_GDI_MOD,
-                                lp, NULL, NULL, malpp, state);
-      lp = lFreeList(lp); 
+                                &lp, NULL, NULL, malpp, state, false);
+      if (lp != NULL) {                                 
+         lp = lFreeList(lp); 
+      }
 
       if (alp != NULL) {
          answer_list_handle_request_answer_list(&alp, stderr);

@@ -142,6 +142,12 @@ GetCell()
    $CLEAR
    fi
    export SGE_CELL
+
+  HOST=`$SGE_UTILBIN/gethostname -aname`
+  if [ "$HOST" = "" ]; then
+     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
+     exit 1
+  fi
 }
 
 
@@ -325,10 +331,10 @@ SetSpoolingOptionsBerkeleyDB()
    fi
    if [ $QMASTER = "install" -a $AUTO = "false" ]; then
       $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
-                   " 1) Local spooling:\n" \
+                   " Local spooling:\n" \
                    " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
                    " This setup is faster, but you can't setup a shadow master host\n\n"
-      $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
+      $INFOTEXT -n " Berkeley DB Spooling Server:\n" \
                    " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
                    " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
                    " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
@@ -406,21 +412,30 @@ SetSpoolingOptionsBerkeleyDB()
    else
       ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       if [ $ret -gt 1 ]; then
-         $INFOTEXT "We found a running berkeley db on this host!"
+         $INFOTEXT "We found a running berkeley db server on this host!"
          if [ $AUTO = true ]; then
-            $INFOTEXT -log "We found a running berkeley db on this host!"
+               if [ $SPOOLING_SERVER = "none" ]; then
+                  $ECHO
+                  Makedir $SPOOLING_DIR
+                  SPOOLING_ARGS="$SPOOLING_DIR"
+               fi
+         else
+
+            $INFOTEXT -log "We found a running berkeley db server on this host!"
             $INFOTEXT -log "Please, check this first! Exiting Installation!"
             MoveLog
          fi
 
-         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
-         if [ $? = 1 ]; then
-            $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-            TMP_STARTUP_SCRIPT=`Enter`
-            SpoolingQueryChange
-            EditStartupScript
-         else
-            exit 1
+         if [ $AUTO = "false" ]; then
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
+            if [ $? = 1 ]; then
+               $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
+               TMP_STARTUP_SCRIPT=`Enter`
+               SpoolingQueryChange
+               EditStartupScript
+            else
+               exit 1
+            fi
          fi 
       else
          while [ $params_ok -eq 0 ]; do
@@ -629,7 +644,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: pre6.0"
+   $ECHO "# Version: 6.0u2"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
@@ -689,7 +704,7 @@ AddConfiguration()
 #
 PrintConf()
 {
-   $ECHO "# Version: pre6.0"
+   $ECHO "# Version: 6.0u2"
    $ECHO "#"
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"
@@ -740,7 +755,7 @@ PrintConf()
    $ECHO "auto_user_oticket      0"
    $ECHO "auto_user_fshare       0"
    $ECHO "auto_user_default_project none"
-   $ECHO "auto_user_delete_time  100"
+   $ECHO "auto_user_delete_time  86400"
    $ECHO "delegated_file_staging false"
 
 }
@@ -1056,6 +1071,20 @@ AddHosts()
              $SGE_BIN/qconf -as $h
         fi
       done  
+
+      for h in $SHADOW_HOST; do
+        if [ -f $h ]; then
+           $INFOTEXT -log "Adding SHADOW_HOSTS from file %s" $h
+           for tmp in `cat $h`; do
+             $INFOTEXT -log "Adding SHADOW_HOST %s" $tmp
+             $SGE_BIN/qconf -ah $tmp
+           done
+        else
+             $INFOTEXT -log "Adding SHADOW_HOST %s" $h
+             $SGE_BIN/qconf -ah $h
+        fi
+      done
+  
    else
       $INFOTEXT -u "\nAdding Grid Engine hosts"
       $INFOTEXT "\nPlease now add the list of hosts, where you will later install your execution\n" \
@@ -1071,16 +1100,55 @@ AddHosts()
                 "Do you want to use a file which contains the list of hosts (y/n) [n] >> "
       ret=$?
       if [ $ret = 0 ]; then
-         AddHostsFromFile
+         AddHostsFromFile execd
          ret=$?
       fi
 
       if [ $ret = 1 ]; then
-         AddHostsFromTerminal
+         AddHostsFromTerminal execd
       fi
 
       $INFOTEXT -wait -auto $AUTO -n "Finished adding hosts. Hit <RETURN> to continue >> "
       $CLEAR
+
+      # Adding later shadow hosts to the admin host list
+      $INFOTEXT "\nIf you want to use a shadow host, it is recommended to add this host\n" \
+                "to the list of administrative hosts.\n\n" \
+                "If you are not sure, it is also possible to add or remove hosts after the\n" \
+                "installation with <qconf -ah hostname> for adding and <qconf -dh hostname>\n" \
+                "for removing this host\n\nAttention: This is not the shadow host installation" \
+                "procedure.\n You still have to install the shadow host separately\n\n"
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                "Do you want to add your shadow host(s) now? (y/n) [y] >> "
+      ret=$?
+      if [ "$ret" = 0 ]; then
+         $CLEAR
+         $INFOTEXT -u "\nAdding Grid Engine shadow hosts"
+         $INFOTEXT "\nPlease now add the list of hosts, where you will later install your shadow\n" \
+                   "daemon.\n\n" \
+                   "Please enter a blank separated list of your execution hosts. You may\n" \
+                   "press <RETURN> if the line is getting too long. Once you are finished\n" \
+                   "simply press <RETURN> without entering a name.\n\n" \
+                   "You also may prepare a file with the hostnames of the machines where you plan\n" \
+                   "to install Grid Engine. This may be convenient if you are installing Grid\n" \
+                   "Engine on many hosts.\n\n"
+
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+                   "Do you want to use a file which contains the list of hosts (y/n) [n] >> "
+         ret=$?
+         if [ $ret = 0 ]; then
+            AddHostsFromFile shadowd 
+            ret=$?
+         fi
+
+         if [ $ret = 1 ]; then
+            AddHostsFromTerminal shadowd
+         fi
+
+         $INFOTEXT -wait -auto $AUTO -n "Finished adding hosts. Hit <RETURN> to continue >> "
+      fi
+      $CLEAR
+
    fi
 
    $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
@@ -1104,6 +1172,7 @@ AddHosts()
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
+
 }
 
 
@@ -1113,11 +1182,16 @@ AddHosts()
 #
 AddHostsFromFile()
 {
-   file=$1
+   hosttype=$1
+   file=$2
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $INFOTEXT -u "\nAdding admin and submit hosts from file"
+      if [ "$hosttype" = "execd" ]; then
+         $INFOTEXT -u "\nAdding admin and submit hosts from file"
+      else
+         $INFOTEXT -u "\nAdding admin hosts from file"
+      fi
       $INFOTEXT -n "\nPlease enter the file name which contains the host list: "
       file=`Enter none`
       if [ "$file" = "none" -o ! -f "$file" ]; then
@@ -1128,10 +1202,16 @@ AddHostsFromFile()
             return 1
          fi
       else
-         for h in `cat $file`; do
-            $SGE_BIN/qconf -ah $h
-            $SGE_BIN/qconf -as $h
-         done
+         if [ "$hosttype" = "execd" ]; then
+            for h in `cat $file`; do
+               $SGE_BIN/qconf -ah $h
+               $SGE_BIN/qconf -as $h
+            done
+         else
+            for h in `cat $file`; do
+               $SGE_BIN/qconf -ah $h
+            done
+         fi
          done=true
       fi
    done
@@ -1143,10 +1223,15 @@ AddHostsFromFile()
 #
 AddHostsFromTerminal()
 {
+   hosttype=$1
    stop=false
    while [ $stop = false ]; do
       $CLEAR
-      $INFOTEXT -u "\nAdding admin and submit hosts"
+      if [ "$hosttype" = "execd" ]; then
+         $INFOTEXT -u "\nAdding admin and submit hosts"
+      else
+         $INFOTEXT -u "\nAdding admin hosts"
+      fi
       $INFOTEXT "\nPlease enter a blank seperated list of hosts.\n\n" \
                 "Stop by entering <RETURN>. You may repeat this step until you are\n" \
                 "entering an empty list. You will see messages from Grid Engine\n" \
@@ -1155,10 +1240,16 @@ AddHostsFromTerminal()
       $INFOTEXT -n "Host(s): "
 
       hlist=`Enter ""`
-      for h in $hlist; do
-         $SGE_BIN/qconf -ah $h
-         $SGE_BIN/qconf -as $h
-      done
+      if [ "$hosttype" = "execd" ]; then
+         for h in $hlist; do
+            $SGE_BIN/qconf -ah $h
+            $SGE_BIN/qconf -as $h
+         done
+      else
+         for h in $hlist; do
+            $SGE_BIN/qconf -ah $h
+         done
+      fi
       if [ "$hlist" = "" ]; then
          stop=true
       else
@@ -1302,8 +1393,8 @@ GetQmasterPort()
       if [ $service_available = false ]; then
          SGE_QMASTER_PORT=$INP
          export SGE_QMASTER_PORT
-         $INFOTEXT "\nUsing port >%s<. No service >sge_qmaster< available.\n" $SGE_QMASTER_PORT
-         $INFOTEXT -log "Using port >%s<. No service >sge_qmaster< available." $SGE_QMASTER_PORT
+         $INFOTEXT "\nUsing port >%s< for sge_qmaster daemon.\n" $SGE_QMASTER_PORT
+         $INFOTEXT -log "Using port >%s< for sge_qmaster daemon." $SGE_QMASTER_PORT
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
@@ -1463,8 +1554,8 @@ GetExecdPort()
       if [ $service_available = false ]; then
          SGE_EXECD_PORT=$INP
          export SGE_EXECD_PORT
-         $INFOTEXT "\nUsing port >%s<. No service >sge_execd< available.\n" $SGE_EXECD_PORT
-         $INFOTEXT -log "Using port >%s<. No service >sge_execd< available." $SGE_EXECD_PORT
+         $INFOTEXT "\nUsing port >%s< for sge_execd daemon.\n" $SGE_EXECD_PORT
+         $INFOTEXT -log "Using port >%s< for sge_execd daemon." $SGE_EXECD_PORT
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       else

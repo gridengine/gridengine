@@ -54,7 +54,7 @@ set check_init_level_procedure "issue_478_init_level"
 set check_name            "issue_478"
 set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
-set check_description(0)  "check valid gid range parameters"
+set check_description(0)  "qtstat -r shows wrong dependencies"
 
 # define test's dependencies
 set check_needs           "init_core_system" 

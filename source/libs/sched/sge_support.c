@@ -57,6 +57,7 @@
 #include "sge_usageL.h"
 #include "sge_userprj.h"
 #include "sgeobj/sge_sharetree.h"
+#include "valid_queue_user.h"
 
 const long sge_usage_interval = SGE_USAGE_INTERVAL;
 static double sge_decay_rate;
@@ -670,7 +671,8 @@ set_share_tree_project_flags( const lList *project_list,
 void
 sge_add_default_user_nodes( lListElem *root_node,
                             const lList *user_list,
-                            const lList *project_list )
+                            const lList *project_list,
+                            const lList *userset_list)
 {
    lListElem *user, *project, *pnode, *dnode;
    const char *proj_name, *user_name;
@@ -690,34 +692,69 @@ sge_add_default_user_nodes( lListElem *root_node,
    set_share_tree_project_flags(project_list, root_node);
 
    for_each(project, project_list) {
+      /*
+      ** check acl and xacl of project for the temp users
+      ** only users that are allowed for the project are shown
+      */
+      lList *xacl = lGetList(project, UP_xacl);
+      lList *acl = lGetList(project, UP_acl);
+
       proj_name = lGetString(project, UP_name);
+
       if (search_userprj_node(root_node, "default", proj_name, NULL)) {
          for_each(user, user_list) {
+            int has_access = 1;
+#if 0            
+            int has_usage = 1;
+            lList *user_prj_usage = lGetList(user, UP_project);
+#endif            
             user_name = lGetString(user, UP_name);
-            if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
-                strcmp("default", lGetString(dnode, STN_name)) == 0) {
+
+            /*
+            ** check if user would be allowed
+            */
+            has_access = sge_has_access_(user_name, NULL, acl, xacl, userset_list);
+#if 0            
+            /*
+            ** check if user has usage for this project
+            */
+            has_usage = (lGetElemStr(user_prj_usage, UPP_name, proj_name) != NULL);
+#endif
+
+            if (has_access && ((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
+                !strcmp("default", lGetString(dnode, STN_name))) {
                lListElem *node = lCopyElem(dnode);
                lSetString(node, STN_name, user_name);
+               lSetList(node, STN_children, NULL);
                lSetUlong(node, STN_temp, 1);
-               lAppendElem(lGetList(pnode, STN_children), node);
+               if (lGetList(dnode,STN_children) == NULL) {
+                  lList *children = lCreateList("display", STN_Type);
+                  lSetList(dnode, STN_children, children);
+               }   
+               lAppendElem(lGetList(dnode,STN_children), node);
             }
          }
       }
    }
 
-      proj_name = NULL;
-      if (search_userprj_node(root_node, "default", proj_name, NULL)) {
-         for_each(user, user_list) {
-            user_name = lGetString(user, UP_name);
-            if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
-                strcmp("default", lGetString(dnode, STN_name)) == 0) {
-               lListElem *node = lCopyElem(dnode);
-               lSetString(node, STN_name, user_name);
-               lSetUlong(node, STN_temp, 1);
-               lAppendElem(lGetList(pnode, STN_children), node);
-            }
+   proj_name = NULL;
+   if (search_userprj_node(root_node, "default", proj_name, NULL)) {
+      for_each(user, user_list) {
+         user_name = lGetString(user, UP_name);
+         if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
+             strcmp("default", lGetString(dnode, STN_name)) == 0) {
+            lListElem *node = lCopyElem(dnode);
+            lSetString(node, STN_name, user_name);
+            lSetList(node, STN_children, NULL);
+            lSetUlong(node, STN_temp, 1);
+            if (lGetList(dnode,STN_children) == NULL) {
+               lList *children = lCreateList("display", STN_Type);
+               lSetList(dnode, STN_children, children);
+            }   
+            lAppendElem(lGetList(dnode,STN_children), node);
          }
       }
+   }
 
 }
 

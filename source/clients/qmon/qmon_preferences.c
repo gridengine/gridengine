@@ -71,8 +71,10 @@ lListElem *qmonGetPreferences(void)
 
    DENTER(TOP_LAYER, "qmonGetPreferences");
 
-   if (!qmon_preferences)
+   if (!qmon_preferences) {
       qmon_preferences = lCreateElem(PREF_Type);
+      lSetBool(qmon_preferences, PREF_job_filter_compact, True);
+   }   
 
    DEXIT;
    return qmon_preferences;

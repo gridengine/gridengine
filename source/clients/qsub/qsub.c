@@ -54,6 +54,7 @@
 #include "japiP.h"
 #include "lck/sge_mtutil.h"
 #include "uti/sge_log.h"
+#include "sge_profiling.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
@@ -100,6 +101,8 @@ char **argv
    drmaa_attr_values_t *jobids = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
+
+   sge_prof_setup();
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QSUB);
@@ -169,7 +172,7 @@ char **argv
    /* Remove all -sync switches since cull_parse_job_parameter()
     * doesn't know what to do with them. */
    while ((ep = lGetElemStr(opts_all, SPA_switch, "-sync"))) {
-      if (lGetInt (ep, SPA_argval_lIntT) == TRUE) {
+      if (lGetInt(ep, SPA_argval_lIntT) == TRUE) {
          wait_for_job = 1;
       }
       
@@ -177,7 +180,7 @@ char **argv
    }
    
    if (wait_for_job) {
-      DPRINTF (("Wait for job end\n"));
+      DPRINTF(("Wait for job end\n"));
    }
    
    alp = cull_parse_job_parameter(opts_all, &job);
@@ -185,6 +188,11 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       SGE_EXIT(tmp_ret);
+   }
+
+   if (set_sec_cred(job) != 0) {
+      fprintf(stderr, MSG_SEC_SETJOBCRED);
+      SGE_EXIT(1);
    }
 
    /* Check is we're just verifying the job */
@@ -301,10 +309,12 @@ char **argv
    }
   
    /* only success message is printed to stdout */
-   if (!just_verify)
+   if (!just_verify) {
       printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
-   else
+   }   
+   else {
       printf(MSG_JOB_VERIFYFOUNDQ);
+   }   
 
    if (wait_for_job || is_immediate) {
       int event;
@@ -403,6 +413,8 @@ Error:
          sge_mutex_unlock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);
       }
    }
+
+   sge_prof_cleanup();
 
    /* This is an exit() instead of an SGE_EXIT() because when the qmaster is
     * supended, SGE_EXIT() hangs. */

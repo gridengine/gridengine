@@ -47,13 +47,16 @@ COMMLIB = libcomm$(LIBEXT)
 COMMLIB_DIR = $(SOURCE)/libs/comm
 COMMLIB_SRC = \
          cl_tcp_framework.c \
+         cl_ssl_framework.c \
          cl_communication.c \
+         cl_xml_parsing.c \
          cl_connection_list.c \
          cl_message_list.c \
          cl_host_list.c \
          cl_host_alias_list.c \
          cl_endpoint_list.c \
          cl_handle_list.c \
+         cl_application_error_list.c \
          cl_commlib.c
 
 COMMLIB_OBJS = $(COMMLIB_SRC:.c=.o)
@@ -70,6 +73,7 @@ COMMLIB_TEST_SRC = \
          test_virtual_qmaster.c \
          test_virtual_event_client.c \
          test_virtual_gdi_client.c \
+         test_debug_client.c \
          test_status_info.c
 
 COMMLIB_TEST_OBJS = $(COMMLIB_TEST_SRC:.c=.o)
@@ -83,7 +87,7 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      test_server_connection test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-     test_virtual_gdi_client
+     test_virtual_gdi_client test_debug_client
 
 depend: commlib_depend commlistslib_depend
 
@@ -98,12 +102,12 @@ commlib_clean: commlistslib_clean
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
       test_cl_hostalias_list test_multithread_io test_status_info test_server_connection \
       test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-      test_virtual_gdi_client
+      test_virtual_gdi_client test_debug_client
 
 commlib_depend: commlistslib_depend
 		$(DEPEND) -f$(COMMLIB_DIR)/commlib_dependencies $(COMMLIB_DIR)/*.c
 
-commlib_messages: commlistslib_messages
+commlib_messages: commlistslib_messages commlib_messages
 	@echo Creating $@
 	@for i in `ls $(COMMLIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -129,8 +133,12 @@ include $(COMMLIB_DIR)/commlib_dependencies
 ###############################################################################
 cl_tcp_framework.o: $(COMMLIB_DIR)/cl_tcp_framework.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_tcp_framework.c
+cl_ssl_framework.o: $(COMMLIB_DIR)/cl_ssl_framework.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_ssl_framework.c
 cl_communication.o: $(COMMLIB_DIR)/cl_communication.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_communication.c
+cl_xml_parsing.o: $(COMMLIB_DIR)/cl_xml_parsing.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_xml_parsing.c
 cl_connection_list.o: $(COMMLIB_DIR)/cl_connection_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_connection_list.c
 cl_message_list.o: $(COMMLIB_DIR)/cl_message_list.c 
@@ -143,6 +151,8 @@ cl_host_alias_list.o: $(COMMLIB_DIR)/cl_host_alias_list.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_host_alias_list.c
 cl_handle_list.o: $(COMMLIB_DIR)/cl_handle_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_handle_list.c
+cl_application_error_list.o: $(COMMLIB_DIR)/cl_application_error_list.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_application_error_list.c
 cl_commlib.o: $(COMMLIB_DIR)/cl_commlib.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_commlib.c
 
@@ -170,6 +180,8 @@ test_virtual_event_client: test_virtual_event_client.o $(COMMLIB) $(COMMLISTSLIB
 	$(CC) -o test_virtual_event_client $(LFLAGS) test_virtual_event_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_virtual_gdi_client: test_virtual_gdi_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_virtual_gdi_client $(LFLAGS) test_virtual_gdi_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_debug_client: test_debug_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_debug_client $(LFLAGS) test_debug_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 
@@ -198,3 +210,6 @@ test_virtual_gdi_client.o: $(COMMLIB_DIR)/test_virtual_gdi_client.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_virtual_gdi_client.c
 test_status_info.o: $(COMMLIB_DIR)/test_status_info.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_status_info.c
+test_debug_client.o: $(COMMLIB_DIR)/test_debug_client.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_debug_client.c
+

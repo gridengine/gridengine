@@ -36,13 +36,13 @@
 #include <map>
 #include <set>
 #include <string>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "culltrans_repository.h"
 #include "culltrans.h"
 
 extern "C" {
-#include "cod_boundaries.h"
+#include "sge_boundaries.h"
 }
 
 #ifdef HAVE_STD
@@ -66,7 +66,7 @@ bool writeConsts() {
    out << "#ifndef elem_codes_idl" << endl;
    out << "#define elem_codes_idl" << endl << endl;
 
-   out << "module Codine {" << endl;
+   out << "module GE {" << endl;
 
    // write the constants
    map<int, string>::iterator it;

@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,16 +28,12 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * NoActiveSessionException.java
- *
- * Created on June 17, 2003, 11:00 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** Exit routine failed because there is no active session.
+/** Requested action failed because there is no active session.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
 public class NoActiveSessionException extends SessionException {
 	

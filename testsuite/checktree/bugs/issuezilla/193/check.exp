@@ -634,8 +634,15 @@ proc issue193_pe_jobs {} {
        } else {
           add_proc_error "reschedule_pe_jobs" -1 "job $job does not start, pe $pe"
        } 
+       if { [is_job_running $job "Sleeper"] != 1 } {
+          add_proc_error "issue193_pe_jobs" -1 "job $job is not running!!"
+       }
+
        delete_job $job
-       wait_for_jobend $job "Sleeper" 100
+       # wait for job without check if he is already running
+       # ==> when job is faster deleted, wait_for_jobend will not find the job and
+       #     report an error
+       wait_for_jobend $job "Sleeper" 100 0
    }
    set_error 0 "ok"
 }

@@ -52,33 +52,6 @@ enum {
    GDI_DO_LATER = 0x01
 };
 
-#if 0
-/* *INDENT-OFF* */
-
-/*
- * Qinstance explanation element
- */
-
-enum {
-   QIM_type = QIM_LOWERBOUND,
-   QIM_message
-};
-
-LISTDEF(QIM_Type)
-   SGE_ULONG(QIM_type, CULL_DEFAULT)
-   SGE_STRING(QIM_message, CULL_DEFAULT)
-LISTEND
-
-NAMEDEF(QIMN)
-   NAME("QIM_type")
-   NAME("QIM_message")
-NAMEEND
-
-#define QIMS sizeof(QIMN)/sizeof(char*)
-
-/* *INDENT-ON* */
-#endif 
-
 /* *INDENT-OFF* */
 
 enum {
@@ -163,11 +136,14 @@ enum {
    QU_host_seq_no,
    QU_resource_utilization,
    QU_message_list,
-   QU_gdi_do_later
+   QU_gdi_do_later,
+
+/* new state variables, these are needed for the scheduler, to dispach jobs into suitable queues */
+   QU_state_changes
 };
 
 SLISTDEF(QU_Type, QInstance)
-   SGE_HOST(QU_qhostname, CULL_SPOOL) 
+   SGE_HOST(QU_qhostname, CULL_HASH | CULL_SPOOL) 
    SGE_STRING(QU_qname, CULL_SPOOL)
    SGE_STRING(QU_full_name, CULL_PRIMARY_KEY)
    SGE_ULONG(QU_tag, CULL_DEFAULT)
@@ -231,7 +207,7 @@ SLISTDEF(QU_Type, QInstance)
 
    SGE_LIST(QU_subordinate_list, SO_Type, CULL_CONFIGURE)
 
-/* EB: TODO: Add internal attributes */
+/* EB:*/
 
    SGE_ULONG(QU_queue_number, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_ULONG(QU_state, CULL_SPOOL)
@@ -249,6 +225,9 @@ SLISTDEF(QU_Type, QInstance)
    SGE_LIST(QU_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(QU_gdi_do_later, CULL_DEFAULT)
+
+   SGE_LIST(QU_state_changes, CQU_Type, CULL_DEFAULT)
+ 
 LISTEND 
 
 NAMEDEF(QUN)
@@ -334,6 +313,8 @@ NAMEDEF(QUN)
    NAME("QU_resource_utilization")
    NAME("QU_message_list")
    NAME("QU_gdi_do_later")
+   NAME("QU_state_changes")
+ 
 NAMEEND
 
 #define QUS sizeof(QUN)/sizeof(char*)

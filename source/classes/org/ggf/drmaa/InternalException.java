@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,19 +28,15 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InternalException.java
- *
- * Created on June 17, 2003, 10:42 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** Unexpected or internal DRMAA error like memory allocation,
  * system call failure, etc.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InternalException extends DRMAAException {
+public class InternalException extends DrmaaRuntimeException {
 	
 	/**
 	 * Creates a new instance of <code>InternalException</code> without detail message.

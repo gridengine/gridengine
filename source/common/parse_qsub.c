@@ -796,6 +796,7 @@ u_long32 flags
 
       if (!strcmp("-js", *sp)) {
          u_long32 jobshare;
+         double jobshare_d;
 
          sp++;
          if (!*sp) {
@@ -807,13 +808,23 @@ u_long32 flags
             return answer;
          }
 
-         if (!parse_ulong_val(NULL, &jobshare, TYPE_INT, *sp, NULL, 0)) {
+         if (!parse_ulong_val(&jobshare_d, NULL, TYPE_INT, *sp, NULL, 0)) {
             answer_list_add(&answer, MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT,
                              STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
 
+
+         if (jobshare_d < 0) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         jobshare = jobshare_d;
+         
          ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, *(sp - 1), *sp);
          lSetUlong(ep_opt, SPA_argval_lUlongT, jobshare);
 
@@ -1110,6 +1121,7 @@ u_long32 flags
 
       if (!strcmp("-ot", *sp)) {
          int otickets;
+         double otickets_d;
 
          sp++;
          if (!*sp) {
@@ -1120,10 +1132,25 @@ u_long32 flags
              return answer;
          }
 
-         otickets = atol(*sp);
+         if (!parse_ulong_val(&otickets_d, NULL, TYPE_INT, *sp, NULL, 0)) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDOTICKETSMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
 
+
+         if (otickets_d < 0) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDOTICKETSMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         otickets = otickets_d;
+         
          ep_opt = sge_add_arg(pcmdline, ot_OPT, lIntT, *(sp - 1), *sp);
-         lSetInt(ep_opt, SPA_argval_lIntT, otickets);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, otickets);
 
          sp++;
          continue;
@@ -1296,10 +1323,10 @@ DTRACE;
 
          DPRINTF(("\"-r %s\"\n", *sp));
 
-         if (!strcmp("y", *sp)) {
+         if ((strcasecmp("y", *sp) == 0) || (strcasecmp("yes", *sp) == 0)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, 1);
-         } else if (!strcmp("n", *sp)) {
+         } else if ((strcasecmp ("n", *sp) == 0) || (strcasecmp ("no", *sp) == 0)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, 2);
          } else {
@@ -1660,7 +1687,7 @@ DTRACE;
          }
          else if (!strcmp("w", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, WARINING_VERIFY);
+            lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
          }
          else if (!strcmp("n", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
@@ -2309,7 +2336,7 @@ char *dest_str
       return 2;
    }
 
-   i_ret = cull_parse_string_list(str_str, "destin ident list", QR_Type, rule, lpp);
+   i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
       FREE(s);
       FREE(str_str);
@@ -2404,7 +2431,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment)
 {
    char *variable;
-   char *value;
+   char *val_str;
+   int var_len;
    stringT str;
    char **str_str;
    char **pstr;
@@ -2449,16 +2477,27 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
 
       variable = sge_strtok(*pstr, "=");
       SGE_ASSERT((variable));
+      var_len=strlen(variable);
+      lSetString(ep, VA_variable, variable);
       memset(str, 0, sizeof(str));
       sprintf(str, "%s=", variable);
-      lSetString(ep, VA_variable, variable);
-      value = sge_strtok((char *) NULL, "=");
-      if (value)
-         lSetString(ep, VA_value, value);
-      else if(check_environment)
+      val_str=*pstr;
+
+      /* The character at the end of the first token must be either '=' or '\0'.
+       * If it's a '=' then we treat the following string as the value */
+      if (val_str[var_len] == '=') {
+          lSetString(ep, VA_value, &val_str[var_len+1]);
+      }
+      /* If it's a '\0' and check_environment is set, then we get the value from
+       * the environment variable value. */
+      else if(check_environment) {
          lSetString(ep, VA_value, sge_getenv(variable));
-      else
+      }
+      /* If it's a '\0' and check_environment is not set, then we set the value
+       * to NULL. */
+      else {
          lSetString(ep, VA_value, NULL);
+      }
    }
 
    FREE(va_string);

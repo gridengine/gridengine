@@ -65,7 +65,8 @@
 const char* sge_build_job_category(
 dstring *category_str,
 lListElem *job,
-lList *acl_list 
+lList *acl_list,
+bool is_resource_cat
 ) {
    lList *cmdl = NULL;
    lListElem *ep;
@@ -141,6 +142,36 @@ lList *acl_list
       goto ERROR;
    }
 
+/* new extension */
+   /* only needed, if jobs should be filtered by categories. */ 
+   if (is_resource_cat && sconf_is_job_category_filtering()) {
+      /* 
+       *  deadline
+       */
+      if (sge_unparse_ulong_option(job, JB_deadline, "-dl", &cmdl, NULL) != 0) {
+         goto ERROR;
+      }
+     
+      /*
+       * priority
+       */
+      if (sge_unparse_ulong_option(job, JB_priority, "-p", &cmdl, NULL) != 0) {
+         goto ERROR;
+      }
+    
+      if (sge_unparse_ulong_option(job, JB_override_tickets, "-ot", &cmdl, NULL) != 0) {
+         goto ERROR;
+      }
+
+      if (sge_unparse_ulong_option(job, JB_jobshare, "-js", &cmdl, NULL) != 0) {
+         goto ERROR;
+      }
+
+      if (sge_unparse_string_option(job, JB_owner, "-u", &cmdl, NULL) != 0) {
+         goto ERROR;
+      }
+    
+   }
    /*
    ** create the category string
    */

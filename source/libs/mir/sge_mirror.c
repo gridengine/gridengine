@@ -73,6 +73,9 @@
 #include "sge_pe_task_mirror.h"
 #include "sge_sharetree_mirror.h"
 #include "sge_sched_conf_mirror.h"
+#include "sge_hgroupL.h"
+#include "sge_hostL.h"
+
 
 #include "sge_mirror.h"
 
@@ -80,6 +83,12 @@
 int num_events = 0;
 
 /* Static functions for internal use */
+static bool produce_qmaster_alive_timeout = false; /* 
+                                                    * used to produce qmaster alive timeout when 
+                                                    * SGE_PRODUCE_ALIVE_TIMEOUT_ERROR environment
+                                                    * variable is set.
+                                                    */
+
 static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
@@ -145,7 +154,7 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, host_update_master_list,                NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
-   { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, host_update_master_list,                NULL, NULL }, /*hgroup*/
    { NULL, generic_update_master_list,             NULL, NULL },
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
@@ -201,6 +210,14 @@ sge_mirror_error sge_mirror_initialize(ev_registration_id id, const char *name)
    int i;
 
    DENTER(TOP_LAYER, "sge_mirror_initialize");
+
+   /* if environment varialbe SGE_PRODUCE_ALIVE_TIMEOUT_ERROR
+      is defined, the mirror event client will produce qmaster
+      alive timeout errors and reconnect to qmaster */
+   if ( getenv("SGE_PRODUCE_ALIVE_TIMEOUT_ERROR") ) {
+      produce_qmaster_alive_timeout = true;
+   }
+
 
    /* initialize mirroring data structures - only changeable fields */
    for(i = 0; i < SGE_TYPE_ALL; i++) {
@@ -324,14 +341,15 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
    return ret;
 }   
   
-static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
-                                              sge_mirror_callback callback_before, 
-                                              sge_mirror_callback callback_after, 
-                                              void *clientdata,
-                                              const lCondition *where, const lEnumeration *what)
+static sge_mirror_error 
+_sge_mirror_subscribe(sge_object_type type, 
+                      sge_mirror_callback callback_before, 
+                      sge_mirror_callback callback_after, 
+                      void *clientdata,
+                      const lCondition *where, const lEnumeration *what)
 {
-lListElem *what_el = lWhatToElem(what);
-lListElem *where_el = lWhereToElem(where);
+   lListElem *what_el = lWhatToElem(what);
+   lListElem *where_el = lWhereToElem(where);
 
    /* type already has been checked before */
    switch(type) {
@@ -911,6 +929,7 @@ sge_mirror_error sge_mirror_process_events(void)
    u_long32 now;
    lList *event_list = NULL;
    sge_mirror_error ret = SGE_EM_OK;
+   static int test_debug = 0;
 
    DENTER(TOP_LAYER, "sge_mirror_process_events");
 
@@ -931,7 +950,17 @@ sge_mirror_error sge_mirror_process_events(void)
       ret = SGE_EM_TIMEOUT;
    }
 
-   if(prof_is_active()) {
+   if ( produce_qmaster_alive_timeout == true ) {
+      test_debug++;
+      if ( test_debug > 3 ) {
+         test_debug = 0;
+         WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+         ec_mark4registration();
+         ret = SGE_EM_TIMEOUT;
+      }
+   }
+
+   if(prof_is_active(SGE_PROF_MIRROR)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
       
@@ -1422,7 +1451,7 @@ static bool sge_mirror_process_qmaster_goes_down(sge_object_type type,
    DENTER(TOP_LAYER, "sge_mirror_process_qmaster_goes_down");
 
    DPRINTF(("qmaster goes down\n"));
-   sleep(8);
+
    ec_mark4registration();
 
    DEXIT;
@@ -1502,6 +1531,7 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
    DENTER(TOP_LAYER, "sge_mirror_update_master_list_str_key");
 
    ep = lGetElemStr(*list, key_nm, key);
+
    ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
 
    DEXIT;

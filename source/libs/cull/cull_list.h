@@ -229,10 +229,11 @@ lListElem *lCopyElemHash(const lListElem *src, bool isHash);
 int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp);
 
 int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, const lEnumeration *ep, bool isHash);
-int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash);
+int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash, lEnumeration *ep);
 
 int lAppendElem(lList *lp, lListElem *ep);
 lListElem *lDechainElem(lList *lp, lListElem *ep);
+void lDechainList(lList *source, lList **target, lListElem *ep);
 lListElem *lDechainObject(lListElem *parent, int name);
 int lRemoveElem(lList *lp, lListElem *ep);
 int lInsertElem(lList *lp, lListElem *ep, lListElem *new_elem);
@@ -257,7 +258,7 @@ lListElem *lFindLast(const lList *lp, const lCondition *cp);
 #define mt_is_unique(mt) ((mt) & CULL_UNIQUE)
 
 bool lListElem_is_pos_changed(const lListElem *ep, int pos);
-
+bool lListElem_is_changed(const lListElem *ep);
 bool lList_clear_changed_info(lList *lp);
 bool lListElem_clear_changed_info(lListElem *lp);
 

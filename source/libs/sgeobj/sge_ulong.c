@@ -144,10 +144,70 @@ bool double_print_memory_to_dstring(double value, dstring *string)
    return ret;
 }
 
-/*
-* NOTES
+/****** sgeobj/double_print_int_to_dstring() ***********************************
+*  NAME
+*     double_print_int_to_dstring() -- Print a double into a dstring as an int
+*
+*  SYNOPSIS
+*     lListElem * 
+*     double_print_int_to_dstring(double value, dstring *string)
+*
+*  FUNCTION
+*    Print a double into a dstring as an int.
+*
+*  INPUTS
+*     double value      - the value to print
+*     dstring *string   - the dstring to receive the value
+*
+*  RESULT
+*     bool - returns false if value is out of range for an int
+*
+*  NOTES
+*     MT-NOTE: double_print_int_to_dstring() is MT safe
+*
+*******************************************************************************/
+bool double_print_int_to_dstring(double value, dstring *string)
+{
+   bool ret = true;
+
+   DENTER(ULONG_LAYER, "double_print_int_to_dstring");
+   
+   if ((value > (double)MAX_INT) || (value < (double)MIN_INT)) {
+      DEXIT;
+      return false;
+   }
+   
+   if (string != NULL) {
+      if (!double_print_infinity_to_dstring(value, string)) {
+         sge_dstring_sprintf_append(string, "%d", (int)value);
+      } 
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/double_print_to_dstring() ***********************************
+*  NAME
+*     double_print_to_dstring() -- Print a double into a dstring
+*
+*  SYNOPSIS
+*     lListElem * 
+*     double_print_to_dstring(double value, dstring *string)
+*
+*  FUNCTION
+*    Print a double into a dstring.
+*
+*  INPUTS
+*     double value      - the value to print
+*     dstring *string   - the dstring to receive the value
+*
+*  RESULT
+*     bool - returns false if something goes wrong
+*
+*  NOTES
 *     MT-NOTE: double_print_to_dstring() is MT safe
-*/
+*
+*******************************************************************************/
 bool double_print_to_dstring(double value, dstring *string)
 {
    bool ret = true;

@@ -6,6 +6,7 @@
 #if defined(ALPHA4) || defined(ALPHA5) || defined(LINUX) || defined(SOLARIS)
 extern "C"
    int yylex(void);
+   void yyerror(const char *);
 #endif
 %}
 

@@ -482,10 +482,15 @@ bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number)
 u_long32 job_get_ja_tasks(const lListElem *job) 
 {  
    u_long32 ret = 0;
+   u_long32 n = 0;
 
    DENTER(TOP_LAYER, "job_get_ja_tasks");
-   ret += job_get_not_enrolled_ja_tasks(job);
-   ret += job_get_enrolled_ja_tasks(job);
+   n = job_get_not_enrolled_ja_tasks(job);
+   ret += n;
+   DPRINTF(("Not enrolled ja_tasks: "u32"\n", n));
+   n = job_get_enrolled_ja_tasks(job);
+   ret += n;
+   DPRINTF(("Enrolled ja_tasks: "u32"\n", n));
    DEXIT;
    return ret;
 }
@@ -515,16 +520,25 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 ******************************************************************************/
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
 {
-   const int attributes = 4;
-   const int attribute[] = {JB_ja_n_h_ids, JB_ja_u_h_ids, JB_ja_o_h_ids,
-                            JB_ja_s_h_ids};
+   lList *answer_list = NULL;
+   lList *uos_ids = NULL;
+   lList *uo_ids = NULL;
    u_long32 ret = 0;
-   int i;
 
    DENTER(TOP_LAYER, "job_get_not_enrolled_ja_tasks");     
-   for (i = 0; i < attributes; i++) {
-      ret += range_list_get_number_of_ids(lGetList(job, attribute[i]));
-   } 
+
+   range_list_calculate_union_set(&uo_ids, &answer_list,
+                                  lGetList(job, JB_ja_u_h_ids),
+                                  lGetList(job, JB_ja_o_h_ids));
+   range_list_calculate_union_set(&uos_ids, &answer_list, uo_ids, 
+                                  lGetList(job, JB_ja_s_h_ids));
+
+   ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
+   ret += range_list_get_number_of_ids(uos_ids);
+
+   uos_ids = lFreeList(uos_ids);
+   uo_ids = lFreeList(uo_ids);
+
    DEXIT;
    return ret;
 }
@@ -1704,7 +1718,7 @@ error:
 *
 *     Please note: The "*_O_*" env variables get their final
 *                  name shortly before job execution. Find more 
-*                  information in the ADOC comment of
+*                  information in the comment of
 *                  job_initialize_env()
 *
 *  INPUTS
@@ -1742,7 +1756,7 @@ const char *job_get_env_string(const lListElem *job, const char *variable)
 *
 *     Please note: The "*_O_*" env variables get their final
 *                  name shortly before job execution. Find more 
-*                  information in the ADOC comment of
+*                  information in the comment of
 *                  job_initialize_env()
 *
 *  INPUTS
@@ -2344,58 +2358,29 @@ bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
    return true;
 }
 
-/****** sgeobj/job/job_has_valid_account_string() *****************************
+/****** sgeobj/job/job_resolve_host_for_path_list() ***************************
 *  NAME
-*     job_has_valid_account_string() -- is job account string valid 
+*     job_resolve_host_for_path_list() -- resolves hostnames in path lists 
 *
 *  SYNOPSIS
-*     bool job_has_valid_account_string(const lListElem *job, 
-*                                       lList **answer_list) 
+*     int 
+*     job_resolve_host_for_path_list(const lListElem *job, 
+*                                    lList **answer_list, int name) 
 *
 *  FUNCTION
-*     Returns true if the account string contained in "job" does not
-*     contain any colon (':'). 
-*
-*  INPUTS
-*     const lListElem *job - JB_Type element 
-*     lList **answer_list  - AN_Type element 
-*
-*  RESULT
-*     bool - true if account string is valid 
-******************************************************************************/
-bool job_has_valid_account_string(const lListElem *job, lList **answer_list)
-{
-   bool ret = true;
-
-   if (strchr(lGetString(job, JB_account), ':')) {
-      answer_list_add(answer_list, MSG_COLONNOTALLOWED, STATUS_EUNKNOWN, 
-                      ANSWER_QUALITY_ERROR);
-      ret = false;
-   }
-   return ret;
-}
-
-/****** sge_job/job_resolve_host_for_path_list() *******************************
-*  NAME
-*     job_resolve_host_for_path_list() -- is a hostname valid 
-*
-*  SYNOPSIS
-*     int job_resolve_host_for_path_list(const lListElem *job, lList 
-*     **answer_list, int name) 
-*
-*  FUNCTION
-*     ??? 
+*     Resolves hostnames in path lists. 
 *
 *  INPUTS
 *     const lListElem *job - the submited cull list 
 *     lList **answer_list  - AN_Type element
-*     int name             - a JB_Type ( JB_stderr_path_list or JB_stout_path_list)
+*     int name             - a JB_Type (JB_stderr_path_list or 
+*                                       JB_stout_path_list)
 *
 *  RESULT
-*     int - error code ( STATUS_OK, or ...) 
-*
+*     int - error code (STATUS_OK, or ...) 
 *******************************************************************************/
-int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name)
+int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, 
+                                   int name)
 {
    bool ret_error=false;
    lListElem *ep;
@@ -2404,7 +2389,6 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
 
    for_each( ep, lGetList(job, name) ){
       int res = sge_resolve_host(ep, PN_host);
-#ifdef ENABLE_NGC
       DPRINTF(("after sge_resolve_host() which returned %s\n", cl_get_error_text(res)));
       if (res != CL_RETVAL_OK) { 
          const char *hostname = lGetHost(ep, PN_host);
@@ -2418,19 +2402,6 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
             ret_error=true;
          }
       } 
-#else
-      if( (res != 0) && (res != -1) && (res !=1 ) ){ /* 0 = everything is fine, 1 = no host specified*/
-         const char *hostname = lGetHost(ep, PN_host);
-
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret_error=true;
-      }  else if (res==-1) {/*something in the data-structure is wrong */
-         ERROR((SGE_EVENT, MSG_PARSE_NULLPOINTERRECEIVED));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret_error=true;
-      }
-#endif
       DPRINTF(("after sge_resolve_host() - II\n"));
 
       /* ensure, that each hostname is only specified once */
@@ -2470,8 +2441,28 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
       return STATUS_OK;
 }
 
-/* EB: ADOC: add commets */
-
+/****** sgeobj/job/job_get_request() ******************************************
+*  NAME
+*     job_get_request() -- Returns the requested centry name 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     job_get_request(const lListElem *this_elem, const char **centry_name) 
+*
+*  FUNCTION
+*     Returns the requested centry name if it is requested by the give
+*     job (JB_Type). 
+*
+*  INPUTS
+*     const lListElem *this_elem - JB_Type element 
+*     const char *centry_name    - name 
+*
+*  RESULT
+*     lListElem * - CE_Type element
+*
+*  NOTES
+*     MT-NOTE: job_get_request() is MT safe 
+*******************************************************************************/
 lListElem *
 job_get_request(const lListElem *this_elem, const char *centry_name) 
 {
@@ -2489,6 +2480,8 @@ job_get_request(const lListElem *this_elem, const char *centry_name)
    DEXIT;
    return ret;
 }
+
+/* EB: ADOC: add commets */
 
 bool
 job_get_contribution(const lListElem *this_elem, lList **answer_list,

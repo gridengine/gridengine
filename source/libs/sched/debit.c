@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 #include "cull.h"
-#include "sge_select_queue.h"
+#include "sge_select_queue.h" 
 #include "debit.h"
 #include "sort_hosts.h"
 #include "sge_pe.h"
@@ -40,6 +40,18 @@
 #include "sge_centry.h"
 #include "sgermon.h"
 #include "sge_resource_utilization.h"
+
+#include "sge_qinstanceL.h"
+#include "sge_qinstance.h"
+#include "subordinate_schedd.h"
+#include "sge_subordinate.h"
+#include "sge_orderL.h"
+#include "sge_log.h"
+#include "msg_schedd.h"
+
+static int 
+debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
+                      lList *complex_list, order_t *orders);
 
 /* -------------------------------------------------------------
 
@@ -96,18 +108,21 @@
       error if you try to debit a job from a queue where the 
       jobs user has no access.
 
+const sge_assignment_t *a - all information describing the assignemnt 
+int *sort_hostlist,       - do we have to resort the hostlist? 
+order_t *orders,          - needed to warn on jobs that were dispatched into
+                            queues and get suspended on subordinate in the very
+                            same interval 
+bool now,                 - if true this is or will be a running job
+                            false for all jobs that must only be put into the schedule 
+const char *type          - a string as forseen with serf_record_entry() 
+                            'type' parameter (may be NULL) 
+      
 */
-int debit_scheduled_job(
-const sge_assignment_t *a, /* all information describing the assignemnt */
-int *sort_hostlist,  /* do we have to resort the hostlist? */
-order_t *orders,  /* needed to warn on jobs that were dispatched into
-                        queues and get suspended on subordinate in the very
-                        same interval */
-bool now,             /* if true this is or will be a running job
-                         false for all jobs that must only be put into the schedule */
-const char *type      /* a string as forseen with serf_record_entry() 
-                         'type' parameter (may be NULL) */
-) {
+int 
+debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,   
+                    order_t *orders, bool now, const char *type) 
+{
    DENTER(TOP_LAYER, "debit_scheduled_job");
 
    if (!a) {
@@ -116,8 +131,9 @@ const char *type      /* a string as forseen with serf_record_entry()
    }
 
    if (now) {
-      if (a->pe)
+      if (a->pe) {
          pe_debit_slots(a->pe, a->slots, a->job_id);
+      }   
       debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
       debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders);
    }
@@ -126,4 +142,88 @@ const char *type      /* a string as forseen with serf_record_entry()
 
    DEXIT;
    return 0;
+}
+
+/*
+ * Here
+ *
+ *   - we reduce the amount of free slots in the queue.
+ *   - we activte suspend_on_subordinate to prevent
+ *     scheduling on queues that will get suspended
+ *   - we debit consumable resouces of queue
+ *
+ * to represent the job again we use the tagged selected queue list
+ * (same game as calling sge_create_orders())
+ * (would be better to use the granted_destin_identifier_list of the job)
+ *
+ * order_t *orders    needed to warn on jobs that get dispatched and suspended
+ *                    on subordinate in the very same interval 
+ */
+static int 
+debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list, 
+                      lList *centry_list, order_t *orders) 
+{
+   int qslots, total;
+   unsigned int tagged;
+   const char *qname;
+   lListElem *gel, *qep, *so;
+   int ret = 0;
+
+   DENTER(TOP_LAYER, "debit_job_from_queue");
+
+   /* use each entry in sel_q_list as reference into the global_queue_list */
+   for_each(gel, granted ) {
+
+      tagged = lGetUlong(gel, JG_slots);
+      if (tagged) {
+         /* find queue */
+         qname = lGetString(gel, JG_qname);
+         qep = lGetElemStr(global_queue_list, QU_full_name, qname);
+
+         /* increase used slots */
+         qslots = qinstance_slots_used(qep);
+
+         /* precompute suspensions for subordinated queues */
+         total = lGetUlong(qep, QU_job_slots);
+         for_each (so, lGetList(qep, QU_subordinate_list)) {
+            if (!tst_sos(qslots,        total, so)  &&  /* not suspended till now */
+                 tst_sos(qslots+tagged, total, so)) {   /* but now                */
+               ret |= sos_schedd(lGetString(so, SO_name), global_queue_list);
+
+               /* warn on jobs that were dispatched into that queue in
+                  the same scheduling interval based on the orders list */
+               {
+                  lListElem *order;
+                  for_each (order, orders->jobStartOrderList) {
+                     if (lGetUlong(order, OR_type) != ORT_start_job) {
+                        continue;
+                     }   
+                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
+                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
+                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
+                     }
+                  }
+                  
+                  for_each (order, orders->sent_job_StartOrderList) {
+                     if (lGetUlong(order, OR_type) != ORT_start_job) {
+                        continue;
+                     }  
+                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
+                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
+                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
+                     }
+                  }
+
+               }
+            }
+         }
+
+         DPRINTF(("REDUCING SLOTS OF QUEUE %s BY %d\n", qname, tagged));
+
+         qinstance_debit_consumable(qep, job, centry_list, tagged);
+      }
+   }
+
+   DEXIT;
+   return ret;
 }

@@ -59,6 +59,8 @@ WelcomeUninstall()
 
 FetchHostname()
 {
+   euid=`$SGE_UTILBIN/uidgid -euid`
+
    if [ $AUTO = "true" ]; then
       HOST=$EXEC_HOST_LIST_RM
    fi
@@ -79,9 +81,10 @@ FetchHostname()
         SuspendQueue $h
         SuspendJobs $h
         RescheduleJobs $h
-        RemoveExecd $h
         RemoveQueues $h
+        RemoveExecd $h
         RemoveSpoolDir $h
+        RemoveRcScript $h execd $euid
 
      else
         $INFOTEXT "%s is not an execution host" $h
@@ -207,8 +210,11 @@ RemoveExecd()
    $INFOTEXT -log "Removing exec host %s now!" $exechost
 
    qconf -dh $exechost
+   sleep 1
    qconf -ds $exechost
+   sleep 1
    qconf -ke $exechost
+   sleep 1
    qconf -de $exechost
  
 

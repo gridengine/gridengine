@@ -45,7 +45,7 @@ static cl_raw_list_t* global_cl_log_list = NULL;
 
 
 /* this functions must lock / unlock the raw list manually */
-static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state,int log_type ,const char* message, const char* parameter ); /* CR check */
+static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state,cl_log_t log_type ,const char* message, const char* parameter ); /* CR check */
 
 #if 0
 /* this functions are not needed */
@@ -58,7 +58,7 @@ static cl_log_list_elem_t* cl_log_list_get_last_elem(cl_raw_list_t* list_p, cl_l
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_add_log()"
-static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state, int log_type, const char* message , const char* parameter) { /* CR check */
+static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state, cl_log_t log_type, const char* message , const char* parameter) { /* CR check */
    cl_log_list_elem_t* new_elem = NULL;
    int module_length = 0;
    char* mod_name_start1 = NULL;  
@@ -145,7 +145,7 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_convert_type_id()"
-const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
+const char* cl_log_list_convert_type_id(cl_log_t id)  {  /* CR check */
 
    switch (id) {
       case CL_LOG_OFF:
@@ -167,17 +167,19 @@ const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_set_log_level()"
-int cl_log_list_set_log_level(cl_raw_list_t* list_p, int new_log_level) {  /* CR check */
+int cl_log_list_set_log_level(cl_raw_list_t* list_p, cl_log_t new_log_level) {  /* CR check */
    cl_log_list_data_t* ldata = NULL;
-   int log_level = 0;
+   cl_log_t log_level = CL_LOG_OFF;
+   char* env_sge_commlib_debug = NULL;
    if (list_p == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
-   /* check for environment variable SGE_NGC_DEBUG */
+   /* check for environment variable SGE_COMMLIB_DEBUG */
    log_level = new_log_level;
-   if (getenv("SGE_COMMLIB_DEBUG") != NULL) {
-      log_level = (int) cl_util_get_ulong_value(getenv("SGE_COMMLIB_DEBUG"));
+   env_sge_commlib_debug = getenv("SGE_COMMLIB_DEBUG");
+   if (env_sge_commlib_debug != NULL) {
+      log_level = (cl_log_t) cl_util_get_ulong_value(env_sge_commlib_debug);
    }
 
    if (log_level < CL_LOG_OFF || log_level > CL_LOG_DEBUG) {
@@ -291,6 +293,8 @@ static cl_log_list_elem_t* cl_log_list_get_last_elem(cl_raw_list_t* list_p, cl_l
 #define __CL_FUNCTION__ "cl_log_list_setup()"
 int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int creator_id, cl_log_list_flush_method_t flush_type, cl_log_func_t flush_func  ) {
    int ret_val;
+   char* env_sge_commlib_debug = NULL;
+
    cl_log_list_data_t* ldata = NULL;
    cl_thread_settings_t* creator_settings = NULL;
 
@@ -351,8 +355,9 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
    }
 
    /* check for environment variable SGE_COMMLIB_DEBUG */
-   if ( getenv("SGE_COMMLIB_DEBUG") != NULL) {
-      ldata->current_log_level = (int) cl_util_get_ulong_value(getenv("SGE_COMMLIB_DEBUG"));
+   env_sge_commlib_debug=getenv("SGE_COMMLIB_DEBUG");
+   if ( env_sge_commlib_debug != NULL) {
+      ldata->current_log_level = (cl_log_t) cl_util_get_ulong_value(env_sge_commlib_debug);
    }
 
    CL_LOG(CL_LOG_INFO,"cl_log_list_setup() complete");
@@ -452,10 +457,16 @@ cl_thread_settings_t* cl_log_list_get_creator_thread(cl_thread_settings_t* threa
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_log()"
-int cl_log_list_log(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param) { /* CR check */
-   int ret_val, ret_val2;
+int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param) {
+
+   int ret_val;
+   int ret_val2;
    cl_thread_settings_t* thread_config = NULL;
-   cl_log_list_data_t* ldata = NULL;
+   cl_log_list_data_t*   ldata = NULL;
+
+   if (log_text == NULL || module_name == NULL || function_name == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }
 
    /* get the thread configuration for the calling thread */
    thread_config = cl_thread_get_thread_config();
@@ -469,10 +480,6 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
    }
 #endif
 
-
-   if (log_text == NULL || module_name == NULL || function_name == NULL ) {
-      return CL_RETVAL_PARAMS;
-   }
 
    if (thread_config != NULL) {
       if (thread_config->thread_log_list == NULL) {
@@ -515,7 +522,7 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
       }
       return ret_val2;
    } else {
-      /* TODO:
+      /* TODO 2 of 2 :
        *  This happens to threads of application which have not started 
        *  commlib setup function. A thread config should be provided for these
        *  threads, or the application should use commlib threads ( lists/thread module ) 
@@ -569,12 +576,100 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_log_list_log_ssi()"
+int cl_log_list_log_ssi(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text,
+                        const char* log_1 , const char* log_2 ,int log_3 ) {
+   int ret_val;
+   char my_buffer[512];
+   cl_thread_settings_t* thread_config = NULL;
+   cl_log_list_data_t*   ldata = NULL;
+   const char* help_null = "NULL";
+   const char* log_param1 = NULL;
+   const char* log_param2 = NULL;
+
+   /* get the thread configuration for the calling thread */
+   thread_config = cl_thread_get_thread_config();
+   if (thread_config != NULL) {
+      if (thread_config->thread_log_list == NULL) {
+         return CL_RETVAL_LOG_NO_LOGLIST;
+      } 
+      ldata = thread_config->thread_log_list->list_data;
+   } else {
+      /* TODO 1 of 2 :
+       *  This happens to threads of application which have not started 
+       *  commlib setup function. A thread config should be provided for these
+       *  threads, or the application should use commlib threads ( lists/thread module ) 
+       */
+       pthread_mutex_lock(&global_cl_log_list_mutex);
+       if ( global_cl_log_list != NULL) {
+          ldata = global_cl_log_list->list_data;
+       }
+       pthread_mutex_unlock(&global_cl_log_list_mutex);
+   }
+
+   if (ldata != NULL) {
+      if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+         return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
+      }
+   } else {
+      return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
+   }   
+   if (log_1 == NULL) {
+      log_param1 = help_null;
+   } else {
+      log_param1 = log_1;
+   }
+
+   if (log_2 == NULL) {
+      log_param2 = help_null;
+   } else {
+      log_param2 = log_2;
+   }
+   snprintf(my_buffer, 512, "\"%s/%s/%d\"", log_param1, log_param2, log_3);
+   ret_val = cl_log_list_log( log_type, line,  function_name, module_name,  log_text,  my_buffer);
+   return ret_val;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_log_list_log_int()"
-int cl_log_list_log_int(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {  /* CR check */
+int cl_log_list_log_int(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {
    int ret_val;
    char my_int_buffer[512];
+   cl_thread_settings_t* thread_config = NULL;
+   cl_log_list_data_t*   ldata = NULL;
 
-   sprintf(my_int_buffer, "%d", param);
+   /* get the thread configuration for the calling thread */
+   thread_config = cl_thread_get_thread_config();
+   if (thread_config != NULL) {
+      if (thread_config->thread_log_list == NULL) {
+         return CL_RETVAL_LOG_NO_LOGLIST;
+      } 
+      ldata = thread_config->thread_log_list->list_data;
+   } else {
+      /* TODO 1 of 2 :
+       *  This happens to threads of application which have not started 
+       *  commlib setup function. A thread config should be provided for these
+       *  threads, or the application should use commlib threads ( lists/thread module ) 
+       */
+       pthread_mutex_lock(&global_cl_log_list_mutex);
+       if ( global_cl_log_list != NULL) {
+          ldata = global_cl_log_list->list_data;
+       }
+       pthread_mutex_unlock(&global_cl_log_list_mutex);
+   }
+
+   if (ldata != NULL) {
+      if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+         return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
+      }
+   } else {
+      return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
+   }   
+
+   snprintf(my_int_buffer, 512, "%d", param);
    ret_val = cl_log_list_log( log_type, line,  function_name, module_name,  log_text,  my_int_buffer);
    return ret_val;
 }
@@ -615,7 +710,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    int ret_val;
    cl_log_list_elem_t* elem = NULL;
    struct timeval now;
-   
+
    
    if (list_p == NULL) {
       return CL_RETVAL_LOG_NO_LOGLIST;
@@ -632,20 +727,36 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
 
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-         printf("%ld.%ld : %15s|%4d|%10s|%8s| %s\n",
+#define CL_COM_PRINT_THREAD_ID 0
+
+#if CL_COM_PRINT_THREAD_ID
+         printf("%ld.%ld|%20s|%4d|%10s|%8s| %s\n",
+#else
+         printf("%ld.%ld|%20s|%10s|%8s| %s\n",
+#endif
+
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
          elem->log_thread_id, 
+#endif
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message);
       } else {
-         printf("%ld.%ld : %15s|%4d|%10s|%8s| %s %s\n",
+#if CL_COM_PRINT_THREAD_ID
+         printf("%ld.%ld|%20s|%4d|%10s|%8s| %s %s\n",
+#else
+         printf("%ld.%ld|%20s|%10s|%8s| %s %s\n",
+#endif
+
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
          elem->log_thread_id, 
+#endif
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message,

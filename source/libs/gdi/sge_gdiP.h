@@ -45,16 +45,17 @@
 extern "C" {
 #endif
 
-/* v5.0:       0x10000000 */
-/* v5.1:       0x10000001 */
-/* v5.2:       0x10000002 */
-/* v5.2.3:     0x10000003 */
-/* v5.3 alpha1 0x100000F0 */
-/* before hash 0x100000F1 */
-/* v5.3beta1   0x100000F2 */
-/* v5.3beta2   0x100000F3 */
-/* v5.3        0x100000F4 */
-#define GRM_GDI_VERSION 0x10000FFF
+/* v5.0:        0x10000000 */
+/* v5.1:        0x10000001 */
+/* v5.2:        0x10000002 */
+/* v5.2.3:      0x10000003 */
+/* v5.3 alpha1  0x100000F0 */
+/* before hash  0x100000F1 */
+/* v5.3beta1    0x100000F2 */
+/* v5.3beta2    0x100000F3 */
+/* v5.3         0x100000F4 */
+/* v6.0, v6.0u1 0x10000FFF */
+#define GRM_GDI_VERSION 0x10001000
 
 u_long32 gdi_state_get_request_id(void);
 int gdi_state_get_daemon_first(void);

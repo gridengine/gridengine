@@ -36,6 +36,7 @@
 #include <unistd.h>
 
 #include "sge.h"
+#include "basis_types.h"
 #include "sge_conf.h"
 #include "sge_stdlib.h"
 #include "cull.h"
@@ -57,12 +58,14 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_profiling.h"
 
 #include "config_file.h"
 
 #include "msg_sgeobjlib.h"
 
 #define SGE_BIN "bin"
+#define STREESPOOLTIMEDEF 240
 
 extern u_long32 loggingfacility;
 
@@ -78,6 +81,12 @@ bool do_credentials = true;
 bool do_authentication = true;
 bool use_qidle = false;
 bool disable_reschedule = false;
+bool prof_message_thrd = false;
+bool prof_signal_thrd = false;
+bool prof_deliver_thrd = false;
+bool prof_tevent_thrd = false;
+bool prof_execd_thrd = false;
+
 
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
@@ -103,6 +112,13 @@ bool simulate_hosts = false;
 
 int scheduler_timeout = 0;
 
+/**
+ * This value specifies the minimum time for spooling the sharetree usage.
+ * It is used and evaluated in the sge_follow module. The users and
+ * projects are spooled, when the qmaster goes down.
+ */
+int spool_time = STREESPOOLTIMEDEF;
+
 /* 
  * Reserved usage flags
  *
@@ -121,6 +137,14 @@ bool sharetree_reserved_usage = false;
  * Use primary group of qsub-host also for the job execution
  */
 bool use_qsub_gid = false;
+
+/*
+ * Job environment inheritance
+ */
+bool set_lib_path = false;
+/* This should match the default set in
+ * shepherd/builtin_starter.c:inherit_env(). */
+bool inherit_env = true;
 
 /*
  * notify_kill_default and notify_susp_default
@@ -493,16 +517,41 @@ int merge_configuration(lListElem *global, lListElem *local,
       do_authentication = true;
       compression_level = 0;
       compression_threshold = 10 * 1024;
+      spool_time = STREESPOOLTIMEDEF;
       use_qidle = false;
       disable_reschedule = false;   
       simulate_hosts = false;
+      prof_message_thrd = false;
+      prof_signal_thrd = false;
+      prof_deliver_thrd = false;
+      prof_tevent_thrd = false;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
+      /*u_long32 output_interval;*/
 
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
             continue;
-         } 
+         }
+         if (parse_bool_param(s, "PROF_SIGNAL", &prof_signal_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_MESSAGE", &prof_message_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_DELIVER", &prof_deliver_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_TEVENT", &prof_tevent_thrd)) {
+            continue;
+         }
+         if (parse_int_param(s, "STREE_SPOOL_INTERVAL", &spool_time, TYPE_TIM)) {
+            if (spool_time<= 0) {
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
+               spool_time = STREESPOOLTIMEDEF;
+            }
+            continue;
+         }
          if (parse_bool_param(s, "FORBID_APPERROR", &forbid_apperror)) {
             continue;
          }   
@@ -559,7 +608,15 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          }
       }
-       
+
+      /* If profiling configuration has changed, 
+         set_thread_prof_status_by_name has to be called for each thread
+      */
+      set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
+      set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
+      set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
+
       /* always initialize to defaults before we check execd_params */
 #ifdef COMPILE_DC
       acct_reserved_usage = false;
@@ -575,6 +632,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       execd_priority = -999;
       keep_active = false;
       use_qsub_gid = false;
+      prof_execd_thrd = false;
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
@@ -602,6 +660,9 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          } 
          if (parse_bool_param(s, "SHARETREE_RESERVED_USAGE", &sharetree_reserved_usage)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_EXECD", &prof_execd_thrd)) {
             continue;
          } 
          if (!strncasecmp(s, "NOTIFY_KILL", sizeof("NOTIFY_KILL")-1)) {
@@ -647,7 +708,19 @@ int merge_configuration(lListElem *global, lListElem *local,
             execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
             continue;
          }
+         if (parse_bool_param(s, "SET_LIB_PATH", &set_lib_path)) {
+            continue;
+         }
+         if (parse_bool_param(s, "INHERIT_ENV", &inherit_env)) {
+            continue;
+         }
       }
+
+      /* If profiling configuration has changed, 
+         set_thread_prof_status_by_name has to be called for each thread
+      */
+      set_thread_prof_status_by_name("Execd Thread", prof_execd_thrd);
+
 
       /* parse reporting parameters */
       for (s=sge_strtok(pconf->reporting_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
@@ -801,4 +874,3 @@ sge_conf_type *conf
 
    return;
 }
-

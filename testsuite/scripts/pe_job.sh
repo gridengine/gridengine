@@ -24,6 +24,7 @@ start_tasks()
 }
 
 # start a sleeper process on each granted processor
+unset SGE_DEBUG_LEVEL
 printf "master task started with job id %6d and pid %8d\n" $JOB_ID $$
 cat $PE_HOSTFILE | start_tasks $1
 echo "master task exiting"

@@ -84,6 +84,7 @@ ShutdownMaster()
    $INFOTEXT "Shutting down scheduler and qmaster!"
    $INFOTEXT -log "Shutting down scheduler and qmaster!"
 
+   euid=`$SGE_UTILBIN/uidgid -euid`
    spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    master_pid=`cat $spool_dir_master/qmaster.pid`
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
@@ -107,7 +108,8 @@ ShutdownMaster()
 
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
 
-   
+   RemoveRcScript $HOST master $euid
+
    $INFOTEXT "Removing qmaster spool directory!"
    $INFOTEXT -log "Removing qmaster spool directory!"
    RM="rm -fR"

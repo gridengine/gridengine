@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2004/04/19 10:52:01 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSELECT 1 "$Date: 2004/04/19 10:52:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSELECT 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qselect \- select queues.
 .\"
@@ -77,7 +77,7 @@ included in the queue list output. Matching is performed on
 queues based on non-mutable resource availability information only. 
 That means load values are always ignored except the so-called static 
 load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
-"virtual_total") ones. Also consumbale utilization is ignored.
+"virtual_total") ones. Also consumable utilization is ignored.
 .\"
 .IP "\fB\-pe pe_name,...\fP"
 Includes queues into the output which are attached to at least one of the 

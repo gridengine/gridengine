@@ -69,6 +69,7 @@
 #include "sge_cqueue.h"
 
 #include "uti/sge_spool.h"
+#include "sge_profiling.h"
 
 typedef struct {
    int host;
@@ -175,6 +176,8 @@ char **argv
    char buffer[128];
 
    DENTER_MAIN(TOP_LAYER, "qacct");
+
+   sge_prof_setup();
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -764,15 +767,18 @@ char **argv
       }
       
       if (complexflag) {
+         dstring qi = DSTRING_INIT;
          lListElem *queue;
          int selected;
-      
-         queue = cqueue_list_locate_qinstance(queue_list, dusage.qname);
+     
+         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname ); 
+         queue = cqueue_list_locate_qinstance(queue_list, sge_dstring_get_string(&qi));
          if (!queue) {
             WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
                       (int)dusage.job_number, dusage.qname));
             continue;
-         } 
+         }
+         sge_dstring_free(&qi); 
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 
@@ -1211,6 +1217,7 @@ char **argv
    /*
    ** problem: other clients evaluate some status here
    */
+   sge_prof_cleanup();
    SGE_EXIT(0);
    DEXIT;
    return 0;
@@ -1564,7 +1571,7 @@ lList **hgrp_l
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
       ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
-                              NULL, NULL, what, NULL, &state);
+                              NULL, NULL, what, NULL, &state, true);
       what = lFreeWhat(what);
 
       if (alp) {
@@ -1579,7 +1586,7 @@ lList **hgrp_l
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
       eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                              NULL, where, what, NULL, &state);
+                              NULL, where, what, NULL, &state, true);
       what = lFreeWhat(what);
       where = lFreeWhere(where);
 
@@ -1595,7 +1602,7 @@ lList **hgrp_l
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                           NULL, NULL, what, NULL, &state);
+                           NULL, NULL, what, NULL, &state, true);
       what = lFreeWhat(what);
 
       if (alp) {
@@ -1608,7 +1615,7 @@ lList **hgrp_l
    */
    what = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                           NULL, NULL, what, &mal, &state);
+                           NULL, NULL, what, &mal, &state, true);
    what = lFreeWhat(what);
 
    if (alp) {

@@ -1,0 +1,61 @@
+Use of branches in the Grid Engine CVS repository
+=================================================
+
+We have the following active branches in the Grid Engine CVS repository:
+- V53_beta2_BRANCH (bug fixes for 5.3p? releases)
+- V60_BRANCH       (bug fixes for the 6.0 release)
+- V60_FCS_FIXES    (urgent P1 bug fixes for the 6.0 release)
+- maintrunk        (ongoing development, release 6.1 to come)
+
+
+Bugs reported for 5.3p? releases
+--------------------------------
+
+Will be fixed in V53_beta2_BRANCH. 
+
+Check if bug is also present in 6.0, merge/rewrite bugfix to the appropriate
+6.0 branch.
+
+Check if bug is also present in maintrunk, merge/rewrite bugfix for maintrunk.
+
+
+
+P1 Bugs reported for the 6.0 release
+------------------------------------
+
+Will be fixed in V60_FCS_FIXES and merged/rewritten for V60_BRANCH and 
+maintrunk.
+
+As the development in the V60_BRANCH (mainly bugfixes and performance 
+improvements) may introduce new bugs, we'll fix urgent bugs in this separate 
+branch.
+This allows us to quickly release patches with a shorter tests phase.
+
+
+
+P2-P5 Bugs reported for the 6.0 release
+---------------------------------------
+
+Will be fixed in V60_BRANCH and merged/rewritten for maintrunk.
+
+
+
+Porting to new platforms
+------------------------
+
+Will be done in V53_beta2_BRANCH, V60_BRANCH, and maintrunk.
+
+
+
+Feature development
+-------------------
+
+Will be done in maintrunk.
+For bigger development projects consider creating a sub branch from maintrunk.
+
+
+
+Cleanup and code quality improvement
+------------------------------------
+
+Will be done in maintrunk.

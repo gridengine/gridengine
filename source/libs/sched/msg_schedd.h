@@ -166,11 +166,16 @@
 
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S      _MESSAGE(47134, _("cannot run because total slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE        _MESSAGE(47135, _("Jobs can not run because total slots of pe are not in range of job") )
+#define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_          _MESSAGE(47136, _("Job Filter: this job got ignored in the last scheduling run, because to many other jobs with the same resource request are in the pending list before this one."))
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "U32CFormat" sec. is too long") ) 
+#define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
+
 
 /* 
 ** schedd/sge_pe_schedd.c
 */ 
-#define MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS       _MESSAGE(47137, _("pe >"SFN"<: failed parsing allocation rule "SFQ"\n"))
+#define MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS       _MESSAGE(47168, _("pe >"SFN"<: failed parsing allocation rule "SFQ))
 #define MSG_USER                                      _MESSAGE(47169, _("user"))
 #define MSG_PROJECT                                   _MESSAGE(47170, _("project"))
 #define MSG_NO                                              _MESSAGE(47193, _("NO"))
@@ -194,14 +199,15 @@
 ** schedd/sge_select_queue.c
 */ 
 #define MSG_SCHEDD_FORDEFAULTREQUEST                        _MESSAGE(47210, _("for default request "  ))
-#define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S              _MESSAGE(47211, _("job requests unknown resource (%s)\n"))
+#define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S              _MESSAGE(47211, _("job requests unknown resource (%s)"))
 #define MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE        _MESSAGE(47212, _("job requests non requestable resource "))
 #define MSG_SCHEDD_ITOFFERSONLY                             _MESSAGE(47213, _("it offers only "))
 #define MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED             _MESSAGE(47214, _("queues dropped because they are full: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED        _MESSAGE(47215, _("queues dropped because they are suspended: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED         _MESSAGE(47216, _("queues dropped because they are disabled: "))
-#define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "U32CFormat"\n"))
-#define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN"\n"))
+#define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "U32CFormat))
+#define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
+#define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 
@@ -330,7 +336,6 @@
 #define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47400, _("The scheduler configuration is incomplete"))
 #define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
 #define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
-#define MSG_SCHEDD_CREATEORDERS_LWHEREFORJOBFAILED    _MESSAGE(47403, _("sge_create_orders(): lWhat() for job failed\n"))
 #define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("\terror: no value for "SFQ" because execd is in unknown state\n"))
 
 #endif /* __MSG_SCHEDD_H */

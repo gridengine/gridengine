@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/tcp.h>
 #include <errno.h>
@@ -394,7 +394,7 @@ const char *get_error_of_qrsh_starter(void)
 *     11, if the acception of a connecting client fails
 *     12, if the execution of the daemon fails
 ******************************************************************************/
-int qlogin_starter(const char *cwd, char *daemon)
+int qlogin_starter(const char *cwd, char *daemon, char** env)
 {
    int ret;
    int port;
@@ -425,10 +425,12 @@ int qlogin_starter(const char *cwd, char *daemon)
                    getuid(), geteuid(), getgid(), getegid()));
    
    /* must be root because we must access /dev/something */
+#if !defined(INTERIX)
    if (setgid(0) || setuid(0) || setegid(0) || seteuid(0)) {
       SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
       return 4;
    }
+#endif
 
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));
@@ -563,7 +565,7 @@ int qlogin_starter(const char *cwd, char *daemon)
 #endif
 
    /* that it. */
-   execv(args[0], args);
+   execve(args[0], args, env);
 
    /* oh oh, exec failed */
    /* no way to tell anyone, becuase all FDs are closed */

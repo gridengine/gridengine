@@ -23,6 +23,7 @@
 #include "cl_message_list.h"
 #include "cl_connection_list.h"
 #include "cl_util.h"
+#include "msg_commlib.h"
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -56,11 +57,26 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);  /* CR check */
-static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_read);  /* CR check */
-static cl_com_tcp_private_t* cl_com_tcp_get_private(cl_com_connection_t* connection);   /* CR check */
+/* connection specific struct (not used from outside) */
+typedef struct cl_com_tcp_private_type {
+   /* TCP/IP specific */
+   int           server_port;         /* used port for server setup */
+   int           connect_port;        /* port to connect to */
+   int           connect_in_port;     /* port from where client is connected (used for reserved port check) */
+   int           sockfd;              /* socket file descriptor */
+   struct sockaddr_in client_addr;    /* used in connect for storing client addr of connection partner */ 
+} cl_com_tcp_private_t;
 
 
+static cl_com_tcp_private_t* cl_com_tcp_get_private(cl_com_connection_t* connection);
+static int cl_com_tcp_free_com_private(cl_com_connection_t* connection);
+
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_fd()"
 int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL || fd == NULL ) {
@@ -74,6 +90,10 @@ int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
    return CL_RETVAL_UNKNOWN;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_service_port()"
 int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL || port == NULL ) {
@@ -86,6 +106,29 @@ int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port) {
    }
    return CL_RETVAL_UNKNOWN;
 }
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_client_socket_in_port()"
+int cl_com_tcp_get_client_socket_in_port(cl_com_connection_t* connection, int* port) {
+   cl_com_tcp_private_t* private = NULL;
+   if (connection == NULL || port == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if ( (private=cl_com_tcp_get_private(connection)) != NULL) {
+      *port = private->connect_in_port;
+      return CL_RETVAL_OK;
+   }
+   return CL_RETVAL_UNKNOWN;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_connect_port()"
 int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL || port == NULL ) {
@@ -99,14 +142,31 @@ int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port) {
    return CL_RETVAL_UNKNOWN;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_set_connect_port()"
+int cl_com_tcp_set_connect_port(cl_com_connection_t* connection, int port) {
+   cl_com_tcp_private_t* private = NULL;
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if ( (private=cl_com_tcp_get_private(connection)) != NULL) {
+      private->connect_port = port;
+      return CL_RETVAL_OK;
+   }
+   return CL_RETVAL_UNKNOWN;
+}
+
+
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_dump_tcp_private()"
-void cl_dump_tcp_private(cl_com_connection_t* connection) {  /* CR check */
+void cl_dump_tcp_private(cl_com_connection_t* connection) {
    cl_com_tcp_private_t* private = NULL;
-   CL_LOG(CL_LOG_DEBUG,"*** cl_dump_tcp_private() ***");
    if (connection == NULL) {
       CL_LOG(CL_LOG_DEBUG, "connection is NULL");
    } else {
@@ -116,7 +176,6 @@ void cl_dump_tcp_private(cl_com_connection_t* connection) {  /* CR check */
          CL_LOG_INT(CL_LOG_DEBUG,"socked fd:",private->sockfd);
       }
    }
-   CL_LOG(CL_LOG_DEBUG,"****************************");
 }
 
 
@@ -133,7 +192,7 @@ void cl_dump_tcp_private(cl_com_connection_t* connection) {  /* CR check */
 *     This function will create a new socket file descriptor and set the 
 *     SO_REUSEADDR socket option and the O_NONBLOCK file descriptor flag. 
 *     After that the socket will try to connect the service handler on the
-*     given connect_port (set with cl_com_setup_tcp_connection()) on the
+*     given connect_port (set with cl_com_tcp_setup_connection()) on the
 *     host specified with comp_host. After a successful connect the 
 *     TCP_NODELAY socket option is set. 
 *
@@ -155,199 +214,245 @@ void cl_dump_tcp_private(cl_com_connection_t* connection) {  /* CR check */
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_open_connection()"
 int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once) {
-
+   cl_com_tcp_private_t* private = NULL;
+   
    int tmp_error = CL_RETVAL_OK;
+   char tmp_buffer[256];
+
+
    if (connection == NULL) { 
       return  CL_RETVAL_PARAMS;
    }
    if (connection->remote == NULL || connection->local == NULL || connection->receiver == NULL || connection->sender == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   if (cl_com_tcp_get_private(connection) == NULL) {
+
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
 
-   if ( cl_com_tcp_get_private(connection)->connect_port <= 0 ) {
+   if ( private->connect_port <= 0 ) {
       CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_NO_PORT_ERROR));
       return CL_RETVAL_NO_PORT_ERROR; 
    }
 
-   if ( connection->connection_state != CL_COM_OPENING ) {
-      CL_LOG(CL_LOG_ERROR,"state is not CL_COM_OPENING - return connect error");
+   if ( connection->connection_state != CL_OPENING ) {
+      CL_LOG(CL_LOG_ERROR,"state is not CL_OPENING - return connect error");
       return CL_RETVAL_CONNECT_ERROR;   
    }
 
-   CL_LOG(CL_LOG_INFO,"setting up connection ...");
    if ( connection->connection_sub_state == CL_COM_OPEN_INIT) {
-      int sockfd = -1;
       int on = 1;
       char* unique_host = NULL;
       struct timeval now;
+      int res_port = IPPORT_RESERVED -1;
 
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_INIT");
-      cl_com_tcp_get_private(connection)->sockfd = -1;
+      private->sockfd = -1;
       
+      switch(connection->tcp_connect_mode) {
+         case CL_TCP_DEFAULT: {
+            /* create socket */
+            if ((private->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+               CL_LOG(CL_LOG_ERROR,"could not create socket");
+               private->sockfd = -1;
+               cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
+               return CL_RETVAL_CREATE_SOCKET;
+            }
+            break;
+         }
 
-      /* create socket */
-      if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-         CL_LOG(CL_LOG_ERROR,"could not create socket");
-         return CL_RETVAL_CREATE_SOCKET;
-      }
+         case CL_TCP_RESERVED_PORT: {
+            /* create reserved port socket */
+            if ((private->sockfd = rresvport(&res_port)) < 0) {
+               CL_LOG(CL_LOG_ERROR,"could not create reserved port socket");
+               private->sockfd = -1;
+               cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR );
+               return CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
+            }
+            break;
+         }
+      }    
 
       /* set local address reuse socket option */
-      if ( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
+      if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
-         cl_com_tcp_get_private(connection)->sockfd = -1;
+         private->sockfd = -1;
+         cl_com_push_application_error(CL_RETVAL_SETSOCKOPT_ERROR, MSG_CL_TCP_FW_SETSOCKOPT_ERROR);
          return CL_RETVAL_SETSOCKOPT_ERROR;
-      }  
+      }
    
       /* this is a non blocking socket */
-      if ( fcntl(sockfd, F_SETFL, O_NONBLOCK) != 0) {
+      if ( fcntl(private->sockfd, F_SETFL, O_NONBLOCK) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set O_NONBLOCK");
-         cl_com_tcp_get_private(connection)->sockfd = -1;
+         private->sockfd = -1;
+         cl_com_push_application_error(CL_RETVAL_FCNTL_ERROR, MSG_CL_TCP_FW_FCNTL_ERROR);
          return CL_RETVAL_FCNTL_ERROR;
       }
 
 
       /* set address  */
-      memset((char *) &(cl_com_tcp_get_private(connection)->client_addr), 0, sizeof(struct sockaddr_in));
-      cl_com_tcp_get_private(connection)->client_addr.sin_port = htons(cl_com_tcp_get_private(connection)->connect_port);
-      cl_com_tcp_get_private(connection)->client_addr.sin_family = AF_INET;
-      if ( (tmp_error=cl_com_cached_gethostbyname(connection->remote->comp_host, &unique_host, &(cl_com_tcp_get_private(connection)->client_addr.sin_addr),NULL , NULL)) != CL_RETVAL_OK) {
-         shutdown(sockfd, 2);
-         close(sockfd);
+      memset((char *) &(private->client_addr), 0, sizeof(struct sockaddr_in));
+      private->client_addr.sin_port = htons(private->connect_port);
+      private->client_addr.sin_family = AF_INET;
+      if ( (tmp_error=cl_com_cached_gethostbyname(connection->remote->comp_host, &unique_host, &(private->client_addr.sin_addr),NULL , NULL)) != CL_RETVAL_OK) {
+   
+         shutdown(private->sockfd, 2);
+         close(private->sockfd);
          free(unique_host);
          CL_LOG(CL_LOG_ERROR,"could not get hostname");
-         cl_com_tcp_get_private(connection)->sockfd = -1;
+         private->sockfd = -1;
+         
+         if ( connection != NULL && connection->remote != NULL && connection->remote->comp_host != NULL) {
+            snprintf(tmp_buffer,256, MSG_CL_TCP_FW_CANT_RESOLVE_HOST_S, connection->remote->comp_host );
+         } else {
+            snprintf(tmp_buffer,256, "%s", cl_get_error_text(tmp_error));
+         }
+         cl_com_push_application_error(tmp_error, tmp_buffer);
          return tmp_error; 
       } 
       free(unique_host);
 
       /* connect */
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
       gettimeofday(&now,NULL);
       connection->write_buffer_timeout_time = now.tv_sec + timeout;
-      cl_com_tcp_get_private(connection)->sockfd = sockfd;
       connection->connection_sub_state = CL_COM_OPEN_CONNECT;
    }
    
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT) {
-      int sockfd = -1;
-      int timeout_flag  = 0;
-      fd_set writefds;
-
-      sockfd = cl_com_tcp_get_private(connection)->sockfd;
+      int my_error;
+      int i;
 
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT");
 
-      while (1) {
-         int my_error;
-         int i;
-         int select_back = 0;
-         int sock_err = 0;
+      errno = 0;
+      i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
+      my_error = errno;
+      if (i != 0) {
+         if (my_error == EISCONN) {
+            /* socket is allready connected */
+            CL_LOG(CL_LOG_INFO,"allready connected");
+         }
 
+         if (my_error == ECONNREFUSED  ) {
+            /* can't open connection */
+            CL_LOG_INT(CL_LOG_ERROR,"connection refused to port ",private->connect_port);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
+            return CL_RETVAL_CONNECT_ERROR;
+         }
+
+         if (my_error == EADDRNOTAVAIL ) {
+            /* can't open connection */
+            CL_LOG_INT(CL_LOG_ERROR,"address not available for port ",private->connect_port);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
+            return CL_RETVAL_CONNECT_ERROR;
+         }
+
+
+         if (my_error == EINPROGRESS || my_error == EALREADY) {
+            connection->connection_sub_state = CL_COM_OPEN_CONNECT_IN_PROGRESS;
+         } else {
+            /* we have an connect error */
+            CL_LOG_INT(CL_LOG_ERROR,"connect error errno:", my_error);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
+            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+            return CL_RETVAL_CONNECT_ERROR;
+         }
+      } else {
+         /* we are connected */
+         CL_LOG(CL_LOG_INFO,"connected");
+      }
+   
+      if (connection->connection_sub_state != CL_COM_OPEN_CONNECT_IN_PROGRESS) {
+         connection->write_buffer_timeout_time = 0;
+         connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
+      }
+   }
+
+   if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
+      int timeout_flag = 0;
+      int do_stop      = 0;
+      fd_set writefds;
+      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
+
+      while (do_stop == 0) {
+         int select_back = 0;
          struct timeval now;
          struct timeval stimeout;
 
-
-         CL_LOG(CL_LOG_INFO,"gettimeofday");
          gettimeofday(&now,NULL);
          if (connection->write_buffer_timeout_time <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
             timeout_flag = 1;
             break;
          }
    
-         errno = 0;
-         i = connect(sockfd, (struct sockaddr *) &(cl_com_tcp_get_private(connection)->client_addr), sizeof(struct sockaddr_in));
-         my_error = errno;
-         if (i != 0) {
-            CL_LOG_INT(CL_LOG_DEBUG,"connect return code:", my_error);
-            if (my_error == EISCONN) {
-               /* socket is allready connected */
-               CL_LOG(CL_LOG_INFO,"allready connected");
-               break;
-            }
-   
-            if (my_error == ECONNREFUSED || my_error == EADDRNOTAVAIL ) {
-               /* can't open connection */
-               CL_LOG_INT(CL_LOG_ERROR,"connection refused or not available on port",cl_com_tcp_get_private(connection)->connect_port);
-               shutdown(sockfd, 2);
-               close(sockfd);
-               cl_com_tcp_get_private(connection)->sockfd = -1;
-               return CL_RETVAL_CONNECT_ERROR;
-            }
-            
-            if (my_error == EINPROGRESS || my_error == EALREADY) {
-               CL_LOG(CL_LOG_INFO,"connecting ...");
-               /* wait for select to indicate that write is enabled 
-                  this is done with timeout in order to not stress 
-                  the cpu */
-               FD_ZERO(&writefds);
+         FD_ZERO(&writefds);
+         FD_SET(private->sockfd, &writefds);
+         if (only_once == 0) {
+            stimeout.tv_sec = 0; 
+            stimeout.tv_usec = 250*1000;   /* 1/4 sec */
+         } else {
+            stimeout.tv_sec = 0; 
+            stimeout.tv_usec = 0;   /* don't waste time */
+         }
 
-               FD_SET(sockfd, &writefds);
-               if (only_once == 0) {
-                  stimeout.tv_sec = 0; 
-                  stimeout.tv_usec = 250*1000;   /* 1/4 sec */
-               } else {
-                  stimeout.tv_sec = 0; 
-                  stimeout.tv_usec = 0;   /* don't waste time */
-               }
-               select_back = select(sockfd + 1, NULL, &writefds, NULL, &stimeout);
-               if (select_back > 0) {
-                  int socket_error = 0;
-                  int socklen = sizeof(socket_error);
+         select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
+         if (select_back > 0) {
+            int socket_error = 0;
+            int socklen = sizeof(socket_error);
 
 #if defined(SOLARIS) && !defined(SOLARIS64) 
-                  sock_err = getsockopt(sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+            getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
-                  sock_err = getsockopt(sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+            getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
 #endif
-                  if (socket_error == 0) {
-                     CL_LOG(CL_LOG_INFO,"connected");
-                     break; /* we are connected */
-                  } else {
-                     if (socket_error != EINPROGRESS && socket_error != EALREADY && socket_error != EISCONN) {
-                        CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
-                        shutdown(sockfd, 2);
-                        close(sockfd);
-                        cl_com_tcp_get_private(connection)->sockfd = -1;
-                        return CL_RETVAL_CONNECT_ERROR;
-                     }
-                     if (only_once != 0) {
-                        return CL_RETVAL_UNCOMPLETE_WRITE;
-                     }
-                  }
-               } else {
-                  if (only_once != 0) {
-                     if (select_back == -1) {
-                        CL_LOG(CL_LOG_ERROR,"select error");
-                        return CL_RETVAL_SELECT_ERROR;
-                     }
-                     return CL_RETVAL_UNCOMPLETE_WRITE;
-                  }
-               } 
+            if (socket_error == 0 || socket_error == EISCONN) {
+               CL_LOG(CL_LOG_INFO,"connected");
+               break; /* we are connected */
             } else {
-               /* we have an connect error */
-               CL_LOG_INT(CL_LOG_ERROR,"connect error errno:", my_error);
-               shutdown(sockfd, 2);
-               close(sockfd);
-               cl_com_tcp_get_private(connection)->sockfd = -1;
-               return CL_RETVAL_CONNECT_ERROR;
+               if (socket_error != EINPROGRESS && socket_error != EALREADY) {
+                  CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
+                  shutdown(private->sockfd, 2);
+                  close(private->sockfd);
+                  private->sockfd = -1;
+                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
+                  cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+                  return CL_RETVAL_CONNECT_ERROR;
+               }
+               if (only_once != 0) {
+                  return CL_RETVAL_UNCOMPLETE_WRITE;
+               }
             }
          } else {
-            /* we are connected */
-            CL_LOG(CL_LOG_INFO,"connected");
-            break;
-         }
+            if (select_back < 0) {
+               CL_LOG(CL_LOG_ERROR,"select error");
+               cl_com_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
+               return CL_RETVAL_SELECT_ERROR;
+            }
+            if (only_once != 0) {
+               return CL_RETVAL_UNCOMPLETE_WRITE;
+            }
+         } 
       }
    
       if (timeout_flag == 1) {
          /* we had an timeout */
          CL_LOG(CL_LOG_ERROR,"connect timeout error");
          connection->write_buffer_timeout_time = 0;
-         shutdown(sockfd, 2);
-         close(sockfd);
-         cl_com_tcp_get_private(connection)->sockfd = -1;
+         shutdown(private->sockfd, 2);
+         close(private->sockfd);
+         private->sockfd = -1;
+         cl_com_push_application_error(CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
          return CL_RETVAL_CONNECT_TIMEOUT;
       }
       connection->write_buffer_timeout_time = 0;
@@ -355,28 +460,131 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECTED) {
-      int sockfd = -1;
       int on = 1; 
 
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECTED");
 
-      sockfd = cl_com_tcp_get_private(connection)->sockfd;
   
 #if defined(SOLARIS) && !defined(SOLARIS64)
-      if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &on, sizeof(int)) != 0) {
+      if (setsockopt(private->sockfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &on, sizeof(int)) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
       } 
 #else
-      if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(int))!= 0) {
+      if (setsockopt(private->sockfd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(int))!= 0) {
          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
       }
 #endif
-      cl_com_tcp_get_private(connection)->sockfd = sockfd;
       return CL_RETVAL_OK;
    }
 
    return CL_RETVAL_UNKNOWN;
 }
+
+
+
+/****** cl_communication/cl_com_tcp_setup_connection() *************************
+*  NAME
+*     cl_com_tcp_setup_connection() -- setup a connection type
+*
+*  SYNOPSIS
+*     int cl_com_tcp_setup_connection(cl_com_connection_t* connection, int 
+*     server_port, int connect_port) 
+*
+*  FUNCTION
+*     This function is used to setup the connection type. It will malloc
+*     a cl_com_tcp_private_t structure and set the pointer 
+*     connection->com_private to this structure.
+*
+*     When the connection structure is used to provide a service the server_port
+*     must be specified. If the connection is used to be a client to a service
+*     the connect_port must be specified.
+*
+*     The memory obtained by the malloc() call for the cl_com_tcp_private_t structure 
+*     is released by a call to cl_com_tcp_close_connection()
+*
+*  INPUTS
+*     cl_com_connection_t* connection - empty connection structure
+*     int server_port                 - port to provide a tcp service 
+*     int connect_port                - port to connect to
+*     int data_flow_type              - CL_COM_STREAM or CL_COM_MESSAGE
+*
+*  RESULT
+*     int - CL_COMM_XXXX error value or CL_RETVAL_OK for no errors
+*
+*  SEE ALSO
+*
+*     cl_communication/cl_com_close_connection()
+*
+*******************************************************************************/
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_setup_connection()"
+int cl_com_tcp_setup_connection(cl_com_connection_t**          connection,
+                                int                            server_port,
+                                int                            connect_port,
+                                cl_xml_connection_type_t       data_flow_type,
+                                cl_xml_connection_autoclose_t  auto_close_mode,
+                                cl_framework_t                 framework_type,
+                                cl_xml_data_format_t           data_format_type,
+                                cl_tcp_connect_t               tcp_connect_mode) {
+   cl_com_tcp_private_t* com_private = NULL;
+   int ret_val;
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*connection != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (data_flow_type != CL_CM_CT_STREAM && data_flow_type != CL_CM_CT_MESSAGE) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* create new connection */
+   if ( (ret_val=cl_com_create_connection(connection)) != CL_RETVAL_OK) {
+      return ret_val;
+   }
+
+   /* check for correct framework specification */
+   switch(framework_type) {
+      case CL_CT_TCP:
+         break;
+      case CL_CT_UNDEFINED:
+      case CL_CT_SSL: {
+         CL_LOG_STR(CL_LOG_ERROR,"unexpected framework:", cl_com_get_framework_type(*connection));
+         cl_com_close_connection(connection);
+         return CL_RETVAL_WRONG_FRAMEWORK;
+      }
+   }
+
+   /* create private data structure */
+   com_private = (cl_com_tcp_private_t*) malloc(sizeof(cl_com_tcp_private_t));
+   if (com_private == NULL) {
+      cl_com_close_connection(connection);
+      return CL_RETVAL_MALLOC;
+   }
+   memset(com_private, 0, sizeof(cl_com_tcp_private_t));
+
+
+   /* set com_private to com_private pointer */
+   (*connection)->com_private = com_private;
+
+   /* set modes */
+   (*connection)->auto_close_type = auto_close_mode;
+   (*connection)->data_flow_type = data_flow_type;
+   (*connection)->connection_type = CL_COM_SEND_RECEIVE;
+   (*connection)->framework_type = framework_type;
+   (*connection)->data_format_type = data_format_type;
+   (*connection)->tcp_connect_mode = tcp_connect_mode;
+
+   /* setup tcp private struct */
+   com_private->sockfd = -1;
+   com_private->server_port = server_port;
+   com_private->connect_port = connect_port;
+   return CL_RETVAL_OK;
+}
+
 
 /****** cl_tcp_framework/cl_com_tcp_free_com_private() *************************
 *  NAME
@@ -400,11 +608,10 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_free_com_private()"
-int cl_com_tcp_free_com_private(cl_com_connection_t* connection) {  /* CR check */
+static int cl_com_tcp_free_com_private(cl_com_connection_t* connection) {
    cl_com_tcp_private_t* private = NULL;
 
 
-   CL_LOG(CL_LOG_INFO,"free private connection data ...");
 
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
@@ -420,10 +627,8 @@ int cl_com_tcp_free_com_private(cl_com_connection_t* connection) {  /* CR check 
    private->sockfd = -1;
 
    /* free struct cl_com_tcp_private_t */
-   free(cl_com_tcp_get_private(connection));
+   free(private);
    connection->com_private = NULL;
-  
-   CL_LOG(CL_LOG_INFO,"private connection data released");
    return CL_RETVAL_OK;
 }
 
@@ -452,9 +657,9 @@ int cl_com_tcp_free_com_private(cl_com_connection_t* connection) {  /* CR check 
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_close_connection()"
-int cl_com_tcp_close_connection(cl_com_connection_t** connection) {     /* CR check */
-   int retval = CL_RETVAL_OK;
-   int ret = CL_RETVAL_OK;
+int cl_com_tcp_close_connection(cl_com_connection_t** connection) {
+   cl_com_tcp_private_t* private = NULL;
+
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -462,25 +667,22 @@ int cl_com_tcp_close_connection(cl_com_connection_t** connection) {     /* CR ch
       return CL_RETVAL_PARAMS;
    }
 
-   CL_LOG(CL_LOG_INFO,"closing connection");
+   private = cl_com_tcp_get_private(*connection);
 
-   if (cl_com_tcp_get_private(*connection) != NULL) {
-      if (cl_com_tcp_get_private((*connection))->sockfd >= 0) {
-         /* shutdown socket connection */
-         shutdown(cl_com_tcp_get_private((*connection))->sockfd, 2);
-         close(cl_com_tcp_get_private((*connection))->sockfd);
-         cl_com_tcp_get_private((*connection))->sockfd = -1;
-      } 
-      /* free com private structure */
-      ret = cl_com_tcp_free_com_private(*connection);
-      if (ret != CL_RETVAL_OK) {
-         retval = ret;
-      }
-   } else {
-      retval = CL_RETVAL_NO_FRAMEWORK_INIT;
+   if (private == NULL) {
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
-   CL_LOG(CL_LOG_INFO,"closing connection finished");
-   return retval;
+
+   if (private->sockfd >= 0) {
+      CL_LOG(CL_LOG_INFO,"closing connection");
+      /* shutdown socket connection */
+      shutdown(private->sockfd, 2);
+      close(private->sockfd);
+      private->sockfd = -1;
+   }
+ 
+   /* free com private structure */
+   return cl_com_tcp_free_com_private(*connection);
 }
 
 
@@ -522,7 +724,7 @@ int cl_com_tcp_close_connection(cl_com_connection_t** connection) {     /* CR ch
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_write()"
-static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {  /* CR check */
+int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {
    struct timeval now;
    long data_written = 0;
    long data_complete = 0;
@@ -551,7 +753,6 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
             complete, we must try it later !!!!!!!!!!!!!!! */
 
    while ( data_complete != size ) {
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
       gettimeofday(&now,NULL);
       if ( now.tv_sec >= timeout_time ) {
          CL_LOG(CL_LOG_ERROR,"send timeout error");
@@ -578,11 +779,8 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
                if (only_one_write != NULL) {
                   *only_one_write = data_complete;
                   if (data_complete != size) {
-                     CL_LOG_INT(CL_LOG_INFO,"incomplete write, bytes to write:", size);
-                     CL_LOG_INT(CL_LOG_INFO,"bytes written:", data_complete);
                      return CL_RETVAL_UNCOMPLETE_WRITE;
                   }
-                  CL_LOG_INT(CL_LOG_INFO,"all bytes written:",data_complete );
                   return CL_RETVAL_OK;
                }
             }
@@ -598,22 +796,17 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
             if (only_one_write != NULL) {
                *only_one_write = data_complete;
                if (data_complete != size) {
-                  CL_LOG_INT(CL_LOG_INFO,"incomplete write, bytes to write:", size);
-                  CL_LOG_INT(CL_LOG_INFO,"bytes written:", data_complete);
                   return CL_RETVAL_UNCOMPLETE_WRITE;
                }
-               CL_LOG_INT(CL_LOG_INFO,"all bytes written:",data_complete );
                return CL_RETVAL_OK;
             }
          }
       }
       if (only_one_write != NULL) {
          *only_one_write = 0;
-         CL_LOG_INT(CL_LOG_INFO,"bytes written", 0 );
          return CL_RETVAL_UNCOMPLETE_WRITE;
       }
    }
-   CL_LOG_INT(CL_LOG_INFO,"all bytes written:",data_complete );
    return CL_RETVAL_OK;
 }
 
@@ -655,7 +848,7 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_read()"
-static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {  /* CR check */
+int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {
    struct timeval now;
    long data_read = 0;
    long data_complete = 0;
@@ -691,7 +884,6 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
 
 
    while ( data_complete != size ) {
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
       gettimeofday(&now,NULL);
       if ( now.tv_sec >= timeout_time ) {
          return CL_RETVAL_READ_TIMEOUT;
@@ -718,11 +910,8 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
                if (only_one_read != NULL) {
                   *only_one_read = data_complete;
                   if (data_complete != size) {
-                     CL_LOG_INT(CL_LOG_INFO,"incomplete read, bytes to read:", size);
-                     CL_LOG_INT(CL_LOG_INFO,"bytes read:", data_complete);
                      return CL_RETVAL_UNCOMPLETE_READ;
                   }
-                  CL_LOG_INT(CL_LOG_INFO,"all bytes read:",data_complete );
                   return CL_RETVAL_OK;
                }
             }
@@ -743,23 +932,19 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
             if (only_one_read != NULL) {
                *only_one_read = data_complete;
                if (data_complete != size) {
-                  CL_LOG_INT(CL_LOG_INFO,"incomplete read, bytes to read:", size);
-                  CL_LOG_INT(CL_LOG_INFO,"bytes read:", data_complete);
                   return CL_RETVAL_UNCOMPLETE_READ;
                }
-               CL_LOG_INT(CL_LOG_INFO,"all bytes read:",data_complete );
                return CL_RETVAL_OK;
             }
          }
+      } else {
+        CL_LOG(CL_LOG_WARNING,"tcp read without selected file descriptor!");
       }
       if (only_one_read != NULL) {
          *only_one_read = 0;
-         CL_LOG_INT(CL_LOG_INFO,"bytes read:", 0);
          return CL_RETVAL_UNCOMPLETE_READ;
       }
    }
-   CL_LOG_INT(CL_LOG_INFO,"all bytes read:",data_complete );
-
    return CL_RETVAL_OK;
 }
 
@@ -784,7 +969,6 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    if ( connection->data_read_buffer_pos < CL_GMSH_MESSAGE_SIZE ) {
       if (only_one_read != NULL) {
          data_read = 0;
-         CL_LOG(CL_LOG_INFO,"read once");
          retval = cl_com_tcp_read(connection->read_buffer_timeout_time, 
                                   private->sockfd, 
                                   &(connection->data_read_buffer[connection->data_read_buffer_pos]),
@@ -836,17 +1020,13 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
 
    connection->data_read_buffer[connection->data_read_buffer_pos] = 0;
-   /* printf("buffer is: \"%s\"\n", connection->data_read_buffer); */
    /* header should be now complete */
    if ( strcmp((char*)&(connection->data_read_buffer[connection->data_read_buffer_pos - 7]) ,"</gmsh>") != 0) {
       return CL_RETVAL_GMSH_ERROR;
    }
-   /* printf("parsing header ...\n"); */
    
    /* parse header */
    retval = cl_xml_parse_GMSH(connection->data_read_buffer, connection->data_read_buffer_pos, connection->read_gmsh_header, &processed_data);
-   CL_LOG_INT(CL_LOG_INFO,"processed data:",processed_data);
-   CL_LOG_STR(CL_LOG_INFO,"buffer:", (char*)connection->data_read_buffer);
    connection->data_read_buffer_processed = connection->data_read_buffer_processed + processed_data ;
    if ( connection->read_gmsh_header->dl == 0) {
       CL_LOG(CL_LOG_ERROR,"gmsh header has dl=0 entry");
@@ -893,22 +1073,19 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_send_message()"
-int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data , long size , unsigned long *only_one_write) {  /* CR check */
+int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data , unsigned long size , unsigned long *only_one_write) {
+   cl_com_tcp_private_t* private = NULL;
 
-   int retval;
    if (connection == NULL || data == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection or no data");
       return CL_RETVAL_PARAMS;
    }
-   if (cl_com_tcp_get_private(connection) == NULL) {
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
       CL_LOG(CL_LOG_ERROR,"framework not initalized");
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
-
-   CL_LOG(CL_LOG_INFO,"sending message ...");
-
-   retval = cl_com_tcp_write(timeout_time, cl_com_tcp_get_private(connection)->sockfd, data, size, only_one_write);
-   return retval;
+   return cl_com_tcp_write(timeout_time, private->sockfd, data, size, only_one_write);
 }
 
 /****** cl_tcp_framework/cl_com_tcp_receive_message() **************************
@@ -946,25 +1123,26 @@ int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout_time, c
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_receive_message()"
-int cl_com_tcp_receive_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data_buffer, unsigned long data_buffer_size , unsigned long *only_one_read) {  /* CR check */
-   int retval;
+int cl_com_tcp_receive_message(cl_com_connection_t* connection,
+                               int                  timeout_time,
+                               cl_byte_t*           data_buffer,
+                               unsigned long        data_buffer_size,
+                               unsigned long*       only_one_read) {
+
+   cl_com_tcp_private_t* private = NULL;
    
    if (connection == NULL || data_buffer == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection or no data buffer");
       return CL_RETVAL_PARAMS;
    }
-   if (cl_com_tcp_get_private(connection) == NULL) {
+  
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
       CL_LOG(CL_LOG_ERROR,"framework not initalized");
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
-   CL_LOG(CL_LOG_INFO,"receiving message ...");
 
-   retval = cl_com_tcp_read(timeout_time, 
-                            cl_com_tcp_get_private(connection)->sockfd,
-                            data_buffer,
-                            data_buffer_size, 
-                            only_one_read );
-   return retval;
+   return cl_com_tcp_read(timeout_time, private->sockfd, data_buffer, data_buffer_size, only_one_read);
 }
 
 
@@ -995,24 +1173,25 @@ int cl_com_tcp_receive_message(cl_com_connection_t* connection, int timeout_time
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_connection_request_handler_setup()"
-int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,cl_com_endpoint_t* local_endpoint ) {  /* CR check */
+int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection ) {
    int sockfd = 0;
-   int on = 1;
    struct sockaddr_in serv_addr;
+   cl_com_tcp_private_t* private = NULL;
 
-   CL_LOG(CL_LOG_INFO,"setting up request handler ...");
+   CL_LOG(CL_LOG_INFO,"setting up TCP request handler ...");
     
    if (connection == NULL ) {
       CL_LOG(CL_LOG_ERROR,"no connection");
       return CL_RETVAL_PARAMS;
    }
 
-   if (cl_com_tcp_get_private(connection) == NULL) {
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
       CL_LOG(CL_LOG_ERROR,"framework not initalized");
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
 
-   if ( cl_com_tcp_get_private(connection)->server_port < 0 ) {
+   if ( private->server_port < 0 ) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_NO_PORT_ERROR));
       return CL_RETVAL_NO_PORT_ERROR;
    }
@@ -1021,17 +1200,23 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       CL_LOG(CL_LOG_ERROR,"could not create socket");
       return CL_RETVAL_CREATE_SOCKET;
-   }   
-
-   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
-      CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
-      return CL_RETVAL_SETSOCKOPT_ERROR;
    }
+   
+#ifndef INTERIX
+   {
+      int on = 1;
+
+      if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
+         CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
+         return CL_RETVAL_SETSOCKOPT_ERROR;
+      }
+   }
+#endif
 
    /* bind an address to socket */
    /* TODO FEATURE: we can also try to use a specified port range */
    memset((char *) &serv_addr, 0, sizeof(serv_addr));
-   serv_addr.sin_port = htons(cl_com_tcp_get_private(connection)->server_port);
+   serv_addr.sin_port = htons(private->server_port);
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
@@ -1039,11 +1224,11 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
       shutdown(sockfd, 2);
       close(sockfd);
-      CL_LOG_INT(CL_LOG_ERROR, "could not bind server socket port:", cl_com_tcp_get_private(connection)->server_port);
+      CL_LOG_INT(CL_LOG_ERROR, "could not bind server socket port:", private->server_port);
       return CL_RETVAL_BIND_SOCKET;
    }
 
-   if (  cl_com_tcp_get_private(connection)->server_port == 0 ) {
+   if (private->server_port == 0) {
 #if defined(AIX43) || defined(AIX51)
       size_t length;
 #else
@@ -1054,11 +1239,11 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
       if (getsockname(sockfd,(struct sockaddr *) &serv_addr, &length ) == -1) {
          shutdown(sockfd, 2);
          close(sockfd);
-         CL_LOG_INT(CL_LOG_ERROR, "could not bind random server socket port:", cl_com_tcp_get_private(connection)->server_port);
+         CL_LOG_INT(CL_LOG_ERROR, "could not bind random server socket port:", private->server_port);
          return CL_RETVAL_BIND_SOCKET;
       }
-      cl_com_tcp_get_private(connection)->server_port = ntohs(serv_addr.sin_port);
-      CL_LOG_INT(CL_LOG_INFO,"random server port is:", cl_com_tcp_get_private(connection)->server_port);
+      private->server_port = ntohs(serv_addr.sin_port);
+      CL_LOG_INT(CL_LOG_INFO,"random server port is:", private->server_port);
    }
 
    /* make socket listening for incoming connects */
@@ -1071,13 +1256,13 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
    CL_LOG_INT(CL_LOG_INFO,"listening with backlog=", 5);
 
    /* set server socked file descriptor and mark connection as service handler */
-   cl_com_tcp_get_private(connection)->sockfd = sockfd;
+   private->sockfd = sockfd;
 
    CL_LOG(CL_LOG_INFO,"===============================");
-   CL_LOG(CL_LOG_INFO,"server setup done:");
+   CL_LOG(CL_LOG_INFO,"TCP server setup done:");
    CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"id:       ",connection->local->comp_id);
+   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
    CL_LOG(CL_LOG_INFO,"===============================");
    return CL_RETVAL_OK;
 }
@@ -1111,18 +1296,21 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
 #define __CL_FUNCTION__ "cl_com_tcp_connection_request_handler_cleanup()"
 int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connection) { /* CR check */
 
+   cl_com_tcp_private_t* private = NULL;
+
    CL_LOG(CL_LOG_INFO,"cleanup of request handler ...");
    if (connection == NULL ) {
       return CL_RETVAL_PARAMS;
    }
 
-   if (cl_com_tcp_get_private(connection) == NULL) {
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
 
-   shutdown(cl_com_tcp_get_private(connection)->sockfd, 2);
-   close(cl_com_tcp_get_private(connection)->sockfd);
-   CL_LOG(CL_LOG_INFO,"request handler cleanup done");
+   shutdown(private->sockfd, 2);
+   close(private->sockfd);
+   private->sockfd = -1;
 
    return CL_RETVAL_OK;
 }
@@ -1170,7 +1358,7 @@ int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_connection_request_handler()"
-int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_com_connection_t** new_connection , int timeout_val_sec , int timeout_val_usec) {  /* CR check */
+int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_com_connection_t** new_connection , int timeout_val_sec , int timeout_val_usec) {
    int select_back = 0;
    cl_com_connection_t* tmp_connection = NULL;
    fd_set readfds;
@@ -1185,9 +1373,8 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
 #endif
    int retval;
    int server_fd = -1;
+   cl_com_tcp_private_t* private = NULL;
    
-   CL_LOG(CL_LOG_INFO,"request handler check ...");
-
    if (connection == NULL || new_connection == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection or no accept connection");
       return CL_RETVAL_PARAMS;
@@ -1198,7 +1385,8 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       return CL_RETVAL_PARAMS;
    }
    
-   if (cl_com_tcp_get_private(connection) == NULL) {
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
       CL_LOG(CL_LOG_ERROR,"framework is not initalized");
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
@@ -1207,7 +1395,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       CL_LOG(CL_LOG_ERROR,"connection is no service handler");
       return CL_RETVAL_NOT_SERVICE_HANDLER;
    }
-   server_fd = cl_com_tcp_get_private(connection)->sockfd;
+   server_fd = private->sockfd;
 
    FD_ZERO(&readfds);
    FD_SET(server_fd, &readfds);
@@ -1226,7 +1414,8 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
       if (new_sfd > -1) {
           char* resolved_host_name = NULL;
-          CL_LOG(CL_LOG_INFO,"new connection setup ...");
+          cl_com_tcp_private_t* tmp_private = NULL;
+
           cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
           if (resolved_host_name != NULL) {
              CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
@@ -1250,10 +1439,14 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
 
           tmp_connection = NULL;
           /* setup a tcp connection where autoclose is still undefined */
-          if ( (retval=cl_com_setup_tcp_connection(&tmp_connection, 
-                                                   cl_com_tcp_get_private(connection)->server_port,
-                                                   cl_com_tcp_get_private(connection)->connect_port,
-                                                   connection->data_flow_type, CL_CM_AC_UNDEFINED )) != CL_RETVAL_OK) {
+          if ( (retval=cl_com_tcp_setup_connection(&tmp_connection, 
+                                                   private->server_port,
+                                                   private->connect_port,
+                                                   connection->data_flow_type, 
+                                                   CL_CM_AC_UNDEFINED,
+                                                   connection->framework_type,
+                                                   connection->data_format_type,
+                                                   connection->tcp_connect_mode)) != CL_RETVAL_OK) {
              cl_com_tcp_close_connection(&tmp_connection); 
              if (resolved_host_name != NULL) {
                 free(resolved_host_name);
@@ -1266,9 +1459,14 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
           tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
           /* setup cl_com_tcp_private_t */
-          cl_com_tcp_get_private(tmp_connection)->sockfd = new_sfd;   /* fd from accept() call */
+          tmp_private = cl_com_tcp_get_private(tmp_connection);
+          if (tmp_private != NULL) {
+             tmp_private->sockfd = new_sfd;   /* fd from accept() call */
+             tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
+             CL_LOG_INT(CL_LOG_WARNING,"client uses port=", tmp_private->connect_in_port);
+          }
+
           *new_connection = tmp_connection;
-          CL_LOG(CL_LOG_INFO,"new connection accepted");
           return CL_RETVAL_OK;
       }
    }
@@ -1284,810 +1482,6 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
   connection = connection to fill in client information for new connect
   sockfd = new connection socket file descriptor (from accept call)
 */
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_tcp_connection_complete_request()"
-
-/* If timeout is 0 then the function will return after one read try, the
-   caller has to call this function again */
-
-/* return values CL_RETVAL_OK - connection is connected 
-                 CL_RETVAL_UNCOMPLETE_READ  - waiting for client data
-                 CL_RETVAL_UNCOMPLETE_WRITE - could not send all data
-*/
-
-int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, unsigned long timeout, unsigned long only_once ) {
-
-   struct timeval now;
-   int retval = CL_RETVAL_OK;
-   cl_com_tcp_private_t* con_private = NULL;
-   cl_com_CM_t* cm_message = NULL;
-   cl_com_CRM_t* crm_message = NULL;
-/*   cl_com_hostent_t* hostent_p = NULL; */
-   char* unique_host = NULL;
-
-
-   unsigned long data_read = 0;
-   long data_to_read;
-   unsigned long data_written = 0;
-
-
-   if (connection == NULL ) {
-      CL_LOG(CL_LOG_ERROR,"no connection");
-      return CL_RETVAL_PARAMS;
-   }
-
-   /* printf("connection local hostname is: \"%s\"\n", connection->local->comp_host); */
-
-   if ( (con_private=cl_com_tcp_get_private(connection)) == NULL) {
-      CL_LOG(CL_LOG_ERROR,"no framework init");
-      return CL_RETVAL_NO_FRAMEWORK_INIT;
-   }
-
-   if (connection->connection_state != CL_COM_CONNECTING) {
-      CL_LOG(CL_LOG_ERROR,"connection statis is not connecting");
-      return CL_RETVAL_ALLREADY_CONNECTED;
-   }
- 
-
-   if (connection->client_host_name == NULL && connection->was_accepted != 0) {
-      CL_LOG(CL_LOG_ERROR,"client hostname could not be resolved");
-      return CL_RETVAL_GETHOSTNAME_ERROR; 
-   }
-
-   if (connection->connection_sub_state == CL_COM_READ_INIT) {
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_READ_INIT");
-      if (connection->receiver != NULL ||
-          connection->sender   != NULL ||
-          connection->remote   != NULL      ) {
-         CL_LOG(CL_LOG_ERROR,"connection is not free");
-         return CL_RETVAL_PARAMS;
-      }
-      /* set connecting timeout in private structure */  
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
-      gettimeofday(&now,NULL);
-      connection->read_buffer_timeout_time = now.tv_sec + timeout;
-      connection->read_gmsh_header->dl = 0;
-      connection->data_read_buffer_pos = 0;
-      connection->data_read_buffer_processed = 0;
-      connection->connection_sub_state = CL_COM_READ_GMSH;
-      connection->data_write_flag = CL_COM_DATA_NOT_READY;
-   }
-
-   if (connection->connection_sub_state == CL_COM_READ_GMSH) {
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_READ_GMSH");
-
-      /* read in GMSH header (General Message Size Header)*/
-      if (only_once != 0) {
-         data_read = 0;
-         CL_LOG(CL_LOG_INFO,"read only once");
-         retval = cl_com_tcp_read_GMSH(connection, &data_read);
-      } else {
-         CL_LOG(CL_LOG_INFO,"read with timeout");
-         retval = cl_com_tcp_read_GMSH(connection, NULL );
-      }
-      if (retval != CL_RETVAL_OK) {
-         return retval;
-      }
-      connection->connection_sub_state = CL_COM_READ_CM;
-   }
-
-   if (connection->connection_sub_state == CL_COM_READ_CM) {
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_READ_CM");
-      CL_LOG_INT(CL_LOG_INFO,"GMSH dl:",connection->read_gmsh_header->dl );
-
-      /* calculate (rest) data size to read = data length - stream buff position */
-
-      data_to_read = connection->read_gmsh_header->dl - (connection->data_read_buffer_pos - connection->data_read_buffer_processed);
-      CL_LOG_INT(CL_LOG_INFO,"data to read=",data_to_read);
-
-      if ( (data_to_read + connection->data_read_buffer_pos) >= connection->data_buffer_size ) {
-         CL_LOG(CL_LOG_ERROR,"stream buffer to small");
-         return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
-      }
-
-      /* is data allready in buffer ? */
-      if (data_to_read > 0) {
-         if (only_once != 0) {
-            data_read = 0;
-            retval = cl_com_tcp_read(connection->read_buffer_timeout_time,
-                                     con_private->sockfd, 
-                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]), /* position to continue */
-                                     data_to_read, 
-                                     &data_read);               /* returns the data bytes read */
-            connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read; /* add data read count to buff position */
-         } else {
-            retval = cl_com_tcp_read(connection->read_buffer_timeout_time,
-                                     con_private->sockfd, 
-                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]),
-                                     data_to_read, 
-                                     NULL);
-            connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_to_read; /* add data read count to buff position */
-         }
-         if (retval != CL_RETVAL_OK) {
-            return retval;
-         }
-      }
-      retval = cl_xml_parse_CM(&(connection->data_read_buffer[(connection->data_read_buffer_processed)]),connection->read_gmsh_header->dl, &cm_message);
-      if (retval != CL_RETVAL_OK) {
-         cl_com_free_cm_message(&cm_message);
-         return retval;
-      }
-
-      cl_com_dump_endpoint(cm_message->src, "src"); 
-      cl_com_dump_endpoint(cm_message->dst, "dst"); 
-      cl_com_dump_endpoint(cm_message->rdata, "rdata"); 
-
-#if 0
-      printf("connect message port: %ld\n", cm_message->port);
-      printf("connect message autoclose: %d\n", cm_message->ac); 
-#endif
-
-      connection->data_read_buffer_processed = connection->data_read_buffer_processed + connection->read_gmsh_header->dl;
-      
-
-      /* resolve hostnames */
-      /* printf("resolving \"%s\"\n", cm_message->src->comp_host); */
-      CL_LOG_STR(CL_LOG_INFO,"resolving host", cm_message->src->comp_host);
-    
-      if ( (retval=cl_com_cached_gethostbyname(cm_message->src->comp_host, &unique_host, NULL, NULL, NULL)) != CL_RETVAL_OK) {
-         free(unique_host);
-         cl_com_free_cm_message(&cm_message);
-         return retval; 
-      }
-      CL_LOG_STR(CL_LOG_INFO,"resolved as",unique_host  );
-
-/*      printf("resolved as \"%s\"\n",hostent_p->he->h_name ); */
-
-      connection->crm_state = CL_CRM_CS_UNDEFINED;
-
-      if (cl_com_compare_hosts( cm_message->src->comp_host , unique_host ) != CL_RETVAL_OK) {
-         CL_LOG(CL_LOG_ERROR,"hostname resolve error");
-         connection->crm_state = CL_CRM_CS_DENIED;
-      }
-      
-      connection->receiver = cl_com_create_endpoint(unique_host ,cm_message->src->comp_name,cm_message->src->comp_id);
-      free(unique_host);
-      unique_host = NULL;
-      
-      if ( (retval=cl_com_cached_gethostbyname(cm_message->dst->comp_host, &unique_host, NULL,NULL, NULL)) != CL_RETVAL_OK) {
-         cl_com_free_endpoint(&(connection->receiver));
-         free(unique_host);
-         cl_com_free_cm_message(&cm_message);
-         return retval; 
-      }
-      if (cl_com_compare_hosts( cm_message->dst->comp_host , unique_host ) != CL_RETVAL_OK) {
-         CL_LOG(CL_LOG_ERROR,"hostname resolve error");
-         connection->crm_state = CL_CRM_CS_DENIED;
-      }
-      connection->sender   = cl_com_create_endpoint( unique_host ,cm_message->dst->comp_name,cm_message->dst->comp_id);
-      free(unique_host);
-      unique_host = NULL;
-
-      if (cm_message->rdata != NULL) {
-         if ( (retval=cl_com_cached_gethostbyname(cm_message->rdata->comp_host, &unique_host,NULL,NULL, NULL)) != CL_RETVAL_OK) {
-            cl_com_free_endpoint(&(connection->sender));
-            cl_com_free_endpoint(&(connection->receiver));
-            free(unique_host);
-            cl_com_free_cm_message(&cm_message);
-            return retval; 
-         }
-         connection->remote   = cl_com_create_endpoint(unique_host ,cm_message->rdata->comp_name,cm_message->rdata->comp_id);
-         if (cl_com_compare_hosts( cm_message->rdata->comp_host , unique_host ) != CL_RETVAL_OK) {
-            CL_LOG(CL_LOG_ERROR,"hostname resolve error");
-            connection->crm_state = CL_CRM_CS_DENIED;
-         }
-         free(unique_host);
-         unique_host = NULL;
-      } else {
-         /* This host is allready resolved */
-         connection->remote   = cl_com_create_endpoint(connection->receiver->comp_host,cm_message->src->comp_name,cm_message->src->comp_id);
-      }
-      connection->data_flow_type = cm_message->ct;
-      connection->data_format_type = cm_message->df;
-      connection->auto_close_type = cm_message->ac;
-      switch(connection->auto_close_type) {
-         case CL_CM_AC_ENABLED: 
-            CL_LOG(CL_LOG_INFO,"client's auto close mode is enabled");
-            break;
-         case CL_CM_AC_DISABLED:
-            CL_LOG(CL_LOG_INFO,"client's auto close mode is disabled");
-            break;
-         default:
-            CL_LOG(CL_LOG_ERROR,"unexpeced auto close mode request from client");
-      }
-
-      if (connection->data_read_buffer_pos != connection->data_read_buffer_processed ) {
-         CL_LOG_INT(CL_LOG_ERROR,"recevied more or less than expected:", 
-                                 connection->data_read_buffer_pos - connection->data_read_buffer_processed );
-      }
-
-      if (connection->receiver == NULL || connection->sender == NULL || connection->remote == NULL ) {
-         cl_com_free_endpoint(&(connection->receiver));
-         cl_com_free_endpoint(&(connection->sender));
-         cl_com_free_endpoint(&(connection->remote));
-         cl_com_free_cm_message(&cm_message);
-         return CL_RETVAL_MALLOC;
-      }
-
-      if ( con_private->connect_port != 0) {
-         CL_LOG(CL_LOG_ERROR,"unexpected error: connect port should be still 0 here");
-      } else {
-         con_private->connect_port = cm_message->port;
-      }
-
-      cl_com_free_cm_message(&cm_message);
-
-      if ( cl_com_compare_hosts( connection->remote->comp_host , connection->client_host_name ) != CL_RETVAL_OK) { 
-         CL_LOG(CL_LOG_ERROR,"hostname address resolving error");
-         CL_LOG_STR(CL_LOG_ERROR,"hostname from address resolving:", connection->client_host_name );
-         CL_LOG_STR(CL_LOG_ERROR,"resolved hostname from client:",connection->remote->comp_host  );
-         connection->crm_state = CL_CRM_CS_DENIED;
-      }
-
-      if (connection->receiver->comp_id == 0 || connection->remote->comp_id == 0 ) {
-         cl_com_handle_t* handle = connection->handler;
-
-         CL_LOG(CL_LOG_INFO,"received connection request for auto client id");
-         /* connection list should be locked in higher framework */
-         if (handle != NULL) {
-            int is_double = 0;
-            cl_raw_list_t*   connection_list = NULL; 
-            cl_connection_list_elem_t* elem = NULL;
-            cl_com_connection_t* tmp_con = NULL;
-
-            connection_list = handle->connection_list;
-            /************************************
-            * search unique client id           *
-            ************************************/
-            /* connection list is locked by calling function , so we do not need to lock the connection list */
-            CL_LOG(CL_LOG_INFO,"search unique client id");
-            connection->receiver->comp_id = handle->next_free_client_id;
-            connection->remote->comp_id = handle->next_free_client_id;
-            do {
-               is_double = 0;
-               for (elem=cl_connection_list_get_first_elem(connection_list); 
-                    elem != NULL ; 
-                    elem = cl_connection_list_get_next_elem(connection_list, elem)) {
-                  tmp_con = elem->connection;
-
-                  if (tmp_con == connection) {
-                     continue;  /* Itself is allowed */
-                  }
-                  if (cl_com_compare_endpoints(tmp_con->receiver, connection->receiver) != 0) {
-                     is_double = 1;
-                     connection->receiver->comp_id = connection->receiver->comp_id + 1;
-                     break;
-                  } 
-                  if (cl_com_compare_endpoints(tmp_con->remote, connection->remote) != 0) {
-                     is_double = 1;
-                     connection->remote->comp_id = connection->remote->comp_id + 1;
-                     break;
-                  }
-               }
-               if (is_double == 1) {
-                  /* this id is not unique, increment client id */
-                  if (handle->next_free_client_id >= CL_DEFINE_MAX_MESSAGE_ID ) {
-                     handle->next_free_client_id = 1;
-                  } else {
-                     handle->next_free_client_id = handle->next_free_client_id + 1;
-                  }
-               }
-            } while (is_double == 1);
-            
-            /* always increment client id */
-            if (handle->next_free_client_id >= CL_DEFINE_MAX_MESSAGE_ID ) {
-               handle->next_free_client_id = 1;
-            } else {
-               handle->next_free_client_id = handle->next_free_client_id + 1;
-            }
-
-         } else {
-            CL_LOG(CL_LOG_WARNING,"handle of connection is not set");
-            if ( connection->receiver->comp_id == 0) {
-               connection->receiver->comp_id = 1;
-            }
-            if ( connection->remote->comp_id == 0) {
-               connection->remote->comp_id = 1;
-            }
-         }
-      }
-      connection->read_buffer_timeout_time = 0;
-      connection->statistic->real_bytes_received += connection->data_read_buffer_processed;
-      connection->connection_sub_state = CL_COM_READ_INIT_CRM;
-   }
-
-
-   if (connection->connection_sub_state == CL_COM_READ_INIT_CRM ) {
-      char* connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_OK;
-      char* connection_status_text = "ok";
-      unsigned long connect_response_message_size = 0;
-      unsigned long gmsh_message_size = 0;
-
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_READ_INIT_CRM");
-
-      cl_com_dump_endpoint(connection->remote,"client endpoint");
-      cl_com_dump_endpoint(connection->sender,"client requested endpoint partner");
-      cl_com_dump_endpoint(connection->local,"local endpoint");
-
-      if ( connection->crm_state == CL_CRM_CS_DENIED) {
-         connection_status_text = "hostname resolving error";
-         connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
-         CL_LOG(CL_LOG_ERROR, connection_status_text );
-      }
-
-      if ( connection->crm_state == CL_CRM_CS_UNDEFINED) {
-         connection->crm_state = CL_CRM_CS_CONNECTED;  /* if is ok, this is ok */
-
-         if ( strcmp( connection->local->comp_name, connection->sender->comp_name) != 0 || 
-              connection->local->comp_id != connection->sender->comp_id ) {
-
-            connection_status_text = "requested component not found";
-            connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
-            connection->crm_state = CL_CRM_CS_DENIED;
-            CL_LOG(CL_LOG_ERROR, connection_status_text );
-         } 
-      }
-
-      if ( connection->crm_state == CL_CRM_CS_CONNECTED) {
-         cl_com_handle_t* handler = NULL;
-         cl_raw_list_t*   connection_list = NULL; 
-         cl_connection_list_elem_t* elem = NULL;
-         cl_com_connection_t* tmp_con = NULL;
-         int is_double = 0;
-
-         handler = connection->handler;
-         if (handler != NULL) {
-            connection_list = handler->connection_list;
-            CL_LOG(CL_LOG_INFO,"checking for duplicate endpoints");
-            /************************************
-            * check duplicate endpoint entries  *
-            ************************************/
-            /* connection list is locked by calling function , so we do not need to lock the connection list */
-            for (elem=cl_connection_list_get_first_elem(connection_list); 
-                 elem != NULL ; 
-                 elem = cl_connection_list_get_next_elem(connection_list, elem)) {
-               tmp_con = elem->connection;
-               if (tmp_con == connection) {
-                  continue;  /* Itself is allowed */
-               }
-
-               if (tmp_con->connection_state == CL_COM_CLOSING) {
-                  continue;  /* This connection will be deleted soon, ignore it */
-               }                 
-
-               if (cl_com_compare_endpoints(tmp_con->receiver, connection->receiver) != 0) {
-                  is_double = 1;
-                  break;
-               } 
-            }
-            if (is_double == 0) {
-               CL_LOG(CL_LOG_INFO,"new client is unique");
-            } else {
-               CL_LOG(CL_LOG_WARNING,"new client is allready connected - endpoint not unique error");
-               connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
-               connection_status_text = "allready connected - endpoint not unique error";
-               connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
-               CL_LOG(CL_LOG_ERROR, connection_status_text );
-            }
-         } else {
-            CL_LOG(CL_LOG_WARNING,"connection list has no handler");
-         } 
-      }
-
-      if ( connection->crm_state == CL_CRM_CS_CONNECTED ) {
-         if ( connection->handler != NULL && connection->was_accepted != 0 ) {
-            /* set check_allowed_host_list to 1 if the commlib should check the
-               allowed host list to enable cl_com_add_allowed_host() calls */
-            int check_allowed_host_list = 0;
-            if (connection->handler->allowed_host_list == NULL && check_allowed_host_list != 0) {
-               connection_status_text = "client is not in allowed host list";
-               connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
-               connection->crm_state = CL_CRM_CS_DENIED;
-               CL_LOG(CL_LOG_ERROR, connection_status_text );
-            } else {
-               cl_string_list_elem_t* elem = NULL;
-               int is_ok = 0;
-               if ( check_allowed_host_list != 0) {
-                  cl_raw_list_lock(connection->handler->allowed_host_list);
-                  for (elem = cl_string_list_get_first_elem(connection->handler->allowed_host_list) ;
-                       elem != NULL; 
-                       elem = cl_string_list_get_next_elem(connection->handler->allowed_host_list,elem)) {
-                     char* resolved_host = NULL;
-                     retval = cl_com_cached_gethostbyname(elem->string, &resolved_host, NULL, NULL, NULL );
-                     if (retval == CL_RETVAL_OK && resolved_host != NULL) {
-                        if(cl_com_compare_hosts(resolved_host, connection->client_host_name) == CL_RETVAL_OK) {
-                           is_ok = 1;
-                           free(resolved_host);
-                           break;
-                        }
-                     }
-                     free(resolved_host);
-                     resolved_host = NULL;
-                  }
-                  cl_raw_list_unlock(connection->handler->allowed_host_list);
-               } else {
-                  CL_LOG(CL_LOG_WARNING,"allowed host list check is not activated");
-                  is_ok = 1;
-               }
-
-               if (is_ok != 1) {
-                  connection_status_text = "client is not in allowed host list";
-                  connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
-                  connection->crm_state = CL_CRM_CS_DENIED;
-                  CL_LOG(CL_LOG_ERROR, connection_status_text );
-               }   
-            }
-         }
-      }
-
-      connect_response_message_size = CL_CONNECT_RESPONSE_MESSAGE_SIZE;
-      connect_response_message_size = connect_response_message_size + strlen(CL_CONNECT_RESPONSE_MESSAGE_VERSION);
-      connect_response_message_size = connect_response_message_size + strlen(connection_status);
-      connect_response_message_size = connect_response_message_size + strlen(connection_status_text);
-
-      connect_response_message_size = connect_response_message_size + strlen(connection->remote->comp_host);
-      connect_response_message_size = connect_response_message_size + strlen(connection->remote->comp_name);
-      connect_response_message_size = connect_response_message_size + cl_util_get_ulong_number_length(connection->remote->comp_id);
-
-      connect_response_message_size = connect_response_message_size + strlen(connection->receiver->comp_host);
-      connect_response_message_size = connect_response_message_size + strlen(connection->receiver->comp_name);
-      connect_response_message_size = connect_response_message_size + cl_util_get_ulong_number_length(connection->receiver->comp_id);
-
-      connect_response_message_size = connect_response_message_size + strlen(connection->sender->comp_host);
-      connect_response_message_size = connect_response_message_size + strlen(connection->sender->comp_name);
-      connect_response_message_size = connect_response_message_size + cl_util_get_ulong_number_length(connection->sender->comp_id);
-
-      gmsh_message_size = CL_GMSH_MESSAGE_SIZE + cl_util_get_ulong_number_length(connect_response_message_size);
-
-      if (connection->data_buffer_size < (gmsh_message_size + connect_response_message_size + 1) ) {
-         return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
-      }
-
-      sprintf((char*)connection->data_write_buffer, CL_GMSH_MESSAGE ,
-               connect_response_message_size);
-         
-      sprintf((char*)&((connection->data_write_buffer)[gmsh_message_size]),CL_CONNECT_RESPONSE_MESSAGE,
-               CL_CONNECT_RESPONSE_MESSAGE_VERSION,
-               connection_status,
-               connection_status_text,
-               connection->receiver->comp_host, 
-               connection->receiver->comp_name,
-               connection->receiver->comp_id,
-               connection->sender->comp_host, 
-               connection->sender->comp_name,
-               connection->sender->comp_id,
-               connection->remote->comp_host, 
-               connection->remote->comp_name,
-               connection->remote->comp_id);
-      connection->data_write_buffer_pos = 0;
-      connection->data_write_buffer_processed = 0;
-      connection->data_write_buffer_to_send = gmsh_message_size + connect_response_message_size ;
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
-      gettimeofday(&now,NULL);
-      connection->write_buffer_timeout_time = now.tv_sec + timeout;
-      connection->data_write_flag = CL_COM_DATA_READY;
-      connection->connection_sub_state = CL_COM_READ_SEND_CRM;
-   }
-
-   if (connection->connection_sub_state == CL_COM_READ_SEND_CRM ) {
-         CL_LOG(CL_LOG_INFO,"state is CL_COM_READ_SEND_CRM");
-         if (only_once != 0) {
-            data_written = 0;
-            retval = cl_com_tcp_write(connection->write_buffer_timeout_time,
-                                      con_private->sockfd, 
-                                      &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),  /* position to continue */
-                                      connection->data_write_buffer_to_send, 
-                                      &data_written);               /* returns the data bytes read */
-            connection->data_write_buffer_pos = connection->data_write_buffer_pos + data_written;  /* add data read count to buff position */
-            connection->data_write_buffer_to_send = connection->data_write_buffer_to_send - data_written; 
-         } else {
-            retval = cl_com_tcp_write(connection->write_buffer_timeout_time,
-                                     con_private->sockfd, 
-                                     &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),
-                                     connection->data_write_buffer_to_send, 
-                                     NULL);
-            connection->data_write_buffer_pos = connection->data_write_buffer_pos + connection->data_write_buffer_to_send;
-         }
-
-         if (retval != CL_RETVAL_OK) {
-            return retval;
-         }
-         if ( cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
-            connection->data_write_flag = CL_COM_DATA_NOT_READY;
-         } else {
-            connection->data_write_flag = CL_COM_DATA_READY;
-         }
-         connection->write_buffer_timeout_time = 0;
-
-         if (connection->crm_state == CL_CRM_CS_CONNECTED) {
-            connection->connection_state = CL_COM_CONNECTED;  /* That was it! */
-            connection->connection_sub_state = CL_COM_WORK;
-         } else {
-            connection->connection_state = CL_COM_CLOSING;  /* That was it! */
-            CL_LOG(CL_LOG_WARNING,"access to client denied");
-            cl_dump_connection(connection);
-         }
-         connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + connection->data_write_buffer_pos;
-   }
-   
-
-   if (connection->connection_sub_state == CL_COM_SEND_INIT) {
-      unsigned long connect_message_size = 0;
-      unsigned long gmsh_message_size = 0;
-      unsigned long local_service_port_number = 0;
-      char* format_type = "";
-      char* flow_type = "";
-      char* autoclose = "";
-
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_SEND_INIT");
-
-      local_service_port_number = con_private->server_port;
-
-      /* set connecting timeout in private structure */  
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
-      gettimeofday(&now,NULL);
-      connection->write_buffer_timeout_time = now.tv_sec + timeout ;
-     
-      connect_message_size = CL_CONNECT_MESSAGE_SIZE;
-      connect_message_size = connect_message_size + strlen(CL_CONNECT_MESSAGE_VERSION);
-
-      if (connection->data_format_type == CL_CM_DF_BIN) {
-         format_type = CL_CONNECT_MESSAGE_DATA_FORMAT_BIN;
-      }
-      if (connection->data_format_type == CL_CM_DF_XML) {
-         format_type = CL_CONNECT_MESSAGE_DATA_FORMAT_XML;
-      }
-      connect_message_size = connect_message_size + strlen(format_type);
-
-      if (connection->data_flow_type == CL_CM_CT_STREAM) {
-         flow_type = CL_CONNECT_MESSAGE_DATA_FLOW_STREAM;
-      }
-      if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
-         flow_type = CL_CONNECT_MESSAGE_DATA_FLOW_MESSAGE;
-      }
-      connect_message_size = connect_message_size + strlen(flow_type);
-
-      connect_message_size = connect_message_size + strlen(connection->sender->comp_host);
-      connect_message_size = connect_message_size + strlen(connection->sender->comp_name);
-      connect_message_size = connect_message_size + cl_util_get_ulong_number_length(connection->sender->comp_id);
-
-      /* add port length and length of auto close */
-      connect_message_size = connect_message_size + cl_util_get_ulong_number_length(local_service_port_number);
-      if (connection->auto_close_type == CL_CM_AC_ENABLED) { 
-         autoclose = CL_CONNECT_MESSAGE_AUTOCLOSE_ENABLED;
-      } 
-      if (connection->auto_close_type == CL_CM_AC_DISABLED) {
-         autoclose = CL_CONNECT_MESSAGE_AUTOCLOSE_DISABLED;
-      }
-      connect_message_size = connect_message_size + strlen(autoclose);
-
-      connect_message_size = connect_message_size + strlen(connection->receiver->comp_host);
-      connect_message_size = connect_message_size + strlen(connection->receiver->comp_name);
-      connect_message_size = connect_message_size + cl_util_get_ulong_number_length(connection->receiver->comp_id);
-
-      connect_message_size = connect_message_size + strlen(connection->local->comp_host);
-      connect_message_size = connect_message_size + strlen(connection->local->comp_name);
-      connect_message_size = connect_message_size + cl_util_get_ulong_number_length(connection->local->comp_id);
-
-      gmsh_message_size = CL_GMSH_MESSAGE_SIZE + cl_util_get_ulong_number_length(connect_message_size);
-
-      if (connection->data_buffer_size < (connect_message_size + gmsh_message_size + 1) ) {
-         return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
-      }
-      sprintf((char*)connection->data_write_buffer, CL_GMSH_MESSAGE ,
-               connect_message_size);
-      sprintf((char*)&((connection->data_write_buffer)[gmsh_message_size]), CL_CONNECT_MESSAGE, 
-               CL_CONNECT_MESSAGE_VERSION, 
-               format_type,
-               flow_type,
-               connection->sender->comp_host,
-               connection->sender->comp_name,
-               connection->sender->comp_id,
-               connection->receiver->comp_host,
-               connection->receiver->comp_name,
-               connection->receiver->comp_id,
-               connection->local->comp_host,
-               connection->local->comp_name,
-               connection->local->comp_id,
-               local_service_port_number,
-               autoclose
-      );
-
-
-#if 0
-      printf("cm:\n|%s|\n", (char*)&((connection->data_write_buffer)[gmsh_message_size])); 
-      printf("cm size: %ld\n", connect_message_size );  
-#endif
-
-      connection->data_write_buffer_pos = 0;
-      connection->data_write_buffer_processed = 0;
-      connection->data_write_buffer_to_send = connect_message_size + gmsh_message_size;
-      connection->data_write_flag = CL_COM_DATA_READY;
-      connection->connection_sub_state = CL_COM_SEND_CM;
-   }
-
-   if (connection->connection_sub_state == CL_COM_SEND_CM) {
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_SEND_CM");
-      if (only_once != 0) {
-         data_written = 0;
-         retval = cl_com_tcp_write(connection->write_buffer_timeout_time,
-                                   con_private->sockfd, 
-                                   &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),  /* position to continue */
-                                   connection->data_write_buffer_to_send, 
-                                   &data_written);               /* returns the data bytes read */
-         connection->data_write_buffer_pos = connection->data_write_buffer_pos + data_written;  /* add data read count to buff position */
-         connection->data_write_buffer_to_send = connection->data_write_buffer_to_send - data_written;
-      } else {
-         retval = cl_com_tcp_write(connection->write_buffer_timeout_time,
-                                   con_private->sockfd, 
-                                   &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),
-                                   connection->data_write_buffer_to_send, 
-                                   NULL);
-         connection->data_write_buffer_pos = connection->data_write_buffer_pos + connection->data_write_buffer_to_send;
-      }
-      if (retval != CL_RETVAL_OK) {
-         return retval;
-      }
-      connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + connection->data_write_buffer_pos;
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
-      gettimeofday(&now,NULL);
-      connection->read_buffer_timeout_time = now.tv_sec + timeout;
-      connection->data_read_buffer_pos = 0;
-      connection->data_read_buffer_processed = 0;
-      connection->read_gmsh_header->dl = 0;
-      connection->data_write_flag = CL_COM_DATA_NOT_READY;
-      connection->connection_sub_state = CL_COM_SEND_READ_GMSH;
-      connection->write_buffer_timeout_time = 0;
-   }
-
-
-   if (connection->connection_sub_state == CL_COM_SEND_READ_GMSH) {
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_SEND_READ_GMSH");
-
-      /* read in GMSH header (General Message Size Header)*/
-      if (only_once != 0) {
-         retval = cl_com_tcp_read_GMSH(connection, &data_read);
-      } else {
-         retval = cl_com_tcp_read_GMSH(connection, NULL );
-      }
-      if (retval != CL_RETVAL_OK) {
-         return retval;
-      }
-      connection->connection_sub_state = CL_COM_SEND_READ_CRM;
-   }
-
-
-   if (connection->connection_sub_state == CL_COM_SEND_READ_CRM) {
-      cl_com_handle_t* handler = NULL;
-
-      CL_LOG(CL_LOG_INFO,"connection state: CL_COM_SEND_READ_CRM");
-      CL_LOG_INT(CL_LOG_INFO,"GMSH dl:",connection->read_gmsh_header->dl );
-
-      /* calculate (rest) data size to read = data length - stream buff position */
-      data_to_read = connection->read_gmsh_header->dl - (connection->data_read_buffer_pos - connection->data_read_buffer_processed);
-      CL_LOG_INT(CL_LOG_INFO,"data to read=",data_to_read);
-
-      if ( (data_to_read + connection->data_read_buffer_pos) >= connection->data_buffer_size ) {
-         CL_LOG(CL_LOG_ERROR,"stream buffer to small");
-         return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
-      }
-
-      /* is data allready in buffer ? */
-      if (data_to_read > 0) {
-         if (only_once != 0) {
-            data_read = 0;
-            retval = cl_com_tcp_read(connection->read_buffer_timeout_time,
-                                     con_private->sockfd, 
-                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]),  /* position to continue */
-                                     data_to_read, 
-                                     &data_read);               /* returns the data bytes read */
-            connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;  /* add data read count to buff position */
-         } else {
-            retval = cl_com_tcp_read(connection->read_buffer_timeout_time,
-                                     con_private->sockfd, 
-                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]),
-                                     data_to_read, 
-                                     NULL);
-            connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_to_read; /* add data read count to buff position */
-         }
-         if (retval != CL_RETVAL_OK) {
-            return retval;
-         }
-      }
-      retval = cl_xml_parse_CRM(&(connection->data_read_buffer[(connection->data_read_buffer_processed)]),connection->read_gmsh_header->dl, &crm_message);
-      if (retval != CL_RETVAL_OK) {
-         cl_com_free_crm_message(&crm_message);
-         return retval;
-      }
-
-
-      if ( cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
-         connection->data_write_flag = CL_COM_DATA_NOT_READY;
-      } else {
-         connection->data_write_flag = CL_COM_DATA_READY;
-      }
-      connection->read_buffer_timeout_time = 0;
-
-      if (crm_message->cs_condition == CL_CRM_CS_CONNECTED) {
-         connection->connection_state = CL_COM_CONNECTED;  /* That was it */
-         connection->connection_sub_state = CL_COM_WORK; 
-         /* printf("local hostname is  : \"%s\"\n", connection->local->comp_host); */
-         /* printf("remote hostname is : \"%s\"\n", connection->remote->comp_host); */
-      } else {
-         CL_LOG_INT(CL_LOG_ERROR,"Connect Error:",crm_message->cs_condition);
-         if (connection->error_func != NULL) {
-            CL_LOG(CL_LOG_WARNING,"calling application error function");
-            switch(crm_message->cs_condition) {
-               case CL_CRM_CS_DENIED:
-                  connection->error_func(CL_RETVAL_ACCESS_DENIED);
-                  break;
-               case CL_CRM_CS_ENDPOINT_NOT_UNIQUE:
-                  connection->error_func(CL_RETVAL_ENDPOINT_NOT_UNIQUE);
-                  break;
-               default:
-                  connection->error_func(CL_RETVAL_UNKNOWN);
-                  break;
-            }
-            CL_LOG(CL_LOG_WARNING,"application error function returns");
-
-         } else {
-            CL_LOG(CL_LOG_WARNING,"No application error function set");
-         }
-         CL_LOG_STR(CL_LOG_ERROR,"error:",crm_message->cs_text);
-         connection->connection_state = CL_COM_CLOSING;  /* That was it */
-      }
-
-      CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (local host) :", crm_message->rdata->comp_host);
-      CL_LOG_STR(CL_LOG_INFO,"local resolved component host name (local host) :", connection->local->comp_host);
-
-      CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (receiver host) :", crm_message->dst->comp_host);
-      CL_LOG_STR(CL_LOG_INFO,"local resolved component host name (receiver host) :", connection->receiver->comp_host);
-
-      CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (sender host) :", crm_message->src->comp_host);
-      CL_LOG_STR(CL_LOG_INFO,"local resolved component host name (sender host) :", connection->sender->comp_host);
-
-      connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + connection->data_read_buffer_pos;
-
-      if ( cl_com_compare_hosts(crm_message->rdata->comp_host , connection->local->comp_host    ) != CL_RETVAL_OK ||
-           cl_com_compare_hosts(crm_message->dst->comp_host   , connection->receiver->comp_host ) != CL_RETVAL_OK ||
-           cl_com_compare_hosts(crm_message->src->comp_host   , connection->sender->comp_host   ) != CL_RETVAL_OK    ) {
-         CL_LOG(CL_LOG_ERROR,"host names are not resolved equal");
-         connection->connection_state = CL_COM_CLOSING;  /* That was it */
-      }
-
-      if ( connection->local->comp_id == 0 ) {
-         connection->local->comp_id = crm_message->rdata->comp_id;
-         CL_LOG_INT(CL_LOG_INFO,"requested local component id from server is", connection->local->comp_id);
-      }
-      if ( connection->sender->comp_id == 0 ) {
-         connection->sender->comp_id = crm_message->src->comp_id;
-         CL_LOG_INT(CL_LOG_INFO,"requested sender component id from server is", connection->sender->comp_id );
-      }
-
-      cl_com_free_crm_message(&crm_message);
-      CL_LOG_INT(CL_LOG_INFO,"our local comp_id is:", connection->local->comp_id);
-
-      handler = connection->handler;
-      if (handler != NULL) {
-         if ( handler->local->comp_id == 0  ) {
-            handler->local->comp_id = connection->local->comp_id;
-            CL_LOG_INT(CL_LOG_ERROR,"setting handler comp_id to reported client id:", handler->local->comp_id);
-            if ( handler->service_provider != 0 ) {
-               CL_LOG_INT(CL_LOG_ERROR,"setting service handle comp_id to reported client id:", connection->local->comp_id);
-               handler->service_handler->local->comp_id = connection->local->comp_id;
-            }
-         }
-      } else {
-         CL_LOG(CL_LOG_WARNING,"connection has no handler");
-      }
-      
-      /* cl_dump_connection(connection); */
-   }
-   
-   return CL_RETVAL_OK;
-}
 
 /****** cl_tcp_framework/cl_com_tcp_get_private() ******************************
 *  NAME
@@ -2165,7 +1559,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 
    int max_fd = -1;
    int server_fd = -1;
-   int retval = CL_RETVAL_OK;
+   int retval = CL_RETVAL_UNKNOWN;
    int do_read_select = 0;
    int do_write_select = 0;
    int my_errno = 0;
@@ -2177,9 +1571,6 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       CL_LOG(CL_LOG_ERROR,"no connection list");
       return CL_RETVAL_PARAMS;
    }
-
-   CL_LOG(CL_LOG_INFO,"checking open connections ...");
-
 
    if (select_mode == CL_RW_SELECT || select_mode == CL_R_SELECT) {
       do_read_select = 1;
@@ -2235,11 +1626,26 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
 
-      if (connection->framework_type == CL_CT_TCP) {
-         CL_LOG_STR(CL_LOG_INFO,"connection_state is", cl_com_get_connection_state(connection));
-         switch (connection->connection_state) {
-            case CL_COM_CONNECTED:
-               if (connection->ccrm_sent == 0) {
+      switch(connection->framework_type) {
+         case CL_CT_TCP: {
+            switch (connection->connection_state) {
+               case CL_CONNECTED:
+                  if (connection->ccrm_sent == 0) {
+                     if (do_read_select != 0) {
+                        max_fd = MAX(max_fd,con_private->sockfd);
+                        FD_SET(con_private->sockfd,&my_read_fds); 
+                        nr_of_descriptors++;
+                        connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                     }
+                     if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
+                        /* this is to come out of select when data is ready to write */
+                        max_fd = MAX(max_fd, con_private->sockfd);
+                        FD_SET(con_private->sockfd,&my_write_fds);
+                        connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                     } 
+                  }
+                  break;
+               case CL_CONNECTING:
                   if (do_read_select != 0) {
                      max_fd = MAX(max_fd,con_private->sockfd);
                      FD_SET(con_private->sockfd,&my_read_fds); 
@@ -2251,35 +1657,37 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                      max_fd = MAX(max_fd, con_private->sockfd);
                      FD_SET(con_private->sockfd,&my_write_fds);
                      connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-                  } 
-               }
-               break;
-            case CL_COM_CONNECTING:
-               if (do_read_select != 0) {
-                  max_fd = MAX(max_fd,con_private->sockfd);
-                  FD_SET(con_private->sockfd,&my_read_fds); 
-                  nr_of_descriptors++;
-                  connection->data_read_flag = CL_COM_DATA_NOT_READY;
-               }
-               if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
-                  /* this is to come out of select when data is ready to write */
-                  max_fd = MAX(max_fd, con_private->sockfd);
-                  FD_SET(con_private->sockfd,&my_write_fds);
-                  connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-               }
-               break;
-            case CL_COM_OPENING:
-               /* this is to come out of select when connection socket is ready to connect */
-               if (connection->connection_sub_state == CL_COM_OPEN_CONNECT) { 
-                  if ( con_private->sockfd > 0 && do_read_select != 0) {
-                     max_fd = MAX(max_fd, con_private->sockfd);
-                     FD_SET(con_private->sockfd,&my_write_fds);
                   }
-               } 
-               break;
+                  break;
+               case CL_OPENING:
+                  /* this is to come out of select when connection socket is ready to connect */
+                  switch(connection->connection_sub_state) {
+                     case CL_COM_OPEN_CONNECTED:
+                     case CL_COM_OPEN_CONNECT_IN_PROGRESS:
+                     case CL_COM_OPEN_CONNECT: {
+                        if ( con_private->sockfd > 0 && do_read_select != 0) {
+                           max_fd = MAX(max_fd, con_private->sockfd);
+                           FD_SET(con_private->sockfd,&my_write_fds);
+                        } 
+                        break;
+                     }
+                     default:
+                        break;
+                  }
+                  break;
+               case CL_DISCONNECTED:
+               case CL_CLOSING:
+                  break;
+            }
+            break;
+         }
+         case CL_CT_UNDEFINED:
+         case CL_CT_SSL: {
+            CL_LOG_STR(CL_LOG_WARNING,"ignoring unexpected connection type:",
+                       cl_com_get_framework_type(connection));
          }
       }
-      con_elem = cl_connection_list_get_next_elem(connection_list,con_elem);
+      con_elem = cl_connection_list_get_next_elem(con_elem);
       if (max_fd + 1 >= FD_SETSIZE) {
          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
          max_fd = FD_SETSIZE - 1;
@@ -2287,9 +1695,8 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    }
 
    /* we don't have any file descriptor for select(), find out why: */
-   CL_LOG_INT(CL_LOG_INFO,"max fd =", max_fd);
    if (max_fd == -1) {
-
+      CL_LOG_INT(CL_LOG_INFO,"max fd =", max_fd);
 /* TODO: remove CL_W_SELECT and CL_R_SELECT handling and use one handling for 
          CL_W_SELECT, CL_R_SELECT and CL_RW_SELECT ? */
       if ( select_mode == CL_W_SELECT ) {
@@ -2353,7 +1760,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
             return to application as far as possible, don't wait for a new connect */
          ldata->last_nr_of_descriptors = nr_of_descriptors;
          cl_raw_list_unlock(connection_list); 
-         CL_LOG(CL_LOG_WARNING,"last connection is gone");
+         CL_LOG(CL_LOG_INFO,"last connection closed");
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
    }
@@ -2413,7 +1820,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   }
                }
             }
-            con_elem = cl_connection_list_get_next_elem(connection_list,con_elem);
+            con_elem = cl_connection_list_get_next_elem(con_elem);
          }
          cl_raw_list_unlock(connection_list);
          if (server_fd != -1) {

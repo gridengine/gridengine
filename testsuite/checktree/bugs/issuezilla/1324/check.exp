@@ -1,0 +1,126 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs tmp_name
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1324"
+set check_description(0)      "qconf -sq doesn't print separator between subordinate queues"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+set check_functions           ""
+lappend check_functions       "issue_1324_setup"   ;# functions to call (in order)
+lappend check_functions       "issue_1324_run"
+lappend check_functions       "issue_1324_cleanup"
+set check_highest_level       0
+set my_pid [pid]
+set tmp_name                  "/tmp/tmp1251.$my_pid"
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL
+
+   # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+
+   return -1
+}
+
+proc issue_1324_setup {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT tmp_name
+
+   # Setup
+   set f [ open "$tmp_name.1" w ]
+   puts $f "qname sub1"
+   close $f
+
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq | grep -v qname >> $tmp_name.1" }
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Aq $tmp_name.1" }
+
+   set f [ open "$tmp_name.2" w ]
+   puts $f "qname sub2"
+   close $f
+
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq | grep -v qname >> $tmp_name.2" }
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Aq $tmp_name.2" }
+
+   set f [ open "$tmp_name.3" w ]
+   puts $f "qname sub3"
+   close $f
+
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq | grep -v qname >> $tmp_name.3" }
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Aq $tmp_name.3" }
+
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -rattr queue subordinate_list sub2,sub3 sub1" }
+
+   set_error 0 "ok"
+}
+
+proc issue_1324_run  {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+
+   # Test
+   set catch_result [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq sub1 | grep subordinate | wc -w" } result]
+   set result [ string trim $result ]
+
+   if { [ string compare $result "3" ] == 0 } {
+      set_error 0 "ok"
+   } else {
+      add_proc_error "issue_1324_run" "-1" "qconf did not insert separators between subordinate queues: XXX${result}XXX"
+      set_error -1 "Issue 1324: qconf mangles subordinate queue list"
+   }
+}
+
+proc issue_1324_cleanup {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+
+   # Cleanup
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dq sub1" }
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dq sub2" }
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dq sub3" }
+
+   # Remove temp files
+   catch { eval exec "rm $tmp_name.1" } result
+   catch { eval exec "rm $tmp_name.2" } result
+   catch { eval exec "rm $tmp_name.3" } result
+
+   set_error 0 "ok"
+}

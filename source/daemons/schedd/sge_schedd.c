@@ -78,6 +78,7 @@
 #include "sge_profiling.h"
 #include "sge_serf.h"
 #include "sge_mt_init.h"
+#include "sge_category.h"
 
 #include <sgeobj/sge_schedd_conf.h>
 
@@ -128,6 +129,8 @@ char *argv[]
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
+   sge_prof_setup();
+
    sge_mt_init();
 
    /* set profiling parameters */
@@ -135,12 +138,12 @@ char *argv[]
    prof_set_level_name(SGE_PROF_SPOOLING, NULL, NULL);
    prof_set_level_name(SGE_PROF_CUSTOM0, "scheduler", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM1, "pending ticket calculation", NULL);
-   prof_set_level_name(SGE_PROF_CUSTOM2, "active job ticket calculation", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM3, "job sorting", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM4, "job dispatching", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM5, "send orders", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM6, "scheduler event loop", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM7, "copy lists", NULL);
+   prof_set_level_name(SGE_PROF_SCHEDLIB4, NULL, NULL);
 
    /* we wish these functions be used for schedule entry recording */
    serf_init(schedd_serf_record_func, schedd_serf_newline);
@@ -219,6 +222,9 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
+   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
+
+
    in_main_loop = 1;
 
    while (!done) {
@@ -227,6 +233,7 @@ char *argv[]
          FREE(initial_qmaster_host);
          sge_shutdown();
       }   
+
 
       if (sigpipe_received) {
          sigpipe_received = 0;
@@ -238,9 +245,15 @@ char *argv[]
             FREE(initial_qmaster_host);
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
-         } else if (ret > 0) {
+         } 
+         
+         if (ret > 0) {
             sleep(10);
             continue;
+         }
+
+         if (ret == 0) {
+            check_qmaster = false;
          }
       }
 
@@ -259,13 +272,45 @@ char *argv[]
          continue;
       }
 
-      /* check profiling settings, if necessary, switch profiling on/off */
-      if(sconf_get_profiling() && !prof_is_active()) {
-         prof_start(NULL);
-      }
+      /* got new config? */
+      if (sconf_is_new_config()) {
 
-      if(!sconf_get_profiling() && prof_is_active()) {
-         prof_stop(NULL);
+         /* set actual syncron receive timeout */
+         cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),
+                                              (int) (sconf_get_schedule_interval() * 2) );
+
+         /* check profiling settings, if necessary, switch profiling on/off */
+         if(sconf_get_profiling()) {
+            prof_start(SGE_PROF_OTHER, NULL);
+            prof_start(SGE_PROF_PACKING, NULL);
+            prof_start(SGE_PROF_EVENTCLIENT, NULL);
+            prof_start(SGE_PROF_MIRROR, NULL);
+            prof_start(SGE_PROF_GDI, NULL);
+            prof_start(SGE_PROF_HT_RESIZE, NULL);
+            prof_start(SGE_PROF_CUSTOM0, NULL);
+            prof_start(SGE_PROF_CUSTOM1, NULL);
+            prof_start(SGE_PROF_CUSTOM3, NULL);
+            prof_start(SGE_PROF_CUSTOM4, NULL);
+            prof_start(SGE_PROF_CUSTOM5, NULL);
+            prof_start(SGE_PROF_CUSTOM6, NULL);
+            prof_start(SGE_PROF_CUSTOM7, NULL);
+            prof_start(SGE_PROF_SCHEDLIB4, NULL);
+         } else {
+            prof_stop(SGE_PROF_OTHER, NULL);
+            prof_stop(SGE_PROF_PACKING, NULL);
+            prof_stop(SGE_PROF_EVENTCLIENT, NULL);
+            prof_stop(SGE_PROF_MIRROR, NULL);
+            prof_stop(SGE_PROF_GDI, NULL);
+            prof_stop(SGE_PROF_HT_RESIZE, NULL);
+            prof_stop(SGE_PROF_CUSTOM0, NULL);
+            prof_stop(SGE_PROF_CUSTOM1, NULL);
+            prof_stop(SGE_PROF_CUSTOM3, NULL);
+            prof_stop(SGE_PROF_CUSTOM4, NULL);
+            prof_stop(SGE_PROF_CUSTOM5, NULL);
+            prof_stop(SGE_PROF_CUSTOM6, NULL);
+            prof_stop(SGE_PROF_CUSTOM7, NULL);
+            prof_stop(SGE_PROF_SCHEDLIB4, NULL);
+         }
       }
    
       sched_funcs[current_scheduler].event_func();
@@ -273,7 +318,7 @@ char *argv[]
       sconf_reset_new_config();
       
       /* output profiling information */
-      if (prof_is_active()) {
+      if (prof_is_active(SGE_PROF_CUSTOM0)) {
          time_t now = sge_get_gmt();
 
          if (now > next_prof_output || shut_me_down) {
@@ -282,6 +327,7 @@ char *argv[]
          }
       }
    }
+   sge_prof_cleanup();
    FREE(initial_qmaster_host);
    DEXIT;
    return EXIT_SUCCESS;
@@ -602,6 +648,14 @@ int sge_before_dispatch(void)
       ec_commit();
    }
 
+   /*
+    * job categories are reset here, we need 
+    *  - an update of the rejected field for every new run
+    *  - the resource request dependent urgency contribution is cached 
+    *    per job category 
+    */
+   sge_reset_job_category(); 
+   
    DEXIT;
    return 0;
 }
@@ -611,7 +665,6 @@ void sge_schedd_mirror_register()
    /* register as event mirror */
    sge_mirror_initialize(EV_ID_SCHEDD, "scheduler");
    ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
-   ec_set_clientdata(-1);
 
    /* subscribe events */
    sched_funcs[current_scheduler].subscribe_func();

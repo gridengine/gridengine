@@ -811,14 +811,21 @@ proc set_exechost { change_array host } {
      set newVal $chgar($elem)
    
      if {[info exists old_values($elem)]} {
-        if { $newVal == "" } {
-           lappend vi_commands ":%s/^$elem .*$//\n"
-        } else {
-           set newVal1 [split $newVal {/}]
-           set newVal [join $newVal1 {\/}]
-           lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [string compare $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$//\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
         }
      } else {
+        # if the config entry didn't exist in old config: append a new line
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
      }
@@ -1326,31 +1333,20 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER
 
-  upvar $change_array chgar
-  set values [array names chgar]
+   upvar $change_array chgar
+   set values [array names chgar]
 
-  if { $do_add == 0 } {
-     get_config old_values $host
-  }
+   # get old config - we want to compare it to new one
+   if { $do_add == 0 } {
+      set qconf_cmd "-mconf"
+      get_config old_values $host
+   } else {
+      set qconf_cmd "-aconf"
+      set old_values(xyz) "abc"
+   }
 
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal $chgar($elem)
-   
-     if {[info exists old_values($elem)]} {
-        if { $newVal == "" } {
-          lappend vi_commands ":%s/^$elem .*$/#/\n"
-        } else {
-          set newVal1 [split $newVal {/}]
-          set newVal [join $newVal1 {\/}]
-          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-        }
-     } else {
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
-     }
-  } 
+   set vi_commands [build_vi_command chgar old_values]
+  
   set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
 
   if { $ts_config(gridengine_version) == 60 } {
@@ -1364,16 +1360,38 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
   
   if { ($ignore_error == 1) && ($result == -4) } {
      # ignore error -4 
   } else {
     if { ($result != 0) && ($result != -3) } {
-      add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
+      add_proc_error "set_config" -1 "could not add or modify configuration for host $host ($result)"
     }
   }
   return $result
+}
+
+proc compare_complex {a b} {
+   set len [llength $a]
+
+   if { $len != [llength $b] } {
+      return 1
+   }
+
+   # compare shortcut (case sensitive)
+   if {[string compare [lindex $a 0] [lindex $b 0]] != 0} {
+      return 1
+   }
+   # compare the complex entry element by element
+   for {set i 1} {$i < $len} {incr i} {
+      puts "comparing [lindex $a $i] with [lindex $b $i]"
+      if {[string compare -nocase [lindex $a $i] [lindex $b $i]] != 0} {
+         return 1
+      }
+   }
+
+   return 0
 }
 
 #****** sge_procedures/set_complex() *******************************************
@@ -1420,14 +1438,21 @@ proc set_complex { change_array complex_list { create 0 } } {
      # this will quote any / to \/  (for vi - search and replace)
      set newVal $chgar($elem)
      if {[info exists old_values($elem)]} {
-        if { $newVal == "" } {
-          lappend vi_commands ":%s/^$elem .*$//\n"
-        } else {
-          set newVal1 [split $newVal {/}]
-          set newVal [join $newVal1 {\/}]
-          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [compare_complex $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$/#/\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
         }
      } else {
+        # if the config entry didn't exist in old config: append a new line
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
      }
@@ -1633,7 +1658,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          }
       }
       puts $CHECK_OUTPUT "waiting for scheduling info information ..."
-      sleep 2
+      after 2000
       if { [timestamp] > $my_timeout } {
          return "timeout"
       }
@@ -2337,75 +2362,6 @@ proc mod_user { change_array { from_file 0 } } {
 }
 
 
-#                                                             max. column:     |
-#****** sge_procedures/add_prj() ******
-# 
-#  NAME
-#     add_prj -- ??? 
-#
-#  SYNOPSIS
-#     add_prj { change_array } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     change_array - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc add_prj { change_array } {
-  global ts_config
-
-# returns 
-# -100 on unknown error
-# -1   on timeout
-# -2   if queue allready exists
-# 0    if ok
-
-# name      template
-# oticket   0
-# fshare    0
-# acl       NONE
-# xacl      NONE  
-# 
-  global CHECK_ARCH 
-  global CHECK_CORE_MASTER CHECK_USER
-
-  upvar $change_array chgar
-
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     add_proc_error "add_prj" -1 "not possible for sge systems"
-     return
-  }
-
-  set vi_commands [build_vi_command chgar]
-
-#  set PROJECT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PROJECT]]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS ]
-  
-  if {$result == -1 } { add_proc_error "add_prj" -1 "timeout error" }
-  if {$result == -2 } { add_proc_error "add_prj" -1 "\"[set chgar(name)]\" already exists" }
-  if {$result != 0  } { add_proc_error "add_prj" -1 "could not add project \"[set chgar(name)]\"" }
-
-  return $result
-}
-
 
 #                                                             max. column:     |
 #****** sge_procedures/del_pe() ******
@@ -2472,79 +2428,6 @@ proc del_pe { mype_name } {
   }
   return $result
 
-}
-
-#                                                             max. column:     |
-#****** sge_procedures/del_prj() ******
-# 
-#  NAME
-#     del_prj -- ??? 
-#
-#  SYNOPSIS
-#     del_prj { myprj_name } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     myprj_name - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc del_prj { myprj_name } {
-  global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_CORE_MASTER
-  global CHECK_HOST
-
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     set_error -1 "del_prj - not possible for sge systems"
-     return
-  }
-
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $myprj_name "*" ]
-
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dprj $myprj_name"]
-  set sp_id [ lindex $id 1 ]
-  set result -1
-  set timeout 30 	
-  log_user 0 
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_prj" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-
-    -i $sp_id default {
-      set result -1
-    }
-  }
-  close_spawn_process $id
-  log_user 1
-  if { $result != 0 } {
-     add_proc_error "del_prj" -1 "could not delete project \"$myprj_name\""
-  }
-  return $result
 }
 
 #                                                             max. column:     |
@@ -2798,7 +2681,7 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
   if { $mytime == $check_timestamp } {
      puts $CHECK_OUTPUT "was_job_running - waiting for job ..."
-     sleep 1
+     after 1000
   }
   set check_timestamp $mytime
 
@@ -2951,7 +2834,7 @@ proc wait_for_load_from_all_queues { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for load value report from all queues ..."
-      sleep 1
+      after 1000
       set result ""
       set catch_return [ catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f"} result ]
       if { $catch_return == 0 } {
@@ -2990,7 +2873,7 @@ proc wait_for_load_from_all_queues { seconds } {
          # check if load of an host is set > 99 (no exed report)
          set failed 0
          foreach elem $load {
-           if {$elem >= 99} {
+           if {$elem == "-NA-" || $elem >= 99} {
               incr failed 1
            }
          }
@@ -3043,7 +2926,7 @@ proc wait_for_job_state { jobid state wait_timeout } {
    set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for job $jobid to become job state ${state} ..."
-      sleep 1
+      after 1000
       set job_state [get_job_state $jobid]
       if { [string first $state $job_state] >= 0 } {
          return $job_state
@@ -3083,7 +2966,7 @@ proc wait_for_queue_state { queue state wait_timeout } {
    set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for queue $queue to get in \"${state}\" state ..."
-      sleep 1
+      after 1000
       set q_state [get_queue_state $queue]
       if { [string first $state $q_state] >= 0 } {
          return $q_state
@@ -3171,8 +3054,13 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
    global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
+
+   if { [ file isfile $ts_config(product_root)/bin/$CHECK_ARCH/qstat ] != 1} {
+      return -1      
+   }
+
    while { 1 } {
-      sleep 1
+      after 1000
       puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
       set result ""
       set catch_return [ catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f"} result ]
@@ -3225,11 +3113,17 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"
+        if { $do_error_check == 1 } {
+           add_proc_error "wait_for_unknown_load" -1 "qstat error"
+        }
+        return -1
       }
 
       set runtime [expr ( [timestamp] - $time) ]
-      if { $runtime >= $seconds && $do_error_check == 1 } {
-          add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
+      if { $runtime >= $seconds } {
+          if { $do_error_check == 1 } {
+             add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
+          }
           return -1
       }
    }
@@ -3269,7 +3163,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for end of all jobs ..."
-      sleep 1
+      after 2000
       set result ""
       set catch_return [ catch {eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -s pr" } result ]
       if { $catch_return == 0 } {
@@ -3595,7 +3489,6 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    global CHECK_USER
 
 
-#   sleep 1
    set REGISTERED1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELTASK_SUU] "*" "*" "*"]
    set REGISTERED2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELJOB_SU] "*" "*" ]
    set DELETED1  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETETASK_SUU] "*" "*" "*"]
@@ -3682,7 +3575,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
              set my_second_qdel_timeout $my_timeout
              delete_job $jobid
           }
-          sleep 1
+          after 1000
       }
    }
    return $result
@@ -3807,13 +3700,21 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set GDI_NEGATIVSTEP [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_NEGATIVSTEP]] 
   set GDI_INITIALPORTIONSTRINGNODECIMAL_S [translate $CHECK_HOST 0 0 0 [sge_macro MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S] "*" ] 
 
+
   if { $ts_config(gridengine_version) == 60 } {
-     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
+#     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
+#     "Colon (':') not allowed in account string"
+
+#      "Unable to run job: : not allowed in objectname."
+      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_S] ":" ]
+
+
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
   }
-   
+
+
   append USAGE " qsub"
 
   if { $show_args == 1 } {
@@ -4282,7 +4183,7 @@ proc get_grppid_of_job { jobid {host ""}} {
    # JG: TODO: we have to do a cat <pidfile> on remote host
    set pidfile "$spool_dir/$CHECK_HOST/active_jobs/$jobid.1/job_pid"
 
-   sleep 5
+   after 5000
 
    set back [ catch { open $pidfile "r" } fio ]
 
@@ -4335,7 +4236,7 @@ proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} } 
    upvar $pidlist pidl 
 
    # give the system time to change the processes before ps call!!
-   sleep 1
+   after 5000
 
    # get process group id
    set real_pid [get_grppid_of_job $jobid]
@@ -4832,7 +4733,7 @@ proc is_job_running { jobid jobname } {
 
    set mytime [timestamp]
    if { $mytime == $check_timestamp } {
-      sleep 1
+      after 1000
    }
    set check_timestamp $mytime
 
@@ -4904,7 +4805,7 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    set mytime [timestamp]
 
    if { $mytime == $check_timestamp } {
-      sleep 1
+      after 1000
    }
    set check_timestamp $mytime
 
@@ -4955,7 +4856,7 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
                set states_all_equal 0
             } 
          }
-         sleep 1
+         after 1000
       }
    }
    if { $not_all_equal != 0 } {
@@ -5117,7 +5018,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
     }
 
     if { $had_error != 0 } {
-       sleep 1
+       after 1000
        continue
     }
 
@@ -5131,7 +5032,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
        add_proc_error "wait_for_end_of_transfer" -1 "timeout waiting for job \"$jobid\""
        return -1
     }
-    sleep 1
+    after 1000
   }
   return 0
 }
@@ -5201,7 +5102,7 @@ proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
        add_proc_error "wait_for_jobpending" -1 "timeout waiting for job \"$jobid\" \"$jobname\" (timeout was $seconds sec)"
        return -1
     }
-    sleep 1
+    after 1000
   }
   return 0
 }
@@ -5425,7 +5326,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
        add_proc_error "wait_for_jobend" -1 "timeout waiting for job \"$jobid\" \"$jobname\":\nis_job_running returned $run_result"
        return -1
     }
-    sleep 1
+    after 1000
   }
 
   if { $wait_for_end != 0 } {
@@ -5433,7 +5334,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
       incr my_timeout 90
       while { [get_qstat_j_info $jobid ] != 0 } {
           puts $CHECK_OUTPUT "waiting for jobend ..."
-          sleep 2
+          after 2000
           if { [timestamp] > $my_timeout } {
              add_proc_error "wait_for_jobend" -1 "timeout while waiting for jobend"
              break;
@@ -5480,7 +5381,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_qmaster {} {
+proc startup_qmaster { {and_scheduler 1} } {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
@@ -5497,7 +5398,12 @@ proc startup_qmaster {} {
       set startup_user $CHECK_USER
    } 
 
-   puts $CHECK_OUTPUT "starting up qmaster and scheduler on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   if {$and_scheduler} {
+      set schedd_message "and scheduler"
+   } else {
+      set schedd_message ""
+   }
+   puts $CHECK_OUTPUT "starting up qmaster $schedd_message on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
    set arch [resolve_arch $CHECK_CORE_MASTER]
 
    if { $master_debug != 0 } {
@@ -5506,16 +5412,21 @@ proc startup_qmaster {} {
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_qmaster" ""
    }
-   if { $schedd_debug != 0 } {
-      puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
-   } else {
-      puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-      set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
-      puts $CHECK_OUTPUT $result
+
+   if {$and_scheduler} {
+      if { $schedd_debug != 0 } {
+         puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+         puts $CHECK_OUTPUT "starting schedd as $startup_user" 
+         start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      } else {
+         puts $CHECK_OUTPUT "starting schedd as $startup_user" 
+         set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
+         puts $CHECK_OUTPUT $result
+      }
    }
-   
+ 
+   after 5000
+     
    return 0
 }
 
@@ -5794,9 +5705,10 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
    if { ($ps_info($scheduler_pid,error) == 0) } {
       if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
          puts $CHECK_OUTPUT "killing schedd with pid $scheduler_pid on host $hostname"
-
+         puts $CHECK_OUTPUT "do a qconf -ks ..."
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks" } result
-         sleep 2
+         puts $CHECK_OUTPUT $result
+         after 2000
          shutdown_system_daemon $hostname sched
 
       } else {
@@ -5946,18 +5858,21 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
    if { $prg_exit_state != 0 } {
       set qmaster_pid -1
    }
+ 
 
    get_ps_info $qmaster_pid $hostname
    if { ($ps_info($qmaster_pid,error) == 0) } {
       if { [ is_pid_with_name_existing $hostname $qmaster_pid "sge_qmaster" ] == 0 } { 
 
          puts $CHECK_OUTPUT "killing qmaster with pid $qmaster_pid on host $hostname"
+         puts $CHECK_OUTPUT "do a qconf -km ..."
 
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" } result
-         sleep 10
+         puts $CHECK_OUTPUT $result
 
+         wait_till_qmaster_is_down $hostname
+       
          shutdown_system_daemon $hostname qmaster
-
       } else {
          add_proc_error "shutdown_qmaster" "-1" "qmaster pid $qmaster_pid not found"
          set qmaster_pid -1
@@ -6028,13 +5943,37 @@ proc shutdown_all_shadowd { hostname } {
       puts $CHECK_OUTPUT $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
          puts $CHECK_OUTPUT "Killing process [ set ps_info(pid,$elem) ] ..."
+         if { [ have_root_passwd ] == -1 } {
+            set_root_passwd 
+         }
          if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
              start_remote_prog "$hostname" "root" "kill" "$ps_info(pid,$elem)"
          } else {
              start_remote_prog "$hostname" "$CHECK_USER" "kill" "$ps_info(pid,$elem)"
          }
-      } else {
-         add_proc_error "shutdown_all_shadowd" "-2" "could not shutdown all shadowd daemons"
+      } 
+   }
+
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
+         add_proc_error "shutdown_all_shadowd" "-3" "could not shutdown shadowd at host $elem with term signal"
+         puts $CHECK_OUTPUT "Killing process with kill signal [ set ps_info(pid,$elem) ] ..."
+         if { [ have_root_passwd ] == -1 } {
+            set_root_passwd 
+         }
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+             start_remote_prog "$hostname" "root" "kill" "-9 $ps_info(pid,$elem)"
+         } else {
+             start_remote_prog "$hostname" "$CHECK_USER" "kill" "-9 $ps_info(pid,$elem)"
+         }
+      } 
+   }
+
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
+         add_proc_error "shutdown_all_shadowd" "-1" "could not shutdown shadowd at host $elem with kill signal"
       }
    }
 
@@ -6152,13 +6091,16 @@ global CHECK_ADMIN_USER_SYSTEM
    }
 
    set found_p [ ps_grep "$ts_config(product_root)/" $host ]
+   set nr_of_found_qmaster_processes_or_threads 0
 
    foreach process_name $process_names {
 
       puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
       foreach elem $found_p {
          if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
+            puts $CHECK_OUTPUT "actuel ps info: $ps_info(string,$elem)"
             if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
+               incr nr_of_found_qmaster_processes_or_threads 1
                puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
                puts $CHECK_OUTPUT $ps_info(string,$elem)
                if { [ have_root_passwd ] == -1 } {
@@ -6171,11 +6113,11 @@ global CHECK_ADMIN_USER_SYSTEM
                }
                puts $CHECK_OUTPUT "killing process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
-               sleep 10
+               after 10000
                if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                    puts $CHECK_OUTPUT "killing (SIG_KILL) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                    puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill "-9 $ps_info(pid,$elem)" ]
-                   sleep 5
+                   after 5000
                    if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                        puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) kill failed (host: $host)"
                        add_proc_error "" -1 "could not shutdown \"$process_name\" on host $host"
@@ -6186,8 +6128,10 @@ global CHECK_ADMIN_USER_SYSTEM
                    puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) process killed (host: $host)"
                }
             } else {
-               puts $CHECK_OUTPUT "checkprog error"
-               add_proc_error "" -3 "could not shutdown \"$process_name\" on host $host"
+               if { $nr_of_found_qmaster_processes_or_threads == 0 } {
+                  puts $CHECK_OUTPUT "checkprog error"
+                  add_proc_error "" -3 "could not shutdown \"$process_name\" on host $host"
+               }
             }
          }
       }
@@ -6200,7 +6144,7 @@ global CHECK_ADMIN_USER_SYSTEM
 #****** sge_procedures/shutdown_core_system() ******
 # 
 #  NAME
-#     shutdown_core_system -- ??? 
+#     shutdown_core_system -- shutdown complete cluster
 #
 #  SYNOPSIS
 #     shutdown_core_system { } 
@@ -6224,6 +6168,7 @@ global CHECK_ADMIN_USER_SYSTEM
 #
 #  SEE ALSO
 #     sge_procedures/shutdown_core_system()
+#     sge_procedures/startup_core_system()
 #     sge_procedures/shutdown_master_and_scheduler()
 #     sge_procedures/shutdown_all_shadowd()
 #     sge_procedures/shutdown_system_daemon()
@@ -6240,11 +6185,15 @@ global CHECK_OUTPUT
 global CHECK_USER
 global CHECK_ADMIN_USER_SYSTEM do_compile
 
+
+   foreach sh_host $ts_config(shadowd_hosts) {
+      shutdown_all_shadowd $sh_host
+   }
    puts $CHECK_OUTPUT "killing scheduler and all execds in the cluster ..."
 
    set result ""
    set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks" ]
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks -ke all" ]
 
    puts $CHECK_OUTPUT "qconf -ke all -ks returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
@@ -6254,7 +6203,9 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 5  ;# give the schedd and execd's some time to shutdown
+#   sleep 15 ;# give the schedd and execd's some time to shutdown
+   wait_for_unknown_load 120 all.q 0
+
 
    puts $CHECK_OUTPUT "killing qmaster ..."
 
@@ -6270,7 +6221,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 10  ;# give the qmaster some time to shutdown
+   wait_till_qmaster_is_down $CHECK_CORE_MASTER
 
    if { $ts_config(gridengine_version) == 53 } {
       puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
@@ -6331,6 +6282,58 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       }
    }
 }
+
+#****** sge_procedures/startup_core_system() ***********************************
+#  NAME
+#     startup_core_system() -- startup complete cluster
+#
+#  SYNOPSIS
+#     startup_core_system { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  SEE ALSO
+#      sge_procedures/shutdown_core_system()
+#*******************************************************************************
+proc startup_core_system {} {
+   global ts_config
+   global CHECK_ARCH 
+   global CHECK_CORE_EXECD 
+   global CHECK_CORE_MASTER 
+   global CHECK_OUTPUT
+   global CHECK_USER
+   global CHECK_ADMIN_USER_SYSTEM do_compile
+
+
+   if { [ have_root_passwd ] == -1 } {
+      set_root_passwd 
+   }
+
+   # startup of schedd and qmaster 
+   startup_qmaster
+
+   
+   # startup all shadowds
+   # 
+   foreach sh_host $ts_config(shadowd_hosts) {
+      startup_shadowd $sh_host
+   }
+
+   # startup of all execd
+   foreach ex_host $ts_config(execd_hosts) {
+      startup_execd $ex_host
+   }
+
+}
+
+
+
 #                                                             max. column:     |
 #****** sge_procedures/add_operator() ******
 # 
@@ -6376,6 +6379,47 @@ proc add_operator { anOperator } {
    }
 }
 
+
+proc wait_till_qmaster_is_down { host } {
+   global ts_config CHECK_OUTPUT
+
+   set process_names "sge_qmaster" 
+   
+   if { [string match "csp" $ts_config(product_feature)] } {
+      set my_timeout [ expr ( [timestamp] + 180 ) ] 
+   } else {
+      set my_timeout [ expr ( [timestamp] + 90 ) ] 
+   }
+
+   while { 1 } {
+      set found_p [ ps_grep "$ts_config(product_root)/" $host ]
+      set nr_of_found_qmaster_processes_or_threads 0
+
+      foreach process_name $process_names {
+         puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
+         foreach elem $found_p {
+            if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
+               puts $CHECK_OUTPUT "actual ps info: $ps_info(string,$elem)"
+               if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
+                  incr nr_of_found_qmaster_processes_or_threads 1
+                  puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
+                  puts $CHECK_OUTPUT $ps_info(string,$elem)
+               }
+            }
+         }
+      }
+      if { [timestamp] > $my_timeout } {
+         add_proc_error "wait_till_qmaster_is_down" -3 "timeout while waiting for qmaster going down"
+         return -1
+      }
+      if { $nr_of_found_qmaster_processes_or_threads == 0 } {
+         puts $CHECK_OUTPUT "no qmaster processes running"
+         return 0      
+      } else {
+         puts $CHECK_OUTPUT "still qmaster processes running ..."
+      }
+   }
+}
 
 #                                                             max. column:     |
 #****** sge_procedures/delete_operator() ******

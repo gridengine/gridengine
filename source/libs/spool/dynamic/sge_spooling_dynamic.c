@@ -74,8 +74,8 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
    void *shlib_handle;
 
    /* get_method function pointer and result */
-   spooling_get_method_func get_spooling_method;
-   const char *spooling_name;
+   spooling_get_method_func get_spooling_method = NULL;
+   const char *spooling_name = NULL;
 
    DENTER(TOP_LAYER, "spool_dynamic_create_context");
 
@@ -84,7 +84,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
     */
    sge_dstring_init(&shlib_dstring, shlib_buffer, sizeof(shlib_buffer));
    shlib_fullname = sge_dstring_sprintf(&shlib_dstring, "%s.%s", shlib_name, 
-#if defined(HP11)
+#if defined(HP11) || defined(HP1164)
                                         "sl"
 #elif defined(DARWIN)
                                         "dylib"

@@ -1,0 +1,6 @@
+Issue:      1131
+Synopsis:   qmod -e '@<host>' causes segmentation fault in qmaster
+
+This bug is verified in the following testsuite check:
+Check:      system_tests/clients/qmod/general
+Function:   qmod_issue_1131

@@ -7,7 +7,8 @@ NAME
 
 SYNTAX
      qselect [ -help ] [ -l resource=val,... ] [ -pe  pe_name,...
-     ] [ -q queue,... ] [ -U user,... ]
+     ] [ -q wc_queue,... ] [ -s {r|p|s|z|hu|ho|hs|hj|ha|h}[+] ] [
+     -U user,... ]
 
 DESCRIPTION
      <I>qselect</I> prints a list of Grid Engine queue names correspond-
@@ -24,18 +25,30 @@ OPTIONS
 
      -l resource[=value],...
           Defines the resources to be granted by the queues which
-          should be included in the queue list output.
+          should  be  included in the queue list output. Matching
+          is performed on queues based  on  non-mutable  resource
+          availability  information  only. That means load values
+          are always ignored except  the  so-called  static  load
+          values    (i.e.    "arch",   "num_proc",   "mem_total",
+          "swap_total" and "virtual_total") ones. Also consumbale
+          utilization is ignored.
 
      -pe pe_name,...
           Includes queues into the output which are  attached  to
           at  least  one of the parallel environments enlisted in
           the comma separated option argument.
 
-     -q queue,...
-          Directly specifies the queues to  be  included  in  the
-          output.  This option usually is only meaningful in con-
-          junction with another <I>qselect</I> option to extract a  sub-
-          set of queue names from a list given by -q.
+     -q wc_queue,...
+          Directly  specifies  the  wildcard  queue  list  to  be
+          included  in  the  output.  This option usually is only
+          meaningful in conjunction with another  <I>qselect</I>  option
+          to extract a subset of queue names from a list given by
+          -q.   Description  of  <I>wc</I>_<I>queue</I>   can   be   found   in
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+
+     -qs {a|c|d|o|s|u|A|C|D|E|S}
+          This option allows to filter  for  queue  instances  in
+          certain states.
 
      -U user,...
           Includes the queues to which the specified  users  have
@@ -81,28 +94,67 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine communication of  the  <I>qselect</I>  client
-                    resides.  Per default the local host is used.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
                      Grid Engine master host file
 
+
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -136,4 +136,3 @@ sge_share_mon.o: $(SCHEDD_SDIR)/sge_share_mon.c
 # ------------- different scheduling algorithms ----------
 scheduler.o : $(SCHEDD_SDIR)/scheduler.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/scheduler.c
-

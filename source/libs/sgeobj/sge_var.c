@@ -74,8 +74,6 @@
 *     sgeobj/var/var_list_remove_prefix_vars()
 ******************************************************************************/
 
-static const char *var_get_sharedlib_path_name(void);
-
 /****** sgeobj/var/var_get_sharedlib_path_name() ******************************
 *  NAME
 *     var_get_sharedlib_path_name -- name of sharedlib path variable
@@ -102,13 +100,13 @@ static const char *var_get_sharedlib_path_name(void);
 *     executed with a faked shared lib path, operations defined in
 *     a non sge library libgdi.so might be executed as user root.
 ******************************************************************************/
-static const char *var_get_sharedlib_path_name(void)
+const char *var_get_sharedlib_path_name(void)
 {
 #if defined(AIX)
    return "LIBPATH";
 #elif defined(HPUX)
    return "SHLIB_PATH";
-#elif defined(ALPHA) || defined(IRIX) || defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD)
+#elif defined(ALPHA) || defined(IRIX) || defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(INTERIX)
    return "LD_LIBRARY_PATH";
 #elif defined(DARWIN)
    return "DYLD_LIBRARY_PATH";
@@ -271,6 +269,7 @@ void var_list_set_sharedlib_path(lList **varl)
 
       if(old_value && strlen(old_value) > 0) {
          DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
+         
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + 
                           strlen(sge_sharedlib_path) + 1);
          strcpy(sharedlib_path, sge_sharedlib_path);

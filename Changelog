@@ -1,25 +1,1737 @@
-CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as "root"
+AS-2004-11-26-0: CVS        Created V60u2_TAG
+---------------------------------------------
+
+CR-2004-11-26-0: Testsuite: - fixed bug in path_alias test which caused errors
+                              on irix65
+                            - additional test output for migration test
+                 Review:    JG
+
+DT-2004-11-25-0: Bugfix:    o Backed out DRMAA-J changes to create_settings.sh
+                 Changed:   create_settings.sh
+
+MD-2004-11-24-0: Bugfix:    arch script does not know about /lib64
+                 Review:    JG
+                 Changed:   arch, arch.dist
+                 Issue:     1357
+                 Bugtraq:   6200013
+
+JG-2004-11-24-0: Bugfix:    sge_qmaster hit stack limit on aix43, aix51 and hp11
+                            with classic spooling.
+                 Review:    CR
+
+DT-2004-11-24-0: Bugfix:    o Fixed segfault in japi_synchronize()
+                 Review:    AH
+                 Changed:   JAPI
+
+MD-2004-11-23-0: Enhancm.:  60/60u1 to 60u2 BDB update script
+                 Changed:   inst_sge, inst_update, inst_common, set_fileperm.sh
+                 Review:    CR
+
+AA-2004-11-23-0: Bugfix:    qmon segv when deleting sharetree Root node more than once
+                            - disallow editing of Root node
+                            - disallow changing default node label
+                 Issue:     1360
+                 Bugtraq:   6199261
+                 Changed:   qmon
+                 Review:    RH
+                 
+CR-2004-11-23-2: Bugfix:    fixed bug in sge_ca script (GE CSP feature):
+                            Generating certificate for users failed
+                 Changed:   sge_ca script
+                 Review:    AA
+
+JG-2004-11-23-0: Testsuite: Verified tests system_tests/geee/sharetree/check.exp
+                            and system_tests/utilbin/loadcheck/check.exp.
+
+CR-2004-11-23-1: Testsuite: test for issue 1096 does not work with csp system
+
+CR-2004-11-23-0: Testsuite: wait 5 seconds after restarting qmaster. It
+                            may be a problem for following commands when
+                            qmaster is not immediately reachable.
+
+JG-2004-11-22-2: Testsuite: fixed check system_tests/shepherd/submit_del
+                 Review:    CR
+
+JG-2004-11-22-1: Testsuite: fixed creation of local configurations (set_config)
+                            fixed check system_tests/config/submit_hosts
+                 Review:    CR
+
+CR-2004-11-22-0: Testsuite: fixed remote login testsuite problem
+                 Review:    JG
+
+JG-2004-11-22-0: Bugfix:    fixed a memory leak in mirror interface.
+                 Review:    SG
+                 Testsuite: Fixed test system_tests/config/path_alias.
+                 Review:    CR
+
+SG-2004-11-22-0: Bugfix:    fixed the scheduler messages for qstat -j.
+                 Changed:   scheduler
+                 Review:    EB
+
+CR-2004-11-19-1: Testsuite  - new test: commlib deadlock test
+                            - fixed bug in issue test 1270
+
+MD-2004-11-19-0: Bugfix:    Bugfix fix. backup/restore problem. compress/gzip
+                            is now supported. backup/restore checks, if host is
+                            mastermachine.
+                 Changed:   inst_common.sh
+                 Review:    pending
+
+AH-2004-11-19-0: Bugfix:    Fix DRMAA_DURATION_{H|S}LIMIT misspelled  
+                            as "durartion"
+                 Review:    JG
+                 Issue:     1345
+                 Bugtraq:   6197253
+                 Changed:   drmaa.h, drmaa_attributes(3)
+
+JG-2004-11-19-0: Bugfix:    Fixed a deadlock in commlib error handling.
+                 Review:    CR/SG
+
+CR-2004-11-19-0: Testsuite: qconf test created files in /tmp/ which can
+                            cause problems for multiple testsuites running
+                            on the same host.
+
+JG-2004-11-18-1: Testsuite: Fixes for tests functional/job_environment and
+                            system_tests/clients/qmod,
+                            some cleanup
+
+AH-2004-11-18-0: Doc:       Fix doc/README-Autoinstall.txt missing in 
+                            distribution.
+                 Review:    TBD
+
+JG-2004-11-18-0: Testsuite: Fixes for tests bugs/issuezilla/1291,
+                            system_tests/clients/qalter,
+                            system_tests/clients/qsub.
+                            Some cleanup in config functions.
+
+MD-2004-11-17-0: Bugfix:    - backup fails if root is mapped to nobody
+                 Review:    pending
+                 Issue:     1344
+                 Bugtraq:   6196578
+                 Changed:   inst_common.sh
+
+SG-2004-11-17-0: Bugfix:    - the deletion of the queue calendar did not reset
+                              the cal for the scheduler.
+                 Review:    EB
+                 Changed:   qmaster
+
+CR-2004-11-17-0: Testsuite: Fixed some problems for commlib performance tests
+                            when grid engine port is < 1024
+
+DT-2004-11-17-0: Bugfix:    o Check drmaa_wait() and drmaa_synchronize() for
+                              negative timeouts.
+                            o drmaa_synchronize() now waits for all tasks ids of
+                              all jobs with DRMAA_JOB_IDS_SESSION_ALL parameter.
+                            o drmaa_set_attribute() checks validity of
+                              DRMAA_TRANFER_FILES value.
+                            o drmaa_control() now recognizes held states.
+                 Review:    AH
+                 Changed:   japi, drmaa
+                 Issue:     1339, 1340, 1341, 1343
+
+JG-2004-11-17-0: Testsuite: Fix and optimization of vi controlling and changing
+                            global config.
+                 Review:    CR
+
+AA-2004-11-16-0: Bugfix:    - label in Policy Dialog
+                            - label width in cluster queue dialog
+                            - hostname filtering of jobs
+                 Bugtraq:   6195249, 5085010
+                 IZ:        1338
+                 Changed:   qmon
+                 Review:    CR
+
+DT-2004-11-16-0: Bugfix:    o Increased profiling thread count to 256
+                            o Added validity check for drmaa_transfer_files
+                            o Added abort to profiling if max number of threads
+                              is exceeded
+                 Changed:   profiling, DRMAA
+                 Review:    AH, MD
+
+CR-2004-11-16-3: Bugfix:    fixed duplicate message id: 33818
+
+MD-2004-11-16-0: Bugfix:    backup/restore does not work under Linux and others.
+                 Changed:   inst_commen.sh
+                 Issue:     1328
+                 Bugtraq:   6193866
+                 Review:    pending
+
+SG-2004-11-16-0: Bugfix:    a cluster queue can be deleted, even though it is referenced
+                 Changed:   qmaster
+                 Review:    EB
+                 Issue:     1316
+                 Bugtraq:   6189289
+
+CR-2004-11-16-2: Enhancm.:  - updated qping man page for -dump option
+                            - fixed usage output of qping
+                 Changed:   qping, qping man page
+
+CR-2004-11-16-1: Cleanup:   removed unused message macros
+
+JG-2004-11-16-0: Bugfix:    Fixed spooling of subordinate queues.
+                            Fixed a memory leak.
+                 Review:    SG
+                 Issue:     1336
+                 Bugtraq:   6194729
+
+CR-2004-11-16-0: Bugfix:    replaced u32 format string with U32CFormat in
+                            scheduler message text
+                 Review:    RH
+                 Changed:   schedd
+
+DT-2004-11-15-0: Bugfix:    o Fixed typo in id_list_build_from_str_list()
+                            o Fixed logic error in qmod
+                            o Fixed typo in qmod man page
+                 Review:    AH
+                 Changed    qmod, sge_id.c                 
+
+MD-2004-11-15-1: Bugfix:    Confusing text
+                 Review:    HP 
+                 Changed:   inst_qmaster.sh
+                 Issue:     791
+                 Bugtraq:   5063317
+
+MD-2004-11-15-0: Bugfix:    Confusing text
+                 Review:    HP 
+                 Changed:   inst_qmaster.sh
+                 Issue:     790
+                 Bugtraq:   5063315
+
+HP-2004-11-15-0: Bugfix:    Jobs fail on NFS drives mounted without root write
+                            privileges - fchown() doesn't work as expected on
+                            Irix and True64
+                 Review:    AH
+                 Changed:   daemons/common/err_trace.c
+                 Issue:     1323
+                 Bugtraq:   6193361
+
+SG-2004-11-15-1: Bugfix:    fixed the delivery of start orders (did not work)
+                 Review:    JG
+                 Changed:   scheduler
+
+SG-2004-11-15-0: Bugfix:    removed a ListWrite from the scheduler
+                 Review:    EB
+                 Changed:   scheduler
+
+JG-2004-11-15-1: Bugfix:    Fixed memory leak in qmaster (event_master).
+                            Load <lib>.sl in hp11-64 instead of <lib>.so.
+                 Review:    SG
+                            Updated version string (6.0u2) and GDI version.
+
+EB-2004-11-15-0: Bugfix:    incorrect select() call in combination with
+                            loadsensors
+                 Changed:   sge_execd
+                 Review:    JG 
+
+AH-2004-11-15-0: Bugfix:    Use hp11 binaries on HP11 64 bit
+                            Use lx24-x86 binaries for Linux 2.6
+                 Review:    AS
+
+
+AH-2004-11-12-0: Doc:       Various fixes with man pages.
+                 Review:    TBD
+                 Bugfix:    MD-2004-10-21-0 broke DRMAA
+                            Added per thread/per process init 
+                            to DRMAA setup code
+                 Review:    DT
+
+JG-2004-11-15-0: Bugfix:    Fixed broken build.
+
+DT-2004-11-12-0: Bugfix:    o qmaster now uses very little memory for
+                              calculating subordinate queue suspension.
+                            o qmaster now ignores NULL job ids.
+                            o "" is now rejected as an invalid job id.
+                            o qconf now sets status to 1 for failed host group
+                              and cluster queue operations.
+                            o The lib path will now only be updated if the execd
+                              param, SET_LIB_PATH, is set.
+                            o The inheritance by jobs of environment of the
+                              shell which started the execd can now be disabled
+                              with the INHERIT_ENV execd param.
+                            o qconf now correctly prints subordinate queue
+                              lists.
+                            o Subordinate queues are no properly suspended at
+                              qmaster startup.
+                            o Fixed broken build on Alpha 5
+                 Review:    AH, SG, AS, AA, EB
+                 Changed:   sgeobj, qmaster, execd, shepherd, qconf, qhost
+                 Issue:     1289, 1291, 1295, 1300, 1324, 1335
+                 Bugtraq:   6194625, 6176181, 6174915, 6185211, 6193348, 6194713
+
+CR-2004-11-12-0: Bugfix:    - commlib called connect() even when connect is
+                              already in progress
+                 Changed:   commlib
+                 Review:    HP
+
+SG-2004-11-12-1: Bugfix:    added a qmaster param to set a sharetree spool time
+                 Review:    DT
+                 Changed:   qmaster
+
+SG-2004-11-12-0: Bugfix:    the scheduler made reservations for queues in an
+                            unknown state or disabled state. (SG-2004-10-27-0)
+                 Review:    AH
+                 Changed:   scheduler
+
+JG-2004-11-12-0: Testsuite: performance/throughput: Added scenario with 
+                            resource reservation.
+                            Fixed test system_tests/clients/qmake.
+                            Fixed reset_schedd_config
+
+CR-2004-11-11-0: Bugfix:    sgemaster -migrate on qmaster host starts second 
+                            qmaster
+                 Issue:     1329, 1325
+                 Bugtraq:   6194002
+                 Changed:   sgemaster startup script
+                 Review:    AS
+
+JG-2004-11-11-0: Bugfix:    Fixed memory access and uninitialized erros in
+                            qmaster.
+                 Review:    DT
+                 Testsuite: Minor fixes.
+
+CR-2004-11-10-1: Bugfix:    sgemaster -shadowd did not start shadowd if
+                            no shadowd pid file exist.
+                 Review:    AA
+                 Changed:   sgemaster_template
+
+CR-2004-11-10-0: Testsuite: - fixed remote loggin problem on slow
+                              hosts
+                            - increased timeout for csp key installation
+                              at execd installation
+
+AA-2004-11-10-0: Bugfix:    - negative ticket values
+                            - default user display in sharetree
+                 Issue:     1318 
+                 Changed:   qmon
+                 Review:    SG
+                            
+AH-2004-11-10-0: Enhancm.:  Improved shepherd diagnosis
+                 Review:    HP
+
+JG-2004-11-10-0: Bugfix:    Fixed memory leaks in qmaster.
+                 Review:    EB
+                 Testsuite: Minor fixes.
+
+AA-2004-11-09-0: Bugfix:    openssl-0.9.7e broke sge_ssl_template.cnf
+                            configuration file parsing changed
+                            fix in sge_ca and sge_ssl_template.cnf
+                 Changed:   util/sgeCA/{sge_ca,sge_ssl_template.cnf}
+                 Review:    CR
+                      
+JG-2004-11-09-0: Testsuite: Fixed test system_tests/clients/qsub.
+
+AA-2004-11-08-0: Bugfix:    - openssl-0.9.7e upgrade
+                 Changed:   all 
+                 Review:    CR
+                 
+CR-2004-11-08-0: Bugfix:    - fixed qevent -trigger
+                            - when qmaster went down once the scheduler always
+                              called qmaster alive method in each schedule run
+                            - removed sleep time for "qmaster goes down event"
+                            - qping -debug now shows also CM/CRM messages
+                            - qping -debug connection will get flushed at 
+                              service shutdown
+                 Changed:   sge_schedd, qevent, commlib, evclib, mirlib
+                 Review:    AA
+
+JG-2004-11-08-0: Testsuite: Improved error diagnosis of some tests.
+
+SG-2004-11-08-0: Bugfix:    fixed SG-2004-11-03-0
+                 Changed:   master
+                 Review:    EB
+
+CR-2004-11-05-1: Bugfix:    fixed broken build
+
+CR-2004-11-05-0: Enhancm.:  qping -dump (communication traffic) option
+                 Changed:   qping
+                 Review:    AA
+
+JG-2004-11-05-0: Bugfix:    Scheduler didn't respect usage of tightly integrated
+                            tasks and logged error messages.
+                 Changed:   qmaster, scheduler
+                 Bugtraq:   6191366
+                 Review:    SG
+
+SG-2004-11-05-1: Bugfix:    added an error message for the case, that a job 
+                            cannot be started due to the calendar.
+                 Changed:   scheduler
+                 Review:    DT
+
+SG-2004-11-05-0: Bugfix:    the scheduler had critical errors, when host groups
+                            were added or modified.
+                 Changed:   mirror interface, scheduler
+                 Review:    JG
+
+SG-2004-11-04-2: Bugfix:    qconf -ks gives bad error message if scheduler isn't
+                            running
+                 Issue:     1319
+                 Changed:   qmaster
+                 Review:    DT
+
+JG-2004-11-04-0: Bugfix:    Jobs were not rescheduled to the same host they ran 
+                            on before.
+                 Issue:     1317
+                 Changed:   execd
+                 Review:    SG
+
+SG-2004-11-04-1: Bugfix:    the scheduler logs 2 error message, when job
+                            was deleted by a user during a scheduling run
+                            and that you was dispatched from the scheduler.
+                 Issue:     1030
+                 Changed:   qmaster
+                 Review:    JG
+
+SG-2004-11-04-0: Bugfix:    fixed the event master error messages
+                 Changed:   qmaster
+                 Review:    DT
+
+CR-2004-11-04-0: Enhancm.:  commlib: added rresvport() (reserved port) support
+                 Changed:   commlib
+                 Review:    AA
+
+SG-2004-11-03-0: Bugfix:    too many array tasks are deleted
+                 Review:    EB
+                 Changed:   qmaster
+                 Issue:     1279
+                 Bugtraq:   6190164
+
+AH-2004-11-03-0: Bugfix:    qsub doesn't forward the AFS token, removed 
+                            set_sec_cred call 
+                            Reschedule unknown blocked host for all jobs of the
+                            rescheduled job.
+                 Review:    AA, SG
+                 Changed:   scheduler, qsub
+                 Issue:     1301
+
+CR-2004-11-03-0: Enhancm.:  - commlib debug client support can be enabled via 
+                              compile time definition "ENABLE_DEBUG_CLIENT" for 
+                              execd and qmaster daemons. 
+                              The binary "test_debug_client" can be used as
+                              debug client.
+                 Changed:   commlib, gdilib
+                 Review:    AA
+
+AD-2004-11-03-0: Bugfix:    '-m a' qsub option did leave a zombie process
+                 Review:    EB
+                 Changed:   qmaster
+                 Issue:     1277
+                 Bugtraq:   5104789
+                 
+CR-2004-11-02-1: Bugfix:    - fixed build
+
+CR-2004-11-02-0: Enhancm.:  - added new commlib test binary: test_debug_client
+                            - added new parameter to statistic calculate function
+                              to force calculation for qping requests. Otherwise
+                              update statistics only once per minute
+                            - added debug client support into commlib
+                            - fixed bug when shutdown commlib with connected
+                              stream clients
+                            - fixed possible deadlock in commlib string list when
+                              the malloc() of an entry failed.
+                            - outcommented unused function: 
+                              should_flush_event_client()
+                 Changed:   commlib, gdilib, qmaster
+                 Review:    AA
+
+SG-2004-11-02-0: Bugfix:    - fixed a memory leak in the scheduler configuration
+                            - fixed a memory leak in the scheduler. It ocoured,
+                              when consumables were used as load thresholds.
+                 Review:    AA
+                 Changed:   scheduler
+                 Issue:     1315
+                 Bugtraq:   6189286
+
+CR-2004-10-29-0: Bugfix:    - fixed gdi bug for commlib error reporting
+                            - new commlib function: cl_is_commlib_error()
+                 Changed:   gdi, commlib
+                 Review:    SG
+
+SG-2004-10-29-2: Bugfix:    - fixed profiling im scheduler
+                            - fixed cpu consumption in event master. The
+                              event master never slept.
+                 Changed:   master, scheduler
+                 Review:    CR
+
+SG-2004-10-29-1: Bugfix:    second try on the profiling.
+                 Review:    JG
+                 Changed:   scheduler
+
+SG-2004-10-29-0: Bugfix:    fixed the flush implementation in the event master
+                 Review:    JG
+                 Changed:   qmaster
+
+CR-2004-10-28-1: Testsuite: commlib throughput test now uses binary_starter.sh
+                            to startup more virtual_event/gdi_client binaries 
+                            parallel
+
+JG-2004-10-28-0: Bugfix:    qmake did not export shell env vars.
+                 Bugtraq:   6090162
+                 Issue:     1313
+                 Review:    SG
+                 Testsuite: New check system_tests/clients/qmake.
+                            Check performance/throughput: Better diagnosis of 
+                            event delivery interval.
+                            Check functional/tight_integration fixed for 5.3.
+
+CR-2004-10-28-0: Enhancem.: - code cleanup of commlib
+                            - continue work on SSL framework module
+                            - removed unused logging output
+                 Changed:   commlib
+                 Review:    AA
+
+SG-2004-10-28-0: Bugfix:    - fixed profiling for the scheduler
+                            - fixed the inclusiv/exclusiv profiling of different
+                              layers
+                 Changed:   scheduler, profiling
+                 Review:    pending
+
+AA-2004-10-27-1: Bugfix:    qmon returns an error dialog, when editing a 
+                            calendar
+                 Issue:     1267
+                 Bugtraq:   6185169
+                 Changed:   qmon
+                 Review:    CR
+
+AA-2004-10-27-0: Bugfix:    qmon job customize weird @{} field names
+                            additional fields canot be added
+                 Issue:     1307
+                 Bugtraq:   6185136
+                 Changed:   qmon
+                 Review:    CR
+                 
+SG-2004-10-27-0: Bugfix:    qmod can modify queues starting with digits
+                            now.
+                 Issue:     1308
+                 Bugtraq:   6184460
+                 Changed:   qmod
+                 Review:    EB
+
+SG-2004-10-27-0: Bugfix:    - 3/3 part of of the look ahead scheduler
+                            extention.
+                 Issue:     978
+                 Bugtraq:   6184466
+                 Changed:   scheduler
+                 Review:    EB
+
+JG-2004-10-26-0: Testsuite: Additional charts for throughput test: Event 
+                            delivery interval and number of events delivered.
+                            Improved writing of testsuite data, e.g. dump files
+                            from throughput test.
+                            Fixed a bug in test performance/throughput.
+
+CR-2004-10-22-1: Testsuite: moved commlib_throughput test to 
+                            checktree/performance/commlib
+
+CR-2004-10-22-0: Testsuite: - some fixes for new commlib_throughput test
+
+SG-2004-10-22-0: Bugfix:    - fixed SG-2004-10-21-1
+                 Changed:   scheduler
+                 Review:    JG
+
+AH-2004-10-22-0: Doc:       Checkpoint README refers to wrong script
+                            queue_conf(5) incomplete for owner_list description
+                 Issue:     1262, 601,
+                 Changed:   README.cpr and README.cray
+   
+JG-2004-10-21-0: Testsuite: Fixed a number of tests, fixed typos and incorrect
+                            test descriptions.
+
+MD-2004-10-21-0: Enhancem.: - Profiling Enhancement, profiling switchable
+                              from the configuration
+                            - added profiling to all threads
+                            - some cleanup
+                            - man pages
+                 Changed:   qmaster, schedd, execd, profiling, man
+                 Review:    HP
+
+SG-2004-10-21-1: Enhancem.: - 2/3 part of of the look ahead scheduler
+                            extention.
+                            - code cleanup
+                            - minor perf. improvements
+                 Changed:   scheduler
+                 Review:    EB
+
+SG-2004-10-21-0: Bugfix:    qsub und qalter accepted negativ ticket values
+                 Issue:     1304
+                 Bugtraq:   6174301
+                 Changed:   qsub, qalter
+                 Review:    EB
+
+CR-2004-10-21-1: Testsuite: - new procedure "startup_core_system"
+                            - new menu selective "(28) restart cluster"
+
+CR-2004-10-21-0: Cleanup:   - code cleanup of commlib
+                 Review:    AA
+                 Changed:   commlib
+
+JG-2004-10-20-0: Bugfix:    fixed qsh and test_drmaa (sge_prof_setup) 
+                 Changed:   qsh test_drmaa
+                 Review:    SG
+
+SG-2004-10-20-0: Bugfix:    - sge_share_mon crashed on startup
+                 Changed:   sge_share_mon
+                 Review:    MD
+
+CR-2004-10-19-0: Testsuite: - new testsuite test for commlib:
+                              checktree/performance/throughput/commlib/check.exp
+                 Changed:   commlib test binaries testsuite
+
+AH-2004-10-19-0: Doc:       Enhanced qstat(1) man page about qstat -j option
+                 Changed:   man pages
+                 Bugtraq:   6181171
+                 Review:    AD
+
+JG-2004-10-19-1: Bugfix:    fixed broken build on alinux
+
+JG-2004-10-19-0: Testsuite: Enhanced ssh support: Which ssh client to use is now 
+                            configured in the host configuration.
+
+EB-2004-10-19-0: Bugfix:    fix of EB-2004-09-15-0: qstat will show
+                            extended information for -pri -ext -urg
+                 Issue:     not necessary
+                 Bugtraq:   not necessary
+                 Review:    SG
+
+SG-2004-10-18-0: Enhancem.: - reworked the locking in qmaster and changed two
+                              not thread save code sections in the order 
+                              processing
+                            - moved the persitence of the job sequ. number into
+                              the timed event thread
+                            - add a copy date flag to the GDI-Multi request
+                 Changed:   qmaster, scheduler, clients
+                 Review:    EB
+
+CR-2004-10-18-0: Cleanup:   - code cleanup of commlib
+                            - removed unused function parameters in list 
+                              functions
+                            - preparatory work for commlib SSL framework
+                 Review:    AA
+                 Changed:   commlib utilib 
+
+AH-2004-10-18-0: Bugfix:    meaningless job error state diagnosis text in 
+                            qstat -j  
+                 Review:    JG
+                 Changed:   execd
+                 Issue:     1299
+                 Bugtraq:   6180529
+
+JG-2004-10-15-0: Testsuite: Fixed csp installation, installation of 
+                            SGE(EE) 5.3, package generation for SGEEE 5.3.
+
+JG-2004-10-14-0: Testsuite: Testsuite now can create tar packages after 
+                            compiling by setting the package_type parameter to 
+                            "create_tar".
+
+CR-2004-10-13-0: Enhancem.: - implemented application status callback 
+                              function for execd.
+                            - qping man page update
+                            - CR-2004-10-07-1 (final Part III)
+                            - additional code cleanup
+                            - faster execd reconnect to qmaster when
+                              qmaster was restarted
+                 Review:    AA
+                 Changed:   qmaster execd utilib commlib gdilib
+                 Issue:     1294
+                 Bugtraq:   6176115
+
+JG-2004-10-14-0: Bugfix:    Fixed broken build.
+
+EB-2004-10-13-0: Enhancem.: qstat requests only necessary jobs (qstat -s -u)
+                 Changed:   qstat, qhost, libuti, sge_qstat(5), qstat(1)
+                 Review:    SG
+
+HP-2004-10-13-0: Bugfix:    Checked in wrong sources yesterday
+                 Changed:   sge_uidgid, windows library
+
+HP-2004-10-12-0: Enhancem.: Changed build output path and binary path for
+                            Windows version, added 'Administrator' detection.
+                 Changed:   sge_uidgid, windows library
+
+JG-2004-10-12-0: Bugfix:    Fixed broken build on AIX.
+
+SG-2004-10-12-0: Bugfix:    The qmaster crashed every once in a while
+                            when processing the peding orders. Introduced
+                            in SG-2004-09-27-0.
+                 Changed:   scheduler
+                 Review:    pending
+                 
+
+SD-2004-10-11-0: Enhancem.: added user to unable to run interactive
+                            job log message
+                 Changed:   qmaster
+                 Issue:     1296
+
+MD-2004-10-11-2: Bugfix:    fixed segfaults of clients
+                 Changed:   qdel, qalter, qevent, qacct, qhost
+
+SG-2004-10-11-0: Enhancem.: Part 1/3 of the look ahead scheduler
+                            extention.
+                            - code cleanup
+                            - every job has a duration now.
+                 Changed:   scheduler
+                 Review:    EB 
+
+JG-2004-10-11-0: Enhancem.: performance tuning
+                            - improved Berkeley DB throughput
+                            - cleanup of qmaster - execd protocol
+                 Review:    CR
+
+MD-2004-10-11-1: Bugfix:    fixed qmod (sge_prof_setup) 
+                 Changed:   sge_profiling
+
+CR-2004-10-11-0: Bugfix:    removed unnecessary logging output
+                 Review:    HP
+                 Changed:   commlib
+
+MD-2004-10-11-0: Bugfix:    fixed broken build
+                 Changed:   sge_profiling
+
+MD-2004-10-08-1: Bugfix:    restoring a backup does not 
+                            restore the job_scripts dir 
+                 Review:    CR
+                 Changed:   inst_sge
+                 Issue:     1239
+                 Bugtraq:   6176177
+
+MD-2004-10-08-0: Enhancem.: Profiling Code Enhancement (made MT-save)
+                 Review:    CR
+                 Changed:   qmaster, schedd, sge_profiling
+                 Issue:
+                 Bugtraq:
+ 
+CR-2004-10-08-0: Enhancem.: implemented application status callback 
+                            function for qmaster. 
+                            CR-2004-10-07-1 (Part II)
+                 Review:    MD
+                 Changed:   qmaster utilib
+                 Issue:     1294
+                 Bugtraq:   6176115
+
+CR-2004-10-07-1: Enhancem.: application status callback function now
+                            supports status string (Part I)
+                 Review:    AA
+                 Changed:   commlib
+                 Issue:     1294
+                 Bugtraq:   6176115
+
+DT-2004-10-07-0: Bugfix:    o Removed slots from complex values list of
+                              queue instances in qconf
+                            o Enabled qsub/qrsh -v VAR again
+                            o Fix job exit error message
+                            o Added missing (not spec'ed) BUFFER to drmaa.h
+                            o Added job category spec
+                 Review:    CR
+                 Changed:   qconf, flatfile spooling, qmaster, qsub/qrsh
+                 Issue:     1198, 1255, 1287
+                 Bugtraq:   6174326, 6174331, 5086108
+
+CR-2004-10-07-0: Cleanup:   qping -help now shows short Grid Engine Version
+                            name 
+                 Changed:   qping
+
+CR-2004-10-05-2: Cleanup:   added some comments
+                 Changed:   commlib header file cl_xml_parsing.h
+
+CR-2004-10-05-1: Testsuite: added missing install expect handling for qmaster
+                            installation
+
+EB-2004-10-05-0: Enhancem.: added new module test which especially tests
+                            the modifications done with EB-2004-09-15-0
+                 Changed:   none
+
+CR-2004-10-05-0: Bugfix:    segmentation fault when vmemsize limit is reached
+                            o removed unnecessary logging information in
+                              commlib
+                            o prepare_enroll() will now terminate application
+                              on cl_com_setup_commlib() errors
+                 Review:    AA
+                 Changed:   commlib, gdi
+                 Issue:     1286
+                 Bugtraq:   6174821
+
+DT-2004-10-04-0: Bugfix:    o Fixed testsuite test for 1269
+                            o Execd now also looks in $SGE_ROOT/bin for qidle
+                              and qloadsensor
+                            o qconf is now able to handle unbreakable lines
+                              longer than MAX_STRING_SIZE
+                 Changed:   testsuite, execd, flatfile spooling
+                 Review:    SG
+                 Issue:     1176, 1251
+                 Bugtraq:   5108635, 5108639
+
+CR-2004-10-01-0: Bugfix:    Thread enabled commlib coredumps on exit on a 
+                            32bit Solaris x86 box
+                 Issue:     1283
+                 Bugtraq:   5075968
+                 Review:    MD
+                 Changed:   commlib
+
+
+JG-2004-09-29-0: Bugfix:    Automatic users were deleted even if they had jobs 
+                            (running or pending).
+                 Review:    SG
+                 Changed:   qmaster
+
+SG-2004-09-29-0: Bugfix:    the master spooled the user and projects in every 
+                            scheduling run
+                 Review:    JG
+                 Changed:   qmaster
+
+JG-2004-09-28-0: Enhancem.: Cleanup in qrsh_starter.
+                            Cleanup and speedup in load report processing.
+                            Add hashtables on cluster queue and queue instance
+                            attributes.
+                 Review:    SG
+
+SG-2004-09-27-0: Tuning:    improved ticket order generation
+                 Changed:   qmaster, scheduler
+                 Review:    JG
+
+JG-2004-09-23-0: Bugfix:    Fixed broken build.
+
+CR-2004-09-23-0: Bugfix:    more precise error messages for communication 
+                            errors
+                 Review:    JG
+                 Issue:     1275
+                 Bugtraq:   5097732
+                 Changed:   commlib, gdilib
+
+CR-2004-09-22-0: Cleanup:   - removed unused messages
+                            - qmaster will now respond faster to qconf -km
+                            - added some comments to the source code
+                 Review:    JG
+
+EB-2004-09-21-0: Bugfix:    qmaster might fail if jobs are deleted which have 
+                            multiple hold states applied 
+                 Issue:     1280
+                 Bugtraq:   
+                 Review:    SG 
+
+CR-2004-09-21-0: Testsuite: added a cleanup function for test
+                            bugs/issuezilla/1270
+
+JG-2004-09-20-0: Testuite:  Improved test performance/throughput, added a number
+                            of charts to comparison of two clusters.
+                 Review:    CR
+
+SG-2004-09-20-0: Enhance.:  First part of extending the scheduler to use the
+                            calendars. The qi-data structure has been extended
+                            to include the next 2 state changes, and how long
+                            the current and the next last. The calendar 
+                            implementation had to be changed to allow that.
+                 Changed:   qmaster, test_calendar
+                 Issue:     1235
+                 Bugtraq:   5104270
+                 Review:    EB
+
+JG-2004-09-17-0: Enhancem.: Performance improvement of the bitfield 
+                            implementation.
+                 Review:    SG
+                 Issue:     1260
+
+DT-2004-09-15-1: Bugfix:    o Fixed qmaster crash
+                            o Added leftover files from DT-2004-09-15-0
+                            - Testsuite test for 1269 not yet working
+                 Changed:   sge_host.c
+                 Review:    SG
+                 Issue:     1269
+                 Bugtraq:   5102442
+
+EB-2004-09-15-0: Enhancem.: qstat requests only that attributes of JB_Type
+                            and JAT_Type elements which are really needed 
+                            to execute qstat successfully
+                 Changed:   all 
+                 Review:    SG
+
+SG-2004-09-15-1: Bugfix:    - fixed a locking issue in the loging.
+                 Changed:   qmaster
+                 Review:    CR
+                 Issue:     1268
+                 Bugtraq:   -NA-
+
+JG-2004-09-15-0: Bugfix:    Fixed a bug in event master.
+                 Changed:   qmaster
+                 Review:    SG
+
+DT-2004-09-15-0: Bugfix:    o Fixed drmaa_synchronize() problem
+                 Changed:   JAPI
+                 Review:    SG
+                 Issue:     1270
+                 Buqtraq:   5102340
+
+SG-2004-09-15-0: Bugfix:    fixed memory leak in the scheduler
+                 Changed:   scheduler
+                 Review:    DT
+                 Issue:     1274
+                 Bugtraq:   5102320
+
+DT-2004-09-14-0: Bugfix:    o Fixed DRMAA-J README
+                            o Fixed JavaDoc error in aimk
+                            o Updated DRMAA-J JavaDocs
+                 Changed:   docs, aimk
+
+JG-2004-09-14-0: Testsuite: Improved test performance/throughput:
+                            - Monitoring of qmaster communication (qping).
+                            - Additional senarios:
+                              - run without qstat
+                              - jobs with resource requests
+                              - parallel jobs with resource requests
+                              - array jobs
+                              - functional policy
+                 Review:    CR
+
+DT-2004-09-13-1: Bugfix:    o Fixed DRMAA-J on Irix 6.5
+DT-2004-09-13-1: Bugfix:    o Added libjdrmaa to LD_LIBRARYN32_PATH in
+                              settings.sh|csh for Irix 6.5
+                 Changed:   create_settings.sh
+
+DT-2004-09-13-0: Bugfix:    o Fixed "delete all" bug in JAPI
+                            o Fixed locking bugs in JAPI
+                            o Tested DRMAA-J on all platforms
+                            - No J2SE 1.4 on Tru64 5.0 and AIX 4.3
+                            o Fixed attribute getter error in DRMAA-J
+                            o Added drmaa.jar to CLASSPATH in settings.sh|csh
+                 Changed:   JAPI, DRMAA, aimk, distinst, create_settings.sh
+                 Review:    EB
+
+SG-2004-09-13-0: Bugfix:    fixed memory leak in the scheduler
+                 Changed:   scheduler
+                 Review:    DT
+
+MD-2004-09-13-0: Testsuite: - fixed install scripts message handling
+                            - added new macro
+
+JG-2004-09-09-0: Testsuite: Improved test performance/throughput:
+                            - monitor size and cpu usage of qmaster and schedd
+                            - do qstat calls during the test run and monitor
+                              the qstat runtime and errors
+                            - verified, fixed and documented the calculated 
+                              metrics.
+                            Some testsuite cleanup.
+                 Review:    CR
+
+SG-2004-09-08-0: Cleanup:   - fixed a bug added by SG-2004-09-08-0
+                            - got the test_sge_qmaster_timed_event working
+                            - cleaned qmaster_main
+                 Changed:   qmaster
+                 Review:    AA 
+
+SG-2004-09-08-0: Cleanup:   - improved the locking in the event master
+                            - filters now for subscribed events
+                 Changed:   qmaster
+                 Review:    JG
+
+SG-2004-09-08-0: Cleanup:   improved the loging
+                 Changed:   all
+                 Review:    AA
+
+JG-2004-09-07-0: Testsuite: Improved test functional/tight_integration 
+                            (different sizes of massive parallel jobs are 
+                            tested)
+
+SG-2004-09-06-0: Cleanup:   Cleanup in the order processing, event master, and
+                            event client
+                 Changed:   qmaster, scheduler
+                 Review:    EB
+
+AH-2004-09-06-0: Bugfix:    Effect of -p priority and weight_priority not 
+                            described in sge_priority(5)
+                 Changed:   man page
+                 Issue:     1265
+                 Bugtraq:   5097481
+                 Review:    JG
+
+AA-2004-09-06-1: Bugfix:    parsing of repeated job arguments fixed
+                 Bugtraq:   5097479
+                 Issue:     1263
+                 Review:    RH
+                 Changed:   qmon
+
+AA-2004-09-06-0: Bugfix:    make culltrans compile under 6.0
+                 Changed:   culltrans
+                 Review:    RH
+
+EB-2004-09-06-0: Buffix:    qacct -l is not working
+                 Review:    SG
+                 Issue:     1261
+                 Bugtraq:   5095907
+                 Changed:   qacct
+
+JG-2004-09-06-0: Testsuite: Enhanced / fixed test performance/throughput:
+                            - reduced performance impact of testsuite monitoring
+                              on the Grid Engine performance
+                            - additional runlevels for additional scenarios and
+                              higher numbers of jobs
+                            - fixed computation of cluster utilization
+                            Did some fixes in testsuite procedures:
+                            - installation of 5.3 systems
+                            - filedescriptor leak in chart creation
+                 Review:    CR
+
+JG-2004-09-01-0: Enhancem.: Cleanup and performance improvement for bitfields.
+                            Enhanced the bitfield module test.
+                 Review:    SG
+                 Issue:     1260
+
+HP-2004-08-31-0: Bugfix:    Fixed some minor bugs: wrong format specifier, 
+                            Typo in man page, ...
+                 Changed:   man-page, commlib-testprogram
+
+SG-2004-08-30-0: Bugfix:    new algorithm for o-ticket 
+                 Changed:   man-page, scheduler
+                 Review:    MD
+                 Issue:     1224
+                 Bugtraq:   9094016
+
+JG-2004-08-30-0: Enhancem.: Added module test for libs/uti/sge_bitfield.
+
+SG-2004-08-27-0: Bugfix:    fix SG-2004-08-19-0 crashed the qmaster, if 
+                            qsub -w v was submitted
+                 Changed:   scheduler                            
+
+HP-2004-08-26-1: Bugfix:    Fixed scripts/zerodepend for No-Windows version 
+
+HP-2004-08-26-0: Enhancem.: Added 'stubs' for Interix (Windows) Version
+
+SG-2004-08-26-0: Bugfix:    hard resource requests ignored in parallel jobs
+                 Review:    AH
+                 Issue:     1253
+                 Bugtraq:   5092487
+                 Changed:   scheduler
+
+CR-2004-08-26-0: Cleanup:    - code cleanup
+                             - added debug code for issue #1197
+                             - code is not active (#if 0 /#endif)
+                             - added comments
+
+CR-2004-08-25-1: Cleanup:    - removed all #ifndef ENABLE_NGC code and removed
+                               makro definition in aimk
+
+CR-2004-08-25-0: Bugfix:     - added man pages for qping, gethostname, 
+                               gethostbyname, gethostbyaddr, getservbyname
+                             - the binaries now support -help option and show
+                               also the GE version number.
+                 Review:     SG, DT
+                 Issue:      1132
+                 Bugtraq:    5071878
+
+JG-2004-08-25-0: Bugfix:     Fixed build on AIX
+
+CR-2004-08-23-0: Testsuite:  Fixed mail report error in tight_integration_test
+
+MD-2004-08-20-0: Bugfix:     merged bugfix from FCS_Branch
+                 Review:     AS
+                 Changed:    inst_sge, inst_common.sh, rc_templates
+
+CR-2004-08-20-0: Testsuite:  enhancement: tight integration test checks 
+                             execd messages files for errors
+                 Issue:      1199
+
+CR-2004-08-19-1: Enhancem.:  added debug information about GDI messages:
+                             don't show debug info when no message was
+                             received.
+
+EB-2004-08-19-0: Bugfix:     Submit to a queue domain is never scheduled
+                 Review:     SG
+                 Issue:      1234
+                 Bugtraq:    5089255
+                 Changed:    sge_schedd
+
+CR-2004-08-19-0: Enhancem.:  added debug information about GDI messages
+                 Changed:    gdi lib
+                 Review:     RH
+
+SG-2004-08-19-0: Bugfix:     scheduling weirdness with wild-card PE's 
+                 Changed:    scheduler
+                 Review:     DT, AH
+                 Issue:      1216
+                 Bugtraq:    5089222
+
+CR-2004-08-17-3: Cleanup:    - removed unused message macros
+
+CR-2004-08-17-2: Enhancem.:  - added new function to transmute the gdi tag
+                               id into a string: sge_dump_message_tag()
+
+CR-2004-08-17-1: Enhancem.:  - added comment about flushing job reports
+                               when jobs are started in execd.
+
+CR-2004-08-17-0: Testsuite:  - added wait time in compile_source
+                             - raised wait time for qmaster shutdown
+
+AS-2004-08-17-0: CVS        Created V60u1_TAG
+---------------------------------------------
+
+AA-2004-08-12-0: Bugfix:     - qmon_help.ad help corrections
+                             - sge_centry_qconf.c missing parentheses break build
+                             - qmon_calendar.c NONE strings were missing for added calendars
+                             - qmon_ckpt.c Reschedule flag is part of Signal When flags
+                             - qmon_cluster.c delegated_file_staging flag added
+                             - qmon_manop.c set corresponding tab when invoked from Policy dialog
+                               dialog resize
+                             - qmon_util.c hostgroups with @f* were not displayed
+                 Issues:     reported during tests             
+                 Review:     CR
+                 Changed:    qmon
+                 
+                             
+MD-2004-08-12-0: Bugfix:     changed wrong directory of qping binary
+                             autoinst shadowd
+                 Changed:    inst_sge
+
+CR-2004-08-12-0: Testsuite:  raised timeout when waiting for qmaster to get 
+                             down
+
+RH-2004-08-12-0: Bugfix:     Refix Issue 1161
+                 Issue:      1161
+                 Bugtraq:    5080856
+                 Review:     CR
+                 Changed:    qconf
+
+CR-2004-08-11-4: Testsuite: - fixed bug which caused error in qmod reschedule
+                              test
+                            - fixed tcl bug in issue test 193
+
+MD-2004-08-11-1: Bugfix:    - sge backup cannot override older backups
+                 Issue:       1222
+                 Bugtraq:     5085508
+                 Review:      HP
+                 Changed:     inst_sge
+
+MD-2004-08-11-0: Bugfix:    - sge_inst restore does not work
+                 Issue:       1219
+                 Bugtraq:     5085507
+                 Review:      HP
+                 Changed:     inst_sge
+
+CR-2004-08-11-3: Testsuite: - fixed bug in procedure wait_for_unknown_load:
+                              endless loop if do_error_check is set to 0
+
+DT-2004-08-11-1: Bugfix.:   o Rolled back dangerous fix from DT-2004-07-16
+                 Review:    SG
+
+CR-2004-08-11-2: Testsuite: - usage test did not work with only 2 execd hosts
+                            - wait_for_unknown_load call from shutdown_core_sytem
+                              did not return immediately when no binaries are
+                              installed or when qconf returns an error
+
+DT-2004-08-11-0: Doc.:      o Cleaned up man3, man8, and submit.1 man pages
+                 Issue:     1170
+                 Review:    DT
+
+CR-2004-08-11-1: Testsuite: - fixed bug which caused error in issue test 314
+
+CR-2004-08-11-0: Testsuite: - fixed bug in issue test 193
+
+MD-2004-08-10-0: Bugfix:    Refix Issue 1113
+                 Issue:     1214
+                 Bugtraq:   5084927
+                 Review:    HP
+                 Changed:   inst_sge
+
+CR-2004-08-10-2: Testsuite: - wait for all queues to report load before
+                              starting any test
+                            - wait for all queues to report unknown load
+                              after qconf -ke all in shutdown_core_system
+
+CR-2004-08-10-1: Testsuite: startup_shadowd did not use sgemaster -shadowd
+                            command line argument
+
+CR-2004-08-10-0: Testsuite: shutdown_core_system will now wait for qmaster
+                            shutdown when qconf -km is used
+
+CR-2004-08-09-0: Bugfix:    fixed fix for CR-2004-08-05-2
+                            execd may exit when hostname resolving is changed
+                            or not available.
+                 Review:    AA
+
+SG-2004-08-09-0: Bugfix:    the reporting file was not written correctly under
+                            linux on opteron.
+                 Issue:     1207
+                 Bugtraq:   5084317
+                 Review:    AA
+
+CR-2004-08-06-0: Bugfix:    Wrong entry SGE_QMASTER_PORT in qconf man page
+                 Issue:     1112
+                 Changed:   qconf man page
+                 Review:    AA
+
+CR-2004-08-05-2: Bugfix:    Need more verbose diagnosis msg if execd port is 
+                            already bound
+                 Issue:     1101
+                 Bugtraq:   5083115
+                 Changed:   commlib, execd, gdi, japi
+                 Review:    SG
+
+AA-2004-08-05-0: Bugfix:    tight integration doesn't work with CSP
+                 Issue:     1080
+                 Bugtraq:   5063314
+                 Changed:   all
+                 Review:    CR
+
+EB-2004-08-05-0: Bugfix:    hostgroup changes do not always take effect.
+                 Issues:    1185
+                 Bugtraq:   5083102
+                 Changed:   qmaster
+                 Review:    SG
+
+CR-2004-08-05-1: Bugfix:    killed slave task on tight integration does 
+                            not cleanup job correctly (part 1)
+                 Issue:     1197
+                 Bugtraq:   5082660
+                 Changed:   execd
+                 Review:    AH
+
+CR-2004-08-05-0: Testsuite: unsetting SGE_DEBUG_LEVEL in testsuite test
+                            scripts pe_task.sh and pe_job.sh
+
+SG-2004-08-04-1: Bugfix:    fixed an aspect of bug 1195: the error message
+                            truncated to 100 characters.
+                 Review:    RH
+                 Issue:     -NA-
+                 Bugtraq:   -NA-
+                 Changed:   qsub
+
+SG-2004-08-04-0: Bugfix:    qstat -ext -urg did not display the submit/start
+                            time
+                 Review:    RH
+                 Issue:     1192
+                 Bugtraq:   5082490
+                 Changed:   qstat
+
+RH-2004-08-04-0: Bugfix:    Missing global defintion of variable 
+                            check_root_access_needs in some bugfix tests added
+                 Changed:   testsuite (tests for issues 1096 1104 1141 1146 
+                            and 1161)
+                 Review:    CR
+                 Issue:     -NA-
+                 Bugtraq:   -NA-
+
+SG-2004-08-03-2: Bugfix:    fixed qsat -g c output and qmon to show cqload
+                            instead of load. The man page for qstat was
+                            changed as well.
+                 Review:    AA
+                 Changed:   qstat, qmon, qstat.1
+                 Issue:     1181, 1190
+                 Bugtraq:   -NA-
+
+EB-2004-08-02-0: Bugfix:    Deleting a queue instance slots value actually
+                            adds it
+                 Issue:     1175
+                 Bugtraq:   5081822
+                 Changed:   qmaster
+                 Review:    SG
+
+SG-2004-08-03-1: Bugfix:    fixed qconf -ahgrp to work with a given
+                            name. It will generate a templet, that
+                            has to be modifed by the user.
+                 Issue:     1186
+                 Bugtraq:   5081839
+                 Changed:   qconf, qmaster
+                 Review:    DT
+
+SG-2004-08-03-0: Bugfix:    fixed a bug in the xml-otuput
+                 Issue:     1191
+                 Bugtraq:   5081821
+                 Changed:   qstat
+                 Review:    EB
+
+DT-2004-08-01-0: Bugfix:    o Fixed JavaDoc errors
+                            o Fixed qstat man page error
+                            o Updated aimk to build new JavaDocs
+                            o Updated distinst to install drmaa.jar in lib
+                            o Added a link to the JavaDocs from the DRMAA Java
+                              language binding howto
+                 Changed:   doc, aimk, distinst, www
+
+DT-2004-07-30-0: Bugfix:    o Fixed seg fault in qconf -mattr
+                            o Fixed CULL cross-linking in qconf -mattr queue
+                              complex_values
+                            o Fixed hostname aliasing issue in qconf -mattr
+                            o qhost now prints NCPU as an int
+                            o Changed qsub -r to accept 'yes' and 'no'
+                            o Cleaned up JAPI
+                 Issue:     1055, 1081, 1092, 1172
+                 Bugtraq:   5080836, 5080839, 5080833, 5080840
+                 Changed:   qconf, qhost, qsub, JAPI, doc
+                 Review:    SG
+
+SG-2004-07-30-1: Bugfix:    qconf -de did not check if the host ist still in use.
+                 Issue:     1183, 1168
+                 Bugtraq:   5080779, 5080784
+                 Changed:   qstat, qmaster
+                 Review:    DT
+
+HP-2004-07-30-0: Doc:       Description of exit_status values of shepherd
+                 Issue:     97
+                 Changed:   man8/sge_shepherd.8
+
+SG-2004-07-30-0: Enhancem.: added a feature to filter the jobs in the
+                            scheduler based on their category.
+                 Changed:   schedler, schedd.conf(5)
+                 Review:    AD
+
+AD-2004-07-30-0: Cleanup:   The implementation of 'sge_add_auto_user()' made
+                            the use of recursive mutexes neccessary.
+                 Changed:   qmaster
+                 Review:    SG
+
+SG-2004-07-29-0: Bugfix:    Resending queue signals broken
+                 Changed:   exed, qmaster
+                 Issue:     1178
+                 Bugtraq:   5079572
+                 Review:    EB
+
+CR-2004-07-28-1  Bugfix:    - Startup of qmaster changes act_qmaster to 
+                              `hostname`,
+                            - Two network cards in exec host: creates wrong 
+                              directory / shutdown fails
+                 Bugtraq:   5071522, 5079514
+                 Issue:     1110, 1113
+                 Changed:   install scripts, shadowd, gdi lib
+                 Review:    RH
+
+JG-2004-07-29-0: Bugfix:    qrsh starter didn't output reason (strerror), if it
+                            couldn't write its pid file.
+                 Testsuite: Make test functional/tight_integration use all hosts
+                            of the testcluster.
+                            Use category VERIFIED as default.
+                 Changed:   qrsh_starter, testsuite
+                 Review:    CR
+
+AA-2004-07-28-1: Bugfix:    qmon's queue filtering doesn't work
+                 Bugtraq:   5075936
+                 Changed:   qmon
+                 Review:    RH
+
+AA-2004-07-28-0: Bugfix:    Wallclock time limit in qmon
+                 Bugtraq:   5078783
+                 Issue:     1162
+                 Changed:   qmon
+                 Review:    CR
+
+SG-2004-07-28-0: Bugfix:    - fixed the event master theading problem
+                            - fixed the job names and accouting string evaluation.
+                            - removed an abort in qmaster, when sched conf was not
+                              valid.
+                 Bugtraq:   5075849
+                 Issue:     1099
+                 Changed:   qmaster, submit.1
+                 Review:    JG
+
+DT-2004-07-27-0: Enhancem.: o Finished enhancing DRMAA Java language binding
+                              docs
+                            o Checked in JavaDocs for DRMAA Java lang. binding
+                 Bugfix:    o Corrected error in DRMAA README
+                            o runBulkJobs now returns all ids
+                            o Minor edits to DRMAA man pages
+                 Changed:   DRMAA, docs
+                 Issue:     1165
+
+JG-2004-07-27-0: Bugfix:    Fixes in reporting file:
+                            - pe_task_id for non pe jobs were inconsistend (in 
+                              some cases "none", in others "NONE").
+                            - Intermediate accounting records contained invalid
+                              data for submission_time and start_time.
+                 Changed:   sge_qmaster
+                 Bugtraq:   5078872
+                 Bugfix:    Fixed a memory leak when reading from Berkeley DB.
+                 Review:    RH
+
+DT-2004-07-26-1: Bugfix:    o Fixed minor regex issue with findcheckin.pl
+                 Changed:   scripts
+
+CR-2004-07-26-0: Testsuite: fixed shutdown of shadowd problem
+                            (testsuite does not shutdown shadowd)
+                 Issue:     1166 
+                 Review:    JG
+
+RH-2004-07-26-2: Bugfix:    definition of wc_cqueue added to man page.              
+                 Issue:     1103
+                 Bugtraq:   Not defined
+                 Changed:   sge_types(1)
+                 Review:    AH
+
+DT-2004-07-26-0: Enhancem.: o Added script to locate files by CVS log header
+                 Changed:   scripts
+
+RH-2004-07-26-1: Bugfix:    man page indicated that qsub accepts "-r yes|no"
+                 Issue:     1103
+                 Bugtraq:   ????
+                 
+RH-2004-07-26-0: Bugfix:    Wrong parameter for -Mc option argument qconf(1)
+                            man page fixed.
+                            Enhancements in man page for sched_conf(5).
+                            In man pages submit(1) the '$' and '.' as forbidden
+                            characters for job names removed.
+                 Issue:     1114, 969, ???????
+                 Bugtraq:   ????, ???, 5076358
+                 Changed:   qconf(1), sched_conf(5), submit(1)
+                 Review:    SG
+
+SG-2004-07-26-0: Bugfix:    - first part of the event_master changes. The total
+                            update of a event client is now thread safe.
+                            - excluded the flowwing character from a job name: "\"
+                 Changed:   qmaster, submit.1
+                 Review:    JG
+
+SG-2004-07-25-0: Bugfix:    - fixed lWriteListTo to use the spedified file handle
+                            - some minor cleanup
+                            - changed the job name specification that all characters
+                              are allowed except: "\n", "\t", "\r", "/", ":", "@"
+                 Issue:     -NA-
+                 Bugtraq:  
+                 Changed:   qmaster, submit.1
+
+CR-2004-07-24-1: Bugfix:    schedd and qmaster get out of sync - no scheduling
+                            for long time
+                 Changed:   communication lib
+                 Issue:     1141
+                 Bugtraq:   5077589
+                 Review:    JG
+
+CR-2004-07-23-0: Testsuite: modified /functional/tight_integration check to be 
+                            more error tolerant
+                 Review:    AA
+
+MD-2004-07-22-2: Bugfix:    reprioritize_interval descr in sched_conf(5) needs 
+                            improvement
+                 Changed:   man5/sched_conf.5
+                 Issue:     1040
+                 Bugtraq:   5077165
+                 Review:    JG
+
+MD-2004-07-22-1: Bugfix:    NO_REPRIORITATION should be removed from man pages
+                 Changed:   man5/queue_conf.5, man5/sge_conf.5, sge_priority.5
+                 Issue:     1097
+                 Bugtraq:   507167
+                 Review:    JG
+
+MD-2004-07-22-0: Bugfix:    uninstall procedure doesn't remove rc-script of 
+                            execd!
+                 Changed:   inst-sge, autoinstall template
+                 Issue:     1130
+                 Bugtraq:   5071868
+                 Review:    JG
+
+DT-2004-07-21-1: Bugfix:    o Added "-w e" as default DRMAA option
+                            o Fixed message number conflict
+                            o Fixed segfault in qconf -mc
+                            o Added test suite test for qalter -h and -t (Issue
+                              1109)
+                            o Added test suite test for Issue 1146
+                            o Added test suite test for Issue 1161
+                            o Cleaned up JAPI
+                            o Fixed broken links on DRMAA-J howto page
+                 Changed:   DRMAA, qmaster, testsuite, qconf, www
+                 Issue:     1109, 1146, 1151, 1161, 1163
+                 Bugtraq:   
+                 Review:    SG
+
+CR-2004-07-21-0: Testsuite: modified /functional/tight_integration check to be 
+                            more error tolerant
+                 Review:    JG
+
+JG-2004-07-21-0: Bugfix:    Fixed a bug in aimk -shared-libs.
+                            Fixed default busy handling in event client.
+                 Doc.:      Described use of bdb_checkpoint.sh in Berkeley DB
+                            README file.
+                 Review:    CR
+
+DT-2004-07-21-0: Enhancem.: o Completed DRMAA Java language binding howto
+                            o Updated DRMAA Java language binding README
+                            o Started enhancing DRMAA Java language binding
+                              JavaDocs
+                 Changed:   DRMAA, www
+
+AD-2004-07-20-0: Bugfix:    calendars broken
+                 Issue:     1111
+                 Bugtraq:   5071502
+                 Changed:   qmaster
+                 Review:    SG
+
+SG-2004-07-20-0: Bugfix:    jobs on hold due to -a time cause qmaster/schedd get out of sync
+                 Issue:     1154
+                 Bugtraq:   5074788
+                 Changed:   scheduler
+                 Review:    DT
+
+MD-2004-07-20-0: Bugfix:    variable syntax :  equal sign support
+                 Issue:     1118
+                 Bugtraq:   5075398
+                 Review:    JG
+                 Changed:   qsub, qrsh, qsh
+
+MD-2004-07-19-0: Bugfix:    sched_conf(5) reprioritize_interval should default to 0
+                 Issue:     1139
+                 Bugtraq:   5075451
+                 Review:    SG
+                 Changed:   schedd default config, schedd
+
+DT-2004-07-19-1: Bugfix:    o Changes from DT-2004-07-16-0 review
+                 Changed:   DRMAA, qstat, qconf, qsub
+
+AD-2004-07-19-1: Bugfix:    'qconf -km' did cause surplus warning.
+                 Changed:   qmaster
+
+SG-2004-07-19-0: Bugfix:    - The usage in the sharetree got lost.
+                            - fixed a mirror interface time out, which disabled
+                              sheduling intervals greater than 1 min.
+                            - fixed a mt problem on qmaster shutdown  
+                 Changed:   qmaster
+                 Issue:     1094
+                 Bugtraq:   5075346
+                 Review:    DT
+
+JG-2004-07-19-0: Testsuite: Fixed testuite setup.
+
+AD-2004-07-19-0: Bugfix:    Did fix broken qmaster locking
+                 Review:    SG
+                 Changed:   qmaster
+
+DT-2004-07-19-0: Enhancem.: o Added code examples for DRMAA Java language
+                              binding howto.  (Done over the weekend)
+                 Changed:   DRMAA
+
+DT-2004-07-16-0: Bugfix:    o Removed chdir() from DRMAA job processing
+                            o Made -cwd an (optionally) forbiddon DRMAA switch
+                            o Fixed minor DRMAA Java binding bugs
+                            o Fixed double-counting of used, unavailable queue
+                              slots
+                            o Changed qstat -g c and qmon to show np_load_avg
+                              instead of load_avg
+                            o Fixed error reporting for invalid characters in
+                              queue names in qconf
+                            o Allowed -w e and -w n as valid DRMAA switches
+                            o Fixed abort in qdel, et al with invalid -t swtich
+                            o Removed "NONE" from qconf -aconf
+                            o Fixed typo: WARINING_VERIFY => WARNING_VERIFY
+                 Changed:   DRMAA, qstat, qmon, qconf, qdel, qmod, qalter, qsub,
+                            qmaster
+                 Issue:     1150, 1125, 1127, 1146, 1151, 1109, 1137
+                 Bugtraq:   5072005, -, -, 5073218, -, 5071525, -
+                 Review:    SG
+
+AH-2004-07-13-0: Bugfix:    Deleted pending job appears in qstat
+                            Problem was that finished jobs generally were 
+                            displayed by qstat. Removed broken code that was 
+                            supposed to mask out running/finished jobs at qmaster 
+                            side. Added code in qmaster to improve diagnostics 
+                            in cases such as new found bug #1154.
+                 Issue:     1117
+                 Bugtraq:   5072481
+                 Review:    JG
+
+MD-2004-07-13-0: Bugfix:    inst_sge -sm doesn't create a local_conf
+                 Issue:     1135
+                 Bugtraq:   5071999
+                 Review:    CR
+                 Changed:   testsuite, inst_sge
+
+AA-2004-07-13-0: Bugfix:    removed stat_log_time from qmon
+                 Issue:     1083
+                 Review:    CR
+                 Changed:   qmon
+                 
+AH-2004-07-13-0: Bugfix:    Revert change AH-2004-07-09-0. Bug #1117 is not fixed.
+                 Issue:     1117
+                 Bugtraq:   5072481
+                 Review:    CR
+
+RH-2004-07-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
+                            in the method qref_resolve_hostname (libs/sgeobj/sge_qref.c)
+                            a sprintf "@%s" instead of "%s@%s" is executed if the 
+                            queuename part is empty.
+                 Issue:     1131
+                 Bugtraq:   5071918
+                 Review:    JG
+                            
+JG-2004-07-13-1: Bugfix:    fixed build for some gcc versions.
+
+JG-2004-07-13-0: Testsuite: fixed test system_tests/geee/sharetree
+
+CR-2004-07-13-0: Testsuite: - modifications for 60 scheduler configuration in
+                              throughput test
+                 Changed:   throughput test
+                 Review:    JG
+
+CR-2004-07-12-0: Bugfix:    - cl_com_tcp_connection_complete_request() got
+                              a new parameter to handle only "read", only "write"
+                              or "read and write" connection establisment.
+                              ( read and write thread did both and produced a 
+                                one second timeout for multithreaded clients. Now
+                                the read thread will only read and the write thread
+                                will only write. A non multithreaded commlib will
+                                do both, read and write )
+                            - new function cl_commlib_search_endpoint(): The
+                              function will return an endpoint list with connected
+                              clients.
+                            - moved some functions to new module: cl_xml_parsing.c
+                 Changed:   commlib
+                 Review:    HP
+
+JG-2004-07-12-0: Bugfix:    qmaster spooled tightly integrated parallel tasks
+                            whenever online usage was reported by an execd.
+                            Added ADOC header for job/ja_task/pe_task spooling.
+                 Changed:   sge_qmaster
+                 Issue:     1129
+                 Bugtraq:   5072772
+                 Review:    AH
+
+SG-2004-07-12-0: Bugfix:    - qstat -j -xml printed unparsable xml-output
+                            - the qstat xml schema missed the hard request
+                              queue field.
+                 Changed:   qstat, detailed_job_info.xsd
+                 Issue:     1144
+                 Bugtraq:   -NA-
+                 Review:    AA
+
+AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat
+                 Changed:   qstat, qhost
+                 Issue:     1117
+                 Bugtraq:   5072481
+                 Review:    CR
+
+SG-2004-07-09-0: Bugfix:    scheduler ignores queue seqno for queue sorting
+                 Changed:   scheduler  
+                 Issue:     1133
+                 Bugtraq:   5071914
+                 Review:    RH
+
+CR-2004-07-07-0: Bugfix:    qping doesn't support host_aliases file
+                 Changed:   qping binary
+                 Issue:     1124
+                 Bugtraq:   5071539
+                 Review:    AA
+       
+MD-2004-07-08-0: Bugfix:    Qmaster requires a local conf in order to start
+                 Issue:     1104 
+                 Bugtraq:   5071987
+                 Review:    CR
+                 Changed:   qmaster_configuration
+
+JG-2004-07-07-0: Testsuite: - Source documentation for compile procedure.
+                            - Disable caching of testsuite generated html files.
+
+JG-2004-07-06-0: Bugfix:    Fixed the build for HPUX.
+
+CR-2004-07-06-0: Bugfix:    qmaster clients may not reconnect after qmaster 
+                            outage
+                 Changed:   communication library (commlib)
+                 Issue:     1126
+                 Bugtraq:   5076491
+                 Review:    JG
+
+JG-2004-07-05-1: QA:        Update of review form and help text.
+                 Review:    CR
+
+JG-2004-07-05-0: Bugfix:    projects not available after sge_qmaster restart
+                 Changed:   sge_qmaster
+                 Issue:     1122
+                 Bugtraq:   5071498
+                 Review:    CR
+
+DT-2004-07-05-0: Bugfix:    o Fixed broken build on AIX
+                            o Fixed typos in JGrid
+                 Changed:   shepherd, JGrid
+
+JG-2004-07-01-0: Testsuite: Added check for qmaster spooling containing a 
+                            testcase for issue 1122.
+
+EB-2004-06-23-0: Cleanup:   Added/Changed ADOC commets
+
+EB-2004-06-22-0: Cleanup:   Added ADOC commets
+
+CR-2004-06-18-1: Testsuite: - new check for CR-2004-06-18-0 (issues 1096 and 
+                              1098)
+                            - new configuration parameter: reserved_port
+                            - fixed testsuite problem on shutdown of multi 
+                              threaded qmaster process(es!) on linux systems.
+
+CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as 
+                              "root"
                             o qmaster cannot bind port below 1024 on Linux
                  Changed:   qmaster
                  Issue:     1096, 1098
                  Bugtraq:   5063987
 
-MD-2004-06-17-0: Bugfix:    remove stat_log_time from configuration                              Changed:   inst_qmaster.sh
+DT-2004-06-17-0: Bugfix:    o Fixed bad link in DRMAA howto (again)
+                            o Added copyright placeholders to Java source files
+                            o Renamed DRMAA Java binding README
+                            o Fixed various JGrid bugs
+                            o Fixed factory bug in DRMAA Java binding
+                            o Fixed multi-threaded errno issue on HP-UX 11
+                            o Added JGrid to experimental html file
+                            - HP11 and HP1164 will need a aimk -clean
+                 Changed:   doc, www, classes, DRMAA, JGrid, aimk
+
+MD-2004-06-17-0: Bugfix:    remove stat_log_time from configuration
+                 Changed:   inst_qmaster.sh
                  Review:    AS
                  Issue:     1082
-                 Bugtraq:   5063305
-
-SG-2004-06-16-0: Bugfix:    Fixes wrong info-messages handling in the scheduler
-                            and the use of job categories for dispatching.
-                 Review:    JG
-                 Issue:     1087
-                 Bugtraq:   5063311
+                 Bugtraq:   506330
 
 MD-2004-06-16-0: Bugfix:    Install script fails when sgeadmin is selected 
                             as install user
                  Changed:   inst_qmaster.sh
                  Review:    JG
                  Issue:     1090
+
+SG-2004-06-16-0: Bugfix:    This bugfix is related to SG-2004-06-09-2. The
+                            prefious one did not fix all aspects of the growing
+                            scheduler and master. The implementation of the
+                            job categories was buggy.
+                 Changed:   scheduler
+                 Review:    JG
+                 Issue:     1087
+                 Bugtraq:   5063311
+
+DT-2004-06-15-1: Bugfix:    o Fixed DRMAA Java binding Makefile
+                            o Fixed installation of libjdrmaa in distinst
+                 Cleanup:   o Removed tabs from aimk help output
+                            o Removed unused code from sge_path_alias.c
+                 Enhancem.: o Ported JGrid to DRMAA Java binding
+                 Changed:   aimk, distinst, sge_path_alias, DRMAA, JGrid
+
+DT-2004-06-15-0: Bugfix:    o Fixed minor bugs in DRMAA Java binding
+                            o Fixed bad link in DRMAA howto
+                 Enhancem.: o Added Java binding README and started howto
+                 Changed:   DRMAA, howtos
+
+JG-2004-06-14-0: QA:        Updated review template and doc.
+                 Cleanup:   Removed unused I18N messages.
+                 Testsuite: Make checks performance/throughput and 
+                            system_tests/qmaster/size check for IZ 1087
+
+DT-2004-06-08-0: Bugfix:    o Backed out AS-2004-06-03-0 for DRMAA README.
+                 Changed:   docs
+
+SG-2004-06-09-3: Enhancem.: updated doc/devel/review.txt
+                 Review:    JG
+
+SG-2004-06-09-2: Bugfix:    The scheduler did not corectly compress the scheduler
+                            info messages, which lead to a hugh memory consumption
+                            in bigger clusters with even a low amount of jobs
+                            in the system.
+                 Changed:   scheduler                            
+                 Review:    JG
+                 Issue:     1087
+                 Bugtraq:   5063311
+
+SG-2004-06-09-1: Bugfix:    - fixed minor issues in the scheduler profiling
+                 Changed:   scheduler
+                 Review:    EB
+
+SG-2004-06-09-0: Bugfix:    - fixed the build for Linux with spool-classic
+                 Changed:   aimk
+                 Review:    JG
+
+JG-2004-06-09-0: QA:        Added development howto's:
+                            - use of branches
+                            - procedure for fixing bugs
+
+JG-2004-06-08-0: QA:        Added review template and help text.
+
+AS-2004-06-08-0: CVS        Created V60_TAG_{BRANCH,TAG}
 
 DT-2004-06-04-1: Bugfix:    o Fixed DRMAA Java binding build on Linux
                             o Added per thread init to japi_exit

@@ -81,14 +81,19 @@ lappend check_functions "qalter_verify"
 lappend check_functions "qalter_V"
 lappend check_functions "qalter_w"
 lappend check_functions "qalter_a"
+lappend check_functions "qalter_t"
+lappend check_functions "qalter_h"
 
-set check_errno       "-1"                          ;# 0 -> OK , != 0 means error 
-set check_errstr        "was never running"           ;# string for error description
+set check_errno       "-1"                         ;# 0 -> OK , != 0 means error 
+set check_errstr      "was never running"        ;# string for error description
 global submitresult
 global old_job_id
 global hold_job_A
 global hold_job_B
 global hold_job_C
+global hold_job_D
+global hold_job_T
+global hold_job_U
 global job_output_dir
 
 #                                                             max. column:     |
@@ -122,8 +127,8 @@ global job_output_dir
 #*******************************
 proc run_dummy_jobs {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
-   global check_errno 
-   global check_errstr old_job_id hold_job_A hold_job_B hold_job_C
+   global CHECK_OUTPUT check_errno hold_job_D hold_job_U
+   global check_errstr old_job_id hold_job_A hold_job_B hold_job_C hold_job_T
 
    set queue [get_queue_instance all.q $CHECK_HOST]
 
@@ -190,9 +195,50 @@ proc run_dummy_jobs {} {
       return 
    }
    set hold_job_C $submitresult
+    
+   set submitresult [ submit_job "-h -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15 " ]
+   if {$submitresult < 0 } {
+     set_error -1 "failure"
+     return
+   }
+   
+   # wait for job to get in pending state
+   if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
+      set_error -1 "job $submitresult is not in pending state"
+      delete_all_jobs
+      return 
+   }
+   set hold_job_D $submitresult
 
+   set submitresult [ submit_job "-h -t 1-4 -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15 " ]
+   if {$submitresult < 0 } {
+     set_error -1 "failure"
+     return
+   }
+   
+   # wait for job to get in pending state
+   if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
+      set_error -1 "job $submitresult is not in pending state"
+      delete_all_jobs
+      return 
+   }
 
+   set hold_job_T $submitresult
 
+   set submitresult [ submit_job "-h -t 1-4 -o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15 " ]
+   if {$submitresult < 0 } {
+     set_error -1 "failure"
+     return
+   }
+   
+   # wait for job to get in pending state
+   if { [wait_for_jobpending $submitresult "leeper" 200 ] != 0 } {
+      set_error -1 "job $submitresult is not in pending state"
+      delete_all_jobs
+      return 
+   }
+
+   set hold_job_U $submitresult
    set_error 0 "no errors"
 }
 
@@ -1722,5 +1768,111 @@ proc qalter_a {} {
    }      
 }
 
+#                                                             max. column:     |
+#****** qalter/qalter_t() ******
+# 
+#  NAME
+#     qalter_w -- test -t option for altering array jobs
+#
+#  SYNOPSIS
+#     qalter_w { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qalter_t {} {
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global check_errno hold_job_T
+   global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error 0 "qalter -t not available for SGE(EE) 5.3"
+   } else {
+      set option "-h n"
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4" } qalteroutput ]
+      if {$qalterresult == 1} {
+         set_error -1 "qalter $option - $qalteroutput"
+         return
+      }
 
+      # Test invalid uses
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4 -t 1-4" } qalteroutput ]
+      if {$qalterresult == 0} {
+         set_error -1 "qalter $option - allowed invalid -t switch"
+         return
+      }
+
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option -t 1-4 $hold_job_T -t 1-4" } qalteroutput ]
+      if {$qalterresult == 0} {
+         set_error -1 "qalter $option - allowed invalid -t switch"
+         return
+      }
+      set_error 0 "qalter $option - no errors"
+   }
+
+   return
+}
+
+#                                                             max. column:     |
+#****** qalter/qalter_h() ******
+# 
+#  NAME
+#     qalter_w -- test -h option for altering jobs' hold states
+#
+#  SYNOPSIS
+#     qalter_w { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qalter_h {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global check_errno hold_job_D hold_job_U
+   global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
+
+   set option "-h n"
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_D $hold_job_U.1-4" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "qalter $option - $qalteroutput"
+      return
+   }
+
+   set_error 0 "qalter $option - no errors"
+
+   return
+}

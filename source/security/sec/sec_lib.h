@@ -42,7 +42,6 @@ int sec_verify_user(const char *user, const char *commproc);
 
 int sec_clear_connectionlist(void);
 
-#ifdef ENABLE_NGC
 int sec_send_message(cl_com_handle_t* handle,
                      char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                      cl_xml_ack_type_t ack_type, 
@@ -50,29 +49,12 @@ int sec_send_message(cl_com_handle_t* handle,
                      unsigned long* mid, unsigned long response_mid, unsigned long tag ,
                      int copy_data,
                      int wait_for_ack);
-int sec_receive_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender);
+int sec_receive_message(cl_com_handle_t* handle,
+                        char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                        int synchron,
+                        unsigned long response_mid, 
+                        cl_com_message_t** message, 
+                        cl_com_endpoint_t** sender);
 
-#else
-int sec_send_message(
-   int synchron, 
-   const char *tocomproc, 
-   int toid, 
-   const char *tohost, 
-   int tag, 
-   char *buffer, 
-   int buflen, 
-   u_long32 *mid, 
-   int compressed);
-
-int sec_receive_message(
-   char *fromcommproc, 
-   u_short *fromid, 
-   char *fromhost, 
-   int *tag, 
-   char **buffer, 
-   u_long32 *buflen, 
-   int synchron, 
-   u_short *compressed);
-#endif
 
 #endif /* __SEC_LIB_H */

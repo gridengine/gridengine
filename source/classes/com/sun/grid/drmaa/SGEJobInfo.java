@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,12 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * SGEJobInfo.java
- *
- * Created on March 4, 2004, 10:17 AM
- */
-
+/*___INFO__MARK_END__*/
 package com.sun.grid.drmaa;
 
 import java.util.HashMap;
@@ -41,7 +37,8 @@ import java.util.Map;
 import org.ggf.drmaa.*;
 
 /**
- *
+ * This class provides information about a completed Grid Engine job.
+ * @see org.ggf.drmaa.JobInfo
  * @author  dan.templeton@sun.com
  */
 public class SGEJobInfo extends JobInfo {
@@ -57,33 +54,73 @@ public class SGEJobInfo extends JobInfo {
    private static final int SIGNAL_OFFSET = 12;
    private String signal = null;
    
-   /** Creates a new instance of SGEJobInfo */
+   /** Creates a new instance of SGEJobInfo
+    * @param jobId the job id string
+    * @param status an opaque status code
+    * @param resourceUsage an array of name=value resource usage pairs
+    * @param signal the string description of the terminating signal
+    */
    SGEJobInfo (String jobId, int status, String[] resourceUsage, String signal) {
       super (jobId, status, nameValuesToMap (resourceUsage));
       
       this.signal = signal;
    }
    
+	/** If hasExited() returns true,  this function returns the exit code
+	 * that the job passed to _exit() (see exit(2)) or exit(3C), or the value
+	 * that the child process returned from main.
+	 * @return the exit code for the job
+	 */	
    public int getExitStatus () {
       return ((status & EXIT_STATUS_BITS) >> EXIT_STATUS_OFFSET);
    }
    
+	/** If hasSignaled() returns true, this method returns a representation of
+    * the signal that caused the termination of the job. For signals declared by
+    * POSIX, the symbolic names are returned (e.g., SIGABRT, SIGALRM).<BR>
+	 * For signals not declared by POSIX, any other string may be returned.
+	 * @return the name of the terminating signal
+	 */	
    public String getTerminatingSignal () {
       return signal;
    }
 
+	/** If hasSignaled() returns true, this function returns true
+	 * if a core image of the terminated job was created.
+	 * @return whether a core dump image was created
+	 */	
    public boolean hasCoreDump () {
       return ((status & COREDUMP_BIT) != 0);
    }
    
+	/** Returns <CODE>true</CODE> if the job terminated normally.
+	 * <CODE>False</CODE> can also indicate that
+	 * although the job has terminated normally an exit status is not available
+	 * or that it is not known whether the job terminated normally. In both
+	 * cases getExitStatus() will not provide exit status information.
+	 * <CODE>True</CODE> indicates more detailed diagnosis can be provided
+	 * by means of hasSignaled(), getTerminatingSignal() and hasCoreDump().
+	 * @return if the job has exited
+	 */	
    public boolean hasExited () {
       return ((status & EXITED_BIT) != 0);
    }
    
+	/** Returns <CODE>true</CODE> if the job terminated due to the receipt
+	 * of a signal. <CODE>False</CODE> can also indicate that although the
+	 * job has terminated due to the receipt of a signal the signal is not
+	 * available or that it is not known whether the job terminated due to
+	 * the receipt of a signal. In both cases getTerminatingSignal() will
+	 * not provide signal information.
+	 * @return if the job exited on a signal
+	 */	
    public boolean hasSignaled () {
       return ((status & SIGNALED_BIT) != 0);
    }
    
+	/** Returns <i>true</i> if the job ended before entering the running state.
+	 * @return whether the job ended before entering the running state
+	 */	
    public boolean wasAborted () {
       return ((status & NEVERRAN_BIT) != 0);
    }   

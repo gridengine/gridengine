@@ -176,6 +176,7 @@ static int sge_ls_status(lListElem *this_ls)
 {
    fd_set writefds;
    int ret;
+   int higest_fd;
 
    DENTER(TOP_LAYER, "sge_ls_status");
 
@@ -186,10 +187,11 @@ static int sge_ls_status(lListElem *this_ls)
 
    /* build writefds */
    FD_ZERO(&writefds);
-   FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
+   higest_fd = fileno((FILE *) lGetRef(this_ls, LS_in));
+   FD_SET(higest_fd, &writefds);
 
    /* is load sensor ready to read ? */
-   ret = select(FD_SETSIZE, NULL, &writefds, NULL, NULL);
+   ret = select(higest_fd + 1, NULL, &writefds, NULL, NULL);
 
    if (ret <= 0) {
       DEXIT;
@@ -307,9 +309,9 @@ static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
 
    DENTER(TOP_LAYER, "sge_ls_create_ls");
 
-   if (scriptfile) {
-      if (SGE_STAT(scriptfile, &st)) {
-         if (!strcmp(name, "extern")) {
+   if (scriptfile != NULL) {
+      if (SGE_STAT(scriptfile, &st) != 0) {
+         if (strcmp(name, "extern") == 0) {
             WARNING((SGE_EVENT, MSG_LS_NOMODTIME_SS, scriptfile,
                    strerror(errno)));
          }
@@ -583,23 +585,33 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    struct timeval timeleft;
    int ret;
    FILE *file;
+   int higest_fd;
 
    DENTER(TOP_LAYER, "ls_send_command");
 
    FD_ZERO(&writefds);
-   FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
+   higest_fd = fileno((FILE *) lGetRef(this_ls, LS_in));
+   FD_SET(higest_fd, &writefds);
 
    timeleft.tv_sec = 0;
    timeleft.tv_usec = 0;
 
    /* wait for writing on fd_in */
-   ret = select(FD_SETSIZE, NULL, &writefds, NULL, &timeleft);
+   ret = select(higest_fd + 1, NULL, &writefds, NULL, &timeleft);
    if (ret == -1) {
-      if (errno == EINTR) {
-         DEXIT;
-         return -1;
+      switch (errno) {
+      case EINTR:
+         DPRINTF(("select failed with EINTR\n"));
+         break;
+      case EBADF:
+         DPRINTF(("select failed with EBADF\n"));
+         break;
+      case EINVAL:
+         DPRINTF(("select failed with EINVAL\n"));
+         break;
+      default:
+         DPRINTF(("select failed with unexpected errno %d", errno));
       }
-      perror("select");
       DEXIT;
       return -1;
    }
@@ -714,7 +726,10 @@ void sge_ls_gnu_ls(int gnu_ls)
 ******************************************************************************/
 int sge_ls_start(char *scriptfiles)
 {
-   lListElem *ls_elem, *nxt_ls_elem;    /* LS_Type */
+   lListElem *ls_elem = NULL;        /* LS_Type */
+   lListElem *nxt_ls_elem = NULL;    /* LS_Type */
+   char scriptfiles_buffer[MAX_STRING_SIZE];
+   SGE_STRUCT_STAT stat_buffer;
 
    DENTER(TOP_LAYER, "sge_ls_start");
 
@@ -726,10 +741,13 @@ int sge_ls_start(char *scriptfiles)
    }
 
    /* add / remove load sensors */
-   if (scriptfiles && strcasecmp(scriptfiles, "NONE")) {
-      char *scriptfile;
-      char scriptfiles_buffer[4096];
+   if ((scriptfiles != NULL) && (strcasecmp(scriptfiles, "NONE") != 0)) {
+      char *scriptfile = NULL;
 
+       if (strlen (scriptfiles) > MAX_STRING_SIZE - 1) {
+          return LS_NOT_STARTED;
+       }
+   
       strcpy(scriptfiles_buffer, scriptfiles);
       /* add new load sensors if necessary 
        * and remove tags from the existing load sensors 
@@ -738,11 +756,11 @@ int sge_ls_start(char *scriptfiles)
       while (scriptfile) {
          ls_elem = lGetElemStr(ls_list, LS_command, scriptfile);
 
-         if (!ls_elem) {
+         if (ls_elem == NULL) {
             INFO((SGE_EVENT, MSG_LS_STARTLS_S, scriptfile));
             ls_elem = sge_ls_create_ls("extern", scriptfile);
          }
-         if (ls_elem) {
+         if (ls_elem != NULL) {
             lSetUlong(ls_elem, LS_tag, 0);
          }
          scriptfile = strtok(NULL, ",\n");
@@ -750,29 +768,39 @@ int sge_ls_start(char *scriptfiles)
    }
    /* QIDLE loadsensor */
    if (has_to_use_qidle) {
-      char scriptfiles_buffer[1024];
-
-      sprintf(scriptfiles_buffer, "%s/%s/%s", bootstrap_get_binary_path(), sge_get_arch(),
-              IDLE_LOADSENSOR_NAME);
+      snprintf(scriptfiles_buffer, MAX_STRING_SIZE, "%s/%s/%s",
+               bootstrap_get_binary_path(), sge_get_arch(),
+               IDLE_LOADSENSOR_NAME);
+      
+      if (SGE_STAT(scriptfiles_buffer, &stat_buffer) != 0) {
+         snprintf(scriptfiles_buffer, MAX_STRING_SIZE, "%s/%s",
+                  bootstrap_get_binary_path(), IDLE_LOADSENSOR_NAME);
+      }
+      
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
-      if (!ls_elem) {
+      if (ls_elem == NULL) {
          ls_elem = sge_ls_create_ls(IDLE_LOADSENSOR_NAME, scriptfiles_buffer);
       }
-      if (ls_elem) {
+      if (ls_elem != NULL) {
          lSetUlong(ls_elem, LS_tag, 0);
       }
    }
    /* GNU loadsensor */
    if (has_to_use_gnu_load_sensor) {
-      char scriptfiles_buffer[1024];
-
-      sprintf(scriptfiles_buffer, "%s/%s/%s", bootstrap_get_binary_path(),
-              sge_get_arch(), GNU_LOADSENSOR_NAME);
+      snprintf(scriptfiles_buffer, MAX_STRING_SIZE, "%s/%s/%s",
+               bootstrap_get_binary_path(), sge_get_arch(),
+               GNU_LOADSENSOR_NAME);
+      
+      if (SGE_STAT(scriptfiles_buffer, &stat_buffer) != 0) {
+         snprintf(scriptfiles_buffer, MAX_STRING_SIZE, "%s/%s",
+                  bootstrap_get_binary_path(), GNU_LOADSENSOR_NAME);
+      }
+      
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
-      if (!ls_elem) {
+      if (ls_elem == NULL) {
          ls_elem = sge_ls_create_ls(GNU_LOADSENSOR_NAME, scriptfiles_buffer);
       }
-      if (ls_elem) {
+      if (ls_elem != NULL) {
          lSetUlong(ls_elem, LS_tag, 0);
       }
    }

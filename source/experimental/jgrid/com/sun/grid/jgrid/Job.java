@@ -62,7 +62,7 @@ public class Job implements Runnable, Serializable {
 	public static final int ERROR = 5;
 	/** The Job is being suspended */
 	public static final int SUSPENDING = 6;
-	/** The Job iss being stopped before completing */
+	/** The Job is being stopped before completing */
 	public static final int STOPPING = 7;
 	/** The results returned from the executing Computable */
 	private Serializable results = null;
@@ -73,18 +73,14 @@ public class Job implements Runnable, Serializable {
 	/** The absolute filename where the serialized Job is written */
 	private String filename;
 	
-	/** The id of this job
-	 */
+	/** The id of this job */
 	private String jobId = null;
-	/** The object to process
-	 */
+	/** The object to process */
 	private Computable job = null;
-	/** Whether this job is to be executed asynchronously or not
-	 */
+	/** Whether this job is to be executed asynchronously or not */
 	private boolean asynch;
 	
-	/** The logging mechanism for jobs
-	 */
+	/** The logging mechanism for jobs */
 	private transient Logger log = null;
 	/** The current state of the Job, as represented by NOT_STARTED, RUNNING, STOPPED,
 	 * COMPLETE, and ERROR
@@ -163,8 +159,8 @@ public class Job implements Runnable, Serializable {
 
 			if (e instanceof java.lang.InterruptedException) {
 				log.logError ("Job failed due to an improperly handled interrupt.  It is " +
-											"likely that the interrupt came from a job.interrupt() call " +
-											"in a suspend(), resume(), cancel(), or checkpoint() method.");
+									"likely that the interrupt came from a job.interrupt() call " +
+									"in a suspend(), resume(), cancel(), or checkpoint() method.");
 			}
 			
 			log.logError (Logger.getExceptionAsString (e));
@@ -306,7 +302,7 @@ public class Job implements Runnable, Serializable {
 	}
 	
 	/** Serializes the Job to the location given by <CODE>filename</CODE>.
-	 * @throws IOException Thrown is there's an error writing the Job to disk
+	 * @throws IOException thrown if there's an error writing the Job to disk
 	 */
 	private void writeJobToDisk () throws IOException {
 		FileOutputStream fout = new FileOutputStream (filename);

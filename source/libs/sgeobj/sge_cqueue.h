@@ -172,6 +172,9 @@ cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
                                lListElem *attr_elem);
 
 bool
+cqueue_is_used_in_subordinate(const char *cqueue_name, const lListElem *cqueue);
+
+bool
 cqueue_verify_consumable_config_list(lListElem *cqueue, lList **answer_list,
                                      lListElem *attr_elem);
 

@@ -89,7 +89,7 @@ GetOldConfiguration()
    echo "auto_user_oticket         0" >> /tmp/configuration.$pid
    echo "auto_user_fshare          0" >> /tmp/configuration.$pid
    echo "auto_user_default_project none" >> /tmp/configuration.$pid
-   echo "auto_user_delete_time     100" >> /tmp/configuration.$pid
+   echo "auto_user_delete_time     86400" >> /tmp/configuration.$pid
    echo "delegated_file_staging    false" >> /tmp/configuration.$pid
 
    ExecuteAsAdmin $SPOOLDEFAULTS configuration /tmp/configuration.$pid
@@ -608,3 +608,90 @@ UpdateHints()
                 "please copy these scripts to the new location and adapt the path \nto the new location!\n" \
                 "Thank you very much for using SGE 6.0 and have fun!\n\n" 
 }
+
+
+WelcomeTheUserUpgrade()
+{
+   $INFOTEXT -u "\nWelcome to the Grid Engine 6.x Upgrade"
+   $INFOTEXT "\nBefore you continue with the upgrade please read these hints:\n\n" \
+             "   - Your terminal window should have a size of at least\n" \
+             "     80x24 characters\n\n" \
+             "   - The INTR character is often bound to the key Ctrl-C.\n" \
+             "     The term >Ctrl-C< is used during the upgrade if you\n" \
+             "     have the possibility to abort the upgrade\n\n" \
+             "The upgrade procedure will take approximately 5 minutes.\n" \
+             "We recommend you to make a full backup of your configuration,\n" \
+             "before you start the upgrade.\n" \
+             "Make sure, that your cluster is down and the new binaries are copied!\n" \
+             "After this upgrade you will get a running qmaster and schedd with\n" \
+             "the configuration of your old installation. If the upgrade was\n" \
+             "successfully completed your can restart your cluster\n\n"
+   $INFOTEXT -wait -n "Hit <RETURN> to start upgrade >> "
+   $CLEAR
+}
+
+
+UpgradeDB()
+{
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   else
+      echo "bootstrap file could not be found, check your installation!"
+      exit 1
+   fi
+
+   SPOOLEDIT="$SGE_UTILBIN/spooledit"
+   $INFOTEXT "   ... starting upgrade ...\n"
+
+   ExecuteAsAdmin $TOUCH /tmp/spooledit_db_key_dump.tmp
+   for qi in `ExecuteAsAdmin $SPOOLEDIT list | grep "QINSTANCE:"` ; do
+      $INFOTEXT "   ... dumping object: %s" $qi
+      ExecuteAsAdmin $SPOOLEDIT dump $qi > /tmp/spooledit_db_key_dump.tmp
+      if [ $? -eq 1 ]; then
+         $INFOTEXT " ... error dumping database! Exiting update!\n"
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump.tmp
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump2.tmp
+         exit 1
+      fi
+      $INFOTEXT "   ... loading object: %s\n" $qi
+      ExecuteAsAdmin $SPOOLEDIT load $qi /tmp/spooledit_db_key_dump.tmp
+      if [ $? -eq 1 ]; then
+         $INFOTEXT " ... error loading database! Exiting update!\n"
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump.tmp
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump2.tmp
+         exit 1
+      fi
+   done
+
+   ExecuteAsAdmin $TOUCH /tmp/spooledit_db_key_dump.tmp
+   ExecuteAsAdmin $TOUCH /tmp/spooledit_db_key_dump2.tmp
+   for cq in `ExecuteAsAdmin $SPOOLEDIT list | grep "CQUEUE:"` ; do
+      $INFOTEXT "   ... dumping object: %s" $cq
+      ExecuteAsAdmin $SPOOLEDIT dump $cq > /tmp/spooledit_db_key_dump.tmp
+      if [ $? -eq 1 ]; then
+         $INFOTEXT " ... error dumping database! Exiting update!\n"
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump.tmp
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump2.tmp
+         exit 1
+      fi
+      cat /tmp/spooledit_db_key_dump.tmp | sed 's/{ 2351, 3 }/{ 2351, 65539 }/g' > /tmp/spooledit_db_key_dump2.tmp
+      $INFOTEXT "   ... loading object: %s\n" $cq
+      ExecuteAsAdmin $SPOOLEDIT load $cq /tmp/spooledit_db_key_dump2.tmp
+      if [ $? -eq 1 ]; then
+         $INFOTEXT " ... error loadping database! Exiting update!\n"
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump.tmp
+         ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump2.tmp
+         exit 1
+      fi
+   done
+
+   $INFOTEXT "   ... finishing upgrade ...\n"
+
+   ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump.tmp
+   ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump2.tmp
+
+   $INFOTEXT "  Your system upgrade was successful!"
+   $INFOTEXT "  Now you can restart your cluster!\n"
+}
+

@@ -46,4 +46,7 @@ str_list_parse_from_string(lList **this_list,
 bool
 str_list_is_valid(const lList *this_list, lList **answer_list);
 
+bool
+str_list_transform_user_list(lList **this_list, lList **answer_list);
+
 #endif /* __SGE_STR_H */

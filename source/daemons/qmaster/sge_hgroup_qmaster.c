@@ -214,8 +214,8 @@ hgroup_commit(lListElem *hgroup)
       next_cqueue = lNext(cqueue);
       cqueue_commit(cqueue);
       lDechainElem(cqueue_list, cqueue);
-      lAppendElem(cqueue_master_list, cqueue);
       lRemoveElem(cqueue_master_list, org_queue);
+      lAppendElem(cqueue_master_list, cqueue);
    }
    lSetList(hgroup, HGRP_cqueue_list, NULL);
    DEXIT;

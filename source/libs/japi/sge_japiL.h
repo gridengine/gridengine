@@ -92,9 +92,6 @@ NAMEEND
 /* *INDENT-ON* */
 
 #define JJS sizeof(JJN)/sizeof(char*)
-#ifdef  __cplusplus
-}
-#endif
 
 /****** japi/--JJAT_Type **************************************************
 *  NAME

@@ -159,6 +159,12 @@ typedef gid_t addgrpid_t;
 #    define PTF_MAX_PRIORITY     -10
 #    define PTF_OS_MIN_PRIORITY   20
 #    define PTF_OS_MAX_PRIORITY  -20
+#  elif defined(INTERIX)
+#    define ENFORCE_PRI_RANGE     1
+#    define PTF_MIN_PRIORITY      20
+#    define PTF_MAX_PRIORITY      0
+#    define PTF_OS_MIN_PRIORITY   20
+#    define PTF_OS_MAX_PRIORITY  -20
 #  endif
 #  define PTF_BACKGROUND_JOB_PROPORTION 0.015
 #  define PTF_BACKGROUND_JOB_PRIORITY NDPLOMAX
@@ -210,6 +216,7 @@ void ptf_stop(void);
 int ptf_is_running(void); 
 
 void ptf_unregister_registered_jobs(void);
+void ptf_unregister_registered_job(u_long32 job_id, u_long32 ja_task_id );
 
 void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_idr, 
                                const char *pe_task_id_str, int priority);

@@ -32,9 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define SGE_COMMON_DEF_REQ_FILE "common/sge_request"
-
-#define SGE_HOME_DEF_REQ_FILE   ".sge_request"
+#define SGE_COMMON_DEF_REQ_FILE     "common/sge_request"
+#define SGE_HOME_DEF_REQ_FILE       ".sge_request"
+#define SGE_COMMON_DEF_QSTAT_FILE   "common/sge_qstat"
+#define SGE_HOME_DEF_QSTAT_FILE     ".sge_qstat"
 
 void opt_list_append_opts_from_default_files(lList **pcmdline,  
                                              lList **answer_list,
@@ -55,6 +56,11 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
                                       const lList *opts_cmdline,
                                       char **envp);
 
+void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *path,
+                                           lList **answer_list,
+                                           const lList *opts_cmdline,
+                                           char **envp);
+                                           
 void opt_list_merge_command_lines(lList **opts_all,
                                   lList **opts_defaults,
                                   lList **opts_scriptfile,

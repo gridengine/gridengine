@@ -1,0 +1,9 @@
+Issue:      1087
+Synopsis:   high memory usage of schedd and master (schedd_job_info)
+
+This bug is verified in the following testsuite checks:
+Check:      performance/throughput
+Function:   all
+
+Check:      system_tests/qmaster/size
+Function:   all

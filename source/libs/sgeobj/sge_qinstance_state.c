@@ -43,7 +43,7 @@
 #include "sge_qinstance_state.h"
 #include "msg_sgeobjlib.h"
 
-/****** sgelib/qinstance/--State_Chart() **************************************
+/****** sgeobj/qinstance_state/--State_Chart() ********************************
 *
 *         /---------------------------------------------------\
 *         |                     exists                        |
@@ -187,9 +187,7 @@ qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit)
    lSetUlong(this_elem, QU_state, state);
 }
 
-
-
-/****** sge_qinstance_state/qinstance_has_state() ******************************
+/****** sgeobj/qinstance_state/qinstance_has_state() **************************
 *  NAME
 *     qinstance_has_state() -- checks a qi for a given states 
 *
@@ -213,11 +211,39 @@ qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit)
 *
 *******************************************************************************/
 bool qinstance_has_state(const lListElem *this_elem, u_long32 bit) {
-   if (bit == U_LONG32_MAX)
-      return true;
-   return (lGetUlong(this_elem, QU_state) & bit) ? true : false;
+   bool ret = true;
+
+   if (bit != U_LONG32_MAX) {
+      ret = (lGetUlong(this_elem, QU_state) & bit) ? true : false;
+   }
+   return ret;
 }
 
+/****** sgeobj/qinstance_state/transition_is_valid_for_qinstance() ************
+*  NAME
+*     transition_is_valid_for_qinstance() -- is transition valid 
+*
+*  SYNOPSIS
+*     bool 
+*     transition_is_valid_for_qinstance(u_long32 transition, 
+*                                       lList **answer_list) 
+*
+*  FUNCTION
+*     Checks if the given transition is valid for a qinstance object.
+*     If the transition is valid, than true will be returned by this function. 
+*
+*  INPUTS
+*     u_long32 transition - transition id 
+*     lList **answer_list - AN_Type list 
+*
+*  RESULT
+*     bool - test result
+*        true  - transition is valid
+*        false - transition is invalid
+*
+*  NOTES
+*     MT-NOTE: transition_is_valid_for_qinstance() is MT safe 
+*******************************************************************************/
 bool
 transition_is_valid_for_qinstance(u_long32 transition, lList **answer_list)
 {
@@ -252,6 +278,7 @@ transition_is_valid_for_qinstance(u_long32 transition, lList **answer_list)
    return ret;
 }
 
+/* EB: What is the purpose of this function? */
 bool
 transition_option_is_valid_for_qinstance(u_long32 option, lList **answer_list)
 {
@@ -302,11 +329,6 @@ qinstance_state_as_string(u_long32 bit)
        * if something is changed here
        */
 
-      /*
-       * Don't forget to change the names-array, too
-       * if something is changed here
-       */
-
       0 
    };
    static const char *names[23] = { NULL }; 
@@ -343,7 +365,6 @@ qinstance_state_as_string(u_long32 bit)
    while (states[i] != 0) {
       if (states[i] == bit) {
          ret = names[i];
-         DTRACE;
          break;
       }
       i++;
@@ -352,8 +373,7 @@ qinstance_state_as_string(u_long32 bit)
    return ret;
 }
 
-
-/****** sge_qinstance_state/qinstance_state_from_string() **********************
+/****** sgeobj/qinstance_state/qinstance_state_from_string() ******************
 *  NAME
 *     qinstance_state_from_string() -- takes a state string and returns an int 
 *
@@ -372,14 +392,13 @@ qinstance_state_as_string(u_long32 bit)
 *  RESULT
 *     u_long32 - new state or 0, if no state was set
 *
-*  EXAMPLE
-*     ??? 
-*
 *  NOTES
 *     MT-NOTE: qinstance_state_from_string() is MT safe 
-*
 *******************************************************************************/
-u_long32 qinstance_state_from_string(const char* sstate, lList **answer_list, u_long32 filter){
+u_long32 
+qinstance_state_from_string(const char* sstate, 
+                            lList **answer_list, 
+                            u_long32 filter){
    u_long32 ustate = 0;
    int i;
    int y;

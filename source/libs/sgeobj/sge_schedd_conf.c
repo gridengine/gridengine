@@ -108,8 +108,8 @@
 #define DEFAULT_LOAD_FORMULA                "np_load_avg"
 #define SCHEDULE_TIME                       "0:0:15"
 #define _SCHEDULE_TIME                      15
-#define SGEEE_SCHEDULE_TIME                 "0:2:0"
-#define _SGEEE_SCHEDULE_TIME                 2*60
+#define REPRIORITIZE_INTERVAL               "0:0:0"
+#define REPRIORITIZE_INTERVAL_I             0
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
@@ -205,6 +205,7 @@ typedef struct{
 }config_pos_type;
 
 static bool schedd_profiling = false;
+static bool is_category_job_filtering = false;
 
 static bool sconf_calc_pos(void);
 
@@ -212,6 +213,7 @@ static void sconf_clear_pos(void);
 
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param); 
 static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param);
+static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list, const char* param);
 
 static char policy_hierarchy_enum2char(policy_type_t value);
 
@@ -241,6 +243,7 @@ static config_pos_type pos = {true,
 const parameters_t params[] = {
    {"PROFILE",  sconf_eval_set_profiling},
    {"MONITOR",  sconf_eval_set_monitoring},
+   {"JC_FILTER", sconf_eval_set_job_category_filtering},
    {"NONE",     NULL},
    {NULL,       NULL}
 };
@@ -319,8 +322,9 @@ static void sconf_clear_pos(void){
          if (pos.c_halflife_decay_list)
             pos.c_halflife_decay_list = lFreeList(pos.c_halflife_decay_list);
 
-         if (pos.c_params)
+         if (pos.c_params) {
             pos.c_params = lFreeList(pos.c_params);
+         }   
          
          pos.c_default_duration = DEFAULT_DURATION_I;
 
@@ -677,7 +681,7 @@ lListElem *sconf_create_default()
    lSetUlong(ep, SC_flush_finish_sec, 0);
    lSetString(ep, SC_params, "none");
    
-   lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
+   lSetString(ep, SC_reprioritize_interval, REPRIORITIZE_INTERVAL);
    lSetUlong(ep, SC_halftime, 168);
 
    added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
@@ -982,7 +986,7 @@ const char *sconf_reprioritize_interval_str(void){
    if (pos.reprioritize_interval!= -1) 
       return lGetPosString(sc_ep, pos.reprioritize_interval);
    else
-      return SGEEE_SCHEDULE_TIME;
+      return REPRIORITIZE_INTERVAL;
 }
 
 /****** sge_schedd_conf/sconf_get_reprioritize_interval() ********************
@@ -1008,7 +1012,7 @@ u_long32 sconf_get_reprioritize_interval(void) {
    time = sconf_reprioritize_interval_str();
 
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM,time, NULL, 0 ,0)) {
-      return _SGEEE_SCHEDULE_TIME;
+      return REPRIORITIZE_INTERVAL_I;
    }
 
    return uval;
@@ -1360,10 +1364,11 @@ u_long32 sconf_get_halftime(void) {
 *
 *******************************************************************************/
 void sconf_set_weight_tickets_override(u_long32 active) {
-   const lListElem *sc_ep = sconf_get_config();
+   lListElem *sc_ep = (lListElem *)sconf_get_config();
 
-   if (pos.weight_tickets_override!= -1)
+   if (pos.weight_tickets_override!= -1) {
       lSetPosUlong(sc_ep, pos.weight_tickets_override, active);
+   }
 }
 
 /****** sge_schedd_conf/sconf_get_compensation_factor() ************************
@@ -1658,6 +1663,27 @@ bool sconf_get_report_pjob_tickets(void){
    else
       return true;
 
+}
+
+/****** sge_schedd_conf/sconf_is_job_category_filtering() **********************
+*  NAME
+*     sconf_is_job_category_filtering() -- true, if the job_category_filtering is on
+*
+*  SYNOPSIS
+*     bool sconf_is_job_category_filtering(void) 
+*
+*  FUNCTION
+*     returns the status of the job category filtering 
+*
+*  RESULT
+*     bool - true, the job category filtering is on
+*
+*  NOTES
+*     MT-NOTE: sconf_is_job_category_filtering() is not MT safe 
+*
+*******************************************************************************/
+bool sconf_is_job_category_filtering(void){
+   return is_category_job_filtering;   
 }
 
 /****** sge_schedd_conf/sconf_get_flush_submit_sec() ***************************
@@ -2194,9 +2220,14 @@ bool sconf_validate_config_(lList **answer_list){
          changed, but it should be turned off. This means we have to turn everything off,
          before we work on the params */
       schedd_profiling = false;
+      is_category_job_filtering = false;
+
       serf_set_active(false);
 
       if (sparams) {
+         if (pos.c_params == NULL) {
+            pos.c_params = lCreateList("params", PARA_Type);
+         }
          for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;
             bool added = false;
@@ -2631,12 +2662,70 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
       ret = false;
    }
    if (elem){
-      lAppendElem(pos.c_params, elem);
+      lAppendElem(param_list, elem);
    }
 
    DEXIT;
    return ret;
 }
+
+/****** sge_schedd_conf/sconf_eval_set_job_category_filtering() ****************
+*  NAME
+*     sconf_eval_set_job_category_filtering() -- enable jc filtering or not.
+*
+*  SYNOPSIS
+*     static bool sconf_eval_set_job_category_filtering(lList *param_list, 
+*     lList **answer_list, const char* param) 
+*
+*  FUNCTION
+*     A parsing function for the prama settings in the scheduler configuration.
+*     It is looking for JC_FILTER to be set to true, or false and updates the
+*     settings accordingly.
+*
+*  INPUTS
+*     lList *param_list   - the param list
+*     lList **answer_list - the answer list, in case of an error
+*     const char* param   - the param string
+*
+*  RESULT
+*     static bool - true, if everything went fine
+*
+*     MT-NOTE: sconf_eval_set_job_category_filtering() is not MT safe 
+*
+*******************************************************************************/
+static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list, const char* param){
+   bool ret = true;
+   lListElem *elem = NULL;
+   DENTER(TOP_LAYER, "sconf_eval_set_job_category_filtering");
+
+   is_category_job_filtering= false;
+
+   if (!strncasecmp(param, "JC_FILTER=1", sizeof("JC_FILTER=1")-1) || 
+       !strncasecmp(param, "JC_FILTER=TRUE", sizeof("JC_FILTER=FALSE")-1) ) {
+      is_category_job_filtering= true;
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "jc_filter");
+      lSetString(elem, PARA_value, "true");
+   }      
+   else if (!strncasecmp(param, "JC_FILTER=0", sizeof("JC_FILTER=1")-1) ||
+            !strncasecmp(param, "JC_FILTER=FALSE", sizeof("JC_FILTER=FALSE")-1) ) {
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "jc_filter");
+      lSetString(elem, PARA_value, "false");
+   }
+   else {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INVALID_PARAM_SETTING_S, param)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   if (elem){
+      lAppendElem(param_list, elem);
+   }
+
+   DEXIT;
+   return ret;
+}
+
 
 /****** sge_schedd_conf/sconf_eval_set_monitoring() ****************************
 *  NAME
@@ -2690,7 +2779,7 @@ static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, co
       ret = false;
    }
    if (elem){
-      lAppendElem(pos.c_params, elem);
+      lAppendElem(param_list, elem);
    }
 
    serf_set_active(do_monitoring);

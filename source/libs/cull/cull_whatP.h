@@ -35,14 +35,17 @@
 #include "cull_what.h"
 
 struct _lEnumeration {
-   int pos;                     /* position in the old cont/descr array         */
-   /* we build an array of _what structs, the      */
-   /* index is the pos in the new descriptor       */
-   /* THERE ARE TWO SPECIAL VALUES                 */
-   /* WHAT_NONE     -1                           */
-   /* WHAT_ALL        -2                           */
-   int mt;                      /* type of the field                                            */
-   int nm;                      /* name of selected column                                */
+   int pos;          /* 
+                      * position in the old cont/descr array 
+                      * we build an array of _what structs, the      
+                      * index is the pos in the new descriptor       
+                      * THERE ARE TWO SPECIAL VALUES                 
+                      * WHAT_NONE     -1                           
+                      * WHAT_ALL      -2                           
+                      */
+   int mt;           /* type of the field */
+   int nm;           /* name of selected column */
+   lEnumeration *ep; /* sub enumeration; only used for objects and lists */
 };
 
 #endif /* __CULL_WHATP_H */

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/04/22 13:56:17 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/11/12 15:40:02 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMAKE 1 "$Date: 2004/04/22 13:56:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMAKE 1 "$Date: 2004/11/12 15:40:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 .PP
@@ -52,7 +52,7 @@ tasks is done by xxQS_NAMExx. It is based on
 .I gmake
 (GNU make), version 3.78.1. Both xxQS_NAMExx and
 .I gmake
-commandline options can be specified. They are separated by "--".
+command line options can be specified. They are separated by "--".
 .PP
 All xxQS_NAMExx options valid with
 .M qsub 1
@@ -62,12 +62,12 @@ can be specified with
 .I qmake
 - see
 .M submit 1
-for a description of all xxQS_NAMExx commandline options.
+for a description of all xxQS_NAMExx command line options.
 The
 .M make 1
 manual page describes the
 .I gmake
-commandline syntax.
+command line syntax.
 .PP
 The syntax of
 .I qmake
@@ -75,7 +75,7 @@ makefiles corresponds to
 .I gmake
 and is described in the "GNU Make Manual".
 .PP
-A typical qmake call will use the xxQS_NAMExx commandline options 
+A typical qmake call will use the xxQS_NAMExx command line options 
 -cwd to have a scheduled make started in the current working directory on 
 the execution host, -v PATH if the xxQS_NAMExx environment is not setup
 in the users .cshrc or .profile shell resource file and request slots in a  
@@ -83,11 +83,11 @@ parallel environment (see
 .M sge_pe 5
 ).
 .PP
-If no resource request (xxQS_NAMExx commandline option -l) is specified, 
+If no resource request (xxQS_NAMExx command line option -l) is specified, 
 qmake will use the environment variable SGE_ARCH to request the same architecture 
 for task execution as has the submit host.
 If SGE_ARCH is set, the architecture specified in SGE_ARCH will be requested by 
-inserting the option -l arch=$SGE_ARCH into the commandline options.
+inserting the option -l arch=$SGE_ARCH into the command line options.
 If SGE_ARCH is not set, the make tasks can be executed on any available architecture.
 As this is critical for typical make (compile) jobs, a warning will be output.
 .PP
@@ -96,8 +96,8 @@ has two different modes for allocating xxQS_NAMExx resources for the parallel
 execution of tasks:
 .PP
 1. Allocation of resources using a parallel environment. If the -pe option is
-used on the qmake commandline, a parallel job is scheduled by xxQS_NAMExx.
-The make rules are executed as tasks withing this parallel job.
+used on the qmake command line, a parallel job is scheduled by xxQS_NAMExx.
+The make rules are executed as tasks within this parallel job.
 .PP
 2. Dynamic allocation of resources. If no parallel environment is requested 
 when submitting a qmake job, each make rule will generate an individual 
@@ -106,7 +106,7 @@ All resource requests given to qmake will be inherited by the jobs processing
 the make rules.
 .PP
 In dynamic allocation mode, additional resource requests for individual rules
-can be specified by preceeding the rule by the definition of an environment
+can be specified by preceding the rule by the definition of an environment
 variable SGE_RREQ. The rule then takes the form
 SGE_RREQ="<request>" <rule>, e.g.
 SGE_RREQ="-l lic=1" cc -c ...
@@ -121,7 +121,7 @@ qmake -cwd -v PATH -pe compiling 1-10 --
 .sp 1
 will request between 1 and 10 slots in parallel environment "compiling".
 If the SGE_ARCH environment variable is set to the machines architecture, a 
-resource request will be inserted into the qmake commandline to start the 
+resource request will be inserted into the qmake command line to start the 
 qmake job on the same architecture as the submit host. The
 .I make
 tasks will
@@ -139,9 +139,10 @@ The qmake job will be started on a machine of architecture sol-sparc, this
 resource request will also be inherited by the make tasks, i.e. all jobs 
 created for the execution of make tasks will request the architecture sol-sparc.
 .sp 1
-If the following Makefile is submitted with the above commandline, additional
+If the following Makefile is submitted with the above command line, additional
 resource requests will be made for individual rules:
-For the compile and link rules, compiler licenses (comp) and linker licenses (link) will be requested, in addition to the resource request made for the whole job (-l arch=sol-sparc) on the commandline.
+For the compile and link rules, compiler licenses (comp) and linker licenses (link) will be requested, in
+addition to the resource request made for the whole job (-l arch=sol-sparc) on the command line.
 .sp 1
 .nf
 .RS
@@ -161,7 +162,7 @@ functions.o: functions.c
 .RE
 .fi
 .sp 2
-The commandline
+The command line
 .nf
 .RS
 qmake -cwd -v PATH -l arch=sol-sparc64 -pe make 3 --
@@ -187,7 +188,7 @@ can be submitted by
 .sp 1
 .nf
 .RS
-qsub -cwd -v PATH -pe make 1-10 [furter xxqs_name_sxx options] <script>
+qsub -cwd -v PATH -pe make 1-10 [further xxqs_name_sxx options] <script>
 .RE
 .fi
 .sp 1
@@ -240,7 +241,7 @@ performance, host c might not yet see files a.o and b.o.
 .\"
 .SS Multiple commands in one rule
 If multiple commands are executed in one rule, the makefile has to
-ensure that they are handled as one commandline.
+ensure that they are handled as one command line.
 .sp 1
 Example:
 .sp 1

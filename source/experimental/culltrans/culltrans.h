@@ -35,9 +35,9 @@
 #include <map>
 #include <set>
 #include <string>
+#include <iostream>
+#include <fstream>
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
 #include "culltrans_repository.h"
 
 #ifdef __cplusplus

@@ -200,8 +200,6 @@ void *my_log_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
-   /* setup cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* setup thread config ( at least done by call to cl_thread_func_startup() ) */
    if ( cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -248,7 +246,6 @@ void *my_log_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0);
    return(NULL);
 }
 
@@ -262,9 +259,6 @@ void *my_test_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-
-   /* setup cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* setup thread config ( at least done by call to cl_thread_func_startup() ) */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -335,7 +329,6 @@ void *my_test_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0);
    return(NULL);
 }
 

@@ -704,6 +704,29 @@ lList **alpp
 }
 
 /*-------------------------------------------------------------------------*/
+int sge_unparse_ulong_option(
+lListElem *job,
+int nm,
+char *option,
+lList **pcmdline,
+lList **alpp 
+) {
+   lListElem *ep_opt = NULL;
+   u_long32 cp;
+
+   DENTER(TOP_LAYER, "sge_unparse_string_option");
+   
+   if ((cp = lGetUlong(job, nm))) {
+      char number[50];
+      snprintf(number, 49, u32, cp);
+      ep_opt = sge_add_arg(pcmdline, 0, lUlongT, option, number);
+      lSetUlong(ep_opt, SPA_argval_lUlongT, cp);
+   }
+   DEXIT;
+   return 0;
+}
+
+/*-------------------------------------------------------------------------*/
 int sge_unparse_resource_list(
 lListElem *job,
 int nm,

@@ -1,0 +1,403 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+# set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "qmake_init_level"
+
+# define test's name and run level descriptions
+set check_name            "qmake"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   2
+set check_description(0)  "Check qmake as non gridified GNU make"
+set check_description(1)  "Check qmake in static allocation mode"
+set check_description(2)  "Check qmake in dynamic allocation mode"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "qmake_setup"
+lappend check_functions "qmake_sequential"
+lappend check_functions "qmake_parallel"
+lappend check_functions "qmake_flags"
+lappend check_functions "qmake_recursive"
+lappend check_functions "qmake_rreq" ;# only for dynamic allocation mode
+lappend check_functions "qmake_cleanup"
+
+proc qmake_init_level {} {
+   global ts_config
+   global CHECK_ACT_LEVEL
+   global qmake_options pe_options
+
+#if { $CHECK_ACT_LEVEL != 0 } {
+#   return -1
+#}
+
+   set arch [resolve_arch $ts_config(master_host)]
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         set qmake_options ""
+         set pe_options ""
+         return 0
+      } 
+      "1" {
+         set qmake_options "-l a=$arch -cwd -v PATH --"
+         set pe_options "-pe make"
+         return 0
+      }
+      "2" {
+         # dynamic allocation mode is not supported in SGE 5.3
+         if { $ts_config(gridengine_version) == 53 } {
+            return -1
+         }
+         set qmake_options "-l a=$arch -cwd -v PATH --"
+         set pe_options ""
+         return 0
+      }
+  } 
+
+  return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+proc qmake_setup  {} {
+   global ts_config
+   global CHECK_OUTPUT 
+
+   # create a qmake queue
+   set queue(load_thresholds) "np_load_avg=11"
+   set queue(slots)           10
+   add_queue qmake.q "@allhosts" queue
+
+   # create a make pe
+   set pe(pe_name)            make
+   set pe(slots)              10
+   set pe(user_lists)         none
+   set pe(xuser_lists)        none
+   set pe(start_proc_args)    none
+   set pe(stop_proc_args)     none
+   set pe(allocation_rule)    "\$round_robin"
+   set pe(control_slaves)     TRUE
+   set pe(job_is_first_task)  FALSE
+   add_pe pe
+
+   # assign pe with queue
+   assign_queues_with_pe_object qmake.q $ts_config(master_host) make
+
+   set_error 0 "ok"
+}
+
+proc qmake_cleanup  {} {
+   global ts_config
+   global CHECK_OUTPUT
+
+   after 5000
+   delete_all_jobs
+   after 5000
+
+   # unassign pe with queue
+   unassign_queues_with_pe_object make
+
+   after 1000
+
+   # delete pe
+   del_pe make
+
+   # delete queue
+   del_queue qmake.q "" 0 1
+
+   set_error 0 "ok"
+}
+
+proc qmake_submit {slots target {variables ""}} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_USER CHECK_ACTUAL_TEST_PATH
+   global qmake_options pe_options
+
+   if { $pe_options == "" } {
+      set arguments "$qmake_options -j $slots $target $variables"
+   } else {
+      set arguments "$pe_options $slots $qmake_options $target $variables"
+   }
+
+   puts $CHECK_OUTPUT "submitting qmake $arguments"
+   set id [open_remote_spawn_process $ts_config(master_host) $CHECK_USER "cd" "$CHECK_ACTUAL_TEST_PATH ; qmake $arguments"]
+   set sp_id [lindex $id 1]
+   set done 0
+   while {!$done} {
+      set timeout 60
+      expect_user {
+         -i $sp_id full_buffer {
+            add_proc_error "qmake_submit" -1 "expect full_buffer error"
+            set done 1
+         }
+         -i $sp_id timeout {
+            add_proc_error "qmake_submit" -1 "timeout"
+            set done 1
+         }
+         -i $sp_id eof {
+            add_proc_error "qmake_submit" -1 "got eof"
+            set done 1
+         }
+         -i $sp_id  "?*\n" {
+            foreach line [string trim [split $expect_out(0,string) "\n"]] {
+               set line [string trim $line]
+               if {$line != ""} {
+                  switch -glob -- $line {
+                     "_start_mark_*" {
+                        puts $CHECK_OUTPUT "qmake starting"
+                        set done 1
+                     }
+                     "*.sh" -
+                     "*unset correct" {
+                        # ignore this output
+                     }
+                     default {
+                        puts $CHECK_OUTPUT "qmake_submit: unexpected output: $line"
+                     }
+                  }
+               }
+            }
+         } 
+      }
+   }
+
+   return $id
+}
+
+proc qmake_close_channel {id} {
+   set sp_id [lindex $id 1]
+   send -i $sp_id "\003" ;# send CTRL+C
+   close_spawn_process $id
+}
+
+proc qmake_monitor {scenario id check_vars_name {parallel 0}} {
+   global CHECK_OUTPUT
+
+   upvar $check_vars_name check_vars
+
+   set sp_id [lindex $id 1]
+
+   set done 0
+   while {!$done} {
+      set timeout 60
+      expect_user {
+         -i $sp_id full_buffer {
+            add_proc_error "qmake_monitor" -1 "expect full_buffer error"
+            set done 1
+         }
+         -i $sp_id timeout {
+            add_proc_error "qmake_monitor" -1 "timeout"
+            set done 1
+         }
+         -i $sp_id eof {
+            add_proc_error "qmake_monitor" -1 "got eof"
+            set done 1
+         }
+         -i $sp_id  "?*\n" {
+            foreach line [string trim [split $expect_out(0,string) "\n"]] {
+               set line [string trim $line]
+               if {$line != ""} {
+                  switch -glob -- $line {
+                     "_exit_status_:*" {
+                        set split_line [split $line ":"]
+                        scan [lindex $split_line 1] "(%d)" exit_status
+                        puts $CHECK_OUTPUT "qmake exited with status $exit_status"
+                        if {$exit_status != 0} {
+                           add_proc_error $scenario -1 "qmake failed with exit status $exit_status"
+                        }
+                        set done 1
+                     }
+
+                     "echo *" -
+                     "./echo_variable.sh*" -
+                     "SGE_RREQ=*" {
+                        # this is qmake outputting the commandline to execute - ignore it
+                     }
+
+                     "dynamic mode" - 
+                     "this call might lead*" -
+                     "starting on local*" {
+                        # ignore this qmake output
+                     }
+
+                     "MAKE=*" - 
+                     "MAKELEVEL=*" -
+                     "MAKEFLAGS=*" -
+                     "MFLAGS=*" -
+                     "MAKEOVERRIDES=*" -
+                     "QMAKE_TEST=*" - 
+                     "QMAKE_MAKEFILE_VARIABLE=*" {
+                        set pos [string first "=" $line]
+                        set variable [string range $line 0 [expr $pos - 1]]
+                        set value [string range $line [expr $pos + 1] end]
+                        puts $CHECK_OUTPUT "make variable $variable set to $value"
+                        set variables($variable) $value
+                     }
+                     "compiling*" {
+                        set compile([lindex $line 1],start) [clock seconds]
+                     }
+                     "done compiling*" {
+                        set compile([lindex $line 2],end) [clock seconds]
+                     }
+                     "linking" {
+                        set link(start) [clock seconds]
+                     }
+                     "done linking" {
+                        set link(end) [clock seconds]
+                     }
+                     "*leaving directory*" {
+                        puts $CHECK_OUTPUT "qmake_monitor: qmake done"
+                     }
+                     "script done." {
+                        puts $CHECK_OUTPUT "qmake_monitor: testsuite script done"
+                     }
+                     default {
+                        puts $CHECK_OUTPUT "qmake_monitor: unexpected output: $line"
+                     }
+                  }
+               }
+            }
+         } 
+      }
+   }
+
+   # now check if make run was ok
+   # check variables
+   foreach var [array names check_vars] {
+      if { ! [info exists variables($var)] } {
+         add_proc_error $scenario -1 "variable $var hasn't been set in make task environment"
+      } else {
+         if { [string compare $variables($var) $check_vars($var)] != 0} {
+            add_proc_error $scenario -1 "variable $var should have value \"$check_vars($var)\", but has \"$variables($var)\""
+         }
+      }
+   }
+
+   # check sequential/parallel execution
+   # doesn't apply to all tests, so check first if we have compile data
+   if {[info exists compile(1,start)]} {
+      if { $parallel } {
+         # compile runs must be parallel (run 2 has to start before run 1 end)
+         if { $compile(2,start) >= $compile(1,end) } {
+            add_proc_error $scenario -1 "compile runs didn't run in parallel (run 1 ended at [clock format $compile(1,end)], run 2 started at [clock format $compile(2,start)]"
+         }
+      } else {
+         # compile runs must be sequential (run 2 may not start before run 1 end)
+         if { $compile(2,start) < $compile(1,end) } {
+            add_proc_error $scenario -1 "compile runs didn't run sequentially (run 1 ended at [clock format $compile(1,end)], run 2 started at [clock format $compile(2,start)]"
+         }
+      }
+   }
+}
+
+proc qmake_sequential {} {
+   set check_vars(MAKELEVEL) 1
+   set check_vars(QMAKE_MAKEFILE_VARIABLE) "\"abc123\""
+
+   set id [qmake_submit 1 link]
+   qmake_monitor qmake_sequential $id check_vars
+   qmake_close_channel $id
+
+   set_error 0 "ok"
+}
+
+proc qmake_parallel {} {
+   set check_vars(MAKELEVEL) 1
+   set check_vars(QMAKE_MAKEFILE_VARIABLE) "\"abc123\""
+
+   set id [qmake_submit 4 link]
+   qmake_monitor qmake_parallel $id check_vars 1
+   qmake_close_channel $id
+
+   set_error 0 "ok"
+}
+
+proc qmake_flags {} {
+   set check_vars(MAKELEVEL) 1
+   set check_vars(QMAKE_TEST) test
+   set check_vars(QMAKE_MAKEFILE_VARIABLE) "\"abc123\""
+
+   set id [qmake_submit 1 variables "QMAKE_TEST=test"]
+   qmake_monitor qmake_flags $id check_vars
+   qmake_close_channel $id
+
+   set_error 0 "ok"
+}
+
+proc qmake_recursive {} {
+   set check_vars(MAKELEVEL) 2
+   set check_vars(QMAKE_MAKEFILE_VARIABLE) "\"abc123\""
+
+   set id [qmake_submit 4 recursive]
+   qmake_monitor qmake_recursive $id check_vars 1
+   qmake_close_channel $id
+
+   set_error 0 "ok"
+}
+
+proc qmake_rreq {} {
+   global CHECK_OUTPUT CHECK_ACT_LEVEL
+
+   if { $CHECK_ACT_LEVEL != 2} {
+      puts $CHECK_OUTPUT "qmake_rreq - resource requests only available in dynamic allocation mode"
+   } else {
+      set check_vars(QMAKE_TEST) rreq
+
+      set id [qmake_submit 1 rreq]
+      qmake_monitor qmake_recursive $id check_vars
+      qmake_close_channel $id
+   }
+
+   set_error 0 "ok"
+}
+

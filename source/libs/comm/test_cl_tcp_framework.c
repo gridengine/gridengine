@@ -216,9 +216,9 @@ void server_cleanup_conlist(cl_raw_list_t** connection_list) {
       con_elem = cl_connection_list_get_first_elem(*connection_list);
       while(con_elem) {
          cl_com_connection_t* connection = con_elem->connection;
-         connection->connection_state = CL_COM_CLOSING;
+         connection->connection_state = CL_CLOSING;
          CL_LOG(CL_LOG_INFO,"marking connection to close");
-         con_elem = cl_connection_list_get_next_elem(*connection_list, con_elem);
+         con_elem = cl_connection_list_get_next_elem(con_elem);
       }
       cl_raw_list_unlock(*connection_list);
       cl_connection_list_destroy_connections_to_close(*connection_list,1);
@@ -259,10 +259,6 @@ void *server_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) server_cleanup, (void*) &con );
-   pthread_cleanup_push((void *) server_cleanup_conlist, (void*) &connection_list);
 
 
    /* set thread config data */
@@ -279,7 +275,7 @@ void *server_thread(void *t_conf) {
    free(local_hostname);
    local_hostname = NULL;
 
-   retval = cl_com_setup_tcp_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED );
+   retval = cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
    CL_LOG_STR(CL_LOG_INFO, "cl_com_setup_tcp_connection() returned ", cl_get_error_text(retval) );
 
    retval = cl_com_connection_request_handler_setup(con, local_host);
@@ -304,8 +300,11 @@ void *server_thread(void *t_conf) {
  
       cl_com_connection_t*  connection = NULL;
 
-
+      pthread_cleanup_push((void *) server_cleanup, (void*) &con );
+      pthread_cleanup_push((void *) server_cleanup_conlist, (void*) &connection_list);
       cl_thread_func_testcancel(thread_config);
+      pthread_cleanup_pop(0); /* list cleanup */
+      pthread_cleanup_pop(0); /* server cleanup */
 
       CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
 
@@ -316,7 +315,7 @@ void *server_thread(void *t_conf) {
       if (retval == CL_RETVAL_OK && new_con != NULL) {
          CL_LOG(CL_LOG_INFO,"new connection!!!");
 
-         retval= cl_com_tcp_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0 );
+         retval= cl_com_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT );
          if (retval != CL_RETVAL_OK) {
             cl_com_tcp_close_connection(&new_con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
@@ -346,9 +345,9 @@ void *server_thread(void *t_conf) {
 
                if (retval != CL_RETVAL_OK && retval != CL_RETVAL_UNCOMPLETE_READ) {
                   /* close this connection */
-                  con_elem = cl_connection_list_get_next_elem(connection_list,con_elem);
+                  con_elem = cl_connection_list_get_next_elem(con_elem);
                   CL_LOG( CL_LOG_INFO, "set connection close flag");
-                  connection->connection_state = CL_COM_CLOSING;
+                  connection->connection_state = CL_CLOSING;
                   continue;
                }
                CL_LOG_STR( CL_LOG_WARNING, "data is:", (char*)connection->data_read_buffer);
@@ -358,7 +357,7 @@ void *server_thread(void *t_conf) {
             } else {
                CL_LOG( CL_LOG_INFO, "no data");
             }
-            con_elem = cl_connection_list_get_next_elem(connection_list,con_elem);
+            con_elem = cl_connection_list_get_next_elem(con_elem);
          }
          cl_raw_list_unlock(connection_list);
       }
@@ -386,9 +385,6 @@ void *server_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1); /* list cleanup */
-   pthread_cleanup_pop(1); /* server cleanup */
-   pthread_cleanup_pop(0); /* default */
    return(NULL);
 }
 
@@ -422,10 +418,6 @@ void *client_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
-   /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
-   pthread_cleanup_push((void *) client_cleanup_function, (void*) &con );
-
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
       printf("cl_thread_set_thread_config() error\n");
@@ -449,10 +441,12 @@ void *client_thread(void *t_conf) {
    while (do_exit == 0) {
       unsigned long size;
 
+      pthread_cleanup_push((void *) client_cleanup_function, (void*) &con );
       cl_thread_func_testcancel(thread_config);
+      pthread_cleanup_pop(0);  /* client_thread_cleanup */
 
       if (con == NULL) {
-         cl_com_setup_tcp_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED );
+         cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
          retval = cl_com_open_connection(con, 5, remote_host, local_host, receiver_host, sender_host);
          CL_LOG_STR( CL_LOG_INFO, "cl_com_open_connection() returned ", cl_get_error_text(retval) );
          if (retval != CL_RETVAL_OK) {
@@ -460,7 +454,7 @@ void *client_thread(void *t_conf) {
             CL_LOG_STR(CL_LOG_INFO, "cl_com_close_connection() returned ", cl_get_error_text(retval) );
          } 
 
-         retval= cl_com_tcp_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0 );
+         retval= cl_com_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT );
          if (retval != CL_RETVAL_OK) {
             cl_com_tcp_close_connection(&con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
@@ -518,7 +512,5 @@ void *client_thread(void *t_conf) {
 
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(1);  /* client_thread_cleanup */
-   pthread_cleanup_pop(0);  /* default */
    return(NULL);
 }

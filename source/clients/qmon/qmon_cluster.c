@@ -97,7 +97,6 @@ typedef struct _tCClEntry {
    int min_uid;
    int min_gid;
    String load_report_time;
-   String stat_log_time;
    String max_unheard;
    String reschedule_unknown;
    int loglevel;
@@ -112,6 +111,7 @@ typedef struct _tCClEntry {
    lList *cluster_xprojects;
    int enforce_project;
    int enforce_user;
+   int dfs;
    String qmaster_params;
    String reporting_params;
    String execd_params;
@@ -202,10 +202,6 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, load_report_time), 
       XtRImmediate, NULL },
 
-   { "stat_log_time", "stat_log_time", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, stat_log_time), 
-      XtRImmediate, NULL },
-
    { "max_unheard", "max_unheard", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, max_unheard), 
       XtRImmediate, NULL },
@@ -220,6 +216,10 @@ XtResource ccl_resources[] = {
       
    { "logmail", "logmail", XtRInt, 
       sizeof(int), XtOffsetOf(tCClEntry, logmail), 
+      XtRImmediate, NULL },
+
+   { "dfs", "dfs", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, dfs), 
       XtRImmediate, NULL },
 
    { "max_aj_instances", "max_aj_instances", XtRInt, 
@@ -358,14 +358,13 @@ static Widget cluster_max_jobs = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
-static Widget cluster_stat_log_time = 0;
-static Widget cluster_stat_log_timePB = 0;
 static Widget cluster_max_unheard = 0;
 static Widget cluster_max_unheardPB = 0;
 static Widget cluster_reschedule_unknown = 0;
 static Widget cluster_reschedule_unknownPB = 0;
 static Widget cluster_shell_start_mode = 0;
 static Widget cluster_loglevel = 0;
+static Widget cluster_dfs = 0;
 static Widget cluster_enforce_project = 0;
 static Widget cluster_enforce_user = 0;
 
@@ -663,6 +662,7 @@ Widget parent
                            "cluster_host", &cluster_host,
                            "cluster_ok", &cluster_ok,
                            "cluster_cancel", &cluster_cancel,
+                           "cluster_dfs", &cluster_dfs,
                            "cluster_enforce_project", &cluster_enforce_project,
                            "cluster_enforce_user", &cluster_enforce_user,
                            "cluster_usersPB", &cluster_usersPB,
@@ -691,8 +691,6 @@ Widget parent
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
                                     &cluster_load_report_timePB,
-                           "cluster_stat_log_time", &cluster_stat_log_time,
-                           "cluster_stat_log_timePB", &cluster_stat_log_timePB,
                            "cluster_max_unheard", &cluster_max_unheard,
                            "cluster_max_unheardPB", &cluster_max_unheardPB,
                            "cluster_reschedule_unknown", &cluster_reschedule_unknown,
@@ -764,8 +762,6 @@ Widget parent
 
    XtAddCallback(cluster_load_report_timePB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_load_report_time);
-   XtAddCallback(cluster_stat_log_timePB, XmNactivateCallback, 
-                     qmonClusterTime, (XtPointer)cluster_stat_log_time);
    XtAddCallback(cluster_max_unheardPB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_max_unheard);
    XtAddCallback(cluster_reschedule_unknownPB, XmNactivateCallback, 
@@ -973,8 +969,6 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_max_u_jobs, mode);
    XtSetSensitive(cluster_max_jobs, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
-   XtSetSensitive(cluster_stat_log_time, mode);
-   XtSetSensitive(cluster_stat_log_timePB, mode);
    XtSetSensitive(cluster_max_unheard, mode);
    XtSetSensitive(cluster_max_unheardPB, mode);
    XtSetSensitive(cluster_shell_start_mode, mode);
@@ -993,6 +987,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_reporting_params, mode);
    XtSetSensitive(cluster_reporting_params_label, mode);
   
+   XtSetSensitive(cluster_dfs, mode);
    XtSetSensitive(cluster_enforce_project, mode);
    XtSetSensitive(cluster_enforce_user, mode);
    XtSetSensitive(cluster_projects, mode);
@@ -1088,6 +1083,7 @@ int local
    };
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
+   static String dfs[] = { "true", "false" };
    static String enforce_project[] = { "true", "false" };
    static String enforce_user[] = { "true", "false", "auto" };
    String str = NULL;
@@ -1327,6 +1323,18 @@ int local
       }
 
 #if 0
+      if (clen->dfs == 0) {
+         ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "delegated_file_staging");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, "true");
+         lAppendElem(lp, new);
+      }
+
       if (clen->starter_method && clen->starter_method[0] != '\0'
            /* && strcmp(lGetString(ep, CF_value), clen->starter_method)*/) {
          ep = lGetElemStr(confl, CF_name, "starter_method");
@@ -1545,13 +1553,6 @@ int local
       }
       lSetString(ep, CF_value, clen->load_report_time);
 
-      ep = lGetElemStr(confl, CF_name, "stat_log_time");
-      if (check_white(clen->stat_log_time)) {
-         strcpy(errstr, "No whitespace allowed in value for stat_log_time");
-         goto error;
-      }
-      lSetString(ep, CF_value, clen->stat_log_time);
-
       ep = lGetElemStr(confl, CF_name, "max_unheard");
       if (check_white(clen->max_unheard)) {
          strcpy(errstr, "No whitespace allowed in value for max_unheard");
@@ -1653,6 +1654,13 @@ int local
       } else {
          lDelElemStr(&confl, CF_name, "gid_range");
       }
+
+      if (clen->dfs >= 0 && 
+            clen->dfs < sizeof(dfs))
+         str = dfs[clen->dfs];
+      ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
+      lSetString(ep, CF_value, str);
+
 
       if (clen->enforce_project >= 0 && 
             clen->enforce_project < sizeof(enforce_project))
@@ -1989,9 +1997,6 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "load_report_time")))
       clen->load_report_time = XtNewString(lGetString(ep, CF_value));
 
-   if ((ep = lGetElemStr(confl, CF_name, "stat_log_time")))
-      clen->stat_log_time = XtNewString(lGetString(ep, CF_value));
-
    if ((ep = lGetElemStr(confl, CF_name, "max_unheard")))
       clen->max_unheard = XtNewString(lGetString(ep, CF_value));
 
@@ -2039,6 +2044,13 @@ tCClEntry *clen
 
    if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
       clen->gid_range = XtNewString(lGetString(ep, CF_value));
+
+   if ((ep = lGetElemStr(confl, CF_name, "delegated_file_staging")))
+      str = (StringConst)lGetString(ep, CF_value);
+   if (str && !strcasecmp(str, "true"))
+      clen->dfs = 0;
+   else
+      clen->dfs = 1;
 
 
    if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
@@ -2214,10 +2226,6 @@ tCClEntry *clen
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;
    }
-   if (clen->stat_log_time) {
-      XtFree((char*)clen->stat_log_time);
-      clen->stat_log_time = NULL;
-   }
    if (clen->max_unheard) {
       XtFree((char*)clen->max_unheard);
       clen->max_unheard = NULL;
@@ -2232,6 +2240,7 @@ tCClEntry *clen
    clen->cluster_xusers = lFreeList(clen->cluster_xusers);
    clen->cluster_projects = lFreeList(clen->cluster_projects);
    clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+   clen->dfs = 1;    
    clen->enforce_project = 1;    
    clen->enforce_user = 1;    
 

@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <string.h>
 
+#include "setup.h"
 #include "sge_gdiP.h"
 #include "sge_any_request.h"
 #include "commlib.h"
@@ -56,8 +57,85 @@ static pthread_mutex_t check_alive_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
 
 /* setup a communication error callback */
-static void general_communication_error(int cl_err);
+static pthread_mutex_t general_communication_error_mutex = PTHREAD_MUTEX_INITIALIZER;
+static void general_communication_error(int cl_err, const char* error_message);
+static int   last_general_communication_error = CL_RETVAL_OK;
+static char* last_general_communication_error_string = NULL;
 static int gdi_general_communication_error = CL_RETVAL_OK;
+
+
+/****** sge_any_request/sge_dump_message_tag() *************************************
+*  NAME
+*     sge_dump_message_tag() -- get tag name string
+*
+*  SYNOPSIS
+*     const char* sge_dump_message_tag(int tag) 
+*
+*  FUNCTION
+*     This is a function used for getting a printable string output for the
+*     different message tags.
+*     (Useful for debugging)
+*
+*  INPUTS
+*     int tag - tag value
+*
+*  RESULT
+*     const char* - name of tag
+*
+*  NOTES
+*     MT-NOTE: sge_dump_message_tag() is MT safe 
+*******************************************************************************/
+const char* sge_dump_message_tag(unsigned long tag) {
+   switch (tag) {
+      case TAG_NONE:
+         return "TAG_NONE";
+      case TAG_OLD_REQUEST:
+         return "TAG_OLD_REQUEST";
+      case TAG_GDI_REQUEST:
+         return "TAG_GDI_REQUEST";
+      case TAG_ACK_REQUEST:
+         return "TAG_ACK_REQUEST";
+      case TAG_REPORT_REQUEST:
+         return "TAG_REPORT_REQUEST";
+      case TAG_FINISH_REQUEST:
+         return "TAG_FINISH_REQUEST";
+      case TAG_JOB_EXECUTION:
+         return "TAG_JOB_EXECUTION";
+      case TAG_SLAVE_ALLOW:
+         return "TAG_SLAVE_ALLOW";
+      case TAG_CHANGE_TICKET:
+         return "TAG_CHANGE_TICKET";
+      case TAG_SIGJOB:
+         return "TAG_SIGJOB";
+      case TAG_SIGQUEUE:
+         return "TAG_SIGQUEUE";
+      case TAG_KILL_EXECD:
+         return "TAG_KILL_EXECD";
+      case TAG_NEW_FEATURES:
+         return "TAG_NEW_FEATURES";
+      case TAG_GET_NEW_CONF:
+         return "TAG_GET_NEW_CONF";
+      case TAG_JOB_REPORT:
+         return "TAG_JOB_REPORT";
+      case TAG_QSTD_QSTAT:
+         return "TAG_QSTD_QSTAT";
+      case TAG_TASK_EXIT:
+         return "TAG_TASK_EXIT";
+      case TAG_TASK_TID:
+         return "TAG_TASK_TID";
+      case TAG_EVENT_CLIENT_EXIT:
+         return "TAG_EVENT_CLIENT_EXIT";
+      case TAG_SEC_ANNOUNCE:
+         return "TAG_SEC_ANNOUNCE";
+      case TAG_SEC_RESPOND:
+         return "TAG_SEC_RESPOND";
+      case TAG_SEC_ERROR:
+         return "TAG_SEC_ERROR";
+      default:
+         return "TAG_NOT_DEFINED";
+   }
+   return "TAG_NOT_DEFINED";
+}
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p) {
    int ret_val;
@@ -116,6 +194,8 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
+         case CL_LOG_OFF:
+            break;
       }
       cl_log_list_del_log(list_p);
    }
@@ -133,29 +213,74 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 *     general_communication_error() -- callback for communication errors
 *
 *  SYNOPSIS
-*     static void general_communication_error(int cl_error) 
+*     static void general_communication_error(int cl_error, 
+*                                             const char* error_message) 
 *
 *  FUNCTION
 *     This function is used by cl_com_set_error_func() to set the default
 *     application error function for communication errors. On important 
 *     communication errors the communication lib will call this function
-*     with a corresponding error number.
+*     with a corresponding error number (within application context).
+*
 *     This function should never block. Treat it as a kind of signal handler.
+*    
+*     The error_message parameter is freed by the commlib.
 *
 *  INPUTS
-*     int cl_error - commlib error number
+*     int cl_error              - commlib error number
+*     const char* error_message - additional error text message
 *
 *  NOTES
 *     MT-NOTE: general_communication_error() is not MT safe 
 *     (static variable "gdi_general_communication_error" is used)
+*     TODO: Implement an error pop/push stack.
+*
 *
 *  SEE ALSO
 *     sge_any_request/sge_get_communication_error()
 *******************************************************************************/
-static void general_communication_error(int cl_error) {
-   DENTER(COMMD_LAYER, "general_communication_error");
-   DPRINTF((MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(cl_error)));
+static void general_communication_error(int cl_error, const char* error_message) {
+   bool do_log = false;
+
+   DENTER(TOP_LAYER, "general_communication_error");
+
+   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
+   do_log = false;
+   /* don't log the same error twice */
+   if ( cl_error != last_general_communication_error ) {
+      do_log = true;
+   } else {
+      /* check if there is a difference in error_message text */
+      if ( last_general_communication_error_string != NULL && error_message == NULL ) {
+         do_log = true;
+      }
+      if ( last_general_communication_error_string == NULL && error_message != NULL ) {
+         do_log = true;
+      }
+      if ( last_general_communication_error_string != NULL && error_message != NULL ) {
+         /* check the string itself */
+         if (strcmp(last_general_communication_error_string, error_message) != 0 ) {
+            do_log = true;
+         }
+      }
+   }
+
+   if ( do_log == true ) {
+      /* This will log the reported error */
+      if (error_message != NULL) {
+         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS ,cl_get_error_text(cl_error), error_message));
+      } else {
+         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S ,cl_get_error_text(cl_error)));
+      }
+      last_general_communication_error_string = sge_strdup(last_general_communication_error_string, error_message);
+      last_general_communication_error = cl_error;
+   }
+
    gdi_general_communication_error = cl_error;
+
+   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
    DEXIT;
 }
 
@@ -176,18 +301,28 @@ static void general_communication_error(int cl_error) {
 *  NOTES
 *     MT-NOTE: sge_get_communication_error() is not MT safe ( returns just 
 *     an static defined integer) but can be called by more threads without 
-*     problem.
+*     problem. But it is possible to loose some errors when the commlib is
+*     calling general_communication_error(), because this would overwrite the
+*     last error.
+*
+*     TODO: Implement an error pop/push stack.
 *
 *  SEE ALSO
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
 int sge_get_communication_error(void) {
-   int com_error = gdi_general_communication_error;
-   DENTER(COMMD_LAYER, "sge_get_communication_error");
+   int com_error = CL_RETVAL_OK;
+
+   DENTER(TOP_LAYER, "sge_get_communication_error");
+   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
+   com_error = gdi_general_communication_error;
    if ( gdi_general_communication_error != CL_RETVAL_OK) {
-      WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(com_error)));
       gdi_general_communication_error = CL_RETVAL_OK;
    }
+
+   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
    DEXIT;
    return com_error;
 }
@@ -229,6 +364,8 @@ void prepare_enroll(const char *name)
    }
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+      CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
+      SGE_EXIT(1);
    }
  
    /* set alias file */
@@ -245,7 +382,7 @@ void prepare_enroll(const char *name)
    if (bootstrap_get_ignore_fqdn() == false) {
       resolve_method = CL_LONG;
    } 
-   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
+   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), NONE_STR) != 0) {
       default_domain = bootstrap_get_default_domain();
    }
    ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
@@ -254,11 +391,21 @@ void prepare_enroll(const char *name)
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
+   /* reresolve qualified hostname with use of host aliases */
+   reresolve_me_qualified_hostname();
 
+   /* set error function */
    ret_val = cl_com_set_error_func(general_communication_error);
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
+
+   /* set tag name function */
+   ret_val = cl_com_set_tag_name_func(sge_dump_message_tag);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+   }
+
 
    me_who = uti_state_get_mewho();
 
@@ -266,6 +413,7 @@ void prepare_enroll(const char *name)
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
       int execd_port = 0;
+      int commlib_error = CL_RETVAL_OK;
       if ( me_who == QMASTER ||
            me_who == EXECD   ||
            me_who == SCHEDD  || 
@@ -276,46 +424,81 @@ void prepare_enroll(const char *name)
       switch(me_who) {
          case EXECD:
             /* add qmaster as known endpoint */
-            cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), (char*)prognames[QMASTER], 1 ,sge_get_qmaster_port(),CL_CM_AC_DISABLED ,1);
+            cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), 
+                                                   (char*) prognames[QMASTER],
+                                                   1 ,
+                                                   sge_get_qmaster_port(),
+                                                   CL_CM_AC_DISABLED ,
+                                                   CL_TRUE);
             execd_port = sge_get_execd_port(); 
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,execd_port ,
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE,execd_port , CL_TCP_DEFAULT,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT, MSG_GDI_CANT_GET_EXECD_HANDLE_SUU, 
-                         (char*) prognames[uti_state_get_mewho()],
-                          u32c(my_component_id), 
-                          u32c(execd_port)));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(execd_port),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE,                              /* message based tcp communication                */
-                                          1, sge_get_qmaster_port(),                                /* create service on qmaster port,                */
-                                                                                                    /* use execd port to connect to endpoints         */
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
+                                          CL_TRUE, sge_get_qmaster_port(),                          /* create service on qmaster port,                */
+                                          CL_TCP_DEFAULT,                                           /* use standard connect mode         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
-                                          1 , 0 );                                                  /* select timeout is set to 1 second 0 usec       */
+                                          1 , 0 );           
+                                       /* select timeout is set to 1 second 0 usec       */
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(sge_get_qmaster_port()),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(sge_get_qmaster_port()),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
 
          default:
             /* this is for "normal" gdi clients of qmaster */
             DPRINTF(("creating GDI handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(sge_get_qmaster_port()),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
       }
@@ -328,10 +511,19 @@ void prepare_enroll(const char *name)
  
    /* this is for testsuite socket bind test (issue 1096 ) */
    if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
+      struct timeval now;
+      gettimeofday(&now,NULL);
+  
       /* if this environment variable is set, we wait 15 seconds after 
          communication lib setup */
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
-      sleep(15);   
+      while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
+         int retval = CL_RETVAL_OK;
+         DPRINTF(("timeout: "U32CFormat"\n",u32c(now.tv_sec - handle->start_time.tv_sec)));
+         retval = cl_commlib_trigger(handle);
+         gettimeofday(&now,NULL);
+      }
+      DPRINTF(("continue with setup\n"));
    }
 
    DEXIT;
@@ -378,7 +570,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    }
 
    if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
-      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,1);
+      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,CL_TRUE);
    }
    
    if (synchron) {
@@ -461,7 +653,10 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
    strcpy(host, rhost);
 
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+
+   /* trigger communication or wait for a new message (select timeout) */
    cl_commlib_trigger(handle);
+
    i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
 
    if ( i == CL_RETVAL_CONNECTION_NOT_FOUND ) {

@@ -31,9 +31,12 @@
 #___INFO__MARK_END__
 SHELL       = /bin/sh
 RM          = rm -f
+DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 SDIR        = ../src
-TRANSSDIR   = ../culltrans
-DEPEND      = sge_depend -l -S -Y $(CFLAGS) 
+TRANSSDIR   = ../experimental/culltrans
+CXXFLAGS = $(CFLAGS) -I$(TRANSSDIR) $(NOERR_CFLAG)
+YACCFLAGS = -d
+LEX_CFLAGS = $(CXXFLAGS)
 
 TRANSTARGETS = culltrans
 
@@ -46,19 +49,19 @@ TRANSSRC   = culltrans_y.tab.cpp culltrans_lex.cpp \
              culltrans_parse.cpp
 
 #---------------------------------------------------------------------
-depend:     $(ALLDEPENDENCIES)
+TRANSOBJS  = $(TRANSSRC:.cpp=.o) 
+TRANSLIBS = -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+#---------------------------------------------------------------------
 
 culltrans_depend:
-	$(DEPEND) -f$(TRANSSDIR)/culltransdependencies $(TRANSSDIR)/*.cpp
+	$(DEPEND) -f$(TRANSSDIR)/culltrans_dependencies $(TRANSSDIR)/*.cpp
+
+culltrans_clean:
+	$(RM) $(TRANSTARGETS) $(TRANSOBJS) culltrans_lex.c culltrans_y.tab.cpp
 
 #---------------------------------------------------------------------
-ALLLIBS     = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
-              $(CULLLIB) $(COMMLIB) $(PWLIB) $(UTILIB) $(RMONLIB) 
-TRANSOBJS  = $(TRANSSRC:.cpp=.o) $(ALLLIBS)
-#---------------------------------------------------------------------
-
 culltrans: $(TRANSOBJS)
-		$(CXX) -o $@ $(LFLAGS) $(TRANSOBJS) $(LIBS) $(PTHRDSLIB)
+		$(CXX) -o $@ $(LFLAGS) $(TRANSOBJS) $(TRANSLIBS) $(LIBS) $(PTHRDSLIB)
 
 culltrans.o: $(TRANSSDIR)/culltrans.cpp
 		$(CXX) $(CXXFLAGS) $(NOERR_CFLAG) -c $(TRANSSDIR)/culltrans.cpp
@@ -99,4 +102,4 @@ culltrans_lex.c: $(TRANSSDIR)/culltrans.l culltrans_y.tab.h
 #---------------------------------------------------------------------
 # src dependencies 
 #---------------------------------------------------------------------
-include $(TRANSSDIR)/culltransdependencies
+include $(TRANSSDIR)/culltrans_dependencies

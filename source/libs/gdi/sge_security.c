@@ -57,6 +57,7 @@
 #include "sge_var.h"
 #include "sge_job.h"
 #include "sge_answer.h"
+#include "sge_time.h"
 
 
 #include "msg_common.h"
@@ -76,12 +77,70 @@
 
 #ifdef SECURE
 const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
+
+static pthread_mutex_t sec_rw_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define SEC_LOCK_RW()      sge_mutex_lock("sec_rw_mutex", SGE_FUNC, __LINE__, &sec_rw_mutex)
+#define SEC_UNLOCK_RW()    sge_mutex_unlock("sec_rw_mutex", SGE_FUNC, __LINE__, &sec_rw_mutex)
+
 #endif 
 
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
+static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender);
+static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid );
 
+static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender) {
+   DENTER(TOP_LAYER, "dump_rcv_info");
+   if ( message  != NULL && sender   != NULL && *message != NULL && *sender  != NULL &&
+        (*sender)->comp_host != NULL && (*sender)->comp_name != NULL ) {
+         char buffer[512];
+         dstring ds;
+         sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
+      DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, u32c((*sender)->comp_id)));
+      DEBUG((SGE_EVENT,"gdi_rcv: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string((*message)->message_mat)));
+      DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (*message)->message_tag) ));
+      DEBUG((SGE_EVENT,"gdi_rcv: message id:        "U32CFormat"\n",  u32c((*message)->message_id) ));
+      DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
+      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
+   } else {
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+      DEBUG((SGE_EVENT,"gdi_rcv: some parameters are not set\n"));
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+   }
+   DEXIT;
+}
+
+static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                          cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid ) {
+   char buffer[512];
+   dstring ds;
+
+   DENTER(TOP_LAYER, "dump_snd_info");
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   if (un_resolved_hostname != NULL && component_name != NULL) {
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+      DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,u32c(component_id)));
+      DEBUG((SGE_EVENT,"gdi_snd: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string(ack_type)));
+      DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( tag) ));
+      if (mid) {
+         DEBUG((SGE_EVENT,"gdi_snd: message id:        "U32CFormat"\n",  u32c(*mid) ));
+      } else {
+         DEBUG((SGE_EVENT,"gdi_snd: message id:        not handled by caller\n"));
+      }
+      DEBUG((SGE_EVENT,"gdi_snd: send time:         %s\n",            sge_ctime(0, &ds)));
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+   } else {
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+      DEBUG((SGE_EVENT,"gdi_snd: some parameters are not set\n"));
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+   }
+   DEXIT;
+}
 
 /****** gdi/security/sge_security_initialize() ********************************
 *  NAME
@@ -170,7 +229,12 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
 
 #ifdef SECURE   
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      SEC_LOCK_RW();
       ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
+      if (message != NULL) {
+         dump_rcv_info(message,sender);
+      }
+      SEC_UNLOCK_RW();
       DEXIT;
       return ret;
    }                      
@@ -178,6 +242,9 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
 
    ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
                                      synchron, response_mid,  message,  sender);
+   if (message != NULL) {
+      dump_rcv_info(message,sender);
+   }
 
    DEXIT;
    return ret;
@@ -196,9 +263,12 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      SEC_LOCK_RW();
       ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
                                   mid,  response_mid,  tag , copy_data, wait_for_ack);
+      dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
+      SEC_UNLOCK_RW();
       DEXIT;
       return ret;
    }                      
@@ -207,6 +277,7 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
                                   mid,  response_mid,  tag , copy_data, wait_for_ack);
+   dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
    DEXIT;
    return ret;
 
@@ -222,7 +293,6 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-#ifdef ENABLE_NGC
 int gdi_send_message(
 int synchron,
 const char *tocomproc,
@@ -280,9 +350,14 @@ int compressed
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
+         int commlib_error = CL_RETVAL_OK;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT,"execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
+         if (handle == NULL) {
+            ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, tocomproc));
+            ERROR((SGE_EVENT,cl_get_error_text(commlib_error)));
+         }
       }
    }
 
@@ -294,7 +369,6 @@ int compressed
       dummy_mid = *mid;
    }
 
-   DEBUG((SGE_EVENT,"gdi_send_message(): sending message to %s,%s,%ld\n",(char*)tohost,(char*)tocomproc ,(unsigned long)toid));
    ret = gdi_send_sec_message( handle, 
                                   (char*)tohost ,(char*)tocomproc ,toid , 
                                   ack_type , 
@@ -316,54 +390,6 @@ int compressed
    DEXIT;
    return ret;
 }
-#else
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
-   int ret;
-
-   DENTER(TOP_LAYER, "gdi_send_message");
-   /*
-   ** handle the selection of the send_message func to use here
-   ** available are krb_send_message and sec_send_message
-   **
-   ** !!! this function returns if the corresponding feature is enabled
-   ** !!! otherwise send_message() is called
-   */
-#ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_send_message(synchron, tocomproc, toid, tohost, tag, 
-                         buffer, buflen, mid, compressed);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-   
-#ifdef KERBEROS
-   if (feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      ret = krb_send_message(synchron, tocomproc, toid, tohost, tag, 
-                         buffer, buflen, mid, compressed);
-
-      DEXIT;
-      return ret;
-   }
-#endif   
-
-   ret = send_message(synchron, tocomproc, toid, tohost, tag, 
-                      buffer, buflen, mid, compressed);
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 
 /* 
@@ -372,7 +398,6 @@ int compressed
  *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
-#ifdef ENABLE_NGC
 int gdi_receive_message(
 char *fromcommproc,
 u_short *fromid,
@@ -428,9 +453,14 @@ u_short *compressed
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
+         int commlib_error = CL_RETVAL_OK;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT, "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
+         if (handle == NULL) {
+            ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, fromcommproc));
+            ERROR((SGE_EVENT,cl_get_error_text(commlib_error)));
+         }
       }
    } 
 
@@ -480,52 +510,6 @@ u_short *compressed
    DEXIT;
    return ret;
 }
-#else
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-) {
-   int ret;
-
-   DENTER(TOP_LAYER, "gdi_receive_message");
-   /*
-   ** handle the selection of the receive_message func to use here
-   ** available are krb_receive_message and sec_receive_message
-   **
-   ** !!! this function returns if the corresponding feature is enabled
-   ** !!! otherwise receive_message() is called
-   */
-#ifdef SECURE   
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_receive_message(fromcommproc, fromid, fromhost, tag, 
-                         buffer, buflen, synchron, compressed);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-
-#ifdef KERBEROS   
-   if (feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      ret = krb_receive_message(fromcommproc, fromid, fromhost, tag, 
-                         buffer, buflen, synchron, compressed);
-      DEXIT;
-      return ret;
-   }   
-#endif   
-
-   ret = receive_message(fromcommproc, fromid, fromhost, tag, 
-                         buffer, buflen, synchron, compressed);
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 
 /****** gdi/security/set_sec_cred() *******************************************
@@ -1215,7 +1199,7 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 
    DENTER(TOP_LAYER, "sge_set_auth_info");
 
-   sprintf(buffer, "%d %d %s %s", uid, gid, user, group);
+   sprintf(buffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group);
    if (!sge_encrypt(buffer, sizeof(buffer), obuffer, sizeof(obuffer))) {
       DEXIT;
       return -1;
@@ -1244,7 +1228,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
       return -1;
    }   
 
-   if (sscanf(dbuffer, "%d %d %s %s", uid, gid, user, group) != 4) {
+   if (sscanf(dbuffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group) != 4) {
       DEXIT;
       return -1;
    }   

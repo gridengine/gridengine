@@ -262,19 +262,18 @@ void sge_reap_children_execd()
          clean_up_job(jr, failed, exit_status, job_is_array(jep),
                       lGetObject(jatep, JAT_pe_object));
 
-         flush_jr = 1; /* trigger direct sending of job reports */ 
+         flush_job_report(jr);
 
-      } 
-      else  if (sge_ls_stop_if_pid(pid, 1)) {
-         if (child_signal)
+      } else  if (sge_ls_stop_if_pid(pid, 1)) {
+         if (child_signal) {
             ERROR((SGE_EVENT, MSG_STATUS_LOADSENSORDIEDWITHSIGNALXY_SI,
                   core_dumped ? MSG_COREDUMPED: "",
                   child_signal));
-         else
+         } else {
             WARNING((SGE_EVENT, MSG_STATUS_LOADSENSOREXITEDWITHEXITSTATUS_I,
                     exit_status));
-      } 
-      else {
+         }
+      } else {
          if (child_signal)
             ERROR((SGE_EVENT, MSG_STATUS_MAILERDIEDTHROUGHSIGNALXY_SI,
                   core_dumped ? MSG_COREDUMPED: "",
@@ -545,7 +544,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
-      if (error[0] != '\0') {
+      if (error[0] == '\0') {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id));
       }
@@ -1140,7 +1139,7 @@ int failed
       DPRINTF(("no job report found to report job start failure!\n"));
       jr = add_job_report(jobid, jataskid, petaskid, jep);
    }
-
+   
    if(petep != NULL) {
       ep = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
    } else {
@@ -1491,7 +1490,7 @@ int npids
    clean_up_job(jr, 0, 0, job_is_array(jep), lGetObject(jatep, JAT_pe_object));
    lSetUlong(jr, JR_state, JEXITING);
    
-   flush_jr = 1;  /* trigger direct sending of job reports */
+   flush_job_report(jr);
 
    DEXIT;
    return;

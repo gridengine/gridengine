@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InvalidArgumentException.java
- *
- * Created on June 17, 2003, 11:02 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** The input value for an argument is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidArgumentException extends DRMAAException {
+public class InvalidArgumentException extends DrmaaException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.

@@ -86,6 +86,10 @@ char **sge_stramemncpy(const char *cp, char **cpp, int n);
 
 char **sge_stracasecmp(const char *cp, char **cpp);
 
+char **stra_from_str(const char *, const char *delim);
+
+void stra_printf(char *stra[]);
+
 void sge_compress_slashes(char *str);
 
 void sge_strip_quotes(char **pstr);

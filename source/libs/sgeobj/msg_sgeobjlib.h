@@ -36,7 +36,8 @@
 #define MSG_CKPTREFINJOB_SU         _MESSAGE(64001, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
 #define MSG_GDI_INVALIDPRODUCTMODESTRING_S   _MESSAGE(64005, _("invalid security mode string "SFQ"\n"))
 #define MSG_GDI_SWITCHFROMTO_SS              _MESSAGE(64007, _("switching from "SFQ" to "SFQ" feature set\n"))
-#define MSG_HOSTREFINQUEUE_SS                _MESSAGE(64008, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
+#define MSG_HOSTREFINQUEUE_SS                _MESSAGE(64008, _("Host object "SFQ" is still referenced in cluster queue "SFQ".\n"))
+#define MSG_HOSTREFINHGRP_SS                             _MESSAGE(64011, _("Host object "SFQ" is still referenced in host group "SFQ".\n"))
 #define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _MESSAGE(64012, _("no argument given in config option: "SFN"\n"))
 #define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _MESSAGE(64013, _("missing configuration attribute "SFQ""))
 #define MSG_GDI_CONFIGADDLISTFAILED_S                    _MESSAGE(64014, _("can't add "SFQ" to list"))
@@ -48,8 +49,8 @@
 #define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS          _MESSAGE(64021, _("reading config file: specifier "SFQ" given twice for "SFQ"\n"))
 #define MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS             _MESSAGE(64022, _("reading conf file: unknown specifier "SFQ" for "SFN"\n"))
 #define MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S         _MESSAGE(64023, _("reading conf file: empty enumeration for "SFQ"\n"))
-#define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFN" is a invalid job-task identifier\n"))
-#define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFQ"' option (The -t option needs a leading job name).\n"))
+#define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFQ" is an invalid job-task identifier\n"))
+#define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFN"' option (The -t option needs a leading job name).\n"))
 
 #define MSG_JOB_JLPPNULL                  _MESSAGE(64028, _("jlpp == NULL in job_add_job()\n"))                                                        
 #define MSG_JOB_JEPNULL                   _MESSAGE(64029, _("jep == NULL in job_add_job()\n"))
@@ -62,7 +63,6 @@
 #define MSG_JOB_NODISPLAY_S               _MESSAGE(64036, _("no DISPLAY variable found with interactive job "SFN"\n"))
 #define MSG_JOB_EMPTYDISPLAY_S            _MESSAGE(64037, _("empty DISPLAY variable delivered with interactive job "SFN"\n"))
 #define MSG_JOB_LOCALDISPLAY_SS           _MESSAGE(64038, _("local DISPLAY variable "SFQ" delivered with interactive job "SFN"\n"))
-#define MSG_COLONNOTALLOWED               _MESSAGE(64039, _("Colon (\':\') not allowed in account string\n") )
 #define MSG_ERRORPARSINGVALUEFORNM_S  _MESSAGE(64040, _("error parsing value "SFQ"\n"))
 #define MSG_PARSE_STARTTIMETOOLONG    _MESSAGE(64041, _("Starttime specifier field length exceeds maximum"))
 #define MSG_PARSE_INVALIDSECONDS      _MESSAGE(64042, _("Invalid format of seconds field."))
@@ -287,6 +287,6 @@
 #define MSG_WEIGHTFACTNONUMB_S         _MESSAGE(64307, _("\"load_formula\" uses "SFQ" as weighting factor (only numbers are allowed)\n"))
 #define MSG_MULTIPLEWEIGHTFACT         _MESSAGE(64308, _("\"load_formula\" may not use multiple weighting factors\n"))
 
-#define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't creae queue "SFQ": host "SFQ" is not known\n"))
+#define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't create queue "SFQ": host "SFQ" is not known\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

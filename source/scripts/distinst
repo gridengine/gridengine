@@ -69,7 +69,8 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-JDRMAA_FILES="drmaa.jar libjdrmaa.so"
+JDRMAA_SHARED_LIBRARIES="libjdrmaa"
+JDRMAA_FILES="drmaa.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -224,6 +225,8 @@ SetArchBin()
       ARCHBIN=FREEBSD_PPC
    elif [ $i = fbsd-sparc64 ]; then
       ARCHBIN=FREEBSD_SPARC64
+   elif [ $i = win32-x86 ]; then
+      ARCHBIN=WIN32_X86
    else
       echo No ARCHBIN name for \"$i\"
       if [ $exit_on_error = true ]; then
@@ -995,7 +998,7 @@ if [ $instcommon = true ]; then
    if [ $insttxtdoc = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
-#      Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
 #      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
@@ -1003,12 +1006,12 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instjavadoc = true ]; then
-      if [ -d ../doc/javadoc ]; then
-         Execute rm -rf $DEST_SGE_ROOT/javadoc
-         Makedir javadoc
-         Execute cp -R ../doc/javadoc $DEST_SGE_ROOT
-         Execute chmod -R a+r $DEST_SGE_ROOT/javadoc
-         Cleanup javadoc
+      if [ -d ../doc/javadocs ]; then
+         Execute rm -rf $DEST_SGE_ROOT/javadocs
+         MakeDir javadocs
+         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT
+         Execute chmod -R a+r $DEST_SGE_ROOT/javadocs
+         Cleanup javadocs
       fi
    fi
 
@@ -1197,12 +1200,15 @@ for i in $ARCH; do
          case $i in 
          hp10|hp11|hp11-64)
             shlibext="sl"
+            jnilibext="sl"
             ;;
          darwin)
             shlibext="dylib"
+            jnilibext="jnilib"
             ;;
          *)
             shlibext="so"
+            jnilibext="so"
             ;;
          esac
 
@@ -1278,9 +1284,16 @@ for i in $ARCH; do
             fi
          done
 
+         for lib in $JDRMAA_SHARED_LIBRARIES; do
+            libname=$lib.$jnilibext
+            if [ -f $libname ]; then
+               InstallProg $libname
+            fi
+         done
+
          for filename in $JDRMAA_FILES; do
             if [ -f $filename ]; then
-                InstallProg $filename
+                Install 0.0 755 $filename $DEST_SGE_ROOT/${UTILPREFIX}/`basename $filename`
             fi
          done
       fi

@@ -48,9 +48,7 @@ lList *sge_add_schedd_info(lList *or_list, int *global_mes_count, int *job_mes_c
 lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, 
                          lList *queue_list, bool no_tickets, bool update_execd);
 
-int sge_send_orders2master(lList *orders);
-
-int get_seq_nr(void);
+int sge_send_orders2master(lList **orders);
 
 lList *create_delete_job_orders(lList *finished_jobs, lList *order_list);
 

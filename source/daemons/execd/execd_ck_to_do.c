@@ -349,6 +349,10 @@ execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now)
    
  do cyclic jobs
  ******************************************************/
+/* TODO: what are the intended intervals? */
+#define USAGE_INTERVAL 1
+#define SIGNAL_RESEND_INTERVAL 1
+#define OLD_JOB_INTERVAL 60
 
 int execd_ck_to_do(
 struct dispatch_entry *de,
@@ -360,24 +364,31 @@ char *err_str,
 int answer_error 
 ) {
    u_long32 now;
-   static u_long then = 0;
+   static u_long next_usage = 0;
+   static u_long next_signal = 0;
+   static u_long next_old_job = 0;
+   static u_long next_report = 0;
    lListElem *jep, *jatep;
    int was_communication_error = CL_RETVAL_UNKNOWN;
    int return_value = 0;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
+   now = sge_get_gmt();
+
 #ifdef KERBEROS
    krb_renew_tgts(Master_Job_List);
 #endif
 
-
-#ifdef COMPILE_DC
    /*
     * Collecting usage and repriorization is only necessary if there are
     * jobs/tasks on this execution host.
+    * do this at maximum once per second
     */
-   if (lGetNumberOfElem(Master_Job_List) > 0) {
+   if (lGetNumberOfElem(Master_Job_List) > 0 &&
+       next_usage <= now) {
+      next_usage = now + USAGE_INTERVAL;
+#ifdef COMPILE_DC
       notify_ptf();
 
       sge_switch2start_user();
@@ -443,8 +454,15 @@ int answer_error
          }
          reprioritization_enabled = 0;
       }
-   }
 #endif
+      /* update the usage list in our job report list */
+      update_job_usage();
+
+#ifdef COMPILE_DC
+      /* check for job limits */
+      force_job_rlimit();
+#endif
+   }
       
    /* start jobs if present */
    if (jobs_to_start) {
@@ -453,56 +471,58 @@ int answer_error
    }
 
    now = sge_get_gmt();
-
-   /* resend signals to shepherds */
-   for_each(jep, Master_Job_List) {
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
-            lList *gdil_list = lGetList(jatep, 
-                                        JAT_granted_destin_identifier_list);
-            lSetUlong(jep, JB_soft_wallclock_gmt, 
-                      execd_get_wallclock_limit(gdil_list, QU_s_rt, now));
-            lSetUlong(jep, JB_hard_wallclock_gmt, 
-                      execd_get_wallclock_limit(gdil_list, QU_h_rt, now));
-         }
-
-         if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
-            if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
-                (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-               INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
-                    u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
-               if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
-                  sge_kill_petasks(jep, jatep);
-               }
-               if (lGetUlong(jatep, JAT_pid) != 0) {
-                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
-                           lGetUlong(jep, JB_job_number),
-                           lGetUlong(jatep, JAT_task_number),
-                           NULL);     
-               }
-               lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);
-            }    
-            continue;
-         }
-
-         if (now >= lGetUlong(jep, JB_soft_wallclock_gmt)) {
-            if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
-                (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-               INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
-                    u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
-               if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
-                  sge_kill_petasks(jep, jatep);
-               }
-               if (lGetUlong(jatep, JAT_pid) != 0) {
-                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
-                           lGetUlong(jep, JB_job_number),
-                           lGetUlong(jatep, JAT_task_number),
-                           NULL);
-               }
-               lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);         
+   if (next_signal <= now) {
+      next_signal = now + SIGNAL_RESEND_INTERVAL;
+      /* resend signals to shepherds */
+      for_each(jep, Master_Job_List) {
+         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+            if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
+               lList *gdil_list = lGetList(jatep, 
+                                           JAT_granted_destin_identifier_list);
+               lSetUlong(jep, JB_soft_wallclock_gmt, 
+                         execd_get_wallclock_limit(gdil_list, QU_s_rt, now));
+               lSetUlong(jep, JB_hard_wallclock_gmt, 
+                         execd_get_wallclock_limit(gdil_list, QU_h_rt, now));
             }
-            continue;
-         }   
+
+            if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
+               if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
+                   (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
+                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
+                       u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
+                  if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
+                     sge_kill_petasks(jep, jatep);
+                  }
+                  if (lGetUlong(jatep, JAT_pid) != 0) {
+                     sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
+                              lGetUlong(jep, JB_job_number),
+                              lGetUlong(jatep, JAT_task_number),
+                              NULL);     
+                  }
+                  lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);
+               }    
+               continue;
+            }
+
+            if (now >= lGetUlong(jep, JB_soft_wallclock_gmt)) {
+               if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
+                   (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
+                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
+                       u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
+                  if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
+                     sge_kill_petasks(jep, jatep);
+                  }
+                  if (lGetUlong(jatep, JAT_pid) != 0) {
+                     sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
+                              lGetUlong(jep, JB_job_number),
+                              lGetUlong(jatep, JAT_task_number),
+                              NULL);
+                  }
+                  lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);         
+               }
+               continue;
+            }   
+         }
       }
    }
 
@@ -512,7 +532,10 @@ int answer_error
       dead_children = 0;
    }
 
-   clean_up_old_jobs(0);
+   if (next_old_job <= now) {
+      next_old_job = now + OLD_JOB_INTERVAL;
+      clean_up_old_jobs(0);
+   }
 
    /* check for end of simulated jobs */
    if(simulate_hosts) {
@@ -547,7 +570,7 @@ int answer_error
             
                
                lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
-               flush_jr = 1;
+               flush_job_report(jr);
             }
          }
       }   
@@ -555,15 +578,20 @@ int answer_error
 
    /* do timeout calculation */
    now = sge_get_gmt();
-   if ( flush_jr || now - then > conf.load_report_time) {
+   if ( flush_jr || next_report <= now) {
       extern int report_seqno;
-      then = now;
+      if (next_report <= now) {
+         next_report = now + conf.load_report_time;
+      }
+
       /* wrap around */
-      if (++report_seqno == 10000)
+      if (++report_seqno == 10000) {
          report_seqno = 0;
+      }
+
+      /* send all reports */
       was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
       DPRINTF(("----> was_communication_error: %s (%d)\n", cl_get_error_text(was_communication_error),was_communication_error));
-      flush_jr = 0;
    } else {
       was_communication_error = CL_RETVAL_OK;
    }
@@ -722,8 +750,17 @@ lListElem *petep
    char err_str[256];
    int pid;
    u_long32 now;
+   u_long32 job_id, ja_task_id;
+   const char *pe_task_id = NULL;
 
    DENTER(TOP_LAYER, "exec_job_or_task");
+
+   /* retrieve ids - we need them later on */
+   job_id = lGetUlong(jep, JB_job_number);
+   ja_task_id = lGetUlong(jatep, JAT_task_number);
+   if (petep != NULL) {
+      pe_task_id = lGetString(petep, PET_id);
+   }
 
    /* we only handle idle jobs or tasks */
    /* JG: TODO: make a function is_task_idle(jep, jatep, petep) */
@@ -753,7 +790,7 @@ lListElem *petep
          u_long32 duration = 60;
 
          DPRINTF(("Simulating job "u32"."u32"\n", 
-                  lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number)));
+                  job_id, ja_task_id));
          lSetUlong(jatep, JAT_start_time, now);
          lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
 
@@ -801,12 +838,11 @@ lListElem *petep
    if (getenv("FAILURE_BEFORE_EXEC")) {
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");
-   }
-   else
+   } else {
       pid = sge_exec_job(jep, jatep, petep, err_str);
+   }   
 
    if (pid < 0) {
-      flush_jr = 1;      
       switch (pid) {
          case -1:
             execd_job_start_failure(jep, jatep, petep, err_str, GFSTATE_NO_HALT);
@@ -834,8 +870,17 @@ lListElem *petep
    }
 
    DPRINTF(("***EXECING "u32"."u32" on %s (tid = %s) (pid = %d)\n",
-            lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 
-            uti_state_get_unqualified_hostname(), petep != NULL ? lGetString(petep, PET_id) : "0", pid));
+            job_id, ja_task_id, 
+            uti_state_get_unqualified_hostname(), pe_task_id != NULL ? pe_task_id : "null", pid));
+
+   /* when a ja_task or pe_task has been started, flush the job report */
+   {
+      lListElem *jr = get_job_report(job_id, ja_task_id, pe_task_id);
+      if (jr == NULL) {
+         jr = add_job_report(job_id, ja_task_id, pe_task_id, jep);
+      }
+      flush_job_report(jr);
+   }
 
    DEXIT;
    return 1;

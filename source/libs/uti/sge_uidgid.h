@@ -42,18 +42,26 @@
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif 
 
+#if defined(INTERIX)
+#  define seteuid(euid) setreuid(-1, euid)
+#  define setegid(egid) setregid(-1, egid)
+#  define getgrgid_r getgrgid_nomembers_r
+#endif
+
 #ifndef MAX_NIS_RETRIES
 #   define MAX_NIS_RETRIES 10
 #endif    
 
 void uidgid_mt_init(void);
 
+int sge_is_start_user_superuser(void);
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);
 bool sge_is_start_user_root(void);
 int sge_run_as_user(void);
 int sge_user2uid(const char *user, uid_t *uidp, int retries);  
+int sge_group2gid(const char *gname, gid_t *gidp, int retries);
 int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries); 
 int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries);
 int sge_add_group(gid_t newgid, char *err_str); 

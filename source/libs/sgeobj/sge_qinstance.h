@@ -90,9 +90,6 @@ bool
 qinstance_is_centry_a_complex_value(const lListElem *this_elem,
                                     const lListElem *name);
 
-int
-qinstance_slots_used(const lListElem *this_elem);
-
 void
 qinstance_set_slots_used(lListElem *this_elem, int new_slots);
 

@@ -43,6 +43,7 @@
 global CHECK_ACTUAL_TEST_PATH
 ts_source $CHECK_ACTUAL_TEST_PATH/qmaster
 ts_source $CHECK_ACTUAL_TEST_PATH/execd
+ts_source $CHECK_ACTUAL_TEST_PATH/shadowd
 
 global check_name check_description check_needs check_functions check_errno check_errstr 
 global check_root_access_needs check_category      
@@ -52,13 +53,14 @@ global check_use_installed_system
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
 set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_description(0)   "install a default system (master/execution daemon on local host and start them up)"
+set check_description(0)   "install a default system (master/execution/shadow daemon on local host and start them up)"
 set check_needs         ""                        ;# dependencies of this check (name of other check)
 set check_functions     ""                        ;# functions to call (in order)
 lappend check_functions "kill_running_system"
 lappend check_functions "install_qmaster"
 lappend check_functions "reread_bootstrap"
 lappend check_functions "make_user_cert"
+lappend check_functions "install_shadowd"
 lappend check_functions "install_execd"
 lappend check_functions "cleanup_system"
 lappend check_functions "setup_queues"
@@ -241,8 +243,10 @@ proc kill_running_system {} {
    
          catch { exec "cp" "$ts_config(product_root)/$ts_config(cell).$moved/common/host_aliases" "$ts_config(product_root)/$ts_config(cell)/common/host_aliases"  } result
          puts $result
-   
-         delete_directory "$ts_config(product_root)/$ts_config(cell).$moved"
+  
+         if { [file exists "$ts_config(product_root)/$ts_config(cell).$moved"] } {
+            delete_directory "$ts_config(product_root)/$ts_config(cell).$moved"
+         }
    }
 }
 
@@ -824,7 +828,7 @@ proc setup_execd_conf {} {
      }
 
      if {! [info exists tmp_config]} {
-        puts $CHECK_OUTPUT "couldn't get conf - skipping $host"
+        add_proc_error "setup_execd_conf" -1 "couldn't get conf - skipping $host"
         continue
      }
      

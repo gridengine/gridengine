@@ -6,14 +6,21 @@ NAME
      qdel - delete Grid Engine jobs from queues
 
 SYNTAX
-     qdel [ -f ] [ -help ] [ -verify ] [ job/task_id_list ]
-
-     qdel [ -f ] [ -help ] [ -verify ] -u user_list | -uall
+     qdel  [  -f  ]  [  -help   ]   [   -u   wc_user_list   ]   [
+     wc_job_range_list ]
 
 DESCRIPTION
      <I>Qdel</I> provides a means for a user/operator/manager to  delete
-     one  or  more  jobs. <I>Qdel</I> deletes jobs in the order in which
-     their job identifiers are presented.
+     one  or more jobs. A manager/operator can delete jobs of any
+     user while a user can only delete his own jobs. In case that
+     a  manager wants to delete another users job, he can specify
+     the job id. If the manager is using a job name  or  pattern,
+     he  has also to specify the user name via "-u wc_user_list".
+     A "qdel wc_job_name" deletes per default only  the  jobs  of
+     the  calling  user.  <I>Qdel</I> deletes jobs in the order in which
+     their job identifiers are presented. Find additional  infor-
+     mation    concerning   <I>wc</I>_<I>user</I>_<I>list</I>   and   <I>wc</I>_<I>job</I>_<I>list</I>   in
+     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
 OPTIONS
      -f   Force action for running jobs. The job(s)  are  deleted
@@ -34,35 +41,16 @@ OPTIONS
      -help
           Prints a listing of all options.
 
-     -u username,... | -uall
+     -u wc_user_list
           Deletes only those jobs which were submitted  by  users
           specified in the list of usernames.  For managers it is
-          possible to use the qdel -uall command  to  delete  all
-          jobs of all users.
+          possible to use qdel -u "*" to delete all jobs  of  all
+          users. If a manager wants to delete a specific job of a
+          user, he has to specify the user and the job. If no job
+          is specified all jobs from that user are deleted.
 
-          If you use the -u or -uall switch it is be permitted to
-          specify a additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
-
-     -verify
-          performs no modifications but just prints what would be
-          done if -verify was not present.
-
-     job/task_id_list
-          Specified by the following form:
-
-              <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][ <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>] ...]
-
-          If present, the <I>task</I>_<I>range</I> restricts the effect of  the
-          <I>qdel</I> operation to the array job task range specified as
-          suffix to the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  for
-          further details on array jobs).
-
-          The task range specifier has the  form  n[-m[:s]].  The
-          range  may  be a single number, a  simple range  of the
-          form n-m or a range with a step size.
-
-          Instead of job/task_id_list it is possible to  use  the
-          keyword 'all' to modify all jobs of the current user.
+     wc_job_range_list
+          A list of jobs, which should be deleted
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -86,16 +74,12 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qdel</I>   client
-                    resides.  Per default the local host is used.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
@@ -105,45 +89,9 @@ SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
      <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
 
-
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

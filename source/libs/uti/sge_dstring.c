@@ -35,6 +35,7 @@
 
 #include "sge.h"
 #include "sgermon.h"
+#include "sge_string.h"
 #include "sge_dstring.h"
 
 #define REALLOC_CHUNK   1024
@@ -616,6 +617,43 @@ void sge_dstring_init(dstring *sb, char *s, size_t size)
       sb->s = s;
       sb->s[0] = '\0';
    }
+}
+
+/****** sge/dstring/sge_dstring_ulong_to_binstring() **************************
+*  NAME
+*     sge_dstring_ulong_to_binstring() -- convert ulong into bin-string 
+*
+*  SYNOPSIS
+*     const char* 
+*     sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number) 
+*
+*  FUNCTION
+*     Convert ulong into bin-strin 
+*
+*  INPUTS
+*     dstring *sb     - dstring 
+*     u_long32 number - 32 bit ulong value 
+*
+*  RESULT
+*     const char* - pointer to dstrings internal buffer
+*******************************************************************************/
+const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number)
+{
+   char buffer[33] = "                              ";
+   int i = 31;
+
+   while (number > 0) {
+      if ((number % 2) > 0) {
+         buffer[i] = '1';
+      } else {
+         buffer[i] = '0';
+      }
+      i--;
+      number /= 2;
+   }  
+   sge_strip_blanks(buffer);
+   sge_dstring_sprintf(sb, buffer);
+   return sge_dstring_get_string(sb);
 }
 
 

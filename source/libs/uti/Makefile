@@ -85,7 +85,7 @@ UTILIB_TEST_PROGS = \
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-utilib: $(UTILIB)
+utilib: $(UTILIB) 
 
 utilib_clean:
 	$(RM) $(UTILIB_OBJS) libuti.a libuti$(SHAREDEXT) $(UTILIB_ADD_OBJS) $(UTILIB_TEST_OBJS) $(UTILIB_TEST_PROGS)
@@ -219,6 +219,13 @@ sge_edit.o:	$(UTILIB_DIR)/sge_edit.c
 ###############################################################################
 # test targets
 ###############################################################################
+test_sge_bitfield: test_sge_bitfield.o $(UTILIB) $(RMONLIB)
+#	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) -lmalloc $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_bitfield.o: $(UTILIB_DIR)/test_sge_bitfield.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_bitfield.c
+
 test_sge_dstring: test_sge_dstring.o $(UTILIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_dstring $(LFLAGS) test_sge_dstring.o $(UTILIB) $(RMONLIB) $(LIBS)
 
@@ -226,7 +233,7 @@ test_sge_dstring.o: $(UTILIB_DIR)/test_sge_dstring.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_dstring.c
 
 test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 
 test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c

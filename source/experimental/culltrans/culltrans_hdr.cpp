@@ -35,8 +35,8 @@
 #include <map>
 #include <set>
 #include <string>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "culltrans_repository.h"
 #include "culltrans.h"
 
@@ -74,36 +74,36 @@ static void writeHeader(ofstream& hdr, map<string, List>::iterator& elem) {
 
 // writeClassHeader
 static void writeClassHeader(ofstream& hdr, map<string, List>::iterator& elem) {
-   hdr << endl << "class Codine_" << elem->second.name << "_implementation" << endl;
-   hdr << indent << indent << ": virtual public Codine_" << elem->second.name << "_skel {" << endl;
+   hdr << endl << "class GE_" << elem->second.name << "_implementation" << endl;
+   hdr << indent << indent << ": virtual public GE_" << elem->second.name << "_skel {" << endl;
    
    // forbid copy c'tor and assignment op
    hdr << indent << "private:" << endl;
-   hdr << indent << indent << "Codine_" << elem->second.name << "_implementation(const Codine_" << elem->second.name << "_implementation&);" << endl;
-   hdr << indent << indent << "Codine_" << elem->second.name << "_implementation& operator=(const Codine_" << elem->second.name << "_implementation&);" << endl << endl;
+   hdr << indent << indent << "GE_" << elem->second.name << "_implementation(const GE_" << elem->second.name << "_implementation&);" << endl;
+   hdr << indent << indent << "GE_" << elem->second.name << "_implementation& operator=(const GE_" << elem->second.name << "_implementation&);" << endl << endl;
 
    // c'tor and d'tor now
    hdr << indent << "public:" << endl;
-   hdr << indent << indent << "Codine_" << elem->second.name << "_implementation(const ";
+   hdr << indent << indent << "GE_" << elem->second.name << "_implementation(const ";
    if(key->type == lUlongT)
-      hdr << "Codine_cod_ulong ";
+      hdr << "GE_sge_ulong ";
    else
       hdr << "char* ";
    hdr << "_key, CORBA_ORB_var o);" << endl;
-   hdr << indent << indent << "Codine_" << elem->second.name << "_implementation(const ";
+   hdr << indent << indent << "GE_" << elem->second.name << "_implementation(const ";
    if(key->type == lUlongT)
-      hdr << "Codine_cod_ulong ";
+      hdr << "GE_sge_ulong ";
    else
       hdr << "char* ";
    hdr << "_key, const time_t& tm, CORBA_ORB_var o);" << endl;
-   hdr << indent << indent << "virtual ~Codine_" << elem->second.name << "_implementation();" << endl;
+   hdr << indent << indent << "virtual ~GE_" << elem->second.name << "_implementation();" << endl;
 }
 
 // writeFunctions
 static bool writeFunctions(ofstream& hdr, vector<Elem>::iterator& it, map<string, List>::iterator& elem) {
    string buffer = "";
    string buffer3 = "virtual ";
-   string buffer2 = "virtual Codine_cod_ulong set_" + it->name + "(";
+   string buffer2 = "virtual GE_sge_ulong set_" + it->name + "(";
    map<string, List>::iterator list = lists.end();
 
    if(it->type == lListT) {
@@ -111,9 +111,9 @@ static bool writeFunctions(ofstream& hdr, vector<Elem>::iterator& it, map<string
       if(list != lists.end()) {
          if(!it->object)
             buffer2 += "const ";
-         buffer += "Codine_" + list->second.name;
-         buffer2 += "Codine_" + list->second.name;
-         buffer3 += "Codine_" + list->second.name;
+         buffer += "GE_" + list->second.name;
+         buffer2 += "GE_" + list->second.name;
+         buffer3 += "GE_" + list->second.name;
          if(!it->object) {
             buffer += "Seq";
             buffer2 += "Seq";
@@ -132,16 +132,16 @@ static bool writeFunctions(ofstream& hdr, vector<Elem>::iterator& it, map<string
       }
    }
    else if(it->type == lStringT) {
-      buffer += "Codine_cod_string ";
+      buffer += "GE_sge_string ";
       buffer2 += "const char* ";
-      buffer3 += "Codine_cod_string ";
+      buffer3 += "GE_sge_string ";
    }
    else {
-      buffer += multiType2codType[it->type];
+      buffer += multiType2sgeType[it->type];
       buffer += ' ';
-      buffer2 += multiType2codType[it->type];
+      buffer2 += multiType2sgeType[it->type];
       buffer2 += ' ';
-      buffer3 += multiType2codType[it->type];
+      buffer3 += multiType2sgeType[it->type];
       buffer3 += ' ';
    }
 
@@ -157,8 +157,8 @@ static bool writeFunctions(ofstream& hdr, vector<Elem>::iterator& it, map<string
 // writeClassFooter
 static void writeClassFooter(ofstream& hdr, map<string, List>::iterator& elem) {
    // state functions
-   hdr << indent << indent << "virtual Codine_contentSeq* get_content(CORBA_Context* ctx);" << endl;
-   hdr << indent << indent << "virtual Codine_cod_ulong   set_content(const Codine_contentSeq& state, CORBA_Context* ctx);" << endl << endl;
+   hdr << indent << indent << "virtual GE_contentSeq* get_content(CORBA_Context* ctx);" << endl;
+   hdr << indent << indent << "virtual GE_sge_ulong   set_content(const GE_contentSeq& state, CORBA_Context* ctx);" << endl << endl;
    
    // add & destroy functions
    hdr << indent << indent << "virtual void               add(CORBA_Context* ctx) = 0;" << endl;
@@ -168,7 +168,7 @@ static void writeClassFooter(ofstream& hdr, map<string, List>::iterator& elem) {
    if(elem->second.interf) {
       hdr << indent << "protected:" << endl << indent << indent;
       if(key->type == lUlongT)
-         hdr << "Codine_cod_ulong    ";
+         hdr << "GE_sge_ulong    ";
       else
          hdr << "CORBA_String_var    ";
       hdr << "key;" << endl;
@@ -177,10 +177,10 @@ static void writeClassFooter(ofstream& hdr, map<string, List>::iterator& elem) {
       hdr << indent << indent << "virtual lListElem*        getSelf() = 0;" << endl;
       hdr << indent << indent << "CORBA_ORB_var             orb;" << endl;
       hdr << indent << indent << "time_t                    creation;" << endl;
-      hdr << indent << indent << "Codine_cod_ulong          lastEvent;" << endl;
+      hdr << indent << indent << "GE_sge_ulong          lastEvent;" << endl;
       hdr << indent << indent << "int                       apiListType;" << endl;
 
-      hdr << indent << "friend class Codine_Master_impl;" << endl << endl;
+      hdr << indent << "friend class GE_Master_impl;" << endl << endl;
    }
    hdr << "};" << endl << endl;
 }

@@ -55,6 +55,7 @@
 ** gdilib/sge_any_request.c
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data\n"))
+#define MSG_GDI_INITCOMMLIBFAILED                     _MESSAGE(43046, _("failed initialize communication library\n"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
 #define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"\n"))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
@@ -120,7 +121,6 @@
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
 #define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS   _MESSAGE(43121, _("unable to send message to "SFN" using port "U32CFormat" on host "SFQ": "SFN"\n"))
 #define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "U32CFormat" on host "SFQ"\n"))
-#define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43123, _("failed to getpwuid(%d): "SFN"\n"))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request\n"))
@@ -148,15 +148,21 @@
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
-#define MSG_GDI_GENERAL_COM_ERROR_S   _MESSAGE(43294, _("general communication error: "SFN"\n"))
+#define MSG_GDI_GENERAL_COM_ERROR_SS   _MESSAGE(43294, _("commlib error: "SFN" ("SFN")\n"))
+#define MSG_GDI_GENERAL_COM_ERROR_S    _MESSAGE(43292, _("commlib error: "SFN"\n"))
 
-#define MSG_GDI_MULTI_THREADED_STARTUP     _MESSAGE(43295, _("starting up multi thread communication\n"))
-#define MSG_GDI_SINGLE_THREADED_STARTUP    _MESSAGE(43296, _("starting up communication without threads\n"))
-#define MSG_GDI_CANT_GET_EXECD_HANDLE_SUU  _MESSAGE(43297, _("can't create execd handle for "SFQ" with id "U32CFormat", using port "U32CFormat"\n"))
-#define MSG_GDI_CANT_CREATE_COM_HANDLE     _MESSAGE(43298, _("can't create handle for communication\n"))
-#define MSG_GDI_HANDLE_CREATED_FOR_S       _MESSAGE(43299, _("created communication handel for component name "SFQ"\n"))
-#define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S _MESSAGE(43300, _("alive check of qmaster failed for component "SFQ"\n"))
-#define MSG_GDI_QMASTER_STILL_RUNNING      _MESSAGE(43301, _("qmaster is still running\n"))
-#define MSG_GDI_ENDPOINT_UPTIME_UU         _MESSAGE(43302, _("endpoint is up since "U32CFormat" seconds and has status "U32CFormat"\n"))
+#define MSG_GDI_MULTI_THREADED_STARTUP       _MESSAGE(43295, _("starting up multi thread communication\n"))
+#define MSG_GDI_SINGLE_THREADED_STARTUP      _MESSAGE(43296, _("starting up communication without threads\n"))
+#define MSG_GDI_CANT_GET_COM_HANDLE_SSUUS    _MESSAGE(43297, _("communication error for \""SFN"/"SFN"/"U32CFormat"\" running on port "U32CFormat": "SFQ"\n"))
+#define MSG_GDI_CANT_CONNECT_HANDLE_SSUUS    _MESSAGE(43298, _("communication error for \""SFN"/"SFN"/"U32CFormat"\" using connect port "U32CFormat": "SFQ"\n"))
+#define MSG_GDI_HANDLE_CREATED_FOR_S         _MESSAGE(43300, _("created communication handel for component name "SFQ"\n"))
+#define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S   _MESSAGE(43301, _("alive check of qmaster failed for component "SFQ"\n"))
+#define MSG_GDI_QMASTER_STILL_RUNNING        _MESSAGE(43302, _("qmaster is still running\n"))
+#define MSG_GDI_ENDPOINT_UPTIME_UU           _MESSAGE(43303, _("endpoint is up since "U32CFormat" seconds and has status "U32CFormat"\n"))
+#define MSG_GDI_ALREADY_CONECTED_SSU         _MESSAGE(43304, _("there is already a client endpoint %s/%s/"U32CFormat" connected to qmaster service\n"))
+#define MSG_GDI_ACCESS_DENIED_SSU            _MESSAGE(43305, _("qmaster service denies access from local endpoint %s/%s/"U32CFormat"\n"))
+#define MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S _MESSAGE(43306, _("can't create handle to execd \"%s\"\n"))
+
+
 #endif /* __MSG_GDILIB_H */
 

@@ -34,9 +34,9 @@ FORMAT
      The syntax of the year field is defined as follows:
 
      year:=
-         {year_day_range_list[=daytime_range_list][=state]
-         |[year_day_range_list=]daytime_range_list[=state]
-         |[year_day_range_list=][daytime_range_list=]state} ...
+         {year_day_range_list=daytime_range_list[=state]
+         |year_day_range_list=[daytime_range_list=]state
+        |state} ...
 
      Where
 
@@ -99,21 +99,41 @@ FORMAT
        week_day_range_list := {weekday-weekday|weekday},...
        week_day :=  {mon|tue|wed|thu|fri|sat|sun}
 
+     with week_day ranges the week_day identifiers must  be  dif-
+     ferent.
+
 SEMANTICS
      Successive entries to the year and week fields (separated by
      blanks) are combined in compliance with the following rule:
 
      <B>o</B>  "off"-areas  are  overridden  by  overlapping  "on"-  and
-        "suspended"-areas.
-
+        "suspended"-areas and "suspended"-areas are overridden by
+        "on"-areas.
 
      Hence an entry of the form
 
        week  12-18 tue=13-17=on
 
      means that queues referencing the corresponding calendar are
-     disabled  the  entire  week  with  the  exception of Tuesday
-     between 13.00-17.00 where the queues are available.
+     disabled the entire week from 12.00-18.00 with the exception
+     of Tuesday between 13.00-17.00 where the queues  are  avail-
+     able.
+
+
+     <B>o</B>  Area overriding occurs only within a year/week basis.  If
+        a year entry exists for a day then only the year calendar
+        is taken into account and no area overriding is done with
+        a possibly conflicting week area.
+
+
+     <B>o</B>  the second time specification in a daytime_range_list may
+        be  prior  the first one and treated as expected. Thus an
+        entry of the form
+
+          year  12.03.2004=12-11=off
+
+        causes the queue(s) be disabled 12.03.2004 from  00:00:00
+        - 10:59:59 and 12:00:00 - 23:59:59.
 
 EXAMPLES
      (The following  examples  are  contained  in  the  directory
@@ -160,6 +180,7 @@ EXAMPLES
           .12.1999=on
           week           mon-fri=6-20=suspended
 
+
      <B>o</B>  Day calendar with suspension:
 
         Essentially the same scenario as the second  example  but
@@ -179,28 +200,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

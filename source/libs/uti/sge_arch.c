@@ -144,6 +144,8 @@ const char *sge_get_arch(void)
 #   endif
 #elif defined(DARWIN)
 #   define ARCHBIN "darwin"   
+#elif defined(INTERIX)
+#   define ARCHBIN "win32-x86"
 #else
 #   pragma "Define an architecture for SGE"
 #endif

@@ -57,7 +57,7 @@ incr check_highest_level -1
 
 # set description for each level
 for {set i 0} { $i <= $check_highest_level } { incr i} {
-   set check_description($i)  "check every option for queue [lindex $CHECK_CORE_EXECD $i].q" 
+   set check_description($i)  "check every option for execution on host [lindex $CHECK_CORE_EXECD $i]" 
 }
 
 set check_init_level_procedure "select_queue"
@@ -249,7 +249,10 @@ proc qsub_starter_method {} {
 
    # set starter method
    set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
-   set_queue all.q $actual_host change_array
+
+   # JG: TODO: it would suffice to set the attribute only for the specific test host,
+   # but set_queue seems to do the reset incorrectly, resulting in stuff like
+   set_queue all.q "" change_array
 
    set jobargs "-q [get_queue_instance all.q ${actual_host}] -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
    set result [submit_job $jobargs] 
@@ -270,7 +273,7 @@ proc qsub_starter_method {} {
    }
 
    # check output file, should contain output from starter method
-   sleep 2
+   after 2000
    set outfilename "$job_output_dir/Sleeper.o$result"
    puts $CHECK_OUTPUT "checking output file $outfilename"
 
@@ -305,7 +308,7 @@ proc qsub_starter_method {} {
 
    # unset starter method
    set change_array(starter_method) "none"
-   set_queue all.q $actual_host change_array
+   set_queue all.q "" change_array
 
    set_error 0 "no errors"
 }
@@ -2926,73 +2929,6 @@ proc check_option_t {} {
          set back [ del_job_files $result $job_output_dir 8 ] 
          if { $back != 8 } {
             set_error -1 "job $result did not produce 8 files\njobargs: $jobargs"
-            return
-         } else {
-            set_error 0 "no error"
-            return
-         }
-      }
-   }
- 
-   set_error -1 "timeout while waiting for job accounting"
-}
-
-#                                                             max. column:     |
-#****** qsub/check_option_v() ******
-# 
-#  NAME
-#     check_option_v -- ??? 
-#
-#  SYNOPSIS
-#     check_option_v { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc check_option_v {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
-   global job_output_dir actual_host
-
-   # first clean up output directory:  
-   setup_output_directory
-
-   set option "-v DISPLAY"
-   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
-  
-   set result [submit_job $jobargs 0]  
-   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
-
-   if { $result < 0 } {
-      set_error -1 "could not submit job"
-      return
-   }
-
-   set time [ expr ( [timestamp] + 300  ) ] 
-
-   while { [timestamp] < $time }  {
-      sleep 1
-      set back [was_job_running $result 0] 
-      if {$back != -1} {
-         set back [ del_job_files $result $job_output_dir 2 ] 
-         if { $back != 2 } {
-            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
             return
          } else {
             set_error 0 "no error"

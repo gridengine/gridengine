@@ -157,10 +157,11 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    DENTER(TOP_LAYER, "sge_add_qeti_resource_container");
 
    /* implicit slot request */
-   if (!(tep = lGetElemStr(total_list, CE_name, SGE_ATTR_SLOTS)) && force_slots) {
+   if ( ((tep = lGetElemStr(total_list, CE_name, SGE_ATTR_SLOTS)) != NULL) && force_slots) {
       DEXIT;
       return -1;
    }
+
    if (tep && sge_qeti_list_add(qeti_to_add, SGE_ATTR_SLOTS, rue_list, 
                   lGetDouble(tep, CE_doubleval), true)) {
       DEXIT;
@@ -170,8 +171,9 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    /* default request */
    for_each (actual, rue_list) {
       name = lGetString(actual, RUE_name);
-      if (!strcmp(name, SGE_ATTR_SLOTS))
+      if (strcmp(name, SGE_ATTR_SLOTS) != 0) {
          continue;
+      }   
 
       centry_config = lGetElemStr(centry_list, CE_name, name);
 
@@ -258,10 +260,12 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       int is_relevant;
       const void *queue_iterator = NULL;
 
-      if (host_match_static(job, NULL, hep, centry_list, acl_list) == -1)
+      if (sge_host_match_static(job, NULL, hep, centry_list, acl_list) == DISPATCH_NEVER_CAT) {
          continue;
-      if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME))
+      }   
+      if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME)) {
          continue;
+      }   
 
       /* There must be at least one queue referenced with the parallel 
          environment that resides at this host. And secondly we only 
@@ -276,8 +280,9 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
             break;
          }
       }
-      if (!is_relevant) 
+      if (!is_relevant) {
          continue;
+      }   
 
       if (sge_add_qeti_resource_container(&iter->cr_refs_host, 
                lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
@@ -295,8 +300,9 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
          continue;
 
       /* consider only those queues that match this job (statically) */
-      if (queue_match_static(qep, job, pe, ckpt, centry_list, acl_list)!=0)  
+      if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
          continue;
+      }   
 
       if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
                lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 

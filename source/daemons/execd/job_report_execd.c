@@ -51,7 +51,16 @@
 #include "sge_report.h"
 
 lList *jr_list = NULL;
-int flush_jr = 0;
+bool flush_jr = false;
+
+void 
+flush_job_report(lListElem *jr)
+{
+   if (jr != NULL) {
+      lSetBool(jr, JR_flush, true);
+      flush_jr = true;
+   }
+}
 
 void trace_jr()
 {
@@ -114,24 +123,27 @@ lListElem *jep
    return jr;
 }
 
-lListElem *get_job_report(
-u_long32 jobid, 
-u_long32 jataskid, 
-const char *petaskid 
-) {
+lListElem *
+get_job_report(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id) 
+{
    lListElem *jr;
-   const char *s;
+   const void *iterator = NULL;
 
    DENTER(TOP_LAYER, "get_job_report");
 
-   /* JG: TODO (256): Could be optimized by using lGetElemUlong for jobid */
-   for_each (jr, jr_list) {
-      s = lGetString(jr, JR_pe_task_id_str);
-
-      if (lGetUlong(jr, JR_job_number) == jobid && 
-          lGetUlong(jr, JR_ja_task_number) == jataskid &&
-          !sge_strnullcmp(s, petaskid))
-         break; 
+   jr = lGetElemUlongFirst(jr_list, JR_job_number, job_id, &iterator);
+   while (jr != NULL) {
+      if (lGetUlong(jr, JR_ja_task_number) == ja_task_id) {
+         if (pe_task_id == NULL) {
+            break;
+         } else {
+            if (sge_strnullcmp(pe_task_id, lGetString(jr, JR_pe_task_id_str)) 
+                == 0) {
+                break;
+            }
+         }
+      }
+      jr = lGetElemUlongNext(jr_list, JR_job_number, job_id, &iterator);
    }
 
    DEXIT;
@@ -150,7 +162,7 @@ u_long32 jataskid
 ) {
    lListElem *nxt, *jr;
 
-   DENTER(TOP_LAYER, "clean_job_report");
+   DENTER(TOP_LAYER, "cleanup_job_report");
 
    /* get rid of job reports for all slave tasks */
    nxt = lFirst(jr_list);

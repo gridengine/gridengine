@@ -30,6 +30,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+# JG: TODO: Change the assign/unassign procedures.
+# The current implemtation using aattr/dattr is destroying the default 
+# settings in all.q
+
 proc unassign_queues_with_pe_object { pe_obj } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH
@@ -192,7 +196,7 @@ proc startup_shadowd { hostname } {
 
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "start"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "-shadowd start"]
    puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0

@@ -8,11 +8,11 @@ NAME
 SYNOPSIS
      qacct [ -A Account ] [ -b BeginTime ] [ -d Days ] [ -e  End-
      Time  ] [ -g [GroupId|GroupName] ] [ -h [HostName] ] [ -help
-     ] [ -history HistoryPath ]  [  -j  [JobId|JobName]  ]  [  -l
-     attr=val,... ] [ -nohist ] [ -o [Owner] ] [ -pe [PEname] ] [
-     -q   [Q_name]   ]   [   -slots   [SlotNumber]   ]    [    -t
-     task_id_range_list  ] [ -P [Project] ] [ -D [Department] ] [
-     -f <I>AcctFileName</I> ]
+     ] [ -j [JobId|JobName|pattern] ] [ -l attr=val,...  ]  [  -o
+     [Owner]      ]     [     -pe     [PEname]     ]     [     -q
+     [CQ_name|QI_name|Q_domain|pattern] ] [ -slots [SlotNumber] ]
+     [ -t task_id_range_list ] [ -P [Project] ] [ -D [Department]
+     ] [ -f <I>AcctFileName</I> ]
 
 DESCRIPTION
      The <I>qacct</I>  utility  scans  the  accounting  data  file  (see
@@ -32,7 +32,8 @@ OPTIONS
 
      -b BeginTime
           The earliest start time for jobs to be  summarized,  in
-          the format [[CC]YY]MMDDhhmm[.SS]. See also -d option.
+          the  format  [[CC]YY]MMDDhhmm[.SS]. See also -d option.
+          If CC is not specified, a YY of &lt; 70 means 20YY.
 
      -d Days
           The number of days to summarize  and  print  accounting
@@ -44,7 +45,8 @@ OPTIONS
 
      -e EndTime
           The latest start time for jobs to be summarized, in the
-          format [[CC]YY]MMDDhhmm[.SS]. See also -d option.
+          format [[CC]YY]MMDDhhmm[.SS]. See also -d option. If CC
+          is not specified, a YY of &lt; 70 means 20YY.
 
      [-f AcctFileName]
           The accounting file to be used. If omitted, the  system
@@ -64,17 +66,11 @@ OPTIONS
      -help
           Display help information for the <I>qacct</I> command.
 
-     -history HistoryPath
-          The directory path where the <I>historical</I> queue and  com-
-          plexes configuration data is located, which is used for
-          resource requirement matching in conjunction  with  the
-          -l  switch.   If  the latter is not set, this option is
-          ignored.
-
-     -j [[JobName|JobId]]
-          The name or ID of the job during  execution  for  which
-          accounting  information  is  printed. If neither a name
-          nor an ID is given all jobs are enlisted.
+     -j [[JobName|JobId|pattern]]
+          The name, a pattern for matching names, or  ID  of  the
+          job  during  execution for which accounting information
+          is printed. If neither a name nor an ID  is  given  all
+          jobs are enlisted.
           This option changes the  output  format  of  <I>qacct</I>.  If
           activated,  CPU times are no longer accumulated but the
           "raw" accounting information is printed in a  formatted
@@ -84,27 +80,8 @@ OPTIONS
      -l attr=val,...
           A resource requirement specification which must be  met
           by  the  queues  in which the jobs being accounted were
-          executing. The matching is  performed  with  <I>historical</I>
-          data,  i.e.  it reflects the situation of the queue and
-          complexes configuration at the time of the job start.
-
-          The  resource  request  is  very  similar  to  the  one
-          described in <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.  The main difference is that ever
-          changing load information may not be requested as it is
-          not  contained  in  the  historical  configuration data
-          being used.
-
-     -nohist
-          Only useful together with  the  -l  option.  It  forces
-          <I>qacct</I>  not to use <I>historical</I> queue and complexes confi-
-          guration data for  resource  requirement  matching  but
-          instead  retrieve actual queue and complexes configura-
-          tion from <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.  Note, that this may lead  to
-          confusing statistical results, as the current queue and
-          complexes configuration may differ  significantly  from
-          the  situation  being  valid for past jobs.  Note also,
-          that all hosts being referenced in the accounting  file
-          have to be up and running in order to get results.
+          executing. The resource request is very similar to  the
+          one described in <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
 
      -o [Owner]
           The name of the owner of the jobs for which  accounting
@@ -118,10 +95,11 @@ OPTIONS
           summarized.  If PEname is not given, accounting data is
           listed for each parallel environment separately.
 
-     -q [Q_name]
-          The name of the queue for which  usage  is  summarized.
-          If  Q_name  is not given, accounting data is listed for
-          each queue separately.
+     -q [CQ_name|QI_name|Q_domain|pattern]
+          A pattern for queues for which usage is summarized. All
+          queue instances matching the pattern will be listed. If
+          no pattern is specified, a cluster queue  summary  will
+          be given.
 
      -slots [SlotNumber]
           The number of queue slots for which  usage  is  summar-
@@ -142,15 +120,12 @@ OPTIONS
      -P [Project]
           The name of the project for which usage is  summarized.
           If  Project is not given, accounting data is listed for
-          each owner project separately. Projects are  only  used
-          when running in Grid Engine Enterprise Edition mode.
+          each owner project separately.
 
      -D [Department]
           The name of the department for which usage  is  summar-
           ized.   If  Department is not given, accounting data is
-          listed for each owner  department  separately.  Depart-
-          ments  are only used when running in Grid Engine Enter-
-          prise Edition mode.
+          listed for each owner department separately.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -174,32 +149,57 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qacct</I>  client
-                    resides.  Per default the local host is used.
+     SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>   is   expected  to  listen  for
+                    communication requests.   Most  installations
+                    will use a services map entry for the service
+                    "sge_execd" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>accounting</I>
                      Grid Engine default accounting file
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>history</I>
-                     Grid Engine default history database
      &lt;<I>xxqs</I>_<I>nam</I>_<I>sexx</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
                      Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,   <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,   <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>,    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

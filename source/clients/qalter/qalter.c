@@ -52,6 +52,7 @@
 #include "sge_answer.h"
 #include "read_defaults.h"
 #include "sge_centry.h"
+#include "sge_profiling.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -90,6 +91,8 @@ char **argv
    int me_who;
 
    DENTER_MAIN(TOP_LAYER, "qalter");
+
+   sge_prof_setup();
 
    /*
    ** get command name: qalter or qresub
@@ -151,6 +154,7 @@ char **argv
          show_job()
       */
       cull_show_job(lFirst(request_list), FLG_QALTER);
+      sge_prof_cleanup();
       SGE_EXIT(0);
    }
 
@@ -197,6 +201,7 @@ char **argv
       }
    }
 
+   sge_prof_cleanup();
    SGE_EXIT(ret);
    DEXIT;
    return 0;
@@ -530,7 +535,7 @@ int *all_users
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-ot"))) {
-         lSetUlong(job, JB_override_tickets, lGetInt(ep, SPA_argval_lIntT));
+         lSetUlong(job, JB_override_tickets, lGetUlong(ep, SPA_argval_lUlongT));
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_override_tickets);
       }
@@ -739,12 +744,14 @@ int *all_users
          char *name = NULL;
          const char *job_name = lGetString(job, JB_job_name);
          int size = strlen(lGetString(ep, ID_str));
-         if (job_name)
+         if (job_name) {
             size += strlen(job_name); 
+         }   
          size += 3;
           
          name = malloc(size);
-         sprintf(name, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
+         /* format: <delimiter>old_name<delimiter>new_name */
+         snprintf(name, size, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
          rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
          FREE(name);
       }   

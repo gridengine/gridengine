@@ -210,7 +210,7 @@ proc job_environment_qsh_job { array arguments } {
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $queue -S $script_name"]
    puts $CHECK_OUTPUT $output
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
-   file delete $CHECK_PROTOCOL_DIR/temp_script.sh
+#   file delete $CHECK_PROTOCOL_DIR/temp_script.sh
 }
 
 
@@ -280,71 +280,75 @@ proc job_environment_amount {} {
    }
 
    set_error 0 "ok"
-
 }
 
-proc job_environment_check_env_value { env_name should_be_name is_name } {
+proc job_environment_check_env_value { env_name should_be is_name } {
    global ts_config
    global CHECK_OUTPUT
 
-   puts -nonewline $CHECK_OUTPUT "checking environment \"$env_name\" ..."
-   set had_error 0
-   if { [ string compare $should_be_name $is_name ] != 0 } {
-      set had_error 1
-      puts -nonewline $CHECK_OUTPUT " failed."
-   } else {
-      puts -nonewline $CHECK_OUTPUT " ok."
-   }
-   puts $CHECK_OUTPUT " ($env_name=$is_name)"
-   if { $had_error == 1 } {
+   upvar $is_name is
 
-      if { $ts_config(gridengine_version) == 53 && [ string compare $env_name "JOB_NAME" ] == 0 } {
-         set message "environment variable \"$env_name\" is set to \"$is_name\", should be \"$should_be_name\"\n\n"
-         append message "This bug is not fixed for version [get_version_info]\n"
-         append message "Workaround: Use \"REQNAME\" or \"REQUEST\" instead of \"$env_name\"\n"
-         append message "in your job scripts!!!\n"
-         add_proc_error "job_environment_check_job_name" -3 $message
+   puts -nonewline $CHECK_OUTPUT "checking environment \"$env_name\" ..."
+
+   if {![info exists is]} {
+      add_proc_error "job_environment_check_job_name" -1 "environment variable \"$env_name\" is not set"
+   } else {
+      set had_error 0
+      if { [ string compare $should_be $is ] != 0 } {
+         set had_error 1
+         puts -nonewline $CHECK_OUTPUT " failed."
       } else {
-         add_proc_error "job_environment_check_job_name" -1 "environment variable \"$env_name\" is set to \"$is_name\", should be \"$should_be_name\""
-      } 
+         puts -nonewline $CHECK_OUTPUT " ok."
+      }
+      puts $CHECK_OUTPUT " ($env_name=$is)"
+      if { $had_error == 1 } {
+         if { $ts_config(gridengine_version) == 53 && [ string compare $env_name "JOB_NAME" ] == 0 } {
+            set message "environment variable \"$env_name\" is set to \"$is\", should be \"$should_be\"\n\n"
+            append message "This bug is not fixed for version [get_version_info]\n"
+            append message "Workaround: Use \"REQNAME\" or \"REQUEST\" instead of \"$env_name\"\n"
+            append message "in your job scripts!!!\n"
+            add_proc_error "job_environment_check_job_name" -3 $message
+         } else {
+            add_proc_error "job_environment_check_job_name" -1 "environment variable \"$env_name\" is set to \"$is\", should be \"$should_be\""
+         } 
+      }
    }
-   
 }
 
 proc job_environment_JOB_NAME {} {
    global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR
-   
+  
    puts $CHECK_OUTPUT "\nqsub ..."
    if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
-      job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
-      job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
+      job_environment_check_env_value "JOB_NAME" "jobenv.sh" job_env(JOB_NAME)
+      job_environment_check_env_value "REQNAME" "jobenv.sh" job_env(REQNAME)
+      job_environment_check_env_value "REQUEST" "jobenv.sh" job_env(REQUEST)
    }
 
    puts $CHECK_OUTPUT "\nqsub -N ..."
    if {[job_environment_qsub_job "newnam" job_env "-o /dev/null -e /dev/null -N newnam"]} {
-      job_environment_check_env_value "JOB_NAME" "newnam" $job_env(JOB_NAME)
-      job_environment_check_env_value "REQNAME" "newnam" $job_env(REQNAME)
-      job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
+      job_environment_check_env_value "JOB_NAME" "newnam" job_env(JOB_NAME)
+      job_environment_check_env_value "REQNAME" "newnam" job_env(REQNAME)
+      job_environment_check_env_value "REQUEST" "newnam" job_env(REQUEST)
    }
 
    puts $CHECK_OUTPUT "\nqresub ..."
    job_environment_qresub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"
-   job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
-   job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
-   job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
+   job_environment_check_env_value "JOB_NAME" "jobenv.sh" job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "jobenv.sh" job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "jobenv.sh" job_env(REQUEST)
 
    puts $CHECK_OUTPUT "\nqalter ..."
    job_environment_qalter_job "newnam" job_env "-o /dev/null -e /dev/null" "-N newnam" 
-   job_environment_check_env_value "JOB_NAME" "newnam" $job_env(JOB_NAME)
-   job_environment_check_env_value "REQNAME" "newnam" $job_env(REQNAME)
-   job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
+   job_environment_check_env_value "JOB_NAME" "newnam" job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "newnam" job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "newnam" job_env(REQUEST)
 
    puts $CHECK_OUTPUT "\nqsh ..."
    job_environment_qsh_job job_env ""
-   job_environment_check_env_value "JOB_NAME" "INTERACTIVE" $job_env(JOB_NAME)
-   job_environment_check_env_value "REQNAME" "INTERACTIVE" $job_env(REQNAME)
-   job_environment_check_env_value "REQUEST" "INTERACTIVE" $job_env(REQUEST)
+   job_environment_check_env_value "JOB_NAME" "INTERACTIVE" job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "INTERACTIVE" job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "INTERACTIVE" job_env(REQUEST)
      
 #   can't test qlogin, need password to login !!!
 #   puts $CHECK_OUTPUT "\nqlogin ..."
@@ -352,9 +356,9 @@ proc job_environment_JOB_NAME {} {
 
    puts $CHECK_OUTPUT "\nqrsh ..."
    job_environment_qrsh_job job_env ""
-   job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
-   job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
-   job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
+   job_environment_check_env_value "JOB_NAME" "jobenv.sh" job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "jobenv.sh" job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "jobenv.sh" job_env(REQUEST)
 
    set_error 0 "ok"
 

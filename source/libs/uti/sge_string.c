@@ -472,11 +472,29 @@ void sge_strip_blanks(char *str)
    return;
 }
 
-/* EB: ADOC: add commets */
-
+/****** uti/string/sge_strip_white_space_at_eol() ******************************
+*  NAME
+*     sge_strip_white_space_at_eol() -- truncate white space at EOL 
+*
+*  SYNOPSIS
+*     void sge_strip_white_space_at_eol(char *str) 
+*
+*  FUNCTION
+*     Truncate white space from the end of the string 
+*
+*  INPUTS
+*     char *str - string to be modified 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: sge_strip_white_space_at_eol() is MT safe 
+*******************************************************************************/
 void sge_strip_white_space_at_eol(char *str) 
 {
    DENTER(BASIS_LAYER, "sge_strip_white_space_at_eol");
+
    if (str != NULL) {
       size_t length = strlen(str);
 
@@ -935,6 +953,59 @@ char **sge_stracasecmp(const char *cp, char **cpp)
    return NULL;
 }   
 
+void
+stra_printf(char *stra[])
+{
+   int i = 0;
+
+   while (stra[i] != NULL) {
+      fprintf(stdout, "%s\n", stra[i]);
+      i++;
+   }
+}
+
+char **
+stra_from_str(const char *source_str, const char *delim)
+{
+   char **ret = NULL;
+
+   if (source_str != NULL && delim != NULL) {
+      struct saved_vars_s *context = NULL;
+      const char *token = NULL;
+      int n = 0;
+
+      /* count token */
+      context = NULL;
+      token = sge_strtok_r(source_str, delim, &context);
+      while (token != NULL) {
+         n++;
+         token = sge_strtok_r(NULL, delim, &context);
+      }
+      sge_free_saved_vars(context);
+   
+      /* malloc array memory */
+      ret = (char **) malloc(sizeof(char*) * (n+1));
+
+      if (ret != NULL) {
+
+         /* malloc/copy each token */
+         n = 0;
+         context = NULL;
+         token = sge_strtok_r(source_str, delim, &context);
+         while (token != NULL) {
+            ret[n] = malloc(strlen(token) + 1);
+            strcpy(ret[n], token);
+
+            token = sge_strtok_r(NULL, delim, &context);
+            n++;
+         }
+         ret[n] = NULL;
+         sge_free_saved_vars(context);
+      } 
+   }
+   return ret;
+}
+
 /****** uti/string/sge_compress_slashes() *************************************
 *  NAME
 *     sge_compress_slashes() -- compresses sequences of slashes 
@@ -1179,9 +1250,27 @@ sge_strerror(int errnum, dstring *buffer)
    return ret;
 }
 
-
-/* EB: ADOC: add commets */
-
+/****** uti/string/sge_str_is_number() *****************************************
+*  NAME
+*     sge_str_is_number() -- represents the given string a number 
+*
+*  SYNOPSIS
+*     bool sge_str_is_number(const char *string) 
+*
+*  FUNCTION
+*     This function returns true if the given string represents a number. 
+*
+*  INPUTS
+*     const char *string - string 
+*
+*  RESULT
+*     bool - result
+*        true  - string represents a number
+*        false - string is not a number 
+*
+*  NOTES
+*     MT-NOTE: sge_str_is_number() is MT safe 
+*******************************************************************************/
 bool sge_str_is_number(const char *string)
 {
    char *end = NULL;

@@ -106,15 +106,17 @@ int answer_error;
 
    if (jobid) {     /* signal a job / task */
       found = (signal_job(jobid, jataskid, signal)==0);
-   } else {            /* signal a queue */
+   } 
+   else {            /* signal a queue */
       for_each(jep, Master_Job_List) {
          lListElem *gdil_ep, *master_q, *jatep;
          const char *qnm;
 
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
 
-            if (lGetUlong(jatep, JAT_status) == JSLAVE) 
+            if (lGetUlong(jatep, JAT_status) == JSLAVE) {
                break;
+            }   
 
             /* iterate through all queues of a parallell job -
                this is done to ensure that signal delivery is also
@@ -122,7 +124,7 @@ int answer_error;
             for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
                master_q = lGetObject(gdil_ep, JG_queue);
                if (master_q != NULL) {
-                  qnm =  lGetString(master_q, QU_qname);
+                  qnm =  lGetString(master_q, QU_full_name);
                   if (!strcmp(qname, qnm)) {
                      char tmpstr[SGE_PATH_MAX];
 
@@ -141,7 +143,8 @@ int answer_error;
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
                         }   
-                     } else {
+                     } 
+                     else {
                         /* if the signal is a unsuspend and the job is suspended
                            we do not deliver a signal */
                         if (signal == SGE_SIGCONT) {
@@ -152,8 +155,9 @@ int answer_error;
                               }
                            }
                         }
-                        else
+                        else {
                            sge_execd_deliver_signal(signal, jep, jatep);
+                        }   
                      }
                      found = lGetUlong(jep, JB_job_number);
 
@@ -184,8 +188,10 @@ int answer_error;
       job_unknown(jobid, jataskid, qname);
    }
 
-   if (qname)
+   if (qname) {
       free(qname);
+   }
+
    DEXIT;
    return 0;
 }
@@ -265,7 +271,8 @@ lListElem *jatep
          add_usage(jr, "signal", NULL, sig);
 
          lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
-         flush_jr = 1;
+
+         flush_job_report(jr);
       }
       
       return 0;

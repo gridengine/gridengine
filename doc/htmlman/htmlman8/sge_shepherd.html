@@ -17,27 +17,64 @@ DESCRIPTION
      signals  for  suspension, enabling, termination and the Grid
      Engine checkpointing signal (see <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B> for details).
 
-     The <I>sge</I>_<I>shepherd</I> receives information about the job to start
-     from  the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  During the execution of the job it
-     actually starts up to 5  child  processes.  First  a  prolog
-     script if this feature is enabled by the prolog parameter in
-     the cluster configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).  Then a  paral-
-     lel  environment startup script if the job is a parallel job
-     (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> for more information).   Afterwards  the  job
-     itself followed by a parallel environment shutdown procedure
-     for parallel jobs, and finally an epilog script if requested
-     by  the  epilog  parameter in the cluster configuration. The
-     prolog and epilog scripts as well as the  parallel  environ-
-     ment  startup  and shutdown procedures are to be provided by
-     the Grid Engine administration and  are  intended  for  site
-     specific  actions  to  be taken prior and after execution of
-     the actual user job.
+     The <I>sge</I>_<I>shepherd</I> receives information about the  job  to  be
+     started  from the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  During the execution of the
+     job it actually starts up to 5 child processes. First a pro-
+     log  script  is run if this feature is enabled by the prolog
+     parameter in the cluster configuration.  (See  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.)
+     Next a parallel environment startup proceedure is run if the
+     job is a parallel job. (See <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> for more information.)
+     After  that,  the  job itself is run, followed by a parallel
+     environment  shutdown  procedure  for  parallel  jobs,   and
+     finally  an epilog script if requested by the epilog parame-
+     ter in the cluster  configuration.  The  prolog  and  epilog
+     scripts  as  well  as  the  parallel environment startup and
+     shutdown procedures are to be provided by  the  Grid  Engine
+     administrator  and are intended for site specific actions to
+     be taken prior and after execution of the actual user job.
 
      After the job has finished and the  epilog  script  is  pro-
      cessed,  <I>sge</I>_<I>shepherd</I>  retrieves  resource  usage statistics
      about the job, places them in a job specific subdirectory of
-     the  spool  directory  of <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for reporting through
+     the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  spool  directory  for  reporting  through
      <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and finishes.
+
+     <I>sge</I>_<I>shepherd</I> also places an exit status file  in  the  spool
+     directory.  This  exit  status  can  be viewed with qacct -j
+     JobId  (see  <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>);  it  is  not  the  exit  status   of
+     <I>sge</I>_<I>shepherd</I>  itself  but  of one of the methods executed by
+     <I>sge</I>_<I>shepherd</I>. This exit status can  have  several  meanings,
+     depending on in which method an error occured (if any).  The
+     possible methods are: prolog, parallel start, job,  parallel
+     stop,  epilog,  suspend, restart, terminate, clean, migrate,
+     and checkpoint.
+
+     The following exit values are returned:
+
+     0      All methods: Operation was executed successfully.
+
+     99     Job script, prolog and epilog: When <I>FORBID</I>_<I>RESCHEDULE</I>
+            is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>),
+            the job gets requeued.  Otherwise see "Other".
+
+     100    Job script, prolog and epilog:  When  <I>FORBID</I>_<I>APPERROR</I>
+            is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>),
+            the job gets requeued.  Otherwise see "Other".
+
+     Other  Job script: This  is  the  exit  status  of  the  job
+            itself.  No  action  is  taken  upon this exit status
+            because the meaning of this exit status is not known.
+            Prolog, epilog and parallel start: The queue  is  set
+            to error state and the job is requeued.
+            Parallel stop: The queue is set to error  state,  but
+            the  job  is not requeued. It is assumed that the job
+            itself ran successfully and only the clean up  script
+            failed.
+            Suspend,  restart,  terminate,  clean,  and  migrate:
+            Always successfull.
+            Checkpoint: Success, except for kernel checkpointing:
+            checkpoint  was  not successfull, did not happen (but
+            migration will happen by Grid Engine).
 
 RESTRICTIONS
      <I>sge</I>_<I>shepherd</I> should not be invoked  manually,  but  only  by
@@ -52,6 +89,21 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </PRE>

@@ -43,8 +43,10 @@
 #include "sge_prog.h"
 #include "setup.h"
 #include "setup_qmaster.h"
+#include "sge_profiling.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_time.h"
 
 
 struct te_event {
@@ -94,7 +96,7 @@ static pthread_t       Event_Thread;
 
 
 static void       timed_event_once_init(void);
-static void*      deliver_events(void*);
+static void*      timed_event_thread(void*);
 static void       check_time(time_t);
 static te_event_t event_from_list_elem(lListElem*);
 static void       scan_table_and_deliver(te_event_t);
@@ -774,18 +776,18 @@ static void timed_event_once_init(void)
 
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-   pthread_create(&Event_Thread, &attr, deliver_events, NULL);
+   pthread_create(&Event_Thread, &attr, timed_event_thread, NULL);
 
    DEXIT;
    return;
 } /* timed_event_once_init() */
 
-/****** qmaster/sge_qmaster_timed_event/deliver_events() ***********************
+/****** qmaster/sge_qmaster_timed_event/timed_event_thread() ***********************
 *  NAME
-*     deliver_events() -- Deliver timed events due
+*     timed_event_thread() -- Deliver timed events due
 *
 *  SYNOPSIS
-*     static void* deliver_events(void* anArg) 
+*     static void* timed_event_thread(void* anArg) 
 *
 *  FUNCTION
 *     Check whether system clock has been put back. If so, adjust event due
@@ -806,18 +808,18 @@ static void timed_event_once_init(void)
 *     void* - none 
 *
 *  NOTES
-*     MT-NOTE: 'deliver_events()' is a thread function. Do NOT use this
+*     MT-NOTE: 'timed_event_thread()' is a thread function. Do NOT use this
 *     MT-NOTE: function in any other way!
 *     MT-NOTE:
-*     MT-NOTE: If the event list is empty, 'deliver_events()' will wait until
+*     MT-NOTE: If the event list is empty, 'timed_event_thread()' will wait until
 *     MT-NOTE: an event has been added.
 *     MT-NOTE: 
 *     MT-NOTE: If no event is due, i.e. the due date of the next event does lie
-*     MT-NOTE: ahead, 'deliver_events()' does wait until the next event does
+*     MT-NOTE: ahead, 'timed_event_thread()' does wait until the next event does
 *     MT-NOTE: become due, or an event which is due earlier has been added. If
 *     MT-NOTE: an event has been deleted while waiting ('Event_Control.delete'
 *     MT-NOTE: equals 'true'), skip the current event and start over. The
-*     MT-NOTE: deleted event maybe the event 'deliver_events()' has been
+*     MT-NOTE: deleted event maybe the event 'timed_event_thread()' has been
 *     MT-NOTE: waiting for.
 *     MT-NOTE:
 *     MT-NOTE: Before 'scan_table_and_deliver()' is invoked,
@@ -825,17 +827,34 @@ static void timed_event_once_init(void)
 *     MT-NOTE: may occur due to recursive mutex locking.
 *
 *******************************************************************************/
-static void* deliver_events(void* anArg)
+static void* timed_event_thread(void* anArg)
 {
    lListElem *le = NULL;
    te_event_t te = NULL;
    time_t now;
+   time_t next_prof_output = 0;
 
-   DENTER(TOP_LAYER, "deliver_events");
+   DENTER(TOP_LAYER, "timed_event_thread");
 
    sge_qmaster_thread_init(true);
 
+   set_thread_name(pthread_self(),"TEvent Thread");
+
    while (should_exit() == false) {
+
+     if (thread_prof_active_by_id(pthread_self())) {
+         prof_start(SGE_PROF_CUSTOM1, NULL);
+         prof_start(SGE_PROF_GDI_REQUEST, NULL);
+         prof_set_level_name(SGE_PROF_CUSTOM1, "TEvent Thread", NULL); 
+      } else {
+           prof_stop(SGE_PROF_CUSTOM1, NULL);
+           prof_stop(SGE_PROF_GDI_REQUEST, NULL);
+      }
+
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+      /* update thread alive time */
+      sge_update_thread_alive_time(SGE_MASTER_TIMED_EVENT_THREAD);
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
       check_time(time(NULL));
@@ -888,11 +907,23 @@ static void* deliver_events(void* anArg)
          
       scan_table_and_deliver(te);
       te_free_event(te);
+
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+      if (prof_is_active(SGE_PROF_ALL)) {
+        time_t now = sge_get_gmt();
+
+         if (now > next_prof_output) {
+            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
+            prof_reset(SGE_PROF_ALL,NULL);
+            next_prof_output = now + 60;
+         }
+      }
    }
 
    DEXIT;
    return NULL;
-} /* deliver_events() */
+}
 
 /****** qmaster/sge_qmaster_timed_event/check_time() ***************************
 *  NAME

@@ -74,7 +74,7 @@ typedef enum {
 #define NONE_STR  "NONE"
 #define NONE_LEN  4
 
-#if defined(FREEBSD)
+#if defined(FREEBSD) || defined(LINUXAMD64)
 #  define U32CFormat "%u"  
 #  define u32c(x)  (unsigned int)(x)
 
@@ -142,13 +142,13 @@ extern "C" {
 #  define uid_t_fmt pid_t_fmt
 #endif
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX)
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) || defined(INTERIX)
 #  define pid_t_fmt    "%ld"
 #else
 #  define pid_t_fmt    "%d"
 #endif
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) 
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) || defined(INTERIX)
 #  define gid_t_fmt    "%ld"
 #elif defined(LINUX86) || defined(FREEBSD)
 #  define gid_t_fmt    "%u"
@@ -157,7 +157,7 @@ extern "C" {
 #endif
 
 /* _POSIX_PATH_MAX is only 255 and this is less than in most real systmes */
-#define SGE_PATH_MAX    1024  
+#define SGE_PATH_MAX    1024
 
 #define MAX_STRING_SIZE 8192
 typedef char stringT[MAX_STRING_SIZE];

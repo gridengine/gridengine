@@ -41,7 +41,7 @@ JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB      = libdrmaa$(SHAREDEXT)
 DRMAALIB_SRC  = drmaa.c
-DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCLIB_OBJS) \
+DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_ADD_OBJS) $(EVCLIB_OBJS) \
                 $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
                 $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
                 $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
@@ -49,18 +49,18 @@ DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCL
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
-JAPI_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd \
+JAPI_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd \
                 $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
                 -luti -lrmon -llck $(DLLIB)
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 
-JAPI_DEPEND_LIBS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
+JAPI_DEPEND_LIBS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                    $(UTILIB) $(RMONLIB) $(LCKLIB)
 
 JAPI_ALL      = japilib drmaalib test_drmaa example howto1 howto2 howto2_1 \
-                howto3 howto3_1 howto3_2 howto4 howto5 howto6
+                howto3 howto3_1 howto3_2 howto4 howto5 howto6 test_drmaa_sync
 
 japi_all: $(JAPI_ALL)
 
@@ -71,7 +71,10 @@ japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 	
 japilib_clean: japihowto_clean
-	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) $(DRMAA_DEPEND_OBJS) libjapi.a libjapi$(SHAREDEXT) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) test_drmaa.o test_drmaa example.o example sge_sub_object.c
+	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) $(DRMAA_DEPEND_OBJS) libjapi.a \
+      libjapi$(SHAREDEXT) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) \
+      test_drmaa.o test_drmaa example.o example sge_sub_object.c \
+      test_drmaa_sync test_drmaa_sync.o
 
 japilib_depend:
 	$(DEPEND) -f$(JAPILIB_DIR)/japi_dependencies $(JAPILIB_DIR)/*.c
@@ -121,6 +124,12 @@ test_drmaa: test_drmaa.o $(DRMAALIB)
 
 test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c
+
+test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_sync.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+test_drmaa_sync.o: $(JAPILIB_DIR)/test_drmaa_sync.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_sync.c
 
 example: example.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)

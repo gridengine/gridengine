@@ -433,7 +433,7 @@ u_long32 action
    }
    
    if (is_run_once && (ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
-      sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(lFirst(lGetList(ep, SPA_argval_lListT)), ST_name));
+      sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
       answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       while ((ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
          lRemoveElem(*ppcmdline, ep);

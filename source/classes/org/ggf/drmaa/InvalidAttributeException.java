@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * AttributeException.java
- *
- * Created on June 17, 2003, 10:47 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** The value or format of an attribute is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidAttributeException extends DRMAAException {
+public abstract class InvalidAttributeException extends DrmaaException {
    
    /**
     * Creates a new instance of <code>AttributeException</code> without detail message.

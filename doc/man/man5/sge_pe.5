@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2004/04/19 10:52:10 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2004/04/19 10:52:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -263,7 +263,7 @@ xxQS_NAMExx to assess the number of slots such jobs might finally
 get.
 .PP
 The assumed slot allocation has a meaning when determining the 
-resource resquest based priority contribution for numeric resoures
+resource request based priority contribution for numeric resources
 as described in
 .M sge_priority 5 
 and is displayed when 
@@ -281,7 +281,7 @@ The of the slot range maximum is used as prospective slot amount.
 If no upper bound is specified with the range the absolute maximum 
 possible due to the PE's \fBslots\fP setting is assumed.
 .IP "\fBavg\fP:" 1i
-The average of all numbers occuring within the jobs PE range 
+The average of all numbers occurring within the jobs PE range 
 request is assumed.
 .\"
 .\"

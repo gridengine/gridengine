@@ -41,6 +41,8 @@ CULLLIB_SRC 	= cull_list.c \
                 cull_where.c \
                 cull_parse.c \
                 cull_what.c \
+                cull_what_elem.c \
+                cull_what_print.c \
                 cull_multitype.c \
                 cull_db.c \
                 cull_sort.c \
@@ -61,7 +63,7 @@ CULL_ALL 	= example1
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-culllib: $(CULLLIB)
+culllib: $(CULLLIB) 
 
 culllib_all: $(CULL_ALL)
 	
@@ -106,6 +108,12 @@ cull_where.o: $(CULLLIB_DIR)/cull_where.c
 
 cull_what.o: 	$(CULLLIB_DIR)/cull_what.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_what.c
+
+cull_what_elem.o: 	$(CULLLIB_DIR)/cull_what_elem.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_what_elem.c
+
+cull_what_print.o: 	$(CULLLIB_DIR)/cull_what_print.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_what_print.c
 
 cull_sort.o: 	$(CULLLIB_DIR)/cull_sort.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_sort.c
@@ -186,7 +194,15 @@ test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 
 #---
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti -llck -lmalloc $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) -lmalloc $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c
+
+#---
+test_enumeration: test_enumeration.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_enumeration test_enumeration.o $(LFLAGS) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) 
+
+test_enumeration.o: $(CULLLIB_DIR)/test_enumeration.c
+	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_enumeration.c
+

@@ -37,10 +37,12 @@
 #include <stdlib.h>
 #include "msg_utilbin.h"
 #include "basis_types.h"
+#include "version.h"
 
 void usage(void)
 {
-   fprintf(stderr, "%s\n getservbyname [-number] service\n\n%s",MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETSERVBYNAME );
+   fprintf(stderr, "Version: %s\n", GDI_VERSION);
+   fprintf(stderr, "%s\n getservbyname [-help|-number] service\n\n%s",MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETSERVBYNAME );
    /*fprintf(stderr, "       get number of a tcp service\n"); */
    exit(1);
 }   
@@ -59,6 +61,8 @@ int main(int argc, char *argv[])
  if (!strcmp(argv[1], "-number"))
     number_only = 1;
     
+ if (!strcmp(argv[1], "-help"))
+    usage();
     
  while (retry-- && !((se = getservbyname(argv[1+number_only], "tcp"))))
     ;

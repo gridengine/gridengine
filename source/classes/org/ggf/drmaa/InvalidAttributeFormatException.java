@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InvalidAttributeFormatException.java
- *
- * Created on June 17, 2003, 11:02 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The format for the job attribute value is invalid.
+/** The format for the attribute value is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidAttributeFormatException extends InvalidArgumentException {
+public class InvalidAttributeFormatException extends InvalidAttributeException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidAttributeFormatException</code> without detail message.

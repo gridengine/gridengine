@@ -42,12 +42,13 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_arch.h"
-
+#include "version.h"
 #include "cl_commlib.h"
 
 void usage(void)
 {
-  fprintf(stderr, "%s gethostbyname [-name|-aname|-all] <name>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "Version: %s\n", GDI_VERSION);
+  fprintf(stderr, "%s gethostbyname [-help|-name|-aname|-all] <name>\n",MSG_UTILBIN_USAGE);
   exit(1);
 }
 
@@ -71,6 +72,9 @@ int main(int argc, char *argv[]) {
 
    unresolved_name = argv[1];
 
+  if (!strcmp(argv[1], "-help")) {
+     usage();
+  }
   if (!strcmp(argv[1], "-name")) {
      if (argc != 3) {
         usage(); 

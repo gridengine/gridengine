@@ -77,7 +77,7 @@ static void feature_state_init(struct feature_state_t* theState);
 static feature_id_t feature_get_featureset_id(const char *name); 
 
 
-/****** sgeobj/sge_feature/feature_mt_init() ***********************************
+/****** sgeobj/feature/feature_mt_init() **************************************
 *  NAME
 *     feature_mt_init() -- Initialize feature code for multi threading use.
 *
@@ -99,14 +99,13 @@ static feature_id_t feature_get_featureset_id(const char *name);
 *
 *  NOTES
 *     MT-NOTE: feature_mt_init() is MT safe 
-*
 *******************************************************************************/
 void feature_mt_init(void)
 {
    pthread_once(&feature_once, feature_once_init);
 }
 
-/****** sge_feature/feature_set_already_read_from_file() ***********************
+/****** sgeobj/feature/feature_set_already_read_from_file() *******************
 *  NAME
 *     feature_set_already_read_from_file()
 *
@@ -122,7 +121,7 @@ void feature_set_already_read_from_file(int i)
    feature_state->already_read_from_file = i;
 }
 
-/****** sge_feature/feature_get_already_read_from_file() ***********************
+/****** sgeobj/feature/feature_get_already_read_from_file() *******************
 *  NAME
 *     feature_get_already_read_from_file()
 *
@@ -138,7 +137,7 @@ int feature_get_already_read_from_file(void)
    return feature_state->already_read_from_file;
 }
 
-/****** sge_feature/feature_get_already_read_from_file() ***********************
+/****** sgeobj/feature/feature_get_already_read_from_file() *******************
 *  NAME
 *     feature_get_master_featureset_list()
 *
@@ -503,7 +502,7 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    return ret;
 }
 
-/****** sgeobj/sge_feature/feature_once_init() *********************************
+/****** sgeobj/feature/feature_once_init() ************************************
 *  NAME
 *     feature_once_init() -- One-time feature code initialization.
 *
@@ -523,14 +522,13 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
 *
 *  NOTES
 *     MT-NOTE: feature_once_init() is MT safe. 
-*
 *******************************************************************************/
 static void feature_once_init(void)
 {
    pthread_key_create(&feature_state_key, feature_state_destroy);
 }
 
-/****** sgeobj/sge_feature/feature_state_destroy() *****************************
+/****** sgeobj/feature/feature_state_destroy() ********************************
 *  NAME
 *     feature_state_destroy() -- Free thread local storage
 *
@@ -548,7 +546,6 @@ static void feature_once_init(void)
 *
 *  NOTES
 *     MT-NOTE: feature_state_destroy() is MT safe.
-*
 *******************************************************************************/
 static void feature_state_destroy(void* theState)
 {
@@ -558,7 +555,7 @@ static void feature_state_destroy(void* theState)
    free(state);
 }
 
-/****** sgeobj/sge_feature/feature_state_init() *******************************************
+/****** sgeobj/feature/feature_state_init() ***********************************
 *  NAME
 *     feature_state_init() -- Initialize feature code state.
 *
@@ -576,7 +573,6 @@ static void feature_state_destroy(void* theState)
 *
 *  NOTES
 *     MT-NOTE: feature_state_init() is MT safe. 
-*
 *******************************************************************************/
 static void feature_state_init(struct feature_state_t* theState)
 {

@@ -35,8 +35,8 @@
 #include <map>
 #include <set>
 #include <string>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "culltrans_repository.h"
 #include "culltrans.h"
 
@@ -58,7 +58,7 @@ static void writeHeader(ofstream& idl, map<string, List>::iterator& elem) {
 
    if(elem->second.interf) {
       idl << "// forward decls" << endl;
-      idl << "module Codine {" << endl;
+      idl << "module GE {" << endl;
       idl << "   interface " << elem->second.name << ";" << endl;
       idl << "   typedef sequence<" << elem->second.name << "> " << elem->second.name << "Seq;" << endl;
       idl << "};" << endl << endl;
@@ -103,15 +103,15 @@ static bool writeElem(ofstream& idl, vector<Elem>::iterator& it, map<string, Lis
 
    if(elem->second.interf) {
       idl << buffer << "get_" << it->name;
-      idl << "() raises(ObjDestroyed, Authentication, Error) context(\"cod_auth\")";
+      idl << "() raises(ObjDestroyed, Authentication, Error) context(\"sge_auth\")";
    }
    else
       idl << buffer << it->name;
 
    idl << ";" << endl;
    if(!it->readonly && elem->second.interf) {
-      idl << indent << indent << "cod_ulong set_" << it->name;
-      idl << "(in " << buffer << "val) raises(ObjDestroyed, Authentication, Error) context(\"cod_auth\");" << endl;
+      idl << indent << indent << "sge_ulong set_" << it->name;
+      idl << "(in " << buffer << "val) raises(ObjDestroyed, Authentication, Error) context(\"sge_auth\");" << endl;
    }
 
    return true;
@@ -137,9 +137,9 @@ bool writeIDL(map<string, List>::iterator& elem) {
 
    // write interface definition
    string buffer;
-   idl << endl << "module Codine {" << endl;
+   idl << endl << "module GE {" << endl;
    idl << indent << (elem->second.interf?"interface ":"struct ") << elem->second.name;
-   idl << (elem->second.interf?" : Codine::Obj ":" ") << "{" << endl;
+   idl << (elem->second.interf?" : GE::Obj ":" ") << "{" << endl;
    for(it=elem->second.elems.begin(); it != elem->second.elems.end(); ++it)
       if(!writeElem(idl, it, elem))
          return false;

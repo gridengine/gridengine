@@ -156,7 +156,6 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_min_gid = min_gid, \
                   cluster_zombie_jobs = zombie_jobs, \
                   cluster_load_report_time = load_report_time, \
-                  cluster_stat_log_time = stat_log_time, \
                   cluster_max_unheard = max_unheard, \
                   cluster_reschedule_unknown = reschedule_unknown, \
                   cluster_gid_range = gid_range, \
@@ -172,6 +171,7 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_auto_user_fshare = auto_user_fshare; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_loglevel = loglevel , \
+                  cluster_dfs = dfs , \
                   cluster_enforce_project = enforce_project, \
                   cluster_enforce_user = enforce_user; \
    StringList     cluster_users = cluster_users, \
@@ -182,7 +182,7 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_projectsPB, cluster_xprojectsPB, \
                   cluster_load_report_timePB, \
                   cluster_reschedule_unknownPB, \
-                  cluster_stat_log_timePB, cluster_max_unheardPB, \
+                  cluster_max_unheardPB, \
                   cluster_auto_user_delete_timePB; \
    XmLabel        cluster_execd_spool_dir_label, \
                   cluster_admin_mail_label, \
@@ -227,6 +227,7 @@ Qmon*cluster_global_layout.layout: \
             Caption tl "@{Log Level}" cluster_loglevel \
          } \
          Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
+         Fixed Caption tl "@{Delegated File Staging}" cluster_dfs \
          <> \
       } \
       ## \
@@ -249,14 +250,10 @@ Qmon*cluster_global_layout.layout: \
          } \
          Fixed Equal Row { \
             Row { \
-               Caption tl "@{Stat Log Time}" 20 em cluster_stat_log_time \
-               Fixed FlushBottom cluster_stat_log_timePB \
-            } \
-            <> \
-            Row { \
                Caption tl "@{Reschedule Unknown}" 20 em cluster_reschedule_unknown \
                Fixed FlushBottom cluster_reschedule_unknownPB \
             } \
+            <> \
          } \
          Equal Col { \
             Row { \
@@ -328,6 +325,10 @@ Qmon*cluster_global_layout.cluster_logmail.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_logmail.strings: \
    "@{True}", "@{False}"
 
+Qmon*cluster_global_layout.cluster_dfs.chooserType: ChooserOption
+Qmon*cluster_global_layout.cluster_dfs.strings: \
+   "@{True}", "@{False}"
+
 
 Qmon*cluster_global_layout.cluster_enforce_project.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_enforce_project.strings: \
@@ -366,9 +367,6 @@ Qmon*cluster_global_layout*cluster_xprojects.visibleItemCount: 3
 
 Qmon*cluster_global_layout.cluster_load_report_timePB.labelType:      PIXMAP
 Qmon*cluster_global_layout.cluster_load_report_timePB.labelPixmap:    time
-Qmon*cluster_global_layout.cluster_stat_log_timePB.labelType:         PIXMAP
-Qmon*cluster_global_layout.cluster_stat_log_timePB.labelPixmap:       time
-Qmon*cluster_global_layout.cluster_stat_log_timePB.labelInsensitivePixmap: time
 Qmon*cluster_global_layout.cluster_max_unheardPB.labelType:           PIXMAP
 Qmon*cluster_global_layout.cluster_max_unheardPB.labelPixmap:         time
 Qmon*cluster_global_layout.cluster_max_unheardPB.labelInsensitivePixmap:   time
@@ -420,7 +418,6 @@ Qmon*cluster_global_layout.cluster_login_shells.verifyCallback: TrimAndTrail(sel
 Qmon*cluster_global_layout.cluster_min_uid.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_min_gid.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_load_report_time.verifyCallback: TrimAndTrail(self);
-Qmon*cluster_global_layout.cluster_stat_log_time.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_max_unheard.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_prolog.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_epilog.verifyCallback: TrimAndTrail(self);

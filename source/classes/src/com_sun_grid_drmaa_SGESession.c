@@ -35,6 +35,7 @@
 #include <pthread.h>
 #include <strings.h>
 #include <string.h>
+#include <errno.h>
 
 #include "japi/drmaa.h"
 #include "japi/msg_drmaa.h"
@@ -191,20 +192,35 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeRunBulkJ
       return NULL;
    }
    
-   num_elem = (end - start) / step;
+   /* Unfortunately, there is no light-weight way to build the id List from the
+    * ids struct.  Because the struct is one-way, once-only, I would have to
+    * build a linked list of id entries while stepping through the struct.  When
+    * I hit the end, I could create an array of the right size and copy
+    * everything over.
+    * Instead, I calculate how big the list should be.  If it turns out to be
+    * smaller than expected, I readjust.  If it's larger than expected, the
+    * extra ids are just lost.  However, there should never be a case where the
+    * math is wrong. */
+   num_elem = (end - start) / step + 1;
    id_strings = (char **)malloc (num_elem * sizeof (char *));
    
-   for (count = start; count < end; count += step) {
+   for (count = start; count <= end; count += step) {
       if (drmaa_get_next_job_id (ids, buffer, DRMAA_JOBNAME_BUFFER)
                                                        == DRMAA_ERRNO_SUCCESS) {
          id_strings[counter++] = strdup (buffer);
+      }
+      /* If we run out of ids before expected, we trust that the qmaster is
+       * right, and we adjust our numbers accordingly. */
+      else {
+         num_elem = counter;
+         break;
       }
    }
 
    num_elem = counter;
    
    /* Create Java array */
-   clazz = (*env)->FindClass (env, "Ljava/lang/String;");
+   clazz = (*env)->FindClass (env, "java/lang/String");
    ret_val = (*env)->NewObjectArray(env, num_elem, clazz, NULL);
 
    for (count = 0; count < num_elem; count++) {
@@ -312,7 +328,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
 
    length = count;
    
-   clazz = (*env)->FindClass (env, "Ljava/lang/String;");
+   clazz = (*env)->FindClass (env, "java/lang/String");
    resources = (*env)->NewObjectArray(env, length, clazz, NULL);
    
    for (count = 0; count < length; count++) {
@@ -343,7 +359,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
       tmp_str = (*env)->NewStringUTF (env, signal);
    }
    
-   clazz = (*env)->FindClass (env, "Lcom/sun/grid/drmaa/SGEJobInfo;");
+   clazz = (*env)->FindClass (env, "com/sun/grid/drmaa/SGEJobInfo");
    meth = (*env)->GetMethodID (env, clazz, "<init>",
                  "(Ljava/lang/String;I[Ljava/lang/String;Ljava/lang/String;)V");
    job_info = (*env)->NewObject (env, clazz, meth,
@@ -491,7 +507,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttri
    
    max = count;
    
-   clazz = (*env)->FindClass (env, "Ljava/lang/String;");
+   clazz = (*env)->FindClass (env, "java/lang/String");
    retval = (*env)->NewObjectArray(env, max, clazz, NULL);
 
    for (count = 0; count < max; count++) {
@@ -539,7 +555,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttri
    
    drmaa_release_attr_names (names);
    
-   clazz = (*env)->FindClass (env, "Ljava/lang/String;");
+   clazz = (*env)->FindClass (env, "java/lang/String");
    
    if (is_vector) {
       errnum = drmaa_get_vector_attribute (jt, name_str, &values, error,
@@ -623,98 +639,98 @@ static void throw_exception (JNIEnv *env, int errnum, char *message)
    jclass newExcCls = NULL;
    
    DENTER (TOP_LAYER, "throw_exception");
-   
+
    switch (errnum) {
       case DRMAA_ERRNO_INTERNAL_ERROR:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/InternalException;");
+                                       "org/ggf/drmaa/InternalException");
          break;
       case DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE:
          newExcCls = (*env)->FindClass(env,
-                                   "Lorg/ggf/drmaa/DRMCommunicationException;");
+                                   "org/ggf/drmaa/DRMCommunicationException");
          break;
       case DRMAA_ERRNO_AUTH_FAILURE:
          newExcCls = (*env)->FindClass(env,
-                                      "Lorg/ggf/drmaa/AuthorizationException;");
+                                      "org/ggf/drmaa/AuthorizationException");
          break;
       case DRMAA_ERRNO_INVALID_ARGUMENT:
          newExcCls = (*env)->FindClass(env,
-                                    "Lorg/ggf/drmaa/InvalidArgumentException;");
+                                    "org/ggf/drmaa/InvalidArgumentException");
          break;
       case DRMAA_ERRNO_NO_ACTIVE_SESSION:
          newExcCls = (*env)->FindClass(env,
-                                    "Lorg/ggf/drmaa/NoActiveSessionException;");
+                                    "org/ggf/drmaa/NoActiveSessionException");
          break;
       case DRMAA_ERRNO_NO_MEMORY:
-         newExcCls = (*env)->FindClass(env, "Ljava/lang/OutOfMemoryError;");
+         newExcCls = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
          break;
       case DRMAA_ERRNO_INVALID_CONTACT_STRING:
          newExcCls = (*env)->FindClass(env,
-                               "Lorg/ggf/drmaa/InvalidContactStringException;");
+                               "org/ggf/drmaa/InvalidContactStringException");
          break;
       case DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR:
          newExcCls = (*env)->FindClass(env,
-                               "Lorg/ggf/drmaa/DefaultContactStringException;");
+                               "org/ggf/drmaa/DefaultContactStringException");
          break;
       case DRMAA_ERRNO_DRMS_INIT_FAILED:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/DRMSInitException;");
+                                       "org/ggf/drmaa/DRMSInitException");
          break;
       case DRMAA_ERRNO_ALREADY_ACTIVE_SESSION:
          newExcCls = (*env)->FindClass(env,
-                               "Lorg/ggf/drmaa/SessionAlreadyActiveException;");
+                               "org/ggf/drmaa/SessionAlreadyActiveException");
          break;
       case DRMAA_ERRNO_DRMS_EXIT_ERROR:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/DRMSExitException;");
+                                       "org/ggf/drmaa/DRMSExitException");
          break;
       case DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT:
          newExcCls = (*env)->FindClass(env,
-                             "Lorg/ggf/drmaa/InvalidAttributeFormatException;");
+                             "org/ggf/drmaa/InvalidAttributeFormatException");
          break;
       case DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE:
          newExcCls = (*env)->FindClass(env,
-                              "Lorg/ggf/drmaa/InvalidAttributeValueException;");
+                              "org/ggf/drmaa/InvalidAttributeValueException");
          break;
       case DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES:
          newExcCls = (*env)->FindClass(env,
-                         "Lorg/ggf/drmaa/ConflictingAttributeValuesException;");
+                         "org/ggf/drmaa/ConflictingAttributeValuesException");
          break;
       case DRMAA_ERRNO_TRY_LATER:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/TryLaterException;");
+                                       "org/ggf/drmaa/TryLaterException");
          break;
       case DRMAA_ERRNO_DENIED_BY_DRM:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/DeniedByDRMException;");
+                                       "org/ggf/drmaa/DeniedByDRMException");
          break;
       case DRMAA_ERRNO_INVALID_JOB:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/InvalidJobException;");
+                                       "org/ggf/drmaa/InvalidJobException");
          break;
       case DRMAA_ERRNO_RESUME_INCONSISTENT_STATE:
          newExcCls = (*env)->FindClass(env,
-                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+                                  "org/ggf/drmaa/InconsistentStateException");
          break;
       case DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE:
          newExcCls = (*env)->FindClass(env,
-                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+                                  "org/ggf/drmaa/InconsistentStateException");
          break;
       case DRMAA_ERRNO_HOLD_INCONSISTENT_STATE:
          newExcCls = (*env)->FindClass(env,
-                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+                                  "org/ggf/drmaa/InconsistentStateException");
          break;
       case DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE:
          newExcCls = (*env)->FindClass(env,
-                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+                                  "org/ggf/drmaa/InconsistentStateException");
          break;
       case DRMAA_ERRNO_EXIT_TIMEOUT:
          newExcCls = (*env)->FindClass(env,
-                                       "Lorg/ggf/drmaa/ExitTimeoutException;");
+                                       "org/ggf/drmaa/ExitTimeoutException");
          break;
       case DRMAA_ERRNO_NO_RUSAGE:
          newExcCls = (*env)->FindClass(env,
-                                "Lorg/ggf/drmaa/NoResourceUsageDataException;");
+                                "org/ggf/drmaa/NoResourceUsageDataException");
          break;
       default:
          break;
@@ -723,7 +739,7 @@ static void throw_exception (JNIEnv *env, int errnum, char *message)
    if (newExcCls == 0) {
       /* If we can't find the specific exception, try again using
        * DRMAAException */
-      newExcCls = (*env)->FindClass(env, "Lorg/ggf/drmaa/DRMAAException;");
+      newExcCls = (*env)->FindClass(env, "org/ggf/drmaa/DRMAAException");
    }
    
    /* This isn't an "else if" because we also need to check the result of the
@@ -731,7 +747,7 @@ static void throw_exception (JNIEnv *env, int errnum, char *message)
    if (newExcCls == 0) {
       /* If we really can't find the right exception, default to something we
        * really expect to be able to find. */
-      newExcCls = (*env)->FindClass(env, "Ljava/lang/RuntimeException;");
+      newExcCls = (*env)->FindClass(env, "java/lang/RuntimeException");
       
       /* If it's still not found, give up. */
       if (newExcCls == 0) {

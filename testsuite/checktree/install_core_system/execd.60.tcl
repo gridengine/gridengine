@@ -114,11 +114,11 @@ proc install_execd {} {
                     add_proc_error "install_execd" -2 "could not tar Certificate Authority (CA) directory into \"$TAR_FILE\""
                 } else {
                     puts $CHECK_OUTPUT "copy tar file \"$TAR_FILE\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cp" "$TAR_FILE $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cp" "$TAR_FILE $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" prg_exit_state 300 ]
                     puts $CHECK_OUTPUT $result
                     
                     puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$TAR_FILE\" on host $exec_host ..."
-                    set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $TAR_FILE" ]
+                    set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $TAR_FILE" prg_exit_state 300 ]
                     puts $CHECK_OUTPUT $result
 
                     set tar_bin [get_binary_path $exec_host "tar"]
@@ -126,9 +126,9 @@ proc install_execd {} {
                     puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
                     start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR" 
                     if { $prg_exit_state != 0 } { 
-                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "$CA_ROOT_DIR" ]
+                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
                     }   
-                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" ]
+                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" prg_exit_state 300 ]
                     puts $CHECK_OUTPUT $result
                     if { $prg_exit_state != 0 } {
                        add_proc_error "install_execd" -2 "could not untar \"$TAR_FILE\" on host $exec_host;\ntar-bin:$tar_bin"
@@ -247,6 +247,8 @@ proc install_execd {} {
 
       set timeout 300
      
+      
+
       set do_log_output 0 ;# 1 _LOG
       if { $CHECK_DEBUG_LEVEL == 2 } {
          set do_log_output 1

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2004/04/19 10:52:06 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2004/11/12 15:40:05 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_submit 3 "$Date: 2004/04/19 10:52:06 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_submit 3 "$Date: 2004/11/12 15:40:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -86,17 +86,19 @@ size_t error_diag_len\fB
 .\"
 .\"
 .SH DESCRIPTION
-The drmaa_run_job() submits a xxQS_NAMExx job with attributes defined in the DRMAA job 
-template \fIjt\fP. On success up to \fIjob_id_len\fP bytes of the job identifier are 
-returned into the buffer \fIjob_id\fP.
+drmaa_run_job() submits an xxQS_NAMExx job with attributes defined in the DRMAA job 
+template, \fIjt\fP. On success up to \fIjob_id_len\fP bytes of the job identifier are 
+returned into the buffer, \fIjob_id\fP.
 .\" 
 .SS "drmaa_run_bulk_jobs()"
 The drmaa_run_bulk_jobs() submits a xxQS_NAMExx array job very much as if the
 .M qsub 1 
-option `-t \fIstart\fP-\fIend\fP:\fIincr\fP' had been used with the corresponding
+option `-t \fIstart\fP-\fIend\fP:\fIincr\fP' had been used along with the additional
 attributes defined in the DRMAA job 
-template \fIjt\fP.  The same constraints regarding value ranges are also in effect
-for the parameters \fIstart\fP \fIend\fP and \fIincr\fP. On success a DRMAA job id string 
+template, \fIjt\fP.  The same constraints regarding value ranges are also in effect
+for the parameters \fIstart\fP, \fIend\fP, and \fIincr\fP as for
+.M qsub 5
+-t. On success a DRMAA job id string 
 vector containing job identifiers for each array job task is returned into \fIjobids\fP. 
 The job identifiers in the job id string
 vector can be extracted using
@@ -107,13 +109,13 @@ vector returned into \fIjobids\fP using
 .PP
 .\"
 .SS "drmaa_get_next_job_id()"
-Each time drmaa_get_next_job_id() is called it returns into the buffer \fIvalue\fP up to \fIvalue_len\fP 
-bytes of the next entry stored in the DRMAA job id string vector \fIvalues\fP.
+Each time drmaa_get_next_job_id() is called it returns into the buffer, \fIvalue\fP, up to \fIvalue_len\fP 
+bytes of the next entry stored in the DRMAA job id string vector, \fIvalues\fP.
 .PP
 .\"
 .SS "drmaa_release_job_ids()"
 The drmaa_release_attr_job_id() function releases all resources associated with the DRMAA job id
-string vector \fIvalues\fP. This operation has no effect on the actual xxQS_NAMExx array job 
+string vector, \fIvalues\fP. This operation has no effect on the actual xxQS_NAMExx array job 
 tasks.
 .PP
 .\"
@@ -165,7 +167,7 @@ information is then provided in the buffer \fIerror_diagnosis\fP.
 The drmaa_run_job(), drmaa_run_bulk_jobs(), and drmaa_get_next_job_id() will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like system call failure, etc.
+Unexpected or internal DRMAA error, like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.
@@ -185,7 +187,7 @@ Failed allocating memory.
 .PP
 The drmaa_run_job() and drmaa_run_bulk_jobs() functions will fail if:
 .SS "DRMAA_ERRNO_TRY_LATER "
-Could not pass job now to DRM system. A retry may succeed however (saturation).
+The DRM system indicated that it is too busy to accept the job. A retry may succeed, however.
 .\" 
 .SS "DRMAA_ERRNO_DENIED_BY_DRM"
 The DRM system rejected the job. The job will never be accepted due to DRM configuration or job template settings.

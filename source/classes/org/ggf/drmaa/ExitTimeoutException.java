@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,19 +28,15 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * ExitTimeoutException.java
- *
- * Created on June 18, 2003, 11:34 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** We have encountered a time-out condition for DRMAASession.synchronize()
  * or DRMAASession.wait().
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class ExitTimeoutException extends DRMAAException {
+public class ExitTimeoutException extends DrmaaException {
 	
 	/**
 	 * Creates a new instance of <code>ExitTimeoutException</code> without detail message.

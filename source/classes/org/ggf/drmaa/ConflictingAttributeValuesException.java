@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,17 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * ConflictingAttributeValuesException.java
- *
- * Created on June 17, 2003, 11:03 AM
- */
+/*___INFO__MARK_END__*/
 
 package org.ggf.drmaa;
 
-/** The value of this attribute is conflicting with a previously set
- * attributes.
+/** The value of this attribute conflicts with the values of one or more previously
+ * set attributes.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
 public class ConflictingAttributeValuesException extends InvalidAttributeException {
 	

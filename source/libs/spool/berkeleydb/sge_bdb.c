@@ -223,6 +223,41 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
                                     dbret, db_strerror(dbret));
             ret = false;
          } 
+
+         /* 
+          * performance tuning 
+          * Switch off flushing of transaction log for every single transaction.
+          * This tuning option has huge impact on performance, but only a slight impact 
+          * on database durability: In case of a server/filesystem crash, we might loose
+          * the last transactions committed before the crash. Still all transactions will
+          * be atomic, isolated and the database will be consistent at any time.
+          */
+         if (ret) {
+            dbret = env->set_flags(env, DB_TXN_WRITE_NOSYNC, 1);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_CANTSETENVFLAGS_IS,
+                                       dbret, db_strerror(dbret));
+               ret = false;
+            } 
+         }
+
+         /* 
+          * performance tuning 
+          * increase the cache size
+          */
+         if (ret) {
+            dbret = env->set_cachesize(env, 0, 4 * 1024 * 1024, 1);
+            if (dbret != 0) {
+               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_BERKELEY_CANTSETENVCACHE_IS,
+                                       dbret, db_strerror(dbret));
+               ret = false;
+            }
+         }
       }
 
       /* if we use a RPC server, set it in the DB_ENV */
@@ -1671,10 +1706,13 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                                     cull_pack_strerror(cull_ret));
             ret = false;
          }
-         /* we may not free the packbuffer: it references the buffer
-          * delivered from the database
-          * clear_packbuffer(&pb);
+
+         /* We specified DB_DBT_MALLOC - BDB will malloc memory for each
+          * object found and we have to free it.
           */
+          if (data_dbt.data != NULL) {
+            FREE(data_dbt.data);
+          }
       }
    }
 

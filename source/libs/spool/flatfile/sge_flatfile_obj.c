@@ -74,6 +74,16 @@
 
 /* read_func's and write_func's -- signature is defined in
  * sge_spooling_utilities.h:spooling_field. */
+static void create_spooling_field (
+   spooling_field *field,
+   int nm, 
+   int width, 
+   const char *name, 
+   struct spooling_field *sub_fields, 
+   const void *clientdata, 
+   int (*read_func) (lListElem *ep, int nm, const char *buffer, lList **alp), 
+   int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp)
+);
 static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lList **alp);
 static int read_SC_queue_sort_method(lListElem *ep, int nm,
                                      const char *buffer, lList **alp);
@@ -509,6 +519,28 @@ spooling_field CU_fields[] = {
    {  CU_inter,          0, "inter",                AINTER_sub_fields},
    {  NoName,            0, NULL,                   NULL}
 };
+
+static void create_spooling_field (
+   spooling_field *field,
+   int nm, 
+   int width, 
+   const char *name, 
+   struct spooling_field *sub_fields, 
+   const void *clientdata, 
+   int (*read_func) (lListElem *ep, int nm, const char *buffer, lList **alp), 
+   int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp)
+)
+{
+   if (field != NULL) {
+      field->nm = nm;
+      field->width = width;
+      field->name = name;
+      field->sub_fields = sub_fields;
+      field->clientdata = clientdata;
+      field->read_func = read_func;
+      field->write_func = write_func;
+   }
+}
 
 spooling_field *sge_build_UP_field_list (int spool, int user)
 {

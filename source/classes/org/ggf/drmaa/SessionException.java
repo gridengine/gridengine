@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,30 +28,23 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InitException.java
- *
- * Created on June 17, 2003, 10:46 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** A problem occured with the DRM session preventing the routine from completing.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class SessionException extends DRMAAException {
+public abstract class SessionException extends DrmaaException {
 	
-	/**
-	 * Creates a new instance of <code>InitException</code> without detail message.
-	 */
+	/** Creates a new instance of <code>SessionException</code> without detail message. */
 	public SessionException () {
 	}
 	
 	
-	/**
-	 * Constructs an instance of <code>InitException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
+	/** Constructs an instance of <code>SessionException</code> with the specified detail message.
+    * @param msg the detail message.
+    */
 	public SessionException (String msg) {
 		super (msg);
 	}

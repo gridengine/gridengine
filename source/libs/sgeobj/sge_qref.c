@@ -441,6 +441,8 @@ qref_list_trash_some_elemts(lList **this_list, const char *full_name)
    if (this_list != NULL) {
       lListElem *qref = NULL;
       lListElem *next_qref = NULL;
+      dstring cqueue_buffer = DSTRING_INIT;
+      dstring host_or_hgroup_buffer = DSTRING_INIT;
       dstring cqueue_buffer1 = DSTRING_INIT;
       dstring host_or_hgroup_buffer1 = DSTRING_INIT;
       bool has_hostname1;
@@ -455,8 +457,6 @@ qref_list_trash_some_elemts(lList **this_list, const char *full_name)
 
       next_qref = lFirst(*this_list);
       while ((qref = next_qref) != NULL) {
-         dstring cqueue_buffer = DSTRING_INIT;
-         dstring host_or_hgroup_buffer = DSTRING_INIT;
          bool has_hostname;
          bool has_domain;
          const char *name = NULL;
@@ -477,10 +477,18 @@ qref_list_trash_some_elemts(lList **this_list, const char *full_name)
          if (!strcmp(cqueue1, cqueue) || strcmp(host1, host)) {
             lRemoveElem(*this_list, qref);
          }
+
+         sge_dstring_clear(&cqueue_buffer);
+         sge_dstring_clear(&host_or_hgroup_buffer);
       }
       if (lGetNumberOfElem(*this_list) == 0) {
          *this_list = lFreeList(*this_list);
       }
+
+      sge_dstring_free(&cqueue_buffer);
+      sge_dstring_free(&host_or_hgroup_buffer);
+      sge_dstring_free(&cqueue_buffer1);
+      sge_dstring_free(&host_or_hgroup_buffer1);
    }
    DEXIT;
    return ret;
@@ -616,10 +624,14 @@ qref_resolve_hostname(lListElem *this_elem)
 
       if (back == CL_RETVAL_OK) {
          dstring new_qref_pattern = DSTRING_INIT;
-
-         sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
-                             sge_dstring_get_string(&cqueue_name),
-                             resolved_name);
+         if (sge_dstring_strlen(&cqueue_name) == 0) {
+             sge_dstring_sprintf(&new_qref_pattern, "@%s",
+                                 resolved_name);
+         } else {
+            sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
+                                sge_dstring_get_string(&cqueue_name),
+                                resolved_name);
+         }
          lSetString(this_elem, QR_name, 
                     sge_dstring_get_string(&new_qref_pattern));
          sge_dstring_free(&new_qref_pattern);

@@ -120,23 +120,6 @@ FORMAT
      Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  for  a
      definition of the syntax of time values).
 
-  user_sort
-     Grid Engine usually schedules user jobs corresponding  to  a
-     first-come-first-served  policy.  In  case  a user submits a
-     large amount of jobs in very short time, this can lead to  a
-     rather unfair situation, because all users submitting after-
-     wards are blocked until most of the first  user's  jobs  are
-     completed.   Therefore,  Grid  Engine  allows to change this
-     policy to the so called equal share sort: As soon as a  user
-     has  a  job  running his other jobs are sorted to the end of
-     the pending jobs list. Thus, the first  jobs  of  all  other
-     users  have  comparable  chances  to find a queue. Note: The
-     equal share sort only applies within the same  job  priority
-     category  (refer  to  the  <I>mp</I>  option  of  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  and
-     <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> commands for more information).
-
-     The default for user_sort is FALSE.
-
   queue_sort_method
      This parameter determines in which  order  several  criteria
      are  taken  into  account  to  product  a sorted queue list.
@@ -157,41 +140,25 @@ FORMAT
      which queues are to be filled (e.g.   the cheapest  resource
      first).
 
-
      The default for this parameter is load.
 
-  sgeee_schedule_interval
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-     The time period between job priority adjustments by the Grid
-     Engine  Enterprise  Edition  global dynamic scheduler (GDS).
-     Valid values are specified of  type  time  as  specified  in
-     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
-
   halftime
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-     When executing under  a  share  based  policy,  Grid  Engine
-     Enterprise  Edition  "ages" (i.e. decreases) usage to imple-
-     ment a sliding window for achieving the  share  entitlements
-     as  defined by the share tree. The halftime defines the time
-     interval in which accumulated usage will have  been  decayed
-     to  half  its  original value. Valid values are specified of
-     type time as specified in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+     When executing under a share  based  policy,  the  scheduler
+     "ages"  (i.e. decreases) usage to implement a sliding window
+     for achieving the share entitlements as defined by the share
+     tree.  The halftime defines the time interval in which accu-
+     mulated usage will have been decayed to  half  its  original
+     value.  Valid values are specified of type time as specified
+     in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
   usage_weight_list
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-     Grid Engine Enterprise Edition accounts for the  consumption
-     of  the  resources  CPU-time, memory and IO to determine the
-     usage which is imposed on a system by a job. A single  usage
-     value  is computed from these three input parameters by mul-
-     tiplying the individual values by weights  and  adding  them
-     up.  The  weights  are defined in the usage_weight_list. The
-     format of the list is
+     Grid Engine accounts for the consumption  of  the  resources
+     CPU-time,  memory  and  IO  to  determine the usage which is
+     imposed on a system by a job. A single usage value  is  com-
+     puted  from  these three input parameters by multiplying the
+     individual values by weights and adding them up. The weights
+     are defined in the usage_weight_list. The format of the list
+     is
 
           cpu=wcpu,mem=wmem,io=wio
 
@@ -200,71 +167,78 @@ FORMAT
      be 1.
 
   compensation_factor
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-     Determines how fast Grid Engine  Enterprise  Edition  should
-     compensate  for past usage below of above the share entitle-
-     ment defined in  the  share  tree.  Recommended  values  are
-     between 2 and 10, where 10 means faster compensation.
+     Determines how fast Grid Engine should compensate  for  past
+     usage  below  of  above the share entitlement defined in the
+     share tree. Recommended values are between 2 and  10,  where
+     10 means faster compensation.
 
   weight_user
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
      The relative importance of the user shares in the functional
      policy.  Values are of type real.
 
   weight_project
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
      The relative importance of the project shares in  the  func-
      tional policy.  Values are of type real.
 
-  weight_jobclass
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-     The relative importance of the job class (i.e. queue) shares
-     in the functional policy. Values are of type real.
-
   weight_department
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
      The relative importance of  the  department  shares  in  the
      functional policy. Values are of type real.
 
   weight_job
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
      The relative importance of the job shares in the  functional
      policy. Values are of type real.
 
   weight_tickets_functional
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
      The maximum number of functional tickets available for  dis-
-     tribution  by Grid Engine Enterprise Edition. Determines the
-     relative importance of the functional policy.
+     tribution by Grid Engine. Determines the relative importance
+     of the functional policy. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
+     overview on job priorities.
 
   weight_tickets_share
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
      The maximum number of share based tickets available for dis-
-     tribution  by Grid Engine Enterprise Edition. Determines the
-     relative importance of the share tree policy.
+     tribution by Grid Engine. Determines the relative importance
+     of the share tree policy. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
+     overview on job priorities.
 
   weight_deadline
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-     The maximum number of deadline tickets available for distri-
-     bution  by  Grid  Engine  Enterprise Edition. Determines the
-     relative importance of the deadline policy.
+     The weight applied on the remaining time until a jobs latest
+     start  time. Determines the relative importance of the dead-
+     line. See under  <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     priorities.
+
+  weight_waiting_time
+     The weight applied on the jobs waiting  time  since  submis-
+     sion.  Determines  the  relative  importance  of the waiting
+     time.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     priorities.
+
+  weight_urgency
+     The weight applied on jobs normalized urgency when determin-
+     ing  priority  finally used.  Determines the relative impor-
+     tance of urgency.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for an overview
+     on job priorities.
+
+  weight_ticket
+     The weight applied on normalized ticket amount  when  deter-
+     mining  priority  finally  used.   Determines  the  relative
+     importance of the ticket policies. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>
+     for an overview on job priorities.
+
+  flush_finish_sec
+     The parameters are provided for tuning the system's schedul-
+     ing  behavior.   By default, a scheduler run is triggered in
+     the scheduler interval. When this parameter is set to  1  or
+     larger,  the  scheduler  will be triggered x seconds after a
+     job has finished. Setting this parameter to 0  disables  the
+     flush after a job has finished.
+
+  flush_submit_sec
+     The parameters are provided for tuning the system's schedul-
+     ing  behavior.   By default, a scheduler run is triggered in
+     the scheduler interval.  When this parameter is set to 1  or
+     larger,  the  scheduler will be triggered  x seconds after a
+     job was submitted to the system. Setting this parameter to 0
+     disables the flush after a job was submitted.
 
   schedd_job_info
      The default scheduler can keep track why jobs could  not  be
@@ -279,6 +253,164 @@ FORMAT
      The user can obtain the collected information with the  com-
      mand qstat -j.
 
+  params
+     This is foreseen for passing additional paramters to the  N1
+     Grid Engine scheduler. The following values are recognized:
+
+     <I>JC</I>_<I>FILTER</I>
+          If set to true, the scheduler limits the number of jobs
+          it  looks  at during a scheduling run. At the beginning
+          of the scheduling run it assigns each  job  a  specific
+          category,   which  is  based  on  the  job's  requests,
+          priority settings, and the job  owner.  All  scheduling
+          policies will assign the same importance to each job in
+          one category. Therefore the number of jobs per category
+          have  a  FIFO order and can be limited to the number of
+          free slots in the system.
+
+          A exception are jobs, which request a resource reserva-
+          tion.  They  are  included regardsless of the number of
+          jobs in a category.
+
+          This setting is turned off per default, because in very
+          rare cases, the scheduler can make a wrong decision. It
+          is also advised to turn report_pjob_tickets off. Other-
+          wise qstat -ext can report outdated ticket amounts. The
+          information shown with a qstat -j for a job,  that  was
+          excluded in a scheduling run, is very limited.
+
+     <I>PROFILE</I>
+          If set equal to 1, the scheduler logs profiling  infor-
+          mation summarizing each scheduling run.
+
+     <I>MONITOR</I>
+          If set equal to 1, the  scheduler  records  information
+          for  each  scheduling  run  allowing  to  reproduce job
+          resources      utilization      in       the       file
+          &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedule</I>.
+
+     Changing params will take immediate effect.  The default for
+     params is none.
+
+  reprioritize_interval"
+     Interval (HH:MM:SS) to reprioritize jobs on the  exec  hosts
+     based  on the current ticket amount for the running jobs. If
+     the interval is set  to  00:00:00  the  reprioritization  is
+     turned off. The default value is 00:00:00.
+
+  report_pjob_tickets
+     This parameter allows to tune the  system's  scheduling  run
+     time.  It is used to enable / disable the reporting of pend-
+     ing job tickets to the qmaster.  It does not  influence  the
+     tickets  calculation.  The  sort  order of jobs in qstat and
+     qmon is only based on the submit time, when the reporting is
+     turned off.
+     The reporting should be turned of  in  a  system  with  very
+     large amount of jobs by setting this param to "false".
+
+  halflife_decay_list
+     The halflive_decay_list allows to configure different  decay
+     rates  for  the "finished_jobs usage types, which is used in
+     the pending job ticket calculation to account for jobs which
+     have just ended. This allows the user the pending jobs algo-
+     rithm to count finished jobs against a user or project for a
+     configurable  decayed  time  period.  The default is set so,
+     that finished jobs are not considered. It is  also  used  to
+     determine  if  the  job  usage has been added to the user or
+     project usage_list.
+     The halflife_decay_list also allows to  configure  different
+     decay  rates for each usage type being tracked (cpu, io, and
+     mem).
+
+  policy_hierarchy
+     This parameter sets up a dependency chain  of  ticket  based
+     policies.  Each  ticket based policy in the dependency chain
+     is influenced by the previous policies  and  influences  the
+     following  policies.  A  typical  scenario is to assign pre-
+     cedence for the override policy over the share-based policy.
+     The  override  policy  determines  in such a case how share-
+     based tickets are assigned among jobs of the  same  user  or
+     project.   Note  that  all policies contribute to the ticket
+     amount assigned to a particular job regardless of the policy
+     hierarchy  definition. Yet the tickets calculated in each of
+     the    policies    can    be    different    depending    on
+     "<I>POLICY</I>_<I>HIERARCHY</I>".
+
+     The "<I>POLICY</I>_<I>HIERARCHY</I>" parameter can be a  up  to  3  letter
+     combination of the first letters of the 3 ticket based poli-
+     cies S(hare-based), F(unctional) and O(verride). So a  value
+     "OFS"  means  that the override policy takes precedence over
+     the functional policy, which finally influences  the  share-
+     based  policy.   Less  than  3 letters mean that some of the
+     policies do not influence other policies and  also  are  not
+     influenced  by other policies. So a value of "FS" means that
+     the functional policy influences the share-based policy  and
+     that there is no interference with the other policies.
+
+     The special value "NONE" switches off policy hierarchies.
+
+  share_override_tickets
+     If set to "true" or "1", override tickets  of  any  override
+     object  instance  are  shared  equaly among all running jobs
+     associated with the object. The pending  jobs  will  get  as
+     many  override  tickets,  as they would have, when they were
+     running. If set to "false" or "0", each job  gets  the  full
+     value  of  the  override tickets associated with the object.
+     The default value is "true".
+
+  share_functional_shares
+     If set to "true" or "1", functional shares of any functional
+     object  instance  are  shared  among all the jobs associated
+     with the object. If set to "false" or "0", each job  associ-
+     ated  with  a  functional  object,  gets the full functional
+     shares of that object. The default value is "true".
+
+
+  max_functional_jobs_to_schedule
+     The maximum number of pending jobs to schedule in the  func-
+     tional policy. The default value is 200.
+
+  max_pending_tasks_per_job
+     The maximum number of subtasks  per  pending  array  job  to
+     schedule.  This parameter exists in order to reduce schedul-
+     ing overhead. The default value is 50.
+
+  max_reservation
+     The  maximum  number  of  reservations  scheduled  within  a
+     schedule  interval.  When  a runnable job can not be started
+     due  to  a  shortage  of  resources  a  reservation  can  be
+     scheduled   instead.  A  reservation  can  cover  consumable
+     resources with the global host, any execution host  and  any
+     queue.  For  parallel  jobs  reservations  are done also for
+     slots resource as specified in <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>.   As  job  runtime
+     the  maximum  of  the  time specified with -l h_rt=... or -l
+     s_rt=... is assumed. For jobs that have neither of them  the
+     default_duration  is  assumed.  Reservations prevent jobs of
+     lower priority as specified in <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> from  utiliz-
+     ing the reserved resource quota during the while of reserva-
+     tion. Jobs of lower priority are allowed  to  utilize  those
+     reserved  resources  only  if  their  prospective job end is
+     before the start of the reservation (backfilling).  Reserva-
+     tion  is  done  only  for  non-immediate jobs (-now no) that
+     request reservation (-R y). If max_reservation is set to "0"
+     no job reservation is done.
+
+     Note, that reservation scheduling can be performance consum-
+     ing  and  hence  reservation  scheduling  is switched off by
+     default. Since reservation scheduling  performance  consump-
+     tion is known to grow with the number of pending jobs use of
+     -R y option is recommended  only  for  those  jobs  actually
+     queuing   for   bottleneck   resources.  Together  with  the
+     max_reservation parameter this technique can be used to nar-
+     row down performance impacts.
+
+  default_duration
+     When job  reservation  is  enabled  through  max_reservation
+     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>  parameter  the default duration is assumed as
+     runtime for  jobs  that  have  neiter  -l  h_rt=...  nor  -l
+     s_rt=...  specified.  In  contrast to a h_rt/s_rt time limit
+     the default_duration is not enforced.
+
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sched</I>_<I>configuration</I>
                 sge_schedd configuration
@@ -292,6 +424,30 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

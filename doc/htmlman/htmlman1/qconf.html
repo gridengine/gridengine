@@ -15,6 +15,16 @@ DESCRIPTION
      user  management.   <I>Qconf</I>  also  allows  you  to examine the
      current queue configuration for existing queues.
 
+     <I>Qconf</I> allows the use of the backslash, '\', character at the
+     end  of a line to indicate that the next line is a continua-
+     tion of the current line.  When displaying settings, such as
+     the  output  of  one of the -s* options, <I>qconf</I> will break up
+     long lines (lines greater than 80 characters)  into  smaller
+     lines  using  backslash  line  continuation  where possible.
+     Lines will only be broken up at commas or whitespace.   This
+     feature  can  be  disabled  by  setting  the SGE_SINGLE_LINE
+     environment variable.
+
 OPTIONS
      Unless denoted otherwise,  the  following  options  and  the
      corresponding  operations  are available to all users with a
@@ -29,12 +39,6 @@ OPTIONS
           in fname following the file format of the corresponding
           object (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for the queue, for example).
           Requires root/manager privileges.
-
-     -Ac complex_name fname        &lt;<I>add</I> <I>complex</I>&gt;
-          Add the complex complex_name defined in  fname  to  the
-          Grid Engine cluster. The format of the complex specifi-
-          cation is described in <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.   Requires  root  or
-          manager privileges.
 
      -Acal fname                   &lt;<I>add</I> <I>calendar</I>&gt;
           Adds a new  calendar  definition  to  the  Grid  Engine
@@ -53,8 +57,8 @@ OPTIONS
           privileges.
 
      -Aconf file_list              &lt;<I>add</I> <I>configurations</I>&gt;
-          Add  the  cluster  configurations   (see   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>)
-          specified  in the files enlisted in the comma separated
+          Add the cluster configurations (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>) speci-
+          fied  in  the  files  enlisted  in  the comma separated
           file_list.
           Requires root or manager privileges.
 
@@ -64,15 +68,17 @@ OPTIONS
           specification is described in  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.   Requires
           root or manager privileges.
 
+     -Ahgrp file                   &lt;<I>add</I> <I>host</I> <I>group</I> <I>config</I>&gt;
+          Add the host group configuration defined in  file.  The
+          file format of file must comply to the format specified
+          in <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B>.  Requires root or manager privileges.
+
      -Ap fname                     &lt;<I>add</I> <I>PE</I> <I>configuration</I>&gt;
           Add the parallel environment (PE) defined in  fname  to
           the  Grid  Engine  cluster.  Requires  root  or manager
           privileges.
 
      -Aprj fname                   &lt;<I>add</I> <I>new</I> <I>project</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Adds the project description defined in  fname  to  the
           list of registered projects (see <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  Requires
           root or manager privileges.
@@ -107,8 +113,8 @@ OPTIONS
           object (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for the queue, for example).
           Requires root/manager privileges.
 
-     -Mc complex_name fname        &lt;<I>modify</I> <I>complex</I>&gt;
-          Overwrites the specified complex  by  the  contents  of
+     -Mc fname                     &lt;<I>modify</I> <I>complex</I>&gt;
+          Overwrites the complex configuration by the contents of
           fname.  The  argument  file  must  comply to the format
           specified in  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.   Requires  root  or  manager
           privilege.
@@ -131,6 +137,14 @@ OPTIONS
           comply to the format defines in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.  Requires
           root or manager privilege.
 
+     -Mhgrp file                   &lt;<I>modify</I> <I>host</I> <I>group</I> <I>config</I>.&gt;
+          Allows changing of host group configuration with a sin-
+          gle  command. All host group configuration entries con-
+          tained in file will be applied.  Configuration  entries
+          not  contained in file will be deleted. The file format
+          of file must comply to the format  specified  in  <I>host-</I>
+          <B><A HREF="../htmlman5/group.html">group(5)</A></B>.
+
      -Mp fname                     &lt;<I>modify</I> <I>PE</I> <I>configuration</I>&gt;
           Same as -mp (see below) but instead of invoking an edi-
           tor  to  modify  the PE configuration the file fname is
@@ -151,20 +165,6 @@ OPTIONS
           considered to contain a changed  configuration.   Refer
           to <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details on the queue configuration
           format.  Requires root or manager privilege.
-
-     -Mqattr fname q_name,...      &lt;<I>modify</I> <I>queue</I> <I>attributes</I>&gt;
-          DEPRECATED: Use -Mattr!
-          Allows changing of selected queue configuration  attri-
-          butes  in multiple queues with a single command. In all
-          queues contained in the comma separated queue name list
-          the queue attribute definitions contained in fname will
-          be applied. Queue attributes  not  contained  in  fname
-          will be left unchanged.
-
-          All queue attributes can be modified except  for  <I>qname</I>
-          and  <I>qhostname</I>.   Refer to <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details on
-          the  queue  configuration  format.  Requires  root   or
-          manager privilege.
 
      -Mu fname                     &lt;<I>modify</I> <I>ACL</I>&gt;
           Takes the user access list (ACL) defined  in  fname  to
@@ -188,12 +188,22 @@ OPTIONS
           Allows adding specifications to a single  configuration
           list  attribute in multiple instances of an object with
           a single command. Currently supported objects  are  the
-          queue  and  the  host  configuration being specified as
-          <I>queue</I> or <I>exechost</I> in obj_spec. The queue load_thesholds
-          parameter  is  an example of a list attribute. With the
-          -aattr option, entries can  be  added  to  such  lists,
-          while  they  can  be deleted with -dattr, modified with
-          -mattr, and replaced with -rattr.
+          queue,  the host, the host group, the parallel environ-
+          ment  and  the  checkpointing  interface  configuration
+          being specified as <I>queue</I> , <I>exechost</I> , <I>hostgroup</I> , <I>pe</I> or
+          <I>ckpt</I>  in  obj_spec.  For   the   obj_spec   <I>queue</I>   the
+          obj_instance  can  be  a  cluster  queue  name, a queue
+          domain name or a queue instance name. Find more  infor-
+          mation    concerning    different    queue   names   in
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.    Depending   on   the   type   of   the
+          obj_instance  this adds to the cluster queues attribute
+          sublist the cluster queues implicit default  configura-
+          tion  value  or the queue domain configuration value or
+          queue  instance   configuartion   value.    The   queue
+          load_thesholds parameter is an example of a list attri-
+          bute. With the -aattr option, entries can be  added  to
+          such  lists,  while  they  can  be deleted with -dattr,
+          modified with -mattr, and replaced with -rattr.
           The name of the configuration attribute to be  enhanced
           is  specified  with  attr_name  followed  by  val  as a
           <I>name</I>=<I>value</I> pair. The comma  separated  list  of  object
@@ -204,21 +214,6 @@ OPTIONS
           object  the  load_values  attribute  cannot be modified
           (see <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
           Requires root or manager privileges.
-
-     -ac complex_name              &lt;<I>add</I> <I>complex</I>&gt;
-          Adds a complex to the Grid Engine environment.  Complex
-          entries  contain  one  or  more  resources which may be
-          requested by jobs submitted to  the  system.  The  <I>com-</I>
-          <B><A HREF="../htmlman5/plex.html">plex(5)</A></B> manual page contains detailed information about
-          the format of a complex definition.
-          When using the -ac option the complex name is given  in
-          the  command  option.  <I>Qconf</I> will then open a temporary
-          file and start up the  text  editor  indicated  by  the
-          environment variable EDITOR (default editor is <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> if
-          EDITOR is not set). After entering the complex  defini-
-          tion  and closing the editor the new complex is checked
-          and   registered   with    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.     Requires
-          root/manager privileges.
 
      -acal calendar_name           &lt;<I>add</I> <I>calendar</I>&gt;
           Adds a new  calendar  definition  to  the  Grid  Engine
@@ -291,6 +286,14 @@ OPTIONS
           option above) to the  Grid  Engine  trusted  host  list
           automatically.  Requires root or manager privileges.
 
+     -ahgrp group                  &lt;<I>add</I> <I>host</I> <I>group</I> <I>config</I>.&gt;
+          Adds a new host group with the name specified in group.
+          This  command  invokes  an  editor (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> or the
+          editor indicated by the EDITOR  environment  variable).
+          The  new  host group entry is registered after changing
+          the entry and exiting  the  editor.  Requires  root  or
+          manager privileges.
+
      -am user,...                  &lt;<I>add</I> <I>managers</I>&gt;
           Adds the indicated users to  the  Grid  Engine  manager
           list. Requires root or manager privileges.
@@ -312,9 +315,6 @@ OPTIONS
           privileges.
 
      -aprj                         &lt;<I>add</I> <I>new</I> <I>project</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Adds a project description to the  list  of  registered
           projects  (see <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  <I>Qconf</I> retrieves a template
           project configuration and executes <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> (or $EDITOR if
@@ -323,16 +323,15 @@ OPTIONS
           the   template   is   registered  with  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
           Requires root or manager privileges.
 
-     -aq [q_template]              &lt;<I>add</I> <I>new</I> <I>queue</I>&gt;
-          <I>Qconf</I> retrieves either the default queue  configuration
-          (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  or the configuration of the queue
-          q_template (if the optional argument  is  present)  and
-          executes  <B><A HREF="../htmlman1/vi.html">vi(1)</A></B>  (or  $EDITOR if the EDITOR environment
-          variable is set) to allow you to  customize  the  queue
-          configuration.  Upon exit from the editor, the queue is
-          registered with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.  A  minimal  configura-
-          tion  requires only that the queue name and queue host-
-          name be set.  Requires root or manager privileges.
+     -aq [queue_name]              &lt;<I>add</I> <I>new</I> <I>queue</I>&gt;
+          <I>Qconf</I> retrieves the default  queue  configuration  (see
+          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  and  executes  <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> (or $EDITOR if the
+          EDITOR environment variable is set)  to  allow  you  to
+          customize  the  queue configuration. Upon exit from the
+          editor, the queue is registered with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.  A
+          minimal configuration requires only that the queue name
+          and queue hostlist be set.  Requires  root  or  manager
+          privileges.
 
      -as hostname,...              &lt;<I>add</I> <I>submit</I> <I>hosts</I>&gt;
           Add hosts hostname to the list of hosts allowed to sub-
@@ -340,9 +339,6 @@ OPTIONS
           Requires root or manager privileges.
 
      -astnode node_path=shares,... &lt;<I>add</I> <I>share</I> <I>tree</I> <I>node</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Adds the specified share tree node(s) to the share tree
           (see  <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).   The node_path is a hierarchical
           path ([/]node_name[[/.]node_name...])   specifying  the
@@ -352,9 +348,6 @@ OPTIONS
           Requires root or manager privileges.
 
      -astree                       &lt;<I>add</I> <I>share</I> <I>tree</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Adds the definition of a share tree to the system  (see
           <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).  A template share tree is retrieved and
           an editor (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B>  or  the  editor  indicated  by
@@ -364,9 +357,6 @@ OPTIONS
           manager privileges.
 
      -Astree fname                 &lt;<I>add</I> <I>share</I> <I>tree</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Adds the definition of a share tree to the system  (see
           <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>)  from  the file fname.  Requires root or
           manager privileges.
@@ -377,18 +367,11 @@ OPTIONS
           Requires root/manager/operator privileges.
 
      -Auser fname                  &lt;<I>add</I> <I>user</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
-          Add the user defined in fname to the Grid Engine Enter-
-          prise  Edition cluster. The format of the user specifi-
-          cation is  described  in  <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root  or
-          manager privileges.
+          Add the user defined in fname to the Grid Engine  clus-
+          ter.  The format of the user specification is described
+          in <B><A HREF="../htmlman5/user.html">user(5)</A></B>.  Requires root or manager privileges.
 
      -auser                        &lt;<I>add</I> <I>user</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Adds a user  to  the  list  of  registered  users  (see
           <B><A HREF="../htmlman5/user.html">user(5)</A></B>).  This command invokes an editor (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B>
           or the editor indicated by the EDITOR environment vari-
@@ -397,42 +380,21 @@ OPTIONS
           Requires root or manager privileges.
 
      -clearusage                   &lt;<I>clear</I> <I>sharetree</I> <I>usage</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Clears all user and project usage from  the  sharetree.
           All usage will be initialized back to zero.
 
-     -cq queue_name,...            &lt;<I>clean</I> <I>queue</I>&gt;
+     -cq wc_queue_list             &lt;<I>clean</I> <I>queue</I>&gt;
           Cleans queue from jobs which haven't been reaped.  Pri-
           marily      a      development      tool.      Requires
-          root/manager/operator privileges.
+          root/manager/operator privileges.  Find  a  description
+          of wc_queue_list in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -dattr obj_spec attr_name val obj_instance,...
                                  &lt;<I>delete</I> <I>in</I> <I>object</I> <I>attribs</I>&gt;
           Allows deleting specifications in a  single  configura-
           tion  list attribute in multiple instances of an object
-          with a single command. Currently supported objects  are
-          the queue and the host configuration being specified as
-          <I>queue</I> or <I>host</I> in  obj_spec.  The  queue  load_thesholds
-          parameter  is  an example of a list attribute. With the
-          -dattr option, entries can be deleted from such  lists,
-          while  they  can  be  added  with -aattr, modified with
-          -mattr, and replaced with -rattr.
-          The name of the configuration attribute to be  modified
-          is  specified  with  attr_name followed by val defining
-          the name of the attribute list entry to be deleted. The
-          comma  separated  list  of  object instances (e.g., the
-          list of queues) to which the changes have to be applied
-          are specified at the end of the command.
-          The following restriction applies: For the host  object
-          the  load_values  attribute  cannot  be  modified  (see
-          <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
-          Requires root or manager privileges.
-
-     -dc complex_name,...          &lt;<I>delete</I> <I>complex</I>&gt;
-          Deletes   complexes   from   Grid   Engine.    Requires
-          root/manager privileges.
+          with a single command. Find more information concerning
+          obj_spec and obj_instance in the description of -aattr
 
      -dcal calendar_name,...       &lt;<I>delete</I> <I>calendar</I>&gt;
           Deletes the specified  calendar  definition  from  Grid
@@ -470,9 +432,6 @@ OPTIONS
           Requires root/manager privileges.
 
      -dprj project,...             &lt;<I>delete</I> <I>projects</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Deletes the specified project(s). Requires root/manager
           privileges.
 
@@ -486,9 +445,6 @@ OPTIONS
           Requires root/manager privileges.
 
      -dstnode node_path,...        &lt;<I>delete</I> <I>share</I> <I>tree</I> <I>node</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Deletes  the  specified  share   tree   node(s).    The
           node_path       is       a       hierarchical      path
           ([/]node_name[[/.]node_name...])  specifying the  loca-
@@ -496,9 +452,6 @@ OPTIONS
           Requires root or manager privileges.
 
      -dstree                       &lt;<I>delete</I> <I>share</I> <I>tree</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Deletes  the  current  share  tree.  Requires  root  or
           manager privileges.
 
@@ -512,9 +465,6 @@ OPTIONS
           Requires root/manager/operator privileges.
 
      -duser user,...               &lt;<I>delete</I> <I>users</I>&gt;"
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Deletes  the  specified  user(s)  from  the   list   of
           registered users.  Requires root or manager privileges.
 
@@ -550,34 +500,11 @@ OPTIONS
                                  &lt;<I>modify</I> <I>object</I> <I>attributes</I>&gt;
           Allows changing a  single  configuration  attribute  in
           multiple  instances of an object with a single command.
-          Currently supported objects are the queue and the  host
-          configuration  being  specified  as  <I>queue</I>  or  <I>host</I> in
-          obj_spec.
-          Note, that "-mattr queue attr_name val q_name, ..."  is
-          equivalent  to "-mqattr attr_name val q_name,..."  (see
-          below). The latter is available for  backward  compati-
-          bility.
-          The name of the configuration attribute to be  modified
-          is  specified  with  attr_name followed by the value to
-          which the attribute is going to be set. If  the  attri-
-          bute  is a list, such as the queue load_thresholds, val
-          can  be  a  <I>name</I>=<I>value</I>  pair,  in  which  case  only  a
-          corresponding  entry  in  the list is changed. Refer to
-          the -aattr, -dattr and -rattr options for a description
-          of  further  means  to  change  specifically  such list
-          attributes.
-          The comma separated list of object instances (e.g., the
-          list of queues) to which the changes have to be applied
-          are specified at the end of the command.
-          The following restrictions apply:  For the <I>queue</I> object
-          the  qname  and qhostname attributes cannot be modified
-          (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).  For the host object the hostname,
-          load_values  and  processors attributes cannot be modi-
-          fied (see <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
-          Requires root or manager privilege.
+          Find   more   information   concerning   obj_spec   and
+          obj_instance in the description of -aattr
 
-     -mc complex_name              &lt;<I>modify</I> <I>complex</I>&gt;
-          The specified complex configuration (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>) is
+     -mc                           &lt;<I>modify</I> <I>complex</I>&gt;
+          The   complex   configuration   (see   <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>)   is
           retrieved,  an  editor is executed (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> or the
           editor indicated by $EDITOR) and  the  changed  complex
           configuration  is  registered  with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> upon
@@ -631,9 +558,6 @@ OPTIONS
           privilege.
 
      -mprj project                 &lt;<I>modify</I> <I>project</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Data for the specific project is  retrieved  (see  <I>pro-</I>
           <B><A HREF="../htmlman5/ject.html">ject(5)</A></B>)  and  an  editor  (either  <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> or the editor
           indicated by $EDITOR) is invoked for modifying the pro-
@@ -650,19 +574,6 @@ OPTIONS
           the  queue  configuration  format.   Requires  root  or
           manager privilege.
 
-     -mqattr attr_name q_name,...  &lt;<I>modify</I> <I>queue</I> <I>attributes</I>&gt;
-          DEPRECATED: Use -mattr!
-          Allows changing of a single queue configuration  attri-
-          bute  in  multiple queues with a single command. In all
-          queues contained in the comma separated queue name list
-          the  value of the attribute attr_name will be overwrit-
-          ten with val.
-
-          All queue attributes can be modified except  for  <I>qname</I>
-          and  <I>qhostname</I>.   Refer to <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details on
-          the  queue  configuration  format.  Requires  root   or
-          manager privilege.
-
      -msconf                       &lt;<I>modify</I> <I>scheduler</I> <I>configuration</I>&gt;
           The current scheduler configuration (see <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>)
           is retrieved, an editor is executed  (either  <B><A HREF="../htmlman1/vi.html">vi(1)</A></B>  or
@@ -670,10 +581,13 @@ OPTIONS
           guration is registered with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> upon exit of
           the editor.  Requires root or manager privilege.
 
+<I>from</I> <I>file</I>&gt;
+     -Msconf  fname                 &lt;<I>modify</I>  <I>scheduler</I>   <I>configuration</I>
+          The current scheduler configuration (see <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>)
+          is overridden with the configuration specified  in  the
+          file. Requires root or manager privilege.
+
      -mstnode node_path=shares,... &lt;<I>modify</I> <I>share</I> <I>tree</I> <I>node</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Modifies the specified share tree node(s) in the  share
           tree (see <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).  The node_path is a hierarch-
           ical path ([/]node_name[[/.]node_name...])   specifying
@@ -682,9 +596,6 @@ OPTIONS
           Requires root or manager privileges.
 
      -mstree                       &lt;<I>modify</I> <I>share</I> <I>tree</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Modifies  the  definition  of  the  share   tree   (see
           <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).   The  present  share tree is retrieved
           and an editor (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> or the editor indicated  by
@@ -694,9 +605,6 @@ OPTIONS
           manager privileges.
 
      -Mstree fname                 &lt;<I>modify</I> <I>share</I> <I>tree</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Modifies  the  definition  of  the  share   tree   (see
           <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).   The  modified  sharetree is read from
           file fname.  Requires root or manager privileges.
@@ -712,37 +620,17 @@ OPTIONS
                                  &lt;<I>replace</I> <I>object</I> <I>attributes</I>&gt;
           Allows replacing a single configuration list  attribute
           in  multiple  instances of an object with a single com-
-          mand. Currently supported objects are the queue and the
-          host configuration being specified as <I>queue</I> or <I>exechost</I>
-          in obj_spec. The queue load_thesholds parameter  is  an
-          example  of  a  list attribute. With the -rattr option,
-          such lists can be replaced, while entries can be  added
-          to  them with -aattr, deleted with -dattr, and modified
-          with -mattr.
-          The name of the configuration attribute to be  modified
-          is  specified  with  attr_name followed by val defining
-          the new setting of the attribute. The  comma  separated
-          list  of object instances (e.g., the list of queues) to
-          which the changes have to be applied are  specified  at
-          the end of the command.
-          The following restriction applies: For the host  object
-          the  load_values  attribute  cannot  be  modified  (see
-          <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
+          mand. Find more  information  concerning  obj_spec  and
+          obj_instance in the description of -aattr .
           Requires root or manager privilege.
 
      -Muser fname                  &lt;<I>modify</I> <I>user</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Modify the user defined in fname  in  the  Grid  Engine
-          Enterprise  Edition  cluster.  The  format  of the user
-          specification is described in <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root
-          or manager privileges.
+          cluster.  The  format  of  the  user  specification  is
+          described  in  <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root   or   manager
+          privileges.
 
      -muser user                   &lt;<I>modify</I> <I>user</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Data for the specific user is retrieved  (see  <B><A HREF="../htmlman5/user.html">user(5)</A></B>)
           and  an editor (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> or the editor indicated by
           the EDITOR environment variable) is invoked for modify-
@@ -750,17 +638,14 @@ OPTIONS
           modified data is registered. Requires root  or  manager
           privileges.
 
-     -sc complex_name,...          &lt;<I>show</I> <I>complexes</I>&gt;
-          Display the configuration of one or more complexes.
+     -sc                           &lt;<I>show</I> <I>complexes</I>&gt;
+          Display the complex configuration.
 
      -scal calendar_name           &lt;<I>show</I> <I>calendar</I>&gt;
           Display the configuration of the specified calendar.
 
      -scall                        &lt;<I>show</I> <I>calendar</I> <I>list</I>&gt;
           Show a list of all calendars currently defined.
-
-     -scl                          &lt;<I>show</I> <I>complex</I> <I>list</I> <I>names</I>&gt;
-          Show a list of all complexes currently configured.
 
      -sckpt ckpt_name              &lt;<I>show</I> <I>ckpt</I>. <I>environment</I>&gt;
           Display the configuration of the specified  checkpoint-
@@ -785,6 +670,10 @@ OPTIONS
           available. The special host name "global" refers to the
           cell global configuration.
 
+     -sds                          &lt;<I>show</I> <I>detached</I> <I>settings</I>&gt;
+          Displays detached settings in  the  cluster  configura-
+          tion.
+
      -se hostname                  &lt;<I>show</I> <I>execution</I> <I>host</I>&gt;
           Displays the  definition  of  the  specified  execution
           host.
@@ -802,11 +691,48 @@ OPTIONS
      -sh                           &lt;<I>show</I> <I>administrative</I> <I>hosts</I>&gt;
           Displays the Grid Engine administrative host list.
 
+     -shgrp group                  &lt;<I>show</I> <I>host</I> <I>group</I> <I>config</I>.&gt;
+          Displays the host group entries for the group specified
+          in group.
+
+     -shgrpl                       &lt;<I>show</I> <I>host</I> <I>group</I> <I>lists</I>&gt;
+          Displays a name list  of  all  currently  defined  host
+          groups which have a valid host group configuration.
+
+     -shgrp_tree group     &lt;<I>show</I> <I>host</I> <I>group</I> <I>tree</I>&gt;
+          Shows a tree like structure of host group.
+
+     -shgrp_resolved       &lt;<I>show</I> <I>host</I> <I>group</I> <I>hosts</I>&gt;
+          Shows a list of all hosts which are part of the defini-
+          tion  of  host group. If the host group definition con-
+          taines sub host  groups  than  also  these  groups  are
+          resolved and the hostnames are printed.
+
      -sm                           &lt;<I>show</I> <I>managers</I>&gt;
           Displays the managers list.
 
      -so                           &lt;<I>show</I> <I>operators</I>&gt;
           Displays the operator list.
+
+     -sobjl obj_spec attr_name val &lt;<I>show</I> <I>object</I> <I>list</I>&gt;
+          Shows a list of all configuration objects for which val
+          matches  at least one configuration value of the attri-
+          butes whose name matches with attr_name.
+
+          Obj_spec  can   be   "queue"   or   "queue_domain"   or
+          "queue_instance"    or    "exechost".     Note:    When
+          "queue_domain"  or  "queue_instance"  is  specified  as
+          obj_spec matching is only done with the attribute over-
+          ridings concerning the  host  group  or  the  execution
+          host.  In  this  case  queue  domain  names resp. queue
+          instances are returned.
+
+          Attr_name can be any of the configuration file keywords
+          enlisted  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> or <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.  Also wild-
+          cards can be used to match multiple attributes.
+
+          Val can be an arbitrary string or  a  wildcard  expres-
+          sion.
 
      -sp pe_name                   &lt;<I>show</I> <I>PE</I> <I>configuration</I>&gt;
           Show the definition of the  <I>parallel</I>  <I>environment</I>  (PE)
@@ -817,23 +743,19 @@ OPTIONS
           <I>ment</I>s (PEs).
 
      -sprj project                 &lt;<I>show</I> <I>project</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Shows the definition of the specified project (see <I>pro-</I>
           <B><A HREF="../htmlman5/ject.html">ject(5)</A></B>).
 
      -sprjl                        &lt;<I>show</I> <I>project</I> <I>list</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Shows the list of all currently defined projects.
 
-     -sq queue_name[,queue_name,...]&lt;show queues&gt;
-          Displays one or multiple queues.
+     -sq wc_queue_list             &lt;show queues&gt;
+          Displays  one  or  multiple  cluster  queues  or  queue
+          instances.  A description of wc_queue_list can be found
+          in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -sql                          &lt;<I>show</I> <I>queue</I> <I>list</I>&gt;
-          Show a list of all currently defined queues.
+          Show a list of all currently defined cluster queues.
 
      -ss                           &lt;<I>show</I> <I>submit</I> <I>hosts</I>&gt;
           Displays the Grid Engine submit host list.
@@ -843,18 +765,12 @@ OPTIONS
           format explained in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>.
 
      -sstnode node_path,...        &lt;<I>show</I> <I>share</I> <I>tree</I> <I>node</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Shows the name and shares of the specified  share  tree
           node(s)   (see  <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).   The  node_path  is  a
           hierarchical   path    ([/]node_name[[/.]node_name...])
           specifying the location of a node in the share tree.
 
      -sstree                       &lt;<I>show</I> <I>share</I> <I>tree</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Shows  the  definition   of   the   share   tree   (see
           <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).
 
@@ -871,16 +787,10 @@ OPTIONS
           Engine user access lists (ACLs).
 
      -suser user,...               &lt;<I>show</I> <I>user</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Shows the definition  of  the  specified  user(s)  (see
           <B><A HREF="../htmlman5/user.html">user(5)</A></B>).
 
      -suserl                       &lt;<I>show</I> <I>users</I>&gt;
-          This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
           Shows the list of all currently defined users.
 
      -tsm                          &lt;<I>trigger</I> <I>scheduler</I> <I>monitoring</I>&gt;
@@ -920,16 +830,24 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
 
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qconf</I>  client
-                    resides.  Per default the local host is used.
+     SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map entry instead to define
+                    that port.
+
+     SGE_SINGLE_LINE
+                    If set, indicates that long lines should  not
+                    be broken up using backslashes.  This setting
+                    is useful for scripts which expect one  entry
+                    per line.
 
 RESTRICTIONS
      Modifications to a queue  configuration  do  not  affect  an
@@ -948,31 +866,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -535,17 +535,13 @@ bdb_get_dbname(bdb_info info, dstring *buffer)
 void
 bdb_lock_info(bdb_info info)
 {
-   DENTER(TOP_LAYER, "bdb_lock_info");
-   sge_mutex_lock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));
-   DEXIT;
+   sge_mutex_lock("bdb mutex", "bdb_lock_info", __LINE__, &(info->mtx));
 }
 
 void
 bdb_unlock_info(bdb_info info)
 {
-   DENTER(TOP_LAYER, "bdb_unlock_info");
-   sge_mutex_unlock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));
-   DEXIT;
+   sge_mutex_unlock("bdb mutex", "bdb_unlock_info", __LINE__, &(info->mtx));
 }
 
 const char *

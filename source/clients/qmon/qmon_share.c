@@ -432,12 +432,6 @@ Widget parent
 
    XtAddCallback(st_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
-#if 0
-   XtAddCallback(st_new, XmNactivateCallback, 
-                     qmonShareTreeLink, NULL);
-   XtAddCallback(st_sharetree_type, XmtNvalueChangedCallback, 
-                     qmonShareTreeToggleType, NULL);
-#endif
    XtAddCallback(st_close, XmNactivateCallback, 
                      qmonShareTreePopdown, NULL);
    XtAddCallback(st_apply, XmNactivateCallback, 
@@ -596,6 +590,16 @@ XtPointer cld, cad;
    }
 
    /*
+   ** if the node or the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if ((item->text && !strcasecmp(item->text, "default")) ||
+       (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default"))) {
+      DEXIT;
+      return;
+   }   
+
+   /*
    ** create new_node
    */
    if (item->type == ItemLeafType)
@@ -649,6 +653,16 @@ XtPointer cld, cad;
       return;
    }
       
+   /*
+   ** if the node or the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if ((item->text && !strcasecmp(item->text, "default")) ||
+       (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default"))) {
+      DEXIT;
+      return;
+   }   
+
 
    /*
    ** create new_node
@@ -660,7 +674,10 @@ XtPointer cld, cad;
    strcpy(name, "");
    status = AskForNode(w, name, 256, &share);
 
-   if (!status) {
+   if (!status || (name && !strcmp(name, "default"))) {
+      if (name && !strcmp(name, "default")) {
+         qmonMessageShow(w, True, "@{Nodes named 'default' are not allowed !}");
+      }   
       ListTreeDelete(tree, new);
    }
    else {
@@ -669,6 +686,7 @@ XtPointer cld, cad;
       item = new;
       dirty = True;
    }
+
    /*
    ** Highlight the new_node
    */
@@ -696,6 +714,15 @@ XtPointer cld, cad;
       return;
    }
    item = ret.items[0];
+
+   /*
+   ** if the node or the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if (item && item->parent && item->parent->text && !strcasecmp(item->parent->text, "default")) {
+      DEXIT;
+      return;
+   }   
 
    if (item != ListTreeFirstItem(tree)) {
       paste_tree = lCreateElemList("Tree", STN_Type, 1);
@@ -773,6 +800,16 @@ XtPointer cld, cad;
       return;
    }
    item = ret.items[0];
+
+   /*
+   ** if the node or the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if ((item->text && !strcasecmp(item->text, "default")) || 
+        (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default"))) {
+      DEXIT;
+      return;
+   }   
 
    CullToTree(tree, item, paste_tree);
    paste_tree = lFreeList(paste_tree);
@@ -1038,7 +1075,22 @@ XtPointer cld, cad;
    ListTreeGetHighlighted(tree, &ret);
    if (ret.count == 1)
       item = ret.items[0];
+
+   if (!item) {
+      DEXIT;
+      return;
+   }   
+      
    
+   /*
+   ** if the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default")) {
+      DEXIT;
+      return;
+   }   
+
    ListTreeDelete(tree, item);
    dirty = True;
 
@@ -1055,6 +1107,7 @@ XtPointer cld, cad;
    ListTreeItem *old_root = NULL;
    lList *scl = NULL;
    lList *ul = NULL;
+   lList *usl = NULL;
    lList *pl = NULL;
    ListTreeItem *root_node = NULL;
    Boolean answer = False;
@@ -1090,7 +1143,7 @@ XtPointer cld, cad;
    /*
    ** set and get several lists
    */
-   qmonMirrorMultiAnswer(SHARETREE_T | USER_T | PROJECT_T | SC_T, &alp);
+   qmonMirrorMultiAnswer(SHARETREE_T | USER_T | PROJECT_T | SC_T| USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -1100,6 +1153,7 @@ XtPointer cld, cad;
 
    share_tree = qmonMirrorList(SGE_SHARETREE_LIST);
    ul = qmonMirrorList(SGE_USER_LIST);
+   usl = qmonMirrorList(SGE_USERSET_LIST);
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    
    /* 
@@ -1113,7 +1167,7 @@ XtPointer cld, cad;
    /*
     * add default user nodes for display purposes
     */
-   sge_add_default_user_nodes(lFirst(share_tree), ul, pl);
+   sge_add_default_user_nodes(lFirst(share_tree), ul, pl, usl);
 
    /*
    ** fill the share tree with the actual values
@@ -1127,17 +1181,6 @@ XtPointer cld, cad;
    old_root = ListTreeFirstItem(tree);
    ListTreeUnchainItem(tree, old_root);
       
-#if 0
-   /*
-   ** set the sharetree type
-   ** translate to 'tree language'
-   */
-   if (share_tree && lFirst(share_tree) && 
-         lGetUlong(lFirst(share_tree), STN_type) == STT_PROJECT )
-      XmtChooserSetState(st_sharetree_type, 1, True);
-   else
-      XmtChooserSetState(st_sharetree_type, 0, True);
-#endif
    root_node = CullToTree(tree, NULL, share_tree);
 
    /*
@@ -1188,10 +1231,10 @@ XtPointer cld, cad;
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
         item=ret->items[i];
-        printf("%s",item->text);
+        printf("%s",item->text ? item->text : "-NA-");
         while (item->parent) {
           item=item->parent;
-          printf("<--%s",item->text);
+          printf("<--%s",item->text ? item->text : "-NA-");
         }
         printf("\n");
       }
@@ -1249,9 +1292,28 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonShareTreeMenu");
 
+   /*
+   ** if the node is Root don't allow editing
+   ** the node is read-only
+   */
+   if (ret->item && ret->item->text && !strcasecmp(ret->item->text, "Root")) {
+      DEXIT;
+      return;
+   }   
+
+   /*
+   ** if the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if (ret->item->parent && ret->item->parent->text && !strcasecmp(ret->item->parent->text, "default")) {
+      DEXIT;
+      return;
+   }   
+
    if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf ("MENU: item=%s\n", ret->item->text);
    }
+
 
    /*
    ** set the values in the item for the node popup
@@ -1299,6 +1361,24 @@ XtPointer cld, cad;
       DEXIT;
       return;
    }
+
+   /*
+   ** if the node is Root don't allow editing
+   ** the node is read-only
+   */
+   if (item && item->text && !strcasecmp(item->text, "Root")) {
+      DEXIT;
+      return;
+   }   
+
+   /*
+   ** if the parent node is default don't allow editing
+   ** the nodes are read-only
+   */
+   if (item->parent && item->parent->text && !strcasecmp(item->parent->text, "default")) {
+      DEXIT;
+      return;
+   }   
 
    /*
    ** set the values in the item for the node popup
@@ -1458,6 +1538,13 @@ int mode
    ** add a new node of type 'type'
    */
    node = ListTreeAddType(tree, parent, name, type);
+#if 1
+   if (!strcasecmp(name, "default")) {
+      Pixmap leaf_plus = qmonGetIcon("leaf_plus");
+      Pixmap leaf_minus = qmonGetIcon("leaf_minus");
+      ListTreeSetItemPixmaps(tree, node, leaf_minus, leaf_plus);
+   }
+#endif      
 
    if (mode == ADD_MODE) {
       /*
@@ -1531,6 +1618,7 @@ lList *shac
    Boolean branch = False;
 
    DENTER(GUI_LAYER, "CullToTree");
+
 
    for_each(ep, shac) {
       /*
@@ -2023,7 +2111,13 @@ Cardinal *share
    node_name = AskNodeInfo.AskNodeName;
    node_share = AskNodeInfo.AskNodeShare;
 
-   XmtSetInitialFocus(node_layout, node_name);
+   if (name && !strcmp(name, "default")) {
+      XtSetSensitive(node_name, False);
+      XmtSetInitialFocus(node_layout, node_share);
+   } else {   
+      XtSetSensitive(node_name, True); 
+      XmtSetInitialFocus(node_layout, node_name);
+   }   
    
    /* 
    ** Tell the dialog who it is transient for 
@@ -2034,7 +2128,7 @@ Cardinal *share
    /*
    ** preset with default values
    */
-   sprintf(buf, "%d", (int) *share);
+   sprintf(buf, u32, (Cardinal) *share);
    XmtInputFieldSetString(node_name, name);
    XmtInputFieldSetString(node_share, buf);
 
@@ -2064,7 +2158,7 @@ Cardinal *share
    XmUpdateDisplay(node_layout);
 
    /*
-   ** if the user clicked Ok, return the time string
+   ** if the user clicked Ok, return the strings
    */
    if (AskNodeInfo.button == XmtOkButton) {
       name_str = XmtInputFieldGetString(node_name);
@@ -2075,9 +2169,16 @@ Cardinal *share
       }
       strncpy(name, name_str, name_len-1);
       name[name_len-1] = '\0';
-      if (share_str && share_str != '\0')
-         *share = (Cardinal)strtol(share_str, &rest, 10); 
-      else
+      if (share_str && share_str != '\0') {
+         long l = strtol(qmon_trim(share_str), &rest, 10);
+         if (l < 0 || (rest && *rest != '\0')) {
+            qmonMessageShow(w, True, "@{Only unsigned integers are allowed !}");
+            DEXIT;
+            return False;
+         } else {
+            *share = (Cardinal)l;
+         }   
+      } else
          *share = 0;
       DEXIT;
       return True;

@@ -123,7 +123,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
    FILE *fp=NULL;
    char err_str[2*SGE_PATH_MAX+128];
 
-   sprintf(err_str, "setosjobid: uid = %d, euid = %d", getuid(), geteuid());
+   sprintf(err_str, "setosjobid: uid = "pid_t_fmt", euid = "pid_t_fmt, getuid(), geteuid());
    shepherd_trace(err_str);
 
 #  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)

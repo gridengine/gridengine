@@ -92,9 +92,9 @@ is_hgroup_name(const char *name)
 }
 
 
-/****** sge_hgroup/hgroup_check_name() *****************************************
+/****** sgeobj/hgroup/hgroup_check_name() *************************************
 *  NAME
-*    hgroup_check_name() -- determine if the given name is a valid hostgroup name
+*    hgroup_check_name() -- determine if the name is a valid hgroup name
 *
 *  SYNOPSIS
 *     void check_hgroup_name(lList **answer_list, const char* name) 
@@ -108,23 +108,25 @@ is_hgroup_name(const char *name)
 *     const char* name    - name of the hostgroup 
 *
 *  RESULT
-*     bool -  TRUE => name contains a valid name for a hostgroup
-*             FALSE => name is not a valid name for a hostrgroup
+*     bool - result 
+*        true  -  name contains a valid name for a hostgroup
+*        false - name is not a valid name for a hostrgroup
 *
 *  NOTES
 *     MT-NOTE: check_hgroup_name() is not MT safe 
 *
 *  SEE ALSO
-*     is_hgroup_name
-*     
+*     sgeobj/hgroup/is_hgroup_name
 *******************************************************************************/
 bool hgroup_check_name(lList **answer_list, const char* name)
 {
-   if( !is_hgroup_name( name ) ) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_HGRP_INVALIDHOSTGROUPNAME_S, name);
+   if (!is_hgroup_name(name)) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_HGRP_INVALIDHOSTGROUPNAME_S, name);
       return false;
    }
-   if( verify_str_key( answer_list,&name[1], "hostgroup") != 0 ) {
+   if (verify_str_key(answer_list,&name[1], "hostgroup") != 0) {
       return false;
    }
    return true;
@@ -198,18 +200,20 @@ hgroup_list_locate(const lList *this_list, const char *group)
 *     lList **answer_list     - AN_Type list 
 *     const char *name        - name 
 *     lList *href_or_groupref - list of hosts for this hgroup 
+*     bool is_name_validate   - if true, the hgrp name is validated. Should be done all the time,
+*                               there is only one case in qconf in that the name has to be ignored.
 *
 *  RESULT
 *     lListElem* - new element or NULL 
 *******************************************************************************/
 lListElem *
-hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
+hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref, bool is_name_validate)
 {
    lListElem *ret = NULL;  /* HGRP_Type */
 
    DENTER(HGROUP_LAYER, "hgroup_create");
    if (name != NULL) {
-      if( hgroup_check_name( answer_list, name ) == TRUE ) {
+      if(!is_name_validate || hgroup_check_name(answer_list, name) ) {
          ret = lCreateElem(HGRP_Type);
          if (ret != NULL) {
             lSetHost(ret, HGRP_name, name);

@@ -259,8 +259,6 @@
 /*
 ** dispatcher.c
 */
-#define MSG_COM_NOCONNECT             _MESSAGE(29156, _("can't connect to commd"))
-#define MSG_COM_RECONNECT             _MESSAGE(29157, _("can connect to commd again"))
 #define MSG_COM_NORCVMSG_S            _MESSAGE(29158, _("error receiving message "SFN))
 #define MSG_COM_NOACK_S               _MESSAGE(29159, _("error sending acknowledge: "SFN"\n"))
 #define MSG_COM_INTERNALDISPATCHCALLWITHOUTDISPATCH _MESSAGE(29160, _("internal dispatcher called without s.th. to dispatch"))
@@ -292,10 +290,14 @@
 
 #define MSG_EXECD_INITPACKBUFFERFAILED_S _MESSAGE(29181, _("init_packbuffer failed: "SFN"\n"))
 
+#define MSG_EXECD_APPL_STATE_OK                _MESSAGE(29182, _("ok"))
+#define MSG_EXECD_APPL_STATE_TIMEOUT_WARNING   _MESSAGE(29183, _("dispatcher timeout warning"))
+#define MSG_EXECD_APPL_STATE_TIMEOUT_ERROR     _MESSAGE(29184, _("dispatcher timeout error"))
+#define MSG_EXECD_APPL_STATE_CFS               _MESSAGE(29185, _("dispatcher: %c (%.2f) | %s"))
 /*
  *
  */
-/* #define MSG_EXECD_CMDNEXISTS          _message(29182, _("The given command does not exist")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EXECD_CMDNEXISTS          _message(29186, _("The given command does not exist")) __TS Removed automatically from testsuite!! TS__*/
 
 #endif /* __MSG_EXECD_H */
 

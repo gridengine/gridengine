@@ -154,7 +154,7 @@
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
 #define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23110, _("ERROR! invalid jobshare, must be an unsigned integer\n"))
-/*#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23111,_("ERROR! two files are specified for the same host\n"))*/
+#define MSG_PARSE_INVALIDOTICKETSMUSTBEUINT              _MESSAGE(23111, _("ERROR! invalid override tickets, must be an unsigned integer\n"))
 
 /*
 ** parse_qconf.c
@@ -185,7 +185,6 @@
 #define MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S     _MESSAGE(23138, _("changed entry of host "SFN" in execution host list\n"))
 #define MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S     _MESSAGE(23139, _(SFN" is not a parallel environment\n"))
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23142, _(SFN": missing filename as option argument\n"))
-#define MSG_QCONF_XISNOTAOBJECTATTRIB_SSS         _MESSAGE(23143, _(SFN": "SFQ" is not a "SFN" attribute\n"))
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23146, _(SFN": cannot change "SFN"\n"))
 #define MSG_QCONF_INTERNALFAILURE_S               _MESSAGE(23147, _(SFN": internal failure\n"))
 #define MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S       _MESSAGE(23148, _(SFN": missing object list\n"))
@@ -201,7 +200,6 @@
 #define MSG_QCONF_EDITORWASTERMINATEDBYSIGX_I     _MESSAGE(23160, _("editor was terminated by a signal %d\n"))
 #define MSG_QCONF_CANTSTARTEDITORX_S              _MESSAGE(23161, _("can't start editor "SFN))
 #define MSG_QCONF_XADDEDTOYLIST_SS                _MESSAGE(23162, _(SFN" added to "SFN" list\n"))
-#define MSG_FILE_CANTCREATETEMPFILE               _MESSAGE(23163, _("could not generate temporary filename\n"))
 #define MSG_QCONF_CANTREADCONFIG_S                _MESSAGE(23164, _("can't read configuration: "SFN"\n"))
 #define MSG_QCONF_CANTREADX_S                     _MESSAGE(23165, _("cant read "SFN"\n"))
 #define MSG_QCONF_CANTREADSHARETREEX_S            _MESSAGE(23166, _("cant read sharetree: "SFN"\n"))
@@ -293,7 +291,7 @@
 #define MSG_CONF_NOGLOBAL             _MESSAGE(23278, _("global configuration not defined"))
 #define MSG_CONF_NOLOCAL_S            _MESSAGE(23279, _("local configuration "SFN" not defined - using global configuration"))
 #define MSG_CONF_NOCONFBG             _MESSAGE(23280, _("can't get configuration from qmaster -- backgrounding"))
-#define MSG_CONF_NOCONFSLEEP          _MESSAGE(23281, _("can't get configuration from qmaster -- sleep(10)"))
+#define MSG_CONF_NOCONFSLEEP          _MESSAGE(23281, _("can't get configuration from qmaster -- waiting ..."))
 #define MSG_CONF_NOCONFSTILL          _MESSAGE(23282, _("still can't get configuration from qmaster -- trying further"))
 #define MSG_CONF_NOREADCONF_IS        _MESSAGE(23283, _("Error %d reading configuration "SFQ"\n"))
 #define MSG_CONF_NOMERGECONF_IS       _MESSAGE(23284, _("Error %d merging configuration "SFQ"\n"))
@@ -1048,6 +1046,7 @@
 
 #define MSG_GDI_USAGE_sick_OPT             "[-sds]"
 #define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show detached settings"))
+#define MSG_FUNC_GETPWUIDXFAILED_IS        _MESSAGE(60613, _("failed to getpwuid(%d): "SFN"\n"))
 
 /*
  * Objects and components

@@ -159,7 +159,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
          function_return = CL_RETVAL_OK;
          break;
       }
-      elem = cl_connection_list_get_next_elem(list_p, elem);
+      elem = cl_connection_list_get_next_elem(elem);
    } 
 
 
@@ -209,7 +209,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
    while ( elem != NULL) {
       elem2 = elem;
       connection = elem2->connection;
-      elem = cl_connection_list_get_next_elem(list_p, elem);
+      elem = cl_connection_list_get_next_elem(elem);
 
 #if 0
       CL_LOG_STR(CL_LOG_ERROR,"connection host is -->",connection->local->comp_host);
@@ -220,15 +220,36 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
       
 
       if (connection->data_flow_type == CL_CM_CT_MESSAGE ) {
-         if (connection->connection_state == CL_COM_CONNECTED &&
+         if (connection->connection_state == CL_CONNECTED &&
              connection->connection_sub_state == CL_COM_DONE) {
+
+            if (connection->connection_close_time.tv_sec == 0) {
+               /* there is no timeout set, set connection close time for this connection */
+               gettimeofday(&(connection->connection_close_time),NULL);
+               if (connection->handler != NULL) {
+                  connection->connection_close_time.tv_sec += connection->handler->close_connection_timeout;
+               } else {
+                  connection->connection_close_time.tv_sec += CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM;
+               }
+            }
+
             if( cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&
                 cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
-                 connection->connection_state = CL_COM_CLOSING;   
+                 connection->connection_state = CL_CLOSING;   
                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
             } else {
-               CL_LOG(CL_LOG_ERROR,"wait for empty message buffers");
+               struct timeval now;
+               gettimeofday(&now,NULL);
+               if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                  CL_LOG(CL_LOG_ERROR,"close connection timeout - shutdown of connection");
+                  connection->connection_state = CL_CLOSING;   
+                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
+                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
+               } else {
+                  CL_LOG(CL_LOG_WARNING,"wait for empty message buffers");
+               }
+               
 #if 0  
                {
                cl_message_list_elem_t* melem;
@@ -252,14 +273,14 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
 
       /* check connection timeout time */
       if (connection->handler != NULL) {
-         if (connection->connection_state == CL_COM_CONNECTED  || 
-             connection->connection_state == CL_COM_OPENING    ||
-             connection->connection_state == CL_COM_CONNECTING ) {
+         if (connection->connection_state == CL_CONNECTED  || 
+             connection->connection_state == CL_OPENING    ||
+             connection->connection_state == CL_CONNECTING ) {
             int h_timeout = connection->handler->connection_timeout;
             struct timeval now;
             gettimeofday(&now,NULL);
-            CL_LOG(CL_LOG_INFO,"handle connection timeout times");
 #if 0
+            CL_LOG(CL_LOG_INFO,"handle connection timeout times");
             CL_LOG_INT(CL_LOG_WARNING,"last transfer time      :",connection->last_transfer_time.tv_sec);
             CL_LOG_INT(CL_LOG_WARNING,"last connection timeout :",h_timeout);
             CL_LOG_INT(CL_LOG_WARNING,"now it is               :",now.tv_sec);
@@ -267,22 +288,22 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             if (connection->last_transfer_time.tv_sec + h_timeout <= now.tv_sec) {
                if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
                   CL_LOG(CL_LOG_WARNING,"got connection transfer timeout ...");
-                  if (connection->connection_state == CL_COM_CONNECTED) {
-                     if (connection->was_opened != 0) {
+                  if (connection->connection_state == CL_CONNECTED) {
+                     if (connection->was_opened == CL_TRUE) {
                         CL_LOG(CL_LOG_WARNING,"client connection ignores connection transfer timeout");
                      } else {
                         if ( cl_raw_list_get_elem_count(connection->send_message_list) == 0 ) {
                            CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
                            CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
-                           CL_LOG_INT(CL_LOG_WARNING,"component id:              ", connection->remote->comp_id );
-                           connection->connection_state = CL_COM_CLOSING;
+                           CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
+                           connection->connection_state = CL_CLOSING;
                         } else {
                            CL_LOG(CL_LOG_WARNING,"unsent messages in send list, don't close connection");
                         }
                      }
                   } else {
                      CL_LOG(CL_LOG_WARNING,"closing unconnected connection object");
-                     connection->connection_state = CL_COM_CLOSING;
+                     connection->connection_state = CL_CLOSING;
                   }
                } 
                if (connection->data_flow_type == CL_CM_CT_STREAM) {
@@ -290,7 +311,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                   if (  connection->remote != NULL) {
                      CL_LOG_STR(CL_LOG_INFO,"component host:", connection->remote->comp_host );
                      CL_LOG_STR(CL_LOG_INFO,"component name:", connection->remote->comp_name );
-                     CL_LOG_INT(CL_LOG_INFO,"component id:  ", connection->remote->comp_id );
+                     CL_LOG_INT(CL_LOG_INFO,"component id:  ", (int)connection->remote->comp_id );
                   }
                }
                if (connection->data_flow_type == CL_CM_CT_UNDEFINED) {
@@ -302,17 +323,17 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                      if (connection->local->comp_name != NULL) {
                         CL_LOG_STR(CL_LOG_WARNING,"component name:", connection->local->comp_name );
                      }
-                     CL_LOG_INT(CL_LOG_WARNING,"component id:  ", connection->local->comp_id );
+                     CL_LOG_INT(CL_LOG_WARNING,"component id:  ", (int)connection->local->comp_id );
                   } else {
                      CL_LOG(CL_LOG_WARNING,"removing undefined connection object");
                   }
-                  connection->connection_state = CL_COM_CLOSING;
+                  connection->connection_state = CL_CLOSING;
                }
             }
          }
       }
 
-      if (connection->connection_state == CL_COM_CLOSING ) {
+      if (connection->connection_state == CL_CLOSING ) {
          if (delete_connections == NULL) {
             ret_val = cl_connection_list_setup(&delete_connections, "delete_connections", 0);
             if (ret_val != CL_RETVAL_OK) {
@@ -356,10 +377,10 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             if (message->message_length != 0) {
                CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);
                CL_LOG(CL_LOG_ERROR,"deleting read message for connection");
-               CL_LOG_INT(CL_LOG_ERROR,"message length:", message->message_length);
-               CL_LOG_INT(CL_LOG_ERROR,"message state:", message->message_state);
-               CL_LOG_INT(CL_LOG_ERROR,"message df:", message->message_df);
-               CL_LOG_INT(CL_LOG_ERROR,"message mat:", message->message_mat);
+               CL_LOG_INT(CL_LOG_ERROR,"message length:", (int)message->message_length);
+               CL_LOG_INT(CL_LOG_ERROR,"message state:", (int)message->message_state);
+               CL_LOG_INT(CL_LOG_ERROR,"message df:", (int)message->message_df);
+               CL_LOG_INT(CL_LOG_ERROR,"message mat:", (int)message->message_mat);
             }
    
             cl_raw_list_remove_elem( connection->received_message_list,  message_list_elem->raw_elem);
@@ -409,7 +430,7 @@ cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list
 }
 
 
-cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_raw_list_t* list_p, cl_connection_list_elem_t* elem) {  /* CR check */
+cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_connection_list_elem_t* elem) {  /* CR check */
 
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
@@ -424,7 +445,7 @@ cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_raw_list_t* list_
 }
 
 
-cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_raw_list_t* list_p, cl_connection_list_elem_t* elem) {  /* CR check */
+cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_connection_list_elem_t* elem) {  /* CR check */
 
    cl_raw_list_elem_t* last_raw_elem = NULL;
    

@@ -62,7 +62,7 @@ proc verify_config { config_array only_check parameter_error_list } {
    set errors 0
    set error_list ""
    
-   if { [ info exists config(version) ] != 1 } {
+   if { ! [ info exists config(version) ] } {
       puts $CHECK_OUTPUT "Could not find version info in configuration file"
       lappend error_list "no version info"
       incr errors 1
@@ -679,13 +679,13 @@ proc config_testsuite_root_dir { only_check name config_array } {
 
    if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
       set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-      debug_puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
+      puts $CHECK_OUTPUT "\nNo USER is set!\n(default: $CHECK_USER)\n"
       set env(USER) $CHECK_USER
    } 
 
    if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
       set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-      debug_puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
+      puts $CHECK_OUTPUT "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
       set env(GROUP) $CHECK_GROUP
    }
 
@@ -1159,11 +1159,21 @@ proc config_source_cvs_hostname { only_check name config_array } {
 proc config_source_cvs_release { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_USER 
-   global CHECK_SOURCE_DIR
    global CHECK_SOURCE_CVS_RELEASE
    global CHECK_SOURCE_HOSTNAME
 
    upvar $config_array config
+
+   # fix "maintrunc" typo - it will be written the next time the config is modified
+   if { $config($name) == "maintrunc" } {
+      set config($name) "maintrunk"
+   }
+
+   if { ! [file isdirectory $config(source_dir)] } {
+      puts $CHECK_OUTPUT "source directory $config(source_dir) doesn't exist"
+      return -1
+   }
+   
    set actual_value  $config($name)
    set default_value $config($name,default)
    set description   $config($name,desc)
@@ -1171,21 +1181,21 @@ proc config_source_cvs_release { only_check name config_array } {
    if { $actual_value == "" } {
       set value $default_value
       if { $default_value == "" } {
-         set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$CHECK_SOURCE_DIR/CVS/Tag" prg_exit_state 60 0 "" 1 0]
+         set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$config(source_dir)/CVS/Tag" prg_exit_state 60 0 "" 1 0]
          set result [string trim $result]
          if { $prg_exit_state == 0 } {
             if { [ string first "T" $result ] == 0 } {
                set value [ string range $result 1 end ]
             }
          } else {
-            set value "maintrunc" 
+            set value "maintrunk" 
          }
       }
    }
    if { $only_check == 0 } {
       # do setup  
       puts $CHECK_OUTPUT "" 
-      puts $CHECK_OUTPUT "Please enter cvs release tag (\"maintrunc\" specifies no tag)"
+      puts $CHECK_OUTPUT "Please enter cvs release tag (\"maintrunk\" specifies no tag)"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
       puts $CHECK_OUTPUT "(default: $value)"
       puts -nonewline $CHECK_OUTPUT "> "
@@ -1197,7 +1207,7 @@ proc config_source_cvs_release { only_check name config_array } {
       }
    } 
 
-   set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$CHECK_SOURCE_DIR/CVS/Tag" prg_exit_state 60 0 "" 1 0]
+   set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$config(source_dir)/CVS/Tag" prg_exit_state 60 0 "" 1 0]
    set result [string trim $result]
    if { $prg_exit_state == 0 } {
       if { [ string compare $result "T$value" ] != 0 && [string compare $result "N$value"] != 0 } {
@@ -1884,6 +1894,95 @@ proc config_commd_port { only_check name config_array } {
    return $value
 }
 
+#****** config/config_reserved_port() **********************************************
+#  NAME
+#     config_reserved_port() -- reserved option setup
+#
+#  SYNOPSIS
+#     config_reserved_port { only_check name config_array } 
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#
+#*******************************************************************************
+proc config_reserved_port { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global CHECK_COMMD_PORT
+   global CHECK_USER
+   global ts_user_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+
+      if { [ info exists ts_user_config($CHECK_USER,portlist) ] } {
+         for {set i 0} { $i < [llength $ts_user_config($CHECK_USER,portlist)] } { incr i 1 } {
+            set act_tmp_value [ lindex $ts_user_config($CHECK_USER,portlist) $i ]
+            if { $act_tmp_value < 1024 } {
+               set value $act_tmp_value
+               break
+            }
+         }
+      } else {
+         set value $default_value
+      }
+   }
+
+   if { $only_check == 0 } {
+#     # do setup  
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please enter an unused port number < 1024. This port is used to test"
+      puts $CHECK_OUTPUT "port binding." 
+      puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "(default: $value)"
+      set ok 0
+      while { $ok == 0 } {
+         puts -nonewline $CHECK_OUTPUT "> "
+         set input [ wait_for_enter 1]
+      
+         if { [ string length $input] > 0 } {
+            if { [ expr ( $input % 2 ) ] == 0  } {
+               set value $input
+               set ok 1
+            } else {
+               puts $CHECK_OUTPUT "value is not even"
+               set ok 0
+            }
+         } else {
+            puts $CHECK_OUTPUT "using default value"
+            set ok 1
+         }
+      }
+   } 
+
+   if { $value <= 1  } {
+      puts $CHECK_OUTPUT "Port $value is <= 1"
+      return -1;
+   }
+
+   if { $value >= 1024 } {
+      puts $CHECK_OUTPUT "Port $value is >= 1024"
+      return -1;
+   }
+
+   return $value
+}
+
+
 #****** config/config_product_root() ********************************************
 #  NAME
 #     config_product_root() -- product root setup
@@ -2360,28 +2459,28 @@ proc config_package_directory { only_check name config_array } {
       }
    } 
 
+   # package dir configured?
    if { [string compare "none" $value ] != 0 } {
-      if { [ file isdirectory $value ] != 1  } {
-         puts $CHECK_OUTPUT "Directory \"$value\" not found"
-         return -1
-      }
-      if { [info exists CHECK_PACKAGE_TYPE] } {
-         if { [string compare $CHECK_PACKAGE_TYPE "tar"] == 0 }    {
-            if { [check_packages_directory $value check_tar] != 0 } {
-               puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
-               return -1
-            }
+      # directory doesn't exist? If we shall generate packages, create dir
+      if { ![file isdirectory $value] } {
+         if { $config(package_type) == "create_tar" } {
+            file mkdir $value
          } else {
+            puts $CHECK_OUTPUT "Directory \"$value\" not found"
+            return -1
+         }
+      }
+      if { [string compare $config(package_type) "tar"] == 0 }    {
+         if { [check_packages_directory $value check_tar] != 0 } {
+            puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
+            return -1
+         }
+      } else {
+         if { [string compare $config(package_type) "tar"] == 0 }    {
             if { [check_packages_directory $value check_zip] != 0 } {
                puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
                return -1
             }
-         }
-
-      } else {
-         if { [check_packages_directory $value] != 0 } {
-            puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
-            return -1
          }
       }
    }
@@ -2428,7 +2527,10 @@ proc config_package_type { only_check name config_array } {
    if { $only_check == 0 } {
       # do setup  
       puts $CHECK_OUTPUT "" 
-      puts $CHECK_OUTPUT "Please enter package type to test (\"tar\" or \"zip\"),"
+      puts $CHECK_OUTPUT "Please enter package type to test:"
+      puts $CHECK_OUTPUT "  \"tar\" to use precompiled tar packages" 
+      puts $CHECK_OUTPUT "  \"zip\" to use precompiled sunpkg packages"
+      puts $CHECK_OUTPUT "  \"create_tar\" to generate tar packages"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
       puts $CHECK_OUTPUT "(default: $value)"
       puts -nonewline $CHECK_OUTPUT "> "
@@ -2441,8 +2543,9 @@ proc config_package_type { only_check name config_array } {
    } 
 
    if { [string compare "tar" $value ] != 0 && 
-        [string compare "zip" $value ] != 0  } {
-      puts $CHECK_OUTPUT "unexpected package type: \"$value\" use \"zip\" or \"tar\"!"
+        [string compare "zip" $value ] != 0 &&
+        [string compare "create_tar" $value ] != 0 } {
+      puts $CHECK_OUTPUT "unexpected package type: \"$value\"!"
       return -1
    }
 
@@ -3477,6 +3580,149 @@ proc config_add_compile_archs { only_check name config_array } {
    return $value
 }
 
+#****** config/config_shadowd_hosts() *********************************************
+#  NAME
+#     config_shadowd_hosts() -- shadowd daemon host setup
+#
+#  SYNOPSIS
+#     config_shadowd_hosts { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_shadowd_hosts { only_check name config_array } {
+   global CHECK_OUTPUT do_nomain
+   global CHECK_HOST
+   global CHECK_CORE_SHADOWD
+   global CHECK_SOURCE_COMPILE_HOSTS
+   global ts_host_config
+
+   set CHECK_CORE_SHADOWD ""
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+      if { $default_value == "" } {
+         set value $CHECK_HOST
+      }
+   }
+
+   if { $only_check == 0 } {
+#      # do setup  
+       puts $CHECK_OUTPUT "" 
+       set selected $value
+       while { 1 } {
+          clear_screen
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          puts $CHECK_OUTPUT $description
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+           
+          set selected [lsort $selected]
+          puts $CHECK_OUTPUT "\nSelected shadow hosts:"
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          foreach elem $selected { puts $CHECK_OUTPUT $elem }
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          host_config_hostlist_show_hosts ts_host_config
+          puts $CHECK_OUTPUT "\n"
+          puts $CHECK_OUTPUT "Type \"all\" to select all hosts in list"
+          puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
+         
+          set host [wait_for_enter 1]
+          if { [ string length $host ] == 0 } {
+             break
+          }
+          if { [ string compare $host "all" ] == 0 } {
+             set selected ""
+             foreach host $ts_host_config(hostlist) {
+                if { [ lsearch -exact $selected $host ] < 0 } {
+                   append selected " $host"
+                }
+             }
+             break
+          }
+          if { [string is integer $host] } {
+             incr host -1
+             set host [ lindex $ts_host_config(hostlist) $host ]
+          }
+          if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
+             puts $CHECK_OUTPUT "host \"$host\" not found in list"
+             wait_for_enter
+             continue
+          }
+          if { [ lsearch -exact $selected $host ] < 0 } {
+             append selected " $host"
+          } else {
+             set index [lsearch $selected $host]
+             set selected [ lreplace $selected $index $index ]
+          }
+       }
+       
+       set value [string trim $selected]
+
+       set index [lsearch $value $CHECK_HOST]
+       if { $index >= 0 } {
+          set selected [ lreplace $value $index $index ]
+       }
+       set value $CHECK_HOST
+       append value " $selected"
+       set value [string trim $value]
+       foreach host $value {
+          if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
+             puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
+             puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
+             wait_for_enter
+             set errors 0
+             incr errors [host_config_hostlist_add_host ts_host_config  $host]
+             incr errors [host_config_hostlist_edit_host ts_host_config $host]
+             incr errors [save_host_configuration $config(host_config_file)]
+             if { $errors != 0 } {
+                setup_host_config $config(host_config_file) 1
+             }
+          }
+       }
+       if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+          wait_for_enter
+          setup_host_config $config(host_config_file) 1
+       }
+   } 
+
+   if { [ string compare [lindex $value 0] $CHECK_HOST] != 0  && $do_nomain == 0} {
+      puts $CHECK_OUTPUT "First shadowd host must be local host"
+      return -1
+   }
+
+
+   foreach host $value {
+      if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
+         puts $CHECK_OUTPUT "Host \"$host\" is not in host configuration file"
+         return -1
+      }
+   }
+   set CHECK_CORE_SHADOWD $value
+
+   if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+      return -1
+   }
+
+   return $value
+}
+
 
 proc config_build_ts_config {} {
    global ts_config
@@ -3746,6 +3992,7 @@ proc config_build_ts_config {} {
    set ts_config($parameter,onchange)   ""
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
+
 }
 
 proc config_build_ts_config_1_1 {} {
@@ -3923,13 +4170,67 @@ proc config_build_ts_config_1_6 {} {
    set ts_config($parameter,onchange)   "stop"
    set ts_config($parameter,pos)        $insert_pos
 
-   # now we have a configuration version 1.5
+   # now we have a configuration version 1.6
    set ts_config(version) "1.6"
+}
+proc config_build_ts_config_1_7 {} {
+   global ts_config
+
+   # insert new parameter after commd_port parameter
+   set insert_pos $ts_config(commd_port,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   # new parameter reserved port
+   set parameter "reserved_port"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Port < 1024 to test root bind() of this port"
+   set ts_config($parameter,default)    ""
+   set ts_config($parameter,setup_func) "config_reserved_port"
+   set ts_config($parameter,onchange)   ""
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.7
+   set ts_config(version) "1.7"
+}
+  
+proc config_build_ts_config_1_8 {} {
+   global ts_config
+
+   # insert new parameter after master_host parameter
+   set insert_pos $ts_config(master_host,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   set parameter "shadowd_hosts"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Grid Engine shadow daemon hosts"
+   set ts_config($parameter,default)    ""
+   set ts_config($parameter,setup_func) "config_$parameter"
+   set ts_config($parameter,onchange)   "install"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.8
+   set ts_config(version) "1.8"
 }
 
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.6"
+set actual_ts_config_version "1.8"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -3940,5 +4241,7 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_4
    config_build_ts_config_1_5
    config_build_ts_config_1_6
+   config_build_ts_config_1_7
+   config_build_ts_config_1_8
 }
 

@@ -1,0 +1,189 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1141"
+set check_description(0)      "schedd and qmaster get out of sync - no scheduling for a long time"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+set check_functions           ""
+lappend check_functions       "issue_1141_setup"          ;# functions to call (in order)
+lappend check_functions       "issue_1141_run"
+lappend check_functions       "issue_1141_cleanup"
+set check_highest_level       0
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {
+       return -1
+   }
+
+    # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+   return -1
+}
+
+
+
+
+
+
+proc issue_1141_setup {} {
+   global ts_config CHECK_HOST
+   set_error 0 "ok"
+}
+proc issue_1141_run  {} {
+   global ts_config  CHECK_OUTPUT CHECK_USER
+
+   set qmaster_abort [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED]]
+   set got_send_error [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_CL_RETVAL_SEND_ERROR]]
+   puts $CHECK_OUTPUT "looking for string \"$qmaster_abort\""
+   puts $CHECK_OUTPUT "not expected error string is \"$got_send_error\""
+
+
+   set up_arch [resolve_build_arch $ts_config(master_host)]
+   set client_binary $ts_config(source_dir)/$up_arch/qevent
+   set client_args "-ts"
+
+#  setting the environment variable SGE_PRODUCE_ALIVE_TIMEOUT_ERROR
+#  will produce qmaster alive timeout error in qevent. When
+#  client can reconnect, bug 1141 is not present.
+
+   set issue_1141_environment(SGE_PRODUCE_ALIVE_TIMEOUT_ERROR) 1
+   
+
+   set client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con" $client_binary $client_args 0 issue_1141_environment]
+   set client_id  [lindex $client_sid 1]
+
+   set in_loop 1
+   set qmaster_abort_found 0
+   set send_error_found 0
+   set qevent_reconnected 0
+   set nr_of_lines 0
+   while { $in_loop } {
+      set timeout 60
+      expect {
+         -i $client_id full_buffer {
+            add_proc_error "issue_1141_run" -1 "expect full_buffer error"
+            return -1
+         }
+         -i $client_id timeout {
+            puts $CHECK_OUTPUT "---->>>>>>>>> got timeout"
+            add_proc_error "issue_1141_run" -1 "got timeout"
+            set in_loop 0   
+         }
+         -i $client_id eof {
+            set spawn_id $expect_out(spawn_id)
+            puts $CHECK_OUTPUT "got eof for spawn_id $spawn_id"
+            add_proc_error "issue_1141_run" -1 "got eof"
+            set in_loop 0   
+         }
+         -i $client_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ string trim [split $output "\n"]]
+                      
+            foreach line $output {
+               incr nr_of_lines 1
+               set help [string trim $line]
+               puts $CHECK_OUTPUT "qevent: $help"
+
+               if { [string match "*$qmaster_abort*" $help] } {
+                  puts $CHECK_OUTPUT "client: $help"
+                  puts $CHECK_OUTPUT "found timeout error"
+                  set qmaster_abort_found 1
+                  continue
+               }
+
+               if { [string match "*$got_send_error*" $help] } {
+                  puts $CHECK_OUTPUT "client: $help"
+                  puts $CHECK_OUTPUT "found send error"
+                  set send_error_found 1
+                  continue
+               }
+               
+               if { $qmaster_abort_found == 1 } {
+                  if { [string match "*ECL_STATE*" $help] } {
+                     puts $CHECK_OUTPUT "client: $help"
+                     puts $CHECK_OUTPUT "got ECL_STATE after qmaster abort"
+                     set qevent_reconnected 1
+                     continue
+                  }
+               }
+            }
+         }
+      }
+      if { $nr_of_lines > 40 } {
+         add_proc_error "issue_1141_run" -1 "unexpected error - stoping test"
+         set in_loop 0
+      }
+
+      if { $qmaster_abort_found == 1 && $send_error_found == 1 } {
+         add_proc_error "issue_1141_run" -1 "bug #1141 is present"
+         set in_loop 0
+      }
+      
+      if { $qevent_reconnected == 1 } {
+         puts $CHECK_OUTPUT "reconnect successfull! - ok"
+         set in_loop 0
+      }
+   }
+   close_spawn_process $client_sid
+   set_error 0 "ok"
+}
+
+
+proc issue_1141_cleanup {} {
+   global ts_config 
+   set_error 0 "ok"
+}
+
+
+
+
+
+
+
+
+

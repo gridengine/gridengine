@@ -38,35 +38,30 @@
 
 #include "sge_orders.h"
 
-int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
-                     lList *centry_list, int allow_non_requestable, int slots); 
+int
+sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
+                 lList *centry_list, int allow_non_requestable, int slots); 
 
-/* 
- * is there a load alarm on this queue
- * 
- */
+/* --- is there a load alarm on this queue ---------------------------- */
+
 int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, 
                    const lList *exechost_list, const lList *complex_list, 
                    const lList *load_adjustments, bool is_check_consumable);
 
 void sge_create_load_list(const lList *queue_list, const lList *host_list, 
                           const lList *centry_list, lList **load_list); 
+
 bool sge_load_list_alarm(lList *load_list, const lList *host_list, 
                          const lList *centry_list);
+
 void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list);
+
 void sge_free_load_list(lList **load_list); 
-/* 
- * get reason for alarm state on queue
- * 
- */
+ 
 char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exechost_list, 
                             const lList *complex_list, char  *reason, int reason_size, 
                             const char *type); 
 
-/* 
- * split queue list into unloaded and overloaded
- * 
- */
 int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, 
                          lList *complex_list, const lList *load_adjustments, 
                          lList *granted, bool is_consumable_load_alarm, bool is_comprehensive,
@@ -78,23 +73,18 @@ int sge_split_disabled(lList **unloaded, lList **overloaded);
 
 int sge_split_suspended(lList **queue_list, lList **suspended);
 
-/* 
- * replicate all queues from the queues list into 
- * the suitable list that are suitable for this
- * job. 
- * 
- * sort order of the queues:
- *    in case of sort by seq_no the queues will 
- *    have the same order as the queues list 
- *
- *    in case of sort by load the queues will
- *    get the same order as the host list
- * 
- */
+/* --- job assignment methods ---------------------------- */
 
-enum { DISPATCH_TYPE_NONE = 0, DISPATCH_TYPE_FAST, DISPATCH_TYPE_COMPREHENSIVE };
-enum { DISPATCH_TIME_NOW = 0, DISPATCH_TIME_QUEUE_END = MAX_ULONG32 };
-enum { MATCH_NOW = 0x01, MATCH_LATER = 0x02, MATCH_NEVER = 0x04 };
+enum { 
+   DISPATCH_TIME_NOW = 0, 
+   DISPATCH_TIME_QUEUE_END = MAX_ULONG32 
+};
+
+enum { 
+   MATCH_NOW = 0x01, 
+   MATCH_LATER = 0x02, 
+   MATCH_NEVER = 0x04 
+};
 
 typedef struct {
    /* ------ this section determines the assignment ------------------------------- */
@@ -111,7 +101,7 @@ typedef struct {
    lList      *queue_list;        /* the queues (QU_Type)                           */
    lList      *centry_list;       /* the complex entries (CE_Type)                  */
    lList      *acl_list;          /* the user sets (US_Type)                        */
-
+   bool       is_reservation;      /* true, if a reservation for this job should be done */
    /* ------ this section is the resulting assignment ----------------------------- */
    lListElem  *pe;                /* the parallel environment (PE_Type)             */
    lList      *gdil;              /* the resources (JG_Type)                        */
@@ -124,80 +114,49 @@ void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);
 
-int sge_sequential_assignment(sge_assignment_t *a);
-int sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list);
+/* -------------------------------------------------------------------------------- */
 
 
-/* 
- * which ulong value has the following attribute
- * 
- */
+typedef enum {
+   DISPATCH_NEVER = 4,  /* an error happend, no dispatch will ever work again */
+   DISPATCH_MISSING_ATTR = 2, /* attribute does not exist */
+   DISPATCH_NOT_AT_TIME = 1,  /* no assignment at the specified time */
+   DISPATCH_OK = 0,           /* ok got an assignment + set time for DISPATCH_TIME_QUEUE_END */
+   DISPATCH_NEVER_CAT = -1,   /* assignment will never be possible for all jobs of that category */
+   DISPATCH_NEVER_JOB = -2    /* assignment will never be possible for that particular job */
+}dispatch_t;
+
+dispatch_t
+sge_sequential_assignment(sge_assignment_t *a);
+
+dispatch_t
+sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list);
+
+/* -------------------------------------------------------------------------------- */
+
+bool is_requested(lList *req, const char *attr);
+
+dispatch_t 
+sge_queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
+                       const lListElem *ckpt, lList *centry_list, lList *acl_list);
+
+dispatch_t
+sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host, lList *centry_list, 
+                      lList *acl_list);
+
+/* ------ DEBUG / output methods --------------------------------------------------- */
+
 /* not used */
-/*
-int sge_get_ulong_qattr(u_long32 *uvalp, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list);
-*/
-/* 
- * which double value has the following attribute
- * 
- */
+/* int sge_get_ulong_qattr(u_long32 *uvalp, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list); */
+
 int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q, 
                          const lList *exechost_list, const lList *complex_list,
                          bool *has_value_from_object);
 
-/* 
- * which string value has the following attribute
- * 
- */
 int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, const lList *exechost_list, const lList *complex_list);
-
-/* 
- *
- * make debitations on all queues that are necessary 
- *
- */
-int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
-    lList *complex_list, order_t *orders);
 
 char *trace_resource(lListElem *rep);
 
 void trace_resources(lList *resources);
-
-bool is_requested(lList *req, const char *attr);
-int sge_best_result(int r1, int r2);
-
-/* -------------------------------------------------------------------------------- */
-
-int pe_slots_by_time(u_long32 start, u_long32 duration, int *slots, int *slots_qend, 
-      lListElem *job, lListElem *pe, lList *acl_list);
-
-int global_time_by_slots(int slots, u_long32 *start_time, u_long32 duration, 
-      int *violations, lListElem *job, lListElem *gep, lList *centry_list, 
-      lList *acl_list);
-
-int global_slots_by_time(u_long32 start, u_long32 duration, int *slots, 
-      int *slots_qend, int *violations, lListElem *job, lListElem *gep,
-      lList *centry_list, lList *acl_list);
-
-int host_time_by_slots(int slots, u_long32 *start, u_long32 duration, 
-   int *host_soft_violations, lListElem *job, lListElem *ja_task, lListElem *hep, 
-   lList *centry_list, lList *acl_list);
-
-int host_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
-                       lListElem *hep, lListElem *global, bool allow_non_requestable);
-  
-int queue_slots_by_time( u_long32 start, u_long32 duration, int *slots, int *slots_qend, 
-   int *violations, lListElem *job, lListElem *qep, const lListElem *pe, const lListElem *ckpt,
-   lList *centry_list, lList *acl_list, bool allow_non_requestable);
-
-int queue_time_by_slots( int slots, u_long32 *start, u_long32 duration, int *violations,
-   lListElem *job, lListElem *qep, const lListElem *pe, const lListElem *ckpt, lList *centry_list, 
-   lList *acl_list);
-
-int queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
-      const lListElem *ckpt, lList *centry_list, lList *acl_list);
-
-int host_match_static(lListElem *job, lListElem *ja_task, 
-                                lListElem *host, lList *centry_list, 
-                                lList *acl_list);
 
 #endif

@@ -81,5 +81,16 @@ files=" \
        3rdparty/fnmatch/fnmatch_dependencies
 "
 echo deleting and truncating: $files
+
 rm -f $files
 touch $files
+
+if [ -d libs/wingrid ]; then
+   rm -f libs/wingrid/wingrid_dependencies
+   touch libs/wingrid/wingrid_dependencies
+fi
+
+if [ -d experimental/culltrans ]; then
+   rm -f experimental/culltrans/culltrans_dependencies
+   touch experimental/culltrans/culltrans_dependencies
+fi

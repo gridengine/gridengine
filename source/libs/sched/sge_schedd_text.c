@@ -44,19 +44,32 @@
 */
 const char* sge_get_schedd_text(int number);
 
-/*
-** Code was former
-** in sge_text.c ( sge_text() is now sge_schedd_text() )
-*/
-const char* sge_get_schedd_text(
-int nr 
-) {
-/* Info strings used in scheduler (detailed information) 
- * and Info strings used in qstat (we group jobs)
- *
- * Info strings used in scheduler and info strings used in qstat must
- * have same sequence because we use offset to map messages
- */
+/****** sge_schedd_text/sge_get_schedd_text() **********************************
+*  NAME
+*     sge_get_schedd_text() -- transformes a id into a info message
+*
+*  SYNOPSIS
+*     const char* sge_get_schedd_text(int nr) 
+*
+*  FUNCTION
+*    transformes a id into a info message
+*
+*  INPUTS
+*     int nr - info id
+*
+*  RESULT
+*     const char* -  info message
+*
+*  NOTES
+*     MT-NOTE: sge_get_schedd_text() is MT safe 
+*
+*  SEE ALSO
+*     sge_schedd_text.h for a detailed description on how to extend this.
+*
+*******************************************************************************/
+const char* sge_get_schedd_text( int nr ) 
+{
+ 
    switch(nr)
    {  
       case SCHEDD_INFO_CANNOTRUNATHOST_SSS      :
@@ -112,9 +125,12 @@ int nr
  
       case SCHEDD_INFO_CANNOTRUNINQUEUE_SSS     :
          return MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS      ;   
- 
-      case SCHEDD_INFO_NORESOURCESPE_      :
-         return MSG_SCHEDD_INFO_NORESOURCESPE_       ;   
+
+      case SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU   :
+         return MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU    ;
+
+      case SCHEDD_INFO_NORESOURCESPE_           :
+         return MSG_SCHEDD_INFO_NORESOURCESPE_            ;   
 
       case SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S :
          return MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S  ;
@@ -196,6 +212,9 @@ int nr
 
       case SCHEDD_INFO_MAX_AJ_INSTANCES_:
          return MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_;
+
+      case SCHEDD_INFO_JOB_CATEGORY_FILTER_:
+         return MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_;
 
 /* */
 
@@ -336,6 +355,12 @@ int nr
 
       case SCHEDD_INFO_MAX_AJ_INSTANCES:
          return MSG_SCHEDD_INFO_MAX_AJ_INSTANCES;
+
+      case SCHEDD_INFO_JOB_CATEGORY_FILTER:
+         return MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER;
+
+      case SCHEDD_INFO_CANNOTRUNINQUEUECAL   :
+         return MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL    ;
 
       default:
          return "";

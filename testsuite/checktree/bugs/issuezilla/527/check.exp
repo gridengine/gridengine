@@ -112,7 +112,7 @@ proc issue_527_check {} {
    wait_for_jobstart $job_id1 "Sleeper" 20 1 1
 
    # wait for job termination
-   wait_for_end_of_all_jobs 30
+   wait_for_end_of_all_jobs 120
 
    set_error 0 "ok"
 }

@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,19 +28,16 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * AuthorizationException.java
- *
- * Created on June 17, 2003, 1:00 PM
- */
+/*___INFO__MARK_END__*/
 
 package org.ggf.drmaa;
 
-/** The specified request is not processed successfully due to
+/** The specified request is not processed successfully due to an
  * authorization failure.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class AuthorizationException extends DRMAAException {
+public class AuthorizationException extends DrmaaException {
 	
 	/**
 	 * Creates a new instance of <code>AuthorizationException</code> without detail message.

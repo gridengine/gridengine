@@ -91,6 +91,7 @@ size_t sge_dstring_strlen(const dstring *string);
 
 size_t sge_dstring_remaining(const dstring *string);
 
+const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number);
 
 #endif /* __SGE_STRING_APPEND_H */
 

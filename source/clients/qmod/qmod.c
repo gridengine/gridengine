@@ -57,6 +57,7 @@
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
+#include "sge_profiling.h"
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
@@ -77,6 +78,8 @@ char **argv
    lListElem *aep;
    
    DENTER_MAIN(TOP_LAYER, "qmod");
+
+   sge_prof_setup();
 
    log_state_set_log_gui(1);
 
@@ -119,6 +122,7 @@ char **argv
       lFreeList(ref_list);
       SGE_EXIT(1);
    }
+   
    {
       lListElem *idep = NULL;
       for_each(idep, ref_list) {
@@ -140,6 +144,9 @@ char **argv
    lFreeList(alp);
    lFreeList(ref_list);
    lFreeList(pcmdline); 
+
+   sge_prof_cleanup();
+
    SGE_EXIT(0);
    DEXIT;
    return 0;
@@ -351,11 +358,11 @@ int usageshowed = 0;
          QI_DO_CLEARERROR,
          QI_DO_CLEARERROR | JOB_DO_ACTION,
          QI_DO_CLEARERROR | QUEUE_DO_ACTION,
-         QI_DO_DISABLE,
+         QI_DO_DISABLE | QUEUE_DO_ACTION,
          QI_DO_RESCHEDULE,
          QI_DO_RESCHEDULE | JOB_DO_ACTION,
          QI_DO_RESCHEDULE | QUEUE_DO_ACTION,
-         QI_DO_ENABLE,
+         QI_DO_ENABLE | QUEUE_DO_ACTION,
          QI_DO_SUSPEND,
          QI_DO_SUSPEND | JOB_DO_ACTION,
          QI_DO_SUSPEND | QUEUE_DO_ACTION,
@@ -386,9 +393,9 @@ int usageshowed = 0;
 
       i = 0;
       while (options[i] != NULL) {
-         if ((transitions[i] & JOB_DO_ACTION) > 0)
+         if ((transitions[i] & QUEUE_DO_ACTION) == 0) {
             parse_multi_jobtaskslist(ppcmdline, options[i], &alp, ppreflist, true, transitions[i]);
-         else{
+         } else {
             lList *queueList = NULL;
             if (parse_multi_stringlist( ppcmdline, options[i], &alp, &queueList, ST_Type, ST_name)){
                id_list_build_from_str_list(ppreflist, &alp, queueList, transitions[i], *pforce); 

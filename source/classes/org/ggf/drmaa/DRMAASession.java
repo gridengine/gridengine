@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,11 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * DRMAASession.java
- *
- * Created on June 17, 2003, 10:33 AM
- */
+/*___INFO__MARK_END__*/
 
 package org.ggf.drmaa;
 
@@ -81,6 +78,8 @@ public abstract class DRMAASession {
 	public static final int SYSTEM_SUSPENDED = 0x21;
 	/** job is user suspended */
 	public static final int USER_SUSPENDED = 0x22;
+	/** job is user suspended */
+	public static final int USER_SYSTEM_SUSPENDED = 0x23;
 	/** job finished normally */
 	public static final int DONE = 0x30;
 	/** job finished, but failed */

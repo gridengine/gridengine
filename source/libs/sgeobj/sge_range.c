@@ -549,8 +549,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
    return end;
 }
 
-
-/****** sge_range/range_list_get_average() *************************************
+/****** sgeobj/range/range_list_get_average() *********************************
 *  NAME
 *     range_list_get_average() -- Return average of all numbers in range.
 *
@@ -587,10 +586,8 @@ double range_list_get_average(const lList *this_list, u_long32 upperbound)
          n++;
       }
    }
-
-   return (n>0)?(sum/n):0;
+   return (n > 0) ? (sum/n) : 0;
 }
-
 
 /******asgeobj/range/range_list_sort_uniq_compress() **************************
 *  NAME
@@ -1309,17 +1306,20 @@ void range_list_calculate_union_set(lList **range_list,
    DENTER(RANGE_LAYER, "range_list_calculate_union_set");
    if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
       *range_list = lFreeList(*range_list);
+
       if (range_list1 != NULL) {
          *range_list = lCopyList("", range_list1);
       } else {
          *range_list = lCopyList("", range_list2);
       }
-      if (*range_list) {
+      if (*range_list == NULL) {
+         DTRACE;
          goto error;
       }
 
       range_list_sort_uniq_compress(*range_list, answer_list);
       if (answer_list_has_error(answer_list)) {
+         DTRACE;
          goto error;
       }
 

@@ -870,7 +870,6 @@ const char *object_dir
       old_name = strdup(lGetString(ep, nm));
    }
    ret = sge_resolve_host(ep, nm);
-#ifdef ENABLE_NGC
    if (ret != CL_RETVAL_OK ) {
       if (ret != CL_RETVAL_GETHOSTNAME_ERROR ) {
          /* finish qmaster setup only if hostname resolving
@@ -884,23 +883,6 @@ const char *object_dir
       }
       WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, object_name, old_name));
    }
-#else
-   if (ret != CL_OK ) {
-      if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
-         /* finish qmaster setup only if hostname resolving
-            does not work at all generally or a timeout
-            indicates that commd itself blocks in resolving
-            a host, e.g. when DNS times out */
-         ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS,
-                  object_name, old_name, cl_errstr(ret)));
-         free(old_name);
-         DEXIT;
-         return -1;
-      }
-      WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS,
-               object_name, old_name));
-   }
-#endif
 
    /* rename config file if resolving changed name */
    if (dataType == lHostT) {
@@ -1082,7 +1064,6 @@ int read_all_configurations(lList **lpp,
          old_name = strdup(lGetHost(el, CONF_hname));
 
          ret = sge_resolve_host(el, CONF_hname);
-#ifdef ENABLE_NGC
          if (ret != CL_RETVAL_OK) {
             if (ret != CL_RETVAL_GETHOSTNAME_ERROR  ) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS, "local configuration", old_name, cl_get_error_text(ret)));
@@ -1092,19 +1073,6 @@ int read_all_configurations(lList **lpp,
             }
             WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, "local configuration", old_name));
          }
-#else
-         if (ret != CL_OK) {
-            if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
-               ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS,
-                        "local configuration", old_name, cl_errstr(ret)));
-               free(old_name);
-               DEXIT;
-               return -1;
-            }
-            WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS,
-                  "local configuration", old_name));
-         }
-#endif
          new_name = lGetHost(el, CONF_hname);
 
          /* simply ignore it if it exists already */

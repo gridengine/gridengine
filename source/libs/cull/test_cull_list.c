@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
    copy = lCreateElem(TEST_Type);
    enp = lWhat("%T(ALL)", TEST_Type);
    index = 0;
-   lCopyElemPartial(copy, &index, ep, enp); 
+   lCopyElemPartial(copy, &index, ep, enp, true); 
    printf("complete copy of element\n");
    lWriteElemTo(copy, stdout);
    copy = lFreeElem(copy);
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
    copy = lCreateElem(TEST_Type);
    enp = lWhat("%T(%I %I %I)", TEST_Type, TEST_string, TEST_float, TEST_double);
    index = lGetPosInDescr(TEST_Type, TEST_string);
-   lCopyElemPartial(copy, &index, ep, enp); 
+   lCopyElemPartial(copy, &index, ep, enp, true); 
    printf("partial copy of element\n");
    lWriteElemTo(copy, stdout);
    copy = lFreeElem(copy);

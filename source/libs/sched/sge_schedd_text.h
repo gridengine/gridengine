@@ -32,18 +32,30 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/*
-** Code was former
-** in sge_text.h ( sge_text() is now sge_schedd_text() )
-*/
-
-/* Info strings used in scheduler (detailed information)
-* and Info strings used in qstat (we group jobs)
-*
-* Info strings used in scheduler and info strings used in qstat must
-* have same sequence because we use offset to map messages
-*/
+/* 
+ * This define contains the sheduler job info ids. Each message
+ * exists of two ids, one job related with detailed information 
+ * and one generic: a summary. 
+ *
+ * When ever a job related message is added by the scheduler, the
+ * print functions can transform the job related message into
+ * the generic message or the detailed message, depending on the
+ * request.
+ *
+ * When a new message is added, you have to:
+ * - add job related id and info message
+ * - add the generic id and info message
+ * - update sge_get_schedd_text to transform the ids into a info
+ *   message
+ *
+ * The generic message and the job info messages have to be in
+ * the same sequence, since a distance (SCHEDD_INFO_OFFSET)is 
+ * used to compute the generic message from the job info message.
+ * 
+ * For testing use: qstat -j and qstat -j job_id.
+ */
 enum { 
+   /* job messages */
    SCHEDD_INFO_CANNOTRUNATHOST_SSS = 0 ,
    SCHEDD_INFO_HASNOPERMISSION_SS,
    SCHEDD_INFO_HASINCORRECTPRJ_SSS,
@@ -90,8 +102,10 @@ enum {
    SCHEDD_INFO_NOPEMATCH_,
    SCHEDD_INFO_CLEANUPNECESSARY_S,
    SCHEDD_INFO_MAX_AJ_INSTANCES_,
+   SCHEDD_INFO_JOB_CATEGORY_FILTER_,
+   SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU,
 
-   /* */
+   /* global messages*/
    SCHEDD_INFO_CANNOTRUNATHOST,
    SCHEDD_INFO_HASNOPERMISSION,
    SCHEDD_INFO_HASINCORRECTPRJ,
@@ -138,6 +152,8 @@ enum {
    SCHEDD_INFO_NOPEMATCH,
    SCHEDD_INFO_CLEANUPNECESSARY,
    SCHEDD_INFO_MAX_AJ_INSTANCES,
+   SCHEDD_INFO_JOB_CATEGORY_FILTER,
+   SCHEDD_INFO_CANNOTRUNINQUEUECAL,
 
    TOOBIG /* don't move from last position! */
 };

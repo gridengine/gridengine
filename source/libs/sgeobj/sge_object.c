@@ -1108,7 +1108,25 @@ const char *object_type_get_name(const sge_object_type type)
    return ret;
 }
 
-/* EB: ADOC: add commets */
+/****** sgeobj/object/object_name_get_type() **********************************
+*  NAME
+*     object_name_get_type() -- Return type id of a certain object 
+*
+*  SYNOPSIS
+*     sge_object_type object_name_get_type(const char *name) 
+*
+*  FUNCTION
+*     returns the type id a an object given by "name" 
+*
+*  INPUTS
+*     const char *name - object name 
+*
+*  RESULT
+*     sge_object_type - type of the object
+*
+*  NOTES
+*     MT-NOTE: object_name_get_type() is MT safe 
+*******************************************************************************/
 sge_object_type object_name_get_type(const char *name)
 {
    sge_object_type ret = SGE_TYPE_ALL;

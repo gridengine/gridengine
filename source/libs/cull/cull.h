@@ -37,6 +37,8 @@
 #include "cull_list.h"
 #include "cull_where.h"
 #include "cull_what.h"
+#include "cull_what_elem.h"
+#include "cull_what_print.h"
 #include "cull_db.h"
 #include "cull_multitype.h"
 #include "cull_dump_scan.h"

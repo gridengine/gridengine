@@ -71,6 +71,7 @@
 #include "sge_mt_init.h"
 
 #include "msg_common.h"
+#include "msg_gdilib.h"
 #include "msg_daemons_common.h"
 #include "msg_shadowd.h"
 
@@ -110,12 +111,13 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
    cl_com_SIRM_t* status = NULL;
    int ret;
    int is_up_and_running = 0;
+   int commlib_error = CL_RETVAL_OK;
 
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
 
-   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, sge_get_qmaster_port() ,(char*)prognames[SHADOWD] , 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
-      CRITICAL((SGE_EVENT,"could not create communication handle\n"));
+      CRITICAL((SGE_EVENT,cl_get_error_text(commlib_error)));
       DEXIT;
       return is_up_and_running;
    }
@@ -136,7 +138,7 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
       cl_com_free_sirm_message(&status);
    }
  
-   cl_commlib_shutdown_handle(handle,0);
+   cl_commlib_shutdown_handle(handle,CL_FALSE);
 
    DEXIT;
    return is_up_and_running;
@@ -193,30 +195,42 @@ char **argv
    /* minimal setup */
    sge_setup(SHADOWD, NULL);
 
-   /* is there a running shadowd on this host */
    {
       const char *conf_string;
       pid_t shadowd_pid;
 
       if ((conf_string = bootstrap_get_qmaster_spool_dir())) {
-         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE,
-            conf_string, uti_state_get_unqualified_hostname());
+         char *shadowd_name;
+         shadowd_name = SGE_SHADOWD;
+
+         /* is there a running shadowd on this host (with unqualified name) */
+         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, conf_string, uti_state_get_unqualified_hostname());
+
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
          if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            char *shadowd_name;
-
             DPRINTF(("shadowd_pid: %d\n", shadowd_pid));
-            shadowd_name = SGE_SHADOWD;
-
             if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
                SGE_EXIT(1);
             }
          }
+
+         prepare_enroll(prognames[SHADOWD]);
+
+         /* is there a running shadowd on this host (with aliased name) */
+         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, conf_string, uti_state_get_qualified_hostname());
+         DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
+         if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
+            DPRINTF(("shadowd_pid: %d\n", shadowd_pid));
+            if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
+               CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
+               SGE_EXIT(1);
+            }
+         }  
+      } else {
+         prepare_enroll(prognames[SHADOWD]);
       }
    }
-
-   prepare_enroll(prognames[SHADOWD]);
 
    uti_state_set_exit_func(shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
@@ -261,6 +275,8 @@ char **argv
    } else {
       sge_daemonize(NULL);
    }
+
+   /* shadowd pid file will contain aliased name */
    sge_write_pid(shadowd_pidfile);
 
    starting_up();
@@ -494,7 +510,6 @@ const char *file
 ) {
    FILE *fp;
    char buf[512], *cp;
-   struct hostent *hp = NULL;
 
    DENTER(TOP_LAYER, "host_in_file");
 
@@ -506,16 +521,17 @@ const char *file
 
    while (fgets(buf, sizeof(buf), fp)) {
       for (cp = strtok(buf, " \t\n,"); cp; cp = strtok(NULL, " \t\n,")) {
-         hp = sge_gethostbyname_retry(cp);
-         if (hp && hp->h_name) {
-            if (!sge_hostcmp(host, hp->h_name)) {
+         char* resolved_host = NULL;
+         cl_com_cached_gethostbyname(cp,&resolved_host,NULL,NULL,NULL);
+         if (resolved_host) {
+            if (!sge_hostcmp(host, resolved_host )) {
                fclose(fp);
-               sge_free_hostent(&hp);
+               FREE(resolved_host);
                DEXIT;
                return 0;
             }
+            FREE(resolved_host);
          }
-         sge_free_hostent(&hp);
       }      
    }
 

@@ -34,6 +34,12 @@
 
 #include "sge_schedd_confL.h"
 
+enum { 
+    DISPATCH_TYPE_NONE = 0, 
+    DISPATCH_TYPE_FAST, 
+    DISPATCH_TYPE_COMPREHENSIVE 
+};
+
 enum schedd_job_info_key {
    SCHEDD_JOB_INFO_FALSE=0,
    SCHEDD_JOB_INFO_TRUE,
@@ -154,6 +160,8 @@ bool sconf_get_share_override_tickets(void);
 bool sconf_get_share_functional_shares(void);
 
 bool sconf_get_report_pjob_tickets(void);
+
+bool sconf_is_job_category_filtering(void);
 
 u_long32 sconf_get_flush_submit_sec(void);
    

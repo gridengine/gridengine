@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InvalidContextStringException.java
- *
- * Created on June 17, 2003, 10:35 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** Initialization failed due to invalid contact string.
+/** Initialization failed due to an invalid contact string.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidContactStringException extends DRMAAException {
+public class InvalidContactStringException extends DrmaaException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidContextStringException</code> without detail message.

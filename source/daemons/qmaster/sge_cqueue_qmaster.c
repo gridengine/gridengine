@@ -863,11 +863,34 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                int slots = qinstance_slots_used(qinstance);
    
                if (slots > 0) {
+                  ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                  ANSWER_QUALITY_ERROR);
                   do_del = false;
                   break; 
                }
             }
 
+            /*
+             * check for references of this cqueue in other cqueues subordinate
+             * lists
+             */
+            if (do_del) {
+               lListElem *tmp_cqueue;
+               
+               for_each(tmp_cqueue, master_list) {
+               
+                  if (cqueue_is_used_in_subordinate(name, tmp_cqueue)) {
+                     ERROR((SGE_EVENT, MSG_CQUEUE_DEL_ISREFASSUBORDINATE_SS, 
+                           name, lGetString(tmp_cqueue, CQ_name)));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 
+                            ANSWER_QUALITY_ERROR);
+                     do_del = false;
+                     break;
+                  }
+               }
+            }
+            
             if (do_del) {
                /*
                 * delete QIs
@@ -909,9 +932,6 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                   ret = false;
                }
             } else {
-               ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
-                               ANSWER_QUALITY_ERROR);
                ret = false;
             }
          } else {

@@ -55,9 +55,12 @@
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
+#include "sge_profiling.h"
+
 
 static lList *sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline);
-static lList *sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, u_long32 *all_jobs, u_long32 *all_users, lList **ppuserlist);
+static lList *sge_parse_qdel(lList **ppcmdline, lList **ppreflist,
+                             u_long32 *pforce, lList **ppuserlist);
 static int qdel_usage(FILE *fp, char *what);
 
 extern char **environ;
@@ -69,7 +72,7 @@ int main(int argc, char **argv) {
    /* lListElem *rep, *nxt_rep, *jep, *aep, *jrep, *idep; */
    lListElem *aep, *idep;
    lList *jlp = NULL, *alp = NULL, *pcmdline = NULL, *ref_list = NULL, *user_list=NULL;
-   u_long32 force = 0, all_users = 0, all_jobs = 0;
+   u_long32 force = 0;
    int cmd;
    int wait;
    unsigned long status = 0;
@@ -77,6 +80,8 @@ int main(int argc, char **argv) {
    cl_com_handle_t* handle = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
+
+   sge_prof_setup();   
 
    log_state_set_log_gui(1);
 
@@ -99,11 +104,9 @@ int main(int argc, char **argv) {
       SGE_EXIT(1);
    }
 
-   alp = sge_parse_qdel(&pcmdline, &ref_list, &force, &all_jobs, &all_users, &user_list);
+   alp = sge_parse_qdel(&pcmdline, &ref_list, &force, &user_list);
 
    DPRINTF(("force     = "u32"\n", force));
-   DPRINTF(("all_users = "u32"\n", all_users));
-   DPRINTF(("all_jobs  = "u32"\n", all_jobs));
 
    if(alp) {
       /*
@@ -128,9 +131,6 @@ int main(int argc, char **argv) {
          lSetList(id, ID_user_list, user_list);
          }
       }
-   }
-   if (all_users) {
-      lAddElemStr(&ref_list, ID_str, "0", ID_Type);
    }
 
    handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
@@ -292,6 +292,7 @@ int main(int argc, char **argv) {
    lFreeList(jlp);
    lFreeList(ref_list);
    sge_gdi_shutdown();
+   sge_prof_cleanup();
    SGE_EXIT(0);
    return 0;
 
@@ -300,6 +301,7 @@ error_exit:
    lFreeList(jlp);
    lFreeList(ref_list);
    sge_gdi_shutdown();
+   sge_prof_cleanup();
    SGE_EXIT(1); 
    DEXIT;
    return 1;
@@ -414,8 +416,6 @@ static lList *sge_parse_qdel(
 lList **ppcmdline,
 lList **ppreflist,
 u_long32 *pforce,
-u_long32 *palljobs,
-u_long32 *pallusers,
 lList **ppuserlist 
 ) {
 lList *alp = NULL;

@@ -34,9 +34,69 @@ spool directory.
 <p><b>3) Start the shadow daemons</b>
 <p>The shadow daemon must be started on all shadow master hosts. This is
 done via the startup script, rcsge. As root on each host, run the following:&nbsp;
-<pre STYLE="margin-bottom: 0.2in">&nbsp;$SGE_ROOT/default/common/rcsge -shadowd</pre>
-After these steps are completed, master shadowing for the Grid Engine cluster
+<pre STYLE="margin-bottom: 0.2in">
+&nbsp;$SGE_ROOT/default/common/rcsge -shadowd  &nbsp;&nbsp;&nbsp;&nbsp; [Version 5.3 and its patches]
+&nbsp;$SGE_ROOT/default/common/sgemaster -shadowd   [Version 6 or later]
+</pre>
+After these steps are successfully completed, master shadowing for the Grid Engine cluster
 is active. See under <a href="http://gridengine.sunsource.net/issues/show_bug.cgi?id=497">issue #497</a>
 for more information about shadowd failover delay and check interval.</td>
 </tr>
 </table>
+
+<p>
+<table border="0" cellspacing="0" cellpadding="2" width="100%">
+<tbody><tr>
+<td>
+<bold><font color="#ff0000">NOTES:</font></bold><br>
+When using this shadow master feature with the master hosts with
+<a href="http://gridengine.sunsource.net/project/gridengine/howto/multi_intrfcs.html">multiple 
+network interfaces</a>, the following things have to be addressed.</p>
+
+<ul><li>Version 6 release must install the Update 1 patch to make the shadow master 
+work.</li> 
+<li>Version 5.3 and its patch releases need to create a symbolic link to each 
+of shadow masters as shown below at $SGE_ROOT/default/spool/qmaster directory.
+This is because the shadow daemon still looks for the following file name associated with 
+the old hostname while the rcsge script looks for the file name associated with the 
+new hostname assigned to the Grid Engine traffic. An example is given below.
+<pre>
+   % ls -l $SGE_ROOT/default/spool/qmaster 
+   ...
+   lrwxrwxrwx 1 sge sge 17 Sep 28 09:01 shadowd_host1-ge.pid -> shadowd_host1.pid
+   -rw-r--r-- 1 sge sge 17 Sep 28 09:00 shadowd_host1.pid
+   lrwxrwxrwx 1 sge sge 17 Sep 28 09:02 shadowd_host2-ge.pid -> shadowd_host2.pid
+   -rw-r--r-- 1 sge sge 17 Sep 28 09:00 shadowd_host2.pid
+</pre>
+In this example, host1 and host2 are hostnames for two shadow masters. Also 
+host1-ge and host2-ge are the names for Grid Engine network interfaces.
+<pre>
+   % cat /etc/hosts
+   #
+   # hostnames
+   #
+   192.168.8.10   host1
+   192.168.8.11   host2
+   #
+   # Grid Engine Network 
+   #
+   192.168.9.10   host1-ge
+   192.168.9.11   host2-ge
+</pre>
+
+<li>Version 5.3 and its patch releases need to keep both new and old hostnames 
+in the shadow_masters file due to the 
+reason mentioned above. An example is given below.
+<pre>
+   % cat shadow_masters
+   host1
+   host2
+   host1-ge
+   host2-ge
+</pre>
+</li></ul>
+</td>
+</tr>
+</tbody></table>
+
+

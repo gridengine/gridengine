@@ -496,7 +496,11 @@ int sge_string2bin(FILE *fp, const char *buf)
 *     char* sge_file2string(const char *fname, int *len)
 *
 *  FUNCTION
-*     Load file into string
+*     Load file into string. Returns a pointer to a string buffer containing
+*     the file contents and the size of the buffer (= number of bytes read)
+*     in the variable len.
+*     If the file cannot be read (doesn't exist, permissions etc.), NULL is
+*     returned as buffer and len is set to 0.
 *
 *  INPUTS
 *     const char *fname - filename
@@ -520,21 +524,30 @@ char *sge_file2string(const char *fname, int *len)
    char *str;
  
    DENTER(CULL_LAYER, "sge_file2string");
- 
-   if (SGE_STAT(fname, &statbuf))
+
+   /* initialize len - in case of errors we want to return 0 
+    * JG: TODO: it would be better to return -1. Check if calling
+    * functions would handle this situation.
+    */
+   if (len != NULL) {
+      *len = 0;
+   }
+
+   /* try file access, read file info */
+   if (SGE_STAT(fname, &statbuf)) {
+      DEXIT;
       return NULL;
+   }
  
    size = statbuf.st_size;
-   if (len)
-      *len = size;
  
-   if (!(fp = fopen(fname, "r"))) {
+   if ((fp = fopen(fname, "r")) == NULL) {
       ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
       DEXIT;
       return NULL;
    }
  
-   if (!(str = malloc(size+1))) {
+   if ((str = malloc(size+1)) == NULL) {
       fclose(fp);
       DEXIT;
       return NULL;
@@ -562,7 +575,7 @@ char *sge_file2string(const char *fname, int *len)
          return NULL;
       }
       str[i] = '\0';    /* delimit this string */   
-      if (len) {
+      if (len != NULL) {
          *len = i;
       }
 #else
@@ -575,10 +588,14 @@ char *sge_file2string(const char *fname, int *len)
          return NULL;
       }
       str[size] = '\0';    /* delimit this string */
+      if (len != NULL) {
+         *len = size;
+      }
 #endif
    } 
  
    fclose(fp);
+
    DEXIT;
    return str;
 }

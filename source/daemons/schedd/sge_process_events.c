@@ -85,13 +85,15 @@
 #include "sge_answer.h"
 #include "sge_parse_num_par.h"
 #include "sge_qinstance_state.h"
+#include "sgeee.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
 extern int start_on_master_host;
 extern int new_global_config;
 
-bool rebuild_categories = true;
+static bool rebuild_categories = true;
+static bool is_fc_filtering = false;
 
 const lCondition 
       *where_queue = NULL,
@@ -114,7 +116,8 @@ const lEnumeration
    *what_acl = NULL,
    *what_centry = NULL,
    *what_dept = NULL,
-   *what_jat = NULL;
+   *what_jat = NULL,
+   *what_pet = NULL;
 
 static void ensure_valid_what_and_where(void);
 
@@ -146,7 +149,6 @@ int event_handler_my_scheduler()
 
 int event_handler_default_scheduler() 
 {
-   int ret;
    sge_Sdescr_t copy;
    dstring ds;
    char buffer[128];
@@ -174,10 +176,7 @@ int event_handler_default_scheduler()
       rebuild_categories = 0;   
    }
 
-   if ((ret=sge_before_dispatch())) {
-      DEXIT;
-      return ret;
-   }
+   sge_before_dispatch();
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_init = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -187,40 +186,41 @@ int event_handler_default_scheduler()
 
    ensure_valid_what_and_where();
 
-   copy.job_list = lCopyList("", Master_Job_List);                           
-
    /* the scheduler functions have to work with a reduced copy .. */
    copy.host_list = lSelect("", Master_Exechost_List,
                             where_host, what_host);
    /* 
     * Within the scheduler we do only need QIs
     */
+
    {
       lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
       lListElem *cqueue = NULL;
 
-      copy.queue_list = NULL;
       for_each(cqueue, master_list) {
          lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lList *selected = NULL;
-         lList *all_selected = NULL;
-         selected = lSelect("", qinstance_list, where_queue, what_queue2);
+         lListElem *queue = NULL;
 
-         if (copy.queue_list == NULL) {
-            copy.queue_list = selected;
-         } else {
-            lAddList(copy.queue_list, selected);
+         if (copy.all_queue_list == NULL) {
+            copy.all_queue_list = lCreateList("qi", lGetListDescr(qinstance_list));
          }
 
-         /* name all queues not suitable for scheduling in tsm-logging */
-         all_selected = lCopyList("", qinstance_list);
-         if (copy.all_queue_list == NULL) {
-            copy.all_queue_list = all_selected;
-         } else {
-            lAddList(copy.all_queue_list, all_selected);
+         for_each(queue, qinstance_list) {
+            lListElem *ep = lCopyElem(queue);
+            lAppendElem(copy.all_queue_list, ep);
          }
       }
+      copy.queue_list = lSelect("sel_qi_list", copy.all_queue_list, where_queue, what_queue2);
+      copy.dis_queue_list = lSelect("dis_qi_list", copy.all_queue_list, where_queue2, what_queue2);
    }
+
+
+   if (sconf_is_job_category_filtering()) {
+      copy.job_list = sge_category_job_copy(Master_Job_List, copy.queue_list); 
+   }
+   else {
+      copy.job_list = lCopyList("test", Master_Job_List);                         
+   }   
 
    copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
    copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
@@ -312,6 +312,7 @@ int event_handler_default_scheduler()
    /* .. which gets deleted after using */
    copy.host_list = lFreeList(copy.host_list);
    copy.queue_list = lFreeList(copy.queue_list);
+   copy.dis_queue_list = lFreeList(copy.dis_queue_list);
    copy.all_queue_list = lFreeList(copy.all_queue_list);
    copy.job_list = lFreeList(copy.job_list);
    copy.centry_list = lFreeList(copy.centry_list);
@@ -331,12 +332,12 @@ int event_handler_default_scheduler()
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
-   if(prof_is_active()){
+   if(prof_is_active(SGE_PROF_CUSTOM6)){
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s)\n",
-               prof_event, prof_init, prof_copy, prof_run, prof_free));
+      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d)\n",
+               prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count() ));
 
       log_state_set_log_level(saved_logginglevel);
    }
@@ -454,10 +455,7 @@ DTRACE;
          QU_consumable_config_list,
          QU_projects,
          QU_xprojects,
-#if 0
-         QU_fshare,
-         QU_oticket,
-#endif
+
          QU_resource_utilization,
          QU_tagged4schedule,
          QU_available_at,
@@ -472,6 +470,9 @@ DTRACE;
          QU_host_seq_no,
          QU_pe_list,
          QU_ckpt_list,
+
+         QU_state_changes,
+         
          NoName
       };
    
@@ -499,17 +500,41 @@ DTRACE;
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
             " !(%I m= %u))",
             queue_des,    
             QU_state, QI_SUSPENDED,        /* only not suspended queues      */
             QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
+            QU_state, QI_CAL_DISABLED,
             QU_state, QI_CAL_SUSPENDED, 
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
             QU_state, QI_AMBIGUOUS,
             QU_state, QI_ORPHANED
             );         /* only known queues              */
+           
+         where_queue2 = lWhere("%T("
+            " ((%I m= %u) || (%I m= %u)) &&" 
+            " !(%I m= %u) &&" 
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u))",
+            queue_des,    
+            QU_state, QI_CAL_SUSPENDED, 
+            QU_state, QI_CAL_DISABLED,
             
+            QU_state, QI_SUSPENDED,        /* only not suspended queues      */
+            QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
+            QU_state, QI_ERROR,            /* no queues in error state       */
+            QU_state, QI_UNKNOWN,
+            QU_state, QI_DISABLED,
+            QU_state, QI_AMBIGUOUS,
+            QU_state, QI_ORPHANED
+            );         /* only known queues              */
+
          if (where_queue == NULL) {
             CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
          }
@@ -642,6 +667,21 @@ DTRACE;
       what_jat = lIntVector2What(JAT_Type, jat_nm);
    }
 
+   if (what_pet == NULL) {
+  
+      const int pet_nm[] = {         
+         PET_id, 
+         PET_status,     
+         PET_granted_destin_identifier_list,
+         PET_usage,
+         PET_scaled_usage,
+         PET_previous_usage,
+         NoName
+      };
+ 
+      what_pet = lIntVector2What(PET_Type, pet_nm);
+   }
+
    DEXIT;
    return;
 }
@@ -666,6 +706,9 @@ void cleanup_default_scheduler(void)
 bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
                                          lListElem *event, void *clientdata){
    sconf_print_config();
+
+   /* do we have to rebuild the job categories? */
+   rebuild_categories |=  (is_fc_filtering != sconf_is_job_category_filtering());
    return true;
 }
 
@@ -681,6 +724,8 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
 
    old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
+
+   is_fc_filtering = sconf_is_job_category_filtering();
 
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
@@ -818,10 +863,13 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
          DEXIT;
          return false;
       }   
+      sge_do_priority_job(job); /* job got added or modified, recompute the priorities */
    }
+   
    switch (action) {
       case SGE_EMA_LIST:
          rebuild_categories = 1;
+         sge_do_priority(Master_Job_List, NULL); /* recompute the priorities */
          break;
 
       case SGE_EMA_ADD:
@@ -992,6 +1040,8 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
    sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet);
   
    /* event types with callbacks */
 
@@ -1022,6 +1072,7 @@ int subscribe_default_scheduler(void)
          a job is removed from its hold state */
       }   
       else {
+         temp--;
          ec_set_flush(sgeE_JOB_ADD, true, temp);
          /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
          a job is removed from its hold state */
@@ -1029,14 +1080,15 @@ int subscribe_default_scheduler(void)
          
       temp = sconf_get_flush_finish_sec();
       if (temp <= 0){
-         ec_set_flush(sgeE_JOB_DEL, false,        -1);
+         ec_set_flush(sgeE_JOB_DEL, false,         -1);
          ec_set_flush(sgeE_JOB_FINAL_USAGE, false, -1);
-         ec_set_flush(sgeE_JATASK_DEL, false,-1);
+         ec_set_flush(sgeE_JATASK_DEL, false,      -1);
       }
       else {
-         ec_set_flush(sgeE_JOB_DEL, true,        temp);
+         temp--;
+         ec_set_flush(sgeE_JOB_DEL, true,         temp);
          ec_set_flush(sgeE_JOB_FINAL_USAGE, true, temp);
-         ec_set_flush(sgeE_JATASK_DEL, true, temp);
+         ec_set_flush(sgeE_JATASK_DEL, true,      temp);
       }
    }
    /* for some reason we flush sharetree changes */

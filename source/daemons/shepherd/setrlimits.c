@@ -441,7 +441,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 
 #if defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD)
+#elif defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD) || defined(INTERIX)
 #  define limit_fmt "%lld"
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
 #  define limit_fmt "%lu"
@@ -458,8 +458,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
       sge_switch2admin_user();  
       if (ret) {
          /* exit or not exit ? */
-         sprintf(trace_str, "setrlimit(%s, {"limit_fmt", "limit_fmt"}) failed: %s"
-,
+         sprintf(trace_str, "setrlimit(%s, {"limit_fmt", "limit_fmt"}) failed: %s",
             limit_str, rlp->rlim_cur, rlp->rlim_max, strerror(errno));
             shepherd_trace(trace_str);
       }

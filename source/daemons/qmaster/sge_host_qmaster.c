@@ -218,7 +218,8 @@ lListElem *hep,
 lList **alpp,
 char *ruser,
 char *rhost,
-u_long32 target 
+u_long32 target,
+const lList* master_hGroup_List
 ) {
    int pos;
    lListElem *ep;
@@ -320,10 +321,10 @@ u_long32 target
    }
 
    if (target == SGE_EXECHOST_LIST && 
-       host_is_referenced(hep, NULL, 
-                          *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELEXECACTIVQ_S, unique));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+       host_is_referenced(hep, alpp, 
+                          *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                          master_hGroup_List)) {
+      answer_list_log(alpp, false);                    
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -744,9 +745,9 @@ lList *lp
       } 
 
       /* replace old load value or add a new one */
-      lep = lGetSubCaseStr(*hepp, HL_name, name, EH_load_list);  
+      lep = lGetSubStr(*hepp, HL_name, name, EH_load_list);  
 
-      if (!lep) {
+      if (lep == NULL) {
          lep = lAddSubStr(*hepp, HL_name, name, EH_load_list, HL_Type);
          DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", 
                lGetHost(ep, LR_host), name, value));
@@ -754,20 +755,19 @@ lList *lp
          if (is_static) {
             statics_changed = true;
          } else {
-            if (!global)
+            if (!global) {
                added_non_static = true; /* triggers clearing of unknown state */
+            }
          }
-      }
-      else {
-         const char *oldval;
+      } else {
+         if (is_static) {
+            const char *oldval = lGetString(lep, HL_value);
+            if (sge_strnullcmp(oldval, value) != 0) {
+               statics_changed = true;
 
-         oldval = lGetString(lep, HL_value);
-         if (sge_is_static_load_value(name) && 
-             (oldval != value) && (!oldval || strcmp(value, oldval))) {
-            statics_changed = true;
-
-            DPRINTF(("%s: updating STATIC lv: "SFQ" = "SFQ" oldval: "SFQ"\n", 
-                    lGetHost(ep, LR_host), name, value, oldval));
+               DPRINTF(("%s: updating STATIC lv: "SFQ" = "SFQ" oldval: "SFQ"\n", 
+                       lGetHost(ep, LR_host), name, value, oldval));
+            }
          }
       }
       /* copy value */
@@ -1191,11 +1191,7 @@ int force
    int mail_options;
    char sge_mail_subj[1024];
    char sge_mail_body[1024];
-#ifdef ENABLE_NGC
    unsigned long last_heard_from;
-#else
-   static u_short number_one = 1;
-#endif
 
 
    DENTER(TOP_LAYER, "notify");
@@ -1204,13 +1200,9 @@ int force
 
    hostname = lGetHost(lel, EH_name);
 
-#ifdef ENABLE_NGC
    cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)hostname, (char*)prognames[EXECD],1, &last_heard_from);
    execd_alive = last_heard_from;
-#else
-   execd_alive = last_heard_from(prognames[EXECD], &number_one, hostname);
-#endif
 
    if (!force && !execd_alive) {
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));

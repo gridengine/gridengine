@@ -805,7 +805,7 @@ href_list_append_to_dstring(const lList *this_list, dstring *string)
    return ret;
 }
 
-/****** sge/href/href_list_remove_existing() **********************************
+/****** sgeobj/href/href_list_remove_existing() *******************************
 *  NAME
 *     href_list_remove_existing() -- Removes entries from list 
 *
@@ -855,7 +855,7 @@ href_list_remove_existing(lList **this_list, lList **answer_list,
    return ret;
 }
 
-/****** sge/href/href_list_debug_print() **************************************
+/****** sgeobj/href/href_list_debug_print() ***********************************
 *  NAME
 *     href_list_debug_print() -- Prints HR_Type list into TOP_LAYER 
 *

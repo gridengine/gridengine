@@ -38,5 +38,8 @@ extern report_source execd_report_sources[];
 
 lList *sge_build_load_report(void);
 
+void update_job_usage(void);
+
+
 #endif /* __LOAD_AVG_H */
 

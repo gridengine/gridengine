@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,19 +28,15 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * DefaultContactStringException.java
- *
- * Created on June 17, 2003, 10:37 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** DRMAA could not use the default contact string to connect to DRM
+/** DRMAA could not use the default contact string to connect to the DRM
  * system.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class DefaultContactStringException extends DRMAAException {
+public class DefaultContactStringException extends InvalidContactStringException {
 	
 	/**
 	 * Creates a new instance of <code>DefaultContactStringException</code> without detail message.

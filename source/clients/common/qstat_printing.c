@@ -361,6 +361,22 @@ const char* sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p, dst
          s = sge_dstring_get_string(resource_string_p);
       }
       break;
+   case TYPE_INT:   
+
+      if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         double val = lGetDouble(rep, CE_pj_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_pj_dominant);
+         double_print_int_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      } else {
+         double val = lGetDouble(rep, CE_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_dominant);
+         double_print_int_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      }
+      break;
    default:   
 
       if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
@@ -700,6 +716,7 @@ int queue_name_length
       sge_dstring_free(&dyn_task_str);
       nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       FoundTasks = 0;
+
       while((jatep = nxt_jatep)) { 
          if (shut_me_down) {
             SGE_EXIT(1);
@@ -721,7 +738,8 @@ int queue_name_length
          }
 
          if (!(lGetUlong(jatep, JAT_suitable) & TAG_FOUND_IT) && 
-            VALID(JQUEUED, lGetUlong(jatep, JAT_state))) {
+            VALID(JQUEUED, lGetUlong(jatep, JAT_state)) &&
+            !VALID(JFINISHED, lGetUlong(jatep, JAT_status))) {
             lSetUlong(jatep, JAT_suitable, 
             lGetUlong(jatep, JAT_suitable)|TAG_FOUND_IT);
 
@@ -743,7 +761,7 @@ int queue_name_length
                                 pe_list, "", group_opt, 0, queue_name_length);
                } else {
                   if (!ja_task_list) {
-                     ja_task_list = lCreateList("", JAT_Type);
+                     ja_task_list = lCreateList("", lGetElemDescr(jatep));
                   }
                   lAppendElem(ja_task_list, lCopyElem(jatep));
                   FoundTasks = 1;
@@ -769,6 +787,7 @@ int queue_name_length
          ja_task_list = lFreeList(ja_task_list);
       }
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
+
          sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
                                      0, 0, ehl, centry_list, pe_list, "", sge_ext, 
                                      group_opt, queue_name_length);
@@ -794,12 +813,13 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)
             sge_ext?hashes:"");
       }
    } 
-   if (full_listing & QSTAT_DISPLAY_ZOMBIES) {
+   if ((full_listing & QSTAT_DISPLAY_ZOMBIES) &&
+       (full_listing & QSTAT_DISPLAY_FULL)) {
       if (first_zombie) {
          first_zombie = 0;
-         printf("\n################################################################################%s\n", sge_ext?hashes:"");
+         printf("\n############################################################################%s\n", sge_ext?hashes:"");
          printf(MSG_QSTAT_PRT_FINISHEDJOBS);
-         printf(  "################################################################################%s\n", sge_ext?hashes:""); 
+         printf("############################################################################%s\n", sge_ext?hashes:""); 
       }
    }
 }
@@ -1067,7 +1087,7 @@ int queue_name_length
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_urg, sge_pri, sge_ext;
+   int sge_urg, sge_pri, sge_ext, sge_time;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -1091,10 +1111,12 @@ int queue_name_length
       queue_name = NULL; 
    }
 
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = ((full_listing & QSTAT_DISPLAY_EXTENDED) == QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
    sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
    sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);
+   sge_time = (!sge_ext | tsk_ext | sge_urg | sge_pri);
+
 
    if (first_time) {
       first_time = 0;
@@ -1127,7 +1149,7 @@ int queue_name_length
                   "user",
                sge_ext?"project          department ":"",
                   "state",
-               !sge_ext?"submit/start at     ":"",
+               sge_time?"submit/start at     ":"",
                sge_urg ? " deadline           " : "",
                sge_ext ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "",
                sge_ext?"tckts ":"",
@@ -1270,11 +1292,12 @@ int queue_name_length
       printf("      "); 
    }
 
-   if (!sge_ext) {
+   if (sge_time) {
       if (print_jobid) {
          /* start/submit time */
-         if (!lGetUlong(jatep, JAT_start_time) )
+         if (!lGetUlong(jatep, JAT_start_time) ) {
             printf("%s ", sge_ctime(lGetUlong(job, JB_submission_time), &ds));
+         }   
          else {
 #if 0
             /* AH: intermediate change to monitor JAT_stop_initiate_time 
@@ -1625,3 +1648,42 @@ int queue_name_length
 }
 
 
+/* print display bitmask */ 
+void qstat_display_bitmask_to_str(u_long32 bitmask, dstring *string)
+{
+   bool found = false;
+   int i;
+   static const struct qstat_display_bitmask_s {
+      u_long32 mask;
+      char *name;
+   } bitmasks[] = {
+      { QSTAT_DISPLAY_USERHOLD,      "USERHOLD" },
+      { QSTAT_DISPLAY_SYSTEMHOLD,    "SYSTEMHOLD" },
+      { QSTAT_DISPLAY_OPERATORHOLD,  "OPERATORHOLD" },
+      { QSTAT_DISPLAY_JOBHOLD,       "JOBHOLD" },
+      { QSTAT_DISPLAY_STARTTIMEHOLD, "STARTTIMEHOLD" },
+      { QSTAT_DISPLAY_HOLD,          "HOLD" },
+      { QSTAT_DISPLAY_PENDING,       "PENDING" },
+      { QSTAT_DISPLAY_RUNNING,       "RUNNING" },
+      { QSTAT_DISPLAY_SUSPENDED,     "SUSPENDED" },
+      { QSTAT_DISPLAY_ZOMBIES,       "ZOMBIES" },
+      { QSTAT_DISPLAY_FINISHED,      "FINISHED" },
+      { 0,                           NULL }
+   };
+
+   sge_dstring_clear(string);
+
+   for (i=0; bitmasks[i].mask !=0 ; i++) {
+      if ((bitmask & bitmasks[i].mask)) {
+         if (found)
+            sge_dstring_append(string, " ");
+         sge_dstring_append(string, bitmasks[i].name);
+         found = true;
+      }
+   }
+
+   if (!found)
+      sge_dstring_copy_string(string, "<NONE>");
+
+   return;
+}

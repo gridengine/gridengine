@@ -446,14 +446,17 @@ void sge_job_resend_event_handler(te_event_t anEvent)
    u_long32 jataskid = te_get_second_numeric_key(anEvent);
    
    DENTER(TOP_LAYER, "sge_job_resend_event_handler");
+   
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    jep = job_list_locate(Master_Job_List, jobid);
    jatep = job_search_task(jep, NULL, jataskid);
    now = sge_get_gmt();
 
-   if(!jep || !jatep) {
-      WARNING((SGE_EVENT, MSG_COM_RESENDUNKNOWNJOB_UU, 
-               u32c(jobid), u32c(jataskid)));
+   if(!jep || !jatep)
+   {
+      WARNING((SGE_EVENT, MSG_COM_RESENDUNKNOWNJOB_UU, u32c(jobid), u32c(jataskid)));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);     
       DEXIT;
       return;
    }
@@ -461,68 +464,81 @@ void sge_job_resend_event_handler(te_event_t anEvent)
    jatasks = lGetList(jep, JB_ja_tasks);
 
    /* check whether a slave execd allowance has to be retransmitted */
-   if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
+   if (lGetUlong(jatep, JAT_status) == JTRANSFERING)
+   {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
-      if (!ep || 
-         !(qnm=lGetString(ep, JG_qname)) || 
-         !(hnm=lGetHost(ep, JG_qhostname))) {
-         ERROR((SGE_EVENT, MSG_JOB_UNKNOWNGDIL4TJ_UU,
-               u32c(jobid), u32c(jataskid)));
+
+      if (!ep || !(qnm=lGetString(ep, JG_qname)) || !(hnm=lGetHost(ep, JG_qhostname)))
+      {
+         ERROR((SGE_EVENT, MSG_JOB_UNKNOWNGDIL4TJ_UU, u32c(jobid), u32c(jataskid)));
          lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
 
-      mqep = cqueue_list_locate_qinstance(
-                     *(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
-      if (mqep == NULL) {
-         ERROR((SGE_EVENT, MSG_JOB_NOQUEUE4TJ_SUU,  
-               qnm, u32c(jobid), u32c(jataskid)));
+      mqep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
+
+      if (mqep == NULL)
+      {
+         ERROR((SGE_EVENT, MSG_JOB_NOQUEUE4TJ_SUU, qnm, u32c(jobid), u32c(jataskid)));
          lDelElemUlong(&jatasks, JAT_task_number, jataskid);
-         DEXIT;
-         return;
-      }
-      if (!(hnm=lGetHost(mqep, QU_qhostname)) ||
-          !(hep = host_list_locate(Master_Exechost_List, hnm))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOHOST4TJ_SUU, 
-                hnm, u32c(jobid), u32c(jataskid)));
-         lDelElemUlong(&jatasks, JAT_task_number, jataskid);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
 
-      if (qinstance_state_is_unknown(mqep)) {
+      if (!(hnm=lGetHost(mqep, QU_qhostname)) || !(hep = host_list_locate(Master_Exechost_List, hnm)))
+      {
+         ERROR((SGE_EVENT, MSG_JOB_NOHOST4TJ_SUU, hnm, u32c(jobid), u32c(jataskid)));
+         lDelElemUlong(&jatasks, JAT_task_number, jataskid);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return;
+      }
+      
+      if (qinstance_state_is_unknown(mqep))
+      {
          trigger_job_resend(now, hep, jobid, jataskid);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
          return; /* try later again */
       }
 
-      if (lGetString(jatep, JAT_granted_pe)) {
-         if (!(pe = pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))) {
-            ERROR((SGE_EVENT, MSG_JOB_NOPE4TJ_SUU, 
-                  lGetString(jep, JB_pe), u32c(jobid), u32c(jataskid)));
+      if (lGetString(jatep, JAT_granted_pe))
+      {
+         if (!(pe = pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe))))
+         {
+            ERROR((SGE_EVENT, MSG_JOB_NOPE4TJ_SUU, lGetString(jep, JB_pe), u32c(jobid), u32c(jataskid)));
             lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DEXIT;
             return;
          }
-      }
-      else
+      } else {
          pe = NULL;
+      }
 
       if (lGetUlong(jatep, JAT_start_time)) {
-         WARNING((SGE_EVENT, MSG_JOB_DELIVER2Q_UUS, 
-                u32c(jobid), u32c(jataskid), 
-                lGetString(jatep, JAT_master_queue)));
+         WARNING((SGE_EVENT, MSG_JOB_DELIVER2Q_UUS, u32c(jobid), 
+                  u32c(jataskid), lGetString(jatep, JAT_master_queue)));
       }
 
+      /* send job to execd */
       sge_give_job(jep, jatep, mqep, pe, hep);
  
       /* reset timer */
       lSetUlong(jatep, JAT_start_time, now);
-      trigger_job_resend(now, hep, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number));
 
+      /* initialize resending of job if not acknowledged by execd */
+      trigger_job_resend(now, hep, lGetUlong(jep, JB_job_number), 
+                         lGetUlong(jatep, JAT_task_number));
    } 
 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    DEXIT;
+   return;
 } /* sge_job_resend_event_handler() */
 
 
@@ -575,8 +591,8 @@ void sge_zombie_job_cleanup_handler(te_event_t anEvent)
 
    SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   while (Master_Zombie_List &&
-            (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs)) {
+   while (Master_Zombie_List && (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs))
+   {
       dep = lFirst(Master_Zombie_List);
       lRemoveElem(Master_Zombie_List, dep);
    }

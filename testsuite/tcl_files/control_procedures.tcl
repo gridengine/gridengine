@@ -77,19 +77,51 @@ proc dump_array_to_tmpfile { change_array } {
 }
 
 # take a name/value array and build a vi command to set new values
-proc build_vi_command { change_array } {
-   upvar $change_array chgar
+proc build_vi_command { change_array {current_array no_current_array_has_been_passed}} {
+   upvar $change_array  chgar
+   upvar $current_array curar
 
    set vi_commands "" 
 
-   if [info exists chgar] {
+   if {![info exists chgar]} {
+      return ""
+   }
+
+   if {[info exists curar]} {
+      # compare the new values to old ones
+      foreach elem [array names chgar] {
+        # this will quote any / to \/  (for vi - search and replace)
+        set newVal $chgar($elem)
+      
+        if {[info exists curar($elem)]} {
+           # if old and new config have the same value, create no vi command,
+           # if they differ, add vi command to ...
+           if { [string compare $curar($elem) $newVal] != 0 } {
+              if { $newVal == "" } {
+                 # ... delete config entry (replace by comment)
+                 lappend vi_commands ":%s/^$elem .*$/#/\n"
+              } else {
+                 # ... change config entry
+                 set newVal1 [split $newVal {/}]
+                 set newVal [join $newVal1 {\/}]
+                 lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+              }
+           }
+        } else {
+           # if the config entry didn't exist in old config: append a new line
+           lappend vi_commands "A\n$elem  $newVal"
+           lappend vi_commands [format "%c" 27]
+        }
+     }   
+   } else {
+      # we have no current values - just create a replace statement for each attribute
       foreach elem [array names chgar] {
          # this will quote any / to \/  (for vi - search and replace)
          set newVal [set chgar($elem)]
          set newVal1 [split $newVal {/}]
          set newVal [join $newVal1 {\/}]
          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-      } 
+      }
    }
 
    return $vi_commands
@@ -225,11 +257,11 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
 
       set stop_line_wait 0
-      set timeout 60
+      set timeout 10
 
       set start_time [ timestamp ] 
       send -i $sp_id "G"
-      set timeout 1
+      #set timeout 1
       set timeout_count 0
       while { $stop_line_wait == 0 } {
          expect {
@@ -238,6 +270,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set stop_line_wait 1
             }
             -i $sp_id "100%" {
+               after 100
                send -i $sp_id "1G"      ;# go to first line
                set stop_line_wait 1
             }
@@ -269,19 +302,29 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       foreach elem $vi_command_sequence {
          set com_length [ string length $elem ]
          set com_sent 0
-         expect -i $sp_id
+         expect -i $sp_id {
+            "*Hit return*" {
+               send -i $sp_id -- "\n"
+            }
+         }
          if { $CHECK_DEBUG_LEVEL != 0 } {
             send -s -i $sp_id -- "$elem"
          } else {
             send -i $sp_id -- "$elem"
          }
-         expect -i $sp_id
+         expect -i $sp_id {
+            "*Hit return*" {
+               send -i $sp_id -- "\n"
+            }
+         }
+
+         after 50
       }
 
       # wait 1 second for new file date!!! 
-      sleep 1
+      after 1000
       while { [ timestamp ] <= $start_time } { 
-         sleep 1
+         after 1000
       }
       send -i $sp_id ":wq\n"
       set timeout 100
@@ -1370,3 +1413,66 @@ proc resolve_host { name { long 0 } } {
 #   }
 #}
 
+proc get_pid_from_file { pid_file } {
+   set pid ""
+   for {set x 0} {$x < 10} {incr x} {
+      if [file exists $pid_file] {
+         if {[file size $pid_file] > 0 } {
+            set f [open $pid_file r]
+            gets $f pid
+            close $f
+
+            if { $pid != "" } { 
+               break
+            }
+         }
+      }   
+      after 2000
+   }
+
+   return $pid
+}
+
+proc get_qmaster_pid {} {
+   set qmaster_spool_dir [ get_qmaster_spool_dir ]
+
+   set pid_file "$qmaster_spool_dir/qmaster.pid"
+
+   return [get_pid_from_file $pid_file]
+}
+
+proc get_schedd_pid {} {
+   set qmaster_spool_dir [ get_qmaster_spool_dir ]
+
+   set pid_file "$qmaster_spool_dir/schedd/schedd.pid"
+
+   return [get_pid_from_file $pid_file]
+}
+
+proc parse_cpu_time {s_cpu} {
+   set l_cpu [split $s_cpu ":"]
+   set cpu 0
+
+   while {[llength $l_cpu] > 0} {
+      scan [lindex $l_cpu 0] "%02d" part
+      
+      switch [llength $l_cpu] {
+         1 {
+            incr cpu $part
+         }
+         2 {
+            incr cpu [expr $part * 60]
+         }
+         3 {
+            incr cpu [expr $part * 3600]
+         }
+         default {
+            add_proc_error "usage_parse_cpu" -1 "cannot parse cpu time $s_cpu"
+         }
+      }
+
+      set l_cpu [lreplace $l_cpu 0 0]
+   }
+
+   return $cpu
+}

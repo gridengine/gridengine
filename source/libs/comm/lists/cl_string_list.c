@@ -108,6 +108,9 @@ int cl_string_list_append_string(cl_raw_list_t* list_p,char* string, int lock_li
    new_elem->string = strdup(string);
    if (new_elem->string == NULL) {
       free(new_elem);
+      if (lock_list == 1) {
+         cl_raw_list_unlock(list_p);
+      }
       return CL_RETVAL_MALLOC;
    }
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
@@ -120,7 +123,7 @@ int cl_string_list_append_string(cl_raw_list_t* list_p,char* string, int lock_li
       return CL_RETVAL_MALLOC;
    }
    
-   /* unlock the thread list */
+   /* unlock the list */
    if (lock_list == 1) {
       if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
          return ret_val;
@@ -159,7 +162,7 @@ int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_l
          elem = NULL;
          break;
       }
-      elem = cl_string_list_get_next_elem(list_p, elem);
+      elem = cl_string_list_get_next_elem(elem);
    } 
 
    if (lock_list != 0) {
@@ -188,7 +191,7 @@ cl_string_list_elem_t* cl_string_list_get_least_elem(cl_raw_list_t* list_p) {
    return NULL;
 }
 
-cl_string_list_elem_t* cl_string_list_get_next_elem(cl_raw_list_t* list_p, cl_string_list_elem_t* elem) {
+cl_string_list_elem_t* cl_string_list_get_next_elem(cl_string_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -202,7 +205,7 @@ cl_string_list_elem_t* cl_string_list_get_next_elem(cl_raw_list_t* list_p, cl_st
 }
 
 
-cl_string_list_elem_t* cl_string_list_get_last_elem(cl_raw_list_t* list_p, cl_string_list_elem_t* elem) {
+cl_string_list_elem_t* cl_string_list_get_last_elem(cl_string_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
 

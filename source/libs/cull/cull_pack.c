@@ -502,7 +502,7 @@ int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep)
 {
    int ret;
 
-   DENTER(CULL_LAYER, "cull_pack_elem");
+   DENTER(TOP_LAYER, "cull_pack_elem");
    ret = cull_pack_elem_partial(pb, ep, 0);
    DEXIT;
    return ret;
@@ -513,7 +513,7 @@ int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags)
 {
    int ret;
 
-   DENTER(CULL_LAYER, "cull_pack_elem_partial");
+   DENTER(TOP_LAYER, "cull_pack_elem_partial");
 
    PROF_START_MEASUREMENT(SGE_PROF_PACKING);
    if(ep->descr == NULL) {
@@ -536,7 +536,7 @@ int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags)
       }
    }
 
-   if((ret = packbitfield(pb, ep->changed)) != PACK_SUCCESS) {
+   if((ret = packbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -998,6 +998,18 @@ const lEnumeration *enp
             goto error;
          if ((ret = packint(pb, enp[i].nm)))
             goto error;
+         if (enp[i].ep == NULL) {
+            if ((ret = packint(pb, 0))) {
+               goto error;
+            }
+         } else {
+            if ((ret = packint(pb, 1))) {
+               goto error;
+            }
+            if ((ret = cull_pack_enum(pb, enp[i].ep))) {
+               goto error;
+            }
+         }
       }
    }
 
@@ -1069,11 +1081,11 @@ lEnumeration **enpp
       }
       enp[0].nm = -99;
       enp[0].mt = -99;
+      enp[0].ep = NULL;
       enp[1].nm = NoName;
       enp[1].mt = lEndT;
-
-   }
-   else {
+      enp[1].ep = NULL;
+   } else {
       /* read in number of lEnumeration fields (without end mark) */
       if ((ret = unpackint(pb, &n)))
          goto error;
@@ -1086,6 +1098,8 @@ lEnumeration **enpp
 
       /* read in n lEnumeration fields */
       for (i = 0; i < n; i++) {
+         lEnumeration *tmp2 = NULL;
+
          if ((ret = unpackint(pb, &temp)))
             goto error;
          enp[i].pos = temp;
@@ -1095,10 +1109,20 @@ lEnumeration **enpp
          if ((ret = unpackint(pb, &temp)))
             goto error;
          enp[i].nm = temp;
+         if ((ret = unpackint(pb, &temp)))
+            goto error;
+         if (temp == 1) {
+            if ((ret = cull_unpack_enum(pb, &tmp2))) {
+               goto error;
+            }
+         }
+         enp[i].ep = tmp2;
+         tmp2 = NULL;
       }
 
       enp[n].nm = NoName;
       enp[n].mt = lEndT;
+      enp[n].ep = NULL;
    }
 
    *enpp = enp;

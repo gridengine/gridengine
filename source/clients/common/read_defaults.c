@@ -121,7 +121,7 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * now read all the defaults files, unaware of where they came from
     */
-    append_opts_from_default_files (pcmdline,  answer_list, envp, def_files);
+   append_opts_from_default_files (pcmdline,  answer_list, envp, def_files);
     
    DEXIT;
    return;
@@ -517,6 +517,87 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
    }
    *answer_list = parse_script_file(scriptfile, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
+}
+
+/****** sge/opt/opt_list_append_opts_from_script_path() ************************
+*  NAME
+*     opt_list_append_opts_from_script_path() -- parse opts from scriptfile 
+*
+*  SYNOPSIS
+*     void opt_list_append_opts_from_script_path(lList **opts_scriptfile,
+*                                           char *path, lList **answer_list, 
+*                                           const lList *opts_cmdline, 
+*                                           char **envp) 
+*
+*  FUNCTION
+*     This function parses the commandline options which are embedded
+*     in scriptfile (jobscript) and stores the parsed objects in
+*     opts_scriptfile. The filename of the scriptfile has to be
+*     contained in the list "opts_cmdline" which has been previously i
+*     created with opt_list_append_opts_from_*_cmdline(). If the filename of
+*     the scriptfile is not an absolute path, "path" will be prepended to it.
+*     "answer_list" will be used to store error/warning messages.
+*     "envp" is a pointer to the process environment.
+*
+*  INPUTS
+*     lList **opts_scriptfile   - embedded command line options 
+*     const char *path          - the root path for the script file
+*     lList **answer_list       - AN_Type list 
+*     const lList *opts_cmdline - Argumente 
+*     char **envp               - Environment 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *path,
+                                           lList **answer_list,
+                                           const lList *opts_cmdline,
+                                           char **envp)
+{ 
+   lListElem *script_option = NULL;
+   lListElem *c_option = NULL;
+   const char *scriptfile = NULL;
+   char *scriptpath = NULL;
+   const char *prefix = NULL;
+ 
+   script_option = lGetElemStr(opts_cmdline, SPA_switch, STR_PSEUDO_SCRIPT);
+   
+   if (script_option != NULL) {
+      scriptfile = lGetString(script_option, SPA_argval_lStringT);
+      
+      /* If the scriptfile path isn't absolute (which includes starting with
+         $HOME), make it absolute relative to the given path.
+         If the script or path is NULL, let parse_script_file() catch it. */
+      if ((scriptfile != NULL) && (path != NULL) && (scriptfile[0] != '/') &&
+          (strncmp (scriptfile, "$HOME/", 6) != 0) &&
+          (strcmp (scriptfile, "$HOME") != 0)) {
+         scriptpath = strdup (path);
+         
+         /* If the last character is not a slash, add one. */
+         if (scriptpath[strlen (scriptpath) - 1] != '/') {
+            strcat (scriptpath, "/");
+         }
+         
+         strcat (scriptpath, scriptfile);
+      }
+   }
+   
+   c_option = lGetElemStr(opts_cmdline, SPA_switch, "-C");
+   
+   if (c_option != NULL) {
+      prefix = lGetString(c_option, SPA_argval_lStringT);
+   } else {
+      prefix = default_prefix;
+   }
+   
+   if (*answer_list) {
+      *answer_list = lFreeList(*answer_list);
+   }
+   
+   *answer_list = parse_script_file(scriptpath, prefix, opts_scriptfile, 
+                                    envp, FLG_DONT_ADD_SCRIPT);
+   
+   FREE (scriptpath);
 }
 
 /****** sge/opt/opt_list_merge_command_lines() ********************************

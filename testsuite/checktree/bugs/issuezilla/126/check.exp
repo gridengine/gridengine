@@ -53,8 +53,7 @@ set check_init_level_procedure "issue_126_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_126"
-#set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   499
 
 set check_126_num_hosts [llength $ts_config(execd_hosts)]
@@ -265,7 +264,7 @@ proc issue_126_cleanup  {} {
 
    delete_all_jobs
 
-   foreach queue "q1 q2" {
+   foreach queue "q2 q1" {
       set result [del_queue [get_requestable_queue $queue $check_126_host] \
                   "" 1 1]
       if { $result != 0 } {

@@ -32,7 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_follow_order(lListElem *order, lList **alpp, char *ruser, char *rhost, lList **topp);
-int distribute_ticket_orders(lList *ticket_orders);
+int 
+sge_follow_order(lListElem *order, lList **alpp, char *ruser, 
+                 char *rhost, lList **topp);
+
+int 
+distribute_ticket_orders(lList *ticket_orders);
 
 #endif /* __SGE_FOLLOW_H */

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/05/06 17:48:27 $     Revision: $Revision: 1.46 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.53 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/05/06 17:48:27 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -110,18 +110,18 @@ submit a copy of an existing xxQS_NAMExx job.
 
 .I Qsub
 submits batch jobs to the xxQS_NAMExx queuing system. xxQS_NAMExx supports
-single and multiple node jobs. \fBCommand\fP might be a path to a
-binary or a script (see \fB-b\fP below) which containes the commands to be
+single- and multiple-node jobs. \fBCommand\fP can be a path to a
+binary or a script (see \fB-b\fP below) which contains the commands to be
 run by the job using a shell (for example,
 .M sh 1
 or
 .M csh 1 ).
-Arguments to the command are given by \fBcommand_args\fP to
+Arguments to the command are given as \fBcommand_args\fP to
 .I qsub .
-If \fBcommand\fP is handled as script then it is possible to embed flags
-in the script if the first two characters of a script line either
+If \fBcommand\fP is handled as a script then it is possible to embed flags
+in the script.  If the first two characters of a script line either
 match '#$' or are equal to the prefix string defined with the \fB-C\fP option
-described below.
+described below, the line is parsed for embedded command flags.
 .PP
 .I Qsh
 submits an interactive X-windows session to xxQS_NAMExx. An
@@ -163,9 +163,12 @@ something like /usr/bin/telnet) parameters in the global and
 local configuration settings of
 .M xxqs_name_sxx_conf 5 .
 The client side command is automatically
-parameterized with the remote host name and port number to
-connect to (i.e. resulting in an invocation like
-/usr/bin/telnet my_exec_host 2442).
+parameterized with the remote host name and port number to which to
+connect, resulting in an invocation like
+.IP
+/usr/bin/telnet my_exec_host 2442
+.PP
+for example.
 .I Qlogin
 is invoked exactly like
 .I qsh
@@ -184,19 +187,19 @@ Usually,
 .I qrsh 
 establishes a 
 .M rsh 1
-connection with the remote host. If no command is given to \fIqrsh\fP, a 
+connection with the remote host. If no command is given to \fIqrsh\fP, an 
 .M rlogin 1
 session is established.
 The server-side commands used can be configured 
 with the \fBrsh_daemon\fP and \fBrlogin_daemon\fP
 parameters in the global and local configuration settings of 
 .M xxqs_name_sxx_conf 5 .
-A xxQS_NAMExx
+An xxQS_NAMExx
 .I rshd
 or
 .I rlogind
-is used, if the parameters are not set or
-otherwise something like /usr/sbin/in.rshd or /usr/sbin/in.rlogind.
+is used if the parameters are not set. If the parameters are set, they should be
+set to something like /usr/sbin/in.rshd or /usr/sbin/in.rlogind.
 On the client-side, the \fBrsh_command\fP and \fBrlogin_command\fP parameters
 can be set in the global and local configuration settings of 
 .M xxqs_name_sxx_conf 5 . 
@@ -216,12 +219,12 @@ facilities supplied with the operating system.
 .I Qrsh
 jobs can only run in INTERACTIVE queues unless the option \fB-now no\fP is
 used (see below).
-They can only be used, if the 
+They can also only be run, if the 
 .M xxqs_name_sxx_execd 8
 is running under the root account.
 .PP
 .I Qrsh
-provides an additional feature useful for the integration with
+provides an additional useful feature for integrating with
 interactive tools providing a specific command shell. If the environment
 variable
 .B QRSH_WRAPPER
@@ -249,10 +252,10 @@ section below), including those which were defined as embedded flags in the
 script file (see above).
 .PP
 .I Qresub
-allows to create jobs as copies from existing pending or running
+allows the user to create jobs as copies of existing pending or running
 jobs. The copied jobs will have exactly the same attributes as the ones
-from which they are copied, but a new job ID. The only modification to the
-copied jobs supported by qresub is to assign a hold state with the \fB\-h\fP
+from which they were copied, except for a new job ID. The only modification to the
+copied jobs supported by qresub is assignment of a hold state with the \fB\-h\fP
 option. This can be used to first copy a job and then change its attributes
 via \fIqalter\fP.
 .PP
@@ -326,8 +329,7 @@ Forces
 to use the
 options contained in \fBoptionfile\fP. The indicated 
 file may contain all valid
-options. Comment lines are starting with a 
-"#" sign.
+options. Comment lines must start with a "#" sign.
 .\"
 .IP "\fB\-a date_time\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -386,9 +388,8 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 Identifies the account to which the resource consumption of the job
 should be charged. The \fBaccount_string\fP
 may be any arbitrary ASCII alphanumeric string
-but may contain no blank, colon or separator characters. The
-underbar '_' is considered a non-separator. In the absence of this
-parameter xxQS_NAMExx 
+but may not contain  "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*",  or "?".
+In the absence of this parameter xxQS_NAMExx 
 will place the default account string "xxqs_name_sxx" in the accounting record
 of the job.
 .sp 1
@@ -397,25 +398,24 @@ allows changing this option even while the job executes.
 .\"
 .IP "\fB\-b y[es]|n[o]\fP"
 Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow
-changing this option. This option is only interpreted if it occures in the
-commandline. It is not possible to embed this flag in \fBcommand\fP itself.
+changing this option. This option cannot be embedded in the script file itself.
 .sp 1
 Gives the user the possibility to indicate explicitly whether
 \fBcommand\fP should be treated as binary or script. If the value
 of \fB\-b\fP is 'y', then \fBcommand\fP  may be a binary or script.
 The \fBcommand\fP might not be accessible from the submission host.
-Nothing except the path of the \fBcommand\fP will be transfered
+Nothing except the path of the \fBcommand\fP will be transferred
 from the submission host to the execution host. Path aliasing will
 be applied to the path of \fBcommand\fP before \fBcommand\fP will
 be executed.
 .sp 1
 If the value of \fB\-b\fP is 'n' then \fBcommand\fP needs to be a
 script and it will be handled as script. The script file has to be
-accessible by the submission host. It will be transfered to the
+accessible by the submission host. It will be transferred to the
 execution host. \fIqsub\fP/\fIqrsh\fP will search directive prefixes
 within script.
 .sp 1
-\fIqsub\fP will implicitely use \fB-b n\fP whereas \fIqrsh\fP will apply
+\fIqsub\fP will implicitly use \fB-b n\fP whereas \fIqrsh\fP will apply
 the \fB-b y\fP option if nothing else is specified.
 .IP "\fB\-c occasion_specifier\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -452,7 +452,7 @@ Available for \fIqsub\fP and \fIqalter\fP only.
 Selects the checkpointing environment (see
 .M checkpoint 5 )
 to be used for 
-a checkpointing the job. Also declares the job to be a checkpointing job. 
+checkpointing the job. Also declares the job to be a checkpointing job. 
 .\"
 .IP "\fB\-clear\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, and \fIqlogin\fP
@@ -472,8 +472,8 @@ corresponding
 configuration files are present (see
 .M xxqs_name_sxx_aliases 5 ).
 .sp 1
-In case of \fIqalter\fP, the previous definition of the current working
-directory will be overwritten, if \fIqalter\fP is executed from a
+In the case of \fIqalter\fP, the previous definition of the current working
+directory will be overwritten if \fIqalter\fP is executed from a
 different directory than the preceding \fIqsub\fP or \fIqalter\fP.
 .sp 1
 .I Qalter
@@ -482,24 +482,20 @@ parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
 .IP "\fB\-C prefix_string\fP"
-Available for \fIqsub\fP, and qrsh with script submission (-b n).
+Available for \fIqsub\fP and qrsh with script submission (-b n).
 .sp 1
 .I Prefix_string
-defines the prefix that declares a directive to
-.I qsub
-in the
+defines the prefix that declares a directive in the
 job's command. The prefix is not a job attribute, but
-affects the behavior of \fIqsub\fP. If the -C option is presented
-with the value of the directive prefix as a null string,
-.I qsub
-will not scan the command.
+affects the behavior of \fIqsub\fP and \fIqrsh\fP. If \fBprefix\fP is a
+null string, the command will not be scanned for embedded directives.
 .br
-The directive prefix consists of two ASCII characters which
-when appearing in the first two bytes of a script line
-indicate that what follows is a xxQS_NAMExx command
-(default is "#$").
+The directive prefix consists of two ASCII characters which,
+when appearing in the first two bytes of a script line,
+indicate that what follows is an xxQS_NAMExx command.
+The default is "#$".
 .br
-The user should be aware that changing the first delimiter character can
+The user should be aware that changing the first delimiting character can
 produce unforeseen side effects. If the script file contains anything
 other than a "#" character in the first byte position of the line, the shell
 processor for the job will reject the line and may exit the job
@@ -513,7 +509,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 .sp 1
 Removes the given variable(s) from the job's context. 
 Multiple \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP options may be given.
-The order is important here.
+The order is important.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
@@ -529,7 +525,7 @@ in order to contact the X server.
 The \fBdisplay_specifier\fP has to contain the hostname part of the display name (e.g. myhost:1). 
 Local display names (e.g. :0) cannot be used in grid environments.
 Values set with the \fB\-display\fP option overwrite settings from the submission environment 
-and from \fB\-v\fP commandline options.
+and from \fB\-v\fP command line options.
 .\"
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -542,7 +538,7 @@ within a given deadline. Before the deadline initiation time the
 priority of a deadline job will be raised steadily until it reaches the
 maximum as configured by the xxQS_NAMExx administrator.
 .br
-This option is applicable for users allowed to submit deadline jobs only.
+This option is applicable only for users allowed to submit deadline jobs.
 .\"
 .IP "\fB\-e [[hostname]:]path,...\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -550,14 +546,14 @@ Available for \fIqsub\fP and \fIqalter\fP only.
 Defines or redefines
 the path used for the standard error stream of the job. If
 the \fBpath\fP constitutes an absolute path name, the
-error-path attribute of the job is set to its value including
+error-path attribute of the job is set to \fBpath\fP, including
 the \fBhostname\fP. If the path name is relative, xxQS_NAMExx
 expands \fBpath\fP either with the current working directory
-path in case the \fB\-cwd\fP (see above) switch is also
-specified or with the home directory path otherwise. If 
+path (if the \fB\-cwd\fP switch (see above) is also
+specified) or with the home directory path. If 
 \fBhostname\fP is present, the standard error stream will be
-placed under the corresponding location if the job runs on
-the specified host. If the path should contain ":" without a
+placed in the corresponding location only if the job runs on
+the specified host. If the path contains a ":" without a
 \fBhostname\fP, a leading ":" has to be specified.
 .sp 1
 By default the file name for standard
@@ -651,7 +647,7 @@ switch:
 .fi
 .sp 1
 xxQS_NAMExx managers can assign and remove all hold types, xxQS_NAMExx 
-operators can assign and remove user and operator holds and users can 
+operators can assign and remove user and operator holds, and users can 
 only assign or remove user holds.
 .sp 1
 In the case of
@@ -683,14 +679,14 @@ Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
 reference by job name or regular expression is only accepted if the 
-referenced job is owend by the same user as the refering job. The 
+referenced job is owned by the same user as the referring job. The 
 submitted job is not eligible for execution unless all jobs 
-referenced in the coma separated job id and/or job name list have 
+referenced in the comma-separated job id and/or job name list have 
 completed successfully.
 With the help of job names or regular expressions one can specify
-a job dependency to multiple jobs satisfying the regular expression
-or to all jobs with the requested name. The name dependencies are
-resolved at submittion time and can only be changed via qalter. New
+a job dependency on multiple jobs satisfying the regular expression
+or on all jobs with the requested name. The name dependencies are
+resolved at submit time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
 
 .sp 1
@@ -703,19 +699,21 @@ however.
 Available for \fIqsub\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the file used for the standard input stream of
-the job. If the \fIfile\fP constitues an absolute filename, the input
-file attribute of the job is set to its value including the
-\fIhostname\fP. If the filename is relative, xxQS_NAMExx expands
-file either with the current working directory path in case the
-\fI-cwd\fP (see above) switch is also specified or with the home directory
-path otherwise. If \fIhostname\fP is present, the standart input stream
-will be found under the corresponding location if the job runs on the
-specified host.
+the job. If the \fIfile\fP constitutes an absolute filename, the input-path
+attribute of the job is set to \fBpath\fP, including
+the \fBhostname\fP. If the path name is relative, xxQS_NAMExx
+expands \fBpath\fP either with the current working directory
+path (if the \fB\-cwd\fP switch (see above) is also
+specified) or with the home directory path. If 
+\fBhostname\fP is present, the standard input stream will be
+placed in the corresponding location only if the job runs on
+the specified host. If the path contains a ":" without a
+\fBhostname\fP, a leading ":" has to be specified.
 .sp 1
 By default /dev/null is the input stream for the job.
 .sp 1
-It is possible to use certain pseudo variables, their value will be
-expanded at runtime of the job and will be used to exert the
+It is possible to use certain pseudo variables, whose values will be
+expanded at runtime of the job and will be used to express the
 standard input stream as described in the \fI-e\fP option for the standard
 error stream.
 .sp 1
@@ -729,12 +727,12 @@ Available only for \fIqrsh\fP and
 .M qmake 1 .
 .sp 1
 .I qrsh 
-allows to start a task in an already scheduled parallel job.
+allows the user to start a task in an already scheduled parallel job.
 The option \fB\-inherit\fP tells 
 .I qrsh
 to read a job id from the environment variable JOB_ID and start the 
 specified command as a task in this job. Please note that in this case,
-the hostname of the host where the command shall be executed, must precede 
+the hostname of the host where the command will be executed must precede 
 the command to execute; the syntax changes to
 .sp 1
 .B qrsh \-inherit
@@ -756,19 +754,21 @@ Usually a task should have the same environment (including the current
 working directory) as the corresponding job, so specifying the option
 \fB\-V\fP should be suitable for most applications.
 .sp 1
-\fINote:\fP If in your system the qmaster tcp port is not configured as service, but via environment
-variable xxQS_NAME_Sxx_QMASTER_PORT, make sure that this variable is set in the enviroment when
+\fINote:\fP If in your system the qmaster tcp port is not configured as a
+service, but rather via the environment
+variable xxQS_NAME_Sxx_QMASTER_PORT, make sure that this variable is set in the environment when
 calling
 .I qrsh
 or
 .I qmake
-with option \fB\-inherit\fP. If you call
+with the \fB\-inherit\fP option. If you call
 .I qrsh
 or
 .I qmake
-with
-option \fB\-inherit\fP from within a job script, export xxQS_NAME_Sxx_QMASTER_PORT with the 
-submit option or special comment "-v xxQS_NAME_Sxx_QMASTER_PORT".
+with the \fB\-inherit\fP
+option from within a job script, export xxQS_NAME_Sxx_QMASTER_PORT with the 
+option "-v xxQS_NAME_Sxx_QMASTER_PORT" either as a command argument or an
+embedded directive.
 .\"
 .IP "\fB\-j y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -777,7 +777,7 @@ Specifies whether or not the standard error stream of the job
 is merged into the standard output stream.
 .br
 If both the \fB\-j y\fP and the \fB\-e\fP options are present,
-xxQS_NAMExx sets, but ignores the error-path attribute.
+xxQS_NAMExx sets but ignores the error-path attribute.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes. The modified
@@ -797,11 +797,11 @@ Policy. It has no effect on the Urgency and Override Policies (see
 .M share_tree 5 ,
 .M sched_conf 5
 and the
-.I xxQS_NAMExx Installation and Administration Guide
+.I "xxQS_NAMExx Installation and Administration Guide"
 for further information on the resource management policies supported by xxQS_NAMExx).
 .sp 1
 In case of the Share Tree Policy, users can distribute the tickets to
-which they are currently entitled, among their jobs using different
+which they are currently entitled among their jobs using different
 shares assigned via \fB\-js\fP. If all jobs have the same job share
 value, the tickets are distributed evenly. Otherwise, jobs receive tickets
 relative to the different job shares. Job shares are treated like
@@ -814,8 +814,8 @@ uneven job share distribution treated as a virtual share distribution level
 underneath the functional job category.
 .sp 1
 If both the Share Tree and the Functional Policy are active, the job
-shares will have an effect in both policies and the tickets
-independently derived in each of them are added up to the total number of
+shares will have an effect in both policies, and the tickets
+independently derived in each of them are added to the total number of
 tickets for each job.
 .\"
 .IP "\fB\-l resource=value\fP,..."
@@ -911,17 +911,17 @@ Available for \fIqsub\fP, \fIqrsh\fP (with command) and
 This flag,
 when set causes xxQS_NAMExx to send "warning" signals
 to a running job prior to sending the signals themselves. If
-a SIGSTOP is pending the job will receive a SIGUSR1 several
-seconds before the SIGSTOP. If a SIGKILL is pending the job
+a SIGSTOP is pending, the job will receive a SIGUSR1 several
+seconds before the SIGSTOP. If a SIGKILL is pending, the job
 will receive a SIGUSR2 several seconds before the SIGKILL.
 The amount of time delay is controlled by the \fBnotify\fP
 parameter in each queue configuration (see
 .M queue_conf 5 ).
 .sp 1
-Note, that the Linux operating system "misuses" the user signals SIGUSR1
-and SIGUSR2 in its current Posix thread implementation. You might not want
-to use the \fB\-notify\fP option if you are running threaded applications
-in your jobs under Linux.
+Note that the Linux operating system "misused" the user signals SIGUSR1
+and SIGUSR2 in some early Posix thread implementations. You might not want
+to use the \fB\-notify\fP option if you are running multi-threaded applications
+in your jobs under Linux, particularly on 2.0 or earlier kernels.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
@@ -937,7 +937,7 @@ the job could not be scheduled immediately).  For array jobs submitted with the
 scheduled.
 \fB\-now y\fP is default for \fIqsh\fP, \fIqlogin\fP and \fIqrsh\fP
 .br
-With option \fB\-now n\fP the job will be put into the pending queue if it
+With the \fB\-now n\fP option, the job will be put into the pending queue if it
 cannot be executed immediately. \fB\-now n\fP is default for \fIqsub\fP.
 .\"
 .IP "\fB\-N name\fP"
@@ -945,38 +945,39 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 The name of the job. The name can be any printable set
-of characters except '|', '.', '$' and it has to start with an alphabetic character.
+of characters except "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*", and "?",
+and it has to start with an alphabetic character.
 .br
-If the \fB\-N\fP option is not present xxQS_NAMExx assigns
+If the \fB\-N\fP option is not present, xxQS_NAMExx assigns
 the name of the job script to the job after 
 any directory pathname has been removed from the
 script-name. If the script is read from standard
-input the job name defaults to STDIN.
+input, the job name defaults to STDIN.
 .br
-In case of
+In the case of
 .I qsh
 or
 .I qlogin
-and if the \fB\-N\fP option is absent the string `INTERACT' is 
+with the \fB\-N\fP option is absent, the string `INTERACT' is 
 assigned to the job.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-noshell\fP"
-Available only for \fIqrsh\fP with a commandline.
+Available only for \fIqrsh\fP with a command line.
 .sp 1
-Do not start the commandline given to \fIqrsh\fP in a users login shell
-but execute it without the wrapping shell.
+Do not start the command line given to \fIqrsh\fP in a user's login shell, i.e.
+execute it without the wrapping shell.
 .sp 1
-The option can be used to speed up execution as some overhead like the  
-shell startup and sourcing the shell resource files is avoided.
+This option can be used to speed up execution as some overhead, like the  
+shell startup and sourcing the shell resource files, is avoided.
 .sp 1
-The option can only be used, if no shell specific commandline parsing is
-required. If the commandline contains shell syntax like environment
+This option can only be used if no shell-specific command line parsing is
+required. If the command line contains shell syntax like environment
 variable substitution or (back) quoting, a shell must be started.
-In this case either do not use the \fB\-noshell\fP option or include
-the shell call in the commandline.
+In this case, either do not use the \fB\-noshell\fP option or include
+the shell call in the command line.
 .sp 1
 Example:
 .br 
@@ -992,7 +993,7 @@ Available only for \fIqrsh\fP.
 Suppress the input stream STDIN - \fIqrsh\fP will pass the option -n to 
 the
 .M rsh 1
-command. This is especially usefull, if multiple tasks
+command. This is especially useful, if multiple tasks
 are executed in parallel using \fIqrsh\fP, e.g. in a
 .M make 1
 process - it would be undefined, which process would get the input.
@@ -1056,19 +1057,20 @@ appropriate resources as available. The
 manual page contains information about the definition of PEs
 and about how to obtain a list of currently valid PEs.
 .br
-You can specify the PE name  by using the wildcard character "*", thus
+You can specify a PE name which uses the wildcard character, "*".  Thus
 the request "pvm*" will match any parallel environment with a name
-starting with the string "pvm". In case multiple parallel environments
-match the largest parallel environment assignment is chosen.
+starting with the string "pvm". In the case of multiple parallel environments
+whose names match the name string, the parallel environment with the most
+available slots is chosen.
 .br
 The range specification is a list of range expressions of the
-form n-m (n as well as m being positive non-zero integer
-numbers), where m is an abbreviation for m-m, -m is a short
-form for 1-m and n- is an abbreviation for n-infinity. The
+form "n-m", where n and m are positive, non-zero integers.  The form "n" is
+equivalent to "n-n".  The form "-m" is equivalent to "1-m".  The form "n-" is
+equivalent to "n-infinity".  The
 range specification is processed as follows: The largest
 number of queues requested is checked first. If enough queues
 meeting the specified attribute list are available, all are
-allocated. The next smaller number of queues is checked next
+allocated. If not, the next smaller number of queues is checked,
 and so forth.
 .br
 If additional \fB\-l\fP options are present, they restrict the
@@ -1099,30 +1101,30 @@ however.
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
 Indicates whether a reservation for this job should be done. Reservation 
-is never done for immediate jobs submitted using 'yes' with 
-\fB\-now\fP option. Please note irrespective of the reservation request 
+is never done for immediate jobs, i.e. jobs submitted using the \fB\-now yes\fP
+option.  Please note that regardless of the reservation request,
 job reservation might be disabled using max_reservation in 
 .M sched_conf 5
-and might be limited only to a certain number of high prior jobs.
+and might be limited only to a certain number of high priority jobs.
 .sp 1
-By default jobs are submitted with \fB\-R n\fP option.
+By default jobs are submitted with the \fB\-R n\fP option.
 .\"
 .IP "\fB\-r y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Identifies the ability of a job to be rerun or not.
-If the value of \fB\-r\fP is 'y', rerun the job if the job was aborted
-without leaving a consistent exit state 
-(this is typically the case if the node on which the job is running
+If the value of \fB\-r\fP is 'yes', the job will be rerun if the job was aborted
+without leaving a consistent exit state.
+(This is typically the case if the node on which the job is running
 crashes).
-If \fB\-r\fP is 'n', do not rerun the job under any circumstances.
+If \fB\-r\fP is 'no', the job will not be rerun under any circumstances.
 .br
 Interactive jobs submitted with
 .I qsh,
 .I qrsh
 or
 .I qlogin
-are not re-runable.
+are not rerunnable.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
@@ -1137,9 +1139,9 @@ Sets the given name/value pairs as the job's context. \fBValue\fP may be
 omitted. xxQS_NAMExx replaces the job's previously defined context with
 the one given as the argument.
 Multiple \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP options may be given.
-The order is important here.
+The order is important.
 .br
-Contexts are a way to dynamically attach and remove meta-information
+Contexts provide a way to dynamically attach and remove meta-information
 to and from a job. The context variables are \fBnot\fP passed to the job's
 execution context in its environment.
 .sp 1
@@ -1150,38 +1152,27 @@ allows changing this option even while the job executes.
 Available only for \fIqsub\fP.
 .sp 1
 \fB\-shell n\fP
-causes qsub to execute the commandline directly, as if by
-.M exec 2
-.  No command shell will be executed for the job.  This option only applies when
-\fB\-b y\fP
-is also used.  Without
-\fB\-b y\fP
-,
-\fB\-shell n\fP
-has no effect.
+causes qsub to execute the command line directly, as if by
+.M exec 2 .
+No command shell will be executed for the job.  This option only applies when
+\fB\-b y\fP is also used.  Without \fB\-b y\fP, \fB\-shell n\fP has no effect.
 .sp 1
-The option can be used to speed up execution as some overhead like the  
+This option can be used to speed up execution as some overhead, like the  
 shell startup and sourcing the shell resource files is avoided.
 .sp 1
-The option can only be used if no shell specific commandline parsing is
-required. If the commandline contains shell syntax, like environment
+This option can only be used if no shell-specific command line parsing is
+required. If the command line contains shell syntax, like environment
 variable substitution or (back) quoting, a shell must be started.
 In this case either do not use the \fB\-shell n\fP option or execute the shell
-as the commandline and pass the path to the executable as a parameter.
+as the command line and pass the path to the executable as a parameter.
 .sp 1
-If a job with \fB\-shell n\fP set fails due to a user error, such as an invalid
+If a job executed with the \fB\-shell n\fP option fails due to a user error, such as an invalid
 path to the executable, the job will enter the error state.
 .sp 1
-\fB\-shell y\fP
-cancels the effect of a previous
-\fB\-shell n\fP.
+\fB\-shell y\fP cancels the effect of a previous \fB\-shell n\fP.
 Otherwise, it has no effect.
 .sp 1
-See
-\fB\-b\fP
-and
-\fB\-noshell\fP
-for more information.
+See \fB\-b\fP and \fB\-noshell\fP for more information.
 .\"
 .IP "\fB\-soft\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -1192,8 +1183,8 @@ command line will be soft requirements and
 are to be filled on an "as available" basis.
 .br
 As xxQS_NAMExx scans the command line and script file for xxQS_NAMExx
-options and parameters it builds a list of resources required
-by a job. All such resource requests are considered as
+options and parameters, it builds a list of resources required
+by the job. All such resource requests are considered as
 absolutely essential for the job to commence. If the
 \fB\-soft\fP option is encountered during the scan
 then all following resources are designated as "soft
@@ -1208,7 +1199,7 @@ Available for \fIqsub\fP.
 .sp 1
 \fB\-sync y\fP
 causes
-.I qsub.
+.I qsub
 to wait for the job to complete before exiting.  If the job completes successfully,
 .I qsub's
 exit code will be that of the completed job.  If the job fails to complete
@@ -1220,9 +1211,9 @@ exit code of 1.  If
 is interrupted, e.g. with CTRL-C, before the job completes, the job will be
 canceled.
 .br
-With option \fB\-sync n\fP
+With the \fB\-sync n\fP option,
 .I qsub
-will exit with an exit code of 0 if as soon as the job is submitted successfully.
+will exit with an exit code of 0 as soon as the job is submitted successfully.
 \fB\-sync n\fP is default for \fIqsub\fP.
 .br
 If \fB\-sync y\fP is used in conjunction with \fB\-now y\fP,
@@ -1262,7 +1253,7 @@ however.
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Submits a so called \fIArray Job\fP, i.e. an array of identical tasks being
-only differentiated by an index number and being treated by xxQS_NAMExx
+differentiated only by an index number and being treated by xxQS_NAMExx
 almost like a series of jobs. The option argument to \fB\-t\fP specifies
 the number of array job tasks and the index number which will be associated
 with the tasks. The index numbers will be exported to the job tasks via the
@@ -1286,15 +1277,15 @@ The task id range specified in the option argument
 may be a single number, a simple range of the form
 n-m or a range with a step size. Hence, the task id range specified by
 2-10:2 would result in the task id indexes 2, 4, 6, 8, and 10,
-i.e. in a total of 5 tasks identical tasks with the environment variable
-xxQS_NAME_Sxx_TASK_ID containing one of the 5 index numbers each.
+for a total of 5 identical tasks, each with the environment variable
+xxQS_NAME_Sxx_TASK_ID containing one of the 5 index numbers.
 .sp 1
 All array job tasks inherit the same resource requests and attribute
 definitions as specified in the \fIqsub\fP or \fIqalter\fP command line,
 except for the \fB\-t\fP option. The tasks are scheduled independently and,
-provided enough resources, concurrently very much like separate jobs.
-However, a array job or a sub-array thereof can be accessed as a total by
-commands like
+provided enough resources exist, concurrently, very much like separate jobs.
+However, an array job or a sub-array there of can be accessed as a single unit
+by commands like
 .M qmod 1
 or
 .M qdel 1 .
@@ -1321,15 +1312,15 @@ tasks into the same file, but the result of this is undefined.
 .\" Empty .SH required below to fix man indentation bug
 .SH
 .\"
-.IP "\fB\-u username,... | -uall\fP"
+.IP "\fB\-u username,...\fP"
 Available for \fIqalter\fP only. Changes are only made on those
 jobs which were submitted by users specified in the list
 of usernames.
-For managers it is possible to use the \fB\qalter -uall\fP command
+For managers it is possible to use the \fB\qalter -u '*'\fP command
 to modify all jobs of all users.
 .sp 1
-If you use the \fB\-u\fP or \fB\-uall\fP switch it is not permitted to
-specify an additional \fI\wc_job_range_list\fP.
+If you use the \fB\-u\fP switch it is not permitted to
+specify an additional \fIwc_job_range_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
@@ -1352,14 +1343,14 @@ Available only for \fIqrsh\fP and
 .M qmake 1 .
 .sp 1
 Unlike \fIqsh\fP and \fIqlogin\fP, \fIqrsh\fP does not output any 
-informational messages while establishing the session compliant
+informational messages while establishing the session, compliant
 with the standard
 .M rsh 1
 and
 .M rlogin 1
 system calls.
-If the option \fB-verbose\fP is set, \fIqrsh\fP behaves as verbose as 
-the \fIqsh\fP and \fIqlogin\fP commands and outputs informations about 
+If the option \fB-verbose\fP is set, \fIqrsh\fP behaves like
+the \fIqsh\fP and \fIqlogin\fP commands, printing information about 
 the process of establishing the
 .M rsh 1
 or
@@ -1370,9 +1361,11 @@ session.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
-Does not submit a job but prints information on the job as being 
-represented by the current command\-line and all pertinent external 
-influences.
+Instead of submitting a job, prints detailed information about the would-be job
+as though
+.M qstat 1
+-j were used, including the effects of command-line parameters and the external 
+environment.
 .\"
 .IP "\fB\-V\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
@@ -1390,7 +1383,7 @@ Specifies a validation level applied to the job to be submitted
 (\fIqsub\fP, \fIqlogin\fP,
 and \fIqsh\fP) or the specified queued job (\fIqalter\fP).
 The information displayed 
-indicates whether the job possibly can be scheduled assuming an empty 
+indicates whether the job can possibly be scheduled assuming an empty 
 system with no other jobs. Resource requests exceeding the configured 
 maximal thresholds or requesting unavailable resource attributes are  
 possible causes for jobs to fail this validation.
@@ -1406,7 +1399,7 @@ The specifiers e, w, n and v define the following validation modes:
 	for invalid requests.
 `n'	none - switches off validation; the default for
 	\fIqsub\fP and \fIqalter\fP.
-`v'	verify - does not submit the job but prints
+`v'	verify - does not submit the job but prints an
 	extensive validation report.
 .fi
 .sp 1
@@ -1663,11 +1656,10 @@ file.
 .\"
 .SH RESTRICTIONS
 .PP
-There is no controlling terminal for batch jobs under xxQS_NAMExx and
+There is no controlling terminal for batch jobs under xxQS_NAMExx, and
 any tests or actions on a controlling terminal 
 will fail. If these operations are in
-your .login or .cshrc file, they will possibly
-cause your job to abort.
+your .login or .cshrc file, they may cause your job to abort.
 .PP
 Insert the following test before any commands
 that are not pertinent to batch jobs in your .login:
@@ -1700,7 +1692,7 @@ limit. Additional information may be found in
 .M sge_conf 5
 .
 .IP ">0" 0.5i
-Error occured.
+Error occurred.
 .\"
 .\"
 .SH EXAMPLES
@@ -1740,7 +1732,7 @@ The next example is a more complex xxQS_NAMExx script.
 #$ -e dec_x:/tmp/foo,sun_y:/usr/me/foo
 
 # Send mail to these users
-#$ -M santa@heaven,claus@heaven
+#$ -M santa@nothpole,claus@northpole
 
 # Mail at beginning/end/on suspension
 #$ -m bes
@@ -1773,9 +1765,9 @@ a.out
 \fI$cwd/.xxqs_name_sxx_request\fR	cwd default request
 \fI$HOME/.xxqs_name_sxx_aliases\fR	user path aliases
 \fI$HOME/.xxqs_name_sxx_request\fR	user default request
-\fI<xxqs_name_sxx_root>/<cell>/common/.xxqs_name_sxx_aliases\fP
+\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_aliases\fP
 	cluster path aliases
-\fI<xxqs_name_sxx_root>/<cell>/common/.xxqs_name_sxx_request\fP
+\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_request\fP
 	cluster default request
 \fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
 	xxQS_NAMExx master host file
@@ -1804,7 +1796,7 @@ If configured correspondingly,
 and
 .I qlogin
 contain portions of the
-\fIrsh\fP, \fIrshd\fP, \ftelnet\fP and \fItelnetd\fP
+\fIrsh\fP, \fIrshd\fP, \fItelnet\fP and \fItelnetd\fP
 code copyrighted by The Regents of the University of California.
 Therefore, the following note applies with respect to \fIqrsh\fP and
 \fIqlogin\fP: This

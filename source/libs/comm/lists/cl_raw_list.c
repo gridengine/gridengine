@@ -39,6 +39,11 @@
 /*___INFO__MARK_END__*/
 
 
+
+#define CL_DO_RAW_LIST_DEBUG 0
+
+
+
 /* setup raw list
 
    list_p              -> address of a raw list pointer to setup 
@@ -95,7 +100,9 @@ int cl_raw_list_setup(cl_raw_list_t** list_p, char* list_name ,int enable_list_l
          return CL_RETVAL_MUTEX_ERROR;
       }
    }
+#if CL_DO_RAW_LIST_DEBUG
    CL_LOG_STR(CL_LOG_DEBUG,"raw list setup complete for list:",(*list_p)->list_name);
+#endif
    return CL_RETVAL_OK;
 }
 
@@ -167,10 +174,11 @@ int cl_raw_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
       (*list_p)->list_mutex = NULL;
    }
 
-
+#if CL_DO_RAW_LIST_DEBUG
    if (do_log) {
       CL_LOG_STR(CL_LOG_DEBUG,"raw list cleanup complete for list:",(*list_p)->list_name );
    }
+#endif
 
    /* destroy list name */
    if ((*list_p)->list_name != NULL) {
@@ -201,7 +209,7 @@ int cl_raw_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_raw_list_append_elem()"
-cl_raw_list_elem_t* cl_raw_list_append_elem(cl_raw_list_t* list_p, void* data) {          /* CR check */
+cl_raw_list_elem_t* cl_raw_list_append_elem(cl_raw_list_t* list_p, void* data) {
 
    cl_raw_list_elem_t* new_elem = NULL;
 
@@ -221,10 +229,13 @@ cl_raw_list_elem_t* cl_raw_list_append_elem(cl_raw_list_t* list_p, void* data) {
 
    cl_raw_list_append_dechained_elem(list_p,new_elem);
 
+#if CL_DO_RAW_LIST_DEBUG
+   /* ENABLE THIS ONLY FOR LIST DEBUGING */
    if ( list_p->list_type != CL_LOG_LIST ) {
       CL_LOG_STR(CL_LOG_DEBUG, "list:", list_p->list_name);
-      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", list_p->elem_count); 
+      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", (int)list_p->elem_count); 
    }
+#endif
    return new_elem;
 }
 
@@ -320,10 +331,12 @@ void* cl_raw_list_remove_elem(cl_raw_list_t* list_p, cl_raw_list_elem_t* delete_
    /* now delete the dechained element */
    free(delete_elem);
 
+#if CL_DO_RAW_LIST_DEBUG
    if ( list_p->list_type != CL_LOG_LIST ) {
       CL_LOG_STR(CL_LOG_DEBUG, "list:", list_p->list_name);
-      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", list_p->elem_count); 
+      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", (int)list_p->elem_count); 
    }
+#endif
    return old_data;
 }
 
@@ -347,9 +360,12 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
       return CL_RETVAL_PARAMS;
    }
    if (list_p->list_mutex != NULL) {
+#if CL_DO_RAW_LIST_DEBUG
+      /* ENABLE THIS ONLY FOR LOCK DEBUGING (1 of 2) */
       if ( list_p->list_type != CL_LOG_LIST ) {
         CL_LOG_STR(CL_LOG_DEBUG, "locking list:", list_p->list_name); 
       }
+#endif
       if ( pthread_mutex_lock(list_p->list_mutex) != 0) {
          if ( list_p->list_type != CL_LOG_LIST ) {
            CL_LOG_STR(CL_LOG_ERROR, "mutex lock error for list:", list_p->list_name); 
@@ -364,14 +380,17 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_raw_list_unlock()"
-int cl_raw_list_unlock(cl_raw_list_t* list_p){           /* CR check */
+int cl_raw_list_unlock(cl_raw_list_t* list_p){
    if (list_p == NULL) {
       return CL_RETVAL_PARAMS;
    }
    if (list_p->list_mutex != NULL) {
+#if CL_DO_RAW_LIST_DEBUG
+      /* ENABLE THIS ONLY FOR LOCK DEBUGING (2 of 2) */
       if ( list_p->list_type != CL_LOG_LIST ) {
         CL_LOG_STR(CL_LOG_DEBUG, "unlocking list:",list_p->list_name); 
       }
+#endif
       if (pthread_mutex_unlock(list_p->list_mutex) != 0) {
          if ( list_p->list_type != CL_LOG_LIST ) {
            CL_LOG_STR(CL_LOG_ERROR, "mutex unlock error for list:",list_p->list_name); 

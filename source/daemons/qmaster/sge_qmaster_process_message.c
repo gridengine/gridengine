@@ -51,7 +51,7 @@
 #include "msg_common.h"
 #include "sgeobj/sge_answer.h"
 #include "sge_prog.h"
-
+#include "sge_mtutil.h"
 
 typedef struct {
    char snd_host[MAXHOSTLEN]; /* sender hostname; NULL -> all              */
@@ -98,8 +98,19 @@ void *sge_qmaster_process_message(void *anArg)
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
    memset((void*)&msg, 0, sizeof(struct_msg_t));
+
+   /*
+    * INFO (CR)  
+    *
+    * The not syncron sge_get_any_request() call will not raise cpu usage to 100%
+    * because sge_get_any_request() is doing a cl_commlib_trigger() which will
+    * return after the timeout specified at cl_com_create_handle() call in prepare_enroll()
+    * which is set to 1 second. A syncron receive would result in a unnecessary qmaster shutdown
+    * timeout (syncron receive timeout) when no messages are there to read.
+    *
+    */
    
-   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid);
+   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 0, 0, &msg.request_mid);
 
    if (res != CL_RETVAL_OK) {
       DPRINTF(("%s returned: %s\n", SGE_FUNC, cl_get_error_text(res)));
@@ -110,7 +121,7 @@ void *sge_qmaster_process_message(void *anArg)
    {
       case TAG_SEC_ANNOUNCE:
          break; /* All processing done in libsec */
-      case TAG_GDI_REQUEST:
+      case TAG_GDI_REQUEST: 
          do_gdi_request(&msg);
          break;
       case TAG_ACK_REQUEST:
@@ -122,12 +133,12 @@ void *sge_qmaster_process_message(void *anArg)
       case TAG_REPORT_REQUEST: 
          do_report_request(&msg);
          break;
-      default:
+      default: 
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
    }
 
    clear_packbuffer(&(msg.buf));
-
+  
    DEXIT;
    return anArg; 
 } /* sge_qmaster_process_message */
@@ -191,7 +202,7 @@ static void do_gdi_request(struct_msg_t *aMsg)
          resp->next = new_gdi_request();
          resp = resp->next;
       }
-
+      
       sge_c_gdi(aMsg->snd_host, req, resp);
    }
 

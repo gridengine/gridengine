@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InvalidJobException.java
- *
- * Created on June 18, 2003, 10:47 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The job specified by the 'jobId' does not exist.
+/** The job specified by the given id does not exist.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidJobException extends DRMAAException {
+public class InvalidJobException extends InvalidArgumentException {
 	
 	/**
 	 * Creates a new instance of <code>InvalidJobException</code> without detail message.

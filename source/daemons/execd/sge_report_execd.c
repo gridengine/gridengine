@@ -94,21 +94,20 @@ report_source *report_sources
       for (i=0; report_sources[i].type; i++) {
          if (!which || which == report_sources[i].type) {
             DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
-            report_sources[i].func(report_list);
+            report_sources[i].func(report_list, now, &(report_sources[i].next_send));
          }
       }
 
-      /*
-       *  do not test if report->lp != NULL:
-       *
-       *  an empty load could get produced by an execd running not as root 
-       *  so let him send this empty list for having an alive protocol
-       */
       /* send load report asynchron to qmaster */
-      ret = report_list_send(report_list, sge_get_master(0), 
-                             prognames[QMASTER], 1, 0, NULL);
+      if (lGetNumberOfElem(report_list) > 0) {
+         ret = report_list_send(report_list, sge_get_master(0), 
+                                prognames[QMASTER], 1, 0, NULL);
+      } else {
+         ret = CL_RETVAL_OK;
+      }
       lFreeList(report_list);
    }
+
    DEXIT;
    return ret;
 }

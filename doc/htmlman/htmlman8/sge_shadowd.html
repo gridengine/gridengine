@@ -10,23 +10,24 @@ SYNOPSIS
 
 DESCRIPTION
      <I>sge</I>_<I>shadowd</I> is a "light weight" process which can be run  on
-     the  so  called shadow master hosts in a Grid Engine cluster
-     to detect failure of the current Grid Engine  master  daemon
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  and  to start-up a new <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> on the
+     so-called  shadow  master  hosts in a Grid Engine cluster to
+     detect failure of the current  Grid  Engine  master  daemon,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,  and to start-up a new <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> on the
      host on which the <I>sge</I>_<I>shadowd</I> runs. If multiple shadow  dae-
      mons  are  active  in  a  cluster, they run a protocol which
      ensures that only one of them will  start-up  a  new  master
      daemon.
 
      The  hosts suitable for being used as  shadow  master  hosts
-     must  have  shared  root  read write access to the directory
+     must  have  shared  root  read/write access to the directory
      &lt;sge_root&gt;/&lt;cell&gt;/common as well as  to  the  master  daemon
-     spool  directory  (Default &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster).
-     The shadow master hosts need to be  contained  in  the  file
+     spool            directory            (by            default
+     &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster).  The names of  the  shadow
+     master   hosts   need   to   be   contained   in   the  file
      &lt;sge_root&gt;/&lt;cell&gt;/common/shadow_masters.
 
 RESTRICTIONS
-     <I>sge</I>_<I>shadowd</I> may only be started from root.
+     <I>sge</I>_<I>shadowd</I> may only be started by root.
 
 ENVIRONMENT VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -51,17 +52,12 @@ ENVIRONMENT VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of   the   <I>sge</I>_<I>shadowd</I>
-                    client  resides.   Per default the local host
-                    is used.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>
@@ -72,12 +68,16 @@ FILES
                      Default master daemon spool directory
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <I>Grid</I> <I>Engine</I>  <I>Ins-</I>
+     <I>tallation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
 
 
 

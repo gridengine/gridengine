@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,18 +28,14 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * SGESessionFactory.java
- *
- * Created on March 3, 2004, 12:04 PM
- */
-
+/*___INFO__MARK_END__*/
 package com.sun.grid.drmaa;
 
 import org.ggf.drmaa.*;
 
 /**
- *
+ * This class is used to create an SGESession object.
+ * @see org.ggf.drmaa.DRMAASessionFactory
  * @author  dan.templeton@sun.com
  */
 public class SGESessionFactory extends DRMAASessionFactory {
@@ -48,8 +45,8 @@ public class SGESessionFactory extends DRMAASessionFactory {
    public SGESessionFactory () {
    }
    
-	/** Gets a DRMAASession object appropriate for the DRM in use.
-	 * @return a DRMAASession object appropriate for the DRM in use
+	/** Gets an SGESession object.
+	 * @return an SGESession object
 	 */	
 	public DRMAASession getSession () {
 		if (thisSession == null) {

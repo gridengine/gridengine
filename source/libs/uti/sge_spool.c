@@ -244,12 +244,12 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
               id == TASKS_SPOOL_DIR || id == TASK_SPOOL_DIR_AS_FILE ||
               id == TASK_SPOOL_DIR || id == JOB_SPOOL_DIR_AS_FILE ||
               id == TASK_SPOOL_FILE || id == PE_TASK_SPOOL_FILE) {
-      stringT job_dir = "";
-      stringT file_prefix = "";
-      stringT id_range = "";
-      stringT job_dir_first = "";
-      stringT job_dir_second = "";
-      stringT job_dir_third = "";
+      char job_dir[SGE_PATH_MAX] = "";
+      char file_prefix[SGE_PATH_MAX] = "";
+      char id_range[SGE_PATH_MAX] = "";
+      char job_dir_first[SGE_PATH_MAX] = "";
+      char job_dir_second[SGE_PATH_MAX] = "";
+      char job_dir_third[SGE_PATH_MAX] = "";
 
       get_spool_dir_parts(ulong_val1, job_dir_first, job_dir_second,
                           job_dir_third);
@@ -314,8 +314,9 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
    } else if (id == JOB_ACTIVE_DIR && in_execd) {
       sprintf(buffer, ACTIVE_DIR"/"u32"."u32, ulong_val1, ulong_val2);
    } else {
-      buffer[0] = '0';
+      buffer[0] = '\0';
    }
+
    return buffer;
 }
 

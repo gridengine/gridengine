@@ -63,6 +63,7 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "qevent.h"
+#include "sge_profiling.h"
 
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -472,7 +473,9 @@ int main(int argc, char *argv[])
    int ret,i,gdi_setup;
 
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+   DENTER_MAIN(TOP_LAYER, "qevent");
+
+   sge_prof_setup();
 
    /* dump pid to file */
    qevent_dump_pid_file();
@@ -537,6 +540,7 @@ int main(int argc, char *argv[])
       lEnumeration *what = NULL;
 
       sge_mirror_initialize(EV_ID_ANY, "sge_mirror -trigger");
+      ec_set_busy_handling(EV_BUSY_UNTIL_ACK);
 
       /* put out information about -trigger option */
       for (i=0;i<enabled_options.trigger_option_count;i++) {
@@ -548,7 +552,9 @@ int main(int argc, char *argv[])
                   
                   /* build mask for the job structure to contain only the needed elements */
                   where = NULL; 
-                  what = lWhat("%T(%I)", JB_Type, JB_job_number);
+                  what = lWhat("%T(%I %I %I %I %I %I %I %I)", JB_Type, JB_job_number, JB_ja_tasks, 
+                                                              JB_ja_structure, JB_ja_n_h_ids, JB_ja_u_h_ids, 
+                                                              JB_ja_s_h_ids,JB_ja_o_h_ids, JB_ja_template);
                   
                   /* register for job events */ 
                   sge_mirror_subscribe(SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, where, what);
@@ -556,12 +562,12 @@ int main(int argc, char *argv[])
 
                   /* the mirror interface registers more events, than we need,
                      thus we free the ones, we do not need */
-                  ec_unsubscribe(sgeE_JOB_LIST);
+                /*  ec_unsubscribe(sgeE_JOB_LIST); */
                   ec_unsubscribe(sgeE_JOB_MOD);
                   ec_unsubscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
                   ec_unsubscribe(sgeE_JOB_USAGE);
                   ec_unsubscribe(sgeE_JOB_FINAL_USAGE);
-                  ec_unsubscribe(sgeE_JOB_ADD);
+               /*   ec_unsubscribe(sgeE_JOB_ADD); */
                   
                   /* free the what and where mask */
                   where = lFreeWhere(where);
@@ -600,6 +606,7 @@ int main(int argc, char *argv[])
       sge_mirror_shutdown();
 
       sge_dstring_free(enabled_options.error_message);
+      sge_prof_cleanup();
       SGE_EXIT(0);
       return 0;
    }
@@ -608,6 +615,7 @@ int main(int argc, char *argv[])
    ERROR((SGE_EVENT, "no option selected\n" ));
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
+   sge_prof_cleanup();
    SGE_EXIT(1);
    DEXIT;
    return 1;
@@ -658,7 +666,7 @@ void qevent_testsuite_mode(void)
 
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
-   sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
+   sge_mirror_initialize(EV_ID_ANY, "qevent");
 
 #ifdef QEVENT_SHOW_ALL
    sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 
@@ -676,7 +684,11 @@ void qevent_testsuite_mode(void)
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
    where = lFreeWhere(where);
    what = lFreeWhat(what);
-   
+ 
+   /* we want a 5 second event delivery interval */
+   ec_set_edtime(5);
+
+   /* and have our events flushed immediately */
    ec_set_flush(sgeE_JATASK_MOD, true, 0);
    ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
    ec_set_flush(sgeE_JOB_ADD, true, 0);

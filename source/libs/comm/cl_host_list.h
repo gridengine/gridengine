@@ -77,8 +77,8 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p);
 int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source);  /* make a copy of this list (will lock source) */
 
 /* thread list functions that will lock the list */
-int cl_host_list_append_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list);
-int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list);
+int cl_host_list_append_host(cl_raw_list_t* list_p, cl_com_host_spec_t* newhost, int lock_list);
+int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* delhost, int lock_list);
 int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file);
 int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p);
 
@@ -87,8 +87,8 @@ int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p);
 cl_host_list_data_t* cl_host_list_get_data(cl_raw_list_t* list_p);
 cl_host_list_elem_t* cl_host_list_get_first_elem(cl_raw_list_t* list_p);
 cl_host_list_elem_t* cl_host_list_get_least_elem(cl_raw_list_t* list_p);
-cl_host_list_elem_t* cl_host_list_get_next_elem(cl_raw_list_t* list_p, cl_host_list_elem_t* elem);
-cl_host_list_elem_t* cl_host_list_get_last_elem(cl_raw_list_t* list_p, cl_host_list_elem_t* elem);
+cl_host_list_elem_t* cl_host_list_get_next_elem(cl_host_list_elem_t* elem);
+cl_host_list_elem_t* cl_host_list_get_last_elem(cl_host_list_elem_t* elem);
 
 
 #endif /* __CL_HOST_LIST_H */

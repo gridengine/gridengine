@@ -128,13 +128,14 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
-static int japi_drmaa_path2path_opt(const lList *attrs, lList **args,
+static int drmaa_path2path_opt(const lList *attrs, lList **args,
    int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag,
    bool bFileStaging);
-static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
-   dstring *diag);
-static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
-   const char *attribute_key, int do_wd, const char **new_path, dstring *diag);
+static int drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
+                             dstring *diag);
+static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
+                               const char *attribute_key, int do_wd,
+                               const char **new_path, dstring *diag);
 static void prune_arg_list (lList *args);
 static void opt_list_append_default_drmaa_opts (lList **opts);
 static void merge_drmaa_options (lList **opts_all, lList **opts_default,
@@ -167,7 +168,6 @@ static drmaa_attr_names_t *drmaa_fill_supported_vector_attributes (dstring *diag
 *******************************************************************************/
 
 static pthread_mutex_t environ_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 #define DRMAA_LOCK_ENVIRON()      sge_mutex_lock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
 #define DRMAA_UNLOCK_ENVIRON()    sge_mutex_unlock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
 
@@ -217,6 +217,21 @@ static const char *drmaa_supported_vector[] = {
    DRMAA_V_EMAIL, /* mandatory */
    NULL
 };
+
+/****** DRMAA/Env **************************************************************
+*  NAME
+*     Env - Env vars used by DRMAA
+*
+*  SYNOPSIS
+*     #define ENABLE_CWD_ENV "SGE_DRMAA_ALLOW_CWD"
+*     
+*  FUNCTION
+*     ENABLE_CWD_ENV - enables the parsing of the -cwd switch in the sge_request,
+*                      job category, and/or native specification.  Unless this
+*                      env is set, -cwd will be ignored because it not multi-
+*                      thread safe.
+*******************************************************************************/
+#define ENABLE_CWD_ENV "SGE_DRMAA_ALLOW_CWD"
 
 /****** DRMAA/drmaa_init() ****************************************************
 *  NAME
@@ -562,7 +577,9 @@ static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *
 {
    int ret;
    drmaa_attr_names_t *p_attr;
-      
+
+   DENTER (TOP_LAYER, "drmaa_is_attribute_supported");
+   
    if( vector ) {
       p_attr = drmaa_fill_supported_vector_attributes (diag);
    } else {
@@ -570,12 +587,15 @@ static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *
    }
 
    if (lGetElemStr( p_attr->it.si.strings, ST_name, name ) != NULL) {
+      DPRINTF (("Attribute %s is supported\n", name));
       ret = DRMAA_ERRNO_SUCCESS;
    } else {
+      DPRINTF (("Attribute %s is not supported\n", name));
       ret = DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
    drmaa_release_attr_names(p_attr);
+   DEXIT;
    return ret;
 }
 
@@ -616,6 +636,8 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
    int       ret = DRMAA_ERRNO_SUCCESS;
    dstring   diag, *diagp = NULL;
    
+   DENTER(TOP_LAYER, "drmaa_set_attribute");
+
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
@@ -623,12 +645,14 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
 
    if (jt == NULL) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
+      DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
    ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
+      DEXIT;
       return ret;
    }
 
@@ -639,24 +663,43 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       /* join files must be either 'y' or 'n' */
       if (!strcmp(name, DRMAA_JOIN_FILES)) {
          if (strlen(value)!=1 || (value[0] != 'y' && value[0] != 'n' )) {
-            if (diagp) 
-               sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
-                     DRMAA_JOIN_FILES, "y", "n");
+            sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
+                                DRMAA_JOIN_FILES, "y", "n");
+            DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
       }
 
       /* submission state must be either active or hold */
       if (!strcmp(name, DRMAA_JS_STATE)) {
-         if (strcmp(value, DRMAA_SUBMISSION_STATE_ACTIVE)
-            && strcmp(value, DRMAA_SUBMISSION_STATE_HOLD)) {
-            if (diagp) 
-               sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
-                     DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_ACTIVE, DRMAA_SUBMISSION_STATE_HOLD);
+         if (strcmp(value, DRMAA_SUBMISSION_STATE_ACTIVE) &&
+             strcmp(value, DRMAA_SUBMISSION_STATE_HOLD)) {
+            sge_dstring_sprintf(diagp,
+                                "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
+                                DRMAA_JS_STATE,
+                                DRMAA_SUBMISSION_STATE_ACTIVE,
+                                DRMAA_SUBMISSION_STATE_HOLD);
+            DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
       }
   
+      /* transfer files must contain only 'e', 'i', and 'o'. */
+      if (strcmp (name, DRMAA_TRANSFER_FILES) == 0) {
+         int count = 0;
+         
+         for (count = 0; value[count] != '\0'; count++) {
+            if ((value[count] != 'e') && (value[count] != 'i') &&
+                (value[count] != 'o')) {
+               sge_dstring_sprintf (diagp,
+                                   "attribute "SFQ" must contain only 'e', 'i', and/or 'o'\n",
+                                   DRMAA_TRANSFER_FILES);
+               DEXIT;
+               return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
+            }
+         }
+      }
+      
       /* add or replace attribute */ 
       if ((ep = lGetElemStr(jt->strings, VA_variable, name))) {
          lSetString(ep, VA_value, value);
@@ -666,6 +709,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       }
    }
 
+   DEXIT;
    return ret;
 }
 
@@ -806,7 +850,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
-   if ((ep = lGetElemStr(jt->string_vectors, NSV_name, name))) {
+   if ((ep = lGetElemStr(jt->string_vectors, NSV_name, name)) != NULL) {
       lSetList(ep, NSV_strings, NULL);
    }
    else {
@@ -814,7 +858,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
    }
  
    lp = lCreateList(NULL, ST_Type);
-   for (i=0; value[i]; i++) {
+   for (i=0; value[i] != NULL; i++) {
       sep = lCreateElem(ST_Type);
       lSetString(sep, ST_name, value[i]);
       lAppendElem(lp, sep);
@@ -2097,7 +2141,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
 *                            qsub style -wd option
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2wd_opt (const lList *attrs, lList **args, int is_bulk,
+*     static int drmaa_path2wd_opt (const lList *attrs, lList **args, int is_bulk,
 *                                        dstring *diag)
 *
 *  FUNCTION
@@ -2121,19 +2165,19 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_path2wd_opt() is MT safe
+*     MT-NOTE: drmaa_path2wd_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
-                                  dstring *diag)
+static int drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
+                             dstring *diag)
 {
    const char *new_path = NULL;
    int drmaa_errno;
    
-   DENTER (TOP_LAYER, "japi_drmaa_path2wd_opt");
+   DENTER (TOP_LAYER, "drmaa_path2wd_opt");
    
-   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
-                                            DRMAA_WD, 0, &new_path,
-                                            diag)) == DRMAA_ERRNO_SUCCESS) {
+   if ((drmaa_errno = drmaa_path2sge_path (attrs, is_bulk,
+                                           DRMAA_WD, 0, &new_path,
+                                           diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path != NULL) {
          lListElem *ep = lGetElemStr (attrs, VA_variable, DRMAA_WD);
          const char *value = lGetString (ep, VA_value);
@@ -2159,9 +2203,9 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 *                             path option
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2path_opt (const lList *attrs, lList **args,
-*                                          int is_bulk, const char *attribute_key,
-*                                          const char *sw, int opt, dstring *diag)
+*     static int drmaa_path2path_opt (const lList *attrs, lList **args,
+*                                     int is_bulk, const char *attribute_key,
+*                                     const char *sw, int opt, dstring *diag)
 *
 *  FUNCTION
 *     Transform a DRMAA job path into SGE qsub style path option. The following 
@@ -2188,17 +2232,17 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_path2path_opt() is MT safe
+*     MT-NOTE: drmaa_path2path_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
-                                    const char *attribute_key, const char *sw,
-                                    int opt, dstring *diag, bool bFileStaging )
+static int drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
+                               const char *attribute_key, const char *sw,
+                               int opt, dstring *diag, bool bFileStaging )
 {
    const char *new_path = NULL;
    int drmaa_errno;
    lList *path_list = lCreateList ("path_list", PN_Type);
    
-   DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
+   DENTER (TOP_LAYER, "drmaa_path2path_opt");
 
    if (path_list == NULL) {
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
@@ -2206,9 +2250,9 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
    
-   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
-                                                 attribute_key, 1, &new_path,
-                                                 diag)) == DRMAA_ERRNO_SUCCESS) {
+   if ((drmaa_errno = drmaa_path2sge_path (attrs, is_bulk,
+                                           attribute_key, 1, &new_path,
+                                           diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
          lListElem *ep = lGetElemStr (attrs, VA_variable, attribute_key);
          const char *value = lGetString(ep, VA_value);
@@ -2286,7 +2330,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
 *                             counterpart
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2sge_path (const lList *attrs, int is_bulk,
+*     static int drmaa_path2sge_path (const lList *attrs, int is_bulk,
 *                                          const char *attribute_key, int do_wd,
 *                                          const char **new_path, dstring *diag)
 *
@@ -2314,15 +2358,15 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: japi_drmaa_path2sge_path() is MT safe
+*     MT-NOTE: drmaa_path2sge_path() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
-                                    const char *attribute_key, int do_wd,
-                                    const char **new_path, dstring *diag)
+static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
+                               const char *attribute_key, int do_wd,
+                               const char **new_path, dstring *diag)
 {
    lListElem *ep;
 
-   DENTER (TOP_LAYER, "japi_drmaa_path2sge_path");
+   DENTER (TOP_LAYER, "drmaa_path2sge_path");
 
    if ((ep=lGetElemStr(attrs, VA_variable, attribute_key ))) {
       dstring ds = DSTRING_INIT;
@@ -2440,7 +2484,6 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    u_long32 jb_now = 0;
 
    DENTER (TOP_LAYER, "drmaa_job2sge_job");
-   DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    
    /* make JB_Type job description out of DRMAA job template */
    if (!(jt = lCreateElem (JB_Type))) {
@@ -2594,14 +2637,15 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
       if (path != NULL) {
          DPRINTF (("Using \"%s\" for the working directory.\n", path));
-         chdir (path);
+         opt_list_append_opts_from_script_path (&opts_scriptfile, path, &alp,
+                                                opts_drmaa, environ);
          FREE (path);
       }
       else {
          DPRINTF (("Using current directory for the working directory.\n"));
+         opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_drmaa,
+                                           environ);
       }
-      
-      opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_drmaa, environ);
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
@@ -2757,7 +2801,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    }
 
    alp = cull_parse_job_parameter (opts_all, &jt);
-   
+
    if (answer_list_has_error (&alp)) {
       answer_list_to_dstring (alp, diag);
       jt = lFreeElem (jt);   
@@ -2853,7 +2897,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    }
 
    /* working directory -- -wd (not exposed in qsub) */
-   if ((drmaa_errno = japi_drmaa_path2wd_opt (attrs, args, is_bulk, diag))
+   if ((drmaa_errno = drmaa_path2wd_opt (attrs, args, is_bulk, diag))
         != DRMAA_ERRNO_SUCCESS) {
       DEXIT;
       return drmaa_errno;
@@ -2866,20 +2910,20 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
          strvalue = lGetString( ep, VA_value );   
       }
       
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+      if((drmaa_errno = drmaa_path2path_opt(attrs, args, is_bulk,
                DRMAA_OUTPUT_PATH, "-o", o_OPT, diag, strchr( strvalue, 'o')?true:false))
          != DRMAA_ERRNO_SUCCESS) {
          DEXIT;
          return drmaa_errno;
       }
 
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+      if((drmaa_errno = drmaa_path2path_opt(attrs, args, is_bulk,
                DRMAA_ERROR_PATH, "-e", e_OPT, diag, strchr( strvalue, 'e')?true:false))
          != DRMAA_ERRNO_SUCCESS) {
          DEXIT;
          return drmaa_errno;
       }
-      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+      if((drmaa_errno = drmaa_path2path_opt(attrs, args, is_bulk,
                DRMAA_INPUT_PATH, "-i", i_OPT, diag, strchr( strvalue, 'i')?true:false))
          != DRMAA_ERRNO_SUCCESS) {
          DEXIT;
@@ -3118,13 +3162,29 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
-   /* BUGFIX: #658
-    * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
-    * Later in drmaa_job2sge_job if binary mode is disabled, I also have to
-    * remove this option. */
+   /* Bugfix: Issuezilla #658
+    * In order to work around Bug #476, I set DRMAA to not spawn an exec
+    * shell. */
    DPRINTF (("disabling execution shell\n"));
    ep_opt = sge_add_arg (opts, shell_OPT, lIntT, "-shell", "n");
 
+   /* Bugfix: Issuezilla #1151
+    * Not only should -w e be allowed, it should be set by default.  The main
+    * reason for this is to make the API friendlier.  Without -w e set by
+    * default, jobs which will never be scheduled can be submitted without
+    * a problem, but the API is not rich enough to allow the application to
+    * discover post-facto that the jobs will never run.  With -w e jobs that
+    * will never be scheduled cannot be submitted, a fact that the application
+    * will note immediately without further need of explanation.  The main
+    * argument against setting -w e by default is performance overhead.  In the
+    * end we decided for setting -w e by default because developer experience
+    * is very important, and if the performance overhead becomes too great, the
+    * option can always be turned off in the native specification or job
+    * category. */
+   DPRINTF (("disabling submission of unschedulable jobs\n"));
+   ep_opt = sge_add_arg (opts, w_OPT, lIntT, "-w", "e");
+   lSetInt (ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
+   
    DEXIT;
 }
 
@@ -3266,7 +3326,7 @@ o   -a date_time                           request a job start time
 +   -c ckpt_selector                       define type of checkpointing for job
 +   -ckpt ckpt-name                        request checkpoint method
 +   -clear                                 skip previous definitions for job
-o   -cwd                                   use current working directory
+-?  -cwd                                   use current working directory
 +   -C directive_prefix                    define command prefix for job script
 +   -dc simple_context_list                remove context variable(s)
 +   -dl date_time                          request a deadline initiation time
@@ -3297,10 +3357,12 @@ o   -o path_list                           specify standard output stream path(s
 o   -v variable_list                       export these environment variables
 -   -verify                                do not submit just verify
 o   -V                                     export all environment variables
--   -w e|w|n|v                             verify mode (error|warning|none|just verify) for jobs
++   -w e|n                                 verify mode (error|none) for jobs
+-   -w w|v                                 verify mode (warning|just verify) for jobs
 +   -@ file                                read commandline input from file
    */
    lListElem *element = NULL;
+   const void *i = NULL;
    
    DENTER(TOP_LAYER, "prune_arg_list");
    
@@ -3319,8 +3381,18 @@ o   -V                                     export all environment variables
       lRemoveElem (args, element);
    }
    
-   while ((element = lGetElemStr (args, SPA_switch, "-w"))) {
-      lRemoveElem (args, element);
+   while ((element = lGetElemStrNext (args, SPA_switch, "-w", &i))) {
+      int argval = lGetInt(element, SPA_argval_lIntT);
+      
+      if ((argval == JUST_VERIFY) || (argval == WARNING_VERIFY)) {      
+         lRemoveElem (args, element);
+      }
+   }
+  
+   if (sge_getenv (ENABLE_CWD_ENV) == NULL) {
+      while ((element = lGetElemStr (args, SPA_switch, "-cwd"))) {
+         lRemoveElem (args, element);
+      }
    }
    
    DEXIT;
@@ -3839,15 +3911,20 @@ static drmaa_attr_names_t *drmaa_fill_supported_nonvector_attributes (dstring *d
 {
    drmaa_attr_names_t *p = NULL;
    
+   DENTER (TOP_LAYER, "drmaa_fill_supported_nonvector_attribute");
+   
    p = drmaa_fill_string_vector (drmaa_supported_nonvector);
    
    if (japi_is_delegated_file_staging_enabled(diag)) {
+      DPRINTF(("adding \"%s\"\n", DRMAA_TRANSFER_FILES));
       if (!lAddElemStr(&(p->it.si.strings),
                        ST_name, DRMAA_TRANSFER_FILES, ST_Type)) {
          japi_delete_string_vector ((drmaa_attr_values_t *)p);
+         DEXIT;
          return NULL;
       } 
    }
    
+   DEXIT;
    return p;
 }

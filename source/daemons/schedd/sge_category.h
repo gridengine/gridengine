@@ -40,6 +40,7 @@ int sge_add_job_category(lListElem *job, lList *acl_list);
 int sge_delete_job_category(lListElem *job);
 int sge_rebuild_job_category(lList *job_list, lList *acl_list);
 void sge_free_job_category(void);
+lList *sge_category_job_copy(lList *job_list, lList *queue_list);
 
 /*
 ** ------------ to be called from within the decision-making layer 
@@ -49,8 +50,11 @@ void sge_reject_category(lRef cat);
 bool sge_is_job_category_rejected_(lRef cat);
 int sge_is_job_category_rejected(lListElem *job);
 int sge_reset_job_category(void);
+bool sge_is_job_category_message_added(lRef cat);
+void sge_set_job_category_message_added( lRef cat );
 
 void sge_print_categories(void);
+int sge_category_count(void);
 
 #endif /* __SGE_CATEGORY_H */
 

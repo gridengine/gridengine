@@ -198,7 +198,7 @@ CheckIfShadowMasterHost()
    fname=$SGE_ROOT/$SGE_CELL/common/shadow_masters
 
    if [ -f $fname ]; then
-      grep -i $host $fname #2>&1 > /dev/null
+      grep -i $host $fname 2>&1 > /dev/null
       if [ $? = 0 ]; then
          shadow_host="true"
       else
@@ -293,12 +293,13 @@ CheckRunningQmaster()
    fi
 
    while [ $running = "false" -a $loop -ne 10 ]; do 
-      $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null
+      $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null 2>&1
 
       if [ "$?" = 0 ]; then
          running=true
       else
          sleep 3 
+         masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
          loop=`expr $loop + 1`
       fi
    done
@@ -398,6 +399,11 @@ if [ "$startup" = true ]; then
    qmaster_host=`CheckIfQmasterHost $HOST`
    primary_qmaster_host=`CheckIfPrimaryQmasterHost $HOST`
 
+   if [ $qmaster = true -a $qmaster_host = true -a $migrate_qmaster = true ]; then
+      echo "   qmaster and scheduler running on this host. Will not migrate qmaster."
+      exit 1
+   fi
+
    if [ $qmaster = true -a $qmaster_host = false -a  \
         \( $primary_qmaster_host = true -o $migrate_qmaster = true \) ]; then
        actual_qmaster_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
@@ -432,30 +438,44 @@ if [ "$startup" = true ]; then
    fi
       
    if [ $shadowd = true -a $shadow_host = true ]; then
-      start_shadowd=false
-      pidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
+      start_shadowd=true
+      UQpidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
+      pidfile=$qmaster_spool_dir/shadowd_$HOST.pid
+
       if [ -f $pidfile ]; then
          pid=`cat $pidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
             echo "   found running sge_shadowd - not starting"
-         else
-            start_shadowd=true
+            start_shadowd=false 
          fi
-      else
-        start_shadowd=true
+      fi
+
+      if [ -f $UQpidfile ]; then
+         pid=`cat $UQpidfile`
+         $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
+         if [ "$?" = 0 ]; then
+            echo "   found running sge_shadowd - not starting"
+            start_shadowd=false
+         fi
       fi
 
       if [ $start_shadowd = true ]; then
          echo "   starting sge_shadowd"
          $bin_dir/sge_shadowd
+      else
+         exit 1
       fi
    fi
 else
    if [ $shadow_host = true ]; then
       # Send SIGTERM to shadowd
       echo "   Shutting down Grid Engine shadowd"
-      Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+      if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
+         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+      elif [ -f $qmaster_spool_dir/shadowd_$HOST.pid ]; then
+         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$HOST.pid
+      fi
    fi
 
    if [ $qmaster = true ]; then

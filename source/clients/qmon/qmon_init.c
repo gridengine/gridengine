@@ -133,7 +133,11 @@ static String icon_names[] = {
    "xterm-linux",
    "xterm-sgi",
    "xterm-ibm",
-   "xterm-cray"
+   "xterm-cray",
+   "leaf",
+   "leaf_open",
+   "leaf_plus",
+   "leaf_minus"
 };
 
 /*-------------------------------------------------------------------------*/

@@ -45,7 +45,7 @@ typedef struct cl_endpoint_list_elem_type {
    /* endpoint specific data (use no malloced pointers here, expect endpoint ) */
    int                           service_port;
    cl_xml_connection_autoclose_t autoclose;
-   int                           is_static;
+   cl_bool_t                     is_static;
    long                          last_used;
 
    /* list data */
@@ -69,9 +69,9 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
 int cl_endpoint_list_cleanup(cl_raw_list_t** list_p);
 
 /* thread list functions that will lock the list */
-int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose ,int is_static);
+int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose ,cl_bool_t is_static);
 int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint);
-int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, unsigned long* time);
+int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, unsigned long* touch_time);
 int cl_endpoint_list_get_service_port(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int* service_port);
 int cl_endpoint_list_get_autoclose_mode(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, cl_xml_connection_autoclose_t* autoclose);
 int cl_endpoint_list_set_entry_life_time(cl_raw_list_t* list_p, long entry_life_time );
@@ -81,8 +81,8 @@ int cl_endpoint_list_set_entry_life_time(cl_raw_list_t* list_p, long entry_life_
 cl_endpoint_list_data_t* cl_endpoint_list_get_data(cl_raw_list_t* list_p);
 cl_endpoint_list_elem_t* cl_endpoint_list_get_first_elem(cl_raw_list_t* list_p);
 cl_endpoint_list_elem_t* cl_endpoint_list_get_least_elem(cl_raw_list_t* list_p);
-cl_endpoint_list_elem_t* cl_endpoint_list_get_next_elem(cl_raw_list_t* list_p, cl_endpoint_list_elem_t* elem);
-cl_endpoint_list_elem_t* cl_endpoint_list_get_last_elem(cl_raw_list_t* list_p, cl_endpoint_list_elem_t* elem);
+cl_endpoint_list_elem_t* cl_endpoint_list_get_next_elem(cl_endpoint_list_elem_t* elem);
+cl_endpoint_list_elem_t* cl_endpoint_list_get_last_elem(cl_endpoint_list_elem_t* elem);
 
 
 #endif /* __CL_ENDPOINT_LIST_H */

@@ -57,8 +57,8 @@ typedef u_long32 sge_locker_t;
 /*
  * Lock user interface
  */
-void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID);
-void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID);
+void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
+void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
 sge_locker_t sge_locker_id(void);
 
 const char* sge_type_name(sge_locktype_t aType);
@@ -72,7 +72,7 @@ int sge_num_locktypes(void);
 { \
    const char *name = sge_type_name(type); \
    DLOCKPRINTF(("%s() line %d: about to lock \"%s\"\n", __FILE__, __LINE__, name)); \
-   sge_lock(type, mode, sge_locker_id()); \
+   sge_lock(type, mode, SGE_FUNC, sge_locker_id()); \
    DLOCKPRINTF(("%s() line %d: locked \"%s\"\n", __FILE__, __LINE__, name)); \
 }
 
@@ -84,15 +84,15 @@ int sge_num_locktypes(void);
 { \
    const char *name = sge_type_name(type); \
    DLOCKPRINTF(("%s() line %d: about to unlock \"%s\"\n", __FILE__, __LINE__, name)); \
-   sge_unlock(type, mode, sge_locker_id()); \
+   sge_unlock(type, mode, SGE_FUNC, sge_locker_id()); \
    DLOCKPRINTF(("%s() line %d: unlocked \"%s\"\n", __FILE__, __LINE__, name)); \
 }
 
 /*
  * Lock service provider interface 
  */
-void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_locker_t)); 
-void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_locker_t));
+void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t)); 
+void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t));
 void sge_set_id_callback(sge_locker_t (*aFunc)(void));
 
 #endif /* _SGE_LOCK_H_ */

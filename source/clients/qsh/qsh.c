@@ -43,6 +43,9 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#if defined(INTERIX)
+#include <arpa/inet.h>
+#endif
 
 #include "basis_types.h"
 #include "symbols.h"
@@ -72,6 +75,7 @@
 #include "sge_answer.h"
 #include "sge_var.h"
 #include "sge_gdi.h"
+#include "sge_profiling.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
@@ -268,6 +272,7 @@ static int open_qrsh_socket(int *port) {
    sock = socket(AF_INET, SOCK_STREAM, 0);
    if (sock == -1) {
       ERROR((SGE_EVENT, MSG_QSH_ERROROPENINGSTREAMSOCKET_S, strerror(errno)));
+      sge_prof_cleanup();
       DEXIT;
       SGE_EXIT(1);
    }
@@ -278,6 +283,7 @@ static int open_qrsh_socket(int *port) {
    server.sin_port = 0;
    if (bind(sock, (struct sockaddr *) &server, sizeof server) == -1) {
       ERROR((SGE_EVENT, MSG_QSH_ERRORBINDINGSTREAMSOCKET_S, strerror(errno)));
+      sge_prof_cleanup();
       DEXIT;
       SGE_EXIT(1);
    }
@@ -286,6 +292,7 @@ static int open_qrsh_socket(int *port) {
    length = sizeof server;
    if (getsockname(sock,(struct sockaddr *) &server,&length) == -1) {
       ERROR((SGE_EVENT, MSG_QSH_ERRORGETTINGSOCKETNAME_S, strerror(errno)));
+      sge_prof_cleanup();
       DEXIT;
       SGE_EXIT(1);
    }
@@ -1204,6 +1211,8 @@ int main(int argc, char **argv)
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
+   sge_prof_setup();
+
    /*
    ** get command name: qlogin, qrsh or qsh
    */
@@ -1224,6 +1233,7 @@ int main(int argc, char **argv)
    sge_gdi_param(SET_MEWHO, my_who, NULL);
    if (sge_gdi_setup(prognames[my_who], &alp)!=AE_OK) {
       answer_list_output(&alp);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1254,6 +1264,7 @@ int main(int argc, char **argv)
    lFreeList(alp);
 
    if (alp_error) {
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1265,6 +1276,7 @@ int main(int argc, char **argv)
    lFreeList(alp);
 
    if (alp_error) {
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1278,12 +1290,14 @@ int main(int argc, char **argv)
       answer = lFreeList(answer);
       
       if (alp_error) {
+         sge_prof_cleanup();
          SGE_EXIT(1);
       }
    }
 
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(stdout);
+      sge_prof_cleanup();
       SGE_EXIT(0);
    }
 
@@ -1319,11 +1333,13 @@ int main(int argc, char **argv)
             if(sscanf(s_existing_job, "%d", &existing_job) != 1) {
                ERROR((SGE_EVENT, MSG_QSH_INVALIDJOB_ID_SS, "JOB_ID",
                       s_existing_job));
+               sge_prof_cleanup();
                SGE_EXIT(1);
             }
          } else {
             ERROR((SGE_EVENT, MSG_QSH_INHERITBUTJOB_IDNOTSET_SSS, "qrsh",
                    "-inherit","JOB_ID"));
+            sge_prof_cleanup();
             SGE_EXIT(1);
          }
       }   
@@ -1364,6 +1380,7 @@ int main(int argc, char **argv)
          if(inherit_job) {
             ERROR((SGE_EVENT, MSG_QSH_INHERITUSAGE_SS, "-inherit", 
                    "qrsh -inherit ... <host> <command> [args]"));
+            sge_prof_cleanup();
             SGE_EXIT(1);
          } else {
             is_rsh = 0;
@@ -1421,6 +1438,7 @@ int main(int argc, char **argv)
          lFreeList(alp);
 
          if (alp_error) {
+            sge_prof_cleanup();
             SGE_EXIT(1);
          }
 
@@ -1453,17 +1471,19 @@ int main(int argc, char **argv)
    lFreeList(alp);
    lFreeList(opts_all);
    if (alp_error) {
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
-   if(is_qlogin) {
+   if (is_qlogin) {
       /* get configuration from qmaster */
-      if((client_name = get_client_name(is_rsh, is_rlogin, inherit_job)) == NULL) {
+      if ((client_name = get_client_name(is_rsh, is_rlogin, inherit_job)) == NULL) {
+         sge_prof_cleanup();
          SGE_EXIT(1);
       } 
    }   
    
-   if(!existing_job) {
+   if (!existing_job) {
       set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
       DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -1474,6 +1494,7 @@ int main(int argc, char **argv)
 
       if (lGetUlong(job, JB_verify)) {
          cull_show_job(job, 0);
+         sge_prof_cleanup();
          SGE_EXIT(0);
       }
 
@@ -1532,13 +1553,17 @@ int main(int argc, char **argv)
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
+#if 0
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       /* leave_commd() for old commlib */
       cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
                                  (char*) sge_get_master(0),
                                  (char*) prognames[QMASTER],
-                                 1);
-   
+                                 1, CL_FALSE);
+#else
+      cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),CL_FALSE);
+#endif
+
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 
                         lGetList(job, JB_env_list),
@@ -1547,6 +1572,7 @@ int main(int argc, char **argv)
       if(tid == NULL) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,
             qexec_last_err() ? qexec_last_err() : "unknown"));
+         sge_prof_cleanup();
          SGE_EXIT(EXIT_FAILURE);
       }
 
@@ -1554,10 +1580,12 @@ int main(int argc, char **argv)
 
       if((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
          ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));
+         sge_prof_cleanup();
          SGE_EXIT(EXIT_FAILURE);
       }
 
       if(!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
+         sge_prof_cleanup();
          SGE_EXIT(EXIT_FAILURE);
       }
 
@@ -1629,8 +1657,10 @@ int main(int argc, char **argv)
          lFreeList(alp);
          lFreeList(lp_jobs);
          if (status == STATUS_NOTOK_DOAGAIN) { 
+            sge_prof_cleanup();
             SGE_EXIT(status);
          } else {
+            sge_prof_cleanup();
             SGE_EXIT(1);
          }
       }
@@ -1658,7 +1688,7 @@ int main(int argc, char **argv)
          cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
                                      (char*) sge_get_master(0),
                                      (char*) prognames[QMASTER],
-                                     1);
+                                     1, CL_FALSE);
    
          if(is_qlogin) {
             /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */
@@ -1781,6 +1811,7 @@ int main(int argc, char **argv)
    
    }
 
+   sge_prof_cleanup();
    SGE_EXIT(exit_status);
    DEXIT;
    return exit_status;
@@ -1840,6 +1871,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-h"))){
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+               sge_prof_cleanup();
                SGE_EXIT(EXIT_FAILURE);
             } else {
                lRemoveElem(lp, ep);
@@ -1862,6 +1894,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+               sge_prof_cleanup();
                SGE_EXIT(EXIT_FAILURE);
             } else {
                lRemoveElem(lp, ep);
@@ -1878,6 +1911,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
               ) {
                if(error) {
                   ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+                  sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
                   lRemoveElem(lp, ep);
@@ -1891,6 +1925,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             if(strcmp(cp, "-S") == 0) {
                if(error) {
                   ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+                  sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
                   lRemoveElem(lp, ep);
@@ -1908,6 +1943,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
               ) {
                if(error) {
                   ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+                  sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
                   lRemoveElem(lp, ep);

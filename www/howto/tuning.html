@@ -1,108 +1,278 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
-	<META NAME="CREATED" CONTENT="20020313;11175000">
-	<META NAME="CHANGED" CONTENT="20020313;11545200">
-</HEAD>
-<BODY>
-<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE="page-break-before: always">
-	<TR>
-		<TD>
-			<H2><FONT COLOR="#336699">Tuning guide</FONT></H2>
-		</TD>
-	</TR>
-</TABLE>
-<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0>
-	<COL WIDTH=256*>
-	<TR>
-		<TD WIDTH=100%>
-			<P><BR><BR>Grid Engine is a full function, general purpose
-			Distributed Resource Management (DRM) tool. The scheduler
-			component in Grid Engine supports a wide range of different
-			compute farm scenarios. To get the maximum performance from your
-			compute environment it can be worthwhile to review which features
-			are enabled and which are really needed to solve your load
-			management problem. Disabling some of these features can have a
-			performance benefit on the throughput of your cluster:</P>
-			<UL>
-				<LI><P><B>scheduler monitoring</B></P>
-				<P>Scheduler monitoring can be helpful to find out the reason why
-				certain jobs are not dispatched. However, providing this
-				information for all jobs at any time can be resource consuming
-				and is usually not needed. To disable scheduler monitoring set
-				<B>schedd_job_info</B> to <B>false</B> in scheduler configuration
-				<B>sched_conf(5)</B>.</P>
-				<LI><P><B>finished jobs</B></P>
-				<P>In case of array jobs the finished job list in qmaster can
-				become quite big. Switching it off will save memory and speed up
-				<B>qstat</B> commands, because <B>qstat</B> also fetches the
-				finished jobs list. Set <B>finished_jobs</B> to <B>0</B> in
-				global confiugration <B>sge_conf(5)</B>.</P>
-				<LI><P><B>job verification</B></P>
-				<P>Forcing validation at job submission time can be valuable tool
-				to prevent non-dispatchable jobs from forever remaining in
-				pending state. However, It can be a time consuming job to
-				validate jobs, especially in heterogenous environments with a
-				varity of different execution nodes and consumable resources and
-				every user having it's own job profile. In homogenous
-				environments with only a couple of different jobs a general job
-				validation usually can be omitted. Job verification is disabled
-				by adding the <B>qsub(1)</B> option <I>-w n</I> in the cluster
-				wide default requests (see <B>sge_request(5)</B>).</P>
-				<LI><P><B>load thresholds and suspend thresholds</B></P>
-				<P>Load thresholds are needed if you deliberately oversubscribe
-				your machines and you need a mechanism to prevent excessive
-				system load; suspend thresholds are also used for this. The other
-				case in which load thresholds are needed is when the execution
-				node is still open for interactive load which is not under
-				control of Grid Engine and you wan't to prevent the node from
-				being overloaded. If a compute farm is more single-purpose, eg,
-				each CPU at a compute node is represended by only one queue slot
-				and no interactive load is expected at these nodes then
-				<B>load_thresholds</B> can be omitted. To disable both thresholds
-				set <B>load_thresholds</B> to <B>none</B> and <B>suspend_thresholds</B>
-				to <B>none</B> (see <B>queue_conf(5)</B><SPAN STYLE="font-weight: medium">)</SPAN><B>.</B></P>
-				<LI><P><B>load adjustments</B></P>
-				<P>Load adjustments are used to virtually increase the measured
-				load after a job has been dispachted. This mechanism is helpful
-				in case of oversubscribed machines in order to align with load
-				thresholds. Load adjustments should be switched off if they are
-				not needed because they impose the scheduler some additional work
-				in connection sorting hosts and load thresholds verification. To
-				disable load adjustments set <B>job_load_adjustments</B> to <B>none</B>
-				and <B>load_adjustment_decay_time</B> to <B>0</B> in the
-				scheduler configuration <B>sched_conf(5)</B><SPAN STYLE="font-weight: medium">.</SPAN></P>
-				<LI><P><B>scheduling-on-demand</B></P>
-				<P>The default for Grid Engine is to start scheduling runs in a
-				fixed schedule interval (see <B>schedule_interval</B> in
-				<B>schedd_conf(5)</B>). The good thing with fixed intervals is
-				that they limit the cpu time consumption of the
-				qmaster/scheduler. The bad thing is that it throttles the
-				scheduler artificially resulting in a limited throughput. In many
-				compute farms there are machines specifically dedicated to
-				qmaster/scheduler and in such setups there is no reason for
-				throttling the scheduler.</P>
-				<P>Scheduling-on-demand can be configured using the
-				<B>FLUSH_SUBMIT_SEC</B> and <B>FLUSH_FINISH_SEC</B> settings in
-				the <B>schedd_params</B> section of the global cluster
-				configuration <B>sge_conf(5)</B><SPAN STYLE="font-weight: medium">.</SPAN>
-				If scheduling-on-demand is activated the throuput of a compute
-				farm is only limited by the power of the machine hosting
-				qmaster/scheduler.</P>
-			</UL>
-		</TD>
-	</TR>
-	<TR>
-		<TD WIDTH=100%>
-			<P><BR>
-			</P>
-		</TD>
-	</TR>
-</TABLE>
-<P><BR><BR>
-</P>
-</BODY>
-</HTML>
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE"
+ content="text/html; charset=iso-8859-1">
+  <title></title>
+  <meta name="GENERATOR" content="StarOffice 6.0  (Solaris Sparc)">
+  <meta name="CREATED" content="20020313;11175000">
+  <meta name="CHANGED" content="20020313;11545200">
+</head>
+<body>
+<table width="100%" border="0" cellpadding="2" cellspacing="0"
+ style="page-break-before: always;">
+  <tbody>
+    <tr>
+      <td>
+      <h2><font color="#336699">Tuning guide</font></h2>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<table width="100%" border="0" cellpadding="2" cellspacing="0">
+  <col width="256*"> <tbody>
+    <tr>
+      <td width="100%">
+      <p><br>
+      <br>
+Grid Engine is a full function, general purpose Distributed Resource
+Management (DRM) tool. The scheduler component in Grid Engine supports
+a wide range of different compute farm scenarios. To get the maximum
+performance from your compute environment it can be worthwhile to
+review which features are enabled and which are really needed to solve
+your load management problem. Disabling/Enabling&nbsp; these features
+can have a performance benefit on the throughput of your cluster. Each
+feature contains in parentheses when it was introduced. If not
+otherwise
+stated, it is available in higher versions as well.<br>
+      </p>
+      <ul>
+        <li>
+          <p><b>overall cluster tuning (V5.3 + V6.0)</b></p>
+          <p>Experience has shown utilization of NFS or similar shared file systems for 
+distributing files required by Grid Engine can have a critical share
+in both overall network load and file server load. Thus keeping such 
+files locally is always beneficially for overall cluster throughput. The HOWTO
+<A HREF="nfsreduce.html">Reducing and Eliminating NFS usage by Grid Engine</A>.
+shows different common choices for accomplishing this.<br>
+        </p>
+        </li>
+        <li>
+          <p><b>scheduler monitoring (V5.3 + V6.0)<br>
+          </b></p>
+          <p>Scheduler monitoring can be helpful to find out the reason
+why certain jobs are not dispatched (displayed via <span
+ style="font-weight: bold;">qstat)</span>. However, providing this
+information for all jobs at any time can be resource consuming (memory
+and cpu time) and is usually not needed. To disable scheduler
+monitoring set <b>schedd_job_info</b> to <b>false</b> in scheduler
+configuration <b>sched_conf(5)</b>.</p>
+        </li>
+        <li>
+          <p><b>finished jobs (V5.3 + V6.0)</b></p>
+          <p>In case of array jobs the finished job list in qmaster can
+become quite big. Switching it off will save memory and speed up <b>qstat</b>
+commands because <b>qstat</b> also fetches the finished jobs list.
+Set <b>finished_jobs</b> to <b>0</b> in global configuration. See <b>sge_conf(5)</b>.</p>
+        </li>
+        <li>
+          <p><b>job verification (V5.3 + V6.0)</b></p>
+          <p>Forcing validation at job submission time can be a
+valuable
+tool to prevent non-dispatchable jobs from remaining in pending
+state foreever. However, It can be a time consuming job to validate
+jobs,
+especially in heterogeneous environments with a variety of different
+execution nodes and consumable resources and where every user has his
+own
+job profile. In homogeneous environments with only a couple of
+different
+jobs, a general job validation usually can be omitted. Job verification
+is disabled per default and should only be used (<span
+ style="font-weight: bold;">qsub(1)</span>: -w [v|e|w]) when
+needed.&nbsp; [It is enables by default with DRMAA]<br>
+          </p>
+        </li>
+        <li>
+          <p><b>load thresholds and suspend thresholds (V5.3 + V6.0)</b></p>
+          <p>Load thresholds are needed if you deliberately
+oversubscribe your machines, and you need a mechanism to prevent
+excessive system load. Suspend thresholds are also used for this. The
+other case in which load thresholds are needed is when the execution
+node is open for interactive load which is not under control of
+Grid Engine, and you want to prevent the node from being overloaded. If
+a compute farm is more single-purpose, e. g., each CPU at a compute
+node
+is represented by only one queue slot, and no interactive load is
+expected at these nodes, then <b>load_thresholds</b> can be omitted.
+To
+disable both thresholds set <b>load_thresholds</b> to <b>none</b> and
+          <b>suspend_thresholds</b> to <b>none.</b> See <b>queue_conf(5)</b><b>.</b></p>
+        </li>
+      </ul>
+      <div style="margin-left: 40px;">Starting with<span
+ style="font-weight: bold;"> V6.0 load_thresholds</span> areapplicable
+to consumable resources as well (see <b>queue_conf(5)</b><span style="">)</span>.
+Using this feature will have a negative impact on
+the scheduler performance.<br>
+      </div>
+      <ul>
+        <li>
+          <p><b>load adjustments (V5.3 + V6.0)</b></p>
+          <p>Load adjustments are used to virtually increase the
+measured load after a job has been dispached. This mechanism is
+helpful in the case of oversubscribed machines in order to align with
+load
+thresholds. Load adjustments should be switched off if they are not
+needed, because they impose on the scheduler some additional work in
+connection sorting hosts and load thresholds verification. To disable
+load adjustments set <b>job_load_adjustments</b> to <b>none</b> and <b>load_adjustment_decay_time</b>
+to <b>0</b> in the scheduler configuration. See <b>sched_conf(5)</b><span
+ style="">.</span></p>
+        </li>
+        <li>
+          <p><b>scheduling-on-demand (V5.3 + V6.0)</b></p>
+          <p>The default for Grid Engine is to start scheduling runs in
+a fixed scheduling interval (see <b>schedule_interval</b> in <b>schedd_conf(5)</b>).
+The good thing with fixed intervals is that they limit the cpu time
+consumption of the qmaster/scheduler. The bad thing is that they
+throttle the scheduler artificially, resulting in a limited throughput.
+In many compute farms there are machines specifically dedicated to
+qmaster/scheduler and in such setups there is no reason for throttling
+the scheduler. How many seconds one should use for flush times is
+difficult to say. It depends on the time the scheduler needs for a
+single run and the number of jobs in the system. A couple test runs
+with
+the scheduler profiling (Add <span style="font-weight: bold;">profile=1</span>
+to the <span style="font-weight: bold;">params</span> in the <span
+ style="font-weight: bold;">schedd_conf(5)</span>.) should give one
+enough data to select a good value.</p>
+        </li>
+      </ul>
+      <ul style="font-weight: bold;">
+        <ul>
+          <li>In V5.3:</li>
+        </ul>
+      </ul>
+      <div style="margin-left: 80px;">Scheduling-on-demand can be
+configured using the <b>FLUSH_SUBMIT_SEC</b> and <b>FLUSH_FINISH_SEC</b>
+settings in the <b>schedd_params</b> section of the global cluster
+configuration. See <b>sge_conf(5)</b><span style="">.</span><br>
+      </div>
+      <ul>
+        <ul>
+          <li><span style="font-weight: bold;">In V6.0:</span><br>
+          </li>
+        </ul>
+      </ul>
+      <ul>
+        <div style="margin-left: 40px;">Scheduling-on-demand can be
+configured using the <b>FLUSH_SUBMIT_SEC</b> and <b>FLUSH_FINISH_SEC</b>
+settings in the <b>schedd_conf(5)</b><span style="">.</span> <br>
+        </div>
+      </ul>
+      <ul>
+If scheduling-on-demand is activated, the throughput of a compute farm
+is
+only limited by the power of the machine hosting qmaster/scheduler.<br>
+        <li style="font-weight: bold;">
+          <p>scheduler priority information (V6.0)</p>
+        </li>
+      </ul>
+      <ul>
+After every scheduling interval, the scheduler sends the calculated
+priority information (tickets, job priority, urgency) to
+the qmaster.
+This information is used to order the job output in "<b>qstat -ext</b>",
+"<b>-urg</b>", and "<b>-pri</b>". The transfer of the
+information can be turned off by setting <b>report_pjob_tickets</b> to
+        <b>false</b>
+in <b>schedd_conf(5)</b>.<br>
+      </ul>
+      <ul>
+        <li> <b>policies (V6.0)</b> </li>
+      </ul>
+      <ul>
+The scheduler contains different policy modules (See <b>sge_priority(5)</b>)
+to
+compute the importance of a job:<br>
+        <ul>
+          <li>ticket policy</li>
+          <li>urgency policy</li>
+          <li>posix priority policy</li>
+          <li>deadline policy</li>
+          <li>waiting time policy<br>
+          </li>
+        </ul>
+      </ul>
+      <ul>
+All policies are turned on per
+default. If one or two of them are not used, it is preferable to turn
+the policy off by setting its<b>
+weighting factor</b> to 0 in <b>schedd_conf(5)</b>.<br>
+      </ul>
+      <ul>
+        <li>
+          <p><b>resource reservation (V6.0)</b><br>
+          </p>
+        </li>
+      </ul>
+      <ul>
+A new feature in version 6 is&nbsp; resource reservation to prevent the
+starvation of jobs with many resource requests. The configuration of
+the scheduler allows one to enable / disable this feature as well as
+limit
+the number of jobs which will get a reservation. Turning off this
+featuer, by setting <b>max_reservation</b> to 0 in <b>schedd_conf(5)</b>,
+will have a positive impact on the scheduler run time.<br>
+        <br>
+If the resource reservation is needed, the number of jobs which will
+get a reservation from the scheduler should be as small as possible.
+This is done by setting a small number for <b>max_reservation</b> in <b>schedd_conf(5)</b>.<br>
+      </ul>
+      <ul>
+        <li><b>EXPERIMENTAL: job filter based on job clases (V6.0u1)</b></li>
+      </ul>
+      <ul>
+The job filter can be enabled by adding <b>JC_FILTER=1</b> to the
+params
+field in <b>schedd_conf(5)</b>.
+This feature is <b>not documented</b> and, if enabled, can lead some
+minor <b>problems in the system</b>.<br>
+        <br>
+If enabled, the scheduler limits the number of jobs it looks at during
+a scheduling run. At the beginning of the scheduling run it assigns
+each
+job a specific category,&nbsp; based on the job's requests, priority
+settings, and the job owner. All scheduling policies will assign the
+same
+importance to each job in a category. Therefore, the number of jobs
+per
+category will have a FIFO order and can be limited to the number of
+free
+slots in the system.<br>
+An exception is jobs which request a resource reservation. They are
+included regardless of the number of jobs in a category. <br>
+This setting is turned off per default, because in very rare cases the
+scheduler
+can make a wrong decision. It is also advised to turn
+report_pjob_tickets off when this feature is used. Otherwise <b>"qstat
+-ext"</b> can report
+outdated
+ticket amounts. The information shown
+with a <b>"qstat -j <job_id>"</job_id></b> for a job, that was
+excluded in a scheduling run, is
+very limited.<br>
+        <br>
+      </ul>
+A new feature with <b>Grid Engine V6.0</b> is the ability to store
+scheduler
+profiles, e. g. <b>"qconf -ssconf &gt;file"</b>,
+such as are used during Grid Engine installation. The profiles are not
+stored internally. With the combination of dynamically changing the
+scheduler configuration by loading a new profile with <b>"qconf
+-Msconf &lt;file&gt;</b>" and a cron job, one can switch to a leaner
+configuration over night and
+return to a user friendly configuration during the day.<br>
+      </td>
+    </tr>
+    <tr>
+      <td width="100%">
+      <p><br>
+      </p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

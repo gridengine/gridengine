@@ -30,7 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+
+#include <string.h>
+#include <errno.h>
+
 #include "sge_string.h"
+#include "sge_uidgid.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_list.h"
@@ -38,6 +43,7 @@
 #include "sge_answer.h"
 #include "sge_str.h"
 
+#include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
 #define STR_LAYER BASIS_LAYER
@@ -190,4 +196,46 @@ str_list_is_valid(const lList *this_list, lList **answer_list)
    return ret;
 }
 
+bool
+str_list_transform_user_list(lList **this_list, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(STR_LAYER, "str_list_transform_user_list");
+   if (this_list != NULL && *this_list != NULL) {
+      lListElem *elem;
+
+      for_each(elem, *this_list) {
+         const char *string = lGetString(elem, ST_name);
+
+         if (string != NULL) {
+            /*
+             * '$user' will be replaced by the current unix username
+             * '*'     emty the remove the list 
+             */
+            if (strcasecmp(string, "$user") == 0) {
+               uid_t uid = getuid();
+               char username[128];
+
+               if (sge_uid2user(uid, username, sizeof(username), 
+                                MAX_NIS_RETRIES) == 0) {
+                  lSetString(elem, ST_name, username);
+               } else { 
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                          ANSWER_QUALITY_ERROR,
+                                          MSG_FUNC_GETPWUIDXFAILED_IS,
+                                          (int)uid, strerror(errno));
+                  ret = false;
+                  break;
+               }
+            } else if (strcmp(string, "*") == 0) {
+               *this_list = lFreeList(*this_list);
+               break;
+            }
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
 

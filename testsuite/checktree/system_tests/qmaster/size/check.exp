@@ -63,7 +63,7 @@ lappend check_functions {check_flood}                  ;# flood of qsub's (sleep
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 # JG: TODO: check setup with zombies in an additional runlevel
 # lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
-lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+#lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
@@ -252,6 +252,10 @@ proc restart_system {} {
      return
    }
 
+   # create an additional interactive only queue
+   # This verifies IZ 1087
+   set queue_conf(qtype) INTERACTIVE
+   add_queue interactive "@allhosts" queue_conf 1
 
    # get qmaster spool dir
    set qmaster_spool_dir [ get_qmaster_spool_dir ]
@@ -324,45 +328,18 @@ proc restart_system {} {
 #     ???/???
 #*******************************
 proc init_ps {} {
-   global CHECK_ARCH CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_ARCH CHECK_PRODUCT_ROOT
    global cmd_ps size_unit
    global qmaster_spool_dir
 
    # get qmaster pid
-   set pid_file "$qmaster_spool_dir/qmaster.pid"
-   set qmaster_pid ""
-   for {set x 0} {$x < 10} {incr x} {
-      if [file exists $pid_file] {
-         if {[file size $pid_file] > 0 } {
-            set f [open $pid_file r]
-            gets $f qmaster_pid
-            close $f
-
-            if { $qmaster_pid != "" } { 
-               break
-            }
-         }
-      }   
-      sleep 2
-   }
+   set qmaster_pid [get_qmaster_pid]
 
    # get schedd pid
-   set pid_file "$qmaster_spool_dir/schedd/schedd.pid"
-   set schedd_pid ""
-   for {set x 0} {$x < 10} {incr x} {
-      if [file exists $pid_file] {
-         if {[file size $pid_file] > 0 } {
-            set f [open $pid_file r]
-            gets $f schedd_pid
-            close $f
+   set schedd_pid [get_schedd_pid]
 
-            if { $schedd_pid != "" } { 
-               break
-            }
-         }
-      }   
-      sleep 2
-   }
+   puts $CHECK_OUTPUT "qmaster pid: $qmaster_pid"
+   puts $CHECK_OUTPUT "schedd  pid: $schedd_pid "
 
    if { $qmaster_pid == "" || $schedd_pid == ""} {
       set_error 1 "could not evaluate pid of qmaster and schedd"
@@ -1340,6 +1317,8 @@ proc check_size_cleanup {} {
 
    set default_array(finished_jobs)   0
    set_config default_array
+
+   del_queue interactive "" 0 1
 
    monitor_size [get_job_count] "reset initial parameters"
 

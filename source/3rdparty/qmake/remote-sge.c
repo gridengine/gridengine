@@ -297,7 +297,7 @@ static int next_job = 0;
 struct finished_job *saved_status = NULL;
 
 static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump_ptr, int block);
-static void read_and_save_remote_status();
+static void read_and_save_remote_status(void);
 
 /****** Interactive/qmake/remote_exit() ***************************************
 *
@@ -493,7 +493,7 @@ static int get_host_count()
    host_count = (fileinfo.st_size - sizeof(hostfile_info)) / (MAXHOSTNAMELEN + sizeof(char));
 
    if(be_verbose) {
-      fprintf(stderr, "number of slots for qmake execution is %d\n", host_count);
+      fprintf(stdout, "number of slots for qmake execution is %d\n", host_count);
    }
 
    return host_count;
@@ -545,7 +545,7 @@ static void create_hostfile()
    struct hostfile_info hostinfo;
 
    if(be_verbose) {
-      fprintf(stderr, "creating qmake hostfile\n");
+      fprintf(stdout, "creating qmake hostfile\n");
    }
    
    /* open qmake hostfile */
@@ -670,9 +670,9 @@ static void init_remote()
       strcpy(sge_hostfile_name, c);
      
       if(be_verbose) {
-         fprintf(stderr, "sge hostfile = %s\n", sge_hostfile_name);
-         fprintf(stderr, "qmake  hostfile = %s\n", hostfile_name);
-         fprintf(stderr, "qmake  lockfile = %s\n", lockfile_name);
+         fprintf(stdout, "sge hostfile = %s\n", sge_hostfile_name);
+         fprintf(stdout, "qmake  hostfile = %s\n", hostfile_name);
+         fprintf(stdout, "qmake  lockfile = %s\n", lockfile_name);
       }
      
       /* hostfile */
@@ -743,14 +743,14 @@ static void lock_hostfile()
          hostfile_locked = 1;
          close(lockfile);
          if(be_verbose) {
-            fprintf(stderr, "obtained lock to qmake lockfile\n");
+            fprintf(stdout, "obtained lock to qmake lockfile\n");
          }
          return;
       }
 
       if(errno == EEXIST) {
          if(be_verbose) {
-            fprintf(stderr, "waiting for lock to qmake lockfile\n");
+            fprintf(stdout, "waiting for lock to qmake lockfile\n");
          }
          usleep(LOCK_SLEEP_TIME);
       } else {
@@ -785,7 +785,7 @@ static void unlock_hostfile()
       hostfile_locked = 0;
       remove(lockfile_name);
       if(be_verbose) {
-         fprintf(stderr, "clearing lock to hostfile\n");
+         fprintf(stdout, "clearing lock to hostfile\n");
       }
    }   
 }
@@ -823,7 +823,7 @@ static void unlock_hostentry(off_t offset) {
       lock_hostfile();
    
       if(be_verbose) {
-         fprintf(stderr, "unlock_hostentry %d\n", (int) offset);
+         fprintf(stdout, "unlock_hostentry %d\n", (int) offset);
       }
    
       if(lseek(hostfile, offset * (MAXHOSTNAMELEN + sizeof(char)) + sizeof(hostfile_info), SEEK_SET) < 0) {
@@ -890,7 +890,7 @@ static const char *next_host()
          unlock_hostfile();
 
          if(be_verbose) {
-            fprintf(stderr, "waiting for a free slot\n");
+            fprintf(stdout, "waiting for a free slot\n");
          }
 
          sleep(WAIT_SLOT_TIME);
@@ -944,7 +944,7 @@ static const char *next_host()
    jobs[next_job].offset = offset;
 
    if(be_verbose) {
-      fprintf(stderr, "next host for qmake job is %s\n", buffer);
+      fprintf(stdout, "next host for qmake job is %s\n", buffer);
    }   
 
    return buffer;
@@ -1160,17 +1160,17 @@ static int parse_options(int *p_argc, char **p_argv[])
 
    if(be_verbose) {
       if (dynamic_mode) {
-         fprintf(stderr, "dynamic task allocation mode\n");
+         fprintf(stdout, "dynamic task allocation mode\n");
       }
       
       for(i = 0; i < sge_argc; i++) {
-         fprintf(stderr, "sge_argv[%d] = %s\n", i, sge_argv[i]);
+         fprintf(stdout, "sge_argv[%d] = %s\n", i, sge_argv[i]);
       }
       for(i = 0; i < sge_v_argc; i++) {
-         fprintf(stderr, "sge_v_argv[%d] = %s\n", i, sge_v_argv[i]);
+         fprintf(stdout, "sge_v_argv[%d] = %s\n", i, sge_v_argv[i]);
       }
       for(i = 0; i < gmake_argc; i++) {
-         fprintf(stderr, "gmake_argv[%d]  = %s\n", i, gmake_argv[i]);
+         fprintf(stdout, "gmake_argv[%d]  = %s\n", i, gmake_argv[i]);
       }
    }
 
@@ -1250,8 +1250,8 @@ void set_default_options()
       /* determine architecture */
       architecture = getenv("SGE_ARCH");
       if(architecture == NULL || strlen(architecture) == 0) {
-         fprintf(stderr, "qmake: *** cannot determine architecture from environment variable SGE_ARCH\n");
-         fprintf(stderr, "           no default architecture set\n");
+         fprintf(stdout, "qmake: *** cannot determine architecture from environment variable SGE_ARCH\n");
+         fprintf(stdout, "           no default architecture set\n");
          return;
       }
 
@@ -1274,7 +1274,7 @@ void set_default_options()
          sprintf(buffer, "arch=%s", architecture);
    
          if(be_verbose) {
-            fprintf(stderr, "setting default options: -l %s\n", buffer);
+            fprintf(stdout, "setting default options: -l %s\n", buffer);
          }
    
          sge_argv[sge_argc++] = "-l";
@@ -1332,7 +1332,7 @@ static void equalize_nslots(int *p_argc, char **p_argv[])
          /* NSLOTS differs from -j parameter? */
          if(strcmp(gmake_argv[i], nslots)) {
             if(be_verbose) {
-               fprintf(stderr, "equalizing -j option with NSLOTS environment: -j %s\n", nslots);
+               fprintf(stdout, "equalizing -j option with NSLOTS environment: -j %s\n", nslots);
             }
             gmake_argv[i] = nslots;
             return;
@@ -1343,7 +1343,7 @@ static void equalize_nslots(int *p_argc, char **p_argv[])
    }
 
    if(be_verbose) {
-      fprintf(stderr, "inserting -j option from NSLOTS environment: -j %s\n", nslots);
+      fprintf(stdout, "inserting -j option from NSLOTS environment: -j %s\n", nslots);
    }
 
    /* no -j option set */
@@ -1424,7 +1424,7 @@ static void equalize_pe_j()
    }
 
    if(be_verbose) {
-      fprintf(stderr, "inserting pe request to sge options: -pe make 1-%d\n", nslots);
+      fprintf(stdout, "inserting pe request to sge options: -pe make 1-%d\n", nslots);
    }
    
    /* insert pe into sge options */
@@ -1557,9 +1557,9 @@ static void submit_qmake()
    } else {
       /* in child, start qrsh */
       if(be_verbose) {
-         fprintf(stderr, "creating scheduled qmake: %d\n", argc);
+         fprintf(stdout, "creating scheduled qmake\n");
          for(i = 0; i < argc; i++) {
-            fprintf(stderr, "argv[%3d] = %s\n", i, argv[i]);
+            fprintf(stdout, "argv[%3d] = %s\n", i, argv[i]);
          }
       }
       
@@ -1612,7 +1612,7 @@ void remote_options(int *p_argc, char **p_argv[])
    }
 
    if(be_verbose) {
-      fprintf(stderr, "determine qmake startmode\n");
+      fprintf(stdout, "determine qmake startmode\n");
    }
    
    /* option -inherit set? */
@@ -1723,7 +1723,7 @@ void remote_cleanup ()
    /* if remote start is enabled */
    if(remote_enabled) {
       if(be_verbose) {
-         fprintf(stderr, "cleanup of remote mechanism\n");
+         fprintf(stdout, "cleanup of remote mechanism\n");
       }
 
       if (!dynamic_mode) {
@@ -1772,28 +1772,30 @@ int start_remote_job_p (int first_p)
 {
    /* if remote is enabled, always return true */
    if(remote_enabled) {
-      int i;
-      
-      /* set pointer to next free entry in job_info */
-      next_job = -1;
-      for(i = 0; i < host_count; i++) {
-         if(jobs[i].pid == 0) {
-            next_job = i;
-            break;
+      if (!dynamic_mode) {
+         int i;
+         
+         /* set pointer to next free entry in job_info */
+         next_job = -1;
+         for(i = 0; i < host_count; i++) {
+            if(jobs[i].pid == 0) {
+               next_job = i;
+               break;
+            }
          }
-      }
 
-      if(next_job == -1) {
-         remote_exit(EXIT_FAILURE, "disaranged job_info list", NULL);
+         if(next_job == -1) {
+            remote_exit(EXIT_FAILURE, "disaranged job_info list", NULL);
+         }
       }
 
       if(be_verbose) {
          if (dynamic_mode) {
-            fprintf(stderr, 
+            fprintf(stdout, 
                     "enabling next task to be scheduled as Grid Engine "
                     "job\n");
          } else {
-            fprintf(stderr, 
+            fprintf(stdout, 
                     "enabling next task to be executed as Grid Engine "
                     "parallel task\n");
          }
@@ -1845,7 +1847,7 @@ static int is_recursive_make(const char *argv_0) {
    if(substring != NULL) {
       if(strcmp(substring, program_name) == 0) {
          if(be_verbose) {
-            fprintf(stderr, "detected recursive make - starting on local machine\n");
+            fprintf(stdout, "detected recursive make - starting on local machine\n");
          }   
          return 1;
       }
@@ -1897,9 +1899,9 @@ static int might_be_recursive_make(char *argv[]) {
 
    for(i = 0; argv[i] != NULL; i++) {
       if(strstr(argv[i], program_name) != NULL) { 
-         fprintf(stderr, "\nthis call might lead to a recursive qmake call:\n");
-         fprintf(stderr, "%s\n", argv[i]);
-         fprintf(stderr, "starting on local machine\n\n"); 
+         fprintf(stdout, "\nthis call might lead to a recursive qmake call:\n");
+         fprintf(stdout, "%s\n", argv[i]);
+         fprintf(stdout, "starting on local machine\n\n"); 
          return 1;
       }
    }
@@ -2023,6 +2025,8 @@ static int copy_sge_resource_request(const char *request, char **args, int argc)
 *
 ****************************************************************************
 */
+#define ADDTL_ENV_VARS 100
+#define ADDTL_ENV_SIZE 4095
 int start_remote_job (char **argv, char **envp, 
                       int stdin_fd, int *is_remote, 
                       int *id_ptr, int *used_stdin)
@@ -2031,9 +2035,76 @@ int start_remote_job (char **argv, char **envp,
    const char *hostname;
    int exec_remote = 1;
    int recursive_make = 0;
+   char *addtl_env[ADDTL_ENV_VARS];
+   char addtl_env_pass[ADDTL_ENV_SIZE + 1];
+   char envvar[ADDTL_ENV_SIZE + 1];
 
+   addtl_env_pass[0] = '\0';
+   {
+      char **env = envp;
+      int first_hit = 1;
+      int var_idx = 0;
+
+      /* 
+       * Parse the given environment and search for variables that are not in the 
+       * current environment or have a changed value.
+       * These variables have to be set in the execution environment, 
+       * if the task is started by qrsh, the variable names have to be part of a 
+       * -v statement.
+       */
+      while (*env != NULL) {
+         char *copy, *variable, *value, *old_value;
+
+         /* we have to dup env as we split it into variable and value */
+         copy = strdup(*env);
+         variable = strtok(copy, "=");
+         value = strtok(NULL, "=");
+         if (value == NULL) {
+            value = "";
+         }
+
+         /* retrieve variable from current environment */
+         old_value = getenv(variable);
+
+         /* if variable isn't set in current environment, or has been changed */
+         if (old_value == NULL || strcmp(old_value, value) != 0) {
+            if (var_idx >= ADDTL_ENV_VARS) {
+               free(copy); copy = NULL;
+               fprintf(stderr, "qmake: too many additional environment variables to set\n");
+               return 1;
+            }
+            /* store additional environment to set */
+            addtl_env[var_idx++] = strdup(*env);
+           
+            /* store variable name for -v option */
+            if (strlen(addtl_env_pass) + strlen(variable) >= ADDTL_ENV_SIZE) {
+               free(copy); copy = NULL;
+               fprintf(stderr, "qmake: additional environment variable names exeed buffer\n");
+               return 1;
+            }
+            if (!first_hit) {
+               strcat(addtl_env_pass, ",");
+            }
+            strcat(addtl_env_pass, variable);
+
+            first_hit = 0;
+         }
+
+         /* free the duplicated env entry */
+         free(copy); copy = NULL;
+         env++;
+      }
+
+      /* addtl_env is a NULL terminated list (array) */
+      addtl_env[var_idx] = NULL;
+
+      if(be_verbose) {
+         fprintf(stdout, "export the following environment variables: %s\n", addtl_env_pass);
+      }
+   } 
+   
    /* check for recursive make */
-   if(is_recursive_make(argv[0])) {
+   if (is_recursive_make(argv[0])) {
       /* force local execution */
       exec_remote = 0;
       recursive_make = 1;
@@ -2045,10 +2116,7 @@ int start_remote_job (char **argv, char **envp,
       }
       jobs[next_job].offset = -1;
    } else {
-      /* JG: TODO: shouldn't is_recursive_make and might_be_recursive_make
-       * be handled in the same way?
-       */
-      if(might_be_recursive_make(argv)) {
+      if (might_be_recursive_make(argv)) {
          /* argv contains program name */
          exec_remote = 0;
          if (dynamic_mode) {
@@ -2060,26 +2128,7 @@ int start_remote_job (char **argv, char **envp,
          jobs[next_job].offset = -1;
          /* dump environment variable RECURSIVE_QMAKE_OPTIONS */
          {
-            char *envvar  = NULL;
-            int   envsize = 0;
             int   i;
-
-            /* compute length of all sge options */
-            for(i = 0; i < sge_v_argc; i++) {
-               envsize += strlen(sge_v_argv[i]);
-            }
-
-            /* add space for variable name, =, -inherit, [-cwd], [-verbose], \n's, \0 */
-            envsize += sizeof("RECURSIVE_QMAKE_OPTIONS") + sizeof("-inherit") + sge_v_argc;
-            if(pass_cwd) {
-               envsize += sizeof("-cwd");
-            }
-
-            if(be_verbose) {
-               envsize += sizeof("-verbose");
-            }
-
-            envvar = (char *)malloc(envsize);
 
             strcpy(envvar, "RECURSIVE_QMAKE_OPTIONS=-inherit");
 
@@ -2092,13 +2141,16 @@ int start_remote_job (char **argv, char **envp,
             }
             
             for(i = 0; i < sge_v_argc; i++) {
+               if (strlen(envvar) + strlen(sge_v_argv[i]) >= ADDTL_ENV_SIZE) {
+                  fprintf(stderr, "qmake: RECURSIVE_QMAKE_OPTIONS too big\n");
+                  return 1;
+               }
                strcat(envvar, "\n");
                strcat(envvar, sge_v_argv[i]);
             }
            
-            putenv(envvar);
             if(be_verbose) {
-               fprintf(stderr, "saving sge options: %s\n", envvar);
+               fprintf(stdout, "saving sge options: %s\n", envvar);
             }
          }
       } else {
@@ -2121,10 +2173,20 @@ int start_remote_job (char **argv, char **envp,
    child_pid = fork();
 
    if(child_pid) {
+      int i;
+
       /* parent */
       *is_remote = 1;
       *id_ptr = child_pid;
       jobs[next_job].pid = child_pid;
+
+      /* free the additional environment variables */
+      i = 0;
+      while (addtl_env[i] != NULL) {
+         free(addtl_env[i]);
+         addtl_env[i] = NULL;
+         i++;
+      }
    } else {
       /* child */
       int argc, no_args, i;
@@ -2150,14 +2212,14 @@ int start_remote_job (char **argv, char **envp,
          resource_request = get_sge_resource_request(argv);
          if (resource_request != NULL) {
             if (be_verbose) {
-               fprintf(stderr, "add SGE resource request for this rule: %s\n", 
+               fprintf(stdout, "add SGE resource request for this rule: %s\n", 
                        resource_request);
             }
             no_args += count_sge_resource_request(resource_request);
          }
       }
   
-      args = (char **)malloc((no_args + sge_v_argc + 6 + pass_cwd + be_verbose) * sizeof(char *));
+      args = (char **)malloc((no_args + sge_v_argc + 8 + pass_cwd + be_verbose) * sizeof(char *));
 
       if(exec_remote) {
          args[argc++] = "qrsh";
@@ -2191,6 +2253,11 @@ int start_remote_job (char **argv, char **envp,
             }
          }
 
+         if (addtl_env_pass[0] != '\0') {
+            args[argc++] = "-v";
+            args[argc++] = addtl_env_pass;
+         }
+
          for(i = 0; i < sge_v_argc; i++) {
             args[argc++] = sge_v_argv[i];
          }
@@ -2200,7 +2267,7 @@ int start_remote_job (char **argv, char **envp,
          }
          i = 0;
       } else {
-         if(recursive_make) {
+         if (recursive_make) {
             args[argc++] = argv[0];
             if(be_verbose) {
                args[argc++] = "-verbose";
@@ -2209,6 +2276,11 @@ int start_remote_job (char **argv, char **envp,
 
             if(pass_cwd) {
                args[argc++] = "-cwd";
+            }
+
+            if (addtl_env_pass[0] != '\0') {
+               args[argc++] = "-v";
+               args[argc++] = addtl_env_pass;
             }
 
             for(i = 0; i < sge_v_argc; i++) {
@@ -2227,12 +2299,22 @@ int start_remote_job (char **argv, char **envp,
       args[argc] = NULL;
      
       if(be_verbose) {
-         fprintf(stderr, "starting job: \n");
+         fprintf(stdout, "starting job: \n");
          for(i = 0; args[i] != NULL; i++) {
-            fprintf(stderr, "args[%3d] = %s\n", i, args[i]);
+            fprintf(stdout, "args[%3d] = %s\n", i, args[i]);
          }
       }
-     
+
+      /* set the RECURSIVE_QMAKE_OPTIONS environment variable */
+      putenv(envvar);
+
+      /* set the additional environment variables */
+      i = 0;
+      while (addtl_env[i] != NULL) {
+         putenv(addtl_env[i]);
+         i++;
+      }
+
       execvp(args[0], args);
    }
    
@@ -2295,7 +2377,7 @@ int remote_status (int *exit_code_ptr, int *signal_ptr,
    pid_t child_pid;
 
    if(be_verbose) {
-      fprintf(stderr, "gmake requesting status of dead child processes\n");
+      fprintf(stdout, "gmake requesting status of dead child processes\n");
    }
 
    if(saved_status != NULL) {
@@ -2519,7 +2601,7 @@ static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump
 void block_remote_children ()
 {
    if(be_verbose) {
-      fprintf(stderr, "gmake called block_remote_children()\n");
+      fprintf(stdout, "gmake called block_remote_children()\n");
    }
 
    return;
@@ -2562,7 +2644,7 @@ void block_remote_children ()
 void unblock_remote_children ()
 {
    if(be_verbose) {
-      fprintf(stderr, "gmake called unblock_remote_children()\n");
+      fprintf(stdout, "gmake called unblock_remote_children()\n");
    }
 
    return;
@@ -2601,7 +2683,7 @@ void unblock_remote_children ()
 int remote_kill (int id, int sig)
 {
    if(be_verbose) {
-      fprintf(stderr, "gmake requested to send signal %d to process %d\n", sig, id);
+      fprintf(stdout, "gmake requested to send signal %d to process %d\n", sig, id);
    }
    
    return kill(id, sig);

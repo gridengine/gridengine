@@ -131,7 +131,7 @@ static void qmonJobFilterEditResource(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad);
 
 static int is_owner_ok(lListElem *jep, lList *owner_list);
-static int is_job_runnable_on_queues(lListElem *jep, lList *queue_list, lList *exec_host_list, lList *complex_list);
+static int is_job_runnable_on_queues(lListElem *jep, lList *queue_list, lList *exec_host_list, lList *complex_list, lList *request_list);
 /*-------------------------------------------------------------------------*/
 /* selectable items, the names must match the names in sge_jobL.h          */
 /* there are fixed columns at the beginning of the natrix                  */
@@ -206,7 +206,7 @@ static tJobField job_items[] = {
 static lList *jobfilter_resources = NULL;
 static lList *jobfilter_owners = NULL;
 static lList *jobfilter_fields = NULL;
-static int jobfilter_compact = 1;
+static Boolean jobfilter_compact = True;
 
 
 static Widget jcu = 0;
@@ -1913,6 +1913,7 @@ XtPointer cld, cad;
    StringConst name, value, strval;
    Boolean found = False;
    lListElem *fill_in_request = NULL;
+   lListElem *global_fill_in_request = NULL;
    
 
    DENTER(GUI_LAYER, "qmonJobFilterEditResource");
@@ -1921,24 +1922,20 @@ XtPointer cld, cad;
 
 
    if (!how) {
-      fill_in_request = lGetElemStr(arl, CE_name, cbs->element->string[0]);
+      global_fill_in_request = lGetElemStr(arl, CE_name, cbs->element->string[0]);
    }
-   else {
-      for_each (fill_in_request, jobfilter_resources) {
-         name = lGetString(fill_in_request, CE_name);
-         value = lGetString(fill_in_request, CE_stringval);
-         if (cbs->element->string[0] && name && 
-            !strcmp(cbs->element->string[0], name) &&
-            cbs->element->string[2] && value &&
-            !strcmp(cbs->element->string[2], value) ) {
-               found = True;
-               break;
-         }
-      }       
-            
-      if (!found) {
-         fill_in_request = NULL; 
+   for_each (fill_in_request, jobfilter_resources) {
+      name = lGetString(fill_in_request, CE_name);
+      value = lGetString(fill_in_request, CE_stringval);
+      if (cbs->element->string[0] && name && 
+         !strcmp(cbs->element->string[0], name)) {
+            found = True;
+            break;
       }
+   }       
+         
+   if (!found) {
+      fill_in_request = global_fill_in_request; 
    }
 
    if (!fill_in_request) {
@@ -1959,16 +1956,19 @@ XtPointer cld, cad;
    ** put the value in the CE_Type elem 
    */
    if (status) {
+      lListElem *ep = NULL;
       lSetString(fill_in_request, CE_stringval, stringval);
     
       /* put it in the hard or soft resource list if necessary */
-      if (!how) {
-         if (!jobfilter_resources) {
-            jobfilter_resources = lCreateList("jobfilter_resources", CE_Type);
-         }
-         if (!lGetElemStr(jobfilter_resources, CE_name, cbs->element->string[0]))
-            lAppendElem(jobfilter_resources, lCopyElem(fill_in_request));
+      if (!jobfilter_resources) {
+         jobfilter_resources = lCreateList("jobfilter_resources", CE_Type);
       }
+      if (!(ep = lGetElemStr(jobfilter_resources, CE_name, cbs->element->string[0]))) {
+         lAppendElem(jobfilter_resources, lCopyElem(fill_in_request));
+      } else {
+         lSetString(ep, CE_stringval, stringval);
+      }   
+         
       qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
    }
    arl = lFreeList(arl);
@@ -2102,6 +2102,7 @@ lList *request_list
 ) {
    lListElem *jep;
    lListElem *dep;
+   lListElem *jatep;
    int show;
 
    DENTER(GUI_LAYER, "match_job");
@@ -2113,6 +2114,13 @@ lList *request_list
       */
       show = 1;
       
+      /* 
+      ** all tasks are suitable 
+      */
+      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+            lSetUlong(jatep, JAT_suitable, TAG_SHOW_IT);
+      }
+
       /*
       ** check if job fulfills user_list and set show flag
       */
@@ -2122,9 +2130,10 @@ lList *request_list
       /*
       ** is job runnable on queues fulfilling requests, dito
       */
-      if (show && request_list) 
+      if (show && request_list) {
          show = is_job_runnable_on_queues(jep, queue_list, exec_host_list,
-                                             complex_list);
+                                             complex_list, request_list);
+      }
 
       if (show) {
          jep = lNext(jep);
@@ -2166,38 +2175,100 @@ static int is_job_runnable_on_queues(
 lListElem *jep,
 lList *queue_list,
 lList *exechost_list,
-lList *centry_list 
+lList *centry_list,
+lList *request_list 
 ) {
    lList *hard_resource_list=NULL;   
    u_long32 empty_qs = 0; 
+   Boolean found_task = False;
+   lListElem *jatep;
 
    DENTER(GUI_LAYER, "is_job_runnable_on_queues");
 
+   /*
+   ** 
+   */
+   if (!queue_list) {
+      return False;
+   }   
+
+   /* all queues are selected */
+   cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
+
    hard_resource_list = lGetList(jep, JB_hard_resource_list);
    
+#if 0   
    /*
    ** if the job has no requests all queues fit
    */
    if (!hard_resource_list) {
       return True;
    }
+#endif   
 
    /*
    ** see if queues fulfill the request_list of the job
    */
-   /* all queues are selected */
-   cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
-
    if (select_by_resource_list(hard_resource_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
       DEXIT;
       return False;
    }
-
    if (!is_cqueue_selected(queue_list)) {
       DEXIT;
       return False;
    }
    
+   /*
+   ** show pending jobs in any case
+   */
+   if(!lGetList(jep, JB_ja_tasks)) {
+      found_task = True;
+   }   
+
+   if (select_by_resource_list(request_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
+      DEXIT;
+      return False;
+   }
+   if (!is_cqueue_selected(queue_list)) {
+      DEXIT;
+      return False;
+   }
+
+   /*
+   ** see if job is running on specified queue otherwise don't show
+   */
+   for_each(jatep, lGetList(jep, JB_ja_tasks)) {
+      if (lGetUlong(jatep, JAT_status) == JRUNNING || 
+            lGetUlong(jatep, JAT_status) == JTRANSFERING) {
+         lListElem *cq;
+         for_each(cq, queue_list) {
+            lListElem *qep;
+            for_each(qep, lGetList(cq, CQ_qinstances)) {
+               if (lGetUlong(qep, QU_tag) == 1) {
+                  dstring queue_name_buffer = DSTRING_INIT;
+                  const char *qnm = qinstance_get_name(qep, &queue_name_buffer);
+                  lListElem *gdilep;
+                  for_each(gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+                     if (!strcmp(lGetString(gdilep, JG_qname), qnm)) {
+                        found_task = True;
+                        break;
+                     }
+                  }
+                  sge_dstring_free(&queue_name_buffer);
+               }
+            }
+         }
+
+         if (!found_task) {
+            lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable) & ~TAG_SHOW_IT);
+         }   
+     }
+   }   
+   if (!found_task) {
+      DEXIT;
+      return False;
+   }   
+
    DEXIT;
    return True; 
 }

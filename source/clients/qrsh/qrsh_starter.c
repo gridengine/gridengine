@@ -33,9 +33,11 @@
 #include <stdarg.h>
 #if defined(LINUX)
 #include <termios.h>
+#endif
+
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#endif
 
 #include <unistd.h>
 #include <errno.h>
@@ -83,7 +85,7 @@ static void qrsh_error(const char *fmt, ...)
 {
    char *tmpdir = NULL;
    char *taskid = NULL;
-   FILE *file   = NULL;
+   int file;
    char fileName[SGE_PATH_MAX];
 
    va_list ap;
@@ -95,7 +97,7 @@ static void qrsh_error(const char *fmt, ...)
       return;
    }
 
-   vsprintf(message, fmt, ap);
+   vsnprintf(message, MAX_STRING_SIZE, fmt, ap);
 
    if ((tmpdir = search_conf_val("qrsh_tmpdir")) == NULL) {
       fprintf(stderr, message);
@@ -106,21 +108,19 @@ static void qrsh_error(const char *fmt, ...)
    taskid = search_conf_val("qrsh_task_id");
 
    if (taskid != NULL) {
-      sprintf(fileName, "%s/qrsh_error.%s", tmpdir, taskid);
+      snprintf(fileName, SGE_PATH_MAX, "%s/qrsh_error.%s", tmpdir, taskid);
    } else {
-      sprintf(fileName, "%s/qrsh_error", tmpdir);
+      snprintf(fileName, SGE_PATH_MAX, "%s/qrsh_error", tmpdir);
    }
 
-   if ((file = fopen(fileName, "a")) == NULL) {
+   if ((file = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
       fprintf(stderr, message);
       fprintf(stderr, MSG_QRSH_STARTER_CANNOTOPENFILE_SS, fileName, strerror(errno));
       return;
    }
-  
-   chmod(fileName, 00744);
-   fwrite(message, strlen(message), 1, file);
 
-   fclose(file);
+   write(file, message, strlen(message));
+   close(file);
 }
 
 /****** Interactive/qrsh/setEnvironment() ***************************************
@@ -168,7 +168,7 @@ static void qrsh_error(const char *fmt, ...)
 */
 static char *setEnvironment(const char *jobdir, char **wrapper)
 {
-   char *envFileName = NULL;
+   char envFileName[SGE_PATH_MAX];
    FILE *envFile = NULL;
    char *line = NULL;
    char *command   = NULL;
@@ -183,22 +183,13 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       set_display = false;
    }
 
-   /* build path of environmentfile */
-   envFileName = (char *)malloc(strlen(jobdir) + strlen("environment") + 2);
-
-   if (envFileName == NULL) {
-      qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return NULL;
-   }
-
-   sprintf(envFileName, "%s/environment", jobdir);
+   snprintf(envFileName, SGE_PATH_MAX, "%s/environment", jobdir);
   
    /* check if environment file exists and
     * retrieve file size. We will take file size as maximum possible line length
     */
    if (SGE_STAT(envFileName, &statbuf) != 0) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
-      FREE(envFileName);
       return NULL;
    } 
    
@@ -206,14 +197,12 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    line = (char *)malloc(size + 1);
    if (line == NULL) {
       qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      FREE(envFileName);
       return NULL;
    }
 
    /* open sge environment file */
    if ((envFile = fopen(envFileName, "r")) == NULL) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
-      FREE(envFileName);
       FREE(line);
       return NULL;
    }
@@ -235,7 +224,6 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
             fclose(envFile);
-            FREE(envFileName);
             FREE(line);
             return NULL;
          }
@@ -247,7 +235,6 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
             if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
                fclose(envFile); 
-               FREE(envFileName);
                FREE(line);
                return NULL;
             }
@@ -257,7 +244,6 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          /* set variable */
          if (!sge_putenv(line)) {
             fclose(envFile); 
-            FREE(envFileName);
             FREE(line);
             return NULL;
          }
@@ -265,7 +251,6 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    }
 
    fclose(envFile); 
-   FREE(envFileName);
    FREE(line);
 
    /* 
@@ -278,9 +263,9 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       if (starter_method != NULL && strcasecmp(starter_method, "none") != 0) { 
          char buffer[128];
          *wrapper = starter_method;
-         sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_PATH", ""); sge_putenv(buffer);
-         sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_START_MODE", "unix_behavior"); sge_putenv(buffer);
-         sprintf(buffer, "%s=%s", "SGE_STARTER_USE_LOGIN_SHELL", "false"); sge_putenv(buffer);
+         snprintf(buffer, 128, "%s=%s", "SGE_STARTER_SHELL_PATH", ""); sge_putenv(buffer);
+         snprintf(buffer, 128, "%s=%s", "SGE_STARTER_SHELL_START_MODE", "unix_behavior"); sge_putenv(buffer);
+         snprintf(buffer, 128, "%s=%s", "SGE_STARTER_USE_LOGIN_SHELL", "false"); sge_putenv(buffer);
       } 
    }
    
@@ -307,26 +292,16 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
 *******************************************************************************/
 static int readConfig(const char *jobdir)
 {
-   char *configFileName = NULL;
+   char configFileName[SGE_PATH_MAX];
 
-   /* build path of configfile */
-   configFileName = (char *)malloc(strlen(jobdir) + strlen("config") + 2);
-
-   if(configFileName == NULL) {
-      qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return 0;
-   }
-
-   sprintf(configFileName, "%s/config", jobdir);
+   snprintf(configFileName, SGE_PATH_MAX, "%s/config", jobdir);
 
    /* read jobs config file */
    if(read_config(configFileName) != 0) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTREADCONFIGFROMFILE_S, configFileName);
-      free(configFileName);
       return 0;
    }
 
-   free(configFileName);
    return 1;
 }
 
@@ -396,32 +371,24 @@ static int changeDirectory(void)
 */
 static int write_pid_file(pid_t pid) 
 {
-   char *tmpdir = NULL;
-   char *task_id_str = NULL;
-   char pid_file_name[SGE_PATH_MAX];
-   FILE *pid_file;
+   char *pid_file_name = NULL;
+   int pid_file;
+   char pid_str[20];
 
-   if((tmpdir = search_conf_val("qrsh_tmpdir")) == NULL) {
-      qrsh_error(MSG_CONF_NOCONFVALUE_S, "qrsh_tmpdir");
+   if((pid_file_name = search_conf_val("qrsh_pid_file")) == NULL) {
+      qrsh_error(MSG_CONF_NOCONFVALUE_S, "qrsh_pid_file");
       return 0;
    }
 
-   task_id_str = get_conf_val("pe_task_id");
-
-   if(task_id_str != NULL) {
-      sprintf(pid_file_name, "%s/pid.%s", tmpdir, task_id_str);
-   } else {
-      sprintf(pid_file_name, "%s/pid", tmpdir);
-   }
-   
-   if((pid_file = fopen(pid_file_name, "w")) == NULL) {
-      qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_S, pid_file_name);
+   if((pid_file = open(pid_file_name, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
+      qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_SS, pid_file_name, strerror(errno));
       return 0;
    }
 
-   chmod(pid_file_name, 00744);
-   fprintf(pid_file, pid_t_fmt, pid);
-   fclose(pid_file);
+   snprintf(pid_str, 20, pid_t_fmt, pid);
+
+   write(pid_file, pid_str, strlen(pid_str));
+   close(pid_file);
    return 1;
 }
 
@@ -486,7 +453,7 @@ static int split_command(char *command, char ***cmdargs) {
    int i,end;
    char delimiter[2];
 
-   sprintf(delimiter, "%c", 0xff);
+   snprintf(delimiter, 2, "%c", 0xff);
 
    while(*s) {
       if(*s++ == delimiter[0]) {
@@ -669,7 +636,6 @@ static int startJob(char *command, char *wrapper, int noshell)
       int i;
 
       if(!write_pid_file(getpid())) {
-         qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_S, "");
          exit(EXIT_FAILURE);
       }
 
@@ -694,7 +660,7 @@ static int startJob(char *command, char *wrapper, int noshell)
          shell = pw->pw_shell;
          
          if(shell == NULL) { 
-            qrsh_error(MSG_QRSH_STARTER_CANNOTDETERMSHELL_S,"/bin/sh");
+            qrsh_error(MSG_QRSH_STARTER_CANNOTDETERMSHELL_S, "/bin/sh");
             shell = "/bin/sh";
          } 
       }
@@ -782,9 +748,10 @@ static int startJob(char *command, char *wrapper, int noshell)
 static int writeExitCode(int myExitCode, int programExitCode) 
 {   
    int exitCode;
+   char exitCode_str[20];
    char *tmpdir = NULL;
    char *taskid = NULL;
-   FILE *file   = NULL;
+   int  file;
    char fileName[SGE_PATH_MAX];
 
    if(myExitCode != EXIT_SUCCESS) {
@@ -801,20 +768,20 @@ static int writeExitCode(int myExitCode, int programExitCode)
    taskid = get_conf_val("pe_task_id");
    
    if(taskid != NULL) {
-      sprintf(fileName, "%s/qrsh_exit_code.%s", tmpdir, taskid);
+      snprintf(fileName, SGE_PATH_MAX, "%s/qrsh_exit_code.%s", tmpdir, taskid);
    } else {
-      sprintf(fileName, "%s/qrsh_exit_code", tmpdir);
+      snprintf(fileName, SGE_PATH_MAX, "%s/qrsh_exit_code", tmpdir);
    }
 
-   if((file = fopen(fileName, "w")) == NULL) {
+   if((file = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, fileName, strerror(errno));
       return EXIT_FAILURE;
    }
-  
-   chmod(fileName, 00744);
-   fprintf(file, "%d", exitCode);
+ 
+   snprintf(exitCode_str, 20, "%d", exitCode);
+   write(file, exitCode_str, strlen(exitCode_str));
 
-   fclose(file);
+   close(file);
    
    return EXIT_SUCCESS;
 }

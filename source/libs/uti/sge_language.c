@@ -47,13 +47,9 @@
 
 /* MT-NOTE: language_mutex guards all language module function calls */
 static pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
-/* MT-NOTE: message_id_view_mutex guards only access to 'sge_message_id_view_flag' */
-static pthread_mutex_t message_id_view_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #   define LANGUAGE_LOCK()            sge_mutex_lock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
 #   define LANGUAGE_UNLOCK()          sge_mutex_unlock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
-#   define MESSAGE_ID_VIEW_LOCK()     sge_mutex_lock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
-#   define MESSAGE_ID_VIEW_UNLOCK()   sge_mutex_unlock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
 
 /*
  *  environment variable "SGE_ENABLE_MSG_ID"
@@ -85,10 +81,13 @@ typedef struct {
    const char* local_message;  /* local translated message */
 } sge_error_message_t;
 
+static pthread_once_t message_id_once = PTHREAD_ONCE_INIT;
+static void          message_id_once_init(void);
 
+static pthread_key_t message_id_key;
+static void          message_id_destroy(void* theState);
 
 static language_functions_struct sge_language_functions;
-static int sge_message_id_view_flag = 0;
 static int sge_enable_msg_id = 0;    /* used to enable/disable message ids */
 static int sge_enable_msg_id_to_every_message = 0;
 static htable sge_message_hash_table = NULL; 
@@ -346,7 +345,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   pathName = NULL;
 
   if (success == true) {
-     sge_enable_msg_id=1;
+     sge_enable_msg_id = 1;
   } 
 
   sge_enable_msg_id_string = getenv(SGE_ENABLE_MSG_ID);
@@ -486,18 +485,18 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *     uti/language/sge_set_message_id_output()
 *******************************************************************************/
 void sge_set_message_id_output(int flag) {
+   int *buf = NULL;
 
    DENTER(CULL_LAYER, "sge_set_message_id_output");
 
-   MESSAGE_ID_VIEW_LOCK();
+   pthread_once(&message_id_once, message_id_once_init);
+   
+   buf = (int*) pthread_getspecific(message_id_key);
 
-   if (flag == 0) {
-      sge_message_id_view_flag = 0;
-   } else {
-      sge_message_id_view_flag = 1;
+   if (buf != NULL) {
+      *buf = flag;
    }
 
-   MESSAGE_ID_VIEW_UNLOCK();
    DEXIT;
    return;
 }
@@ -576,8 +575,7 @@ int sge_get_message_id_output(void)
 *******************************************************************************/
 static int sge_get_message_id_output_implementation(void) 
 {
-   int ret;
-
+   int *buf;
    DENTER(CULL_LAYER, "sge_get_message_id_output_implementation");
 
    if (sge_enable_msg_id_to_every_message == 1) {
@@ -590,12 +588,18 @@ static int sge_get_message_id_output_implementation(void)
       return 0;
    }
 
-   MESSAGE_ID_VIEW_LOCK();
-   ret = sge_message_id_view_flag;
-   MESSAGE_ID_VIEW_UNLOCK();
+   pthread_once(&message_id_once, message_id_once_init);
 
-   DEXIT;
-   return ret;
+   buf = (int*) pthread_getspecific(message_id_key);
+
+   if (buf != NULL) { 
+      DEXIT;
+      return 0;
+   }
+   else {
+      DEXIT;
+      return *buf;
+   }
 }
 
 /****** uti/language/sge_gettext() *********************************************
@@ -785,5 +789,29 @@ const char *sge_gettext__(char *x)
 
    DEXIT;
    return z;
+}
+
+static void message_id_destroy(void* theState) 
+{
+   if (theState != NULL) {
+      free(theState);
+   }
+}
+
+static void message_id_once_init(void)
+{
+  int *buf;
+  int res;
+  pthread_key_create(&message_id_key, &message_id_destroy);
+
+  buf = (int*) sge_malloc(sizeof(int));
+  *buf = 0;
+
+  res = pthread_setspecific(message_id_key, (const void*)buf);
+
+  if (0 != res) {
+     fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "log_buffer_getspecific", strerror(res));
+     abort();
+  }
 }
 #endif

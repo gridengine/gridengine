@@ -266,7 +266,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attrname);
                if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
 
-               strcpy(sval, load_value);
+               strncpy(sval, load_value, 100);
                /* --------------------------------
                   look for 'name' in our load_adjustments list
                */
@@ -405,7 +405,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
       switch(type) {
       case TYPE_INT:
          dval = (double)lGetUlong(queue, queue_resource[pos].field);
-         sprintf(as_str, u32, lGetUlong(queue, queue_resource[pos].field));
+         snprintf(as_str, 100, u32, lGetUlong(queue, queue_resource[pos].field));
          break;
 
       case TYPE_TIM:
@@ -418,7 +418,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
 
       case TYPE_BOO:
          dval = (double)lGetBool(queue, queue_resource[pos].field);
-         sprintf(as_str, "%d", (int)lGetBool(queue, queue_resource[pos].field));
+         snprintf(as_str, 100, "%d", (int)lGetBool(queue, queue_resource[pos].field));
          break;
 
       case TYPE_STR: 
@@ -759,10 +759,12 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
    
    DENTER(BASIS_LAYER, "get_attribute_list");
    
-   if (global)
+   if (global != NULL) {
       size += lGetNumberOfElem(lGetList(global, EH_load_list));
-   if (host)
+   }   
+   if (host != NULL) {
       size +=  lGetNumberOfElem( lGetList(host, EH_load_list));
+   }   
 
    filter = malloc(size * sizeof(char*)); 
    memset(filter, 0, size * sizeof(char*));
@@ -979,8 +981,9 @@ int force_existence
    const char *name;
    const char *offer;
    char dom_str[5];
-   char availability_text1[2048];
-   char availability_text2[2048]; 
+#define STR_LEN_AVAIL_TEXT 2048   
+   char availability_text1[STR_LEN_AVAIL_TEXT];
+   char availability_text2[STR_LEN_AVAIL_TEXT]; 
    dstring resource_string = DSTRING_INIT;
 
    DENTER(TOP_LAYER,"compare_complexes");
@@ -1030,7 +1033,7 @@ int force_existence
             request, offer)); 
 #endif
       match = string_cmp(type, used_relop, request, offer);
-      sprintf(availability_text, "%s:%s=%s", dom_str, name, offer);
+      snprintf(availability_text, STR_LEN_AVAIL_TEXT, "%s:%s=%s", dom_str, name, offer);
 #if 0
       DPRINTF(("-l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
             name, request, dom_str, name, map_op2str(relop),
@@ -1121,7 +1124,7 @@ int force_existence
             double_print_to_dstring(src_dl, &resource_string);
             break;
          } 
-         sprintf(availability_text1, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
+         snprintf(availability_text1, STR_LEN_AVAIL_TEXT, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
       }
 
       /* is there a per slot limit */
@@ -1182,7 +1185,7 @@ int force_existence
             double_print_to_dstring(src_dl, &resource_string);
             break;
          } 
-         sprintf(availability_text2, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
+         snprintf(availability_text2, STR_LEN_AVAIL_TEXT, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
       }
       sge_dstring_free(&resource_string);
       if (is_threshold)
@@ -1190,11 +1193,11 @@ int force_existence
       else {
          match = m1 && m2;
          if (!m1) {
-            strcpy(availability_text, availability_text1);
+            strncpy(availability_text, availability_text1, STR_LEN_AVAIL_TEXT);
          } else if (!m2) {
-            strcpy(availability_text, availability_text2);
+            strncpy(availability_text, availability_text2, STR_LEN_AVAIL_TEXT);
          } else {
-            strcpy(availability_text, "");
+            strncpy(availability_text, "", STR_LEN_AVAIL_TEXT);
          }
       }
       DEXIT;

@@ -73,6 +73,7 @@
 #include "sge_calendar.h"
 #include "sge_cqueue.h"
 #include "sge_qref.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -411,7 +412,7 @@ sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, 
    isoperator = manop_is_operator(user);
 
    if (!isowner) {
-      WARNING((SGE_EVENT, MSG_QUEUE_NOCHANGEQPERMS_SS, user, lGetString(qep, QU_qname)));
+      WARNING((SGE_EVENT, MSG_QUEUE_NOCHANGEQPERMS_SS, user, lGetString(qep, QU_full_name)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
@@ -564,7 +565,7 @@ int isowner
 
    if (!isoperator && !isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NORESCHEDULEQPERMS_SS, user, 
-         lGetString(qep, QU_qname)));
+         lGetString(qep, QU_full_name)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
@@ -977,7 +978,7 @@ void rebuild_signal_events()
 
          if (lGetUlong(qinstance, QU_pending_signal) && (when > 0))
          {
-            const char* str_key = lGetString(qinstance, QU_qname); 
+            const char* str_key = lGetString(qinstance, QU_full_name); 
             te_event_t ev = NULL;
 
             ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0, str_key);
@@ -1001,26 +1002,36 @@ void resend_signal_event(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "resend_signal_event");
 
-   if (!queue) {
-      if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
-          !(jatep=job_search_task(jep, NULL, jataskid))) {
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   if (queue == NULL) {
+      if (!(jep = job_list_locate(Master_Job_List, jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
+      {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
-      if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                                   lGetString(jatep, JAT_master_queue))))
+      
+      if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(jatep, JAT_master_queue)))) {
          sge_signal_queue(lGetUlong(jatep, JAT_pending_signal), qep, jep, jatep);
+      }
    } else {
       if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALQ_S, queue));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         sge_free((char *)queue);
          DEXIT;
          return;
       }
+      
       sge_signal_queue(lGetUlong(qep, QU_pending_signal), qep, NULL, NULL);
    }
 
    sge_free((char *)queue);
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    DEXIT;
    return;
 }
@@ -1086,7 +1097,7 @@ lListElem *jatep
             packint(&pb, 0); 
             packint(&pb, 0);
          }
-         packstr(&pb, lGetString(qep, QU_qname));
+         packstr(&pb, lGetString(qep, QU_full_name));
          packint(&pb, how); 
 
 
@@ -1098,7 +1109,7 @@ lListElem *jatep
       }
 
       if (i != CL_RETVAL_OK) {
-         ERROR((SGE_EVENT, MSG_COM_NOUPDATEQSTATE_IS, how, lGetString(qep, QU_qname)));
+         ERROR((SGE_EVENT, MSG_COM_NOUPDATEQSTATE_IS, how, lGetString(qep, QU_full_name)));
          DEXIT;
          return i;
       }
@@ -1131,24 +1142,27 @@ lListElem *jatep
       te_event_t ev = NULL;
 
       DPRINTF(("QUEUE %s: %s signal %s (retry after "u32" seconds) host %s\n", 
-            lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
+            lGetString(qep, QU_full_name), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_qname));
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_full_name));
       lSetUlong(qep, QU_pending_signal, how);
       ev = te_new_event(next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
-         lGetString(qep, QU_qname));
+         lGetString(qep, QU_full_name));
       te_add_event(ev);
       te_free_event(ev);
       lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
    }
 
-   if (!jep) /* signalling a queue ? - handle slave jobs in this queue */
+   if (!jep) {/* signalling a queue ? - handle slave jobs in this queue */
       signal_slave_jobs_in_queue(how, qep); 
-   else /* is this the master queue of this job to signal ? - then decide whether slave tasks also 
+   }   
+   else {/* is this the master queue of this job to signal ? - then decide whether slave tasks also 
            must get signalled */
       if (!strcmp(lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
-            JG_qname), lGetString(qep, QU_qname)))
+            JG_qname), lGetString(qep, QU_full_name))) {
          signal_slave_tasks_of_job(how, jep, jatep); 
+      }
+   }   
 
    DEXIT;
    return 0;

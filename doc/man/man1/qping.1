@@ -1,0 +1,358 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/11/16 10:44:56 $     Revision: $Revision: 1.5 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH QPING 1 "$Date: 2004/11/16 10:44:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.SH NAME
+qping \- check application status of xxQS_NAMExx daemons.
+.PP
+.SH SYNTAX
+.B "qping [-help] [-noalias] [ [ [-i <interval>] [-info] [-f] ] | [-dump] ]"
+.B <host> <port> <name> <id>
+.\"
+.\"
+.PP
+.SH DESCRIPTION
+.I Qping
+is used to validate the runtime status of a xxQS_NAMExx service daemon. The current
+xxQS_NAMExx implementation allows one to query the xxQS_NAME_Sxx_QMASTER daemon and any
+running xxQS_NAME_Sxx_EXECD daemon. The qping command is used to send a SIM (Status
+Information Message) to the destination daemon. The communication layer of the 
+specified daemon will respond with a SIRM (Status Information Response Message) which
+contains status information about the consulted daemon.
+
+The qping -dump option allows an administrator to observe the communication protocol
+data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
+with root account and on the same host where the observed daemon is running.
+.PP
+.\"
+.\"
+.SH OPTIONS
+.\"
+.SS "\fB\-f\fP"
+Show full status information on each ping interval.
+
+\fIFirst output Line:\fP
+The first output line shows the date and time of the request.
+
+\fISIRM version:\fP
+Internal version number of the SIRM (Status Information Response Message)
+
+\fISIRM message id:\fP
+Current message id for this connection
+
+\fIstart time:\fP
+Start time of daemon. The format is as follows:
+
+MM/DD/YYYY HH:MM:SS (seconds since 01.01.1970)
+
+\fIrun time [s]:\fP
+Run time in seconds since start time
+
+\fImessages in read buffer:\fP
+Nr. of buffered messages in communication buffer. The messages are buffered
+for the application (daemon). When this number grows too large the daemon is not able
+to handle all messages sent to it. 
+
+\fImessages in write buffer:\fP
+Nr. of buffered messages in the communication write buffer. The messages are sent
+from the application (daemon) to the connected clients, but the communication 
+layer wasn't able to send the messages yet. If this number grows too large, the
+communication layer isn't able to send them as fast as the application (daemon) wants
+the messages to be sent.
+
+\fInr. of connected clients:\fP
+This is the number of actual connected clients to this daemon. This also implies the
+current qping connection.
+
+\fIstatus:\fP
+The status value of the daemon. This value depends on the application which reply to
+the qping request.
+If the application does not provide any information the status is 99999.
+Here are the possible status information values for the xxQS_NAMExx daemons:
+
+.in+3
+qmaster:
+
+.in+3
+\fI0\fP
+There is no unusual timing situation.
+.in-3
+
+.in+3
+\fI1\fP
+One or more threads has reached warning timeout. This may happen when 
+at least one thread does not increment his time stamp for a not usual long
+time. A possible reason for this is a high workload for this thread.
+.in-3
+    
+.in+3
+\fI2\fP
+One or more threads has reached error timeout. This may happen when 
+at least one thread has not incremented his time stamp for longer than
+10 minutes.
+.in-3
+
+.in+3
+\fI3\fP
+The time measurement is not initialized.
+.in-3
+
+execd:
+
+.in+3
+\fI0\fP
+There is no unusual timing situation.
+.in-3
+
+.in+3
+\fI1\fP
+Dispatcher has reached warning timeout. This may happen when 
+the dispatcher does not increment his time stamp for a unusual long
+time. A possible reason for this is a high workload.
+.in-3
+    
+.in+3
+\fI2\fP
+Dispatcher has reached error timeout. This may happen when 
+the dispatcher has not incremented his time stamp for longer than
+10 minutes.
+.in-3
+
+.in+3
+\fI3\fP
+The time measurement is not initialized.
+.in-3
+.in-3
+
+
+\fIinfo:\fP
+Status message of the daemon. This value depends on the application which reply to
+the qping request.
+If the application does not provide any information the info message is "not available".
+Here are the possible status information values for the xxQS_NAMExx daemons:
+
+.in+3
+
+qmaster:
+
+.in+3
+The info message contains information for each qmaster thread followed by a thread
+state and time information:
+
+.in+3
+THREAD_NAME: THREAD_STATE (THREAD_TIME)
+.in-3 
+
+.in+3
+THREAD_NAME:
+.in+3
+.nf
+EDT:  Event Delivery Thread
+TET:  Timed Event Thread
+MT:   Message Thread
+SIGT: SIGnal Thread
+.fi
+.in-3
+
+THREAD_STATE:
+.in+3
+.nf
+R: Running
+W: Warning
+E: Error
+.fi
+.in-3
+
+THREAD_TIME:
+.in+3
+.nf
+Time since last timestamp updating.
+.fi
+.in-3
+.in-3
+
+After the dispatcher information follows an additional information string which describes the
+complete application status.
+.in-3
+
+execd:
+
+.in+3
+The info message contains information for the execd job dispatcher:
+.in+3
+dispatcher: STATE (TIME)
+.in-3
+
+STATE:
+.in+3
+.nf
+R: Running
+W: Warning
+E: Error
+.fi
+.in-3
+
+TIME:
+.in+3
+.nf
+Time since last timestamp updating.
+.fi
+.in-3
+.in-3
+
+After the thread information follows an additional information string which describes the
+application status.
+
+.in-3
+.in-3
+
+.SS "\fB\-help\fP"
+Prints a list of all options.
+
+.SS "\fB\-i interval\fP"
+Set qping interval time.
+
+The default interval time is one second. Qping will send a SIM (Status Information Message)
+on each interval time.
+
+.SS "\fB\-info\fP"
+Show full status information (see \fB\-f\fP for more information) and exit. The exit
+value 0 indicates no error. On errors qping returns with 1.
+
+.SS "\fB\-noalias\fP"
+Ignore host_aliases file, which is located at 
+\fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
+If this option is used it is not necessary to set any xxQS_NAMExx environment
+variable. 
+
+.SS "\fB\-dump\fP"
+This option allows an administrator to observe the communication protocol
+data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
+as root and on the same host where the observed daemon is running.
+
+The output is written to stdout. The enviroment variable "SGE_QPING_OUTPUT_FORMAT"
+can be set to hide columns, set a default column width or to set a hostname output
+format. The value of the environment variable can be set to any combination of
+the following specifiers separated by a space character:
+.in+3
+.RS
+.nf
+"h:X"   -> hide column X
+"w:X:Y" -> set width of column X to Y
+"hn:X"  -> set hostname output parameter X. 
+           X values are "long" or "short"
+.fi
+.RE
+
+.in-3
+
+.SS "\fBhost\fP"
+Host where daemon is running.
+
+.SS "\fBport\fP"
+Port which daemon has bound (used xxqs_name_sxx_qmaster/xxqs_name_sxx_execd port number).
+
+.SS "\fBname\fP"
+Name of communication endpoint ("qmaster" or "execd"). A communication endpoint is a 
+triplet of hostname/endpoint name/endpoint id (e.g. hostA/qmaster/1 or subhost/qstat/4).
+
+.SS "\fBid\fP"
+Id of communication endpoint ("1" for daemons)
+
+.\"
+.\"
+
+.SH "EXAMPLES"
+.RS
+.nf
+>qping master_host 31116 qmaster
+08/24/2004 16:41:15 endpoint master_host/qmaster/1 at port 31116 is up since 365761 seconds
+08/24/2004 16:41:16 endpoint master_host/qmaster/1 at port 31116 is up since 365762 seconds
+08/24/2004 16:41:17 endpoint master_host/qmaster/1 at port 31116 is up since 365763 seconds
+.fi
+.RE
+
+.RS
+.nf
+> qping -info master_host 31116 qmaster 1
+08/24/2004 16:42:47:
+SIRM version:             0.1
+SIRM message id:          1
+start time:               08/20/2004 11:05:14 (1092992714)
+run time [s]:             365853
+messages in read buffer:  0
+messages in write buffer: 0
+nr. of connected clients: 4
+status:                   0
+info:                     ok
+.fi
+.RE
+
+.RS
+.nf
+> qping -info execd_host 31117 execd 1
+08/24/2004 16:43:45:
+SIRM version:             0.1
+SIRM message id:          1
+start time:               08/20/2004 11:06:13 (1092992773)
+run time [s]:             365852
+messages in read buffer:  0
+messages in write buffer: 0
+nr. of connected clients: 2
+status:                   0
+info:                     ok
+.fi
+.RE
+
+.\"
+.\"
+
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M xxQS_NAME_Sxx_H_ALIASES 5 ,
+.M xxqs_name_sxx_qmaster 8 ,
+.M xxqs_name_sxx_execd 8 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

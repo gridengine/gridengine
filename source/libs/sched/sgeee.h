@@ -44,9 +44,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,
                     lList *pending_jobs,
-                    lList **orderlist,
-                    bool has_queues,
-                    bool has_pending_jobs );
+                    lList **orderlist);
 void sgeee_resort_pending_jobs(lList **job_list, lList *order_list); 
  
 int calculate_host_tickets( lList **running, lList **hosts );
@@ -64,5 +62,7 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
                       int seqno,
                       bool update_execd);
 
+void sge_do_priority(lList *running_jobs, lList *pending_jobs);
+void sge_do_priority_job(lListElem *jep);
 #endif /*  __SGEEE_H */
 

@@ -40,6 +40,7 @@
 typedef struct {
    lList *host_list;        /* EH_Type */
    lList *queue_list;       /* QU_Type */
+   lList *dis_queue_list;   /* QU_Type  contains the queues only for the reservation*/
    lList *all_queue_list;   /* QU_Type */
    lList *job_list;         /* JB_Type */
    lList *centry_list;      /* CE_Type */

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <fnmatch.h>
+#include <string.h>
 
 #include "sgermon.h"
 #include "sge_string.h"
@@ -75,7 +76,7 @@ int used,      umber of slots actually used in queue B
 int total,     total number of slots in queue B              
 lListElem *so  SO_Type referencing to a queue C              
 */
-int
+bool
 tst_sos(int used, int total, lListElem *so)
 {
    u_long32 threshold;
@@ -112,6 +113,10 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
       bool printed = false;
 
       for_each(elem, this_list) {
+         if (printed) {
+            sge_dstring_append (string, " ");
+         }
+         
          sge_dstring_sprintf_append(string, "%s", lGetString(elem, SO_name));
          if (lGetUlong(elem, SO_threshold)) {
             sge_dstring_sprintf_append(string, "="u32"%s",
@@ -140,7 +145,7 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
 {
    bool ret = true;
       
-   DENTER(TOP_LAYER, "sol_list_add");
+   DENTER(TOP_LAYER, "so_list_add");
    if (this_list != NULL && so_name != NULL) {
       lListElem *elem = lGetElemStr(*this_list, SO_name, so_name);
    
@@ -148,56 +153,156 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
          u_long32 current_threshold = lGetUlong(elem, SO_threshold);
 
          if (threshold != 0 && threshold < current_threshold) {
+            DPRINTF (("Replacing entry with higher threshold: %d => %d\n",
+                      current_threshold, threshold));
             lSetUlong(elem, SO_threshold, threshold);
          }
       } else {
+         DPRINTF (("Adding new entry with threshold: %d\n", threshold));
          elem = lAddElemStr(this_list, SO_name, so_name, SO_Type);
          lSetUlong(elem, SO_threshold, threshold);
       }
    }
+   
+   DEXIT;
    return ret;
 }
 
+/****** sgeobj/subordinate/so_list_resolve() ***********************************
+*  NAME
+*     so_list_resolve() -- Resolve a generic list of subordinates into their
+*                          full names.
+*
+*  SYNOPSIS
+*     bool so_list_resolve(const lList *so_list, lList **answer_list,
+*                          lList **resolved_so_list, const char *qi_name,
+*                          const char *hostname)
+*
+*  FUNCTION
+*     Goes through every entry in the so_list, retrieves the corresponding
+*     cqueue, gets the qinstance for hostname from the cqueue, and adds the
+*     qinstance's full name to the resolved_so_list.  If qi_name is given, the
+*     subordinate list will be checked to make sure that it doesn't contain the
+*     queue to which the list is subordinate.
+*
+*  INPUTS
+*     const lList *so_list     - the list of subordinates to resolve
+*     lList **answer_list      - answer list for errors
+*     lList **resolved_so_list - the destination list for resolved subordinates
+*     const char *qi_name      - the queue name of the qinstance to which the
+*                                subordinate list is subordinate
+*     const char *hostname     - the hostname for the queue to which the
+*                                subordinate list is subordinate
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*******************************************************************************/
 bool
 so_list_resolve(const lList *so_list, lList **answer_list,
-                lList **resolved_so_list, const char *full_name)
+                lList **resolved_so_list, const char *qi_name,
+                const char *hostname)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "so_list_resolve");
-   if (so_list != NULL) {
+   if ((so_list != NULL) && (hostname != NULL)) {
       lListElem *so;
+      lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+      /* Subordinate name parts */
+      dstring cq_name = DSTRING_INIT;
+      dstring host_name = DSTRING_INIT;
+      bool has_hostname = false;
+      bool has_domain = false;
+      const char *cq_name_str = NULL;
+      /* Temporary storage for cqueues */
+      lList *qref_list = NULL;
+      lListElem *cq_ref = NULL;
 
-      for_each(so, so_list) {
-         lList *queue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-         lList *hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
-         const char *so_name = lGetString(so, SO_name);
-         lList *qref_list = NULL;
-         lList *resolved_qref_list = NULL;
-         bool found_something = false;
-
-         ret &= qref_list_add(&qref_list, answer_list, so_name);
-         ret &= qref_list_resolve(qref_list, answer_list, &resolved_qref_list,
-                                  &found_something, queue_list, hgroup_list,
-                                  true, true);
-         ret &= qref_list_trash_some_elemts(&resolved_qref_list, full_name);
-         if (ret) {  
-            lListElem *resolved_qref = NULL;
-            u_long32 threshold = lGetUlong(so, SO_threshold);
-
-            for_each(resolved_qref, resolved_qref_list) {
-               const char *qref_name = lGetString(resolved_qref, QR_name);
-
-               ret &= so_list_add(resolved_so_list, answer_list,
-                                  qref_name, threshold); 
-               if (!ret) {
-                  break;
-               }
-            } 
-         }
-         qref_list = lFreeList(qref_list);
-         resolved_qref_list = lFreeList(resolved_qref_list);
+      if (qi_name != NULL) {
+         DPRINTF (("Finding subordinates for %s on %s\n", qi_name, hostname));
       }
+      else {
+         DPRINTF (("Finding subordinates on host %s\n", hostname));
+      }
+      
+      /* Get the list of resolved qinstances for each subsordinate. */
+      for_each (so, so_list) {
+         const char *sub_name = lGetString (so, SO_name);
+         DPRINTF (("Finding cqueues for subordinate %s\n", sub_name));
+
+         /* Break the subordinate name into cqueue and host parts. */
+         /* Here we use the has_hostname and has_domain variables just because
+          * we need to pass something in.  All we're interested in is the cqueue
+          * name.  Their values will be ignored. */
+         ret = cqueue_name_split (sub_name, &cq_name, &host_name,
+                                  &has_hostname, &has_domain);
+
+         if (ret) {
+            cq_name_str = sge_dstring_get_string (&cq_name);
+
+            ret = (cq_name_str != NULL);
+         }
+
+         /* If no qinstance name is given, the calling routine is responsible
+          * for checking for circular dependencies. */
+         if (qi_name != NULL) {
+            /* Circular dependency -- just ignore it.  This is what the previous
+             * code did.  I would actually count this as an error, but since it
+             * wasn't before, it won't be now. [DT] */
+            if (strcmp (cq_name_str, qi_name) == 0) {
+               continue;
+            }
+         }
+
+         if (ret) {
+            /* Get all the cqueues that match the subordinate's cqueue
+             * part.  This could be a memory pig if the subordinate is a broad
+             * wildcard, and there are a lot of hosts.  However, there's really
+             * nothing we can double about it. */
+            ret = cqueue_list_find_all_matching_references(cqueue_list,
+                                                           answer_list,
+                                                           cq_name_str,
+                                                           &qref_list);
+
+            if (ret) {
+               for_each (cq_ref, qref_list) {
+                  /* Translate the reference into the corresponding cqueue */
+                  const char *cqueue_name = lGetString(cq_ref, QR_name);
+                  lListElem *cqueue = lGetElemStr(cqueue_list, CQ_name,
+                                                  cqueue_name);
+                  lListElem *qinstance = NULL;
+                  
+                  DPRINTF (("Finding qinstances for cqueue %s\n",
+                            cqueue_name));
+
+                  /* Get the qinstance for this cqueue that is on this
+                   * host. */
+                  qinstance = cqueue_locate_qinstance (cqueue, hostname);
+
+                  /* If this cqueue doesn't have a qinstance on this host,
+                   * just skip it. */
+                  if (qinstance != NULL) {
+                     const char *qinstance_name = lGetString (qinstance,
+                                                             QU_full_name);
+                     int threshold = lGetUlong (so, SO_threshold);
+
+                     ret = so_list_add (resolved_so_list, answer_list,
+                                        qinstance_name, threshold);
+                  }
+               }
+            }
+
+            qref_list = lFreeList (qref_list);
+         }
+
+         sge_dstring_clear (&cq_name);
+         sge_dstring_clear (&host_name);
+      }
+            
+      sge_dstring_free (&cq_name);
+      sge_dstring_free (&host_name);
    }
    DEXIT;
    return ret;

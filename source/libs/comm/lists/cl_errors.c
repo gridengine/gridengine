@@ -44,9 +44,20 @@
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_get_error_text()"
-const char* cl_get_error_text(int error_id) {       /* CR check */
+#define __CL_FUNCTION__ "cl_is_commlib_error()"
+int cl_is_commlib_error(int error_id) {
+   if ( error_id >= CL_RETVAL_OK && error_id < CL_RETVAL_LAST_ID) {
+      return 1;
+   } else {
+      return 0;
+   }
+}
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_get_error_text()"
+const char* cl_get_error_text(int error_id) {
    switch(error_id) {
       case CL_RETVAL_OK                        : {
          return MSG_CL_RETVAL_OK;
@@ -306,7 +317,24 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_PROTOCOL_ERROR: {
          return MSG_CL_RETVAL_PROTOCOL_ERROR;
       }
-      
+      case CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE: {
+         return MSG_CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE;
+      } 
+      case CL_RETVAL_TO_LESS_FILEDESCRIPTORS: {
+         return MSG_CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
+      }
+      case CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED: {
+         return MSG_CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+      }
+      case CL_RETVAL_CREATE_RESERVED_PORT_SOCKET: {
+         return MSG_CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
+      }
+      case CL_RETVAL_NO_RESERVED_PORT_CONNECTION: {
+         return MSG_CL_RETVAL_NO_RESERVED_PORT_CONNECTION;
+      }
+      case CL_RETVAL_NO_LOCAL_HOST_CONNECTION: {
+         return MSG_CL_RETVAL_NO_LOCAL_HOST_CONNECTION;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

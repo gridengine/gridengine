@@ -737,6 +737,17 @@ void updateJobList(void)
       */
       if (lGetNumberOfElem(rtasks) > 0) {
          int tow = 0;
+#if 0      
+   {
+      lListElem* ep;
+      printf("Running Tasks\n");
+      for_each(ep, rtasks) {
+         printf("T: %d (%d)\n", (int)lGetUlong(ep, JAT_task_number), 
+               (int)lGetUlong(ep, JAT_suitable));
+      }
+   }
+#endif
+
          for_each(jap, rtasks) {
             ql = lGetList(jap, JAT_granted_destin_identifier_list);
             if (ql) {
@@ -757,9 +768,12 @@ void updateJobList(void)
                   }
                }
             }
-            qmonJobToMatrix(job_running_jobs, jep, jap, NULL,
-                              JOB_DISPLAY_MODE_RUNNING, row + tow);
-            tow++;                                                            
+
+            if (lGetUlong(jap, JAT_suitable)) {
+               qmonJobToMatrix(job_running_jobs, jep, jap, NULL,
+                                 JOB_DISPLAY_MODE_RUNNING, row + tow);
+               tow++;                                                            
+            }
          }
          rtasks = lFreeList(rtasks);
          row += tow;
@@ -1345,7 +1359,7 @@ XtPointer cld, cad;
             }
          }
 
-lWriteListTo(jl, stdout);
+/* lWriteListTo(jl, stdout); */
 
          alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
       

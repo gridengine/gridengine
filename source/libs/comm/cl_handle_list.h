@@ -56,8 +56,8 @@ int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle,
 
 /* thread functions that will not lock the list */
 cl_handle_list_elem_t* cl_handle_list_get_first_elem(cl_raw_list_t* list_p);  /* CR check */
-cl_handle_list_elem_t* cl_handle_list_get_next_elem(cl_raw_list_t* list_p, cl_handle_list_elem_t* elem);  /* CR check */
-cl_handle_list_elem_t* cl_handle_list_get_last_elem(cl_raw_list_t* list_p, cl_handle_list_elem_t* elem);  /* CR check */
+cl_handle_list_elem_t* cl_handle_list_get_next_elem(cl_handle_list_elem_t* elem);  /* CR check */
+cl_handle_list_elem_t* cl_handle_list_get_last_elem(cl_handle_list_elem_t* elem);  /* CR check */
 
 
 #endif /* __CL_HANDLE_LIST_H */

@@ -154,7 +154,7 @@ static void sge_htable_resize(htable ht, int grow)
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   if(prof_is_active() && log_state_get_log_level() >= LOG_DEBUG) {
+   if(prof_is_active(SGE_PROF_HT_RESIZE) && log_state_get_log_level() >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", 
                sge_htable_statistics(ht, &buffer_wrapper)));
@@ -186,7 +186,7 @@ static void sge_htable_resize(htable ht, int grow)
    }
    free((char *) otable);
 
-   if(prof_is_active() && log_state_get_log_level() >= LOG_DEBUG) {
+   if(prof_is_active(SGE_PROF_HT_RESIZE) && log_state_get_log_level() >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / sysconf(_SC_CLK_TCK)));
       DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht, &buffer_wrapper)));
@@ -518,36 +518,36 @@ const char *sge_htable_statistics(htable ht, dstring *buffer)
 ******************************************************************************/
 const void *dup_func_u_long32(const void *key) 
 {
-   u_long32 *dup = NULL;
+   u_long32 *dup_key = NULL;
    u_long32 *cast = (u_long32 *)key;
 
-   if((dup = (u_long32 *)malloc(sizeof(u_long32))) != NULL) {
-      *dup = *cast;
+   if((dup_key = (u_long32 *)malloc(sizeof(u_long32))) != NULL) {
+      *dup_key = *cast;
    }
 
-   return dup;
+   return dup_key;
 }
 
 const void *dup_func_long(const void *key)
 {
-   long *dup  = NULL;
+   long *dup_key  = NULL;
    long *cast = (long*)key;
 
-   if((dup = (long*) malloc(sizeof(long))) != NULL) {
-      *dup = *cast;
+   if((dup_key = (long*) malloc(sizeof(long))) != NULL) {
+      *dup_key = *cast;
    }
-   return dup;
+   return dup_key;
 }
 
 const void *dup_func_pointer(const void *key)
 {
-   char **dup  = NULL;
+   char **dup_key  = NULL;
    char **cast = (char **)key;
 
-   if((dup = (char **) malloc(sizeof(char *))) != NULL) {
-      *dup = *cast;
+   if((dup_key = (char **) malloc(sizeof(char *))) != NULL) {
+      *dup_key = *cast;
    }
-   return dup;
+   return dup_key;
 }
 
 const void *dup_func_string(const void *key)

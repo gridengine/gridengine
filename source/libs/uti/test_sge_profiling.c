@@ -34,74 +34,311 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <string.h>
 
 #include "sge_profiling.h"
 
+void* do_sleep(void*);
+void* do_calc(void*);
+void* do_calc2(void*);
+void* do_malloc(void*);
+
+
 int main(int argc, char *argv[])
 {
-   int i;
-   double x, y;
+   pthread_t sleep_thread, calc_thread, calc2_thread, malloc_thread;
+
    dstring error = DSTRING_INIT;
 
-   /* initialize */
-   if(!prof_start(&error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
+   sge_prof_setup();
 
-   if(!prof_set_level_name(SGE_PROF_CUSTOM1, "sublevel1", &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   if(!prof_set_level_name(SGE_PROF_CUSTOM2, "sublevel2", &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   printf("after start:\n");
+/*   set_thread_name(pthread_self(), "Main Loop");
+   set_thread_prof_status_by_name(pthread_self(), "Main Loop", true);*/
 
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
-   /* sleep and measure time */
-   sleep(5);
-   printf("after sleep(5):\n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+/*   if (thread_prof_active_by_id(pthread_self()) == true ) {*/
+
+      if(!prof_start(SGE_PROF_OTHER, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_CUSTOM1, "Main Loop", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_OTHER, "other", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+   /*}*/
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   pthread_create(&sleep_thread, NULL, do_sleep, NULL);
    sleep(1);
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
-   sleep(2);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+/*   set_thread_name(sleep_thread, "Sleep Thread");*/
+/*   set_thread_prof_status_by_name(sleep_thread, "Sleep Thread", true);*/
+
+   pthread_create(&calc_thread, NULL, do_calc, NULL);
    sleep(1);
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
-   sleep(2);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+/*   set_thread_name(calc_thread, "Calc Thread");
+   set_thread_prof_status_by_name(calc_thread, "Calc Thread", true);*/
+
+   pthread_create(&calc2_thread, NULL, do_calc2, NULL);
+   sleep(1);
+/*   set_thread_name(calc2_thread, "Calc2 Thread");
+   set_thread_prof_status_by_name(calc2_thread, "Calc2 Thread", true);*/
+
+   pthread_create(&malloc_thread, NULL, do_malloc, NULL);
+/*   set_thread_name(malloc_thread, "Malloc Thread");
+   set_thread_prof_status_by_name(malloc_thread, "Malloc Thread", true);*/
+
+   pthread_join(sleep_thread, NULL);
+   pthread_join(calc_thread, NULL);
+   pthread_join(calc2_thread, NULL);
+   pthread_join(malloc_thread, NULL);
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+
    printf("after nested profiling:\n");
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
-   /* work and measure time */
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+
+   if(!prof_reset(SGE_PROF_CUSTOM1, &error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+
+   printf("after reset: \n");
+   printf("%s\n", prof_get_info_string(SGE_PROF_CUSTOM1, false, &error));
+
+   if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+
+   if(!prof_stop(SGE_PROF_OTHER, &error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+
+   sge_dstring_free(&error);
+   sge_prof_cleanup();
+
+   return EXIT_SUCCESS;
+}
+
+void* do_sleep(void* p) {
+
+
+   dstring error = DSTRING_INIT;
+
+/*   if (thread_prof_active_by_id(pthread_self()) == true ) {*/
+
+      if(!prof_start(SGE_PROF_OTHER, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_start(SGE_PROF_CUSTOM2, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_CUSTOM1, "sleep thread", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_CUSTOM2, "sleep_thread_printf", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }  
+/*   }*/
+
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
-   for(i = 0; i < 1000000; i++) {
+
+   sleep(10);
+
+   
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
+
+   printf("Hello World!\n");
+   sleep(1);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+
+   /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
+      if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_stop(SGE_PROF_CUSTOM2, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_stop(SGE_PROF_OTHER, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+   /*}*/  
+   sge_dstring_free(&error);
+    
+   return NULL;
+}
+
+
+void* do_calc(void* p) {
+   int num = 3000;
+   int i = 0;
+   double x, y, z;
+   dstring error = DSTRING_INIT;
+
+
+   /*if (thread_prof_active_by_id(pthread_self()) == true ) {   */
+      if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_CUSTOM1, "calc thread", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+   /*}*/
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   for(i = 0; i < num; i++) {
+      
+      x = sin(i % 10);
+      y = cos(i % 10);
+      z = x * y;
+   }
+
+   for(i = 0; i < num; i++) {
+      x++;
+   }
+
+   for(i = 0; i < num; i++) {
+      x = tan(i % 10);
+   }
+
+   sleep(4);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+
+      if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+   sge_dstring_free(&error);
+
+   return NULL;
+}
+
+void* do_calc2(void* p) {
+   int num = 7000;
+   int i = 0;
+   int x,y;
+   dstring error = DSTRING_INIT;
+
+
+   /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
+      if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_CUSTOM1, "calc2 thread", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+   /*}*/
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   for(i = 0; i < num; i++) {
       x = sin(i % 10);
       y = cos(i % 10);
    }
+
+   sleep(5);
+
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   printf("after working: \n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
-   printf("with subusage: \n");
-   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, true, &error));
-
-   /* reset profiling, verify data */
-   if(!prof_reset(&error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   printf("after reset: \n");
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
-   if(!prof_stop(&error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
-      sge_dstring_clear(&error);
-   }
-   return EXIT_SUCCESS;
+      if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+   sge_dstring_free(&error);
+
+   return NULL;
 }
+
+void* do_malloc(void* p) {
+   char* text;
+   int count = 90000;
+   int i;
+   dstring error = DSTRING_INIT;
+
+   /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
+      if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+      if(!prof_set_level_name(SGE_PROF_CUSTOM1, "malloc thread", &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }   
+   /*}*/
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   for (i = 0; i < count; i++) {
+      text = strdup("malloc thread");
+      free(text);
+   }
+   
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+
+      if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
+         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         sge_dstring_clear(&error);
+      }
+
+   sge_dstring_free(&error);
+
+   return NULL;
+}
+

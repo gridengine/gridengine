@@ -34,10 +34,8 @@
 
 #include "sge_gdi_request.h"
 
-
 int main(int argc, char* argv[]);
-void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-
+unsigned long sge_qmaster_application_status(char** info_message);
 
 #endif /* _SGE_QMASTER_MAIN_H_ */
 

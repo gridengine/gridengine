@@ -96,7 +96,6 @@ if ( ! -d $CODIR ) then
 endif
 
 if ( -f CVS/Root ) then
-   echo hier
    setenv CVSROOT `cat CVS/Root`
 endif
 

@@ -320,9 +320,28 @@ cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
       if (href_name != NULL) {
          lList *href_list = lGetList(this_elem, CQ_hostlist);
          lListElem *tmp_href = lGetElemHost(href_list, HR_name, href_name);
+         int index;
 
+         /*
+          * Is the host group part of the hostlist definition ...
+          */
          if (tmp_href != NULL) {
             ret = true;
+         }
+         /*
+          * ... or is it contained on one of the attribute lists
+          */
+         index = 0;
+         while (cqueue_attribute_array[index].cqueue_attr != NoName && !ret) {
+            lList *attr_list = lGetList(this_elem,
+                                    cqueue_attribute_array[index].cqueue_attr);
+            lListElem *attr_elem = lGetElemHost(attr_list,
+                           cqueue_attribute_array[index].href_attr, href_name);
+                                                                                
+            if (attr_elem != NULL) {
+               ret = true;
+            }
+            index++;
          }
       }
    }
@@ -1041,12 +1060,34 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
        */
       for_each(mod_elem, mod_list) {
          const char *name = lGetHost(mod_elem, sublist_host_name);
-         lListElem *org_elem = lGetElemHost(org_list, sublist_host_name, name);
+         char resolved_name[MAXHOSTLEN+1];
+         lListElem *org_elem = NULL;
+         
+         /* Don't try to resolve hostgroups */
+         if (name[0] != '@') {
+            int back = getuniquehostname(name, resolved_name, 0);
+
+            if (back != CL_RETVAL_OK) {
+               ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+               break;
+            }
+            
+            /* This assignment is ok because preious name contained a const
+             * string from the mod_elem that we didn't need to free.  Now it
+             * will contain a string that's on the stack, so we still don't have
+             * to free it. */
+            name = resolved_name;
+         }
+         
+         org_elem = lGetElemHost(org_list, sublist_host_name, name);
 
          /*
           * Create element if it does not exist
           */
-         if (org_elem == NULL) {
+         if (org_elem == NULL && sub_command != SGE_GDI_REMOVE) {
             if (org_list == NULL) {
                org_list = lCreateList("", lGetElemDescr(mod_elem));
                lSetList(this_elem, attribute_name, org_list);
@@ -1376,6 +1417,56 @@ cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
          }
       }
    }
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/cqueue_is_used_in_subordinate() ****************************
+*  NAME
+*     cqueue_is_used_in_subordinate() -- checks for cqueue references
+*
+*  SYNOPSIS
+*     bool cqueue_is_used_in_subordinate(const char *cqueue_name, 
+*                                        lListElem *cqueue)
+*
+*  FUNCTION
+*     The function goes through all cq subordinate definition and looks
+*     for the cq_name handed in. If it is found, the function will return
+*     true.
+*
+*  INPUTS
+*     const char *cqueue_name - cq name to look for
+*     const lListElem *cqueue - cq to look in
+*     
+*
+*  RESULT
+*     bool - true - a reference was found     
+*
+*  NOTES
+*     MT-NOTE: cqueue_is_used_in_subordinate() is MT safe 
+*******************************************************************************/
+bool
+cqueue_is_used_in_subordinate(const char *cqueue_name, const lListElem *cqueue)
+{
+   bool ret = false;
+
+   DENTER(CQUEUE_LAYER, "cqueue_is_used_in_subordinate");
+
+   if (cqueue != NULL && cqueue_name != NULL) {
+      const lList *sub_list = lGetList(cqueue, CQ_subordinate_list);
+      const lListElem *sub_el;
+      const lListElem *so;
+
+      for_each(sub_el, sub_list) {
+         so = lGetSubStr(sub_el, SO_name, cqueue_name, ASOLIST_value);
+
+         if (so != NULL) { /* we found a reference */
+            ret = true;
+            break;
+         }
+      }
+   }
+
    DEXIT;
    return ret;
 }

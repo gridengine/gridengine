@@ -66,6 +66,7 @@ lappend check_functions "qconf_duser"
 lappend check_functions "qconf_Auser"
 lappend check_functions "qconf_muser"
 lappend check_functions "qconf_Muser"
+lappend check_functions "qconf_de_check"
 
 # TODO: check all options
 #lappend check_functions "qconf_aattr_check"
@@ -113,7 +114,7 @@ global submitjob_jobid
 #     ???/???
 #*******************************
 proc init_level {} {
-  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue_names
+  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue_names ts_config
 
   set queue_names     ""
   for { set i 0 } { $i < 1000 }  {incr i 1} {
@@ -121,7 +122,14 @@ proc init_level {} {
   }
 
   switch -- $CHECK_ACT_LEVEL {
-     "0" {  return 0   } 
+     "0" {
+        if { [llength $ts_config(execd_hosts)] <= 1 } {
+           set_error -1 "need more than one host for this test"
+           return -1
+        } else {
+           return 0
+        }
+     } 
   } 
   return -1  ;# no other level else
 }
@@ -818,4 +826,88 @@ proc qconf_rattr_check {} {
 #     ???/???
 #*******************************
 proc qconf_Rattr_check {} {
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_Rattr_check() ******
+# 
+#  NAME
+#     qconf_Rattr_check -- ??? 
+#
+#  SYNOPSIS
+#     qconf_Rattr_check { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qconf_de_check {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER CHECK env ts_config
+   puts $CHECK_OUTPUT "testing qconf -de ..."
+
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error 0 "test doesn't apply for SGE 5.3"
+      return
+   }
+
+   # Setup
+   set execd [lindex $ts_config(execd_hosts) 0]
+   set arch [resolve_arch $ts_config(master_host)]
+
+   # - Disable line breaks in qconf so that the grep can work
+   set env(SGE_SINGLE_LINE) 1
+
+   # the tmp_file is automatically removed from testsuite
+   set tmp_file [get_tmp_file_name]
+   
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > $tmp_file" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not store execd config: $result"
+   }
+   puts $CHECK_OUTPUT "tmp file is: $tmp_file"
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -dattr hostgroup hostlist $execd @allhosts" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not remove host from hostgroup @allhosts: $result"
+   }
+
+   # Test
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
+   puts $CHECK_OUTPUT $result
+   
+   set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $ts_config(master_host) $execd "execution host"]
+
+   if { [ string compare $result "$EXEC_HOST_REMOVED\n" ] != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not delete live execd: $result"
+      set_error -1 "Bug 1269: qconf -de still crashes qmaster"
+      return
+   }
+   puts $CHECK_OUTPUT "removed execd $execd from cluster"
+
+   # Cleanup
+   unset env(SGE_SINGLE_LINE)
+
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae $tmp_file" } result 
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result
+
+   puts $CHECK_OUTPUT "added execd $execd to cluster"
+
+   set_error 0 "ok"
 }

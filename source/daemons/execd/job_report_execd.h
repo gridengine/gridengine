@@ -32,14 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern int flush_jr;
+extern bool flush_jr;
+void flush_job_report(lListElem *jr);
 
 lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid, lListElem *jep);
 lListElem *get_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid);
 
 void del_job_report(lListElem *jr);
 void cleanup_job_report(u_long32 jobid, u_long32 jataskid);
-void flush_job_report(void);
 void trace_jr(void);
 
 int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);

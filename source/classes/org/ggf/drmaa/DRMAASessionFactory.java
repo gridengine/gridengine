@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,12 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * DRMAASessionFactory.java
- *
- * Created on June 18, 2003, 10:07 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 import java.io.*;
@@ -133,9 +129,12 @@ public abstract class DRMAASessionFactory {
 				return (DRMAASessionFactory)newInstance (className, classLoader);
 			}
 		}
-		catch(Exception ex ) {
-			ex.printStackTrace ();
+		catch (SecurityException se ) {
+			//If we get a security exception, treat it as failure and try the next method
 		}
+      catch (IOException ie) {
+			//If we get an I/O exception, treat it as failure and try the next method
+      }      
 		
 		String serviceId = "META-INF/services/" + SESSION_PROPERTY;
 		// try to find services in CLASSPATH
@@ -160,8 +159,8 @@ public abstract class DRMAASessionFactory {
 			}
 		}
 		catch (Exception ex) {
-			ex.printStackTrace ();
-		}
+         //Ignore exceptions here and let the config error be thrown
+      }
 		
 		throw new ConfigurationError ("Provider for " + SESSION_PROPERTY + " cannot be found", null);
 	}

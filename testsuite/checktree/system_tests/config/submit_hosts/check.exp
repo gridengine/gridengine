@@ -52,7 +52,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "submit_hosts"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   1
 set check_description(0)  "checking submit host functionality without local configuration"
 set check_description(1)  "checking submit host functionality with local qsh_command"
@@ -228,9 +228,9 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "qstat -f on host $submit_host doesn't work"
       } 
 
-      foreach queue $CHECK_CORE_EXECD {
-         set command_args "qrsh -q ${queue}.q uname -n"
-         set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "-q ${queue}.q uname -n" ]
+      foreach host $CHECK_CORE_EXECD {
+         set command_args "qrsh -l h=${host} uname -n"
+         set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "-l h=${host} uname -n" ]
          puts $CHECK_OUTPUT $output
          puts $CHECK_OUTPUT "qrsh exit state: $prg_exit_state"
          if { $prg_exit_state != 0 } {
@@ -245,8 +245,8 @@ proc submit_hosts_test {} {
                add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host should not use local configuration\n$output"
             }
          }
-         if { [ string first $queue $output] < 0 } {
-            add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host did no \"rsh uname -n\" on queue \"${queue}.q\"\n$output"
+         if { [ string first $host $output] < 0 } {
+            add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host did no \"rsh uname -n\" on host \"${host}\"\n$output"
          }
       }
 

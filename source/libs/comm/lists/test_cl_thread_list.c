@@ -117,12 +117,10 @@ void *my_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* setup thread */
    printf("thread %d: initialize\n", thread_config->thread_id);
 
-   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
 
 
    /* thread init done, trigger startup conditon variable*/
@@ -137,9 +135,8 @@ void *my_thread(void *t_conf) {
 
       printf("thread %d: try locking thread_list ...\n", thread_config->thread_id);
  
-      pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-      pthread_testcancel();
-      pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+      /* check for cancel */
+      cl_thread_func_testcancel(thread_config);
       if (cl_raw_list_lock(thread_list) == CL_RETVAL_OK) {
          int id;
          printf("thread %d: locked thread_list\n", thread_config->thread_id);
@@ -182,7 +179,6 @@ void *my_thread(void *t_conf) {
    
    /* at least set exit state */
    cl_thread_func_cleanup(thread_config);  
-   pthread_cleanup_pop(0);
    return(NULL);
 }
 

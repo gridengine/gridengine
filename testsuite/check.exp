@@ -33,10 +33,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-
-
-
-
 global daemon_debug 
 set daemon_debug 0
 global master_debug
@@ -82,7 +78,7 @@ set CHECK_HTML_DIRECTORY ""
 # globals for source code specific staff
 global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
-set CHECK_SOURCE_CVS_RELEASE "maintrunc"    ;# default is "maintrunc"
+set CHECK_SOURCE_CVS_RELEASE "maintrunk"    ;# default is "maintrunk"
 global CHECK_SOURCE_HOSTNAME       ;# name of host with cvs installed on (e.g. fangorn)
 global CHECK_SOURCE_COMPILE_HOSTS     ;# list of hostnames on which the source should be compiled
 global CHECK_AIMK_COMPILE_OPTIONS     ;# optional: aimk options
@@ -686,16 +682,21 @@ proc have_ssh_access {} {
      set host_array $CHECK_CORE_EXECD
   }
 
+  set ssh_binary [get_binary_path $CHECK_HOST ssh]
+  if { $ssh_binary == "" } {
+     add_proc_error "have_ssh_access" "-1" "--> no ssh binary configured for host $CHECK_HOST - please update your testsuite host configuration"
+     return 0
+  }
+
   log_user 0
   set have_complete_access 1
   
   foreach elem $host_array { 
- 
      set catch_state [ catch {
 
-        puts $CHECK_OUTPUT "trying ssh -l root $elem id"
+        puts $CHECK_OUTPUT "trying $ssh_binary -l root $elem id"
 
-        set id [ open_spawn_process "ssh" "-l" "root" "$elem" "id"]
+        set id [ open_spawn_process "$ssh_binary" "-l" "root" "$elem" "id"]
         set sp_id [ lindex $id 1 ] 
  
         set timeout 30
@@ -900,15 +901,14 @@ proc get_setup_change_state {} {
 #     check/get_root_passwd
 #*******************************
 proc have_root_passwd {} {
-  global CHECK_ROOT_PASSWORD
+  global CHECK_ROOT_PASSWORD CHECK_OUTPUT
 
   if { [have_ssh_access] == 1 } {
-     puts "--> ssh access ok" 
      return 0
   }
 
   if { [string compare "none" $CHECK_ROOT_PASSWORD ] == 0 } {
-     puts "you have no ssh access and no root password"
+     puts $CHECK_OUTPUT "you have no ssh access and no root password"
      return -1
   }
   return 0
@@ -2002,8 +2002,26 @@ proc update_ts_host_config_version { filename } {
          wait_for_enter
          return
       }
+   }
+
+   if { $ts_host_config(version) == "1.1" && $actual_ts_host_config_version == "1.2" } {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.1 to 1.2 ..."
+
+      foreach host $ts_host_config(hostlist) {
+         set ts_host_config($host,ssh) ""
+      }
+      set ts_host_config(version) "1.2"
+     
+      show_config ts_host_config
+      wait_for_enter
+      if { [ save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
       return 0
    }
+
    puts $CHECK_OUTPUT "\nunexpected version"
    return -1
 }
@@ -2026,7 +2044,7 @@ proc update_ts_config_version {} {
    global actual_ts_config_version 
    global ts_config
    global CHECK_OUTPUT
-   
+puts $CHECK_OUTPUT "entering update_ts_config_version"
    if { $ts_config(version) == "1.0" } {
       puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.0 to 1.1 ..."
       config_build_ts_config_1_1
@@ -2063,8 +2081,22 @@ proc update_ts_config_version {} {
    }
    
    if { $ts_config(version) == "1.5" } {
-      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.4 to 1.5 ..."
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.5 to 1.6 ..."
       config_build_ts_config_1_6
+      show_config ts_config
+      wait_for_enter
+   }
+  
+   if { $ts_config(version) == "1.6" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.6 to 1.7 ..."
+      config_build_ts_config_1_7
+      show_config ts_config
+      wait_for_enter
+   }
+
+   if { $ts_config(version) == "1.7" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.7 to 1.8 ..."
+      config_build_ts_config_1_8
       show_config ts_config
       wait_for_enter
       return 0
@@ -2204,7 +2236,9 @@ proc setup2 { } {
          set configuration_updated 1
       }
       # got config
-      
+     
+      read_array_from_file $ts_config(host_config_file) "testsuite host configuration" ts_host_config
+     
       if { [verify_config ts_config 1 err_list] != 0 } {
        
          # configuration problems
@@ -2332,7 +2366,9 @@ proc enhanced_setup {} {
    get_max_level_count $CHECK_CHECKTREE_ROOT
 
    set CHECK_ENABLED_RUNLEVELS "0" ;# 100 200 300 400" ;#$CHECK_MAX_LEVEL is 400
-   set CHECK_ENABLED_CATEGORIES "SYSTEM" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
+   # JG: changed default categories to VERIFIED, reset to SYSTEM, once we get
+   #     rid of the VERFIED category (when all tests are verified).
+   set CHECK_ENABLED_CATEGORIES "VERIFIED" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
 
    delete_tests $CHECK_CHECKTREE_ROOT 1
 
@@ -3122,8 +3158,7 @@ proc delete_tests {path { only_if_not_there 0 } } {
                       delete_result $elem 0 $i
                    } 
                 } else {
-# JG: TODO: this cannot work (?)
-#                  delete_result $elem 0 $i
+                   delete_result $elem 0 $i
                 }
              }
           }
@@ -3716,10 +3751,12 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    set complete_errstr ""
    set complete_errno ""
 
-   if { [ string compare $check_name "init_core_system" ] != 0 } {
+   if { [ string compare $check_name "init_core_system" ] != 0 && 
+        [ string compare $check_needs "" ] != 0 } {
       if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
          add_proc_error "run_test_level" -1 "scheduler is not alive"
       }
+      wait_for_load_from_all_queues 60
    }
 
    if { [info exists check_functions] == 1 } {
@@ -5728,25 +5765,36 @@ proc compile_source { { do_only_install 0 } } {
    global CHECK_ADDITIONAL_COMPILE_HOSTS CHECK_HTML_DIRECTORY
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-   global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
-   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER
+   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER CHECK_HOST
 
-
+   # settings for mail
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
    set mail_subject "testsuite error - compile_source"
    set mail_body    "date: [exec date]\n"
 
-
+   # settings for html output
    set html_body [ create_html_text "date: [exec date]" 1 ]
    append html_body [ create_html_text "compiling ..." 1 ]
    update_compile_html_output $html_body
    set html_body [ create_html_text "date: [exec date]" 1 ]
 
- 
    set was_error 0
    set cvs_change_log ""
 
+   # if we configured to install precompiled packages - stop
+   if { $ts_config(package_directory) != "none" && 
+        ($ts_config(package_type) == "tar" || $ts_config(package_type) == "zip") } {
+      puts $CHECK_OUTPUT "will not compile but use precompiled packages"
+      puts $CHECK_OUTPUT "set package_directory to \"none\" or set package_type to \"create_tar\""
+      puts $CHECK_OUTPUT "if compilation (and package creation) should be done"
+      mail_report $mail_subject "$mail_body using precompiled packages" 
+      append html_body [ create_html_text "using precompiled packages" ]
+      update_compile_html_output $html_body
+      return -1
+   }
+
+   # merge additional compile hosts into general compile hosts
    foreach host $CHECK_ADDITIONAL_COMPILE_HOSTS {
       if { [ lsearch -exact $CHECK_SOURCE_COMPILE_HOSTS $host ] < 0 } {
          lappend CHECK_SOURCE_COMPILE_HOSTS $host
@@ -5754,38 +5802,34 @@ proc compile_source { { do_only_install 0 } } {
       }
    }
 
-   if { $CHECK_PACKAGE_DIRECTORY != "none" } {
-       puts $CHECK_OUTPUT "can not compile -> using product packages"
-       puts $CHECK_OUTPUT "edit settings file and set package_directory to \"none\" if comilation should be possible"
-       mail_report $mail_subject "$mail_body can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" 
-       append html_body [ create_html_text "can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" ]
-       update_compile_html_output $html_body
-       return -1
-   }
-
-
+   # check source directory
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
-       puts $CHECK_OUTPUT "source directory unknown - check defaults file"
-       mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
-       append html_body [ create_html_text "source directory unknown - check defaults file" ]
-       update_compile_html_output $html_body
-       return -1
-   }
-   if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
-       puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
-       mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
-       append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
-       update_compile_html_output $html_body
-       return -1
-   }
-   if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
-       puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
-       mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
-       append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
-       update_compile_html_output $html_body
-       return -1
+      puts $CHECK_OUTPUT "source directory unknown - check defaults file"
+      mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
+      append html_body [ create_html_text "source directory unknown - check defaults file" ]
+      update_compile_html_output $html_body
+      return -1
    }
 
+   # check compile host
+   if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
+      puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
+      mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
+      append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
+      update_compile_html_output $html_body
+      return -1
+   }
+
+   # check compile hosts
+   if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
+      puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
+      mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
+      append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
+      update_compile_html_output $html_body
+      return -1
+   }
+
+   # figure out the compile archs
    set compile_arch_list ""
    foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
       puts $CHECK_OUTPUT "\n-> checking architecture for host $chost ..."
@@ -5797,10 +5841,11 @@ proc compile_source { { do_only_install 0 } } {
          update_compile_html_output $html_body
          return -1
       }
-      puts $CHECK_OUTPUT "output:\n$output"
+      puts $CHECK_OUTPUT "host $chost will build [string trim $output] binaries"
       lappend compile_arch_list $output
    }
 
+   # check if compile hosts are unique per arch
    foreach elem $compile_arch_list {
      set found 0
      set hostarch ""
@@ -5818,6 +5863,7 @@ proc compile_source { { do_only_install 0 } } {
      }
    }
 
+   # create protocol directory
    if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
@@ -5828,93 +5874,95 @@ proc compile_source { { do_only_install 0 } } {
       } 
    }
 
-
-   # shutdown eventually running system
+   # shutdown possibly running system
    shutdown_core_system
 
-
+   # update sources
    if { $do_only_install != 1 } {
+      # update source 
+      if { $do_not_update == 0 } {
+         set tries 1
 
-   # update source 
-   if { $do_not_update == 0 } {
-
-      set tries 1
-
-      set output ""
-      set update_ok 0
-      while { $tries <= 3 && $update_ok == 0 } {
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "$tries. cvs update try ..."
-         puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
-         append output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
-         append output "\n"
-         if { $prg_exit_state != 0 } {
-            set update_ok 0
-            sleep 60
-         } else {
-            set update_ok 1
+         set output ""
+         set update_ok 0
+         while { $tries <= 3 && $update_ok == 0 } {
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "$tries. cvs update try ..."
+            puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
+            append output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
+            append output "\n"
+            if { $prg_exit_state != 0 } {
+               set update_ok 0
+               sleep 60
+            } else {
+               set update_ok 1
+            }
+            incr tries 1
          }
-         incr tries 1
-      }
-      if { $update_ok != 1 } {
-         add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
-         append html_body [ create_html_text "cvs update -dP error:\n$output" ]
-         update_compile_html_output $html_body
-         return -1
-      }
+         if { $update_ok != 1 } {
+            add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
+            append html_body [ create_html_text "cvs update -dP error:\n$output" ]
+            update_compile_html_output $html_body
+            return -1
+         }
 
-      puts $CHECK_OUTPUT "------------------------------------------"
-      set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
-      puts $cvs_output $output
-      close $cvs_output
-      set update_output [split $output "\n"] 
-      set frame_work_script_update 0
-      set testsuite_update 0
-      foreach elem $update_output {
-         if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
-            puts $CHECK_OUTPUT $elem
-            append cvs_change_log "$elem\n"
-            if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
-               set frame_work_script_update 1
-            }
-            if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
-               set testsuite_update 1
-            }
-         } 
-      }
-      if { $frame_work_script_update == 1 } {
-         puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
-         flush $CHECK_OUTPUT
-         mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
-         append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
-         exit 1 
-      }
-      if { $testsuite_update == 1 } {
-         puts $CHECK_OUTPUT "testsuite source procedures were updated!!! resourcing it !!!"
-      }
-      puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "------------------------------------------"
+         set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
+         puts $cvs_output $output
+         close $cvs_output
+         set update_output [split $output "\n"] 
+         set frame_work_script_update 0
+         set testsuite_update 0
+         foreach elem $update_output {
+            if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
+               puts $CHECK_OUTPUT $elem
+               append cvs_change_log "$elem\n"
+               if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+                  set frame_work_script_update 1
+               }
+               if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+                  set testsuite_update 1
+               }
+            } 
+         }
 
-      foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+         # if the testsuite itself has been update, require restart
+         if { $frame_work_script_update == 1 } {
+            puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
+            flush $CHECK_OUTPUT
+            mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
+            append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
+            exit 1 
+         }
+         if { $testsuite_update == 1 } {
+            puts $CHECK_OUTPUT "testsuite source procedures were updated!!! resourcing it !!!"
+         }
          puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
-         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "return state: $prg_exit_state"
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "output:\n$output"
-         puts $CHECK_OUTPUT "------------------------------------------"
+
+         # after an update, do an aimk clean
+         foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
+            set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "return state: $prg_exit_state"
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "output:\n$output"
+            puts $CHECK_OUTPUT "------------------------------------------"
+         }
+
+         # after an update, delete macro messages file to have it updated
+         set macro_messages_file [get_macro_messages_file_name]
+         puts $CHECK_OUTPUT "deleting macro messages file after update!"
+         puts $CHECK_OUTPUT "file: $macro_messages_file"
+         if { [ file isfile $macro_messages_file] } {
+            file delete $macro_messages_file
+         }
+         update_macro_messages_list
       }
-      set macro_messages_file [get_macro_messages_file_name]
-      puts $CHECK_OUTPUT "deleting macro messages file after update!"
-      puts $CHECK_OUTPUT "file: $macro_messages_file"
-      if { [ file isfile $macro_messages_file] } {
-         file delete $macro_messages_file
-      }
-      update_macro_messages_list
    }
-   }
-   
 
+   # choose a host for aimk depend, we prefer to do it on solaris 64bit
    if { $do_only_install != 1 } {
    set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
 
@@ -5926,6 +5974,7 @@ proc compile_source { { do_only_install 0 } } {
       }
    }
 
+   # clean dependency files (zerodepend)
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
@@ -5937,7 +5986,7 @@ proc compile_source { { do_only_install 0 } } {
 
    puts $CHECK_OUTPUT "------------------------------------------"
 
-
+   # build the depencency building program
    set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
    puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
@@ -5954,7 +6003,7 @@ proc compile_source { { do_only_install 0 } } {
       return -1
    }
 
-
+   # build the dependencies
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
@@ -5974,6 +6023,7 @@ proc compile_source { { do_only_install 0 } } {
 
    }
 
+   # now start build on all compile hosts
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
    if { $do_only_install != 1 } {
    
@@ -5983,7 +6033,7 @@ proc compile_source { { do_only_install 0 } } {
    set file_list {}
    set file_name_list {}
  
-   set cvs_tag "maintrunc"
+   set cvs_tag "maintrunk"
    if { [ file isfile "${CHECK_SOURCE_DIR}/CVS/Tag" ] } {
       set cvs_tag "no_tag_dir" 
       set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
@@ -6232,7 +6282,7 @@ proc compile_source { { do_only_install 0 } } {
       return -1
    } 
 
-   } 
+   }
 
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"
@@ -6260,9 +6310,13 @@ proc compile_source { { do_only_install 0 } } {
       add_proc_error "compile_source" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
       return -1
    }
-  
+ 
+   # wait for nfs updates
+   after 5000
 
    catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
+   puts $result
+   catch { exec "touch" "$CHECK_PRODUCT_ROOT"  } result
    puts $result
    catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
    puts $result
@@ -6271,7 +6325,6 @@ proc compile_source { { do_only_install 0 } } {
       puts $CHECK_OUTPUT "\ncreating link \"$link_name\""
       set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
    }
-
 
    set arch_list {}
    set compiled_mail_architectures ""
@@ -6282,22 +6335,18 @@ proc compile_source { { do_only_install 0 } } {
       puts -nonewline $CHECK_OUTPUT "$output "
       append compiled_mail_architectures "\n$elem ($output)"
    }
-
-     
-
  
    puts $CHECK_OUTPUT "\ninstalling product binaries"
    if { $ts_config(gridengine_version) == 53 } {
-
-      set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
    } else {
-      set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
    }
    set sp_id [ lindex $open_spawn 1 ]
    set timeout -1
    set done 0
    while { $done != 1 } {
-      expect {
+      expect_user {
          -i $sp_id full_buffer {
             puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
@@ -6312,6 +6361,9 @@ proc compile_source { { do_only_install 0 } } {
          }
          -i $sp_id eof {
             set done 1
+         }
+         -i $sp_id "*\n" {
+            puts $CHECK_OUTPUT $expect_out(0,string)
          }
       }
    }
@@ -6386,6 +6438,55 @@ proc compile_source { { do_only_install 0 } } {
         puts "could not copy defaults file"
         return -1
    }
+
+   # if required, build distribution
+   if { $ts_config(package_type) == "create_tar" &&
+        $ts_config(package_directory) != "none" } {
+      puts $CHECK_OUTPUT "creating tar packages"  
+      # distribution will be created using mk_dist
+      # figure out which commandline options to use
+      set args ""
+      append args "-vdir $ts_config(product_root)"             ;# find the distrib here
+      append args " -version $ts_config(source_cvs_release)"   ;# for package names
+      append args " -basedir $ts_config(package_directory)"    ;# destination dir
+      append args " -bin -common"                              ;# which packages
+
+      if { $ts_config(gridengine_version) == 53 } {
+         if { $ts_config(product_type) == "sgeee" } {
+            append args " -sgeee"
+         }
+      }
+
+      if { ! [file isdirectory $ts_config(package_directory)] } {
+         file mkdir $ts_config(package_directory)
+      }
+
+      puts $CHECK_OUTPUT "starting mk_dist $args $arch_list"
+      # start mk_dist
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./scripts/mk_dist $args $arch_list" ]
+      set sp_id [ lindex $open_spawn 1 ]
+      set timeout -1
+      set done 0
+      while { $done != 1 } {
+         expect_user {
+            -i $sp_id full_buffer {
+               puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
+            -i $sp_id "_exit_status_" {
+               set done 1
+            }
+            -i $sp_id eof {
+               set done 1
+            }
+            -i $sp_id "*\n" {
+               puts $CHECK_OUTPUT $expect_out(0,string)
+            }
+         }
+      }
+      close_spawn_process $open_spawn
+      puts $CHECK_OUTPUT ""
+   }
+   
    return 0
 }
 
@@ -6715,6 +6816,7 @@ proc menu {} {
     puts " (25) set testsuite debug level (current value: $CHECK_DEBUG_LEVEL)"
     puts " (26) enter testsuite setup" 
     puts " (27) set command line options"
+    puts " (28) restart cluster"
 
   set input [wait_for_enter 1]; 
 
@@ -6728,12 +6830,14 @@ proc menu {} {
            wait_for_enter
          }
     "23" { 
-            if { $CHECK_PACKAGE_DIRECTORY == "none"  } {
+            if { [have_root_passwd] == -1 } {
+                  puts $CHECK_OUTPUT "need root access ..."
+                  set_root_passwd
+            }
+
+            if { $ts_config(package_directory) == "none" ||
+                 $ts_config(package_type) == "create_tar" } {
                # we compile the source and do a scripts/distinst
-               if { [have_root_passwd] == -1 } {
-                     puts $CHECK_OUTPUT "need root access ..."
-                     set_root_passwd
-                }
                 set back [compile_source]
                 if { $back != 0 } {
                    puts "--> error compiling and pre installing source code"
@@ -6743,10 +6847,6 @@ proc menu {} {
                 wait_for_enter
             } else {
                # we have product packages
-               if { [have_root_passwd] == -1 } {
-                     puts $CHECK_OUTPUT "need root access ..."
-                     set_root_passwd
-                }
                 set back [prepare_packages]
                 if { $back != 0 } {
                    puts "--> error installing product packages"
@@ -6782,6 +6882,9 @@ proc menu {} {
          }
     "27" {
          set_command_line_options
+    }
+    "28" {
+         startup_core_system
     }
     "0" { select_runlevel }
     "1" { change_dir; }
@@ -6953,6 +7056,7 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_procedures
    ts_source $libdir/sge_job
    ts_source $libdir/sge_queue
+   ts_source $libdir/sge_project
    ts_source $libdir/sge_sched_conf
 
    # source a user private tcl file, e.g. to contain a 
@@ -7326,6 +7430,11 @@ if { $check_reinit_on_tcl_error == 1 } {
 }
 
 if { $do_compile } {
+   if { [have_root_passwd] == -1 } {
+         puts $CHECK_OUTPUT "need root access ..."
+         set_root_passwd
+   }
+
    if { [ compile_source ] != 0 } {
       exit -1
    } else {

@@ -151,9 +151,10 @@ lList* ja_task_list_split_group(lList **ja_task_list)
          u_long32 status = lGetUlong(first_task, JAT_status); 
          u_long32 state = lGetUlong(first_task, JAT_state); 
          u_long32 hold = lGetUlong(first_task, JAT_hold);
+         const lDescr *descr = lGetElemDescr(first_task);
          lCondition *where = NULL;
 
-         where = lWhere("%T(%I != %u || %I != %u || %I != %u)", JAT_Type,
+         where = lWhere("%T(%I != %u || %I != %u || %I != %u)", descr,
                         JAT_status, status, JAT_state, state,
                         JAT_hold, hold);
          lSplit(ja_task_list, &ret_list, NULL, where);
@@ -315,10 +316,19 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    DENTER(TOP_LAYER, "sge_parse_jobtasks");
    job_str = strdup(str_jobtask);
 
+   /* An empty job id string is a bad job id string! */
+   if (strcmp (job_str, "") == 0) {
+      ret = -1;
+   }
    /*
    ** dup the input string for tokenizing
    */
-   if (isdigit(job_str[0])) {
+   else if(isdigit(job_str[0])) {
+      const double epsilon = 1.0E-12;
+      char *end_ptr = NULL;
+      double dbl_value;
+      u_long32 ulng_value;
+
       if ((token = strchr(job_str, '.')) != NULL){
          token[0] = '\0';
          token++;
@@ -329,21 +339,12 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          }
       }
 
-      {
-         const double epsilon = 1.0E-12;
-         char *end_ptr = NULL;
-         double dbl_value;
-         u_long32 ulng_value;
+      dbl_value = strtod(job_str, &end_ptr);
+      ulng_value = dbl_value;
 
-         dbl_value = strtod(job_str, &end_ptr);
-         ulng_value = dbl_value;
-         if (dbl_value < 1 || dbl_value - ulng_value > epsilon) {
-            ret = -1;
-         } else if (end_ptr != NULL && *end_ptr == '\0') {
-            
-         } else {
-            ret = -1;
-         }
+      if ((dbl_value < 1) || (dbl_value - ulng_value > epsilon) ||
+          (end_ptr == NULL) || (end_ptr[0] != '\0')) {
+         ret = -1;
       }
    }
 
@@ -352,16 +353,17 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          task_id_range_list = lCopyList(lGetListName(arrayDefList), arrayDefList);
       }
       else {
-         lAddList(task_id_range_list, lCopyList("",arrayDefList));
+         lAddList(task_id_range_list, lCopyList("", arrayDefList));
       }
    }
 
    if (ret == 1) {
-      if (!include_names && !isdigit(job_str[0]) && strcmp(job_str, "\"*\"")) {
+      if (!include_names && !isdigit(job_str[0]) && (strcmp(job_str, "\"*\"") != 0)) {
          ret = -1;
       }
       else {   
          *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
+         
          if (*idp) {
             range_list_sort_uniq_compress(task_id_range_list, alpp);
             lSetList(*idp, ID_ja_structure, task_id_range_list);
@@ -376,9 +378,37 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    return ret;
 }
 
-/* EB: ADOC: add commets */
-
-bool
+/****** sgeobj/ja_task/ja_task_message_add() **********************************
+*  NAME
+*     ja_task_message_add() -- add a message to the message list of a task 
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_message_add(lListElem *this_elem, u_long32 type, 
+*                         const char *message) 
+*
+*  FUNCTION
+*     Adds a message in the "JAT_message_list"-message list of "this_elem"
+*     "type" will be the message type. "message" is the text string stored
+*     int the new element of the sublist.  
+*
+*  INPUTS
+*     lListElem *this_elem - JAT_Type element 
+*     u_long32 type        - message type id 
+*     const char *message  - message 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: ja_task_message_add() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/ja_task/ja_task_message_trash_all_of_type_X()
+*******************************************************************************/
+bool 
 ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
 {
    bool ret = true;
@@ -389,6 +419,32 @@ ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
    return ret;
 }
 
+/****** sgeobj/ja_task/ja_task_message_trash_all_of_type_X() ******************
+*  NAME
+*     ja_task_message_trash_all_of_type_X() -- Trash messages of certain type 
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_message_trash_all_of_type_X(lListElem *this_elem, 
+*                                         u_long32 type) 
+*
+*  FUNCTION
+*     Trash all messages from the sublist of JAT_message_list which are of
+*     the given "type". 
+*     
+*
+*  INPUTS
+*     lListElem *this_elem - JAT_Type element 
+*     u_long32 type        - type id 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: ja_task_message_trash_all_of_type_X() is MT safe 
+*******************************************************************************/
 bool
 ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
 {

@@ -219,6 +219,10 @@ case "tru64":
    set BUILDARCH = ALPHA5
    set TARGET_BITS = TARGET_32BIT
    breaksw
+case "win32-x86":
+   set BUILDARCH = WIN32_X86
+   set TARGET_BITS = TARGET_32BIT
+   breaksw   
 default:
    echo cannot compile - no mapping for architecture \"$buildarch\" defined yet
    exit 1
@@ -372,6 +376,7 @@ set QMAKE            = 1
 set QTCSH            = 1
 set MAKESTRPTIME     = 0
 set MAKEFNMATCH      = 0
+set MAKEWINGRIDLIB   = 0
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 
 # Default Flags and Libraries 
@@ -391,6 +396,9 @@ set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
 set JAVA             = 0
+set JAVA_BINDIR      = "bin"
+set JAVA_INCL        = "include"
+set JAVA_SHAREDEXT   = ""
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -869,14 +877,10 @@ if ( $JAVA == 1 || $BUILDJAVADOC == 1 ) then
    if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
       exit
-   else
-      if ($JAVA == 1) then
-         set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/include"
-      endif
    endif
 endif
 
-set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
+set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD $SECFLAGS"
 
 #---------------------------------------------------------------------------
 
@@ -1046,7 +1050,7 @@ case DARWIN:
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
-   set XLIBD    = "-L/usr/X11R6/lib -L$MOTIFHOME/lib"
+   set XLIBD    = "-L$MOTIFHOME/lib -L/usr/X11R6/lib"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE"
 
    switch ($REL)
@@ -1065,6 +1069,9 @@ case DARWIN:
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
+   set JAVA_BINDIR = "Commands"
+   set JAVA_INCL = "Versions/1.3.1/Headers"
+   set JAVA_SHAREDEXT = ".jnilib"
    unset REL
    breaksw
 
@@ -1170,7 +1177,7 @@ case HP1164:
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -b +s"
    endif
 
-   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS -D_REENTRANT"
    set LIBS     = "-lnsl $LIBS"
 
    if ($BUILDARCH == HP11) then
@@ -1189,11 +1196,11 @@ case HP1164:
    set SHAREDEXT = ".sl"
    set JAVA_ARCH = "hp-ux"
    breaksw
+   
 case ALINUX:
 case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
-
    set COMPILE_DC = 1
 
    if ($OPTIMIZATION == 1) then
@@ -1280,6 +1287,78 @@ case LINUXIA64:
    endif
    set JAVA_ARCH = "linux"
    breaksw
+   
+case WIN32_X86:
+   set CC = gcc
+
+   # option -no-secure always on
+   set SEC         = 0
+   set SECCLEAN    = ""  
+   set SECDEPEND   = ""
+   set SECFLAGS    = ""
+   set SECLIB      = ""
+   set SECLIBS     = ""
+   set SECLIBOBJS  = ""
+   set SECTARGETS  = ""
+   set KLFLAGS     = ""
+
+   set COMPILE_DC     = 1
+   set MAKEWINGRIDLIB = 1
+
+   set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
+   #set LIBS = "$LIBS -lwingrid"
+
+   if ($OPTIMIZATION == 1) then
+      set OFLAG = "-O3"
+   else
+      set OFLAG = "-O"
+   endif
+
+   if ($CC == gcc) then
+      set CC  = gcc
+      set CXX = gcc
+      #set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -I/dev/fs/C/Program\ Files/Microsoft\ Visual\ Studio\ .NET\ 2003/Vc7/PlatformSDK/Include -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"      
+   else
+      set CC  = cc
+      set CXX = cc
+      set CFLAGS = "-X /Wall -X /WX $OFLAG -DINTERIX -D$COMPILE_ARCH $DEBUG_FLAG $CFLAGS"
+   endif
+
+   if ($DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set OFLAG = ""
+   endif
+   if ($GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   if ( -f /lib/libc.so.6 ) then
+      strings /lib/libc.so.6 | grep "GNU C Library" | grep '2.[234]' >& /dev/null
+      if ($status == 0) then
+         set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+      endif
+   endif
+
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set SHAREDLD = $CC
+#   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
+
+   set NOERR_CFLAG = "-Wno-error"
+   set NOERR_PROTO = "-Wno-strict-prototypes"
+#   set LIBS     = "-lgcc -ldb -ll -lm -lpthread -lpsxdll -lc -lrpclib -lsocket -ly -lfrtbegin -litcl3.2 -litk3.2 -lg2c $LIBS"
+   
+   set XMTDEF   = ""
+   set XLIBD    = "-L/usr/X11R6/lib64"
+   set XLFLAGS  = "$XLIBD"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include -I/usr/local/include/bind"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
+   breaksw
+   
 case NECSX4:
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
@@ -1384,11 +1463,13 @@ case SOLARIS86:
             set compversion = `cc -V |& head -1 | cut -f4 -d" "`
             set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
             set haspatch = `expr $patchcnt ">=" 1`
+     #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 ) then
                set OFLAG = "-fast -xchip=pentium -xcache=generic"
             else
                echo using \"-xO3\" optimization due to compiler bug
                set OFLAG = "-xO3"
+     #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
          else
             set OFLAG = "-fast -xchip=generic -xcache=generic"
@@ -1435,7 +1516,9 @@ case SOLARIS86:
       endif
    endif
 
-   set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 $DEBUG_FLAG"
+   if ( $CC == cc ) then
+      set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 $DEBUG_FLAG"
+   endif
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
@@ -1510,8 +1593,15 @@ default:
    exit 1
 endsw
 
-if ($JAVA == 1 && "$JAVA_ARCH" != "") then
-   set CFLAGS = "$CFLAGS -I${JAVA_HOME}/include/${JAVA_ARCH}"
+if ($JAVA == 1) then
+   set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
+   if ("$JAVA_ARCH" != "") then
+      set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
+   endif
+endif
+
+if ($JAVA_SHAREDEXT == "") then
+   set JAVA_SHAREDEXT = "$SHAREDEXT"
 endif
 
 set MAKEOPT = "$MAKEOPT $PARALLEL"
@@ -1655,15 +1745,15 @@ if ( "$BUILDJAVADOC" == 1 ) then
 
    cd $SOURCE/$COMPILE_ARCH
 
-   if ( ! -d ../../doc/javadoc ) then
+   if ( ! -d ../../doc/javadocs ) then
       echo " INFO: JavaDoc directory does not exist. Creating"
-      mkdir ../../doc/javadoc
+      mkdir ../../doc/javadocs
    else
       echo " INFO: clearing old JavaDoc directory."
-      rm -Rf ../../doc/javadoc/*
+      rm -Rf ../../doc/javadocs/*
    endif
 
-   $JAVA_HOME/bin/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadoc -version org.ggf.drmaa
+   $JAVA_HOME/$JAVA_BINDIR/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadocs -version -subpackages org.ggf.drmaa com.sun.grid.drmaa -exclude com.sun.grid.drmaa.howto
 
    if ( $status != 0 ) then
       echo not done
@@ -1685,6 +1775,54 @@ if ( "$SGE_DEPEND" == 1 ) then
 
    cd $COMPILE_ARCH
    $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$MAKEWINGRIDLIB" == 1 ) then
+   echo _________L_I_B__W_I_N_G_R_I_D_____________
+
+   cd $COMPILE_ARCH
+
+   switch ( "$argv" )
+      case clean:
+         set param = clean
+         set DEPEND = ""
+      breaksw
+
+      case depend:
+         set param = depend
+         set DEPEND = "../3rdparty/sge_depend/$COMPILE_ARCH/sge_depend -l -S -Y $DEPEND_FLAGS"
+      breaksw
+
+      case messages:
+         set param = messages
+         set DEPEND = ""
+      breaksw
+
+      default:
+         set param = wingridlib
+         set DEPEND = ""
+         set LIBS = "$LIBS -lwingrid" 
+      breaksw
+   endsw
+
+   
+  $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
+      "COMPILE_ARCH=$COMPILE_ARCH" \
+      "CFLAGS=$CFLAGS $CORE_INCLUDE" "SOURCE=$SOURCE" \
+      "KRBLIBS=$KRBLIBS" \
+      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "DEPEND_FLAGS=$DEPEND_FLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" \
+      "SDIR=$SDIR" "DEPEND=$DEPEND" $param
 
    if ( $status != 0 ) then
       echo not done
@@ -1827,7 +1965,9 @@ if ( "$CORE" == 1 ) then
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
+			"JNI_INCLUDES=$JNI_INCLUDES" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
+         "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          $argv
    if ( $status != 0 ) then
       echo not done
@@ -1835,6 +1975,7 @@ if ( "$CORE" == 1 ) then
    endif
 
    if ( $JAVA == 1 ) then
+      echo _________D_R_M_A_A__J A_V_A_______________
       $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
             "LD_WRAPPER=$LD_WRAPPER" \
             "CFLAGS=$CFLAGS $CORE_INCLUDE" \
@@ -1857,9 +1998,8 @@ if ( "$CORE" == 1 ) then
             "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
             "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
             "SPOOLLIBEXT=$SPOOLLIBEXT" \
-            "DLLIB=$DLLIB" \
-            "MEMCFLAG=$MEMCFLAG" \
-            "CORE_INCLUDE=$CORE_INCLUDE" \
+            "DLLIB=$DLLIB" "MEMCFLAG=$MEMCFLAG" "CORE_INCLUDE=$CORE_INCLUDE" \
+            "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
             classes_all
       if ( $status != 0 ) then
          echo not done
@@ -2045,7 +2185,7 @@ if ( "$QTCSH" == 1) then
    endif
 
    if ( $SHAREDLIBS == 1 ) then
-      unsetenv SHARED_PATH_NAME
+      unsetenv $SHARED_PATH_NAME
    endif
 
    cd $SOURCE
@@ -2113,23 +2253,6 @@ if ( "$ADOC" == 1) then
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
 
    echo "Creating documentation for libs: libdrmaa.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine DRMAA Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/drmaa.h libs/japi/drmaa.c -o $COMPILE_ARCH/libdrmaa.texi
-
-   echo "Creating documentation for libs: libspool.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Spooling Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/spool/*.h libs/spool/*.c libs/spool/*/*.h libs/spool/*/*.c -o $COMPILE_ARCH/libspool.texi
-
-   echo "Creating documentation for libs: libuti.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine UTI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
-
-   echo "Creating documentation for core system: core.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE -o $COMPILE_ARCH/core.texi
-
-   echo "Creating documentation for testsuite: testsuite.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE -o $COMPILE_ARCH/testsuite.texi
-
-   echo "To create a html or pdf documentation, execute for example"
-   echo "texi2html $COMPILE_ARCH/libsgeobj.texi   or"
-   echo "texi2pdf $COMPILE_ARCH/libsgeobj.texi"
 endif
 
 echo done.

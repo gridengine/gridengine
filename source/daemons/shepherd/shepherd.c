@@ -73,6 +73,7 @@ struct rusage {
 #include "signal_queue.h"
 #include "execution_states.h"
 #include "sge_signal.h"
+#include "sge_uidgid.h"
 #include "sge_time.h"
 #include "sge_parse_num_par.h"
 #include "sgedefs.h"
@@ -543,6 +544,7 @@ int main(int argc, char **argv)
 	shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    shepherd_trace_sprintf("shepherd called with uid = "uid_t_fmt", euid = "uid_t_fmt, 
                           getuid(), geteuid());
 
@@ -634,8 +636,8 @@ int main(int argc, char **argv)
 
    uid = getuid();
 
-   if (uid) {
-      shepherd_trace_sprintf("warning: starting not as root (uid=%d)", uid);
+   if (!sge_is_start_user_superuser()) {
+      shepherd_trace_sprintf("warning: starting not as superuser (uid=%d)", uid);
    }
 
    /* Shepherd in own process group */
@@ -804,8 +806,10 @@ int main(int argc, char **argv)
 
    if (!SGE_STAT("exit_status", &buf) && buf.st_size) {
       /* retrieve first exit status from exit status file */
-      if (!(fp = fopen("exit_status", "r")) || (fscanf(fp, "%d\n", &return_code)!=1))
+      if (!(fp = fopen("exit_status", "r")) || (fscanf(fp, "%d\n", &return_code)!=1)) {
+         shepherd_trace("could not read exit_status file\n");
          return_code = ESSTATE_NO_EXITSTATUS;
+      }
       fclose(fp);
    } else {
       /* ensure an exit status file exists */
@@ -1306,9 +1310,9 @@ static void forward_signal_to_job(int pid, int timeout,
 
          if((fp = fopen(qrsh_pid_file, "r")) != NULL) {
             /* file contains a valid pid */
-            if(fscanf(fp, "%d", &qrsh_pid) == 1) {            
+            if(fscanf(fp, pid_t_fmt, &qrsh_pid) == 1) {            
                /* set pid from qrsh_starter as job_pid */
-               sprintf(buffer, "%d", qrsh_pid);
+               sprintf(buffer, pid_t_fmt, qrsh_pid);
                add_config_entry("job_pid", buffer); /* !!! should better be add_or_replace */
                replace_qrsh_pid = 0;
             }
@@ -1745,7 +1749,7 @@ char *childname            /* "job", "pe_start", ...     */
       if (ckpt_interval && rest_ckpt_interval)
          alarm(rest_ckpt_interval);
 
-#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
       npid = waitpid(-1, &status, 0);
 #else
       npid = wait3(&status, 0, rusage);
@@ -2077,7 +2081,7 @@ static int start_async_command(char *descr, char *cmd)
       pid = getpid();
       setpgid(pid, pid);  
       setrlimits(0);
-      set_environment();
+      sge_set_environment();
       umask(022);
       tmp_str = search_conf_val("qsub_gid");
       if (tmp_str && strcmp(tmp_str, "no")) {
@@ -2377,7 +2381,7 @@ static int notify_tasker(u_long32 exit_status)
       if (!strcmp(name, "PVM_TASK_ID"))
          strcpy(pvm_task_id, value);
 
-      sge_setenv(name, value);
+      sge_set_env_value(name, value);
    }
 
    fclose(fp);
@@ -2441,7 +2445,7 @@ static pid_t start_token_cmd(int wait_for_finish, char *cmd, char *arg1,
       if (!wait_for_finish && (getenv("SGE_DEBUG_LEVEL"))) {
          putenv("SGE_DEBUG_LEVEL=0 0 0 0 0 0 0 0");
       }   
-      execl(cmd, cmd, arg1, arg2, arg3, NULL);
+      execle(cmd, cmd, arg1, arg2, arg3, NULL, sge_get_environment ());
       exit(1);
    } else if (wait_for_finish) {
         ret = do_wait(pid);

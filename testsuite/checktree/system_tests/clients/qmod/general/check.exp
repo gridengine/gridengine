@@ -55,9 +55,21 @@ lappend check_functions    "qmod_clearerrorstate"
 lappend check_functions    "qmod_verify"
 lappend check_functions    "qmod_forceaction"
 lappend check_functions    "removequeue"
-
+# ---- Wildchart test ------------------------------
+lappend check_functions    "qmod_addqueues"
+lappend check_functions    "qmod_wildcard_disable"
+lappend check_functions    "qmod_wildcard_enable"
+lappend check_functions    "qmod_issue_1131"
+lappend check_functions    "qmod_removequeues"
 
 global test_queue
+global qmod_test_queues
+
+set qmod_test_queues ""
+lappend qmod_test_queues "qmod0"
+lappend qmod_test_queues "qmod1"
+lappend qmod_test_queues "qmod2"
+
 
 proc qmod_general_init_level {} {
    global CHECK_ACT_LEVEL
@@ -67,9 +79,234 @@ proc qmod_general_init_level {} {
            return 0    
      }
   } 
-
   return -1  ;# no other level else
 }
+
+#                                                             max. column:     |
+#****** qmod/qmod_addqueues() ******
+# 
+#  NAME
+#     qmod_addqueues -- ??? 
+#
+#  SYNOPSIS
+#     qmod_addqueues { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     Adds all queues from qmod_test_queues to
+#     the cluster
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qmod_addqueues {} {
+   global CHECK_HOST qmod_test_queues CHECK_OUTPUT
+   
+   foreach queue_name $qmod_test_queues {
+      set q_param(slots)                 "2"
+      set q_param(load_thresholds)       "np_load_avg=6.75"      
+      add_queue $queue_name ${CHECK_HOST} q_param
+   }   
+   set_error 0 "ok"        
+}
+
+#                                                             max. column:     |
+#****** qmod/qmod_removequeues() ******
+# 
+#  NAME
+#     qmod_removequeues -- ??? 
+#
+#  SYNOPSIS
+#     qmod_removequeues { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     Removes all queues from qmod_test_queues from
+#     the cluster
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qmod_removequeues {} {
+   global CHECK_HOST qmod_test_queues
+   
+   foreach queue_name $qmod_test_queues {
+     del_queue $queue_name $CHECK_HOST 0 1
+   }   
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qmod/qmod_wildcard_enable() ******
+# 
+#  NAME
+#     qmod_wildcard_enable -- ??? 
+#
+#  SYNOPSIS
+#     qmod_wildcard_enable { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qmod_wildcard_enable {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_OUTPUT qmod_test_queues
+   
+   #enable all queues on the test host
+   set queue_name "qmod*"
+   set queue_instance [get_queue_instance $queue_name ${CHECK_HOST}] 
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -e $queue_name" } output ]
+   
+   if {$result != 0} {
+     add_proc_error "qmod_wildcard_enable" -1 "exit state of \"qmod -e $queue_name\" is not 0"
+   }            
+   
+   foreach queue_name $qmod_test_queues {
+      set queue_instance [get_queue_instance $queue_name ${CHECK_HOST}]
+      puts $CHECK_OUTPUT "get state of queue \"$queue_instance\""
+      set state [ get_queue_state $queue_instance ] 
+      if { [ string compare $state "" ] != 0  } {
+         add_proc_error "qmod_wildcard_enable" -1 "queue $queue_name is not in original state"
+         return
+      }      
+   }
+   
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qmod/qmod_wildcard_disable() ******
+# 
+#  NAME
+#     qmod_wildcard_disable -- ??? 
+#
+#  SYNOPSIS
+#     qmod_wildcard_disable { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qmod_wildcard_disable { } {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_OUTPUT qmod_test_queues
+   
+   #diable all queues on the test host
+   set queue_name [get_queue_instance "qmod*" ${CHECK_HOST}] 
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -d $queue_name" } output ]
+   
+   if {$result != 0} {
+     add_proc_error "qmod_wildcard_disable" -1 "exit state of \"qmod -e $queue_name\" is not 0"
+   }            
+   
+   foreach queue_name $qmod_test_queues {
+      set queue_instance [get_queue_instance $queue_name ${CHECK_HOST}] 
+      puts $CHECK_OUTPUT "get state of queue \"$queue_instance\""
+      set state [ get_queue_state $queue_instance ] 
+      if { [ string compare $state "d" ] != 0  } {
+         add_proc_error "qmod_wildcard_disable" -1 "queue $queue_instance is not disabled"
+         return
+      }      
+   }
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qmod/qmod_issue_1131() ******
+# 
+#  NAME
+#     qmod_issue_1131
+#
+#     Tests the qmod -e "@<host>" call which causes a segmentation
+#     fault in N1GE 6.0.
+#
+#  SYNOPSIS
+#     qmod_issue_1131 { } 
+#
+#  FUNCTION
+#     qmod_issue_1131 
+#
+#  NOTES
+#     Tests the qmod -e "@<host>" call which causes a segmentation
+#     fault in N1GE 6.0.
+#
+#  BUGS
+#       1131
+#
+#*******************************
+proc qmod_issue_1131 {} {
+   global CHECK_HOST CHECK_OUTPUT CHECK_ARCH ts_config
+   set queue_name "@${CHECK_HOST}"
+   set result [ catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod -d $queue_name" } output ]
+   
+   if { $result != 0 } {
+     add_proc_error "qmod_issue_1131" -1 "exit state of \"qmod -e $queue_name\" is not 0"
+   }
+
+   set INVALID_QUEUE_NAME [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QUEUE_INVALIDQ_S] $queue_name]
+   
+   if { [ string compare $output $INVALID_QUEUE_NAME ] != 0 } {
+      add_proc_error "qmod_issue_1131" -2 "issue 1131 still exists, qmod -e \"@<host>\" crashes qmaster"
+   }
+   set_error 0 "ok"
+}
+
+
 
 #                                                             max. column:     |
 #****** qmod/addqueue() ******
@@ -111,7 +348,8 @@ proc addqueue {} {
   add_queue "qmod" ${CHECK_HOST} q_param
 
   set_error 0 "ok"  
-}                                                                          
+}         
+                                                                 
 
 #                                                             max. column:     |
 #****** qmod/removequeue() ******

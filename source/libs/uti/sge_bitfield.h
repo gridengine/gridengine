@@ -65,23 +65,52 @@
 #define CLEARBIT(a,b)   (b &= (~(a)));
 
 typedef struct {
-   int size;
-   char *bf;
-} _bitfield;
+   unsigned int size;
+   union {
+      char fix[sizeof(char *)];  /* fixed size buffer for small bitfields */
+      char *dyn;                 /* dynamic size buffer for large bitfields */
+   } bf;
+} bitfield;
 
-typedef _bitfield *bitfield;
+bitfield *
+sge_bitfield_new(unsigned int size);
 
-bitfield sge_bitfield_new(int size);
-bitfield sge_bitfield_free(bitfield bf);
-bool sge_bitfield_copy(bitfield source, bitfield target);
-bool sge_bitfield_bitwise_copy(bitfield source, bitfield target);
+bitfield *
+sge_bitfield_free(bitfield *bf);
 
-int sge_bitfield_set(bitfield bf, int bit);
-int sge_bitfield_get(bitfield bf, int bit);
-int sge_bitfield_clear(bitfield bf, int bit);
-bool sge_bitfield_reset(bitfield source);
-bool sge_bitfield_changed(bitfield source);
+bool 
+sge_bitfield_init(bitfield *bf, unsigned int size);
 
-void sge_bitfield_print(bitfield bf, FILE *fd); 
+bool 
+sge_bitfield_free_data(bitfield *bf);
+
+bool 
+sge_bitfield_copy(const bitfield *source, bitfield *target);
+
+bool 
+sge_bitfield_bitwise_copy(const bitfield *source, bitfield *target);
+
+bool 
+sge_bitfield_set(bitfield *bf, unsigned int bit);
+
+bool 
+sge_bitfield_get(const bitfield *bf, unsigned int bit);
+
+bool 
+sge_bitfield_clear(bitfield *bf, unsigned int bit);
+
+bool 
+sge_bitfield_reset(bitfield *source);
+
+bool 
+sge_bitfield_changed(const bitfield *source);
+
+void 
+sge_bitfield_print(const bitfield *bf, FILE *fd); 
+
+#define fixed_bits (sizeof(char *) * 8)
+#define sge_bitfield_get_size(bf) ((bf)->size)
+#define sge_bitfield_get_size_bytes(size) ((size) / 8 + (((size) % 8) > 0 ? 1 : 0))
+#define sge_bitfield_get_buffer(source) ((source)->size <= fixed_bits) ? (source)->bf.fix : (source)->bf.dyn
 
 #endif /* __SGE_BITFIELD_H */

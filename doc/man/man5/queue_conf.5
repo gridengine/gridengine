@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:09 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/11/12 15:40:06 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2004/04/19 10:52:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2004/11/12 15:40:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -85,20 +85,20 @@ needed for all configuration attributes.
 Integrity verifications will be applied on the configuration.
 .PP
 Configurations without default setting are rejected.
-Ambigous configurations with more than one attribute setting for
+Ambiguous configurations with more than one attribute setting for
 a particular host are rejected.
 Configurations containing override values for hosts not enlisted
 under 'hostname' are accepted but are indicated by \fB\-sick\fP
 of 
 .M qconf 1
-The cluster queue should contain a non-ambigous specification
+The cluster queue should contain a non-ambiguous specification
 for each configuration attribute of each queue instance specified
-under hostname in \fIqueue_conf\fP. Ambigous configurations with more
+under hostname in \fIqueue_conf\fP. Ambiguous configurations with more
 than one attribute setting resulting from overlapping host groups
 are indicated by \fB\-explain c\fP of
 .M qstat 1
 and cause the queue instance
-with ambigous configurations to enter the c(onfiguration ambibous) state.
+with ambiguous configurations to enter the c(onfiguration ambiguous) state.
 .\"
 .\"
 .SH FORMAT
@@ -180,14 +180,11 @@ default is zero (which means no nice value is set explicitly). Negative
 values (up to -20) correspond to a higher scheduling priority, positive 
 values (up to +20) correspond to a lower scheduling priority.
 .PP
-In a SGEEE system the value of \fBpriority\fP has no effect because SGEEE
-adjusts priorities dynamically to implement the SGEEE entitlement policy
-goals. Dynamic priority adjustment can be switched off, however, by setting
-the \fBexecd_param\fP NO_REPRIORITIZATION to true in the global or
-execution daemon local cluster configuration, see
-.M xxqs_name_sxx_conf 5 .
-In this case, the setting of \fBpriority\fP also will haven an effect in
-SGEEE.
+The value of \fBpriority\fP has no effect because SGE
+adjusts priorities dynamically to implement the SGE entitlement policy
+goals. Dynamic priority adjustment can be switched off, by setting
+the reprioritize_interval to 00:00:00, which is the default value. 
+In this case, the setting of \fBpriority\fP also will haven't an effect.
 .SS "\fBmin_cpu_interval\fP"
 The time between two automatic checkpoints in case of
 transparently checkpointing jobs. The maximum of the time requested by
@@ -229,7 +226,7 @@ or a combination in a comma separated list or
 .PP
 The formerly supported types parallel and checkpointing are not allowed 
 anymore. A queue
-instance is impicitely of type parallel/checkpointing 
+instance is implicitly of type parallel/checkpointing 
 if there is a parallel environment or a checkpointing interface specified
 for this queue instance in \fBpe_list\fP/\fBckpt_list\fP. 
 Formerly possible settings e.g.
@@ -239,7 +236,7 @@ Formerly possible settings e.g.
 qtype   PARALLEL
 .fi
 .PP  
-could be transfered into
+could be transferred into
 .PP
 .nf
 .ta 
@@ -249,11 +246,11 @@ pe_list pe_name
 .PP
 (type string; default: batch interactive).
 .SS "\fBpe_list\fP"
-The list of administartor defined parallel environments to be associated with
+The list of administrator defined parallel environments to be associated with
 the queue. The default is
 .I NONE.
 .SS "\fBckpt_list\fP"
-The list of administartor defined checkpointing interfaces to be associated 
+The list of administrator defined checkpointing interfaces to be associated 
 with the queue. The default is
 .I NONE.
 .SS "\fBrerun\fP"
@@ -481,8 +478,10 @@ the
 .SS "\fBowner_list\fP"
 The \fBowner_list\fP names the login names (in a comma separated list)
 of those users who are
-authorized to suspend this queue (xxQS_NAMExx operators and managers can suspend
-queues by default). It is customary to set this field for queues on
+authorized to disable and suspend this queue through 
+.M qmod 1
+(xxQS_NAMExx operators and managers can do this by default). It is customary 
+to set this field for queues on
 interactive workstations where the computing resources are shared between
 interactive sessions and xxQS_NAMExx jobs, allowing the workstation owner to have
 priority access
@@ -521,7 +520,7 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the queue.
 .SS "\fBsubordinate_list\fP"
-A list of xxQS_NAMExx cluster queues. Relashionship however are in effect
+A list of xxQS_NAMExx cluster queues. Relationship however are in effect
 only between queue instances residing at the same host. If there is a 
 queue instance (be in the sub- or superordinated one) on only one
 particular host this relationship is ignored.

@@ -2463,7 +2463,7 @@ static int verify_predecessors(lList **alpp, u_long32 jobid, char *job_name, lLi
                   jid_ref = lGetUlong(jep, JB_job_number);
                } else {
                   ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU, 
-                     pre_ident, jid_ref, lGetUlong(jep, JB_job_number)));
+                     pre_ident, u32c(jid_ref), u32c(lGetUlong(jep, JB_job_number))));
                   sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
                   DEXIT;
                   return STATUS_EUNKNOWN;

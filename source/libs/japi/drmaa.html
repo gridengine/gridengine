@@ -98,7 +98,8 @@ is recommended.
 <H1>Notes on implementation</H1>
 <P>The Grid Engine implementation of DRMAA bases on Grid Engine 
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/japi.html?content-type=text/html">Job
-API library (JAPI)</A>. Interfaces operations of Grid Engine JAPI library and DRMAA library have lots in common.
+API library (JAPI)</A>. As a result DRMAA library inherits MT safety from JAPI library.</P>
+<P>Interfaces operations of Grid Engine JAPI library and DRMAA library have lots in common.
 The big difference amongst them is that JAPI allows any characteristic of the Grid Engine job 
 that is submitted through JAPI be influenced, whereas DRMAA allows only those characteristics be influenced that 
 are interfaced by DRMAA. Note that this ostensible drawback of DRMAA library is not as meaningful as it seems: 
@@ -106,8 +107,7 @@ Firstly DRMAA job template attributes "drmaa_job_category" and "drmaa_native_spe
 of the qsub(1) job characteristics be influenced. Secondly by building an integration upon DRMAA library you 
 don't need to change your application code each time when a new Grid Engine version is released. When using JAPI 
 library interface you must be prepared to change your application code in this case. This is because JAPI directly 
-exports Grid Engine internal data structures that usually are subject of change with new releases. Note that DRMAA 
-library inherits MT safety from JAPI library.</P>
+exports Grid Engine internal data structures that usually are subject of change with new releases.</P>
 <H1>TODO</H1>
 This list contains items that are not yet implemented but required for a DRMAA 1.0 compliant 
 implementation:

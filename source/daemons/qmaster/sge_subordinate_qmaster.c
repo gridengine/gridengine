@@ -171,12 +171,11 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
    if (suspend) {
       do_action = (sos_counter == 1);
       signal = SGE_SIGSTOP;
-      event = sgeE_QUEUE_SUSPEND_ON_SUB;
+      event = sgeE_QINSTANCE_SOS;
    } else {
-      send_qinstance_signal = !send_qinstance_signal;
       do_action = (sos_counter == 0);
       signal = SGE_SIGCONT;
-      event = sgeE_QUEUE_UNSUSPEND_ON_SUB;
+      event = sgeE_QINSTANCE_USOS;
    }
 
    /*
@@ -186,13 +185,15 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
             (do_action ? "" : "already"),
             (suspend ? "suspended" : "unsuspended")));
    if (do_action) {
+      DPRINTF(("Due to other suspend states signal will %sbe delivered\n",
+               send_qinstance_signal ? "NOT " : "")); 
       if (send_qinstance_signal && !rebuild_cache) {
          ret |= sge_signal_queue(signal, this_elem, NULL, NULL);
       }
 
       qinstance_state_set_susp_on_sub(this_elem, suspend);
 
-      sge_add_event(NULL, 0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
+      sge_add_event(0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
       reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
       lListElem_clear_changed_info(this_elem);
    }

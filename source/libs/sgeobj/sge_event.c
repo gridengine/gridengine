@@ -298,10 +298,10 @@ const char *event_text(const lListElem *event, dstring *buffer)
    case sgeE_QINSTANCE_MOD:
       sge_dstring_sprintf(buffer, MSG_EVENT_MODQINSTANCE_ISS, (int)number, strkey, strkey2);
       break;
-   case sgeE_QINSTANCE_SOS:
+   case sgeE_QINSTANCE_USOS:
       sge_dstring_sprintf(buffer, MSG_EVENT_UNSUSPENDQUEUEXONSUBORDINATE_IS, (int)number, strkey);
       break;
-   case sgeE_QINSTANCE_USOS:
+   case sgeE_QINSTANCE_SOS:
       sge_dstring_sprintf(buffer, MSG_EVENT_SUSPENDQUEUEXONSUBORDINATE_IS , (int)number, strkey);
       break;
 

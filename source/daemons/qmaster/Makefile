@@ -65,7 +65,7 @@ QMASTER_SRC = sge_qmaster_main.c \
               qmaster_to_execd.c \
               sched_conf_qmaster.c \
               setup_qmaster.c \
-              subordinate_qmaster.c \
+              sge_subordinate_qmaster.c \
               sge_qmaster_timed_event.c \
               sge_utility_qmaster.c \
               sge_persistence_qmaster.c \
@@ -225,8 +225,8 @@ sched_conf_qmaster.o   : $(QMASTER_DIR)/sched_conf_qmaster.c
 setup_qmaster.o   : $(QMASTER_DIR)/setup_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/setup_qmaster.c
 
-subordinate_qmaster.o   : $(QMASTER_DIR)/subordinate_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/subordinate_qmaster.c
+sge_subordinate_qmaster.o   : $(QMASTER_DIR)/sge_subordinate_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_subordinate_qmaster.c
 
 sge_qmaster_timed_event.o   : $(QMASTER_DIR)/sge_qmaster_timed_event.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_qmaster_timed_event.c

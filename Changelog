@@ -1,9 +1,14 @@
-SG-2004-03-10-1: Bugfix:    the japi event client does get qmaster goes down events
-                            and client shut down events. Part of issue: 788
+EB-2004-03-10-1: Bugfix:    Unsuspend on subordinate is broken
+                 Issue:     807
+                 Changed:   sge_qmaster
+                 Review:    SG
+
+SG-2004-03-10-1: Bugfix:    the japi event client does get qmaster goes down 
+                            events and client shut down events. Part of 788
                  Changed:   qmaster
 
-SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket computation
-                            on AMD64 - linux
+SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket 
+                            computation on AMD64 - linux
                  Changed:   scheduler
                  Review:    CR
                  Issue:     820

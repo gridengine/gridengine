@@ -557,12 +557,19 @@ static int read_ls(void)
                    lGetString(ls_elem, LS_command), input));
          } else {
 #ifdef INTERIX
-            if (wl_handle_ls_results(name, value, host)) 
+            char error_buffer[4 * MAX_STRING_SIZE] = "";
+
+            if (wl_handle_ls_results(name, value, host, error_buffer)) 
 #endif
             {
                tmp_list = lGetList(ls_elem, LS_incomplete);
                sge_add_str2load_report(&tmp_list, name, value, host);
             }
+#ifdef INTERIX
+            if (error_buffer[0] != '\0') {
+               ERROR((SGE_EVENT, error_buffer));
+            }
+#endif
          }
       }
    }

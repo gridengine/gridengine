@@ -1352,8 +1352,8 @@ case WIN32_X86:
    # Default build targets for WIN32_X86 for which we have seperate make files
    set SGE_DEPEND       = 0
    set QMON             = 0
-   set REMOTE           = 1
-   set QMAKE            = 1
+#   set REMOTE           = 1
+#   set QMAKE            = 1
    set QTCSH            = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
@@ -1902,6 +1902,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    if ( $DEBUGGED == 1 ) then
       set WINLFLAGS = "/DEBUG"
+   else
+      set WINLFLAGS = ""
    endif 
    set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
    set WINLFLAGS = "${WINLFLAGS} /SUBSYSTEM:CONSOLE /MACHINE:X86"

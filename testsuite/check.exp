@@ -5254,7 +5254,11 @@ proc compile_source {} {
    set mail_body    "date: [exec date]\n"
 
    set html_body [ create_html_text "date: [exec date]" 1 ]
-    
+   append html_body [ create_html_text "compiling ..." 1 ]
+   update_compile_html_output $html_body
+   set html_body [ create_html_text "date: [exec date]" 1 ]
+
+ 
    set was_error 0
    set cvs_change_log ""
 

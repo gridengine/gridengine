@@ -1,3 +1,13 @@
+AA-2004-03-26-1: Bugfix:    -2 spinbox bug
+                 Changed:   qmon
+                 Bugtraq:   ???
+                 Review:    AS
+
+AA-2004-03-26-0: Bugfix:    CSP reconnect problem of scheduler and execd
+                 Changed:   all binaries
+                 Bugtraq:   ???
+                 Review:    AS
+
 AS-2004-03-25-1: Bugfix:    openSSL vulnerabilites
                             upgrade to openSSL 0.9.7d
                  Bugtraq:   5018884

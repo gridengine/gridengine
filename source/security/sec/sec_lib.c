@@ -368,6 +368,7 @@ int sec_init(const char *progname)
 /*    EVP_add_digest_alias(SN_sha1,"ssl3-sha1"); */
 /*    EVP_add_digest_alias(SN_sha1WithRSAEncryption,SN_sha1WithRSA); */
 #else
+   EVP_add_cipher(EVP_enc_null());
    EVP_add_cipher(EVP_rc4());
    EVP_add_digest(EVP_md5());
    EVP_add_digest_alias(SN_md5,"ssl2-md5");
@@ -437,6 +438,10 @@ int sec_init(const char *progname)
    }   
 
    gsd.connid = gsd.seq_send = gsd.connect = gsd.seq_receive = 0;
+
+   if (gsd.is_master) {
+      conn_list = lCreateList("conn_list", SecurityT);
+   }   
 
    /* 
    ** read security related files
@@ -566,7 +571,7 @@ int compressed
                     pb.head_ptr, pb.bytes_used, mid, compressed);
    
    clear_packbuffer(&pb);
-   
+
    DEXIT;
    return i;
 }
@@ -609,6 +614,16 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 
    if ((i=receive_message(fromcommproc, fromid, fromhost, tag, buffer, buflen,
                        synchron, compressed))) {
+
+      /*
+      ** FIXME
+      ** a possible cause may be an invalid connection after master restart
+      ** any side effects ???
+      */
+      if (*tag == TAG_GDI_REQUEST) {
+         gsd.connect = 0;
+      }
+
       DEXIT;
       return i;
    }
@@ -628,8 +643,10 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
       if (sec_decrypt(buffer,buflen,fromhost,fromcommproc,*fromid)) {
          ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSI,
                   fromhost,fromcommproc,*fromid));
-         if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0))
-            ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
+         if (*tag != TAG_GDI_REQUEST) {         
+            if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0))
+               ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
+         }   
          DEXIT;
          return SEC_RECEIVE_FAILED;
       }
@@ -642,6 +659,7 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
          return SEC_RECEIVE_FAILED;
       }
    }
+
 
    DEXIT;
    return 0;
@@ -1017,6 +1035,11 @@ const char *tohost
       goto error;
    }
 
+/***
+FIXME AA
+***/
+remove_pending_messages(NULL, 0, 0, 0);
+
    /* 
    ** send buffer
    */
@@ -1066,6 +1089,7 @@ const char *tohost
       i=-1;
       goto error;
    }
+
    if (fromtag != TAG_SEC_RESPOND) {
       ERROR((SGE_EVENT, MSG_SEC_UNEXPECTEDTAG));
       i=-1;
@@ -1517,11 +1541,13 @@ int inbuflen
    /*
    ** malloc outbuf 
    */
-   outbuf = malloc(inbuflen + EVP_CIPHER_block_size(gsd.cipher));
-   if (!outbuf) {
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
-      i=-1;
-      goto error;
+   if (inbuflen > 0) {
+      outbuf = malloc(inbuflen + EVP_CIPHER_block_size(gsd.cipher));
+      if (!outbuf) {
+         ERROR((SGE_EVENT, MSG_GDI_MEMORY_MALLOCFAILED));
+         i=-1;
+         goto error;
+      }
    }
 
    /*
@@ -1553,26 +1579,26 @@ int inbuflen
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
 
-
-   memset(iv, '\0', sizeof(iv));
-   EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
-   if (!EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
-                           (unsigned char*)inbuf, inbuflen)) {
-      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
-      sec_error();
-      i=-1;
-      goto error;
+   if (inbuflen > 0) {
+      memset(iv, '\0', sizeof(iv));
+      EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
+      if (!EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
+                              (unsigned char*)inbuf, inbuflen)) {
+         ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
+         sec_error();
+         i=-1;
+         goto error;
+      }
+      if (!EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
+         ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
+         sec_error();
+         i=-1;
+         goto error;
+      }
+      EVP_CIPHER_CTX_cleanup(&ctx);
+      if (!outlen)
+         outlen = inbuflen;
    }
-   if (!EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
-      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
-      sec_error();
-      i=-1;
-      goto error;
-   }
-   EVP_CIPHER_CTX_cleanup(&ctx);
-   if (!outlen)
-      outlen = inbuflen;
-
    /*
    ** initialize packbuffer
    */
@@ -1740,6 +1766,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    */
    if ((i=init_packbuffer_from_buffer(&pb, *buffer, *buflen, 0))) {
       ERROR((SGE_EVENT, MSG_SEC_INITPBFAILED));
+      DTRACE;
       goto error;
    }
 
@@ -1748,7 +1775,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    */
    i = sec_unpack_message(&pb, &connid, &enc_mac_len, &enc_mac, 
                           &enc_msg_len, &enc_msg);
-   if (i) {
+   if (i != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_SEC_UNPACKMSGFAILED));
       packstr(&pb, MSG_SEC_UNPACKMSGFAILED);
       goto error;
@@ -1872,7 +1899,6 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    EVP_CIPHER_CTX_cleanup(&ctx);
    if (!outlen)
       outlen = enc_msg_len;
-
    /*
    ** FIXME: check of mac ????
    */
@@ -2231,7 +2257,7 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
    u_long32 new_buflen;
    sge_pack_buffer pb;
 
-   DENTER(GDI_LAYER,"sec_set_connid");
+   DENTER(GDI_LAYER,"sec_get_connid");
 
    new_buflen = *buflen - INTSIZE;
 

@@ -36,7 +36,13 @@ import java.util.*;
 import org.ggf.drmaa.*;
 
 /**
- *
+ * <p>The SGESession provides a DRMAA interface to Grid Engine.  This interface
+ * is built on top of the DRMAA C binding using JNI.  In order to keep the
+ * native code as localized as possible, this class also provides native DRMAA
+ * services to other classes, such as the SGEJobTemplate.</p>
+ * <p>This class relies on the <i>jdrmaa</i> shared library.</p>
+ * @see org.ggf.drmaa.DRMAASession
+ * @see SGEJobTemplate
  * @author  dan.templeton@sun.com
  */
 public class SGESession extends DRMAASession {

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/05/12 10:08:32 $     Revision: $Revision: 1.22 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/08/01 23:41:41 $     Revision: $Revision: 1.23 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/05/12 10:08:32 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/08/01 23:41:41 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -242,7 +242,7 @@ Depending on the presence or absence of the \fB-explain\fP, \fB\-f\fP, \fB\-F\fP
 The \fB\-ext\fP and \fB\-urg\fP options may be used 
 to display additional information for each job.
 .\"
-.SS "\fBCluster Queue Format (without \-g c)\fP"
+.SS "\fBCluster Queue Format (with \-g c)\fP"
 Following the header line a section for each cluster queue
 is provided. When queue instances selection are applied (\-l \-pe, \-q, \-U)
 the cluster format contains only cluster queues of the corresponding queue

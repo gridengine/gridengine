@@ -1004,12 +1004,12 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instjavadoc = true ]; then
-      if [ -d ../doc/javadoc ]; then
-         Execute rm -rf $DEST_SGE_ROOT/javadoc
-         Makedir javadoc
-         Execute cp -R ../doc/javadoc $DEST_SGE_ROOT
-         Execute chmod -R a+r $DEST_SGE_ROOT/javadoc
-         Cleanup javadoc
+      if [ -d ../doc/javadocs ]; then
+         Execute rm -rf $DEST_SGE_ROOT/javadocs
+         Makedir javadocs
+         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT
+         Execute chmod -R a+r $DEST_SGE_ROOT/javadocs
+         Cleanup javadocs
       fi
    fi
 
@@ -1288,7 +1288,7 @@ for i in $ARCH; do
 
          for filename in $JDRMAA_FILES; do
             if [ -f $filename ]; then
-                InstallProg $filename
+                Install 0.0 755 $filename $DEST_SGE_ROOT/${UTILPREFIX}/`basename $filename`
             fi
          done
       fi

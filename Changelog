@@ -1,3 +1,11 @@
+DT-2004-08-01-0: Bugfix:    o Fixed JavaDoc errors
+                            o Fixed qstat man page error
+                            o Updated aimk to build new JavaDocs
+                            o Updated distinst to install drmaa.jar in lib
+                            o Added a link to the JavaDocs from the DRMAA Java
+                              language binding howto
+                 Changed:   doc, aimk, distinst, www
+
 DT-2004-07-30-0: Bugfix:    o Fixed seg fault in qconf -mattr
                             o Fixed CULL cross-linking in qconf -mattr queue
                               complex_values

@@ -34,7 +34,8 @@ package com.sun.grid.drmaa;
 import org.ggf.drmaa.*;
 
 /**
- *
+ * This class is used to create an SGESession object.
+ * @see org.ggf.drmaa.DRMAASessionFactory
  * @author  dan.templeton@sun.com
  */
 public class SGESessionFactory extends DRMAASessionFactory {

@@ -37,7 +37,8 @@ import java.util.Map;
 import org.ggf.drmaa.*;
 
 /**
- *
+ * This class provides information about a completed Grid Engine job.
+ * @see org.ggf.drmaa.JobInfo
  * @author  dan.templeton@sun.com
  */
 public class SGEJobInfo extends JobInfo {
@@ -53,7 +54,12 @@ public class SGEJobInfo extends JobInfo {
    private static final int SIGNAL_OFFSET = 12;
    private String signal = null;
    
-   /** Creates a new instance of SGEJobInfo */
+   /** Creates a new instance of SGEJobInfo
+    * @param jobId the job id string
+    * @param status an opaque status code
+    * @param resourceUsage an array of name=value resource usage pairs
+    * @param signal the string description of the terminating signal
+    */
    SGEJobInfo (String jobId, int status, String[] resourceUsage, String signal) {
       super (jobId, status, nameValuesToMap (resourceUsage));
       

@@ -36,7 +36,6 @@ import java.util.regex.*;
 
 import org.ggf.drmaa.*;
 
-/**
 /** <p>This class represents a remote job and its attributes.  It is used to
  * set up the environment for a job to be submitted.</p>
  * <h3>DRMMA Attributes</h3>
@@ -97,8 +96,8 @@ import org.ggf.drmaa.*;
  *  <tr><td>softRunDurationTimeLimit</td><td>NONE</td>
  * </table>
  * @author  dan.templeton@sun.com
- * @see org/ggf/drmaa/JobTemplate
- * @see org/ggf/drmaa/DRMAASession
+ * @see org.ggf.drmaa.JobTemplate
+ * @see org.ggf.drmaa.DRMAASession
  * @see SGESession
  */
 public class SGEJobTemplate extends JobTemplate {
@@ -128,7 +127,10 @@ public class SGEJobTemplate extends JobTemplate {
    private SGESession session = null;
    private int id = -1;
    
-   /** Creates a new instance of SGEJobTemplate */
+   /** Creates a new instance of SGEJobTemplate
+    * @param session the associated SGESession object
+    * @param id the id of this job template
+    */
    SGEJobTemplate (SGESession session, int id) {
       this.session = session;
       this.id = id;

@@ -238,6 +238,7 @@ enum {
    Dattr_OPT,     /* aelete a sublist from file */
    Aattr_OPT,     /* add a element to a sublist from file */
    sobjl_OPT,     /* show object list which matches conf value */
+   purge_OPT,     /* delete element which value matches given string */
       
 #ifndef __SGE_NO_USERMAPPING__
    /* added for user mapping */

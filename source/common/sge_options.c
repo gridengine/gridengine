@@ -418,6 +418,8 @@ unsigned short sge_options[][ALL_OPT + 1] =
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 /* sobjl_OPT */ 
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/* purge_OPT */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 
 #ifndef __SGE_NO_USERMAPPING__
 /*  aumap_OPT  -  add new user mapping entry */

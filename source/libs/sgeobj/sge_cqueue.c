@@ -1712,3 +1712,40 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
    DEXIT;
    return ret;
 }
+
+bool
+cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, const char *hgroup_or_hostname)
+{
+   bool ret = false;
+   int index;
+
+   lList *sublist;
+   lListElem *ep = NULL;
+   const char *attr_name = NULL;
+
+   DENTER(CQUEUE_LAYER, "cqueue_purge_host");
+   if (this_elem != NULL) {
+      for_each (ep, attr_list) {
+         attr_name = lGetString(ep, US_name);
+         DPRINTF((SFQ"\n", attr_name));
+      
+         index = 0;
+         while(cqueue_attribute_array[index].name != NULL) {
+
+            /* Does the given attr_wildcard match with the actual attr_name */ 
+            if (!fnmatch(attr_name, cqueue_attribute_array[index].name, 0)) {
+               sublist = lGetList(this_elem, cqueue_attribute_array[index].cqueue_attr );
+
+               if (lDelElemHost(&sublist, cqueue_attribute_array[index].href_attr, hgroup_or_hostname) == 1) {
+                  DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, cqueue_attribute_array[index].name ));
+                  ret = true;
+               }
+            }
+            index++;
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}

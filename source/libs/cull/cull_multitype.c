@@ -5066,10 +5066,12 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
          lFreeList(*lpp);
          *lpp = NULL;
       }
+      DEXIT;
+      return 1;
    }
 
    DEXIT;
-   return 1;
+   return 0;
 }
 
 

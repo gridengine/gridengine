@@ -49,6 +49,7 @@
 #define MSG_CUSER_FILENOTCORRECT_S    _MESSAGE(5013, _("User mapping file "SFQ" is not correct\n"))
 #define MSG_PARSE_BAD_ATTR_ARGS_SS    _MESSAGE(5014, _("The attribute name ("SFQ") and/or value ("SFQ") is invalid\n"))
 #define MSG_QCONF_CANT_MODIFY_NONE    _MESSAGE(5015, _("\"NONE\" is not a valid list attribute value for -mattr.  Try using -rattr instead.\n"))
+#define MSG_PARSE_ATTR_ARGS_NOT_FOUND    _MESSAGE(5016, _("Attribute name ("SFQ") and/or value ("SFQ") not found \n"))
 
 #endif /* __MSG_QCONF_H */
 

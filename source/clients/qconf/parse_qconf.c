@@ -105,6 +105,7 @@
 #include "sgeobj/sge_subordinateL.h"
 
 #include "msg_common.h"
+#include "msg_clients_common.h"
 #include "msg_qconf.h"
 
 static int sge_next_is_an_opt(char **ptr);
@@ -2934,6 +2935,134 @@ char *argv[]
       FREE (info_entry[1].fields);
       FREE (info_entry[2].fields);
       
+      continue;
+   }
+
+
+/*----------------------------------------------------------------------------*/
+   /* "-purge" */
+   if (strcmp("-purge", *spp) == 0) {
+
+      static object_info_entry info_entry[] = {
+         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    QR_Type,   SGE_ATTR_QNAME,     QR_name,   NULL,        cqueue_xattr_pre_gdi},
+#ifndef __SGE_NO_USERMAPPING__
+         {SGE_USER_MAPPING_LIST,     SGE_OBJ_USERMAPPING,    CU_Type,   NULL,     CU_name,   NULL,        cqueue_xattr_pre_gdi},
+#endif
+         {0,                   NULL,              0,         NULL,               0,         NULL,        NULL}
+      };
+
+      int index = 0;
+      char *object_instance = NULL;
+      char *object = NULL;
+      char *hgroup_or_hostname = NULL;
+      char *attr = NULL;
+      lListElem *cqueue = NULL;
+
+      /* This does not have to be freed later */
+      info_entry[0].fields = CQ_fields;
+
+      spp = sge_parser_get_next(spp);
+
+      /* is the object given in commandline
+         supported by this function */
+      index = 0;
+      while(info_entry[index].object_name) {
+         if (!strcmp(info_entry[index].object_name, *spp)) {
+            spp = sge_parser_get_next(spp);
+         break; 
+      }
+      index++;
+   }
+
+   if (!info_entry[index].object_name) {
+      fprintf(stderr, "Modification of object "SFQ" not supported\n", *spp);
+      SGE_EXIT(1);
+   } 
+
+   /* parse command line arguments */
+   attr = sge_strdup(NULL, *spp);
+   if (attr == NULL) {
+      fprintf(stderr, "No attribute given\n");
+      SGE_EXIT(1);
+   }
+   spp = sge_parser_get_next(spp);
+
+   object_instance = sge_strdup(NULL, *spp);
+
+   /* object_instance look like queue@host */
+   if (object = sge_strdup(NULL, sge_strtok(object_instance, "@"))) {
+       hgroup_or_hostname = sge_strdup(NULL, sge_strtok(NULL, NULL));
+   }
+   
+   if ( (object == NULL) || (hgroup_or_hostname == NULL) ) {
+      fprintf(stderr, "Given object_instance "SFQ" is incomplete\n", object_instance);
+      FREE(attr);
+      FREE(object_instance);
+      FREE(object);
+      SGE_EXIT(1);
+   }
+     
+   /* queue_instance no longer neede */
+   FREE(object_instance);
+
+   if (strcmp("@/", hgroup_or_hostname) == 0) {
+      fprintf(stderr, "Modification of host "SFQ" not supported\n", hgroup_or_hostname);
+      FREE(attr);
+      FREE(object);
+      FREE(hgroup_or_hostname);
+      SGE_EXIT(1);
+   }
+
+#ifndef __SGE_NO_USERMAPPING__
+   if ( strcmp(info_entry[index].object_name, SGE_CQUEUE_LIST )) {
+#endif
+
+      /* now get the queue, delete the objects and send the queue back to the master */
+      cqueue = cqueue_get_via_gdi(&alp, object);
+
+      if (cqueue == NULL) {
+         ERROR((SGE_EVENT, MSG_CQUEUE_DOESNOTEXIST_S, object));  
+         FREE(attr); 
+         FREE(object);
+         FREE(hgroup_or_hostname);
+         SGE_EXIT(1);
+      }
+      
+      parse_name_list_to_cull("attribute list", &lp, US_Type, US_name, attr);
+      if (cqueue_purge_host(cqueue, &alp, lp, hgroup_or_hostname) == true) {
+         cqueue_add_del_mod_via_gdi(cqueue, &alp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+      }
+      else {
+         WARNING((SGE_EVENT, MSG_PARSE_ATTR_ARGS_NOT_FOUND, attr, hgroup_or_hostname));
+      }
+
+#ifndef __SGE_NO_USERMAPPING__
+   }
+   else {
+      /* Usermapping could be done analoguous to code above */
+   }
+#endif
+
+      /* Error handling */
+      for_each(aep, alp) {
+            FILE *std_x = NULL;
+            
+            if (lGetUlong(aep, AN_status) != STATUS_OK) {
+               std_x = stderr;
+            } else {
+               std_x = stdout;
+            } 
+            fprintf(std_x, "%s", lGetString(aep, AN_text)); 
+         }
+
+      if (cqueue != NULL) {
+         cqueue = lFreeElem(cqueue);
+      }
+
+      FREE(attr); 
+      FREE(object);
+      FREE(hgroup_or_hostname);
+      spp++;
       continue;
    }
 

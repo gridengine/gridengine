@@ -172,6 +172,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST;
      case OA_OBJECT_NAME2:
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2;
+     case OA_OBJECT_NAME3:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3;
 
      default:
          break; 
@@ -841,6 +843,12 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_pe_OPT_PE_NAME_SLOT_RANGE, 
          MSG_GDI_UTEXT_pe_OPT_PE_NAME_SLOT_RANGE );
       MARK(OA_SLOT_RANGE);
+   }
+
+   if (VALID_OPT(purge_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_purge_OPT,
+         MSG_GDI_UTEXT_purge_OPT);
+      MARK(OA_OBJECT_NAME3);
    }
 
    if (VALID_OPT(q_OPT, uti_state_get_mewho())) {

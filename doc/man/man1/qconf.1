@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/11/12 15:40:02 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/03/01 08:58:16 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2004/11/12 15:40:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2005/03/01 08:58:16 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -282,7 +282,7 @@ Requires root/manager privileges.
 .\"
 .IP "\fB\-aattr obj_spec attr_name val obj_instance,...\fP"
 .ta 2.3i
-	\fI<add to object attributes>\fP
+   \fI<add to object attributes>\fP
 .ta 3i
 .br
 Allows adding specifications to a single
@@ -911,6 +911,16 @@ and an editor (either
 or the editor indicated by the EDITOR environment variable) is invoked
 for modifying the user definition. Upon exiting the editor, the
 modified data is registered. Requires root or manager privileges.
+.\"
+.IP "\fB\-purge queue attr_nm,... queue_instance\fP"
+.ta 2.3i
+   \fI<purge attributes>\fP
+.ta 3i
+.br
+Purge the attributes defined in \fBattr_nm\fP from the queue 
+instance defined in \fBqueue_instance\fP. The name of the 
+attributes are described in 
+.M queue_conf 1 .
 .\"
 .IP "\fB\-sc\fP	\fI<show complexes>\fP"
 Display the complex configuration.

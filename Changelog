@@ -1,3 +1,8 @@
+RD-2005-03-01-1: Enhancem.: -purge switch added
+                            purge host specific cluster queue profiles
+                 Issue:     1453            
+                 Review:    MD
+
 JG-2005-02-28-1: Testsuite: Adding high numbers of hosts during qmaster 
                             installation could break communication between 
                             expect and install script.

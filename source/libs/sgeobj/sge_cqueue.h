@@ -192,4 +192,7 @@ bool
 cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
                                const char *hgroup_or_hostname);
 
+bool
+cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, const char *hgroup_or_hostname);
+
 #endif /* __SGE_CQUEUE_H */

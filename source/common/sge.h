@@ -57,6 +57,7 @@
 #define SGE_OBJ_PE                     "pe"
 #define SGE_OBJ_CKPT                   "ckpt"
 #define SGE_OBJ_CALENDAR               "cal"
+#define SGE_OBJ_USER_MAPPING           "usermapping"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_SCALING          "load_scaling"

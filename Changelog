@@ -1,3 +1,6 @@
+AS-2004-11-26-0: CVS        Created V60u2_TAG
+---------------------------------------------
+
 CR-2004-11-26-0: Testsuite: - fixed bug in path_alias test which caused errors
                               on irix65
                             - additional test output for migration test

@@ -40,6 +40,7 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "msg_utilib.h"
+#include "fnmatch.h"
 
 #define IS_DELIMITOR(c,delimitor) \
    (delimitor?(strchr(delimitor, c)?1:0):isspace(c))
@@ -577,6 +578,47 @@ int sge_strnullcmp(const char *a, const char *b)
    }
    return strcmp(a, b);
 }
+
+/****** sge_string/sge_patternnullcmp() ****************************************
+*  NAME
+*     sge_patternnullcmp() -- like fnmatch 
+*
+*  SYNOPSIS
+*     int sge_patternnullcmp(const char *str, const char *pattern) 
+*
+*  FUNCTION
+*     Like fnmatch() apart from the handling of NULL strings.
+*     These are treated as being less than any not-NULL strings.
+*     Important for sorting lists where NULL strings can occur. 
+*
+*  INPUTS
+*     const char *str     - string 
+*     const char *pattern - pattern to match 
+*
+*  RESULT
+*     int - result
+*         0 - strings are the same or both NULL 
+*        -1 - a < b or a is NULL
+*         1 - a > b or b is NULL
+*
+*
+*  NOTES
+*   MT-NOTE: fnmatch uses static variables, not MT safe
+*******************************************************************************/
+int sge_patternnullcmp(const char *str, const char *pattern) 
+{
+   if (!str && pattern) {
+      return -1;
+   }
+   if (str && !pattern) {
+      return 1;
+   }
+   if (!str && !pattern) {
+      return 0;
+   }
+   return fnmatch(pattern, str, 0);
+}
+
 
 /****** uti/string/sge_strnullcasecmp() ***************************************
 *  NAME

@@ -1331,7 +1331,7 @@ cqueue_find_used_href(lListElem *this_elem, lList **answer_list,
 
    DENTER(CQUEUE_LAYER, "cqueue_find_used_href");
    if (this_elem != NULL) {
-      int index;
+      int index=0;
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(this_elem,
@@ -1363,7 +1363,7 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
 
    DENTER(CQUEUE_LAYER, "cqueue_trash_used_href_setting");
    if (this_elem != NULL) {
-      int index;
+      int index=0;
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(this_elem,

@@ -111,12 +111,12 @@ static u_long32 guess_highest_job_number(void);
 static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
 static int job_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range);
 
-static lCondition *job_list_filter(int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);
+static lCondition *job_list_filter(int user_list_flag, lList *user_list, int jid_flag, const char *jobid, int all_users_flag, int all_jobs_flag, char *ruser);
 static int job_verify_predecessors(lListElem *job, lList **alpp);
 static int job_verify_name(const lListElem *job, lList **alpp, const char *job_descr);
 static bool contains_dependency_cycles(const lListElem * new_job, u_long32 job_number, lList **alpp);
 static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs_flag, int jid_flag, int user_list_flag, char *ruser);
-static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
+static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, const char *jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
 static int changes_consumables(lList **alpp, lList* new, lList* old);
@@ -800,12 +800,16 @@ int sub_command
       user_list_flag = 0;
 
    /* Did we get a valid jobid? */
+   jid_flag = 1;
+   jid_str = lGetString(idep, ID_str);
+
+/*   
    if ((jid_str = lGetString(idep, ID_str)) && (atol(jid_str) > 0)) {
       jid_flag = 1;
    } else {
       jid_flag = 0;    
    }
-
+*/
    if ((ret=verify_job_list_filter(alpp, all_users_flag, all_jobs_flag, 
          jid_flag, user_list_flag, ruser))) { 
       DEXIT;
@@ -814,7 +818,7 @@ int sub_command
 
    where = job_list_filter(
       user_list_flag, lGetList(idep, ID_user_list), /* user list */
-      jid_flag, jid_flag?atol(lGetString(idep, ID_str)):0,     /* job id */
+      jid_flag, jid_flag?jid_str:"0",     /* job id */
       all_users_flag,       /* all jobs  */
       all_jobs_flag,        /* all jobs in user list */
       ruser);
@@ -1075,7 +1079,7 @@ int sub_command
    if (!njobs && !deleted_tasks) {
       empty_job_list_filter(alpp, 0, user_list_flag,
             lGetList(idep, ID_user_list), jid_flag,
-            jid_flag?atol(lGetString(idep, ID_str)):0,
+            jid_flag?lGetString(idep, ID_str):"0",
             all_users_flag, all_jobs_flag, ruser,
             alltasks == 0 ? 1 : 0, r_start, r_end, step);
       DEXIT;
@@ -1094,7 +1098,7 @@ int was_modify,
 int user_list_flag,
 lList *user_list,
 int jid_flag,
-u_long32 jobid,
+const char *jobid,
 int all_users_flag,
 int all_jobs_flag,
 char *ruser, 
@@ -1130,14 +1134,14 @@ u_long32 step
    } else if (jid_flag) {
       if(is_array) {
          if(start == end) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASK_UU, 
-                   u32c(jobid), u32c(start)));
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASK_SU, 
+                   jobid, u32c(start)));
          } else {
-            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU, 
-                   u32c(jobid), u32c(start), u32c(end), u32c(step)));
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU, 
+                   jobid, u32c(start), u32c(end), u32c(step)));
          }
       } else {
-         ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SU, "job", u32c(jobid)));
+         ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SS, "job", jobid));
       }      
    } else {
       /* Should not be possible */
@@ -1155,7 +1159,7 @@ static lCondition *job_list_filter(
 int user_list_flag,
 lList *user_list,
 int jid_flag,
-u_long32 jobid,
+const char* jobid,
 int all_users_flag,
 int all_jobs_flag,
 char *ruser 
@@ -1195,7 +1199,10 @@ char *ruser
 
    if (jid_flag) {
       DPRINTF(("Add jid "u32" to filter\n", jobid));
-      new_where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jobid);
+      if (isdigit(jobid[0]))
+         new_where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, atol(jobid));
+      else
+         new_where = lWhere("%T(%I p= %s)", JB_Type, JB_job_name, jobid);
       if (!where)
          where = new_where;
       else
@@ -1246,6 +1253,7 @@ char *ruser
    }
 
    /* case 9 */
+   
    if (all_users_flag && user_list_flag) {
       ERROR((SGE_EVENT, MSG_SGETEXT_SPECIFYONEORALLUSER));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1260,6 +1268,7 @@ char *ruser
       DEXIT;
       return STATUS_EUNKNOWN;
    }                            
+
 
    /* case 1,3: Only manager can modify all jobs of all users */
    if (all_users_flag && !jid_flag && !manop_is_manager(ruser)) {
@@ -1500,11 +1509,14 @@ int sub_command
    lListElem *nxt, *jobep = NULL;   /* pointer to old job */
    int job_id_pos;
    int user_list_pos;
+   int job_name_pos;
    lCondition *where = NULL;
    int user_list_flag;
    int njobs = 0, ret, jid_flag;
    int all_jobs_flag;
    int all_users_flag;
+   bool job_name_flag = false;
+   char *job_mod_name = NULL;
  
    DENTER(TOP_LAYER, "sge_gdi_mod_job");
 
@@ -1525,10 +1537,15 @@ int sub_command
       user_list_flag = 1;
    else
       user_list_flag = 0;
-
+      
+   job_name_pos = lGetPosViaElem(jep, JB_job_name); 
    /* Did we get a job - with a jobid? */
-   if (((job_id_pos = lGetPosViaElem(jep, JB_job_number)) >= 0) && 
-       lGetPosUlong(jep, job_id_pos) > 0) { 
+   if (
+       (((job_id_pos = lGetPosViaElem(jep, JB_job_number)) >= 0) && 
+       lGetPosUlong(jep, job_id_pos) > 0) ||
+       ((job_name_pos >= 0) &&  
+        (job_name_flag = (lGetPosString(jep, job_name_pos)[0] == '$')))
+       ) { 
       jid_flag = 1; 
    } else
       jid_flag = 0;
@@ -1538,12 +1555,37 @@ int sub_command
       DEXIT;
       return ret;
    }    
+   {
+      const char *job_id_str = NULL;
+      char job_id[40];
+      if (!job_name_flag){
+         sprintf(job_id, u32,lGetPosUlong(jep, job_id_pos)); 
+         job_id_str = job_id;
+      }
+      else {   
+         char *del_pos = NULL;
+         job_id_str = lGetPosString(jep, job_name_pos);
+         job_id_str++;
+         del_pos = strchr(job_id_str, '$');
+         *del_pos = '\0';
+         del_pos++;
+
+         job_mod_name = sge_strdup(NULL, job_id_str);
+         job_id_str = job_mod_name;
+
+         if (strlen(del_pos)>0)
+            lSetPosString(jep, job_name_pos, del_pos);
+         else
+            lSetPosString(jep, job_name_pos, NULL);
+            
+      }
 
    where = job_list_filter(
       user_list_flag, user_list_flag?lGetPosList(jep, user_list_pos):NULL,  
-      jid_flag, jid_flag?lGetPosUlong(jep, job_id_pos):0,/* job id    */
+      jid_flag, jid_flag?job_id_str:"0",/* job id    */
       all_users_flag,                           /* all jobs  */
       all_jobs_flag,                            /* all jobs in user list */         ruser); 
+   }
    
    nxt = lFirst(Master_Job_List);
    while ((jobep=nxt)) {  
@@ -1566,6 +1608,7 @@ int sub_command
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, u32c(jobid), MSG_JOB_CHANGEATTR));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          lFreeWhere(where);
+         FREE(job_mod_name);
          DEXIT;
          return STATUS_ENOTOWNER;   
       }
@@ -1588,6 +1631,7 @@ int sub_command
 
          DPRINTF(("---------- removed messages\n"));
          lFreeWhere(where);
+         FREE(job_mod_name); 
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -1608,6 +1652,7 @@ int sub_command
             lFreeList(tmp_alp);
             lFreeElem(new_job);
             lFreeWhere(where); 
+            FREE(job_mod_name);
             DEXIT;
             return STATUS_EDISK;
          }
@@ -1668,15 +1713,26 @@ int sub_command
    lFreeWhere(where);
 
    if (!njobs) {
+      const char *job_id_str = NULL;
+      char job_id[40];
+      if (!job_name_flag){
+         sprintf(job_id, u32,lGetPosUlong(jep, job_id_pos)); 
+         job_id_str = job_id;
+         }
+      else {  
+         job_id_str = job_mod_name;
+      }
+      
       empty_job_list_filter(alpp, 1, user_list_flag,
             user_list_flag?lGetPosList(jep, user_list_pos):NULL,
-            jid_flag, jid_flag?lGetPosUlong(jep, job_id_pos):0,
+            jid_flag, jid_flag?job_id_str:"0",
             all_users_flag, all_jobs_flag, ruser, 0, 0, 0, 0);
+      FREE(job_mod_name);            
       DEXIT;
       return STATUS_EEXIST;
    }   
 
-
+   FREE(job_mod_name); 
    DEXIT;
    return STATUS_OK;
 }
@@ -2886,7 +2942,17 @@ static int job_verify_name(const lListElem *job, lList **alpp,
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
-   if (strchr(job_name, '|') != NULL){
+   else if (strchr(job_name, '|') != NULL){
+      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      ret = STATUS_EUNKNOWN;
+   }
+   else if (strchr(job_name, '.') != NULL){
+      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      ret = STATUS_EUNKNOWN;
+   }
+   else if (strchr(job_name, '$') != NULL){
       ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;

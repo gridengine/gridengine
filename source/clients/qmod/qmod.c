@@ -299,6 +299,7 @@ int usageshowed = 0;
          break;
       }
    }
+
    if(lGetNumberOfElem(*ppcmdline)) {
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if(!usageshowed)
@@ -356,7 +357,7 @@ char *what
 #endif
       fprintf(fp, "job_queue_list          {job_tasks|queue}[{,| }{job_tasks|queue}{,| }...]\n");
       fprintf(fp, "queue_list              {queue}[{,| }{queue}{,| }...]\n");
-      fprintf(fp, "job_tasks               job_id['.'task_id_range]\n");
+      fprintf(fp, "job_tasks               [job_id|job_name|pattern]['.'task_id_range]\n");
       fprintf(fp, "task_id_range           task_id['-'task_id[':'step]]\n");
 
    } else {

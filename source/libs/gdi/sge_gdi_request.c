@@ -1175,7 +1175,6 @@ sge_gdi_request **in
       }
       sge_c_gdi(uti_state_get_qualified_hostname(), ar, an);
    }
-
    return 0;
 }
 

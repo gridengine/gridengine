@@ -216,8 +216,8 @@ int event_handler_default_scheduler()
          lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
          lList *selected = NULL;
          lList *all_selected = NULL;
-
          selected = lSelect("", qinstance_list, where_queue, what_queue);
+
          if (copy.queue_list == NULL) {
             copy.queue_list = selected;
          } else {

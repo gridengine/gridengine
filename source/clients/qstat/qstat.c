@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fnmatch.h>
+#include <ctype.h>
 
 #include "sgermon.h"
 #include "symbols.h"
@@ -1967,7 +1968,7 @@ char *what
       fprintf(fp, "        [-help]                         %s",MSG_QSTAT_USAGE_PRINTTHISHELP);
       if (!qselect_mode) 
       if (!qselect_mode) 
-         fprintf(fp, "        [-j job_list ]                  %s",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
+         fprintf(fp, "        [-j job_identifier_list ]                  %s",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
       fprintf(fp, "        [-l resource_list]              %s",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
       if (!qselect_mode) 
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
@@ -1995,7 +1996,8 @@ char *what
 
       fprintf(fp, "destin_id_list           queue[,queue,...]\n");
       fprintf(fp, "pe_list                  pe[,pe,...]\n");
-      fprintf(fp, "resource_list            resource[=value][,resource[=value],.  ..]\n");
+      fprintf(fp, "job_identifier_list      [job_id|job_mame|pattern]{, [job_id|job_mame|pattern]}\n");
+      fprintf(fp, "resource_list            resource[=value][,resource[=value],...]\n");
       fprintf(fp, "user_list                user|@group[,user|@group],...]\n");
       fprintf(fp, "resource_attributes      resource,resource,.\n");
    } else {
@@ -2044,13 +2046,21 @@ lList *jid_list
    /* build 'where' for all jobs */
    where = NULL;
    for_each(j_elem, jid_list) {
-      u_long32 jid = atol(lGetString(j_elem, ST_name));
+      const char *job_name = lGetString(j_elem, ST_name);
 
-      newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
-      if (!where)
-         where = newcp;
-      else
-         where = lOrWhere(where, newcp);
+      if (isdigit(job_name[0])){
+         u_long32 jid = atol(lGetString(j_elem, ST_name));
+         newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
+      }
+      else {
+         newcp = lWhere("%T(%I p= %s)", JB_Type, JB_job_name, job_name);
+      }
+      if (newcp){ 
+         if (!where)
+            where = newcp;
+         else
+            where = lOrWhere(where, newcp);
+      }   
    }
    what = lWhat("%T(ALL)", JB_Type);
    /* get job list */
@@ -2065,12 +2075,13 @@ lList *jid_list
    }
    lFreeList(alp);
    if(!jobs_exist) {
+
       DEXIT;
       return 1;
    }
 
    /* does jlp contain all information we requested? */
-   if (lGetNumberOfElem(jlp) != lGetNumberOfElem(jid_list)) {
+   if (lGetNumberOfElem(jlp) == 0) {
       lListElem *elem1, *elem2;
       int first_time = 1;
 
@@ -2097,6 +2108,7 @@ lList *jid_list
       DEXIT;
       SGE_EXIT(1);
    }
+
 
    /* print scheduler job information and global scheduler info */
    for_each (j_elem, jlp) {

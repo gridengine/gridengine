@@ -82,6 +82,7 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "sge_qinstance.h"
 
 /*-------------------------------------------------------------------------*/
 

@@ -328,8 +328,29 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                }
             }
          }
+         /* job name or pattern was submitted */
+         else if (lGetUlong(dep, ID_action) == QI_DO_SUSPEND || 
+                lGetUlong(dep, ID_action) == QI_DO_RESCHEDULE ||
+                lGetUlong(dep, ID_action) == QI_DO_CLEARERROR || 
+                lGetUlong(dep, ID_action) == QI_DO_UNSUSPEND) {
+                
+            const char *job_name = lGetString(dep, ID_str);
+            const lListElem *job;
+            lListElem *mod = NULL;
+            for_each(job, Master_Job_List) {
+               if (!fnmatch(job_name, lGetString(job, JB_job_name), 0)) {
+                  char job_id[40];
+                  mod = lCopyElem(dep);
+                  sprintf(job_id, u32, lGetUlong(job, JB_job_number));
+                  lSetString(mod, ID_str, job_id);
+                  lAppendElem(request->lp, mod);
+                  found = true;
+               }
+            }
+         }
          else {
             /* job id invalid or action invalid for jobs */
+
          }
       }
 

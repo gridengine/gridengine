@@ -78,7 +78,8 @@ int sge_parse_jobtasks(
 lList **ipp,          /* ID_Type List */
 lListElem **idp,     /* New ID_Type-Elem parsed from str_jobtask */
 const char *str_jobtask,   
-lList **alpp 
+lList **alpp,
+bool include_names
 ) {
    char *token;
    char *job_str, *str;
@@ -121,10 +122,12 @@ lList **alpp
       }
    }
 
-   if (!atol(job_str) && strcmp(job_str, "all")) {
+   if (!include_names && !atol(job_str) && strcmp(job_str, "all")
+   ) {
       /*
       ** free the dupped string
       */
+         
       free(str);
       DEXIT;
       return -1;
@@ -455,7 +458,8 @@ bool parse_multi_jobtaskslist(
 lList **ppcmdline,
 const char *opt,
 lList **alpp,
-lList **ppdestlist 
+lList **ppdestlist,
+bool include_names
 ) {
    lListElem *ep, *sep, *idp;
    char str[256];
@@ -468,7 +472,7 @@ lList **ppdestlist
          lList *tmp_alp = NULL;
       
          if (sge_parse_jobtasks(ppdestlist, &idp, 
-               lGetString(sep, ST_name), &tmp_alp) == -1) {
+               lGetString(sep, ST_name), &tmp_alp, include_names) == -1) {
             sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
                lGetString(sep, ST_name));
             answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);

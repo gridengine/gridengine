@@ -726,8 +726,9 @@ char **argv
          } else {
             show_ja_task = 1;
          }
-         
-         if (((dusage.job_number == job_number) || !sge_strnullcmp(dusage.job_name, job_name)) &&
+        
+         if (((dusage.job_number == job_number) || !sge_patternnullcmp(dusage.job_name, job_name)) &&
+         /*!sge_strnullcmp(dusage.job_name, job_name)) && */
                show_ja_task) {
             showjob(&dusage);
             jobfound = 1;
@@ -1334,24 +1335,26 @@ FILE *fp
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
          
    fprintf(fp, "%s qacct [options]\n",MSG_HISTORY_USAGE );
-   fprintf(fp, " [-A account_string]          %s", MSG_HISTORY_A_OPT_USAGE); 
-   fprintf(fp, " [-help]                      %s", MSG_HISTORY_help_OPT_USAGE);
-   fprintf(fp, " [-h [host]]                  %s", MSG_HISTORY_h_OPT_USAGE );
-   fprintf(fp, " [-q [queue]]                 %s", MSG_HISTORY_q_OPT_USAGE );
-   fprintf(fp, " [-g [groupid|groupname]]     %s", MSG_HISTORY_g_OPT_USAGE );
-   fprintf(fp, " [-o [owner]]                 %s", MSG_HISTORY_o_OPT_USAGE);
-   fprintf(fp, " [-P [project]]               %s", MSG_HISTORY_P_OPT_USAGE );
-   fprintf(fp, " [-D [department]]            %s", MSG_HISTORY_D_OPT_USAGE);
-   fprintf(fp, " [-pe [pe_name]]              %s", MSG_HISTORY_pe_OPT_USAGE );
-   fprintf(fp, " [-slots [slots]]             %s", MSG_HISTORY_slots_OPT_USAGE);
-   fprintf(fp, " [-l attr=val,...]            %s", MSG_HISTORY_l_OPT_USAGE );
-   fprintf(fp, " [-b begin_time]              %s", MSG_HISTORY_b_OPT_USAGE);
-   fprintf(fp, " [-e end_time]                %s", MSG_HISTORY_e_OPT_USAGE);
-   fprintf(fp, " [-d days]                    %s", MSG_HISTORY_d_OPT_USAGE );
-   fprintf(fp, " [-j [[jobid|jobname]]]       %s", MSG_HISTORY_j_OPT_USAGE);
-   fprintf(fp, " [-t taskid[-taskid[:step]]]  %s", MSG_HISTORY_t_OPT_USAGE );
-   fprintf(fp, " [[-f] acctfile]              %s", MSG_HISTORY_f_OPT_USAGE );
-   fprintf(fp, " begin_time, end_time         %s", MSG_HISTORY_beginend_OPT_USAGE );
+   fprintf(fp, " [-A account_string]               %s", MSG_HISTORY_A_OPT_USAGE); 
+   fprintf(fp, " [-b begin_time]                   %s", MSG_HISTORY_b_OPT_USAGE);
+   fprintf(fp, " [-d days]                         %s", MSG_HISTORY_d_OPT_USAGE ); 
+   fprintf(fp, " [-D [department]]                 %s", MSG_HISTORY_D_OPT_USAGE);
+   fprintf(fp, " [-e end_time]                     %s", MSG_HISTORY_e_OPT_USAGE);
+   fprintf(fp, " [-g [groupid|groupname]]          %s", MSG_HISTORY_g_OPT_USAGE );
+   fprintf(fp, " [-h [host]]                       %s", MSG_HISTORY_h_OPT_USAGE );
+   fprintf(fp, " [-help]                           %s", MSG_HISTORY_help_OPT_USAGE);
+   fprintf(fp, " [-j [[job_id|job_name|pattern]]]  %s", MSG_HISTORY_j_OPT_USAGE);
+   fprintf(fp, " [-l attr=val,...]                 %s", MSG_HISTORY_l_OPT_USAGE );
+   fprintf(fp, " [-o [owner]]                      %s", MSG_HISTORY_o_OPT_USAGE);
+   fprintf(fp, " [-pe [pe_name]]                   %s", MSG_HISTORY_pe_OPT_USAGE );
+   fprintf(fp, " [-P [project]]                    %s", MSG_HISTORY_P_OPT_USAGE );
+   fprintf(fp, " [-q [queue]]                      %s", MSG_HISTORY_q_OPT_USAGE );
+   fprintf(fp, " [-slots [slots]]                  %s", MSG_HISTORY_slots_OPT_USAGE);
+   fprintf(fp, " [-t taskid[-taskid[:step]]]       %s", MSG_HISTORY_t_OPT_USAGE );
+   fprintf(fp, " [[-f] acctfile]                   %s", MSG_HISTORY_f_OPT_USAGE );
+   
+   fprintf(fp, "\n");
+   fprintf(fp, " begin_time, end_time              %s", MSG_HISTORY_beginend_OPT_USAGE );
   
    if (fp==stderr) {
       SGE_EXIT(1);

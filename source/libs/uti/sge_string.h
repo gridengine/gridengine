@@ -68,6 +68,8 @@ int sge_strnullcasecmp(const char *a, const char *b);
 
 int sge_strnullcmp(const char *a, const char *b);
 
+int sge_patternnullcmp(const char *str, const char *pattern); 
+
 void sge_strip_blanks(char *str);
 
 void sge_strtoupper(char *buffer, int max_len);

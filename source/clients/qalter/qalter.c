@@ -255,40 +255,12 @@ int *all_users
    /* initialize job field set */
    job_field[0] = NoName;
    nm_set(job_field, JB_job_number);
+   nm_set(job_field, JB_job_name);
 
    /* don't do verification of schedulability per default */
    lSetUlong(job, JB_verify_suitable_queues, SKIP_VERIFY);
    nm_set(job_field, JB_verify_suitable_queues);
 
-
-   /*
-   ** -clear option is special, is sensitive to order
-   ** kills all options that come before
-   ** there might be more than one -clear
-   */
-   /*while ((ep = lGetElemStr(cmdline, SPA_switch, "-clear"))) {
-      lListElem *ep_run;
-      char *cp_switch;
-
-      for (ep_run = lFirst(cmdline); ep_run;) {
-         ** remove -clear itsself
-         if (ep_run == ep) {
-            lRemoveElem(cmdline, ep_run);
-            break;
-         }
-         ** lNext can never be NULL here, because the -clear
-         ** element is the last one to delete
-         ** in general, these two lines wont work!
-         ep_run = lNext(ep_run);
-         
-         ** remove switch only if it is not a pseudo-arg
-         cp_switch = lGetString(lPrev(ep_run), SPA_switch);
-         if (cp_switch && (*cp_switch == '-')) {
-            lRemoveElem(cmdline, lPrev(ep_run));
-         }
-      }
-   }
-   */
 
    /*
    ** -help now handled separately in main()
@@ -388,7 +360,7 @@ int *all_users
    /* STR_PSEUDO_JOBID */
    if (lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBID)) {
       lList *jid_list = NULL;
-      if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list)) {
+      if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true)) {
          DEXIT;
          return answer;
       }                                                 
@@ -502,7 +474,7 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
          lSetString(job, JB_job_name, lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(cmdline, ep);
-         nm_set(job_field, JB_job_name);
+/*         nm_set(job_field, JB_job_name); */
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
@@ -721,8 +693,8 @@ int *all_users
          all_or_jidlist = ALL;
          (*all_jobs) = 1;
          DPRINTF(("got \'all\' from parsing\n", jobid));
-      } else if (((all_or_jidlist == NOTINIT) || (all_or_jidlist == JOB)) && 
-                  jobid != 0) { 
+      } else if (((all_or_jidlist == NOTINIT) || (all_or_jidlist == JOB)) /* && 
+                  jobid != 0*/) { 
          all_or_jidlist = JOB;
          (*all_jobs) = 0; 
          DPRINTF(("got job " u32 " from parsing\n", jobid));
@@ -741,16 +713,32 @@ int *all_users
             return answer;
          }
       }
-  
-      rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
-      if (!rep) { 
+      if ((jobid != 0) || ((*all_jobs) == 1)){
+         rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
+         lSetString(rep, JB_job_name, lGetString(job, JB_job_name));
+      }   
+      else{
+         char *name = NULL;
+         const char *job_name = lGetString(job, JB_job_name);
+         int size = strlen(lGetString(ep, ID_str));
+         if (job_name)
+            size += strlen(job_name); 
+         size += 3;
+          
+         name = malloc(size);
+         sprintf(name, "$%s$%s", lGetString(ep, ID_str), job_name?job_name:"");
+         rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
+         FREE(name);
+      }   
+
+      if (!rep) {   
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
-     
+
       /* build task list from ID_Type from JB_job_identifier */
       if (!lGetList(ep, ID_ja_structure)) {
          task = lAddElemUlong(&task_list, JAT_task_number, 0, task_descr);      
@@ -779,7 +767,7 @@ int *all_users
             JB_account,
             JB_cwd,
             JB_checkpoint_name,
-            JB_job_name,
+/*            JB_job_name,*/ 
             JB_project,
             JB_pe,
             NoName
@@ -841,9 +829,9 @@ int *all_users
          for (i=0; list_nm[i]!=NoName; i++)
             if (lGetPosViaElem(job, list_nm[i]) != -1  && lGetPosViaElem(rep, list_nm[i]) != -1)
                lSetList(rep, list_nm[i], lCopyList("", lGetList(job, list_nm[i])));
+
       }
    }
-
    if (!*prequestlist) {
       /* got no target */
       answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 

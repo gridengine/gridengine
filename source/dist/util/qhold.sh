@@ -39,7 +39,7 @@ ErrUsage()
    echo 
    echo "$transout $cmdname [-h {u|o|s},..] job_task_list|'all'|-u user_list|-uall"
    echo "       job_task_list         job_tasks [,job_tasks, ...]"
-   echo "       job_tasks             job_id['.'task_id_range]"
+   echo "       job_tasks             [job_id|job_name|job_id]['.'task_id_range]"
    echo "       task_id_range         task_id['-'task_id[':'step]]"
    echo "       user_list             user['-'user, ...]"
    echo

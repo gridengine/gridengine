@@ -324,6 +324,7 @@
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "U32CFormat" was rejected cause it can't be written: "SFN"\n"))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "U32CFormat" was rejected cause it couldn't be written\n"))
 #define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "u32" dependency change would generate a dependency cycle with job "u32"\n"))
+
 #define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33234, _("your job "U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33235, _("your job-array "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_LOG_NEWJOB                _MESSAGE(33236, _("new job"))
@@ -413,8 +414,8 @@
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN"\n"))
 #define MSG_SGETEXT_MOD_JOBS_SU                       _MESSAGE(33320, _("modified "SFN" of job "U32CFormat"\n") )     
 #define MSG_SGETEXT_DOESNOTEXIST_SU                   _MESSAGE(33321, _(""SFN" \"" U32CFormat "\" does not exist\n"))
-#define MSG_SGETEXT_DOESNOTEXISTTASK_UU               _MESSAGE(33322, _("job \"" U32CFormat "\" task \"" U32CFormat "\" does not exist\n"))
-#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU        _MESSAGE(33323, _("job \"" U32CFormat "\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks\n"))
+#define MSG_SGETEXT_DOESNOTEXISTTASK_SU               _MESSAGE(33322, _("job \""SFN"\" task \"" U32CFormat "\" does not exist\n"))
+#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU        _MESSAGE(33323, _("job \""SFN"\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks\n"))
 #define MSG_SGETEXT_NO_PROJECT                        _MESSAGE(33324, _("job rejected: no project assigned to job\n") )     
 #define MSG_SGETEXT_MOD_JATASK_SUU                    _MESSAGE(33325, _("modified "SFN" of job-array task "U32CFormat"."U32CFormat"\n") )  
 #define MSG_SGETEXT_MUST_BE_MGR_TO_SS                 _MESSAGE(33326, _("denied: "SFQ" must be manager to "SFN"\n"))

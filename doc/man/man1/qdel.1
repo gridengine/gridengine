@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2003/07/30 12:21:48 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2003/12/15 15:42:14 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QDEL 1 "$Date: 2003/07/30 12:21:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QDEL 1 "$Date: 2003/12/15 15:42:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qdel \- delete xxQS_NAMExx jobs from queues
 .SH SYNTAX
@@ -108,8 +108,25 @@ performs no modifications but just prints what would be done if
 Specified by the following form:
 .sp 1
 .ta 0.5i
-    \fIjob_id[.task_range][ job_id[.task_range] ...]\fP
+    \fI[job_id|job_name|pattern][.task_range][ [job_id|job_name|pattern][.task_range] ...]\fP
 .ta 0.0i
+.sp 1
+The job name and pattern are usualy not unique. One has to be carefull. 
+The pattern specification follows the following rules and should be
+specified in '"':
+.RS
+ - "*"   : matches any character and any number of 
+           chars (between 0 and inv).
+ - "?"   : matches any character. It cannot be no 
+           character
+ - "."   : is the character ".". It has no other 
+           meaning
+ - "\\"   : escape character. "\\\\" = "\\", "\\*" = "*", 
+           "\\?" = "?"
+ - "[xx]": specifies an array or a range of allowed 
+           characters for one character at a specific 
+           position
+.RE           
 .sp 1
 If present, the \fItask_range\fP restricts the effect of the \fIqdel\fP
 operation to the array job task range specified as suffix to the job id

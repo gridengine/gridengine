@@ -890,7 +890,7 @@ lList **local
          str = XbaeMatrixGetCell(matrix, i, 0);
          if ( str && *str != '\0' ) { 
             DPRINTF(("JobTask(s) to delete: %s\n", str));
-            if (sge_parse_jobtasks(&jl, &jep, str, &alp) == -1) {
+            if (sge_parse_jobtasks(&jl, &jep, str, &alp, false) == -1) {
                qmonMessageBox(w, alp, 0);
                DEXIT;
                return False;
@@ -1059,7 +1059,7 @@ int nm;
                      lList *ipp = NULL;
                      lList *jat_list = NULL;
                      lList *alp = NULL;
-                     if (sge_parse_jobtasks(&ipp, &idp, str, &alp) == -1) {
+                     if (sge_parse_jobtasks(&ipp, &idp, str, &alp, false) == -1) {
                         alp = lFreeList(alp);
                         DEXIT;
                         return NULL;

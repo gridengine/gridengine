@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/07/30 12:21:47 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/12/15 15:42:13 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2003/07/30 12:21:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2003/12/15 15:42:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -50,7 +50,7 @@ qacct \- report and account for xxQS_NAMExx usage
 ] [
 .B \-help
 ] [
-.B \-j [JobId|JobName]
+.B \-j [JobId|JobName|pattern]
 ] [
 .B \-l attr=val,...
 ] [
@@ -129,9 +129,10 @@ Display help information for the
 .I qacct
 command.
 .\"
-.IP "\fB\-j\fP [[\fBJobName\fP|\fBJobId\fP]]"
-The name or ID of the job during execution for which accounting information
-is printed. If neither a name nor an ID is given all jobs are enlisted.
+.IP "\fB\-j\fP [[\fBJobName\fP|\fBJobId\fP|\fBpattern\fP]]"
+The name, a pattern for matching names, or ID of the job during execution 
+for which accounting information is printed. If neither a name nor an ID 
+is given all jobs are enlisted.
 .br
 This option changes the output format of
 \fIqacct\fP. If activated, CPU times are no longer accumulated but the

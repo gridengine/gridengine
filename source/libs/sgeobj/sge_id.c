@@ -69,7 +69,7 @@ id_list_build_from_str_list(lList **id_list,
           * Try to parse and add jid/taskid
           * or add string (queue pattern) 
           */
-         sge_parse_jobtasks(id_list, &new_id, string, answer_list);
+         sge_parse_jobtasks(id_list, &new_id, string, answer_list, false);
          if (new_id == NULL) {
             new_id = lAddElemStr(id_list, ID_str, string, ID_Type);
          }
@@ -82,8 +82,10 @@ id_list_build_from_str_list(lList **id_list,
             *id_list = lFreeList(*id_list);
             break;
          }
+         
       }
    }
+
    DEXIT;
    return ret;
 }

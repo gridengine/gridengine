@@ -51,6 +51,7 @@
 #include "sge_calendar.h"
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -213,9 +214,12 @@ void sge_calendar_event_handler(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "sge_calendar_event_handler");
 
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    if (!(cep = calendar_list_locate(Master_Calendar_List, cal_name)))
    {
-      ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));
+      ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));   
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);      
       DEXIT;
       return;
    }
@@ -223,6 +227,8 @@ void sge_calendar_event_handler(te_event_t anEvent)
    calendar_update_queue_states(cep, 0, NULL);
 
    sge_free((char *)cal_name);
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
    return;

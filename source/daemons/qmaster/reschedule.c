@@ -61,6 +61,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
 #include "sge_cqueue.h"
+#include "sge_lock.h"
 #include "configuration_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
@@ -114,6 +115,8 @@ void reschedule_unknown_event(te_event_t anEvent)
 
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
+
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
  
    /*
     * is the automatic rescheduling disabled
@@ -183,11 +186,16 @@ void reschedule_unknown_event(te_event_t anEvent)
    lFreeList(answer_list);
    
    free((char*)hostname);
+   
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    DEXIT;
    return;
 
 Error:
    free((char*)hostname);
+   
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   DEXIT;
    return;
 }
  

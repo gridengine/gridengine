@@ -48,6 +48,7 @@
 #include "sge_any_request.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_answer.h"
+#include "sge_lock.h"
 
 
 static int update_license_data(lListElem *hep, lList *lp_lic); 
@@ -71,6 +72,9 @@ static int update_license_data(lListElem *hep, lList *lp_lic);
 *  RESULT
 *     void - nothing
 *
+*  NOTES
+*     MT-NOTE: sge_c_report() is MT safe
+*
 ******************************************************************************/
 void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
 {
@@ -83,8 +87,11 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
 
    DENTER(TOP_LAYER, "sge_c_report");
 
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    if (!lGetNumberOfElem(report_list)) {
       DPRINTF(("received empty report\n"));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
@@ -92,6 +99,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    /* accept reports only from execd's */
    if (strcmp(prognames[EXECD], commproc)) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNCOMMPROC_S, commproc));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
@@ -99,6 +107,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
@@ -106,6 +115,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    /* do not process load reports from old execution daemons */
    rversion = lGetUlong(lFirst(report_list), REP_version);
    if (verify_request_version(NULL, rversion, rhost, commproc, id)) {
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
@@ -119,11 +129,12 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    if ((this_seqno < last_seqno && (last_seqno - this_seqno) <= 9000) &&
       !(last_seqno > 9990 && this_seqno < 10)) {
       /* this must be an old report, log and then ignore it */
-      DPRINTF(("received old load report ("U32CFormat"< "U32CFormat") from exec host %s\n", 
-         u32c(this_seqno), u32c(last_seqno+1), rhost));
+      DPRINTF(("received old load report ("U32CFormat"< "U32CFormat") from exec host %s\n", u32c(this_seqno), u32c(last_seqno+1), rhost));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
+   
    lSetUlong(hep, EH_report_seqno, this_seqno);
 
    /*
@@ -190,11 +201,13 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
 
       default:   
          DPRINTF(("received invalid report type %ld\n", rep_type));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
    } /* end for_each */
 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    
    DEXIT;
    return;

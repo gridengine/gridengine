@@ -1215,10 +1215,18 @@ proc create_html_table { array_name { border 0 } { align LEFT } } {
    for {set row 1} { $row <= $table(ROWS) } { incr row 1 } {
       append back "<tr ALIGN=$align VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
       for {set col 1} { $col <= $table(COLS) } { incr col 1 } {
-         if { [ info exists table($row,$col,FNCOLOR) ] } {
-            append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+         if { [info exists table($row,$col)] } {
+            if { [ info exists table($row,$col,FNCOLOR) ] } {
+               append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+            } else {
+               append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+            }
          } else {
-            append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+            if { [ info exists table($row,$col,FNCOLOR) ] } {
+               append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1></font></font></b></td>\n"
+            } else {
+               append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1></font></font></b></td>\n"
+            }
          }
       }
       append back "</tr>\n"
@@ -2077,9 +2085,11 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"
       puts $CHECK_OUTPUT "found prog: $output"
+      return 0;
    } else {
       puts $CHECK_OUTPUT "timeout"
       add_proc_error "wait_for_remote_file" -1 "timeout while waiting for file $path on host $hostname"
+      return -1;
    }
 }
 

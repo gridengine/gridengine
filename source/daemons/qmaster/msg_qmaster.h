@@ -253,7 +253,15 @@
 #define MSG_JOB_RESCHEDULE_UU         _MESSAGE(33159, _("rescheduling job "U32CFormat"."U32CFormat) ) 
 #define MSG_RU_CANCELED_S             _MESSAGE(33160, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" was canceled."))
 #define MSG_RU_TRIGGER_SU             _MESSAGE(33161, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" will be triggerd in "U32CFormat" seconds."))
-#define MSG_RU_MAILSUB_SS             _MESSAGE(33162, _("Pushed rescheduling of "SFN" "SFN))
+
+/* CR: don't localize mail subject, until we send it in Mime format!
+ *  The message definition is not l10n'ed (no _() macro used)!!!     
+ */
+/* #define MSG_RU_MAILSUB_SS             _MESSAGE(33162, _("Pushed rescheduling of "SFN" "SFN)) */
+#define MSG_RU_MAILSUB_SS             "Pushed rescheduling of "SFN" "SFN
+
+
+
 #define MSG_RU_MAILBODY_SSSS          _MESSAGE(33163, _("Your "SFN" "SFN" is was running on host "SFN". "SFN" manually/automatic rescheduling for this "SFN"."))
 #define MSG_RU_MAILTYPE               _MESSAGE(33164, _("job rescheduling"))
 #define MSG_RU_PUSHEDR                _MESSAGE(33165, _("Pushed"))
@@ -284,7 +292,12 @@
 #define MSG_OBJ_UNKNOWN               _MESSAGE(33186, _("unknown"))
 #define MSG_NOTIFY_SHUTDOWNANDKILL    _MESSAGE(33187, _("shutdown and kill"))
 #define MSG_NOTIFY_SHUTDOWN           _MESSAGE(33188, _("shutdown"))
+
+/* CR: don't localize mail subject, until we send it in Mime format!
+ *  The message definition is not l10n'ed (no _() macro used)!!!     
+ */
 #define MSG_MAIL_JOBKILLEDSUBJ_US     "Job " U32CFormat " ("SFN") Killed"
+
 #define MSG_MAIL_JOBKILLEDBODY_USS    _MESSAGE(33189, _("Job " U32CFormat " ("SFN") was killed due to a kill execd on host "SFN))
 #define MSG_OBJ_INVALIDHOST_S         _MESSAGE(33190, _("invalid hostname "SFQ"\n"))
 #define MSG_OBJ_NOADDHOST_S           _MESSAGE(33191, _("adding host "SFQ" failed\n"))
@@ -347,7 +360,13 @@
 #define MSG_JOB_DELETEJOB_SU          _MESSAGE(33244, _(SFN" has deleted job "U32CFormat"\n"))
 #define MSG_JOB_DISCONTINUEDTRANS_SU  _MESSAGE(33245, _("Discontinued delete transaction of user "SFQ" after job "U32CFormat"\n"))
 #define MSG_JOB_UNABLE2FINDQOFJOB_S   _MESSAGE(33246, _("can't locate the queue "SFQ" associated with this job\n"))
+
+/* CR: don't localize mail subject, until we send it in Mime format!
+ *  The message definition is not l10n'ed (no _() macro used)!!!     
+ */
 #define MSG_MAIL_TASKKILLEDSUBJ_UUS   "Job-array task "U32CFormat"."U32CFormat" ("SFN") Killed"
+
+
 #define MSG_MAIL_TASKKILLEDBODY_UUSSS _MESSAGE(33247, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") was killed by "SFN"@"SFN))
 #define MSG_MAIL_JOBKILLEDBODY_USSS   _MESSAGE(33248, _("Job " U32CFormat " ("SFN")  was killed by "SFN"@"SFN))
 #define MSG_MAIL_BECAUSE              _MESSAGE(33249, _("\nbecause "))

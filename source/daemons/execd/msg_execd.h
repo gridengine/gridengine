@@ -199,9 +199,19 @@
 #define MSG_EXECD_NOCREATETOKENFILE_S _MESSAGE(29113, _("can't create token file: "SFN))
 #define MSG_EXECD_TOKENZERO           _MESSAGE(29114, _("AFS token does not exist or has zero length"))
 #define MSG_EXECD_NOWRITETOKEN_S      _MESSAGE(29115, _("can't write token to token file: "SFN))
+
+/* CR: don't localize mail subject, until we send it in Mime format!
+ *  The message definition is not l10n'ed (no _() macro used)!!!     
+ */
 #define MSG_MAIL_STARTSUBJECT_UUS     "Job-array task "U32CFormat"."U32CFormat" ("SFN") Started" 
+
 #define MSG_MAIL_STARTBODY_UUSSSSS    _MESSAGE(29116, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
+
+/* CR: don't localize mail subject, until we send it in Mime format!
+ *  The message definition is not l10n'ed (no _() macro used)!!!     
+ */
 #define MSG_MAIL_STARTSUBJECT_US      "Job "U32CFormat" ("SFN") Started"
+
 #define MSG_MAIL_STARTBODY_USSSSS     _MESSAGE(29117, _("Job "U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
 #define MSG_FILE_CHDIR_SS             _MESSAGE(29118, _("can't change dir to "SFN": "SFN))
 #define MSG_EXECD_NOFORK_S            _MESSAGE(29119, _("fork failed: "SFN))

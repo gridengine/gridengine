@@ -44,17 +44,42 @@
 #include "job.h"
 #include "read_write_job.h"
 
-extern HashTable Master_Job_Hash_Table;
-
+/****** gdi/job_jatask/job_get_ja_task_template_pending() **********************
+*  NAME
+*     job_get_ja_task_template_pending() -- create a ja task template 
+*
+*  SYNOPSIS
+*     lListElem* job_get_ja_task_template_pending(const lListElem *job, 
+*                                                 u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     The function returns a pointer to a template array task element.
+*     This task represents a currently submitted pending task (no hold state).
+*
+*     The task number (JAT_task_number) of this template task will be
+*     initialized with the value given by 'ja_task_id'.
+*
+*  INPUTS
+*     const lListElem *job - JB_Type
+*     u_long32 ja_task_id  - array task number 
+*
+*  RESULT
+*     lListElem* - template task (JAT_Type)
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_task_template_pending()
+*     gdi/job_jatask/job_get_ja_task_template_hold()
+*     gdi/job_jatask/job_get_ja_task_template()
+*******************************************************************************/
 lListElem *job_get_ja_task_template_pending(const lListElem *job,
                                             u_long32 ja_task_id)
 {
-   lListElem *template_task = NULL;   /* JAT_Type */
+   lListElem *template_task = NULL;    /* JAT_Type */
 
    DENTER(BASIS_LAYER, "job_get_ja_task_template");
    template_task = lFirst(lGetList(job, JB_ja_template));
    if (!template_task) {
-      ERROR((SGE_EVENT, "unable to create template task\n"));
+      ERROR((SGE_EVENT, "unable to retrieve template task\n"));
    } 
    if (template_task) {
       lSetUlong(template_task, JAT_state, JQUEUED | JWAITING);
@@ -66,13 +91,46 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    return template_task;
 }
 
+/****** gdi/job_jatask/job_get_ja_task_template_hold() *************************
+*  NAME
+*     job_get_ja_task_template_hold() -- create a ja task template 
+*
+*  SYNOPSIS
+*     lListElem* job_get_ja_task_template_pending(const lListElem *job, 
+*                                                 u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     The function returns a pointer to a template array task element.
+*     This task represents a currently submitted pending task.
+*
+*     The task number (JAT_task_number) of this template task will be
+*     initialized with the value given by 'ja_task_id'.
+*
+*     The hold state of the task (JAT_hold) will be initialized with
+*     the 'hold_state' value. The function job_get_ja_task_hold_state()
+*     may be used to get the current hold state of an unenrolled
+*     pending task.
+*
+*  INPUTS
+*     const lListElem *job - JB_Type
+*     u_long32 ja_task_id  - array task number 
+*
+*  RESULT
+*     lListElem* - template task (JAT_Type)
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_task_template_pending()
+*     gdi/job_jatask/job_get_ja_task_hold_state()
+*     gdi/job_jatask/job_get_ja_task_template()
+*******************************************************************************/
 lListElem *job_get_ja_task_template_hold(const lListElem *job,
                                          u_long32 ja_task_id, 
                                          u_long32 hold_state)
 {
-   lListElem *template_task = job_get_ja_task_template_pending(job, ja_task_id);
+   lListElem *template_task = NULL;    /* JAT_Type */
  
    DENTER(BASIS_LAYER, "job_get_ja_task_template");
+   template_task = job_get_ja_task_template_pending(job, ja_task_id);
    if (template_task) {
       u_long32 state;
  
@@ -88,11 +146,53 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
    DEXIT;
    return template_task;                                                        }
 
+/****** gdi/job_jatask/job_is_zombie_job() *************************************
+*  NAME
+*     job_is_zombie_job() -- Is 'job' a zombie job 
+*
+*  SYNOPSIS
+*     int job_is_zombie_job(const lListElem *job) 
+*
+*  FUNCTION
+*     True will be returned if 'job' is a zombie job. 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*
+*  RESULT
+*     int - 0 or 1
+*******************************************************************************/
 int job_is_zombie_job(const lListElem *job)
 {
    return (lGetList(job, JB_ja_z_ids) != NULL);
 }
 
+/****** gdi/job_jatask/job_get_ja_task_template() ******************************
+*  NAME
+*     job_get_ja_task_template() -- create a ja task template 
+*
+*  SYNOPSIS
+*     lListElem* job_get_ja_task_template_pending(const lListElem *job, 
+*                                                 u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     The function returns a pointer to a template array task element.
+*     This task represents a currently submitted pending task.
+*     (see job_get_ja_task_hold_state() and job_get_ja_task_template_hold())
+*
+*  INPUTS
+*     const lListElem *job - JB_Type
+*     u_long32 ja_task_id  - array task number 
+*
+*  RESULT
+*     lListElem* - template task (JAT_Type)
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_task_template_pending()
+*     gdi/job_jatask/job_get_ja_task_template_hold()
+*     gdi/job_jatask/job_get_ja_task_hold_state()
+*     gdi/job_jatask/job_get_ja_task_template()
+*******************************************************************************/
 lListElem *job_get_ja_task_template(const lListElem *job,
                                     u_long32 ja_task_id)
 {
@@ -101,11 +201,31 @@ lListElem *job_get_ja_task_template(const lListElem *job,
    return job_get_ja_task_template_hold(job, ja_task_id, hold_state);
 }
 
+/****** gdi/job_jatask/job_get_ja_task_hold_state() ****************************
+*  NAME
+*     job_get_ja_task_hold_state() -- return hold state of unenrolled task
+*
+*  SYNOPSIS
+*     u_long32 job_get_ja_task_hold_state(const lListElem *job, 
+*                                         u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     Returns the hold state of a task which is not enrolled in 
+*     the JB_ja_tasks list of 'job' 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*     u_long32 ja_task_id  - valid ja task id  
+*
+*  RESULT
+*     u_long32 - hold state 
+*******************************************************************************/
 u_long32 job_get_ja_task_hold_state(const lListElem *job,
                                      u_long32 ja_task_id)
 {
    u_long32 ret = 0;
 
+   DENTER(TOP_LAYER, "job_get_ja_task_hold_state");
    if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), ja_task_id)) {
       ret |= MINUS_H_TGT_USER;
    }
@@ -115,14 +235,40 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), ja_task_id)) {
       ret |= MINUS_H_TGT_SYSTEM;
    }
+   DEXIT;
    return ret;
 }
 
+/****** gdi/job_jatask/job_create_hold_id_lists() ******************************
+*  NAME
+*     job_create_hold_id_lists() -- create lists for eight hold combinations
+*
+*  SYNOPSIS
+*     void job_create_hold_id_lists(const lListElem *job, lList *id_list[8], 
+*                                   u_long32 hold_state[8]) 
+*
+*  FUNCTION
+*     This function creates eight 'id_lists'. Tasks whose id is contained in
+*     an id list has the hold state combination delivered by 'hold_state'.
+*
+*     After using 'id_list' the function job_destroy_hold_id_lists() has
+*     to be called to free allocated memory.
+*
+*  INPUTS
+*     const lListElem *job   - JB_Type 
+*     lList *id_list[8]      - NULL initialized pointer array 
+*     u_long32 hold_state[8] - Array for hold state combinations 
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_destroy_hold_id_lists() 
+*******************************************************************************/
 void job_create_hold_id_lists(const lListElem *job, lList *id_list[8], 
                               u_long32 hold_state[8]) 
 {
    int i;
    lList *list[7];
+
+   DENTER(TOP_LAYER, "job_create_hold_id_lists");
 
    hold_state[0] = 0;
    hold_state[1] = MINUS_H_TGT_USER;
@@ -133,7 +279,6 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    hold_state[6] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM;
    hold_state[7] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
                    MINUS_H_TGT_SYSTEM;
-
    for (i = 0; i < 7; i++) {
       list[i] = NULL;
    }
@@ -182,17 +327,56 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    for (i = 0; i < 7; i++) {
       list[i] = lFreeList(list[i]);
    }
+   DEXIT;
 }
 
+/****** gdi/job_jatask/job_destroy_hold_id_lists() *****************************
+*  NAME
+*     job_destroy_hold_id_lists() -- destroy lists for eight hold combinations 
+*
+*  SYNOPSIS
+*     void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]) 
+*
+*  FUNCTION
+*     This function frees all memory allocated by a previous call of 
+*     job_create_hold_id_lists(). 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*     lList *id_list[8]    - array of RN_Type lists
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_create_hold_id_lists 
+*******************************************************************************/
 void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]) 
 {
    int i;
 
+   DENTER(TOP_LAYER, "job_destroy_hold_id_lists");
    for (i = 0; i < 8; i++) {
       id_list[i] = lFreeList(id_list[i]);
    }
+   DEXIT;
 }
 
+/****** gdi/job_jatask/job_is_enrolled() ***************************************
+*  NAME
+*     job_is_enrolled() -- Is a certain array task enrolled in JB_ja_tasks 
+*
+*  SYNOPSIS
+*     int job_is_enrolled(const lListElem *job, u_long32 task_number) 
+*
+*  FUNCTION
+*     This function will return true (1) if the array task with 
+*     'task_number' is not enrolled in the JB_ja_tasks sublist of 'job'.
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*     u_long32 task_number - task_number 
+*
+*  RESULT
+*     int - 0 or 1
+*******************************************************************************/
 int job_is_enrolled(const lListElem *job, u_long32 task_number)
 {
    int ret = 1;
@@ -208,27 +392,87 @@ int job_is_enrolled(const lListElem *job, u_long32 task_number)
    return ret;
 }
 
+/****** gdi/job_jatask/job_is_ja_task_defined() ********************************
+*  NAME
+*     job_is_ja_task_defined() -- was this task submitted 
+*
+*  SYNOPSIS
+*     int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
+*
+*  FUNCTION
+*     This function will return true (1) if the task with 'ja_task_number' is
+*     defined within the array 'job'. The task is defined when 'ja_task_number'
+*     is enclosed in the task id range which was specified during submit
+*     time (qsub -t). 
+*
+*  INPUTS
+*     const lListElem *job    - JB_Type 
+*     u_long32 ja_task_number - task number 
+*
+*  RESULT
+*     int - 0 or 1
+*******************************************************************************/
 int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
 {
    lList *range_list = lGetList(job, JB_ja_structure);
-   int ret = range_list_is_id_within(range_list, ja_task_number);
 
-   DENTER(BASIS_LAYER, "job_is_ja_task_defined");
-   DPRINTF(("Task "u32" is "SFQ"\n", ja_task_number, 
-            ret ? "defined" : "undefined"));
-   DEXIT;
-   return ret;
+   return range_list_is_id_within(range_list, ja_task_number);
 }
 
+/****** gdi/job_jatask/job_get_ja_tasks() **************************************
+*  NAME
+*     job_get_ja_tasks() -- returns number of array tasks 
+*
+*  SYNOPSIS
+*     u_long32 job_get_ja_tasks(const lListElem *job) 
+*
+*  FUNCTION
+*     This function returns the overall amount of tasks in an array job. 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*
+*  RESULT
+*     u_long32 - number of tasks 
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*******************************************************************************/
 u_long32 job_get_ja_tasks(const lListElem *job) 
 {  
    u_long32 ret = 0;
 
+   DENTER(TOP_LAYER, "job_get_ja_tasks");
    ret += job_get_not_enrolled_ja_tasks(job);
    ret += job_get_enrolled_ja_tasks(job);
+   DEXIT;
    return ret;
 }
 
+/****** gdi/job_jatask/job_get_not_enrolled_ja_tasks() *************************
+*  NAME
+*     job_get_not_enrolled_ja_tasks() -- returns num. of unenrolled array tasks 
+*
+*  SYNOPSIS
+*     u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
+*
+*  FUNCTION
+*     This function returns the amount of tasks not enrolled in the
+*     JB_ja_tasks sublist. 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*
+*  RESULT
+*     u_long32 - number of tasks 
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*******************************************************************************/
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
 {
    const int attributes = 4;
@@ -236,58 +480,124 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
                             JB_ja_s_h_ids};
    u_long32 ret = 0;
    int i;
-     
+
+   DENTER(TOP_LAYER, "job_get_not_enrolled_ja_tasks");     
    for (i = 0; i < attributes; i++) {
       ret += range_list_get_number_of_ids(lGetList(job, attribute[i]));
    } 
+   DEXIT;
    return ret;
 }
 
+/****** gdi/job_jatask/job_get_enrolled_ja_tasks() *****************************
+*  NAME
+*     job_get_enrolled_ja_tasks() -- returns num. of enrolled array tasks 
+*
+*  SYNOPSIS
+*     u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
+*
+*  FUNCTION
+*     This function returns the amount of tasks enrolled in the
+*     JB_ja_tasks sublist. 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*
+*  RESULT
+*     u_long32 - number of tasks 
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*******************************************************************************/
 u_long32 job_get_enrolled_ja_tasks(const lListElem *job) 
 {
    return lGetNumberOfElem(lGetList(job, JB_ja_tasks));
 }
  
+/****** sge_job_jatask/job_enroll() ********************************************
+*  NAME
+*     job_enroll() -- enrolls a array task into the JB_ja_tasks lists 
+*
+*  SYNOPSIS
+*     void job_enroll(lListElem *job, lList **answer_list, 
+*                     u_long32 ja_task_number) 
+*
+*  FUNCTION
+*     The task with 'ja_task_number' will be enrolled into the JB_ja_tasks
+*     list of 'job' when this function is called. 
+*
+*  INPUTS
+*     lListElem *job          - JB_Type 
+*     lList **answer_list     - AN_Type 
+*     u_long32 ja_task_number - task number 
+*******************************************************************************/
 void job_enroll(lListElem *job, lList **answer_list, u_long32 ja_task_number)
 {
    lList *range_list = NULL;
    lListElem *ja_task = NULL;
 
+   DENTER(TOP_LAYER, "job_enroll");
    lXchgList(job, JB_ja_n_h_ids, &range_list);
    range_list_remove_id(&range_list, answer_list, ja_task_number);
    lXchgList(job, JB_ja_n_h_ids, &range_list);
+   range_list_compress(lGetList(job, JB_ja_n_h_ids));
+
    lXchgList(job, JB_ja_u_h_ids, &range_list);
    range_list_remove_id(&range_list, answer_list, ja_task_number);
    lXchgList(job, JB_ja_u_h_ids, &range_list);
+   range_list_compress(lGetList(job, JB_ja_u_h_ids));
+
    lXchgList(job, JB_ja_o_h_ids, &range_list);
    range_list_remove_id(&range_list, answer_list, ja_task_number);
    lXchgList(job, JB_ja_o_h_ids, &range_list);
+   range_list_compress(lGetList(job, JB_ja_o_h_ids));
+
    lXchgList(job, JB_ja_s_h_ids, &range_list);
    range_list_remove_id(&range_list, answer_list, ja_task_number);
    lXchgList(job, JB_ja_s_h_ids, &range_list);
-   range_compress(lGetList(job, JB_ja_n_h_ids));
-   range_compress(lGetList(job, JB_ja_u_h_ids));
-   range_compress(lGetList(job, JB_ja_o_h_ids));
-   range_compress(lGetList(job, JB_ja_s_h_ids));
+   range_list_compress(lGetList(job, JB_ja_s_h_ids));
 
    /* EB: should we add a new CULL function? */
    ja_task = lGetSubUlong(job, JAT_task_number, ja_task_number, JB_ja_tasks);
    if (ja_task == NULL) {
+      lListElem *template_task = NULL;
       lList *ja_task_list = lGetList(job, JB_ja_tasks);
 
       if (ja_task_list == NULL) {
          ja_task_list = lCreateList("", JAT_Type);
          lSetList(job, JB_ja_tasks, ja_task_list);
-      } 
-      ja_task = lCopyElem(job_get_ja_task_template_pending(job, ja_task_number));
+      }
+      template_task = job_get_ja_task_template_pending(job, ja_task_number); 
+      ja_task = lCopyElem(template_task);
       lAppendElem(ja_task_list, ja_task); 
    }
+   DEXIT;
 }  
 
+/****** sge_job_jatask/job_has_tasks() *****************************************
+*  NAME
+*     job_has_tasks() -- Returns true if there exist unenrolled tasks 
+*
+*  SYNOPSIS
+*     int job_has_tasks(lListElem *job) 
+*
+*  FUNCTION
+*     This function returns true (1) if there exists an unenrolled pending 
+*     task in 'job'.
+*
+*  INPUTS
+*     lListElem *job - JB_Type 
+*
+*  RESULT
+*     int - 0 or 1
+*******************************************************************************/
 int job_has_tasks(lListElem *job) 
 {
    int ret = 0;
 
+   DENTER(TOP_LAYER, "job_has_tasks");
    if (job != NULL) {
       if (lGetList(job, JB_ja_n_h_ids) != NULL || 
           lGetList(job, JB_ja_u_h_ids) != NULL ||
@@ -296,6 +606,7 @@ int job_has_tasks(lListElem *job)
          ret = 1;
       }
    }
+   DEXIT;
    return ret;
 }
 
@@ -307,35 +618,41 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
                             JB_ja_s_h_ids};
    int i;
 
+   DENTER(TOP_LAYER, "job_delete_not_enrolled_ja_task");
    for (i = 0; i < attributes; i++) { 
       lList *range_list = NULL;
 
       lXchgList(job, attribute[i], &range_list);
       range_list_remove_id(&range_list, answer_list, ja_task_number);
       lXchgList(job, attribute[i], &range_list);
-      range_compress(range_list);
+      range_list_compress(range_list);
    }
+   DEXIT;
 } 
 
 void job_add_as_zombie(lListElem *zombie, const lListElem *job, 
                                 lList **answer_list, u_long32 ja_task_id) 
 {
    lList *z_ids = NULL;    /* RN_Type */
- 
+
+   DENTER(TOP_LAYER, "job_add_as_zombie");
    lXchgList(zombie, JB_ja_z_ids, &z_ids);
    range_list_insert_id(&z_ids, NULL, ja_task_id);
-   range_compress(z_ids);
+   range_list_compress(z_ids);
    lXchgList(zombie, JB_ja_z_ids, &z_ids);    
+   DEXIT;
 }
 
 int job_has_job_pending_tasks(lListElem *job) 
 {
    int ret = 0;
 
+   DENTER(TOP_LAYER, "job_has_job_pending_tasks");
    if (lGetList(job, JB_ja_n_h_ids) || lGetList(job, JB_ja_u_h_ids) ||
        lGetList(job, JB_ja_o_h_ids) || lGetList(job, JB_ja_s_h_ids)) {
       ret = 1;
    }
+   DEXIT;
    return ret;
 }
 
@@ -372,7 +689,7 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
             else_function[i](&range_list, answer_list, ja_task_id);
             lXchgList(job, attribute[i], &range_list);
          }
-         range_compress(lGetList(job, attribute[i]));
+         range_list_compress(lGetList(job, attribute[i]));
       }
    } else {
       lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
@@ -391,6 +708,7 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
 {
    u_long32 ret = 0;
 
+   DENTER(TOP_LAYER, "job_get_hold_state");
    if (job_is_enrolled(job, ja_task_id)) {
       lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
    
@@ -409,6 +727,7 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
          }
       }
    }
+   DEXIT;
    return ret;
 }
 
@@ -462,36 +781,3 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    DEXIT;
    return 0;
 }     
-
-void job_list_print(lList *job_list)
-{
-   lListElem *job = NULL;
-
-   for_each(job, job_list) {
-      StringBufferT string = {NULL, 0};
-
-      range_list_print_to_string(lGetList(job, JB_ja_n_h_ids), &string);
-      if(string.s) {
-         fprintf(stderr, "job: "u32" n_h_list: %s\n", 
-                 lGetUlong(job, JB_job_number), string.s);
-      }
-      sge_string_free(&string);
-      range_list_print_to_string(lGetList(job, JB_ja_u_h_ids), &string);
-      if(string.s) {
-         fprintf(stderr, "job: "u32" u_h_list: %s\n", 
-                 lGetUlong(job, JB_job_number), string.s);
-      }
-      sge_string_free(&string);
-      range_list_print_to_string(lGetList(job, JB_ja_o_h_ids), &string);
-      if(string.s) {
-         fprintf(stderr, "job: "u32" o_h_list: %s\n", 
-                 lGetUlong(job, JB_job_number), string.s);
-      }
-      sge_string_free(&string);
-      range_list_print_to_string(lGetList(job, JB_ja_s_h_ids), &string);
-      if(string.s) {
-         fprintf(stderr, "job: "u32" s_h_list: %s\n", 
-                 lGetUlong(job, JB_job_number), string.s);
-      }
-   }
-}          

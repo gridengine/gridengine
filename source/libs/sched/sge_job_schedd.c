@@ -136,7 +136,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
          lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
          range_list_remove_id(&tmp_range_list, NULL, ja_task_id);
          lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
-         range_compress(lGetList(*pending_job, JB_ja_n_h_ids));
+         range_list_compress(lGetList(*pending_job, JB_ja_n_h_ids));
          lAppendElem(lGetList(running_job, JB_ja_tasks), new_ja_task);
       } else {
          lListElem *new_job = NULL; /* JB_Type */
@@ -160,7 +160,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
          lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
          range_list_remove_id(&tmp_range_list, NULL, ja_task_id);
          lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
-         range_compress(lGetList(*pending_job, JB_ja_n_h_ids));
+         range_list_compress(lGetList(*pending_job, JB_ja_n_h_ids));
       }
       if (!job_has_tasks(*pending_job)) {
          lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);

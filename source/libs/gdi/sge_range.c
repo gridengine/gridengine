@@ -66,7 +66,8 @@
 #include "sge_schedd_text.h"
 #include "job.h"
 
-static void add_taskrange_str(u_long32 start, u_long32 end, int step, StringBufferT *dyn_taskrange_str);
+static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
+                              StringBufferT *dyn_taskrange_str);
 
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2);
@@ -427,7 +428,7 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
          /*
           * Join sequenced ranges
           */
-         range_compress(range_list);
+         range_list_compress(range_list);
       } else {
          sge_add_answer(answer_list, "unable to create range list",
                         STATUS_ERROR1, NUM_AN_ERROR);            
@@ -435,12 +436,12 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
    }
 }
 
-/****** gdi/range/range_compress() *********************************************
+/****** gdi/range/range_list_compress() ****************************************
 *  NAME
-*     range_compress() -- Joins sequenced ranges within a list 
+*     range_list_compress() -- Joins sequenced ranges within a list 
 *
 *  SYNOPSIS
-*     void range_compress(lList *range_list) 
+*     void range_list_compress(lList *range_list) 
 *
 *  FUNCTION
 *     Consecutive ranges within the list will be joined by this function. 
@@ -459,7 +460,7 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 *  EXAMPLE
 *     1-3:1,4-5:1,6-8:2,8-10:2   => 1-5:1,6-10:2 
 *******************************************************************************/
-void range_compress(lList *range_list) 
+void range_list_compress(lList *range_list) 
 {
    if (range_list != NULL) {
       lListElem *range1 = NULL;
@@ -703,8 +704,16 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *     lList **answer_list - pointer to a AN_Type list 
 *     u_long32 id         - new id 
 *
+*  NOTES
+*     It may be possible that 'id' is multiply contained in 'range_list' 
+*     after using this function. Use range_list_compress() to eliminate
+*     them.
+*
 *  RESULT
 *     range_list and answer_list may be modified 
+*
+*  SEE ALSO
+*     gdi/range/range_list_compress()
 *******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
@@ -931,7 +940,7 @@ void range_list_calculate_union_set(lList **range_list,
                range_list_insert_id(range_list, answer_list, start2);
             }
          }
-         range_compress(*range_list); 
+         range_list_compress(*range_list); 
       }
    }
    return;
@@ -993,7 +1002,7 @@ void range_calculate_difference_set(lList **range_list, lList **answer_list,
                }
             }
          }
-         range_compress(*range_list);
+         range_list_compress(*range_list);
       }            
    }
    DEXIT;
@@ -1057,7 +1066,7 @@ void range_calculate_intersection_set(lList **range_list, lList **answer_list,
             }
          }
       }
-      range_compress(*range_list);
+      range_list_compress(*range_list);
    }
    return;
 

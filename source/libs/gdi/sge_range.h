@@ -73,7 +73,7 @@ int range_is_id_within(const lListElem *range, u_long32 id);
 
 int range_list_is_id_within(const lList *range_list, u_long32 id);   
 
-void range_compress(lList *range_list);    
+void range_list_compress(lList *range_list);    
 
 u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list);
 

@@ -2081,7 +2081,7 @@ static int start_async_command(char *descr, char *cmd)
       pid = getpid();
       setpgid(pid, pid);  
       setrlimits(0);
-      set_environment();
+      sge_set_environment();
       umask(022);
       tmp_str = search_conf_val("qsub_gid");
       if (tmp_str && strcmp(tmp_str, "no")) {
@@ -2381,7 +2381,7 @@ static int notify_tasker(u_long32 exit_status)
       if (!strcmp(name, "PVM_TASK_ID"))
          strcpy(pvm_task_id, value);
 
-      sge_setenv(name, value);
+      sge_set_env_value(name, value);
    }
 
    fclose(fp);
@@ -2445,7 +2445,7 @@ static pid_t start_token_cmd(int wait_for_finish, char *cmd, char *arg1,
       if (!wait_for_finish && (getenv("SGE_DEBUG_LEVEL"))) {
          putenv("SGE_DEBUG_LEVEL=0 0 0 0 0 0 0 0");
       }   
-      execl(cmd, cmd, arg1, arg2, arg3, NULL);
+      execle(cmd, cmd, arg1, arg2, arg3, NULL, sge_get_environment ());
       exit(1);
    } else if (wait_for_finish) {
         ret = do_wait(pid);

@@ -1171,7 +1171,6 @@ int subscribe_default_scheduler(void)
    ec_set_flush(sgeE_NEW_SHARETREE, true,  0);
 
    /* configuration changes and trigger should have immediate effect */
-   ec_set_flush(sgeE_GLOBAL_CONFIG, true,  0);
    ec_set_flush(sgeE_SCHED_CONF, true,     0);
    ec_set_flush(sgeE_SCHEDDMONITOR, true,  0);
 

@@ -1,3 +1,7 @@
+DT-2003-11-21-0: Bugfix:	  Fixed scheduler startup issue -- cleaned up event
+														client changes
+								 Changed:	  sge_process_events.c
+
 EB-2003-11-21-0: Bugfix:    Fixed broken build
                             SuSE 9.0 x86:
                               Linux 2.4.21 i686
@@ -45,6 +49,7 @@ DT-2003-11-17-1: Enhancem.: Implemented remaining DRMAA attributes.  Reworked
                             could easily be added to qsub et al.  Also added
                             a test to test_drmaa to test all DRMAA attributes.
                  Changed:   libdrmaa.so and common parameter parsing routines
+								 Review:	  AH
 
 DT-2003-11-17-0: Bugfix.:   -b y in sge_request would override -b n on
                             commandline

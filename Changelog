@@ -1,3 +1,13 @@
+JG-2002-04-18-0: Bugfix:    If more then 1 task of a parallel job was started
+                            in a queue, retrieving exit code of a task and
+                            signaling a task was unreliable as the TASK_ID
+                            variable was no longer exported to the tasks 
+                            environment. Replaced the TASK_ID mechanism by
+                            an entry in the jobs config.
+                 Issue:     #236
+                 Bugtraq:   #4670664
+                 Changed:   sge_shepherd, sge_execd, qrsh_starter
+
 CR-2002-04-17-0: Testsuite: fixed tcl error on using help command line parameter
                  Bugfix:    
 

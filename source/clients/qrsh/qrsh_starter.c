@@ -211,7 +211,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
     */
     
    if(*wrapper == NULL) {
-      char *starter_method = get_conf_val("starter_method");
+      char *starter_method = search_conf_val("starter_method");
       if(starter_method != NULL && strcasecmp(starter_method, "none") != 0) { 
          char buffer[128];
          *wrapper = starter_method;
@@ -291,7 +291,7 @@ static int changeDirectory(void)
    char *cwd = NULL;
 
    /* get jobs target directory */
-   cwd = get_conf_val("cwd");
+   cwd = search_conf_val("cwd");
 
    if(cwd == NULL) {
       fprintf(stderr, "MSG_QRSH_STARTER_NOCWDINCONFIG");
@@ -343,11 +343,10 @@ static int write_pid_file(pid_t pid)
       return 0;
    }
 
-   task_id_str = getenv("TASK_ID");
+   task_id_str = search_conf_val("qrsh_task_id");
 
-   if(task_id_str) {
-      long task_id = atol(task_id_str);
-      sprintf(pid_file_name, "%s/pid.%ld", tmpdir, task_id);
+   if(task_id_str != NULL) {
+      sprintf(pid_file_name, "%s/pid.%s", tmpdir, task_id_str);
    } else {
       sprintf(pid_file_name, "%s/pid", tmpdir);
    }
@@ -728,7 +727,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
       return EXIT_FAILURE;
    }
   
-   taskid = getenv("TASK_ID");
+   taskid = search_conf_val("qrsh_task_id");
    
    if(taskid != NULL) {
       sprintf(fileName, "%s/qrsh_exit_code.%s", tmpdir, taskid);

@@ -70,7 +70,7 @@ set check_init_level_procedure "large_cluster_init_level"
 
 # define test's name and run level descriptions
 set check_name            "large_cluster"
-set check_highest_level   [expr ( [llength $CHECK_CORE_EXECD] - 1 + 300 ) ]
+set check_highest_level   [expr ( [llength $CHECK_CORE_EXECD] - 2 + 300 ) ]
 for {set i 300} {$i <= $check_highest_level} {incr i} {
    set check_description($i) "check performance with [expr ( $i - 300 + 1 ) * $LARGE_CLUSTER_HOSTS_PER_HOST] queues"
 }
@@ -107,7 +107,7 @@ proc large_cluster_init_level {} {
    # done correctly on all involved hosts
 
    if { $CHECK_ACT_LEVEL >= 300 && $CHECK_ACT_LEVEL <= $check_highest_level } {
-      set real_hosts [lrange $CHECK_CORE_EXECD 0 [expr $CHECK_ACT_LEVEL - 300]]
+      set real_hosts [lrange $CHECK_CORE_EXECD 1 [expr 1 + $CHECK_ACT_LEVEL - 300]]
       return 0 
    }
 
@@ -258,7 +258,7 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
       }
    }
 
-   set submit_host_list [lrange $CHECK_CORE_EXECD 0 9]
+   set submit_host_list [lrange $CHECK_CORE_EXECD 1 10]
 
    # submit first bunch of jobs
    # keep a list of expect spawn id's for expect calls

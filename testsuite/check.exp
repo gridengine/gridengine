@@ -2379,6 +2379,19 @@ proc setup { {do_only_hostname_resolving 0} } {
              puts $CHECK_OUTPUT "directory \"$CHECK_CURRENT_WORKING_DIR\" is not available on host \"$host\""
              set setup_ok -1
          } 
+         puts $CHECK_OUTPUT "\n--> try rsh $host echo \"hello $host\" ..."
+         set exit_state [ catch { exec rsh $host "echo \"hello $host\"" } result ]
+         puts $CHECK_OUTPUT "--> rsh exit state: $exit_state"
+         puts $CHECK_OUTPUT "--> rsh result:     $result"
+         if { $exit_state != 0 } {
+             puts $CHECK_OUTPUT "-->rsh to host $host doesn't work correctly"
+             set setup_ok -1
+         }
+         if { [ string first "hello $host" $result ] < 0 } {
+             puts $CHECK_OUTPUT "$result"
+             puts $CHECK_OUTPUT "echo \"hello $host\" doesn't work"
+             set setup_ok -1
+         }
          get_binary_path $host "expect"       
          get_binary_path $host "vim"
       }
@@ -4975,7 +4988,7 @@ proc compile_source {} {
 
    global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
-   global CHECK_PRODUCT_FEATURE 
+   global CHECK_PRODUCT_FEATURE
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_PRODUCT_FEATURE CHECK_USER
@@ -5064,7 +5077,6 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "output:\n$output"
    puts $CHECK_OUTPUT "------------------------------------------"
-
 
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
    

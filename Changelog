@@ -1,3 +1,10 @@
+JG-2003-04-22-0  Bugfix:    qrsh (rshd) does not set limits after setting the 
+                            osjobid. This disabled limits that depend on being 
+                            in a OS managed job (e.g. on SUPER-UX/SX).
+                 IZ:        #513
+                 Review:    to be done
+                 Changed:   rshd
+
 AH-2003-04-17-0  Bugfix:    Consumable values were not considered in 
                             load/suspend threshold.
                  IZ:        #464

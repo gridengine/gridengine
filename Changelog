@@ -1,3 +1,8 @@
+AH-2002-01-25-1: Bugfix:    Removed last reference of no longer existing QSI from man pages.
+                            The QSI functionality is replaced by {starter,terminate,suspend,
+                            resume}_method functionality
+                 Enhancem.: Default queue type is now batch, interactive and parallel.
+
 EB-2002-01-25-1: Bugfix:    - shadowd did not remove the lock file
                               if it encountered that there may be another
                               master.

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/12/17 10:29:42 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2002/01/25 15:32:59 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2001/12/17 10:29:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2002/01/25 15:32:59 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -176,13 +176,8 @@ The type of queue. Currently one of
 or
 .I checkpointing
 or any combination in a comma separated list.
-Alternatively, if the xxQS_NAMExx Queuing System Interface (QSI)
-option is licensed, the type
-.I transfer
-can be specified to indicate a queue which passes jobs on to
-a foreign queuing system. Deprecated in the current version.
 .PP
-(type string; default: batch).
+(type string; default: batch interactive parallel ).
 .SS "\fBrerun\fP"
 Defines a default behavior for jobs which are aborted by system crashes
 or manual "violent" (via

@@ -613,7 +613,7 @@ lList *lp;
    lSetString(qep, QU_min_cpu_interval, "00:05:00");
    lSetString(qep, QU_processors, "UNDEFINED");
    lSetString(qep, QU_priority, "0");
-   lSetUlong(qep, QU_qtype, BQ|IQ);
+   lSetUlong(qep, QU_qtype, BQ|IQ|PQ);
    lSetUlong(qep, QU_job_slots, 1);
    lSetString(qep, QU_tmpdir, "/tmp");
    lSetString(qep, QU_shell, "/bin/csh");

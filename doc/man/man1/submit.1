@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/01/25 14:04:54 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/01/25 15:32:58 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/01/25 14:04:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/01/25 15:32:58 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1007,17 +1007,6 @@ described above.
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
-.\"
-.IP "\fB\-qs_args ... -qs_end\fP"
-Available for \fIqsub\fP and \fIqalter\fP only. Deprecated in the current
-version.
-.sp 1
-Valid with the Queuing System Interface (QSI) option only.
-Please ask your system administrator.
-.br
-The options between \fB\-qs_args\fP and \fB\-qs_end\fP braces
-are passed from xxQS_NAMExx to a foreign queuing system which interfaced
-via the xxQS_NAMExx QSI facility.
 .\"
 .IP "\fB\-r y|n\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.

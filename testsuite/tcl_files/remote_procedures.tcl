@@ -677,16 +677,18 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
       if { $CHECK_DEBUG_LEVEL != 0 } {
         log_user 1
       }
-      while { 1 } {
-         send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
+      set timeout 1
+      send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
+      set open_remote_spawn__tries 70
+      while { $open_remote_spawn__tries > 0 } {
          expect {
             -i $open_remote_spawn__id full_buffer {
                add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                break
             }
             -i $open_remote_spawn__id timeout {
-               add_proc_error "open_remote_spawn_process" -2 "timeout waiting for ls command"
-               break
+                send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
+                incr open_remote_spawn__tries -1
             }  
             -i $open_remote_spawn__id ">>0<<" {
                debug_puts "file $open_remote_spawn__script_name exists"
@@ -697,7 +699,9 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                break
             }
          }
-         sleep 1
+      }
+      if { $open_remote_spawn__tries <= 0 } {
+          add_proc_error "open_remote_spawn_process" -1 "timeout waiting for ls command"
       }
       log_user 1
    }

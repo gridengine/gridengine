@@ -1,3 +1,7 @@
+CR-2001-11-23-0: Testsuite:
+                    - changed timeout behaviour in procedure 
+                      open_remote_spawn_process
+
 CR-2001-11-22-0: Testsuite:
                     - rework on auto_reschedule test
                     - faster handle_vi_edit procedure

@@ -746,44 +746,48 @@ int is_array
 
    /* Check whether a message about tasks exit has to be sent.
       We need job data to know whether an ack about exit status was requested */
-   if (pe_task_id_str) {
-      lListElem *jep, *tep, *uep;
+   if (pe_task_id_str != NULL) {
+      lListElem *jep = NULL, *jatep = NULL, *tep = NULL, *uep = NULL;
+      const void *iterator;
 
-      if ((jep  = lGetElemUlong(Master_Job_List, JB_job_number, jobid))) {
-         lListElem* jatep;
+      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+      while(jep != NULL) {
+         if((jatep = search_task(jataskid, jep)) != NULL) {
+            break;
+         }
+         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+      }
 
-         jatep = search_task(jataskid, jep);
-         if (jatep && (tep = lGetSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, 
-               JAT_task_list))) {
-            if (!lGetSubStr(tep, VA_variable, OVERWRITE_NO_ACK, JB_env_list)) {
-               char *host, *commproc;
-               u_short id;
-               sge_pack_buffer pb;
-               u_long32 exit_status = 1;
-               u_long32 dummymid;
-               int ret;
+      if (jatep && (tep = lGetSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, 
+            JAT_task_list))) {
+         if (!lGetSubStr(tep, VA_variable, OVERWRITE_NO_ACK, JB_env_list)) {
+            char *host, *commproc;
+            u_short id;
+            sge_pack_buffer pb;
+            u_long32 exit_status = 1;
+            u_long32 dummymid;
+            int ret;
 
-               /* extract address from JB_job_source */
-               host = sge_strtok(lGetString(tep, JB_job_source), ":"); 
-               commproc = sge_strtok(NULL, ":"); 
-               id = atoi(sge_strtok(NULL, ":")); 
+            /* extract address from JB_job_source */
+            host = sge_strtok(lGetString(tep, JB_job_source), ":"); 
+            commproc = sge_strtok(NULL, ":"); 
+            id = atoi(sge_strtok(NULL, ":")); 
 
-               /* extract exit status from job report */
-               if ((uep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
-                  exit_status = lGetDouble(uep, UA_value);         
-              
-               /* fill in pack buffer */
-               if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-                  packstr(&pb, pe_task_id_str);
-                  packint(&pb, exit_status);
+            /* extract exit status from job report */
+            if ((uep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
+               exit_status = lGetDouble(uep, UA_value);         
+           
+            /* fill in pack buffer */
+            if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
+               packstr(&pb, pe_task_id_str);
+               packint(&pb, exit_status);
 
-                  /* send a task exit message to the submitter of this task */
-                  ret=send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
-                  DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
-                        ret?"failed":"success", pe_task_id_str, 
-                        lGetString(tep, JB_job_source), ret?cl_errstr(ret):""));
-                  clear_packbuffer(&pb);
-               }
+               /* send a task exit message to the submitter of this task */
+               ret=send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
+               DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
+                     ret?"failed":"success", pe_task_id_str, 
+                     lGetString(tep, JB_job_source), ret?cl_errstr(ret):""));
+               clear_packbuffer(&pb);
             }
          }
       }
@@ -807,32 +811,27 @@ lListElem *jr
    lListElem *jep, *job, *tep = NULL, *jatep = NULL;
    lListElem *master_q;
    char *pe_task_id_str; 
+   const void *iterator;
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
-
-   pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
-
-   /* try to find this job in our job list */
-   for_each (jep, Master_Job_List) {
-      if (lGetUlong(jep, JB_job_number) == jobid) {
-         int Break = 0;
-
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if (lGetUlong(jatep, JAT_task_number) == jataskid) {
-               Break = 1;
-               break;
-            }
-         }
-         if (Break)
-            break;
-      }
-   }
 
    if (jataskid == 0) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(jobid)));
       DEXIT;
       return;
    }
+
+   pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
+
+   /* try to find this job in our job list */ 
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   while(jep != NULL) {
+      if((jatep = search_task(jataskid, jep)) != NULL) {
+         break;
+      }
+      lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+   }
+
    if (jep && jatep) {
       int used_slots;
    
@@ -918,12 +917,13 @@ lListElem *jr
 
             /* it is possible to remove the exec_file if
                less than one task of a job is running */
-            for_each (tmp_job, Master_Job_List) {
-               if (lGetUlong(tmp_job, JB_job_number) == jobid) {
-                  task_number++;
-               }
+            tmp_job = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+            while(tmp_job != NULL) {
+               task_number++;
+               tmp_job = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
             }
-            if (task_number == 1) {
+            
+            if (task_number <= 1) {
                DPRINTF(("unlinking script file %s\n", lGetString(job, JB_exec_file)));
                unlink(lGetString(job, JB_exec_file));
             }
@@ -1209,6 +1209,7 @@ int startup
    while ((dent=SGE_READDIR(cwd))) {
       char string[256], *token, *endp;
       u_long32 tmp_id;
+      const void *iterator;
 
       jobdir = dent->d_name;    /* jobdir is the jobid.jataskid converted to string */
       strcpy(string, jobdir);
@@ -1237,19 +1238,12 @@ int startup
       }
 
       /* seek job to this jobdir */
-      for_each (jep, Master_Job_List) {
-         if (lGetUlong(jep, JB_job_number) == jobid) {
-            int Break = 0;
-
-            for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-               if (lGetUlong(jatep, JAT_task_number) == jataskid) {
-                  Break = 1;
-                  break;
-               }
-            }
-            if (Break)
+      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+      while(jep != NULL) {
+         if((jatep = search_task(jataskid, jep)) != NULL) {
             break;
          }
+         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
       }
  
       if (!jep || !jatep) {

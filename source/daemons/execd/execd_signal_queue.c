@@ -410,20 +410,21 @@ u_long32 signal
    lListElem *master_q;
    lListElem *jatep = NULL;
    int getridofjob = 0;
+   const void *iterator;
 
    DENTER(TOP_LAYER, "signal_job");
 
    job_log(jobid, jataskid, sge_sig2str(signal));
 
    /* search appropriate array task and job */
-   for_each (jep, Master_Job_List) {
-      if (jobid == lGetUlong(jep, JB_job_number)) {
-         jatep = search_task(jataskid, jep);
-         if (!jatep)
-            continue; /* next master job list entry */
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   while(jep != NULL) {
+      if((jatep = search_task(jataskid, jep)) != NULL) {
          break;
       }
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
+
    if (!jatep) {
       DEXIT;
       return 1;

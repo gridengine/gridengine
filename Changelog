@@ -1,3 +1,8 @@
+JG-2001-10-18-0: Execd:
+                  - bugfix: reporting of a parallel array jobs pe task in
+                            tight integration could.
+                  - use cull hashing iterators for searches in job list          
+
 JG-2001-10-17-0: (Issue #57)
                  Sparc Linux port (32 bit). Grid Engine platform slinux.
                  The port is restricted to SGE as the pdc module had to be 

@@ -187,6 +187,7 @@ int slave
    char *qnm;
    int slots;
    int fd;
+   const void *iterator;
 
    DENTER(TOP_LAYER, "handle_job");
 
@@ -206,14 +207,16 @@ int slave
     * 
     * We can ignore this job because job is resend by qmaster.
     */
-   for_each(jep, Master_Job_List) {
-      if (lGetUlong(jep, JB_job_number) == jobid && 
-          (jep_jatep = search_task(jataskid, jep))) {
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   while(jep != NULL) {
+      if((jep_jatep = search_task(jataskid, jep)) != NULL) {
          DPRINTF(("Job "u32"."u32" is already running - skip the new one\n", 
-            jobid, jataskid));
+                  jobid, jataskid));
          DEXIT;
          goto Ignore;   /* don't set queue in error state */
       }
+
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
 
    if (slave) {

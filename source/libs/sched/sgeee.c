@@ -3586,14 +3586,20 @@ sge_calc_node_targets( lListElem *root,
       if (lGetUlong(child, STN_job_ref_count)>0) {
          double shares, shr, ltt, oltt;
          shares = lGetUlong(child, STN_shares);
-         if (sum_shares > 0)
+         if (sum_shares > 0) {
             ltt = shares / (double)sum_shares;
-         else
+         } else {
             ltt = 0;
+         }
          oltt = lGetDouble(node, STN_oltt) * ltt;
          lSetDouble(child, STN_ltt, ltt);
          lSetDouble(child, STN_oltt, oltt);
-         shr = shares * shares / MAX(lGetDouble(child, STN_combined_usage), SGE_MIN_USAGE*oltt);
+         if (oltt > 0) {
+            shr = shares * shares / 
+                MAX(lGetDouble(child, STN_combined_usage), SGE_MIN_USAGE*oltt);
+         } else {
+            shr = 0;
+         } 
          lSetDouble(child, STN_shr, shr);
          sum += shr;
       }
@@ -3614,7 +3620,13 @@ sge_calc_node_targets( lListElem *root,
 
    for_each(child, children) {
       if (lGetUlong(child, STN_job_ref_count)>0) {
-         double stt = lGetDouble(child, STN_shr) / sum;
+         double stt;
+
+         if (sum > 0) {
+            stt = lGetDouble(child, STN_shr) / sum;
+         } else {
+            stt = 0;
+         }
          lSetDouble(child, STN_stt, stt);
          lSetDouble(child, STN_ostt, lGetDouble(node, STN_ostt) * stt);
          lSetDouble(child, STN_adjusted_current_proportion, lGetDouble(child, STN_ostt));
@@ -3660,6 +3672,7 @@ sge_calc_node_targets( lListElem *root,
          if (lGetUlong(child, STN_job_ref_count)>0) {
             double ostt = lGetDouble(child, STN_ostt);
             double oltt = lGetDouble(child, STN_oltt);
+
             if (ostt > (compensation_factor * oltt)) {
                double shares = lGetUlong(child, STN_shares);
                double shr = shares * shares /

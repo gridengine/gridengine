@@ -230,7 +230,6 @@ char **argv
                          aliasfile, strerror(errno)));
                 exit(1);
              }
-             read_aliasfile(aliasfile);
          } else
             commd_usage(stderr, argv);
          continue;
@@ -256,18 +255,18 @@ char **argv
    /* initialize host module */
    host_initialize();
 
-   if (aliasfile) {
+   if (aliasfile == NULL) {
       /* expect alias file at default location */
       aliasfile = get_alias_path(me.default_cell);
-      
-      /* read aliasfile */
-      if (aliasfile) {
-         if (SGE_STAT(aliasfile, &stat_dummy))
-            INFO((SGE_EVENT, MSG_COMMD_STATHOSTALIASFILEFAILED_SS, 
-                  aliasfile, strerror(errno)));
-         else
-            read_aliasfile(aliasfile);
-      }
+   }   
+
+   /* read aliasfile */
+   if (aliasfile) {
+      if (SGE_STAT(aliasfile, &stat_dummy))
+         INFO((SGE_EVENT, MSG_COMMD_STATHOSTALIASFILEFAILED_SS, 
+               aliasfile, strerror(errno)));
+      else
+         read_aliasfile(aliasfile);
    }
 
    if (message_logging)

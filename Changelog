@@ -1,3 +1,10 @@
+JG-2001-08-22-0: (Issue# 43), host_aliases file was not implicitly used from 
+                 standard location, option -a <path_to_host_aliases> worked.
+
+AA-2001-08-22-0: - bugfix IZ 42, processing of projects/xprojects in SGEEE mode 
+
+AA-2001-08-17-0: - enhanced scripts/snapshot.csh to use TAG as part of filename
+
 JG-2001-08-13-0: fixed/improved handling of aimk option -opt (optimization)
                  at Ron Chen's suggestion.
 
@@ -109,6 +116,3 @@ AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
 
-AA-2001-08-17-0: - enhanced scripts/snapshot.csh to use TAG as part of filename
-
-AA-2001-08-22-0: - bugfix IZ 42, processing of projects/xprojects in SGEEE mode 

@@ -47,9 +47,9 @@ you check out the sources as described under <A HREF="http://gridengine.sunsourc
 <P>In this source snapshot the following Grid Engine binary architectures are known to be working:</P>
 <UL>
    <LI><P>solaris (Sparc Solaris 2.6, 7, 8, 9  32-bit)</P>
-   <LI><P>solaris64 (Sparc Solaris 7, 8, 9  64-bit</P>
+   ><P>solaris64 (Sparc Solaris 7, 8, 9  64-bit</P>
    <LI><P>solaris86 (x86 Solaris 8)</P>
-   <LI><P>glinux (x86 Linux, kernel 2.4, glibc >= 2.2)</P>
+   ><P>glinux (x86 Linux, kernel 2.4, glibc >= 2.2)</P>
 </UL>
 <P>There are three build targets that are related to DRMAA:</P>
 <UL>
@@ -98,6 +98,7 @@ made. The current major assumptions are</P>
    <LI><P>if the code was compiled with aimk option -SECURE then 
          only non-secure may be used</P>
    <LI><P>neither AFS nor DCE/KERBEROS security may be used</P>
+   <LI><P>system is not used in I18N mode</P>
 </UL>
 <P>if these assumptions are not met DRMAA library can not be expected to be working
 properly and will crash most probably! To overcome those constraints it is necessary 

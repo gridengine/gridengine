@@ -34,6 +34,13 @@
 
 #include "sge_c_gdi.h"
 
+enum {
+   SGE_QI_TAG_DEFAULT = 0,
+   SGE_QI_TAG_DEL     = 1,
+   SGE_QI_TAG_ADD     = 2,
+   SGE_QI_TAG_MOD     = 4
+};
+
 int cqueue_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
 int cqueue_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 

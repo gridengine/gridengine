@@ -49,6 +49,10 @@ extern lList *Master_CQueue_List;
 
 extern list_attribute_struct cqueue_attribute_array[];
 
+bool
+cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
+                  bool *has_hostname, bool *has_domain);
+
 lListElem *
 cqueue_create(lList **answer_list, const char *name);
 

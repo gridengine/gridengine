@@ -39,7 +39,9 @@
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_stringL.h"
+#include "sge_unistd.h"
 #include "sge_answer.h"
 #include "read_write_cqueue.h"
 #include "sge_string.h"
@@ -52,6 +54,7 @@
 #include "sge_attr.h"
 #include "sge_feature.h"
 #include "sge_href.h"
+#include "sge_cqueue_qmaster.h"
 
 #include "msg_common.h"
 
@@ -1249,6 +1252,99 @@ write_cqueue(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "INFINITY\n"));
       }
  
+   }
+
+   if (how == 2) {
+      lList *qinstances = lGetList(ep, CQ_qinstances);
+      lListElem *qinstance = NULL;
+      bool file_renamed = false;
+      bool do_mkdir = true;
+
+      /* Spool QIs into tmp files */
+      for_each(qinstance, qinstances) {
+         u_long32 tag = lGetUlong(qinstance, QI_tag);
+         dstring qi_dir = DSTRING_INIT;
+         dstring qi_file = DSTRING_INIT;
+         FILE *qi_fp = NULL;
+
+         if (how == 2 && tag != SGE_QI_TAG_DEL) {
+            sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR, 
+                                lGetString(qinstance, QI_name));
+            sge_dstring_sprintf(&qi_file, "%s/%s/.%s", QINSTANCES_DIR, 
+                                lGetString(qinstance, QI_name), 
+                                lGetHost(qinstance, QI_hostname));
+
+            if (tag == SGE_QI_TAG_ADD) {
+               if (do_mkdir) {
+                  sge_mkdir(sge_dstring_get_string(&qi_dir), 0755, 0, 0);
+               }
+               do_mkdir = false;
+            } else if (tag == SGE_QI_TAG_MOD) {
+               do_mkdir = false;
+            }
+            qi_fp = fopen(sge_dstring_get_string(&qi_file), "w");
+            if (qi_fp == NULL) {
+               CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, 
+                         sge_dstring_get_string(&qi_file), strerror(errno)));
+               DEXIT;
+               return NULL;
+            } 
+
+            FPRINTF((qi_fp, "qname              %s\n", 
+                     lGetString(qinstance, QI_name)));
+            FPRINTF((qi_fp, "hostname           %s\n", 
+                     lGetHost(qinstance, QI_hostname)));
+            FPRINTF((qi_fp, "seq_no             %d\n", 
+                     (int) lGetUlong(qinstance, QI_seq_no)));
+            fclose(qi_fp);
+         }
+         sge_dstring_free(&qi_dir);
+         sge_dstring_free(&qi_file);
+      } 
+      /* rename all tmp files and remove obsolete qinstance files */
+      for_each(qinstance, qinstances) {
+         u_long32 tag = lGetUlong(qinstance, QI_tag);
+         dstring qi_file = DSTRING_INIT;
+         dstring qi_realfile = DSTRING_INIT;
+
+         if (how == 2) {
+            sge_dstring_sprintf(&qi_file, "%s/%s/.%s", QINSTANCES_DIR, 
+                                lGetString(qinstance, QI_name), 
+                                lGetHost(qinstance, QI_hostname));
+            sge_dstring_sprintf(&qi_realfile, "%s/%s/%s", QINSTANCES_DIR, 
+                                lGetString(qinstance, QI_name), 
+                                lGetHost(qinstance, QI_hostname));
+            if (tag != SGE_QI_TAG_DEL) {
+               if (rename(sge_dstring_get_string(&qi_file),
+                          sge_dstring_get_string(&qi_realfile)) == -1) {
+                  CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, 
+                            sge_dstring_get_string(&qi_realfile), 
+                            strerror(errno)));
+                  DEXIT;
+                  return NULL;
+               }
+               file_renamed = true;
+            } else {
+               sge_unlink(NULL, sge_dstring_get_string(&qi_realfile));
+            }
+         } 
+         sge_dstring_free(&qi_realfile);
+         sge_dstring_free(&qi_file);
+      } 
+      if (!file_renamed) {
+         dstring qi_dir = DSTRING_INIT;
+         dstring message = DSTRING_INIT;
+
+         sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR,
+                             lGetString(ep, CQ_name));
+         if (sge_rmdir(sge_dstring_get_string(&qi_dir), &message)) {
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS,
+                   MSG_JOB_TASK_SPOOL_FILE,
+                   sge_dstring_get_string(&message)));
+         }
+         sge_dstring_free(&qi_dir);
+         sge_dstring_free(&message);
+      }
    }
 
    if (how != 0) {

@@ -94,7 +94,7 @@
 #include "sge_hgroup.h"
 #include "sge_conf.h"
 #include "sge_ckpt.h"
-#include "sge_cqueue.h"
+#include "sge_queue.h"
 #include "sge_hgroup_qconf.h"
 #include "sge_cuser_qconf.h"
 #include "sge_centry_qconf.h"
@@ -140,10 +140,8 @@ static int sge_gdi_is_adminhost(const char *host);
 /************************************************************************/
 
 /***************************************************************************/
-static char **sge_parser_get_next(
-char **arg 
-) {
-
+static char **sge_parser_get_next(char **arg) 
+{
    DENTER(TOP_LAYER, "sge_parser_get_next");
    if (!*(arg+1)) {
       ERROR((SGE_EVENT, MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S , *arg));
@@ -3602,16 +3600,6 @@ DPRINTF(("ep: %s %s\n",
       }
 #endif
 
-/*----------------------------------------------------------------------------*/
-
-#ifdef __SGE_CQUEUE_DEBUG__
-      /* "-scql" */
-      if (!strcmp("-scql", *spp)) {
-         show_object_list(SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list");
-         spp++;
-         continue;
-      }
-#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -3714,25 +3702,6 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_modify(&answer_list, *spp);
-         show_gdi_request_answer(answer_list);
-         spp++;
-         continue;
-      }
-#endif
-
-/*----------------------------------------------------------------------------*/
-
-#ifdef __SGE_CQUEUE_DEBUG__
-      /* "-mcq cqueue"  */
-      if (!strcmp("-mcq", *spp)) {
-         lList *answer_list = NULL;
-
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-
-         spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
-         cqueue_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          spp++;
          continue;
@@ -3870,22 +3839,6 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __SGE_CQUEUE_DEBUG__
-      /* "-acq cqueue"  */
-      if (!strcmp("-acq", *spp)) {
-         lList *answer_list = NULL;
-
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-
-         spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
-         cqueue_add(&answer_list, *spp);
-         show_gdi_request_answer(answer_list);
-         spp++;
-         continue;
-      }
-#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -4089,20 +4042,120 @@ DPRINTF(("ep: %s %s\n",
       }
 #endif
 
-/*----------------------------------------------------------------------------*/
-
 #ifdef __SGE_CQUEUE_DEBUG__
+
+      /* "-scql" */
+      if (!strcmp("-scql", *spp)) {
+         show_object_list(SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list");
+         spp++;
+         continue;
+      }
+
+      /* "-mcq cqueue"  */
+      if (!strcmp("-mcq", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cqueue_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+      /* "-acq cqueue"  */
+      if (!strcmp("-acq", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cqueue_add(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
       /* "-dcq cqueue"  */
       if (!strcmp("-dcq", *spp)) {
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
+
          sge_gdi_is_manager(uti_state_get_user_name());
          cqueue_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
+
+#if 1 /* EB: TODO: implement -scq switch */
+      /* "-scq [destin_id[,destin_id,...]]" */
+      if (!strcmp("-scq", *spp)) {
+         if(*(spp+1) && strncmp("-", *(spp+1), 1)) {
+            /* queues specified */
+            while(*(spp+1) && strncmp("-", *(spp+1), 1)) {
+               spp++;
+               if (strncmp("-", *spp, 1)) {
+                  lString2List(*spp, &arglp, QR_Type, QR_name, ", ");
+
+lWriteListTo(arglp, stderr);
+{
+   lListElem *qref;
+
+   for_each(qref, arglp) {
+      dstring cqueue_name = DSTRING_INIT;
+      dstring host_domain = DSTRING_INIT;
+      const char *name = lGetString(qref, QR_name);
+      bool has_hostname, has_domain;
+
+      cqueue_name_split(name, &cqueue_name, &host_domain, 
+                        &has_hostname, &has_domain);
+
+      fprintf(stderr, "%s\n", sge_dstring_get_string(&cqueue_name));
+      fprintf(stderr, "%s\n", sge_dstring_get_string(&host_domain));
+      
+      sge_dstring_free(&cqueue_name);
+      sge_dstring_free(&host_domain);
+   }
+}
+
+#if 0
+
+                  for_each(argep, arglp) {
+                     where = lWhere("%T( %I==%s )", QU_Type, QU_qname, lGetString(argep, QR_name));
+                     what = lWhat("%T(ALL)", QU_Type);
+                     alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_GET, &lp, where, what);
+                     where = lFreeWhere(where);
+                     what = lFreeWhat(what);
+
+                     if(lp)
+                        cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
+                     else {
+                        fprintf(stderr, MSG_QUEUE_UNABLE2FINDQ_S, lGetString(argep, QR_name));
+                        sge_parse_return = 1;
+                     }
+                     aep = lFirst(alp);
+                     answer_exit_if_not_recoverable(aep);
+                     if(answer_get_status(aep) != STATUS_OK) {
+                        fprintf(stderr, "%s", lGetString(aep, AN_text));
+                     }
+                     lFreeList(alp);
+
+                     printf("\n");
+                  }
+#endif
+                  arglp = lFreeList(arglp);
+               }
+            }
+         } 
+         spp++;
+         continue;
+      }
+#endif
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -4451,15 +4504,12 @@ char *s
 }
 
 /****************************************************************************/
-static int sge_next_is_an_opt(
-char **pptr 
-
-) {
+static int sge_next_is_an_opt(char **pptr) 
+{
    DENTER(TOP_LAYER, "sge_next_is_an_opt");
 
    if (!*(pptr+1)) {
       DEXIT;
-/*       return -1; */
       return 1;
    }
 

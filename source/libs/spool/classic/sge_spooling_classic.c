@@ -299,10 +299,11 @@ spool_classic_default_startup_func(lList **answer_list,
 
       if (ret) {
          /* create spool sub directories */
-         sge_mkdir(JOB_DIR,  0755, true, false);
+         sge_mkdir(JOB_DIR, 0755, true, false);
          sge_mkdir(ZOMBIE_DIR, 0755, true, false);
-         sge_mkdir(QUEUE_DIR,  0755, true, false);
-         sge_mkdir(CQUEUE_DIR,  0755, true, false);
+         sge_mkdir(QUEUE_DIR, 0755, true, false);
+         sge_mkdir(CQUEUE_DIR, 0755, true, false);
+         sge_mkdir(QINSTANCES_DIR, 0755, true, false);
          sge_mkdir(EXECHOST_DIR, 0755, true, false);
          sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
          sge_mkdir(ADMINHOST_DIR, 0755, true, false);

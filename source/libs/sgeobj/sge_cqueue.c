@@ -39,6 +39,7 @@
 
 #include "sge_gdi.h"
 
+#include "sge_dstring.h"
 #include "sge_object.h"
 #include "sge_answer.h"
 #include "sge_attr.h"
@@ -126,6 +127,43 @@ list_attribute_struct cqueue_attribute_array[] = {
 /* *INDENT-ON* */
 
 lList *Master_CQueue_List = NULL;
+
+bool
+cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain, 
+                  bool *has_hostname, bool *has_domain)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_name_split");
+   if (name != NULL && cqueue_name != NULL && 
+       host_domain != NULL && has_hostname != NULL && has_domain != NULL) {
+      const char *first = strchr(name, '@');
+
+      if (first != NULL) {
+         sge_dstring_sprintf(cqueue_name, "%s", name);
+         first++;
+         if (*first == '@') {
+            has_hostname = false;
+            has_domain = true;
+         } else if (*first == '\0') {
+            has_hostname = false;
+            has_domain = false;
+         } else {
+            has_hostname = true;
+            has_domain = false;
+         }
+         sge_dstring_sprintf(host_domain, "%s", first);
+
+         fprintf(stderr, "%s\n", name);
+         fprintf(stderr, "%s\n", first);
+      } else {
+         sge_dstring_sprintf(cqueue_name, "%s", name);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
 
 lList **cqueue_list_get_master_list(void)
 {

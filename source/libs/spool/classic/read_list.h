@@ -53,4 +53,6 @@ int read_all_configurations(lList **lpp,
 
 int sge_read_user_mapping_entries_from_disk(void);
 
+int sge_read_qinstance_list_from_disk(lListElem *cqueue);
+
 #endif /* __SGE_READ_LIST_H */    

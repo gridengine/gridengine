@@ -36,9 +36,6 @@ lListElem *
 cull_read_in_qinstance(const char *dirname, const char *filename, 
                        int spool, int flag, int *tag, int fields[]);
 
-char *
-write_qinstance(int spool, int how, const lListElem *cqueue);
-
 int
 read_qinstance_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
                     int spool, int flag, int *tag, int parsing_type);

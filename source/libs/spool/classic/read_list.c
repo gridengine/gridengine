@@ -65,6 +65,7 @@
 #include "sge_pe.h"
 #include "sge_queue.h"
 #include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
@@ -89,7 +90,7 @@
 
 #include "sge_hgroup.h"
 #include "read_write_host_group.h"
-
+#include "read_write_qinstance.h"
 
 #include "setup_path.h"
 #include "sge_uidgid.h"
@@ -536,6 +537,51 @@ int sge_read_ckpt_list_from_disk()
    return 0;
 }
 
+int sge_read_qinstance_list_from_disk(lListElem *cqueue)
+{
+   lList *dir_list;
+   dstring qinstance_dir = DSTRING_INIT;
+   const char *cqueue_name = lGetString(cqueue, CQ_name);
+
+   DENTER(TOP_LAYER, "sge_read_qinstance_list_from_disk");
+
+   sge_dstring_sprintf(&qinstance_dir, "%s/%s", QINSTANCES_DIR, cqueue_name);
+   dir_list = sge_get_dirents(sge_dstring_get_string(&qinstance_dir));
+   if (dir_list) {
+      lListElem *dir;
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      
+      for_each(dir, dir_list) {
+         const char *hostname = lGetString(dir, ST_name);
+         lListElem *qinstance = NULL;
+
+         if (hostname[0] != '.') {
+            qinstance = cull_read_in_qinstance(
+                                     sge_dstring_get_string(&qinstance_dir), 
+                                     hostname, 1, 0, NULL, NULL);
+            if (qinstance == NULL) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, 
+                      sge_dstring_get_string(&qinstance_dir), hostname));
+               DEXIT;
+               return -1;
+            }
+          
+            if (qinstance_list == NULL) {
+               qinstance_list = lCreateList("", QI_Type);
+               lSetList(cqueue, CQ_qinstances, qinstance_list);
+            } 
+            lAppendElem(qinstance_list, qinstance);
+         } else {
+            sge_unlink(sge_dstring_get_string(&qinstance_dir), hostname);
+         }
+      }
+      lFreeList(dir_list);
+   }
+   sge_dstring_free(&qinstance_dir);
+
+   DEXIT;
+   return 0;
+}   
 int sge_read_queue_list_from_disk()
 {
    lList *alp = NULL, *direntries;
@@ -703,14 +749,6 @@ int sge_read_cqueue_list_from_disk(void)
                DEXIT;
                return -1;
             }
-            if (config_tag & CONFIG_TAG_OBSOLETE_VALUE) {
-               /* an obsolete config value was found in the file.
-                  spool it out again to have the newest version on disk. */
-               cull_write_qconf(1, 0, CQUEUE_DIR, 
-                                lGetString(direntry, ST_name), NULL, qep);
-               INFO((SGE_EVENT, MSG_CONFIG_QUEUEXUPDATED_S, 
-                     lGetString(direntry, ST_name)));
-            }
             
             if (!strcmp(lGetString(direntry, ST_name), SGE_TEMPLATE_NAME) && 
                 !strcmp(lGetString(qep, CQ_name), SGE_TEMPLATE_NAME)) {
@@ -751,6 +789,7 @@ int sge_read_cqueue_list_from_disk(void)
                }
 #endif
 
+               sge_read_qinstance_list_from_disk(qep);
                cqueue_list_add_cqueue(qep);
 
 #if 0 /* EB: TODO: APIBASE */

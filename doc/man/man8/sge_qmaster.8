@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2004/02/19 14:39:20 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2004/02/19 16:57:43 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2004/02/19 14:39:20 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2004/02/19 16:57:43 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .\"
@@ -38,8 +38,6 @@ xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .B xxqs_name_sxx_qmaster
 [
 .B \-help
-] [
-.B \-lj log_file
 ]
 .\"
 .\"
@@ -55,15 +53,6 @@ cooperates with
 .SH OPTIONS
 .IP "\fB\-help\fP"
 Prints  a listing of all options.
-.\"
-.IP "\fB\-lj log_file\fP"
-Enables job logging. All actions taken by 
-.I xxqs_name_sxx_qmaster
-from submit to job exit
-are logged to the log_file. This feature is also available with
-the
-.M xxqs_name_sxx_execd 8
-daemon.
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"

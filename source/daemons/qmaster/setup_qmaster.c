@@ -313,13 +313,10 @@ static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline )
    DENTER(TOP_LAYER, "parse_cmdline_qmaster");
 
    rp = argv;
-   while(*(sp=rp)) {
+   while(*(sp=rp))
+   {
       /* -help */
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
-      /* -lj */
-      if ((rp = parse_until_next_opt(sp, "-lj", NULL, ppcmdline, &alp)) != sp)
          continue;
 
       /* oops */
@@ -362,7 +359,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
    lList *alp = NULL;
    int usageshowed = 0;
    u_long32 flag;
-   char *filename;
 
    DENTER(TOP_LAYER, "parse_qmaster");
 
@@ -377,13 +373,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
          usageshowed = 1;
          sge_usage(stdout);
          break;
-      }
-
-      /* -lj */
-      if(parse_string(ppcmdline, "-lj", &alp, &filename)) {
-         enable_job_logging(filename);
-         FREE(filename);
-         continue;
       }
    }
 

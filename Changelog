@@ -1,3 +1,6 @@
+CR-2002-06-11-0: Testsuite: compile_source(): tcl error on connection timeout
+                 Bugfix:
+
 EB-2002-06-07-0: Bugfix:    disallow "none" in load_formula and addition
                             tests for the correctness
                  Issue:     #215

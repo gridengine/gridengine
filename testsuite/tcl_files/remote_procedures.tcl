@@ -1575,10 +1575,13 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    } 
 
    set open_spawn_buffer $sp_id
-   catch { uplevel $my_uplevel { close -i $open_spawn_buffer
-            debug_puts "closed buffer: $open_spawn_buffer" } }
-
-   flush $open_spawn_buffer
+   catch { 
+      uplevel $my_uplevel { 
+         close -i $open_spawn_buffer
+         debug_puts "closed buffer: $open_spawn_buffer"
+         flush $open_spawn_buffer
+      }
+   }
    log_user 1
    set wait_return "" 
    catch { set wait_return [ uplevel $my_uplevel { wait -i $open_spawn_buffer } ] }

@@ -1,13 +1,10 @@
+DT-2004-03-07-0: Enhancem.: o Added DRMAA Java binding.  Not yet complete.
+                 Changed:   DRMAA
+
 SG-2004-03-07-0: Bugfix:    - fixed the build for glinux
                             - fixed the scheduler high profile
                             - fixed the help output from inst_sge
                  Changed:   qstat, inst_sge                            
-
-MD-2004-03-05-0: Bugfix:    - shadowhost installation was broken
-                            - sgebdb stop didn't stop the db
-                            - typo
-                 Issue:     777
-                 Changed:     rc script templates, inst_sge
 
 DT-2004-03-05-5: Bugfix:    o Changed error messages from DT-2004-03-05-4 to
                               start with lower case letters.

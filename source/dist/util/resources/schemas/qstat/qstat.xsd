@@ -14,7 +14,7 @@
          <xsd:sequence>
             <xsd:element name="queue_info" type="queue_info_t" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="job_info" type="job_info_t" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="cluster-queue-summary" type="cqueue-summary_t" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="cluster_queue_summary" type="cqueue_summary_t" minOccurs="0" maxOccurs="unbounded"/>
          </xsd:sequence>
       </xsd:complexType>   
    </xsd:element>
@@ -22,7 +22,7 @@
 <!-- ======================================= -->
 <!-- general qstat output                    -->
 
-   <xsd:element name="cqueue-summary_t">
+   <xsd:element name="cqueue_summary_t">
       <xsd:complexType>
          <xsd:annotation>
             <xsd:documentation></xsd:documentation>
@@ -58,8 +58,8 @@
          <xsd:sequence>
             <xsd:element name="name" type="xsd:String" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="qtype" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="slots-used" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="slots-total" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="slots_used" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="slots_total" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="load_avg" type="xsd:float" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="arch" type="xsd:String" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="state" type="xsd:String" minOccurs="0" maxOccurs="1"/>
@@ -113,9 +113,9 @@
             <xsd:element name="JAT_start_time" type="xsd:dateTime" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="JB_deadline" type="xsd:dateTime" minOccurs="0" maxOccurs="1"/>
 
-            <xsd:element name="cpu-usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="mem-usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="io-usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="cpu_usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="mem_usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="io_usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
 
             <xsd:element name="tickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/> 
             <xsd:element name="JB_override_tickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>

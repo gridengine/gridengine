@@ -732,15 +732,15 @@ int slots_per_line  /* number of slots to be printed in slots column
          secs   -= minutes*60;
       
          sprintf(xmlBuffer, "%d:%2.2d:%2.2d:%2.2d ", days, hours, minutes, secs); 
-         xml_append_Attr_S(attributeList, "cpu-usage", xmlBuffer);
+         xml_append_Attr_S(attributeList, "cpu_usage", xmlBuffer);
       } 
       /* scaled mem usage */
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_MEM))) 
-         xml_append_Attr_D(attributeList, "mem-usage", lGetDouble(up, UA_value));  
+         xml_append_Attr_D(attributeList, "mem_usage", lGetDouble(up, UA_value));  
   
       /* scaled io usage */
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_IO))) 
-         xml_append_Attr_D(attributeList, "io-usage", lGetDouble(up, UA_value));  
+         xml_append_Attr_D(attributeList, "io_usage", lGetDouble(up, UA_value));  
 
       lFreeList(job_usage_list);
 
@@ -1267,7 +1267,7 @@ lList **target_list
    DENTER(TOP_LAYER, "xml_print_jobs_queue");
 
    if (*target_list == NULL){
-      *target_list = lCreateList("job-list", XMLE_Type);
+      *target_list = lCreateList("job_list", XMLE_Type);
    }
 
    sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
@@ -1517,8 +1517,8 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
    }
 
    /* number of used/free slots */
-   xml_append_Attr_I(attributeList, "slots-used", qinstance_slots_used(q) ); 
-   xml_append_Attr_I(attributeList, "slots-total", (int)lGetUlong(q, QU_job_slots));
+   xml_append_Attr_I(attributeList, "slots_used", qinstance_slots_used(q) ); 
+   xml_append_Attr_I(attributeList, "slots_total", (int)lGetUlong(q, QU_job_slots));
 
    /* load avg */
    if (!is_load_value) {

@@ -651,7 +651,7 @@ char **argv
                }
                if (elem) {
                   if (XML_out == NULL){
-                     XML_out = lCreateList("cluster-queue-summary", XMLE_Type);
+                     XML_out = lCreateList("cluster_queue_summary", XMLE_Type);
                   }
                   lAppendElem(XML_out, elem); 
                } 

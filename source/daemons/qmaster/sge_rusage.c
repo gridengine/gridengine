@@ -618,6 +618,7 @@ sge_rusage_type *d
 
    /* skip job category */
    while ((pc=strtok(NULL, ":")) &&
+          strlen(pc) &&
           pc[strlen(pc)-1] != ' ' &&
           strcmp(pc, "none")) {
       /*

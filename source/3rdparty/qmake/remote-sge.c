@@ -1930,20 +1930,18 @@ int start_remote_job (char **argv, char **envp,
             }
 
             /* add space for variable name, =, -inherit, [-cwd], [-verbose], \n's, \0 */
-            envsize += strlen("RECURSIVE_QMAKE_OPTIONS") + 1 + strlen("-inherit") + sge_v_argc + 1;
+            envsize += sizeof("RECURSIVE_QMAKE_OPTIONS") + sizeof("-inherit") + sge_v_argc;
             if(pass_cwd) {
-               envsize += 1 + strlen("-cwd");
+               envsize += sizeof("-cwd");
             }
 
             if(be_verbose) {
-               envsize += 1 + strlen("-verbose");
+               envsize += sizeof("-verbose");
             }
 
             envvar = (char *)malloc(envsize);
 
-            strcpy(envvar, "RECURSIVE_QMAKE_OPTIONS");
-            strcat(envvar, "=");
-            strcat(envvar, "-inherit");
+            strcpy(envvar, "RECURSIVE_QMAKE_OPTIONS=-inherit");
 
             if(pass_cwd) {
                strcat(envvar, "\n-cwd");

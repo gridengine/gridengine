@@ -43,11 +43,48 @@
 #include "cl_communication.h"
 
 
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking) {  /* CR check */
-   return cl_raw_list_setup(list_p,list_name , enable_locking); /* enable list locking */
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking) {
+   cl_connection_list_data_t* ldata = NULL;
+   int ret_val;
+   ldata = (cl_connection_list_data_t*) malloc(sizeof(cl_connection_list_data_t));
+   if (ldata == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   ldata->last_nr_of_descriptors = 0;
+   ldata->select_not_called_count = 0;
+
+   ret_val = cl_raw_list_setup(list_p, list_name , enable_locking); 
+   if ( ret_val != CL_RETVAL_OK) {
+      free(ldata);
+      ldata = NULL;
+      return ret_val;
+   }
+   /* set private list data */
+   (*list_p)->list_data = ldata;
+   return ret_val;
 }
 
-int cl_connection_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
+int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
+   cl_connection_list_data_t* ldata = NULL;
+
+
+   if (list_p == NULL) {
+      /* we expect an address of an pointer */
+      return CL_RETVAL_PARAMS;
+   }
+   if (*list_p == NULL) {
+      /* we expect an initalized pointer */
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* clean list private data */
+   ldata = (*list_p)->list_data;
+   (*list_p)->list_data = NULL;
+   if ( ldata != NULL ) {
+      free(ldata);
+      ldata = NULL;
+   }
+
    return cl_raw_list_cleanup(list_p);
 }
 

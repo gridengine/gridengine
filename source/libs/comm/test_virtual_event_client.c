@@ -133,11 +133,8 @@ extern int main(int argc, char** argv)
             retval = cl_commlib_open_connection(handle, argv[3], "virtual_master", 1);
             if (retval == CL_RETVAL_OK) {
                first_message_sent = 0; 
-            } else {
-               cl_commlib_trigger(handle);
-            }
+            } 
         }
-        
      } else {
         printf("received message from %s/%s/%ld: \"%s\" (%ld bytes)\n", sender->comp_host,sender->comp_name,sender->comp_id, message->message, message->message_length);
         cl_com_free_message(&message);

@@ -133,7 +133,7 @@ extern int main(int argc, char** argv)
 
   while(do_shutdown == 0) {
      printf("\nvirtual qmaster is running ...\n");
-     sleep(5);
+     sleep(1);
   }
 
   printf("shutdown threads ...\n");

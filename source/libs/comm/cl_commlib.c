@@ -456,6 +456,10 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       return NULL;
    }
 
+   if ( service_provider == 1 && component_id == 0) {
+      CL_LOG(CL_LOG_ERROR,"service can't use component id 0");
+      return NULL;
+   }
 
    /* first lock handle list */   
    cl_raw_list_lock(cl_com_handle_list);
@@ -1919,6 +1923,8 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
             } 
             if ( elem->connection->connection_state == CL_COM_CONNECTED ) {
                cl_commlib_finish_request_completeness(elem->connection);
+               /* connection is now in connect state, do select before next reading */
+               elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
             }
          } else {
             /* check timeouts */
@@ -3226,7 +3232,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
    }
 
    if ( un_resolved_hostname != NULL || component_name != NULL || component_id != 0) {
-      CL_LOG(CL_LOG_INFO,"message filtering not supported");
+      CL_LOG(CL_LOG_WARNING,"message filtering not supported");
    }
    do {
       /* return if there are no connections in list */
@@ -4049,6 +4055,20 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
       /* unlock connection list */
       pthread_mutex_unlock(handle->connection_list_mutex);
+
+      /* do this for compatibility to remote clients, which
+         will never immediately will return a connect error */
+      switch(cl_com_create_threads) {
+      case CL_NO_THREAD:
+         CL_LOG(CL_LOG_INFO,"no threads enabled");
+         cl_commlib_trigger(handle);
+         break;
+      case CL_ONE_THREAD:
+         cl_thread_trigger_event(handle->read_thread);
+         cl_commlib_trigger(handle); /* TODO: check if this is ok ???  */
+         break;
+      }
+
       return ret_val;
    }
    new_con->handler = handle;
@@ -4971,8 +4991,8 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          }
 
          /* check for new connections */
-         if (handle->service_provider                != 0 && 
-             handle->do_shutdown                     == 0 && 
+         if (handle->service_provider                != 0                 && 
+             handle->do_shutdown                     == 0                 && 
              handle->service_handler->data_read_flag == CL_COM_DATA_READY &&
              handle->max_connection_count_reached    == 0) {
 
@@ -5037,6 +5057,8 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                   } 
                   if ( elem->connection->connection_state == CL_COM_CONNECTED ) {
                      cl_commlib_finish_request_completeness(elem->connection);
+                     /* connection is now in connect state, do select before next reading */
+                     elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
                   }
                } else {
                   /* check timeouts */
@@ -5271,6 +5293,8 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                         }
                         if ( elem->connection->connection_state == CL_COM_CONNECTED ) {
                            cl_commlib_finish_request_completeness(elem->connection);
+                           /* connection is now in connect state, do select before next reading */
+                           elem->connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
                      } else {
                         /* check timeouts */

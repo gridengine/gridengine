@@ -42,6 +42,11 @@ typedef struct cl_connection_list_elem_t {
    cl_raw_list_elem_t*   raw_elem;
 } cl_connection_list_elem_t;
 
+typedef struct cl_connection_list_data_type {                      /* list specific data */
+   /* this is for tcp/ip */
+   int last_nr_of_descriptors;
+   int select_not_called_count;
+} cl_connection_list_data_t;
 
 
 

@@ -1,3 +1,18 @@
+CR-2004-05-07-0: Bugfix:    commlib:
+                               o forbid to create a service handle with 
+                                 component id 0
+                               o when a new connected client doesn't write any
+                                 data (is just listening) after connection 
+                                 establishment a read timeout appeared at
+                                 service component and the connection was 
+                                 closed because of read timeout error.
+                               o added code to ensure that an application will
+                                 not go into an endless loop when a connection
+                                 can't be opened (endless application calls to
+                                 cl_commlib_receive_message() in a while loop
+                                 without guilty communication endpoint).
+                 Changed:   commlib
+
 DT-2004-04-07-1: Bugfix:    o Added test to test_drmaa for invalid attributes
                             o Did cleanup related to 966
                             o Added Java DRMAA binding to aimk and distinst

@@ -3853,6 +3853,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
          cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
          cl_com_free_hostspec(&elem_host);
          free(act_elem);
+         act_elem = NULL;
          continue; /* removed entry, continue with next */
       }
 
@@ -3977,6 +3978,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
             cl_raw_list_remove_elem(list_p, elem->raw_elem);
             cl_com_free_hostspec(&elem_host);
             free(elem);
+            elem = NULL;
          }
 
          /* now dechain elements from copied list into original list */
@@ -4672,7 +4674,8 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
                   cl_com_tcp_close_connection(new_connection);
                   retval = CL_RETVAL_MALLOC;
                }
-               /* This is a new connection from a client, assuming that there is data to read */
+               /* This is a new connection from a client, assuming that 
+                  there is data to read ( read a CM - Message ) */
                (*new_connection)->data_read_flag = CL_COM_DATA_READY;
             }
             return retval;

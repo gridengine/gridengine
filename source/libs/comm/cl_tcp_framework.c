@@ -261,7 +261,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          i = connect(sockfd, (struct sockaddr *) &(cl_com_tcp_get_private(connection)->client_addr), sizeof(struct sockaddr_in));
          my_error = errno;
          if (i != 0) {
-            CL_LOG_INT(CL_LOG_INFO,"connect status errno:", my_error);
+            CL_LOG_INT(CL_LOG_DEBUG,"connect return code:", my_error);
             if (my_error == EISCONN) {
                /* socket is allready connected */
                CL_LOG(CL_LOG_INFO,"allready connected");
@@ -1594,7 +1594,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
          }
       }
       connection->read_buffer_timeout_time = 0;
-      connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + connection->data_read_buffer_processed;
+      connection->statistic->real_bytes_received += connection->data_read_buffer_processed;
       connection->connection_sub_state = CL_COM_READ_INIT_CRM;
    }
 
@@ -2170,7 +2170,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int do_write_select = 0;
    int my_errno = 0;
    int nr_of_descriptors = 0;
-   static int last_nr_of_descriptors = 0;
+   cl_connection_list_data_t* ldata = NULL;
 
 
    if (connection_list == NULL ) {
@@ -2214,6 +2214,13 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"could not lock connection list");
       return CL_RETVAL_LOCK_ERROR;
+   }
+
+   if ( connection_list->list_data == NULL) {
+      cl_raw_list_unlock(connection_list);
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
+   } else {
+      ldata = (cl_connection_list_data_t*) connection_list->list_data;
    }
 
    /* reset connection data_read flags */
@@ -2273,59 +2280,88 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          }
       }
       con_elem = cl_connection_list_get_next_elem(connection_list,con_elem);
+      if (max_fd + 1 >= FD_SETSIZE) {
+         CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+         max_fd = FD_SETSIZE - 1;
+      } 
    }
-   cl_raw_list_unlock(connection_list); 
 
-
+   /* we don't have any file descriptor for select(), find out why: */
    CL_LOG_INT(CL_LOG_INFO,"max fd =", max_fd);
    if (max_fd == -1) {
+
+/* TODO: remove CL_W_SELECT and CL_R_SELECT handling and use one handling for 
+         CL_W_SELECT, CL_R_SELECT and CL_RW_SELECT ? */
       if ( select_mode == CL_W_SELECT ) {
          /* return immediate for only write select ( only called by write thread) */
+         cl_raw_list_unlock(connection_list); 
+         CL_LOG(CL_LOG_INFO,"returning, because of no select descriptors (CL_W_SELECT)");
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
-
+#if 0
       if ( select_mode == CL_R_SELECT ) {
          /* return immediate for only read select ( only called by read thread) */
-         return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+         cl_raw_list_unlock(connection_list); 
+         CL_LOG(CL_LOG_INFO,"returning, because of no select  (CL_R_SELECT)");
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
       }
-
-      
-      /* we have no file descriptors, but we do a select with standard timeout
-         because we don't want to overload the cpu by endless trigger() calls 
-         from application when there is no connection client 
-         (no descriptors part 1)
-      */
-      CL_LOG(CL_LOG_WARNING, "no entries in open connection list ... wait");
-      return CL_RETVAL_NO_SELECT_DESCRIPTORS;
-#if 0
-      /* enable this for shorter timeout */
-      timeout.tv_sec = 0; 
-      timeout.tv_usec = 100*1000;  /* wait for 1/10 second */
-      max_fd = 0;
 #endif
+
+      /* (only when not multithreaded): 
+       *    don't return immediately when the last call to this function was also
+       *    with no possible descriptors! ( which may be caused by a not connectable service )
+       *    This must be done to prevent the application to poll endless ( with 100% CPU usage)
+       *
+       *    we have no file descriptors, but we do a select with standard timeout
+       *    because we don't want to overload the cpu by endless trigger() calls 
+       *    from application when there is no connection client 
+       *    (no descriptors part 1)
+       *
+       *    we have a handler of the connection list, try to find out if 
+       *    this is the first call without guilty file descriptors 
+       */
+      
+      if ( ldata->select_not_called_count < 3 ) { 
+         CL_LOG_INT(CL_LOG_WARNING, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
+         ldata->select_not_called_count += 1;
+         cl_raw_list_unlock(connection_list); 
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
+      } else {
+         CL_LOG(CL_LOG_WARNING, "no usable file descriptors (repeated!) - select() will be used for wait");
+         ldata->select_not_called_count = 0;
+#if 0
+         /* enable this for shorter timeout */
+         timeout.tv_sec = 0; 
+         timeout.tv_usec = 100*1000;  /* wait for 1/10 second */
+#endif
+         max_fd = 0;
+      }
    }
 
    
-   /* This is to return as far as possible if this connection has a service and
-      a client was disconnected */
-
-   /* TODO: Fix this problem:
-      multi_threaded:
-
-         -  find a way to wake up select when a new connection was added by write thread
+   /* TODO: Fix this problem (multithread mode):
+         -  find a way to wake up select when a new connection was added by another thread
             (perhaps with dummy read file descriptor)
-
-      single_threaded:
- 
-         -  find a way to do the same
-
    */
-       
-   if ( nr_of_descriptors != last_nr_of_descriptors && nr_of_descriptors == 1 && service_connection != NULL && do_read_select != 0 ) {
-      last_nr_of_descriptors = nr_of_descriptors;
-      return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+    
+   if ( nr_of_descriptors != ldata->last_nr_of_descriptors ) {
+      if ( nr_of_descriptors == 1 && service_connection != NULL && do_read_select != 0 ) {
+         /* This is to return as far as possible if this connection has a service and
+             a client was disconnected */
+
+         /* a connection is done and no more connections (beside service connection itself) is alive,
+            return to application as far as possible, don't wait for a new connect */
+         ldata->last_nr_of_descriptors = nr_of_descriptors;
+         cl_raw_list_unlock(connection_list); 
+         CL_LOG(CL_LOG_WARNING,"last connection is gone");
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+      }
    }
-   last_nr_of_descriptors = nr_of_descriptors;
+
+   ldata->last_nr_of_descriptors = nr_of_descriptors;
+
+   cl_raw_list_unlock(connection_list); 
+
 
    if (max_fd + 1 >= FD_SETSIZE) {
       CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");

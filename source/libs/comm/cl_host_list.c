@@ -59,7 +59,6 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 
    ldata = (cl_host_list_data_t*) malloc(sizeof(cl_host_list_data_t));
    if (ldata == NULL ) {
-      free(ldata);
       return CL_RETVAL_MALLOC;
    }
    ldata->host_alias_file      = NULL;

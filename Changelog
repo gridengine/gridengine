@@ -1,3 +1,8 @@
+EB-2002-01-24-0: Bugfix:    Fixed "bug" within the code handling task id
+                            ranges which caused performance problem
+                            in scheduler for huge fragmented array jobs
+                            and array jobs with a step size != 1.
+
 AS-2002-01-24-2: Enhancem.  added SUN MPI install support for 'distinst'"
 
 AS-2002-01-24-1: Enhancem.  Added PE 'make' template

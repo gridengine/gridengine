@@ -672,6 +672,12 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
              id <= lGetUlong(range, RN_max);
              id += lGetUlong(range, RN_step)) {  
             range_list_insert_id(range_list2, answer_list, id);
+#if 1 /* 
+       * EB: should fix the performance problem within the scheduler 
+       *     reported by JG 
+       */
+            range_list_compress(*range_list2);
+#endif
             if (--n == 0) {
                break;
             }
@@ -721,6 +727,15 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
    int inserted = 0;
    DENTER(TOP_LAYER, "range_insert_id");
 
+#if 0 /* EB: debug */
+{
+   StringBufferT dstring = {NULL, 0};
+
+   range_list_print_to_string(*range_list, &dstring);
+   fprintf(stderr, "%s\n", dstring.s);
+   sge_string_free(&dstring);
+}
+#endif
    lSortList2(*range_list, "%I+", RN_min);
 
    range = NULL;

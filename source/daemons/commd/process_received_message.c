@@ -137,7 +137,7 @@ int commdport
 
       if (!h) {
          read_aliasfile(aliasfile);
-         h = newhost_addr((char *) &mp->fromaddr);
+         h = newhost_addr(&mp->fromaddr);
 
          if (!h) {
             DEBUG((SGE_EVENT, "message from unknown host %s",
@@ -244,7 +244,7 @@ int commdport
      
       if (!h) {
          read_aliasfile(aliasfile);
-         h = newhost_addr((char *) &mp->fromaddr);
+         h = newhost_addr(&mp->fromaddr);
 
          if (!h) {
             DEBUG((SGE_EVENT, "control message from unknown host %s",
@@ -482,7 +482,7 @@ int commdport
    /* unknown host ? */
    if (!h && (mp->flags & COMMD_SCOMMD)) {
       read_aliasfile(aliasfile);
-      h = newhost_addr((char *) &mp->fromaddr);
+      h = newhost_addr(&mp->fromaddr);
    }
    if (!h) {
       WARNING((SGE_EVENT, "can't resolve host address %s", inet_ntoa(mp->fromaddr)));

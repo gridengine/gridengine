@@ -58,7 +58,7 @@ extern host *localhost;
 
 int matches_name(struct hostent *he, char *name);
 void host_initialize(void);
-host *newhost_addr(char *addr);
+host *newhost_addr(const struct in_addr *addr);
 host *newhost_name(char *name, int *not_really_new);
 host *create_host(void);
 void delete_host(host *h);

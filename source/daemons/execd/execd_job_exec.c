@@ -321,9 +321,6 @@ int slave
          goto Error;
       }
 
-#if 1 /* EB */
-      lWriteElemTo(jelem, stderr);
-#endif
       if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
          lGetUlong(jelem, JB_script_size))) !=
          lGetUlong(jelem, JB_script_size)) {

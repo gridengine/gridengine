@@ -46,6 +46,9 @@
 #include "msg_commd.h"
 #include "sge_language.h"
 #include "sge_stat.h" 
+#include "sge_time.h" 
+
+extern void trace(char *);
 
 static host *hostlist = NULL;
 
@@ -62,9 +65,75 @@ static void free_cpp(char **cpp);
 static char **cpp_casecmp(char *cp, char **cpp);
 static char **cpp_memncmp(char *cp, char **cpp, int n);
 
+/* resolver library wrappers */
+static struct hostent *commd_gethostbyname(const char *name);
+static struct hostent *commd_gethostbyaddr(const struct in_addr *addr);
+
 #if defined(SOLARIS)
 int gethostname(char *name, int namelen);
 #endif
+
+#define MAX_RESOLVER_BLOCKING 15
+
+static struct hostent *commd_gethostbyname(const char *name)
+{
+   struct hostent *he;
+   time_t now;
+   int time;
+
+   DENTER(TOP_LAYER, "commd_gethostbyname");
+
+   now = sge_get_gmt();
+   he = gethostbyname(name);
+   time = sge_get_gmt() - now;
+
+   /* warn about blocking gethostbyname() calls */
+   if (time > MAX_RESOLVER_BLOCKING) {
+      WARNING((SGE_EVENT, "gethostbyname(%s) took %d seconds and returns %s\n", 
+            name, time, he?"success":
+          (h_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
+          (h_errno == TRY_AGAIN)?"TRY_AGAIN":
+          (h_errno == NO_RECOVERY)?"NO_RECOVERY":
+          (h_errno == NO_DATA)?"NO_DATA":
+          (h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
+      trace(SGE_EVENT);
+   }
+
+   DEXIT;
+   return he;
+}
+
+static struct hostent *commd_gethostbyaddr(const struct in_addr *addr)
+{
+   struct hostent *he;
+   time_t now;
+   int time;
+
+   DENTER(TOP_LAYER, "commd_gethostbyaddr");
+
+   now = sge_get_gmt();
+#if defined(CRAY)
+   he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
+#else   
+   he = gethostbyaddr((const char *)addr, 4, AF_INET);
+#endif
+   time = sge_get_gmt() - now;
+
+   /* warn about blocking gethostbyaddr() calls */
+   if (time > MAX_RESOLVER_BLOCKING) {
+      WARNING((SGE_EVENT, "gethostbyaddr(%s) took %d seconds and returns %s\n", 
+            inet_ntoa(*addr), time, he?"success":
+          (h_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
+          (h_errno == TRY_AGAIN)?"TRY_AGAIN":
+          (h_errno == NO_RECOVERY)?"NO_RECOVERY":
+          (h_errno == NO_DATA)?"NO_DATA":
+          (h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
+      trace(SGE_EVENT);
+   }
+
+   DEXIT;
+   return he;
+}
 
 /**********************************************************************/
 void host_initialize()
@@ -145,20 +214,15 @@ host *h
 
 /**********************************************************************/
 /* create new host from internet address in hostorder */
-host *newhost_addr(
-char *addr 
-) {
+host *newhost_addr( const struct in_addr *addr) 
+{
    host *new = create_host();
    struct hostent *he;
 
    if (!new)
       return NULL;
 
-#if defined(CRAY)
-   he = gethostbyaddr(addr, sizeof(struct in_addr), AF_INET);
-#else   
-   he = gethostbyaddr(addr, 4, AF_INET);
-#endif
+   he = commd_gethostbyaddr(addr);
    
    if (!he) {
       delete_host(new);
@@ -172,6 +236,7 @@ char *addr
 
    return new;
 }
+
 /*************************************************/
 /* create new host from hostname                 */
 /*   be careful with resolving anomalies.        */
@@ -184,9 +249,13 @@ int *not_really_new
    struct hostent *he;
    char **cpp;
 
-   he = gethostbyname(name);
-   if (!he)
+   DENTER(TOP_LAYER, "newhost_name");
+
+   he = commd_gethostbyname(name);
+   if (!he) {
+      DEXIT;
       return NULL;
+   } 
 
    /* use address to make sure we are unique */
 
@@ -195,18 +264,23 @@ int *not_really_new
          /* make a new host entry, but host is already known */
          if (not_really_new)
             *not_really_new = 1;
+         DEXIT;
          return h;
       }
    }
 
-   if (!(new = create_host()))
-      return NULL;
-
-   if (copy_hostent(&new->he, he)) {
-      delete_host(new);
+   if (!(new = create_host())) {
+      DEXIT;
       return NULL;
    }
 
+   if (copy_hostent(&new->he, he)) {
+      delete_host(new);
+      DEXIT;
+      return NULL;
+   }
+
+   DEXIT;
    return new;
 }
 
@@ -549,7 +623,7 @@ void refresh_hostlist()
    struct hostent *he;
 
    while (hl) {
-      he = gethostbyname(hl->he.h_name);
+      he = commd_gethostbyname(hl->he.h_name);
       if (!he) {
          hl->deleted = 1;
          continue;
@@ -577,6 +651,7 @@ host *h
 
    return (char *) h1->he.h_name;
 }
+
 
 /********************************************************/
 #ifdef TEST

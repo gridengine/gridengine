@@ -464,7 +464,7 @@ int *after
       break;
 #ifdef QHOST_TEST
    case SGE_QHOST:
-lWriteListTo(request->lp, stdout);
+/* lWriteListTo(request->lp, stdout); */
       sprintf(SGE_EVENT, "SGE_QHOST\n");
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
       DEXIT;

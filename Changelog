@@ -1,3 +1,6 @@
+AH-2001-12-07-0: Cleanup:   Improved diagnosis possibilities when commd is 
+                            blocked NIS/DNS resolver library calls.
+
 SD-2001-12-07-1: Bugfix:    Fixed ln command in distinst when creating security
                             distribution.
                  Issue:     None (Fix of Cleanup: SD-2001-12-06-4)

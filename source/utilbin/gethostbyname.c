@@ -65,6 +65,12 @@ int main(int argc, char *argv[])
   he = gethostbyname(argv[1+name_only]);
 
   if (!he) {
+    fprintf(stderr, "h_errno = %s\n", 
+	(h_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
+	(h_errno == TRY_AGAIN)?"TRY_AGAIN":
+	(h_errno == NO_RECOVERY)?"NO_RECOVERY":
+	(h_errno == NO_DATA)?"NO_DATA":
+	(h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>");
     perror(MSG_SYSTEM_GETHOSTBYADDRFAILED );
     exit(1);
   }

@@ -1,3 +1,7 @@
+CR-2003-01-29-0  Testsuite: Troughput performance test: Test connection to
+                            execd host before start to submit jobs (it was 
+                            possible to lose the first job submits)
+
 JG-2003-01-29-0  Bugfix:    startup failure of qrsh was reported as regular job
                             exit.
                  IZ:        #380

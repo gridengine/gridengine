@@ -422,6 +422,29 @@ proc run_throughput_test {} {
    # open shell on each execd host, used for submitting jobs
    set spawn_list ""
    set remote_spawn_list ""
+   
+
+   set tries 0
+   set con_error 1
+   while { $tries < 3 && $con_error > 0} {
+      set con_error 0
+      foreach host $host_list {
+         puts $CHECK_OUTPUT "start remote call on host $host"
+         set output [start_remote_prog $host $CHECK_USER "id" ""]
+         puts $CHECK_OUTPUT $output
+         if { $prg_exit_state != 0 } {
+            incr con_error 1
+         }
+      }
+      incr tries 1
+   }
+
+   if { $con_error != 0 } {
+      set_error -1 "could not enable connection to host $host"
+      return -1
+   }
+
+   # connections are buffered, so the connection are already open !!!
    foreach host $host_list {
       puts $CHECK_OUTPUT "open connection to host $host"
       set id [ open_remote_spawn_process $host $CHECK_USER "/bin/sh" "" ]
@@ -436,8 +459,18 @@ proc run_throughput_test {} {
    set sent_jobs 0
    set sent_job_ids ""
    set schedd_nr 0
-   
-   while { $ok != [llength $host_list] } {
+   set ids_received 0
+   set ids_spawn_list ""
+   set active_spawn_ids ""
+
+   set my_timeout [ expr ( [timestamp] + 300 ) ]
+   while { $ok != [llength $host_list] || $ids_received != [llength $host_list] } {
+      
+      foreach elem $active_spawn_ids {
+         puts $CHECK_OUTPUT "sending id request to spawn id $elem"
+         send -i $elem "id\n"
+      }
+
       expect {
          -i $spawn_list full_buffer {
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (1)"
@@ -456,12 +489,34 @@ proc run_throughput_test {} {
             set spawn_id $expect_out(spawn_id)
             set host_nr [lsearch $spawn_list $spawn_id]
             set host_name [lindex $host_list $host_nr]
-            puts $CHECK_OUTPUT "host $host_name is ready to submit jobs"
             incr ok 1
+            lappend active_spawn_ids $spawn_id
+            puts $CHECK_OUTPUT "testing spawn id $spawn_id"
             # here the host is added to the next submit list
             lappend next_submit_list $host_name
          }
+         -i $spawn_list "uid=*$CHECK_USER" {
+            set spawn_id $expect_out(spawn_id)
+            puts $CHECK_OUTPUT "got id from spawn id: $spawn_id"
+            if { [lsearch $ids_spawn_list $spawn_id] < 0 } {
+               lappend  ids_spawn_list $spawn_id
+            }
+            set help [lsearch $active_spawn_ids $spawn_id]
+            if { $help >= 0 } {
+               puts $CHECK_OUTPUT "found spawn id on pos $help"
+               set active_spawn_ids [lreplace $active_spawn_ids $help $help]
+            }
+         }
        }
+       if {  [timestamp] > $my_timeout  } {
+          foreach elem $remote_spawn_list {
+             close_spawn_process $elem
+          }
+          set_error -1 "timeout - could not enable all host connections"
+          return -1
+       }
+       set ids_received [llength $ids_spawn_list]
+       sleep 1
    }
 
    # variables set not in main loop for speed reasons
@@ -487,10 +542,8 @@ proc run_throughput_test {} {
               set spawn_id [lindex $spawn_list $host_index]
               set next_submit_list [lrange $next_submit_list 1 end]
               if { $throughput_sharetree == 1 } {
-                 set act_project "project"
                  set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
-                 append act_project $numb
-                 set my_job_command "qsub -o /dev/null -e /dev/null -P $act_project $my_job $result(job_run_time)\n"
+                 set my_job_command "qsub -o /dev/null -e /dev/null -P project${numb} $my_job $result(job_run_time)\n"
                  set job_data($sent_jobs,project) $numb
               } 
               send -i $spawn_id $my_job_command
@@ -547,10 +600,13 @@ proc run_throughput_test {} {
 #                  puts $CHECK_OUTPUT "line : >$line<"
 #                  puts $CHECK_OUTPUT "match: >$JOB_SUBMITTED<"
                   set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
-                  set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-                  set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
-                  if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
-                      add_proc_error "run_throughput_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
+                  if { $result(jobs_submitted) < 50 } {
+                     # test evtl. L10N errors only the first 50 jobs
+                     set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
+                     set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+                     if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+                         add_proc_error "run_throughput_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
+                     }
                   }
                   incr job_id_pos -1
                   set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]

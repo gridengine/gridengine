@@ -1633,7 +1633,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          }
       }
       puts $CHECK_OUTPUT "waiting for scheduling info information ..."
-      sleep 2
+      after 2000
       if { [timestamp] > $my_timeout } {
          return "timeout"
       }
@@ -2656,7 +2656,7 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
   if { $mytime == $check_timestamp } {
      puts $CHECK_OUTPUT "was_job_running - waiting for job ..."
-     sleep 1
+     after 1000
   }
   set check_timestamp $mytime
 
@@ -2809,7 +2809,7 @@ proc wait_for_load_from_all_queues { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for load value report from all queues ..."
-      sleep 1
+      after 1000
       set result ""
       set catch_return [ catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f"} result ]
       if { $catch_return == 0 } {
@@ -2901,7 +2901,7 @@ proc wait_for_job_state { jobid state wait_timeout } {
    set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for job $jobid to become job state ${state} ..."
-      sleep 1
+      after 1000
       set job_state [get_job_state $jobid]
       if { [string first $state $job_state] >= 0 } {
          return $job_state
@@ -2941,7 +2941,7 @@ proc wait_for_queue_state { queue state wait_timeout } {
    set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for queue $queue to get in \"${state}\" state ..."
-      sleep 1
+      after 1000
       set q_state [get_queue_state $queue]
       if { [string first $state $q_state] >= 0 } {
          return $q_state
@@ -3035,7 +3035,7 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
    }
 
    while { 1 } {
-      sleep 1
+      after 1000
       puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
       set result ""
       set catch_return [ catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f"} result ]
@@ -3138,7 +3138,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for end of all jobs ..."
-      sleep 1
+      after 2000
       set result ""
       set catch_return [ catch {eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -s pr" } result ]
       if { $catch_return == 0 } {
@@ -3464,7 +3464,6 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    global CHECK_USER
 
 
-#   sleep 1
    set REGISTERED1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELTASK_SUU] "*" "*" "*"]
    set REGISTERED2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELJOB_SU] "*" "*" ]
    set DELETED1  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETETASK_SUU] "*" "*" "*"]
@@ -3551,7 +3550,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
              set my_second_qdel_timeout $my_timeout
              delete_job $jobid
           }
-          sleep 1
+          after 1000
       }
    }
    return $result
@@ -4159,7 +4158,7 @@ proc get_grppid_of_job { jobid {host ""}} {
    # JG: TODO: we have to do a cat <pidfile> on remote host
    set pidfile "$spool_dir/$CHECK_HOST/active_jobs/$jobid.1/job_pid"
 
-   sleep 5
+   after 5000
 
    set back [ catch { open $pidfile "r" } fio ]
 
@@ -4212,7 +4211,7 @@ proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} } 
    upvar $pidlist pidl 
 
    # give the system time to change the processes before ps call!!
-   sleep 1
+   after 5000
 
    # get process group id
    set real_pid [get_grppid_of_job $jobid]
@@ -4709,7 +4708,7 @@ proc is_job_running { jobid jobname } {
 
    set mytime [timestamp]
    if { $mytime == $check_timestamp } {
-      sleep 1
+      after 1000
    }
    set check_timestamp $mytime
 
@@ -4781,7 +4780,7 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    set mytime [timestamp]
 
    if { $mytime == $check_timestamp } {
-      sleep 1
+      after 1000
    }
    set check_timestamp $mytime
 
@@ -4832,7 +4831,7 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
                set states_all_equal 0
             } 
          }
-         sleep 1
+         after 1000
       }
    }
    if { $not_all_equal != 0 } {
@@ -4994,7 +4993,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
     }
 
     if { $had_error != 0 } {
-       sleep 1
+       after 1000
        continue
     }
 
@@ -5008,7 +5007,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
        add_proc_error "wait_for_end_of_transfer" -1 "timeout waiting for job \"$jobid\""
        return -1
     }
-    sleep 1
+    after 1000
   }
   return 0
 }
@@ -5078,7 +5077,7 @@ proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
        add_proc_error "wait_for_jobpending" -1 "timeout waiting for job \"$jobid\" \"$jobname\" (timeout was $seconds sec)"
        return -1
     }
-    sleep 1
+    after 1000
   }
   return 0
 }
@@ -5302,7 +5301,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
        add_proc_error "wait_for_jobend" -1 "timeout waiting for job \"$jobid\" \"$jobname\":\nis_job_running returned $run_result"
        return -1
     }
-    sleep 1
+    after 1000
   }
 
   if { $wait_for_end != 0 } {
@@ -5310,7 +5309,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
       incr my_timeout 90
       while { [get_qstat_j_info $jobid ] != 0 } {
           puts $CHECK_OUTPUT "waiting for jobend ..."
-          sleep 2
+          after 2000
           if { [timestamp] > $my_timeout } {
              add_proc_error "wait_for_jobend" -1 "timeout while waiting for jobend"
              break;
@@ -5682,7 +5681,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
          puts $CHECK_OUTPUT "do a qconf -ks ..."
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks" } result
          puts $CHECK_OUTPUT $result
-         sleep 2
+         after 2000
          shutdown_system_daemon $hostname sched
 
       } else {
@@ -6087,11 +6086,11 @@ global CHECK_ADMIN_USER_SYSTEM
                }
                puts $CHECK_OUTPUT "killing process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
-               sleep 10
+               after 10000
                if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                    puts $CHECK_OUTPUT "killing (SIG_KILL) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                    puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill "-9 $ps_info(pid,$elem)" ]
-                   sleep 5
+                   after 5000
                    if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                        puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) kill failed (host: $host)"
                        add_proc_error "" -1 "could not shutdown \"$process_name\" on host $host"

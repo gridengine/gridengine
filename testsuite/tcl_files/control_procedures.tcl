@@ -225,11 +225,11 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
 
       set stop_line_wait 0
-      set timeout 60
+      set timeout 10
 
       set start_time [ timestamp ] 
       send -i $sp_id "G"
-      set timeout 1
+      #set timeout 1
       set timeout_count 0
       while { $stop_line_wait == 0 } {
          expect {

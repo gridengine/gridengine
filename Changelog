@@ -1,3 +1,7 @@
+JG-2004-11-10-0: Bugfix:    Fixed memory leaks in qmaster.
+                 Review:    EB
+                 Testsuite: Minor fixes.
+
 AA-2004-11-09-0: Bugfix:    openssl-0.9.7e broke sge_ssl_template.cnf
                             configuration file parsing changed
                             fix in sge_ca and sge_ssl_template.cnf

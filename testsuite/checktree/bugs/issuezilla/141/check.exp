@@ -156,7 +156,7 @@ proc issue_141_check {} {
       }
    }
 
-   wait_for_jobend $job_id "Sleeper" 180 0 1
+   wait_for_jobend $job_id "Sleeper" 300 0 1
 
    set_error 0 "ok"
 }

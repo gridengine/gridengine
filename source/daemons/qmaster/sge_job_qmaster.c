@@ -899,7 +899,6 @@ int sub_command
    u_long32 deleted_tasks = 0;
    u_long32 time;
    u_long32 start_time;
-   lList *range_list = NULL;        /* RN_Type */
    lList *user_list = lGetList(idep, ID_user_list);
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
@@ -979,16 +978,13 @@ int sub_command
    start_time = sge_get_gmt();
    nxt = lFirst(Master_Job_List);
    while ((job=nxt)) {
+      lList *range_list = NULL;        /* RN_Type */
       u_long32 task_number;
       u_long32 existing_tasks;
       int deleted_unenrolled_tasks;
+      char *dupped_session = NULL;
 
       nxt = lNext(job);   
-
-      /* free task id range list of previous iteration */
-      if (range_list != NULL) {
-         range_list = lFreeList(range_list);
-      }
 
       if ((job_where != NULL) && !lCompare(job, job_where)) {
          continue;
@@ -1009,12 +1005,20 @@ int sub_command
          continue; 
       }
 
+      /* In certain cases sge_commit_job() free's the job structure passed.
+       * The session information is needed after sge_commit_job() so we make 
+       * a copy of the job session before calling sge_commit_job(). This copy
+       * must be free'd!
+       */
+      if (lGetString(job, JB_session)) {
+         dupped_session = strdup(lGetString(job, JB_session));
+      }
+
       /*
        * Repeat until all requested taskid ranges are handled
        */
       rn = lFirst(lGetList(idep, ID_ja_structure));
       do {
-         char *dupped_session = NULL;
 
          /*
           * delete tasks or the whole job?
@@ -1118,14 +1122,6 @@ int sub_command
 
                   tmp_task = job_get_ja_task_template_pending(job, task_number);
                   deleted_tasks++;
-                  /* In certain cases sge_commit_job() free's the job structure passed.
-                   * The session information is needed after sge_commit_job() so we make 
-                   * a copy of the job session before calling sge_commit_job(). This copy
-                   * must be free'd!
-                   */
-                  if (lGetString(job, JB_session)) {
-                     dupped_session = strdup(lGetString(job, JB_session));
-                  }
 
                   reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
                                            ruser, rhost, NULL, job, tmp_task, 
@@ -1165,7 +1161,6 @@ int sub_command
                              NULL, NULL, dupped_session, NULL);
             }
          }
-         FREE(dupped_session);
 
          /*
           * Delete enrolled ja tasks
@@ -1255,13 +1250,19 @@ int sub_command
             answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
             lFreeWhere(job_where);
             lFreeWhere(user_where);
+            FREE(dupped_session);
+            range_list = lFreeList(range_list);
             DEXIT;
             return STATUS_OK;
          }
 
-         rn = lNext(rn);   
+         rn = lNext(rn);
       } while (rn != NULL);
 
+      /* free task id range list of this iteration */
+      range_list = lFreeList(range_list);
+
+      FREE(dupped_session);
    }
 
    lFreeWhere(job_where);

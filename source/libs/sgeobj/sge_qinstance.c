@@ -698,6 +698,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
                const char *qi_name = qinstance_get_name(qinstance, &buffer);
 
                lAddElemStr(qref_list, QR_name, qi_name, QR_Type);
+               sge_dstring_free(&buffer);
             }
          }
       }

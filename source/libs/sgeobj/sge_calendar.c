@@ -875,6 +875,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
             }
             if (is_allways_inactive) { /* the calendar is disabled for the whole week. No need to compute anything further */
                *is_end_of_day_reached = false;
+               lep = lFreeElem(lep);
                DEXIT;
                return 0;
             }

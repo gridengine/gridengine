@@ -1004,8 +1004,7 @@ void resend_signal_event(te_event_t anEvent)
 
    SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   if (!queue)
-   {
+   if (queue == NULL) {
       if (!(jep = job_list_locate(Master_Job_List, jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
       {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
@@ -1014,17 +1013,14 @@ void resend_signal_event(te_event_t anEvent)
          return;
       }
       
-      if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(jatep, JAT_master_queue))))
-      {
+      if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(jatep, JAT_master_queue)))) {
          sge_signal_queue(lGetUlong(jatep, JAT_pending_signal), qep, jep, jatep);
       }
-   }
-   else
-   {
-      if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue)))
-      {
+   } else {
+      if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALQ_S, queue));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         sge_free((char *)queue);
          DEXIT;
          return;
       }

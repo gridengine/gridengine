@@ -89,7 +89,7 @@ GetOldConfiguration()
    echo "auto_user_oticket         0" >> /tmp/configuration.$pid
    echo "auto_user_fshare          0" >> /tmp/configuration.$pid
    echo "auto_user_default_project none" >> /tmp/configuration.$pid
-   echo "auto_user_delete_time     100" >> /tmp/configuration.$pid
+   echo "auto_user_delete_time     86400" >> /tmp/configuration.$pid
    echo "delegated_file_staging    false" >> /tmp/configuration.$pid
 
    ExecuteAsAdmin $SPOOLDEFAULTS configuration /tmp/configuration.$pid

@@ -1,3 +1,7 @@
+AS-2004-04-19-1: Bugfix:    get correct error message of hostname resolving
+                            problem
+                 Changed:   util/install_modules/inst_execd.sh
+
 AS-2004-04-19-1  Bugfix:    removed afs requirement for Linux insserv method
                  Changed:   util/rctemplates/*
 

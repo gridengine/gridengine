@@ -1,3 +1,6 @@
+JG-2004-05-24-0: Testsuite: Add $SGE_CELL to testsuite mails.
+                            Fixed remote execution of testsuite commands.
+
 JG-2004-05-23-0: Testsuite: Additional changes required for multi cell support.
                             Fixed installation using RPC server.
                             Removed unused testsuite code, macros and scripts.

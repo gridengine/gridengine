@@ -1900,22 +1900,23 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
 #     remote_procedures/start_remote_prog
 #*******************************
 proc run_command_as_user { hostname user command args counter } {
-
+   global ts_config
    global CHECK_TESTSUITE_ROOT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer 
    global CHECK_HOST CHECK_COMMD_PORT CHECK_SCRIPT_FILE_DIR
  
    # perform su to user and submit jobs as user $user
    set program  "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remote_submit.sh"           ;# script to call in su root -c option
    set par1     "$CHECK_PRODUCT_ROOT"    ;# settings script
+   set par2     "$ts_config(cell)"
    if { [string first "\/" $command ] >= 0 } {
-      set par2  "$command $args"
+      set par3  "$command $args"
    } else {
-      set par2  "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$command $args"  ;# job to start
+      set par3  "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$command $args"  ;# job to start
    }
-   set par3     "$counter"  ;# number of qsub calls
+   set par4     "$counter"  ;# number of qsub calls
 
    puts $CHECK_OUTPUT "running: $par2"
-   set output [ start_remote_prog "$hostname" "$user" "$program" "\"$par1\" \"$par2\" \"$par3\"" "prg_exit_state" "120" ]
+   set output [ start_remote_prog "$hostname" "$user" "$program" "\"$par1\" \"$par2\" \"$par3\" \"$par4\"" "prg_exit_state" "120" ]
    return $output
 }
 

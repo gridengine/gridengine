@@ -2270,56 +2270,6 @@ proc setup2 { } {
       if { $be_quiet == 0 } { 
          puts $CHECK_OUTPUT "\nstarting setup ... ok"
       }
-#      if { $be_quiet == 0 } { 
-#         puts "product type:         $CHECK_PRODUCT_TYPE";
-#         puts "product version:      $CHECK_PRODUCT_VERSION_NUMBER";
-#         puts "product root dir:     $CHECK_PRODUCT_ROOT";
-#         puts "commd port:           $CHECK_COMMD_PORT";
-#         puts "testsuite root:       $CHECK_TESTSUITE_ROOT";
-#         puts "testsuite config dir: $CHECK_CONFIG_DIR";
-#         puts "checktree is:         $CHECK_CHECKTREE_ROOT";
-#         puts "check results dir:    $CHECK_MAIN_RESULTS_DIR";
-#         puts "check job output dir: $CHECK_JOB_OUTPUT_DIR";
-#         puts "check protocols:      $CHECK_PROTOCOL_DIR";
-#         puts "master host:          $CHECK_CORE_MASTER";
-#         puts "execution hosts:      $CHECK_CORE_EXECD";
-#         puts "number of procs:      $CHECK_CORE_PROCESSORS";
-#         puts "submit_only_hosts:    $CHECK_SUBMIT_ONLY_HOSTS";
-#         puts "username:             $CHECK_USER";
-#         puts "user groupname:       $CHECK_GROUP";
-#         puts "current working dir:  $CHECK_CURRENT_WORKING_DIR"
-#         puts "source code dir:      $CHECK_SOURCE_DIR";
-#         puts "cvs release/tag:      $CHECK_SOURCE_CVS_RELEASE";
-#         puts "name of cvs host:     $CHECK_SOURCE_HOSTNAME";
-#         puts "compile hosts:        $CHECK_SOURCE_COMPILE_HOSTS"
-#         puts "aimk compile opt.:    $CHECK_AIMK_COMPILE_OPTIONS"
-#         puts "dist inst opt.:       $CHECK_DIST_INSTALL_OPTIONS"
-#         puts "package_directory:    $CHECK_PACKAGE_DIRECTORY"
-#         puts "package_type:         $CHECK_PACKAGE_TYPE"
-#         puts "qmaster inst opt.:    $CHECK_QMASTER_INSTALL_OPTIONS"
-#         puts "execd inst opt.:      $CHECK_EXECD_INSTALL_OPTIONS"
-#         puts "dns_domain_name:      $CHECK_DNS_DOMAINNAME"
-#         puts "user_environment:     $CHECK_REMOTE_ENVIRONMENT"
-#         puts "other system users:   $CHECK_FIRST_FOREIGN_SYSTEM_USER, $CHECK_SECOND_FOREIGN_SYSTEM_USER"
-#         puts "other system groups:  $CHECK_FIRST_FOREIGN_SYSTEM_GROUP, $CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
-#         puts "default domain:       $CHECK_DEFAULT_DOMAIN"
-#         puts "mail host (mailx):    $CHECK_MAILX_HOST"
-#         puts "mail report to:       $CHECK_REPORT_EMAIL_TO"
-#         puts "mail cc to:           $CHECK_REPORT_EMAIL_CC"
-#         if { $CHECK_SEND_ERROR_MAILS == 0 } {
-#            set smail_state_text "disabled"
-#         } else {
-#            set smail_state_text "enabled"
-#         }
-#         puts "enable_error_mails:   $smail_state_text"
-#         puts "max_run_all_mails:    $CHECK_MAX_ERROR_MAILS"
-#         if { $CHECK_USE_SSH == 0 } {
-#            set ssh_state_text "disabled"
-#         } else {
-#            set ssh_state_text "enabled"
-#         }
-#         puts "use_ssh:              $ssh_state_text"        
-#      }
       enhanced_setup
       
       if { $CHECK_DO_SETUP == 1 } {
@@ -4208,6 +4158,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
         set mail_body "${mail_body}product feature:  $ts_config(product_feature)\n"
         set mail_body "${mail_body}product version:  $CHECK_PRODUCT_VERSION_NUMBER\n"
         set mail_body "${mail_body}product root:     $CHECK_PRODUCT_ROOT\n"
+        set mail_body "${mail_body}cell:             $ts_config(cell)\n"
         set mail_body "${mail_body}runlevel:         [get_run_level_name $my_current_runlevel]\n"
         set mail_body "${mail_body}max. runlevel:    [get_run_level_name $check_highest_level]\n"
         set mail_body "${mail_body}dependencies:     $check_needs\n"
@@ -7251,6 +7202,7 @@ for { set i 0 } { $i < $argc } { incr i } {
          set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
          set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
          set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+         set mail_body "$mail_body SGE CELL is  \"$ts_config(cell)\"\n-------\n"
          mail_report $mail_subject "$mail_body used check parameter without runlevel or checkname" 
          exit -1
       }
@@ -7268,6 +7220,7 @@ for { set i 0 } { $i < $argc } { incr i } {
          set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
          set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
          set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+         set mail_body "$mail_body SGE CELL is  \"$ts_config(cell)\"\n-------\n"
          mail_report $mail_subject "$mail_body used all parameter without runlevel" 
          exit -1
       }
@@ -7286,6 +7239,7 @@ for { set i 0 } { $i < $argc } { incr i } {
          set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
          set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
          set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+         set mail_body "$mail_body SGE CELL is  \"$ts_config(cell)\"\n-------\n"
          mail_report $mail_subject "$mail_body used category parameter without category list" 
          exit -1
       }
@@ -7346,6 +7300,7 @@ set mail_body "$mail_body product version is [get_version_info]\n"
 set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
 set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
 set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+set mail_body "$mail_body SGE CELL is  \"$ts_config(cell)\"\n-------\n"
 
 
 if { $no_action == 1 } {

@@ -1,3 +1,13 @@
+AA-2001-11-05-3: GE version of intro,logo.xpm
+
+AA-2001-11-05-2: Fix for core dump if no submit/admin host in ticket dialogue
+
+AA-2001-11-05-1: copyright for GE
+
+AA-2001-11-05-0: obsolete pixmaps removed
+
+AA-2001-10-31-0: copyright notice
+
 EB-2001-11-05-0: Bugfix: Ckpt jobs and jobs exiting with exit state 99
                  could meet an old instance of the same job if the 
                  scheduler was to fast.

@@ -665,7 +665,7 @@ static bool escape_string(const char *string, dstring *target){
             break;
          case '\'' : sge_dstring_append(target, "&apos;");
             break;
-         case '\"' : sge_dstring_append(target, "&quat;");
+         case '\"' : sge_dstring_append(target, "&quot;");
             break;
          default :
             sge_dstring_append_char(target, string[i]); 

@@ -1,11 +1,16 @@
-CR-2004-03-05-0  Bugfix:    fixed broken CSP install
+
+SG-2004-03-05-0: Enhancem.: - updated the qstat schema files. 
+                            - fixed a xml string encoding problem
+                 Changed:   qstat schemas, qstat
+
+CR-2004-03-05-0: Bugfix:    fixed broken CSP install
                  Changed:   install scripts, CULL feature list, feature
                             functions
                  Review:    SG, MD
                  Issues:    778, 779
 
-DT-2004-03-04-3  Bugfix:    o qconf now validates scheduler configuration
-                              settings
+DT-2004-03-04-3: Bugfix:    o qconf now validates scheduler configuration
+                            settings
                  Changed:   qconf
 
 AH-2004-03-04-0: Bugfix:    qselect/qstat -l selection wrongly considers 
@@ -13,7 +18,7 @@ AH-2004-03-04-0: Bugfix:    qselect/qstat -l selection wrongly considers
                  Issue:     771
                  Review:    AS
 
-CR-2004-03-04-0  Bugfix:    Rolled back change from CR-2004-03-02-2:
+CR-2004-03-04-0: Bugfix:    Rolled back change from CR-2004-03-02-2:
                             all clients will now log error and critical 
                             messages to stderr again. 
 
@@ -26,24 +31,24 @@ MD-2004-03-04-1: Bugfix:    - Pattern matching for -l q= doesn't work
                  Review:    SG
                  Changed:   install
 
-DT-2004-03-04-2  Bugfix:    o Removed duplicate error messages for missing
+DT-2004-03-04-2: Bugfix:    o Removed duplicate error messages for missing
                               SGE_ROOT in execd and schedd
                             o Added missing error message for missing SGE_ROOT
                               in qmon
                  Changed:   execd, schedd, setup_gdi.c
                  Issue:     774
 
-DT-2004-03-04-1  Bugfix:    o Removed duplicate error message for missing
+DT-2004-03-04-1: Bugfix:    o Removed duplicate error message for missing
                               SGE_ROOT
                  Changed:   age_arch.c
                  Issue:     768
 
-MD-2004-03-04-0  Bugfix:    - Removed warning message at execd install
+MD-2004-03-04-0: Bugfix:    - Removed warning message at execd install
                             - Formatting, text cleaning, typo
                  Issue:     763
                  Changed:   testsuite, inst_sge
 
-EB-2004-03-04-0  Bugfix:    - misleading message of "qstat -explain a" if 
+EB-2004-03-04-0: Bugfix:    - misleading message of "qstat -explain a" if 
                               execd is down
                             - slots in queue_conf(5) accepts 1,myslots=5, \
                               [@allhosts=4]

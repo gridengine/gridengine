@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+            targetNamespace="http://www.sun.com/gridengine" 
+            xmlns="http://www.sun.com/gridengine">
+
+   <xsd:element name="detailed_job_info">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:documentation>qstat -j number output</xsd:documentation>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element name="qmaster_response" minOccurs="0" maxOccurs="unbounded">   
+               <xsd:complexType>
+                  <xsd:sequence>  
+                     <xsd:element name="JB_job_number" type="xsd:positiveInteger"/> 
+                     <xsd:element name="JB_job_name" type="xsd:String"/> 
+                     <xsd:element name="JB_version" type="xsd:positiveInteger"/> 
+                     <xsd:element name="JB_session" type="xsd:String"/>
+                     <xsd:element name="JB_department" type="xsd:String"/>
+                     <xsd:element name="JB_exec_file" type="xsd:String"/>
+                     <xsd:element name="JB_script_file" type="xsd:String"/>
+                     <xsd:element name="JB_script_size" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_submission_time" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_execution_time" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_deadline" type="xsd:positiveInteger"/>
+
+                     <xsd:element name="JB_jid_request_list">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="string_ublist" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="JRE_job_number" type="xsd:positiveInteger"/>
+                                       <xsd:element name="JRE_job_name" type="xsd:String"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence>
+                        </xsd:complexType>  
+                     </xsd:element> 
+                     
+                     <xsd:element name="JB_jid_sucessor_list">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="ulong_sublist" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="JRE_job_number" type="xsd:positiveInteger"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence>
+                        </xsd:complexType>  
+                     </xsd:element> 
+
+                     <xsd:element name="JB_owner" type="xsd:String"/> 
+                     <xsd:element name="JB_uid" type="xsd:String"/> 
+                     <xsd:element name="JB_group" type="xsd:String"/>
+                     <xsd:element name="JB_gid" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_account" type="xsd:String"/>
+                     <xsd:element name="JB_notify" type="xsd:Boolean"/>
+                     <xsd:element name="JB_type" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_priority" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_jobshare" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_verify" type="xsd:Boolean"/>
+
+                     <xsd:element name="JB_shell_list">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="path_list" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="PN_path" type="xsd:String"/>
+                                       <xsd:element name="PN_host" type="xsd:String"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence>
+                        </xsd:complexType>  
+                     </xsd:element> 
+
+                     <xsd:element name="JB_env_list">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="job_sublist" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="VA_variable" type="xsd:String"/>
+                                       <xsd:element name="VA_value" type="xsd:String"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence>
+                        </xsd:complexType>  
+                     </xsd:element> 
+
+                     <xsd:element name="JB_checkpoint_attr" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_checkpoint_object" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_checkpoint_interval" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_restart" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_merge_stderr" type="xsd:Boolean"/>
+                     <xsd:element name="JB_mail_options" type="xsd:positiveInteger"/>
+
+                     <xsd:element name="JB_mail_list">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="string_sublist" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="MR_user" type="xsd:String"/>
+                                       <xsd:element name="MR_host" type="xsd:String"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence>
+                        </xsd:complexType>  
+                     </xsd:element> 
+
+                     <xsd:element name="JB_ja_structure">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="task_id_range" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="RN_min" type="xsd:positiveInteger"/>
+                                       <xsd:element name="RN_max" type="xsd:positiveInteger"/>
+                                       <xsd:element name="RN_step" type="xsd:positiveInteger"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence> 
+                        </xsd:complexType>  
+                     </xsd:element> 
+
+                     <xsd:element name="JB_ja_template" type="ja_task_t"/>
+                     <xsd:element name="JB_ja_tasks" type="ja_task_t"/>
+
+                     <xsd:element name="JB_host" type="xsd:String"/>
+                     <xsd:element name="JB_verify_suitable_queues" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_nrunning" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_soft_wallclock_gmt" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_hard_wallclock_gmt" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_override_tickets" type="xsd:positiveInteger"/>
+                     <xsd:element name="JB_urg" type="xsd:float"/>
+                     <xsd:element name="JB_rrcontr" type="xsd:float"/>
+                     <xsd:element name="JB_nurg" type="xsd:float"/>
+                     <xsd:element name="JB_dlcontr" type="xsd:float"/>
+                     <xsd:element name="JB_wtcontr" type="xsd:float"/>
+
+                  </xsd:sequence>  
+               </xsd:complexType> 
+            </xsd:element> 
+         </xsd:sequence>
+      </xsd:complexType>   
+   </xsd:element>
+
+<!-- ======================================= -->
+<!-- qstat -j wc_job                         -->
+
+   <xsd:complexType name="ja_task_t">
+      <xsd:sequence>
+         <xsd:element name="element" minOccurs="0" maxOccurs="unbounded">
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element name="JAT_task_number" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_status" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_start_time" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_end_time" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_hold" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_job_restarted" type="xsd:positiveInteger"/>
+
+
+                  <xsd:element name="JAT_granted_destin_identifier_list" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:sequence>
+                           <xsd:element name="string_sublist" minOccurs="0" maxOccurs="unbounded">
+                              <xsd:complexType>
+                                 <xsd:sequence>
+                                    <xsd:element name="JG_qname" type="xsd:string"/>
+                                    <xsd:element name="JG_qversion" type="xsd:string"/>
+                                    <xsd:element name="JG_qhostname" type="xsd:string"/>
+                                    <xsd:element name="JG_slots" type="xsd:positiveInteger"/>
+                                    <xsd:element name="JG_queue" type="xsd:string"/>
+                                    <xsd:element name="JG_tag_slave_job" type="xsd:positiveInteger"/>
+                                    <xsd:element name="JG_task_id_range" type="xsd:positiveInteger"/>
+                                    <xsd:element name="JG_ticket" type="xsd:float"/>
+                                    <xsd:element name="JG_oticket" type="xsd:float"/>
+                                    <xsd:element name="JG_fticket" type="xsd:float"/>
+                                    <xsd:element name="JG_sticket" type="xsd:float"/>
+                                    <xsd:element name="JG_jcoticket" type="xsd:float"/>
+                                    <xsd:element name="JG_jcfticket" type="xsd:float"/>
+                                    <xsd:element name="JG_processors" type="xsd:string"/>
+                                 </xsd:sequence>
+                              </xsd:complexType>                          
+                           </xsd:element>
+                        </xsd:sequence>
+                     </xsd:complexType> 
+                  </xsd:element>
+                 
+                  <xsd:element name="JAT_master_queue" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="JAT_state" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_pvm_ckpt_pid" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_pending_signal" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_pending_signal_delivery_time" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_pid" type="xsd:positiveInteger"/>
+                 
+                  <xsd:element name="JAT_usage_list" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:sequence>
+                           <xsd:element name="string_sublist" minOccurs="0" maxOccurs="unbounded">
+                              <xsd:complexType>
+                                 <xsd:sequence>
+                                    <xsd:element name="UA_name" type="xsd:positiveInteger"/>
+                                    <xsd:element name="UA_value" type="xsd:float"/> 
+                                 </xsd:sequence>
+                              </xsd:complexType>                          
+                           </xsd:element> 
+                        </xsd:sequence>
+                     </xsd:complexType>  
+                  </xsd:element> 
+
+                  <xsd:element name="JAT_scaled_usage_list" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:sequence>
+                           <xsd:element name="scaled" minOccurs="0" maxOccurs="unbounded">
+                              <xsd:complexType>
+                                 <xsd:sequence>
+                                    <xsd:element name="UA_name" type="xsd:positiveInteger"/>
+                                    <xsd:element name="UA_value" type="xsd:float"/> 
+                                 </xsd:sequence>
+                              </xsd:complexType>                          
+                           </xsd:element> 
+                        </xsd:sequence>
+                     </xsd:complexType>  
+                  </xsd:element>
+
+                  <xsd:element name="JAT_fshare" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_tix" type="xsd:float"/>
+                  <xsd:element name="JAT_oticket" type="xsd:float"/>
+                  <xsd:element name="JAT_fticket" type="xsd:float"/>
+                  <xsd:element name="JAT_sticket" type="xsd:float"/>
+                  <xsd:element name="JAT_share" type="xsd:float"/>
+                  <xsd:element name="JAT_suitable" type="xsd:positiveInteger"/>
+               
+                  <xsd:element name="JAT_pe_object" type="xsd:String"/>
+                  <xsd:element name="JAT_next_pe_task_id" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_stop_initiate_time" type="xsd:positiveInteger"/>
+                  <xsd:element name="JAT_prio" type="xsd:float"/>
+                  <xsd:element name="JAT_ntix" type="xsd:float"/>
+                  
+               </xsd:sequence>
+            </xsd:complexType>                          
+         </xsd:element>
+      </xsd:sequence>
+   </xsd:complexType>
+
+<!-- ======================================= -->
+<!-- qstat -j wc_job                         -->
+<!-- qstat -j                                -->
+
+   <xsd:element name="message_list_t">
+      <xsd:complexType >
+         <xsd:annotation>
+            <xsd:documentation></xsd:documentation>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element name="element" minOccurs="0" maxOccurs="unbounded">
+               <xsd:complexType >
+                  <xsd:sequence>
+                     <xsd:element name="MES_job_number_list">
+                        <xsd:complexType>
+                           <xsd:sequence>
+                              <xsd:element name="element" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="ULNG" type="xsd:positiveInteger"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>
+                              </xsd:element>
+                           </xsd:sequence>
+                        </xsd:complexType> 
+                     </xsd:element>   
+                     <xsd:element name="MES_message_number" type="xsd:positiveInteger"/>
+                     <xsd:element name="MES_message" type="xsd:String"/>
+                  </xsd:sequence>
+               </xsd:complexType> 
+            </xsd:element> 
+         </xsd:sequence>
+      </xsd:complexType>   
+   </xsd:element>
+
+   <xsd:element name="gmessage_list_t">
+      <xsd:complexType >
+         <xsd:annotation>
+            <xsd:documentation></xsd:documentation>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element name="element" minOccurs="0" maxOccurs="unbounded">
+               <xsd:complexType>
+                  <xsd:sequence>
+                     <xsd:element name="MES_message_number" type="xsd:positiveInteger"/>
+                     <xsd:element name="MES_message" type="xsd:String"/>
+                  </xsd:sequence>
+               </xsd:complexType> 
+            </xsd:element>
+         </xsd:sequence>
+      </xsd:complexType>   
+   </xsd:element>
+
+</xsd:schema>       

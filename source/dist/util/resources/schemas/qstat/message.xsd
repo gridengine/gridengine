@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+            targetNamespace="http://www.sun.com/gridengine" 
+            xmlns="http://www.sun.com/gridengine">
+
+   <xsd:element name="message">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:documentation>qstat -j output</xsd:documentation>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element name="qmaster_response">
+               <xsd:complexType>
+                  <xsd:sequence>
+                     <xsd:element name="SME_global_message_list" type="gmessage_list_t" minOccurs="0" maxOccurs="1"/>
+                  </xsd:sequence>
+               </xsd:complexType> 
+            </xsd:element>
+         </xsd:sequence>
+      </xsd:complexType>   
+   </xsd:element>    
+ 
+<!-- ======================================= -->
+<!-- qstat -j                                -->
+
+   <xsd:element name="gmessage_list_t">
+      <xsd:complexType >
+         <xsd:annotation>
+            <xsd:documentation></xsd:documentation>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element name="element" minOccurs="0" maxOccurs="unbounded">
+               <xsd:complexType>
+                  <xsd:sequence>
+                     <xsd:element name="MES_message_number" type="xsd:positiveInteger"/>
+                     <xsd:element name="MES_message" type="xsd:String"/>
+                  </xsd:sequence>
+               </xsd:complexType> 
+            </xsd:element>
+         </xsd:sequence>
+      </xsd:complexType>   
+   </xsd:element>
+ 
+</xsd:schema>           

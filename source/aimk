@@ -174,7 +174,7 @@ usage:
    echo "-only-qtcsh       -> build only qtcsh"
    echo "-only-remote      -> build only 3rdparty remote module (rsh, rshd, rlogin)"
    echo "-only-zlib        -> build only 3rdparty zlib"
-   echo "-opt              -> compile with -O3"
+   echo "-opt              -> compile with high optimization"
    echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
@@ -234,6 +234,7 @@ set   CXX         = CC
 set   FC          = f77
 set   LFLAGS      = "-L."
 set   LIBS        = "-lm"
+set   OPTIMIZATION = 0
 set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.35"
 set   MAKEZLIB    = 0
 set   ZLIBBASE    = ""
@@ -570,8 +571,7 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       breaksw
    case "-opt":
-      set CFLAGS  = "-O3 $CFLAGS"
-      set CXXFLAGS  = "-O3 $CXXFLAGS"
+      set OPTIMIZATION = 1
       breaksw
    case "-parallel":
       set argv     = ($argv[2-])
@@ -659,11 +659,17 @@ case AIX43:
    if ( $BUILDARCH == AIX41 ) then
       set INTERACTTARGETS = ""
    endif
+
+   set OFLAG    = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3 -qstrict"
+   endif   
+   
    set CXX      = xlC
    set MAKE     = make
-   set CFLAGS   = "-O -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS   = "-O -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
+   set CXXFLAGS   = "$OFLAG -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -671,6 +677,7 @@ case AIX43:
    set XLIBD    = ""
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
+
    if ( $STATIC == 1 ) then
       set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
       set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
@@ -691,6 +698,10 @@ case ALINUX:
       set MAKE = make
    endif
    set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
+
    set CC = "gcc"
    set CXX = "g++"
 
@@ -744,12 +755,16 @@ case ALPHA5:
       # set WFLAG = ""
    endif
 
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
+
    # gprof option is superset of debug option
    # -g3 produces better debugging information than -g1
    if ( $DEBUGGED == 1) then
       set DEBUG_FLAG = "-g3"
-   else
-      set DEBUG_FLAG = "-O"
+      set OFLAG      = ""
    endif
 
    if ( $GPROFFED == 1) then
@@ -757,11 +772,11 @@ case ALPHA5:
    endif
 
    if ( $CC == gcc ) then
-      set CFLAGS   = "-Wall -Wstrict-prototypes -Wno-error -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "-Wstrict-prototypes -Werror -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+      set CFLAGS   = "$OFLAG -Wall -Wstrict-prototypes -Wno-error -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wstrict-prototypes -Werror -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
-      set CFLAGS   = "$WFLAG -std1 -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -Olimit 2000"
-      set CXXFLAGS   = "$WFLAG -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS -Olimit 2000"
+      set CFLAGS   = "$OFLAG $WFLAG -std1 -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -Olimit 2000"
+      set CXXFLAGS   = "$OFLAG $WFLAG -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS -Olimit 2000"
       set PTHRDSFLAGS = "-pthread"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -834,8 +849,13 @@ case IRIX6*:
       set CFLAGS = "-DIRIX_NOPSET $CFLAGS"
    endif
 
-   set CFLAGS   = "-O -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CFLAGS"
-   set CXXFLAGS   = "-O -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CXXFLAGS -DHAVE_STD"
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O2"
+   endif   
+
+   set CFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CFLAGS"
+   set CXXFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CXXFLAGS -DHAVE_STD"
    if ( $CC == gcc ) then
       set CFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CFLAGS -Wall -Wstrict-prototypes -Werror"
       set CXXFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CXXFLAGS -Wstrict-prototypes -Werror"
@@ -882,12 +902,19 @@ case IRIX6*:
 
 case HP10:
    set MAKE = gmake
+   set OFLAG = "-O"
    if ( $CC == gcc ) then
-      set CFLAGS = "-O -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "-O -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
-      set CFLAGS = "-Ae -O -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "-Ae -O -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
+      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -926,13 +953,20 @@ case HP10:
 
 case HP11:
    set MAKE = gmake
+   set OFLAG = "-O"
    if ( $CC == gcc ) then
-      set CFLAGS = "-O -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "-O -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
       set CXX = "aCC"
-      set CFLAGS = "-Ae -O -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-      set CXXFLAGS = "-D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -975,6 +1009,9 @@ case LINUX6:
       set MAKE = make
    endif
    set OFLAG = "-O"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
    if ( "$CC" != insure ) then
       set CC       = gcc
       set CXX      = g++
@@ -1090,6 +1127,18 @@ case SOLARIS86:
       set WITH_GETTEXT = 0
    endif
 
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      if ( $CC == gcc ) then
+         set OFLAG = "-O3"
+      else
+         set OFLAG = "-xO4"
+         if ( $BUILDARCH == SOLARIS || $BUILDARCH == SOLARIS64 ) then
+            set OFLAG = "$OFLAG -xchip=ultra2"
+         endif   
+      endif
+   endif
+
    if ( $GPROFFED == 1 ) then
       if ( $CC == gcc ) then
          set DEBUG_FLAG = "-g -pg"
@@ -1124,8 +1173,8 @@ case SOLARIS86:
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 
-   set CFLAGS = "$CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
-   set CXXFLAGS = "$CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG -DHAVE_STD -mt"
+   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
+   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG -DHAVE_STD -mt"
 
    if ( $SHAREDLIBS == 1 ) then
       set SHAREDLD = $CC

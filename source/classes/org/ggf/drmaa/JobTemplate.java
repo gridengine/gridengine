@@ -35,8 +35,7 @@
 
 package org.ggf.drmaa;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /** This class represents a remote job and its attributes.  It is used to
  * set up the environment for a job to be submitted.
@@ -44,96 +43,467 @@ import java.util.Set;
  * @see DRMAASession
  */
 public abstract class JobTemplate {
-	/** The command to execute as the job.
-	 * It is relative to the execution host.<BR>
-	 * It is evaluated on the execution host.<BR>
-	 * No binary file management is done.<BR>
+   /** Placeholder which represents the home directory in workingDirectory, inputPath,
+    * outputPath, and errorPath attributes
+    */   
+   private static final String HOME_DIRECTORY = "$drmaa_hd_ph$";
+   /** Placeholder which represents the working directory in workingDirectory,
+    * inputPath, outputPath, and errorPath attributes
+    */   
+   private static final String WORKING_DIRECTORY = "$drmaa_wd_ph$";
+   /** The names of all the required attributes */   
+   private static final String[] attributeNames = new String[] {
+      "blockEmail",
+      "emailAddresses",
+      "errorPath",
+      "inputParameters",
+      "inputPath",
+      "jobCategory",
+      "jobEnvironment",
+      "jobName",
+      "jobSubmissionState",
+      "joinFiles",
+      "nativeSpecification",
+      "outputPath",
+      "remoteCommand",
+      "startTime",
+      "workingDirectory"
+   };
+
+	/** jobSubmissionState which means job has been queued, but it is NOT
+    * eligible to run
+    */	
+	public static final int HOLD = 0;
+	/** jobSumissionState which means job has been queued, and is eligible to run */	
+	public static final int ACTIVE = 1;
+   /** transferFiles value which means not to transfer any files */   
+   public static final byte TRANSFER_NONE = 0x00;
+   /** transferFiles values which means to export error files */   
+   public static final byte TRANSFER_ERROR_FILES = 0x01;
+   /** transferFiles value which means to import input files */   
+   public static final byte TRANSFER_INPUT_FILES = 0x02;
+   /** transferFiles value which means to export output files */   
+   public static final byte TRANSFER_OUTPUT_FILES = 0x04;
+
+   /** Remote command to execute */   
+   protected String remoteCommand = null;
+   /** Input parameters passed as arguments to the job */   
+   protected String[] args = null;
+   /** Job state at submission */   
+   protected int state = ACTIVE;
+   /* I used a Properties here instead of a Map because Properties are always
+    * strings, and Properties can have a set of parent Properties to whose value
+    * unset attributes default. */
+   /** The environment values that define the remote environment */   
+   protected Properties env = null;
+   /** The directory where the job is executed. */   
+   protected String wd = null;
+   /** An implementation-defined string specifying how to resolve site-specific resources
+    * and/or policies
+    */   
+   protected String category = null;
+   /** An implementation-defined string that is passed by the end user to DRMAA to specify
+    * site-specific resources and/or policies
+    */   
+   protected String spec = null;
+   /** E-mail addresses used to report the job completion and status */   
+   protected String[] email = null;
+   /** Blocks sending e-mail by default, regardless of the DRMS setting */   
+   protected boolean blockEmail = false;
+   /** The earliest time when the job MAY be eligible to be run */   
+   protected Date startTime = null;
+   /** Job name */   
+   protected String name = null;
+   /** The job's standard input stream */   
+   protected String inputPath = null;
+   /** The job's standard output stream */   
+   protected String outputPath = null;
+   /** The job's standard error stream */   
+   protected String errorPath = null;
+   /** Whether the error stream should be intermixed with the output stream */   
+   protected boolean join = false;
+      
+   /** Set the command to execute as the job.  The command
+    * is relative to the execution host and is evaluated on the
+    * execution host.  No binary file management is done.
+    * @param remoteCommand The command to execute as the job
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    *
+    */
+   public void setRemoteCommand (String remoteCommand) throws DRMAAException {
+      this.remoteCommand = remoteCommand;
+   }
+   
+   /** Get the command to execute as the job.  The command
+	 * is relative to the execution host and is evaluated on the
+    * execution host.  No binary file management is done.
+	 * @return The command to execute as the job or null if it has not been set
+	 */
+   public String getRemoteCommand () {
+      return remoteCommand;
+   }
+   
+	/** Set the parameters passed as arguments to the job.
+    * @param args The parameters passed as arguments to the job
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    *
+    */
+   public void setInputParameters (String[] args) throws DRMAAException {
+      this.args = new String[args.length];
+      System.arraycopy (args, 0, this.args, 0, args.length);
+   }
+   
+	/** Get The parameters passed as arguments to the job.
+	 * @return The parameters passed as arguments to the job or null if they have
+    * not been set
 	 */	
-	public static final String REMOTE_COMMAND = "drmaa_remote_command";
-	/** These parameters are passed as arguments to the job. */	
-	public static final String INPUT_PARAMETERS = "drmaa_v_argv";
-	/** Job state at submission.  This might be useful for a rather rudimentary,
-	 * but very general job-dependent execution.  The states are HOLD and ACTIVE:<BR>
+   public String[] getInputParameters () {
+      if (args != null) {
+         String[] returnValue = new String[args.length];
+
+         System.arraycopy (args, 0, returnValue, 0, args.length);
+
+         return returnValue;
+      }
+      else {
+         return null;
+      }
+   }
+   
+	/** Set the job state at submission.  This might be useful for a rather
+    * rudimentary, but very general, job dependent execution.  The states are
+    * HOLD and ACTIVE:<BR>
+    * ACTIVE means job has been queued, and is eligible to run
+    * HOLD means job has been queued, but it is NOT eligible to run
+    * @param state The job state at submission
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    *
+    */	
+   public void setJobSubmissionState (int state) throws DRMAAException {
+      if ((state != ACTIVE) && (state != HOLD)) {
+         throw new IllegalArgumentException ("Invalid state");
+      }
+      
+      this.state = state;
+   }
+   
+	/** Get the job state at submission.  The states are HOLD and ACTIVE:<BR>
 	 * ACTIVE means job has been queued, and is eligible to run
 	 * HOLD means job has been queued, but it is NOT eligible to run
+	 * @return The job state at submission
 	 */	
-	public static final String JOB_SUBMISSION_STATE = "drmaa_js_state";
-	/** The environment values that define the remote environment.
-	 * Each string will comply with the format &lt;name&gt;=&lt;value&gt;.
+   public int getJobSubmissionState () {
+      return state;
+   }
+   
+	/** Set the environment values that define the remote environment.
+    * The values override the remote environment values if there is a collision.
+    * If above is not possible, it is implementation dependent.
+    * @param env The environment values that define the remote environment
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    *
+    */
+   public void setJobEnvironment (Properties env) throws DRMAAException {
+      /* We keep the original reference instead of making a copy because we want
+       * to enable changing environment entries without having to make two more
+       * copies of all of the enviroment variables (one for the get and one for
+       * the set) */
+      this.env = env;
+   }
+   
+	/** Get the environment values that define the remote environment.
 	 * The values override the remote environment values if there is a collision.
 	 * If above is not possible, it is implementation dependent.
-	 */	
-	public static final String JOB_ENVIRONMENT = "drmaa_v_env";
-	/** This attribute specifies the directory where the job is executed.
-	 * If not set, it is implementation dependent.
-	 * Evaluated relative to the execution host.<BR>
-	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning denotes the remaining
-	 * portion of the directory name as a relative directory name resolved
-	 * relative to the job users home directory at the execution host.<BR>
-	 * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position within
-	 * the directory name of parametric job templates and will be substituted
+	 * @return The environment values that define the remote environment or null
+    * if it has not been set
+	 */
+   public Properties getJobEnvironment () {
+      /* We return the original reference instead of returning a copy because we
+       * want to enable changing environment entries without having to make two
+       * more copies of all of the enviroment variables (one for the get and one
+       * for the set) */
+      return env;
+   }
+
+   /** Set the directory where the job is executed.  If the working directory is
+    * not set, behavior is implementation dependent.  The working directory is
+    * evaluated relative to the execution host.<BR>
+    * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning denotes that the
+    * remaining portion of the directory name is resolved
+    * relative to the job submiter's home directory on the execution host.<BR>
+    * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
+    * within the directory name of parametric jobs and will be replaced
+    * by the underlying DRM system with the parametric jobs' index.<BR>
+    * The directory name must be specified in a syntax that is common at the
+    * host where the job will be executed.<BR>
+    * If no placeholder is used, an absolute directory specification
+    * is expected.<BR>
+    * If the directory does not exist when the job is run, the job enters the
+    * state FAILED.
+    * @param wd The directory where the job is executed
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    *
+    */
+   public void setWorkingDirectory (String wd) throws DRMAAException {
+      if (wd.indexOf (HOME_DIRECTORY) > 0) {
+         throw new InvalidAttributeFormatException ("$drmaa_hd_ph$ may only appear at the beginning of the path.");
+      }
+      
+      this.wd = wd;
+   }
+   
+   /** Get the directory where the job is executed.  The working directory is
+    * evaluated relative to the execution host.<BR>
+	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning denotes that the
+    * remaining portion of the directory name is resolved
+	 * relative to the job submiter's home directory on the execution host.<BR>
+	 * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
+    * within the directory name of parametric jobs and will be replaced
 	 * by the underlying DRM system with the parametric jobs' index.<BR>
-	 * The directory name must be specified in a syntax that is common at the
-	 * host where the job is executed.<BR>
-	 * If set and no placeholder is used, an absolute directory specification
-	 * is expected.<BR>
-	 * If set and the directory does not exist, the job enters the state FAILED.
-	 */	
-	public static final String WORKING_DIRECTORY = "drmaa_wd";
-	/** An opaque string specifying how to resolve site-specific resources
+	 * The directory name is specified in a syntax that is common at the
+	 * host where the job will be executed.<BR>
+	 * If no placeholder is used, an absolute directory specification
+	 * is represented.<BR>
+    * @return The directory where the job is executed or null if it has not been
+    * set
+	 */
+   public String getWorkingDirectory () {
+      return wd;
+   }
+
+   /** Set an opaque string specifying how to resolve site-specific resources
+    * and/or policies.
+    * @param category An opaque string specifying how to resolve site-specific
+    * resources and/or policies.
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    *
+    */
+   public void setJobCategory (String category) throws DRMAAException {
+      this.category = category;
+   }
+   
+   /** Get the opaque string specifying how to resolve site-specific resources
 	 * and/or policies.
-	 */	
-	public static final String JOB_CATEGORY = "drmaa_job_category";
-	/** An opaque string that is passed by the end user to DRMAA to specify
-	 * site-specific resources and/or policies.
-	 */	
-	public static final String NATIVE_SPECIFICATION = "drmaa_native_specification";
-	/** A list of email addresses.  It is used to report the job completion and status. */	
-	public static final String EMAIL_ADDRESS = "drmaa_v_email";
-	/** Used to block sending e-mail by default, regardless of the DRMS settings.
-	 * <UL>
-	 * <LI>1 - block</LI>
-	 * <LI>0 - do not block.</LI>
-	 * </UL>
-	 */	
-	public static final String BLOCK_EMAIL = "drmaa_block_email";
-	/** This attribute specifies the earliest time when the job may be eligible
-	 * to be run.  This is a required attribute.<BR>
-	 * The value of the attribute will be of the form
-	 * [[[[CC]YY/]MM/]DD] hh:mm[:ss] [{-|+}UU:uu]
-	 * where<BR>
-	 * <P>CC is the first two digits of the year (century-1)<BR>
-	 * YY is the last two digits of the year<BR>
-	 * MM is the two digits of the month [01,12]<BR>
-	 * DD is the two-digit day of the month [01,31]<BR>
-	 * hh is the two-digit hour of the day [00,23]<BR>
-	 * mm is the two-digit minute of the day [00,59]<BR>
-	 * ss is the two-digit second of the minute [00,61]<BR>
-	 * UU is the two-digit hours since (before) UTC<BR>
-	 * uu is the two-digit minutes since (before) UTC</P>
-	 * If the optional UTC-offset is not specified, the offset
-	 * associated with the local timezone will be used.
-	 * If the day (DD) is not specified, the current day will
-	 * be used unless the specified hour:mm:ss has already
-	 * elapsed, in which case the next day will be used.<BR>
-	 * Similarly for month (MM), year (YY), and century-1 (CC).
-	 * Example:<BR>
-	 * The time: Sep 3 4:47:27 PM PDT 2002,
-	 * could be represented as: 2002/09/03 16:47:27 -07:00
-	 */	
-	public static final String START_TIME = "drmaa_start_time";
-	/** The name of the job.  A job name will comprise alpha-numeric and _ characters.
-	 * The drmaa-implementation will not provide the client with a job name longer
-	 * than JOBNAME_BUFFER -1 (1023) characters.
-	 * The drmaa-implementation may truncate any client-provided job name to an
-	 * implementationdefined length that is at least 31 characters.
-	 */	
-	public static final String JOB_NAME = "drmaa_job_name";
-	/** Specifies the jobs? standard input.
-	 * Unless set elsewhere, if not explicitly set in the job template, the job
-	 * is started with an empty input stream.<BR>
-	 * If set, specifies the network path of the jobs input stream file of
-	 * the form [hostname]:file_path<BR>
+    * @return The opaque string specifying how to resolve site-specific
+	 * resources and/or policies or null if it has not been set
+	 */
+   public String getJobCategory () {
+      return category;
+   }
+   
+	/** Set an opaque string that is passed by the end user to DRMAA to specify
+    * site-specific resources and/or policies.
+    * @param spec An opaque string that is passed by the end user to DRMAA to
+    * specify site-specific resources and/or policies
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setNativeSpecification (String spec) throws DRMAAException {
+      this.spec = spec;
+   }
+   
+	/** Get the opaque string that is passed by the end user to DRMAA to specify
+    * site-specific resources and/or policies.
+    * @return The opaque string that is passed by the end user to DRMAA to
+    * specify site-specific resources and/or policies or null if it has not been
+    * set
+    */
+   public String getNativeSpecification () {
+      return spec;
+   }
+   
+	/** Set the list of email addresses used to report the job completion and
+    * status.
+    * @param email The list of email addresses used to report the job completion
+    * and status.
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */	
+   public void setEmailAddresses (String[] email) throws DRMAAException {
+      this.email = new String[email.length];
+      System.arraycopy (email, 0, this.email, 0, email.length);
+   }
+   
+	/** Get the list of email addresses used to report the job completion and
+    * status.
+    * @return The list of email addresses used to report the job completion
+    * and status or null if they have not been set
+    */	
+   public String[] getEmailAddresses () {
+      if (email != null) {
+         String[] returnValue = new String[email.length];
+
+         System.arraycopy (email, 0, this.email, 0, email.length);
+
+         return returnValue;
+      }
+      else {
+         return null;
+      }
+   }
+   
+	/** Set whether to block sending e-mail by default, regardless of the DRMS
+    * settings.
+    * @param blockEmail Whether to block sending e-mail by default
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setBlockEmail (boolean blockEmail) throws DRMAAException {
+      this.blockEmail = blockEmail;
+   }
+   
+	/** Get whether to block sending e-mail by default, regardless of the DRMS
+    * settings.
+    * @return Whether to block sending e-mail by default
+	 */
+   public boolean getBlockEmail () {
+      return blockEmail;
+   }
+   
+	/** Set the earliest time when the job may be eligible to be run.
+    * @param startTime The earliest time when the job may be eligible to be run
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setStartTime (Date startTime) throws DRMAAException {
+      if (startTime.getTime () < System.currentTimeMillis ()) {
+         throw new IllegalArgumentException ("Start time is in the past.");
+      }
+      
+      this.startTime = startTime;
+   }
+   
+	/** Get the earliest time when the job may be eligible to be run.
+    * @return The earliest time when the job may be eligible to be run or null
+    * if it has not been set
+	 */
+   public Date getStartTime () {
+      if (startTime != null) {
+         return (Date)startTime.clone ();
+      }
+      else {
+         return null;
+      }
+   }
+   
+	/** Set the name of the job.  A job name will be comprised of alpha-numeric
+    * and _ characters.  The DRMAA implementation may truncate client
+    * provided job names to an implementation defined length that is at least 31
+    * characters.
+    * @param name The name of the job
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setJobName (String name) throws DRMAAException {
+      this.name = name;
+   }
+   
+	/** Get the name of the job.  A job name will be comprised of alpha-numeric
+    * and _ characters.
+    * @return The name of the job or null if it has not been set
+	 */
+   public String getJobName () {
+      return name;
+   }
+   
+	/** Set the job's standard input path.
+    * Unless set elsewhere, if not explicitly set in the job template, the job
+    * is started with an empty input stream.<BR>
+    * If set, specifies the network path of the job's input stream in
+    * the form of [hostname]:file_path<BR>
+    * When the TRANSFER_FILES job template attribute is supported and contains
+    * the character 'i', the input file will be fetched by the underlying DRM
+    * system from the specified host or from the submit host if no hostname
+    * is specified.<BR>
+    * When the TRANSFER_FILES job template attribute is not supported or does
+    * not contain the character 'i', the input file is always expected at the
+    * host where the job is executed irrespectively of a possibly hostname
+    * specified.<BR>
+    * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
+    * within the file path of parametric job templates and will be replaced
+    * by the underlying DRM system with the parametric job's index.<BR>
+    * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning of the file path
+    * denotes that the remaining portion of the file path is relative to the job
+    * submiter's home directory on the host where the file is located.<BR>
+    * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the beginning of the file path
+    * denotes that the remaining portion of the file path is relative to the
+    * job's working directory on the host where the file is located.<BR>
+    * The file path must be specified in a syntax that is common at the host
+    * where the file is located.<BR>
+    * When the job is run, if this attribute is set, and the file can't be read,
+    * the job will enter the state FAILED.
+    * @param inputPath The job's standard input path
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setInputPath (String inputPath) throws DRMAAException {
+      this.checkPath (inputPath);
+      this.inputPath = inputPath;
+   }
+   
+	/** Get the job's standard input path.<BR>
+	 * Specifies the network path of the job's input stream in
+	 * the form of [hostname]:file_path<BR>
 	 * When the TRANSFER_FILES job template attribute is supported and contains
 	 * the character 'i', the input file will be fetched by the underlying DRM
 	 * system from the specified host or from the submit host if no hostname
@@ -143,26 +513,64 @@ public abstract class JobTemplate {
 	 * host where the job is executed irrespectively of a possibly hostname
 	 * specified.<BR>
 	 * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
-	 * within the file path of parametric job templates and will be substituted
-	 * by the underlying DRM system with the parametric jobs' index.<BR>
-	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the begin of the file path
-	 * denotes the remaining portion of the file path as a relative file
-	 * specification resolved relative to the job users home directory at the
-	 * host where the file is located.<BR>
-	 * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the begin of the file path
-	 * denotes the remaining portion of the file path as a relative file
-	 * specification resolved relative to the jobs working directory at
-	 * the host where the file is located.<BR>
-	 * The file path must be specified in a syntax that is common at the host
+	 * within the file path of parametric job templates and will be replaced
+	 * by the underlying DRM system with the parametric job's index.<BR>
+	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning of the file path
+	 * denotes that the remaining portion of the file path is relative to the job
+    * submiter's home directory on the host where the file is located.<BR>
+	 * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the beginning of the file path
+	 * denotes that the remaining portion of the file path is relative to the
+    * job's working directory on the host where the file is located.<BR>
+	 * The file path is specified in a syntax that is common at the host
 	 * where the file is located.<BR>
-	 * If set, and the file can't be read, the job enters the state FAILED.
-	 */	
-	public static final String INPUT_PATH = "drmaa_input_path";
-	/** Specifies how to direct the jobs? standard output.
-	 * If not explicitly set in the job template, the whereabouts of the jobs
-	 * output stream is not defined.
-	 * If set, specifies the network path of the jobs output stream file of the form
-	 * [hostname]:file_path<BR>
+    * @return The job's standard input path or null if it has not been set
+	 */
+   public String getInputPath () {
+      return inputPath;
+   }
+   
+	/** Sets how to direct the job's standard output.
+    * If not explicitly set in the job template, the whereabouts of the jobs
+    * output stream is not defined.
+    * If set, specifies the network path of the job's output stream file in the
+    * form of [hostname]:file_path<BR>
+    * When the TRANSFER_FILES job template attribute is supported and contains
+    * the character 'o', the output file will be transferred by the underlying
+    * DRM system to the specified host or to the submit host if no hostname is
+    * specified.<BR>
+    * When the TRANSFER_FILES job template attribute is not supported or does not
+    * contain the character 'o', the output file is always kept at the host where
+    * the job is executed irrespectively of a possibly hostname specified.<BR>
+    * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
+    * within the file path of parametric job templates and will be replaced
+    * by the underlying DRM system with the parametric job's index.<BR>
+    * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning of the file path
+    * denotes that the remaining portion of the file path is relative to the job
+    * submiter's home directory on the host where the file is located.<BR>
+    * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the beginning of the file path
+    * denotes that the remaining portion of the file path is relative to the
+    * job's working directory on the host where the file is located.<BR>
+    * The file path must be specified in a syntax that is common at the host
+    * where the file is located.<BR>
+    * When the job is run, if this attribute is set, and the file can't be
+    * written before execution the job will enter the state FAILED.
+    * @param outputPath How to direct the job's standard output
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setOutputPath (String outputPath) throws DRMAAException {
+      this.checkPath (outputPath);
+      this.outputPath = outputPath;
+   }
+   
+	/** Gets how to direct the job's standard output.
+	 * If set, specifies the network path of the job's output stream file in the
+	 * form of [hostname]:file_path<BR>
 	 * When the TRANSFER_FILES job template attribute is supported and contains
 	 * the character 'o', the output file will be transferred by the underlying
 	 * DRM system to the specified host or to the submit host if no hostname is
@@ -171,26 +579,65 @@ public abstract class JobTemplate {
 	 * contain the character 'o', the output file is always kept at the host where
 	 * the job is executed irrespectively of a possibly hostname specified.<BR>
 	 * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
-	 * within the file path of parametric job templates and will be substituted
-	 * by the underlying DRM system with the parametric jobs' index.<BR>
-	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the begin of the file path
-	 * denotes the remaining portion of the file path as a relative file
-	 * specification resolved relative to the job users home directory at the
-	 * host where the file is located.<BR>
-	 * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the begin of the file path
-	 * denotes the remaining portion of the file path as a relative file
-	 * specification resolved relative to the jobs working directory at the host
+	 * within the file path of parametric job templates and will be replaced
+	 * by the underlying DRM system with the parametric job's index.<BR>
+	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning of the file path
+	 * denotes that the remaining portion of the file path is relative to the job
+    * submiter's home directory on the host where the file is located.<BR>
+	 * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the beginning of the file path
+	 * denotes that the remaining portion of the file path is relative to the
+    * job's working directory on the host where the file is located.<BR>
+	 * The file path is specified in a syntax that is common at the host
 	 * where the file is located.<BR>
-	 * The file path must be specified in a syntax that is common at the host
-	 * where the file is located.<BR>
-	 * If set and the file can't be written before execution the job enters the state
-	 * FAILED.
-	 */	
-	public static final String OUTPUT_PATH = "drmaa_output_path";
-	/** Specifies how to direct the jobs? standard error.
-	 * If not explicitly set in the job template, the whereabouts of the jobs'
+    * @return How to direct the job's standard output or null if it has not been
+    * set
+	 */
+   public String getOutputPath () {
+      return outputPath;
+   }
+   
+	/** Sets how to direct the job's standard error.
+    * If not explicitly set in the job template, the whereabouts of the job's
+    * error stream is not defined. If set, specifies the network path of the
+    * job's error stream file in the form [hostname]:file_path<BR>
+    * When the TRANSFER_FILES job template attribute is supported and contains
+    * the character 'e', the output file will be transferred by the underlying
+    * DRM system to the specified host or to the submit host if no hostname is
+    * specified.<BR>
+    * When the TRANSFER_FILES job template attribute is not supported or does not
+    * contain the character 'e', the error file is always kept at the host where
+    * the job is executed irrespectively of a possibly hostname specified.<BR>
+    * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
+    * within the file path of parametric job templates and will be replaced
+    * by the underlying DRM system with the parametric job's index.<BR>
+    * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning of the file path
+    * denotes that the remaining portion of the file path is relative to the job
+    * submiter's home directory on the host where the file is located.<BR>
+    * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the beginning of the file path
+    * denotes that the remaining portion of the file path is relative to the
+    * job's working directory on the host where the file is located.<BR>
+    * The file path must be specified in a syntax that is common at the host
+    * where the file is located.<BR>
+    * When the job is run, if this attribute is set, and the file can't be
+    * written before execution the job will enter the state FAILED.
+    * @param errorPath How to direct the job's standard error
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeFormatException</LI>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setErrorPath (String errorPath) throws DRMAAException {
+      this.checkPath (errorPath);
+      this.errorPath = errorPath;
+   }
+   
+	/** Gets how to direct the job's standard error.
+	 * If not explicitly set in the job template, the whereabouts of the job's
 	 * error stream is not defined. If set, specifies the network path of the
-	 * jobs' error stream file of the form [hostname]:file_path<BR>
+	 * job's error stream file in the form [hostname]:file_path<BR>
 	 * When the TRANSFER_FILES job template attribute is supported and contains
 	 * the character 'e', the output file will be transferred by the underlying
 	 * DRM system to the specified host or to the submit host if no hostname is
@@ -199,172 +646,254 @@ public abstract class JobTemplate {
 	 * contain the character 'e', the error file is always kept at the host where
 	 * the job is executed irrespectively of a possibly hostname specified.<BR>
 	 * The <CODE>$drmaa_incr_ph$</CODE> placeholder can be used at any position
-	 * within the file path of parametric job templates and will be substituted
-	 * by the underlying DRM system with the parametric jobs' index.<BR>
-	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the begin of the file path
-	 * denotes the remaining portion of the file path as a relative file
-	 * specification resolved relative to the job users home directory at the
-	 * host where the file is located.<BR>
-	 * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the begin of the file path
-	 * denotes the remaining portion of the file path as a relative file
-	 * specification resolved relative to the jobs working directory at the
-	 * host where the file is located.<BR>
+	 * within the file path of parametric job templates and will be replaced
+	 * by the underlying DRM system with the parametric job's index.<BR>
+	 * A <CODE>$drmaa_hd_ph$</CODE> placeholder at the beginning of the file path
+	 * denotes that the remaining portion of the file path is relative to the job
+    * submiter's home directory on the host where the file is located.<BR>
+	 * A <CODE>$drmaa_wd_ph$</CODE> placeholder at the beginning of the file path
+	 * denotes that the remaining portion of the file path is relative to the
+    * job's working directory on the host where the file is located.<BR>
 	 * The file path must be specified in a syntax that is common at the host
 	 * where the file is located.<BR>
-	 * If set and the file can't be written before execution the job enters the state
-	 * FAILED.
-	 */	
-	public static final String ERROR_PATH = "drmaa_error_path";
-	/** Specifies if the error stream should be intermixed with the output stream.
-	 * If not explicitly set in the job template the attribute defaults to 'n'.
-	 * Either 'y' or 'n' can be specified.<BR>
-	 * If 'y' is specified the underlying DRM system will ignore the value of the
-	 * ERROR_PATH attribute and intermix the standard error stream with the standard
-	 * output stream as specified with OUTPUT_PATH.
-	 */	
-	public static final String JOIN_FILES = "drmaa_join_files";
-	/** Specifies how to transfer files between hosts.
-	 * If not explicitly set in the job template the attribute defaults to '.'
-	 * Any combination of 'e', 'i' and 'o' can be specified.<BR>
-	 * Whether the character 'e' is specified impacts the behavior of the
-	 * ERROR_PATH attribute.<BR>
-	 * Whether the character 'i' is specified impacts the behavior of the
-	 * INPUT_PATH attribute.<BR>
-	 * Whether the character 'o' is specified impacts the behavior of the
-	 * OUTPUT_PATH attribute.
-	 */	
-	public static final String TRANSFER_FILES = "drmaa_tranfer_files";
-	/** This attribute specifies a deadline after which the DRMS will terminate a job.
-	 * The value of the attribute will be of the form
-	 * [[[[CC]YY/]MM/]DD] hh:mm[:ss] [{-|+}UU:uu]
-	 * where<BR>
-	 * CC is the first two digits of the year (century-1)<BR>
-	 * YY is the last two digits of the year<BR>
-	 * MM is the two digits of the month [01,12]<BR>
-	 * DD is the two digit day of the month [01,31]<BR>
-	 * hh is the two digit hour of the day [00,23]<BR>
-	 * mm is the two digit minute of the day [00,59]<BR>
-	 * ss is the two digit second of the minute [00,61]<BR>
-	 * UU is the two digit hours since (before) UTC<BR>
-	 * uu is the two digit minutes since (before) UTC<BR>
-	 * If an optional portion of the time specification is omitted,
-	 * then the termination time will be determined based upon the
-	 * the job's earliest start time.<BR>
-	 * If the day (DD) is not specified, the earliest start day
-	 * for the job will be used unless the specified hour:mm:ss
-	 * precedes the corresponding portion of the job start time,
-	 * in which case the next day will be used.<BR>
-	 * Similarly for month (MM), year (YY), and century-1 (CC).
-	 * Example:<BR>
-	 * The time: Sep 3 4:47:27 PM PDT 2002,
-	 * could be represented as: 2002/09/03 16:47:27 -07:00
-	 */	
-	public static final String DEADLINE_TIME = "drmaa_deadline_time";
-	/** This attribute specifies when the job's wall clock time limit has
-	 * been exceeded. The DRMS will terminate a job that has exceeded its wall
-	 * clock time limit. Note that the suspended time is also accumulated here.<BR>
-	 * The value of the attribute will be of the form
-	 * [[h:]m:]s
-	 * where<BR>
-	 * h is one or more digits representing hours<BR>
-	 * m is one or more digits representing minutes<BR>
-	 * s is one or more digits representing seconds<BR>
-	 * Example:<BR>
-	 * To terminate a job after 2 hours and 30 minutes,
-	 * any of the following can be passed:
-	 * 2:30:0, 1:90:0, 150:0
-	 */	
-	public static final String HARD_WALLCLOCK_TIME_LIMIT = "drmaa_wct_hlimit";
-	/** This attribute specifies an estimate as to how long the
-	 * job will need wall clock time to complete. Note that
-	 * the suspended time is also accumulated here.<BR>
+    * @return How to direct the job's standard error
+	 */
+   public String getErrorPath () {
+      return errorPath;
+   }
+   
+	/** Sets whether the error stream should be intermixed with the output
+    * stream. If not explicitly set in the job template the attribute defaults
+    * to false.<BR>
+    * If true is specified the underlying DRM system will ignore the value of
+    * the errorPath attribute and intermix the standard error stream with the
+    * standard output stream as specified with outputPath.
+    * @param join Whether the error stream should be intermixed with the output
+    * stream
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setJoinFiles (boolean join) throws DRMAAException {
+      this.join = join;
+   }
+   
+	/** Gets whether the error stream should be intermixed with the output
+	 * stream.
+	 * If true is specified the underlying DRM system will ignore the value of
+	 * the errorPath attribute and intermix the standard error stream with the
+	 * standard output stream as specified with outputPath.
+    * @return Whether the error stream should be intermixed with the output
+	 * stream
+	 */
+   public boolean getJoinFiles () {
+      return join;
+   }
+   
+	/** Sets how to transfer files between hosts.
+    * If not explicitly set in the job template the attribute defaults to
+    * TRANSFER_NONE.  Any combination of TRANSFER_ERROR_FILES,
+    * TRANSFER_INPUT_FILES and TRANSFER_OUTPUT_FILES can be specified by oring
+    * them together.<BR>
+    * TRANSFER_ERROR_FILES causes the errorPath attribute to specify the
+    * location to which error files should be transfered after the job
+    * finishes.<BR>
+    * TRANSFER_INPUT_FILES causes the inputPath attribute to specify the
+    * location from which input files should be transfered before the job
+    * starts.<BR>
+    * TRANSFER_OUTPUT_FILES causes the outputPath attribute to specify the
+    * location to which output files should be transfered after the job
+    * finishes.<BR>
+    * @param transfer How to transfer files between hosts.  May be
+    * TRANSFER_NONE, or a combination of TRANSFER_ERROR_FILES,
+    * TRANSFER_INPUT_FILES and/or TRANSFER_OUTPUT_FILES ored together
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setTransferFiles (byte transfer) throws DRMAAException {
+      throw new UnsupportedAttributeException ("The transferFiles attribute is not supported.");
+   }
+   
+	/** Gets how to transfer files between hosts.  May be
+	 * any combination of TRANSFER_ERROR_FILES,
+    * TRANSFER_INPUT_FILES and TRANSFER_OUTPUT_FILES ored together.<BR>
+    * TRANSFER_ERROR_FILES causes the errorPath attribute to specify the
+    * location to which error files should be transfered after the job
+    * finishes.<BR>
+	 * TRANSFER_INPUT_FILES causes the inputPath attribute to specify the
+    * location from which input files should be transfered before the job
+    * starts.<BR>
+	 * TRANSFER_OUTPUT_FILES causes the outputPath attribute to specify the
+    * location to which output files should be transfered after the job
+    * finishes.<BR>
+    * @return How to transfer files between hosts.  May be
+    * TRANSFER_NONE, or a combination of TRANSFER_ERROR_FILES,
+    * TRANSFER_INPUT_FILES and/or TRANSFER_OUTPUT_FILES ored together
+	 */
+   public byte getTransferFiles () {
+      throw new UnsupportedAttributeException ("The transferFiles attribute is not supported.");
+   }
+   
+	/** Sets a deadline after which the DRMS will terminate the job.
+    * @param deadline The deadline after which the DRMS will terminate the job
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>InvalidArgumentException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setDeadlineTime (Date deadline) throws DRMAAException {
+      throw new UnsupportedAttributeException ("The deadlineTime attribute is not supported.");
+   }
+   
+	/** Sets a deadline after which the DRMS will terminate the job.
+    * @return The deadline after which the DRMS will terminate the job
+	 */
+   public Date getDeadlineTime () {
+      throw new UnsupportedAttributeException ("The deadlineTime attribute is not supported.");
+   }
+   
+	/** Sets when the job's wall clock time limit has
+    * been exceeded.  The DRMS will terminate a job that has exceeded its wall
+    * clock time limit.  Note that time spent suspended is also accounted for
+    * here.<BR>
+    * @param hardWallclockLimit When the job's wall clock time limit has been
+    * exceeded.  Specified in seconds
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setHardWallclockTimeLimit (long hardWallclockLimit) throws DRMAAException {
+      throw new UnsupportedAttributeException ("The hardWallclockTimeLimit attribute is not supported.");
+   }
+   
+	/** Gets the duration of the job's wall clock time limit.  The DRMS will
+    * terminate a job that has exceeded its wall
+	 * clock time limit.  Note that time spent suspended is also accounted for
+    * here.<BR>
+    * @return When the job's wall clock time limit has been exceeded.
+    * Specified in seconds
+	 */
+   public long getHardWallclockTimeLimit () {
+      throw new UnsupportedAttributeException ("The hardWallclockTimeLimit attribute is not supported.");
+   }
+   
+	/** Sets an estimate as to how much wall clock time job will need to
+    * complete. Note that time spent suspended is also accounted for here.<BR>
+    * This attribute is intended to assist the scheduler.
+    * If the time specified in insufficient, the
+    * drmaa-implementation may impose a scheduling penalty.
+    * @param softWallclockLimit An estimate as to how much wall clock time job
+    * will need to complete.  Specified in seconds
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setSoftWallClockTimeLimit (long softWallclockLimit) throws DRMAAException {
+      throw new UnsupportedAttributeException ("The softWallclockTimeLimit attribute is not supported.");
+   }
+   
+	/** Gets an estimate as to how much wall clock time job will need to
+    * complete. Note that time spent suspended is also accounted for here.<BR>
 	 * This attribute is intended to assist the scheduler.
 	 * If the time specified in insufficient, the
 	 * drmaa-implementation may impose a scheduling penalty.
-	 * The value of the attribute will be of the form
-	 * [[h:]m:]s
-	 * where<BR>
-	 * h is one or more digits representing hours<BR>
-	 * m is one or more digits representing minutes<BR>
-	 * s is one or more digits representing seconds
-	 */	
-	public static final String SOFT_WALLCLOCK_TIME_LIMIT = "drmaa_wct_slimit";
-	/** This attribute specifies how long the job may be in a running state
-	 * before its limit has been exceeded, and therefore is terminated by
-	 * the DRMS.
-	 * This is a reserved attribute named drmaa_run_duration_hlimit
-	 * The value of the attribute will be of the form
-	 * [[h:]m:]s
-	 * where<BR>
-	 * h is one or more digits representing hours<BR>
-	 * m is one or more digits representing minutes<BR>
-	 * s is one or more digits representing seconds
-	 */	
-	public static final String HARD_RUN_DURATION_LIMIT = "drmaa_run_duration_hlimit";
-	/** This attribute specifies an estimate as to how long the job will need
-	 * to remain in a running state to complete.
-	 * This attribute is intended to assist the scheduler. If the time specified
-	 * in insufficient, the drmaaimplementation may impose a scheduling penalty.<BR>
-	 * The value of the attribute will be of the form
-	 * [[h:]m:]s
-	 * where<BR>
-	 * h is one or more digits representing hours<BR>
-	 * m is one or more digits representing minutes<BR>
-	 * s is one or more digits representing seconds
-	 */	
-	public static final String SOFT_RUN_DURATION_LIMIT = "drmaa_run_duration_slimit";
-	/** JOB_SUBMISSION_STATE which means job has been queued, but it is NOT
-	 * eligible to run
-	 */	
-	public static final int HOLD = 0;
-	/** JOB_SUBMISSION_STATE which means job has been queued, and is eligible to run */	
-	public static final int ACTIVE = 1;
+    * @return An estimate as to how much wall clock time job will need
+    * to complete.  Specified in seconds
+	 */
+   public long getSoftWallClockTimeLimit () {
+      throw new UnsupportedAttributeException ("The softWallclockTimeLimit attribute is not supported.");
+   }
+   
+	/** Sets how long the job may be in a running state before its limit has been
+    * exceeded, and therefore is terminated by the DRMS.
+    * @param hardRunLimit How long the job may be in a running state before its
+    * limit has been exceeded.  Specified in seconds
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setHardRunDurationLimit (long hardRunLimit) throws DRMAAException {
+      throw new UnsupportedAttributeException ("The hardRunDurationLimit attribute is not supported.");
+   }
+   
+	/** Gets how long the job may be in a running state before its limit has been
+	 * exceeded, and therefore is terminated by the DRMS.
+    * @return How long the job may be in a running state before its limit has
+    * been exceeded.  Specified in seconds
+	 */
+   public long getHardRunDurationLimit () {
+      throw new UnsupportedAttributeException ("The hardRunDurationLimit attribute is not supported.");
+   }
+   
+	/** Sets an estimate as to how long the job will need to remain in a running
+    * state to complete.  This attribute is intended to assist the scheduler. If
+    * the time specified in insufficient, the DRMAA implementation may impose a
+    * scheduling penalty.<BR>
+    * @param softRunLimit An estimate as to how long the job will need to remain
+    * in a running state to complete.  Specified in seconds
+    * @throws DRMAAException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidAttributeValueException</LI>
+    * <LI>ConflictingAttributeValuesException</LI>
+    * </UL>
+    */
+   public void setSoftRunDurationLimit (long softRunLimit) throws DRMAAException {
+      throw new UnsupportedAttributeException ("The softRunDurationLimit attribute is not supported.");
+   }
+
+	/** Gets an estimate as to how long the job will need to remain in a running
+    * state to complete.  This attribute is intended to assist the scheduler. If
+    * the time specified in insufficient, the DRMAA implementation may impose a
+    * scheduling penalty.<BR>
+    * @return An estimate as to how long the job will need to remain
+    * in a running state to complete.  Specified in seconds
+	 */
+   public long getSoftRunDurationLimit () {
+      throw new UnsupportedAttributeException ("The softRunDurationLimit attribute is not supported.");
+   }
 	
 	/** Creates a new instance of JobTemplate */
 	protected JobTemplate () {
 	}
 	
-	/** Adds ('name', 'value') pair to list of attributes in the job template.
-    * @param name the name of the attribute to set
-    * @param value the value to which to set the attribute
-    * @throws DRMAAException May be one of the following:
-    * <UL>
-    * <LI>InvalidAttributeFormatException</LI>
-    * <LI>InvalidArgumentException</LI>
-    * <LI>InvalidAttributeValueException</LI>
-    * <LI>ConflictingAttributeValuesException</LI>
-    * </UL>
-    * @see java.util.Collections#singletonList()
-    */	
-	public abstract void setAttribute (String name, String value) throws DRMAAException;
-	
-	/** Adds ('name', 'values') pair to list of attributes in the job template.
-	 * @param name The name of the attribute to set
-	 * @param value The list of values to which to set the attribute
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>InvalidAttributeFormatException</LI>
-	 * <LI>InvalidAttributeValueException</LI>
-	 * <LI>ConflictingAttributeValuesException</LI>
-	 * </UL>
-	 */	
-	public abstract void setAttribute (String name, List value) throws DRMAAException;
-	
-   /** If 'name' is an existing attribute name in the job template, then
-	 * the value of 'name' SHALL be returned; otherwise, NULL is returned.  If the
-	 * value of the attribute is not a vector, the returned List will be a
-    * singleton List.
-	 * @param name The name of the attribute whose value to return
-	 * @return The value of the attribute
-	 */	
-	public abstract List getAttribute (String name);
-
-   /** SHALL return the set of supported attribute names.  This set SHALL
+   /** SHALL return the list of supported attribute names.  This list SHALL
     * include supported DRMAA reserved attribute names and native attribute
     * names.
-	 * @return the set of supported attribute names
+	 * @return the list of supported attribute names
 	 */	
-	public abstract Set getAttributeNames ();
+	public List getAttributeNames () {
+      ArrayList allNames = null;
+      List requiredNames = Arrays.asList (attributeNames);
+      List optionalNames = this.getOptionalAttributeNames ();
+      
+      allNames = new ArrayList (requiredNames.size () + optionalNames.size ());
+      allNames.addAll (requiredNames);
+      allNames.addAll (optionalNames);
+      
+      return allNames;
+   }
+   
+   /** This method returns the names of all optional and implementation-specific
+    * attributes supported by this DRMAA implementation.  Unless overridden by the
+    * DRMAA implementation, this method returns an empty list.
+    * @return The names of all optional and implementation-specific
+    * attributes supported by this DRMAA implementation
+    */   
+   protected List getOptionalAttributeNames () {
+      return Collections.EMPTY_LIST;
+   }
    
    /** Deallocate a job template. This routine has no effect on jobs.
     * @throws DRMAAException May be one of the following:
@@ -373,4 +902,18 @@ public abstract class JobTemplate {
     * </UL>
     */
    public abstract void delete () throws DRMAAException;
+
+   /** Checks for a valid path.  Throws an IllegalArgumentException is the path
+    * is not valid.
+    * @param path The path to validate
+    */
+   private void checkPath (String path) {
+      if (path.indexOf (HOME_DIRECTORY) > 0) {
+         throw new IllegalArgumentException ("$drmaa_hd_ph$ may only appear at the beginning of the path.");
+      }
+      
+      if (path.indexOf (WORKING_DIRECTORY) > 0) {
+         throw new IllegalArgumentException ("$drmaa_wd_ph$ may only appear at the beginning of the path.");
+      }
+   }
 }

@@ -60,6 +60,79 @@ NAMEEND
 /* *INDENT-ON* */
 
 #define JRES sizeof(JREN)/sizeof(char*)
+
+#ifdef ENABLE_438_FIX
+/* 
+ * We need to store information about finished pe tasks to avoid 
+ * duplicate accounting records (see IZ 438).
+ * The whole job -> ja_task -> pe_task structure has to be maintained
+ * with a minimal set of data.
+ */
+
+/* *INDENT-OFF* */
+
+/* Finished Job Reference */
+
+enum {
+   FJR_job_number = FJR_LOWERBOUND, 
+   FJR_ja_tasks
+};
+
+LISTDEF(FJR_Type)
+   SGE_ULONGHU(FJR_job_number)
+   SGE_LIST(FJR_ja_tasks)
+LISTEND
+
+NAMEDEF(FJRN)
+   NAME("FJR_job_number")
+   NAME("FJR_ja_tasks")
+NAMEEND
+
+/* *INDENT-ON* */
+
+#define FJRS sizeof(FJRN)/sizeof(char *)
+
+/* *INDENT-OFF* */
+
+enum {
+   FTR_task_number = FTR_LOWERBOUND,
+   FTR_pe_tasks
+};
+
+LISTDEF(FTR_Type)
+   SGE_ULONGHU(FTR_task_number)
+   SGE_LIST(FTR_pe_tasks)
+LISTEND
+
+NAMEDEF(FTRN)
+   NAME("FTR_task_number")
+   NAME("FTR_pe_tasks")
+NAMEEND
+
+/* *INDENT-ON* */
+
+#define FTRS sizeof(FTRN)/sizeof(char *)
+
+/* *INDENT-OFF* */
+
+enum {
+   FPR_id = FPR_LOWERBOUND
+};
+
+LISTDEF(FPR_Type)
+   SGE_STRINGHU(FPR_id)
+LISTEND
+
+NAMEDEF(FPRN)
+   NAME("FPR_id")
+NAMEEND
+
+/* *INDENT-ON* */
+
+#define FPRS sizeof(FPRN)/sizeof(char *)
+
+#endif /* ENABLE_438_FIX */
+
 #ifdef  __cplusplus
 }
 #endif

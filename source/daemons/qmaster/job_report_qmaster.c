@@ -534,6 +534,11 @@ sge_pack_buffer *pb
                      this is needed to prevent multiple debitation of one task 
                      -- need a state in qmaster for each task */
 
+#ifdef ENABLE_438_FIX
+               /* handle task exit only once for each pe_task */
+               if (ftref_add(jobid, jataskid, pe_task_id_str)) {
+#endif /* ENABLE_438_FIX */
+
                   if (!task) {
    
                      task = lAddSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, JAT_task_list, JB_Type);
@@ -571,7 +576,8 @@ sge_pack_buffer *pb
                      err_str = lGetString(jr, JR_err_str);
                      sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
                      lSetString(task, JB_sge_o_mail, failed_msg);
-                     sge_log_dusage(jr, jep, jatep);
+
+                        sge_log_dusage(jr, jep, jatep);
 
                      /* remove pe task from job */
                      {
@@ -654,6 +660,9 @@ sge_pack_buffer *pb
                   if (feature_is_enabled(FEATURE_SGEEE))
                      sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
 
+#ifdef ENABLE_438_FIX
+                  }
+#endif /* ENABLE_438_FIX */
                } else {
                   lListElem *jg;
                   const char *shouldbe_queue_name;

@@ -538,6 +538,9 @@ const char *queue
          ERROR((SGE_EVENT, MSG_JOB_UNKNOWNGDIL4TJ_UU,
                u32c(jobid), u32c(jataskid)));
          lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
+#ifdef ENABLE_438_FIX
+         ftref_del_job(jobid);
+#endif /* ENABLE_438_FIX */
          DEXIT;
          return;
       }
@@ -568,6 +571,9 @@ const char *queue
             ERROR((SGE_EVENT, MSG_JOB_NOPE4TJ_SUU, 
                   lGetString(jep, JB_pe), u32c(jobid), u32c(jataskid)));
             lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
+#ifdef ENABLE_438_FIX
+            ftref_del_job(jobid);
+#endif /* ENABLE_438_FIX */
             DEXIT;
             return;
          }
@@ -1170,6 +1176,9 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        */
       suser_unregister_job(job);
       lRemoveElem(Master_Job_List, job);
+#ifdef ENABLE_438_FIX
+      ftref_del_job(job_id);
+#endif /* ENABLE_438_FIX */
       if (!no_events) {
          sge_add_event(NULL, sgeE_JOB_DEL, job_id, ja_task_id, NULL, NULL);
       }
@@ -1184,6 +1193,9 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       if (is_enrolled) {
          job_remove_spool_file(job_id, ja_task_id, 0);
          lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
+#ifdef ENABLE_438_FIX
+         ftref_del_ja_task(job_id, ja_task_id);
+#endif /* ENABLE_438_FIX */
       } else {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          if (spool_job) {

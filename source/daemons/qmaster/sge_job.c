@@ -3614,4 +3614,186 @@ static int job_check_qsh_display(lListElem *job, lList **answer_list)
 
    DEXIT;
    return STATUS_OK;
-}      
+}
+
+#ifdef ENABLE_438_FIX
+
+lList *Master_Finished_Pe_Task_List = NULL;
+
+/****** qmaster/job/ftref_add() ****************************************************
+*  NAME
+*     ftref_add() -- add reference for finished pe task
+*
+*  SYNOPSIS
+*     int 
+*     ftref_add(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id) 
+*
+*  FUNCTION
+*     Will add a reference to a finished pe task to qmasters list (tree structure)
+*     of finished pe tasks.
+*
+*     The structure is built as follows:
+*      
+*     job1  -> ja_task1 -> pe_task1
+*                       -> pe_task2
+*                            ...
+*                       -> pe_taskn
+*
+*           -> ja_task2 -> pe_task1
+*                       -> pe_task2
+*                            ...
+*                       -> pe_taskn
+*     job2  -> ...
+*     ...
+*
+*     A job has a list of ja_tasks. A ja_task has a list of pe_tasks.
+*     The data structure used just contains identifiers and sublists.
+*
+*  INPUTS
+*     u_long32 job_id        - job id
+*     u_long32 ja_task_id    - array task id
+*     const char *pe_task_id - parallel task id
+*
+*  RESULT
+*     int - TRUE, if the pe task did not yet exist and was added
+*           FALSE, if the pe task already existed in the list
+*
+*  NOTES
+*     For future releases the ja_task object type (JAT_Type) should contain
+*     a sublist containing all finished pe task id's.
+*
+*  SEE ALSO
+*     qmaster/job/ftref_del_job()
+*     qmaster/job/ftref_del_ja_task()
+*******************************************************************************/
+int 
+ftref_add(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
+{
+   lListElem *job;
+   lListElem *ja_task;
+   lListElem *pe_task;
+
+   DENTER(TOP_LAYER, "ftref_add");
+
+   job = lGetElemUlong(Master_Finished_Pe_Task_List, FJR_job_number, job_id);
+   if (job == NULL) {
+      job = lAddElemUlong(&Master_Finished_Pe_Task_List, FJR_job_number, job_id, FJR_Type);
+   }
+
+   ja_task = lGetElemUlong(lGetList(job, FJR_ja_tasks), FTR_task_number, ja_task_id);
+   if (ja_task == NULL) {
+      ja_task = lAddSubUlong(job, FTR_task_number, ja_task_id, FJR_ja_tasks, FTR_Type);
+   }
+
+   pe_task = lGetElemStr(lGetList(ja_task, FTR_pe_tasks), FPR_id, pe_task_id);
+   if (pe_task != NULL) {
+      DPRINTF(("already handled exit of pe task "U32CFormat"."U32CFormat" "SFN"\n",
+               job_id, ja_task_id, pe_task_id));
+      DEXIT;
+      return FALSE;
+   }
+
+   pe_task = lAddSubStr(ja_task, FPR_id, pe_task_id, FTR_pe_tasks, FPR_Type);
+
+   DEXIT;
+   return TRUE;
+}
+
+/****** qmaster/job/ftref_del_job() ****************************************************
+*  NAME
+*     ftref_del_job() -- delete complete finished pe task subtree for a job
+*
+*  SYNOPSIS
+*     int 
+*     ftref_del_job(u_long32 job_id)
+*
+*  FUNCTION
+*     Deletes the whole subtree for a certain job_id in the qmaster's finished pe task 
+*     tree.
+*
+*  INPUTS
+*     u_long32 job_id        - job id
+*
+*  RESULT
+*     int - TRUE, if the job existed, else FALSE
+*
+*  SEE ALSO
+*     qmaster/job/ftref_add()
+*     qmaster/job/ftref_del_ja_task()
+*******************************************************************************/
+int 
+ftref_del_job(u_long32 job_id)
+{
+   lListElem *job;
+
+   DENTER(TOP_LAYER, "ftref_del_job");
+
+   job = lGetElemUlong(Master_Finished_Pe_Task_List, FJR_job_number, job_id);
+   if (job == NULL) {
+      DEXIT;
+      return FALSE;
+   }
+
+   lRemoveElem(Master_Finished_Pe_Task_List, job);
+   
+   DEXIT;
+   return TRUE;
+}
+
+/****** qmaster/job/ftref_del_ja_task() ****************************************************
+*  NAME
+*     ftref_del_ja_task() -- delete complete finished pe task subtree for a ja_task
+*
+*  SYNOPSIS
+*     int 
+*     ftref_del_ja_task(u_long32 job_id, u_long32 ja_task_id)
+*
+*  FUNCTION
+*     Deletes the whole subtree for a certain ja_task referenced by job_id and ja_task_id
+*     in the qmaster's finished pe task tree.
+*
+*  INPUTS
+*     u_long32 job_id        - job id
+*     u_long32 ja_task_id    - array task id
+*
+*  RESULT
+*     int - TRUE, if the job and ja_task existed, else FALSE
+*
+*  SEE ALSO
+*     qmaster/job/ftref_add()
+*     qmaster/job/ftref_del_job()
+*******************************************************************************/
+int 
+ftref_del_ja_task(u_long32 job_id, u_long32 ja_task_id)
+{
+   lListElem *job;
+   lListElem *ja_task;
+
+   DENTER(TOP_LAYER, "ftref_del_ja_task");
+
+   job = lGetElemUlong(Master_Finished_Pe_Task_List, FJR_job_number, job_id);
+   if (job == NULL) {
+      DEXIT;
+      return FALSE;
+   }
+
+   ja_task = lGetElemUlong(lGetList(job, FJR_ja_tasks), FTR_task_number, ja_task_id);
+   if (ja_task == NULL) {
+      DEXIT;
+      return FALSE;
+   }
+
+   lRemoveElem(lGetList(job, FJR_ja_tasks), ja_task);
+  
+   /* if last ja_task is removed, remove job */
+
+   if (lGetNumberOfElem(lGetList(job, FJR_ja_tasks)) == 0) {
+      ftref_del_job(job_id);
+   }
+  
+   DEXIT;
+   return TRUE;
+}
+   
+#endif /* ENABLE_438_FIX */
+

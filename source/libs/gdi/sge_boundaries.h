@@ -421,7 +421,22 @@ enum NameSpaceBoundaries {
    /* security connection list  */
   ,SEC_LOWERBOUND = FE_UPPERBOUND + 1,
    SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1
+
+#ifdef ENABLE_438_FIX 
+   /* finished pe task info */
+  ,FJR_LOWERBOUND = SEC_UPPERBOUND + 1,
+   FJR_UPPERBOUND = FJR_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   FTR_LOWERBOUND = FJR_UPPERBOUND + 1,
+   FTR_UPPERBOUND = FTR_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   FPR_LOWERBOUND = FTR_UPPERBOUND + 1,
+   FPR_UPPERBOUND = FPR_LOWERBOUND + 1 * BASIC_UNIT -1
+   
+#  define LAST_UPPERBOUND FPR_UPPERBOUND
+#else    
 #  define LAST_UPPERBOUND SEC_UPPERBOUND
+#endif /* ENABLE_438_FIX */
 
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */

@@ -84,4 +84,14 @@ void get_rid_of_job(lList **alpp, lListElem *jep, lListElem *jatep, int force,
 
 #endif
 
+#ifdef ENABLE_438_FIX
+
+extern lList *Master_Finished_Pe_Task_List;
+
+int ftref_add(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id);
+int ftref_del_job(u_long32 job_id);
+int ftref_del_ja_task(u_long32 job_id, u_long32 ja_task_id);
+   
+#endif /* ENABLE_438_FIX */
+
 #endif /* __SGE_JOB_H */

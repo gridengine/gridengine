@@ -206,9 +206,13 @@ extern "C" {
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
+#ifdef ENABLE_438_FIX
+      {FJR_LOWERBOUND, FJRS, FJRN},     /* finished job info */
+      {FTR_LOWERBOUND, FTRS, FTRN},     /* finished ja_task info */
+      {FPR_LOWERBOUND, FPRS, FPRN},     /* finished pe_task info */
+#endif /* ENABLE_438_FIX */
       {0, 0, NULL}
    };
-
 #ifdef  __cplusplus
 }
 #endif

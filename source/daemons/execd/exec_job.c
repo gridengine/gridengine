@@ -778,20 +778,6 @@ char *err_str
       }
    }
 
-   /* write PWD, might get overridden by task environment */
-   if (lGetString(job_jep, JB_cwd)) { 
-      static char cwd_out[SGE_PATH_MAX];
-      
-      /* path aliasing only for cwd flag set */
-      get_path_alias(lGetString(job_jep, JB_cwd), cwd_out, SGE_PATH_MAX, 
-               lGetList(job_jep, JB_path_aliases), me.qualified_hostname, NULL);
-      cwd = cwd_out;
-   }
-   else 
-      cwd = pw->pw_dir;
-
-   add_or_replace_env(environmentList, "PWD", cwd);
-
    {
       char *s, *name;
       int n = strlen(COMPLEX2ENV_PREFIX);
@@ -804,6 +790,19 @@ char *err_str
          add_or_replace_env(environmentList, name, s ? s : "");
       }
    }
+   
+   /* write PWD, might get overridden by task environment */
+   if (lGetString(job_jep, JB_cwd)) { 
+      static char cwd_out[SGE_PATH_MAX];
+      
+      /* path aliasing only for cwd flag set */
+      get_path_alias(lGetString(job_jep, JB_cwd), cwd_out, SGE_PATH_MAX, 
+               lGetList(job_jep, JB_path_aliases), me.qualified_hostname, NULL);
+      cwd = cwd_out;
+      add_or_replace_env(environmentList, "PWD", cwd);
+   }
+   else 
+      cwd = pw->pw_dir;
 
    if (lGetString(job_jep, JB_sge_o_home)) {
       if (set_sge_environment) 

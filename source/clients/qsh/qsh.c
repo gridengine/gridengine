@@ -731,12 +731,10 @@ static int start_client_program(const char *client_name,
             }
          }
       }
-
    } else {
       char* args[11]; 
       int i = 0;
       char shellpath[SGE_PATH_MAX];
-      char envpath[SGE_PATH_MAX];
 
       args[i++] = (char *)client_name;
 
@@ -752,10 +750,9 @@ static int start_client_program(const char *client_name,
          args[i++] = (char *)host;
          if(is_rsh) {
             sprintf(shellpath, "%s/qrsh_starter", utilbin_dir);
-            sprintf(envpath, "%s/environment", job_dir);
             args[i++] = "exec";
             args[i++] = (char *)quote_argument(shellpath);
-            args[i++] = (char *)quote_argument(envpath);
+            args[i++] = (char *)quote_argument(job_dir);
             if(noshell) {
                args[i++] = "noshell";
             }   

@@ -1,3 +1,9 @@
+JG-2001-09-03-0: (Issue #51)
+                 - PWD was set incorrectly for jobs submitted with qsub -cwd
+                   if a path mapping was active (sge_aliases file)
+                 - qrsh does no longer use the PWD variable to determine 
+                   target job working directory but jobs configuration
+
 CR-2001-08-31-0: Testsuite:
                  - issue #10 shutdown_system_daemon does not work for some platforms
                  - start_remote_prog procedure can now export user environment on

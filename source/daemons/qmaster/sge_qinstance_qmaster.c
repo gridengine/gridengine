@@ -337,7 +337,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                new_list = lCopyList("", new_value);
                new_value = NULL;
                centry_list_fill_request(new_list, Master_CEntry_List, 
-                                        false, true, false);
+                                        true, true, false);
                lSetList(tmp_elem, attribute_name, new_list);
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                lXchgList(tmp_elem, attribute_name, &new_value);

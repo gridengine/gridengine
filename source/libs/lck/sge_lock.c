@@ -81,8 +81,8 @@ static const char* locktype_names[NUM_OF_TYPES] = {
    "global"  /* LOCK_GLOBAL */
 };
 
-static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, sge_locker_t);
-static void (*unlock_callback) (sge_locktype_t, sge_lockmode_t, sge_locker_t); 
+static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
+static void (*unlock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t); 
 static sge_locker_t (*id_callback) (void);
 
 
@@ -113,12 +113,12 @@ static sge_locker_t (*id_callback) (void);
 *  NOTES
 *     MT-NOTE: sge_lock() is MT safe 
 *******************************************************************************/
-void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
+void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
    DENTER(TOP_LAYER, "sge_lock");
 
    if (NULL != lock_callback) {
-      lock_callback(aType, aMode, anID);
+      lock_callback(aType, aMode, func, anID);
    }
 
    DEXIT;
@@ -150,12 +150,12 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
 *  NOTES
 *     MT-NOTE: sge_unlock() is MT safe 
 *******************************************************************************/
-void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
+void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
    DENTER(TOP_LAYER, "sge_unlock");
 
    if (NULL != unlock_callback) {
-      unlock_callback(aType, aMode, anID);
+      unlock_callback(aType, aMode, func, anID);
    }
 
    DEXIT;
@@ -288,7 +288,7 @@ int sge_num_locktypes(void)
 *  NOTES
 *     MT-NOTE; sge_set_lock_callback() is NOT MT safe 
 *******************************************************************************/
-void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_locker_t))
+void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *, sge_locker_t))
 {
    DENTER(TOP_LAYER, "sge_set_lock_callback");
 
@@ -323,7 +323,7 @@ void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_loc
 *  NOTES
 *     MT-NOTE: sge_set_unlock_callback() is NOT MT safe 
 *******************************************************************************/
-void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_locker_t))
+void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *, sge_locker_t))
 {
    DENTER(TOP_LAYER, "sge_set_unlock_callback");
 

@@ -241,13 +241,14 @@ lList **answerp
          current++;
          index = i + 1;
          QmonMirrorList[index].id = sge_gdi_multi(&alp, 
-                                 (current == count) ? SGE_GDI_SEND : 
-                                             SGE_GDI_RECORD,
-                                 QmonMirrorList[index].type, SGE_GDI_GET,
+                                 (current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD,
+                                 QmonMirrorList[index].type, 
+                                 SGE_GDI_GET,
                                  NULL, 
                                  QmonMirrorList[index].where, 
                                  QmonMirrorList[index].what,
-                                 (current == count) ? &mal : NULL, &state);
+                                 (current == count) ? &mal : NULL, 
+                                 &state, true);
          if (QmonMirrorList[index].id == -1)
             goto error;
       }   

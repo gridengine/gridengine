@@ -1,3 +1,11 @@
+SG-2004-10-18-0: Enhancem.: - reworked the locking in qmaster and changed two
+                              not thread save code sections in the order processing
+                            - moved the persitence of the job sequ. number into
+                              the timed event thread
+                            - add a copy date flag to the GDI-Multi request
+                 Changed:   qmaster, scheduler, clients
+                 Review:    EB
+
 CR-2004-10-18-0: Cleanup:   - code cleanup of commlib
                             - removed unused function parameters in list functions
                             - preparatory work for commlib SSL framework

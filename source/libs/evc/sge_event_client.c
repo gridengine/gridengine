@@ -2185,8 +2185,10 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
        *  - if this event client is already enrolled at qmaster
        */
       commit_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_EVENT_LIST, SGE_GDI_MOD,
-                                lp, NULL, NULL, malpp, state);
-      lp = lFreeList(lp); 
+                                &lp, NULL, NULL, malpp, state, false);
+      if (lp != NULL) {                                 
+         lp = lFreeList(lp); 
+      }
 
       if (alp != NULL) {
          answer_list_handle_request_answer_list(&alp, stderr);

@@ -176,7 +176,6 @@ lList
    if (type == ORT_tickets || type == ORT_ptickets) {
       const lDescr tixDesc[] = {
                             {JAT_task_number, lUlongT},
-                            {JAT_status, lUlongT}, 
                             {JAT_tix, lDoubleT},
                             {JAT_oticket, lDoubleT}, 
                             {JAT_fticket, lDoubleT },
@@ -189,7 +188,6 @@ lList
                            };
       const lDescr tix2Desc[] = {
                              {JAT_task_number, lUlongT},
-                             {JAT_status, lUlongT}, 
                              {JAT_tix, lDoubleT},
                              {JAT_oticket, lDoubleT}, 
                              {JAT_fticket, lDoubleT },
@@ -308,7 +306,7 @@ lList
   
  *************************************************************/
 int sge_send_orders2master(
-lList *orders 
+lList **orders 
 ) {
    int ret = STATUS_OK;
    lList *alp = NULL;
@@ -322,15 +320,15 @@ lList *orders
    /* do we have to set event client to "not busy"? */
    set_busy = (ec_get_busy_handling() == EV_BUSY_UNTIL_RELEASED);
 
-   if (orders != NULL) {
-      DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(orders)));
+   if (*orders != NULL) {
+      DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(*orders)));
 
       if(set_busy) {
          order_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders, NULL, NULL, NULL, &state);
+                                  orders, NULL, NULL, NULL, &state, false);
       } else {
          order_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders, NULL, NULL, &malp, &state);
+                                  orders, NULL, NULL, &malp, &state, false);
       }
 
       if (alp != NULL) {
@@ -512,11 +510,11 @@ int sge_send_job_start_orders(order_t *orders) {
    if (orders->configOrderList != NULL) {
 
       order_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders->configOrderList, NULL, NULL, &malp, &state);
+                                  &orders->configOrderList, NULL, NULL, &malp, &state, false);
    }        
 
    order_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders->jobStartOrderList, NULL, NULL, &malp, &state);
+                                  &orders->jobStartOrderList, NULL, NULL, &malp, &state, false);
 
    if (orders->sent_job_StartOrderList == NULL) {
       orders->sent_job_StartOrderList =  orders->jobStartOrderList;

@@ -51,7 +51,7 @@
 #include "msg_common.h"
 #include "sgeobj/sge_answer.h"
 #include "sge_prog.h"
-
+#include "sge_mtutil.h"
 
 typedef struct {
    char snd_host[MAXHOSTLEN]; /* sender hostname; NULL -> all              */
@@ -98,7 +98,7 @@ void *sge_qmaster_process_message(void *anArg)
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
    memset((void*)&msg, 0, sizeof(struct_msg_t));
-   
+
    /*
     * INFO (CR)  
     *
@@ -121,7 +121,7 @@ void *sge_qmaster_process_message(void *anArg)
    {
       case TAG_SEC_ANNOUNCE:
          break; /* All processing done in libsec */
-      case TAG_GDI_REQUEST:
+      case TAG_GDI_REQUEST: 
          do_gdi_request(&msg);
          break;
       case TAG_ACK_REQUEST:
@@ -133,12 +133,12 @@ void *sge_qmaster_process_message(void *anArg)
       case TAG_REPORT_REQUEST: 
          do_report_request(&msg);
          break;
-      default:
+      default: 
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
    }
 
    clear_packbuffer(&(msg.buf));
-
+  
    DEXIT;
    return anArg; 
 } /* sge_qmaster_process_message */
@@ -203,9 +203,7 @@ static void do_gdi_request(struct_msg_t *aMsg)
          resp = resp->next;
       }
       
-      sge_set_commit_required();
       sge_c_gdi(aMsg->snd_host, req, resp);
-      sge_commit();
    }
 
    sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,

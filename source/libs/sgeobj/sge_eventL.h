@@ -268,8 +268,6 @@ typedef enum {
    sgeE_QMASTER_GOES_DOWN,          /* + qmaster notifies all event clients, before
                                          it exits */
 
-   /* EB: TODO: QI event */
-
    sgeE_CQUEUE_LIST,                /* + send cluster queue list at registration */
    sgeE_CQUEUE_ADD,                 /* + event cluster queue add */
    sgeE_CQUEUE_DEL,                 /* + event cluster queue delete */

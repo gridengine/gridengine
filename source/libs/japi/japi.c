@@ -3345,7 +3345,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       JAPI_ENTER_CR();
       qu_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
                             SGE_GDI_GET, NULL, cqueue_selection, cqueue_fields, 
-                            NULL, &state);
+                            NULL, &state, true);
       JAPI_EXIT_CR();
       cqueue_selection = lFreeWhere(cqueue_selection);
       cqueue_fields = lFreeWhat(cqueue_fields);
@@ -3375,7 +3375,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       }
       JAPI_ENTER_CR();
       jb_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_JOB_LIST, SGE_GDI_GET, NULL, 
-            job_selection, job_fields, &mal, &state);
+            job_selection, job_fields, &mal, &state, true);
       JAPI_EXIT_CR();
       job_selection = lFreeWhere(job_selection);
       job_fields = lFreeWhat(job_fields);

@@ -229,7 +229,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
          lEnumeration *what = lWhat("%T(ALL)", HGRP_Type);
         
          hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
-                                 SGE_GDI_GET, NULL, NULL, what, NULL, &state);
+                                 SGE_GDI_GET, NULL, NULL, what, NULL, &state, true);
          what = lFreeWhat(what);
       }  
       if (ret) {
@@ -238,7 +238,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
          what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
          cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                                SGE_GDI_GET, NULL, cqueue_where, what,
-                               &multi_answer_list, &state);
+                               &multi_answer_list, &state, true);
          what = lFreeWhat(what);
       }
       if (ret && fetch_all_hgroup) {
@@ -299,14 +299,14 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
       /* HGRP */
       hgrp_what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
-                              SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state);
+                              SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
       hgrp_what = lFreeWhat(hgrp_what);
 
       /* CQ */
       cqueue_what = lWhat("%T(ALL)", CQ_Type);
       cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                             SGE_GDI_GET, NULL, NULL, cqueue_what,
-                            &multi_answer_list, &state);
+                            &multi_answer_list, &state, true);
       cqueue_what = lFreeWhat(cqueue_what);
 
       /* HGRP */

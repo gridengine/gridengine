@@ -335,8 +335,10 @@ int scheduler(sge_Sdescr_t *lists) {
       lList *orderlist=sge_join_orders(&orders);
      
       if (orderlist) {
-         sge_send_orders2master(orderlist);
-         orderlist = lFreeList(orderlist);
+         sge_send_orders2master(&orderlist);
+         if (orderlist != NULL) {
+            orderlist = lFreeList(orderlist);
+         }
       }
    }
 

@@ -1571,7 +1571,7 @@ lList **hgrp_l
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
       ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
-                              NULL, NULL, what, NULL, &state);
+                              NULL, NULL, what, NULL, &state, true);
       what = lFreeWhat(what);
 
       if (alp) {
@@ -1586,7 +1586,7 @@ lList **hgrp_l
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
       eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                              NULL, where, what, NULL, &state);
+                              NULL, where, what, NULL, &state, true);
       what = lFreeWhat(what);
       where = lFreeWhere(where);
 
@@ -1602,7 +1602,7 @@ lList **hgrp_l
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                           NULL, NULL, what, NULL, &state);
+                           NULL, NULL, what, NULL, &state, true);
       what = lFreeWhat(what);
 
       if (alp) {
@@ -1615,7 +1615,7 @@ lList **hgrp_l
    */
    what = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                           NULL, NULL, what, &mal, &state);
+                           NULL, NULL, what, &mal, &state, true);
    what = lFreeWhat(what);
 
    if (alp) {

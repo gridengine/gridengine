@@ -645,37 +645,43 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
 
             del_id = sge_gdi_multi(&gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_DEL, *old_list,
-                                   NULL, NULL, &mal_answer_list, &state);
+                                   SGE_CENTRY_LIST, SGE_GDI_DEL, old_list,
+                                   NULL, NULL, &mal_answer_list, &state, false);
             if (answer_list_has_error(&gdi_answer_list)) {
                DTRACE;
                ret = false;
             }
-            *old_list = lFreeList(*old_list);
+            if (*old_list != NULL) {
+               *old_list = lFreeList(*old_list);
+            }
          }
          if (ret && do_mod) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
 
             mod_id = sge_gdi_multi(&gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_MOD, modify_list,
-                                   NULL, NULL, &mal_answer_list, &state);
+                                   SGE_CENTRY_LIST, SGE_GDI_MOD, &modify_list,
+                                   NULL, NULL, &mal_answer_list, &state, false);
             if (answer_list_has_error(&gdi_answer_list)) {
                DTRACE;
                ret = false;
             }
-            modify_list = lFreeList(modify_list);
+            if (modify_list) {
+               modify_list = lFreeList(modify_list);
+            }
          }
          if (ret && do_add) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
 
             add_id = sge_gdi_multi(&gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_ADD, add_list,
-                                   NULL, NULL, &mal_answer_list, &state);
+                                   SGE_CENTRY_LIST, SGE_GDI_ADD, &add_list,
+                                   NULL, NULL, &mal_answer_list, &state, false);
             if (answer_list_has_error(&gdi_answer_list)) {
                DTRACE;
                ret = false;
             }
-            add_list = lFreeList(add_list);
+            if (add_list != NULL){
+               add_list = lFreeList(add_list);
+            }
          }
 
          /*

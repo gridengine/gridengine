@@ -75,6 +75,7 @@
 #include "sge.h"
 #include "sge_qmod_qmaster.h"
 #include "reschedule.h"
+#include "sge_job_qmaster.h"
 #include "sge_profiling.h"
 
 
@@ -95,11 +96,10 @@ typedef struct {
 
 
 static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, INVALID_THREAD, false, 0};
-static pthread_mutex_t   Global_Lock;
-
+static pthread_rwlock_t Global_Lock;
 /* lock service provider */
-static void lock_callback(sge_locktype_t, sge_lockmode_t, sge_locker_t);
-static void unlock_callback(sge_locktype_t, sge_lockmode_t, sge_locker_t);
+static void lock_callback(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
+static void unlock_callback(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
 static sge_locker_t id_callback(void);
 
 /* thread management */
@@ -383,22 +383,29 @@ void sge_start_heartbeat(void)
 *******************************************************************************/
 void sge_create_and_join_threads(void)
 {
-   enum { NUM_THRDS = 2 };
+   enum { NUM_THRDS = 5 };
 
    pthread_t tids[NUM_THRDS];
+   int threads = 1;
    int i;
 
    DENTER(TOP_LAYER, "sge_create_and_join_threads");
+
+   if (threads >= NUM_THRDS) {
+      threads = NUM_THRDS -1;
+   }
 
    pthread_create(&(tids[0]), NULL, signal_thread, NULL);
    inc_thread_count();
    
    set_signal_thread(tids[0]);
 
-   pthread_create(&(tids[1]), NULL, message_thread, NULL);
-   inc_thread_count();
+   for (i = 1; i <= threads; i++) {
+      pthread_create(&(tids[i]), NULL, message_thread, NULL);
+      inc_thread_count();
+   }
 
-   for (i = 0; i < NUM_THRDS; i++) {
+   for (i = 0; i <= threads; i++) {
       pthread_join(tids[i], NULL);
    }
 
@@ -547,6 +554,11 @@ void sge_start_periodic_tasks(void)
 
    DENTER(TOP_LAYER, "sge_start_periodic_tasks");
 
+   te_register_event_handler(sge_store_job_number, TYPE_JOB_NUMBER_EVENT);
+   ev = te_new_event(15, TYPE_JOB_NUMBER_EVENT, RECURRING_EVENT, 0, 0, "job_number_changed");
+   te_add_event(ev);
+   te_free_event(ev);
+
    te_register_event_handler(sge_job_resend_event_handler, TYPE_JOB_RESEND_EVENT);
 
    te_register_event_handler(sge_calendar_event_handler, TYPE_CALENDAR_EVENT);
@@ -610,8 +622,7 @@ void sge_setup_lock_service(void)
 {
    DENTER(TOP_LAYER, "sge_setup_lock_service");
    
-   pthread_mutex_init(&Global_Lock, NULL);
-
+   pthread_rwlock_init(&Global_Lock, NULL); 
    sge_set_lock_callback(lock_callback);
    sge_set_unlock_callback(unlock_callback);
    sge_set_id_callback(id_callback);
@@ -644,7 +655,6 @@ void sge_teardown_lock_service(void)
 {
    DENTER(TOP_LAYER, "sge_teardown_lock_service");
 
-   pthread_mutex_destroy(&Global_Lock);
    
    DEXIT;
    return;
@@ -676,11 +686,19 @@ void sge_teardown_lock_service(void)
 *     that the lock mode has no effect.
 *
 *******************************************************************************/
-static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
+static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, const char *func,  sge_locker_t anID)
 {
    DENTER(TOP_LAYER, "lock_callback");
 
-   sge_mutex_lock(sge_type_name(aType), SGE_FUNC, __LINE__, &Global_Lock);
+   if (aMode == LOCK_READ) {
+       sge_rwlock_rdlock("Global_Lock_read", func, __LINE__, &(Global_Lock));
+   }
+   else if (aMode == LOCK_WRITE) {
+       sge_rwlock_wrlock("Global_Lock_write", func, __LINE__, &(Global_Lock));
+   }
+   else {
+      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
+   }
 
    DEXIT;
    return;
@@ -713,11 +731,20 @@ static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker
 *     that the lock mode has no effect.
 *
 *******************************************************************************/
-static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
+static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
    DENTER(TOP_LAYER, "unlock_callback");
 
-   sge_mutex_unlock(sge_type_name(aType), SGE_FUNC, __LINE__, &Global_Lock);
+   if (aMode == LOCK_READ) {
+       sge_rwlock_unlock("Global_Lock_read", "lock_callback", __LINE__, &(Global_Lock));
+   }
+   else if (aMode == LOCK_WRITE) {
+       sge_rwlock_unlock("Global_Lock_write", "lock_callback", __LINE__, &(Global_Lock));
+   }
+  else {
+      ERROR((SGE_EVENT, "wrong lock type for global lock\n"));
+   }
+   
 
    DEXIT;
    return;

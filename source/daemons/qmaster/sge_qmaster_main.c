@@ -76,6 +76,7 @@
 #include "sge_qmod_qmaster.h"
 #include "reschedule.h"
 #include "sge_qmaster_threads.h"
+#include "sge_job_qmaster.h"
 #include "sge_profiling.h"
 
 
@@ -351,9 +352,13 @@ int main(int argc, char* argv[])
 
    sge_start_periodic_tasks();
 
+   sge_init_job_number();
+
    sge_setup_job_resend();
 
    sge_create_and_join_threads();
+
+   sge_store_job_number(NULL);
 
    sge_qmaster_shutdown();
 

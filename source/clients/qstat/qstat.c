@@ -897,7 +897,7 @@ u_long32 show
 
    q_all = lWhat("%T(ALL)", CQ_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                        NULL, NULL, q_all, NULL, &state);
+                        NULL, NULL, q_all, NULL, &state, true);
    q_all = lFreeWhat(q_all);
    qw = lFreeWhere(qw);
  
@@ -914,7 +914,7 @@ u_long32 show
       lEnumeration *what = qstat_get_JB_Type_filter();
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
-                           NULL, where, what, NULL, &state);
+                           NULL, where, what, NULL, &state, true);
 
       where = lFreeWhere(where);
 
@@ -937,7 +937,7 @@ u_long32 show
       }
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
-                           NULL, zw, qstat_get_JB_Type_filter(), NULL, &state);
+                           NULL, zw, qstat_get_JB_Type_filter(), NULL, &state, true);
       zw = lFreeWhere(zw);
 
       if (alp) {
@@ -951,7 +951,7 @@ u_long32 show
    */
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                        NULL, NULL, ce_all, NULL, &state);
+                        NULL, NULL, ce_all, NULL, &state, true);
    ce_all = lFreeWhat(ce_all);
 
    if (alp) {
@@ -965,7 +965,7 @@ u_long32 show
    where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    eh_all = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                        NULL, where, eh_all, NULL, &state);
+                        NULL, where, eh_all, NULL, &state, true);
    eh_all = lFreeWhat(eh_all);
    where = lFreeWhere(where);
 
@@ -980,7 +980,7 @@ u_long32 show
    if (pe_l) {   
       pe_all = lWhat("%T(%I%I%I%I%I)", PE_Type, PE_name, PE_slots, PE_job_is_first_task, PE_control_slaves, PE_urgency_slots);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
-                           NULL, pw, pe_all, NULL, &state);
+                           NULL, pw, pe_all, NULL, &state, true);
       pe_all = lFreeWhat(pe_all);
       pw = lFreeWhere(pw);
 
@@ -996,7 +996,7 @@ u_long32 show
    if (ckpt_l) {
       ckpt_all = lWhat("%T(%I)", CK_Type, CK_name);
       ckpt_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET,
-                           NULL, NULL, ckpt_all, NULL, &state);
+                           NULL, NULL, ckpt_all, NULL, &state, true);
       ckpt_all = lFreeWhat(ckpt_all);
 
       if (alp) {
@@ -1011,7 +1011,7 @@ u_long32 show
    if (acl_l) {
       acl_all = lWhat("%T(ALL)", US_Type);
       acl_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
-                           NULL, NULL, acl_all, NULL, &state);
+                           NULL, NULL, acl_all, NULL, &state, true);
       acl_all = lFreeWhat(acl_all);
 
       if (alp) {
@@ -1029,7 +1029,7 @@ u_long32 show
    sc_what = lWhat("%T(ALL)", SC_Type);
 
    sc_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
-                        NULL, NULL, sc_what, NULL, &state);
+                        NULL, NULL, sc_what, NULL, &state, true);
    sc_what = lFreeWhat(sc_what);
 
    if (alp) {
@@ -1042,7 +1042,7 @@ u_long32 show
    */
    hgrp_what = lWhat("%T(ALL)", HGRP_Type);
    hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                        NULL, NULL, hgrp_what, NULL, &state);
+                        NULL, NULL, hgrp_what, NULL, &state, true);
    hgrp_what = lFreeWhat(hgrp_what);
 
    if (alp) {
@@ -1056,7 +1056,7 @@ u_long32 show
    gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                        NULL, gc_where, gc_what, &mal, &state);
+                        NULL, gc_where, gc_what, &mal, &state, true);
    gc_what = lFreeWhat(gc_what);
    gc_where = lFreeWhere(gc_where);
 

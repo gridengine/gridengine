@@ -77,6 +77,8 @@
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
 
+#include "sge_lock.h"
+
 /****** transaction handling implementation ************
  *
  * Well, one cannot realy the transaction implementation
@@ -2171,7 +2173,7 @@ static void* event_deliver_thread(void *anArg)
        */
       if (!Master_Control.is_flush) {
          u_long32 current_time = sge_get_gmt();
-         
+  
          /*
           * since the ack for a delivered event might take some time, we want to sleep
           * before delivering new events. If we would change this into a while loop,
@@ -2200,8 +2202,8 @@ static void* event_deliver_thread(void *anArg)
        * we are delivering events now, though we can reset the flush.
        */
       Master_Control.is_flush = false;
-      sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__,
-                       &Master_Control.cond_mutex);
+
+      sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 
       /* If the client array has changed, rebuild the indices. */
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
@@ -2637,6 +2639,8 @@ static void flush_events(lListElem *event_client, int interval)
 *     MT-NOTE: 'LOCK_EVENT_CLIENT_LST' locked! This is in accordance with
 *     MT-NOTE: the acquire/release protocol as defined by the Grid Engine
 *     MT-NOTE: Locking API.
+*     MT-NOTE: the method also locks the global lock. One has to make sure,
+*     MT-NOTE: that no calling method has that lock already.
 *
 *  SEE ALSO
 *     libs/lck/sge_lock.h
@@ -2650,6 +2654,8 @@ static void total_update(lListElem *event_client)
    SGE_ASSERT (event_client != NULL);
   
    blockEvents(event_client, sgeE_ALL_EVENTS, true);
+   
+   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    
    total_update_event(event_client, sgeE_ADMINHOST_LIST);
    total_update_event(event_client, sgeE_CALENDAR_LIST);
@@ -2677,6 +2683,8 @@ static void total_update(lListElem *event_client)
    total_update_event(event_client, sgeE_CUSER_LIST);
 #endif
 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+   
    DEXIT;
    return;
 } /* total_update() */
@@ -3002,8 +3010,10 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
       selection = subscription[type].where;
       fields = subscription[type].what;
 
+#if 0
       DPRINTF(("deliver event: %d with where filter=%s and what filter=%s\n", 
-               type, selection?"true":"false", fields?"true":"false"));
+               type, selection?"true":"false", fields?"true":"false")); 
+#endif               
 
       if (fields) {
          descr = getDescriptorL(subscription, lp, type);
@@ -3683,16 +3693,7 @@ if (id < 1) {
 static void unlock_client(u_long32 id)
 {
    DENTER(TOP_LAYER, "unlock_client");
-/* DEBUG */
-#if 1
-DPRINTF (("unlock_client(%ld)\n", id));
-   
-if (id < 1) {
-   DPRINTF(("Client ids less than 1 are not allowed!\n"));
-   abort();
-}
-#endif
-   
+
    if ((id < 1) ||
        (id > Master_Control.max_event_clients + EV_ID_FIRST_DYNAMIC - 1)) {
       return;

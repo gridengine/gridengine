@@ -182,8 +182,8 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
       *lpp = NULL;
 #endif
 
-   if ((id = sge_gdi_multi(&alp, SGE_GDI_SEND, target, cmd, lpp ? *lpp : NULL, 
-                              cp, enp, &mal, &state)) == -1) {
+   if ((id = sge_gdi_multi(&alp, SGE_GDI_SEND, target, cmd, lpp, 
+                              cp, enp, &mal, &state, true)) == -1) {
       PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DEXIT;
       return alp;
@@ -261,9 +261,10 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           (a complete list ob enum values and valid combinations
 *            can be found in sge_gdi.h)
 *
-*     lList* lp         - The caller can specify a list
+*     lList** lp         - The caller can specify a list
 *           containing the (sub)elements to add/modify/delete.
-*           sge_gdi_multi() doesn't free the passed list.
+*           sge_gdi_multi() doesn't free the passed list. If no
+*           copy is made, that pointer is set to NULL
 *
 *     lCondition* cp    - Points to a lCondition as it is build by 
 *           lWhere (refer to CULL documentation). This enumeration 
@@ -286,6 +287,9 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           variable must be initialized with STATE_GDI_MULTI_INIT 
 *           before a series of calls to sge_gdi_multi()
 *
+*     bool do_copy - indicates, if the passed in data needs to be copyed or not
+*
+*
 *  RESULT
 *     -1  - if an error occured
 *     (positive integer) - id which identifies the current gdi request.
@@ -302,7 +306,8 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *     MT-NOTES: sge_gdi_multi() is MT safe (assumptions)
 ******************************************************************************/
 int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
-                  lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state) 
+                  lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state,
+                  bool do_copy) 
 {
    lListElem *map = NULL;
    sge_gdi_request *request = NULL;
@@ -324,7 +329,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 
    operation = SGE_GDI_GET_OPERATION(cmd);
 
-   if (!lp && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET 
+   if ((!lp || !*lp) && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET 
        || operation == SGE_GDI_TRIGGER || 
        (operation == SGE_GDI_DEL && target == SGE_SHARETREE_LIST))) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT ));
@@ -336,7 +341,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       goto error;
    }
    
-
+   request->lp = NULL;
    request->op = cmd;
    request->target = target;
    request->version = GRM_GDI_VERSION;
@@ -348,13 +353,25 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       break;
 #endif
    case SGE_GDI_MOD:
-      if (enp) {
-         request->lp = lSelect("lp", lp, NULL, enp);
+      if (enp && lp != NULL) {
+         if (do_copy) {
+            request->lp = lSelect("lp", *lp, NULL, enp);
+         } else {
+            request->lp = *lp;
+            *lp = NULL;
+         }
          break;
       }
       /* no break */
    default:
-      request->lp = lCopyList("lp", lp);
+      if (lp != NULL) {
+         if (do_copy) {
+            request->lp = lCopyList("lp", *lp);
+         } else {
+               request->lp = *lp;
+               *lp = NULL;
+         }
+      }
       break;
    }
    if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK)) {

@@ -49,6 +49,7 @@
 #include "sge_persistence_qmaster.h"
 #include "sge_answer.h"
 #include "sge_lock.h"
+#include "sge_event_master.h"
 
 
 static int update_license_data(lListElem *hep, lList *lp_lic); 
@@ -84,14 +85,13 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    int ret = 0;
    u_long32 this_seqno, last_seqno;
    u_long32 rversion;
+   sge_pack_buffer pb;   
+   bool is_pb_used = false;
 
    DENTER(TOP_LAYER, "sge_c_report");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
    if (!lGetNumberOfElem(report_list)) {
       DPRINTF(("received empty report\n"));
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
@@ -99,11 +99,20 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    /* accept reports only from execd's */
    if (strcmp(prognames[EXECD], commproc)) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNCOMMPROC_S, commproc));
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
-  
+
+   /* do not process load reports from old execution daemons */
+   rversion = lGetUlong(lFirst(report_list), REP_version);
+   if (verify_request_version(NULL, rversion, rhost, commproc, id)) {
+      DEXIT;
+      return;
+   }
+   
+   this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
+   
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); 
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
@@ -112,18 +121,9 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
       return;
    }
 
-   /* do not process load reports from old execution daemons */
-   rversion = lGetUlong(lFirst(report_list), REP_version);
-   if (verify_request_version(NULL, rversion, rhost, commproc, id)) {
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      DEXIT;
-      return;
-   }
-
    /* prevent old reports being proceeded 
       frequent loggings of outdated reports can be an indication 
       of too high message traffic arriving at qmaster */ 
-   this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
    last_seqno = lGetUlong(hep, EH_report_seqno);
 
    if ((this_seqno < last_seqno && (last_seqno - this_seqno) <= 9000) &&
@@ -155,12 +155,10 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          break;
       case NUM_REP_REPORT_CONF:
 
-         if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0))
-         {
+         if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
 
-            if (host_notify_about_new_conf(hep) != 0)
-            {
+            if (host_notify_about_new_conf(hep) != 0) {
                ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
             }
          }
@@ -173,7 +171,6 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          ret = update_license_data(hep, lGetList(report, REP_list));
          if (ret) {
             ERROR((SGE_EVENT, MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I, ret));
-            break;
          }
 
          break;
@@ -181,32 +178,30 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
       case NUM_REP_REPORT_JOB:
 
          {
-            sge_pack_buffer pb;
-
+            is_pb_used = true;
             if(init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
                process_job_report(report, hep, rhost, commproc, &pb);
-
-               if (pb_filled(&pb)) {
-                  lList *alp = NULL;
-                  /* send all stuff packed during processing to execd */
-                  sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
-                  
-                  answer_list_output (&alp);
-               }
-               clear_packbuffer(&pb);
             }
          }
          break;
 
       default:   
          DPRINTF(("received invalid report type %ld\n", rep_type));
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-         DEXIT;
-         return;
       }
    } /* end for_each */
-
+   
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+  
+   if (is_pb_used) {
+      if (pb_filled(&pb)) {
+         lList *alp = NULL;
+         /* send all stuff packed during processing to execd */
+         sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
+         
+         answer_list_output (&alp);
+      }
+      clear_packbuffer(&pb);
+   }
    
    DEXIT;
    return;

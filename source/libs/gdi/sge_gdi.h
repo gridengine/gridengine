@@ -140,7 +140,7 @@ typedef struct {
 
 lList *sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
 
-int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state);
+int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state, bool do_copy);
 
 
 lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);

@@ -1,3 +1,7 @@
+CR-2002-08-29-0  Bugfix:    corrected mistake in writing in debug messages
+                            for localization
+                 Changed:   All binaries using i18n
+
 EB-2002-08-28-0  Bugfix:    protocol doing termin. on failure for tightly 
                             integr. par. job could be leaner
                  Issue:     #214

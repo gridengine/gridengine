@@ -150,7 +150,7 @@ char *localeDir
 
   DENTER(TOP_LAYER, "sge_init_language");
 
-  DPRINTF(("****** starting localisation procedure ... **********\n"));
+  DPRINTF(("****** starting localization procedure ... **********\n"));
 
 
   while ( stop <= 2 ) {
@@ -356,9 +356,9 @@ char *localeDir
   }
 
   if (success == TRUE) {
-    DPRINTF(("****** starting localisation procedure ... success **\n"));
+    DPRINTF(("****** starting localization procedure ... success **\n"));
   } else {
-    DPRINTF(("****** starting localisation procedure ... failed  **\n"));
+    DPRINTF(("****** starting localization procedure ... failed  **\n"));
   }
 
   DEXIT;

@@ -354,6 +354,44 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
 }
 
 
+
+
+#****** file_procedures/get_file_content() *************************************
+#  NAME
+#     get_file_content() -- read remote/local file with cat command
+#
+#  SYNOPSIS
+#     get_file_content { host user file { file_a "file_array" } } 
+#
+#  FUNCTION
+#     This procedure fills up the file_array with the content of the given
+#     file. file_array(0) contains the number of lines (starting from 1)
+#     file_array(1) - file_array($file_array(0)) contains the lines of the 
+#     file.
+#
+#  INPUTS
+#     host                    - hostname to connect
+#     user                    - user which calls the cat command
+#     file                    - full path name of file
+#     { file_a "file_array" } - array name
+#
+#*******************************************************************************
+proc get_file_content { host user file { file_a "file_array" } } {
+
+   upvar $file_a back
+
+   set program "cat"
+   set program_arg $file
+   set output [ start_remote_prog $host $user $program $program_arg]
+   set help [ split $output "\n" ]
+   set lcounter 0
+   foreach line $help {
+      incr lcounter 1
+      set back($lcounter) $line
+   }
+   set back(0) $lcounter
+}
+
 #                                                             max. column:     |
 #****** file_procedures/get_binary_path() ******
 # 

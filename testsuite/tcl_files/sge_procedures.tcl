@@ -162,6 +162,9 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGE_5.3beta2_1)      2
    set versions(SGEEE_5.3beta2_2)    2
    set versions(SGE_5.3beta2_2)      2
+   set versions(SGEEE_pre6.0_(Maintrunk))    2
+   set versions(SGE_pre6.0_(Maintrunk))      2
+
 
    
     
@@ -259,6 +262,167 @@ proc get_execd_spool_dir {host} {
 }
 
 
+#****** sge_procedures/check_messages_files() **********************************
+#  NAME
+#     check_messages_files() -- check messages files for errors and warnings
+#
+#  SYNOPSIS
+#     check_messages_files { } 
+#
+#  FUNCTION
+#     This procedure reads in all cluster messages files from qmaster and
+#     execd and returns the messages with errors or warnings.
+#
+#  RESULT
+#     string with parsed file output
+#
+#*******************************************************************************
+proc check_messages_files { } {
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER
+
+
+   set full_info ""
+
+   foreach host $CHECK_CORE_EXECD {
+      set status [ check_execd_messages $host 1] 
+      append full_info "\n=========================================\n"
+      append full_info "execd: $host\n"
+      append full_info "file : [check_execd_messages $host 2]\n"
+      append full_info "=========================================\n"
+      append full_info $status
+   }
+
+   set status [ check_qmaster_messages 1] 
+   append full_info "\n=========================================\n"
+   append full_info "qmaster: $CHECK_CORE_MASTER\n"
+   append full_info "file   : [check_qmaster_messages 2]\n"
+   append full_info "=========================================\n"
+   append full_info $status
+   return $full_info
+}
+
+
+
+#****** sge_procedures/check_qmaster_messages() ********************************
+#  NAME
+#     check_qmaster_messages() -- get qmaster messages file content
+#
+#  SYNOPSIS
+#     check_qmaster_messages { { show_mode 0 } } 
+#
+#  FUNCTION
+#     This procedure locates the qmaster messages file (using qconf -sconf) 
+#     and returns the output of cat.
+#
+#  INPUTS
+#     { show_mode 0 } - if not 0: return only warning and error lines
+#                       if     2: return only path to qmaster messages file
+#
+#  RESULT
+#     output string
+#
+#  SEE ALSO
+#     sge_procedures/check_execd_messages()
+#*******************************************************************************
+proc check_qmaster_messages { { show_mode 0 } } {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_CORE_MASTER
+
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program_arg "-sconf global" 
+   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+
+   set output [ split $output "\n" ]
+   set spool_dir "unkown"
+   foreach line $output {
+      if { [ string first "qmaster_spool_dir" $line ] >= 0 } {
+         set spool_dir [ lindex $line 1 ]
+      }
+   }
+   puts $CHECK_OUTPUT "\"$spool_dir\""
+
+   set messages_file "$spool_dir/messages"
+
+   if { $show_mode == 2 } {
+      return $messages_file
+   }   
+
+   set return_value ""
+
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages_file
+   for { set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+       set line $file_array($i)
+       if { ( [ string first "|E|" $line ] >= 0 )   || 
+            ( [ string first "|W|" $line ] >= 0 )   ||
+            ( $show_mode == 0               )  }   {
+            append return_value "line $i: $line\n"
+       }
+   }
+   return $return_value
+}
+
+#****** sge_procedures/check_execd_messages() **********************************
+#  NAME
+#     check_execd_messages() -- get execd messages file content
+#
+#  SYNOPSIS
+#     check_execd_messages { hostname { show_mode 0 } } 
+#
+#  FUNCTION
+#     This procedure locates the execd messages file (using qconf -sconf) 
+#     and returns the output of cat.
+#
+#  INPUTS
+#     hostname        - hostname of execd
+#     { show_mode 0 } - if not 0: return only warning and error lines
+#                       if     2: return only path to execd messages file
+#
+#  RESULT
+#     output string
+#
+#  SEE ALSO
+#     sge_procedures/check_qmaster_messages()
+#*******************************************************************************
+proc check_execd_messages { hostname { show_mode 0 } } {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT
+
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program_arg "-sconf $hostname" 
+   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+   if { [string first "execd_spool_dir" $output ] < 0 } {
+      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+      set program_arg "-sconf global" 
+      set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+   }
+
+   set output [ split $output "\n" ]
+   set spool_dir "unkown"
+   foreach line $output {
+      if { [ string first "execd_spool_dir" $line ] >= 0 } {
+         set spool_dir [ lindex $line 1 ]
+      }
+   }
+   puts $CHECK_OUTPUT "\"$spool_dir\""
+
+   set messages_file "$spool_dir/$hostname/messages"
+   if { $show_mode == 2 } {
+      return $messages_file
+   }
+
+   set return_value ""
+
+   get_file_content $hostname $CHECK_USER $messages_file
+   for { set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+       set line $file_array($i)
+       if { ( [ string first "|E|" $line ] >= 0 ) || 
+            ( [ string first "|W|" $line ] >= 0 ) ||
+            ( $show_mode == 0 )                }  {
+            append return_value "line $i: $line\n"
+       }
+   }
+   return $return_value
+} 
 
 
 #                                                             max. column:     |

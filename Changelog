@@ -1,3 +1,13 @@
+CR-2002-03-28-0  Testsuite: - new menu point: check messages files of
+                              execds and qmaster
+                            - new tcl file procedure: get_file_content()
+                            - new sge procedure: check_execd_messages()
+                            - new sge procedure: check_qmaster_messages()
+                            - new sge procedure: check_messages_files()
+                            - added new version: "SGEEE pre6.0 (Maintrunk)"
+                            - added new version: "SGE pre6.0 (Maintrunk)"
+
+
 JG-2002-03-28-0  Merge:     merged JG-2002-03-27-0 from V53_beta2_BRANCH
                  Testsuite: large_cluster test:
                             - fixed problems due to change of runlevel

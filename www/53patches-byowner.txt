@@ -175,7 +175,7 @@ SG       SG      2003-07-17-0       Optimized functional ticket computation (see
 SG       SG      2004-01-22-0       a user cannot be renamed anymore
 SG       SG      2004-01-26-0       qdel XXXX.YY- deleted the first task...
          SG      540                enabled output file names to have a ":" inside for qsub
-TOFIX    SG      544     4886017    qstat crashed, when used with the options -r -s z
+SG       SG      544     4886017    qstat crashed, when used with the options -r -s z
          SG      551     4969825    do not use job task with -hold_jid flag, qlater accepts only tasks when allowed
          SG      555     4886025    queue name was truncated to 10 chars
          SG      576     4886026    max_u_jobs could count rejected jobs as submitted

@@ -976,6 +976,7 @@ u_long32 show
             
             JB_checkpoint_name,
             JB_jid_predecessor_list,
+            JB_jid_request_list,
             JB_env_list,
             JB_priority,
             JB_jobshare,

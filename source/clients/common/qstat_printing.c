@@ -962,7 +962,6 @@ u_long32 group_opt
 
    for_each (jep, zombie_list) { 
       lList *z_ids = NULL;
-
       z_ids = lGetList(jep, JB_ja_z_ids);
       if (z_ids != NULL) {
          lListElem *ja_task = NULL;

@@ -1,3 +1,6 @@
+SG-2004-02-19-3: Bugfix:    fixed qstat -s z -r
+                 Changed:   qstat
+
 EB-2004-02-19-1: Bugfix:    It was possible to delete used cluster queues
                  Changed:   sge_qmaster
                  Review:    SG 

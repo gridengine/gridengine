@@ -75,7 +75,6 @@ static Widget ckpt_rest_command_w = 0;
 static Widget ckpt_clean_command_w = 0;
 static Widget ckpt_ckpt_dir_w = 0;
 static Widget ckpt_when_w = 0;
-static Widget ckpt_reschedule_w = 0;
 static Widget ckpt_signal_w = 0;
 static int add_mode = 0;
 
@@ -352,7 +351,6 @@ Widget parent
                            "ckpt_clean_command", &ckpt_clean_command_w,
                            "ckpt_ckpt_dir", &ckpt_ckpt_dir_w,
                            "ckpt_when", &ckpt_when_w,
-                           "ckpt_reschedule", &ckpt_reschedule_w,
                            "ckpt_signal", &ckpt_signal_w,
                            NULL);
 
@@ -558,7 +556,6 @@ lListElem *ckp
    StringConst ckpt_signal = NULL;
    int i;
    int state = 0;
-   int reschedule = 0;
 
    DENTER(GUI_LAYER, "qmonCkptSetAsk");
 
@@ -610,14 +607,12 @@ lListElem *ckp
       state |= 2;
    if (ckpt_when && strchr(ckpt_when, 'x'))
       state |= 4;
-
    if (ckpt_when && strchr(ckpt_when, 'r'))
-      reschedule = 1;
+      state |= 8;
 
    if (!state)
       state = 1;
    XmtChooserSetState(ckpt_when_w, state, False);
-   XmtChooserSetState(ckpt_reschedule_w, reschedule, False);
    
    ckpt_signal = (StringConst)lGetString(ckp, CK_signal);
    if (ckpt_signal)
@@ -641,7 +636,6 @@ static void qmonCkptResetAsk(void)
    XmtInputFieldSetString(ckpt_clean_command_w, "NONE");
    XmtInputFieldSetString(ckpt_ckpt_dir_w, "/tmp");
    XmtChooserSetState(ckpt_when_w, state, False);
-   XmtChooserSetState(ckpt_reschedule_w, 0, False);
    XmtInputFieldSetString(ckpt_signal_w, "NONE");
 
    DEXIT;
@@ -740,9 +734,6 @@ lListElem *ckp
       if (state & (1<<i))
          strcat(ckpt_when, ckpt_when_strings[i]);
    }
-   state = XmtChooserGetState(ckpt_reschedule_w);
-   if (state)
-      strcat(ckpt_when, "r");
    if (!ckpt_when || ckpt_when[0] == '\0') {
       qmonMessageShow(ckpt_ask_layout, True, "Checkpoint when required !");
       DEXIT;

@@ -109,7 +109,6 @@ Qmon*ckpt_ask_shell.ckpt_ask_layout.xmtChildren: \
                   ckpt_ckpt_dir, \
                   ckpt_signal; \
    XmtChooser     ckpt_interface, \
-                  ckpt_reschedule, \
                   ckpt_when; \
    XmPushButton   ckpt_ok, ckpt_cancel;
 
@@ -129,7 +128,6 @@ Qmon*ckpt_ask_layout.layout: \
          Fixed Caption tl "@{Checkpointing Directory}" ckpt_ckpt_dir \
          Fixed Caption tl "@{Checkpoint When}" ckpt_when \
          Fixed Caption tl "@{Checkpoint Signal}" ckpt_signal \
-         Fixed ckpt_reschedule \
       } \
       Fixed Shadowed Col { \
          Fixed ckpt_ok \
@@ -147,17 +145,13 @@ Qmon*ckpt_ask_layout.ckpt_interface.strings: \
    "@{CRAY-CKPT}", \
    "@{APPLICATION-LEVEL}"
 
-Qmon*ckpt_ask_layout.ckpt_reschedule.chooserType:  ChooserCheckBox
-Qmon*ckpt_ask_layout.ckpt_reschedule.orientation:  HORIZONTAL
-Qmon*ckpt_ask_layout.ckpt_reschedule.strings: \
-   "@{Reschedule Job}"
-
 Qmon*ckpt_ask_layout.ckpt_when.chooserType:  ChooserCheckBox
 Qmon*ckpt_ask_layout.ckpt_when.orientation:  HORIZONTAL
 Qmon*ckpt_ask_layout.ckpt_when.strings: \
    "@{On Shutdown of Execd}", \
    "@{On Min CPU Interval}", \
-   "@{On Job Suspend}"
+   "@{On Job Suspend}", \
+   "@{Reschedule Job}"
 
 Qmon*ckpt_ask_layout.ckpt_ok.labelString:     @{Ok}
 Qmon*ckpt_ask_layout.ckpt_cancel.labelString: @{Cancel}

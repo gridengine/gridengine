@@ -787,7 +787,11 @@ int queue_name_length
          ja_task_list = lFreeList(ja_task_list);
       }
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
+#if 0 /* EB: TODO: Review still has to be done EB-2004-10-19-0 */
          sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, (full_listing & QSTAT_DISPLAY_FULL) | (full_listing & QSTAT_DISPLAY_PENDING),
+#else
+         sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
+#endif
                                      0, 0, ehl, centry_list, pe_list, "", sge_ext, 
                                      group_opt, queue_name_length);
       }
@@ -1110,7 +1114,7 @@ int queue_name_length
       queue_name = NULL; 
    }
 
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = ((full_listing & QSTAT_DISPLAY_EXTENDED) == QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
    sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
    sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);

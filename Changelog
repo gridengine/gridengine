@@ -1,8 +1,15 @@
-JG-2004-10-19-0: Testsuite: Enhanced ssh support: Which ssh client to use is now 
-                            configured in the host configuration.
+EB-2004-10-19-0: Bugfix:    fix of EB-2004-09-15-0: qstat will show
+                            extended information for -pri -ext -urg
+                 Issue:     not necessary
+                 Bugtraq:   not necessary
+                 Review:    HAS TO BE DONE
+
+JG-2004-10-19-0: Testsuite: Enhanced ssh support: Which ssh client to use is 
+                            now configured in the host configuration.
 
 SG-2004-10-18-0: Enhancem.: - reworked the locking in qmaster and changed two
-                              not thread save code sections in the order processing
+                              not thread save code sections in the order 
+                              processing
                             - moved the persitence of the job sequ. number into
                               the timed event thread
                             - add a copy date flag to the GDI-Multi request
@@ -10,7 +17,8 @@ SG-2004-10-18-0: Enhancem.: - reworked the locking in qmaster and changed two
                  Review:    EB
 
 CR-2004-10-18-0: Cleanup:   - code cleanup of commlib
-                            - removed unused function parameters in list functions
+                            - removed unused function parameters in list 
+                              functions
                             - preparatory work for commlib SSL framework
                  Review:    AA
                  Changed:   commlib utilib 
@@ -22,8 +30,8 @@ AH-2004-10-18-0: Bugfix:    meaningless job error state diagnosis text in
                  Issue:     1299
                  Bugtraq:   6180529
 
-JG-2004-10-15-0: Testsuite: Fixed csp installation, installation of SGE(EE) 5.3, 
-                            package generation for SGEEE 5.3.
+JG-2004-10-15-0: Testsuite: Fixed csp installation, installation of 
+                            SGE(EE) 5.3, package generation for SGEEE 5.3.
 
 JG-2004-10-14-0: Testsuite: Testsuite now can create tar packages after 
                             compiling by setting the package_type parameter to 

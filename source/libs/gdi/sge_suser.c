@@ -130,7 +130,6 @@ void suser_increase_job_counter(lListElem *suser)
 {
    if (suser != NULL) {
       u_long32 jobs = lGetUlong(suser, SU_jobs) + 1;
-
       lSetUlong(suser, SU_jobs, jobs);
    }
 }
@@ -149,15 +148,20 @@ void suser_increase_job_counter(lListElem *suser)
 *     lListElem *suser - SU_Type list 
 *
 *  RESULT
-*     void - NONE
+*     0, if the job counter was decreased
+*     1, in case of an error (meaning the job counter was allready 0) 
 ******************************************************************************/
-void suser_decrease_job_counter(lListElem *suser)
+int suser_decrease_job_counter(lListElem *suser)
 {
    if (suser != NULL) {
-      u_long32 jobs = lGetUlong(suser, SU_jobs) - 1;
-      
-      lSetUlong(suser, SU_jobs, jobs);
+      u_long32 jobs = lGetUlong(suser, SU_jobs);
+      if(jobs>0){
+         jobs -= 1;
+         lSetUlong(suser, SU_jobs, jobs);
+         return 0;
+      }
    }
+   return 1;
 }
 
 /****** gdi/suser/suser_get_job_counter() *************************************
@@ -185,6 +189,60 @@ u_long32 suser_get_job_counter(lListElem *suser)
    }
    return ret;
 }
+
+/****** gdi/suser/suser_check_new_job() ************************************
+*  NAME
+*     suser_check_new_job() -- checks, if a job can be registered
+*
+*  SYNOPSIS
+*     int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs, 
+*                                int force_registration) 
+*
+*  FUNCTION
+*     This function checks whether a new "job" would exceed the maxium
+*     number of allowed jobs per user ("max_u_jobs"). JB_owner of "job" 
+*     is the username which will be used by this function to compare
+*     the current number of registered jobs with "max_u_jobs". If the
+*     limit would be exceeded than the function will return 1 otherwise 0.
+*
+*  INPUTS
+*     const lListElem *job   - JB_Type element 
+*     u_long32 max_u_jobs    - maximum number of allowed jobs per user 
+*     int force_registration - force job registration 
+*
+*  RESULT
+*     int - 1 => limit would be exceeded
+*           0 => otherwise
+******************************************************************************/
+int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs,
+                           int force_registration)
+{
+   const char *submit_user = NULL;
+   lListElem *suser = NULL;
+   int ret = 1;
+
+   DENTER(TOP_LAYER, "suser_check_new_job");
+   submit_user = lGetString(job, JB_owner);
+   suser = suser_list_add(&Master_SUser_List, NULL, submit_user);
+   if (suser != NULL) {
+      if(max_u_jobs == 0 || force_registration || 
+         max_u_jobs > suser_get_job_counter(suser))
+         ret = 0;
+      else
+         ret = 1;
+/* 
+      if (max_u_jobs > 0 && !force_registration &&
+          max_u_jobs <= suser_get_job_counter(suser)) {
+         ret = 1;
+      } else {
+         ret = 0;
+      }
+*/
+   }      
+   DEXIT;
+   return ret;
+}
+
 
 /****** gdi/suser/suser_register_new_job() ************************************
 *  NAME
@@ -216,26 +274,55 @@ u_long32 suser_get_job_counter(lListElem *suser)
 ******************************************************************************/
 int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
                            int force_registration)
-{
-   const char *submit_user = NULL;
+{   
+   int ret;
    lListElem *suser = NULL;
-   int ret = 1;
+   const char *submit_user = NULL;
 
    DENTER(TOP_LAYER, "suser_register_new_job");
    submit_user = lGetString(job, JB_owner);
-   suser = suser_list_add(&Master_SUser_List, NULL, submit_user);
-   if (suser != NULL) {
-      if (max_u_jobs > 0 && !force_registration &&
-          max_u_jobs <= suser_get_job_counter(suser)) {
-         ret = 1;
-      } else {
-         suser_increase_job_counter(suser);
-         ret = 0;
-      }
-   }      
+   suser = suser_list_find(Master_SUser_List, submit_user);
+
+   ret = suser_check_new_job(job, max_u_jobs, force_registration);
+   if( ret == 0){ 
+      suser_increase_job_counter(suser);
+   }
+
    DEXIT;
    return ret;
 }
+
+/****** gdi/suser/suser_get_job_count(const lListElem *job) **************************************
+*  NAME
+*     suser_job_count() - number of jobs for a given user
+*
+*  SYNOPSIS
+*     void suser_job_count(const lListElem *job) 
+*
+*  FUNCTION
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*
+*  RESULT
+*     number of jobs in the system
+******************************************************************************/
+int suser_job_count(const lListElem *job)
+{
+   const char *submit_user = NULL;
+   lListElem *suser = NULL;
+   int ret = 0;    
+
+   DENTER(TOP_LAYER, "suser_unregister_job");
+   submit_user = lGetString(job, JB_owner);  
+   suser = suser_list_find(Master_SUser_List, submit_user);
+   if (suser != NULL) {
+      ret = suser_get_job_counter(suser);
+   }
+   DEXIT;
+   return ret;
+}
+
 
 /****** gdi/suser/suser_unregister_job() **************************************
 *  NAME
@@ -251,18 +338,22 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
 *     const lListElem *job - JB_Type element 
 *
 *  RESULT
-*     void - NONE
+*     0, everything went fine
+*     1, the user was found, but no jobs were registered for the user
+*     2, user not found 
 ******************************************************************************/
-void suser_unregister_job(const lListElem *job)
+int suser_unregister_job(const lListElem *job)
 {
    const char *submit_user = NULL;
-   lListElem *suser = NULL;    
+   lListElem *suser = NULL;
+   int ret = 2;    
 
    DENTER(TOP_LAYER, "suser_unregister_job");
    submit_user = lGetString(job, JB_owner);  
    suser = suser_list_find(Master_SUser_List, submit_user);
    if (suser != NULL) {
-      suser_decrease_job_counter(suser);
+      ret = suser_decrease_job_counter(suser);
    }
    DEXIT;
+   return ret;
 }

@@ -222,12 +222,17 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetUlong(jep, JB_gid, gid);
    
    /* check conf.max_u_user */
-   if (suser_register_new_job(jep, conf.max_u_jobs, 0)) {
-      INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, 
-            u32c(conf.max_u_jobs)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, 0);
-      DEXIT;
-      return STATUS_NOTOK_DOAGAIN;
+   { 
+      int ret = suser_check_new_job(jep, conf.max_u_jobs, 0);
+      printf("status: %d\n", ret);
+      if (  (lGetUlong(jep, JB_verify_suitable_queues)!=JUST_VERIFY) 
+         && (ret != 0)) {
+         INFO(( SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, u32c(conf.max_u_jobs), 
+                                                       u32c(suser_job_count(jep)) ));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, 0);
+         DEXIT;
+         return STATUS_NOTOK_DOAGAIN;
+      }
    }
 
    if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
@@ -743,7 +748,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
+   /** increase user counter */
+   suser_register_new_job(jep, conf.max_u_jobs, 0);
 
    /* generate an sgeE_JOB_ADD event and queue it into the event list */
    sge_add_job_event(sgeE_JOB_ADD, jep, 0);

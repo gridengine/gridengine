@@ -1,3 +1,12 @@
+SG-2003-07-02-1: Bugfix:    max jobs allowed per user
+                 Bugtrag:   4886026
+                 Issue:     576
+                 Review:
+                 Changed:   qmaster
+                            It is not sure, if the bug and this fix are realy 
+                            related, but they generate the same behavior. 
+                              
+
 JG-2003-07-02-0: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment
                             of tightly integrated tasks
                  Bugtraq:   4885906

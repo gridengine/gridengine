@@ -1160,8 +1160,7 @@ for i in $ARCH; do
                   :
                elif [ $DSTARCH = darwin ]; then
                   (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
-                   ln -s $lib.$shlibext $lib.0.$shlibext; \
-                   ln -s $lib.$shlibext $libname $lib.$shlibext)
+                   ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
                else
                   (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
                fi

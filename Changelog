@@ -1,3 +1,7 @@
+AD-2004-03-12-0: Bugfix:    Did fix broken symlinks for DARWIN.
+                 Changed:   distinst
+                 Review:    AS
+
 MD-2004-03-12-1: Bugfix:    - added clear at the end of installation
                             - local fs check for irix65 was broken
                  Chaged:    inst_sge

@@ -60,9 +60,9 @@ set LARGE_CLUSTER_HOST_PREFIX       "lchost_"
 set LARGE_CLUSTER_HOSTS_PER_HOST    100
 set LARGE_CLUSTER_QUEUES_PER_HOST   2
 set LARGE_CLUSTER_SLOTS_PER_QUEUE   1
-set LARGE_CLUSTER_JOB_SIZES         "500 1000 1500 2000 25*1-100 10*1-300 7*1-500 4*1-2000:2"
+set LARGE_CLUSTER_JOB_SIZES         "500 1000 1500 2000 25*1-100 10*1-300 7*1-500 4*1-1000 4*1-2000:2"
 set LARGE_CLUSTER_JOB_DURATION      60
-set LARGE_CLUSTER_POLICIES_PROJECTS "100 200 300 400 500"
+set LARGE_CLUSTER_POLICIES_PROJECTS "100 200 300 400 500 600 700 800 900 1000"
 set LARGE_CLUSTER_POLICIES_JOBS     1000
 
 # define a level initialization procedure:
@@ -78,8 +78,8 @@ set check_highest_level   [expr [llength $CHECK_CORE_EXECD] - 1]
 #set LARGE_CLUSTER_JOB_DURATION      20
 #set LARGE_CLUSTER_POLICIES_PROJECTS "10 20"
 #set LARGE_CLUSTER_POLICIES_JOBS     100
-#set LARGE_CLUSTER_SLOTS_PER_QUEUE   8
-#set check_highest_level   0
+#set LARGE_CLUSTER_SLOTS_PER_QUEUE   2
+#set check_highest_level   1
 
 for {set i 0} {$i <= $check_highest_level} {incr i} {
    set check_description($i) "check performance with [expr $i * $LARGE_CLUSTER_HOSTS_PER_HOST] queues"
@@ -165,6 +165,7 @@ proc large_cluster_parse_cpu {s_cpu} {
 
 proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
    global CHECK_OUTPUT LARGE_CLUSTER_JOB_DURATION CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_HOST
+   global CHECK_PRODUCT_TYPE
    
    # parse array job info
    set l_size [split $size "*"]
@@ -190,16 +191,21 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
       set args ""
    }
 
-   append args "-o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh $LARGE_CLUSTER_JOB_DURATION"
+   append args "-o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
 
    # submit jobs
    puts $CHECK_OUTPUT "submitting $size jobs with a duration of $LARGE_CLUSTER_JOB_DURATION s each"
    set jobs_submitted 0
    while {$jobs_submitted < $num_jobs} {
       foreach project $projects {
-         set prj_args "-P $project $args"
+         if {[string compare $CHECK_PRODUCT_TYPE geee] == 0} {
+            set prj_args "-P $project"
+         } else {
+            set prj_args ""
+         }
          foreach user $users {
-            submit_job $prj_args 1 30 $CHECK_HOST $user
+            set runtime [expr $LARGE_CLUSTER_JOB_DURATION -5 + $jobs_submitted % 11]
+            submit_job "$prj_args $args $runtime" 1 30 $CHECK_HOST $user
             incr jobs_submitted
             if {$jobs_submitted >= $num_jobs} {
                return
@@ -272,18 +278,20 @@ proc large_cluster_monitoring {tail_id first_sched_var total_sched_var index} {
                   set orders [lindex $sched_info 8]
 
                   if {$first == 1} {
-                     set first_sched(time,$index)    $time
-                     set first_sched(fast,$index)    $fast
-                     set first_sched(complex,$index) $complex
-                     set first_sched(orders,$index)  $orders
+                     if {[expr $fast + $complex] > 0} {
+                        set first_sched(time,$index)    $time
+                        set first_sched(fast,$index)    $fast
+                        set first_sched(complex,$index) $complex
+                        set first_sched(orders,$index)  $orders
 
-                     set total_sched(count,$index)   1
-                     set total_sched(time,$index)    $time
-                     set total_sched(fast,$index)    $fast
-                     set total_sched(complex,$index) $complex
-                     set total_sched(orders,$index)  $orders
+                        set total_sched(count,$index)   1
+                        set total_sched(time,$index)    $time
+                        set total_sched(fast,$index)    $fast
+                        set total_sched(complex,$index) $complex
+                        set total_sched(orders,$index)  $orders
 
-                     set first 0
+                        set first 0
+                     }
                   } else {
                      incr total_sched(count,$index)   1
                      incr total_sched(time,$index)    $time
@@ -333,6 +341,8 @@ proc large_cluster_write_file {type target content {mode a}} {
 
 proc large_cluster_write_statistics {type index start_time end_time start_cpu end_cpu first_sched total_sched} {
    global CHECK_OUTPUT CHECK_ACT_LEVEL LARGE_CLUSTER_HOSTS_PER_HOST
+   global check_highest_level
+
    upvar $start_time st
    upvar $end_time et
    upvar $start_cpu sc
@@ -384,6 +394,10 @@ proc large_cluster_write_statistics {type index start_time end_time start_cpu en
       append line "\t[expr $ts(time,$i) * 1000.0 / $ts(orders,$i)]"
    }
    large_cluster_write_file $type avg_orders $line
+
+   if {$CHECK_ACT_LEVEL == $check_highest_level} {
+      large_cluster_create_html
+   }
 }
 
 proc large_cluster_jobs {} {
@@ -495,18 +509,21 @@ proc large_cluster_setup_sharetree {size} {
 
       lappend project_list $project
 
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astnode" "/$project=[expr $i + 10]"} result
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astnode" "/$project/$CHECK_USER=30"} result
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astnode" "/$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER=70"} result
-
+      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astnode" "/$project=[expr $i + 10],/$project/$CHECK_USER=30,/$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER=70"} result
       puts $CHECK_OUTPUT $result
    }
 }
 
 proc large_cluster_sharetree {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global CHECK_PRODUCT_TYPE
    global LARGE_CLUSTER_POLICIES_PROJECTS LARGE_CLUSTER_POLICIES_JOBS LARGE_CLUSTER_JOB_DURATION  
    global project_list
+
+   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
+      set_error -3 "not available for sge system"
+      return
+   }
 
    if {[info exists start_time]} {
       unset start_time
@@ -568,6 +585,7 @@ proc large_cluster_sharetree {} {
 
 proc large_cluster_setup {} {
    global CHECK_OUTPUT CHECK_HOST CHECK_ACTUAL_TEST_PATH CHECK_ACT_LEVEL
+   global CHECK_PRODUCT_TYPE
    global LARGE_CLUSTER_JOB_SIZES LARGE_CLUSTER_POLICIES_PROJECTS
    global qmaster_spool_dir pids
 
@@ -591,11 +609,13 @@ proc large_cluster_setup {} {
          }
          large_cluster_write_file job $target $content w
 
-         set content hosts
-         foreach i $LARGE_CLUSTER_POLICIES_PROJECTS {
-            append content "\t$i"
+         if {[string compare $CHECK_PRODUCT_TYPE geee] == 0} {
+            set content hosts
+            foreach i $LARGE_CLUSTER_POLICIES_PROJECTS {
+               append content "\t$i"
+            }
+            large_cluster_write_file stree $target $content w
          }
-         large_cluster_write_file stree $target $content w
       }
    }
 
@@ -651,7 +671,9 @@ proc large_cluster_setup {} {
    }
 
    set new_schedd_config(schedule_interval) "0:1:0"
-   set new_schedd_config(weight_tickets_share) 10000
+   if {[string compare $CHECK_PRODUCT_TYPE geee] == 0} {
+      set new_schedd_config(weight_tickets_share) 10000
+   }
    set_schedd_config new_schedd_config
   
    # create queues
@@ -778,9 +800,9 @@ proc large_cluster_remove_default {} {
 }
 
 proc large_cluster_cleanup {} {
-   global CHECK_ACT_PATH CHECK_CHECKTREE_ROOT CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-   global LARGE_CLUSTER_HOST_PREFIX
-   global check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system
+   global CHECK_ACTUAL_TEST_PATH CHECK_CHECKTREE_ROOT CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACT_LEVEL
+   global LARGE_CLUSTER_HOST_PREFIX CHECK_PRODUCT_TYPE 
+   global check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system check_highest_level
 
 
    # reinit system
@@ -795,11 +817,13 @@ proc large_cluster_cleanup {} {
    # restore cluster configuration
    puts $CHECK_OUTPUT "reset scheduler configuration"
    set new_schedd_config(schedule_interval) "0:0:15"
-   set new_schedd_config(weight_tickets_share) 0
+   if {[string compare $CHECK_PRODUCT_TYPE geee] == 0} {
+      set new_schedd_config(weight_tickets_share) 0
+   }
    set_schedd_config new_schedd_config
 
    # backup check variables
-   foreach var "check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system CHECK_ACT_PATH" {
+   foreach var "check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system CHECK_ACTUAL_TEST_PATH check_highest_level" {
       upvar 0 $var value
       if {[array exists value]} {
          foreach i [array names value] {
@@ -817,7 +841,7 @@ proc large_cluster_cleanup {} {
    run_test $CHECK_ACT_PATH 1
 
    # restore check variables
-   foreach var "check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system CHECK_ACT_PATH" {
+   foreach var "check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system CHECK_ACTUAL_TEST_PATH check_highest_level" {
       upvar 0 $var variable
       upvar 0 large_cluster_backup_${var} value
       if {[array exists value]} {
@@ -840,6 +864,245 @@ proc large_cluster_cleanup {} {
    }
    puts ""
 
+   if {$CHECK_ACT_LEVEL == $check_highest_level} {
+      large_cluster_create_html
+   }
+
    set_error 0 "ok"
 }
+
+#=========================================
+# create HTML report
+#=========================================
+
+proc large_cluster_create_chart {report_dir html title check data gnuplot} {
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR
+
+   puts $CHECK_OUTPUT "creating chart for check $check, datatype $data"
+   set datafile    "$CHECK_PROTOCOL_DIR/gnuplot.dat"
+   set commandfile "$CHECK_PROTOCOL_DIR/gnuplot.cmd"
+   set giffile     "large_cluster_${check}_${data}.gif"
+
+   # dump data file
+   set input [open "$CHECK_PROTOCOL_DIR/large_cluster_${check}_${data}.txt" r]
+   set output [open $datafile w]
+
+   # labels for x axis
+   gets $input line
+   set labels [lrange $line 1 end]
+   set xtics "("
+   set counter 1
+   foreach label $labels {
+      if {$counter == 1} {
+         append xtics "\"$label\" $counter"
+      } else {
+         append xtics ",\"$label\" $counter"
+      }
+      incr counter
+   }
+   append xtics ")"
+
+   set hostcounts {}
+   while {[gets $input line] > 0} {
+      lappend hostcounts [lindex $line 0]
+      set counter 1
+      foreach sample [lrange $line 1 end] {
+         puts $output "$counter $sample"
+         incr counter
+      }
+      puts $output "\n"
+   }
+
+   close $input
+   close $output
+
+   # dump command file
+
+   switch -exact $check {
+      job {
+         set xlabel "jobs"
+      } 
+      stree {
+         set xlabel "size of sharetree (n * 3)"
+      }
+      default {
+         set xlabel "unknown"
+      }
+   }
+
+   switch -exact $data {
+      avg_jobs {
+         set ylabel "time \[ms\]"
+      }
+      avg_orders {
+         set ylabel "time \[ms\]"
+      }
+      cpu_qmaster {
+         set ylabel "cpu time \[s\]"
+      }
+      cpu_schedd {
+         set ylabel "cpu time \[s\]"
+      }
+      first_jobs {
+         set ylabel "time \[s\]"
+      }
+      runtime {
+         set ylabel "time \[s\]"
+      }
+      default {
+         set ylabel "unknown"
+      }
+   }
+   
+   set f [open "$commandfile" w]
+   puts $f "set terminal gif"
+   puts $f "set output '$report_dir/$giffile'"
+   puts $f "set xtics $xtics"
+   puts $f "set xlabel \"$xlabel\""
+   puts $f "set ylabel \"$ylabel\""
+   puts $f "set title \"$title"
+   set counter 0
+   puts -nonewline $f "plot "
+   foreach hostcount $hostcounts {
+      if {$counter > 0} {
+         puts -nonewline $f ", "
+      }
+      puts -nonewline $f "'$datafile' index $counter title \"$hostcount\" with lines" 
+      incr counter
+   }
+   puts $f ""
+   close $f
+  
+   # call gnuplot
+   set returncode [catch {exec $gnuplot $commandfile} output]
+   if {$returncode != 0} {
+      add_proc_error large_cluster_create_chart -1 "calling gnuplot failed: $output"
+   }
+  
+   # cleanup
+   file delete $datafile
+   file delete $commandfile
+
+   # write html
+   puts $html "<P><IMG SRC=\"$giffile\" NAME=\"$title\" ALIGN=LEFT BORDER=0><BR CLEAR=LEFT><BR><BR></P>"
+}
+
+proc large_cluster_dump_data {html check data} {
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR
+
+   puts $CHECK_OUTPUT "dumping data for check $check, datatype $data"
+
+   set input [open "$CHECK_PROTOCOL_DIR/large_cluster_${check}_${data}.txt" r]
+   gets $input line
+
+   puts $html "<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=3>"
+   puts $html "<THEAD>"
+   puts $html "<TR>"
+   foreach data $line {
+      puts $html "<TH> $data </TH>"
+   }
+   puts $html "</TR>"
+   puts $html "</THEAD>"
+   while {[gets $input line] > 0} {
+      puts $html "<TR>"
+      foreach data $line {
+         puts $html "<TD> <P ALIGN=RIGHT> [format "%.3f" $data] </P> </TD>"
+      }
+      puts $html "</TR>"
+   }
+   puts $html "</TABLE>"
+
+   close $input
+}
+
+proc large_cluster_create_html {} {
+   global CHECK_HOST CHECK_PROTOCOL_DIR CHECK_OUTPUT CHECK_PRODUCT_TYPE
+
+   # check prerequisits
+   set gnuplot [get_binary_path $CHECK_HOST "gnuplot"]
+
+   set report_dir "$CHECK_PROTOCOL_DIR/HTML"
+   if {![file exists $report_dir]} {
+      file mkdir $report_dir
+   }
+
+   # create HTML file
+   set output [open "$report_dir/large_cluster.html" w]
+   puts $output "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">"
+   puts $output "<HTML>"
+   puts $output "<HEAD>"
+   puts $output "	<META HTTP-EQUIV=\"CONTENT-TYPE\" CONTENT=\"text/html; charset=iso-8859-1\">"
+   puts $output "	<TITLE>Testsuite Results - Large Cluster Performance and Scalability</TITLE>"
+   puts $output "	<META NAME=\"GENERATOR\" CONTENT=\"Grid Engine Testsuite\">"
+   puts $output "</HEAD>"
+   puts $output "<BODY>"
+   puts $output "<H1>Large Cluster Performance and Scalability</H1>"
+
+   # create charts
+   set check_types {job}
+   if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
+      lappend check_types stree
+   }
+
+   foreach check_type $check_types {
+      set checktitle "dependent on number of hosts"
+
+      switch -exact -- $check_type {
+         job {
+            puts $CHECK_OUTPUT "---> job"
+            set checktitle "$checktitle and number of jobs"
+            puts $output "<H2>Dependent on number of hosts and number of jobs</H2>"
+            puts $output "<P>... description ...</P>"
+         }
+         stree {
+            puts $CHECK_OUTPUT "---> stree"
+            set checktitle "$checktitle and size of a sharetree"
+            puts $output "<H2>Dependent on number of hosts and the size of a sharetree</H2>"
+            puts $output "<P>... description ...</P>"
+         }
+         default {
+            puts $CHECK_OUTPUT "---> default"
+            set title  "unknown test"
+            puts $output "<H2>Unknown check</H2>"
+         }
+      }
+   
+      foreach data "avg_jobs avg_orders cpu_qmaster cpu_schedd first_jobs runtime" {
+         switch -exact $data {
+            avg_jobs {
+               set title "average time to schedule a job $checktitle"
+            }
+            avg_orders {
+               set title "average time to create an order $checktitle"
+            }
+            cpu_qmaster {
+               set title "cpu time consumed by qmaster $checktitle"
+            }
+            cpu_schedd {
+               set title "cpu time consumed by scheduler $checktitle"
+            }   
+            first_jobs {
+               set title "time for first scheduling $checktitle"
+            }
+            runtime {
+               set title "total runtime $checktitle"
+            }
+            default {
+               set title "unknown data of $checktitle"
+            }
+         }
+         puts $output "<H3> $title </H3>"
+
+         large_cluster_dump_data $output $check_type $data
+         large_cluster_create_chart $report_dir $output $title $check_type $data $gnuplot
+      }
+   }
+
+   puts $output "</BODY>"
+   puts $output "</HTML>"
+   close $output
+
+   set_error 0 "ok"
+}
+
 

@@ -178,6 +178,8 @@ SetArchBin()
       ARCHBIN=LINUXIA64_24
    elif  [ $i = lx26-ia64 ]; then 
       ARCHBIN=LINUXIA64_26
+   elif  [ $i = lx26-ppc ]; then
+      ARCHBIN=LINUXPPC_26
    elif  [ $i = lx22-sparc ]; then 
       ARCHBIN=SLINUX_22
    elif  [ $i = lx24-sparc ]; then 
@@ -261,6 +263,7 @@ ArchTable()
    echo "lx26-amd64            AMD Linux v2.6 kernel"
    echo "lx24-ia64             IA64 Linux v2.4 kernel"
    echo "lx26-ia64             IA64 Linux v2.6 kernel"
+   echo "lx26-ppc              PPC Linux v2.6 kernel"
    echo "lx22-sparc            SPARC Linux v2.2 kernel"
    echo "lx24-sparc            SPARC Linux v2.4 kernel"
    echo "lx26-sparc            SPARC Linux v2.6 kernel"

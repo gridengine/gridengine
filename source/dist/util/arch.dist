@@ -163,6 +163,9 @@ Linux)
    ia64)
      lxmachine=ia64
      ;;
+   ppc*)
+     lxmachine=ppc
+     ;;
    *)
      lxmachine=UNSUPPORTED-linux
    esac

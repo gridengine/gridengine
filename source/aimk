@@ -158,6 +158,11 @@ case "lx24-ia64":
    set COMPILE_ARCH = LINUXIA64_24
    set TARGET_BITS = TARGET_64BIT
    breaksw
+case "lx26-ppc":
+   set BUILDARCH = LINUXPPC
+   set COMPILE_ARCH = LINUXPPC_26
+   set TARGET_BITS = TARGET_32BIT
+   breaksw
 case "lx26-ia64":               
    set BUILDARCH = LINUXIA64
    set COMPILE_ARCH = LINUXIA64_26
@@ -1273,6 +1278,7 @@ case ALINUX:
 case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
+case LINUXPPC:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1

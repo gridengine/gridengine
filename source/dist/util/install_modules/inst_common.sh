@@ -842,7 +842,7 @@ AddSGEStartUpScript()
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
-      S95NAME=S95sgeexecd
+      S95NAME=S96sgeexecd
       DAEMON_NAME="execd"
    fi
 

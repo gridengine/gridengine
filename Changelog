@@ -1,3 +1,8 @@
+MD-2004-03-23-0: Bugfix:    fixed rc scripts boot order
+                            rc script output if master didn't start
+                 Issue:     784, 876
+                 Changed:   inst_sge, rc template
+
 JG-2004-03-23-1: Bugfix:    fixed "Read from uninitialized" errors.
                  Review:    CR
 

@@ -119,15 +119,31 @@ Shutdown()
       if [ "$?" = 0 ]; then
          kill -TERM $pid
       fi
+
       $utilbin_dir/checkprog $pid $name > /dev/null
       if [ "$?" = 0 ]; then
          sleep 30
-         kill  $pid
-      fi
-      $utilbin_dir/checkprog $pid $name > /dev/null
-      if [ "$?" = 0 ]; then
-         sleep 30
-         kill -9 $pid
+         $utilbin_dir/checkprog $pid $name > /dev/null
+         if [ "$?" = 0 ]; then
+            kill  $pid
+         else
+            return
+         fi
+
+         $utilbin_dir/checkprog $pid $name > /dev/null
+         if [ "$?" = 0 ]; then
+            sleep 30
+            $utilbin_dir/checkprog $pid $name > /dev/null
+            if [ "$?" = 0 ]; then
+               kill -9 $pid
+            else
+               return
+            fi
+         else
+            return
+         fi
+      else
+         return
       fi
 
    fi
@@ -277,6 +293,24 @@ GetPathToUtilbin()
    echo $base
 }
 
+#---------------------------------------------------------------------------
+# CheckRunningQmaster
+# checks, if sge_qmaster is running
+# In error case the sge_qmaster didn't start, silently
+#
+CheckRunningQmaster()
+{
+   act_pid=`cat $qmaster_spool_dir/qmaster.pid`
+
+   $utilbin_dir/checkprog $act_pid sge_qmaster > /dev/null
+   
+   if [ "$?" = 0 ]; then
+      echo
+      echo "sge_qmaster didn't start!"
+      echo "Please check the messages file"
+      echo
+   fi
+}
 
 #---------------------------------------------------------------------------
 usage()
@@ -387,11 +421,17 @@ if [ "$startup" = true ]; then
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
       $bin_dir/sge_qmaster
-
+      CheckRunningQmaster
       echo "   starting sge_schedd"
       $bin_dir/sge_schedd
+   elif [ $qmaster = true -a $qmaster_host = false ]; then
+      echo
+      echo "sge_qmaster didn't start!"
+      echo "This is not a qmaster host!"
+      echo "Please, check your act_qmaster file!" 
+      echo
    fi
-
+      
    if [ $shadowd = true -a $shadow_host = true ]; then
       start_shadowd=false
       pidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid

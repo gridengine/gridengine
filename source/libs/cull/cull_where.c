@@ -725,7 +725,11 @@ va_list *app
    case CHAR:
       if (cp->operand.cmp.mt != lCharT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBECHART);
+#if USING_GCC_2_96
+      cp->operand.cmp.val.c = va_arg(*app, int);
+#else 
       cp->operand.cmp.val.c = va_arg(*app, lChar);
+#endif
       break;
 
    case REF:

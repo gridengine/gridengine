@@ -1285,7 +1285,11 @@ int main(int argc, char *argv[]) {
 
    /* find out the framework type to use */
    if ( option_ssl == 0 && option_tcp == 0 ) {
-      sge_setup_paths(sge_get_default_cell(), NULL);
+      char buffer[2*1024];
+      dstring bw;
+      sge_dstring_init(&bw, buffer, sizeof(buffer)); 
+
+      sge_setup_paths(sge_get_default_cell(), &bw);
       if (sge_bootstrap(NULL) != true) {
          fprintf(stderr,"please use option -ssl or -tcp to bypass bootstrap file read\n");
          exit(1);

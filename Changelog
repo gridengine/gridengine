@@ -1,3 +1,8 @@
+CR-2005-03-10-0: Bugfix:    - fixed thread signal behaviour for application threads
+                              calling cl_commlib_receive_message() at the same time.
+                            - fixed qping failure when no sge environment is sourced
+                 Review:    MD
+
 JG-2005-03-09-0: Enhancem.: More fine grained profiling information in qmaster.
                             Profiling for the spooling of jobs scripts.
                  Review:    MD

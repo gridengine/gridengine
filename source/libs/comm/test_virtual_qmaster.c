@@ -61,6 +61,13 @@ cl_raw_list_t* thread_list = NULL;
 cl_com_endpoint_t* event_client_array[MAX_EVENT_CLIENTS];
 
 void *my_message_thread(void *t_conf);
+
+void do_nothing(void) {
+   char help[255];
+
+   sprintf(help,"hallo");
+}
+
 void *my_event_thread(void *t_conf);
 
 
@@ -151,7 +158,10 @@ extern int main(int argc, char** argv)
 
   printf("create application threads ...\n");
   cl_thread_list_setup(&thread_list,"thread list");
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread", 1, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 1", 100, my_message_thread);
+#if 1
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 2", 101, my_message_thread);
+#endif
   cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread);
 
   gettimeofday(&last,NULL);
@@ -257,8 +267,9 @@ void *my_message_thread(void *t_conf) {
 
       cl_thread_func_testcancel(thread_config);
 
+      cl_commlib_trigger(handle);
       ret_val = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
-                                           1, 0,                       /* syncron, response_mid */
+                                           0, 0,                       /* syncron, response_mid */
                                            &message, &sender );
       if (ret_val == CL_RETVAL_OK) {
          rcv_messages++;
@@ -298,6 +309,15 @@ void *my_message_thread(void *t_conf) {
                            sender->comp_host, sender->comp_name, sender->comp_id);
 #endif
 
+#if 1
+           /* simulate a work for the gdi thread */
+           {
+              int d;
+              for (d=0;d<18000;d++) {
+                 do_nothing();
+              }
+            }
+#endif
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
                                       (cl_byte_t*) data , 3000,

@@ -60,6 +60,80 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p);
 static void general_communication_error(int cl_err);
 static int gdi_general_communication_error = CL_RETVAL_OK;
 
+
+/****** sge_any_request/sge_dump_message_tag() *************************************
+*  NAME
+*     sge_dump_message_tag() -- get tag name string
+*
+*  SYNOPSIS
+*     const char* sge_dump_message_tag(int tag) 
+*
+*  FUNCTION
+*     This is a function used for getting a printable string output for the
+*     different message tags.
+*     (Useful for debugging)
+*
+*  INPUTS
+*     int tag - tag value
+*
+*  RESULT
+*     const char* - name of tag
+*
+*  NOTES
+*     MT-NOTE: sge_dump_message_tag() is MT safe 
+*******************************************************************************/
+const char* sge_dump_message_tag(int tag) {
+   switch (tag) {
+      case TAG_NONE:
+         return "TAG_NONE";
+      case TAG_OLD_REQUEST:
+         return "TAG_OLD_REQUEST";
+      case TAG_GDI_REQUEST:
+         return "TAG_GDI_REQUEST";
+      case TAG_ACK_REQUEST:
+         return "TAG_ACK_REQUEST";
+      case TAG_REPORT_REQUEST:
+         return "TAG_REPORT_REQUEST";
+      case TAG_FINISH_REQUEST:
+         return "TAG_FINISH_REQUEST";
+      case TAG_JOB_EXECUTION:
+         return "TAG_JOB_EXECUTION";
+      case TAG_SLAVE_ALLOW:
+         return "TAG_SLAVE_ALLOW";
+      case TAG_CHANGE_TICKET:
+         return "TAG_CHANGE_TICKET";
+      case TAG_SIGJOB:
+         return "TAG_SIGJOB";
+      case TAG_SIGQUEUE:
+         return "TAG_SIGQUEUE";
+      case TAG_KILL_EXECD:
+         return "TAG_KILL_EXECD";
+      case TAG_NEW_FEATURES:
+         return "TAG_NEW_FEATURES";
+      case TAG_GET_NEW_CONF:
+         return "TAG_GET_NEW_CONF";
+      case TAG_JOB_REPORT:
+         return "TAG_JOB_REPORT";
+      case TAG_QSTD_QSTAT:
+         return "TAG_QSTD_QSTAT";
+      case TAG_TASK_EXIT:
+         return "TAG_TASK_EXIT";
+      case TAG_TASK_TID:
+         return "TAG_TASK_TID";
+      case TAG_EVENT_CLIENT_EXIT:
+         return "TAG_EVENT_CLIENT_EXIT";
+      case TAG_SEC_ANNOUNCE:
+         return "TAG_SEC_ANNOUNCE";
+      case TAG_SEC_RESPOND:
+         return "TAG_SEC_RESPOND";
+      case TAG_SEC_ERROR:
+         return "TAG_SEC_ERROR";
+      default:
+         return "TAG_NOT_DEFINED";
+   }
+   return "TAG_NOT_DEFINED";
+}
+
 static int gdi_log_flush_func(cl_raw_list_t* list_p) {
    int ret_val;
    cl_log_list_elem_t* elem = NULL;

@@ -1,3 +1,6 @@
+CR-2004-08-17-2: Enhancem.:  - added new function to transmute the gdi tag
+                               id into a string: sge_dump_message_tag()
+
 CR-2004-08-17-1: Enhancem.:  - added comment about flushing job reports
                                when jobs are started in execd.
 

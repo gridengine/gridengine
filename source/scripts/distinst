@@ -757,6 +757,7 @@ if [ $instcommon = true ]; then
       echo "Installing README, INSTALL ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
       Execute cp ../doc/INSTALL $DEST_SGE_ROOT/doc
+      Execute cp ../doc/UPGRADE-2-53 $DEST_SGE_ROOT/doc/UPGRADE
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
    fi
 

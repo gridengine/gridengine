@@ -862,7 +862,7 @@ int sub_command
    jid_str = lGetString(idep, ID_str);
 
    /* Did we get a valid jobid? */
-   if ((!all_users_flag) && (!all_jobs_flag && (strcmp(jid_str, "0") != 0)))
+   if (/*(!all_users_flag) &&*/ (!all_jobs_flag && (strcmp(jid_str, "0") != 0)))
       jid_flag = 1;
    else
       jid_flag = 0;

@@ -4228,26 +4228,6 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       log_state_set_log_level(saved_logginglevel);
    }
 
-
-   /* 
-    * Order Jobs in descending order according to tickets and 
-    * then job number 
-    */
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
-
-   sgeee_sort_jobs(&pending_jobs);
-
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
-
-   if (prof_is_active()) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
-
-      log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: job sorting took %.3f s\n",
-            prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);
-   }
-
    /* somebody might have played with the system clock. */
    if (now < past)
       past = now;

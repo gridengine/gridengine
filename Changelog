@@ -1,3 +1,8 @@
+SG-2004-04-29-0: Bugfix:    qdel -u "*" jid deleted all jobs of all users.
+                 Changed:   qmaster
+                 Review:    JG
+                 Issue:     1000
+
 CR-2004-04-29-0: Enhancm.:  Added more help output to qping application
 
 JG-2004-04-28-2: Testsuite: Fixed tests bugs/issuezilla/423 and 

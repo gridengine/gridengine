@@ -260,6 +260,9 @@ typedef char stringT[MAX_STRING_SIZE];
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R
 #define HAS_GETGRGID_R
+#endif
+
+#if !defined(AIX42)
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
 #endif

@@ -160,6 +160,19 @@ int sge_is_file(const char *name)
    return (sge_get_file_type(name) == FILE_TYPE_FILE);
 }
 
+int sge_is_executable(const char *name) 
+{
+   SGE_STRUCT_STAT stat_buffer;
+   int ret = SGE_STAT(name, &stat_buffer);
+   if (!ret) { 
+      return (stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+   } else {
+      return 0;
+   }
+}
+
+
+
 static file_type_t sge_get_file_type(const char *name)
 {                    
    SGE_STRUCT_STAT stat_buffer;

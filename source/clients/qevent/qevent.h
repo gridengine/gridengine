@@ -1,5 +1,5 @@
-#ifndef __SGE_DIR_H
-#define __SGE_DIR_H
+#ifndef __QEVENT_H
+#define __QEVENT_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,14 +32,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int recursive_rmdir(const char *cp, char *err_str); 
-
-int sge_is_directory(const char *name);
-
-int sge_is_file(const char *name);
-
-int sge_is_executable(const char *name); 
+#include "sge_dstring.h"
 
 
-#endif /* __SGE_DIR_H */
+#define MAX_TRIGGER_SCRIPTS 10
+#define QEVENT_JB_END 1
+#define QEVENT_JB_TASK_END 2
+
+typedef struct qevent_options {
+  int          help_option;
+  int          testsuite_option;
+  int          trigger_option_count;
+  int          trigger_option_events[MAX_TRIGGER_SCRIPTS];
+  const char*  trigger_option_scripts[MAX_TRIGGER_SCRIPTS];
+  dstring      *error_message;
+} qevent_options;
+
+#endif /* __QEVENT_H */
 

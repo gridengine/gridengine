@@ -58,12 +58,24 @@ mkdir -p $MANBUILDDIR
 # Take CVSROOT from current CVS direcotry
 #
 setenv CVSROOT `cat CVS/Root`
+
+setenv CVSBRANCH ""
+if ( $KVMAN == 1 ) then
+   if ( -f CVS/Tag ) then
+      setenv CVSBRANCH `sed 's/^T//' CVS/Tag`
+      echo "==> Using CVS branch: ${CVSBRANCH}"
+      setenv CVSBRANCH "-r $CVSBRANCH"
+   else
+      setenv CVSBRANCH ""
+   endif
+endif
+
 cd $MANBUILDDIR
 
 if ( $KVMAN == 1 ) then
    set MANSRCDIR = $MANBUILDDIR/MANSRC
    echo "Checking out manpage source"
-   cvs -q co -P -kv -d MANSRC gridengine/doc/man
+   cvs -q co $CVSBRANCH -P -kv -d MANSRC gridengine/doc/man
 else
    set MANSRCDIR = $1/../doc/man
 endif

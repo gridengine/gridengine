@@ -178,7 +178,7 @@ char *rhost
 
    sge_event_spool(alpp, 0, sgeE_CALENDAR_DEL, 
                    0, 0, cal_name, 
-                   NULL, NULL, NULL, true);
+                   NULL, NULL, NULL, true, true);
    lDelElemStr(&Master_Calendar_List, CAL_name, cal_name);
 
 #ifdef QIDL

@@ -354,7 +354,7 @@ int user        /* =1 user, =0 project */
    /* delete user or project file */
    if (!sge_event_spool(alpp, 0, user ? sgeE_USER_DEL : sgeE_PROJECT_DEL,
                         0, 0, name, 
-                        NULL, NULL, NULL, true)) {
+                        NULL, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EDISK;
    }

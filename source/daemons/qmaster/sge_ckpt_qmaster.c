@@ -380,7 +380,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    /* remove ckpt file 1st */
    if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL,
                             0, 0, ckpt_name,
-                            NULL, NULL, NULL, true)) {
+                            NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -417,8 +417,10 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
       if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
          lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+
+         /* event has already been sent in sge_change_queue_version */
+         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
+                      lGetString(qep, QU_qname), qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue \"%s\" because %s"
             " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
@@ -435,8 +437,10 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
           && (qep = queue_list_locate(Master_Queue_List, q_name))) {
          lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+
+         /* event has already been sent in sge_change_queue_version */
+         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
+                      lGetString(qep, QU_qname), qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue \"%s\" because %s"
                " \"%s\" has changed\n", q_name, obj_name, ckpt_name));

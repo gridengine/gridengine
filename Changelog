@@ -1,3 +1,7 @@
+JG-2003-05-06-0  Bugfix:    array tasks were not deleted (bug introduced in 
+                            change JG-2003-04-29-0), some cleanup.
+                 Review:    EB
+
 EB-2003-05-05-0  Bugfix:    qhost -F broken
                  Issue:     530
 

@@ -382,7 +382,7 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
             if (ret) {
                if (sge_event_spool(answer_list, 0, sgeE_HGROUP_DEL, 
                                    0, 0, name, 
-                                   NULL, NULL, NULL, true)) {
+                                   NULL, NULL, NULL, true, true)) {
       
                   /*
                    * Let's remove the object => Success!

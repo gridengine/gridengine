@@ -100,8 +100,9 @@ char *rhost
       old_SC_weight_tickets_override);
    lAppendElem(*confl, lCopyElem(confp));
 
-   if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 0, 0, NULL, confp, NULL, NULL,
-                        true)) {
+   if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 
+                        0, 0, NULL, 
+                        confp, NULL, NULL, true, true)) {
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

@@ -711,7 +711,7 @@ sge_commit_flags_t commit_flags
          lList *answer_list = NULL;
          sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL,
-                         jep, jatep, NULL, true);
+                         jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
       }
       break;
@@ -841,7 +841,7 @@ sge_commit_flags_t commit_flags
          lList *answer_list = NULL;
          sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL,
-                         jep, jatep, NULL, true);
+                         jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
       }
       break;
@@ -920,7 +920,7 @@ sge_commit_flags_t commit_flags
          lList *answer_list = NULL;
          sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL,
-                         jep, jatep, NULL, true);
+                         jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
       }
       break;

@@ -81,6 +81,7 @@
 #include "sched_conf.h"
 
 #include "msg_common.h"
+#include "spool/msg_spoollib.h"
 #include "spool/classic/msg_spoollib_classic.h"
 
 #include "spool/classic/sge_spooling_classic.h"
@@ -568,6 +569,11 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
          break;
    }
 
@@ -718,6 +724,10 @@ spool_classic_default_read_func(lList **answer_list,
          ep = cull_read_in_host_group(HGROUP_DIR, key, 1, 0, NULL, NULL); 
          break;
       default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
          break;
    }
 
@@ -838,6 +848,8 @@ spool_classic_default_write_func(lList **answer_list,
          write_host(1, 2, object, EH_name, NULL);
          break;
       case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
          {
             u_long32 job_id, ja_task_id;
             char *pe_task_id;
@@ -979,6 +991,11 @@ spool_classic_default_write_func(lList **answer_list,
          write_host_group(1, 2, object);
          break;
       default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
          break;
    }
 
@@ -1123,12 +1140,16 @@ spool_classic_default_delete_func(lList **answer_list,
          ret = sge_unlink(HGROUP_DIR, key) == 0;
          break;
       default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
          break;
    }
 
    DEXIT;
    return ret;
 }
-
 
 

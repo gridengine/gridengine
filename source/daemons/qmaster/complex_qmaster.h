@@ -36,8 +36,6 @@
 
 #include "sge_c_gdi.h"
 
-int read_all_complexes(void);
-
 int sge_del_cmplx(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 
 int complex_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);

@@ -279,7 +279,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    /* remove host file */
    if (!sge_event_spool(alpp, 0, sgeE_PE_DEL,
                         0, 0, pe, 
-                        NULL, NULL, NULL, true)) {
+                        NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;

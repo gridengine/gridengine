@@ -354,7 +354,7 @@ lList **answer
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
             sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                             job_id, task_id, NULL,
-                            jep, jatep, NULL, true);
+                            jep, jatep, NULL, true, true);
             if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
             } else {
@@ -415,8 +415,11 @@ int isowner
    lSetUlong(qep, QU_state, state);
 
    sge_change_queue_version(qep, 0, 0);
-   if (!spool_write_object(answer, spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
+
+   /* event has already been sent in sge_change_queue_version */
+   if (!sge_event_spool(answer, 0, sgeE_QUEUE_MOD,
+                        0, 0, lGetString(qep, QU_qname), 
+                        qep, NULL, NULL, false, true)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname))); 
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -468,8 +471,11 @@ int isowner
    lSetUlong(qep, QU_state, state);
 
    sge_change_queue_version(qep, 0, 0);
-   if (!spool_write_object(answer, spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
+
+   /* event has already been sent in sge_change_queue_version */
+   if (!sge_event_spool(answer, 0, sgeE_QUEUE_MOD,
+                        0, 0, lGetString(qep, QU_qname), 
+                        qep, NULL, NULL, false, true)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -522,8 +528,11 @@ int isowner
    lSetUlong(qep, QU_state, state);
 
    sge_change_queue_version(qep, 0, 0);
-   if (!spool_write_object(answer, spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
+
+   /* event has already been sent in sge_change_queue_version */
+   if (!sge_event_spool(answer, 0, sgeE_QUEUE_MOD,
+                        0, 0, lGetString(qep, QU_qname), 
+                        qep, NULL, NULL, false, true)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -917,7 +926,7 @@ char *host
 
       sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
                       jobid, jataskid, NULL,
-                      jep, jatep, NULL, true);
+                      jep, jatep, NULL, true, true);
    }
    else {   /* job wasn't suspended yet */
       if (queueep) {
@@ -950,7 +959,7 @@ char *host
          lSetUlong(jatep, JAT_state, state);
          sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL, 
-                         jep, jatep, NULL, true);
+                         jep, jatep, NULL, true, true);
       }
       else {
          if (!i) {
@@ -967,7 +976,7 @@ char *host
             lSetUlong(jatep, JAT_state, state);
             sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
                             jobid, jataskid, NULL,
-                            jep, jatep, NULL, true);
+                            jep, jatep, NULL, true, true);
          }
       }
    }
@@ -1010,7 +1019,7 @@ char *host
          lSetUlong(jatep, JAT_state, state);
          sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL,
-                         jep, jatep, NULL, true);
+                         jep, jatep, NULL, true, true);
          DEXIT;
          return;
       } 
@@ -1095,7 +1104,7 @@ char *host
          lSetUlong(jatep, JAT_state, state);
          sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL,
-                         jep, jatep, NULL, true);
+                         jep, jatep, NULL, true, true);
       }
       else {
          /* set job state only if communication works */
@@ -1113,7 +1122,7 @@ char *host
             lSetUlong(jatep, JAT_state, state);
             sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                             jobid, jataskid, NULL,
-                            jep, jatep, NULL, true);
+                            jep, jatep, NULL, true, true);
          }
       }
    }

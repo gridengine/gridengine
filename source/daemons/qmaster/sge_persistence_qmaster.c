@@ -52,7 +52,7 @@
 *     sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
 *                     u_long32 intkey1, u_long32 intkey2, const char *strkey, 
 *                     lListElem *object, lListElem *sub_object1, 
-*                     lListElem *sub_object2, bool spool) 
+*                     lListElem *sub_object2, bool send_event, bool spool) 
 *
 *  FUNCTION
 *     Spools (writes or deletes) an object.
@@ -71,6 +71,7 @@
 *     lListElem *object      - the object to spool and send
 *     lListElem *sub_object1 - optionally a sub object (ja_task)
 *     lListElem *sub_object2 - optionally a sub sub object (pe_task)
+*     bool send_event        - shall we send an event, or only spool?
 *     bool spool             - shall we spool or only send an event?
 *
 *  RESULT
@@ -90,7 +91,7 @@ bool
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 
                 lListElem *object, lListElem *sub_object1, 
-                lListElem *sub_object2, bool spool)
+                lListElem *sub_object2, bool send_event, bool spool)
 {
    bool ret = true;
   
@@ -323,6 +324,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_MANAGER_DEL:
          case sgeE_OPERATOR_DEL:
          case sgeE_PE_DEL:
+         case sgeE_PROJECT_DEL:
          case sgeE_QUEUE_DEL:
          case sgeE_SUBMITHOST_DEL:
          case sgeE_USER_DEL:
@@ -355,7 +357,10 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
 
    /* send event only, if spooling succeeded */
    if (ret) {
-      sge_add_event(NULL, timestamp, event, intkey1, intkey2, strkey, element);
+      if (send_event) {
+         sge_add_event(NULL, timestamp, event, intkey1, intkey2, strkey, 
+                       element);
+      }
 
       /* clear the changed bits */
       lListElem_clear_changed_info(object);

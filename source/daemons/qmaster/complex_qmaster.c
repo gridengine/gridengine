@@ -451,7 +451,7 @@ char *rhost
    /* If this is the qmaster we delete the complex from disk */
    sge_event_spool(alpp, 0, sgeE_COMPLEX_DEL, 
                    0, 0, cmplxname, 
-                   NULL, NULL, NULL, true);
+                   NULL, NULL, NULL, true, true);
 
    /* change versions of corresponding queues */ 
    sge_change_queue_version_complex(cmplxname);
@@ -486,14 +486,17 @@ const char *cmplx_name
    for_each(ep, Master_Queue_List) {
 
       sge_change_queue_version(ep, 0, 0);
-
-      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
-                      lGetString(ep, QU_qname), ep, NULL, NULL, true);
+      
+      /* event has already been sent in sge_change_queue_version */
+      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
+                      0, 0, lGetString(ep, QU_qname), 
+                      ep, NULL, NULL, false, true);
    }
 
    for_each(ep, Master_Exechost_List) {
-      sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 0, 0, 
-                      lGetHost(ep, EH_name), ep, NULL, NULL, false);
+      sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
+                      0, 0, lGetHost(ep, EH_name), 
+                      ep, NULL, NULL, true, false);
    }
 
    answer_list_output(&answer_list);

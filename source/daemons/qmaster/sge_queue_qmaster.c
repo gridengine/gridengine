@@ -858,9 +858,10 @@ int sub_command
                
    /* write on file */
    if (sge_change_queue_version(new_queue, add, 1) ||
+      /* event has already been sent in sge_change_queue_version */
       !sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
                        0, 0, lGetString(new_queue, QU_qname),
-                       new_queue, NULL, NULL, true)) {
+                       new_queue, NULL, NULL, false, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -989,14 +990,20 @@ int sub_command
             sge_event_spool(alpp, 0, sgeE_JATASK_MOD,
                             lGetUlong(job, JB_job_number), 
                             lGetUlong(ja_task, JAT_task_number), NULL,
-                            job, ja_task, NULL, true);
+                            job, ja_task, NULL, true, true);
          }
       }
    }         
 
    /* send an additional event concerning this queue to schedd */
    /* the first one is sent whithin sge_change_queue_version() */
-   sge_add_queue_event(sgeE_QUEUE_MOD, new_queue);
+   /* JG: TODO: we should also spool here - e.g. a new queue's state has
+    *           been cleared since first spooling.
+    *           Perhaps simply spool later?
+    */
+   sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
+                   0, 0, lGetString(new_queue, QU_qname),
+                   new_queue, NULL, NULL, true, false);
 
    INFO((SGE_EVENT, add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
       MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, qname, MSG_OBJ_QUEUE));
@@ -1166,7 +1173,7 @@ char *rhost
 
    sge_event_spool(alpp, 0, sgeE_QUEUE_DEL, 
                    0, 0, qname, 
-                   NULL, NULL, NULL, true);
+                   NULL, NULL, NULL, true, true);
 
    unsuspend_all(sos_list_before, 0);
    lFreeList(sos_list_before); 

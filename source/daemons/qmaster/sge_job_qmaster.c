@@ -642,7 +642,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    if (!sge_event_spool(alpp, 0, sgeE_JOB_ADD, 
                         job_number, 0, NULL,
-                        jep, NULL, NULL, true)) {
+                        jep, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;

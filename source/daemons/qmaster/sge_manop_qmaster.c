@@ -125,7 +125,7 @@ DTRACE;
    if(!sge_event_spool(alpp, 0, target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : 
                                                              sgeE_OPERATOR_ADD,
                        0, 0, manop_name, 
-                       added, NULL, NULL, true)) {
+                       added, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
@@ -225,7 +225,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    if (!sge_event_spool(alpp, 0, target == SGE_MANAGER_LIST ? 
                                  sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
                            0, 0, manop_name,
-                           NULL, NULL, NULL, true)) {
+                           NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    

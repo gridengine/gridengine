@@ -313,7 +313,7 @@ sge_pack_buffer *pb
                        if (new_task) {
                           sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
                                           jobid, jataskid, pe_task_id_str, 
-                                          jep, jatep, petask, true);
+                                          jep, jatep, petask, true, true);
                        } else {
                           /* do not spool usage of pe task (?) */
                           sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
@@ -494,7 +494,7 @@ sge_pack_buffer *pb
                         /* finished pe task will not be spooled (?) */
                         sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
                                         jobid, jataskid, pe_task_id_str, 
-                                        jep, jatep, petask, false);
+                                        jep, jatep, petask, true, false);
                         answer_list_output(&answer_list);
                      }
 
@@ -532,7 +532,7 @@ sge_pack_buffer *pb
                               /* usage container will not be spooled (?) */
                               sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
                                             jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
-                                            jep, jatep, container, false);
+                                            jep, jatep, container, true, false);
                               answer_list_output(&answer_list);
                            } else {
                               pe_task_sum_past_usage(container, petask);
@@ -549,7 +549,7 @@ sge_pack_buffer *pb
                            lList *answer_list = NULL;
                            sge_event_spool(&answer_list, 0, sgeE_PETASK_DEL, 
                                           jobid, jataskid, pe_task_id_str, 
-                                          NULL, NULL, NULL, true);
+                                          NULL, NULL, NULL, true, true);
                            answer_list_output(&answer_list);
                         }
                         lRemoveElem(lGetList(jatep, JAT_task_list), petask);

@@ -143,7 +143,7 @@ char *rhost
 
    sge_event_spool(alpp, 0, sgeE_CONFIG_DEL,
                    0, 0, config_name,
-                   NULL, NULL, NULL, true);
+                   NULL, NULL, NULL, true, true);
     
    /* now remove it from our internal list*/
    lRemoveElem(Master_Config_List, ep);
@@ -293,7 +293,8 @@ char *rhost
    }
 
    sge_event_spool(alpp, 0, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 
-                   0, 0, config_name, ep, NULL, NULL, true);
+                   0, 0, config_name, 
+                   ep, NULL, NULL, true, true);
 
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
       sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);

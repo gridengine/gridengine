@@ -149,7 +149,7 @@ char *rhost
 
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
                         0, 0, userset_name, 
-                        ep, NULL, NULL, true)) {
+                        ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }   
@@ -233,7 +233,7 @@ char *rhost
 
    sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
                    0, 0, userset_name, 
-                   NULL, NULL, NULL, true);
+                   NULL, NULL, NULL, true, true);
 
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);
@@ -331,7 +331,7 @@ char *rhost
    /* update on file */
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
                         0, 0, userset_name, 
-                        ep, NULL, NULL, true)) {
+                        ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EDISK;
    }
@@ -360,15 +360,18 @@ const char *acl_name
 ) {
    lListElem *qep;
 
-   DENTER(TOP_LAYER, "sge_change_queue_version");
+   DENTER(TOP_LAYER, "sge_change_queue_version_acl");
 
    for_each(qep, Master_Queue_List) {
       if (lGetElemStr(lGetList(qep, QU_acl), US_name, acl_name) ||
           lGetElemStr(lGetList(qep, QU_xacl), US_name, acl_name)) {
          lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+      
+         /* event has already been sent in sge_change_queue_version */
+         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
+                         0, 0, lGetString(qep, QU_qname), 
+                         qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue "SFQ" because acl "
                        SFQ" changed\n", lGetString(qep, QU_qname), acl_name));

@@ -989,7 +989,8 @@ lList **topp  /* ticket orders ptr ptr */
                sge_event_spool(&answer_list, 0,
                                or_type == ORT_update_user_usage ? 
                                           sgeE_USER_MOD:sgeE_PROJECT_MOD,
-                               0, 0, up_name, up, NULL, NULL, true);
+                               0, 0, up_name, 
+                               up, NULL, NULL, true, true);
                answer_list_output(&answer_list);
             }
          }
@@ -1081,7 +1082,7 @@ lList **topp  /* ticket orders ptr ptr */
                lList *answer_list = NULL;
                sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
                                jobid, task_number, NULL, 
-                               jep, jatp, NULL, true);
+                               jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
             }
 
@@ -1133,7 +1134,7 @@ lList **topp  /* ticket orders ptr ptr */
                lList *answer_list = NULL;
                sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
                                jobid, task_number, NULL,
-                               jep, jatp, NULL, true);
+                               jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
             }
             /* update queues time stamp in schedd */

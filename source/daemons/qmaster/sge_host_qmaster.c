@@ -318,7 +318,7 @@ u_long32 target
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_ADMINHOST_DEL, 
                             0, 0, host, 
-                            NULL, NULL, NULL, true);
+                            NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
          break;
@@ -327,7 +327,7 @@ u_long32 target
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_EXECHOST_DEL, 
                             0, 0, host, 
-                            NULL, NULL, NULL, true);
+                            NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
          break;
@@ -336,7 +336,7 @@ u_long32 target
             lList *answer_list = NULL;
             sge_event_spool(&answer_list, 0, sgeE_SUBMITHOST_DEL, 
                             0, 0, host, 
-                            NULL, NULL, NULL, true);
+                            NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
          break;
@@ -776,7 +776,7 @@ lList *lp
       lList *answer_list = NULL;
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, SGE_GLOBAL_NAME,
-                      global_ep, NULL, NULL, false);
+                      global_ep, NULL, NULL, true, false);
       answer_list_output(&answer_list);
    }
 
@@ -788,7 +788,7 @@ lList *lp
       lList *answer_list = NULL;
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(host_ep, EH_name), 
-                      host_ep, NULL, NULL, statics_changed);
+                      host_ep, NULL, NULL, true, statics_changed);
       answer_list_output(&answer_list);
    }
 
@@ -1004,9 +1004,11 @@ const char *exechost_name
       for_each(qep, Master_Queue_List) {   
          lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
-         lListElem_clear_changed_info(qep);
+
+         /* event has already been sent in sge_change_queue_version */
+         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
+                         0, 0, lGetString(qep, QU_qname), 
+                         qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
       }
    } else {
@@ -1016,9 +1018,11 @@ const char *exechost_name
          DPRINTF(("increasing version of queue "SFQ" because exec host "
                   SFQ" changed\n", lGetString(qep, QU_qname), exechost_name));
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
-         lListElem_clear_changed_info(qep);
+
+         /* event has already been sent in sge_change_queue_version */
+         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
+                         0, 0, lGetString(qep, QU_qname), 
+                         qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
       }
@@ -1311,12 +1315,14 @@ u_long32 target) {
       if (queue_set_initial_state(qep, rhost)) {
          lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(&answer_list, spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
-         lListElem_clear_changed_info(qep);
+
+         /* event has already been sent in sge_change_queue_version */
+         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
+                         0, 0, lGetString(qep, QU_qname), 
+                         qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
       } 
-      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, rhost, &iterator); 
+      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, rhost, &iterator);
    }
 
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 

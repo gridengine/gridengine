@@ -187,11 +187,12 @@ extern int main(int argc, char** argv)
                exist when handle is active (but data is only updated every second) */
             (int)handle->statistic->unread_message_count,
             (int)handle->statistic->unsend_message_count );
+     fflush(stdout);
 
+     cl_thread_wait_for_event(cl_thread_get_thread_config(),1,0);
      if ( interval >= time_interval ) {
         break;
      }
-     cl_thread_wait_for_event(cl_thread_get_thread_config(),1,0);
   }
   cl_com_ignore_timeouts(CL_TRUE);
 
@@ -204,7 +205,7 @@ extern int main(int argc, char** argv)
 
   printf("shutdown commlib ...\n");
   cl_com_cleanup_commlib();
-
+  fflush(stdout);
   printf("main done\n");
   return 0;
 }

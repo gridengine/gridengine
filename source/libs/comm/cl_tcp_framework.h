@@ -40,7 +40,6 @@
 
 
 
-int cl_com_tcp_free_com_private(cl_com_connection_t* connection);   /* CR check */ 
 void cl_dump_tcp_private(cl_com_connection_t* connection); 
 
 int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd);
@@ -61,8 +60,9 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection,cl_com
 int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connection); /* CR check */
 
 /* connection establish help functions */
-int cl_com_tcp_connection_complete_request(cl_com_connection_t* connection, long timeout,unsigned long only_once, cl_select_method_t select_mode );  /* CR check */
 int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read);
+int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
+int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_read);
 
 
 

@@ -76,7 +76,6 @@ int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct 
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy,int* system_error_val );
 char* cl_com_get_h_error_string(int h_error);
 int cl_com_compare_hosts(char* host1, char* host2);
-int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t method, char* domain);
 int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domain_name);
 
 int cl_com_free_handle_statistic(cl_com_handle_statistic_t** statistic);
@@ -110,6 +109,12 @@ int cl_com_setup_message(cl_com_message_t** message, cl_com_connection_t* connec
 int cl_com_create_message(cl_com_message_t** message);
 int cl_com_free_message(cl_com_message_t** message);
 
+int cl_com_create_connection(cl_com_connection_t** connection);
+/*
+int cl_com_free_connection(cl_com_connection_t** connection);
+   use cl_com_close_connection();
+*/
+
 /* after this line are the main functions used by lib user */
 /* ======================================================= */
 
@@ -129,6 +134,8 @@ int cl_com_send_message(cl_com_connection_t* connection,
                               unsigned long* only_one_write);          /* CR check */
 
 int cl_com_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read);
+int cl_com_read(cl_framework_t framework, long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long* only_one_read);
+int cl_com_write(cl_framework_t framework, long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
 
 int cl_com_receive_message(cl_com_connection_t* connection, 
                                             int timeout_time, 
@@ -139,6 +146,13 @@ int cl_com_receive_message(cl_com_connection_t* connection,
 
 /* This functions need service connection pointer = cl_com_connection_request_handler_setup */
 /* ======================================================================================== */
+
+int cl_com_connection_get_connect_port(cl_com_connection_t* connection, int* port);
+int cl_com_connection_set_connect_port(cl_com_connection_t* connection, int port);
+
+int cl_com_connection_get_service_port(cl_com_connection_t* connection, int* port);
+int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd);
+
 
 /* setup service */
 int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,
@@ -159,6 +173,9 @@ int cl_com_open_connection_request_handler(cl_framework_t framework_type,
                                            int timeout_val_sec,
                                            int timeout_val_usec,
                                            cl_select_method_t select_mode );
+
+int cl_com_connection_complete_request(cl_com_connection_t* connection, long timeout,unsigned long only_once, cl_select_method_t select_mode );
+
 
 #endif /* __CL_COMMUNICATION_H */
 

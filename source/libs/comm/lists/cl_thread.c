@@ -40,6 +40,9 @@
 /*___INFO__MARK_END__*/
 
 
+#define CL_DO_THREAD_DEBUG 0
+
+
 /* this global is used to set the thread configuration data for each thread */
 static pthread_mutex_t global_thread_config_key_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_key_t global_thread_config_key;
@@ -206,7 +209,9 @@ int cl_thread_wait_for_thread_condition(cl_thread_condition_t* condition, long s
 
 
    pthread_mutex_lock(condition->trigger_count_mutex);
-   CL_LOG_INT(CL_LOG_INFO,"Trigger count:", (int)condition->trigger_count );
+#if CL_DO_THREAD_DEBUG
+   CL_LOG_INT(CL_LOG_DEBUG,"Trigger count:", (int)condition->trigger_count );
+#endif
 
    if ( condition->trigger_count == 0 ) {
       /* trigger count is zero, wait for trigger */
@@ -269,9 +274,10 @@ int cl_thread_wait_for_thread_condition(cl_thread_condition_t* condition, long s
       }
    } else {
       /* trigger count is > zero, do not trigger */
-      CL_LOG(CL_LOG_INFO,"Thread was triggerd before wait - continue");
-      CL_LOG_INT(CL_LOG_INFO,"Trigger count:", (int)condition->trigger_count );
-
+#if CL_DO_THREAD_DEBUG
+      CL_LOG(CL_LOG_DEBUG,"Thread was triggerd before wait - continue");
+      CL_LOG_INT(CL_LOG_DEBUG,"Trigger count:", (int)condition->trigger_count );
+#endif
       condition->trigger_count = condition->trigger_count - 1;
       pthread_mutex_unlock(condition->trigger_count_mutex);
    }
@@ -300,7 +306,9 @@ int cl_thread_clear_triggered_conditions(cl_thread_condition_t* condition) {
    /* increase trigger count */
    if (pthread_mutex_lock(condition->trigger_count_mutex) == 0) {
       condition->trigger_count = 0;
-      CL_LOG(CL_LOG_INFO,"cleared trigger count");
+#if CL_DO_THREAD_DEBUG
+      CL_LOG(CL_LOG_DEBUG,"cleared trigger count");
+#endif
       if (pthread_mutex_unlock(condition->trigger_count_mutex) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not unlock trigger_count_mutex");
          return CL_RETVAL_MUTEX_UNLOCK_ERROR;
@@ -571,13 +579,17 @@ int cl_thread_wait_for_event(cl_thread_settings_t *thread_config, long sec, long
 
    thread_config->thread_event_count = thread_config->thread_event_count + 1;
    thread_config->thread_state = CL_THREAD_WAITING;
+#if CL_DO_THREAD_DEBUG
    CL_LOG(CL_LOG_DEBUG, "cl_thread_wait_for_event() start waiting ...");
+#endif
 
    
    ret = cl_thread_wait_for_thread_condition(thread_config->thread_event_condition, sec, micro_sec);
 
    thread_config->thread_state = CL_THREAD_RUNNING;
+#if CL_DO_THREAD_DEBUG
    CL_LOG(CL_LOG_DEBUG, "cl_thread_wait_for_event() wake up");
+#endif
 
 
    return ret;
@@ -646,8 +658,9 @@ int cl_thread_trigger_event(cl_thread_settings_t *thread_config) {
    }
    
    ret_val = cl_thread_trigger_thread_condition(thread_config->thread_event_condition, 0);
-
+#if CL_DO_THREAD_DEBUG
    CL_LOG(CL_LOG_DEBUG, "cl_thread_trigger_event() called");
+#endif
    return ret_val;
 }
 
@@ -658,7 +671,6 @@ int cl_thread_trigger_event(cl_thread_settings_t *thread_config) {
 int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    int ret_val = 0;
    int execute_pop = 0;
-   CL_LOG(CL_LOG_INFO, "checking for cancelation ...");
 
 
    /* push default cleanup function */

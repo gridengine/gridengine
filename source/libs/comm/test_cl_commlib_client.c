@@ -101,6 +101,7 @@ extern int main(int argc, char** argv)
   int close_connection = 0;
   unsigned long last_mid = 0;
   int i;
+  cl_framework_t framework = CL_CT_TCP;
   cl_xml_connection_autoclose_t autoclose;
 
   /* setup signalhandling */
@@ -113,13 +114,28 @@ extern int main(int argc, char** argv)
   sigaction(SIGPIPE, &sa, NULL);
 
   
-  if (argc != 7) {
-     printf("wrong parameters, param1 = server host, param2 = port number, param3 = client id, param4=debug_level, param5=sleep time, param6=do_close\n");
+  if (argc < 7) {
+     printf("wrong parameters, param1 = server host, param2 = port number, param3 = client id, param4=debug_level, param5=sleep time, param6=do_close, [param7=framework(TCP/SSL)]\n");
      exit(1);
   }
   cl_com_setup_commlib(CL_NO_THREAD, atoi(argv[4]), NULL );
   if (atoi(argv[6]) != 0) {
      close_connection = 1;
+  }
+  if (argv[7]) {
+     framework = CL_CT_UNDEFINED;
+     if (strcmp(argv[7], "TCP") == 0) {
+        framework=CL_CT_TCP;
+        printf("using TCP framework\n");
+     }
+     if (strcmp(argv[7], "SSL") == 0) {
+        framework=CL_CT_SSL;
+        printf("using SSL framework\n");
+     }
+     if (framework == CL_CT_UNDEFINED) {
+        printf("unexpected framework type\n");
+        exit(1);
+     }
   }
 
   cl_com_set_alias_file("./alias_file");
@@ -136,7 +152,7 @@ extern int main(int argc, char** argv)
 
 #ifdef CREATE_SERVICE
   cl_com_append_known_endpoint_from_name(argv[1], "server", 1,atoi(argv[2]),CL_CM_AC_DISABLED , 1);
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -146,7 +162,7 @@ extern int main(int argc, char** argv)
      printf("I'm reachable at port %d!\n", my_port);
   }
 #else
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -373,7 +389,7 @@ extern int main(int argc, char** argv)
            }
         }  
 #ifdef CREATE_SERVICE
-        handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
+        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);
@@ -383,7 +399,7 @@ extern int main(int argc, char** argv)
            printf("I'm reachable at port %d!\n", my_port);
         }
 #else
-        handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
+        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);

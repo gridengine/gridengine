@@ -46,6 +46,9 @@
 #include "cl_xml_parsing.h"
 
 
+#define CL_DO_XML_DEBUG 0
+
+
 static cl_bool_t cl_xml_parse_is_version(char* buffer, unsigned long start, unsigned long buffer_length );
 
 
@@ -1163,21 +1166,21 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    }
 
    (*message)->formats = strdup("not supported");
-
-   CL_LOG_STR(CL_LOG_INFO,"version:     ", (*message)->version);
-   CL_LOG_INT(CL_LOG_INFO,"cs_condition:", (int)(*message)->cs_condition);
-   CL_LOG_STR(CL_LOG_INFO,"cs_text:     ", (*message)->cs_text);
-   CL_LOG_STR(CL_LOG_INFO,"formats:     ", (*message)->formats);
-   CL_LOG_STR(CL_LOG_INFO,"src->host:   ", (*message)->src->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"src->comp:   ", (*message)->src->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"src->id:     ", (int)(*message)->src->comp_id);
-   CL_LOG_STR(CL_LOG_INFO,"dst->host:   ", (*message)->dst->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"dst->comp:   ", (*message)->dst->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"dst->id:     ", (int)(*message)->dst->comp_id);
-   CL_LOG_STR(CL_LOG_INFO,"rdata->host: ", (*message)->rdata->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"rdata->comp: ", (*message)->rdata->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"rdata->id:   ", (int)(*message)->rdata->comp_id);
-
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version:     ", (*message)->version);
+   CL_LOG_INT(CL_LOG_DEBUG,"cs_condition:", (int)(*message)->cs_condition);
+   CL_LOG_STR(CL_LOG_DEBUG,"cs_text:     ", (*message)->cs_text);
+   CL_LOG_STR(CL_LOG_DEBUG,"formats:     ", (*message)->formats);
+   CL_LOG_STR(CL_LOG_DEBUG,"src->host:   ", (*message)->src->comp_host);
+   CL_LOG_STR(CL_LOG_DEBUG,"src->comp:   ", (*message)->src->comp_name);
+   CL_LOG_INT(CL_LOG_DEBUG,"src->id:     ", (int)(*message)->src->comp_id);
+   CL_LOG_STR(CL_LOG_DEBUG,"dst->host:   ", (*message)->dst->comp_host);
+   CL_LOG_STR(CL_LOG_DEBUG,"dst->comp:   ", (*message)->dst->comp_name);
+   CL_LOG_INT(CL_LOG_DEBUG,"dst->id:     ", (int)(*message)->dst->comp_id);
+   CL_LOG_STR(CL_LOG_DEBUG,"rdata->host: ", (*message)->rdata->comp_host);
+   CL_LOG_STR(CL_LOG_DEBUG,"rdata->comp: ", (*message)->rdata->comp_name);
+   CL_LOG_INT(CL_LOG_DEBUG,"rdata->id:   ", (int)(*message)->rdata->comp_id);
+#endif
 
    return CL_RETVAL_OK;
 }
@@ -1449,15 +1452,15 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
       }
    }
 
-
-   CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
-   CL_LOG_INT(CL_LOG_INFO,"mid:     ", (int)(*message)->mid);
-   CL_LOG_INT(CL_LOG_INFO,"dl:      ", (int)(*message)->dl);
-   CL_LOG_STR(CL_LOG_INFO,"df:      ", cl_com_get_mih_df_string((*message)->df));
-   CL_LOG_STR(CL_LOG_INFO,"mat:     ", cl_com_get_mih_mat_string((*message)->mat));
-   CL_LOG_INT(CL_LOG_INFO,"tag:     ", (int)(*message)->tag);
-   CL_LOG_INT(CL_LOG_INFO,"rid:     ", (int)(*message)->rid);
-
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version: ", (*message)->version);
+   CL_LOG_INT(CL_LOG_DEBUG,"mid:     ", (int)(*message)->mid);
+   CL_LOG_INT(CL_LOG_DEBUG,"dl:      ", (int)(*message)->dl);
+   CL_LOG_STR(CL_LOG_DEBUG,"df:      ", cl_com_get_mih_df_string((*message)->df));
+   CL_LOG_STR(CL_LOG_DEBUG,"mat:     ", cl_com_get_mih_mat_string((*message)->mat));
+   CL_LOG_INT(CL_LOG_DEBUG,"tag:     ", (int)(*message)->tag);
+   CL_LOG_INT(CL_LOG_DEBUG,"rid:     ", (int)(*message)->rid);
+#endif
 
    if ( (*message)->dl > CL_DEFINE_MAX_MESSAGE_LENGTH ) {
       return CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR; 
@@ -1730,16 +1733,17 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
       (*message)->application_status = cl_util_get_ulong_value(help_buf);
    }
 
-
-   CL_LOG_STR(CL_LOG_WARNING,"version:   ", (*message)->version);
-   CL_LOG_INT(CL_LOG_WARNING,"mid:       ", (int)(*message)->mid);
-   CL_LOG_INT(CL_LOG_WARNING,"starttime: ", (int)(*message)->starttime);
-   CL_LOG_INT(CL_LOG_WARNING,"runtime:   ", (int)(*message)->runtime);
-   CL_LOG_INT(CL_LOG_WARNING,"brm:       ", (int)(*message)->application_messages_brm);
-   CL_LOG_INT(CL_LOG_WARNING,"bwm:       ", (int)(*message)->application_messages_bwm);
-   CL_LOG_INT(CL_LOG_WARNING,"noc:       ", (int)(*message)->application_connections_noc);
-   CL_LOG_INT(CL_LOG_WARNING,"status:    ", (int)(*message)->application_status);
-   CL_LOG_STR(CL_LOG_WARNING,"info:      ", (*message)->info);
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version:   ", (*message)->version);
+   CL_LOG_INT(CL_LOG_DEBUG,"mid:       ", (int)(*message)->mid);
+   CL_LOG_INT(CL_LOG_DEBUG,"starttime: ", (int)(*message)->starttime);
+   CL_LOG_INT(CL_LOG_DEBUG,"runtime:   ", (int)(*message)->runtime);
+   CL_LOG_INT(CL_LOG_DEBUG,"brm:       ", (int)(*message)->application_messages_brm);
+   CL_LOG_INT(CL_LOG_DEBUG,"bwm:       ", (int)(*message)->application_messages_bwm);
+   CL_LOG_INT(CL_LOG_DEBUG,"noc:       ", (int)(*message)->application_connections_noc);
+   CL_LOG_INT(CL_LOG_DEBUG,"status:    ", (int)(*message)->application_status);
+   CL_LOG_STR(CL_LOG_DEBUG,"info:      ", (*message)->info);
+#endif
 
    return CL_RETVAL_OK;
 }
@@ -1844,8 +1848,10 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
       (*message)->mid = cl_util_get_ulong_value(help_buf);
    }
 
-   CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
-   CL_LOG_INT(CL_LOG_INFO,"mid:     ", (int)(*message)->mid);
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version: ", (*message)->version);
+   CL_LOG_INT(CL_LOG_DEBUG,"mid:     ", (int)(*message)->mid);
+#endif
 
    return CL_RETVAL_OK;
 
@@ -1926,8 +1932,9 @@ int cl_xml_parse_CCM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       (*message)->version = strdup(help_buf);
    }
 
-
-   CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version: ", (*message)->version);
+#endif
    return CL_RETVAL_OK;
 }
 
@@ -2005,8 +2012,9 @@ int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com
       (*message)->version = strdup(help_buf);
    }
 
-
-   CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version: ", (*message)->version);
+#endif
 
    return CL_RETVAL_OK;
 }
@@ -2085,8 +2093,9 @@ int cl_xml_parse_SIM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       (*message)->version = strdup(help_buf);
    }
 
-
-   CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
+#if CL_DO_XML_DEBUG
+   CL_LOG_STR(CL_LOG_DEBUG,"version: ", (*message)->version);
+#endif
    return CL_RETVAL_OK;
 }
 

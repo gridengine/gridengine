@@ -279,8 +279,8 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             int h_timeout = connection->handler->connection_timeout;
             struct timeval now;
             gettimeofday(&now,NULL);
-            CL_LOG(CL_LOG_INFO,"handle connection timeout times");
 #if 0
+            CL_LOG(CL_LOG_INFO,"handle connection timeout times");
             CL_LOG_INT(CL_LOG_WARNING,"last transfer time      :",connection->last_transfer_time.tv_sec);
             CL_LOG_INT(CL_LOG_WARNING,"last connection timeout :",h_timeout);
             CL_LOG_INT(CL_LOG_WARNING,"now it is               :",now.tv_sec);

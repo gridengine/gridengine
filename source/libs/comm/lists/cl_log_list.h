@@ -47,10 +47,12 @@
 #define CL_LOG(log_type, log_text)              cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, NULL)
 #define CL_LOG_STR(log_type, log_text, log_str) cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )
 #define CL_LOG_INT(log_type, log_text, log_str) cl_log_list_log_int(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )
+#define CL_LOG_STR_STR_INT(log_type, log_text, log_str1, log_str2, log_str3) cl_log_list_log_ssi(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str1, log_str2, log_str3)
 #else
-#define CL_LOG(log_type, log_text)              /* cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, NULL) */
-#define CL_LOG_STR(log_type, log_text, log_str) /* cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
-#define CL_LOG_INT(log_type, log_text, log_str) /* cl_log_list_log_int(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
+#define CL_LOG(log_type, log_text)
+#define CL_LOG_STR(log_type, log_text, log_str)
+#define CL_LOG_INT(log_type, log_text, log_str)
+#define CL_LOG_STR_STR_INT(log_type, log_text, log_str1, log_str2, log_str3)
 #endif
 
 
@@ -71,6 +73,8 @@ int cl_log_list_flush(void);   /* CR check */
 int cl_log_list_flush_list(cl_raw_list_t* list_p); /* CR check */
 int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param); /* CR check */
 int cl_log_list_log_int(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param); /* CR check */
+int cl_log_list_log_ssi(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text,
+                        const char* log_1 , const char* log_2 ,int log_3 );
 int cl_log_list_del_log(cl_raw_list_t* list_p);   /* CR check */
 cl_log_list_elem_t* cl_log_list_get_first_elem(cl_raw_list_t* list_p);  /* CR check */
 

@@ -457,10 +457,16 @@ cl_thread_settings_t* cl_log_list_get_creator_thread(cl_thread_settings_t* threa
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_log()"
-int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param) { /* CR check */
-   int ret_val, ret_val2;
+int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param) {
+
+   int ret_val;
+   int ret_val2;
    cl_thread_settings_t* thread_config = NULL;
-   cl_log_list_data_t* ldata = NULL;
+   cl_log_list_data_t*   ldata = NULL;
+
+   if (log_text == NULL || module_name == NULL || function_name == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }
 
    /* get the thread configuration for the calling thread */
    thread_config = cl_thread_get_thread_config();
@@ -474,10 +480,6 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
    }
 #endif
 
-
-   if (log_text == NULL || module_name == NULL || function_name == NULL ) {
-      return CL_RETVAL_PARAMS;
-   }
 
    if (thread_config != NULL) {
       if (thread_config->thread_log_list == NULL) {
@@ -520,7 +522,7 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
       }
       return ret_val2;
    } else {
-      /* TODO:
+      /* TODO 2 of 2 :
        *  This happens to threads of application which have not started 
        *  commlib setup function. A thread config should be provided for these
        *  threads, or the application should use commlib threads ( lists/thread module ) 
@@ -574,10 +576,98 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_log_list_log_ssi()"
+int cl_log_list_log_ssi(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text,
+                        const char* log_1 , const char* log_2 ,int log_3 ) {
+   int ret_val;
+   char my_buffer[512];
+   cl_thread_settings_t* thread_config = NULL;
+   cl_log_list_data_t*   ldata = NULL;
+   const char* help_null = "NULL";
+   const char* log_param1 = NULL;
+   const char* log_param2 = NULL;
+
+   /* get the thread configuration for the calling thread */
+   thread_config = cl_thread_get_thread_config();
+   if (thread_config != NULL) {
+      if (thread_config->thread_log_list == NULL) {
+         return CL_RETVAL_LOG_NO_LOGLIST;
+      } 
+      ldata = thread_config->thread_log_list->list_data;
+   } else {
+      /* TODO 1 of 2 :
+       *  This happens to threads of application which have not started 
+       *  commlib setup function. A thread config should be provided for these
+       *  threads, or the application should use commlib threads ( lists/thread module ) 
+       */
+       pthread_mutex_lock(&global_cl_log_list_mutex);
+       if ( global_cl_log_list != NULL) {
+          ldata = global_cl_log_list->list_data;
+       }
+       pthread_mutex_unlock(&global_cl_log_list_mutex);
+   }
+
+   if (ldata != NULL) {
+      if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+         return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
+      }
+   } else {
+      return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
+   }   
+   if (log_1 == NULL) {
+      log_param1 = help_null;
+   } else {
+      log_param1 = log_1;
+   }
+
+   if (log_2 == NULL) {
+      log_param2 = help_null;
+   } else {
+      log_param2 = log_2;
+   }
+   snprintf(my_buffer, 512, "\"%s/%s/%d\"", log_param1, log_param2, log_3);
+   ret_val = cl_log_list_log( log_type, line,  function_name, module_name,  log_text,  my_buffer);
+   return ret_val;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_log_list_log_int()"
-int cl_log_list_log_int(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {  /* CR check */
+int cl_log_list_log_int(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {
    int ret_val;
    char my_int_buffer[512];
+   cl_thread_settings_t* thread_config = NULL;
+   cl_log_list_data_t*   ldata = NULL;
+
+   /* get the thread configuration for the calling thread */
+   thread_config = cl_thread_get_thread_config();
+   if (thread_config != NULL) {
+      if (thread_config->thread_log_list == NULL) {
+         return CL_RETVAL_LOG_NO_LOGLIST;
+      } 
+      ldata = thread_config->thread_log_list->list_data;
+   } else {
+      /* TODO 1 of 2 :
+       *  This happens to threads of application which have not started 
+       *  commlib setup function. A thread config should be provided for these
+       *  threads, or the application should use commlib threads ( lists/thread module ) 
+       */
+       pthread_mutex_lock(&global_cl_log_list_mutex);
+       if ( global_cl_log_list != NULL) {
+          ldata = global_cl_log_list->list_data;
+       }
+       pthread_mutex_unlock(&global_cl_log_list_mutex);
+   }
+
+   if (ldata != NULL) {
+      if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+         return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
+      }
+   } else {
+      return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */
+   }   
 
    snprintf(my_int_buffer, 512, "%d", param);
    ret_val = cl_log_list_log( log_type, line,  function_name, module_name,  log_text,  my_int_buffer);

@@ -216,8 +216,6 @@ int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* e
             elem->is_static = is_static;
          }
         
-         CL_LOG_STR(CL_LOG_DEBUG,"resetting data of endpoint comp_host:",elem->endpoint->comp_host);
-
          /* unlock the list */
          if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
             return ret_val;

@@ -45,10 +45,9 @@
 
 /* typedef for Connection Type (CT) */
 typedef enum cl_framework_def {
-   CL_CT_TCP = 1      /* tcp/ip framework */
-#if 0
-   ,CL_CT_SSL        /* secure socket layer  -> on work */
-#endif
+   CL_CT_UNDEFINED = 0,
+   CL_CT_TCP,        /* tcp/ip framework */
+   CL_CT_SSL         /* secure socket layer  -> on work */
 } cl_framework_t;
 
 
@@ -229,8 +228,8 @@ typedef struct cl_com_handle {
    
    /* service specific */
    int do_shutdown;                        /* set when this handle wants to shutdown */
-   int max_connection_count_reached;       /* set when max connection count is reached */
-   int max_connection_count_found_connection_to_close; /* set if we found a connection to close when max_connection_count_reached is set */
+   cl_bool_t max_connection_count_reached;       /* set when max connection count is reached */
+   cl_bool_t max_connection_count_found_connection_to_close; /* set if we found a connection to close when max_connection_count_reached is set */
    cl_com_connection_t* last_receive_message_connection;  /* this is the last connection from connection list, where cl_comlib_receive_message() was called */
    long shutdown_timeout;                   /* used when shutting down handle */
    cl_com_connection_t* service_handler;    /* service handler of this handle */

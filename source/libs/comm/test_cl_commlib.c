@@ -90,10 +90,28 @@ extern int main(int argc, char** argv)
   cl_com_endpoint_t* sender = NULL;
   int i;
   cl_log_t log_level;
+  cl_framework_t framework = CL_CT_TCP;
+
   
-  if (argc != 2) {
-      printf("please enter debug level\n");
+  if (argc < 2) {
+      printf("param1=debug_level [param2=framework(TCP/SSL)]\n");
       exit(1);
+  }
+
+  if (argv[2]) {
+     framework = CL_CT_UNDEFINED;
+     if (strcmp(argv[2], "TCP") == 0) {
+        framework=CL_CT_TCP;
+        printf("using TCP framework\n");
+     }
+     if (strcmp(argv[2], "SSL") == 0) {
+        framework=CL_CT_SSL;
+        printf("using SSL framework\n");
+     }
+     if (framework == CL_CT_UNDEFINED) {
+        printf("unexpected framework type\n");
+        exit(1);
+     }
   }
 
   /* setup signalhandling */
@@ -142,7 +160,7 @@ extern int main(int argc, char** argv)
   cl_com_set_status_func(my_application_status); 
 
 
-  handle=cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE, 0, "server", 1, 2, 0 );
+  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, "server", 1, 2, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);

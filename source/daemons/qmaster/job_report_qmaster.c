@@ -872,11 +872,11 @@ sge_pack_buffer *pb
                      }
                    }
                    if (lGetUlong(petask, PET_status)==JRUNNING) {
-                     DPRINTF(("(REISI) job exit for job "u32": still waiting for task %s\n", 
+                     DPRINTF(("job exit for job "u32": still waiting for task %s\n", 
                         jobid, lGetString(petask, PET_id)));
                      skip_job_exit = 1;
                    } else {
-                     DPRINTF(("(REISI) SKIP check for other tasks, PET_status is not JRUNNING\n"));
+                     DPRINTF(("SKIP check for other tasks, PET_status is not JRUNNING\n"));
                    }
                }
 #endif

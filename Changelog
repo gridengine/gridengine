@@ -1,9 +1,17 @@
-SG-2004-10-28-0: Bugfix:    -fixed profiling for the scheduler
-                            - fixed the inclusiv/exclusiv profiling of different layers
+CR-2004-10-28-0: Enhancem.: - code cleanup of commlib
+                            - continue work on SSL framework module
+                            - removed unused logging output
+                 Changed:   commlib
+                 Review:    AA
+
+SG-2004-10-28-0: Bugfix:    - fixed profiling for the scheduler
+                            - fixed the inclusiv/exclusiv profiling of different
+                              layers
                  Changed:   scheduler, profiling
                  Review:    pending
 
-AA-2004-10-27-1: Bugfix:    qmon returns an error dialog, when editing a calendar
+AA-2004-10-27-1: Bugfix:    qmon returns an error dialog, when editing a 
+                            calendar
                  Issue:     1267
                  Bugtraq:   6185169
                  Changed:   qmon

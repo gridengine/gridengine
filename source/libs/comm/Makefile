@@ -47,6 +47,7 @@ COMMLIB = libcomm$(LIBEXT)
 COMMLIB_DIR = $(SOURCE)/libs/comm
 COMMLIB_SRC = \
          cl_tcp_framework.c \
+         cl_ssl_framework.c \
          cl_communication.c \
          cl_xml_parsing.c \
          cl_connection_list.c \
@@ -131,6 +132,8 @@ include $(COMMLIB_DIR)/commlib_dependencies
 ###############################################################################
 cl_tcp_framework.o: $(COMMLIB_DIR)/cl_tcp_framework.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_tcp_framework.c
+cl_ssl_framework.o: $(COMMLIB_DIR)/cl_ssl_framework.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_ssl_framework.c
 cl_communication.o: $(COMMLIB_DIR)/cl_communication.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_communication.c
 cl_xml_parsing.o: $(COMMLIB_DIR)/cl_xml_parsing.c 

@@ -32,10 +32,42 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include "cl_lists.h"
+#include "cl_data_types.h"
 
 
+/* debug functions */
 void cl_dump_ssl_private(cl_com_connection_t* connection);
+
+/* get/set functions */
+int cl_com_ssl_get_connect_port(cl_com_connection_t* connection, int* port);
+int cl_com_ssl_set_connect_port(cl_com_connection_t* connection, int port);
+int cl_com_ssl_get_service_port(cl_com_connection_t* connection, int* port);
+int cl_com_ssl_get_fd(cl_com_connection_t* connection, int* fd);
+
+
+/* create new connection object */
+int cl_com_ssl_setup_connection(cl_com_connection_t** connection, int server_port, int connect_port, cl_xml_connection_type_t data_flow_type, cl_xml_connection_autoclose_t auto_close_mode);
+
+/* create/destroy connection functions */
+int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once);
+int cl_com_ssl_close_connection(cl_com_connection_t** connection);
+
+/* read/write functions */
+int cl_com_ssl_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
+int cl_com_ssl_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_read);
 int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read);
+int cl_com_ssl_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data, unsigned long size, unsigned long *only_one_write );
+int cl_com_ssl_receive_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data_buffer, unsigned long data_buffer_size, unsigned long *only_one_read);
+
+
+/* create service, accept new connections */
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection);
+int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection ,int timeout_val_sec, int timeout_val_usec );
+int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connection);
+
+/* select mechanism */
+int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode);
 
 #endif /* __CL_SSL_FRAMEWORK_H */
 

@@ -2439,6 +2439,8 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
       return STATUS_OK;
 }
 
+/* EB: ADOC: add commets */
+
 lListElem *
 job_get_request(const lListElem *this_elem, const char *centry_name) 
 {

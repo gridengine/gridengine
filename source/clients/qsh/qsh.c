@@ -1526,10 +1526,6 @@ int main(int argc, char **argv)
       }
    }
 
-#if 0 /* EB: debug */
-   lWriteElemTo(job, stderr); 
-#endif
-
    /* 
    ** add the job
    */

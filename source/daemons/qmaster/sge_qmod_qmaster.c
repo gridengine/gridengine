@@ -431,7 +431,6 @@ sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, 
          break;
 
       case QI_DO_RESCHEDULE:
-         /* EB: TODO: QI operation */
          result = qmod_queue_weakclean(qep, force, answer, user, host, isoperator, isowner);
 	 break;
       default:
@@ -971,7 +970,6 @@ void rebuild_signal_events()
             const char* str_key = lGetString(qinstance, QU_qname); 
             te_event_t ev = NULL;
 
-            /* EB: TODO: full_name? */
             ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0, str_key);
             te_add_event(ev);
             te_free_event(ev);
@@ -1004,7 +1002,6 @@ void resend_signal_event(te_event_t anEvent)
                                    lGetString(jatep, JAT_master_queue))))
          sge_signal_queue(lGetUlong(jatep, JAT_pending_signal), qep, jep, jatep);
    } else {
-      /* EB: TODO: is queue a QI name */
       if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALQ_S, queue));
          DEXIT;

@@ -641,6 +641,7 @@ hgroup_list_find_matching_and_resolve(const lList *this_list,
    return ret;
 }
 
+/* EB: ADOC: add commets */
 bool
 hgroup_list_find_matching(const lList *this_list, lList **answer_list,
                           const char *hgroup_pattern, lList **used_hosts) 

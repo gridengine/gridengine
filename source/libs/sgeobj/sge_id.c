@@ -45,6 +45,8 @@
 
 #define ID_LAYER BASIS_LAYER
 
+/* EB: ADOC: add commets */
+
 bool
 id_list_build_from_str_list(lList **id_list, 
                             lList **answer_list,

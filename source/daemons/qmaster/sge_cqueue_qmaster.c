@@ -77,6 +77,8 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+/* EB: ADOC: add commets */
+
 static bool
 cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
                     lListElem *reduced_elem, int sub_command, 
@@ -359,7 +361,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
             tmp_hosts = lFreeList(tmp_hosts);
          }
 
-#if 1 /* EB: debug */
+#if 0 /* EB: DEBUG */
          if (ret) {
             href_list_debug_print(*add_hosts, "add_hosts: ");
             href_list_debug_print(*rem_hosts, "rem_hosts: ");
@@ -481,8 +483,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
                       * Add a message which explains the reason for
                       * ambiguous state
                       */   
-                     /* EB: TODO: move to msg file */
-                     sprintf(SGE_EVENT, "waning: "SFQ" has ambiguous value ("SFQ", "SFQ")\n", 
+                     sprintf(SGE_EVENT, MSG_ATTR_HASAMBVAL_SSS, 
                              cqueue_attribute_array[index].name,
                              matching_host_or_group, matching_group);
                      qinstance_message_add(qinstance, QIM_AMBIGUOUS, SGE_EVENT);
@@ -644,10 +645,9 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    }
 
    /*
-    * EB:
-    *    Client and scheduler code expects existing EH_Type elements
-    *    for all hosts used in CQ_hostlist. Therefore it is neccessary
-    *    to create all not existing EH_Type elements.
+    * Client and scheduler code expects existing EH_Type elements
+    * for all hosts used in CQ_hostlist. Therefore it is neccessary
+    * to create all not existing EH_Type elements.
     */
    if (ret) {
       lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));

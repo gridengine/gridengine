@@ -223,8 +223,6 @@ lList **topp  /* ticket orders ptr ptr */
          return -1;
       }
 
-
-      /* EB: TODO: untag all queues */
       cqueue_list_set_tag(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
                           0, true);
 

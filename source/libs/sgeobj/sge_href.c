@@ -904,6 +904,7 @@ href_list_debug_print(const lList *this_list, const char *prefix)
    DEXIT;
 }
 
+/* EB: ADOC: add commets */
 void
 href_list_make_uniq(lList *this_list, lList **answer_list)
 {

@@ -54,6 +54,8 @@
 
 #define QREF_LAYER TOP_LAYER
 
+/* EB: ADOC: add commets */
+
 static bool
 qref_list_resolve_cqueue_names(const lList *cq_qref_list, 
                                lList **answer_list,

@@ -1027,7 +1027,6 @@ lWriteListTo(ehl, stdout);
    alp = lFreeList(alp);
 
    /* --- queue */
-   /* EB: TODO: */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (!alp) {

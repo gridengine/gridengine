@@ -82,15 +82,9 @@
 #   define TRUE  1
 #endif
 
-#if 0 /* EB: debug */
-#  define CHECK_INTERVAL      6 
-#  define GET_ACTIVE_INTERVAL 24
-#  define DELAY_TIME          60 
-#else
-#  define CHECK_INTERVAL      60 
-#  define GET_ACTIVE_INTERVAL 240
-#  define DELAY_TIME          600 
-#endif
+#define CHECK_INTERVAL      60 
+#define GET_ACTIVE_INTERVAL 240
+#define DELAY_TIME          600 
 
 static int check_interval = CHECK_INTERVAL;
 static int get_active_interval = GET_ACTIVE_INTERVAL;

@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
    }
 
    /*
-    * EB: add additional tests
+    * EB: TEST: add additional tests
     */
 
    return failed ? 1 : 0;

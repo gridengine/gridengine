@@ -605,7 +605,7 @@ void sge_dstring_init(dstring *sb, char *s, size_t size)
 }
 
 
-#if 0 /* EB: debug */
+#if 0 /* EB: DEBUG: */
 int main(void)
 {
    char *s;

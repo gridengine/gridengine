@@ -70,7 +70,7 @@ static void sge_parse_string_list(lList **lp, const char *str, int field,
    DEXIT;
 }
 
-/* EB: TODO Following function should be moved to the sge_jatask module */
+/* CLEANUP: Following function should be moved to the sge_jatask module */
 
 /*
  * return   -1 no valid JobTask-Identifier

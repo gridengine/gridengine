@@ -691,7 +691,7 @@ void updateJobList(void)
       lSplit(&rtasks, &ptasks, "rtasks", where_run);
       lSplit(&ptasks, &etasks, "etasks", where_exiting);
 
-#if 0 /* EB: debug code */
+#if 0 /* EB: DEBUG */
       printf("========> jep\n");
       lWriteElemTo(jep, stdout);
       printf("========> where_run\n"); 

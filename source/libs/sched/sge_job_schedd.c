@@ -241,7 +241,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       *pending_job = lFreeElem(*pending_job); 
    }
 
-#if 0 /* EB: debug */
+#if 0 /* EB: DEBUG */
    job_lists_print(splitted_jobs);
 #endif
 
@@ -453,7 +453,7 @@ void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
                 lList **result_list[])
 {
-#if 0 /* EB: enable debug messages for split_jobs() */
+#if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
 #endif
    lListElem *job = NULL;
@@ -535,15 +535,6 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
             target = &(target_tasks[SPLIT_FINISHED]);
          } 
-#if 0
-      /*
-       * EB: "hold" section has been moved downwards!!!!
-       *
-       *      Running or suspended jobs which have a hold applied
-       *      have to be handled as running or suspended jobs within schedd
-       *      We cannot trash them because of the hold state!
-       */
-#endif
 
          if (target == NULL && result_list[SPLIT_ERROR] && 
              (ja_task_state & JERROR)) {

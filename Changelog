@@ -1,3 +1,6 @@
+EB-2004-01-21-1: Bugfix:   Handled TODO-Sections concernings CQs
+                 Changed:  sge_schedd
+
 EB-2004-01-21-0: Bugfix:   Queue selection did not work in combination
                            with cluster queue printing (qstat -g c -q <QI>)
                  Changed:  qstat

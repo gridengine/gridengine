@@ -54,7 +54,7 @@
 
 lList *Master_Cuser_List = NULL;
 
-/* EB: TODO: ADOC: add comments */
+/* EB: ADOC: add comments */
 
 lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user)

@@ -42,6 +42,8 @@
 
 #define STR_LAYER BASIS_LAYER
 
+/* EB: ADOC: add commets */
+
 const char *
 str_list_append_to_dstring(const lList *this_list, dstring *string,
                            const char delimiter)

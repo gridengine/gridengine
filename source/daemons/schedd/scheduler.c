@@ -173,7 +173,7 @@ int scheduler(sge_Sdescr_t *lists) {
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
               conf.max_aj_instances, splitted_job_lists);
  
-#if 0 /* EB: debug */
+#if 0 /* EB: DEBUG */
    job_lists_print(splitted_job_lists);
 #endif                      
 

@@ -65,6 +65,8 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+/* EB: ADOC: add comments */
+
 static bool
 hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
                     lListElem *reduced_elem, int sub_command,
@@ -351,12 +353,6 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                                               before_mod_list, 
                                               &real_add_hosts,
                                               NULL, NULL, NULL);
-#if 1 /* debug */
-                     if (ret) { 
-                        href_list_debug_print(real_add_hosts, "CQ add_host: ");
-                        href_list_debug_print(real_rem_hosts, "CQ rem_host: ");
-                     }
-#endif
                   }
 
                   /*
@@ -373,7 +369,6 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                      if (new_cqueue != NULL && cqueue_list != NULL) {
                         lAppendElem(cqueue_list, new_cqueue);
                      } else {
-                        /* EB: TODO: Add error message */
                         ret = false;
                      }
                   }
@@ -422,10 +417,9 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
          } 
 
          /*
-          * EB:
-          *    Client and scheduler code expects existing EH_Type elements
-          *    for all hosts used in CQ_hostlist. Therefore it is neccessary
-          *    to create all not existing EH_Type elements.
+          * Client and scheduler code expects existing EH_Type elements
+          * for all hosts used in CQ_hostlist. Therefore it is neccessary
+          * to create all not existing EH_Type elements.
           */
          if (ret) {
             lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
@@ -612,12 +606,6 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
 
    DENTER(TOP_LAYER, "hgroup_spool");
 
-   /*
-    * EB: TODO: Spooling
-    * 
-    * Spooling for CQ and HGRP is no atomar operation until now!!!
-    * Transactions within the spooling framework may solve this problem.
-    */
    for_each (cqueue, cqueue_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL;

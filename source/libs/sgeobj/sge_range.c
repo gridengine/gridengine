@@ -318,8 +318,7 @@ void range_list_initialize(lList **this_list, lList **answer_list)
          lListElem *next_range;
 
          /* 
-          * EB: we might implement a new CULL function
-          * lEmptyList(lList *list)
+          * EB: CLEANUP: implement a new CULL function lEmptyList(lList *list)
           */
 
          next_range = lFirst(*this_list);

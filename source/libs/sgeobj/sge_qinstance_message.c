@@ -40,6 +40,8 @@
 #include "sge_qinstance_message.h"
 #include "msg_sgeobjlib.h"
 
+/* EB: ADOC: add commets */
+
 static bool
 qim_list_add(lList **this_list, u_long32 type, const char *message);
 

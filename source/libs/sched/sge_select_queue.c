@@ -1880,17 +1880,12 @@ int host_order_changed) {
 
                if (available_slots_at_host(job, ja_task, hep, host_list, 1, 1, 1, centry_list, acl_list, NULL)){
 
-#if 0 /* EB: Bug: finds only first element in list */
                   const void *queue_iterator = NULL;
                   lListElem *next_queue = NULL;
 
                   next_queue = lGetElemHostFirst(queues, QU_qhostname, eh_name, &queue_iterator); 
                   while ((qep = next_queue) != NULL) {
                      next_queue = lGetElemHostNext(queues, QU_qhostname, eh_name, &queue_iterator); 
-#else
-                  for_each(qep, queues) 
-                     if (!sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name)) {
-#endif
 
                      qname = lGetString(qep, QU_full_name);
 

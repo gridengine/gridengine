@@ -85,7 +85,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            bool *has_changed_conf_attr, 
                            bool *has_changed_state_attr)
 {
-#if 1 /* EB: debug */
+#if 0 /* EB: DEBUG: enable debugging for qinstance_modify_attribute() */
 #define QINSTANCE_MODIFY_DEBUG
 #endif
    bool ret = true;

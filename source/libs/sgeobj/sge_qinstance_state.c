@@ -139,6 +139,8 @@
 
 #define QINSTANCE_STATE_LAYER TOP_LAYER
 
+/* EB: ADOC: add commets */
+
 static const u_long32 states[] = {
       QI_ALARM,
       QI_SUSPEND_ALARM,

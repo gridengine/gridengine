@@ -52,6 +52,8 @@
 #include "sge_subordinate.h"
 #include "sge_qref.h"
 
+/* EB: ADOC: add comments */
+
 /*
    (un)suspend on subordinate using granted_destination_identifier_list
 

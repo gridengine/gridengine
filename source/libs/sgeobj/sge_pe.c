@@ -362,6 +362,8 @@ int pe_validate_urgency_slots(lList **alpp, const char *s)
    return STATUS_OK;
 }
 
+/* EB: ADOC: add commets */
+
 bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
                           const lList *pe_ref_list)
 {

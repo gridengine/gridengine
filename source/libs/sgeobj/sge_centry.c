@@ -55,6 +55,8 @@
 
 lList *Master_CEntry_List = NULL;
 
+/* EB: ADOC: add commets */
+
 static int
 centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
                       bool allow_neg_consumable);
@@ -702,7 +704,7 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
             return -1;
          }
       } else {
-         /* EB: TODO: message should be put into answer_list and
+         /* CLEANUP: message should be put into answer_list and
             returned via argument. */
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
          DEXIT;
@@ -764,7 +766,7 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
    return ret;
 }
 
-/* EB: TODO: CLEANUP: should be replaced by centry_list_append_to_dstring() */
+/* CLEANUP: should be replaced by centry_list_append_to_dstring() */
 int
 centry_list_append_to_string(lList *this_list, char *buff, 
                              u_long32 max_len)
@@ -791,7 +793,7 @@ centry_list_append_to_string(lList *this_list, char *buff,
    return 0;
 }
 
-/* EB: TODO: CLEANUP: add answer_list remove SGE_EVENT */
+/* CLEANUP: add answer_list remove SGE_EVENT */
 /*
  * NOTE
  *    MT-NOTE: function is not MT safe

@@ -308,6 +308,8 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
    return STATUS_OK;
 }
 
+/* EB: ADOC: add commets */
+
 lList **
 ckpt_list_get_master_list(void)
 {

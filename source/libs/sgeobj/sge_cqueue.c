@@ -143,6 +143,8 @@ list_attribute_struct cqueue_attribute_array[] = {
 
 lList *Master_CQueue_List = NULL;
 
+/* EB: ADOC: add commets */
+
 bool
 cqueue_name_split(const char *name, 
                   dstring *cqueue_name, dstring *host_domain, 

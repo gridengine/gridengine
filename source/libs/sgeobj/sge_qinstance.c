@@ -76,6 +76,8 @@
 
 #define QINSTANCE_LAYER TOP_LAYER
 
+/* EB: ADOC: add commets */
+
 const char *queue_types[] = {
    "BATCH",
    "INTERACTIVE",
@@ -135,7 +137,6 @@ qinstance_list_locate(const lList *this_list, const char *hostname,
    if (cqueue_name == NULL) {
       ret = lGetElemHost(this_list, QU_qhostname, hostname);
    } else {
-      /* EB: TODO: CLEANUP lGetElemFirst ... */
       for_each(ret, this_list) {
          const char *qname = lGetString(ret, QU_qname);
          const char *hname = lGetHost(ret, QU_qhostname);

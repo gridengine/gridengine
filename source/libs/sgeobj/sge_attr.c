@@ -138,6 +138,9 @@ static lListElem *
 attr_list_locate(const lList *this_list, const char *host_or_group, 
                  int href_nm);
 
+
+/* EB: ADOC: add commets */
+
 /*
 descriptor        ASTR_Type
 href_nm           ASTR_href

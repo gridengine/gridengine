@@ -392,6 +392,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       local_ret = cqueue_hgroup_get_via_gdi(answer_list, qref_pattern_list,
                                             &hgroup_list, &cqueue_list);
       if (local_ret) {
+
          for_each(qref_pattern, qref_pattern_list) {
             dstring cqueue_name = DSTRING_INIT;
             dstring host_domain = DSTRING_INIT;
@@ -490,6 +491,12 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
             sge_dstring_free(&cqueue_name);
          }
       } 
+   } else {
+      lListElem *cqueue = cqueue_create(answer_list, "template");
+
+      DTRACE;
+      ret &= cqueue_set_template_attributes(cqueue, answer_list);
+      write_cqueue(0, 0, cqueue);
    }
    DEXIT;
    return ret;

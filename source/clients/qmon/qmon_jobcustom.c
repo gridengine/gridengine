@@ -85,32 +85,32 @@ static void cancelCB(Widget w, XtPointer cld, XtPointer cad);
 static void addToSelected(Widget w, XtPointer cld, XtPointer cad);
 static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad);
 
-static String PrintUlong(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintDoubleAsUlong(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintDouble(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintPriority(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintString(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintTime(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintStartTime(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintBool(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintGrantedQueue(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintJobTaskId(lListElem *ep, lListElem *jat, lList *jal, int nm);
+static String PrintUlong(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintDoubleAsUlong(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintDouble(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintPriority(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintString(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintTime(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintStartTime(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintBool(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintGrantedQueue(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintJobTaskId(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 /* static String PrintJobId(lListElem *ep, lListElem *jat, */
-/*                               lList *jal,  int nm); */
+/*                               lList *eleml,  int nm); */
 /* static String PrintTaskId(lListElem *ep, lListElem *jat, */
-/*                               lList *jal,  int nm); */
-static String PrintStatus(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintHold(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintMailOptions(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintPathList(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintCPU(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintMEM(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintIO(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintMailList(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintPERange(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintJobArgs(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintPredecessors(lListElem *ep, lListElem *jat, lList *jal, int nm);
-static String PrintRestart(lListElem *ep, lListElem *jat, lList *jal, int nm);                           
+/*                               lList *eleml,  int nm); */
+static String PrintStatus(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintHold(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintMailOptions(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintPathList(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintCPU(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintMEM(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintIO(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintMailList(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintPERange(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintJobArgs(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintPredecessors(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintRestart(lListElem *ep, lListElem *jat, lList *eleml, int nm);                           
 static void SetJobLabels(Widget w);
 static void qmonWhatSetItems(Widget list, int how);
 static void qmonJobFilterSet(Widget w, XtPointer cld, XtPointer cad);
@@ -195,7 +195,7 @@ static Widget jobfield_selected = 0;
 static String PrintUlong(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -206,14 +206,13 @@ int nm
    if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
       int show_value = 0;
  
-#if 1 /* EB: review with Andre */
-      if (jal && !jat) {
-         lListElem *first_elem = lFirst(jal);
+      if (eleml && !jat) {
+         lListElem *first_elem = lFirst(eleml);
  
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            jat = lFirst(jal);
+            jat = lFirst(eleml);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            u_long32 task_id = range_list_get_first_id(jal, NULL);
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
             jat = job_get_ja_task_template(ep, task_id);
             show_value = 1;
@@ -229,9 +228,6 @@ int nm
             show_value = 1;
          }
       }
-#else
-      jat = lFirst(lGetList(ep, JB_ja_tasks));
-#endif
  
       if (show_value) {
          sprintf(buf, "%d", (int)lGetUlong(jat, nm));
@@ -252,7 +248,7 @@ int nm
 static String PrintDoubleAsUlong(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm
 ) {
    char buf[BUFSIZ];
@@ -266,26 +262,33 @@ int nm
       if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
          int show_value = 0;
 
-         if (jal && !jat) {
-            lListElem *first_elem = lFirst(jal);
+         if (eleml && !jat) {
+            lListElem *first_elem = lFirst(eleml);
        
             if (is_obj_of_type(first_elem, JAT_Type)) {
-               jat = lFirst(jal);
+               jat = lFirst(eleml);
             } else if (is_obj_of_type(first_elem, RN_Type)) {
-               u_long32 task_id = range_list_get_first_id(jal, NULL);
+               u_long32 task_id = range_list_get_first_id(eleml, NULL);
        
                jat = job_get_ja_task_template(ep, task_id);
                show_value = 1;
             }
          } else if (jat) {
-            lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids); 
-            u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
+            u_long32 given_task_id = lGetUlong(jat, JAT_task_number);
+            int is_enrolled = job_is_enrolled(ep, given_task_id);
 
-            /*
-             * only show value for the first pending task of a job
-             */
-            if (task_id == lGetUlong(jat, JAT_task_number)) {
+            if (is_enrolled) {
                show_value = 1;
+            } else {
+               lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids); 
+               u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
+
+               /*
+                * only show value for the first pending task of a job
+                */
+               if (task_id == given_task_id) {
+                  show_value = 1;
+               }
             }
          }
 
@@ -309,7 +312,7 @@ int nm
 static String PrintDouble(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -323,32 +326,35 @@ int nm
       if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
          int show_value = 0;
     
-   #if 1 /* EB: review with Andre */
-         if (jal && !jat) {
-            lListElem *first_elem = lFirst(jal);
+         if (eleml && !jat) {
+            lListElem *first_elem = lFirst(eleml);
     
             if (is_obj_of_type(first_elem, JAT_Type)) {
-               jat = lFirst(jal);
+               jat = lFirst(eleml);
             } else if (is_obj_of_type(first_elem, RN_Type)) {
-               u_long32 task_id = range_list_get_first_id(jal, NULL);
+               u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
                jat = job_get_ja_task_template(ep, task_id);
                show_value = 1;
             }
          } else if (jat) {
-            lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids);
-            u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
-    
-            /*
-             * only show value for the first pending task of a job
-             */
-            if (task_id == lGetUlong(jat, JAT_task_number)) {
+            u_long32 given_task_id = lGetUlong(jat, JAT_task_number);
+            int is_enrolled = job_is_enrolled(ep, given_task_id);
+ 
+            if (is_enrolled) {
                show_value = 1;
-            }
+            } else {
+               lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids);
+               u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
+ 
+               /*
+                * only show value for the first pending task of a job
+                */
+               if (task_id == given_task_id) {
+                  show_value = 1;
+               }
+            }         
          }
-   #else
-         jat = lFirst(lGetList(ep, JB_ja_tasks));
-   #endif
     
          if (show_value) {
             sprintf(buf, "%f", lGetDouble(jat, nm));
@@ -370,7 +376,7 @@ int nm
 static String PrintBool(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -390,7 +396,7 @@ int nm
 static String PrintJobArgs(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -421,7 +427,7 @@ int nm
 static String PrintPredecessors(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -448,7 +454,7 @@ int nm
 static String PrintPERange(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -468,7 +474,7 @@ int nm
 static String PrintPathList(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -488,7 +494,7 @@ int nm
 static String PrintCPU(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -501,13 +507,13 @@ int nm
    if (job_is_zombie_job(ep)) {
       str = XtNewString("NA");
    } else {
-      if (jal && !jat) {
-         lListElem *first_elem = lFirst(jal);
+      if (eleml && !jat) {
+         lListElem *first_elem = lFirst(eleml);
 
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            jat = lFirst(jal);
+            jat = lFirst(eleml);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            u_long32 task_id = range_list_get_first_id(jal, NULL);
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
 
             jat = job_get_ja_task_template(ep, task_id);
          }
@@ -547,7 +553,7 @@ int nm
 static String PrintMEM(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -560,13 +566,13 @@ int nm
    if (job_is_zombie_job(ep)) {
       str = XtNewString("NA");
    } else {  
-      if (jal && !jat) {
-         lListElem *first_elem = lFirst(jal);
+      if (eleml && !jat) {
+         lListElem *first_elem = lFirst(eleml);
     
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            jat = lFirst(jal);
+            jat = lFirst(eleml);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            u_long32 task_id = range_list_get_first_id(jal, NULL);
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
          }
@@ -593,7 +599,7 @@ int nm
 static String PrintIO(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -606,13 +612,13 @@ int nm
    if (job_is_zombie_job(ep)) {
       str = XtNewString("NA");
    } else {  
-      if (jal && !jat) {
-         lListElem *first_elem = lFirst(jal);
+      if (eleml && !jat) {
+         lListElem *first_elem = lFirst(eleml);
     
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            jat = lFirst(jal);
+            jat = lFirst(eleml);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            u_long32 task_id = range_list_get_first_id(jal, NULL);
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
          }
@@ -639,7 +645,7 @@ int nm
 static String PrintMailList(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -659,7 +665,7 @@ int nm
 static String PrintMailOptions(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -695,7 +701,7 @@ int nm
 static String PrintCheckpointAttr(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -722,7 +728,7 @@ int nm
 static String PrintGrantedQueue(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str = NULL;
@@ -752,13 +758,13 @@ int nm
       str = XtNewString(queue);
 #endif
 
-   if (jal && !jat) {
-      lListElem *first_elem = lFirst(jal);
+   if (eleml && !jat) {
+      lListElem *first_elem = lFirst(eleml);
  
       if (is_obj_of_type(first_elem, JAT_Type)) {
-         jat = lFirst(jal);
+         jat = lFirst(eleml);
       } else if (is_obj_of_type(first_elem, RN_Type)) {
-         u_long32 task_id = range_list_get_first_id(jal, NULL);
+         u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
          jat = job_get_ja_task_template(ep, task_id);
       }
@@ -806,7 +812,7 @@ int nm
 static String PrintTaskId(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -820,9 +826,9 @@ int nm
    if (jat) {
       sprintf(buf, u32, lGetUlong(jat, JAT_task_number));
    }
-   else if (jal) {
+   else if (eleml) {
       buf[0] = '\0';
-      get_taskrange_str(jal, buf);
+      get_taskrange_str(eleml, buf);
    }
 
    str = XtNewString(buf);
@@ -835,7 +841,7 @@ int nm
 static String PrintJobId(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -856,7 +862,7 @@ int nm
 static String PrintJobTaskId(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    StringBufferT dyn_buf = {NULL, 0};
@@ -870,19 +876,17 @@ int nm
    if (is_array(ep)) {
       StringBufferT dyn_buf2 = {NULL, 0};
 
-#if 1 /* EB: review with Andre */
       if (jat) {
          sge_string_printf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
-      } else if (jal) {
-         lListElem *first_elem = lFirst(jal);
+      } else if (eleml) {
+         lListElem *first_elem = lFirst(eleml);
 
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            get_taskrange_str(jal, &dyn_buf2);
+            get_taskrange_str(eleml, &dyn_buf2);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            range_print_to_string(jal, &dyn_buf2);
+            range_print_to_string(eleml, &dyn_buf2);
          }
       }
-#endif
       if (dyn_buf2.s) {
          sge_string_append(&dyn_buf, ".");
          sge_string_append(&dyn_buf, dyn_buf2.s);
@@ -904,7 +908,7 @@ int nm
 static String PrintStatus(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    lListElem *qep;
@@ -917,19 +921,17 @@ int nm
 
    DENTER(GUI_LAYER, "PrintStatus");
 
-#if 1 /* EB: review with Andre */
-   if (jal && !jat) {
-      lListElem *first_elem = lFirst(jal);
+   if (eleml && !jat) {
+      lListElem *first_elem = lFirst(eleml);
  
       if (is_obj_of_type(first_elem, JAT_Type)) {
-         jat = lFirst(jal);
+         jat = lFirst(eleml);
       } else if (is_obj_of_type(first_elem, RN_Type)) {
-         u_long32 task_id = range_list_get_first_id(jal, NULL);
+         u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
          jat = job_get_ja_task_template(ep, task_id);  
       }
    }
-#endif  
 
    if (jat) {
       ql = lGetList(jat, JAT_granted_destin_identifier_list);
@@ -991,7 +993,7 @@ int nm
 static String PrintHold(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -1005,13 +1007,13 @@ int nm
    if (job_is_zombie_job(ep)) {
       str = XtNewString("NA");
    } else {
-      if (jal && !jat) {
-         lListElem *first_elem = lFirst(jal);
+      if (eleml && !jat) {
+         lListElem *first_elem = lFirst(eleml);
     
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            jat = lFirst(jal);
+            jat = lFirst(eleml);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
-            u_long32 task_id = range_list_get_first_id(jal, NULL);
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
          }         
@@ -1035,7 +1037,7 @@ int nm
 static String PrintPriority(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    char buf[BUFSIZ];
@@ -1055,7 +1057,7 @@ int nm
 static String PrintString(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
 
@@ -1076,7 +1078,7 @@ int nm
 static String PrintTime(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
 
@@ -1097,7 +1099,7 @@ int nm
 static String PrintRestart(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
    String str;
@@ -1123,7 +1125,7 @@ int nm
 static String PrintStartTime(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int nm 
 ) {
 
@@ -1152,7 +1154,7 @@ int nm
 String* PrintJobField(
 lListElem *ep,
 lListElem *jat,
-lList *jal,
+lList *eleml,
 int cols 
 ) {
    int i;
@@ -1173,7 +1175,7 @@ int cols
       for (i=0, col=0; row && i<XtNumber(job_items) && col<cols; i++) {
          if (job_items[i].show) {
             if (job_items[i].printJobField &&
-               (entry = job_items[i].printJobField(ep, jat, jal, job_items[i].nm))) { 
+               (entry = job_items[i].printJobField(ep, jat, eleml, job_items[i].nm))) { 
                row[col] = entry;
             }
             else {

@@ -1793,10 +1793,16 @@ char *prefix
    }
 #endif
 
-   if (lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_hold))
+   if (lGetNumberOfElem(lGetList(jep, JB_ja_tasks)) &&
+       lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_hold)) {
       data->hold = 1;
-   else  
-      data->hold = 0;
+   } else {
+      if (range_list_is_id_within(lGetList(jep, JB_ja_n_h_ids), 1)) {
+         data->hold = 0;
+      } else {
+         data->hold = 1;
+      }
+   }
 
    data->now = JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now));
 
@@ -2036,51 +2042,51 @@ int save
 
    if (data->hold) {
       lListElem *jap;
-      if (!is_array(jep)) {
-         /* 
-          * simple job 
-          */
-         lSetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_hold,
-                     MINUS_H_CMD_SET|MINUS_H_TGT_USER);
-      }
-      else {
-         /* 
-          * array job 
-          */
-         if (data->task_range) {
-            lListElem *range;
-            u_long32 start, end, step;
-            for_each (range, data->task_range) {
-               start = lGetUlong(range, RN_min);
-               end = lGetUlong(range, RN_max);
-               step = lGetUlong(range, RN_step);
-               jap = lFirst(lGetList(jep, JB_ja_tasks));
-               for (;start <= end && jap; start += step) {
-                  while (jap && lGetUlong(jap, JAT_task_number) != start) {
-                     jap = lNext(jap);
+
+      if (reduced_job) {
+         lList *ja_tasks = lGetList(jep, JB_ja_tasks);
+
+         if (ja_tasks) {
+            if (is_array(jep)) {
+               if (data->task_range) {
+                  lListElem *range;
+                  u_long32 start, end, step;
+
+                  for_each (range, data->task_range) {
+                     start = lGetUlong(range, RN_min);
+                     end = lGetUlong(range, RN_max);
+                     step = lGetUlong(range, RN_step);
+                     jap = lFirst(lGetList(jep, JB_ja_tasks));
+                     for (;start <= end && jap; start += step) {
+                        while (jap && 
+                               lGetUlong(jap, JAT_task_number) != start) {
+                           jap = lNext(jap);
+                        }
+                        if (jap) {
+                           lSetUlong(jap, JAT_hold, 
+                                     MINUS_H_CMD_SET|MINUS_H_TGT_USER);
+                        }   
+                     }
                   }
-                  if (jap) {
+               } else {
+                  lListElem *jap;
+                  for_each (jap, lGetList(jep, JB_ja_tasks)) {
                      lSetUlong(jap, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
-                  }   
+                  }
                }
+            } else {
+               lListElem *ja_task = lFirst(lGetList(jep, JB_ja_tasks));
+
+               lSetUlong(ja_task, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
             }
          }
-         else {
-            lListElem *jap;
-            for_each (jap, lGetList(jep, JB_ja_tasks)) {
-               lSetUlong(jap, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
-            }
-         }
+      } else {
+         lList *task_ids = NULL;
+
+         lXchgList(jep, JB_ja_n_h_ids, &task_ids);
+         lXchgList(jep, JB_ja_u_h_ids, &task_ids);
       }
-#if 1 /* EB: TODO*/
-      if (!reduced_job) {
-         lSetList(jep, JB_ja_u_h_ids, lCopyList("user hold ids",
-            lGetList(jep, JB_ja_n_h_ids))); 
-         lSetList(jep, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
-      }
-#endif
-   }
-   else {
+   } else {
       lListElem *jap;
       for_each (jap, lGetList(jep, JB_ja_tasks)) {
          lSetUlong(jap, JAT_hold, 0);

@@ -418,7 +418,6 @@ int row
       ** do show the different job states we show the job id in a different           ** color
       */
 
-#if 1 /* EB: review with Andre */
       if (!jat) {
          lListElem *first_elem = lFirst(tasks);
 
@@ -430,7 +429,6 @@ int row
             jat = job_get_ja_task_template(job, task_id);       
          }
       }
-#endif
       color = qmonJobStateToColor(w, jat);
       XbaeMatrixSetRowColors(w, row, &color, 1);
    }
@@ -739,17 +737,14 @@ void updateJobList(void)
             }
          } else {
             for_each(jap, ptasks) {
-#if 1 /* EB: is JOB_DISPLAY_MODE_RUNNING correct? */
                qmonJobToMatrix(job_pending_jobs, jep, jap, NULL,
                                  JOB_DISPLAY_MODE_RUNNING, pow + tow);
-#endif
                tow++;
             }
             pow++;
          }
          ptasks = lFreeList(ptasks);
       }
-#if 1 /* EB: review with Andre */
       if (lGetList(jep, JB_ja_n_h_ids) || lGetList(jep, JB_ja_u_h_ids) ||
           lGetList(jep, JB_ja_o_h_ids) || lGetList(jep, JB_ja_s_h_ids)) {
          lList *range_list[8];         /* RN_Type */
@@ -789,7 +784,6 @@ void updateJobList(void)
          }
          job_destroy_hold_id_lists(jep, range_list);
       }
-#endif
    }
 
    /*
@@ -1073,6 +1067,10 @@ lDescr *dp;
                               }
                            }
                         }
+                        if (lGetNumberOfElem(jat_list) == 0) {
+                           lAddElemUlong(&jat_list, JAT_task_number, 
+                                         1, JAT_Type);
+                        }
                         lSetList(jep, JB_ja_tasks, jat_list);
                         ipp = lFreeList(ipp);
                      }
@@ -1205,7 +1203,6 @@ XtPointer cld, cad;
       u_long32 selected_job_id;
       u_long32 selected_ja_task_id;
 
-#if 1 /* EB: Review with Andre */
       /*
       ** get the first job in list and its first task to preset 
       ** the hold dialog
@@ -1221,7 +1218,6 @@ XtPointer cld, cad;
       } else {
          new_hold = job_get_ja_task_hold_state(job, selected_ja_task_id);
       }
-#endif
 
       if (lGetNumberOfElem(jl) == 1 && is_array(job)) {
          get_taskrange_str(lGetList(selected_job, JB_ja_tasks), &dyn_tasks);
@@ -1241,43 +1237,14 @@ XtPointer cld, cad;
                               lGetUlong(jatep, JAT_task_number),
                               new_hold | MINUS_H_CMD_SET));
                }
-            }
-            else {
-               lList *range_list = NULL;
-               lListElem *range = NULL;
-               u_long32 start=1, end=1, step=1;
-               /* reset all tasks */
+            } else {
                for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-                  lSetUlong(jatep, JAT_hold, 0);
+                  lSetUlong(jatep, JAT_hold, new_hold | MINUS_H_CMD_SET);
+                  DPRINTF(("Hold for" u32 "." u32 " is " u32 "\n",
+                           lGetUlong(jep, JB_job_number),
+                           lGetUlong(jatep, JAT_task_number),      
+                           new_hold | MINUS_H_CMD_SET));
                }
- 
-               range_list = parse_ranges(dyn_tasks.s, 0, 1, NULL, NULL, 
-                                          INF_NOT_ALLOWED);
- 
-               if (!range_list) {
-                  lListElem *tap = NULL;
-                  tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
-                  lSetUlong(tap, RN_max, 1);
-                  lSetUlong(tap, RN_step, 1);
-               }
-               for_each (range, range_list) {
-                  start = lGetUlong(range, RN_min);
-                  end = lGetUlong(range, RN_max);
-                  step = lGetUlong(range, RN_step);
-                  for (; start<=end; start+=step) {
-                     lListElem *jatep;
-                     jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks),
-                                           JAT_task_number, start);
-                     if (jatep) {
-                        lSetUlong(jatep, JAT_hold, new_hold | MINUS_H_CMD_SET);
-                        DPRINTF(("Hold for" u32 "." u32 " is " u32 "\n",
-                                 lGetUlong(jep, JB_job_number),
-                                 lGetUlong(jatep, JAT_task_number),      
-                                 new_hold | MINUS_H_CMD_SET));
-                     }
-                  }
-               }
-               range_list = lFreeList(range_list); 
             }
          }
          /*
@@ -1331,10 +1298,11 @@ XtPointer cld, cad;
    pl = qmonJobBuildSelectedList(job_pending_jobs, JB_Type, JB_job_number);
 
 #ifdef QALTER_RUNNING
-   if (!pl && rl)
+   if (!pl && rl) {
       pl = rl;
-   else if (rl)
+   } else if (rl) {
       lAddList(pl, rl);
+   }
 #endif
    /*
    ** call the submit dialog for pending jobs
@@ -1348,13 +1316,13 @@ XtPointer cld, cad;
 #ifdef QALTER_RUNNING
       XbaeMatrixDeselectAll(job_running_jobs);
 #endif
-   }
-   else
+   } else {
 #ifndef QALTER_RUNNING
       qmonMessageShow(w, True, "@{Select one pending job for Qalter !}");
 #else
       qmonMessageShow(w, True, "@{Select one job for Qalter !}");
 #endif
+   }
    
    DEXIT;
 }

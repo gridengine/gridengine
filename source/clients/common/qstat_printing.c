@@ -136,8 +136,6 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    if (lGetUlong(q, QU_nsuspend) != 0 &&
        interval != 0 &&
        sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL, false)) {
-/* SG: TODO: does this belong here? */       
-fprintf(stderr, u32" "u32" "u32"\n", lGetUlong(q, QU_nsuspend), interval, interval);
       qinstance_state_set_suspend_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
                             exechost_list, centry_list, suspend_alarm_reason, 

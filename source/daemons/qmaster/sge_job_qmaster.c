@@ -2573,6 +2573,7 @@ int *trigger
    if ((pos=lGetPosViaElem(jep, JB_reserve))>=0) {
       DPRINTF(("got new JB_reserve\n")); 
       lSetBool(new_job, JB_reserve, lGetBool(jep, JB_reserve));
+      *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_RESERVE, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }

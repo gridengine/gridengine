@@ -1,3 +1,7 @@
+AH-2004-04-21-1: Bugfix:    Fix broken qalter -R y|n
+                 Issue      982
+                 Review:    AD
+
 CR-2004-04-21-0: Bugfix:    Ensure that max. nr of dynamic event clients never
                             exceeds max. nr of file descriptors used for 
                             communication

@@ -1,3 +1,14 @@
+AH-2002-10-10-0  Bugfix:    Fix problem with user .cshrc error causing 
+                            [pro|epi]log,pe-[start|stop] failure and setting queue
+                            into error state. [pro|epi]log,pe-[start|stop] are
+                            now started with "unix_behavior" i.e plain execvp().
+                            This allows admins to prevent .cshrc/.profile from being 
+                            sourced when #!/bin/csh -f or #!/bin/sh -f is used.
+                 IZ:        391
+                 Bugtraq:   4756556
+                 Review:    AS
+                 Changed    sge_shepherd
+
 AH-2002-10-08-0  Bugfix:    Commd read the host alias file each time when 
                             a hostname was not found in commd's host list.
                             Now host alias file only read at commd startup

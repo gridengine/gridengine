@@ -1003,13 +1003,13 @@ int ckpt_type
 #endif
 
    if (WIFSIGNALED(status)) {
-      sprintf(err_str, "job exited due to uncaught signal");
+      sprintf(err_str, "%s exited due to signal", childname);
       shepherd_trace(err_str);
 
 #if 0 /* EB: review with AS */
       if (ckpt_type && !signalled_ckpt_job) {
          unlink("checkpointed");
-         shepherd_trace("job exited due to signal but not due to checkpoint");
+         shepherd_trace("%s exited due to signal but not due to checkpoint", childname);
          if (ckpt_type & CKPT_KERNEL) {
             shepherd_trace("starting ckpt clean command");
             start_clean_command(clean_command);
@@ -1032,7 +1032,7 @@ int ckpt_type
 
       exit_status = 128+child_signal;
    } else {
-      sprintf(err_str, "job exited NOT due to uncaught signal");
+      sprintf(err_str, "%s exited not due to signal", childname);
       shepherd_trace(err_str);
 
 #if 0 /* EB: review with AS */
@@ -2600,7 +2600,7 @@ static int start_async_command(char *descr, char *cmd)
 
       sge_set_def_sig_mask(0, NULL);
       sge_unblock_all_signals();
-      start_command(get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
+      start_command(descr, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
       return 0;   
    }
 

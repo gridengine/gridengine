@@ -2336,7 +2336,8 @@ int *trigger
 
    }
 
-#if 1 /* MD: #599: If it is a deadline job the user has to be a deadline user */
+   /* ---- JB_deadline */
+   /* If it is a deadline job the user has to be a deadline user */
    if ((pos=lGetPosViaElem(jep, JB_deadline))>=0) {
       if (!userset_is_deadline_user(Master_Userset_List, ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
@@ -2350,7 +2351,6 @@ int *trigger
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    }
-#endif
 
 
    /* ---- JB_execution_time */

@@ -376,6 +376,7 @@ if [ "$startup" = true ]; then
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
       $bin_dir/sge_qmaster
+      sleep 5
 
       echo "   starting sge_schedd"
       $bin_dir/sge_schedd

@@ -1,3 +1,7 @@
+MD-2004-01-29-0: Bugfix:    - fixed sgeee option in sge_config, distinst 
+                            - changed comment in sge_job_master.c 
+                 Changed:   sge_config, distinst 
+
 SG-2004-01-29-0: Enhancem.: Added qstat -explain E support.
                  Review:    pending
                  Changed:   qmaster, qstat

@@ -361,7 +361,7 @@ instsecbin=false
 inst3rdparty=false
 
 exit_on_error=true
-sgeee=false
+sgeee=true
 sundist=false
 localinst=false
 setfileperm=true

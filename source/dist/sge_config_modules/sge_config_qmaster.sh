@@ -329,7 +329,7 @@ SpoolingCheckParams()
       
       CreateRPCServerScript
       $INFOTEXT "Now we have to startup the rc script >%s< on the RPC server machine\n" $COMMONDIR/sgebdb
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installtion script try to start the RPC server? (y/n) [y] >>"
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
       if [ $? = 0 -o $AUTO = "true" -a $START_RPC_SERVICE = "true" ]; then
          $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
@@ -614,12 +614,10 @@ PrintConf()
    $ECHO "min_gid                0"
    $ECHO "user_lists             none"
    $ECHO "xuser_lists            none"
-   if [ $SGEEE = true ]; then
-      $ECHO "projects               none"
-      $ECHO "xprojects              none"
-      $ECHO "enforce_project        false"
-      $ECHO "enforce_user           false"
-   fi
+   $ECHO "projects               none"
+   $ECHO "xprojects              none"
+   $ECHO "enforce_project        false"
+   $ECHO "enforce_user           false"
    $ECHO "load_report_time       00:00:40"
    $ECHO "stat_log_time          48:00:00"
    $ECHO "max_unheard            00:05:00"
@@ -649,12 +647,10 @@ PrintConf()
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"
    $ECHO "max_jobs               0"
-   if [ $inst = sgeee ]; then
-      $ECHO "auto_user_oticket      0"
-      $ECHO "auto_user_fshare       0"
-      $ECHO "auto_user_default_project none"
-      $ECHO "auto_user_delete_time  0"
-   fi
+   $ECHO "auto_user_oticket      0"
+   $ECHO "auto_user_fshare       0"
+   $ECHO "auto_user_default_project none"
+   $ECHO "auto_user_delete_time  0"
 
 }
 

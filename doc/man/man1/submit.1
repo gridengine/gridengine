@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/01/22 14:39:59 $     Revision: $Revision: 1.9.2.10 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/05/20 14:04:37 $     Revision: $Revision: 1.9.2.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2003/01/22 14:39:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/05/20 14:04:37 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1382,7 +1382,7 @@ switch, the contents of the DISPLAY environment variable are used as default.
 In addition to those environment variables specified to be
 exported to the job via the \fB\-v\fP or the \fB\-V\fP option
 (see above)
-\fIqsub\fP, \fIqsh\fP, and \fIqlogin\fP
+\fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, and \fIqlogin\fP
 add the following variables with the indicated values to the variable
 list:
 .sp 1
@@ -1406,6 +1406,9 @@ the time zone of the submitting client.
 .IP "\fBxxQS_NAME_Sxx_O_WORKDIR\fP" 1.5i
 the absolute path of the current working directory of the
 submitting client.
+.PP
+For tasks of a tightly integrated parallel job, submitting client is the 
+command submitting the task (qrsh -inherit).
 .PP
 Furthermore, xxQS_NAMExx sets additional variables into the
 job's environment, as listed below.

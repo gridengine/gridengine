@@ -1,3 +1,11 @@
+JG-2003-05-20-0  Bugfix:    SGE_O_* variables for a task within a tightly 
+                            integrated job were set from the jobs environment, 
+                            but have to come from the tasks environment.
+                 IZ:        557
+                 Bugtraq:   4866711
+                 Review:    AH
+                 Changed:   qsh, sge_execd
+
 AA-2003-05-09-0  Bugfix:    unexpected output for qstat -j and qmon Why? 
                             with no job selected due to wrong order of 
                             message ids fixed
@@ -6,8 +14,8 @@ AA-2003-05-09-0  Bugfix:    unexpected output for qstat -j and qmon Why?
                  Changed:   all binaries that link against schedlib
 
 JG-2003-05-08-0  Bugfix:    qmake dumped core when starting recursive make calls
-                 IZ:        #547
-                 Bugtraq:   #4860391
+                 IZ:        547
+                 Bugtraq:   4860391
                  Review:    AS
                  Changed:   qmake
 
@@ -25,7 +33,7 @@ AA-2003-04-30-0  Bugfix:    qlogin/qlogind whitespace checking removed to
 JG-2003-04-22-0  Bugfix:    qrsh (rshd) does not set limits after setting the 
                             osjobid. This disabled limits that depend on being 
                             in a OS managed job (e.g. on SUPER-UX/SX).
-                 IZ:        #513
+                 IZ:        513
                  Review:    EB
                  Changed:   rshd
 

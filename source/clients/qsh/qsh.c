@@ -1613,8 +1613,7 @@ char **argv
    if(existing_job) {
       int msgsock   = -1;
       sge_tid_t tid = -1;
-      const char *cwd = NULL;
-     
+
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
       /* if we had a connection to qmaster commd (to get configuration), 
@@ -1622,9 +1621,7 @@ char **argv
       leave_commd();
       set_commlib_param(CL_P_ID, 0, NULL, NULL);
    
-      cwd = lGetString(job, JB_cwd);
-
-      tid = sge_qexecve(host, NULL, cwd, NULL, lGetList(job, JB_env_list), 1); 
+      tid = sge_qexecve(host, NULL, NULL, job, 1); 
 
       if(tid <= 0) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,

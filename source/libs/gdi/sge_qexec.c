@@ -80,7 +80,7 @@ const char *qexec_last_err(void)
 *
 *  SYNOPSIS
 *     sge_tid_t sge_qexecve(const char *hostname, const char *path, 
-*                           const char *argv[], const lList *env_lp, 
+*                           const char *argv[], const lListElem *job_template,
 *                           int is_qrsh) 
 *
 *  FUNCTION
@@ -92,30 +92,32 @@ const char *qexec_last_err(void)
 *     contains a task id that is returned to the caller of the function.
 *
 *  INPUTS
-*     const char *hostname - name of the host on which to start the task
-*     const char *path     - complete path of the command to start
-*     const char *argv[]   - argument vector for the command to start
-*     const lList *env_lp  - list containing environment variable settings
-*                            for the task that override the default environment
-*     int is_qrsh          - is the task to be started a qrsh -inherit task?
-*                            0 means 0, != 0 means yes
+*     const char *hostname          - name of the host on which to start the 
+*                                     task
+*     const char *path              - complete path of the command to start
+*     const char *argv[]            - argument vector for the command to start
+*     const lListElem *job_template - job_template containing cwd, the 
+*                                     environment, the sge_o_* variables etc.
+*     int is_qrsh                   - is the task to be started a qrsh -inherit
+*                                     task? 0 means 0, != 0 means yes
 *
 *  RESULT
 *     sge_tid_t - the task id, if the task can be executed,
 *                 a value <= 0 indicates an error.
 *
 *******************************************************************************/
-sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *cwd,
-                      const char *argv[], const lList *env_lp, 
+sge_tid_t sge_qexecve(const char *hostname, const char *path,
+                      const char *argv[], const lListElem *job_template,
                       int is_qrsh)
 {
-char localhost[1000];
-char myname[256];
-const char *s;
+   char localhost[1000];
+   char myname[256];
+   const char *s;
+   const char *cwd;
    int ret, i, uid;
    sge_tid_t tid = 0;
    lListElem *rt, *jep, *arg_ep, *env_ep, *jgelem=NULL, *taskep;
-   lList *env, *arg_lp = NULL;
+   lList *env, *env_lp, *arg_lp = NULL;
    sge_pack_buffer pb;
    u_long32 jobid;
    u_long32 dummymid;
@@ -140,7 +142,9 @@ const char *s;
       DEXIT;
       return -1;
    }
-   
+  
+   env_lp = lGetList(job_template, JB_env_list);
+  
    {  
       lListElem *ep;
       if ( !(s=getenv("JOB_ID")) && 
@@ -201,6 +205,7 @@ const char *s;
    lSetUlong(jep, JB_job_number, jobid); 
    lSetString(jep, JB_owner, myname);
 
+   cwd = lGetString(job_template, JB_cwd);
    if(cwd != NULL) {
       lSetString(jep, JB_cwd, cwd);
    }
@@ -288,6 +293,35 @@ const char *s;
 
    lSetList(jep, JB_env_list, env);
    env = NULL;
+
+   /* copy sge_o_* variables */
+   {
+      const int o_vars[] = { 
+         JB_sge_o_home,
+         JB_sge_o_log_name,
+         JB_sge_o_path,
+         JB_sge_o_mail,
+         JB_sge_o_shell,
+         JB_sge_o_tz,
+         JB_sge_o_workdir, 
+         NoName 
+      };
+      int i;
+      const char *value;
+
+      for (i = 0; o_vars[i] != NoName; i++) {
+         value = lGetString(job_template, o_vars[i]);
+         if (value != NULL) {
+            lSetString(jep, o_vars[i], value);
+         }
+      }
+
+      value = lGetHost(job_template, JB_sge_o_host);
+      if (value != NULL) {
+         lSetHost(jep, JB_sge_o_host, value);
+      }
+   }
+   
 
    set_commlib_param(CL_P_COMMDHOST, 0, hostname, NULL); 
 

@@ -877,70 +877,70 @@ char *err_str
    else 
       cwd = pw->pw_dir;
 
-   if (lGetString(job_jep, JB_sge_o_home)) {
+   if (lGetString(jep, JB_sge_o_home)) {
       if (set_sge_environment) 
-         add_or_replace_env(environmentList, "SGE_O_HOME", lGetString(job_jep, JB_sge_o_home));
+         add_or_replace_env(environmentList, "SGE_O_HOME", lGetString(jep, JB_sge_o_home));
       if (set_cod_environment) 
-         add_or_replace_env(environmentList, "COD_O_HOME", lGetString(job_jep, JB_sge_o_home));
+         add_or_replace_env(environmentList, "COD_O_HOME", lGetString(jep, JB_sge_o_home));
       if (set_grd_environment) 
-         add_or_replace_env(environmentList, "GRD_O_HOME", lGetString(job_jep, JB_sge_o_home));
+         add_or_replace_env(environmentList, "GRD_O_HOME", lGetString(jep, JB_sge_o_home));
    }   
-   if (lGetString(job_jep, JB_sge_o_log_name)) {
+   if (lGetString(jep, JB_sge_o_log_name)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_LOGNAME", lGetString(job_jep, JB_sge_o_log_name));
+         add_or_replace_env(environmentList, "SGE_O_LOGNAME", lGetString(jep, JB_sge_o_log_name));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_LOGNAME", lGetString(job_jep, JB_sge_o_log_name));
+         add_or_replace_env(environmentList, "COD_O_LOGNAME", lGetString(jep, JB_sge_o_log_name));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_LOGNAME", lGetString(job_jep, JB_sge_o_log_name));
+         add_or_replace_env(environmentList, "GRD_O_LOGNAME", lGetString(jep, JB_sge_o_log_name));
    }
       
-   if (lGetString(job_jep, JB_sge_o_path)) {
+   if (lGetString(jep, JB_sge_o_path)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_PATH", lGetString(job_jep, JB_sge_o_path));
+         add_or_replace_env(environmentList, "SGE_O_PATH", lGetString(jep, JB_sge_o_path));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_PATH", lGetString(job_jep, JB_sge_o_path));
+         add_or_replace_env(environmentList, "COD_O_PATH", lGetString(jep, JB_sge_o_path));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_PATH", lGetString(job_jep, JB_sge_o_path));
+         add_or_replace_env(environmentList, "GRD_O_PATH", lGetString(jep, JB_sge_o_path));
    }   
-   if (lGetString(job_jep, JB_sge_o_mail)) {
+   if (lGetString(jep, JB_sge_o_mail)) {
       if (set_sge_environment) 
-         add_or_replace_env(environmentList, "SGE_O_MAIL", lGetString(job_jep, JB_sge_o_mail));
+         add_or_replace_env(environmentList, "SGE_O_MAIL", lGetString(jep, JB_sge_o_mail));
       if (set_cod_environment) 
-         add_or_replace_env(environmentList, "COD_O_MAIL", lGetString(job_jep, JB_sge_o_mail));
+         add_or_replace_env(environmentList, "COD_O_MAIL", lGetString(jep, JB_sge_o_mail));
       if (set_grd_environment) 
-         add_or_replace_env(environmentList, "GRD_O_MAIL", lGetString(job_jep, JB_sge_o_mail));
+         add_or_replace_env(environmentList, "GRD_O_MAIL", lGetString(jep, JB_sge_o_mail));
    }   
-   if (lGetString(job_jep, JB_sge_o_shell)) {
+   if (lGetString(jep, JB_sge_o_shell)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_SHELL", lGetString(job_jep, JB_sge_o_shell));
+         add_or_replace_env(environmentList, "SGE_O_SHELL", lGetString(jep, JB_sge_o_shell));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_SHELL", lGetString(job_jep, JB_sge_o_shell));
+         add_or_replace_env(environmentList, "COD_O_SHELL", lGetString(jep, JB_sge_o_shell));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_SHELL", lGetString(job_jep, JB_sge_o_shell));
+         add_or_replace_env(environmentList, "GRD_O_SHELL", lGetString(jep, JB_sge_o_shell));
    }   
-   if (lGetString(job_jep, JB_sge_o_tz)) {
+   if (lGetString(jep, JB_sge_o_tz)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_TZ", lGetString(job_jep, JB_sge_o_tz));
+         add_or_replace_env(environmentList, "SGE_O_TZ", lGetString(jep, JB_sge_o_tz));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_TZ", lGetString(job_jep, JB_sge_o_tz));
+         add_or_replace_env(environmentList, "COD_O_TZ", lGetString(jep, JB_sge_o_tz));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_TZ", lGetString(job_jep, JB_sge_o_tz));
+         add_or_replace_env(environmentList, "GRD_O_TZ", lGetString(jep, JB_sge_o_tz));
    }   
-   if (lGetString(job_jep, JB_sge_o_workdir)) {
+   if (lGetString(jep, JB_sge_o_workdir)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
+         add_or_replace_env(environmentList, "SGE_O_WORKDIR", lGetString(jep, JB_sge_o_workdir));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
+         add_or_replace_env(environmentList, "COD_O_WORKDIR", lGetString(jep, JB_sge_o_workdir));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
+         add_or_replace_env(environmentList, "GRD_O_WORKDIR", lGetString(jep, JB_sge_o_workdir));
    }   
-   if (lGetHost(job_jep, JB_sge_o_host)) {
+   if (lGetHost(jep, JB_sge_o_host)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_HOST", lGetHost(job_jep, JB_sge_o_host));
+         add_or_replace_env(environmentList, "SGE_O_HOST", lGetHost(jep, JB_sge_o_host));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_HOST", lGetHost(job_jep, JB_sge_o_host));
+         add_or_replace_env(environmentList, "COD_O_HOST", lGetHost(jep, JB_sge_o_host));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_HOST", lGetHost(job_jep, JB_sge_o_host));
+         add_or_replace_env(environmentList, "GRD_O_HOST", lGetHost(jep, JB_sge_o_host));
    }   
    if (lGetString(job_jep, JB_job_name)) {
       add_or_replace_env(environmentList, "REQNAME", lGetString(job_jep, JB_job_name));

@@ -90,7 +90,7 @@
 #define DENTER( layer, function)
 #define DEXIT
 #define DTRACE
-#define DTRACEPRINTF(x)
+#define DLOCKPRINTF(x)
 #define DPRINTF(x)
 #define DTIMEPRINTF(x)
 #define DSPECIALPRINTF(x)

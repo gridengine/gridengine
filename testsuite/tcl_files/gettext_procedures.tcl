@@ -319,6 +319,7 @@ proc update_macro_messages_list {} {
         if { [string first "_MESSAGE" $line] >= 0 } {
            set org_line $line
            set line [replace_string $line "SFQ" "\"\\\"%-.100s\\\"\""]
+           set line [replace_string $line "SFN2" "\"%-.200s\""]
            set line [replace_string $line "SFN" "\"%-.100s\""]
            set line [replace_string $line "U32CFormat" "\"%ld\""]
            set line [replace_string $line "X32CFormat" "\"%lx\""]

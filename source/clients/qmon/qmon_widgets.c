@@ -434,7 +434,7 @@ Cardinal size
 
       for (ep=lFirst(lp), i=0; ep; ep=lNext(ep), i++) {
          str1 = lGetString(ep, MR_user);
-         str2 = lGetString(ep, MR_host);
+         str2 = lGetHost(ep, MR_host);
          if (str1) {
             if (!str2)
                strncpy(buf, str1, BUFSIZ);
@@ -772,8 +772,18 @@ int type
          set_comma = 1;
       else
          strcat(pair_string, comma);
-      field1 = lGetString(ep, nm1);
-      field2 = lGetString(ep, nm2);
+
+      if (nm1 == PN_host ) {
+         field1 = lGetHost(ep, nm1);
+      } else {
+         field1 = lGetString(ep, nm1);
+      }
+
+      if (nm2 == MR_host) {
+         field2 = lGetHost(ep, nm2);
+      } else {
+         field2 = lGetString(ep, nm2);
+      }
       
       if (field1 && field1[0] != '\0') {
          strcat(pair_string, field1);

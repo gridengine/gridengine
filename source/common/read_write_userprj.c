@@ -333,8 +333,7 @@ int parsing_type
                   ssclp = lCopyList(NULL, lGetList(cp, CF_sublist));
 
                   /* --------- UPP_name */
-                  if (!(upp = lAddSubStr(ep, UPP_name, name, 
-                                         UP_project, UPP_Type))) {
+                  if (!(upp = lAddSubStr(ep, UPP_name, name, UP_project, UPP_Type))) {
                      sprintf(SGE_EVENT, MSG_PROJECT_FOUNDPROJECTXTWICE_S, name);
                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX,
                             NUM_AN_ERROR);

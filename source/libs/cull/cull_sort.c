@@ -170,6 +170,9 @@ const lSortOrder *sp
       case lStringT:
          result = sge_strnullcmp(lGetPosString(ep0, sp[i].pos), lGetPosString(ep1, sp[i].pos));
          break;
+      case lHostT:
+         result = sge_strnullcmp(lGetPosHost(ep0, sp[i].pos), lGetPosHost(ep1, sp[i].pos));
+         break;
       case lUlongT:
          result = ulongcmp(lGetPosUlong(ep0, sp[i].pos), lGetPosUlong(ep1, sp[i].pos));
          break;

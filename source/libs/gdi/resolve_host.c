@@ -47,33 +47,54 @@ lListElem *ep,
 int nm 
 ) {
    int pos, ret;
+   int dataType;
    char unique[MAXHOSTLEN];
    const char *hostname;
 
    DENTER(TOP_LAYER, "sge_resolve_host");
+
+   if (ep == NULL) {
+      DEXIT;
+      return -1; 
+   }
 
    /* ep is no host element, if ep has no nm */
    if ((pos = lGetPosViaElem(ep, nm)) < 0) {
       DEXIT;
       return -1;
    }
+   dataType = lGetPosType(lGetElemDescr(ep),pos);
+   switch (dataType) {
+       case lStringT:
+          hostname = lGetPosString(ep, pos);
+          DPRINTF(("!!!!!!!!!!!!!  sge_resolve_host: call with lStringT data type, should be lHostT !!!!!!!!!!! \n"));
+          break;
 
-   hostname = lGetPosString(ep, pos);
+       case lHostT:
+          hostname = lGetPosHost(ep, pos);
+          break;
+
+       default:
+          hostname = NULL;
+          break;
+   }
 
    ret = sge_resolve_hostname(hostname, unique, nm);
-   
-   switch ( ret ) {
-   case COMMD_NACK_UNKNOWN_HOST:
-      DEXIT;
-      return ret;
-   case CL_OK:
-      lSetPosString(ep, pos, unique);
-      DEXIT;
-      return ret;
-   default:
-      DEXIT; /* can't say */
-      return ret;
+
+
+   if (ret == CL_OK) {
+      switch (dataType) {
+       case lStringT:
+          lSetPosString(ep, pos, unique);
+          break;
+
+       case lHostT:
+          lSetPosHost(ep, pos, unique);
+          break;
+      }
    }
+   DEXIT;
+   return ret;
 }
 
 /* ------------------------------------------------------------ */
@@ -91,7 +112,8 @@ int nm
       return CL_RANGE;
    }
 
-   /* these names are resolved */
+   /* these "spezial" names are resolved:
+          ("global", "unknown", "template")*/
    switch (nm) {
    case CE_stringval:
       if (!strcmp(hostname, SGE_UNKNOWN_NAME)) {

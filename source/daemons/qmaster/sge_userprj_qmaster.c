@@ -300,14 +300,14 @@ int user        /* =1 user, =0 project */
       for_each (ep, Master_Exechost_List) {
          if (lGetElemStr(lGetList(ep, EH_prj), UP_name, name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
-                  MSG_OBJ_PRJS, MSG_OBJ_EH, lGetString(ep, EH_name)));
+                  MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;
             return STATUS_EEXIST;
          }
          if (lGetElemStr(lGetList(ep, EH_xprj), UP_name, name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
-                  MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetString(ep, EH_name)));
+                  MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;
             return STATUS_EEXIST;

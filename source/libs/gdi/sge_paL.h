@@ -55,8 +55,8 @@ enum {
 SLISTDEF(PA_Type, PathAlias)
    /* configuration fields */
    SGE_STRING(PA_origin)
-   SGE_STRING(PA_submit_host)
-   SGE_STRING(PA_exec_host)
+   SGE_HOST(PA_submit_host)       /* CR - hostname change */
+   SGE_HOST(PA_exec_host)         /* CR - hostname change */
    SGE_STRING(PA_translation)
 LISTEND 
 

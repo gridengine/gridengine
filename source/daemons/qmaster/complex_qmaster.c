@@ -149,7 +149,7 @@ int sub_command
                      CE_name, lGetString(old_cep, CE_name));
                   if (ceep) {
                      ERROR((SGE_EVENT, MSG_ATTRSTILLREFINHOST_SS, lGetString(old_cep, CE_name), 
-                        lGetString(hep, EH_name)));
+                        lGetHost(hep, EH_name)));
                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
                      goto ERROR;
                   }        
@@ -297,7 +297,7 @@ int sub_command
             for_each (hep, Master_Exechost_List) {
                if ((cr = lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) && 
                      !parse_ulong_val(NULL, NULL, type, lGetString(cr, CE_stringval), NULL, 0)) {
-                  ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUMEH_SS, name, lGetString(hep, EH_name))) ;
+                  ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUMEH_SS, name, lGetHost(hep, EH_name))) ;
                   sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
                   goto ERROR;
                } 
@@ -394,7 +394,7 @@ gdi_object_t *object
                continue;
 
             qslots = lGetUlong(gdil, JG_slots);
-            debit_host_consumable(jep, sge_locate_host(lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST),
+            debit_host_consumable(jep, sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST),
                               Master_Complex_List, qslots);
             debit_queue_consumable(jep, qep, Master_Complex_List, qslots);
 
@@ -602,7 +602,7 @@ const char *cmplx_name
       sge_add_event(NULL, sgeE_QUEUE_MOD, 0, 0, lGetString(ep, QU_qname), ep);
    }
    for_each(ep, Master_Exechost_List)
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(ep, EH_name), ep);
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(ep, EH_name), ep);
 
    DEXIT;
    return;
@@ -629,7 +629,7 @@ const char *complex_name
    for_each (ep, Master_Exechost_List) {
       if (lGetElemStr(lGetList(ep, EH_complex_list), CX_name, complex_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
-               complex_name, MSG_OBJ_EH, lGetString(ep, EH_name)));
+               complex_name, MSG_OBJ_EH, lGetHost(ep, EH_name)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = STATUS_EUNKNOWN;
       }

@@ -568,14 +568,14 @@ lList **finished_jobs
 
          for_each(host, lists->host_list) {
             fprintf(fpdjp, "after sort by share load - for running jobs only\n");
-            fprintf(fpdjp, "For host %s :\n", lGetString(host, EH_name));
+            fprintf(fpdjp, "For host %s :\n", lGetHost(host, EH_name));
             fprintf(fpdjp, "EH_sge_tickets is %u\n", (u_long32)lGetDouble(host, EH_sge_tickets));
             fprintf(fpdjp, "EH_sge_ticket_pct is %f\n", lGetDouble(host, EH_sge_ticket_pct));
             fprintf(fpdjp, "EH_resource_capability_factor is %f\n", lGetDouble(host, EH_resource_capability_factor));
             fprintf(fpdjp, "EH_resource_capability_factor_pct is %f\n", lGetDouble(host, EH_resource_capability_factor_pct));
             fprintf(fpdjp, "EH_sort_value  is %f\n", lGetDouble(host, EH_sort_value));
             fprintf(fpdjp, "EH_sge_load_pct  is %f\n", lGetDouble(host, EH_sge_load_pct));
-            fprintf(fpdjp, "share load value for host %s is %d\n", lGetString(host, EH_name), lGetUlong(host, EH_sge_load));
+            fprintf(fpdjp, "share load value for host %s is %d\n", lGetHost(host, EH_name), lGetUlong(host, EH_sge_load));
        }
 #endif
       }
@@ -594,7 +594,7 @@ lList **finished_jobs
 
       for_each(host, lists->host_list) {
          fprintf(fpdjp, "load value for host %s is %f\n",
-                 lGetString(host, EH_name), lGetDouble(host, EH_sort_value));
+                 lGetHost(host, EH_name), lGetDouble(host, EH_sort_value));
 
          if (sgeee_mode)  {
             fprintf(fpdjp, "EH_sge_tickets is %u\n", (u_long32)lGetDouble(host, EH_sge_tickets));
@@ -813,7 +813,7 @@ SKIP_THIS_JOB:
        if (scheddconf.queue_sort_method == QSM_LOAD)  {
             fprintf(fpdjp, "using sort_by_load method - after sge_debit_job:\n");
             for_each(host, lists->host_list) {
-               fprintf(fpdjp, "load value for host %s is %f\n", lGetString(host, EH_name), lGetDouble(host, EH_sort_value));
+               fprintf(fpdjp, "load value for host %s is %f\n", lGetHost(host, EH_name), lGetDouble(host, EH_sort_value));
             }
             fprintf(fpdjp, " \n");
             fprintf(fpdjp, "QUEUE ORDER:\n");
@@ -830,7 +830,7 @@ SKIP_THIS_JOB:
 #ifdef TEST_DEMO
             for_each(host, lists->host_list) {
                fprintf(fpdjp, "after sort by share load - for running and already placed new jobs \n");
-               fprintf(fpdjp, "For host %s :\n", lGetString(host, EH_name));
+               fprintf(fpdjp, "For host %s :\n", lGetHost(host, EH_name));
                fprintf(fpdjp, "EH_sge_tickets is %f\n", lGetDouble(host, EH_sge_tickets));
                fprintf(fpdjp, "EH_sge_ticket_pct is %f\n", lGetDouble(host, EH_sge_ticket_pct));
                fprintf(fpdjp, "EH_resource_capability_factor is %f\n", 
@@ -840,7 +840,7 @@ SKIP_THIS_JOB:
                fprintf(fpdjp, "EH_sort_value  is %f\n", lGetDouble(host, EH_sort_value));
                fprintf(fpdjp, "EH_sge_load_pct  is %f\n", lGetDouble(host, EH_sge_load_pct));
                fprintf(fpdjp, "share load value for host %s is %d\n", 
-                              lGetString(host, EH_name), lGetUlong(host, EH_sge_load));
+                              lGetHost(host, EH_name), lGetUlong(host, EH_sge_load));
             }
 #endif
 
@@ -955,7 +955,7 @@ int *sort_hostlist
       job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_ticket)/nslots;
 
       for_each(granted_el, granted) {
-         hep = lGetElemHost(host_list, EH_name, lGetString(granted_el, JG_qhostname));
+         hep = lGetElemHost(host_list, EH_name, lGetHost(granted_el, JG_qhostname));
          old_host_tickets = lGetDouble(hep, EH_sge_tickets);
          lSetDouble(hep, EH_sge_tickets, (old_host_tickets + 
                job_tickets_per_slot*lGetUlong(granted_el, JG_slots)));

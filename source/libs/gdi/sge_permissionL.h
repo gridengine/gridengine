@@ -126,7 +126,7 @@ enum {
 LISTDEF(PERM_Type)
    SGE_ULONG(PERM_manager)            /* 0 or 1 (1 means user has the right) */
    SGE_ULONG(PERM_operator)           /* 0 or 1 (1 means user has the right) */
-   SGE_STRING(PERM_req_host)          /* Name of destination host */
+   SGE_HOST(PERM_req_host)          /* Name of destination host */       /* CR - hostname change */
    SGE_STRING(PERM_req_username)      /* Username on destination host */
    SGE_STRING(PERM_sge_username)      /* username on master host */
 LISTEND 

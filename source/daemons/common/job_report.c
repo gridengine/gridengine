@@ -93,7 +93,7 @@ lListElem *jatep
    /* put in data from master queue */
    if ((masterq=lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)))) {
       lSetString(jr, JR_queue_name, lGetString(masterq, JG_qname));
-      lSetString(jr, JR_host_name,  lGetString(masterq, JG_qhostname));
+      lSetHost(jr, JR_host_name,  lGetHost(masterq, JG_qhostname));
    }
 
    DEXIT;

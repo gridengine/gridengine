@@ -330,9 +330,7 @@ DTRACE;
 
 DTRACE;
    if (!where_host) 
-      where_host = lWhere("%T(!(%Ic=%s))", 
-            EH_Type, 
-               EH_name, SGE_TEMPLATE_NAME);
+      where_host = lWhere("%T(!(%Ic=%s))", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    if (!where_host) 
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED ));
 
@@ -681,9 +679,15 @@ int sge_process_all_events(lList *event_list) {
                JB_project,
                JB_department,
                JB_jobclass,
+               NoName
+            };
+
+            static int host_nm[] =
+            {
                JB_host,
                NoName
             };
+
             static int ulong_nm[] =
             {
                JB_job_number,
@@ -753,8 +757,16 @@ int sge_process_all_events(lList *event_list) {
 
             /* copy all strings */
             for (i = 0; str_nm[i] != NoName; i++)
-               if (lGetPosViaElem(job, str_nm[i]))
+               if (lGetPosViaElem(job, str_nm[i])) {
+                  DPRINTF(("sge_process_all_events: copy all strings\n"));
                   lSetString(ep, str_nm[i], lGetString(job, str_nm[i]));
+               }
+            for (i = 0; host_nm[i] != NoName; i++)
+               if (lGetPosViaElem(job, host_nm[i])) {
+                  DPRINTF(("sge_process_all_events: copy all hosts\n"));
+                  lSetHost(ep, host_nm[i], lGetHost(job, host_nm[i]));
+               }
+
 
             /* copy all ulongs */
             for (i = 0; ulong_nm[i] != NoName; i++)
@@ -855,7 +867,7 @@ int sge_process_all_events(lList *event_list) {
  
             /* copy all strings */
             for (i = 0; str_nm[i] != NoName; i++)
-               if (lGetPosViaElem(new_ja_task, str_nm[i]))
+               if (lGetPosViaElem(new_ja_task, str_nm[i])) 
                   lSetString(ja_task, str_nm[i], lGetString(new_ja_task, str_nm[i]));
 
             /* copy all ulongs */

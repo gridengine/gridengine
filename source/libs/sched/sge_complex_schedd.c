@@ -429,8 +429,10 @@ int recompute_debitation_dependent
 
    /* build global complex and add it to result */
    if (recompute_debitation_dependent || !*new_complex_list) {
-      global_complexes2scheduler(new_complex_list, lGetElemStr(exechost_list, 
-            EH_name, "global"), complex_list, recompute_debitation_dependent);
+      global_complexes2scheduler(new_complex_list, 
+                                 lGetElemHost(exechost_list, EH_name, "global"), 
+                                 complex_list,
+                                 recompute_debitation_dependent);
    }
 
    /* build host complex and add it to result */
@@ -466,7 +468,7 @@ int recompute_debitation_dependent
       host_complexes2scheduler(
          new_complex_list, 
          queue ?
-            lGetElemHost(exechost_list, EH_name, lGetString(queue, QU_qhostname))
+            lGetElemHost(exechost_list, EH_name, lGetHost(queue, QU_qhostname))
             :NULL, 
          exechost_list, 
          complex_list, 
@@ -526,7 +528,7 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    for_each (cep, lGetList(host, EH_complex_list)) {
       if (!(complex = lGetElemStr(complex_list, CX_name, lGetString(cep, CX_name)))) {
          ERROR((SGE_EVENT, MSG_LIST_NOCOMPLEXXATTACHEDTOHOSTY_SS , 
-               lGetString(cep, CX_name), lGetString(host, EH_name)));
+               lGetString(cep, CX_name), lGetHost(host, EH_name)));
          DEXIT;
          return -1;
       }
@@ -542,7 +544,7 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    /* handle load values */
    load_values(
       *new_complex,
-      lGetString(host, EH_name),
+      lGetHost(host, EH_name),
       lGetList(host, EH_load_list),
       layer,
       recompute_debitation_dependent,
@@ -811,9 +813,15 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
 
       case TYPE_STR:
       case TYPE_CSTR:
-      case TYPE_HOST:
          /* read a value from queue */
          if ((value = lGetString(queue, q2cptr->field))) {
+            lSetString(complexel, CE_stringval, value);
+            lSetUlong(complexel, CE_dominant, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
+         }
+         break;
+      case TYPE_HOST:
+         /* read a value from queue */
+         if ((value = lGetHost(queue, q2cptr->field))) {
             lSetString(complexel, CE_stringval, value);
             lSetUlong(complexel, CE_dominant, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
          }

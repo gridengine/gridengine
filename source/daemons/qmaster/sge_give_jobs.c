@@ -152,7 +152,7 @@ lListElem *hep
    /*
    originalUser = sge_strdup(NULL,lGetString(jep, JB_owner));
    DPRINTF(("sge_give_job: Starting job from %s\n", originalUser));
-   mappedUser = sge_malloc_map_out_going_username(originalUser, lGetString(master_qep, QU_qhostname));
+   mappedUser = sge_malloc_map_out_going_username(originalUser, lGetHost(master_qep, QU_qhostname));
    if (mappedUser == NULL) {
       DPRINTF(("user %s not mapped !\n",lGetString(jep, JB_owner) ));
       FREE(originalUser);
@@ -170,14 +170,14 @@ lListElem *hep
       rhost = lGetString(hep, EH_real_name);
       DPRINTF(("qstd host: %s\n", rhost));
       if (!rhost) {
-         ERROR((SGE_EVENT, MSG_OBJ_NOREALNAMEINHOST_S, lGetString(hep, EH_name)));
+         ERROR((SGE_EVENT, MSG_OBJ_NOREALNAMEINHOST_S, lGetHost(hep, EH_name)));
          DEXIT;
          return -1;
       }
    }
    else {
       target = prognames[EXECD];
-      rhost = lGetString(master_qep, QU_qhostname);
+      rhost = lGetHost(master_qep, QU_qhostname);
       DPRINTF(("execd host: %s\n", rhost));
    }
 
@@ -211,7 +211,7 @@ lListElem *hep
       lListElem *slave_hep;
 
       if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
-         if (!(slave_hep = sge_locate_host(lGetString(gdil_ep, JG_qhostname), 
+         if (!(slave_hep = sge_locate_host(lGetHost(gdil_ep, JG_qhostname), 
             SGE_EXECHOST_LIST))) {
             ret = -1;   
             break;
@@ -221,7 +221,7 @@ lListElem *hep
          lSetUlong(jep, JB_task_id_range, lGetUlong(gdil_ep, JG_task_id_range));
 
 
-         if (send_job(lGetString(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
+         if (send_job(lGetHost(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
             ret = -1;   
             break;
          }
@@ -514,7 +514,7 @@ const char *queue
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
       if (!ep || 
          !(qnm=lGetString(ep, JG_qname)) || 
-         !(hnm=lGetString(ep, JG_qhostname))) {
+         !(hnm=lGetHost(ep, JG_qhostname))) {
          ERROR((SGE_EVENT, MSG_JOB_UNKNOWNGDIL4TJ_UU,
                u32c(jobid), u32c(jataskid)));
          lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
@@ -529,7 +529,7 @@ const char *queue
          DEXIT;
          return;
       }
-      if (!(hnm=lGetString(mqep, QU_qhostname)) ||
+      if (!(hnm=lGetHost(mqep, QU_qhostname)) ||
           !(hep = sge_locate_host(hnm, SGE_EXECHOST_LIST))) {
          ERROR((SGE_EVENT, MSG_JOB_NOHOST4TJ_SUU, 
                 hnm, u32c(jobid), u32c(jataskid)));
@@ -705,9 +705,9 @@ int spool_job
                      Master_Complex_List, slots)>0)
                sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", hep);
 
-            if (debit_host_consumable(jep, hep=sge_locate_host(lGetString(qep, QU_qhostname), 
+            if (debit_host_consumable(jep, hep=sge_locate_host(lGetHost(qep, QU_qhostname), 
                      SGE_EXECHOST_LIST), Master_Complex_List, slots)>0)
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(qep, QU_qhostname), hep);
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(qep, QU_qhostname), hep);
 
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
@@ -752,12 +752,11 @@ int spool_job
                   lListElem *host;
 
                   if (!master_host) {
-                     master_host = lGetString(granted_queue, JG_qhostname);
+                     master_host = lGetHost(granted_queue, JG_qhostname);
                   } 
                   
-                  if (strcasecmp(master_host, lGetString(granted_queue, JG_qhostname))) {
-                     host = lGetElemCaseStr(Master_Exechost_List, EH_name, 
-                        lGetString(granted_queue, JG_qhostname)); 
+                  if (strcasecmp(master_host, lGetHost(granted_queue, JG_qhostname))) {
+                     host = lGetElemHost(Master_Exechost_List, EH_name, lGetHost(granted_queue, JG_qhostname)); 
                      
                      add_to_reschedule_unknown_list(host, 
                         lGetUlong(jep, JB_job_number),
@@ -778,8 +777,7 @@ int spool_job
 
             granted_list = lGetList(jatep, JAT_granted_destin_identifier_list);
             granted_queue = lFirst(granted_list);
-            host = lGetElemCaseStr(Master_Exechost_List, EH_name,
-                                   lGetString(granted_queue, JG_qhostname));
+            host = lGetElemHost(Master_Exechost_List, EH_name, lGetHost(granted_queue, JG_qhostname));
             add_to_reschedule_unknown_list(host, lGetUlong(jep, JB_job_number),
                                            lGetUlong(jatep, JAT_task_number),
                                            RESCHEDULE_SKIP_JR);
@@ -985,9 +983,9 @@ int incslots
                   Master_Complex_List, -tmp_slot))
                sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", hep);
 
-            if (debit_host_consumable(jep, (hep=sge_locate_host(lGetString(qep, QU_qhostname), 
+            if (debit_host_consumable(jep, (hep=sge_locate_host(lGetHost(qep, QU_qhostname), 
                   SGE_EXECHOST_LIST)), Master_Complex_List, -tmp_slot))
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(qep, QU_qhostname), hep);
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(qep, QU_qhostname), hep);
 
             debit_queue_consumable(jep, qep, Master_Complex_List, -tmp_slot);
          }
@@ -1071,7 +1069,7 @@ char *rlimit_name
       if ((dcep=sge_locate_complex_attr(rlimit_name, Master_Complex_List))
                && lGetUlong(dcep, CE_consumable))
          if ( lGetSubStr(qep, CE_name, rlimit_name, QU_consumable_config_list) ||
-              lGetSubStr(sge_locate_host(lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST),
+              lGetSubStr(sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST),
                      CE_name, rlimit_name, EH_consumable_config_list) ||
               lGetSubStr(sge_locate_host(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST),
                      CE_name, rlimit_name, EH_consumable_config_list))

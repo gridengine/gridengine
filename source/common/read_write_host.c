@@ -257,6 +257,7 @@ int fields[]
          argp = &args[2];
          break;
       default:
+         DPRINTF(("!!!!!!!!!!!!!!!cull_read_in_host: unexpected type\n"));
          DEXIT;
          return NULL;
    }
@@ -334,8 +335,8 @@ char *file
             DEXIT;
             return NULL;
          }
-         sprintf(filename, "%s/.%s", dir, lGetString(ep, nm));
-         sprintf(real_filename, "%s/%s", dir, lGetString(ep, nm));
+         sprintf(filename, "%s/.%s", dir, lGetHost(ep, nm));
+         sprintf(real_filename, "%s/%s", dir, lGetHost(ep, nm));
          DPRINTF(("writing to %s\n", filename));
       }
 
@@ -368,7 +369,11 @@ char *file
 
    /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - */
    /* print values controlled by SGE */
-   FPRINTF((fp, "hostname                   %s\n", lGetString(ep, nm)));
+   if (lGetHost(ep, nm) != NULL) {
+      FPRINTF((fp, "hostname                   %s\n", lGetHost(ep, nm)));
+   } else {
+      FPRINTF((fp, "hostname                   %s\n", "(null)"));
+   }
 
 #if 0
       CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITINGHOSTNAME));

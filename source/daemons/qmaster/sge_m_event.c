@@ -458,7 +458,7 @@ u_long32 now
    while (event_client) {
 
       /* extract address of event client */
-      host = lGetString(event_client, EV_host);
+      host = lGetHost(event_client, EV_host);
       commproc = lGetString(event_client, EV_commproc);
       id = lGetUlong(event_client, EV_commid);
 
@@ -511,7 +511,7 @@ u_long32 now
          report_list = lCreateList("report list", REP_Type);
          report = lCreateElem(REP_Type);
          lSetUlong(report, REP_type, NUM_REP_REPORT_EVENTS);
-         lSetString(report, REP_host, me.qualified_hostname);
+         lSetHost(report, REP_host, me.qualified_hostname);
          lSetList(report, REP_list, lGetList(event_client, EV_events));
          lAppendElem(report_list, report);
 
@@ -761,7 +761,7 @@ int need_copy_list  /* to reduce overhead */
 
    /* -------------------- */
    case sgeE_EXECHOST_DEL:
-      deleteObjectByName(SGE_EXECHOST_LIST, lFirst(list) ? lGetString(lFirst(list),EH_name) : strkey);
+      deleteObjectByName(SGE_EXECHOST_LIST, lFirst(list) ? lGetHost(lFirst(list),EH_name) : strkey);
    case sgeE_EXECHOST_ADD:
       /* done by handle generic gdi object */
       break;

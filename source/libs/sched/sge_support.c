@@ -492,8 +492,7 @@ sge_calc_node_usage( lListElem *node,
                lListElem *u;
                if (((u=lGetElemStr(lGetPosList(node, sn_usage_list_pos),
                                    UA_name, nm))) ||
-                   ((u=lAddSubStr(node, UA_name, nm,
-                                  STN_usage_list, UA_Type))))
+                   ((u=lAddSubStr(node, UA_name, nm, STN_usage_list, UA_Type))))
                   lSetPosDouble(u, ua_value_pos,
                                 lGetPosDouble(u, ua_value_pos) +
                                 lGetPosDouble(nu, ua_value_pos));

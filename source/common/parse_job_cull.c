@@ -180,7 +180,7 @@ lListElem **pjob
                         me.qualified_hostname, NULL);  
       lSetString(*pjob, JB_sge_o_workdir, cwd_out);
    }
-   lSetString(*pjob, JB_sge_o_host, 
+   lSetHost(*pjob, JB_sge_o_host, 
       ((cp = sge_getenv("HOST")) ? cp : me.unqualified_hostname));
    if (lGetString(*pjob, JB_cell)) {
       lSetString(*pjob, JB_cell, me.default_cell);
@@ -483,7 +483,7 @@ lListElem **pjob
 #ifndef USE_CLIENT_QALTER
    if (!lGetList(*pjob, JB_mail_list)) {   
       ep = lAddSubStr(*pjob, MR_user, me.user_name, JB_mail_list, MR_Type);
-      lSetString(ep, MR_host, me.qualified_hostname);
+      lSetHost(ep, MR_host, me.qualified_hostname);
    }
 #endif
 

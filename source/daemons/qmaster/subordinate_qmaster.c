@@ -297,9 +297,9 @@ int how
          /* need to be done in case of suspend_at adding a queue */
 
       } else {
-         if (hostcmp(host, lGetString(refqep, QU_qhostname))) {
+         if (hostcmp(host, lGetHost(refqep, QU_qhostname))) {
             ERROR((SGE_EVENT, MSG_SGETEXT_SUBHOSTDIFF_SSS, 
-                  qname, so_qname, lGetString(refqep, QU_qhostname)));
+                  qname, so_qname, lGetHost(refqep, QU_qhostname)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;
             return STATUS_EUNKNOWN;

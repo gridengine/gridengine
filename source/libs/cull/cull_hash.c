@@ -37,6 +37,7 @@
 #include "cull_hash.h"
 #include "cull_listP.h"
 #include "cull_multitypeP.h"
+#include "sge_string.h"
 
 /****** uti/hash/--Introduction *************************************************
 *  NAME
@@ -205,6 +206,12 @@ lHash *cull_hash_create(const lDescr *descr)
             return NULL;
          }
          break;
+      case lHostT:
+         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+            free(hash);
+            return NULL;
+         }
+         break;
       case lUlongT:
          if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
             free(hash);
@@ -255,6 +262,12 @@ void cull_hash_create_hashtables(lList *lp)
                   lp->descr[i].hash = NULL;
                }
                break;
+            case lHostT:
+               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+                  free(lp->descr[i].hash);
+                  lp->descr[i].hash = NULL;
+               }
+               break;
             case lUlongT:
                if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
                   free(lp->descr[i].hash);
@@ -292,7 +305,8 @@ void cull_hash_create_hashtables(lList *lp)
 *******************************************************************************/
 void cull_hash_insert(const lListElem *ep, const int pos)
 {
-   lDescr *descr;
+   char host_key[MAXHOSTLEN+1];
+   lDescr *descr = NULL;
    void *key = NULL;
 
    if(ep == NULL || pos < 0) {
@@ -312,6 +326,14 @@ void cull_hash_insert(const lListElem *ep, const int pos)
 
       case lStringT:
          key = ep->cont[pos].str;
+         break;
+  
+      case lHostT:
+         if (ep->cont[pos].host != NULL) {
+            hostcpy(host_key,ep->cont[pos].host);
+            string_toupper(host_key,MAXHOSTLEN);
+            key = host_key;
+         }
          break;
 
       default:
@@ -368,7 +390,8 @@ void cull_hash_insert(const lListElem *ep, const int pos)
 *******************************************************************************/
 void cull_hash_remove(const lListElem *ep, const int pos)
 {
-   lDescr *descr;
+   char host_key[MAXHOSTLEN+1];
+   lDescr *descr = NULL;
    void *key = NULL;
 
    if(ep == NULL || pos < 0) {
@@ -388,6 +411,14 @@ void cull_hash_remove(const lListElem *ep, const int pos)
 
       case lStringT:
          key = ep->cont[pos].str;
+         break;
+      
+      case lHostT:
+         if (ep->cont[pos].host != NULL) {
+            hostcpy(host_key,ep->cont[pos].host);
+            string_toupper(host_key,MAXHOSTLEN);
+            key = host_key;
+         }
          break;
 
       default:

@@ -78,7 +78,8 @@ extern char *default_domain;
 
 int hostcmp(const char *h1, const char *h2);
 
-void hostdup(const char *raw, char *dst);
+void hostcpy(char *dst, const char *raw);
+void string_toupper(char *buffer , int max_len );
 
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)

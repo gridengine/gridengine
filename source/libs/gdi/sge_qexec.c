@@ -278,7 +278,7 @@ const char *s;
   
    /* add list into our remote task list */
    rt = lAddElemUlong(&remote_task_list, RT_tid, tid, RT_Type);
-   lSetString(rt, RT_hostname, hostname);
+   lSetHost(rt, RT_hostname, hostname);
 
    if (no_ack) {
       lSetUlong(rt, RT_state, RT_STATE_EXITED);

@@ -728,11 +728,11 @@ char *err_str
          q_set = lGetString(qep, QU_processors);
          pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
-            lGetString(gdil_ep, JG_qhostname),
+            lGetHost(gdil_ep, JG_qhostname),
             slots, 
             lGetString(gdil_ep, JG_qname), 
             q_set);
-         if (!hostcmp(lGetString(master_q, QU_qhostname), lGetString(gdil_ep, JG_qhostname))) {
+         if (!hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
             host_slots += slots;
             if (q_set && strcasecmp(q_set, "UNDEFINED")) {
                parse_ranges(lGetString(qep, QU_processors), 0, 0, &alp, &processor_set, INF_ALLOWED);
@@ -886,13 +886,13 @@ char *err_str
       if (set_grd_environment)
          add_or_replace_env(environmentList, "GRD_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
    }   
-   if (lGetString(job_jep, JB_sge_o_host)) {
+   if (lGetHost(job_jep, JB_sge_o_host)) {
       if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_HOST", lGetString(job_jep, JB_sge_o_host));
+         add_or_replace_env(environmentList, "SGE_O_HOST", lGetHost(job_jep, JB_sge_o_host));
       if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_HOST", lGetString(job_jep, JB_sge_o_host));
+         add_or_replace_env(environmentList, "COD_O_HOST", lGetHost(job_jep, JB_sge_o_host));
       if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_HOST", lGetString(job_jep, JB_sge_o_host));
+         add_or_replace_env(environmentList, "GRD_O_HOST", lGetHost(job_jep, JB_sge_o_host));
    }   
    if (lGetString(job_jep, JB_job_name)) {
       add_or_replace_env(environmentList, "REQNAME", lGetString(job_jep, JB_job_name));
@@ -945,7 +945,7 @@ char *err_str
    }
 
    add_or_replace_env(environmentList, "REQUEST", lGetString(job_jep, JB_job_name));
-   add_or_replace_env(environmentList, "HOSTNAME", lGetString(master_q, QU_qhostname));
+   add_or_replace_env(environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
    add_or_replace_env(environmentList, "QUEUE", lGetString(master_q, QU_qname));
    add_or_replace_env_u32(environmentList, "JOB_ID", lGetUlong(job_jep, JB_job_number));
   
@@ -1001,9 +1001,9 @@ char *err_str
 
    add_or_replace_env_int(environmentList, "RESTARTED", (int) lGetUlong(job_jatep, JAT_job_restarted));
    add_or_replace_env(environmentList, "FIRST_HOST", 
-         lGetString(job_jep, JB_first_host) ? lGetString(job_jep, JB_first_host) : "UNKNOWN");
+         lGetHost(job_jep, JB_first_host) ? lGetHost(job_jep, JB_first_host) : "UNKNOWN");
    add_or_replace_env(environmentList, "LAST_HOST", 
-         lGetString(job_jep, JB_last_host) ? lGetString(job_jep, JB_last_host) : "UNKNOWN");   
+         lGetHost(job_jep, JB_last_host) ? lGetHost(job_jep, JB_last_host) : "UNKNOWN");   
 
    /*
    ** interactive and login jobs have no script file
@@ -1237,8 +1237,8 @@ char *err_str
    fprintf(fp, "min_uid=" u32 "\n", conf.min_uid);
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX6)
-   if (lGetString(job_jep, JB_sge_o_host))
-      fprintf(fp, "spi_initiator=%s\n", lGetString(job_jep, JB_sge_o_host));
+   if (lGetHost(job_jep, JB_sge_o_host))
+      fprintf(fp, "spi_initiator=%s\n", lGetHost(job_jep, JB_sge_o_host));
    else
       fprintf(fp, "spi_initiator=%s\n", "unknown");
 #endif
@@ -1314,7 +1314,7 @@ char *err_str
    fprintf(fp, "mail_options=" u32 "\n", lGetUlong(jep, JB_mail_options));
    fprintf(fp, "forbid_reschedule=%d\n", forbid_reschedule);
    fprintf(fp, "queue=%s\n", lGetString(master_q, QU_qname));
-   fprintf(fp, "host=%s\n", lGetString(master_q, QU_qhostname));
+   fprintf(fp, "host=%s\n", lGetHost(master_q, QU_qhostname));
    fprintf(fp, "processors=");
    unparse_ranges(fp, NULL, 0, processor_set);
    fprintf(fp, "\n");
@@ -1626,7 +1626,7 @@ char *err_str
              lGetString(jep, JB_job_name),
              lGetString(jep, JB_owner), 
              lGetString(master_q, QU_qname),
-             lGetString(master_q, QU_qhostname), sge_mail_start);
+             lGetHost(master_q, QU_qhostname), sge_mail_start);
       } 
       else {
          sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(lGetUlong(jep, JB_job_number)),
@@ -1636,7 +1636,7 @@ char *err_str
              lGetString(jep, JB_job_name),
              lGetString(jep, JB_owner),
              lGetString(master_q, QU_qname),
-             lGetString(master_q, QU_qhostname), sge_mail_start);
+             lGetHost(master_q, QU_qhostname), sge_mail_start);
       }
       cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job start");
    }
@@ -1822,8 +1822,8 @@ lList *gdil_orig  /* JG_Type */
    gdil_copy = lCopyList("", gdil_orig);   
    while ((ep=lFirst(gdil_copy))) {
       /* remove all gdil_copy-elements with the same JG_qhostname */
-      where = lWhere("%T(!(%I h= %s))", 
-         JG_Type, JG_qhostname, lGetString(ep, JG_qhostname));
+      where = lWhere("%T(!(%I h= %s))", JG_Type, JG_qhostname, 
+              lGetHost(ep, JG_qhostname));
       if (!where) {
          lFreeList(gdil_copy);
          CRITICAL((SGE_EVENT, MSG_EXECD_NOWHERE4GDIL_S,"JG_qhostname"));

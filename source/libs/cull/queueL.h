@@ -48,7 +48,7 @@ enum {
 
 LISTDEF( QueueT )
    SGE_XSTRING   ( Q_name )
-   SGE_XSTRING   ( Q_hostname )
+   SGE_HOST     ( Q_hostname )                    /* CR - hostname change */
    SGE_XINT      ( Q_load )
    SGE_XULONG    ( Q_status )
    SGE_XLIST     ( Q_ownerlist, OwnerT )

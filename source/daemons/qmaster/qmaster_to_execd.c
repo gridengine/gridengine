@@ -63,7 +63,7 @@ lListElem *hep
    
    DENTER(BASIS_LAYER, "notify_new_conf_2_execd");
    
-   hostname = lGetString(hep, EH_name);
+   hostname = lGetHost(hep, EH_name);
    ret = notify_new_conf(hostname, EXECD);
 
    DEXIT;

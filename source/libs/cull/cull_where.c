@@ -258,6 +258,16 @@ FILE *fp
             fprintf(fp, "%s \"%s\"\n", out, cp->operand.cmp.val.str);
          }
          break;
+
+      case lHostT:
+         if (!fp) {
+            DPRINTF(("%s \"%s\"\n", out, cp->operand.cmp.val.host));
+         }
+         else {
+            fprintf(fp, "%s \"%s\"\n", out, cp->operand.cmp.val.host);
+         }
+         break;
+
       case lListT:
 /*          DPRINTF(("lWriteWhere error\n")); */
          break;
@@ -673,12 +683,17 @@ va_list *app
       break;
 
    case STRING:
-      if (cp->operand.cmp.mt != lStringT)
+      if ( (cp->operand.cmp.mt != lStringT ) && (cp->operand.cmp.mt != lHostT )   )
          incompatibleType(MSG_CULL_WHERE_SHOULDBESTRINGT );
-      s = va_arg(*app, char *);
-
-      cp->operand.cmp.val.str = strdup((char *) s);
-/*       cp->operand.cmp.val.str = strdup(va_arg(*app, char *)); */
+      if ( cp->operand.cmp.mt == lStringT ) {
+         s = va_arg(*app, char *);
+         cp->operand.cmp.val.str = strdup((char *) s);
+         /* cp->operand.cmp.val.str = strdup(va_arg(*app, char *)); */
+      } 
+      if ( cp->operand.cmp.mt == lHostT ) {
+         s = va_arg(*app, char *);
+         cp->operand.cmp.val.host = strdup((char *) s);
+      }
       break;
 
    case ULONG:
@@ -1045,10 +1060,16 @@ WhereArgList *wapp
       break;
 
    case STRING:
-      if (cp->operand.cmp.mt != lStringT)
+      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)   )
          incompatibleType(MSG_CULL_WHERE_SHOULDBESTRINGT);
-/*       DPRINTF(("(*wapp)->value.str = %s\n", (*wapp)->value.str)); */
-      cp->operand.cmp.val.str = (*wapp)++->value.str;
+
+      if ( cp->operand.cmp.mt == lStringT ) {
+         /* DPRINTF(("(*wapp)->value.str = %s\n", (*wapp)->value.str)); */
+         cp->operand.cmp.val.str = (*wapp)++->value.str;
+      } 
+      if ( cp->operand.cmp.mt == lHostT   ) {
+         cp->operand.cmp.val.host = (*wapp)++->value.host;
+      }
       break;
 
    case ULONG:
@@ -1107,10 +1128,10 @@ WhereArgList *wapp
       "p=" as operator is not allowed with other types than lStringT
       "h=" as operator is not allowed with other types than lStringT
     */
-   if ((cp->op == BITMASK && cp->operand.cmp.mt != lUlongT) ||
-       (cp->op == STRCASECMP && cp->operand.cmp.mt != lStringT)||
-       (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lStringT)||
-       (cp->op == PATTERNCMP && cp->operand.cmp.mt != lStringT))
+   if ((cp->op == BITMASK && cp->operand.cmp.mt     != lUlongT )                                                                ||
+       ( (cp->op == STRCASECMP && cp->operand.cmp.mt  != lStringT) && (cp->op == STRCASECMP && cp->operand.cmp.mt  != lHostT) ) ||
+       ( (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lStringT) && (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lHostT) ) ||
+       ( (cp->op == PATTERNCMP && cp->operand.cmp.mt  != lStringT) && (cp->op == PATTERNCMP && cp->operand.cmp.mt  != lHostT) ))
       incompatibleType(MSG_CULL_WHERE_OPERANDHITNOTOPERATORERROR );
 
    eat_token();
@@ -1150,6 +1171,11 @@ lCondition *cp
       if (cp->operand.cmp.mt == lStringT) {
          if (cp->operand.cmp.val.str) {
             free(cp->operand.cmp.val.str);
+         }
+      }
+      if (cp->operand.cmp.mt == lHostT) {
+         if (cp->operand.cmp.val.host) {
+            free(cp->operand.cmp.val.host);
          }
       }
    case SUBSCOPE:
@@ -1230,8 +1256,25 @@ const lCondition *cp
             return 0;
          }
          result = strcmp(str1, str2);
-         DPRINTF(("strcmp(%s, %s) = %d\n", str1, str2, result));
+         DPRINTF(("strcmp(%s, %s)(lStringT) = %d\n", str1, str2, result));
          break;
+      case lHostT:
+         if (!(str1 = lGetPosHost(ep, cp->operand.cmp.pos))) {
+            LERROR(LENULLSTRING);
+            DPRINTF(("lGetPosHost in lCompare\n"));
+            DEXIT;
+            return 0;
+         }
+         if (!(str2 = cp->operand.cmp.val.host)) {
+            DPRINTF(("cp->operand.cmp.val.host in lCompare\n"));
+            LERROR(LENULLSTRING);
+            DEXIT;
+            return 0;
+         }
+         result = strcmp(str1, str2);
+         DPRINTF(("strcmp(%s, %s)(lhostT) = %d\n", str1, str2, result));
+         break;
+
       case lUlongT:
          result = ulongcmp(lGetPosUlong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ul);
          break;
@@ -1288,31 +1331,47 @@ const lCondition *cp
 
    case STRCASECMP:
    case HOSTNAMECMP:
-      if (cp->operand.cmp.mt != lStringT) {
+      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT) ) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-
-      if (cp->op == STRCASECMP ) {
-         result = SGE_STRCASECMP(lGetPosString(ep, cp->operand.cmp.pos),
+      if (cp->operand.cmp.mt == lStringT) {
+         if (cp->op == STRCASECMP ) {
+            result = SGE_STRCASECMP(lGetPosString(ep, cp->operand.cmp.pos),
+                                cp->operand.cmp.val.str);
+         } else {
+            result = hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
                              cp->operand.cmp.val.str);
-      } else {
-         result = hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
-                          cp->operand.cmp.val.str);
+         }
+         result = (result == 0);
+      }
+      if (cp->operand.cmp.mt == lHostT) {
+         if (cp->op == STRCASECMP ) {
+            result = SGE_STRCASECMP(lGetPosHost(ep, cp->operand.cmp.pos),
+                                cp->operand.cmp.val.host);
+         } else {
+            result = hostcmp(lGetPosHost(ep, cp->operand.cmp.pos),
+                             cp->operand.cmp.val.host);
+         }
+         result = (result == 0);
       }
 
-      result = (result == 0);
+
       break;
 
    case PATTERNCMP:
-      if (cp->operand.cmp.mt != lStringT) {
+      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT) ) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-      result = !fnmatch(cp->operand.cmp.val.str,
-                           lGetPosString(ep, cp->operand.cmp.pos), 0);
+      if (cp->operand.cmp.mt == lStringT) {
+         result = !fnmatch(cp->operand.cmp.val.str, lGetPosString(ep, cp->operand.cmp.pos), 0);
+      } 
+      if (cp->operand.cmp.mt == lHostT) {
+         result = !fnmatch(cp->operand.cmp.val.host, lGetPosHost(ep, cp->operand.cmp.pos), 0);
+      }
       break;
 
 
@@ -1404,6 +1463,9 @@ const lCondition *cp
          break;
       case lStringT:
          new->operand.cmp.val.str = strdup(cp->operand.cmp.val.str);
+         break;
+      case lHostT:
+         new->operand.cmp.val.host = strdup(cp->operand.cmp.val.host);
          break;
       case lListT:
          break;

@@ -774,7 +774,7 @@ char **argv
             continue;
       }
       if (host[0]) {
-         if (sge_strnullcasecmp(host, dusage.hostname))
+         if (hostcmp(host, dusage.hostname))
             continue;
       }
       if (accountflag) {
@@ -922,19 +922,19 @@ char **argv
          ** or the existing element to increase
          */
          while (hostflag && ep &&
-                (sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname) < 0)) {
+                (hostcmp(lGetHost(ep, QAJ_host), dusage.hostname) < 0)) {
              ep = lNext(ep);
          }
          while (queueflag && ep &&
                 (sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname) < 0) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname)))) {
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname)))) {
              ep = lNext(ep);
          }
          while (groupflag && ep &&
                 (sge_strnullcmp(lGetString(ep, QAJ_group), dusage.group) < 0) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) && 
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname)))) {
              ep = lNext(ep);
@@ -942,7 +942,7 @@ char **argv
          while (ownerflag && ep &&
                 (sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner) < 0) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) && 
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -954,7 +954,7 @@ char **argv
                 (!ownerflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) && 
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag ||  
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -968,7 +968,7 @@ char **argv
                 (!ownerflag ||
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) && 
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -985,7 +985,7 @@ char **argv
                 (!ownerflag ||
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) && 
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -1003,7 +1003,7 @@ char **argv
                 (!ownerflag ||
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) && 
+                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -1015,7 +1015,7 @@ char **argv
          ** or do we have to insert one?
          */
          if (ep &&
-             (!hostflag ||       (!sge_strnullcasecmp(lGetString(ep, QAJ_host), dusage.hostname))) &&
+             (!hostflag ||       (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) &&
              (!queueflag ||      (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
              (!groupflag ||      (!sge_strnullcmp(lGetString(ep, QAJ_group) , dusage.group))) &&
              (!ownerflag ||      (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
@@ -1048,7 +1048,7 @@ char **argv
 
             new_ep = lCreateElem(QAJ_Type);
             if (hostflag && dusage.hostname)
-               lSetString(new_ep, QAJ_host, dusage.hostname);
+               lSetHost(new_ep, QAJ_host, dusage.hostname);
             if (queueflag && dusage.qname) 
                lSetString(new_ep, QAJ_queue, dusage.qname);
             if (groupflag && dusage.group) 
@@ -1213,7 +1213,7 @@ char **argv
             ** we can't ignore it because it was a line in the
             ** accounting file
             */
-            printf("%-30.29s", ((cp = lGetString(ep, QAJ_host)) ? cp : ""));
+            printf("%-30.29s", ((cp = lGetHost(ep, QAJ_host)) ? cp : ""));
          }
          if (queue[0]) {
             printf("%-15.14s", queue);

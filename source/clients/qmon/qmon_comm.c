@@ -308,6 +308,8 @@ lEnumeration *what
    lList *alp = NULL;
    lListElem *alep = NULL;
    lListElem *ep = NULL;
+   const lDescr *listDescriptor = NULL;
+   int dataType;
 
    DENTER(GUI_LAYER, "qmonDelList");
 
@@ -362,8 +364,22 @@ printf("__________________________________\n");
    else { /* type != SGE_JOB_LIST */
       /* modify local list */
       for_each2(alep, alp, ep, *lpp) {
-         if ( lGetUlong(alep, AN_status) == STATUS_OK)
-            lDelElemStr(local, nm, lGetString(ep, nm)); 
+         if ( lGetUlong(alep, AN_status) == STATUS_OK) {
+            listDescriptor = lGetListDescr(*local);
+            dataType = lGetPosType(listDescriptor, lGetPosInDescr(listDescriptor, nm));
+            switch (dataType) {
+               case lStringT:
+                  lDelElemStr(local, nm, lGetString(ep, nm)); 
+                  break;
+               case lHostT:
+                  lDelElemHost(local, nm, lGetHost(ep, nm));
+                  break;
+               default:
+                  sge_add_answer(&alp, "data type not lStringT or lHostT", STATUS_ESEMANTIC, 0);
+                  DPRINTF(("qmonDelList: data type not lStringT or lHostT\n"));
+                  break;
+            }
+         }
       }
    }
 
@@ -463,6 +479,9 @@ lEnumeration *what
    lListElem *ep = NULL;
    lListElem *prev = NULL;
    lListElem *rem = NULL;
+   const lDescr *listDescriptor = NULL;
+   int dataType;
+
    
    DENTER(GUI_LAYER, "qmonModList");
 
@@ -493,10 +512,24 @@ lEnumeration *what
             if (!*local && *lpp)
                *local = lCreateList(lGetListName(*lpp), lGetListDescr(*lpp));
             else {
-               if (nm == JB_job_number)
+               if (nm == JB_job_number) {
                   rem = lGetElemUlong(*local, nm, lGetUlong(ep, nm));
-               else
-                  rem = lGetElemStr(*local, nm, lGetString(ep, nm));
+               } else {
+                  listDescriptor = lGetListDescr(*local);
+                  dataType = lGetPosType(listDescriptor, lGetPosInDescr(listDescriptor, nm));
+                  rem = NULL;
+                  switch (dataType) {
+                     case lStringT:
+                        rem = lGetElemStr(*local, nm, lGetString(ep, nm));
+                        break;
+                     case lHostT:
+                        rem = lGetElemHost(*local, nm, lGetHost(ep, nm));
+                        break;
+                     default:
+                        DPRINTF(("qmonModList: data type not lStringT or lHostT\n"));
+                        goto error;
+                  }
+               } 
             }
             if (rem) {
                prev = lPrev(prev);

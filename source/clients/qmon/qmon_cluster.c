@@ -445,8 +445,7 @@ void updateClusterList(void)
 
    cl = qmonMirrorList(SGE_CONFIG_LIST);
    lPSortList(cl, "%I+", CONF_hname);
-   UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, 
-                           CONF_hname);
+   UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_hname);
    XtVaGetValues( cluster_host_list,
                   XmNselectedItems, &selectedItems,
                   XmNselectedItemCount, &selectedItemCount,
@@ -851,7 +850,7 @@ XtPointer cld, cad;
 
    if (qmonCClEntryToCull(layout, &cluster_entry, &conf_entries, local)) {
       confl = lCreateElemList("Conf_list", CONF_Type, 1);
-      lSetString(lFirst(confl), CONF_hname, host ? host : "global");
+      lSetHost(lFirst(confl), CONF_hname, host ? host : "global");
       lSetList(lFirst(confl), CONF_entries, conf_entries);
 
       xhost = XmtCreateXmString(host ? host : "global");
@@ -866,8 +865,7 @@ XtPointer cld, cad;
       */
       what = lWhat("%T(ALL)", CONF_Type);
 
-      alp = qmonModList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST),
-                           CONF_hname, &confl, NULL, what);
+      alp = qmonModList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_hname, &confl, NULL, what);
 
       aep = lFirst(alp);
       if (lFirst(alp) && lGetUlong(aep, AN_status) == STATUS_OK)
@@ -984,8 +982,8 @@ XtPointer cld, cad;
       if (answer) {
          what = lWhat("%T(ALL)", CONF_Type);
 
-         alp = qmonDelList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST),
-                                 CONF_hname, &lp, NULL, what);
+         alp = qmonDelList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_hname, 
+                           &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
 
@@ -1041,7 +1039,7 @@ int local
    /*
    ** get the global conf list
    */
-   gep = lGetElemStr(qmonMirrorList(SGE_CONFIG_LIST), CONF_hname, "global");
+   gep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_hname, "global");
    if (!gep) {
       *lpp = NULL;
       DEXIT;
@@ -2319,7 +2317,7 @@ XtPointer cld, cad;
       DPRINTF(("cbs->input = %s\n", cbs->input));
 
       /* try to resolve hostname */
-      ret=sge_resolve_hostname((String)cbs->input, unique, EH_name);
+      ret=sge_resolve_hostname((const char*)cbs->input, unique, EH_name);
 
       switch ( ret ) {
          case COMMD_NACK_UNKNOWN_HOST:

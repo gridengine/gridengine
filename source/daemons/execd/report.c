@@ -175,7 +175,7 @@ const char *name,
 const char *value,
 int global 
 ) {
-   lListElem *ep;
+   lListElem *ep=NULL;
 
    DENTER(BASIS_LAYER, "sge_add_str2load_report");
 
@@ -185,16 +185,18 @@ int global
    }
 
    ep=lGetElemStr(*lpp, LR_name, name);
+   
    if (!ep) {
       ep = lAddElemStr(lpp, LR_name, name, LR_Type);
    }
    lSetString(ep, LR_value, value);
    lSetUlong(ep, LR_global, (u_long32)(global?1:0));
 
+
    if (global)
-      lSetString(ep, LR_host, SGE_GLOBAL_NAME);
+      lSetHost(ep, LR_host, SGE_GLOBAL_NAME);
    else {
-      lSetString(ep, LR_host, me.qualified_hostname);
+      lSetHost(ep, LR_host, me.qualified_hostname);
    }
 
    DEXIT;

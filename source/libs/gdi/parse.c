@@ -88,7 +88,7 @@ unsigned int mail_str_len
       if (!(u = lGetString(elem, MR_user)))
          u = MSG_SMALLNULL;
 
-      if (!(h = lGetString(elem, MR_host)))
+      if (!(h = lGetHost(elem, MR_host)))
          sprintf(tmpstr, "%s", u);
       else
          sprintf(tmpstr, "%s@%s", u, h);

@@ -136,7 +136,7 @@ int is_array
 
    if (!(q=lGetString(jr, JR_queue_name)))
       q = "<unknown>";
-   if (!(h=lGetString(jr, JR_host_name)))
+   if (!(h=lGetHost(jr, JR_host_name)))
       h = "<unknown>";
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
       strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));

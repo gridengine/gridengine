@@ -1117,9 +1117,9 @@ char *indent
                   if the consumable is specified in the global host. For running we print it
                   if the resource is managed at this node/queue */
                if ((qep && lGetSubStr(qep, CE_name, name, QU_consumable_config_list)) ||
-                   (qep && (hep=lGetElemHost(exechost_list, EH_name, lGetString(qep, QU_qhostname))) &&
+                   (qep && (hep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname))) &&
                     lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) ||
-                     ((hep=lGetElemCaseStr(exechost_list, EH_name, SGE_GLOBAL_NAME)) &&
+                     ((hep=lGetElemHost(exechost_list, EH_name, SGE_GLOBAL_NAME)) &&
                          lGetSubStr(hep, CE_name, name, EH_consumable_config_list)))
 
                printf("%s%s=%s (default)\n", QSTAT_INDENT, name, lGetString(ce, CE_default));      

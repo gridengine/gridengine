@@ -544,7 +544,7 @@ lList *new_hl
       /*
       ** we must remap the qhostname for qstd queues
       */
-      qhostname = lGetString(qep, QU_qhostname);
+      qhostname = lGetHost(qep, QU_qhostname);
       
       qname = lGetString(qep, QU_qname);
       /* quarkify  QU_qname */
@@ -919,7 +919,7 @@ lListElem *qep
 
    sprintf(info, WIDTH"%s\n", "\n","Queue:", lGetString(qep, QU_qname));
 
-   sprintf(info, WIDTH"%s\n", info, "Host:", lGetString(qep, QU_qhostname));
+   sprintf(info, WIDTH"%s\n", info, "Host:", lGetHost(qep, QU_qhostname));
 
    qtype = lGetUlong(qep, QU_qtype);
    buf[0] = '\0';
@@ -1050,7 +1050,7 @@ Boolean *ctd
 
                   strcpy(hostname, "global");
                   if (qB && qB->qI && qB->qI->qp) {
-                     strncpy(hostname, lGetString(qB->qI->qp, QU_qhostname),
+                     strncpy(hostname, lGetHost(qB->qI->qp, QU_qhostname),
                                  SGE_PATH_MAX);                      
                      strtok(hostname, ".");
                   }
@@ -1166,7 +1166,7 @@ XtPointer cld, cad;
          q = qB->qI->qp;
 
          qname     = lGetString(q, QU_qname);
-         qhostname = lGetString(q, QU_qhostname);
+         qhostname = lGetHost(q, QU_qhostname);
          job_slots = lGetUlong(q, QU_job_slots);
          job_slots_used = qslots_used(q);
          qstate = lGetUlong(q, QU_state); 

@@ -208,7 +208,7 @@ char *script;
    sge_ls_get(&lpp);
    for_each (ep, lpp) {
       printf("%s:%s:%s\n", 
-      lGetString(ep, LR_host),
+      lGetHost(ep, LR_host),
       lGetString(ep, LR_name),
       lGetString(ep, LR_value)); fflush(NULL);
    }

@@ -3561,7 +3561,7 @@ calculate_host_tickets( lList **running,   /* JB_Type */
    }
 
    for_each (hep, *hosts) {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       lSetDouble(hep, EH_sge_tickets, 0);
       host_sge_tickets = 0;
       for_each (running_job_elem, *running) {
@@ -3569,7 +3569,7 @@ calculate_host_tickets( lList **running,   /* JB_Type */
 
          for_each(ja_task, lGetList(running_job_elem, JB_ja_tasks)) {
             for_each (rjq, lGetList(ja_task, JAT_granted_destin_identifier_list)) {
-               if (hostcmp(lGetString(rjq, JG_qhostname), host_name) == 0)
+               if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) == 0)
                   host_sge_tickets += lGetDouble(ja_task, JAT_ticket);
             }
          }
@@ -3635,7 +3635,7 @@ sort_host_list_by_share_load( lList *hl,
 
    for_each (hlp, hl) {
       /* EH_sort_value (i.e., load) should not be less than 1 */
-      host = lGetString(hlp,EH_name);
+      host = lGetHost(hlp,EH_name);
       if (strcmp(host, "global")) { /* don't treat global */
          if (lGetDouble(hlp, EH_sort_value) < 1) {
             lSetDouble(hlp, EH_sort_value, 1);
@@ -3656,7 +3656,7 @@ sort_host_list_by_share_load( lList *hl,
 
    if ( total_resource_capability_factor == 0.0)  {
       for_each(hlp, hl)  {
-         host = lGetString(hlp,EH_name);
+         host = lGetHost(hlp,EH_name);
          if (strcmp(host, "global") && !(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)) { /* don't treat global */
             lSetDouble(hlp, EH_resource_capability_factor, 1.0);
             total_resource_capability_factor += 1.0;
@@ -3668,7 +3668,7 @@ sort_host_list_by_share_load( lList *hl,
    /* Calculate share load parameter percentages for each host*/
 
    for_each (hlp, hl) {
-      host = lGetString(hlp,EH_name);
+      host = lGetHost(hlp,EH_name);
       if (strcmp(host, "global")) { /* don't treat global */
 
          if (!(total_SGE_tickets == 0)){
@@ -3697,7 +3697,7 @@ sort_host_list_by_share_load( lList *hl,
    /* Calculate share load quantities for each job */
 
    for_each (hlp, hl) {
-      host = lGetString(hlp,EH_name);
+      host = lGetHost(hlp,EH_name);
       if (strcmp(host,"global")) { /* don't treat global */
          if (!(lGetDouble(hlp, EH_sort_value)==ERROR_LOAD_VAL)){
             resource_allocation_factor = (( lGetDouble(hlp, EH_resource_capability_factor_pct)) - ( lGetDouble(hlp,EH_sge_ticket_pct)));
@@ -3817,19 +3817,19 @@ main(int argc, char **argv)
    lInit(nmv);
 
    /* build host list */
-   lAddElemStr(&(lists->host_list), EH_name, "racerx", EH_Type); 
-   lAddElemStr(&(lists->host_list), EH_name, "yosemite_sam", EH_Type); 
-   lAddElemStr(&(lists->host_list), EH_name, "fritz", EH_Type); 
+   lAddElemHost(&(lists->host_list), EH_name, "racerx", EH_Type); 
+   lAddElemHost(&(lists->host_list), EH_name, "yosemite_sam", EH_Type); 
+   lAddElemHost(&(lists->host_list), EH_name, "fritz", EH_Type); 
 
    /* build queue list */
    ep = lAddElemStr(&(lists->all_queue_list), QU_qname, "racerx.q", QU_Type); 
-   lSetString(ep, QU_qhostname, "racerx");
+   lSetHost(ep, QU_qhostname, "racerx");
 
    ep = lAddElemStr(&(lists->all_queue_list), QU_qname, "yosemite_sam.q", QU_Type); 
-   lSetString(ep, QU_qhostname, "yosemite_sam");
+   lSetHost(ep, QU_qhostname, "yosemite_sam");
 
    ep = lAddElemStr(&(lists->all_queue_list), QU_qname, "fritz.q", QU_Type); 
-   lSetString(ep, QU_qhostname, "fritz");
+   lSetHost(ep, QU_qhostname, "fritz");
    
    /* build configuration */
 
@@ -3928,7 +3928,7 @@ main(int argc, char **argv)
    lSetString(job, JB_department, "software");
    lSetUlong(job, JB_submission_time, sge_get_gmt() - 60*2);
    lSetUlong(job, JB_deadline, 0);
-   lSetString(job, JB_host, "racerx");
+   lSetHost(job, JB_host, "racerx");
    lSetUlong(job, JB_override_tickets, 0);
    lSetList(job, JB_scaled_usage_list, build_usage_list("jobusagelist", NULL));
    for_each(usage, lGetList(job, JB_scaled_usage_list))
@@ -3942,7 +3942,7 @@ main(int argc, char **argv)
    lSetString(job, JB_department, "software");
    lSetUlong(job, JB_submission_time, sge_get_gmt() - 60*2);
    lSetUlong(job, JB_deadline, 0);
-   lSetString(job, JB_host, "racerx");
+   lSetHost(job, JB_host, "racerx");
    lSetUlong(job, JB_override_tickets, 0);
    lSetList(job, JB_scaled_usage_list, build_usage_list("jobusagelist", NULL));
    for_each(usage, lGetList(job, JB_scaled_usage_list))
@@ -3957,7 +3957,7 @@ main(int argc, char **argv)
    lSetString(job, JB_department, "hardware");
    lSetUlong(job, JB_submission_time, sge_get_gmt() - 60*2);
    lSetUlong(job, JB_deadline, 0);
-   lSetString(job, JB_host, "racerx");
+   lSetHost(job, JB_host, "racerx");
    lSetUlong(job, JB_override_tickets, 0);
    lSetList(job, JB_scaled_usage_list, build_usage_list("jobusagelist", NULL));
    for_each(usage, lGetList(job, JB_scaled_usage_list))
@@ -3971,7 +3971,7 @@ main(int argc, char **argv)
    lSetString(job, JB_department, "software");
    lSetUlong(job, JB_submission_time, sge_get_gmt() - 60*2);
    lSetUlong(job, JB_deadline, sge_get_gmt() + 60*2);
-   lSetString(job, JB_host, "racerx");
+   lSetHost(job, JB_host, "racerx");
    lSetUlong(job, JB_override_tickets, 0);
    lSetList(job, JB_scaled_usage_list, build_usage_list("jobusagelist", NULL));
    for_each(usage, lGetList(job, JB_scaled_usage_list))

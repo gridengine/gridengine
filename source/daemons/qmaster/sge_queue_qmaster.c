@@ -147,8 +147,8 @@ lListElem *qep
 
    DENTER(TOP_LAYER, "clear_unknown");
 
-   if (!(hep = sge_locate_host(lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
-      ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetString(qep, QU_qhostname)));
+   if (!(hep = sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
+      ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
       DEXIT;
       return;
    }
@@ -165,7 +165,7 @@ lListElem *qep
    }
 
    DPRINTF(("no non-static load value for host %s of queue %s\n",
-         lGetString(qep, QU_qhostname), lGetString(qep, QU_qname)));
+         lGetHost(qep, QU_qhostname), lGetString(qep, QU_qname)));
 
    DEXIT;
    return;
@@ -249,15 +249,15 @@ int sub_command
          goto ERROR;            
       }
       if (sge_resolve_host(qep, QU_qhostname)!=0) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(qep, QU_qhostname)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(qep, QU_qhostname)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          goto ERROR;            
       }
-      lSetString(new_queue, QU_qhostname, lGetString(qep, QU_qhostname));
+      lSetHost(new_queue, QU_qhostname, lGetHost(qep, QU_qhostname));
    } else {
    
       if (lGetPosViaElem(qep, QU_qhostname) >= 0) {
-         if (hostcmp(lGetString(new_queue, QU_qhostname), lGetString(qep, QU_qhostname))) {
+         if (hostcmp(lGetHost(new_queue, QU_qhostname), lGetHost(qep, QU_qhostname))) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOTPOSSIBLETOMODHOSTNAME));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
             goto ERROR;
@@ -358,12 +358,12 @@ int sub_command
 #endif         
          
          /* add the exechost for the real hostname */
-         strcpy(qhostname, lGetString(new_queue, QU_qhostname));
+         strcpy(qhostname, lGetHost(new_queue, QU_qhostname));
          if (!sge_locate_host(qhostname, SGE_EXECHOST_LIST))
             sge_add_host_of_type(qhostname, SGE_EXECHOST_LIST);
 
          /* enter the pseudohostname to the queue */
-         lSetString(new_queue, QU_qhostname, pseudohostname);
+         lSetHost(new_queue, QU_qhostname, pseudohostname);
 
          /* enter the real host name to the pseudo host object */
          hel = sge_locate_host(pseudohostname, SGE_EXECHOST_LIST);
@@ -477,7 +477,7 @@ int sub_command
       DPRINTF(("got new QU_subordinate_list\n"));
 
       if (check_subordinate_list(alpp, qname, 
-            lGetString(new_queue, QU_qhostname),
+            lGetHost(new_queue, QU_qhostname),
             lGetUlong(new_queue, QU_job_slots), 
             lGetList(qep, QU_subordinate_list), CHECK4MOD)!=STATUS_OK)
          goto ERROR;            
@@ -946,9 +946,9 @@ int sub_command
    signal_on_calendar(new_queue, old_cal_state, new_cal_state);
 
    if (add) {
-      if (!sge_locate_host(lGetString(new_queue, QU_qhostname), SGE_EXECHOST_LIST) &&
+      if (!sge_locate_host(lGetHost(new_queue, QU_qhostname), SGE_EXECHOST_LIST) &&
          !(lGetUlong(new_queue, QU_qtype) & TQ))
-         sge_add_host_of_type(lGetString(new_queue, QU_qhostname), SGE_EXECHOST_LIST);
+         sge_add_host_of_type(lGetHost(new_queue, QU_qhostname), SGE_EXECHOST_LIST);
       clear_unknown(new_queue);
    }
 

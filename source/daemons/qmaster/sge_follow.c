@@ -356,8 +356,8 @@ lList **topp  /* ticket orders ptr ptr */
          /* ---------------------- 
           *  find and check host 
           */
-         if (!(hep=sge_locate_host(lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
-            ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetString(qep, QU_qhostname)));
+         if (!(hep=sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
+            ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
@@ -374,7 +374,7 @@ lList **topp  /* ticket orders ptr ptr */
                   if (lGetUlong(jep, JB_job_number) == lGetUlong(ruep, RU_job_number)
                       && lGetUlong(jatp, JAT_task_number) == lGetUlong(ruep, RU_task_number)) {
                      ERROR((SGE_EVENT, MSG_JOB_UNABLE2STARTJOB_US, u32c(lGetUlong(ruep, RU_job_number)),
-                        lGetString(qep, QU_qhostname)));
+                        lGetHost(qep, QU_qhostname)));
                      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
                      lFreeList(gdil);
                      lSetString(jatp, JAT_granted_pe, NULL);
@@ -393,7 +393,7 @@ lList **topp  /* ticket orders ptr ptr */
           *  build up granted_destin_identifier_list (gdil)
           */
          gdil_ep = lAddElemStr(&gdil, JG_qname, q_name, JG_Type); /* free me on error! */
-         lSetString(gdil_ep, JG_qhostname, lGetString(qep, QU_qhostname));
+         lSetHost(gdil_ep, JG_qhostname, lGetHost(qep, QU_qhostname));
          lSetUlong(gdil_ep, JG_slots, q_slots);
 
          /* ------------------------------------------------
@@ -413,20 +413,19 @@ lList **topp  /* ticket orders ptr ptr */
             }
      
 
-            if (hostcmp(lGetString(master_host, EH_name), lGetString(hep, EH_name))) {
+            if (hostcmp(lGetHost(master_host, EH_name), lGetHost(hep, EH_name))) {
                lListElem *first_at_host;
 
                /* ensure each host gets tagged only one time 
                   we tag the first entry for a host in the existing gdil */
-               first_at_host = lGetElemHost(gdil, 
-                     JG_qhostname, lGetString(hep, EH_name));
+               first_at_host = lGetElemHost(gdil, JG_qhostname, lGetHost(hep, EH_name));
                if (!first_at_host) {
                   ERROR((SGE_EVENT, MSG_JOB_HOSTNAMERESOLVE_US, 
                            u32c(lGetUlong(jep, JB_job_number)), 
-                           lGetString(hep, EH_name)  ));
+                           lGetHost(hep, EH_name)  ));
                } else {
                   if (lGetUlong(first_at_host, JG_tag_slave_job)==0) {
-                     DPRINTF(("slave host %s\n", lGetString(hep, EH_name)));
+                     DPRINTF(("slave host %s\n", lGetHost(hep, EH_name)));
                      task_id_range += TASK_ID_RANGE_SIZE;
                      DPRINTF(("task_id_range = %d\n", task_id_range));
                      lSetUlong(first_at_host, JG_task_id_range, task_id_range);   
@@ -434,7 +433,7 @@ lList **topp  /* ticket orders ptr ptr */
                   lSetUlong(first_at_host, JG_tag_slave_job, 1);   
                }
             } else 
-               DPRINTF(("master host %s\n", lGetString(master_host, EH_name)));
+               DPRINTF(("master host %s\n", lGetHost(master_host, EH_name)));
          }
          /* in case of a pe job update free_slots on the pe */
          if (pe) 
@@ -710,7 +709,7 @@ lList **topp  /* ticket orders ptr ptr */
                while((oep=lFirst(oeql))) {
                   if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
                       ((oep_qep = sge_locate_queue(oep_qname))) &&
-                      ((oep_hname=lGetString(oep_qep, QU_qhostname)))) {
+                      ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
 
                      const char *curr_oep_qname=NULL, *curr_oep_hname=NULL;
                      lListElem *curr_oep, *next_oep, *curr_oep_qep=NULL;
@@ -721,7 +720,7 @@ lList **topp  /* ticket orders ptr ptr */
                         next_oep = lNext(curr_oep);
                         if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
                             ((curr_oep_qep = sge_locate_queue(curr_oep_qname))) &&
-                            ((curr_oep_hname=lGetString(curr_oep_qep, QU_qhostname))) &&
+                            ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
                             !hostcmp(oep_hname, curr_oep_hname)) {
                            job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
                            lRemoveElem(oeql, curr_oep);
@@ -1164,7 +1163,7 @@ lList *ticket_orders
       }
  
       /* seek master queue */
-      master_host_name = lGetString(lFirst(
+      master_host_name = lGetHost(lFirst(
          lGetList(jatask, JAT_granted_destin_identifier_list)), JG_qhostname);
 
       /* put this one in 'to_send' */ 
@@ -1188,7 +1187,7 @@ lList *ticket_orders
             lRemoveElem(ticket_orders, other);
          }
 
-         host_name = lGetString(lFirst(lGetList(other_jatask, 
+         host_name = lGetHost(lFirst(lGetList(other_jatask, 
             JAT_granted_destin_identifier_list)), JG_qhostname);
          if (!hostcmp(host_name, master_host_name)) {
             /* add it */

@@ -562,7 +562,7 @@ int sub_command
 
          /* fill address infos from request */
          /* into event client that must be added */
-         lSetString(ep, EV_host, request->host);
+         lSetHost(ep, EV_host, request->host);
          lSetString(ep, EV_commproc, request->commproc);
          lSetUlong(ep, EV_commid, request->id);
 
@@ -937,7 +937,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
      
          tmp_lp = request->lp;
          tmp_ep = tmp_lp->first;
-         requestedHost = lGetString(tmp_ep, PERM_req_host);
+         requestedHost = lGetHost(tmp_ep, PERM_req_host);
 #ifndef __SGE_NO_USERMAPPING__
          mappingName =  sge_malloc_map_out_going_username( Master_Host_Group_List,
                                                          Master_Usermapping_Entry_List,
@@ -947,7 +947,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
     }
 
     if (requestedHost != NULL) {
-       lSetString(ep, PERM_req_host, requestedHost );  
+       lSetHost(ep, PERM_req_host, requestedHost );  
     }   
 
     if (mappingName != NULL) {
@@ -1413,6 +1413,8 @@ char *ruser,
 char *rhost,
 int sub_command 
 ) {
+   int pos;
+   int dataType;
    const char *name;
    lList *tmp_alp = NULL;
    lListElem *new_obj = NULL,
@@ -1446,23 +1448,35 @@ int sub_command
           object->key_nm == SH_name) && 
           sge_resolve_host(instructions, object->key_nm)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-            lGetString(instructions, object->key_nm)));
+            lGetHost(instructions, object->key_nm)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
+   pos = lGetPosViaElem(instructions,  object->key_nm );
+   dataType = lGetPosType(lGetElemDescr(instructions),pos);
+   if (dataType == lHostT) {
+      name = lGetHost(instructions, object->key_nm); 
+      old_obj = lGetElemHost(*(object->master_list), object->key_nm, name); 
+   } else {
+      name = lGetString(instructions, object->key_nm); 
+      old_obj = lGetElemStr(*(object->master_list), object->key_nm, name);
+   }
 
-   name = lGetString(instructions, object->key_nm); 
+   
 
    /* special search for host types */
-   if (object->key_nm == EH_name ||
+/*   if (object->key_nm == EH_name ||
        object->key_nm == AH_name||
        object->key_nm == SH_name) {
        old_obj = lGetElemHost(*(object->master_list), object->key_nm, name); 
    } else { 
       old_obj = lGetElemStr(*(object->master_list), object->key_nm, name);
    }
+
+   This code was removed because the information is here via lHostT data type
+*/
 
    if ((old_obj && add) ||
       (!old_obj && !add)) {

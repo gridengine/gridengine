@@ -134,8 +134,8 @@ DTRACE;
          printf("sge_o_workdir:              %s\n", lGetString(job, JB_sge_o_workdir));
 
    if (lGetPosViaElem(job, JB_sge_o_host)>=0)
-      if (lGetString(job, JB_sge_o_host))
-         printf("sge_o_host:                 %s\n", lGetString(job, JB_sge_o_host));
+      if (lGetHost(job, JB_sge_o_host))
+         printf("sge_o_host:                 %s\n", lGetHost(job, JB_sge_o_host));
 
    if (lGetPosViaElem(job, JB_execution_time)>=0)
       if ((ultime = lGetUlong(job, JB_execution_time)))

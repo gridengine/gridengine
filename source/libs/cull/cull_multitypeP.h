@@ -45,6 +45,7 @@ union _lMultiType {
    lString str;
    lList *glp;
    lRef  ref;
+   lHost host;
    lCondition *cp;
 };
 

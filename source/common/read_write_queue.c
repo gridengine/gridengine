@@ -122,7 +122,7 @@ int parsing_type
    } 
    else {
       if (generic_queue) {
-         lSetString(ep, QU_qhostname, str);
+         lSetHost(ep, QU_qhostname, str);
       } 
       else {
          /* build unique hostname when it comes in */
@@ -136,10 +136,10 @@ int parsing_type
             }
          }
          if (ret == CL_OK)
-            lSetString(ep, QU_qhostname, unique);
+            lSetHost(ep, QU_qhostname, unique);
          else
             /* ignore NACK_UNKNOWN_HOST error */
-            lSetString(ep, QU_qhostname, str);
+            lSetHost(ep, QU_qhostname, str);
       }
 
       lDelElemStr(clpp, CF_name, "hostname");
@@ -624,7 +624,7 @@ lList *lp;
 
    qep = lCreateElem(QU_Type);
    lSetString(qep, QU_qname, "template");
-   lSetString(qep, QU_qhostname, "unknown");
+   lSetHost(qep, QU_qhostname, "unknown");
 
    lp = lCreateList("load_thresholds", CE_Type); 
    ep = lCreateElem(CE_Type);
@@ -734,7 +734,7 @@ lListElem *qep
       that points (real hostname) to hostname to be printed
       for user */
 
-   FPRINTF((fp, "hostname             %s\n", lGetString(qep, QU_qhostname)));
+   FPRINTF((fp, "hostname             %s\n", lGetHost(qep, QU_qhostname)));
    FPRINTF((fp, "seq_no               %d\n", (int) lGetUlong(qep, QU_seq_no)));
  
    ret = fprint_thresholds(fp, "load_thresholds      ", 

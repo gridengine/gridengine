@@ -100,7 +100,7 @@ int buflen
    permList = lCreateList("permissons", PERM_Type);
    ep = lCreateElem(PERM_Type);
    lAppendElem(permList,ep);
-   lSetString(ep, PERM_req_host, requestedHost); 
+   lSetHost(ep, PERM_req_host, requestedHost); 
 
    alp = sge_gdi(SGE_DUMMY_LIST, SGE_GDI_PERMCHECK ,  &permList , NULL,NULL );
 

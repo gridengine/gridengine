@@ -212,7 +212,7 @@ void force_job_rlimit()
             double lim;
 
             if (hostcmp(me.qualified_hostname, 
-                 lGetString(gdil_ep, JG_qhostname)) 
+                 lGetHost(gdil_ep, JG_qhostname)) 
                 || !(q = lFirst(lGetList(gdil_ep, JG_queue))))
                continue;
 

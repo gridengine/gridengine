@@ -67,7 +67,7 @@ LISTDEF(JR_Type)
    SGE_ULONG(JR_job_number)   /* Job to report */
    SGE_ULONG(JR_ja_task_number)       /* JobArray task to report */
    SGE_STRING(JR_queue_name)  /* Queue this job (tried to) run in */
-   SGE_STRING(JR_host_name)   /* Host this job (tried to) run on */
+   SGE_HOST(JR_host_name)   /* Host this job (tried to) run on */ /* CR - hostname change */
    SGE_STRING(JR_owner)       /* Owner (User) of this job */
    SGE_STRING(JR_group)       /* Owner (User) of this job */
    SGE_ULONG(JR_state)        /* either JRUNNING or JEXITING, JRUNNING sent 

@@ -90,7 +90,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
    if (user_list) {
       for_each(ep, user_list) {
          user = lGetString(ep, MR_user);
-         host = lGetString(ep, MR_host);
+         host = lGetHost(ep, MR_host);
          if (!user && !host) {
             ERROR((SGE_EVENT, MSG_MAIL_EMPTYUSERHOST));
             DEXIT;

@@ -284,7 +284,7 @@ FILE *fpdchu;
    lDumpList(fpdchu, finished_jobs, 5);
 #endif
    for_each (hep, hosts) {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global")) { /* don't treat global */
 
 #ifdef TEST_CALC_HOST_USAGE
@@ -304,11 +304,11 @@ FILE *fpdchu;
 
 #ifdef TEST_CALC_HOST_USAGE
 
-          fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(running_job_elem, JB_job_number), lGetString(rjq, JG_qhostname));
+          fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(running_job_elem, JB_job_number), lGetHost(rjq, JG_qhostname));
 
 #endif
           job_usage_list = NULL;
-          if (hostcmp(lGetString(rjq, JG_qhostname), host_name) == 0) {
+          if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) == 0) {
 #ifdef TEST_CALC_HOST_USAGE
             fprintf(fpdchu, "found running job on host %s \n", host_name);
 #endif
@@ -336,7 +336,7 @@ FILE *fpdchu;
                     } /* if (lGetString(job_usage_elem, UA_name)=="io")*/
                   } /* if (lGetString(job_usage_elem, UA_name)=="mem")*/                }  /* if (lGetString(job_usage_elem, UA_name)=="cpu")*/
              }  /*for_each(job_usage_elem, job_usage_list)*/
-          }  /* if (hostcmp(lGetString(rjq, JG_qhostname), host_name) ==
+          }  /* if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) ==
 0) */
         } /* for_each (rjq, lGetList(running_job_elem, JB_granted_destin_identifier_list))*/
       }  /* for_each (running_job_elem, running_jobs) */
@@ -358,10 +358,10 @@ was added here because it was a convenient place to gather the information */
 
         for_each (fjq, lGetList(finished_job_elem, JB_granted_destin_identifier_list)) {
 #ifdef TEST_CALC_HOST_USAGE
-          fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(finished_job_elem, JB_job_number), lGetString(fjq, JG_qhostname));
+          fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(finished_job_elem, JB_job_number), lGetHost(fjq, JG_qhostname));
 #endif
           job_usage_list = NULL;
-          if (hostcmp(lGetString(fjq, JG_qhostname), host_name) == 0) {
+          if (hostcmp(lGetHost(fjq, JG_qhostname), host_name) == 0) {
 #ifdef TEST_CALC_HOST_USAGE
             fprintf(fpdchu, "found finished job on host %s \n", host_name);
 #endif
@@ -387,7 +387,7 @@ was added here because it was a convenient place to gather the information */
                     } /* if (lGetString(job_usage_elem, UA_name)=="io")*/
                   } /* if (lGetString(job_usage_elem, UA_name)=="mem")*/                }  /* if (lGetString(job_usage_elem, UA_name)=="cpu")*/
             }  /*for_each(job_usage_elem, job_usage_list)*/
-          }  /* if (hostcmp(lGetString(fjq, JG_qhostname), host_name) ==
+          }  /* if (hostcmp(lGetHost(fjq, JG_qhostname), host_name) ==
 0) */
         } /* for_each (fjq, lGetList(finished_job_elem, JB_granted_destin_identifier_list))*/
       }  /* for_each (finished_job_elem, finished_jobs) */
@@ -425,7 +425,7 @@ was added here because it was a convenient place to gather the information */
        percentages for cpu, mem, and io on a host basis */
 
    for_each (hep, hosts)  {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global")) { /* don't treat global */
 
    lSetList(hep, EH_scaled_usage_pct_list, build_usage_list("hostusagelist", NULL));
@@ -478,13 +478,13 @@ was added here because it was a convenient place to gather the information */
 /*****************************************************************/
 /* Calculate host tickets    */
    for_each (hep, hosts) {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
       lSetUlong(hep, EH_sge_tickets, 0);
       host_sge_tickets = 0;
       for_each (running_job_elem, running_jobs) {
          for_each (rjq, lGetList(running_job_elem, JB_granted_destin_identifier_list)) {
-            if (strcmp(lGetString(rjq, JG_qhostname), host_name) == 0)
+            if (strcmp(lGetHost(rjq, JG_qhostname), host_name) == 0)
                host_sge_tickets += lGetUlong(running_job_elem, JB_ticket);
          }
       }
@@ -496,7 +496,7 @@ was added here because it was a convenient place to gather the information */
 /* Calculate percentage of tickets for each host */
 
    for_each (hep, hosts) {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
          if (total_host_tickets != 0)  {
 
@@ -558,13 +558,13 @@ lListElem *hep, *running_job_elem, *rjq;
    }
 
    for_each (hep, hosts) {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       lSetUlong(hep, EH_sge_tickets, 0);
       host_sge_tickets = 0;
       for_each (running_job_elem, *running) {
          for_each (rjq, lGetList(running_job_elem,
                                  JB_granted_destin_identifier_list)) {
-            if (strcmp(lGetString(rjq, JG_qhostname), host_name) == 0)
+            if (strcmp(lGetHost(rjq, JG_qhostname), host_name) == 0)
                host_sge_tickets += lGetUlong(running_job_elem, JB_ticket);
          }
       }
@@ -614,7 +614,7 @@ int calculate_host_pcts(lList *hosts, lList *complex)
 /*  Calculate the total_resource_capability_factor and the total_sge_load */
 
    for_each (hep, hosts)  {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
 
       total_resource_capability_factor += lGetDouble(hep, EH_resource_capability_factor);
@@ -627,7 +627,7 @@ int calculate_host_pcts(lList *hosts, lList *complex)
 /*  Calculate the percentages of resource_capability_factor and sge load for each host */
 
    for_each (hep, hosts)  {
-      host_name = lGetString(hep, EH_name);
+      host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
          if (total_resource_capability_factor != 0.0)  {
             lSetDouble(hep, EH_resource_capability_factor_pct, (lGetDouble(hep, EH_resource_capability_factor)/total_resource_capability_factor));
@@ -771,7 +771,7 @@ print_host(FILE *out, lListElem *host, char **names, format_t *format)
    lList *host_usage, *host_usage_pct;
    int i, fields_printed=0;
    current_time = sge_get_gmt();
-   host_name = lGetString(host, EH_name);
+   host_name = lGetHost(host, EH_name);
    host_rcf = lGetDouble(host, EH_resource_capability_factor);
    host_rcf_pct = lGetDouble(host, EH_resource_capability_factor_pct);
    host_tickets = lGetUlong(host, EH_sge_tickets);

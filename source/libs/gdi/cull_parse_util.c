@@ -323,6 +323,10 @@ lList **pplist
          case lStringT:
             lSetString(ep, *rule, *pstrlist);
             break;
+     
+         case lHostT:
+            lSetHost(ep, *rule, *pstrlist);
+            break;
 
          case lListT:
             /*
@@ -525,6 +529,12 @@ int nm_value
                is_there = 1;
             }
             break;
+         case lHostT:
+            if ( !sge_strnullcmp(lGetHost(ep_new, nm_var), lGetHost(ep_old, nm_var))) {
+               is_there = 1;
+            }
+            break;
+
          case lListT:
             DPRINTF(("cull_merge_definition_list: " \
                "list type not implemented with this function\n"));
@@ -568,6 +578,10 @@ int nm_value
          case lStringT:
             lSetString(ep_old, nm_value, lGetString(ep_new, nm_value));
             break;
+         case lHostT:
+            lSetHost(ep_old, nm_value, lGetHost(ep_new, nm_value));
+            break;
+
          case lListT:
             DPRINTF(("cull_merge_definition_list: " \
                "list type not implemented with function\n"));
@@ -669,6 +683,19 @@ int double_keys
                   is_there = 1;
             }
             break;
+
+         case lHostT:
+            if (double_keys) {
+               if (!sge_strnullcmp(lGetHost(ep_one, nm_var), lGetHost(ep_other, nm_var)) 
+                && !sge_strnullcmp(lGetHost(ep_one, nm_value), lGetHost(ep_other, nm_value)))
+                  is_there = 1;
+            } else {
+               if (lGetHost(ep_one, nm_var) && 
+                   !sge_strnullcmp(lGetHost(ep_one, nm_var), lGetHost(ep_other, nm_var))) 
+                  is_there = 1;
+            }
+            break;
+
          case lListT:
             DPRINTF(("cull_compress_definition_list: " \
                "list type not implemented with this function\n"));
@@ -946,6 +973,14 @@ unsigned long flags
                cp = "";
             }
             break;
+
+         case lHostT:
+            cp = lGetHost(ep, *rule);
+            if (!cp) {
+               cp = "";
+            }
+            break;
+
 
          case lListT:
             /*

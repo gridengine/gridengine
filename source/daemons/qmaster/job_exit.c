@@ -138,13 +138,13 @@ lListElem *jatep
 
    if (failed) {        /* a problem occured */
       WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, u32c(jobid), u32c(jataskid), 
-             queueep ? lGetString(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST,
+             queueep ? lGetHost(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST,
              general_failure ? MSG_GENERAL : "",
              get_sstate_description(failed), err_str));
    }
    else
       INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  u32c(jobid), u32c(jataskid), 
-            queueep ? lGetString(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST));
+            queueep ? lGetHost(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST));
 
 
    /*-------------------------------------------------*/
@@ -257,11 +257,11 @@ lListElem *jatep
       ** in this case we have to halt all queues on this host
       */
       if (general_failure == GFSTATE_HOST) {
-         hep = sge_locate_host(lGetString(queueep, QU_qhostname), SGE_EXECHOST_LIST);
+         hep = sge_locate_host(lGetHost(queueep, QU_qhostname), SGE_EXECHOST_LIST);
          if (hep) {
-            host = lGetString(hep, EH_name);
+            host = lGetHost(hep, EH_name);
             for_each(qep, Master_Queue_List) {
-               if (!hostcmp(lGetString(qep, QU_qhostname), host)) {
+               if (!hostcmp(lGetHost(qep, QU_qhostname), host)) {
                   state = lGetUlong(qep, QU_state);
                   CLEARBIT(QRUNNING,state);
                   SETBIT(QERROR, state);

@@ -68,35 +68,35 @@ lList *buildHostList(void)
       values and append them to the list.  
     */
    element = lCreateElem(HostT);
-   lSetString(element, H_hostname, "balin");
+   lSetHost(element, H_hostname, "balin");
    lSetString(element, H_arch, "sun4");
    lSetString(element, H_os, "SunOS 4.1.2");
    lSetUlong(element, H_memsize, 16);
    lAppendElem(hostlist, element);
 
    element = lCreateElem(HostT);
-   lSetString(element, H_hostname, "balin");
+   lSetHost(element, H_hostname, "balin");
    lSetString(element, H_arch, "sun4");
    lSetString(element, H_os, "SunOS 4.1.2");
    lSetUlong(element, H_memsize, 24);
    lAppendElem(hostlist, element);
 
    element = lCreateElem(HostT);
-   lSetString(element, H_hostname, "legolas");
+   lSetHost(element, H_hostname, "legolas");
    lSetString(element, H_arch, "alpha");
    lSetString(element, H_os, "OSF/1 3.02");
    lSetUlong(element, H_memsize, 64);
    lAppendElem(hostlist, element);
 
    element = lCreateElem(HostT);
-   lSetString(element, H_hostname, "bilbo");
+   lSetHost(element, H_hostname, "bilbo");
    lSetString(element, H_arch, "sgi");
    lSetString(element, H_os, "IRIX 4");
    lSetUlong(element, H_memsize, 16);
    lAppendElem(hostlist, element);
 
    element = lCreateElem(HostT);
-   lSetString(element, H_hostname, "sam");
+   lSetHost(element, H_hostname, "sam");
    lSetString(element, H_arch, "i386");
    lSetString(element, H_os, "Linux");
    lSetUlong(element, H_memsize, 128);
@@ -118,7 +118,7 @@ lList *buildQueueList(void)
     */
    element = lCreateElem(QueueT);
    lSetString(element, Q_name, "balin.q");
-   lSetString(element, Q_hostname, "balin");
+   lSetHost(element, Q_hostname, "balin");
    lSetInt(element, Q_load, 2);
    /*
       The member Q_ownerlist is initialized with NULL, 
@@ -128,19 +128,19 @@ lList *buildQueueList(void)
 
    element = lCreateElem(QueueT);
    lSetString(element, Q_name, "durin.q");
-   lSetString(element, Q_hostname, "durin");
+   lSetHost(element, Q_hostname, "durin");
    lSetInt(element, Q_load, 7);
    lAppendElem(queuelist, element);
 
    element = lCreateElem(QueueT);
    lSetString(element, Q_name, "gloin.q");
-   lSetString(element, Q_hostname, "gloin");
+   lSetHost(element, Q_hostname, "gloin");
    lSetInt(element, Q_load, 23);
    lAppendElem(queuelist, element);
 
    element = lCreateElem(QueueT);
    lSetString(element, Q_name, "legolas.q");
-   lSetString(element, Q_hostname, "legolas");
+   lSetHost(element, Q_hostname, "legolas");
    lSetInt(element, Q_load, 4);
    lAppendElem(queuelist, element);
 
@@ -297,9 +297,8 @@ int main(int argc, char *argv[])
          i.e. either Q_hostname or H_hostname)
        */
 
-      joinedlist = lJoin("joinedList",
-                         H_hostname, hostlist, NULL, allHostFields,
-                         Q_hostname, queuelist, NULL, allQueueFields);
+      joinedlist = lJoin("joinedList", H_hostname, hostlist, NULL, allHostFields, Q_hostname,
+                         queuelist, NULL, allQueueFields);
 
       /* print the result */
       printf("\n\nJOINED LIST\ncommon fields are "
@@ -580,8 +579,7 @@ int main(int argc, char *argv[])
          exit(-1);
       }
       /* Q_ownerlist is removed, so we have a flat list */
-      if (!(what = lWhat("%T( %I %I %I )", QueueT, Q_name,
-                         Q_hostname, Q_load))) {
+      if (!(what = lWhat("%T( %I %I %I )", QueueT, Q_name, Q_hostname, Q_load))) {
          printf("lWhat failure\n");
          exit(-1);
       }
@@ -734,8 +732,8 @@ int main(int argc, char *argv[])
       }
       where = lWhere("%T(!(%I m= %u))", QueueT,
                      Q_status, 3);
-      what = lWhat(" %T( %I %I %I %I %I)", QueueT, Q_load, Q_status,
-                   Q_name, Q_hostname, Q_ownerlist);
+      what = lWhat(" %T( %I %I %I %I %I)", QueueT, Q_load, Q_status, Q_name, Q_hostname, 
+                   Q_ownerlist);
       selectedlist = lSelect("selectedlist", queuelist, where, what);
 
       /* release memory */
@@ -751,8 +749,7 @@ int main(int argc, char *argv[])
 
    case SPLIT:
       queuelist = buildQueueList();
-      where = lWhere("%T(!(%I < %d && %I != %s)) ", QueueT,
-                     Q_load, 12, Q_hostname, "durin");
+      where = lWhere("%T(!(%I < %d && %I != %s)) ", QueueT, Q_load, 12, Q_hostname, "durin");
 
       printf("Condition is:\n");
       printf("Vor Split\n");
@@ -772,14 +769,13 @@ int main(int argc, char *argv[])
    case UNIQ:
       hostlist = buildHostList();
       lWriteListTo(hostlist, stdout);
-      lUniqStr(hostlist, H_hostname);
+      lUniqHost(hostlist, H_hostname);
       lWriteListTo(hostlist, stdout);
       break;
 
    case COPYENUM:
       queuelist = buildQueueList();
-      where = lWhere("%T(!(%I < %d && %I != %s)) ", QueueT,
-                     Q_load, 12, Q_hostname, "durin");
+      where = lWhere("%T(!(%I < %d && %I != %s)) ", QueueT, Q_load, 12, Q_hostname, "durin");
 
       what = lWhat("%T(%I %I)", QueueT, Q_hostname, Q_load);
 

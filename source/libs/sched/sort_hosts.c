@@ -119,14 +119,14 @@ lList *cplx_list     /* CX_Type */
       host_complex_attributes = lGetList(host_complex, CX_entries);
 
    for_each (hlp, hl) {
-      host = lGetString(hlp,EH_name);
+      host = lGetHost(hlp,EH_name);
       if (strcmp(host,"global")) { /* don't treat global */
 
          /* build complexes for that host */
          host_complexes2scheduler(&tcl, hlp, hl, cplx_list, 0);
          lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(tcl));
          tcl = lFreeList(tcl);  
-         DPRINTF(("%s: %f\n", lGetString(hlp, EH_name), load));
+         DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
    }
 
@@ -353,7 +353,7 @@ int *sort_hostlist
       lList *tcl;
       int slots = lGetUlong(gel, JG_slots);
 
-      hnm = lGetString(gel, JG_qhostname);
+      hnm = lGetHost(gel, JG_qhostname);
       hep = lGetElemHost(host_list, EH_name, hnm); 
 
       if (scheddconf.load_adjustment_decay_time && lGetNumberOfElem(scheddconf.job_load_adjustments)) {
@@ -363,7 +363,7 @@ int *sort_hostlist
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
-      debit_host_consumable(job, lGetElemStr(host_list, EH_name, "global"), complex_list, slots);
+      debit_host_consumable(job, lGetElemHost(host_list, EH_name, "global"), complex_list, slots);
       debit_host_consumable(job, hep, complex_list, slots);
 
       /* compute new combined load for this host and put it into the host */
@@ -403,5 +403,5 @@ int slots
 ) {
    return debit_consumable(jep, hep, complex_list, slots,
          EH_consumable_config_list, EH_consumable_actual_list, 
-         lGetString(hep, EH_name));
+         lGetHost(hep, EH_name));
 }

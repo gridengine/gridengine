@@ -55,6 +55,7 @@ int fGetDescr(FILE *fp, lDescr *dp);
 int fGetInt(FILE *fp, lInt *value);
 int fGetUlong(FILE *fp, lUlong *value);
 int fGetString(FILE *fp, lString *value);
+int fGetHost(FILE *fp, lHost *value);
 int fGetFloat(FILE *fp, lFloat *value);
 int fGetDouble(FILE *fp, lDouble *value);
 int fGetLong(FILE *fp, lLong *value);

@@ -49,6 +49,7 @@ typedef long lLong;
 typedef char lChar;
 typedef int lInt;
 typedef char *lString;
+typedef char *lHost;      /* CR - hostname change */
 typedef void*  lRef;
 typedef struct _lDescr lDescr;
 typedef struct _lNameSpace lNameSpace;
@@ -72,7 +73,8 @@ enum _enum_lMultiType {
    lIntT,
    lStringT,
    lListT,
-   lRefT
+   lRefT,
+   lHostT             /* CR - hostname change */
 };
 
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
@@ -88,6 +90,9 @@ enum _enum_lMultiType {
 #define SGE_IINT(name)
 #define SGE_IRINT(name)
 #define SGE_XINT(name) { name, lIntT, NULL },
+#define SGE_HOST(name) { name, lHostT, NULL },                    /* CR - hostname change */
+#define SGE_HOSTH(name) { name, lHostT, &template_hash },         /* CR - hostname change */
+#define SGE_HOSTHU(name) { name, lHostT, &template_hash_unique }, /* CR - hostname change */
 #define SGE_STRING(name) { name, lStringT, NULL },
 #define SGE_STRINGH(name) { name, lStringT, &template_hash },
 #define SGE_STRINGHU(name) { name, lStringT, &template_hash_unique },
@@ -171,6 +176,9 @@ enum _enum_lMultiType {
 #define SGE_RINT(name)
 #define SGE_IRINT(name)
 #define SGE_XINT(name)
+#define SGE_HOST(name)
+#define SGE_HOSTH(name)
+#define SGE_HOSTHU(name)
 #define SGE_STRING(name)
 #define SGE_STRINGH(name)
 #define SGE_STRINGHU(name)
@@ -294,6 +302,8 @@ int lPSortList(lList *lp, const char *fmt, ...);
 int lSortList(lList *lp, const lSortOrder *sp);
 int lSortList2(lList *lp, const char *fmt, ...);
 int lUniqStr(lList *lp, int keyfield);
+int lUniqHost(lList *lp, int keyfield);
+
 
 
 lListElem *lFirst(const lList *lp);

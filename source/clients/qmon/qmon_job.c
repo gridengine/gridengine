@@ -1416,7 +1416,7 @@ lListElem *jep
    str = lGetString(jep, JB_sge_o_workdir);
    sprintf(info, WIDTH"%s\n", info, "SGE_O_WORKDIR:", str ? str : ""); 
 
-   str = lGetString(jep, JB_sge_o_host);
+   str = lGetHost(jep, JB_sge_o_host);
    sprintf(info, WIDTH"%s\n", info, "SGE_O_HOST:", str ? str : ""); 
 #endif
 

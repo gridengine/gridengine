@@ -195,20 +195,42 @@ lListElem *new_ep,
 int nm,
 char *attr_name 
 ) {
+   int dataType;
+   int pos;
+  
    DENTER(TOP_LAYER, "attr_mod_str");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if ((pos=lGetPosViaElem(qep, nm))>=0) {
       const char *s;
 
       DPRINTF(("got new %s\n", attr_name));
-      if (!(s = lGetString(qep, nm))) {
-         ERROR((SGE_EVENT, MSG_GDI_VALUE_S, attr_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+
+      dataType = lGetPosType(lGetElemDescr(qep),pos);
+      switch (dataType) {
+         case lStringT:
+            if (!(s = lGetString(qep, nm))) {
+               ERROR((SGE_EVENT, MSG_GDI_VALUE_S, attr_name));
+               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+               DEXIT;
+               return STATUS_EUNKNOWN;
+            }
+            lSetString(new_ep, nm, s);
+            break;
+         case lHostT:
+            if (!(s = lGetHost(qep, nm))) {
+               ERROR((SGE_EVENT, MSG_GDI_VALUE_S, attr_name));
+               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+               DEXIT;
+               return STATUS_EUNKNOWN;
+            }
+            lSetHost(new_ep, nm, s);
+            break;
+         default:
+            DPRINTF(("unexpected data type\n"));
+            DEXIT;
+            return STATUS_EUNKNOWN;
       }
-      lSetString(new_ep, nm, s);
    }
 
    DEXIT;
@@ -510,11 +532,11 @@ int nm
    for_each (attr, lGetList(ep, nm)) {
       if (!resources) { /* first time build resources list */
          if ( nm==EH_consumable_config_list ) {
-            if (!strcmp(lGetString(ep, EH_name), "global"))
+            if (!strcmp(lGetHost(ep, EH_name), "global"))
                global_complexes2scheduler(&resources, ep, Master_Complex_List, 0);
             else 
                host_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
-            obj_name = lGetString(ep, EH_name);
+            obj_name = lGetHost(ep, EH_name);
             obj_descr = "host";
          } else {
             queue_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);

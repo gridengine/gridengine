@@ -335,8 +335,8 @@ char **argv
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
          queue_complexes2scheduler(&ce, qep, exechost_list, complex_list, 0);
-         ccl[0] = lGetList(lGetElemStr(exechost_list, EH_name, "global"), EH_consumable_config_list);
-         ccl[1] = (ep=lGetElemHost(exechost_list, EH_name, lGetString(qep, QU_qhostname)))?
+         ccl[0] = lGetList(lGetElemHost(exechost_list, EH_name, "global"), EH_consumable_config_list);
+         ccl[1] = (ep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname)))?
                   lGetList(ep, EH_consumable_config_list):NULL;
          ccl[2] = lGetList(qep, QU_consumable_config_list);
 

@@ -413,9 +413,8 @@ static lList *set_queue_info_in_task(const char *qname, lListElem *jatask)
 {
    lListElem *jge;
 
-   jge = lAddSubStr(jatask, JG_qname, qname,
-                    JAT_granted_destin_identifier_list, JG_Type);
-   lSetString(jge, JG_qhostname, me.qualified_hostname);
+   jge = lAddSubStr(jatask, JG_qname, qname, JAT_granted_destin_identifier_list, JG_Type);
+   lSetHost(jge, JG_qhostname, me.qualified_hostname);
    lSetUlong(jge, JG_slots, 1);
    DPRINTF(("selected queue %s for task\n", qname));
 
@@ -556,7 +555,7 @@ static lList *get_queue_for_task(lListElem *jatep, lListElem *jatask)
       this_q = lFirst(lGetList(gdil_ep, JG_queue));
 
       /* must be at this host and either must have free slots or task about to exit */
-      if(this_q  && !hostcmp(lGetString(gdil_ep, JG_qhostname), me.qualified_hostname) 
+      if(this_q  && !hostcmp(lGetHost(gdil_ep, JG_qhostname), me.qualified_hostname) 
                  && qslots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
          return set_queue_info_in_task(lGetString(gdil_ep, JG_qname), jatask);
       } 
@@ -643,8 +642,7 @@ int *synchron;
          task_str, jobid));
 
       if (!ep)
-         ep = lAddSubStr(jelem, VA_variable, "TASK_ID", 
-               JB_env_list, VA_Type);
+         ep = lAddSubStr(jelem, VA_variable, "TASK_ID", JB_env_list, VA_Type);
       lSetString(ep, VA_value, task_str);
    } else { /* user proposes a task id - ensure we do 
                not already have a task with this id */
@@ -703,8 +701,8 @@ int *synchron;
          if (!this_q) {
             ERROR((SGE_EVENT, MSG_JOB_NOSUCHQ_SUSS, qnm, u32c(jobid), lGetString(jelem, JB_owner), de->host));
             gdil = NULL;
-         } else if (hostcmp(lGetString(job_gdil, JG_qhostname), me.qualified_hostname)) {
-            ERROR((SGE_EVENT, MSG_JOB_NOREQQONHOST_SSS, qnm, me.qualified_hostname, lGetString(job_gdil, JG_qhostname)));
+         } else if (hostcmp(lGetHost(job_gdil, JG_qhostname), me.qualified_hostname)) {
+            ERROR((SGE_EVENT, MSG_JOB_NOREQQONHOST_SSS, qnm, me.qualified_hostname, lGetHost(job_gdil, JG_qhostname)));
             gdil = NULL;
          } else if (lGetUlong(this_q, QU_job_slots)<=qslots_used(this_q)) {
             ERROR((SGE_EVENT, MSG_JOB_REQQFULL_SII, qnm, (int)lGetUlong(this_q, QU_job_slots), qslots_used(this_q)));
@@ -712,7 +710,7 @@ int *synchron;
          }
 
          if (gdil) 
-            lSetString(lFirst(gdil), JG_qhostname, me.qualified_hostname);
+            lSetHost(lFirst(gdil), JG_qhostname, me.qualified_hostname);
       }
 
       if (!gdil) {

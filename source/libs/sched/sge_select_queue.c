@@ -851,7 +851,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    }
 
    job_id = lGetUlong(job, JB_job_number);
-   eh_name = lGetString(host, EH_name);
+   eh_name = lGetHost(host, EH_name);
 
    /* check if job owner has access rights to the host */
    if (!sge_has_access_(lGetString(job, JB_owner),
@@ -1109,7 +1109,7 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
       return 0;
    }
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetString(qep, QU_qhostname));
+   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
 
    if(!hep) { 
       /* no host for queue -> ERROR */
@@ -1204,7 +1204,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       return reason;
    }
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetString(qep, QU_qhostname));
+   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
 
    if(!hep) { 
       /* no host for queue -> ERROR */
@@ -1327,7 +1327,7 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
       /* do not verify load alarm anew if a job has been dispatched recently
          but not to the host where this queue resides */
       if (!granted || (granted && (get_global_load_correction() ||
-                           lGetElemHost(granted, JG_qhostname, lGetString(qep, QU_qhostname))))) {
+                           lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
          nverified++;
 
          if (sge_load_alarm(qep, thresholds, exechost_list, complex_list, load_adjustments)!=0) {
@@ -1603,7 +1603,7 @@ int host_order_changed) {
       for_each(qep, queues)
          lSetUlong(qep, QU_tagged, 0);
 
-      global_hep = lGetElemStr(host_list, EH_name, "global");
+      global_hep = lGetElemHost(host_list, EH_name, "global");
 
       ccl[0] = lGetList(global_hep, EH_consumable_config_list);
       ccl[1] = NULL;
@@ -1643,9 +1643,9 @@ int host_order_changed) {
                }
       
                /* set host_seqno for all queues of this host */
-               eh_name = lGetString(hep, EH_name);
+               eh_name = lGetHost(hep, EH_name);
                for_each (qep, queues) {
-                  if (hostcmp(lGetString(qep, QU_qhostname), eh_name))
+                  if (hostcmp(lGetHost(qep, QU_qhostname), eh_name))
                      continue;
                   lSetUlong(qep, QU_host_seq_no, host_seqno);
                }
@@ -1688,7 +1688,7 @@ int host_order_changed) {
          /* do static and dynamic checks for "global" host */ 
          if (!sge_why_not_job2host(job, ja_task, global_hep, complex_list, acl_list)) {
             for_each (qep, queues) { /* in queue sort order */
-               hep = lGetElemHost(host_list, EH_name, lGetString(qep, QU_qhostname));
+               hep = lGetElemHost(host_list, EH_name, lGetHost(qep, QU_qhostname));
                ccl[1] = lGetList(hep, EH_consumable_config_list);
                ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -1699,14 +1699,14 @@ int host_order_changed) {
                   lList *gdil = NULL;
 
                   qname = lGetString(qep, QU_qname);
-                  eh_name = lGetString(qep, QU_qhostname);
+                  eh_name = lGetHost(qep, QU_qhostname);
 
                   DPRINTF((u32": 1 slot in queue %s@%s user %s\n",
                      job_id, qname, eh_name, lGetString(job, JB_owner)));
 
                   gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
                   lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
-                  lSetString(gdil_ep, JG_qhostname, eh_name);
+                  lSetHost(gdil_ep, JG_qhostname, eh_name);
                   lSetUlong(gdil_ep, JG_slots, 1);
                   scheduled_fast_jobs++;
                   DEXIT;
@@ -1835,7 +1835,7 @@ int host_order_changed) {
 
                int max_slots_this_host = 0;
 
-               eh_name = lGetString(hep, EH_name);
+               eh_name = lGetHost(hep, EH_name);
                if (!strcasecmp(eh_name, "global") || !strcasecmp(eh_name, "template"))
                   continue;
 
@@ -1891,7 +1891,7 @@ int host_order_changed) {
                   if (host_slots>=minslots) {
                      /* tag amount of slots we can get served with resources limited per queue */
                      for_each (qep, queues) {
-                        if (hostcmp(lGetString(qep, QU_qhostname), eh_name))
+                        if (hostcmp(lGetHost(qep, QU_qhostname), eh_name))
                            continue;
                         qname = lGetString(qep, QU_qname);
 
@@ -2084,7 +2084,7 @@ int host_order_changed) {
             continue;
 
          /* ensure host of this queue has enough slots */
-         eh_name = lGetString(qep, QU_qhostname);
+         eh_name = lGetHost(qep, QU_qhostname);
          hep = lGetElemHost(host_list, EH_name, eh_name);
          if ((int) lGetUlong(hep, EH_tagged) >= minslots && 
                (int) lGetUlong(hep, EH_seq_no)==-1) {
@@ -2120,9 +2120,9 @@ int host_order_changed) {
 
          /* change order of queues in a way causing the best suited master 
             queue of the master host to be at the first position */
-         master_eh_name = lGetString(master_hep, EH_name);
+         master_eh_name = lGetHost(master_hep, EH_name);
          for_each (qep, queues) {
-            if (hostcmp(master_eh_name, lGetString(qep, QU_qhostname)))
+            if (hostcmp(master_eh_name, lGetHost(qep, QU_qhostname)))
                continue;
             if (lGetUlong(qep, QU_tagged4schedule))
                break;
@@ -2148,7 +2148,7 @@ int host_order_changed) {
             if (!(hep=lGetElemUlong(host_list, EH_seq_no, host_seq_no))) {
                continue; /* old position of master host */
             }
-            eh_name = lGetString(hep, EH_name);
+            eh_name = lGetHost(hep, EH_name);
 
             /* how many slots to alloc in this step */
             if ((available=lGetUlong(hep, EH_tagged)) < minslots) {
@@ -2169,7 +2169,7 @@ int host_order_changed) {
             for_each (qep, queues) {
                int qtagged;
 
-               if (hostcmp(eh_name, lGetString(qep, QU_qhostname)))
+               if (hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                   continue;
 
                qname = lGetString(qep, QU_qname);
@@ -2186,7 +2186,7 @@ int host_order_changed) {
                if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
                   gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
                   lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
-                  lSetString(gdil_ep, JG_qhostname, eh_name);
+                  lSetHost(gdil_ep, JG_qhostname, eh_name);
                   lSetUlong(gdil_ep, JG_slots, slots);
                } else 
                   lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
@@ -2413,7 +2413,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
    DENTER(TOP_LAYER, "available_slots_at_host");
 
    job_id = lGetUlong(job, JB_job_number);
-   eh_name = lGetString(host, EH_name);
+   eh_name = lGetHost(host, EH_name);
 
    /* check if job has access to host */
    if (sge_why_not_job2host(job, ja_task, host, complex_list, acl_list)>0) {
@@ -2490,7 +2490,7 @@ lList *acl_list;
 
    /* check if job has access to any hosts globally */
    if (sge_why_not_job2host(job, ja_task, 
-         lGetElemCaseStr(host_list, EH_name, "global"), complex_list, acl_list)>0) {
+         lGetElemHost(host_list, EH_name, SGE_GLOBAL_NAME ), complex_list, acl_list)>0) {
       DEXIT;
       return 0;
    }
@@ -2514,7 +2514,7 @@ lList *acl_list;
 
    /* initially looked at global slots */
    if (!*global_resources)
-      global_complexes2scheduler(global_resources, lGetElemStr(host_list, EH_name, "global"), complex_list, 0);
+      global_complexes2scheduler(global_resources, lGetElemHost(host_list, EH_name, "global"), complex_list, 0);
  
    for (; global_slots; 
             global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {

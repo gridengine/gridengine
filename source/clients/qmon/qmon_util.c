@@ -268,6 +268,8 @@ Boolean UpdateXmListFromCull(Widget list, XmStringCharSet tag, lList *lp,
    Cardinal itemCount;
    StringConst str;
    int pos;
+   int dataType;
+   const lDescr *listDescriptor = NULL;
    Widget lw;
    Boolean found = False;
    
@@ -292,9 +294,22 @@ Boolean UpdateXmListFromCull(Widget list, XmStringCharSet tag, lList *lp,
    if (found && lw)
       XmtLayoutDisableLayout(lw);
    
-   pos = lGetPosInDescr(lGetListDescr(lp), field); 
+   listDescriptor = lGetListDescr(lp);
+   pos = lGetPosInDescr(listDescriptor, field); 
+   dataType = lGetPosType(listDescriptor,pos);
    for (ep=lFirst(lp); ep; ep=lNext(ep)) {
-      str = lGetPosString(ep, pos);
+      switch (dataType) {
+         case lStringT:
+              str = lGetPosString(ep, pos);
+           break;
+         case lHostT:
+              str = lGetPosHost(ep, pos);
+           break;
+         default:
+              str = "(null) UpdateXmListFromCull";
+              DPRINTF(("UpdateXmListFromCull: unexpected data type\n"));
+           break; 
+      }
       /* FIX_CONST_GUI */
       XmListAddItemUniqueSorted(list, (String)str);
       DPRINTF(("UpdateXmListFromCull: str = '%s'\n", str));
@@ -316,6 +331,7 @@ lList *XmStringToCull(Widget list, lDescr *dp, int nm, int selected)
    lList *lp = NULL;
    lListElem *ep = NULL;
    int i;
+   int dataType;
    
    DENTER(GUI_LAYER, "XmStringToCull");
 
@@ -335,7 +351,18 @@ lList *XmStringToCull(Widget list, lDescr *dp, int nm, int selected)
                                           XmFONTLIST_DEFAULT_TAG);
       if (strings) { 
          for (i=0; i<itemCount; i++) {
-            ep = lAddElemStr(&lp, nm, strings[i], dp);
+            dataType = lGetPosType(dp, lGetPosInDescr(dp, nm));
+            switch (dataType) {
+               case lStringT:
+                  ep = lAddElemStr(&lp, nm, strings[i], dp);
+                  break;
+               case lHostT:
+                  ep = lAddElemHost(&lp, nm, strings[i], dp);
+                  break;
+               default:
+                  DPRINTF(("XmStringToCull - unexpected data type\n"));
+                  break;
+            }
          }
          StringTableFree(strings, itemCount);
       }

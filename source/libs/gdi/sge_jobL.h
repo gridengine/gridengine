@@ -287,7 +287,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_sge_o_shell)
    SGE_STRING(JB_sge_o_tz)
    SGE_STRING(JB_sge_o_workdir)
-   SGE_STRING(JB_sge_o_host)
+   SGE_HOST(JB_sge_o_host)             /* CR - hostname change */
    SGE_ULONG(JB_execution_time)         /* "-a date_time" specifies time    
                                          * availability of job(qalter,qsub) */
    SGE_STRING(JB_account)               /* "-A account_string" specifies   
@@ -369,8 +369,8 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_TLIST(JB_job_args, ST_Type)      /* ST_Type - contains job arguments */
                                         /* given to job when it is executed */
    SGE_XULONG(JB_task_id_range)         /* task id range for job at this host */
-   SGE_XSTRING(JB_first_host)           /* unused */
-   SGE_XSTRING(JB_last_host)            /* unused */
+   SGE_HOST(JB_first_host)           /* unused */                                    /* CR - hostname change */
+   SGE_HOST(JB_last_host)            /* unused */                                    /* CR - hostname change */
    SGE_LIST(JB_master_hard_queue_list)  /* QR_Type - "-masterq dest_identifier" */
                                         /* specifies a queue (qsub)         */
 
@@ -409,7 +409,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
                                         /* not spooled                      */
    SGE_ULONG(JB_deadline)               /* SGEEE - deadline initiation time   */
                                         /* set by qsub; spooled             */
-   SGE_XSTRING(JB_host)                 /* SGEEE - host job is executing on   */
+   SGE_HOST(JB_host)                    /* SGEEE - host job is executing on   */ /* CR - hostname change */
                                         /* local to schedd; not spooled     */
    SGE_ULONG(JB_override_tickets)       /* SGEEE - override tickets assigned  */
                                         /* by admin; spooled                */
@@ -612,7 +612,7 @@ enum {
 
 SLISTDEF(PN_Type, PathName)
    SGE_STRING(PN_path)
-   SGE_STRING(PN_host)
+   SGE_HOST(PN_host)                    /* CR - hostname change */
 LISTEND
 
 NAMEDEF(PNN)
@@ -673,7 +673,7 @@ enum {
 
 SLISTDEF(MR_Type, MailRecipient)
    SGE_STRING(MR_user)
-   SGE_STRING(MR_host)
+   SGE_HOST(MR_host)       /* CR - hostname change */
 LISTEND
 
 NAMEDEF(MRN)
@@ -712,7 +712,7 @@ enum {
 SLISTDEF( JG_Type, GrantedQueue )
    SGE_RSTRING(JG_qname)    /* the queue's name                           */
    SGE_XULONG(JG_qversion)  /* it's version                               */
-   SGE_XSTRING(JG_qhostname)/* redundant qualified host name for caching  */
+   SGE_HOST(JG_qhostname)/* redundant qualified host name for caching  */  /* CR - hostname change */
    SGE_RULONG(JG_slots)     /* from orders list                           */
    SGE_ROBJECT(JG_queue, QU_Type) /* QU_Type - complete queue only in execd */
    SGE_XULONG(JG_tag_slave_job) /* whether slave execds job has arrived in 

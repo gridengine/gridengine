@@ -140,7 +140,7 @@ lListElem **pjob
                         me.qualified_hostname, NULL);  
       lSetString(*pjob, JB_sge_o_workdir, cwd_out);
    }
-   lSetString(*pjob, JB_sge_o_host, 
+   lSetHost(*pjob, JB_sge_o_host, 
       ((cp = sge_getenv("HOST")) ? cp : me.unqualified_hostname));
    if (lGetString(*pjob, JB_cell)) {
       lSetString(*pjob, JB_cell, me.default_cell);
@@ -378,7 +378,7 @@ lListElem **pjob
 
    if (!lGetList(*pjob, JB_mail_list)) {   
       ep = lAddSubStr(*pjob, MR_user, me.user_name, JB_mail_list, MR_Type);
-      lSetString(ep, MR_host, me.qualified_hostname);
+      lSetHost(ep, MR_host, me.qualified_hostname);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
@@ -558,7 +558,7 @@ lListElem **pjob
          }
 
          hep = lCreateElem(EH_Type);
-         lSetString(hep, EH_name, me.unqualified_hostname);
+         lSetHost(hep, EH_name, me.unqualified_hostname);
             
          switch (sge_resolve_host(hep, EH_name)) {
             case 0:
@@ -572,15 +572,15 @@ lListElem **pjob
             return answer;
             default:
                sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-                       lGetString(hep, EH_name));
+                       lGetHost(hep, EH_name));
                sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
                lFreeElem(hep);
             DEXIT;
             return answer;
          }
-         new_display = malloc(strlen(lGetString(hep, EH_name)) + 4 + 1 +
+         new_display = malloc(strlen(lGetHost(hep, EH_name)) + 4 + 1 +
                            (ending ? strlen(ending) : 0));
-         strcpy(new_display, lGetString(hep, EH_name));
+         strcpy(new_display, lGetHost(hep, EH_name));
          strcat(new_display, (ending ? ending : ":0.0"));
          lFreeElem(hep);
          lSetString(vep, VA_value, new_display);

@@ -1618,7 +1618,7 @@ outlen = enc_msg_len;
    */
    gsd.seq_receive = INC32(gsd.seq_receive);
    if(gsd.conn_list){
-      lSetString(element,SEC_Host,host);
+      lSetHost(element,SEC_Host,host);
       lSetString(element,SEC_Commproc,commproc);
       lSetInt(element,SEC_Id,id);
       lSetUlong(element,SEC_SeqNoReceive,gsd.seq_receive);
@@ -2038,7 +2038,7 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
       goto error;
    }
 
-   lSetString(element,SEC_Host,host);
+   lSetHost(element,SEC_Host,host);
    lSetString(element,SEC_Commproc,commproc);
    lSetInt(element,SEC_Id,id);
 
@@ -2080,12 +2080,12 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    ** get right element from connection list         
    */
    if (id) {
-      where = lWhere("%T(%I==%s && %I==%s && %I==%d)",SecurityT,
-                       SEC_Host,host,SEC_Commproc,commproc,SEC_Id,id);
+      where = lWhere("%T(%I==%s && %I==%s && %I==%d)",SecurityT, SEC_Host,
+                     host,SEC_Commproc,commproc,SEC_Id,id);
    }
    else {
-      where = lWhere("%T(%I==%s && %I==%s)",SecurityT,
-                     SEC_Host,host,SEC_Commproc,commproc);
+      where = lWhere("%T(%I==%s && %I==%s)",SecurityT, SEC_Host,
+                     host,SEC_Commproc,commproc);
    }
 
    element = lFindFirst(gsd.conn_list,where);
@@ -2153,8 +2153,8 @@ static int sec_insert_conn2list(char *host, char *commproc, int id)
    /* 
    ** delete element if some with <host,commproc,id> exists   
    */
-   where = lWhere( "%T(%I==%s && %I==%s && %I==%d)",SecurityT,
-                    SEC_Host,host,SEC_Commproc,commproc,SEC_Id,id);
+   where = lWhere( "%T(%I==%s && %I==%s && %I==%d)",SecurityT, SEC_Host,
+                   host,SEC_Commproc,commproc,SEC_Id,id);
    if (!where) {
       ERROR((SGE_EVENT,"can't build condition\n"));
       ret = -1;
@@ -2185,7 +2185,7 @@ static int sec_insert_conn2list(char *host, char *commproc, int id)
    ** set values of element               
    */
    lSetUlong(element,SEC_ConnectionID,gsd.connid); 
-   lSetString(element,SEC_Host,host); 
+   lSetHost(element,SEC_Host,host); 
    lSetString(element,SEC_Commproc,commproc); 
    lSetInt(element,SEC_Id,id); 
    lSetUlong(element,SEC_SeqNoSend,0); 

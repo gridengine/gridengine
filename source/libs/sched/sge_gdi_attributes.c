@@ -207,11 +207,9 @@ const char *attr_name
 
    /* get host object(s) */
    if (global) 
-      where = lWhere("%T(%I==%s)", EH_Type, 
-            EH_name, SGE_GLOBAL_NAME);
+      where = lWhere("%T(%I==%s)", EH_Type, EH_name, SGE_GLOBAL_NAME);
    else 
-      where = lWhere("%T(%I==%s || %Ih=%s)", EH_Type, 
-            EH_name, SGE_GLOBAL_NAME, EH_name, unique);
+      where = lWhere("%T(%I==%s || %Ih=%s)", EH_Type, EH_name, SGE_GLOBAL_NAME, EH_name, unique);
    what = lWhat("%T(ALL)", EH_Type);
    alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &exechost_list, where, what);
    lFreeWhat(what);
@@ -342,7 +340,7 @@ u_long32 jobid
    /* accumulate slots if host matches */
    for_each (gdil_ep, lGetList(lFirst(lGetList(lFirst(job_list), JB_ja_tasks)), 
       JAT_granted_destin_identifier_list)) {
-	   if (!hostcmp(unique, lGetString(gdil_ep, JG_qhostname)))
+	   if (!hostcmp(unique, lGetHost(gdil_ep, JG_qhostname)))
          nslots += lGetUlong(gdil_ep, JG_slots);
    }
      

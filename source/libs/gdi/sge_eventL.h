@@ -75,7 +75,7 @@ enum {
 LISTDEF(EV_Type)
    SGE_ULONG(EV_id)
    SGE_STRING(EV_name)
-   SGE_STRING(EV_host)
+   SGE_HOST(EV_host)
    SGE_STRING(EV_commproc)
    SGE_ULONG(EV_commid)
    SGE_ULONG(EV_uid)

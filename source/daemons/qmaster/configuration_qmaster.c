@@ -126,7 +126,7 @@ lList **lpp
       lpDefaults = sge_set_defined_defaults(lpDefaults);
    
       epc = lCreateElem(CONF_Type);
-      lSetString(epc, CONF_hname, SGE_GLOBAL_NAME);
+      lSetHost(epc, CONF_hname, SGE_GLOBAL_NAME);
       lSetList(epc, CONF_entries, lCopyList("global config", lpDefaults));
       lAppendElem(*lpp, epc);
       lFreeList(lpDefaults);
@@ -177,7 +177,7 @@ lList **lpp
          lList *alp = NULL;
 
          /* resolve config name */
-         old_name = strdup(lGetString(el, CONF_hname));
+         old_name = strdup(lGetHost(el, CONF_hname));
 
          if ((ret = sge_resolve_host(el, CONF_hname))!= CL_OK) {
             if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
@@ -190,7 +190,7 @@ lList **lpp
             WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS,
                   "local configuration", old_name));
          }
-         new_name = lGetString(el, CONF_hname);
+         new_name = lGetHost(el, CONF_hname);
 
          /* simply ignore it if it exists already */
          if (*lpp && lGetElemHost(*lpp, CONF_hname, new_name)) {
@@ -254,7 +254,7 @@ char *rhost
       return STATUS_EUNKNOWN;
    }
 
-   if (!(config_name = lGetString(confp, CONF_hname))) {
+   if (!(config_name = lGetHost(confp, CONF_hname))) {
       /* confp is no config element, if confp has no CONF_hname */
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                 lNm2Str(CONF_hname), SGE_FUNC));
@@ -332,7 +332,7 @@ char *rhost
       return STATUS_EUNKNOWN;
    }
 
-   if (!(config_name = lGetString(confp, CONF_hname))) {
+   if (!(config_name = lGetHost(confp, CONF_hname))) {
       /* confp is no config element, if confp has no CONF_hname */
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                 lNm2Str(CONF_hname), SGE_FUNC));
@@ -418,7 +418,7 @@ char *rhost
                me.qualified_hostname, ret));
       }
       ret = merge_configuration(
-         lGetElemStr(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), 
+         lGetElemHost(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), 
                lep, &conf, NULL);
       if (ret) {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_SI,
@@ -461,7 +461,7 @@ lListElem *conf
  
    DENTER(TOP_LAYER, "check_config");
  
-   conf_name = lGetString(conf, CONF_hname);
+   conf_name = lGetHost(conf, CONF_hname);
  
    for_each(ep, lGetList(conf, CONF_entries)) {
       name = lGetString(ep, CF_name);
@@ -665,7 +665,7 @@ lListElem **cepp
    }
    else {
       hep = lCreateElem(EH_Type);
-      lSetString(hep, EH_name, config_name);
+      lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
       if (ret) {
@@ -675,11 +675,11 @@ lListElem **cepp
          DEXIT;
          return -2;
       }
-/*       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetString(hep, EH_name))); */
+/*       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name))); */
    }
    
    *cepp = lGetElemHost(lp, CONF_hname, 
-      (is_global_requested ? SGE_GLOBAL_NAME : lGetString(hep, EH_name)));
+      (is_global_requested ? SGE_GLOBAL_NAME : lGetHost(hep, EH_name)));
    
    lFreeElem(hep);
    DEXIT;
@@ -716,7 +716,7 @@ lList *to_check_list
 
    if (lGetNumberOfElem(to_check_list) == 0) {
       DPRINTF(("received empty configuration list from %s\n", \
-         lGetString(hep, EH_name)));
+         lGetHost(hep, EH_name)));
       DEXIT;
       return 0;
    }
@@ -725,20 +725,20 @@ lList *to_check_list
       /*
        * find the corresponding element in the configuration list
        */
-      ep_conf = lGetElemHost(conf_list, CONF_hname, lGetString(ep, CONF_hname));
+      ep_conf = lGetElemHost(conf_list, CONF_hname, lGetHost(ep, CONF_hname));
       /*
        * if there is no such element this means that the configuration has
        * been deleted meanwhile
        */
       if (!ep_conf) {
          DPRINTF(("configuration %s no longer exists\n", \
-            lGetString(ep, CONF_hname)));
+            lGetHost(ep, CONF_hname)));
          DEXIT;
          return 0;
       }
       if (lGetUlong(ep, CONF_version) != lGetUlong(ep_conf, CONF_version)) {
          DPRINTF(("configuration %s changed from version %ld to %ld\n", \
-            lGetString(ep, CONF_hname), lGetUlong(ep, CONF_version), \
+            lGetHost(ep, CONF_hname), lGetUlong(ep, CONF_version), \
             lGetUlong(ep_conf, CONF_version)));
          DEXIT;
          return 0;
@@ -750,11 +750,10 @@ lList *to_check_list
     * has been added meanwhile
     */
    if (lGetNumberOfElem(to_check_list) == 1) {
-      ep_conf = lGetElemHost(conf_list, 
-         CONF_hname, lGetString(hep, EH_name));
+      ep_conf = lGetElemHost(conf_list, CONF_hname, lGetHost(hep, EH_name));
       if (ep_conf) {
          DPRINTF(("new local configuration %s has been created\n", \
-            lGetString(hep, EH_name)));
+            lGetHost(hep, EH_name)));
          DEXIT;
          return 0;
       }

@@ -1196,15 +1196,15 @@ lListElem *jatep
       if (lGetUlong(qep, QU_qtype) & TQ) {
          lListElem *hep;
          pnm = prognames[QSTD];
-         if (!(hep=sge_locate_host(lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST))
+         if (!(hep=sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))
             || !(hnm=lGetString(hep, EH_real_name))) {
-            ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetString(hep, EH_name)));
+            ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(hep, EH_name)));
             DEXIT;
             return -1;
          }
       } else {
          pnm = prognames[EXECD]; 
-         hnm = lGetString(qep, QU_qhostname);
+         hnm = lGetHost(qep, QU_qhostname);
       }
 
       if((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
@@ -1248,7 +1248,7 @@ lListElem *jatep
    if (jep) {
       DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
             lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time, 
-            lGetString(qep, QU_qhostname)));
+            lGetHost(qep, QU_qhostname)));
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number));
       lSetUlong(jatep, JAT_pending_signal, how);
       te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, lGetUlong(jep, JB_job_number),
@@ -1258,7 +1258,7 @@ lListElem *jatep
    else {
       DPRINTF(("QUEUE %s: %s signal %s (retry after "u32" seconds) host %s\n", 
             lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time,
-            lGetString(qep, QU_qhostname)));
+            lGetHost(qep, QU_qhostname)));
       te_delete(TYPE_SIGNAL_RESEND_EVENT, lGetString(qep, QU_qname), 0, 0);
       lSetUlong(qep, QU_pending_signal, how);
       te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, 0, 0, lGetString(qep, QU_qname));

@@ -133,7 +133,7 @@ u_long32 now
          for_each(qep, Master_Queue_List) {
             memset(str, 0, sizeof(str));
 
-            if (( hep = sge_locate_host(lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
+            if (( hep = sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
                 /* use load avg */
                 if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
                    load_avg = strtod(lGetString(ep, HL_value), NULL);
@@ -144,7 +144,7 @@ u_long32 now
 
             fprintf(fp, "%u:%s:%s:%.2f:%.2f:", 
                      (unsigned) now,
-                     lGetString(qep, QU_qhostname), 
+                     lGetHost(qep, QU_qhostname), 
                      lGetString(qep, QU_qname),
                      load_avg, 
                      vmem);

@@ -547,14 +547,27 @@ int field2
                            1);         /* we add 1 rows      */
          max_rows++;
       }
-      col1 = lGetString(ep, field1);
       /*
-      ** the first column of the matrix is always a string
+      ** the first column of the matrix can be string or host type
+      **
+      */
+      switch (lGetType(lGetListDescr(lp), field1)) {
+         case lStringT:
+            col1 = lGetString(ep, field1);
+            break;
+         case lHostT:
+            col1 = lGetHost(ep,field1);
+            break;
+      }
+      /*
       ** the second column can be of different type
       */
       switch (lGetType(lGetListDescr(lp), field2)) {
          case lStringT:
             col2 = lGetString(ep, field2);
+            break;
+         case lHostT:
+            col2 = lGetHost(ep,field2);
             break;
          case lUlongT:
             val = (int)lGetUlong(ep, field2);
@@ -608,14 +621,29 @@ int field2
             lp = lCreateList(XtName(w), dp);
          ep = lCreateElem(dp);
          lAppendElem(lp, ep);
-         lSetString(ep, field1, col1 ? col1 : "");
+
          /*
-         ** the first field in the column is always a string
+         ** the first field in the column can be host or string
+         */
+
+         switch(lGetType(lGetListDescr(lp), field1)) {
+            case lStringT:
+               lSetString(ep, field1, col1 ? col1 : "");
+               break;
+            case lHostT:
+               lSetHost(ep, field1, col1 ? col1 : "");
+               break;
+         }
+
+         /*
          ** the second field can be of different type
          */
          switch(lGetType(lGetListDescr(lp), field2)) {
             case lStringT: 
                lSetString(ep, field2, col2 ? col2 : "" );
+               break;
+            case lHostT:
+               lSetHost(ep, field2, col2 ? col2 : "");
                break;
             case lUlongT:
                lSetUlong(ep, field2, col2 ? atoi(col2) : 0);

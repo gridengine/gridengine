@@ -553,8 +553,8 @@ int hostcmp(const char *h1, const char*h2)
 
    DENTER(BASIS_LAYER, "hostcmp");
 
-   hostdup(h1, h1_cpy);
-   hostdup(h2, h2_cpy);
+   hostcpy(h1_cpy,h1);
+   hostcpy(h2_cpy,h2);
 
    if (h1_cpy && h2_cpy) {
      cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
@@ -566,12 +566,29 @@ int hostcmp(const char *h1, const char*h2)
    return cmp;
 }
 
-void hostdup(
-const char *raw,
-char *dst 
+void string_toupper(char *buffer, int max_len ) {
+   int i;
+   DENTER(BASIS_LAYER, "string_toupper");
+   if (buffer != NULL) {
+       for ( i = 0 ; (i < max_len) && (i < strlen(buffer)) ; i++) {
+           buffer[i] = toupper(buffer[i]); 
+       }
+   }
+   DPRINTF(("string_toupper: string is %s\n", buffer));
+   DEXIT;
+} 
+
+void hostcpy(
+char *dst, 
+const char *raw
 ) {
    char *s;
 
+/*   if ( (dst == NULL) || (raw == NULL ) ) {
+      return;
+   }  
+*/
+ 
    if (!fqdn_cmp) {              /* standard: simply ignore FQDN */
       strncpy(dst, raw, MAXHOSTLEN);
       if ((s = strchr(dst, '.')))
@@ -587,6 +604,5 @@ char *dst
    } else {                     /* hardcore: honor FQDN, don't use default_domain */
       strncpy(dst, raw, MAXHOSTLEN);
    }
-
    return;
 }

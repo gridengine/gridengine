@@ -1756,8 +1756,8 @@ lList *exec_host_list
       lListElem *ep;
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      ccl[0] = lGetList(lGetElemStr(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetString(qep, QU_qhostname)))?
+      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -1800,8 +1800,8 @@ lList *exec_host_list
       lList *ccl[3];
       lListElem *ep;
 
-      ccl[0] = lGetList(lGetElemStr(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetString(qep, QU_qhostname)))?
+      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -1925,8 +1925,8 @@ lList *complex_list
    for_each(qep, queue_list) {
       lList *ccl[3];
       lListElem *ep;
-      ccl[0] = lGetList(lGetElemStr(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetString(qep, QU_qhostname)))?
+      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 

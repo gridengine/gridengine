@@ -108,7 +108,7 @@ u_long32 action_flag
          ** It would be better to change the call to use ID_Type!
          */
          for_each(hep, host_list) {
-            hlep = lAddElemStr(&hlp, ID_str, lGetString(hep, EH_name), ID_Type);
+            hlep = lAddElemStr(&hlp, ID_str, lGetHost(hep, EH_name), ID_Type);
             lSetUlong(hlep, ID_force, (action_flag & JOB_KILL)?1:0);
          }
       } else {

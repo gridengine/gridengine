@@ -49,7 +49,7 @@ enum {
 };
 
 ILISTDEF(CONF_Type, Configuration, SGE_CONFIG_LIST)
-   SGE_KSTRINGHU(CONF_hname)
+   SGE_HOSTHU(CONF_hname)                       /* CR - hostname change */
    SGE_XULONG(CONF_version)
    SGE_TLIST(CONF_entries, CF_Type)
 LISTEND 

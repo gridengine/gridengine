@@ -1243,7 +1243,7 @@ DTRACE;
                   XmtSizeOf(tQCEntry, qname));
 
          qmonMirrorMulti(EXECHOST_T);
-         qhostname = lGetString(qep, QU_qhostname); 
+         qhostname = lGetHost(qep, QU_qhostname); 
          strncpy(data->qhostname, qhostname,  XmtSizeOf(tQCEntry, qhostname));
       }
 
@@ -1467,7 +1467,7 @@ lListElem *qep
    /**************************/
    lSetString(qep, QU_qname, qmon_trim(data->qname));
 
-   lSetString(qep, QU_qhostname, data->qhostname);
+   lSetHost(qep, QU_qhostname, data->qhostname);
    /* get the unqualified hostname */
 
    lSetUlong(qep, QU_qtype, data->qtype);
@@ -2310,7 +2310,7 @@ XtPointer cld, cad;
 
    qep = lCreateElem(QU_Type);
    lSetString(qep, QU_qname, qname);
-   lSetString(qep, QU_qhostname, qhostname);
+   lSetHost(qep, QU_qhostname, qhostname);
    lSetList(qep, QU_complex_list, attached_cplx_list);
    queue_complexes2scheduler(&entries, qep, ehl, cl, 0);   
    qep = lFreeElem(qep);

@@ -110,7 +110,7 @@ lList *report_list
    lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
    lSetUlong(report, REP_version, GRM_GDI_VERSION);
    lSetUlong(report, REP_seqno, report_seqno);
-   lSetString(report, REP_host, me.qualified_hostname);
+   lSetHost(report, REP_host, me.qualified_hostname);
    lSetList(report, REP_list, sge_build_load_report());
    lAppendElem(report_list, report);
 
@@ -132,7 +132,7 @@ lList *report_list
    lSetUlong(report, REP_type, NUM_REP_REPORT_CONF);
    lSetUlong(report, REP_version, GRM_GDI_VERSION);
    lSetUlong(report, REP_seqno, report_seqno);
-   lSetString(report, REP_host, me.qualified_hostname);
+   lSetHost(report, REP_host, me.qualified_hostname);
    lSetList(report, REP_list, 
       lCopyList("execd config list copy", execd_config_list));
    lAppendElem(report_list, report);
@@ -153,7 +153,7 @@ lList *report_list
    lSetUlong(report, REP_type, NUM_REP_REPORT_PROCESSORS);
    lSetUlong(report, REP_version, GRM_GDI_VERSION);
    lSetUlong(report, REP_seqno, report_seqno);
-   lSetString(report, REP_host, me.qualified_hostname);
+   lSetHost(report, REP_host, me.qualified_hostname);
    {
       lList *lp_lic;
       lListElem *ep_lic;
@@ -195,7 +195,7 @@ lList *report_list
    lSetUlong(job_report, REP_type, NUM_REP_REPORT_JOB);
    lSetUlong(job_report, REP_version, GRM_GDI_VERSION);
    lSetUlong(job_report, REP_seqno, report_seqno);
-   lSetString(job_report, REP_host, me.qualified_hostname);
+   lSetHost(job_report, REP_host, me.qualified_hostname);
 
    lSetList(job_report, REP_list, lCopyList("jr_list", jr_list));
    lAppendElem(report_list, job_report);
@@ -723,7 +723,7 @@ lList **job_usage_list
             double lim, h_vmem_lim, s_vmem_lim;
 
             if (hostcmp(me.qualified_hostname,
-                  lGetString(gdil_ep, JG_qhostname)) ||
+                  lGetHost(gdil_ep, JG_qhostname)) ||
                   !(q = lFirst(lGetList(gdil_ep, JG_queue))))
                continue;
 

@@ -58,7 +58,7 @@ enum {
 LISTDEF( KRB_Type )
    SGE_STRING( KRB_commproc )
    SGE_ULONG( KRB_id )
-   SGE_STRING( KRB_host )
+   SGE_HOST( KRB_host )                    /* CR - hostname change */
    SGE_ULONG( KRB_timestamp )
    SGE_STRING( KRB_auth_context )
    SGE_LIST( KRB_tgt_list )

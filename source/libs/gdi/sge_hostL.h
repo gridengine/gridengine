@@ -134,7 +134,7 @@ enum {
 };
 
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
-   SGE_KSTRINGHU(EH_name)
+   SGE_HOSTHU(EH_name)                        /* CR - hostname change */
    SGE_TLIST(EH_scaling_list, HS_Type)
    SGE_TLIST(EH_complex_list, CX_Type)
    SGE_TLIST(EH_consumable_config_list, CE_Type)
@@ -260,7 +260,7 @@ enum {
 };
 
 LISTDEF(AH_Type)
-   SGE_STRINGHU(AH_name)
+   SGE_HOSTHU(AH_name)               /* CR - hostname change */
 LISTEND 
 
 NAMEDEF(AHN)
@@ -277,7 +277,7 @@ enum {
 };
 
 LISTDEF(SH_Type)
-   SGE_STRINGHU(SH_name)
+   SGE_HOSTHU(SH_name)                 /* CR - hostname change */
 LISTEND 
 
 NAMEDEF(SHN)

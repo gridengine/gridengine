@@ -273,11 +273,11 @@ int flags
       */
       for_each(ep, lp) {
          user = lGetString(ep, MR_user);
-         host = lGetString(ep, MR_host);
+         host = lGetHost(ep, MR_host);
          if (sge_strnullcmp(user, me.user_name) || 
-             sge_strnullcasecmp(host, me.qualified_hostname)) {
+             hostcmp(host, me.qualified_hostname)) {
             ep_new = lAddElemStr(&lp_new, MR_user, user, MR_Type);
-            lSetString(ep_new, MR_host, host);
+            lSetHost(ep_new, MR_host, host);
          }
       }
       if (lp_new) {

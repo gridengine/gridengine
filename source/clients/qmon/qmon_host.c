@@ -775,21 +775,17 @@ XtPointer cld, cad;
    ehl = qmonExecHostGetAsk();
 
    if (ehl) {
-      ehname = lGetString(lFirst(ehl), EH_name);
+      ehname = lGetHost(lFirst(ehl), EH_name);
       /*
       ** gdi call 
       */
       what = lWhat("%T(ALL)", EH_Type);
       
       if (add_mode) {
-         alp = qmonAddList(SGE_EXECHOST_LIST, 
-                           qmonMirrorListRef(SGE_EXECHOST_LIST),
-                           EH_name, &ehl, NULL, what);
+         alp = qmonAddList(SGE_EXECHOST_LIST, qmonMirrorListRef(SGE_EXECHOST_LIST), EH_name, &ehl, NULL, what);
       }
       else {
-         alp = qmonModList(SGE_EXECHOST_LIST, 
-                           qmonMirrorListRef(SGE_EXECHOST_LIST),
-                           EH_name, &ehl, NULL, what);
+         alp = qmonModList(SGE_EXECHOST_LIST, qmonMirrorListRef(SGE_EXECHOST_LIST), EH_name, &ehl, NULL, what);
       }
 
       if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK)
@@ -845,7 +841,7 @@ static lList* qmonExecHostGetAsk(void)
       /*
       ** name of exec_host
       */
-      lSetString(lFirst(lp), EH_name, host_data.name);
+      lSetHost(lFirst(lp), EH_name, host_data.name);
       XtFree((char*)host_data.name);
       host_data.name = NULL;
       
@@ -1183,8 +1179,7 @@ XtPointer cld, cad;
    if (lp) {
       what = lWhat("%T(ALL)", dp);
       
-      alp = qmonDelList(type, qmonMirrorListRef(type),
-                              field, &lp, NULL, what);
+      alp = qmonDelList(type, qmonMirrorListRef(type), field, &lp, NULL, what);
 
       qmonMessageBox(w, alp, 0);
 
@@ -1288,7 +1283,7 @@ XtPointer cld, cad;
                DEXIT;
                return;
             }
-            lSetString(lFirst(lp), field, unique);
+            lSetHost(lFirst(lp), field, unique);
 
             alp = qmonAddList(type, qmonMirrorListRef(type), 
                                  field, &lp, NULL, what);
@@ -1380,7 +1375,7 @@ XtPointer cld, cad;
       strcpy(unique, "");
 
       /* try to resolve hostname */
-      ret=sge_resolve_hostname((String)cbs->input, unique, EH_name);
+      ret=sge_resolve_hostname((const char*)cbs->input, unique, EH_name);
 
       switch ( ret ) {
          case COMMD_NACK_UNKNOWN_HOST:
@@ -1569,7 +1564,7 @@ lList *attached_cplx_list
    ** create a queue element and get the complex attribute entries
    */
    hep = lCreateElem(EH_Type);
-   lSetString(hep, EH_name, qhostname);
+   lSetHost(hep, EH_name, qhostname);
    lSetList(hep, EH_complex_list, attached_cplx_list);
    if (qhostname && !strcasecmp(qhostname, "global"))
       global_complexes2scheduler(&entries, hep, cl, 0);

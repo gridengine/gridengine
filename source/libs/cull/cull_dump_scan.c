@@ -240,6 +240,10 @@ int indent
          ret = fprintf(fp, "%s/* %-20.20s */ \"%s\"\n",
                   space, lNm2Str(ep->descr[i].nm), lGetPosString(ep, i));
          break;
+      case lHostT:
+         ret = fprintf(fp, "%s/* %-20.20s */ \"%s\"\n",
+                  space, lNm2Str(ep->descr[i].nm), lGetPosHost(ep, i));
+         break;
       case lFloatT:
          ret = fprintf(fp, "%s/* %-20.20s */ %f\n",
                    space, lNm2Str(ep->descr[i].nm), lGetPosFloat(ep, i));
@@ -386,6 +390,11 @@ const lDescr *dp
          ret = fGetString(fp, &str);
          lSetPosString(ep, i, str);
          free(str);             /* fGetString strdup's */
+         break;
+      case lHostT:
+         ret = fGetHost(fp, &str);
+         lSetPosHost(ep, i, str);
+         free(str);             /* fGetHost strdup's */
          break;
       case lFloatT:
          ret = fGetFloat(fp, &(ep->cont[i].fl));
@@ -865,6 +874,57 @@ lString *tp
    DEXIT;
    return 0;
 }
+
+int fGetHost(
+FILE *fp,
+lHost *tp 
+) {
+   int i;
+   char line[READ_LINE_LENGHT + 1];
+   char sp[READ_LINE_LENGHT + 1];
+   char *s;
+
+   DENTER(CULL_LAYER, "fGetHost");
+
+   if (!fp) {
+      LERROR(LEFILENULL);
+      DEXIT;
+      return -1;
+   }
+
+   if (fGetLine(fp, line, READ_LINE_LENGHT)) {
+      LERROR(LEFGETLINE);
+      DEXIT;
+      return -1;
+   }
+   s = line;
+
+   while (isspace((int) *s))
+      s++;
+   if (*s++ != '"') {
+      LERROR(LESYNTAX);
+      DEXIT;
+      return -1;
+   }
+   for (i = 0; s[i] != '\0' && s[i] != '"'; i++)
+      sp[i] = s[i];
+   if (s[i] != '"') {
+      LERROR(LESYNTAX);
+      DEXIT;
+      return -1;
+   }
+   sp[i] = '\0';
+
+   if (!(*tp = strdup(sp))) {
+      LERROR(LESTRDUP);
+      DEXIT;
+      return -1;
+   }
+
+   DEXIT;
+   return 0;
+}
+
 
 int fGetFloat(
 FILE *fp,

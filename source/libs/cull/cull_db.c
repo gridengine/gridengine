@@ -336,6 +336,9 @@ const lEnumeration *enp1;
             case lStringT:
                needed = !strcmp(ep0->cont[lp0_pos].str, ep1->cont[lp1_pos].str);
                break;
+            case lHostT:
+               needed = !strcmp(ep0->cont[lp0_pos].str, ep1->cont[lp1_pos].str);
+               break;
             case lLongT:
                needed = (ep0->cont[lp0_pos].l == ep1->cont[lp1_pos].l);
                break;
@@ -762,6 +765,11 @@ const lEnumeration *ep1
 ******************************************************************************/
 int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
                  const char *dlmt) {
+
+   int pos;
+   int dataType;
+
+
    DENTER(TOP_LAYER, "lString2List");
 
    if (!s) {
@@ -769,17 +777,44 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
       return 1;
    }
 
-   for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
-      if (lGetElemStr(*lpp, nm, s)) {
-         /* silently ignore multiple occurencies */
-         continue;
-      }
-      if (!lAddElemStr(lpp, nm, s, dp)) {
-         lFreeList(*lpp);
-         *lpp = NULL;
-         DEXIT;
-         return 1;
-      }
+   pos = lGetPosInDescr(dp, nm);
+   dataType = lGetPosType(dp, pos);
+   switch (dataType) {
+      case lStringT:
+         DPRINTF(("lString2List: got lStringT data type\n"));
+         for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
+            if (lGetElemStr(*lpp, nm, s)) {
+               /* silently ignore multiple occurencies */
+               continue;
+            }
+            if (!lAddElemStr(lpp, nm, s, dp)) {
+               lFreeList(*lpp);
+               *lpp = NULL;
+               DEXIT;
+               return 1;
+            }
+         }
+
+         break;
+      case lHostT:
+         DPRINTF(("lString2List: got lHostT data type\n"));
+         for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
+            if (lGetElemHost(*lpp, nm, s)) {
+               /* silently ignore multiple occurencies */
+               continue;
+            }
+            if (!lAddElemHost(lpp, nm, s, dp)) {
+               lFreeList(*lpp);
+               *lpp = NULL;
+               DEXIT;
+               return 1;
+            }
+         }
+
+         break;
+      default:
+         DPRINTF(("lString2List: unexpected data type\n"));
+         break;
    }
 
    DEXIT;
@@ -793,16 +828,40 @@ const lDescr *dp,
 int nm,
 const char *dlmt 
 ) {
+   int pos;
+   int dataType;
    if (lString2List(s, lpp, dp, nm, dlmt))
       return 1;
 
-   if (lGetNumberOfElem(*lpp) > 1 && lGetElemCaseStr(*lpp, nm, "none")) {
-      *lpp = lFreeList(*lpp);
-      return 1;
-   }
 
-   if (lGetNumberOfElem(*lpp) == 1 && lGetElemCaseStr(*lpp, nm, "none"))
-      *lpp = lFreeList(*lpp);
+   pos = lGetPosInDescr(dp, nm);
+   dataType = lGetPosType(dp, pos);
+   switch(dataType) {
+      case lStringT:
+         DPRINTF(("lString2ListNone: got lStringT data type\n"));
+         if (lGetNumberOfElem(*lpp) > 1 && lGetElemCaseStr(*lpp, nm, "none")) {
+            *lpp = lFreeList(*lpp);
+            return 1;
+         }
+
+         if (lGetNumberOfElem(*lpp) == 1 && lGetElemCaseStr(*lpp, nm, "none"))
+            *lpp = lFreeList(*lpp);
+         break;
+      case lHostT:
+         DPRINTF(("lString2ListNone: got lHostT data type\n"));
+         if (lGetNumberOfElem(*lpp) > 1 && lGetElemHost(*lpp, nm, "none")) {
+            *lpp = lFreeList(*lpp);
+            return 1;
+         }
+
+         if (lGetNumberOfElem(*lpp) == 1 && lGetElemHost(*lpp, nm, "none"))
+            *lpp = lFreeList(*lpp);
+         break;
+
+      default:
+         DPRINTF(("lString2ListNone: unexpected data type\n"));
+         break;
+   }
 
    return 0;
 }

@@ -86,6 +86,10 @@ int type
       ret = unpackstr(pb, &(dst->str));
       break;
 
+   case lHostT:
+      ret = unpackstr(pb, &(dst->host));
+      break;
+
    case lListT:
       ret = cull_unpack_list(pb, &(dst->glp));
       break;
@@ -143,6 +147,10 @@ int type
 
    case lStringT:
       ret = packstr(pb, src->str);
+      break;
+
+   case lHostT:
+      ret = packstr(pb, src->host);
       break;
 
    case lListT:

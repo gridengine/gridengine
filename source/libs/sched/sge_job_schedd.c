@@ -1087,7 +1087,7 @@ const char *qhostname
 
    for_each (gdil_ep, granted) {
       if (qhostname && 
-            hostcmp(qhostname, lGetString(gdil_ep, JG_qhostname)))
+            hostcmp(qhostname, lGetHost(gdil_ep, JG_qhostname)))
          continue; 
       nslots += lGetUlong(gdil_ep, JG_slots);
    }
@@ -1141,7 +1141,7 @@ const char *qhostname
 
    for_each (gdil_ep, granted) {
       if (qhostname && 
-            hostcmp(qhostname, lGetString(gdil_ep, JG_qhostname)))
+            hostcmp(qhostname, lGetHost(gdil_ep, JG_qhostname)))
          continue; 
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {
          task_list = lGetList(ja_task, JAT_task_list);

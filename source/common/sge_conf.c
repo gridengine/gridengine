@@ -971,7 +971,7 @@ lListElem **lepp
    }
    else {
       hep = lCreateElem(EH_Type);
-      lSetString(hep, EH_name, config_name);
+      lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
       if (ret) {
@@ -987,7 +987,7 @@ lListElem **lepp
             return -2;
          }
       }
-      DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetString(hep, EH_name)));
+      DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
    }
 
    if (!is_global_requested && !lepp) {
@@ -1005,9 +1005,9 @@ lListElem **lepp
       DPRINTF(("requesting global\n"));
    }
    else {
-      where = lWhere("%T(%I c= %s || %I h= %s)", 
-         CONF_Type, CONF_hname, SGE_GLOBAL_NAME, CONF_hname, lGetString(hep, EH_name));
-      DPRINTF(("requesting global and %s\n", lGetString(hep, EH_name)));
+      where = lWhere("%T(%I c= %s || %I h= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME, CONF_hname,
+                     lGetHost(hep, EH_name));
+      DPRINTF(("requesting global and %s\n", lGetHost(hep, EH_name)));
    }
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
@@ -1034,7 +1034,7 @@ lListElem **lepp
       WARNING((SGE_EVENT, MSG_CONF_REQCONF_II, 2 - is_global_requested, lGetNumberOfElem(lp)));
    }
 
-   if (!(*gepp = lGetElemCaseStr(lp, CONF_hname, SGE_GLOBAL_NAME))) {
+   if (!(*gepp = lGetElemHost(lp, CONF_hname, SGE_GLOBAL_NAME))) {
       ERROR((SGE_EVENT, MSG_CONF_NOGLOBAL));
       lFreeList(lp);
       lFreeElem(hep);
@@ -1044,9 +1044,9 @@ lListElem **lepp
    lDechainElem(lp, *gepp);
 
    if (!is_global_requested) {
-      if (!(*lepp = lGetElemHost(lp, CONF_hname, lGetString(hep, EH_name)))) {
+      if (!(*lepp = lGetElemHost(lp, CONF_hname, lGetHost(hep, EH_name)))) {
          if (*gepp) {
-            WARNING((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetString(hep, EH_name)));
+            WARNING((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetHost(hep, EH_name)));
          }
          lFreeList(lp);
          lFreeElem(hep);

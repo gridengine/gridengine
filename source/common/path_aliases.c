@@ -175,14 +175,14 @@ lList **alpp
       /*
       ** set the values of the element
       */
-      lSetString(pal, PA_submit_host, submit_host);
+      lSetHost(pal, PA_submit_host, submit_host);
       if (strcmp(submit_host, "*") && sge_resolve_host(pal, PA_submit_host)) {
          sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host);
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = -1;
          break;
       }
-      lSetString(pal, PA_exec_host, exec_host);
+      lSetHost(pal, PA_exec_host, exec_host);
       lSetString(pal, PA_translation, translation);
 
    } /* while (fgets) */
@@ -281,7 +281,7 @@ lList **alpp
    if (path_aliases) { /* use aliases */
       for_each(pap, path_aliases) {
          origin = lGetString(pap, PA_origin);
-         exec_host = lGetString(pap, PA_exec_host);
+         exec_host = lGetHost(pap, PA_exec_host);
          translation = lGetString(pap, PA_translation);
 
          if (strncmp(origin, the_path, strlen(origin))) {
@@ -298,7 +298,7 @@ lList **alpp
                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, exec_host)); 
                continue;
             }
-            exec_host = lGetString(pap, PA_exec_host);
+            exec_host = lGetHost(pap, PA_exec_host);
 
             /* and compare it to the executing host */
             if (hostcmp(exec_host, myhost))

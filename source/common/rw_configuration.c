@@ -308,7 +308,7 @@ u_long32 flags
    fclose(fp);
 
    epc = lCreateElem(CONF_Type);
-   lSetString(epc, CONF_hname, conf_name);
+   lSetHost(epc, CONF_hname, conf_name);
    lSetUlong(epc, CONF_version, conf_version);
    lSetList(epc, CONF_entries, lp);
 

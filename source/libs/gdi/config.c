@@ -281,6 +281,8 @@ lListElem *ep,
 int name_nm 
 ) {
    const char *str;
+   int pos;
+   int dataType;
 
    DENTER(CULL_LAYER, "set_conf_string");
 
@@ -288,7 +290,22 @@ int name_nm
       DEXIT;
       return fields?TRUE:FALSE;
    }
-   lSetString(ep, name_nm, str);
+
+   pos = lGetPosViaElem(ep, name_nm);
+   dataType = lGetPosType(lGetElemDescr(ep),pos);
+   switch (dataType) {
+      case lStringT:
+         DPRINTF(("set_conf_string: lStringT data type (Type: %s)\n",lNm2Str(name_nm)));
+         lSetString(ep, name_nm, str);
+         break;
+      case lHostT:
+         DPRINTF(("set_conf_string: lHostT data type (Type: %s)\n",lNm2Str(name_nm)));
+         lSetHost(ep, name_nm, str);
+         break;
+      default:
+         DPRINTF(("!!!!!!!!!set_conf_string: unexpected data type !!!!!!!!!!!!!!!!!\n"));
+         break;
+   } 
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 

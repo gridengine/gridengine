@@ -648,12 +648,12 @@ int compressed
 		       strcmp(prognames[QMASTER], tocomproc))) {
 
       if (toid)
-	 where = lWhere("%T(%I==%s && %I==%s && %I==%u)", KRB_Type,
-			KRB_host, tohost, KRB_commproc, tocomproc,
+	 where = lWhere("%T(%I==%s && %I==%s && %I==%u)", KRB_Type, KRB_host, 
+         tohost, KRB_commproc, tocomproc,
 			KRB_id, toid);
       else
-	 where = lWhere("%T(%I==%s && %I==%s)", KRB_Type,
-			KRB_host, tohost, KRB_commproc, tocomproc);
+	 where = lWhere("%T(%I==%s && %I==%s)", KRB_Type, KRB_host, 
+                   tohost, KRB_commproc, tocomproc);
       client = lFindFirst(gsd.conn_list, where);
       if (!client || !where) {
 	 ERROR((SGE_EVENT, MSG_KRB_NOCLIENTENTRYFOR_SSI ,
@@ -1082,8 +1082,8 @@ u_short *compressed      /* this one is for the original message */
       }
 
       /* lookup client in the connection list */
-      where = lWhere( "%T(%I==%s && %I==%s && %I==%u)", KRB_Type,
-		      KRB_host, tmphost, KRB_commproc, tmpcommproc,
+      where = lWhere( "%T(%I==%s && %I==%s && %I==%u)", KRB_Type, KRB_host,
+                      tmphost, KRB_commproc, tmpcommproc,
                       KRB_id, tmpid);
       client = lFindFirst(gsd.conn_list, where);
 
@@ -1108,7 +1108,7 @@ u_short *compressed      /* this one is for the original message */
 	    ret = SEC_RECEIVE_FAILED;
 	    goto error;
 	 }
-	 lSetString(client, KRB_host, tmphost);
+	 lSetHost(client, KRB_host, tmphost);
 	 lSetString(client, KRB_commproc, tmpcommproc);
 	 lSetUlong(client, KRB_id, tmpid);
 
@@ -1355,8 +1355,8 @@ char *user
 
    /* lookup client in the connection list using commd triple */
 
-   where = lWhere( "%T(%I==%s && %I==%s && %I==%u)", KRB_Type,
-                   KRB_host, host, KRB_commproc, commproc,
+   where = lWhere( "%T(%I==%s && %I==%s && %I==%u)", KRB_Type, KRB_host, 
+                   host, KRB_commproc, commproc,
                    KRB_id, id);
    client = lFindFirst(gsd.conn_list, where);
    if (!client) goto error;

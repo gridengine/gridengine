@@ -205,9 +205,16 @@ int dst_idx
          dep->cont[dst_idx].str = NULL;
       else
          dep->cont[dst_idx].str = strdup(sep->cont[src_idx].str);
-            
       /* lSetPosString(dep, dst_idx, lGetPosString(sep, src_idx)); */
       break;
+   case lHostT:
+      if (!sep->cont[src_idx].host)
+         dep->cont[dst_idx].host = NULL;
+      else
+         dep->cont[dst_idx].host = strdup(sep->cont[src_idx].host);
+      /* lSetPosString(dep, dst_idx, lGetPosString(sep, src_idx)); */
+      break;
+
    case lDoubleT:
       dep->cont[dst_idx].db = sep->cont[src_idx].db;
       /* lSetPosDouble(dep, dst_idx, lGetPosDouble(sep, src_idx)); */
@@ -504,6 +511,17 @@ FILE *fp
             fprintf(fp, "%s%-20.20s (String)  = %s\n", space,
                     lNm2Str(ep->descr[i].nm), str ? str : "(null)");
          break;
+
+      case lHostT:
+         str = lGetPosHost(ep, i);
+         if (!fp)
+            DPRINTF(("%s%-20.20s (Host)  = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), str ? str : "(null)"));
+         else
+            fprintf(fp, "%s%-20.20s (Host)  = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), str ? str : "(null)");
+         break;
+
       case lListT:
          tlp = lGetPosList(ep, i);
          if (!fp)
@@ -857,6 +875,11 @@ lListElem *ep
             free(ep->cont[i].str);
          break;
 
+      case lHostT:
+         if (ep->cont[i].host)
+            free(ep->cont[i].host);
+         break;
+
       case lListT:
          if (ep->cont[i].glp)
             lFreeList(ep->cont[i].glp);
@@ -1164,7 +1187,6 @@ lListElem *ep
    ep->descr = lp->descr;
 
    cull_hash_elem(ep);
-   
    lp->nelem++;
 
    DEXIT;
@@ -1659,3 +1681,44 @@ int keyfield
    DEXIT;
    return 0;
 }
+
+
+/*-------------------------------------------------------------------------*/
+/* uniq a string key list                                                  */
+/* the list is sorted alphabetically afterwards                            */
+/*-------------------------------------------------------------------------*/
+int lUniqHost(
+lList *lp,
+int keyfield 
+) {
+   lListElem *ep;
+   lListElem *rep;
+
+   DENTER(CULL_LAYER, "lUniqHost");
+
+   /*
+      ** sort the list first to make our algorithm work
+    */
+   if (lPSortList(lp, "%I+", keyfield)) {
+      DEXIT;
+      return -1;
+   }
+
+   /*
+      ** go over all elements and remove following elements
+    */
+   ep = lFirst(lp);
+   while (ep) {
+      rep = lNext(ep);
+      while (rep &&
+          !strcmp(lGetHost(rep, keyfield), lGetHost(ep, keyfield))) {
+         lRemoveElem(lp, rep);
+         rep = lNext(ep);
+      }
+      ep = lNext(ep);
+   }
+
+   DEXIT;
+   return 0;
+}
+

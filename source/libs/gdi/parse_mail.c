@@ -88,7 +88,7 @@ const char *mail_str
       user = sge_strtok(*pstr, "@");
       host = sge_strtok(NULL, "@");
       if ((tmp=lGetElemStr(*lpp, MR_user, user))) {
-         if (!sge_strnullcmp(host, lGetString(tmp, MR_host))) {
+         if (!sge_strnullcmp(host, lGetHost(tmp, MR_host))) {
             /* got this mail adress twice */
             continue;
          }
@@ -98,7 +98,7 @@ const char *mail_str
       ep = lCreateElem(MR_Type);
       lSetString(ep, MR_user, user);
       if (host) 
-         lSetString(ep, MR_host, host);
+         lSetHost(ep, MR_host, host);
       lAppendElem(*lpp, ep);
    }
 

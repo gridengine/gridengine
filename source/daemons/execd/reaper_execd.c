@@ -1078,7 +1078,7 @@ int failed
 
    if ((ep=lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)))) {
       lSetString(jr, JR_queue_name, lGetString(ep, JG_qname));
-      lSetString(jr, JR_host_name,  lGetString(ep, JG_qhostname));
+      lSetHost(jr, JR_host_name,  lGetHost(ep, JG_qhostname));
    }
       
    lSetUlong(jr, JR_failed, failed);
@@ -1460,7 +1460,7 @@ int failed
       char *owner;
 
       lSetString(jr, JR_queue_name, get_conf_val("queue"));
-      lSetString(jr, JR_host_name, get_conf_val("host"));
+      lSetHost(jr, JR_host_name, get_conf_val("host"));
       lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
       if (owner) {
          struct passwd *pw;
@@ -1718,7 +1718,7 @@ lListElem *jr
    if (!(q=lGetString(jr, JR_queue_name)))
       q = "<unknown>";
 
-   if (!(h=lGetString(jr, JR_host_name)))
+   if (!(h=lGetHost(jr, JR_host_name)))
       h = me.qualified_hostname;
 
    if (!(u=lGetString(jep, JB_owner)))

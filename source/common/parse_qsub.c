@@ -1946,7 +1946,7 @@ char *path_str
 
       lSetString(ep, PN_path, path);
       if (cell) {
-         lSetString(ep, PN_host, cell);
+         lSetHost(ep, PN_host, cell);
       }
    }
 

@@ -115,7 +115,7 @@ enum {
 };
 
 LISTDEF(QAJ_Type)
-   SGE_STRING(QAJ_host)
+   SGE_HOST(QAJ_host)               /* CR - hostname change */
    SGE_STRING(QAJ_queue)
    SGE_STRING(QAJ_group)
    SGE_STRING(QAJ_owner)

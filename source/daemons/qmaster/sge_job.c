@@ -1168,16 +1168,16 @@ char *commproc
       sge_pack_buffer tmp_pb;
 
       for_each (granted_queue, lGetList(t, JAT_granted_destin_identifier_list)) {
-         if (hostcmp(pb_host, lGetString(granted_queue, JG_qhostname))) {
+         if (hostcmp(pb_host, lGetHost(granted_queue, JG_qhostname))) {
             if(init_packbuffer(&tmp_pb, 1024, 0) == PACK_SUCCESS) {
 
                ERROR((SGE_EVENT, MSG_JOB_SENDKILLTOXFORJOBYZ_SUU ,
-                      lGetString(granted_queue, JG_qhostname), 
+                      lGetHost(granted_queue, JG_qhostname), 
                       u32c(job_number), 
                       u32c(task_number)));
 
                pack_job_kill(&tmp_pb, job_number, task_number);
-               sge_send_any_request(0, NULL, lGetString(granted_queue, JG_qhostname),
+               sge_send_any_request(0, NULL, lGetHost(granted_queue, JG_qhostname),
                                     commproc, 1, &tmp_pb, TAG_ACK_REQUEST);
                clear_packbuffer(&tmp_pb);
             } else {
@@ -1187,7 +1187,7 @@ char *commproc
       }
    }     
 
-   if (pb && !hostcmp(pb_host, lGetString(qep, QU_qhostname)))
+   if (pb && !hostcmp(pb_host, lGetHost(qep, QU_qhostname)))
       pack_job_kill(pb, job_number, task_number); 
    else {
       if (qep && sge_signal_queue(SGE_SIGKILL, qep, j, t)) {

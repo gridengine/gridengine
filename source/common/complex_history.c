@@ -703,8 +703,7 @@ lListElem **ppelem
          }
          DPRINTF(("filename: %s\n", filename));
 
-         host = cull_read_in_host(filename, NULL, CULL_READ_HISTORY,
-               EH_name, &tag, NULL);
+         host = cull_read_in_host(filename, NULL, CULL_READ_HISTORY, EH_name, &tag, NULL);
 
          if (!host) {
             ERROR((SGE_EVENT, MSG_HISTORY_CULLREADINHOSTRETURNEDNOHOST));
@@ -766,8 +765,7 @@ lListElem **ppelem
             DPRINTF(("version_subdir: %s\n", lGetString(version_subdir, 
                HD_name)));
 
-            host = cull_read_in_host(filename, NULL, CULL_READ_HISTORY, 
-               EH_name, &tag, NULL);
+            host = cull_read_in_host(filename, NULL, CULL_READ_HISTORY, EH_name, &tag, NULL);
             if (!host) {
                ERROR((SGE_EVENT, MSG_HISTORY_CULLREADINHOSTRETURNEDNOHOST ));
                answer = lFreeList(answer);
@@ -2000,10 +1998,10 @@ lListElem *host
    DENTER(TOP_LAYER, "write_host_history");
 
    i_ret = prepare_version_subdir(&exechost_dirs, 
-      STR_DIR_EXECHOSTS, lGetString(host, EH_name), &version_subdir);
+      STR_DIR_EXECHOSTS, lGetHost(host, EH_name), &version_subdir);
    if (i_ret) {
       ERROR((SGE_EVENT, MSG_HISTORY_WRITEHOSTHISTORYERRORXPREPVERSSUBDIRFORHOSTY_IS
-          , i_ret, lGetString(host, EH_name)));
+          , i_ret, lGetHost(host, EH_name)));
       lFreeList(exechost_dirs);
       exechost_dirs = NULL;
       DEXIT;
@@ -2014,7 +2012,7 @@ lListElem *host
    i_ret = write_complex_host_version(exechost_dirs, version_subdir, ultime, NULL, host);
    if (i_ret) {
       ERROR((SGE_EVENT, MSG_HISTORY_WRITEHOSTHISTORYERRORXWRITINGTOVERSSUBDIRTHECONFIGFORHOSTY_IS
-         , i_ret, lGetString(host, EH_name)));
+         , i_ret, lGetHost(host, EH_name)));
       lFreeList(exechost_dirs);
       exechost_dirs = NULL;
       DEXIT;

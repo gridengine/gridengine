@@ -65,7 +65,7 @@ enum {
 
 LISTDEF(SecurityT)
    SGE_ULONG(SEC_ConnectionID)
-   SGE_STRING(SEC_Host)
+   SGE_HOST(SEC_Host)               /* CR - hostname change */
    SGE_STRING(SEC_Commproc)
    SGE_INT(SEC_Id)
    SGE_STRING(SEC_ExpiryDate)

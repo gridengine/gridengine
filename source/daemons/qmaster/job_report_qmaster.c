@@ -282,7 +282,7 @@ sge_pack_buffer *pb
                         lSetList(task, JB_ja_tasks, task_tasks);      
                         lSetUlong(task_task, JAT_status, JRUNNING);
                         lSetList(task_task, JAT_granted_destin_identifier_list, NULL);
-                        if ((ep=lAddSubStr(task_task, JG_qhostname, rhost, JAT_granted_destin_identifier_list, JG_Type)))
+                        if ((ep=lAddSubHost(task_task, JG_qhostname, rhost, JAT_granted_destin_identifier_list, JG_Type)))
                            lSetString(ep, JG_qname, queue_name);
                         job_write_spool_file(jep, 0, SPOOL_DEFAULT);
                     }
@@ -318,7 +318,7 @@ sge_pack_buffer *pb
                         }
                         else {
                            shouldbe_queue_name = (s=lGetString(jg, JG_qname))?s: MSG_OBJ_UNKNOWN;
-                           shouldbe_host_name = (s=lGetString(jg, JG_qhostname))?s: MSG_OBJ_UNKNOWN;
+                           shouldbe_host_name = (s=lGetHost(jg, JG_qhostname))?s: MSG_OBJ_UNKNOWN;
                         }
                         /* should never happen */
                         ERROR((SGE_EVENT, MSG_JOB_REPORTEXITQ_SUUSSSSS, 
@@ -364,8 +364,7 @@ sge_pack_buffer *pb
             /* must be ack for slave job */
             lListElem *first_at_host, *gdil_ep;
 
-            first_at_host = lGetElemHost(lGetList(jatep, 
-               JAT_granted_destin_identifier_list), JG_qhostname, rhost);
+            first_at_host = lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost);
             if (first_at_host) {
                if (lGetUlong(first_at_host, JG_tag_slave_job)!=0) {
                   int all_slaves_arrived = 1;
@@ -461,8 +460,7 @@ sge_pack_buffer *pb
                if ( lGetString(jatep, JAT_granted_pe)
                   && (pe=sge_locate_pe(lGetString(jatep, JAT_granted_pe)))
                   && lGetUlong(pe, PE_control_slaves)
-                  && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), 
-                           JG_qhostname, rhost)) {
+                  && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                   /* here we get usage of tasks that ran on slave/master execd's 
                      we store a job element for each job in the task list of the job
                      this is needed to prevent multiple debitation of one task 
@@ -470,8 +468,7 @@ sge_pack_buffer *pb
 
                   if (!task) {
    
-                     task = lAddSubStr(jatep, JB_pe_task_id_str, 
-                           pe_task_id_str, JAT_task_list, JB_Type);
+                     task = lAddSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, JAT_task_list, JB_Type);
                      task_task = lAddSubUlong(task, JAT_status, 
                            JRUNNING, JB_ja_tasks, JAT_Type); 
                   }
@@ -566,7 +563,7 @@ sge_pack_buffer *pb
                      else {
                         shouldbe_queue_name = (s=lGetString(jg, JG_qname))?s: 
                           MSG_OBJ_UNKNOWN;
-                        shouldbe_host_name = (s=lGetString(jg, JG_qhostname))?s:
+                        shouldbe_host_name = (s=lGetHost(jg, JG_qhostname))?s:
                           MSG_OBJ_UNKNOWN;
                      }
                      /* should never happen */
@@ -617,7 +614,7 @@ sge_pack_buffer *pb
              lGetUlong(psep, EH_startup)) {
             lSetUlong(psep, EH_startup, 0);
             DPRINTF(("->>Resend Trigger for host: %s\n", 
-                     lGetString(psep, EH_name)));
+                     lGetHost(psep, EH_name)));
          }
       }
    }

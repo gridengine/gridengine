@@ -112,7 +112,7 @@ u_long32 decay_time
             
             /* search this host */
             hep = lGetElemHost(*lpp_host, EH_name, 
-               hnm=lGetString(gdil, JG_qhostname));
+               hnm=lGetHost(gdil, JG_qhostname));
             if (!hep) {
                DPRINTF(("Unable to find host \"%s\" from gdil "
                   "list of job "u32"."u32"\n", hnm, jobid, ja_taskid));
@@ -158,7 +158,7 @@ u_long32 decay_time
          }
       }
 
-      hep = lGetElemStr(*lpp_host, EH_name, "global");
+      hep = lGetElemHost(*lpp_host, EH_name, "global");
       lSetUlong(hep, EH_load_correction_factor, 
                 (100*lcf_global) + lGetUlong(hep, EH_load_correction_factor));
    }
@@ -187,7 +187,7 @@ lList *complex_list
    DENTER(TOP_LAYER, "correct_capacities");
  
    for_each (hep, host_list) {
-      const char *host_name = lGetString(hep, EH_name);
+      const char *host_name = lGetHost(hep, EH_name);
 
       for_each (ep, lGetList(hep, EH_load_list)) {
          const char *attr_name = lGetString(ep, HL_name);

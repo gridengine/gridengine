@@ -199,10 +199,10 @@ char **argv
       for_each(ep, ehl) {
 
          /* prepare complex attributes */
-         if (!strcmp(lGetString(ep, EH_name), SGE_TEMPLATE_NAME))
+         if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
             continue;
 
-         DPRINTF(("matching host %s with qhost -l\n", lGetString(ep, EH_name)));
+         DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
          ce = NULL;
 
          host_complexes2scheduler(&ce, ep, ehl, cl, 0);
@@ -278,7 +278,7 @@ lListElem *hep
    /*
    ** host name
    */
-   host = lGetString(hep, EH_name);
+   host = lGetHost(hep, EH_name);
 
    /* cut away domain in case of fqdn_cmp */
    strncpy(host_print, host, MAXHOSTLEN);
@@ -374,7 +374,7 @@ u_long32 show
    DENTER(TOP_LAYER, "sge_print_queues");
 
    for_each(qep, qlp) {
-      if (!hostcmp(lGetString(qep, QU_qhostname), lGetString(host, EH_name))) {
+      if (!hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
          char buf[80];
 
          if (show & QHOST_DISPLAY_QUEUES) { 

@@ -44,6 +44,7 @@ typedef int (*lCmpFunction)(lListElem *, lListElem *, int);
 
 void lWriteDescrTo(const lDescr *dp, FILE *fp);
 int lGetPosInDescr(const lDescr *dp, int name);
+int lGetPosType(const lDescr *dp, int pos);
 int lCountDescr(const lDescr *dp);
 lDescr* lCopyDescr(const lDescr *dp);
 
@@ -56,6 +57,8 @@ int lStr2Nm(const char *str);
 int _lStr2Nm(const lNameSpace *nsp, const char *str);
 
 char **lGetPosStringRef(const lListElem *ep, int id);
+char **lGetPosHostRef(const lListElem *ep, int id);
+
 lList **lGetListRef(const lListElem *ep, int name);
 int lGetType(const lDescr *dp, int nm);
 int lXchgList(lListElem *ep, int name, lList **lpp);
@@ -64,6 +67,7 @@ int lSwapList(lListElem *to, int to_nm, lListElem *from, int from_nm);
 lInt lGetPosInt(const lListElem *ep, int id);
 lUlong lGetPosUlong(const lListElem *ep, int id);
 const char *lGetPosString(const lListElem *ep, int id);
+const char *lGetPosHost(const lListElem *ep, int id);
 lList *lGetPosList(const lListElem *ep, int id);
 lFloat lGetPosFloat(const lListElem *ep, int id);
 lDouble lGetPosDouble(const lListElem *ep, int id);
@@ -74,6 +78,8 @@ lRef lGetPosRef(const lListElem *ep, int id);
 int lSetPosInt(const lListElem *ep, int pos, int value);
 int lSetPosUlong(const lListElem *ep, int pos, lUlong value);
 int lSetPosString(const lListElem *ep, int pos, const char *value);
+int lSetPosHost(const lListElem *ep, int pos, const char *value);
+
 int lSetPosList(const lListElem *ep, int pos, lList *value);
 int lSetPosFloat(const lListElem *ep, int pos, lFloat value);
 int lSetPosDouble(const lListElem *ep, int pos, lDouble value);
@@ -84,6 +90,7 @@ int lSetPosRef(const lListElem *ep, int pos, lRef value);
 lInt lGetInt(const lListElem *ep, int name);
 lUlong lGetUlong(const lListElem *ep, int name);
 const char *lGetString(const lListElem *ep, int name);
+const char *lGetHost(const lListElem *ep, int name);
 lList *lGetList(const lListElem *ep, int name);
 lFloat lGetFloat(const lListElem *ep, int name);
 lDouble lGetDouble(const lListElem *ep, int name);
@@ -94,6 +101,7 @@ lRef lGetRef(const lListElem *ep, int name);
 int lSetInt(lListElem *ep, int name, int value);
 int lSetUlong(lListElem *ep, int name, lUlong value);
 int lSetString(lListElem *ep, int name, const char *value);
+int lSetHost(lListElem *ep, int name, const char *value);
 int lSetList(lListElem *ep, int name, lList *value);
 int lSetFloat(lListElem *ep, int name, lFloat value);
 int lSetDouble(lListElem *ep, int name, lDouble value);
@@ -122,11 +130,17 @@ int unknownType(const char *str);
 
 */
 lListElem* lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp);
+lListElem* lAddElemHost(lList **lpp, int nm, const char *str, const lDescr *dp);
+
 int lDelElemStr(lList **lpp, int nm, const char *str); 
+
+
 lListElem *lGetElemStr(const lList *lp, int nm, const char *str);
 lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void **iterator);
 lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void **iterator);
 lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str);
+
+
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - 
 
@@ -165,6 +179,7 @@ lListElem *lGetSubUlong(const lListElem *ep, int nm, lUlong val, int snm);
 int lDelElemCaseStr(lList **lpp, int nm, const char *str); 
 lListElem *lGetElemCaseStr(const lList *lp, int nm, const char *str);
 
+
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - 
 
    functions for sublists with a char * as key
@@ -178,10 +193,13 @@ lListElem *lGetSubCaseStr(const lListElem *ep, int nm, const char *str, int snm)
    functions for sublists with a hostname as key
 
 */
-
-lListElem *lGetElemHost(const lList *lp, int nm, const char *str);
+lListElem* lAddSubHost(lListElem *ep, int nm, const char *str, int snm, const lDescr *dp); 
 int lDelElemHost(lList **lpp, int nm, const char *str);
 lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm);
+lListElem *lGetElemHost(const lList *lp, int nm, const char *str);
+lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const void **iterator);
+lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void **iterator);
+
 
 #ifdef  __cplusplus
 }

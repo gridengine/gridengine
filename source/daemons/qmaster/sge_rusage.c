@@ -66,6 +66,10 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
 
 #define SET_STR_DEFAULT(jr, nm, s) if (!lGetString(jr, nm)) \
                                       lSetString(jr, nm, s);
+#define SET_HOST_DEFAULT(jr, nm, s) if (!lGetHost(jr, nm)) \
+                                      lSetHost(jr, nm, s);
+
+
 #define GET_ULONG_USAGE(lp, name, ep, def) \
    ((ep=lGetElemStr(lp, UA_name, name))?(u_long32)lGetDouble(ep, UA_value):def)
 
@@ -129,7 +133,7 @@ char *category_str
 #endif
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN");
-   SET_STR_DEFAULT(jr, JR_host_name,  "UNKNOWN");
+   SET_HOST_DEFAULT(jr, JR_host_name,  "UNKNOWN");
    SET_STR_DEFAULT(jr, JR_group,      "UNKNOWN");
    SET_STR_DEFAULT(jr, JR_owner,      "UNKNOWN");
    
@@ -187,7 +191,7 @@ char *category_str
 
    fprintf_count = fprintf(fp, ACTFILE_FPRINTF_FORMAT, 
           lGetString(jr, JR_queue_name),
-          lGetString(jr, JR_host_name),
+          lGetHost(jr, JR_host_name),
           lGetString(jr, JR_group),
           lGetString(jr, JR_owner),
           lGetString(jep, JB_job_name),

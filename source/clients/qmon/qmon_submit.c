@@ -1730,7 +1730,7 @@ char *prefix
       lListElem* entry = lAddElemStr(&(data->mail_list), MR_user, 
                                     me.user_name, MR_Type);
       if (entry)
-         lSetString(entry, MR_host, me.qualified_hostname);
+         lSetHost(entry, MR_host, me.qualified_hostname);
    }
 
    data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
@@ -2016,7 +2016,7 @@ int save
       cp = sge_getenv("HOST");
       if (!cp)
          cp = me.unqualified_hostname;
-      lSetString(jep, JB_sge_o_host, cp);
+      lSetHost(jep, JB_sge_o_host, cp);
    }
 
    /* 
@@ -2054,7 +2054,7 @@ int save
       data->mail_list = lCreateElemList("ML", MR_Type, 1);
       if (data->mail_list) {
          lSetString(lFirst(data->mail_list), MR_user, me.user_name);
-         lSetString(lFirst(data->mail_list), MR_host, me.qualified_hostname);
+         lSetHost(lFirst(data->mail_list), MR_host, me.qualified_hostname);
       }
    }
    lSetList(jep, JB_mail_list, lCopyList("ML", data->mail_list));

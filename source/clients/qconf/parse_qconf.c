@@ -375,7 +375,7 @@ DPRINTF(("ep: %s %s\n",
 
             /* try to resolve hostname */
             hep = lCreateElem(EH_Type);
-            lSetString(hep, EH_name, host);
+            lSetHost(hep, EH_name, host);
 
             switch (sge_resolve_host(hep, EH_name)) {
             case 0:
@@ -387,13 +387,13 @@ DPRINTF(("ep: %s %s\n",
                SGE_EXIT(1);
                break;
             default:
-               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(hep, EH_name));
+               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
                lFreeElem(hep);
                SGE_EXIT(1);
                break;
             }
             
-            host = sge_strdup(host, lGetString(hep, EH_name));
+            host = sge_strdup(host, lGetHost(hep, EH_name));
          }
          else {
             /* no template name given - then use "template" as name */
@@ -440,13 +440,13 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          default:
-            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep, EH_name));
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
             lFreeElem(ep);
             SGE_EXIT(1);
             break;
          }
 
-         host = sge_strdup(host, lGetString(ep, EH_name));
+         host = sge_strdup(host, lGetHost(ep, EH_name));
          lFreeList(arglp);
 
 
@@ -484,8 +484,7 @@ DPRINTF(("ep: %s %s\n",
 
          /* read file */
          lp = lCreateList("exechosts to add", EH_Type); 
-         ep = cull_read_in_host(NULL, *spp, CULL_READ_MINIMUM, EH_name, 
-               NULL, NULL);
+         ep = cull_read_in_host(NULL, *spp, CULL_READ_MINIMUM, EH_name, NULL, NULL);
          if (!ep) {
             fprintf(stderr, MSG_ANSWER_INVALIDFORMAT); 
             SGE_EXIT(1);
@@ -503,7 +502,7 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          default:
-            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep, EH_name));
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
             lFreeElem(ep);
             SGE_EXIT(1);
             break;
@@ -1854,7 +1853,7 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          default:
-            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep, EH_name));
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
             lFreeElem(ep);
             SGE_EXIT(1);
             break;
@@ -1896,12 +1895,12 @@ DPRINTF(("ep: %s %s\n",
                break;
             default:
                fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-                  lGetString(argep, EH_name));
+                  lGetHost(argep, EH_name));
                lFreeElem(argep);
                SGE_EXIT(1);
                break;
             }
-            host = lGetString(argep, EH_name);
+            host = lGetHost(argep, EH_name);
 
             /* get the existing host entry .. */
             where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
@@ -2905,7 +2904,9 @@ DPRINTF(("ep: %s %s\n",
          }
          else if (!strcmp("-mconf", *spp)) {
             sge_gdi_is_manager(me.user_name);
-            sge_gdi_is_adminhost(me.qualified_hostname);
+            if (sge_gdi_is_adminhost(me.qualified_hostname) != 0) {
+               SGE_EXIT(1);
+            }
             action = 2;
          }
          else if (!strcmp("-Aconf", *spp)) {
@@ -2932,10 +2933,10 @@ DPRINTF(("ep: %s %s\n",
             ** it would be uncomfortable if you could only give files in .
             */
             if ((action == 3) && cp && strrchr(cp, '/')) {
-               lSetString(hep, EH_name, strrchr(cp, '/') + 1);
+               lSetHost(hep, EH_name, strrchr(cp, '/') + 1);
             }
             else {
-               lSetString(hep, EH_name, cp);
+               lSetHost(hep, EH_name, cp);
             }
             
             switch ((ret=sge_resolve_host(hep, EH_name))) {
@@ -2950,13 +2951,13 @@ DPRINTF(("ep: %s %s\n",
                break;
             default:
                fprintf(stderr, MSG_ANSWER_CANTRESOLVEHOSTNAME_SS, 
-                     lGetString(hep, EH_name), cl_errstr(ret));
+                     lGetHost(hep, EH_name), cl_errstr(ret));
                FREE(host_list);
                lFreeElem(hep);
                SGE_EXIT(1);
                break;
             }
-            host = lGetString(hep, EH_name);
+            host = lGetHost(hep, EH_name);
 
             if (action == 0)
                print_config(host);
@@ -3043,7 +3044,7 @@ DPRINTF(("ep: %s %s\n",
             for ((cp = sge_strtok(host_list, ",")); cp && *cp;
                  (cp = sge_strtok(NULL, ","))) {
                
-               lSetString(hep, EH_name, cp);
+               lSetHost(hep, EH_name, cp);
                
                switch (sge_resolve_host(hep, EH_name)) {
                case 0:
@@ -3062,7 +3063,7 @@ DPRINTF(("ep: %s %s\n",
                   SGE_EXIT(1);
                   break;
                }
-               host = lGetString(hep, EH_name);
+               host = lGetHost(hep, EH_name);
                ret = delete_config(host);
                /*
                ** try the unresolved name if this was different
@@ -3089,7 +3090,7 @@ DPRINTF(("ep: %s %s\n",
 
          /* resolve host */
          hep = lCreateElem(EH_Type);
-         lSetString(hep, EH_name, *spp);
+         lSetHost(hep, EH_name, *spp);
          
          switch (sge_resolve_host(hep, EH_name)) {
          case 0:
@@ -3101,13 +3102,13 @@ DPRINTF(("ep: %s %s\n",
             SGE_EXIT(1);
             break;
          default:
-            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(hep, EH_name));
+            fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
             lFreeElem(hep);
             SGE_EXIT(1);
             break;
          }
 
-         host = lGetString(hep, EH_name);
+         host = lGetHost(hep, EH_name);
         
          /* get the existing host entry .. */
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
@@ -3926,17 +3927,48 @@ char *s
 ) {
    char *cp2;
    lListElem *ep;
+   int pos;
+   int dataType;
 
    DENTER(TOP_LAYER, "parse_name_list_to_cull");
 
+   
    *lpp = lCreateList(name, dp);
    cp2 = sge_strtok(s, ",");
    ep = lCreateElem(dp);
-   lSetString(ep, nm, cp2);
+ 
+   pos = lGetPosInDescr(dp, nm);
+   dataType = lGetPosType(dp,pos);
+   switch (dataType) {
+      case lStringT:
+         DPRINTF(("parse_name_list_to_cull: Adding lStringT type element\n"));
+         lSetString(ep, nm, cp2);
+         break;
+      case lHostT:
+         DPRINTF(("parse_name_list_to_cull: Adding lHostT type element\n"));
+         lSetHost(ep, nm, cp2);
+         break;
+      default:
+         DPRINTF(("parse_name_list_to_cull: unexpected data type\n"));
+         break;
+   }
    lAppendElem(*lpp, ep);
+
    while ((cp2 = sge_strtok(0, ",")) != NULL) {
       ep = lCreateElem(dp);
-      lSetString(ep, nm, cp2);
+      switch (dataType) {
+         case lStringT:
+            DPRINTF(("parse_name_list_to_cull: Adding lStringT type element\n"));
+            lSetString(ep, nm, cp2);
+            break;
+         case lHostT:
+            DPRINTF(("parse_name_list_to_cull: Adding lHostT type element\n"));
+            lSetHost(ep, nm, cp2);
+            break;
+         default:
+            DPRINTF(("parse_name_list_to_cull: unexpected data type\n"));
+            break;
+      }
       lAppendElem(*lpp, ep);
    }
 
@@ -4079,16 +4111,21 @@ u_long32 target
    DENTER(TOP_LAYER, "add_host_of_type");
 
    switch (target) {
-   case SGE_SUBMITHOST_LIST:
-      nm = SH_name;
-      type = SH_Type;
-      name = "submit host";
-      break;
-   case SGE_ADMINHOST_LIST:
-      nm = AH_name;
-      type = AH_Type;
-      name = "administrative host";
-      break;
+      case SGE_SUBMITHOST_LIST:
+         nm = SH_name;
+         type = SH_Type;
+         name = "submit host";
+         break;
+      case SGE_ADMINHOST_LIST:
+         nm = AH_name;
+         type = AH_Type;
+         name = "administrative host";
+         break;
+      default:
+         DPRINTF(("add_host_of_type: unexpected type\n"));
+         ret |= 1;
+         DEXIT;
+         return ret;
    }
    
    for_each (argep, arglp) {
@@ -4096,10 +4133,10 @@ u_long32 target
       /* resolve hostname */
       if (sge_resolve_host(argep, nm)) {
          ret |= 1;
-         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(argep, nm));
+         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
          continue;
       }
-      host = lGetString(argep, nm);
+      host = lGetHost(argep, nm);
 
       /* make a new host element */
       lp = lCreateList("host to add", type);
@@ -4157,7 +4194,7 @@ u_long32 target
 
       /* resolve hostname */
       if (sge_resolve_host(argep, nm)) {
-         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(argep, nm));
+         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
          continue;
       }
 
@@ -4387,6 +4424,9 @@ char *name
    lCondition *where;
    lList *alp = NULL, *lp = NULL;
    lListElem *ep;
+   int pos;
+   int dataType;
+   
 
    DENTER(TOP_LAYER, "show_object_list");
 
@@ -4427,13 +4467,28 @@ char *name
       return 0;
    }
 
+
+
    if (lp) {
       for_each (ep, lp) {
          const char *line;
-
-         line = lGetString(ep, keynm);
-         if (line && line[0] != COMMENT_CHAR) { 
-            printf("%s\n", lGetString(ep, keynm));
+         pos = lGetPosInDescr(type, keynm);
+         dataType = lGetPosType(type , pos);
+         switch(dataType) {
+            case lStringT: 
+               line = lGetString(ep, keynm);
+               if (line && line[0] != COMMENT_CHAR) { 
+                  printf("%s\n", lGetString(ep, keynm));
+               }
+               break;
+            case lHostT:
+                line = lGetHost(ep, keynm);
+               if (line && line[0] != COMMENT_CHAR) { 
+                  printf("%s\n", lGetHost(ep, keynm));
+               }
+               break;
+            default:
+               DPRINTF(("show_object_list: unexpected data type\n")); 
          }
       }
    } else {
@@ -4459,8 +4514,8 @@ static int show_processors()
    DENTER(TOP_LAYER, "show_processors");
 
    what = lWhat("%T(%I %I %I)", EH_Type, EH_name, EH_processors, EH_load_list);
-   where = lWhere("%T(!(%Ic=%s || %Ic=%s))",
-      EH_Type, EH_name, SGE_TEMPLATE_NAME, EH_name, SGE_GLOBAL_NAME);
+   where = lWhere("%T(!(%Ic=%s || %Ic=%s))", EH_Type, EH_name, 
+                  SGE_TEMPLATE_NAME, EH_name, SGE_GLOBAL_NAME);
 
    alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
    what = lFreeWhat(what);
@@ -4482,7 +4537,7 @@ static int show_processors()
 
          arch_elem = lGetSubStr(ep, HL_name, "arch", EH_load_list);
 
-         printf("%-25.24s", ((cp = lGetString(ep, EH_name)) ? cp : ""));
+         printf("%-25.24s", ((cp = lGetHost(ep, EH_name)) ? cp : ""));
          printf("%10"fu32, lGetUlong(ep, EH_processors));
          if (arch_elem) {
             printf("%12.11s", lGetString(arch_elem, HL_value));
@@ -5956,7 +6011,7 @@ const char *config_name
    
    DENTER(TOP_LAYER, "delete_config");
 
-   lAddElemStr(&lp, CONF_hname, config_name, CONF_Type);
+   lAddElemHost(&lp, CONF_hname, config_name, CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
 
    ep = lFirst(alp);
@@ -6037,7 +6092,7 @@ u_long32 flags
       /* get config or make an empty config entry if none exists */
       if (ep == NULL) {
          ep = lCreateElem(CONF_Type);
-         lSetString(ep, CONF_hname, cfn);
+         lSetHost(ep, CONF_hname, cfn);
       }   
  
       write_configuration(0, NULL, tmpname, ep, NULL, 0L);

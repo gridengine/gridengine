@@ -190,8 +190,7 @@ int sge_setup_qmaster()
          return -1;
       }   
    }
-   ret = merge_configuration(
-      lGetElemStr(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), lep, &conf, NULL);
+   ret = merge_configuration( lGetElemHost(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), lep, &conf, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, me.qualified_hostname));
       return -1;
@@ -507,15 +506,15 @@ int sge_setup_qmaster()
 
                set_qslots_used(qep, 0);
                
-               if (!(exec_host = sge_locate_host(lGetString(qep, QU_qhostname), 
+               if (!(exec_host = sge_locate_host(lGetHost(qep, QU_qhostname), 
                    SGE_EXECHOST_LIST))) {
                   if (lGetUlong(qep, QU_qtype) & TQ) {
                      ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
-                     lGetString(qep, QU_qname), lGetString(qep, QU_qhostname)));
+                     lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
                      lRemoveElem(Master_Queue_List, qep);
                   }
                   else {
-                     if (sge_add_host_of_type(lGetString(qep, QU_qhostname), 
+                     if (sge_add_host_of_type(lGetHost(qep, QU_qhostname), 
 				SGE_EXECHOST_LIST)) {
                         qep = lFreeElem(qep);
                         lFreeList(direntries);
@@ -610,7 +609,7 @@ int sge_setup_qmaster()
    for_each(tmpqep, Master_Queue_List) {
       lList *to_suspend;
 
-      if (check_subordinate_list(NULL, lGetString(tmpqep, QU_qname), lGetString(tmpqep, QU_qhostname), 
+      if (check_subordinate_list(NULL, lGetString(tmpqep, QU_qname), lGetHost(tmpqep, QU_qhostname), 
             lGetUlong(tmpqep, QU_job_slots), lGetList(tmpqep, QU_subordinate_list), 
             CHECK4SETUP)!=STATUS_OK) {
          DEXIT; /* inconsistent subordinates */
@@ -751,8 +750,8 @@ int sge_setup_qmaster()
       lListElem *host;
  
       for_each(host, Master_Exechost_List) {
-         if (strcmp(lGetString(host , EH_name), SGE_GLOBAL_NAME) 
-             && strcmp(lGetString(host , EH_name), SGE_TEMPLATE_NAME)) {
+         if (strcmp(lGetHost(host , EH_name), SGE_GLOBAL_NAME) 
+             && strcmp(lGetHost(host , EH_name), SGE_TEMPLATE_NAME)) {
             reschedule_add_additional_time(load_report_interval(host));
             reschedule_unknown_trigger(host);
             reschedule_add_additional_time(0); 
@@ -947,8 +946,8 @@ static int sge_read_host_list_from_disk()
          host = lGetString(direntry, STR);
          if (host[0] != '.') {
             DPRINTF(("Host: %s\n", host));
-            ep = cull_read_in_host(EXECHOST_DIR, host, CULL_READ_SPOOL, 
-               EH_name, NULL, NULL);
+            ep = cull_read_in_host(EXECHOST_DIR, host, CULL_READ_SPOOL, EH_name, 
+                                   NULL, NULL);
             if (!ep) {
                direntries = lFreeList(direntries);
                DEXIT; 
@@ -968,7 +967,7 @@ static int sge_read_host_list_from_disk()
             sge_fill_requests(lGetList(ep, EH_consumable_config_list), 
                   Master_Complex_List, 1, 0, 1);
 
-            if (verify_complex_list(NULL, "host", lGetString(ep, EH_name),
+            if (verify_complex_list(NULL, "host", lGetHost(ep, EH_name),
                         lGetList(ep, EH_complex_list))!=STATUS_OK) {
                DEXIT;
                return -1;
@@ -984,15 +983,15 @@ static int sge_read_host_list_from_disk()
             ** make a start for the history when Sge first starts up
             ** or when history has been deleted
             */
-            if (!is_nohist() && lGetString(ep, EH_name) &&
+            if (!is_nohist() && lGetHost(ep, EH_name) &&
                 !is_object_in_history(STR_DIR_EXECHOSTS, 
-                   lGetString(ep, EH_name))) {
+                   lGetHost(ep, EH_name))) {
                int ret;
             
                ret = write_host_history(ep);
                if (ret) {
                   WARNING((SGE_EVENT, MSG_CONFIG_CANTWRITEHISTORYFORHOSTX_S,
-                           lGetString(ep, EH_name)));
+                           lGetHost(ep, EH_name)));
                }
             }
          } else {
@@ -1020,8 +1019,7 @@ static int sge_read_host_list_from_disk()
 
          if (host[0] != '.') {
             DPRINTF(("Host: %s\n", host));
-            ep = cull_read_in_host(ADMINHOST_DIR, host, CULL_READ_SPOOL, 
-               AH_name, NULL, NULL);
+            ep = cull_read_in_host(ADMINHOST_DIR, host, CULL_READ_SPOOL, AH_name, NULL, NULL);
             if (!ep) {
                direntries = lFreeList(direntries);
                DEXIT; 
@@ -1345,7 +1343,7 @@ static int debit_all_jobs_from_qs()
             debit_host_consumable(jep, sge_locate_host("global", 
                      SGE_EXECHOST_LIST), Master_Complex_List, slots);
             debit_host_consumable(jep, hep = sge_locate_host(
-                     lGetString(qep, QU_qhostname), SGE_EXECHOST_LIST), 
+                     lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST), 
                      Master_Complex_List, slots);
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             if (!master_hep)
@@ -1373,11 +1371,19 @@ char *object_dir
    char *old_name;
    const char *new_name;
    int ret;
+   int pos;
+   int dataType;
 
    DENTER(TOP_LAYER, "reresolve_host");
 
-   old_name = strdup(lGetString(ep, nm));
 
+   pos = lGetPosViaElem(ep, nm);
+   dataType = lGetPosType(lGetElemDescr(ep),pos);
+   if (dataType == lHostT) {
+      old_name = strdup(lGetHost(ep, nm));
+   } else {
+      old_name = strdup(lGetString(ep, nm));
+   }
    ret = sge_resolve_host(ep, nm);
    if (ret != CL_OK ) {
       if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
@@ -1396,7 +1402,11 @@ char *object_dir
    }
 
    /* rename config file if resolving changed name */
-   new_name = lGetString(ep, nm);
+   if (dataType == lHostT) {
+      new_name = lGetHost(ep, nm);
+   } else {
+      new_name = lGetString(ep, nm);
+   }
    if (strcmp(old_name, new_name)) {
       if (!write_host(1, 2, ep, nm, NULL)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, new_name));

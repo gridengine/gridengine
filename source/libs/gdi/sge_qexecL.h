@@ -62,7 +62,7 @@ enum {
 
 LISTDEF(RT_Type)
    SGE_ULONG(RT_tid)
-   SGE_STRING(RT_hostname)
+   SGE_HOST(RT_hostname)       /* CR - hostname change */
    SGE_ULONG(RT_status)
    SGE_ULONG(RT_state)
 LISTEND 

@@ -314,14 +314,14 @@ usage:
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks)"
    echo "-intl             -> compile with internationalization library (libintl)"
-   echo "-java             -> compile Java sources such as DRMAA Java binding"
-   echo "-javadoc          -> create JavaDoc for Java sources such as DRMAA Java binding"
+   echo "-javadoc          -> create source code documentation in Javadoc[TM] tool format"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
    echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"
+   echo "-no-java          -> do not compile Java[TM] class files"
    echo "-no-mk            -> only return the specific architecture string"
    echo "-no-opt           -> compile with low optimization"
    echo "-no-qmake         -> don't compile qmake"
@@ -400,7 +400,7 @@ set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
-set JAVA             = 0
+set JAVA             = 1
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
@@ -656,9 +656,6 @@ while ($#argv >= 1 && $?found)
    case  "-intl"
       set WITH_GETTEXT = 1
       breaksw
-   case  "-java"
-      set JAVA = 1
-      breaksw
    case  "-javadoc"
       set BUILDJAVADOC = 1
       breaksw
@@ -695,6 +692,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-no-intl"
       set WITH_GETTEXT = 0
+      breaksw
+   case  "-no-java"
+      set JAVA = 0
       breaksw
    case "-no-mk":
       set nomk
@@ -1855,17 +1855,9 @@ endif
 if ( "$BUILDJAVADOC" == 1 ) then
    echo _________J_A_V_A_D_O_C_S__________________
 
-   cd $SOURCE/$COMPILE_ARCH
+   cd $SOURCE/classes
 
-   if ( ! -d ../../doc/javadocs ) then
-      echo " INFO: JavaDoc directory does not exist. Creating"
-      mkdir ../../doc/javadocs
-   else
-      echo " INFO: clearing old JavaDoc directory."
-      rm -Rf ../../doc/javadocs/*
-   endif
-
-   $JAVA_HOME/$JAVA_BINDIR/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadocs -version -subpackages org.ggf.drmaa com.sun.grid.drmaa -exclude com.sun.grid.drmaa.howto
+   ant -f build.xml javadoc
 
    if ( $status != 0 ) then
       echo not done
@@ -2095,6 +2087,14 @@ if ( "$CORE" == 1 ) then
    end
    set SPOOLING_DEPS = "$new_deps"
 
+   set target=$argv
+
+   if ( $JAVA == 0 && "$target" == "" ) then
+      set target=common_all_nj
+   else if ( $JAVA == 0 && "$target" == "clean" ) then
+      set target=clean_nj
+   endif
+
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
@@ -2122,46 +2122,13 @@ if ( "$CORE" == 1 ) then
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
-			"JNI_INCLUDES=$JNI_INCLUDES" \
+         "JNI_INCLUDES=$JNI_INCLUDES" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
-         $argv
+         $target
    if ( $status != 0 ) then
       echo not done
       exit 1
-   endif
-
-   if ( $JAVA == 1 ) then
-      echo _________D_R_M_A_A__J A_V_A_______________
-      $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
-            "LD_WRAPPER=$LD_WRAPPER" \
-            "CFLAGS=$CFLAGS $CORE_INCLUDE" \
-            "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-            "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
-            "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-            "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
-            "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-            "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
-            "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
-            "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-            "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
-            "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-            "NOERR_PROTO=$NOERR_PROTO" \
-            "NOERR_CFLAG=$NOERR_CFLAG" \
-            "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
-            "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
-            "INTERACTTARGETS=$INTERACTTARGETS" \
-            "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
-            "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
-            "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
-            "SPOOLLIBEXT=$SPOOLLIBEXT" \
-            "DLLIB=$DLLIB" "MEMCFLAG=$MEMCFLAG" "CORE_INCLUDE=$CORE_INCLUDE" \
-            "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
-            classes_all
-      if ( $status != 0 ) then
-         echo not done
-         exit 1
-      endif
    endif
 
    cd $SOURCE

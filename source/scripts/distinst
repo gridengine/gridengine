@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-#set -x
 #  distinst
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -54,7 +53,8 @@ REMOTEBINARIES="rsh rshd rlogin"
 JOBBINARIES="work"
 
 SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti libspool libspoold libspoolc libspoolf libsgeobj libsgeobjd libevc libevm libmir"
-QMON_SHARED_LIBRARIES="libXbae libXicon libXltree libXmt libXspin libXtab"
+QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"
+QMON_NEED_SHARED_LIBRARIES="libXltree"
 OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
 BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
@@ -103,12 +103,14 @@ ErrUsage()
    echo "       -all           = all binaries + common"
    echo "       -allall        = all binaries + common + doc"
    echo "       -basedir <dir> = define base directory for distribution"
-   echo "       -bin           = all binaries"
+   echo "       -bin           = all binaries and libraries"
+   echo "       -libs          = all libraries"
    echo "       -local         = install in \$SGE_ROOT"
    echo "       -mansrc <dir>  = take man pages from MANSBUILD_<dir>"
    echo "       -noexit        = do not exit on installation errors"
    echo "       -noinst        = no install, show target arch"
    echo "       -nosource      = do not source \"distinst.private\""
+   echo "       -onlybin       = all binaries, no libraries"
    echo "       -resetarch     = set PROG="" (useful to override distinst.privat)"
    echo "       -resetprog     = set ARCH="" (useful to override distinst.privat)"
    echo "       -tcc           = create file .COMMON_CHANGED if common changed"
@@ -431,6 +433,9 @@ while [ $# -ge 1 ]; do
       PROG="$DEFAULTPROG $PROG"
       instsharedlibs=true
       ;;
+   -onlybin)
+      PROG="$DEFAULTPROG $PROG"
+      ;;
    -h|-help)
       ErrUsage
       ;;
@@ -442,6 +447,9 @@ while [ $# -ge 1 ]; do
       ;;
    -tcc)
       touchcommonchanged=true
+      ;;
+   -libs)
+      instsharedlibs=true
       ;;
    -local)
       if [ "$SGE_ROOT" = "" ]; then
@@ -1007,12 +1015,11 @@ for i in $ARCH; do
          esac
 
          UTILPREFIX="lib"
-         echo "Installing SGE shared libs"
-         echo "--------------------------"
+         echo "Installing shared libraries"
+         echo "---------------------------"
 
          Execute rm -f $DEST_SGE_ROOT/$UTILPREFIX/$i/*
          for lib in $SHARED_LIBRARIES; do
-            # echo checking $lib.$shlibext
             if [ -f $lib.$shlibext ]; then
                InstallProg $lib.$shlibext
             fi
@@ -1020,41 +1027,51 @@ for i in $ARCH; do
 
          for lib in $QMON_SHARED_LIBRARIES; do
             libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-            # echo checking $libname
             if [ -f $libname ]; then
                InstallProg $libname
             fi
          done
 
+         for lib in $QMON_NEED_SHARED_LIBRARIES; do
+            libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
+            if [ -f $libname ]; then
+               InstallProg $libname
+            elif [ $exit_on_error = true ]; then
+               echo "\"$libname\" not found. Installation failed."
+            fi
+         done
+
          for lib in $OPENSSL_SHARED_LIBRARIES; do
-            if ($DSTARCH != tru64) then
+            if [ $DSTARCH != tru64 ];  then
                libname="$OPENSSLBASE/$DSTARCH/lib/$lib.${shlibext}.0.9.7"
             else
                libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
             fi
-            # echo checking $libname
             if [ -f $libname ]; then
                InstallProg $libname
-               if ($DSTARCH != tru64) then
-                  # echo linking $libname
+               if [ $DSTARCH != tru64 ]; then
                   (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
                fi
+            elif [ $exit_on_error = true ]; then
+               echo "\"$libname\" not found. Installation failed."
             fi
          done
 
          for lib in $BERKELEYDB_SHARED_LIBRARIES; do
             libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
-            echo checking for BDB shared library \"$libname\"
             if [ -f $libname ]; then
                InstallProg $libname
+            elif [ $exit_on_error = true ]; then
+               echo "\"$libname\" not found. Installation failed."
             fi
          done
 
          for lib in $DRMAA_SHARED_LIBRARIES; do
             libname="../${ARCHBIN}/$lib.$shlibext"
-            echo checking for DRMAA shared library \"$libname\"
             if [ -f $libname ]; then
                InstallProg $libname
+            elif [ $exit_on_error = true ]; then
+               echo "\"$libname\" not found. Installation failed."
             fi
          done
       fi

@@ -36,8 +36,7 @@
 
 umask 022
 
-BASEDIR=/dist/SGEDIST
-MANUALPDF=/dist/SGEDIST/gridengine-download/www/SGE5_3alpha.pdf
+BASEDIR=undef
 VERSIONDIR=SGE53
 SGE_PRODUCT_MODE=ge
 
@@ -50,7 +49,7 @@ if [ -f scripts/distinst.private ]; then
 fi
 
 
-HASDIR="ckpt doc examples/jobs locale mpi mpi/myrinet pvm qmon/PIXMAPS/big qmon/locale"
+HASDIR="ckpt doc examples/jobs locale mpi mpi/myrinet pvm qmon/PIXMAPS/big"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
@@ -120,14 +119,14 @@ ErrUsage()
 {
    echo
    echo "Usage: $0 [-opts] [other archs] [-- other progs]"
-   echo "       -all        = all binaries + common"
-   echo "       -allall     = all binaries + common + doc"
-   echo "       -basedir    = define base directory for distribution (distinst)"
-   echo "       -bin        = all binaries"
-   echo "       -noinst     = no install, show target arch"
-   echo "       -sgeee      = install distribution as Enhanced Grid Engine distribution"
-   echo "       -v          = more verbose"
-   echo "       -versiondir = define version directory for distribution (distinst)"
+   echo "       -all     = all binaries + common"
+   echo "       -allall  = all binaries + common + doc"
+   echo "       -basedir = define base directory for distribution (distinst)"
+   echo "       -bin     = all binaries"
+   echo "       -noinst  = no install, show target arch"
+   echo "       -sgeee   = install distribution as Enhanced Grid Engine distribution"
+   echo "       -v       = more verbose"
+   echo "       -vdir    = define version directory for distribution (distinst)"
    echo ""
    echo "       \"distcommon\"  = arch. independent stuff + man + doc/"
    echo "       \"common\"      = arch. independent, no man/ and no doc/"
@@ -136,7 +135,6 @@ ErrUsage()
    echo "       \"examples\"    = examples/ directory tree without binaries"
    echo "       \"inst_sge\"    = install script"
    echo "       \"jobs\"        = examples/jobsbin/ example binaries"
-   echo "       \"locale\"      = locale support files"
    echo "       \"man\"         = manual pages"
    echo "       \"mpi\"         = MPI scripts"
    echo "       \"pvm\"         = PVM source files and scripts"
@@ -344,7 +342,6 @@ verbose=false
 instjobs=false
 instsharedlibs=true
 instckpt=false
-instlocale=false
 instdirectory=false
 instdrmaa=false
 instinst_sge=false
@@ -364,6 +361,7 @@ inst3rdparty=false
 
 exit_on_error=true
 sgeee=false
+sundist=false
 localinst=false
 setfileperm=true
 
@@ -377,7 +375,7 @@ elif [ $cmdname = myinst ]; then
       exit 1
    fi
    if [ ! -d $SGE_ROOT ];  then
-      echo please create direcotry \"$SGE_ROOT\" first. Installation failed.
+      echo please create directory \"$SGE_ROOT\" first. Installation failed.
       exit 1
    fi
 
@@ -387,11 +385,13 @@ elif [ $cmdname = myinst ]; then
    setfileperm=false
 elif [ $cmdname = sgeinst ]; then 
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGE53beta2
+   BASEDIR=/dist/SGEDIST
+   VERSIONDIR=SGE60beta1
    SGE_PRODUCT_MODE=sge
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGEEE53beta2
+   BASEDIR=/dist/SGEDIST
+   VERSIONDIR=SGEEE60beta1
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
 else
@@ -454,7 +454,7 @@ while [ $# -ge 1 ]; do
    -v)
       verbose=true
       ;;
-   -versiondir)
+   -vdir)
       shift
       if [ $localinst = false ]; then
          if [ "$1" != "" ]; then
@@ -475,7 +475,7 @@ while [ $# -ge 1 ]; do
    --)
       break
       ;;
-   --*)
+   -*)
       echo option \"$1\" is not supported. Installation failed
       exit 1
       ;;
@@ -487,7 +487,16 @@ while [ $# -ge 1 ]; do
 done
 
 if [ $localinst = false ]; then
+   if [ $BASEDIR = undef ]; then
+      echo set basedir with -basedir switch. Installation failed
+      exit 1
+   fi
+
    DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
+   if [ -f $DEST_SGE_ROOT/LOCKED ]; then
+      echo "Sorry, file \"$DEST_SGE_ROOT/LOCKED\" exits. Installation failed."
+      exit 1
+   fi
    mkdir -p $DEST_SGE_ROOT
 fi
 
@@ -558,7 +567,6 @@ for prog in $PROG; do
          instckpt=true
          instexamples=true
          instinst_sge=true
-#        instlocale=true
          instmpi=true
          instpvm=true
          instqmon=true
@@ -590,10 +598,6 @@ for prog in $PROG; do
          ;;
       jobs)   
          instjobs=true
-         ;;
-      locale)     
-         instlocale=true
-         instcommon=true
          ;;
       man)
          instman=true
@@ -703,7 +707,7 @@ if [ $instcommon = true ]; then
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/*.xpm
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm
 
-      Execute cp dist/qmon/Qmon $DEST_SGE_ROOT/qmon/Qmon
+      Execute cp dist/qmon/Qmon $DEST_SGE_ROOT/qmon
       Execute chmod 644 $DEST_SGE_ROOT/qmon/Qmon
    
       Execute cp dist/qmon/qmon_help.ad $DEST_SGE_ROOT/qmon
@@ -753,7 +757,7 @@ if [ $instcommon = true ]; then
       rm -rf $DEST_SGE_ROOT/mpi/*
       Execute mkdir -p $DEST_SGE_ROOT/mpi/myrinet
       for f in $MPIFILES; do
-         Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi/$f
+         Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
       done
       chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname $DEST_SGE_ROOT/mpi/rsh $DEST_SGE_ROOT/mpi/myrinet/*.sh $DEST_SGE_ROOT/mpi/myrinet/gmps $DEST_SGE_ROOT/mpi/myrinet/sge_mpirun
 
@@ -798,19 +802,15 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/SEDMAN/man $DEST_SGE_ROOT
-      if [ -d MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman ]; then
-         Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
-      fi
+      Execute rm -rf $DEST_SGE_ROOT/man/man3
+      Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
    fi
 
    if [ $instdoc = true ]; then
+      # currently no docs in CVS repository
       echo Installing \"doc/\"
-      echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      if [ -r $MANUALPDF ]; then
-         Execute cp $MANUALPDF $DEST_SGE_ROOT/doc/SGE53beta2_doc.pdf
-      fi
    fi
 
    # this rule must come *after* the "instdoc" rule
@@ -828,13 +828,6 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/ckpt/*
       cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
       chmod 755 $DEST_SGE_ROOT/ckpt/*_command
-   fi
-
-   if [ $instlocale = true ]; then
-      echo "Installing \"locale/\" and \"qmon/locale/\""
-      Execute cp -r locale/* $DEST_SGE_ROOT/locale
-      Execute rm -rf $DEST_SGE_ROOT/qmon/locale/*
-      Execute cp -r dist/qmon/locale/* $DEST_SGE_ROOT/qmon/locale
    fi
 
    if [ $instsec = true ]; then
@@ -856,6 +849,10 @@ if [ $instcommon = true ]; then
    if [ $setfileperm = true ]; then
       echo Setting file permissions
       SetFilePerm $DEST_SGE_ROOT
+   fi
+
+   if [ $sundist = true ]; then
+      touch $DEST_SGE_ROOT/.COMMON_CHANGED
    fi
 
    # Remove CVS directories, ".#" files, backup files
@@ -885,7 +882,7 @@ for i in $ARCH; do
 
    for prog in $PROG; do
       case $prog in
-         jobs|ckpt|locale|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin)
+         jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin)
             : 
             ;;
          qmake)
@@ -911,13 +908,13 @@ for i in $ARCH; do
                  echo ln -s qstat qselect ; \
                  ln -s qstat qselect \
                )
-             elif [ $prog = qalter ]; then
+            elif [ $prog = qalter ]; then
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  echo ln -s qalter qresub ; \
                  ln -s qalter qresub \
                )
-             elif [ $prog = qsh ]; then
+            elif [ $prog = qsh ]; then
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  echo ln -s qsh qlogin ; \
@@ -925,8 +922,8 @@ for i in $ARCH; do
                  echo ln -s qsh qrsh ; \
                  ln -s qsh qrsh ; \
                )
-             fi
-             ;;
+            fi
+            ;;
       esac
    done
 
@@ -945,7 +942,7 @@ for i in $ARCH; do
             elif [ -f $OPENSSLBASE/bin/openssl ]; then
                InstallProg $OPENSSLBASE/bin/openssl
             else
-               echo openssl binary not found
+               echo \"openssl\" binary not found
             fi
          elif [ $prog = testsuidroot ]; then
             InstallProgSUID $prog
@@ -1001,7 +998,7 @@ for i in $ARCH; do
 
       Execute rm -f $DEST_SGE_ROOT/$UTILPREFIX/$i/*
       for lib in $SHARED_LIBRARIES; do
-         echo checking $lib.$shlibext
+         # echo checking $lib.$shlibext
          if [ -f $lib.$shlibext ]; then
             InstallProg $lib.$shlibext
          fi
@@ -1009,7 +1006,7 @@ for i in $ARCH; do
 
       for lib in $QMON_SHARED_LIBRARIES; do
          libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-         echo checking $libname
+         # echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname
          fi
@@ -1017,7 +1014,7 @@ for i in $ARCH; do
 
       for lib in $ZLIB_SHARED_LIBRARIES; do
          libname="../3rdparty/zlib/$ARCHBIN/$lib.$shlibext"
-         echo checking $libname
+         # echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname
          fi
@@ -1025,12 +1022,12 @@ for i in $ARCH; do
 
       for lib in $OPENSSL_SHARED_LIBRARIES; do
          libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
-         echo checking $libname
+         # echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname
+            # echo linking $libname
+            (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.$shlibext.0.9.7 $lib.$shlibext)
          fi
-         echo linking $libname
-         (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.$shlibext.0.9.7 $lib.$shlibext)
       done
 
       for lib in $BERKELEYDB_SHARED_LIBRARIES; do

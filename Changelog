@@ -1,3 +1,7 @@
+JG-2004-11-18-1: Testsuite: Fixes for tests functional/job_environment and
+                            system_tests/clients/qmod,
+                            some cleanup
+
 AH-2004-11-18-0: Doc:       Fix doc/README-Autoinstall.txt missing in 
                             distribution.
                  Review:    TBD

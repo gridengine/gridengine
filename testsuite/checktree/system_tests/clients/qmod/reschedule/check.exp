@@ -658,7 +658,7 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    set my_timeout [timestamp]
    incr my_timeout 60
    while { [ string first "login:" $result] < 0 } {
-      sleep 2
+      after 2000
       catch { eval exec "cat $qlogin_out_file" } result
       puts $CHECK_OUTPUT $result
       if { $my_timeout < [timestamp] } {
@@ -727,7 +727,7 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       set ru_jobs [ llength $jobs ]
       puts $CHECK_OUTPUT "found $ru_jobs jobs"
       unset job_info
-      sleep 1
+      after 1000
       set now [timestamp]
       if { $now > $end_time } {
          add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" "-1" "timeout waiting for processes"

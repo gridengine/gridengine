@@ -515,8 +515,6 @@ proc spool_array_add_data {filename obj_name array_name {write_comment 0} {data_
       # the position of the OBJ_START/OBJ_END line
       set obj_start [expr [search_for_obj_start data $obj_name] - 1]
       set obj_end [expr [search_for_obj_end data $obj_name] + 1]
-      puts "start: $obj_start"
-      puts "end:   $obj_end"
 
       # delete the object from data
       for {set i $obj_start} {$i <= $obj_end} {incr i} {

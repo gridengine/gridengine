@@ -1,3 +1,6 @@
+AH-2004-02-23-2: Bugfix:    Improved diagnosis output of drmaa_init()
+                            in case $SGE_ROOT is not set
+
 AH-2004-02-23-1: Bugfix:    Added ":" to DRMAA example.c output path.
                             Improved example.c diagnosis capabilities.
 

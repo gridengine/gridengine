@@ -511,7 +511,6 @@ int japi_init(const char *contact, const char *session_key_in,
    
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
-      japi_standard_error(DRMAA_ERRNO_INTERNAL_ERROR, diag);
       JAPI_LOCK_SESSION();
       japi_session = JAPI_SESSION_INACTIVE;
       JAPI_UNLOCK_SESSION();

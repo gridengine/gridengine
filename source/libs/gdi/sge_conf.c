@@ -558,6 +558,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       disable_reschedule = 0;   
       simulate_hosts = 0;
       scheduler_timeout = 0;
+      profile_master = 0;
 
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "FORBID_RESCHEDULE")) {

@@ -1,3 +1,5 @@
+EB-2001-12-19-0: Enhancem.: qmaster writes heartbeat-file during job deletion
+
 CR-2001-12-19-1: Testsuite: new test: job_state_handling
                                - testing job states for array and "normal" jobs
                                  (hold, pending, running, finished, error, timehold

@@ -904,7 +904,6 @@ lList **local
       alp = qmonDelList(SGE_JOB_LIST, local, 
                         ID_str, &jl, NULL, NULL);
 
-   
       qmonMessageBox(w, alp, 0);
 
       updateJobList();

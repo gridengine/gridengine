@@ -44,4 +44,6 @@ extern pthread_mutex_t  master_lock;
 
 void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
+void increment_heartbeat(time_t now);
+
 #endif /* _QMASTER_H_ */

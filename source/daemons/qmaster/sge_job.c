@@ -102,6 +102,7 @@
 #include "sge_range.h"
 #include "sge_job_jatask.h"
 #include "sge_job_jatask.h"
+#include "qmaster.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -902,6 +903,7 @@ int sub_command
                }         
             }
          }
+         increment_heartbeat(sge_get_gmt());
       }
       if (deleted_unenrolled_tasks) {
          lListElem *schedd;
@@ -975,6 +977,7 @@ int sub_command
             } else {
                ; /* Task did never exist! - Ignore silently */
             }
+            increment_heartbeat(sge_get_gmt()); 
          }
       }
       if (alltasks && showmessage) {

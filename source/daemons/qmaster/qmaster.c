@@ -155,7 +155,6 @@ void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void qmaster_exit_func(int i);
 static void sge_c_report(char *, char *, int, lList *);
 static void makedirs(void);
-static void increment_heartbeat(time_t);
 
 static lList *sge_parse_cmdline_qmaster(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmaster(lList **ppcmdline, lList **ppreflist, u_long32 *help);
@@ -894,9 +893,8 @@ static void makedirs()
  *    - increment heartbeat each 30 seconds
  *    - delete lock file
  *-------------------------------------------------------------------*/
-static void increment_heartbeat(
-time_t now 
-) {
+void increment_heartbeat(time_t now) 
+{
    static time_t last = 0;
 
    DENTER(TOP_LAYER, "increment_heartbeat");

@@ -1051,14 +1051,14 @@ int need_copy_list  /* to reduce overhead */
    /* chain in new event */
    lAppendElem(lp, event);
 
-   DPRINTF((event_text(event)));
+   DPRINTF(("%s\n", event_text(event)));
 
    /* check if event clients wants flushing */
    {
       const char *subscription = lGetString(event_client, EV_subscription);
 /*       dump_subscription(subscription); */
       if((subscription[type] & EV_FLUSHED) == EV_FLUSHED) {
-         DPRINTF(("flushing event client"));
+         DPRINTF(("flushing event client\n"));
          sge_flush_events(event_client, subscription[type] >> 2);
       }
    }
@@ -1491,7 +1491,7 @@ static void sge_total_update_event(lListElem *event_client, ev_event type)
          lSetList(event_client, EV_events, lp);
       }
 
-      DPRINTF((event_text(event)));
+      DPRINTF(("%s\n", event_text(event)));
       /* chain in new event */
       lAppendElem(lp, event);
    }

@@ -290,7 +290,7 @@ lListElem *jatep
 
    FILE *fp;
    int write_result;
-   const char *category_str;
+   dstring category_str = DSTRING_INIT;
    SGE_STRUCT_STAT statbuf;
    int write_comment;
 
@@ -316,27 +316,22 @@ lListElem *jatep
       return;
    }   
 
-   category_str = sge_build_job_category(jep, Master_Userset_List);
-   write_result = sge_write_rusage(fp, jr, jep, jatep, category_str);
+   sge_build_job_category(&category_str, jep, Master_Userset_List);
+   write_result = sge_write_rusage(fp, jr, jep, jatep, sge_dstring_get_string(&category_str));
+   sge_dstring_free(&category_str);
+   fclose(fp);
+
    if (write_result == EOF) {
       ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path.acct_file));
-      fclose(fp);
       DEXIT;
       return;
-   }
-   if (category_str)
-      free((char *)category_str); 
-   else if (write_result == -2) {
+   } else if (write_result == -2) {
       /* The file should be open... */
       ERROR((SGE_EVENT, MSG_FILE_WRITEACCT));
-      fclose(fp);
       DEXIT;
       return;
    }
-
-   fclose(fp);
 
    DEXIT;
    return;
 }
-

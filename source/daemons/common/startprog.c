@@ -98,6 +98,8 @@ int startprog(int out, int err,
        *ptr = '\0';
        strcat(prog_path, name);
        if (SGE_STAT(prog_path, &sb)) {
+          ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
+               prog_path, strerror(errno)));
           DEXIT;
           return -2;
        }
@@ -114,6 +116,8 @@ int startprog(int out, int err,
     if (SGE_STAT(prog_path, &sb)) {
        sprintf(prog_path, "%s/%s", path, name);
        if (SGE_STAT(prog_path, &sb)) {
+          ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
+               prog_path, strerror(errno)));
           DEXIT;
           return -2;
        }   

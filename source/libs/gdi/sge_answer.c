@@ -403,7 +403,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
          ret = answer_list_add(answer_list, message, status, quality);
       }
 
-      sge_dstring_clear(&buffer);
+      sge_dstring_free(&buffer);
    }
 
    DEXIT;

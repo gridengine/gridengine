@@ -77,13 +77,13 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
    const char *cstr;
    u_long32 rc = 0, jobid;
    static char no_requests[] = "no-requests";
+   dstring category_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_add_job_category");
    
-   cstr = sge_build_job_category(job, acl_list);
-
+   cstr = sge_build_job_category(&category_str, job, acl_list);
    if (!cstr) 
-      cstr = strdup(no_requests);
+      cstr = sge_dstring_copy_string(&category_str, no_requests);
 
    jobid = lGetUlong(job, JB_job_number);
    if (!CATEGORY_LIST)
@@ -106,8 +106,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
    /* 
    ** free cstr
    */
-   if (cstr)
-      free((char *)cstr);
+   sge_dstring_free(&category_str);
 
    DEXIT;
    return 0;

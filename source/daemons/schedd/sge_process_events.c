@@ -307,7 +307,7 @@ int event_handler_default_scheduler()
 
 
 /*-------------------------------------------------------------------*/
-void ensure_valid_what_and_where(void) 
+static void ensure_valid_what_and_where(void) 
 {
    static int called = 0;
 

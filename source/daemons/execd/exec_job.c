@@ -245,15 +245,14 @@ char *err_str
 #endif
 #endif   
 
-   dstring active_dir_buffer = DSTRING_INIT;
-
-   const char *active_dir;
+   dstring active_dir;
 
    char shepherd_path[SGE_PATH_MAX], 
         coshepherd_path[SGE_PATH_MAX],
         hostfilename[SGE_PATH_MAX], 
         script_file[SGE_PATH_MAX], 
         tmpdir[SGE_PATH_MAX], 
+        active_dir_buffer[SGE_PATH_MAX],
         fname[SGE_PATH_MAX],
         shell_path[SGE_PATH_MAX], 
         stdout_path[SGE_PATH_MAX],
@@ -276,6 +275,8 @@ char *err_str
    const char *pe_task_id = NULL;
 
    DENTER(TOP_LAYER, "sge_exec_job");
+
+   sge_dstring_init(&active_dir, active_dir_buffer, sizeof(active_dir_buffer));
 
    SGE_ASSERT((jep));
    SGE_ASSERT((jatep));
@@ -307,9 +308,8 @@ char *err_str
       return -3;        /* error only relevant for this user */
    }
 
-   active_dir = sge_get_active_job_file_path(&active_dir_buffer, 
-                                         job_id, ja_task_id, pe_task_id,
-                                         NULL);
+   sge_get_active_job_file_path(&active_dir, job_id, 
+                 ja_task_id, pe_task_id, NULL);
 
    umask(022);
 
@@ -320,14 +320,12 @@ char *err_str
       if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
           pw->pw_uid, pw->pw_gid, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTMAKETMPDIR);
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
    } else {
       if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }                    
@@ -346,11 +344,10 @@ char *err_str
       if (processor_set)
          processor_set = lFreeList(processor_set);
 
-      sprintf(hostfilename, "%s/%s/%s", execd_spool_dir, active_dir, PE_HOSTFILE);
+      sprintf(hostfilename, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
       fp = fopen(hostfilename, "w");
       if (!fp) {
          sprintf(err_str, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -398,12 +395,10 @@ char *err_str
    /*************************** finished writing sge hostfile  ********/
 
    /********************** setup environment file ***************************/
-   /* JG: TODO (254) use function sge_get_active_job.... */
-   sprintf(fname, "%s/%s/environment", execd_spool_dir, active_dir);
+   sprintf(fname, "%s/%s/environment", execd_spool_dir, active_dir_buffer);
    fp = fopen(fname, "w");
    if (!fp) {
       sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
-      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;        /* general */
    }
@@ -654,7 +649,7 @@ lWriteListTo(environmentList, stderr);
    if (lGetString(jatep, JAT_granted_pe) != NULL) {
       char buffer[SGE_PATH_MAX];
       var_list_set_string(&environmentList, "PE", lGetString(jatep, JAT_granted_pe));
-      sprintf(buffer, "%s/%s/%s", execd_spool_dir, active_dir, PE_HOSTFILE);
+      sprintf(buffer, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
       var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
    }   
 
@@ -668,7 +663,7 @@ lWriteListTo(environmentList, stderr);
    {
       char buffer[SGE_PATH_MAX]; 
 
-      sprintf(buffer, "%s/%s", execd_spool_dir, active_dir);  
+      sprintf(buffer, "%s/%s", execd_spool_dir, active_dir_buffer);  
       var_list_set_string(&environmentList, VAR_PREFIX "JOB_SPOOL_DIR", buffer);
    }
 
@@ -711,12 +706,11 @@ lWriteListTo(environmentList, stderr);
 
    /**************** write out config file ******************************/
    /* JG: TODO (254) use function sge_get_active_job.... */
-   sprintf(fname, "%s/config", active_dir);
+   sprintf(fname, "%s/config", active_dir_buffer);
    fp = fopen(fname, "w");
    if (!fp) {
       lFreeList(environmentList);
       sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
-      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;
    }
@@ -737,7 +731,6 @@ lWriteListTo(environmentList, stderr);
          lFreeList(environmentList);
          sprintf(err_str, MSG_EXECD_NOSGID); 
          fclose(fp);
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return(-2);
       }
@@ -753,7 +746,6 @@ lWriteListTo(environmentList, stderr);
           sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
           lFreeList(environmentList);
           fclose(fp);
-          sge_dstring_free(&active_dir_buffer);
           DEXIT;
           return (-2);
       } 
@@ -767,7 +759,6 @@ lWriteListTo(environmentList, stderr);
             sprintf(err_str, MSG_EXECD_NOADDGID);
             lFreeList(environmentList);
             fclose(fp);
-            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return (-1);
          }
@@ -915,7 +906,7 @@ lWriteListTo(environmentList, stderr);
       if(petep == NULL) {
          pep = lGetObject(jatep, JAT_pe_object);
       }
-      fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, active_dir, PE_HOSTFILE);
+      fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
       fprintf(fp, "pe_start=%s\n",  pep != NULL && lGetString(pep, PE_start_proc_args)?
                                        lGetString(pep, PE_start_proc_args):"none");
       fprintf(fp, "pe_stop=%s\n",   pep != NULL && lGetString(pep, PE_stop_proc_args)?
@@ -1017,7 +1008,6 @@ lWriteListTo(environmentList, stderr);
             sprintf(err_str, MSG_EXECD_NOXTERM); 
             fclose(fp);
             lFreeList(environmentList);
-            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -2;
             /*
@@ -1090,7 +1080,6 @@ lWriteListTo(environmentList, stderr);
             lFreeList(answer_list);
             lFreeList(environmentList);
             fclose(fp);
-            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -1;
          }
@@ -1101,7 +1090,6 @@ lWriteListTo(environmentList, stderr);
    if (arch_dep_config(fp, cplx, err_str)) {
       lFreeList(environmentList);
       fclose(fp);
-      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return -2;
    } 
@@ -1223,7 +1211,6 @@ lWriteListTo(environmentList, stderr);
          if (SGE_STAT(script_file, &buf)) {
             sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
                     script_file, strerror(errno));
-            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -2;
          }
@@ -1238,7 +1225,6 @@ lWriteListTo(environmentList, stderr);
       sprintf(shepherd_path, "%s/%s", conf.binary_path, shepherd_name);
       if (SGE_STAT(shepherd_path, &buf)) {
          sprintf(err_str, MSG_EXECD_NOSHEPHERD_SSS, arch, shepherd_path, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1248,7 +1234,6 @@ lWriteListTo(environmentList, stderr);
        strcasecmp(conf.shepherd_cmd, "none")) {
       if (SGE_STAT(conf.shepherd_cmd, &buf)) {
          sprintf(err_str, MSG_EXECD_NOSHEPHERDWRAP_SS, conf.shepherd_cmd, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1258,7 +1243,6 @@ lWriteListTo(environmentList, stderr);
               path.sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          sprintf(err_str, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1273,7 +1257,6 @@ lWriteListTo(environmentList, stderr);
          sprintf(coshepherd_path, "%s/%s", conf.binary_path, shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             sprintf(err_str, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
-            sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -2;
          }
@@ -1281,16 +1264,14 @@ lWriteListTo(environmentList, stderr);
       if (!conf.set_token_cmd ||
           !strlen(conf.set_token_cmd) || !conf.token_extend_time) {
          sprintf(err_str, MSG_EXECD_AFSCONFINCOMPLETE);
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
 
    /* JG: TODO (254) use function sge_get_active_job.... */
-      sprintf(fname, "%s/%s", active_dir, TOKEN_FILE);
+      sprintf(fname, "%s/%s", active_dir_buffer, TOKEN_FILE);
       if ((fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
          sprintf(err_str, MSG_EXECD_NOCREATETOKENFILE_S, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }   
@@ -1298,13 +1279,11 @@ lWriteListTo(environmentList, stderr);
       cp = lGetString(jep, JB_tgt);
       if (!cp || !(len = strlen(cp))) {
          sprintf(err_str, MSG_EXECD_TOKENZERO);
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -3; /* problem of this user */
       }
       if (write(fd, cp, len) != len) {
          sprintf(err_str, MSG_EXECD_NOWRITETOKEN_S, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
          DEXIT;
          return -2;
       }
@@ -1344,9 +1323,8 @@ lWriteListTo(environmentList, stderr);
 
    /* Change to jobs directory. Father changes back to cwd. We do this to
       ensure chdir() works before forking. */
-   if (chdir(active_dir)) {
-      sprintf(err_str, MSG_FILE_CHDIR_SS, active_dir, strerror(errno));
-      sge_dstring_free(&active_dir_buffer);
+   if (chdir(active_dir_buffer)) {
+      sprintf(err_str, MSG_FILE_CHDIR_SS, active_dir_buffer, strerror(errno));
       DEXIT;
       return -2;
    }
@@ -1376,7 +1354,6 @@ lWriteListTo(environmentList, stderr);
             sprintf(err_str, MSG_EXECD_NOFORK_S, strerror(errno));
       }
 
-      sge_dstring_free(&active_dir_buffer);
       DEXIT;
       return i;
    }

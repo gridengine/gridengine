@@ -46,17 +46,24 @@
 *     {
 *        dstring error_msg = DSTRING_INIT;
 *     }
+*  NOTE 
+*     The DSTRING_INIT counterpart for static buffers is sge_dstring_init()
 ******************************************************************************/
 
 #include <stdarg.h>
 #include "sge_stdlib.h"
 
-#define DSTRING_INIT {NULL, 0}
+#define DSTRING_INIT {NULL, 0, 0}
 
 typedef struct {
-   char *s;
-   size_t size;
+   char *s; /* refers to allocated buffer with dynamic dstrings
+               refers to static buffer with static dstrings */
+   size_t size; /*  */
+   int is_static;
 } dstring;
+
+/* DSTRING_INIT counterpart when static buffers are wrapped with dstring */
+void sge_dstring_init(dstring *sb, char *buffer, size_t size);
 
 const char* sge_dstring_append(dstring *sb, const char *a);
 const char* sge_dstring_append_dstring(dstring *sb, const dstring *a);
@@ -75,6 +82,8 @@ const char* sge_dstring_copy_string(dstring *sb, const char* str);
 const char* sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2);
 
 size_t sge_dstring_strlen(const dstring *string);
+
+size_t sge_dstring_remaining(const dstring *string);
 
 
 #endif /* __SGE_STRING_APPEND_H */

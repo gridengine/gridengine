@@ -132,7 +132,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    u_long32 ckpt_attr, ckpt_inter;
    u_long32 job_number;
    lListElem *ckpt_ep;
-   char str[10*1024 + 1]="";
+   char str[1024 + 1]="";
    u_long32 start, end, step;
    uid_t uid;
    gid_t gid;
@@ -141,8 +141,11 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lList *pe_range = NULL;
    unsigned long pe_range_max = 0;
    unsigned long pe_range_min = 0;
+   dstring str_wrapper;
 
    DENTER(TOP_LAYER, "sge_gdi_add_job");
+
+   sge_dstring_init(&str_wrapper, str, sizeof(str));
 
    if ( !jep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
@@ -668,44 +671,51 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
    }
 
-   *str = 0;
-   if (lGetList(jep, JB_job_args)) {
-      lList *sp = lGetList(jep, JB_job_args);
+   {
       lListElem *se;
 
-      for_each(se,sp) {
+      sge_dstring_clear(&str_wrapper);
+      for_each(se, lGetList(jep, JB_job_args)) {
          int do_quote = 0;
-         int i = 0;
+         int n;
          const char *s = lGetString(se,STR);
 
          /* handle NULL as empty string */
          if (s == NULL) {
             s = "";
          }
+         n = strlen(s);
  
          /* quote for empty strings */
-         if (strlen(s) == 0)
+         if (n == 0)
             do_quote++;
 
          /* quote when white space is in argument */         
-         for( i=0 ; i < strlen(s) ; i++ ) {
-            if (s[i] == ' ') {
-                do_quote++;
-                break;
-            }
+         if (strchr(s, ' '))
+            do_quote++;
+
+         sge_dstring_append(&str_wrapper, " ");
+         if (sge_dstring_remaining(&str_wrapper)<=0)
+            break;
+
+         if (do_quote != 0) {
+            sge_dstring_append(&str_wrapper, "\"");
+            if (sge_dstring_remaining(&str_wrapper)<=0)
+               break;
          }
 
-         strcat(str, " ");
-         if (do_quote != 0) {
-            strcat(str, "\"");
-         }
-         strcat(str, s);
-         if (do_quote != 0) {
-            strcat(str, "\"");
-         }
+         sge_dstring_append(&str_wrapper, s);
+         if (sge_dstring_remaining(&str_wrapper)<=0)
+            break;
 
+         if (do_quote != 0) {
+            sge_dstring_append(&str_wrapper, "\"");
+            if (sge_dstring_remaining(&str_wrapper)<=0)
+               break;
+         }
       }
    }
+
    if (!job_is_array(jep)) {
       (sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
             u32c(lGetUlong(jep, JB_job_number)), 

@@ -1,3 +1,9 @@
+AH-2002-12-19-1  Bugfix     job arguments larger than 10k crash qmaster
+                            and introduced static dstrings
+                 IZ:        #440
+                 Bugtraq:   #4792036
+                 Review:    EB
+
 JG-2002-12-19-0  Bugfix:    - Accesstree was corrupted in the sge scheduler due
                               to a bug in the event handling.
                             - Wrong error output if a userlist shall be deleted

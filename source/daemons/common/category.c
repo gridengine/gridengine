@@ -67,11 +67,11 @@
 /* build the category string                                               */
 /*-------------------------------------------------------------------------*/
 const char* sge_build_job_category(
+dstring *category_str,
 lListElem *job,
 lList *acl_list 
 ) {
    const char *cats = NULL;
-   dstring sb = DSTRING_INIT;
    lList *cmdl = NULL;
    lListElem *ep;
    const char *owner, *group;
@@ -170,15 +170,15 @@ lList *acl_list
       char buf[20];
       strcpy(buf, lGetString(ep, SPA_switch));
       strcat(buf, " ");
-      cats = sge_dstring_append(&sb, buf);
+      cats = sge_dstring_append(category_str, buf);
       if (lGetString(ep, SPA_switch_arg))
-         cats = sge_dstring_append(&sb, lGetString(ep, SPA_switch_arg));
-      cats = sge_dstring_append(&sb, " ");
+         cats = sge_dstring_append(category_str, lGetString(ep, SPA_switch_arg));
+      cats = sge_dstring_append(category_str, " ");
    }
    lFreeList(cmdl);
        
    DEXIT;
-   return cats;
+   return sge_dstring_get_string(category_str);
 
 ERROR:
    ERROR((SGE_EVENT, MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U,  

@@ -61,40 +61,54 @@ const char* sge_dstring_append(dstring *sb, const char *a)
 {
    int n, m;
 
+   DENTER(TOP_LAYER, "sge_dstring_append");
+
    if (!sb) {
+      DEXIT;
       return NULL;
    }
 
    if (!a) {
+      DEXIT;
       return NULL;
    }
-   
-   /* only allow to append a string with length 0
-      for memory allocation */
-   /* JG: TODO: strlen(a) is called more than once -> performance leak */
-   if (strlen(a) == 0 && sb->s != NULL ) {
-      return sb->s;
-   }
+  
+   if (sb->is_static) {
+      n = strlen(a);
+      m = strlen(sb->s); 
+      if ( ((size_t)(m+n)) > sb->size )
+         n = (int)sb->size - m;
 
-   n = strlen(a) + 1 ;
-   if (sb->s == NULL) {
-      m = 1;
+/*       DPRINTF(("strncat(sb->s, \"%s\", %d)\n", a, n)); */
+      strncat(sb->s, a, n);
    } else {
-      m = strlen(sb->s) + 1;
-   }  
-   if ( (m + n - 1 ) > sb->size ) {
-      if (n < REALLOC_CHUNK)
-         n = REALLOC_CHUNK; 
-      sb->size += n;
-      if (sb->s)
-         sb->s = realloc(sb->s, sb->size * sizeof(char)); 
-      else {
-         sb->s = malloc(sb->size * sizeof(char));
-         sb->s[0] = '\0';
+      /* only allow to append a string with length 0
+         for memory allocation */
+      /* JG: TODO: strlen(a) is called more than once -> performance leak */
+      if (strlen(a) == 0 && sb->s != NULL ) {
+         return sb->s;
       }
-   }   
-   
-   strcat(sb->s, a);
+
+      n = strlen(a) + 1 ;
+      if (sb->s == NULL) {
+         m = 1;
+      } else {
+         m = strlen(sb->s) + 1;
+      }  
+      if ( (m + n - 1 ) > sb->size ) {
+         if (n < REALLOC_CHUNK)
+            n = REALLOC_CHUNK; 
+         sb->size += n;
+         if (sb->s)
+            sb->s = realloc(sb->s, sb->size * sizeof(char)); 
+         else {
+            sb->s = malloc(sb->size * sizeof(char));
+            sb->s[0] = '\0';
+         }
+      }   
+      
+      strcat(sb->s, a);
+   }
    return sb->s;
 }
 
@@ -153,11 +167,18 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
    va_list ap;
 
    va_start(ap, format);
+
    if (!format) {
       return sb ? sb->s : NULL;
    }
-   vsprintf(buf, format, ap);
-   return sge_dstring_copy_string(sb, buf);
+
+   if (sb->is_static) {
+      vsprintf(sb->s, format, ap);
+      return sb->s;
+   } else {
+      vsprintf(buf, format, ap);
+      return sge_dstring_copy_string(sb, buf);
+   }
 }
 
 /****** uti/dstring/sge_dstring_vsprintf() *************************************
@@ -193,8 +214,13 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
    if (!format) {
       return sb ? sb->s : NULL;
    }
-   vsprintf(buf, format, ap);
-   return sge_dstring_copy_string(sb, buf);
+   if (sb->is_static) {
+      vsprintf(sb->s, format, ap);
+      return sb->s;
+   } else {
+      vsprintf(buf, format, ap);
+      return sge_dstring_copy_string(sb, buf);
+   }
 }
 
 /****** uti/dstring/sge_dstring_sprintf_append() ******************************
@@ -235,6 +261,7 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
    if (!format) {
       return sb ? sb->s : NULL;
    }
+
    vsprintf(buf, format, ap);
    return sge_dstring_append(sb, buf);
 }
@@ -261,11 +288,21 @@ const char *sge_dstring_copy_string(dstring *sb, const char *str)
    const char *ret = NULL;
 
    DENTER(TOP_LAYER, "sge_dstring_copy_string");
-   if (sb != NULL && sb->s != NULL) {
+
+   if (sb == NULL) {
+      DEXIT;
+      return NULL;
+   }
+
+   if (sb->is_static) {
       sb->s[0] = 0;
-   }  
-   if (sb != NULL && sb->s == NULL) {
-      sge_dstring_append(sb, "");
+   } else {
+      if (sb->s != NULL) {
+         sb->s[0] = 0;
+      }  
+      if (sb->s == NULL) {
+         sge_dstring_append(sb, "");
+      }
    }
 
    ret = sge_dstring_append(sb, str);
@@ -296,11 +333,15 @@ const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2)
    const char *ret = NULL;
    DENTER(TOP_LAYER, "sge_dstring_copy_dstring");
 
-   if (sb1 != NULL && sb1->s != NULL) {
+   if (sb1->is_static) {
       sb1->s[0] = 0;
-   }  
-   if (sb1 != NULL && sb1->s == NULL) {
-      sge_dstring_append(sb1, "");
+   } else {
+      if (sb1 != NULL && sb1->s != NULL) {
+         sb1->s[0] = 0;
+      }  
+      if (sb1 != NULL && sb1->s == NULL) {
+         sge_dstring_append(sb1, "");
+      }
    }
 
    ret = sge_dstring_append(sb1, sge_dstring_get_string(sb2));
@@ -323,7 +364,7 @@ const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2)
 ******************************************************************************/
 void sge_dstring_free(dstring *sb) 
 {
-   if (sb && sb->s) {
+   if (sb && !sb->is_static && sb->s ) {
       free(sb->s);
       sb->s = NULL;
       sb->size = 0;
@@ -345,8 +386,15 @@ void sge_dstring_free(dstring *sb)
 ******************************************************************************/
 void sge_dstring_clear(dstring *sb) 
 {
-   if (sb && sb->s) {
+   if (sb == NULL)
+      return;
+
+   if (sb->is_static) {
       sb->s[0] = 0;
+   } else {
+      if (sb->s) {
+         sb->s[0] = 0;
+      }
    }
 }   
 
@@ -401,6 +449,67 @@ size_t sge_dstring_strlen(const dstring *string)
    DEXIT;
    return len;
 }
+
+/****** uti/dstring/sge_dstring_remaining() **************************************
+*  NAME
+*     sge_dstring_remaining() -- remaining chars in dstring
+*
+*  SYNOPSIS
+*     size_t sge_dstring_remaining(const dstring *string) 
+*
+*  FUNCTION
+*     Returns number of chars remaining in dstrings.
+*
+*  INPUTS
+*     const dstring *string - pointer to dynamic string 
+*
+*  RESULT
+*     size_t - remaining chars
+*******************************************************************************/
+size_t sge_dstring_remaining(const dstring *string)
+{
+   DENTER(TOP_LAYER,"sge_dstring_remaining");
+
+   if (string && string->is_static) {
+      int n = string->size - strlen(string->s);
+/*       DPRINTF(("remaining: %d\n", n)); */
+      DEXIT;
+      return (n<0)?0:n;
+   } else {
+      DEXIT;
+      return 100000;
+   }
+}
+
+/****** uti/dstring/sge_dstring_init() **************************************
+*  NAME
+*     sge_dstring_init() -- init static dstrings
+*
+*  SYNOPSIS
+*     size_t sge_dstring_init(dstring *string, char *s, size_t size) 
+*
+*  FUNCTION
+*     Initialize dstring with a static buffer.
+*
+*  INPUTS
+*     const dstring *string - pointer to dynamic string 
+*
+*  RESULT
+*     size_t - remaining chars
+*******************************************************************************/
+void sge_dstring_init(dstring *string, char *s, size_t size)
+{
+   if (!string || !s)
+      return;
+
+   string->is_static = 1;
+   string->size = size-1;
+   string->s = s;
+   string->s[0] = 0;
+
+   return;
+}
+
 
 #if 0 /* EB: debug */
 int main(void)

@@ -283,6 +283,7 @@ proc install_qmaster {} {
  global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT
  global CHECK_REPORT_EMAIL_TO CHECK_MAIN_RESULTS_DIR CHECK_FIRST_FOREIGN_SYSTEM_USER
  global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
+ global CHECK_PROTOCOL_DIR
 
  puts $CHECK_OUTPUT "install qmaster ($CHECK_PRODUCT_TYPE system) on host $CHECK_CORE_MASTER ..."
 
@@ -305,6 +306,14 @@ proc install_qmaster {} {
     set_error "-1" "install_qmaster - install_qmaster file not found"
     return
  }
+
+ #dump hostlist to file
+ set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
+ set f [open $host_file_name w]
+ foreach exechost $CHECK_CORE_EXECD {
+    puts $f "${exechost}"
+ }
+ close $f
 
  cd "$CHECK_PRODUCT_ROOT"
 
@@ -715,7 +724,6 @@ proc install_qmaster {} {
           continue;
        }
 
-
        -i $sp_id "Do you want to create a new configuration" {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
           if {$do_log_output == 1} {
@@ -726,14 +734,57 @@ proc install_qmaster {} {
           send -i $sp_id "y\n"
           continue;
        }
-       -i $sp_id "Do you want to use a file which contains the list of hosts" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+
+       -i $sp_id "Please enter the file name which contains the host list" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >${host_file_name}<"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
           }
 
-          send -i $sp_id "n\n"
+          send -i $sp_id "${host_file_name}\n"
+          continue;
+       }
+   
+       -i $sp_id "Finished adding hosts" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          send -i $sp_id "\n"
+          continue;
+       }
+   
+       -i $sp_id "already exists" {
+          puts $CHECK_OUTPUT "\n --> testsuite: ignoring install script output"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          continue;
+       }
+   
+       -i $sp_id "added to * host list" {
+          puts $CHECK_OUTPUT "\n --> testsuite: ignoring install script output"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          continue;
+       }
+   
+       -i $sp_id "Do you want to use a file which contains the list of hosts" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          send -i $sp_id "y\n"
           continue;
        }
    
@@ -828,7 +879,7 @@ proc install_qmaster {} {
           continue;
        }
        -i $sp_id default {
-          set_error "-1" "install_qmaster - undefined behaiviour: $expect_out(buffer)"
+          set_error "-1" "install_qmaster - undefined behaviour: $expect_out(buffer)"
           close_spawn_process $id; 
           return;
        }

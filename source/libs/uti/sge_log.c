@@ -52,12 +52,13 @@
 typedef struct {
     u_long32         log_level;
     char             log_buffer[4*MAX_STRING_SIZE]; /* formerly known as SGE_EVENT */
-    char*            log_file;
     int              log_as_admin_user;
     int              verbose;
     int              gui_log;
     trace_func_type  trace_func;
 } log_state_t;
+
+static char* Log_File = TMP_ERR_FILE_SNBU;
 
 static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 static pthread_key_t log_state_key;
@@ -121,29 +122,39 @@ u_long32 log_state_get_log_level(void)
    return log_state->log_level;
 }
 
-/****** uti/log/log_state_get_log_file() ******************************************
+/****** uti/sge_log/log_state_get_log_file() ***********************************
 *  NAME
-*     log_state_get_log_file() -- Return path to log file in use.
+*     log_state_get_log_file() -- get log file name
 *
 *  SYNOPSIS
-*     const char *log_state_get_log_file(void) 
+*     const char* log_state_get_log_file(void) 
 *
 *  FUNCTION
-*     Return path to log file in use.
+*     Return name of current log file. The string returned may or may not 
+*     contain a path.
+*
+*  INPUTS
+*     void - none 
 *
 *  RESULT
-*     const char * 
+*     const char* - log file name (with relative or absolute path)
 *
-******************************************************************************/
+*  NOTES
+*     MT-NOTE: log_state_get_log_file() is not MT safe.
+*     MT-NOTE:
+*     MT-NOTE: It is safe, however, to call this function from within multiple
+*     MT-NOTE: threads as long as no other thread does change 'Log_File'.
+*
+*  BUGS
+*     BUGBUG-AD: This function should use something like a barrier for
+*     BUGBUG-AD: synchronization.
+*
+*******************************************************************************/
 const char *log_state_get_log_file(void)
 {
-   log_state_t *log_state = NULL;
-
    pthread_once(&log_once, log_once_init);
 
-   log_state = log_state_getspecific(log_state_key);
-
-   return log_state->log_file;
+   return Log_File;
 }
 
 /****** uti/log/log_state_get_log_verbose() ******************************************
@@ -288,31 +299,38 @@ void log_state_set_log_level(u_long32 i)
    return;
 }
 
-/****** uti/log/log_state_set_log_file() *****************************************
+/****** uti/sge_log/log_state_set_log_file() ***********************************
 *  NAME
-*     log_state_set_log_file() -- Set log file to be used.
+*     log_state_set_log_file() -- set log file name
 *
 *  SYNOPSIS
-*     void log_state_set_log_file(int i) 
+*     void log_state_set_log_file(char *file) 
 *
 *  FUNCTION
-*     Set path of log file to be used. 
+*     Set log file name. 'file' may either contain a relative or absolute path. 
 *
 *  INPUTS
-*     char * 
+*     char *file - log file name 
 *
-*  SEE ALSO
-*     uti/log/log_state_get_log_file() 
-******************************************************************************/
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: log_state_set_log_file() is not MT safe 
+*     MT-NOTE:
+*     MT-NOTE: Do NOT invoke this function while more than one thread is
+*     MT-NOTE: active!
+*
+*  BUGS
+*     BUGBUG-AD: This function should use something like a barrier for
+*     BUGBUG-AD: synchronization.
+*
+*******************************************************************************/
 void log_state_set_log_file(char *file)
 {
-   log_state_t *log_state = NULL;
-
    pthread_once(&log_once, log_once_init);
 
-   log_state = log_state_getspecific(log_state_key);
-
-   log_state->log_file = file;
+   Log_File = file;
 
    return;
 }
@@ -736,7 +754,6 @@ static void log_state_init(log_state_t *theState)
 {
    strcpy(theState->log_buffer, "");
    theState->log_level         = LOG_WARNING;
-   theState->log_file          = TMP_ERR_FILE_SNBU;
    theState->log_as_admin_user = 0;
    theState->verbose           = 1;
    theState->gui_log           = 1;

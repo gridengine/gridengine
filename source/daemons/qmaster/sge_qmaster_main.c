@@ -142,6 +142,10 @@ static void exit_func(int);
 *     0 - success 
 *
 *  NOTES
+*     We check whether 'SGE_ROOT' is set before we daemonize. Once qmaster is
+*     a daemon, we are no longer connected to a terminal and hence can not
+*     output an error message to stdout or stderr.
+*
 *     We need to inovke 'prepare_enroll()' *before* the user id is switched via
 *     'become_admin_user()'. This is because qmaster must be able to bind a so
 *     called reserved port (requires root privileges) if configured to do so.
@@ -153,8 +157,7 @@ int main(int argc, char* argv[])
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
-   /* Make sure SGE_ROOT is given before we deamonize */
-   sge_get_root_dir (true, NULL, 0, true);
+   sge_get_root_dir(true, NULL, 0, true);
    
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    sge_init_language_func((gettext_func_type)gettext, (setlocale_func_type)setlocale, (bindtextdomain_func_type)bindtextdomain, (textdomain_func_type)textdomain);

@@ -111,7 +111,7 @@ char **argv
       fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
               sge_dstring_get_string (&diag));
       DEXIT;
-      exit (1);
+      SGE_EXIT (1);
    }
 
    /*

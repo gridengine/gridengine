@@ -1057,7 +1057,6 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
          return EPERM;
       }
 
-      /* This function will aquire the client lock on its own, as needed. */
       add_list_event_for_client(aClientID, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
                                 NULL, NULL, true);
 

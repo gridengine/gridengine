@@ -46,6 +46,8 @@ extern "C" {
 #define MSG_DRMAA_INC_NOT_ALLOWED      _MESSAGE(45005, _("The $drmaa_inc_ph$ placeholder is not allowed when the DRMAA_NATIVE_SPECIFICATION attribute contains \"-b n\"\n"))
 #define MSG_DRMAA_PATH_NEEDS_COLON_S   _MESSAGE(45006, _("The "SFQ" attribute must begin with a colon, ':'\n"))
 #define MSG_DRMAA_NEEDS_INPUT_PATH     _MESSAGE(45007, _("When using input file staging, and input path must be set.\n"))
+   
+#define MSG_JDRMAA_BAD_JOB_TEMPLATE    _MESSAGE(45101, _("Requested job template does not exist"))
 
 #ifdef	__cplusplus
 }

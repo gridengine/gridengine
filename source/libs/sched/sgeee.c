@@ -1861,7 +1861,7 @@ static void destribute_ftickets(lList *root, int dependent){
 *     sge_ref_t *job_ref     - array of pointers to the job reference structure 
 *     int num_jobs           - amount of elements in the job_ref array 
 *     sge_fcategory_t **root - root pointer to the functional category list 
-*     sge_ref_list_t ** ref_array - has to be a pointer to NULL pointer. The momory 
+*     sge_ref_list_t ** ref_array - has to be a pointer to NULL pointer. The memory 
 *                                   will be allocated
 *                                   in this function and freed with free_fcategories.
 *     int dependent          - does the functional tickets depend on prior computed tickets? 
@@ -1872,7 +1872,7 @@ static void destribute_ftickets(lList *root, int dependent){
 *
 *  IMPROVEMENTS:
 *     - the stored values in the functional category structure can be used to speed up the
-*       ticket calculation. This wil avoid unnessisary CULL accesses in the function
+*       ticket calculation. This will avoid unnecessary CULL accesses in the function
 *       calc_job_functional_tickets_pass1
 *     - A further improvement can be done by:
 *        - limiting the job list length in each category to the max nr of jobs calculated
@@ -2429,10 +2429,12 @@ sge_clear_ja_task( lListElem *ja_task )
 *
 *  SYNOPSIS
 *     void calc_intern_pending_job_functional_tickets(sge_fcategory_t *current, 
-*     double sum_of_user_functional_shares, double 
-*     sum_of_project_functional_shares, double 
-*     sum_of_department_functional_shares, double sum_of_job_functional_shares, 
-*     double total_functional_tickets, double weight[]) 
+*                                    double sum_of_user_functional_shares,
+*                                    double sum_of_project_functional_shares,
+*                                    double sum_of_department_functional_shares,
+*                                    double sum_of_job_functional_shares, 
+*                                    double total_functional_tickets,
+*                                    double weight[]) 
 *
 *  FUNCTION
 *     This is an optimized and incomplete version of calc_pending_job_functional_tickets.
@@ -3258,14 +3260,14 @@ sge_calc_tickets( sge_Sdescr_t *lists,
             if (hierarchy[policy_ndx].dependent)
                jref->tickets += REF_GET_OTICKET(jref);
          }
-      }
-      }
+      } /* for */
+      } /* case */
             break;
 
          default:
             break;
          }
-      }
+      } /* switch */
 
       /*-----------------------------------------------------------------
        * Combine the ticket values into the total tickets for the job

@@ -90,9 +90,9 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetContact
 {
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errno = DRMAA_ERRNO_SUCCESS;
-   char contact[BUFFER_LENGTH];
+   char contact[DRMAA_CONTACT_BUFFER];
    
-   errno = drmaa_get_contact (contact, BUFFER_LENGTH, error,
+   errno = drmaa_get_contact (contact, DRMAA_CONTACT_BUFFER, error,
                               DRMAA_ERROR_STRING_BUFFER);
    
    if (errno != DRMAA_ERRNO_SUCCESS) {
@@ -109,9 +109,9 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetDRMSInfo
 {
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errno = DRMAA_ERRNO_SUCCESS;
-   char system[BUFFER_LENGTH];
+   char system[DRMAA_DRM_SYSTEM_BUFFER];
    
-   errno = drmaa_get_DRM_system (system, BUFFER_LENGTH, error,
+   errno = drmaa_get_DRM_system (system, DRMAA_DRM_SYSTEM_BUFFER, error,
                                  DRMAA_ERROR_STRING_BUFFER);
    
    if (errno != DRMAA_ERRNO_SUCCESS) {
@@ -169,7 +169,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeRunBulkJ
 {
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errno = DRMAA_ERRNO_SUCCESS;
-   char buffer[BUFFER_LENGTH];
+   char buffer[DRMAA_JOBNAME_BUFFER];
    drmaa_job_template_t *jt = job_templates[id];
    drmaa_job_ids_t *ids = NULL;
    int num_elem = 0;
@@ -193,7 +193,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeRunBulkJ
    id_strings = (char **)malloc (num_elem * sizeof (char *));
    
    for (count = start; count < end; count += step) {
-      if (drmaa_get_next_job_id (ids, buffer, BUFFER_LENGTH)
+      if (drmaa_get_next_job_id (ids, buffer, DRMAA_JOBNAME_BUFFER)
                                                        == DRMAA_ERRNO_SUCCESS) {
          id_strings[counter++] = strdup (buffer);
       }
@@ -221,10 +221,10 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_drmaa_SGESession_nativeRunJob
 {
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errno = DRMAA_ERRNO_SUCCESS;
-   char job_id[BUFFER_LENGTH];
+   char job_id[DRMAA_JOBNAME_BUFFER];
    drmaa_job_template_t *jt = job_templates[id];
    
-   errno = drmaa_run_job (job_id, BUFFER_LENGTH, jt, error,
+   errno = drmaa_run_job (job_id, DRMAA_JOBNAME_BUFFER, jt, error,
                           DRMAA_ERROR_STRING_BUFFER);
    
    if (errno != DRMAA_ERRNO_SUCCESS) {
@@ -274,7 +274,8 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
 {
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errno = DRMAA_ERRNO_SUCCESS;
-   char buffer[BUFFER_LENGTH];
+   char buffer[DRMAA_JOBNAME_BUFFER];
+   char signal[DRMAA_SIGNAL_BUFFER];
    const char *job_id = NULL;
    jobject job_info = NULL;
    jmethodID meth = NULL;
@@ -290,8 +291,8 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
    
    job_id = (*env)->GetStringUTFChars (env, jobId, NULL);
    
-   errno = drmaa_wait (job_id, buffer, BUFFER_LENGTH, &status, timeout, &rusage,
-                       error, DRMAA_ERROR_STRING_BUFFER);
+   errno = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status, timeout,
+                       &rusage, error, DRMAA_ERROR_STRING_BUFFER);
    
    (*env)->ReleaseStringUTFChars (env, jobId, job_id);
       
@@ -327,7 +328,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
       return NULL;
    }
    else if (signaled != 0) {
-      errno = drmaa_wtermsig (buffer, BUFFER_LENGTH, status, error,
+      errno = drmaa_wtermsig (signal, DRMAA_SIGNAL_BUFFER, status, error,
                               DRMAA_ERROR_STRING_BUFFER);
 
       if (errno != DRMAA_ERRNO_SUCCESS) {
@@ -336,7 +337,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
          return NULL;
       }
       
-      tmp_str = (*env)->NewStringUTF (env, buffer);
+      tmp_str = (*env)->NewStringUTF (env, signal);
    }
    
    clazz = (*env)->FindClass (env, "Lcom/sun/grid/drmaa/SGEJobInfo;");
@@ -376,7 +377,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeSetAttributeValu
    
    if (jt == NULL) {
       throw_exception (env, DRMAA_ERRNO_INTERNAL_ERROR,
-                       "Requested job template does not exist");
+                       MSG_JDRMAA_BAD_JOB_TEMPLATE);
       return;
    }
    
@@ -410,7 +411,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeSetAttributeValu
    
    if (jt == NULL) {
       throw_exception (env, DRMAA_ERRNO_INTERNAL_ERROR,
-                       "Requested job template does not exist");
+                       MSG_JDRMAA_BAD_JOB_TEMPLATE);
       return;
    }
 
@@ -609,7 +610,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeDeleteJobTemplat
    }
    else {
       throw_exception (env, DRMAA_ERRNO_INTERNAL_ERROR,
-                       "Requested job template does not exist");
+                       MSG_JDRMAA_BAD_JOB_TEMPLATE);
       return;
    }
 }
@@ -617,7 +618,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeDeleteJobTemplat
 static void throw_exception (JNIEnv *env, int errno, char *message)
 {
    jclass newExcCls = NULL;
-   bool default_err = false;
    
    DENTER (TOP_LAYER, "throw_exception");
    
@@ -626,14 +626,98 @@ static void throw_exception (JNIEnv *env, int errno, char *message)
          newExcCls = (*env)->FindClass(env,
                                        "Lorg/ggf/drmaa/InternalException;");
          break;
-      /* DT: TODO: Add other error codes. */
+      case DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE:
+         newExcCls = (*env)->FindClass(env,
+                                   "Lorg/ggf/drmaa/DRMCommunicationException;");
+         break;
+      case DRMAA_ERRNO_AUTH_FAILURE:
+         newExcCls = (*env)->FindClass(env,
+                                      "Lorg/ggf/drmaa/AuthorizationException;");
+         break;
+      case DRMAA_ERRNO_INVALID_ARGUMENT:
+         newExcCls = (*env)->FindClass(env,
+                                    "Lorg/ggf/drmaa/InvalidArgumentException;");
+         break;
+      case DRMAA_ERRNO_NO_ACTIVE_SESSION:
+         newExcCls = (*env)->FindClass(env,
+                                    "Lorg/ggf/drmaa/NoActiveSessionException;");
+         break;
+      case DRMAA_ERRNO_NO_MEMORY:
+         newExcCls = (*env)->FindClass(env, "Ljava/lang/OutOfMemoryError;");
+         break;
+      case DRMAA_ERRNO_INVALID_CONTACT_STRING:
+         newExcCls = (*env)->FindClass(env,
+                               "Lorg/ggf/drmaa/InvalidContactStringException;");
+         break;
+      case DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR:
+         newExcCls = (*env)->FindClass(env,
+                               "Lorg/ggf/drmaa/DefaultContactStringException;");
+         break;
+      case DRMAA_ERRNO_DRMS_INIT_FAILED:
+         newExcCls = (*env)->FindClass(env,
+                                       "Lorg/ggf/drmaa/DRMSInitException;");
+         break;
+      case DRMAA_ERRNO_ALREADY_ACTIVE_SESSION:
+         newExcCls = (*env)->FindClass(env,
+                               "Lorg/ggf/drmaa/SessionAlreadyActiveException;");
+         break;
+      case DRMAA_ERRNO_DRMS_EXIT_ERROR:
+         newExcCls = (*env)->FindClass(env,
+                                       "Lorg/ggf/drmaa/DRMSExitException;");
+         break;
+      case DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT:
+         newExcCls = (*env)->FindClass(env,
+                             "Lorg/ggf/drmaa/InvalidAttributeFormatException;");
+         break;
+      case DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE:
+         newExcCls = (*env)->FindClass(env,
+                              "Lorg/ggf/drmaa/InvalidAttributeValueException;");
+         break;
+      case DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES:
+         newExcCls = (*env)->FindClass(env,
+                         "Lorg/ggf/drmaa/ConflictingAttributeValuesException;");
+         break;
+      case DRMAA_ERRNO_TRY_LATER:
+         newExcCls = (*env)->FindClass(env,
+                                       "Lorg/ggf/drmaa/TryLaterException;");
+         break;
+      case DRMAA_ERRNO_DENIED_BY_DRM:
+         newExcCls = (*env)->FindClass(env,
+                                       "Lorg/ggf/drmaa/DeniedByDRMException;");
+         break;
+      case DRMAA_ERRNO_INVALID_JOB:
+         newExcCls = (*env)->FindClass(env,
+                                       "Lorg/ggf/drmaa/InvalidJobException;");
+         break;
+      case DRMAA_ERRNO_RESUME_INCONSISTENT_STATE:
+         newExcCls = (*env)->FindClass(env,
+                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+         break;
+      case DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE:
+         newExcCls = (*env)->FindClass(env,
+                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+         break;
+      case DRMAA_ERRNO_HOLD_INCONSISTENT_STATE:
+         newExcCls = (*env)->FindClass(env,
+                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+         break;
+      case DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE:
+         newExcCls = (*env)->FindClass(env,
+                                  "Lorg/ggf/drmaa/InconsistentStateException;");
+         break;
+      case DRMAA_ERRNO_EXIT_TIMEOUT:
+         newExcCls = (*env)->FindClass(env,
+                                       "Lorg/ggf/drmaa/ExitTimeoutException;");
+         break;
+      case DRMAA_ERRNO_NO_RUSAGE:
+         newExcCls = (*env)->FindClass(env,
+                               "Lorg/ggf/drmaa/DNoResourceUsageDataException;");
+         break;
       default:
-         newExcCls = (*env)->FindClass(env, "Lorg/ggf/drmaa/DRMAAException;");
-         default_err = true;
          break;
    }
 
-   if ((newExcCls == 0) && !default_err) {
+   if (newExcCls == 0) {
       /* If we can't find the specific exception, try again using
        * DRMAAException */
       newExcCls = (*env)->FindClass(env, "Lorg/ggf/drmaa/DRMAAException;");
@@ -655,8 +739,43 @@ static void throw_exception (JNIEnv *env, int errno, char *message)
       }
    }
 
-   /* Throw the exception. */
-   (*env)->ThrowNew(env, newExcCls, message);
+   /* InconsistentStateException has a different constructor. */
+   if ((errno == DRMAA_ERRNO_RESUME_INCONSISTENT_STATE) ||
+       (errno == DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE) ||
+       (errno == DRMAA_ERRNO_HOLD_INCONSISTENT_STATE) ||
+       (errno == DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE)) {
+      jmeth meth = NULL;
+      jthrowable e = NULL;
+      int state = 0;
+      jfieldID id = NULL;
+      
+      switch (errno) {
+         case DRMAA_ERRNO_RESUME_INCONSISTENT_STATE:
+            id = (*env)->GetStaticFieldID(env, newExcCls, "RESUME", "I");
+            break;
+         case DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE:
+            id = (*env)->GetStaticFieldID(env, newExcCls, "SUSPEND", "I");
+            break;
+         case DRMAA_ERRNO_HOLD_INCONSISTENT_STATE:
+            id = (*env)->GetStaticFieldID(env, newExcCls, "HOLD", "I");
+            break;
+         case DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE:
+            id = (*env)->GetStaticFieldID(env, newExcCls, "RELEASE", "I");
+            break;
+      }
+      
+      state = GetStaticIntField(env, newExcCls, id);
+         
+      meth = (*env)->GetMethodID (env, newExcCls, "<init>",
+                                  "(ILjava/lang/String;)V");
+      e = (*env)->NewObject (env, newExcCls, meth, state, message);
+      /* Throw the exception. */
+      (*env)->Throw(env, e);
+   }
+   else {
+      /* Throw the exception. */
+      (*env)->ThrowNew(env, newExcCls, message);
+   }
    
    DEXIT;
 }

@@ -1,8 +1,13 @@
+DT-2004-05-18-0: Cleanup:   o Cleaned up some code and comments
+                            o Added test program for DRMAA Java binding
+                            o Cleaned up JNI code for DRMAA Java binding
+                 Changed:   qsub, DRMAA, various others
+
 MD-2004-05-18-4: Enhamcem:  - more comments in inst_template.conf
 
 JG-2004-05-18-3: Bugfix:    Fixed a core dump in qmaster.
 
-SG-2004-05-18-4: Bugfix:    fixed the qstat -t -xml output. 
+SG-2004-05-18-4: Bugfix:    fixed the qstat -t -xml output.
                  Issue:     1043
                  Changed:   qstat
                  Review:    JG
@@ -14,7 +19,7 @@ MD-2004-05-18-3: Bugfix:    - backup/restore works (only Berkeley DB spooling)
                             - help output 
                  Changed:   inst_common.sh
                  Issue:     1003, 1004
-  
+
 SG-2004-05-18-2: Bugfix:    changed the qdel behavior back to the v5.3 one.
                  Review:    JG
                  Changed:   qmaster

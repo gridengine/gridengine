@@ -1,3 +1,5 @@
+JG-2003-01-07-0  CVS:       Created VMAIN_STABLE_1_TAG
+
 JG-2003-01-02-0  Enhancem.  Prevent lex scanner to be generated after each 
                             checkout. Instead, the checked in scanner is used.
 

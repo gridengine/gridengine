@@ -42,6 +42,7 @@
 #include "sge_unistd.h"
 
 #include "msg_common.h"
+#include "msg_gdilib.h"
 
 static void print_marked(FILE *fp);
 static char* get_argument_syntax(int nr);
@@ -1168,6 +1169,6 @@ static void usage_silent(
 FILE *fp 
 ) {
    DENTER(TOP_LAYER, "usage_silent");
-   print_option_syntax(fp, "[-s]", "startup silently");
+   print_option_syntax(fp, "[-s]", MSG_GDI_USAGE_SILENT);
    DEXIT;
 }

@@ -263,8 +263,14 @@ Widget parent
    ** set title bar
    */
    sprintf(buf, "%-20.20s %-10.10s %-10.10s %-20.20s %-5.5s %-7.7s %-10.10s %-20.20s",
-             "NAME", "SHORTCUT", "TYPE", "VALUE  ", "RELOP",
-             "REQ   ", "CONSUMABLE", "DEFAULT");
+             XmtLocalize(parent, "NAME", "NAME"), 
+             XmtLocalize(parent, "SHORTCUT", "SHORTCUT"),
+             XmtLocalize(parent, "TYPE", "TYPE"),
+             XmtLocalize(parent, "VALUE", "VALUE"),
+             XmtLocalize(parent, "RELOP", "RELOP"),
+             XmtLocalize(parent, "REQ","REQ"),
+             XmtLocalize(parent, "CONSUMABLE", "CONSUMABLE"),
+             XmtLocalize(parent, "DEFAULT", "DEFAULT"));
    XmTextSetString(cplx_attributes_title, buf);
    DEXIT;
    return cplx_layout;
@@ -674,23 +680,23 @@ XtPointer cld, cad;
    ** check input 
    */
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_aname))) {
-      qmonMessageShow(matrix, True, "Name required !\n");
+      qmonMessageShow(matrix, True, "Name required !");
       DEXIT;
       return;
    }
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_ashort))) {
-      qmonMessageShow(matrix, True, "Shortcut required !\n");
+      qmonMessageShow(matrix, True, "Shortcut required !");
       DEXIT;
       return;
    }
    if (XmtChooserGetState(cplx_ask_atype) == 0 && 
          is_empty_word(XmtInputFieldGetString(cplx_ask_avalue))) {
-      qmonMessageShow(matrix, True, "Value required !\n");
+      qmonMessageShow(matrix, True, "Value required !");
       DEXIT;
       return;
    }
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_adefault))) {
-      qmonMessageShow(matrix, True, "Default required !\n");
+      qmonMessageShow(matrix, True, "Default required !");
       DEXIT;
       return;
    }

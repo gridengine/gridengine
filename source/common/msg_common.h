@@ -103,7 +103,7 @@
 #define MSG_USER_INVALIDNAMEX_S             _MESSAGE(23048, _("invalid user name "SFQ"\n"))
 #define MSG_USER_NOHOMEDIRFORUSERX_S        _MESSAGE(23049, _("missing home directory for user "SFQ"\n"))
 #define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S  _MESSAGE(23050, _("getuniquehostname() failed resolving: "SFN"\n"))
-#define MSG_OBJ_UNABLE2FINDQ_S        _MESSAGE(23051, _("unable to find queue "SFQ"\n"))
+#define MSG_QUEUE_UNABLE2FINDQ_S        _MESSAGE(23051, _("unable to find queue "SFQ"\n"))
 #define MSG_OBJ_USER                  _MESSAGE(23052, _("user"))
 #define MSG_OBJ_GROUP                 _MESSAGE(23053, _("group"))
 #define MSG_OBJ_USERPRJ               _MESSAGE(23054, _("user/project"))

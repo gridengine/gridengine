@@ -429,3 +429,14 @@ done
 
 
 awk '{printf "DE:"; printf "Bavaria:"; printf "Regensburg:"; printf "Sun Microsystems:"; printf "Gridware:"; printf $0":"; print $1"."$2"@sun.com"}' NAMES.txt > DN_TABLE.txt
+
+
+Generate a CRL
+utilbin/solaris64/openssl ca -config util/sgeCA/sge_ssl.cnf -verbose -cert default/common/sgeCA/cacert.pem -keyfile /var/sgeCA/port5321/default/private/cakey.pem -gencrl -out troet
+
+
+Renewal of CA key:
+
+$SGE_ROOT/utilbin/solaris64/openssl req -nodes -x509 -key /var/sgeCA/port5321/default/private/cakey.pem -out cacert.new -days 1024 -new -config <myconfig>
+
+

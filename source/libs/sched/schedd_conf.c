@@ -94,7 +94,7 @@ lList *cmplx_list
    s = lGetString(sc_ep, SC_algorithm);
    if ( !s || (strcmp(s, "default") && strcmp(s, "simple_sched") 
       && strncmp(s, "ext_", 4))) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME )); 
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME_S, s)); 
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: HelpBox.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: HelpBox.c,v 1.2 2002/08/22 15:06:10 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,14 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: HelpBox.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.2  2002/08/22 15:06:10  andre
+ * AA-2002-08-22-0  I18N:      bunch of fixes for l10n
+ *                  Bugtraq:   #4733802, #4733201, #4733089, #4733043,
+ *                             #4731976, #4731990, #4731967, #4731958,
+ *                             #4731944, #4731935, #4731273, #4729700
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -214,11 +220,30 @@ XmtHelpBoxWidget hb;
 
 
     /* get the label string and size and query # of lines */
+
+#if defined(SOLARIS64)
+    /*
+    ** I18N bug for label size under Solaris
+    */
+    XtVaGetValues(hb->help_box.label_widget,
+		  XmNlabelString, &label,
+		  XmNheight, &height,
+		  NULL);
+   
+      
+    XtVaSetValues(hb->help_box.label_widget, 
+                  XmNlabelString, label,
+                  XmNalignment, XmALIGNMENT_BEGINNING,
+                  XmNheight, (int)(1.1 * height), 
+                  NULL);
+#endif
+
     XtVaGetValues(hb->help_box.label_widget,
 		  XmNlabelString, &label,
 		  XmNwidth, &width,
 		  XmNheight, &height,
 		  NULL);
+
     if (label) {
 	lines = XmStringLineCount(label);
 #if XmVersion < 1002
@@ -227,7 +252,6 @@ XmtHelpBoxWidget hb;
     }
     else lines = 0;
     XmStringFree(label);
-
     /*
      * if the number of lines in the label widget is > than the requested
      * number of visible lines, then we will have a vertical scrollbar.
@@ -255,6 +279,8 @@ XmtHelpBoxWidget hb;
     XtVaSetValues(hb->help_box.scrolled_widget,
 		  XmtNlayoutWidth, width,
 		  XmtNlayoutHeight, height,
+		  XmNwidth, width,
+		  XmNheight, height,
 		  NULL);
 }
 
@@ -418,7 +444,6 @@ Cardinal *num_args;
     XtVaSetValues((Widget)sw->swindow.ClipWindow,
 		  XmNbackground, hb->help_box.help_background,
 		  NULL);    
-    
     label = XmStringCreateSimple(XmtLocalizeWidget(init, "Okay", "ok"));
     hb->help_box.button_widget =
 	XtVaCreateManagedWidget("okay", xmPushButtonWidgetClass, init,

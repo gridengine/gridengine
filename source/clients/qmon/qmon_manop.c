@@ -1127,7 +1127,7 @@ XtPointer cld, cad;
    }
    else
       qmonMessageShow(w, True, 
-            "Please configure a project first.");
+            "@{Please configure a project first !}");
    
    DEXIT;
 }

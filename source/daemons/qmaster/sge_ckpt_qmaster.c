@@ -537,7 +537,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
    for (i=0; ckpt_commands[i].nm!=NoName; i++) {
       if (replace_params(lGetString(ep, ckpt_commands[i].nm),
                NULL, 0, ckpt_variables)) {
-         ERROR((SGE_EVENT, MSG_OBJ_CKPTENV,
+         ERROR((SGE_EVENT, MSG_OBJ_CKPTENV_SSS,
                ckpt_commands[i].text, lGetString(ep, CK_name), err_msg));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;

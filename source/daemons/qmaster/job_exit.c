@@ -109,7 +109,7 @@ lListElem *jatep
       qname = (char *)MSG_OBJ_UNKNOWNQ;
    err_str = lGetString(jr, JR_err_str);
    if (!err_str)
-      err_str = MSG_OBJ_UNKNOWNREASON;
+      err_str = MSG_UNKNOWNREASON;
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);

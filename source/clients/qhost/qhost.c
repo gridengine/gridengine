@@ -211,12 +211,10 @@ char **argv
             lSetUlong(ep, EH_tagged, 1);
          ce = lFreeList(ce);
       }
+
       /*
       ** reduce the hostlist, only the tagged ones survive
       */
-  
-       
-
       where = lWhere("%T(%I == %u)", EH_Type, EH_tagged, 1);
       lSplit(&ehl, NULL, NULL, where);
       where = lFreeWhere(where);
@@ -528,7 +526,6 @@ u_long32 type
       "INTERACTIVE",
       "CHECKPOINTING",
       "PARALLEL",
-      "TRANSFER",
       ""
    };
 
@@ -942,7 +939,6 @@ lWriteListTo(ehl, stdout);
                      JB_ja_o_h_ids,
                      JB_ja_z_ids 
                     );
-
 
 /* printf("======================================\n"); */
 /* lWriteWhereTo(jw, stdout); */

@@ -1285,7 +1285,7 @@ XtPointer cld, cad;
 
       switch ( ret ) {
          case COMMD_NACK_UNKNOWN_HOST:
-            qmonMessageShow(w, True, "can't resolve host '%s'\n", host);
+            qmonMessageShow(w, True, "Can't resolve host '%s'", host);
             break;
          case CL_OK:
             what = lWhat("%T(ALL)", dp);

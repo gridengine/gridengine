@@ -222,12 +222,12 @@ lList **answerp
 
    if (status != CL_OK) {
       if (status == CL_UNKNOWN_RECEIVER)
-         sprintf(msg, "Can't reach qmaster\n");
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       else
-         sprintf(msg, "Can't reach:\n%s\n", cl_errstr(status));
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
 
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
-                                                msg, "Retry", "Abort",
+                                                msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
       /*
       ** we don't want to retry, so go down

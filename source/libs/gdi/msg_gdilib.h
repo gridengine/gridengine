@@ -86,6 +86,7 @@
 #define MSG_PARSE_INVALIDMINUTE       _MESSAGE(43034, _("Invalid minute specification."))
 #define MSG_PARSE_INVALIDSECOND       _MESSAGE(43035, _("Invalid seconds specification."))
 #define MSG_PARSE_NODATEFROMINPUT     _MESSAGE(43036, _("Couldn't generate date from input. Perhaps a date before 1970 was specified."))
+#define MSG_PARSE_NODATE              _MESSAGE(43038, _("no date specified"))
 
 /*
 ** parse.c
@@ -401,6 +402,11 @@
 #define MSG_SGETEXT_UNKNOWNCOMPLEX_SSS             _MESSAGE(43253, _("denied: complex "SFQ" referenced in "SFN" "SFQ" does not exist\n")) 
 #define MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS      _MESSAGE(43254, _("denied: complex "SFQ" referenced in "SFN" "SFQ" is not a user complex\n") )
 #define MSG_HOSTREFINQUEUE_SS                      _MESSAGE(43255, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
+/*
+** common/usage.c
+*/
+#define MSG_GDI_USAGE_SILENT          _MESSAGE(43256, _("startup silently"))
+
 
 #endif /* __MSG_GDILIB_H */
 

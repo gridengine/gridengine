@@ -62,7 +62,10 @@ Qmon*MainControl.MainRowCol.numColumns:  2
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*FontList: $interface
 
-_FontLists_*small*interface: \
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! default fonts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_FontLists_.small.*.interface: \
 -adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*=R,\
 -adobe-helvetica-bold-r-*-*-12-*-*-*-p-*-*-*=B,\
 -adobe-helvetica-medium-r-*-*-18-*-*-*-p-*-*-*=BIG,\
@@ -73,12 +76,12 @@ _FontLists_*small*interface: \
 -adobe-courier-medium-r-*-*-10-*-*-*-m-*-*-*=LISTSMALL,\
 -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
 
-_FontLists_*small*dialog_font:  -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
-_FontLists_*small*matrix_font:  -adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*
-_FontLists_*small*browser_font: -adobe-courier-medium-r-*-*-10-*-*-*-m-*-*-*
-_FontLists_*small*fixed_font:  -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
+_FontLists_.small.*.dialog_font:  -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
+_FontLists_.small.*.matrix_font:  -adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*
+_FontLists_.small.*.browser_font: -adobe-courier-medium-r-*-*-10-*-*-*-m-*-*-*
+_FontLists_.small.*.fixed_font:  -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
 
-_FontLists_*big*interface: \
+_FontLists_.big.*.interface: \
 -adobe-helvetica-medium-r-*-*-18-*-*-*-p-*-*-*=R,\
 -adobe-helvetica-bold-r-*-*-18-*-*-*-p-*-*-*=B,\
 -adobe-helvetica-medium-r-*-*-24-*-*-*-p-*-*-*=BIG,\
@@ -89,27 +92,165 @@ _FontLists_*big*interface: \
 -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*=LISTSMALL,\
 -adobe-helvetica-medium-r-*-*-10-*-*-*-p-*-*-*=QUEUEICON
 
-_FontLists_*big*dialog_font:  -adobe-courier-medium-r-*-*-17-*-*-*-m-*-*-*
-_FontLists_*big*matrix_font:  -adobe-helvetica-medium-r-*-*-17-*-*-*-p-*-*-*
-_FontLists_*big*browser_font: -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
-_FontLists_*fixed_font:  -adobe-courier-medium-r-*-*-17-*-*-*-m-*-*-*
+_FontLists_.big.*.dialog_font:  -adobe-courier-medium-r-*-*-17-*-*-*-m-*-*-*
+_FontLists_.big.*.matrix_font:  -adobe-helvetica-medium-r-*-*-17-*-*-*-p-*-*-*
+_FontLists_.big.*.browser_font: -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
+_FontLists_.big.*.fixed_font:  -adobe-courier-medium-r-*-*-17-*-*-*-m-*-*-*
 
+_FontLists_.*.interface: \
+-adobe-helvetica-medium-r-*--14-*-*-*-p-*-*-*=R,\
+-adobe-helvetica-bold-r-*--14-*-*-*-p-*-*-*=B,\
+-adobe-helvetica-medium-r-*--20-*-*-*-p-*-*-*=BIG,\
+-adobe-helvetica-medium-r-*--12-*-*-*-p-*-*-*=SMALL,\
+-adobe-helvetica-medium-r-*--24-*-*-*-p-*-*-*=HUGE,\
+-adobe-courier-medium-r-*--14-*-*-*-m-*-*-*=LIST,\
+-adobe-courier-bold-r-*--14-*-*-*-m-*-*-*=LISTBOLD,\
+-adobe-courier-medium-r-*--12-*-*-*-m-*-*-*=LISTSMALL,\
+-adobe-helvetica-medium-r-*--10-*-*-*-p-*-*-*=QUEUEICON
 
-_FontLists_*interface: \
--adobe-helvetica-medium-r-*-*-14-*-*-*-p-*-*-*=R,\
--adobe-helvetica-bold-r-*-*-14-*-*-*-p-*-*-*=B,\
--adobe-helvetica-medium-r-*-*-20-*-*-*-p-*-*-*=BIG,\
--adobe-helvetica-medium-r-*-*-12-*-*-*-p-*-*-*=SMALL,\
--adobe-helvetica-medium-r-*-*-24-*-*-*-p-*-*-*=HUGE,\
--adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*=LIST,\
--adobe-courier-bold-r-*-*-14-*-*-*-m-*-*-*=LISTBOLD,\
--adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*=LISTSMALL,\
--adobe-helvetica-medium-r-*-*-10-*-*-*-p-*-*-*=QUEUEICON
+_FontLists_.*.dialog_font:  -adobe-courier-medium-r-*--14-*-*-*-m-*-*-*
+_FontLists_.*.matrix_font:  -adobe-helvetica-medium-r-*--14-*-*-*-p-*-*-*
+_FontLists_.*.browser_font: -adobe-courier-medium-r-*--12-*-*-*-m-*-*-*
+_FontLists_.*.fixed_font:  -adobe-courier-medium-r-*--14-*-*-*-m-*-*-*
 
-_FontLists_*dialog_font:  -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
-_FontLists_*matrix_font:  -adobe-helvetica-medium-r-*-*-14-*-*-*-p-*-*-*
-_FontLists_*browser_font: -adobe-courier-medium-r-*-*-12-*-*-*-m-*-*-*
-_FontLists_*fixed_font:  -adobe-courier-medium-r-*-*-14-*-*-*-m-*-*-*
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ japanese fonts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_FontLists_*.ja.*.interface: \
+    -*-*gothic*-medium-r-*-14-*:R,\
+    -*-*gothic*-bold-r-*-14-*:B,\
+    -*-*gothic*-medium-i-*-14-*:I,\
+    -*-*gothic*-bold-i-*-14-*:BI,\
+    -*-*gothic*-bold-r-*-16-*:BIG,\
+    -*-*gothic*-bold-r-*-18-*:HUGE,\
+    -*-*gothic*-medium-r-*-10-*:SMALL,\
+    -*-*gothic*-medium-r-*-12-*:LIST,\
+    -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
+    -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
+    -*-*gothic*-bold-r-*-10-*:QUEUEICON
+ 
+_FontLists_*.ja.*.dialog_font: \
+    -*-*gothic*-medium-r-*-14-*:R,\
+    -*-*gothic*-bold-r-*-14-*:B,\
+    -*-*gothic*-medium-i-*-14-*:I,\
+    -*-*gothic*-bold-i-*-14-*:BI,\
+    -*-*gothic*-bold-r-*-16-*:BIG,\
+    -*-*gothic*-bold-r-*-18-*:HUGE,\
+    -*-*gothic*-medium-r-*-10-*:SMALL,\
+    -*-*gothic*-medium-r-*-12-*:LIST,\
+    -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
+    -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
+    -*-*gothic*-bold-r-*-10-*:QUEUEICON
+ 
+_FontLists_*.ja.*.matrix_font: \
+    -*-*gothic*-medium-r-*-14-*:R,\
+    -*-*gothic*-bold-r-*-14-*:B,\
+    -*-*gothic*-medium-i-*-14-*:I,\
+    -*-*gothic*-bold-i-*-14-*:BI,\
+    -*-*gothic*-bold-r-*-16-*:BIG,\
+    -*-*gothic*-bold-r-*-18-*:HUGE,\
+    -*-*gothic*-medium-r-*-10-*:SMALL,\
+    -*-*gothic*-medium-r-*-12-*:LIST,\
+    -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
+    -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
+    -*-*gothic*-bold-r-*-10-*:QUEUEICON
+
+_FontLists_*.ja.*.browser_font: \
+    -*-*gothic*-medium-r-*-14-*:R,\
+    -*-*gothic*-bold-r-*-14-*:B,\
+    -*-*gothic*-medium-i-*-14-*:I,\
+    -*-*gothic*-bold-i-*-14-*:BI,\
+    -*-*gothic*-bold-r-*-16-*:BIG,\
+    -*-*gothic*-bold-r-*-18-*:HUGE,\
+    -*-*gothic*-medium-r-*-10-*:SMALL,\
+    -*-*gothic*-medium-r-*-12-*:LIST,\
+    -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
+    -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
+    -*-*gothic*-bold-r-*-10-*:QUEUEICON
+
+_FontLists_*.ja.*.fixed_font:\
+    -*-*gothic*-medium-r-*-14-*:R,\
+    -*-*gothic*-bold-r-*-14-*:B,\
+    -*-*gothic*-medium-i-*-14-*:I,\
+    -*-*gothic*-bold-i-*-14-*:BI,\
+    -*-*gothic*-bold-r-*-16-*:BIG,\
+    -*-*gothic*-bold-r-*-18-*:HUGE,\
+    -*-*gothic*-medium-r-*-10-*:SMALL,\
+    -*-*gothic*-medium-r-*-12-*:LIST,\
+    -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
+    -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
+    -*-*gothic*-bold-r-*-10-*:QUEUEICON
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! chinese fonts
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+_FontLists_*.zh.*.interface: \
+    -*-medium-r-*-16-*:R,\
+    -*-bold-r-*-16-*:B,\
+    -*-medium-r-*-16-*:I,\
+    -*-bold-r-*-16-*:BI,\
+    -*-bold-r-*-18-*:BIG,\
+    -*-bold-r-*-22-*:HUGE,\
+    -*-medium-r-*-14-*:SMALL,\
+    -*-medium-r-*-14-*:LIST,\
+    -*-bold-r-*-16-*:LISTBOLD,\
+    -*-medium-r-*-16-*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*.zh.*.dialog_font: \
+    -*-medium-r-*-16-*:R,\
+    -*-bold-r-*-16-*:B,\
+    -*-medium-r-*-16-*:I,\
+    -*-bold-r-*-16-*:BI,\
+    -*-bold-r-*-18-*:BIG,\
+    -*-bold-r-*-22-*:HUGE,\
+    -*-medium-r-*-14-*:SMALL,\
+    -*-medium-r-*-14-*:LIST,\
+    -*-bold-r-*-16-*:LISTBOLD,\
+    -*-medium-r-*-16-*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*.zh.*.matrix_font: \
+    -*-medium-r-*-16-*:R,\
+    -*-bold-r-*-16-*:B,\
+    -*-medium-r-*-16-*:I,\
+    -*-bold-r-*-16-*:BI,\
+    -*-bold-r-*-18-*:BIG,\
+    -*-bold-r-*-22-*:HUGE,\
+    -*-medium-r-*-14-*:SMALL,\
+    -*-medium-r-*-14-*:LIST,\
+    -*-bold-r-*-16-*:LISTBOLD,\
+    -*-medium-r-*-16-*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*.zh.*.browser_font: \
+    -*-medium-r-*-16-*:R,\
+    -*-bold-r-*-16-*:B,\
+    -*-medium-r-*-16-*:I,\
+    -*-bold-r-*-16-*:BI,\
+    -*-bold-r-*-18-*:BIG,\
+    -*-bold-r-*-22-*:HUGE,\
+    -*-medium-r-*-14-*:SMALL,\
+    -*-medium-r-*-14-*:LIST,\
+    -*-bold-r-*-16-*:LISTBOLD,\
+    -*-medium-r-*-16-*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
+
+_FontLists_*.zh.*.fixed_font:\
+    -*-medium-r-*-16-*:R,\
+    -*-bold-r-*-16-*:B,\
+    -*-medium-r-*-16-*:I,\
+    -*-bold-r-*-16-*:BI,\
+    -*-bold-r-*-18-*:BIG,\
+    -*-bold-r-*-22-*:HUGE,\
+    -*-medium-r-*-14-*:SMALL,\
+    -*-medium-r-*-14-*:LIST,\
+    -*-bold-r-*-16-*:LISTBOLD,\
+    -*-medium-r-*-16-*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! end of font specs
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! pixmapFilePath: here we find pixmaps

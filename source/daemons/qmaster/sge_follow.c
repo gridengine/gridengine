@@ -271,7 +271,7 @@ lList **topp  /* ticket orders ptr ptr */
 
          qep = queue_list_locate(Master_Queue_List, q_name);
          if (!qep) {
-            ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDQ_S, q_name));
+            ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);

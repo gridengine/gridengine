@@ -187,7 +187,11 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_execd_spool_dir_label, \
                   cluster_admin_mail_label, \
                   cluster_login_shells_label, \
+                  cluster_max_aj_instances_label, \
+                  cluster_max_aj_tasks_label, \
+                  cluster_max_job_per_user_label, \
                   cluster_admin_user_label;
+
 
 
 Qmon*cluster_global_layout.layout: \
@@ -206,15 +210,15 @@ Qmon*cluster_global_layout.layout: \
          Row { cluster_login_shells_label  <> Fixed 25 em cluster_login_shells }\
          ### \
          Equal Row { \
-            Caption "@{Maximal Array\nJob Instances}" <> cluster_max_aj_instances \
+             cluster_max_aj_instances_label <> cluster_max_aj_instances \
          } \
          ## \
          Equal Row { \
-            Caption "@{Maximal Array\nJob Tasks}" <> cluster_max_aj_tasks \
+             cluster_max_aj_tasks_label <> cluster_max_aj_tasks \
          } \
          ## \
          Equal Row { \
-            Caption "@{Maximal Jobs\nPer User}" <> cluster_max_u_jobs \
+             cluster_max_job_per_user_label <> cluster_max_u_jobs \
          } \
          ## \
          Equal Row { \
@@ -288,7 +292,10 @@ Qmon*cluster_global_layout.cluster_qmaster_spool_dir_label.labelString: @{Master
 Qmon*cluster_global_layout.cluster_execd_spool_dir_label.labelString: @{Execd Spool Dir}
 Qmon*cluster_global_layout.cluster_admin_user_label.labelString: @{Admin User}
 Qmon*cluster_global_layout.cluster_admin_mail_label.labelString: @{Admin Mail}
-Qmon*cluster_global_layout.cluster_login_shells.labelString: @{Login Shells}
+Qmon*cluster_global_layout.cluster_login_shells_label.labelString: @{Login Shells}
+Qmon*cluster_global_layout.cluster_max_aj_instances_label.labelString: @{cluster.max_aj_instances.Maximal Array\nJob Instances}
+Qmon*cluster_global_layout.cluster_max_aj_tasks_label.labelString: @{cluster.max_aj_tasks.Maximal Array\nJob Tasks}
+Qmon*cluster_global_layout.cluster_max_job_per_user_label.labelString: @{cluster.max_job_per_user.Maximal Jobs\nPer User}
 
 Qmon*cluster_global_layout.cluster_min_uid*columns: 5
 Qmon*cluster_global_layout.cluster_min_gid*columns: 5
@@ -366,6 +373,7 @@ Qmon*cluster_global_layout.cluster_max_aj_instances.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_aj_instances.columns: 5
 Qmon*cluster_global_layout.cluster_max_aj_instances.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_aj_instances.value: 0
+Qmon*cluster_global_layout.cluster_max_aj_instances.incrementLarge: 10
 
 Qmon*cluster_global_layout.cluster_max_aj_tasks.minimum: 0
 Qmon*cluster_global_layout.cluster_max_aj_tasks.spinboxStyle: SPINBOX_STACKED_RIGHT
@@ -373,6 +381,7 @@ Qmon*cluster_global_layout.cluster_max_aj_tasks.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_aj_tasks.columns: 5
 Qmon*cluster_global_layout.cluster_max_aj_tasks.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_aj_tasks.value: 0
+Qmon*cluster_global_layout.cluster_max_aj_tasks.incrementLarge: 10
 
 Qmon*cluster_global_layout.cluster_max_u_jobs.minimum: 0
 Qmon*cluster_global_layout.cluster_max_u_jobs.spinboxStyle: SPINBOX_STACKED_RIGHT
@@ -380,6 +389,7 @@ Qmon*cluster_global_layout.cluster_max_u_jobs.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_u_jobs.columns: 5
 Qmon*cluster_global_layout.cluster_max_u_jobs.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_u_jobs.value: 0
+Qmon*cluster_global_layout.cluster_max_u_jobs.incrementLarge: 10
 Qmon*cluster_global_layout.cluster_max_jobs.minimum: 0
 Qmon*cluster_global_layout.cluster_max_jobs.spinboxStyle: SPINBOX_STACKED_RIGHT
 Qmon*cluster_global_layout.cluster_max_jobs.buttonSizeFixed: True

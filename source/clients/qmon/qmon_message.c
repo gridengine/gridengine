@@ -61,6 +61,7 @@ void qmonMessageShow(Widget w, Boolean msg_box, StringConst fmt, ...)
 {
    va_list arg_list;
    char buf[BUFSIZ];
+   char *l10nfmt;
    
    DENTER(GUI_LAYER, "qmonMessageShow");
 
@@ -77,9 +78,11 @@ void qmonMessageShow(Widget w, Boolean msg_box, StringConst fmt, ...)
       
       case MSG_BROWSER:
 #endif
-         (void)vsprintf(buf, fmt, arg_list);
+         l10nfmt = XmtLocalize(w, fmt, fmt);
+         (void)vsprintf(buf, l10nfmt, arg_list);
          if (qmonBrowserObjectEnabled(BROWSE_MSG)) {
             qmonBrowserShow(buf);
+            qmonBrowserShow("\n");
          }
 
          if (msg_box) {

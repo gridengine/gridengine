@@ -525,6 +525,7 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case  "-mo"
+      echo "BUILDARCH=$BUILDARCH"
       if ( $BUILDARCH == solaris || $BUILDARCH == solaris64 ) then
          scripts/msgmerge.csh
       else
@@ -635,17 +636,30 @@ while ($#argv >= 1 && $?found)
          echo ""
          echo "==========READY FOR TRANSLATION========="
          echo ""
+      else
+         echo "Must be done on glinux"
+         exit 1
       endif
       exit 0
       breaksw
    case  "-pot"
+      if ( $buildarch != glinux ) then
+         echo "Must be done on fangorn"
+         exit 1
+      endif   
       $0 -intl -only-core messages
       echo "Adding script messages"
       setenv BUILDARCH $BUILDARCH
-      $TCLSH scripts/infotext_msg_parse.tcl -F /tmp/scripts.pot dist/inst_sge
-      echo "Concatenating pot files"
-      cat /tmp/scripts.pot >> dist/locale/gridenginenotuniq.pot
-      rm /tmp/scripts.pot
+      foreach f ( dist/inst_sge  dist/util/setfileperm.sh dist/util/arch_variables \
+                  dist/util/qhold.sh dist/util/setfileperm.sh dist/util/sgeCA/sge_ca )
+         set pf = "/tmp/`basename $f`.pot"
+         $TCLSH scripts/infotext_msg_parse.tcl -F $pf $f
+         echo "Appending script pot file $pf" 
+         cat $pf >> dist/locale/gridenginenotuniq.pot
+         rm $pf
+      end
+      echo "Uniqing pot file"
+      scripts/msgmerge.csh merge
       exit 0
       breaksw
    case "-pr-geee":  
@@ -1314,7 +1328,7 @@ case SOLARIS86:
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
    set XCFLAGS  = "-Xc -DNeedFunctionPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-lXm -lXt -lXext -lX11 -lw -lgen"
+   set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
    set RANLIB   = "echo"
 
@@ -1430,13 +1444,15 @@ if ( $WITH_GETTEXT == 1 ) then
    else
       if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "SOLARIS86" || $COMPILE_ARCH == "LINUX6" ) then
          set LIBINTL = ""
+         set HFLAGS = ""
       else
+         set HFLAGS = "-I$GETTEXTBASE/$BUILDARCH/include"
          set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
          set LIBINTL = "-lintl -lnlsut"
       endif
    endif
    set LIBS = "$LIBINTL $LIBS"
-   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ -I$GETTEXTBASE/$BUILDARCH/include"
+   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ $HFLAGS"
    set CXXFLAGS = "$CXXFLAGS"
 else
    set XGETTEXT = ""

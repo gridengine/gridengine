@@ -281,6 +281,12 @@ Display *dpy,     /* unused */
 String xnl,
 XtPointer closure  /* unused */
 ) {
+   char *languste = NULL;
+
+   if (getenv("XMTDEBUGFINDFILE")) {
+      printf("xnl = '%s'\n", xnl);
+   }
+
    if (!strcasecmp(xnl, "relabel"))
       xnl = "C";
 
@@ -291,14 +297,19 @@ XtPointer closure  /* unused */
       XtWarning("locale not supported by Xlib, locale set to C");
       setlocale(LC_ALL, "C");
    }
-   else {
-      setlocale(LC_NUMERIC, "C");
-   }
+   
+   setlocale(LC_NUMERIC, "C");
    
    if (! XSetLocaleModifiers(""))
       XtWarning("X locale modifiers not supported, using default");
 
-   return setlocale(LC_ALL, NULL); /* re-query in case overwritten */
+   languste = setlocale(LC_MESSAGES, NULL);
+
+   if (getenv("XMTDEBUGFINDFILE")) {
+      printf("languste: '%s'\n", languste);
+   }   
+   
+   return languste; /* re-query in case overwritten */
 }
 #endif 
 
@@ -323,12 +334,7 @@ Cardinal num_args
 
    DENTER(GUI_LAYER, "XmtInitialize");
 
-#ifndef LINUX
-   setlocale(LC_NUMERIC, "C");
-   XtSetLanguageProc(NULL, NULL, NULL);
-#else
    XtSetLanguageProc(NULL, myXtDefaultLanguageProc, NULL);
-#endif   
 
    for (i=0; i<*argc_in_out; i++) {
       if (!strcmp(argv_in_out[i], "-cmap")) {

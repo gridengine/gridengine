@@ -356,7 +356,7 @@
 /* 
 ** schedd/schedd_conf.c
 */ 
-#define MSG_ATTRIB_ALGORITHMNOVALIDNAME         _MESSAGE(47250, _("attribute \"algorithm\" is not a valid algorithm name.\n"))
+#define MSG_ATTRIB_ALGORITHMNOVALIDNAME_S       _MESSAGE(47250, _("attribute " SFQ " is not a valid algorithm name.\n"))
 #define MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM    _MESSAGE(47251, _("attribute \"schedd_job_info \" is not a valid parameter\n"))
 #define MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST  _MESSAGE(47252, _("attribute \"schedd_job_info\" is not a valid job_list\n"))
 #define MSG_ATTRIB_USINGXASY_SS                 _MESSAGE(47253, _("using "SFQ" as "SFN"\n"))

@@ -71,6 +71,16 @@ lList **alpp
 
    memset(tmp_str, 0, sizeof(tmp_str));
 
+   if (!date_str || date_str[0] == '\0') {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_NODATE)); 
+      if (alpp) 
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      else 
+         fprintf(stderr,"\n%s\n", SGE_EVENT);
+      DEXIT;
+      return -1;
+   }
+
    if (strlen(date_str) > sizeof(stringT)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_STARTTIMETOOLONG)); 
       if (alpp) 

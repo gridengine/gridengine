@@ -566,7 +566,7 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    if (feature_is_enabled(FEATURE_SGEEE)) {
       if (!data.sgeee_schedule_interval || 
             data.sgeee_schedule_interval[0] == '\0') {
-         qmonMessageShow(qmon_sconf, True, "@{SGE Schedule Interval required!}");
+         qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
          DEXIT;
          return False;
       }

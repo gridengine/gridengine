@@ -3355,7 +3355,7 @@ DPRINTF(("ep: %s %s\n",
                      if(lp)
                         cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
                      else {
-                        fprintf(stderr, MSG_OBJ_UNABLE2FINDQ_S, lGetString(argep, QR_name));
+                        fprintf(stderr, MSG_QUEUE_UNABLE2FINDQ_S, lGetString(argep, QR_name));
                         sge_parse_return = 1;
                      }
                      aep = lFirst(alp);

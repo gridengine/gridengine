@@ -81,7 +81,6 @@ static int sge_enable_msg_id = 0;    /* used to enable/disable message ids */
 static int sge_enable_msg_id_to_every_message = 0;
 static htable sge_message_hash_table = NULL; 
 
-
 /* this is to find out if the sge_init_language_func() was called */
 static int sge_are_language_functions_installed = FALSE;
 
@@ -179,7 +178,8 @@ int sge_init_languagefunc(char *package, char *localeDir)
    
      /* no package name given, using default one */
      if (packName == NULL) {
-        packName = strdup(SGE_DEFAULT_PACKAGE);
+        packName = malloc(sizeof(char)*(strlen(SGE_DEFAULT_PACKAGE)+strlen(sge_get_arch()) + 2));
+        sprintf(packName, "%s/%s", sge_get_arch(), SGE_DEFAULT_PACKAGE);
      }
       
      /* try to get the localization directory */ 
@@ -209,8 +209,8 @@ int sge_init_languagefunc(char *package, char *localeDir)
         if ( root == NULL ) {
             locDir = strdup("/usr/lib/locale");
         } else {
-            locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR)+100));
-            sprintf(locDir,"%s/%s",root,SGE_DEFAULT_LOCALEDIR);
+            locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR) + 100));
+            sprintf(locDir, "%s/%s", root, SGE_DEFAULT_LOCALEDIR);
         }
         free(root);
         root = NULL;

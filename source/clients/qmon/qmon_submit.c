@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h> 
+#include <unistd.h> 
 #include <sys/types.h>
 #include <fcntl.h>
 #include "msg_common.h"
@@ -309,6 +310,7 @@ static void qmonSubmitGetScript(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckInput(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitCommitInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitOutputMerge(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitShellList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitMailList(Widget w, XtPointer cld, XtPointer cad);
@@ -603,10 +605,14 @@ String qmonSubmitRequestType(void)
    XmtDialogGetDialogValues(submit_layout, &SMData);
 
    if (SMData.pe) {
-      sprintf(buf, "@fBParallel Job Request: %s", SMData.pe); 
+      sprintf(buf, 
+              XmtLocalize(submit_layout, "@fBParallel Job Request - %s",
+                           "@fBParallel Job Request - %s"),
+              SMData.pe); 
    }
    else
-      strcpy(buf, "@fBSerial Job");
+      strcpy(buf, 
+             XmtLocalize(submit_layout, "@fBSerial Job", "@fBSerial Job"));
                            
 
    DEXIT;
@@ -771,6 +777,8 @@ Widget parent
                      qmonSubmitReload, NULL);
    XtAddCallback(submit_script, XmtNverifyCallback, 
                      qmonSubmitCheckInput, NULL);
+   XtAddCallback(submit_script, XmtNinputCallback, 
+                     qmonSubmitCommitInput, NULL);
    XtAddCallback(submit_scriptPB, XmNactivateCallback, 
                      qmonSubmitGetScript, NULL);
    XtAddCallback(submit_name, XmtNverifyCallback, 
@@ -1105,6 +1113,7 @@ XtPointer cld, cad;
    Boolean status;
    char message[] = "@{submit.asksubmittime.Enter the submit time in the\nfollowing format: [[CC]]YY]MMDDhhmm[.ss]\nor leave the current time and press ok}";
    char exec_time[128];
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitExecTime");
 
@@ -1119,8 +1128,13 @@ XtPointer cld, cad;
    ** validate exec_time and show warning msgbox
    */
    if (status) {
-      SMData.execution_time = sge_parse_date_time(exec_time, NULL, NULL);
-      XmtDialogSetDialogValues(submit_layout, &SMData);
+      SMData.execution_time = sge_parse_date_time(exec_time, NULL, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+      } else {   
+         XmtDialogSetDialogValues(submit_layout, &SMData);
+      }   
    }
 
    DEXIT;
@@ -1138,6 +1152,7 @@ XtPointer cld, cad;
    char message[] = "@{submit.askdeadlinetime.Enter the deadline time in the\nfollowing format: [[CC]]YY]MMDDhhmm.[ss]\nor leave the current time and press ok}";
    char deadline_time[128];
    char *set_deadline_time = NULL;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitDeadline");
 
@@ -1157,9 +1172,13 @@ XtPointer cld, cad;
    ** validate deadline_time and show warning msgbox
    */
    if (status) {
-      SMData.deadline = sge_parse_date_time(deadline_time, NULL, NULL);
-      XmtDialogSetDialogValues(submit_layout, &SMData);
-
+      SMData.deadline = sge_parse_date_time(deadline_time, NULL, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+      } else {   
+         XmtDialogSetDialogValues(submit_layout, &SMData);
+      }   
    }
 
    DEXIT;
@@ -1196,7 +1215,8 @@ XtPointer cld, cad;
       */
       if ( (!SMData.job_script || SMData.job_script[0] == '\0') && 
                submit_mode_data.sub_mode != SUBMIT_QSH ) {
-         sprintf(buf, "Job Script required\n");
+         sprintf(buf, XmtLocalize(w, "Job Script required !", 
+                  "Job Script required !"));
          goto error;
       }
 
@@ -1210,7 +1230,11 @@ XtPointer cld, cad;
          pe = strtok(theInput, " ");
          pe_range = strtok(NULL, "\n");
          if (!(pe_range && pe_range[0] != '\0')) {
-            sprintf(buf, "Parallel Environment requires valid name and valid range !");
+            sprintf(buf, 
+               XmtLocalize(w, 
+               "Parallel Environment requires valid name and valid range !", 
+               "Parallel Environment requires valid name and valid range !")
+            );
             goto error;
          } else {
             lList *range_list = NULL;
@@ -1219,7 +1243,11 @@ XtPointer cld, cad;
                                          1, 0, INF_ALLOWED);
             range_list = lFreeList(range_list);
             if (alp) {
-               sprintf(buf, "Parallel Environment requires valid name and valid range !");
+               sprintf(buf, 
+                  XmtLocalize(w, 
+                  "Parallel Environment requires valid name and valid range !", 
+                  "Parallel Environment requires valid name and valid range !")
+               );
                alp = lFreeList(alp);
                goto error;
             }
@@ -1228,13 +1256,21 @@ XtPointer cld, cad;
 
       if (!(lp = lCreateElemList("JobSubmitList", JB_Type, 1))) {
          DPRINTF(("lCreateElemList failure\n"));
-         sprintf(buf, "Job submission failed\n");
+         sprintf(buf, 
+                 XmtLocalize(w, 
+                             "Job submission failed", 
+                             "Job submission failed")
+         );
          goto error;
       }
 
       if (!qmonSMToCull(&SMData, lFirst(lp), 0)) {
          DPRINTF(("qmonSMToCull failure\n"));
-         sprintf(buf, "Job submission failed\n");
+         sprintf(buf, 
+                 XmtLocalize(w, 
+                             "Job submission failed", 
+                             "Job submission failed")
+         );
          goto error;
       }
 
@@ -1279,16 +1315,21 @@ XtPointer cld, cad;
 /*          ja_task_list_print_to_string(lGetList(lFirst(lp), JB_ja_tasks), task_str); */
 /*          XmtMsgLinePrintf(submit_message, "Job %d (%s) submitted",  */
 /*                 (int)lGetUlong(lFirst(lp), JB_job_number), task_str); */
-         XmtMsgLinePrintf(submit_message, "Job %d submitted", 
+         XmtMsgLinePrintf(submit_message, 
+                           XmtLocalize(w, "Job %d submitted", "Job %d submitted"), 
                            (int)lGetUlong(lFirst(lp), JB_job_number));
          XmtMsgLineClear(submit_message, DISPLAY_MESSAGE_DURATION); 
       }
       else if (!just_verify) {
          int jobid;
          if ( lFirst(lp) && (jobid = (int)lGetUlong(lFirst(lp), JB_job_number)))
-            XmtMsgLinePrintf(submit_message, "Job %d failed", jobid); 
+            XmtMsgLinePrintf(submit_message, 
+                             XmtLocalize(w, "Job %d failed", "Job %d failed"),
+                             jobid); 
          else
-            XmtMsgLinePrintf(submit_message, "Job Submission failed"); 
+            XmtMsgLinePrintf(submit_message, 
+                             XmtLocalize(w, "Job Submission failed", 
+                                          "Job Submission failed")); 
          XmtMsgLineClear(submit_message, DISPLAY_MESSAGE_DURATION); 
       }
       lFreeWhat(what);
@@ -1485,15 +1526,13 @@ int read_defaults
    DENTER(GUI_LAYER, "qmonSubmitReadScript");
 
    if (filename[strlen(filename)-1] == '/' || filename[0] == '\0')  {
-      sprintf(msg, "Invalid script name '%s'", filename);
-      qmonMessageShow(w, True, msg);
+      qmonMessageShow(w, True, "Invalid script name '%s'", filename);
       DEXIT;
       return;
    }
 
    if (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG) {
-      sprintf(msg, "'%s' does not exist or is no regular file !", filename);
-      qmonMessageShow(w, True, msg);
+      qmonMessageShow(w, True, "File '%s' does not exist or is no regular file !", filename);
       DEXIT;
       return;
    }
@@ -2275,6 +2314,23 @@ XtPointer cld, cad;
    DEXIT;
 }
 
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitCommitInput(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   char *cbs = (char *)cad;
+
+   DENTER(GUI_LAYER, "qmonSubmitCommitInput");
+
+   if (!cbs || *(cbs) == '\0')
+      qmonSubmitClear(w, NULL, NULL);
+   else
+      printf("Input: %s\n", cbs);
+
+   DEXIT;
+}
+
 	
 /*-------------------------------------------------------------------------*/
 static u_long32 ConvertMailOptions(
@@ -2682,7 +2738,7 @@ XtPointer cld, cad;
    }
    else
       qmonMessageShow(w, True, 
-            "@{Please configure a project first.}");
+            "@{Please configure a project first !}");
    
    DEXIT;
 }
@@ -2974,7 +3030,7 @@ XtPointer cld, cad;
    }
 
    if (selectedItemCount == itemCount) {
-      XmtDisplayWarning(w, NULL, "There must be at least one mail address");
+      XmtDisplayWarning(w, "onemailaddress", "There must be at least one mail address.");
       DEXIT;
       return;
    }

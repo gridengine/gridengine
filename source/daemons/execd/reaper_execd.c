@@ -1865,7 +1865,7 @@ lListElem *jr
          signo = (u_long32)lGetDouble(ep, UA_value);
 
       if (!(err_str=lGetString(jr, JR_err_str)))
-         err_str = MSG_OBJ_UNKNOWNREASON;
+         err_str = MSG_UNKNOWNREASON;
 
       DPRINTF(("MAIL VALID at ABORT\n"));
       sprintf(exitstr, "%d", exit_status);

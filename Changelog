@@ -1,3 +1,7 @@
+EB-2001-12-17-1: Bugfix:    qstat -j <job_id> did not show a monitoring message
+                 Issue:     #113
+                 Bugtraq:   #4614501
+
 JG-2001-12-17-1: Testsuite: Testsuite framework will output stack trace
                             if a TCL error causes a test to fail.
 

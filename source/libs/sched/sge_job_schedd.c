@@ -587,7 +587,70 @@ void split_jobs(lList **job_list, lList **answer_list,
 
    DEXIT;
    return;
-}  
+} 
+
+void trash_splitted_jobs(lList **splitted_job_lists[]) 
+{
+   int split_id_a[] = {
+      SPLIT_ERROR, 
+      SPLIT_HOLD, 
+      SPLIT_WAITING_DUE_TO_TIME,
+      SPLIT_WAITING_DUE_TO_PREDECESSOR,
+      SPLIT_PENDING_EXCLUDED_INSTANCES,
+      SPLIT_PENDING_EXCLUDED,
+      SPLIT_LAST
+   }; 
+   int i = -1;
+
+   while (split_id_a[++i] != SPLIT_LAST) { 
+      lList **job_list = splitted_job_lists[split_id_a[i]];
+      lListElem *job = NULL;
+
+      for_each (job, *job_list) {
+         u_long32 job_id = lGetUlong(job, JB_job_number);
+
+         switch (split_id_a[i]) {
+         case SPLIT_ERROR:
+            schedd_add_message(job_id, SCHEDD_INFO_JOBINERROR_);
+            if (monitor_next_run) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
+                               *job_list, JB_job_number);
+            }
+            break;
+         case SPLIT_HOLD:
+            schedd_add_message(job_id, SCHEDD_INFO_JOBHOLD_);
+            if (monitor_next_run) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
+                               *job_list, JB_job_number);
+            }
+            break;
+         case SPLIT_WAITING_DUE_TO_TIME:
+            schedd_add_message(job_id, SCHEDD_INFO_EXECTIME_);
+            if (monitor_next_run) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
+                               *job_list, JB_job_number);
+            }
+            break;
+         case SPLIT_WAITING_DUE_TO_PREDECESSOR:
+            schedd_add_message(job_id, SCHEDD_INFO_JOBDEPEND_);
+            if (monitor_next_run) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
+                               *job_list, JB_job_number);
+            }
+            break;
+         case SPLIT_PENDING_EXCLUDED_INSTANCES:
+            schedd_add_message(job_id, SCHEDD_INFO_MAX_AJ_INSTANCES_);
+            break;
+         case SPLIT_PENDING_EXCLUDED:
+            schedd_add_message(job_id, SCHEDD_INFO_USRGRPLIMIT_);
+            break;
+         default:
+            ;
+         }
+      } 
+      *job_list = lFreeList(*job_list);
+   }
+} 
 
 void job_lists_print(lList **job_list[]) 
 {

@@ -195,6 +195,8 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 void job_move_first_pending_to_running(lListElem **pending_job,
                                        lList **result_lists[]);
 
+void trash_splitted_jobs(lList **job_list[]);
+
 void job_lists_print(lList **job_list[]);
 
 #endif /* __SGE_JOB_SCHEDD_H */

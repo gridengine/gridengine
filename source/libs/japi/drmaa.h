@@ -145,8 +145,8 @@ extern "C" {
 #define DRMAA_DEADLINE_TIME          "drmaa_deadline_time"
 #define DRMAA_WCT_HLIMIT             "drmaa_wct_hlimit"
 #define DRMAA_WCT_SLIMIT             "drmaa_wct_slimit"
-#define DRMAA_DURATION_HLIMIT        "drmaa_durartion_hlimit"
-#define DRMAA_DURATION_SLIMIT        "drmaa_durartion_slimit"
+#define DRMAA_DURATION_HLIMIT        "drmaa_duration_hlimit"
+#define DRMAA_DURATION_SLIMIT        "drmaa_duration_slimit"
 
 /* names of job template vector attributes */
 #define DRMAA_V_ARGV                 "drmaa_v_argv"

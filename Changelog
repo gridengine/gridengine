@@ -1,3 +1,10 @@
+AH-2004-11-19-0: Bugfix:    Fix DRMAA_DURATION_{H|S}LIMIT misspelled  
+                            as "durartion"
+                 Review:    JG
+                 Issue:     1345
+                 Bugtraq:   6197253
+                 Changed:   drmaa.h, drmaa_attributes(3)
+
 JG-2004-11-19-0: Bugfix:    Fixed a deadlock in commlib error handling.
                  Review:    CR/SG
 

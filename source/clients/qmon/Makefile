@@ -131,7 +131,7 @@ depend:
 messages:
 
 qmon_help: ../dist/qmon/qmon_help.ad
-	../util/sed_help
+	../scripts/sed_help
 
 ###############################################################################
 # rules to build binaries

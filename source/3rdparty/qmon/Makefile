@@ -14,6 +14,9 @@ include ../tab/Makefile.aimk
 all: $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
      $(XLTREELIB) $(XTABLIB)
 
+qmon_help:
+	@echo .   
+
 depend: 
 	@echo "No dependencies for 3rd_party qmon libs yet" 
 

@@ -424,11 +424,12 @@ char **argv
 
                if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
                   continue;
-                
-               ret = queue_time_by_slots(1, &now_time, 0, &dummy, jep, qep, pe, ckpt, 
-                        centry_list, acl_list);
 
-               if (ret>0) {
+               ret = sge_select_queue(lGetList(jep, JB_hard_resource_list), qep, 
+                     host_list_locate(exechost_list, lGetHost(qep, QU_qhostname)), 
+                     exechost_list, centry_list, true, 1);
+
+               if (ret==1) {
                   show_job = 1;
                   break;
                }

@@ -1,3 +1,7 @@
+AH-2004-03-04-0: Bugfix:    Job-queue matching in qstat broken
+                 Issue:     786
+                 Review:    AS
+
 AS-2004-03-05-0: Bugfix:    wrong dependencies for sge_sub_object.c are now
                             corrected through new script 
                             scripts/fix_dependencies

@@ -1,3 +1,8 @@
+SG-2003-05-27-0: Testsuite: - removed error message with maintrunk
+                              removed unused macro call 
+                              "REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT"
+                 Review:   CR
+
 CR-2003-05-22-0: Testsuite: - enhancments to make testsuite compatible with
                               cvs commit from EB-2003-05-15-0 (PE/CKPT 
                               references moved into queue configuration)

@@ -3196,10 +3196,15 @@ proc add_checkpointobj { change_array } {
  
   set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $chgar(ckpt_name)]
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(ckpt_name) "checkpoint interface" ]
-  set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
-  
+  if { [resolve_version] < 3 } {
+     set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
+
+     set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+  } else {
+     set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS ] 
+
+  }
   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }

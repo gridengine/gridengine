@@ -1086,8 +1086,7 @@ static int fGetString(FILE *fp, lString *tp)
    int i, j;
    char line[READ_LINE_LENGHT + 1];
    dstring sp = DSTRING_INIT;
-   char *s;
-   bool multiline=true;
+   const char *s;
 
    DENTER(CULL_LAYER, "fGetString");
 

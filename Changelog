@@ -1,3 +1,6 @@
+RD-2005-03-11-1: Bugfix:   fixed build for lx24-amd64 & lx24-x86
+                 Review:   CR,RH
+
 RD-2005-03-11-0: Bugfix:   Spooledit fails during database upgradeA
                  Issue:    1425
                  Bugtraq:  6239394

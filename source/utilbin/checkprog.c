@@ -81,7 +81,7 @@ void usage_getprogs(void)
 int main(int argc, char *argv[]) 
 {
    int res;
-   pid_t pid;
+   pid_t pid = 0;
    pid_t pids[10000];
    char *ptr;
    int checkit, i;

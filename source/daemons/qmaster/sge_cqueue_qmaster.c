@@ -119,7 +119,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
     */
    if (ret) {
       ret &= cqueue_mod_hostlist(cqueue, answer_list, reduced_elem,
-                                 &add_hosts, &rem_hosts);
+                                 sub_command, &add_hosts, &rem_hosts);
    }
 
    /*
@@ -132,7 +132,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                                    reduced_elem, sub_command);
    }
    if (ret) {
-      ret &= cqueue_verify_attributes(cqueue, answer_list, reduced_elem);
+      ret &= cqueue_verify_attributes(cqueue, answer_list, 
+                                      reduced_elem, true);
    }
 
    /*
@@ -239,15 +240,12 @@ void cqueue_commit(lListElem *cqueue)
       lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEFAULT);
 
       if (tag == SGE_QI_TAG_ADD) {
-         DPRINTF(("ADD QI event\n"));
          sge_add_event(NULL, 0, sgeE_QINSTANCE_ADD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_MOD) {
-         DPRINTF(("MOD QI event\n"));
          sge_add_event(NULL, 0, sgeE_QINSTANCE_MOD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_DEL) {
-         DPRINTF(("DEL QI event\n"));
          sge_add_event(NULL, 0, sgeE_QINSTANCE_DEL, 0, 0,
                        name, hostname, NULL, NULL);
 
@@ -295,6 +293,26 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
          lListElem *cqueue = cqueue_list_locate(master_list, name);
 
          if (cqueue != NULL) {
+            lList *qinstances = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance = NULL;
+            const char *cq_name = lGetString(cqueue, CQ_name);
+            dstring dir = DSTRING_INIT;
+
+            for_each(qinstance, qinstances) {
+               dstring key = DSTRING_INIT;
+               const char *qi_name = lGetHost(qinstance, QI_hostname);
+
+               sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
+               sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name); 
+               if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
+                                   0, 0, sge_dstring_get_string(&key), 
+                                   NULL, NULL, NULL, NULL, NULL, true, true)) {
+                  ; /* EB: TODO: Ask JG what we can do here? */
+               }
+               sge_dstring_free(&key);
+            }
+            sge_rmdir(sge_dstring_get_string(&dir), NULL);
+            sge_dstring_free(&dir);
             if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
                                 0, 0, name, NULL, NULL,
                                 NULL, NULL, NULL, true, true)) {

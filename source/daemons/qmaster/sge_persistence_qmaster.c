@@ -253,6 +253,11 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          element = object;
          object_type = SGE_TYPE_CQUEUE;
          break;
+      case sgeE_QINSTANCE_DEL:
+         key = strkey;
+         element = object;
+         object_type = SGE_TYPE_QINSTANCE;
+         break;
       case sgeE_SCHED_CONF:
          key = strkey;
          element = object;
@@ -339,6 +344,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_PROJECT_DEL:
          case sgeE_QUEUE_DEL:
          case sgeE_CQUEUE_DEL:
+         case sgeE_QINSTANCE_DEL:
          case sgeE_SUBMITHOST_DEL:
          case sgeE_USER_DEL:
          case sgeE_USERSET_DEL:

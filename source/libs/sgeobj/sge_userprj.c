@@ -34,7 +34,10 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_list.h"
+#include "sge_answer.h"
 #include "sge_userprj.h"
+
+#include "msg_sgeobjlib.h"
 
 lList *Master_Project_List = NULL;
 lList *Master_User_List = NULL;
@@ -59,8 +62,7 @@ lList *Master_User_List = NULL;
 *     lListElem* - pointer to user or project element
 ******************************************************************************/
 lListElem *
-userprj_list_locate(lList *userprj_list, 
-                               const char *uerprj_name) 
+userprj_list_locate(const lList *userprj_list, const char *uerprj_name) 
 {
    return lGetElemStr(userprj_list, UP_name, uerprj_name);
 }
@@ -89,6 +91,36 @@ userprj_list_append_to_dstring(const lList *this_list, dstring *string)
    }
    DEXIT;
    return ret;
+}
+
+bool
+prj_list_do_all_exist(const lList *this_list, lList **answer_list,
+                      const lList *prj_list)
+{
+   bool ret = true;
+   lListElem *prj = NULL;
+
+   DENTER(TOP_LAYER, "prj_list_do_all_exist");
+   for_each(prj, prj_list) {
+      const char *name = lGetString(prj, UP_name);
+
+      if (userprj_list_locate(this_list, name) == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EEXIST,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_CQUEUE_UNKNOWNPROJECT_S, name);
+         DTRACE;
+         ret = false;
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+lList **
+prj_list_get_master_list(void)
+{
+   return &Master_Project_List;
 }
 
 

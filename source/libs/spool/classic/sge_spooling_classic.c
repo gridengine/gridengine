@@ -1250,6 +1250,9 @@ spool_classic_default_delete_func(lList **answer_list,
       case SGE_TYPE_CQUEUE:
          ret = sge_unlink(CQUEUE_DIR, key) == 0;
          break;
+      case SGE_TYPE_QINSTANCE:
+         ret = sge_unlink(QINSTANCES_DIR, key) == 0;
+         break;
       case SGE_TYPE_SCHEDD_CONF:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 

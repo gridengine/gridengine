@@ -1,3 +1,10 @@
+EB-2003-10-06-0: Enhancem.: Fixed many bugs concerning CQs-APIBASE package
+                            - spooling
+                            - verification code
+                            - hostlist modification in HGRP and CQ
+                            - HR_Type functions
+                            - event handling
+
 EB-2003-10-05-0: Enhancem.: create QI due to hgroup changes
 
 AD-2003-10-02-1: Bugfix.:   Fixed the build

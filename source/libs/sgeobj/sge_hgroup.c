@@ -666,6 +666,32 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
          }
 
          /*
+          * Make sure that:
+          *   - added hosts where not already part the old hostlist
+          *   - removed hosts are not part of the new hostlist
+          */
+         if (ret) {
+            lList *tmp_hosts = NULL;
+
+            ret &= href_list_find_all_references(old_href_list, answer_list,
+                                                 master_list, &tmp_hosts, NULL);
+            ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
+            tmp_hosts = lFreeList(tmp_hosts);
+
+            ret &= href_list_find_all_references(href_list, answer_list,
+                                                 master_list, &tmp_hosts, NULL);
+            ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
+            tmp_hosts = lFreeList(tmp_hosts);
+         }
+
+#if 1 /* EB: debug */
+         if (ret) {
+            href_list_debug_print(*add_hosts, "add_hosts: ");
+            href_list_debug_print(*rem_hosts, "rem_hosts: ");
+         }
+#endif
+
+         /*
           * Cleanup
           */
          old_href_list = lFreeList(old_href_list);

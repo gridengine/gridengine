@@ -88,11 +88,9 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
    if (mkdir(path_, (mode_t) fmode)) {
       if (errno == EEXIST) {
          if (may_not_exist) {
-            DPRINTF(("directory \"%s\" already exists\n", path_));
             DEXIT;
             return -1;
          } else {
-            DPRINTF(("directory \"%s\" already exists\n", path_));
             DEXIT;
             return 0;
          }
@@ -421,16 +419,20 @@ int sge_rmdir(const char *cp, dstring *error)
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
    char fname[SGE_PATH_MAX];
+
+   DENTER(TOP_LAYER, "sge_rmdir");
  
    if (!cp) {
       if (error) 
          sge_dstring_sprintf(error, MSG_POINTER_NULLPARAMETER);
+      DEXIT;
       return -1;
    }
  
    if (!(dir = opendir(cp))) {
       if (error) 
          sge_dstring_sprintf(error, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
+      DEXIT;
       return -1;
    }
  
@@ -444,6 +446,7 @@ int sge_rmdir(const char *cp, dstring *error)
             if (error) 
                sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
+            DEXIT;
             return -1;
          }
 #else
@@ -452,6 +455,7 @@ int sge_rmdir(const char *cp, dstring *error)
             if (error) 
                sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
+            DEXIT;
             return -1;
          }
 #endif /* WIN32 */
@@ -466,6 +470,7 @@ int sge_rmdir(const char *cp, dstring *error)
                if (error) 
                   sge_dstring_sprintf(error, MSG_FILE_RECURSIVERMDIRFAILED );
                closedir(dir);
+               DEXIT;
                return -1;
             }
          }
@@ -478,6 +483,7 @@ int sge_rmdir(const char *cp, dstring *error)
                   sge_dstring_sprintf(error, MSG_FILE_UNLINKFAILED_SS,
                       fname, strerror(errno));
                closedir(dir);
+               DEXIT;
                return -1;
             }
 #endif
@@ -493,6 +499,7 @@ int sge_rmdir(const char *cp, dstring *error)
    if (rmdir(cp)) {
       if (error) 
          sge_dstring_sprintf(error, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
+      DEXIT;
       return -1;
    }
 #endif

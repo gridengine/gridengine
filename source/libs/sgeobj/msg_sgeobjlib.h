@@ -226,5 +226,9 @@
 #define MSG_CQUEUE_PRIORITYNOTINRANGE              _MESSAGE(64211, _("Priority not in range -20 to +20\n"))
 #define MSG_CQUEUE_SLOTSNOTINRANGE                 _MESSAGE(64212, _("Slots has to be >0\n"))
 #define MSG_CQUEUE_UNKNOWNUSERSET_S                _MESSAGE(64213, _("Userset "SFQ" does not exist\n") )
+#define MSG_CQUEUE_UNKNOWNPROJECT_S                _MESSAGE(64214, _("Project "SFQ" does not exist\n"))
+#define MSG_CQUEUE_UNKNOWNCALENDAR_S               _MESSAGE(64215, _("Calendar "SFQ" does not exist\n"))
+#define MSG_CQUEUE_UNKNOWNINITSTATE_S              _MESSAGE(64216, _("Invalid value "SFQ" as initial state\n"))
+#define MSG_CQUEUE_UNKNOWNSTARTMODE_S              _MESSAGE(64217, _("Invalid value "SFQ" as shell start mode\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

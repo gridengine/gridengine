@@ -50,6 +50,7 @@ typedef struct _list_attribute_struct {
    int primary_key_attr;
    const char *name;
    bool is_sgeee_attribute;
+   bool verify_client;
    bool (*verify_function)(lListElem *attr_elem, lList **answer_list, lListElem *cqueue);
 } list_attribute_struct;
 
@@ -104,9 +105,9 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list);
 
 
 bool
-cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list, 
-                    lListElem *reduced_elem, lList **add_hosts, 
-                    lList **rem_hosts);
+cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command,
+                    lList **add_hosts, lList **rem_hosts);
 
 bool
 cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
@@ -131,7 +132,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list,
 
 bool
 cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
-                         lListElem *reduced_elem);
+                         lListElem *reduced_elem, bool in_master);
 
 bool
 cqueue_verify_priority(lListElem *cqueue, lList **answer_list,
@@ -146,12 +147,23 @@ cqueue_verify_ckpt_list(lListElem *cqueue, lList **answer_list,
                         lListElem *attr_elem);
 
 bool
-cqueue_verify_slots(lListElem *cqueue, lList **answer_list,
-                    lListElem *attr_elem);
-
-bool
 cqueue_verify_user_list(lListElem *cqueue, lList **answer_list,
                         lListElem *attr_elem);
 
+bool
+cqueue_verify_project_list(lListElem *cqueue, lList **answer_list,
+                           lListElem *attr_elem);
+
+bool
+cqueue_verify_calendar(lListElem *cqueue, lList **answer_list,
+                       lListElem *attr_elem);
+
+bool
+cqueue_verify_initial_state(lListElem *cqueue, lList **answer_list,
+                            lListElem *attr_elem);
+
+bool
+cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
+                               lListElem *attr_elem);
 
 #endif /* __SGE_CQUEUE_H */

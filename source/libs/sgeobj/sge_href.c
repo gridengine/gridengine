@@ -281,6 +281,37 @@ bool href_list_find_diff(const lList *this_list, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/href/href_list_find_effective_diff() ***************************
+*  NAME
+*     href_list_find_effective_diff() -- Resolves groups and creates diff
+*
+*  SYNOPSIS
+*     bool href_list_find_effective_diff(lList **answer_list, 
+*                                        const lList *add_groups, 
+*                                        const lList *rem_groups, 
+*                                        const lList *master_list, 
+*                                        lList **add_hosts, lList **rem_hosts) 
+*
+*  FUNCTION
+*     Resolves hostgroup names of all groups contained in "add_groups"
+*     and "rem_groups". Hostnames not part of both resulting hostgroup
+*     sets will be stored in "add_hosts" and "rem_hosts".
+*
+*  INPUTS
+*     lList **answer_list      - AN_Type list 
+*     const lList *add_groups  - HR_Type list1 (hgroups)
+*     const lList *rem_groups  - HR_Type list2 (hgroups)
+*     const lList *master_list - HGRP_Type list of all hgroups
+*     lList **add_hosts        - resolved "add_groups" hosts not part
+*                                of "rem_groups" 
+*     lList **rem_hosts        - resolved "rem_groups" hosts not part
+*                                of "add_hosts"
+*
+*  RESULT
+*     bool - error state
+*        true  - Success
+*        false - Error
+******************************************************************************/
 bool
 href_list_find_effective_diff(lList **answer_list, const lList *add_groups, 
                               const lList *rem_groups, const lList *master_list,
@@ -288,7 +319,7 @@ href_list_find_effective_diff(lList **answer_list, const lList *add_groups,
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "href_list_find_effective_diff");
+   DENTER(HOSTREF_LAYER, "href_list_find_effective_diff");
    if (ret && add_groups != NULL) {
       ret &= href_list_find_all_references(add_groups, answer_list,
                                            master_list, add_hosts, NULL);
@@ -314,54 +345,6 @@ href_list_find_effective_diff(lList **answer_list, const lList *add_groups,
          tmp_rem_hosts = NULL;
       }
    }
-#if 1 /* EB: debug */
-   if (ret) {
-      {
-         lListElem *href = NULL;
-         dstring message = DSTRING_INIT;
-         bool is_first_hostname = true;
-
-         for_each(href, *add_hosts) {
-            const char *hostname = lGetHost(href, HR_name);
-
-            if (is_first_hostname) {
-               sge_dstring_sprintf(&message, "add_hosts: ");
-            } else {
-               sge_dstring_sprintf_append(&message, ", ");
-            }
-            sge_dstring_sprintf_append(&message, "%s", hostname);
-            is_first_hostname = false;
-         }
-         if (!is_first_hostname) {
-            sge_dstring_sprintf_append(&message, "\n");
-            DPRINTF((sge_dstring_get_string(&message)));
-         }
-         sge_dstring_free(&message);
-      }
-      {
-         lListElem *href = NULL;
-         dstring message = DSTRING_INIT;
-         bool is_first_hostname = true;
-
-         for_each(href, *rem_hosts) {
-            const char *hostname = lGetHost(href, HR_name);
-
-            if (is_first_hostname) {
-               sge_dstring_sprintf(&message, "rem_hosts: ");
-            } else {
-               sge_dstring_sprintf_append(&message, ", ");
-            }
-            sge_dstring_sprintf_append(&message, "%s", hostname);
-            is_first_hostname = false;
-         }
-         if (!is_first_hostname) {
-            sge_dstring_sprintf_append(&message, "\n");
-            DPRINTF((sge_dstring_get_string(&message)));
-         }
-         sge_dstring_free(&message);
-      }
-   }
-#endif
    DEXIT;
    return ret;
 }
@@ -476,12 +459,7 @@ href_list_find_references(const lList *this_list, lList **answer_list,
             }
          }
       } 
-   } else {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
-      answer_list_add(answer_list, SGE_EVENT,
-                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-      ret = false;
-   }
+   } 
    DEXIT;
    return ret;
 }
@@ -524,7 +502,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "href_list_find_all_references");
+   DENTER(HOSTREF_LAYER, "href_list_find_all_references");
    if (this_list != NULL && master_list != NULL) {
       lList *tmp_used_groups = NULL;
       bool free_tmp_list = false;
@@ -576,12 +554,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
       if (free_tmp_list) {
          tmp_used_groups = lFreeList(tmp_used_groups);
       }
-   } else {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
-      answer_list_add(answer_list, SGE_EVENT,
-                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-      ret = false;
-   }
+   } 
    DEXIT;
    return ret;
 }
@@ -863,5 +836,100 @@ bool href_list_append_to_dstring(const lList *this_list, dstring *string)
    } 
    DEXIT;
    return ret;
+}
+
+/****** sge/href/href_list_remove_existing() **********************************
+*  NAME
+*     href_list_remove_existing() -- Removes entries from list 
+*
+*  SYNOPSIS
+*     bool href_list_remove_existing(lList **this_list, 
+*                                    lList **answer_list, 
+*                                    lList *list) 
+*
+*  FUNCTION
+*     Removes all entries contained in "list" will be removed from 
+*     "this_list" if they exist.
+*
+*  INPUTS
+*     lList **this_list   - HR_Type list 
+*     lList **answer_list - AN_Type list 
+*     lList *list         - HR_Type list 
+*
+*  RESULT
+*     bool - Error state
+*        true  - Success
+*        false - Error
+******************************************************************************/
+bool
+href_list_remove_existing(lList **this_list, lList **answer_list,
+                          lList *list)
+{
+   bool ret = true;
+
+   DENTER(HOSTREF_LAYER, "href_list_remove_existing");
+   if (this_list != NULL && *this_list != NULL && list != NULL) {
+      lListElem * href = NULL;
+
+      for_each(href, list) {
+         const char *hostname = lGetHost(href, HR_name);
+         lListElem *existing_href = lGetElemHost(*this_list, HR_name, hostname);
+
+         if (existing_href != NULL) {
+            DTRACE;
+            lRemoveElem(*this_list, existing_href);
+         }
+      }
+      if (lGetNumberOfElem(*this_list) == 0) {
+         *this_list = lFreeList(*this_list);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sge/href/href_list_debug_print() **************************************
+*  NAME
+*     href_list_debug_print() -- Prints HR_Type list into TOP_LAYER 
+*
+*  SYNOPSIS
+*     void href_list_debug_print(const lList *this_list, const char *prefix) 
+*
+*  FUNCTION
+*     Prints prefix and HR_Type "this_list" into TOP_LAYER of debug 
+*     output if this_list exists. 
+*
+*  INPUTS
+*     const lList *this_list - HR_Type list 
+*     const char *prefix     - prefix string 
+*
+*  RESULT
+*     void -  None
+******************************************************************************/
+void
+href_list_debug_print(const lList *this_list, const char *prefix) 
+{
+   lListElem *href = NULL;
+   dstring message = DSTRING_INIT;
+   bool is_first_hostname = true;
+   DENTER(TOP_LAYER, "href_list_debug_print");
+
+   for_each(href, this_list) {
+      const char *hostname = lGetHost(href, HR_name);
+
+      if (is_first_hostname) {
+         sge_dstring_sprintf(&message, prefix);
+      } else {
+         sge_dstring_sprintf_append(&message, ", ");
+      }
+      sge_dstring_sprintf_append(&message, "%s", hostname);
+      is_first_hostname = false;
+   }
+   if (!is_first_hostname) {
+      sge_dstring_sprintf_append(&message, "\n");
+      DPRINTF((sge_dstring_get_string(&message)));
+   }
+   sge_dstring_free(&message);
+   DEXIT;
 }
 

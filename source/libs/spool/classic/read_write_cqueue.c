@@ -1331,20 +1331,6 @@ write_cqueue(int spool, int how, const lListElem *ep)
          sge_dstring_free(&qi_realfile);
          sge_dstring_free(&qi_file);
       } 
-      if (!file_renamed) {
-         dstring qi_dir = DSTRING_INIT;
-         dstring message = DSTRING_INIT;
-
-         sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR,
-                             lGetString(ep, CQ_name));
-         if (sge_rmdir(sge_dstring_get_string(&qi_dir), &message)) {
-            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS,
-                   MSG_JOB_TASK_SPOOL_FILE,
-                   sge_dstring_get_string(&message)));
-         }
-         sge_dstring_free(&qi_dir);
-         sge_dstring_free(&message);
-      }
    }
 
    if (how != 0) {

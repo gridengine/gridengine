@@ -57,18 +57,27 @@ bool
 cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command)
 {
-   bool ret = false;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "cqueue_add_del_mod_via_gdi");
    if (this_elem != NULL) {
-      lList *cqueue_list = NULL;
-      lList *gdi_answer_list = NULL;
+      u_long32 operation = SGE_GDI_GET_OPERATION(gdi_command);
+      bool do_verify = (operation == SGE_GDI_MOD) || (operation == SGE_GDI_ADD);
 
-      cqueue_list = lCreateList("", CQ_Type);
-      lAppendElem(cqueue_list, this_elem);
-      gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, gdi_command,
-                                &cqueue_list, NULL, NULL);
-      answer_list_replace(answer_list, &gdi_answer_list);
+      if (do_verify) {
+         ret &= cqueue_verify_attributes(this_elem, answer_list,
+                                         this_elem, false);
+      }
+      if (ret) {
+         lList *cqueue_list = NULL;
+         lList *gdi_answer_list = NULL;
+
+         cqueue_list = lCreateList("", CQ_Type);
+         lAppendElem(cqueue_list, this_elem);
+         gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, gdi_command,
+                                   &cqueue_list, NULL, NULL);
+         answer_list_replace(answer_list, &gdi_answer_list);
+      }
    }
    DEXIT;
    return ret;

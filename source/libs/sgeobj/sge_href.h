@@ -38,6 +38,10 @@ bool
 href_list_add(lList **this_list, lList **answer_list,
               const char *host_or_group);
 
+bool
+href_list_remove_existing(lList **this_list, lList **answer_list,
+                          lList *list);
+
 bool 
 href_list_has_member(const lList *this_list, const char *host_or_group);
 
@@ -85,6 +89,9 @@ href_list_locate(const lList *this_list, const char *name);
 
 bool 
 href_list_resolve_hostnames(lList *this_list, lList **answer_list);
+
+void
+href_list_debug_print(const lList *this_list, const char *prefix);
 
 #endif /* __SGE_HREF_H__ */
 

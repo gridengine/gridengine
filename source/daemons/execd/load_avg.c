@@ -534,6 +534,7 @@ static void update_job_usage(void)
    lList *usage_list = NULL;
    lListElem *jr;
    lListElem *usage;
+   lListElem *next_usage;
 
    DENTER(TOP_LAYER, "update_job_usage");
 
@@ -575,23 +576,30 @@ static void update_job_usage(void)
 #endif
 
    /* replace existing usage in the job report with the new one */
-   for_each(usage, usage_list) {
+   next_usage = lFirst(usage_list);
+   while( (usage=next_usage) ) {
       u_long32 job_id;
       lListElem *ja_task;
+      lListElem *next_ja_task;
 
+      next_usage = lNext(usage);
       job_id = lGetUlong(usage, JB_job_number);
 
-      for_each (ja_task, lGetList(usage, JB_ja_tasks)) {
+      next_ja_task = lFirst(lGetList(usage, JB_ja_tasks));
+      while ( (ja_task=next_ja_task) ) {
          u_long32 ja_task_id;
          lListElem *uep;
          lListElem *pe_task;
 
+         next_ja_task = lNext(ja_task);
          ja_task_id = lGetUlong(ja_task, JAT_task_number);
          /* search matching job report */
          if (!(jr = get_job_report(job_id, ja_task_id, NULL))) {
             /* should not happen in theory */
-            ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
-               "contained in job usage from ptf", job_id, ja_task_id));
+            ERROR((SGE_EVENT, "removing unreferenced job "u32"."u32" without job report from ptf",job_id ,ja_task_id ));
+#ifdef COMPILE_DC
+            ptf_unregister_registered_job(job_id ,ja_task_id);
+#endif
             continue;
          }
 
@@ -671,7 +679,6 @@ static void update_job_usage(void)
          }
       }
    }
-
    lFreeList(usage_list);
 
    DEXIT;

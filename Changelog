@@ -1,3 +1,10 @@
+CR-2004-08-05-1: Bugfix:    killed slave task on tight integration does 
+                            not cleanup job correctly (part 1)
+                 Issue:     1197
+                 Bugtraq:   5082660
+                 Changed:   execd
+                 Review:    AH
+
 SG-2004-08-04-1: Bugfix:    fixed an aspect of bug 1195: the error message
                             truncated to 100 characters.
                  Review:    RH

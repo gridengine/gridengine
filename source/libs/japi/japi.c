@@ -2748,13 +2748,13 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
       return DRMAA_ERRNO_INVALID_JOB;
    }
 
-   DEXIT;
-   
    if ((event_mask & JAPI_JOB_FINISH) && (rusage != NULL) && !got_usage_info) {
       japi_standard_error (DRMAA_ERRNO_NO_RUSAGE, diag);
+      DEXIT;   
       return DRMAA_ERRNO_NO_RUSAGE;
    }
    else {
+      DEXIT;   
       return DRMAA_ERRNO_SUCCESS;
    }
 }
@@ -2867,11 +2867,17 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
          bool still_running = false;
          
          for_each (job, japi_job_list) {
-            if ((lFirst (lGetList (job, JJ_started_task_ids)))) {
+            /* If there's a task in the started list, that counts. */
+            if (lFirst (lGetList (job, JJ_started_task_ids)) != NULL) {
+               break;
+            }
+            /* A task in the finished list also counts. */
+            else if (lFirst (lGetList (job, JJ_finished_tasks)) != NULL) {
                break;
             }
             
-            if (lGetList(job, JJ_not_yet_finished_ids)) {
+            /* A task in the not yet finished list means we wait. */
+            if (lGetList(job, JJ_not_yet_finished_ids) != NULL) {
                still_running = true;
             }
          }
@@ -3565,7 +3571,7 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
 *     int stat      - 'stat' value returned by japi_wait()
 *
 *  OUTPUTS
-*     int *exited   - Returns 1 if the job was aborted, 0 otherwise - on success.
+*     int *aborted  - Returns 1 if the job was aborted, 0 otherwise - on success.
 *     dstring *diag - Returns diagnosis information - on error.
 *
 *  RESULT

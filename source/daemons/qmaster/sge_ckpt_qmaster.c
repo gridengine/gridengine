@@ -67,6 +67,7 @@
 #include "sge_parse_num_par.h"
 
 extern lList *Master_Ckpt_List;
+extern lList *Master_Job_List;
 
 static int sge_count_ckpts(void); 
 
@@ -401,6 +402,20 @@ char *rhost
       sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;
+   }
+
+   {
+      lList *local_answer_list = NULL;
+
+      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List)) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         local_answer_list = lFreeList(local_answer_list);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    /* remove ckpt file 1st */
@@ -766,4 +781,37 @@ int verbose
       return 0;
    }
 }       
-    
+   
+int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
+{
+   const char *ckpt_name = lGetString(ckpt, CK_name);
+   const char *ref_ckpt_name = lGetString(job, JB_checkpoint_object);
+   int ret = 0;
+
+   if(ckpt_name != NULL && ref_ckpt_name != NULL) {
+      if (!strcmp(ref_ckpt_name, ckpt_name)) {
+         ret = 1;
+      }
+   }
+   return ret;
+}
+
+int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
+                       const lList *job_list)
+{
+   lListElem *job = NULL;
+   int ret = 0;
+
+   for_each(job, job_list) {
+      if (job_is_ckpt_referenced(job, ckpt)) {
+         const char *ckpt_name = lGetString(ckpt, CK_name);
+         u_long32 job_id = lGetUlong(job, JB_job_number);
+
+         sprintf(SGE_EVENT, MSG_CKPTREFINJOB_SU, ckpt_name, u32c(job_id));
+         sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         ret = 1;
+      }
+   }
+   return ret;
+}
+ 

@@ -55,5 +55,11 @@ int validate_ckpt(lListElem *ep, lList **alpp);
 
 int check_ckpt_lic(int licensed_ckpts, int verbose);     
 
+int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt);
+
+int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
+                       const lList *job_list);
+
+
 #endif /* __SGE_CKPT_QMASTER_H */
 

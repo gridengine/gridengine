@@ -896,7 +896,9 @@
 #define MSG_SGETEXT_OPERATOR_ADDEDTOLIST_SSS         _MESSAGE(33595, _(""SFN"@"SFN" added "SFQ" to operator list\n"))
 #define MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS           _MESSAGE(33596, _(""SFN"@"SFN" added "SFQ" to configuration list\n"))
 
-#define MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS         _MESSAGE(33598, _(""SFN"@"SFN" modified "SFQ" in configuration list\n"))
-#define MSG_SGETEXT_SCHEDULER_MODIFIEDINLIST_SS       _MESSAGE(33600, _(""SFN"@"SFN" modified scheduler configuration\n"))
+#define MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS        _MESSAGE(33598, _(""SFN"@"SFN" modified "SFQ" in configuration list\n"))
+#define MSG_SGETEXT_SCHEDULER_MODIFIEDINLIST_SS      _MESSAGE(33600, _(""SFN"@"SFN" modified scheduler configuration\n"))
+#define MSG_CKPTREFINJOB_SU                          _MESSAGE(33601, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
+#define MSG_PEREFINJOB_SU                            _MESSAGE(33602, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
 
 #endif /* __MSG_QMASTER_H */

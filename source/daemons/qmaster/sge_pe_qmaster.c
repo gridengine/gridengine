@@ -267,6 +267,23 @@ char *rhost
       return STATUS_EEXIST;
    }
 
+   /* 
+    * Try to find references in other objects
+    */
+   {
+      lList *local_answer_list = NULL;
+
+      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List)) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         local_answer_list = lFreeList(local_answer_list);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
    /* remove host file */
    if (sge_unlink(PE_DIR, pe)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
@@ -466,3 +483,41 @@ lList **alpp
    DEXIT;
    return STATUS_OK;
 }
+
+int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
+{
+   const char *ref_pe_name = lGetString(job, JB_pe);
+   int ret = 0;
+
+   if(ref_pe_name != NULL) {
+      if (pe_is_matching(pe, ref_pe_name)) {
+         ret = 1;
+      }
+   }
+   return ret;
+}
+
+int pe_is_matching(const lListElem *pe, const char *wildcard)
+{
+   return !fnmatch(wildcard, lGetString(pe, PE_name), 0);
+}
+
+int pe_is_referenced(const lListElem *pe, lList **answer_list,
+                     const lList *master_job_list)
+{
+   lListElem *job = NULL;
+   int ret = 0;
+
+   for_each(job, master_job_list) {
+      if (job_is_pe_referenced(job, pe)) {
+         const char *pe_name = lGetString(pe, PE_name);
+         u_long32 job_id = lGetUlong(job, JB_job_number);
+
+         sprintf(SGE_EVENT, MSG_PEREFINJOB_SU, pe_name, u32c(job_id));
+         sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         ret = 1;
+      }
+   }
+   return ret;
+}
+

@@ -60,5 +60,12 @@ void reverse_job_from_pe(lListElem *pep, int slots, u_long32 job_id);
 
 int validate_pe(int startup, lListElem *pep, lList **alpp);
 
+int pe_is_referenced(const lListElem *pe, lList **answer_list, 
+                     const lList *master_job_list);
+
+int job_is_pe_referenced(const lListElem *job, const lListElem *pe);
+
+int pe_is_matching(const lListElem *pe, const char *wildcard);
+
 #endif /* __SGE_PE_QMASTER_H */
 

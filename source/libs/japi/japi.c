@@ -286,6 +286,7 @@ static pthread_cond_t japi_threads_in_session_cv = PTHREAD_COND_INITIALIZER;
 
 /* ---- globals ------------------------------------- */
 char *japi_session_key = NULL;
+static const char *JAPI_SINGLE_SESSION_KEY = "JAPI_SSK";
 static int prog_number = JAPI;
 static bool multi_threaded = false;
 
@@ -530,7 +531,7 @@ int japi_init(const char *contact, const char *session_key_in,
       ret = japi_enable_job_wait (session_key_in, session_key_out, diag);
    }
    else {
-      japi_session_key = JAPI_SINGLE_SESSION_KEY;
+      japi_session_key = (char *)JAPI_SINGLE_SESSION_KEY;
       ret = DRMAA_ERRNO_SUCCESS;
    }
 
@@ -624,7 +625,14 @@ int japi_enable_job_wait(const char *session_key_in,
    }
 
    JAPI_LOCK_SESSION();
-   japi_session_key = sge_strdup(japi_session_key, sge_dstring_get_string(session_key_out));
+   if (japi_session_key == JAPI_SINGLE_SESSION_KEY) {
+      /* japi_init() was called with enable_wait set to false */
+      japi_session_key = strdup(sge_dstring_get_string(session_key_out));
+   }
+   else {
+      /* japi_init() was called with enable_wait set to true */
+      japi_session_key = sge_strdup(japi_session_key, sge_dstring_get_string(session_key_out));
+   }
    JAPI_UNLOCK_SESSION();
 
    pthread_attr_init(&attr);
@@ -4325,7 +4333,7 @@ static void *japi_implementation_thread(void *p)
                         pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
                      }
                   } else {
-                     fprintf(stderr, "ignoring event on unknown job "u32"\n", intkey);
+                     DPRINTF (("ignoring event on unknown job "u32"\n", intkey));
                   }
 
                   JAPI_UNLOCK_JOB_LIST();
@@ -4373,7 +4381,7 @@ static void *japi_implementation_thread(void *p)
                            pthread_cond_broadcast (&Master_japi_job_list_finished_cv);
                         }
                      } else {
-                        fprintf(stderr, "ignoring event on unknown job "u32"\n", intkey);
+                        DPRINTF(("ignoring event on unknown job "u32"\n", intkey));
                      }
 
                      JAPI_UNLOCK_JOB_LIST();
@@ -4716,7 +4724,7 @@ static void *japi_implementation_thread(void *p)
                         pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
                      }
                   } else {
-                     fprintf(stderr, "ignoring event on unknown job "u32"\n", intkey);
+                     DPRINTF(("ignoring event on unknown job "u32"\n", intkey));
                   }
 
                   JAPI_UNLOCK_JOB_LIST();
@@ -4746,7 +4754,7 @@ static void *japi_implementation_thread(void *p)
                         pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
                      }
                   } else {
-                     fprintf(stderr, "ignoring event on unknown job "u32"\n", intkey);
+                     DPRINTF (("ignoring event on unknown job "u32"\n", intkey));
                   }
 
                   JAPI_UNLOCK_JOB_LIST();

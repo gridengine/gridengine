@@ -1,3 +1,9 @@
+DT-2004-02-04-0: Bugfix:    Fixed JAPI session initialization bug which caused
+                            qsub to segfault if exiting due to failed job
+                            submission.
+                 Changed:   JAPI
+                 Review:    SG
+
 JG-2004-02-04-1: Testsuite: fixed testsuite for SGE 5.3
 
 JG-2004-02-04-0: Enhancem.: Added a utility to dump the list of objects in the

@@ -78,8 +78,6 @@ extern "C" {
  */
 #define JAPI_SESSION_SUBDIR ".sge/session"
 
-#define JAPI_SINGLE_SESSION_KEY "JAPI_SSK";
-
 #define JAPI_JOB_FINISH 1
 #define JAPI_JOB_START 2
 

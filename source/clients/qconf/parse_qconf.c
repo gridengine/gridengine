@@ -6664,7 +6664,6 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       DTRACE;
    } else {
 #ifdef QCONF_FLATFILE
-      spooling_field fields_in[2];
       const char *name = NULL;
       const char *value = NULL;
       const char *filename = NULL;

@@ -842,11 +842,14 @@ int ckpt_type
       sprintf(err_str, "using signal delivery delay of %d seconds", timeout);
       shepherd_trace(err_str);
       alarm(timeout);
-   }
-   else {
-      /* there are signals to deliver. Give son() a chance to start job */
-      if (get_n_sigs()>0)
+   } else {
+      int number_of_signals = get_n_sigs();
+
+      if (number_of_signals > 0) {
+         sprintf(err_str, "There are %d signals to deliver. Wait until job has been started.", number_of_signals);
+         shepherd_trace(err_str);
          alarm(10);
+      }
    }
 
    if (ckpt_type)
@@ -1095,13 +1098,11 @@ char *method_name
 /***************************************************************
  We have gotten a signal. Look for it and forward it to the
  group of the job.
+
+ no timeout means implicitly the job 
  ***************************************************************/
-static void forward_signal_to_job(pid, timeout, postponed_signal, remaining_alarm, ctrl_pid)
-int pid;
-int timeout; /* no timeout means implicitly the job */
-int *postponed_signal;
-int remaining_alarm;
-pid_t ctrl_pid[3];
+static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
+                                  int remaining_alarm, pid_t ctrl_pid[3])
 {
    int sig;
    FILE *fp;
@@ -1119,8 +1120,9 @@ pid_t ctrl_pid[3];
             shepherd_trace("timeout expired - killing process");
             shepherd_signal_job(-pid, SIGKILL);
          }
-      } else 
+      } else {
          shepherd_trace("SIGALRM without timeout");
+      }
       received_signal = 0;
       return;
    }
@@ -1657,7 +1659,10 @@ char *childname            /* "job", "pe_start", ...     */
                shepherd_trace(err_str);
                shepherd_signal_job(-pid, postponed_signal);
                postponed_signal = 0;
-            } else 
+            } else {
+               sprintf(err_str, "no postponed signal");
+               shepherd_trace(err_str);
+
                /* userdefined ckpt has always ckpt_interval = 0 */ 
                if (ckpt_interval) {
                   if (ckpt_type & CKPT_KERNEL) {
@@ -1670,38 +1675,41 @@ char *childname            /* "job", "pe_start", ...     */
                      }
                      else
                         inCkpt = 1;
-                  }
-                  else if (ckpt_type & CKPT_TRANS) {
+                  } else if (ckpt_type & CKPT_TRANS) {
                      shepherd_trace("send checkpointing signal to transparent checkpointing job");
                      sge_switch2start_user();
                      kill(-pid, ckpt_signal);
                      sge_switch2admin_user();
-                  } 
-                  else if (ckpt_type & CKPT_USER) {
+                  } else if (ckpt_type & CKPT_USER) {
                      shepherd_trace("send checkpointing signal to userdefined checkpointing job");
                      sge_switch2start_user();
                      kill(-pid, ckpt_signal);
                      sge_switch2admin_user();
                   }
                } 
-         }
-         else if (ckpt_pid && (received_signal == SIGTTOU)) {
+
+               forward_signal_to_job(pid, timeout, &postponed_signal,
+                                     remaining_alarm, ctrl_pid);
+            }
+         } else if (ckpt_pid && (received_signal == SIGTTOU)) {
             shepherd_trace("initiate checkpoint due to migration request");
             rest_ckpt_interval = 0; /* disable regular checkpoint */
             if (!inCkpt) {
                migr_cmd_pid = start_async_command("migrate", migr_command);
-               if (migr_cmd_pid == -1) 
+               if (migr_cmd_pid == -1) {
                   migr_cmd_pid = -999;
-               else {
+               } else {
                   inCkpt = 1;
                   signalled_ckpt_job = 1;
                }
+            } else {
+               /* kill job after end of ckpt_command */
+               kill_job_after_checkpoint = 1; 
             }
-            else
-               kill_job_after_checkpoint = 1; /* kill job after end of ckpt_command   */
+         } else {
+            forward_signal_to_job(pid, timeout, &postponed_signal, 
+                                  remaining_alarm, ctrl_pid);
          }
-         else
-            forward_signal_to_job(pid, timeout, &postponed_signal, remaining_alarm, ctrl_pid);
       }
             
       /* here we reap the control action methods */

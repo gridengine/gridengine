@@ -841,6 +841,7 @@
 #define MSG_QMASTER_DEPTFORDEFDEPARTMENT           _MESSAGE(33678, _("the \"defaultdepartment\" has to be of type \"DEPT\"\n"))
 #define MSG_QMASTER_ACLNOSHARE                     _MESSAGE(33679, _("not allowed to set \"fshare\" for ACL lists\n"))
 #define MSG_QMASTER_ACLNOTICKET                    _MESSAGE(33680, _("not allowed to set \"oticket\" for ACL lists\n"))
+#define MSG_SUSERCNTISALREADYZERO_S                _MESSAGE(33681, _("Job counter of user "SFQ" is already 0\n"))
 
 #endif /* __MSG_QMASTER_H */
 

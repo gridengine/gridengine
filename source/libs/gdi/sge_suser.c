@@ -40,6 +40,7 @@
 #include "sge_suserL.h"
 #include "sge_job.h"
 #include "sge_suser.h"
+
 #include "msg_qmaster.h"
 
 /****** gdi/suser/Master_SUser_List *******************************************
@@ -185,11 +186,20 @@ void suser_increase_job_counter(lListElem *suser)
 ******************************************************************************/
 void suser_decrease_job_counter(lListElem *suser)
 {
+   DENTER(TOP_LAYER, "suser_decrease_job_counter");
+
    if (suser != NULL) {
-      u_long32 jobs = lGetUlong(suser, SU_jobs) - 1;
-      
-      lSetUlong(suser, SU_jobs, jobs);
+      u_long32 jobs = lGetUlong(suser, SU_jobs);
+    
+      if (jobs == 0) {
+         ERROR((SGE_EVENT, MSG_SUSERCNTISALREADYZERO_S, 
+                lGetString(suser, SU_name))); 
+      } else {
+         jobs -= 1;
+         lSetUlong(suser, SU_jobs, jobs);
+      }
    }
+   DEXIT;
 }
 
 /****** gdi/suser/suser_get_job_counter() *************************************

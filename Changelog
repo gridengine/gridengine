@@ -1,3 +1,9 @@
+EB-2002-11-20-0  Bugfix:    race condition if signals are to be delivered in
+                            job's startup phase
+                 IZ:        #126
+                 Bugtraq:   #4780316
+                 Review:    AH
+
 CR-2002-11-19-3  L10N       - modified message definitions
                             - new command line parameters for infotext:
                               raw     : return localized format string
@@ -25,8 +31,8 @@ EB-2002-11-14-0  Bugfix:    - memopy leak in execd
                               results in qmaster exception
                             - job env variables SGE_TASK_* might be
                               overwritten by qsub -v
-                 IZ:        423, 424, 402, 264
-                 Bugtraq:   4778757, 4778758, 4778762
+                 IZ:        #423, #424, #402, #264
+                 Bugtraq:   #4778757, #4778758, #4778762
                  Review:    partially AH
 
 EB-2002-11-12-0  Enhancem.: Allow qsub -b y to handle built-in commands

@@ -138,7 +138,7 @@ proc drmaa_check {} {
          puts $CHECK_OUTPUT "DRMAA not supported for binary architecture $binary_arch"
          continue
       }
-      set compile_arch_mt "[resolve_upper_arch $host]_MT"
+      set compile_arch_mt "[resolve_upper_arch $host]"
       set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
 
@@ -200,8 +200,8 @@ proc drmaa_check {} {
          } 
          "1" { 
             # all MT tests need a sleeper job as argument
-            foreach mt_test "MT_SUBMIT_WAIT MT_SUBMIT_BEFORE_INIT_WAIT MT_EXIT_DURING_SUBMIT 
-                  MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT" {
+            foreach mt_test "MT_SUBMIT_WAIT MT_SUBMIT_BEFORE_INIT_WAIT MT_EXIT_DURING_SUBMIT \
+                             MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT" {
                puts "starting multi threaded test $mt_test"
                drmaa_test $host $binary_path $mt_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
             }

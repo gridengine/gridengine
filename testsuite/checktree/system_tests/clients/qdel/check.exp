@@ -233,16 +233,20 @@ proc qdel_submit_delete_when_transfered { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_ACT_LEVEL CHECK_L10N
+   global CHECK_ACT_LEVEL CHECK_L10N ts_config
  
    if { $CHECK_ACT_LEVEL == 0 } {
       if { $CHECK_L10N == 1 } {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         if { $ts_config(gridengine_version) == 60 } {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
+         } else {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         }
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
-         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+         if { $job_id_pos > $job_name_pos } {
             add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
          }
          incr job_id_pos -1
@@ -402,7 +406,7 @@ proc are_jobs_deleted { job_list } {
 #*******************************
 proc submit_testjobs { { user "" } { additional_job_args "" }} {
   global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT 
-  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_L10N CHECK_HOST
+  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_L10N CHECK_HOST ts_config
 
   set joblist ""
   set year [exec date "+%Y"] 
@@ -433,12 +437,16 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      
      set result [ run_command_as_user "$CHECK_HOST" "$user" "qsub" "$jobargs" 4]
      if { $CHECK_L10N == 1 } {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         if { $ts_config(gridengine_version) == 60 } {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
+         } else {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         }
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
-         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+         if { $job_id_pos > $job_name_pos } {
             add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
          }
          incr job_id_pos -1

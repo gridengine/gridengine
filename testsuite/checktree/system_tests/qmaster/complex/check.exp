@@ -227,7 +227,7 @@ proc complex_cleanup  {} {
 
 
    puts $CHECK_OUTPUT "do qdel -uall"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   set catch_result [delete_all_jobs]
    puts $CHECK_OUTPUT $catch_result
 
    set host [lindex $CHECK_CORE_EXECD 0]

@@ -1540,7 +1540,11 @@ proc qrsh_batch {} {
 
    puts $CHECK_OUTPUT "check qrsh in immediate and batch mode (-now yes / no)"
    set COULD_NOT_BE_STARED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
-   set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
+   if { $ts_config(gridengine_version) == 60 } {
+      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+   } else {
+      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
+   }
 
 
    foreach host $qrsh_hostlist {

@@ -117,7 +117,7 @@ proc submit_del_test { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_L10N CHECK_HOST
+   global CHECK_L10N CHECK_HOST ts_config
 
    set arch [resolve_arch $CHECK_HOST]
    set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
@@ -134,17 +134,22 @@ proc submit_del_test { } {
       wait_for_jobstart $elem "Sleeper" 60 1 1
    }
 
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   set catch_result [delete_all_jobs]
+
 
    wait_for_end_of_all_jobs 120
 
    if { $CHECK_L10N == 1 } {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         if { $ts_config(gridengine_version) == 60 } {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
+         } else {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         }
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
-         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+         if { $job_id_pos > $job_name_pos  } {
             add_proc_error "submit_del_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
          }
          incr job_id_pos -1
@@ -220,7 +225,8 @@ proc submit_del_cleanup  {} {
 
 
    puts $CHECK_OUTPUT "do qdel -uall"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   set catch_result [delete_all_jobs]
+
    puts $CHECK_OUTPUT $catch_result
    wait_for_end_of_all_jobs 100
 

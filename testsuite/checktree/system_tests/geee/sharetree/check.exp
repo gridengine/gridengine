@@ -610,7 +610,8 @@ proc share_tree_cleanup  {} {
 
    reset_schedd_config
 
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } result
+   set result [delete_all_jobs]
+
 
    puts $CHECK_OUTPUT "ensure that no jobs are referenced in qmaster any longer ..."
    foreach job [concat $prj1_id_list $prj2_id_list $prj3_id_list] {

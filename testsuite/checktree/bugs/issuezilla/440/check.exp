@@ -264,7 +264,7 @@ proc issue_440_cleanup  {} {
    set jobid [ submit_job $command_line ]
    wait_for_jobstart  $jobid "leeper" 60 1 1
    wait_for_jobend $jobid "leeper" 60 
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   delete_all_jobs
    wait_for_end_of_all_jobs 60
    set_error 0 "ok"
 }

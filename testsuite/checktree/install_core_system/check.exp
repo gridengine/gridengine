@@ -352,7 +352,8 @@ set anykey [wait_for_enter 1]
    puts $CHECK_OUTPUT "\ncleaning up system"
 
    # delete all jobs
-   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qdel" "-uall" } result
+   delete_all_jobs
+
 
    # wait until cluster is empty
    set my_time [ expr ( [timestamp] + 100 ) ]

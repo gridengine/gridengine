@@ -130,9 +130,11 @@ proc issue_140_check {} {
 }
 
 proc issue_140_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER ts_config 
 
+ 
    delete_all_jobs
+
    wait_for_end_of_all_jobs 60 
 
    puts $CHECK_OUTPUT "check if master and scheduler are running ..."

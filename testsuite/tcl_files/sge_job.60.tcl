@@ -42,4 +42,5 @@ proc delete_all_jobs {} {
    }
 
    puts $CHECK_OUTPUT $catch_result
+   return $catch_result
 }

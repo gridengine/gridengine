@@ -180,7 +180,7 @@ proc issue_511_check {} {
 
    # Terminate all jobs
    puts $CHECK_OUTPUT "Terminate all jobs"
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   delete_all_jobs
    wait_for_end_of_all_jobs 60
 
    # CLEANUP

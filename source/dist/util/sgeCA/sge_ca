@@ -81,29 +81,6 @@ ErrUsage()
 }
 
 #--------------------------------------------------------------------------
-# SetAdminUser
-#   set ADMINUSER from global cluster config
-#   exit if cluster config does not exist
-#
-SetAdminUser()
-{
-   cfgname=$SGE_ROOT/$SGE_CELL/common/configuration
- 
-   if [ -f $cfgname ]; then
-      user=`grep admin_user $cfgname | awk '{ print $2 }'`
-   else
-      Translate 1 "Global cluster configuration >%s< does not exist. Exit." $cfgname
-      exit 1
-   fi
- 
-   if [ `echo $user|tr "A-Z" "a-z"` = "none" ]; then
-      ADMINUSER=default
-   else
-      ADMINUSER=$user
-   fi
-}
-
-#--------------------------------------------------------------------------
 # InitCA Init CA directories and get DN info
 #
 InitCA()
@@ -173,7 +150,7 @@ InstallKey()
       keyfile=$CALOCALTOP/private/key.pem
       certfile=$CATOP/certs/cert.pem
       randfile=$CALOCALTOP/private/rand.seed
-      HOMEDIR=`grep '^root:' /etc/passwd | cut -f6 -d:`
+      HOMEDIR=`env LC_ALL=C grep '^root:' /etc/passwd | cut -f6 -d:`
    else
       keyfile=$userkeydir/$ME/key.pem
       certfile=$userkeydir/$ME/cert.pem
@@ -570,6 +547,8 @@ MakeCADirs()
 # GET ARCH + ARCH SPECIFIC DEFAULTS
 #
 
+umask 022
+
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo
    echo ERROR: Please set your \$SGE_ROOT environment variable
@@ -606,10 +585,6 @@ else
    CA_PORT=sge_commd
 fi
 
-# Set variable $ADMINUSER
-#
-SetAdminUser
-
 #-------------------------------------------------------------------------
 # setup i18n
 
@@ -627,6 +602,9 @@ fi
 # end of internationalization setup
 #-------------------------------------------------------------------------
 
+# Set variable $ADMINUSER
+#
+SetAdminUser
 
 V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
@@ -645,7 +623,7 @@ fi
 ME=`whoami`
 
 if [ "$ME" = "" ]; then
-   Translate 0 "Can't determine usernames with \"%s\" command. Exit" whoami
+   Translate 0 "Can't determine your username with \"%s\" command. Exit" whoami
    exit 1
 fi
 
@@ -717,10 +695,11 @@ if [ "$WHICH" = "undef" ]; then
    ErrUsage
 fi
 
+
 REQ="$OPENSSL req -nodes"
 
 CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
-   -outdir $CATOP/newcerts"
+             -outdir $CATOP/newcerts"
 
 VERIFY="$OPENSSL verify"
 

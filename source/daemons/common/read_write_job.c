@@ -34,10 +34,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#ifdef PROFILE_MASTER 
 #include <time.h>
 #include <sys/times.h>
-#endif
 
 #include "sge.h"
 #include "sge_log.h"
@@ -65,9 +63,7 @@
 #include "sge_suser.h"
 #include "sge_conf.h"
 
-#ifdef PROFILE_MASTER
 extern u_long32 logginglevel;
-#endif
 
 extern lList *Master_Job_List;
 
@@ -282,16 +278,13 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    int within_execd = flags & SPOOL_WITHIN_EXECD;
    int ignore_instances = flags & SPOOL_IGNORE_TASK_INSTANCES;
    int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
-#ifdef PROFILE_MASTER
    static u_long32 sumall = 0, sumuser = 0, sumsystem = 0;  
    static u_long32 firststart = 0;
    static u_long32 jobs;
    u_long32 start = 0, now;
    struct tms tms_start, tms_now;
-#endif
    DENTER(TOP_LAYER, "job_write_spool_file");
 
-#ifdef PROFILE_MASTER
    if (profile_master) {
       start = times(&tms_start);
 
@@ -328,7 +321,6 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
          }
       }
    }
-#endif
 
    spool_single_task_files = (!handle_as_zombie && !within_execd && 
       job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
@@ -341,7 +333,6 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
       ret = job_write_as_single_file(job, ja_taskid, flags); 
    }
 
-#ifdef PROFILE_MASTER
    if (profile_master) {
       now = times(&tms_now);  
 
@@ -349,7 +340,6 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
       sumuser += tms_now.tms_utime - tms_start.tms_utime;
       sumsystem += tms_now.tms_stime - tms_start.tms_stime;
    }
-#endif
 
    DEXIT; 
    return ret;

@@ -1,10 +1,12 @@
+EB-2003-02-14-1  Enhancem.: Enabled qmaster profiles code
+
 JG-2003-02-14-0  Bugfix:    Second migration of tightly integrated jobs failed
                             if any host was used in both the first and second
                             run of the job.
                  Review:    AH
                  Changed:   sge_qmaster
 
-EB-2003-02-14-1  Testsuite: new test which will find #226 
+EB-2003-02-14-0  Testsuite: new test which will find #226 
                  Issue:     #364
 
 JG-2003-02-13-1  Enhancem.: Disabled use of non unique hashtable in scheduler.

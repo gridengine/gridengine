@@ -127,9 +127,7 @@ extern int sharetree_reserved_usage;
 extern int flush_submit_sec; 
 extern int flush_finish_sec;
 extern int profile_schedd;
-#ifdef PROFILE_MASTER
 extern int profile_master;
-#endif 
 extern int keep_active;
 extern int simulate_hosts;
 extern long ptf_max_priority;

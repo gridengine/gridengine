@@ -281,7 +281,7 @@ void prepare_enroll(const char *name)
          case EXECD:
             /* add qmaster as known endpoint */
             cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), 
-                                                   (char*) prognames[QMASTER], 
+                                                   (char*) prognames[QMASTER],
                                                    1 ,
                                                    sge_get_qmaster_port(),
                                                    CL_CM_AC_DISABLED ,
@@ -366,12 +366,20 @@ void prepare_enroll(const char *name)
  
    /* this is for testsuite socket bind test (issue 1096 ) */
    if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
+      struct timeval now;
+      gettimeofday(&now,NULL);
+  
       /* if this environment variable is set, we wait 15 seconds after 
          communication lib setup */
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
-      sleep(15);   
+      while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
+         int retval = CL_RETVAL_OK;
+         DPRINTF(("timeout: "U32CFormat"\n",u32c(now.tv_sec - handle->start_time.tv_sec)));
+         retval = cl_commlib_trigger(handle);
+         gettimeofday(&now,NULL);
+      }
+      DPRINTF(("continue with setup\n"));
    }
-
 
    DEXIT;
 }

@@ -56,7 +56,7 @@ static char *sge_gdi_list_timers[] = {
    "QUEUE",
    "JOB",
    "EVENT",
-   "COMPLEX",
+   "CENTRY",
    "ORDER",
    "MASTER_EVENT",
    "CONFIG",
@@ -72,6 +72,8 @@ static char *sge_gdi_list_timers[] = {
    "CALENDAR",
    "SCHEDD_INFO",
    "ZOMBIE_JOBS",
+   "USER_MAPPING",
+   "HGROUP",
    "END"
 };
 
@@ -101,6 +103,8 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_CALENDAR_LIST, 0, 1, 0, NULL },
    { SGE_JOB_SCHEDD_INFO, 0, 1, 0, NULL },
    { SGE_ZOMBIE_LIST, 0, 1, 0, NULL },
+   { SGE_USER_MAPPING_LIST, 0, 1, 0, NULL },
+   { SGE_HGROUP_LIST, 0, 1, 0, NULL },
    { 0, 0, 0, 0, NULL}
 };
 

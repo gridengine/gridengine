@@ -1,3 +1,7 @@
+EB-2003-07-14-2: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
+                            * qmaster core: qmon send wrong target info
+                 Changed:   qmon, sge_qmaster
+
 EB-2003-07-14-1: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
                             * handle suspend_thrsholds correctly
                  Changed:   sge_schedd, qstat, qhost

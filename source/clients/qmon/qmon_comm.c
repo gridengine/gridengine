@@ -104,7 +104,6 @@ static char *sge_gdi_list_types[] = {
    "QUEUE",
    "JOB",
    "EVENT",
-   "COMPLEX",
    "CENTRY",
    "ORDER",
    "MASTER_EVENT",

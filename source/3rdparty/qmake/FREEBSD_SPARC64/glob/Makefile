@@ -16,9 +16,9 @@
 
 SHELL = /bin/sh
 
-srcdir = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/glob
-top_srcdir = /home/brooks/working/sge/gridengine/source/3rdparty/qmake
-VPATH = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/glob
+srcdir = ../../glob
+top_srcdir = ../..
+VPATH = ../../glob
 prefix = /usr/local
 exec_prefix = ${prefix}
 
@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing aclocal
-AUTOCONF = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing autoconf
-AUTOMAKE = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing automake
-AUTOHEADER = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing autoheader
+ACLOCAL = ../../missing aclocal
+AUTOCONF = ../../missing autoconf
+AUTOMAKE = ../../missing automake
+AUTOHEADER = ../../missing autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -60,8 +60,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/configure
-host_triplet = 
+host_alias = sparc64-unknown-freebsd
+host_triplet = sparc64-unknown-freebsd
 AR = ar
 CC = gcc
 CPP = gcc -E
@@ -69,7 +69,7 @@ GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS = 
 MAKEINFO = makeinfo
-MAKE_HOST = 
+MAKE_HOST = sparc64-unknown-freebsd
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib
@@ -91,7 +91,7 @@ LIBRARIES =  $(noinst_LIBRARIES)
 
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
-CPPFLAGS =  -I/home/brooks/working/sge/gridengine/source/3rdparty/qmake/glob
+CPPFLAGS =  -I../../glob
 LDFLAGS = 
 LIBS = -lutil -lkvm 
 libglob_a_LIBADD = 

@@ -1,3 +1,8 @@
+BD-2004-02-24-0: Bugfix:    Clean up FreeBSD alpha, amd64, ia64, and
+                            sparc64 qmake files.  Should let them build
+                            somewhere other then my personal machines.
+                 Changed:   qmake
+
 RC-2004-02-24-0: Bugfix:    A small bug in glibc recognition code
                  Changed:   arch
                  Review:    AS

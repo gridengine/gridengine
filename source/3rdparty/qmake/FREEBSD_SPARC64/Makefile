@@ -60,8 +60,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = sparc64-unknown-freebsdelf5.0
-host_triplet = sparc64-unknown-freebsdelf5.0
+host_alias = sparc64-unknown-freebsd
+host_triplet = sparc64-unknown-freebsd
 AR = ar
 CC = gcc
 CPP = gcc -E
@@ -96,7 +96,7 @@ SUBDIRS = glob
 MOSTLYCLEANFILES = loadavg.c
 CLEANFILES = loadavg
 
-MAKE_HOST = sparc64-unknown-freebsdelf5.0
+MAKE_HOST = sparc64-unknown-freebsd
 
 # --------------- Local INSTALL Section
 

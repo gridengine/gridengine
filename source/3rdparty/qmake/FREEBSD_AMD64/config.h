@@ -375,5 +375,5 @@
 /* #undef _LARGE_FILES */
 
 /* Build host information. */
-#define MAKE_HOST "amd64-unknown-freebsdelf5.2"
+#define MAKE_HOST "amd64-unknown-freebsd
 

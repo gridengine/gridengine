@@ -375,5 +375,5 @@
 /* #undef _LARGE_FILES */
 
 /* Build host information. */
-#define MAKE_HOST "sparc64-unknown-freebsdelf5.0"
+#define MAKE_HOST "ia64-unknown-freebsd
 

@@ -60,8 +60,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = alpha-unknown-freebsdelf5.0
-host_triplet = alpha-unknown-freebsdelf5.0
+host_alias = alpha-unknown-freebsd
+host_triplet = alpha-unknown-freebsd
 AR = ar
 CC = gcc
 CPP = gcc -E
@@ -96,7 +96,7 @@ SUBDIRS = glob
 MOSTLYCLEANFILES = loadavg.c
 CLEANFILES = loadavg
 
-MAKE_HOST = alpha-unknown-freebsdelf5.0
+MAKE_HOST = alpha-unknown-freebsd
 
 # --------------- Local INSTALL Section
 

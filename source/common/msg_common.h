@@ -164,13 +164,12 @@
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23107, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
-
+#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23111,_("ERROR! two files are specified for the same host\n"))
 
 /*
 ** parse_qconf.c
 */
 #define MSG_QCONF_CANTCHANGEQUEUENAME_S           _MESSAGE(23110, _(SFN": cannot change queuename\n"))
-/* #define MSG_QCONF_CANTCHANGEHOSTNAME_S           _message(23111, _(SFN": cannot change hostname\n") )   __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_NOFILEARGUMENTGIVEN           _MESSAGE(23112, _("no file argument given\n"))
 #define MSG_PARSE_EDITFAILED                   _MESSAGE(23113, _("edit failed\n"))
 #define MSG_FILE_FILEUNCHANGED                 _MESSAGE(23114, _("file unchanged\n"))

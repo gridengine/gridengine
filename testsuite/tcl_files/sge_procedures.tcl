@@ -4424,8 +4424,6 @@ proc delete_job { jobid { wait_for_end 0 }} {
    set DELETED1  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETETASK_SUU] "*" "*" "*"]
    set DELETED2  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETEJOB_SU] "*" "*" ]
 
-   puts $CHECK_OUTPUT "delete_job - debug 1"
-
    set result -1
 
    if { [ is_job_id $jobid] } {

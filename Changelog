@@ -1,3 +1,5 @@
+JG-2003-01-14-0  Testsuite: Fixed and improved sharetree test.
+
 CR-2003-01-14-1  Testsuite: New command line parameter for testsuite:
                                no_main2 : don't run main part and don't  
                                           start setup ( used for sourcing 

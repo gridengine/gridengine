@@ -34,8 +34,8 @@
 echo "******************************************************"
 echo "testsuite - debug startup script"
 # SGE_DEBUG_LEVEL="3 0 0 0 0 0 0 0"  ;# full top layer debug
-SGE_DEBUG_LEVEL="2 0 0 0 0 0 0 0"    ;# normal debug
-# SGE_DEBUG_LEVEL="3 3 3 3 3 3 3 3"  ;# full debug
+# SGE_DEBUG_LEVEL="2 0 0 0 0 0 0 0"    ;# normal debug
+ SGE_DEBUG_LEVEL="3 3 3 3 3 3 3 3"  ;# full debug
 OUTPUT_FILE=$1
 export SGE_DEBUG_LEVEL
 echo " SGE_DEBUG_LEVEL : \"$SGE_DEBUG_LEVEL\""

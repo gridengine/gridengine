@@ -926,6 +926,8 @@ const char *tohost
                  *tmp = NULL,
                  *x509_buf = NULL;
    sge_pack_buffer pb;
+   char *buffer;
+   u_long32 buflen;
    char fromhost[MAXHOSTLEN];
    char fromcommproc[MAXCOMPONENTLEN];
    int fromtag;
@@ -1015,16 +1017,19 @@ const char *tohost
    fromid = 0;
    fromtag = 0;
    if ((i = receive_message(fromcommproc, &fromid, fromhost, &fromtag,
-                        &pb.head_ptr, (u_long32 *) &pb.mem_size, 
-                        COMMD_SYNCHRON, &compressed))) {
+                        &buffer, &buflen,
+                        COMMD_SYNCHRON, &compressed)) != CL_OK) {
       ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SISIS,
              fromcommproc, fromid, fromhost, fromtag, cl_errstr(i)));
       i = -1;
       goto error;
    }
 
-   pb.cur_ptr = pb.head_ptr;
-   pb.bytes_used = 0;
+   if((i = init_packbuffer_from_buffer(&pb, buffer, buflen, compressed)) != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
+      i = -1;
+      goto error;
+   }
 
    DPRINTF(("received announcement response from=(%s:%s:%d) tag=%d buflen=%d\n",
            fromhost, fromcommproc, fromid, fromtag, pb.mem_size));

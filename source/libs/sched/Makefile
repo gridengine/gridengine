@@ -43,6 +43,7 @@ SCHEDLIB_SRC = sge_select_queue.c \
               sge_job_schedd.c \
               sge_range_schedd.c \
               sge_pe_schedd.c \
+              sge_qeti.c \
               debit.c \
               subordinate_schedd.c \
               load_correction.c \
@@ -119,6 +120,9 @@ sge_job_schedd.o : $(SCHEDLIB_DIR)/sge_job_schedd.c
 
 sge_pe_schedd.o : $(SCHEDLIB_DIR)/sge_pe_schedd.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_pe_schedd.c
+
+sge_qeti.o : $(SCHEDLIB_DIR)/sge_qeti.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_qeti.c
 
 sge_range_schedd.o : $(SCHEDLIB_DIR)/sge_range_schedd.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_range_schedd.c

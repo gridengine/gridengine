@@ -2063,7 +2063,7 @@ lList *exec_host_list
    while (qep) {
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      if (!sge_select_queue(request_list, qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
+      if (!sge_select_queue(request_list, qep, NULL, exec_host_list, complex_list, 1, 1)) {
          dep = qep;
          qep = lNext(qep);
          lRemoveElem(*queue_list, dep);
@@ -2096,7 +2096,7 @@ lList *exec_host_list
    sconf_set_qs_state(QS_STATE_EMPTY);
    while (qep) {
       
-      if (!sge_select_queue(request_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
+      if (!sge_select_queue(request_list,qep, NULL, exec_host_list, complex_list, 1, 1)) {
          dep = qep;
          qep = lNext(qep);
          lRemoveElem(*queue_list, dep);
@@ -2209,7 +2209,7 @@ lList *complex_list
    ** see if queues fulfill the request_list of the job
    */
    for_each(qep, queue_list) {
-      if (sge_select_queue(hard_resource_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
+      if (sge_select_queue(hard_resource_list,qep, NULL, exec_host_list, complex_list, 1, 1)) {
          return True;
       } 
    } 

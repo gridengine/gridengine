@@ -1,3 +1,8 @@
+AH-2004-03-02-0: Enhancem.: Completed qstat -j schedd messages
+                            Fixed broken qsub -w e|w option
+                 Bugfix:    Fixed schedd problem with jobs exceeding their
+                            prospecive duration for whatever reason.
+
 MD-2004-03-02-2  Bugfix:    - adapted path to module files
                  Changed:   inst_sge
 

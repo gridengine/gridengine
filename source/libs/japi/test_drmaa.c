@@ -377,8 +377,13 @@ enum {
          - wait for jobend
          - print job usage */
    ST_TRANSFER_FILES_SINGLE_JOB,
-   ST_TRANSFER_FILES_BULK_JOB
+   ST_TRANSFER_FILES_BULK_JOB,
       /* Set Job InputHost:/InputPath, OutputHost:/OutputPath, ErrorHost:/ErrorPath */
+
+   ST_RESERVATION_FINISH_ORDER,
+      /* ensure three jobs finish in the order foreseen for reservation */
+   ST_BACKFILL_FINISH_ORDER
+      /* ensure three jobs finish in the order foreseen for backfilling */
             
 };
 
@@ -452,6 +457,9 @@ const struct test_name2number_map {
    { "ST_TRANSFER_FILES_BULK_JOB",               ST_TRANSFER_FILES_BULK_JOB,                 6, "<sleeper_job> <file_staging_flags "
          "{\"i\"|\"o\"|\"e\" }> <<merge_stderr {\"y\"|\"n\"}> [inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
 
+   { "ST_RESERVATION_FINISH_ORDER",              ST_RESERVATION_FINISH_ORDER,                4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
+   { "ST_BACKFILL_FINISH_ORDER",                 ST_BACKFILL_FINISH_ORDER,                   4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
+
    { NULL,                                       0 }
 };
 #define FIRST_NON_AUTOMATED_TEST ST_INPUT_BECOMES_OUTPUT
@@ -477,6 +485,7 @@ static const char *drmaa_ctrl2str(int control);
 static const char *drmaa_errno2str(int ctrl);
 
 static void report_wrong_job_finish(const char *comment, const char *jobid, int stat);
+static int test_dispatch_order_3jobs(const char *native[3], int reserve);
 
 static int test_case;
 static int is_sun_grid_engine;
@@ -513,6 +522,9 @@ static void usage(void)
    fprintf(stderr, "                 the user must have write access to this file at the target machine\n");
    fprintf(stderr, "  <email_addr>   is an email address to which to send \n");
    fprintf(stderr, "                 job completion notices\n");
+   fprintf(stderr, "  <native_spec0> a native specification\n");
+   fprintf(stderr, "  <native_spec1> a native specification\n");
+   fprintf(stderr, "  <native_spec2> a native specification\n");
 
    exit(1);
 }
@@ -3991,6 +4003,35 @@ static int test(int *argc, char **argv[], int parse_args)
          }
       }
       break;
+
+   case ST_RESERVATION_FINISH_ORDER:
+   case ST_BACKFILL_FINISH_ORDER:
+      {
+         const char *native_spec[3];
+
+         if (parse_args) {
+            sleeper_job    = NEXT_ARGV(argc, argv);
+            native_spec[0] = NEXT_ARGV(argc, argv);
+            native_spec[1] = NEXT_ARGV(argc, argv);
+            native_spec[2] = NEXT_ARGV(argc, argv);
+         }
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+
+         if (test_dispatch_order_3jobs(native_spec, test_case==ST_RESERVATION_FINISH_ORDER?1:0)) {
+            return 1;
+         }
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
       
    default:
       break;
@@ -4061,12 +4102,12 @@ static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bul
 
 #if 0
    if (!as_bulk_job)
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
    else
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
 #else
    /* no output please */
-   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, "/dev/null", NULL, 0);
+   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
 #endif
 
    if (in_hold) 
@@ -4480,4 +4521,101 @@ static void report_wrong_job_finish(const char *comment, const char *jobid, int 
                comment, jobid);
       }
    }
+}
+
+
+   /* during wait for job finish ends we examine job order 
+    * and report an error if it's wrong:
+    *
+    * 0   --> 1 --> 2 (reservation) 
+    * 
+    *         An error is returned if reservation job 1 does not finish before job 2 
+    *                           and if high prior job 0 does not finish before job 1
+    *         
+    * 0,2 --> 1       (backfilling)
+    * 
+    *         An error is returned if backfilling job 2 does not finish before job 1
+    *                           and if high prior job 0 does not finish before job 1
+    * 
+    */
+static int test_dispatch_order_3jobs(const char *native[3], int reserve)
+{
+   char diagnosis[DRMAA_ERROR_STRING_BUFFER];
+   char *all_jobids[3];
+   char jobid[100];
+   drmaa_job_template_t *jt;
+   int drmaa_errno, i, n = 3, pos = 0;
+   int stat;
+
+   /* submit jobs in hold */
+   for (i=0; i<3; i++) {
+      jt = create_sleeper_job_template(20, 0, 1);
+      drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, native[i], NULL, 0);
+      if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+         fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+         return -1;
+      }
+      all_jobids[pos++] = strdup(jobid);
+      drmaa_delete_job_template(jt, NULL, 0);
+   }
+   all_jobids[pos] = NULL;
+
+   /* release all three jobs in one operation to ensure they get runnable at once for scheduler */
+   if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
+      fprintf(stderr, "drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE) failed: %s\n", diagnosis);
+      return -1;
+   }
+
+   do {
+      drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, 
+                     DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
+      if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
+
+         printf("waited job \"%s\"\n", jobid);
+
+         /* map jobid to job index */
+         pos = -1;
+         for (i=0; i<3; i++) {
+            if (all_jobids[i] && !strcmp(jobid, all_jobids[i]))
+               pos = i;
+         }
+         if (pos == -1) {
+            fprintf(stderr, "drmaa_wait() returned unexpected job: %s\n", jobid);
+            return -1;
+         }
+
+         /* NULL-ify finished ones */
+         free(all_jobids[pos]);
+         all_jobids[pos] = NULL;
+
+         /* examine order */
+         if (reserve) {
+            if ( pos == 2 && all_jobids[1] != NULL) {
+               fprintf(stderr, "reservation broken: large job (1) did not finish before small job (2)\n");
+               return -1;
+            }
+            if ( pos == 1 && all_jobids[0] != NULL) {
+               fprintf(stderr, "reservation broken: high prior job (0) did not finish before large job (1)\n");
+               return -1;
+            }
+         } else {
+            if ( pos == 1 && all_jobids[2] != NULL) {
+               fprintf(stderr, "backfilling broken: backfilling job (2) did not finish before large job (1)\n");
+               return -1;
+            }
+            if ( pos == 1 && all_jobids[0] != NULL) {
+               fprintf(stderr, "backfilling broken: high prior job (0) did not finish before large job (1)\n");
+               return -1;
+            }
+         }
+         if (--n == 0) {
+            printf("waited for last job\n");
+            break;
+         }
+      } else if (drmaa_errno != DRMAA_ERRNO_INVALID_JOB) {
+         printf("drmaa_wait() returned %s\n", drmaa_strerror(drmaa_errno));
+      }
+   } while (drmaa_errno == DRMAA_ERRNO_SUCCESS);
+
+   return 0;
 }

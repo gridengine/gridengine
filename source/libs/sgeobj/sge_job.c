@@ -1638,7 +1638,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       }
    }
    {
-      const char* host = sge_getenv("HOST");
+      const char* host = sge_getenv("HOST"); /* ??? */
 
       if (host == NULL) {
          host = uti_state_get_unqualified_hostname();

@@ -45,6 +45,7 @@ void utilization_print_all(const lList* pe_list, lList *host_list, const lList *
 u_long32 utilization_below(const lListElem *cr, double max_util, const char *object_name);
 
 int add_job_utilization(const sge_assignment_t *a, const char *type);
+double utilization_queue_end(const lListElem *cr);
 
 #endif /* __SGE_RESOURCE_UTILIZATION_H */
 

@@ -3545,44 +3545,45 @@ int *trigger
    case JUST_VERIFY:
    default:
       {
-         lListElem *pep = NULL;
-         const lListElem *ckpt_ep = NULL;
+         lListElem *cqueue;
          lList *talp = NULL;
          int ngranted = 0;
          int try_it = 1;
          const char *pe_name, *ckpt_name;
 
+         sge_assignment_t a;
+         assignment_init(&a, jep, NULL);
+
          DPRINTF(("verify schedulability = %c\n", OPTION_VERIFY_STR[verify_mode]));
-
-         /* parallel */
-         if ((pe_name=lGetString(jep, JB_pe))) {
-
-            if (!sge_is_pattern(pe_name))
-               pep = pe_list_locate(Master_Pe_List, pe_name);
-            else {
-
-               /* use the first matching pe if we got a wildcard -pe requests */
-               if ((pep=pe_list_find_matching(Master_Pe_List, pe_name))) {
-                  DPRINTF(("use %s as first matching pe for %s to verify schedulability\n", 
-                           lGetString(pep, PE_name), pe_name));
-               }
-            }
-            if (!pep)
-               try_it = 0;
-         }
 
          /* checkpointing */
          if (try_it && (ckpt_name=lGetString(jep, JB_checkpoint_name)))
-            if (!(ckpt_ep = ckpt_list_locate(Master_Ckpt_List, ckpt_name)))
+            if (!(a.ckpt = ckpt_list_locate(Master_Ckpt_List, ckpt_name)))
                try_it = 0;
 
+         /* parallel */
          if (try_it) {
-            sge_assignment_t assignment;
 
-            memset(&assignment, 0, sizeof(sge_assignment_t));
-            assignment.pe = pep; 
-            assignment.duration = 0; 
-            assignment.start = DISPATCH_TIME_NOW; 
+            /* 
+             * Current scheduler code expects all queue instances in a plain list. We use 
+             * a copy of all queue instances that needs to be free'd explicitely after 
+             * deciding about assignment. This is because assignment_release() sees 
+             * queue_list only as a list pointer.
+             */
+            for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+               lList *qinstance_list = lCopyList(NULL, lGetList(cqueue, CQ_qinstances));
+               if (!a.queue_list)
+                  a.queue_list = qinstance_list;
+               else
+                  lAddList(a.queue_list, qinstance_list);
+            }
+
+            a.host_list        = Master_Exechost_List;
+            a.centry_list      = Master_CEntry_List;
+            a.acl_list         = Master_Userset_List;
+            a.gep              = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);
+            a.start            = DISPATCH_TIME_NOW;
+            a.duration         = 0;
 
             /* imagine qs is empty */
             sconf_set_qs_state(QS_STATE_EMPTY);
@@ -3591,22 +3592,13 @@ int *trigger
             if (verify_mode==JUST_VERIFY)
                set_monitor_alpp(&talp);
 
-#if 0
-            /* must be reworked */
-            ngranted = 0;
-            for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-
-               granted = sge_replicate_queues_suitable4job(qinstance_list, 
-                  jep, NULL, pep, ckpt_ep, sconf_get_queue_sort_method(),
-                  Master_CEntry_List, Master_Exechost_List, 
-                  Master_Userset_List, NULL, 0, &prev_dipatch_type, 0);
-               ngranted += nslots_granted(granted, NULL);
-               granted = lFreeList(granted);
+            if ((pe_name=lGetString(jep, JB_pe))) {
+               sge_select_parallel_environment(&a, Master_Pe_List);
+               ngranted += nslots_granted(a.gdil, NULL);
+            } else {
+               sge_sequential_assignment(&a, NULL, NULL);
+               ngranted += nslots_granted(a.gdil, NULL);
             }
-#endif
-            ngranted = assignment.slots;
-            assignment.gdil = lFreeList(assignment.gdil);
 
             /* stop redirection of scheduler monitoring messages */
             if (verify_mode==JUST_VERIFY)
@@ -3614,7 +3606,11 @@ int *trigger
 
             /* stop dreaming */
             sconf_set_qs_state(QS_STATE_FULL);
+
+            a.queue_list = lFreeList(a.queue_list);
          }
+
+         assignment_release(&a);
 
          /* consequences */
          if (!ngranted || !try_it) {
@@ -3641,7 +3637,7 @@ int *trigger
          if (verify_mode==JUST_VERIFY) {
             if (trigger)
                *trigger |= VERIFY_EVENT;
-            if (!pep)
+            if (!a.pe)
                sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
             else 
                sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);

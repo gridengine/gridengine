@@ -38,14 +38,20 @@ extern char log_string[];
 
 #define SCHED_LOG_NAME "schedd_runlog"
 
+/* free answer list if anyone is registered */
 void clean_monitor_alp(void);
 
+/* registers answer list to be used */
 void set_monitor_alpp(lList **alpp);
 
+/* retunrs string representation of jobid */
 const char *job_descr(u_long32 jobid);
 
+/* if monitor_next_run flag is set adds log string to 
+   registered answer list or writes to schedd runlog file otherwise */
 int schedd_log(const char *logstr);
 
+/* used for multiple calling schedd_log() and generating list of items such as jobids */
 int schedd_log_list(const char *logstr, lList *lp, int nm);
 
 #define SCHED_MON(x) (sprintf x,schedd_log(log_string))

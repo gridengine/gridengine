@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 #endif
 
 static void utilization_normalize(lList *diagram);
+static u_long32 utilization_endtime(u_long32 start, u_long32 duration);
 
 static int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
       lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
@@ -162,6 +163,15 @@ void utilization_print(const lListElem *cr, const char *object_name)
    return;
 }
 
+static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
+{
+   u_long32 end_time;
+   if (((double)start + (double)duration) < ((double)U_LONG32_MAX))
+      end_time = start + duration;
+   else
+      end_time = U_LONG32_MAX;
+   return end_time;
+}
 
 int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, double utilization, 
    u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name, const char *type) 
@@ -175,7 +185,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    
    DENTER(TOP_LAYER, "utilization_add");
 
-   end_time = start_time + duration;
+   end_time = utilization_endtime(start_time, duration);
 
    serf_record_entry(job_id, ja_taskid, (type!=NULL)?type:"<unknown>", start_time, end_time, 
          level_char, object_name, name, utilization);
@@ -225,7 +235,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
       if (end_time < lGetUlong(this, RDE_time)) {
          break;
       }
-      /* increment amount of elements in between */
+      /* increment amount of elements in-between */
       lAddDouble(this, RDE_amount, utilization);
       prev = this;
       this = lNext(this);
@@ -306,14 +316,28 @@ static void utilization_normalize(lList *diagram)
    return;
 }
 
+/* return the utilization at queue end time */
+double utilization_queue_end(const lListElem *cr)
+{
+   const lListElem *ep = lLast(lGetList(cr, RUE_utilized));
+
+   if (ep)
+      return lGetDouble(ep, RDE_amount);
+   else
+      return 0.0;
+}
+
+
 /* return the maximum unitilization within the specified time frame */
 double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 duration)
 {
    const lListElem *rde;
    lListElem *start, *prev;
    double max = 0.0;
+   u_long32 end_time = utilization_endtime(start_time, duration);
 
    DENTER(TOP_LAYER, "utilization_max");
+
 
 #if 0
    utilization_print(cr, "the object");
@@ -335,7 +359,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
    }
 
    /* now watch out for the maximum before end time */ 
-   while (rde && (start_time + duration) > lGetUlong(rde, RDE_time)) {
+   while (rde && end_time > lGetUlong(rde, RDE_time)) {
       max = MAX(max, lGetDouble(rde, RDE_amount));
       rde = lNext(rde);
    }
@@ -410,7 +434,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
       slots = 0;
       for (next_gel = lGetElemHostFirst(a->gdil, JG_qhostname, eh_name, &queue_iterator);
           (gel = next_gel);
-         next_gel = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &queue_iterator)) {
+           next_gel = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &queue_iterator)) {
          
          slots += lGetUlong(gel, JG_slots);
       }

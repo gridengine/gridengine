@@ -46,7 +46,7 @@ int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue,
 
 lListElem *
 get_attribute_by_name(lListElem *global, lListElem *host, lListElem *queue, 
-             const char *attrname, const lList *centry_list, char *reason, int reason_size);
+             const char *attrname, const lList *centry_list);
 
 int compare_complexes(int slots, lListElem *complex1, 
                       lListElem *complex2, char *availability_text, 
@@ -61,8 +61,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
 lListElem* 
 get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, 
               lList *load_attr, const lList *centry_list, lListElem *queue, 
-              u_long32 layer, double lc_factor, char *reason, int reason_size, 
-              bool zero_utilization);
+              u_long32 layer, double lc_factor, dstring *reason, bool zero_utilization);
 
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 

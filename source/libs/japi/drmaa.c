@@ -1913,11 +1913,11 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
                                   dstring *diag)
 {
    const char *new_path = NULL;
-   int ret_val;
+   int drmaa_errno;
    
    DENTER (TOP_LAYER, "japi_drmaa_path2wd_opt");
    
-   if ((ret_val = japi_drmaa_path2sge_path (attrs, is_bulk,
+   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
                                             DRMAA_WD, 0, &new_path,
                                             diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
@@ -1930,12 +1930,12 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
          lSetString (ep, SPA_argval_lStringT, new_path);
       }
       else {
-         ret_val = 0;
+         drmaa_errno = DRMAA_ERRNO_SUCCESS;
       }
    }   
    
    DEXIT;
-   return ret_val;
+   return drmaa_errno;
 }
 
 /****** DRMAA/drmaa_path2path_opt() ********************************************
@@ -1980,16 +1980,18 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
                                     int opt, dstring *diag, bool bFileStaging )
 {
    const char *new_path = NULL;
-   int ret_val;
+   int drmaa_errno;
    lList *path_list = lCreateList ("path list", PN_Type);
    
    DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
 
    if (path_list == NULL) {
+      japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
       DEXIT;
-      return 1;
+      return DRMAA_ERRNO_INTERNAL_ERROR;
    }
-   else if ((ret_val = japi_drmaa_path2sge_path (attrs, is_bulk,
+   
+   if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
                                                  attribute_key, 1, &new_path,
                                                  diag)) == DRMAA_ERRNO_SUCCESS) {
       if (new_path) {
@@ -2014,6 +2016,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             path += 1;
          } else { /* path */
             /* DRMAA-Spec says: The path MUST begin with a colon! */
+            sge_dstring_sprintf(diag, "path must begin with a colon");
             DEXIT;
             return DRMAA_ERRNO_INVALID_ARGUMENT;
          }
@@ -2025,7 +2028,8 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             lSetString( ep, PN_path, path );
          } else if( !strcmp( sw, "-i" ) && bFileStaging==true ) {
             /* No default stdin_path for file staging! */
-            ret_val = 1;
+            sge_dstring_sprintf(diag, "stdin path required for input file staging ");
+            drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
          }
 
          if( cell ) {
@@ -2034,11 +2038,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             FREE( cell );
          } else {
             /* No host was given, so we use this host we are running on.*/
-            const char* host = sge_getenv("HOST");
-            if (host == NULL) {
-               host = uti_state_get_unqualified_hostname();
-            }
-            lSetHost( ep, PN_file_host, host );
+            lSetHost( ep, PN_file_host, uti_state_get_unqualified_hostname());
          }
          
 
@@ -2053,12 +2053,12 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
          FREE (new_path);
       }   
       else {
-         ret_val = 0;
+         drmaa_errno = DRMAA_ERRNO_SUCCESS;
       }
    }
 
    DEXIT;
-   return ret_val;
+   return drmaa_errno;
 }
 
 /****** DRMAA/drmaa_path2sge_path() ********************************************

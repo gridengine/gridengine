@@ -40,10 +40,14 @@ extern "C" {
 
 #define MAXMSGLEN 256
 
+/* Initialize module variables */
+/* prepare tmp_sme for collecting messages */
 void schedd_mes_initialize(void);
 
+/* Free module variables */
 void schedd_mes_release(void);
 
+/* Get message structure */
 lListElem *schedd_mes_obtain_package(void);
 
 void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...);
@@ -51,6 +55,8 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...);
 void schedd_mes_add_global(u_long32 message_number, ...);
 
 void schedd_mes_set_logging(int bval);
+
+int schedd_mes_get_logging(void);
 
 void schedd_mes_commit(lList *job_list, int ignore_category);
 

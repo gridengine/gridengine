@@ -208,7 +208,7 @@
 ** schedd/sge_select_queue.c
 */ 
 #define MSG_SCHEDD_FORDEFAULTREQUEST                        _MESSAGE(47210, _("for default request "  ))
-#define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE                _MESSAGE(47211, _("job requests unknown resource"))
+#define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S              _MESSAGE(47211, _("job requests unknown resource (%s)\n"))
 #define MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE        _MESSAGE(47212, _("job requests non requestable resource "))
 #define MSG_SCHEDD_ITOFFERSONLY                             _MESSAGE(47213, _("it offers only "))
 #define MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED             _MESSAGE(47214, _("queues dropped because they are full: "))

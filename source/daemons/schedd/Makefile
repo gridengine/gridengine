@@ -38,7 +38,6 @@ SCHEDD_TARGETS = sge_schedd sge_share_mon
 
 SCHEDD_SRC  = sge_schedd.c \
              scheduler.c \
-             sge_qeti.c \
              sge_category.c \
              sge_process_events.c \
              interactive_sched.c 
@@ -122,9 +121,6 @@ sge_category.o : $(SCHEDD_SDIR)/sge_category.c
 
 sge_process_events.o : $(SCHEDD_SDIR)/sge_process_events.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_process_events.c
-
-sge_qeti.o : $(SCHEDD_SDIR)/sge_qeti.c
-	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_qeti.c
 
 interactive_sched.o : $(SCHEDD_SDIR)/interactive_sched.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/interactive_sched.c

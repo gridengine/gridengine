@@ -37,8 +37,7 @@
 #endif
 
 int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
-                     lList *centry_list, int allow_non_requestable, char *reason, 
-                     int reason_size, int slots); 
+                     lList *centry_list, int allow_non_requestable, int slots); 
 
 /* 
  * is there a load alarm on this queue
@@ -87,7 +86,8 @@ typedef struct {
    u_long32    job_id;            /* job id (convenience reasons)                   */
    u_long32    ja_task_id;        /* job array task id (convenience reasons)        */
    lListElem  *job;               /* the job (JB_Type)                              */
-   lListElem  *ja_task;           /* the task (JAT_Type)                            */
+   lListElem  *ja_task;           /* the task (JAT_Type) (if NULL only reschedule   */
+                                  /* unknown verification is missing)               */
    lListElem  *ckpt;              /* the checkpoint interface (CK_Type)             */
    lListElem  *gep;               /* the global host (EH_Type)                      */
    u_long32   duration;           /* jobs time of the assignment                    */
@@ -104,8 +104,12 @@ typedef struct {
    u_long32   start;              /* jobs start time                                */
 } sge_assignment_t;
 
+void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task);
+void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
+void assignment_release(sge_assignment_t *a);
+
 int sge_sequential_assignment(sge_assignment_t *a, lList **ignore_hosts, lList **ignore_queues);
-int sge_parallel_assignment(sge_assignment_t *a);
+int sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list);
 
 
 /* 

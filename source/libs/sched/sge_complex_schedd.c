@@ -125,8 +125,7 @@ u_long32 mask
 *  SYNOPSIS
 *     static lListElem* get_attribute(const char *attrname, lList *config_attr, 
 *     lList *actual_attr, lList *load_attr, lList *centry_list, lListElem 
-*     *queue, lListElem *rep, u_long32 layer, double lc_factor, char *reason, 
-*     int reason_size) 
+*     *queue, lListElem *rep, u_long32 layer, double lc_factor, dstring *reason) 
 *
 *  FUNCTION
 *     Extracts the attribut specified with 'attrname' and finds the 
@@ -142,15 +141,14 @@ u_long32 mask
 *     lListElem *queue     - the current queue, or null, if one works on hosts 
 *     u_long32 layer       - the current layer 
 *     double lc_factor     - the load correction value 
-*     char *reason         - space for error messages or NULL 
-*     int reason_size      - the amount of memory for error messages. 
+*     dstring *reason      - space for error messages or NULL 
 *
 *  RESULT
 *     static lListElem* - the element one was looking for or NULL
 *
 *******************************************************************************/
 lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr, 
-   const lList *centry_list, lListElem *queue, u_long32 layer, double lc_factor, char *reason, int reason_size,
+   const lList *centry_list, lListElem *queue, u_long32 layer, double lc_factor, dstring *reason,
    bool zero_utilization)
 {
    lListElem *actual_el=NULL;
@@ -208,11 +206,7 @@ DTRACE;
             sge_dstring_sprintf(&ds, "%8.3f", (float)lGetDouble(cplx_el, CE_pj_doubleval));
             lSetString(cplx_el,CE_pj_stringval, as_str);
          } else{
-            if (reason) {
-               dstring ds;
-               sge_dstring_init(&ds, reason, reason_size);
-               sge_dstring_sprintf(&ds, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
-            }
+            sge_dstring_sprintf(reason, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
             cplx_el = lFreeElem(cplx_el);
             DEXIT;
             return NULL;
@@ -721,7 +715,7 @@ static lList *get_attribute_list_by_names(lListElem *global, lListElem *host,
    int i;
 
    for (i=0; i<max_names; i++){
-      attr = get_attribute_by_name(global, host, queue, attrnames[i], centry_list, NULL, 0);
+      attr = get_attribute_by_name(global, host, queue, attrnames[i], centry_list);
       if (attr) {
          if (!list )
             list = lCreateList("attr", CE_Type);
@@ -1231,7 +1225,7 @@ int force_existence
 *
 *******************************************************************************/
 lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, 
-    const char* attrname, const lList *centry_list, char * reason, int reason_size){
+    const char* attrname, const lList *centry_list){
    lListElem *global_el=NULL;
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
@@ -1257,7 +1251,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       }
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
-                                lc_factor, reason, reason_size, false);
+                                lc_factor, NULL, false);
       ret_el = global_el;
    } 
 
@@ -1272,7 +1266,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
             lc_factor = ((double)ulc_factor)/100;
       }
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
-                              lc_factor, reason, reason_size, false);
+                              lc_factor, NULL, false);
       if(!global_el && host_el)
          ret_el = host_el;
       else if(global_el && host_el){
@@ -1291,7 +1285,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       actual_attr = lGetList(queue, QU_resource_utilization);
       
       queue_el = get_attribute(attrname, config_attr, actual_attr, NULL, centry_list, queue, DOMINANT_LAYER_QUEUE, 
-                              0.0, reason, reason_size, false);
+                              0.0, NULL, false);
 
       if(!ret_el)
          ret_el = queue_el;

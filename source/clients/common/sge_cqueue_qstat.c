@@ -551,7 +551,7 @@ u_long32 empty_qs
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, 1, NULL, 0, -1);
+         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, 1, -1);
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_FULL);
 

@@ -173,6 +173,8 @@ void schedd_mes_initialize(void)
       tmp_list = lCreateList("", MES_Type);
       lSetList(sme, SME_global_message_list, tmp_list);
    }
+
+   /* prepare tmp_sme for collecting messages */
    if (!tmp_sme) {
       lList *tmp_list;
 
@@ -334,6 +336,9 @@ void schedd_mes_set_logging(int bval) {
    DEXIT;
 }
 
+int schedd_mes_get_logging(void) {
+   return log_schedd_info;
+}
 /****** schedd/schedd_mes/schedd_mes_add() ************************************
 *  NAME
 *     schedd_mes_add() -- Add one entry into the message structure. 

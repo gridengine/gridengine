@@ -177,6 +177,12 @@ proc job_state_handling_hold_pending_running_finished {} {
          set t_state_ok 1
          break
       }
+#     if the time is to short to get the transfering state
+#     with qstat -f, we also allow the job running state 
+      if { [ string compare $job_state "r" ] == 0 } {
+         set t_state_ok 1
+         break
+      }
       sleep 1
    }   
    if { $t_state_ok != 1 } {

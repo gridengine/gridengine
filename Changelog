@@ -1,3 +1,7 @@
+CR-2003-07-25-1: Testsuite: - fixed timing problem when job is not very
+                              long in "t" state in 
+                              scheduler/job_state_handling test
+
 CR-2003-07-25-0: Testsuite: - using -now no option for qrsh in 
                               qmod reschedule test
 

@@ -1286,7 +1286,13 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                add_proc_error "check_rlogin_session" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set ok 2
             }
-            -i $spawn_id timeout {
+            -i $spawn_id -- "__ my id is ->*${user}*<-" { 
+                debug_puts "shell response! - fine" 
+                set ok 1
+                send -i $spawn_id "\n"
+                debug_puts "sending new line"
+            }
+            -i $spawn_id default {
                flush $CHECK_OUTPUT
                send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
                set timeout 3
@@ -1296,12 +1302,6 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                if  { $mytries < 0 } { 
                    set ok 2
                }
-            }
-            -i $spawn_id -- "__ my id is ->*${user}*<-" { 
-                debug_puts "shell response! - fine" 
-                set ok 1
-                send -i $spawn_id "\n"
-                debug_puts "sending new line"
             }
          }
       }
@@ -1402,6 +1402,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
           }
        }
        set timeout 10
+       set my_tries 6
        while { $do_stop != 1 } {
           expect {
              -i $sp_id full_buffer {
@@ -1414,7 +1415,13 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
              }
              -i $sp_id default {
                 puts $CHECK_OUTPUT "timeout"
-                send -s -i $sp_id "exit\n"
+                if { $my_tries > 0 } {
+                   send -s -i $sp_id "exit\n"
+                } else {
+                   add_proc_error "close_spawn_process" "-1" "error closing shell"
+                   set do_stop 1
+                }
+                incr my_tries -1
              }
           }
           debug_puts "waiting for end of file"

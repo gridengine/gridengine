@@ -199,19 +199,18 @@ proc check_submit {} {
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT
 
+
    # first clean up output directory:  
    setup_output_directory
-
+  
 
    foreach elem $CHECK_CORE_EXECD {
      set jobargs "-q ${elem}.q -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
      set result [submit_job $jobargs] 
 
-
      if {$result < 0} {
         set_error -1 "could not submit job: $jobargs"
      }
-
      # Wait job to run and for end of job
      set back [ wait_for_jobstart $result "leeper" 300 ]
      if { $back != 0 } {
@@ -223,7 +222,6 @@ proc check_submit {} {
      if { $back != 0 } {
         set_error -1 "job $result doesn't stop"
      } 
-
      set back [ del_job_files $result $job_output_dir 2 ]
      if { $back != 2 } {
         set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
@@ -275,11 +273,14 @@ proc setup_output_directory {} {
    } else {
       if { [ string length $job_output_dir  ] > 5 } {
          puts $CHECK_OUTPUT "deleting all files in output directory \"$job_output_dir\"!"
-         set files [ glob -nocomplain $job_output_dir/* ] 
+         set files [ glob -nocomplain $job_output_dir/* ]
          foreach elem $files {
-             puts $CHECK_OUTPUT "deleting file $elem"
-             incr files_deleted
-             delete_file $elem
+             puts $CHECK_OUTPUT $elem
+             if { [ file isfile $elem ] == 1 } {
+                puts $CHECK_OUTPUT "deleting file $elem"
+                incr files_deleted
+                delete_file $elem
+             } 
          }
       } else {
          set_error -1 "job output dir path must at least have 5 characters"

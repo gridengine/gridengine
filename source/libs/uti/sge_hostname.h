@@ -69,12 +69,7 @@ extern unsigned long gethostbyname_sec;
 extern unsigned long gethostbyaddr_calls;
 extern unsigned long gethostbyaddr_sec;
 
-const char *uti_state_get_default_domain(void);
-int uti_state_get_fqdn_cmp(void);
 host *uti_state_get_localhost(void);
-
-void uti_state_set_default_domain(const char *);
-void uti_state_set_fqdn_cmp(int);
 
 host *sge_host_new_addr(const struct in_addr *addr);
 

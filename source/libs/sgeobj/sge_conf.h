@@ -67,7 +67,6 @@ struct confel {                       /* cluster configuration parameters */
     char        *schedd_params;
     char        *execd_params;
     char        *gid_range;           /* Range of additional group ids */
-    char        *admin_user;
     u_long32    zombie_jobs;          /* jobs to save after execution */
     char        *qlogin_daemon;       /* eg /usr/sbin/in.telnetd */
     char        *qlogin_command;      /* eg telnet $HOST $PORT */

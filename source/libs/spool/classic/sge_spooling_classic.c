@@ -170,6 +170,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
 
    /* check parameters - both must be set and be absolute paths */
    if (args == NULL) {
+      DPRINTF(("spooling arguments are NULL\n"));
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
@@ -181,6 +182,10 @@ spool_classic_create_context(lList **answer_list, const char *args)
       
       if (common_dir == NULL || spool_dir == NULL ||
          *common_dir != '/' || *spool_dir != '/') {
+         DPRINTF(("common_dir: "SFN"\n", common_dir == NULL ? "<null>" : 
+                                                              common_dir));
+         DPRINTF(("spool_dir: "SFN"\n", spool_dir == NULL ? "<null>" : 
+                                                              spool_dir));
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);

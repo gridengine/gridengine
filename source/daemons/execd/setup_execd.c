@@ -34,6 +34,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "sge_bootstrap.h"
+
 #include "sgermon.h"
 #include "sge.h"
 #include "setup.h"
@@ -85,7 +87,7 @@ void sge_setup_sge_execd()
    /*
    ** switch to admin user
    */
-   if (sge_set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }

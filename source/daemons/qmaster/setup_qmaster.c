@@ -34,6 +34,7 @@
 #include <unistd.h>  
 #include <errno.h>
 
+#include "sge_bootstrap.h"
 #include "sge.h"
 #include "sge_conf.h"
 #include "commlib.h"
@@ -104,12 +105,6 @@ remove_invalid_job_references(int user);
 static int 
 debit_all_jobs_from_qs(void);
 
-static bool 
-init_spooling_params(const char **shlib, const char **args);
-
-static bool
-init_admin_user(void);
-
 /*------------------------------------------------------------*/
 int sge_setup_qmaster()
 {
@@ -133,8 +128,9 @@ int sge_setup_qmaster()
       return -1;
    }   
 
-   if (!init_admin_user()) {
-      CRITICAL((SGE_EVENT, "cannot determine admin_user\n"));
+   ret = sge_set_admin_username(bootstrap_get_admin_user(), err_str);
+   if (ret == -1) {
+      CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
@@ -164,31 +160,22 @@ int sge_setup_qmaster()
 #endif
 
    /* create spooling context */
-   {
-      const char *shlib;
-      const char *args;
-
-      if (!init_spooling_params(&shlib, &args)) {
-         CRITICAL((SGE_EVENT, "unable to initialize spooling\n"));
-         SGE_EXIT(1);
-      }
-      
-      spooling_context = spool_create_dynamic_context(&answer_list, 
-                                                      shlib, args);
-      answer_list_output(&answer_list);
-      if (spooling_context == NULL) {
-         CRITICAL((SGE_EVENT, "unable to create spooling context\n"));
-         SGE_EXIT(1);
-      }
-
-      if (!spool_startup_context(&answer_list, spooling_context, true)) {
-         CRITICAL((SGE_EVENT, "unable to startup spooling context\n"));
-         SGE_EXIT(1);
-      }
-      answer_list_output(&answer_list);
-
-      spool_set_default_context(spooling_context);
+   spooling_context = spool_create_dynamic_context(&answer_list, 
+                           bootstrap_get_spooling_lib(), 
+                           bootstrap_get_spooling_params());
+   answer_list_output(&answer_list);
+   if (spooling_context == NULL) {
+      CRITICAL((SGE_EVENT, "unable to create spooling context\n"));
+      SGE_EXIT(1);
    }
+
+   if (!spool_startup_context(&answer_list, spooling_context, true)) {
+      CRITICAL((SGE_EVENT, "unable to startup spooling context\n"));
+      SGE_EXIT(1);
+   }
+   answer_list_output(&answer_list);
+
+   spool_set_default_context(spooling_context);
 
    /*
    ** get cluster configuration
@@ -595,54 +582,3 @@ static int debit_all_jobs_from_qs()
    return ret;
 }
 
-static bool 
-init_spooling_params(const char **shlib, const char **args)
-{
-   static dstring args_out = DSTRING_INIT;
-   const char *name[1] = { "qmaster_spool_dir" };
-   char value[1][1025];
-
-   DENTER(TOP_LAYER, "init_spooling_params");
-
-   if (sge_get_confval_array(path_state_get_conf_file(), 1, name, value)) {
-      ERROR((SGE_EVENT, "cannot read spooling parameters\n"));
-      DEXIT;
-      return false;
-   }
-
-   sge_dstring_sprintf(&args_out, "%s/%s;%s", 
-                       path_state_get_cell_root(), COMMON_DIR, value[0]);
-   
-   *shlib = "none";
-   *args  = sge_dstring_get_string(&args_out);
-
-   DEXIT;
-   return true;
-}
-
-static bool
-init_admin_user(void)
-{
-   const char *name[1] = { "admin_user" };
-   char value[1][1025];
-   int ret;
-   char err_str[MAX_STRING_SIZE];
-
-   DENTER(TOP_LAYER, "init_admin_user");
-
-   if (sge_get_confval_array(path_state_get_conf_file(), 1, name, value)) {
-      ERROR((SGE_EVENT, "cannot read admin_user parameter\n"));
-      DEXIT;
-      return false;
-   }
-
-   ret = sge_set_admin_username(value[0], err_str);
-   if (ret == -1) {
-      ERROR((SGE_EVENT, err_str));
-      DEXIT;
-      return false;
-   }
-
-   DEXIT;
-   return true;
-}

@@ -42,6 +42,8 @@
 #   include <sys/schedctl.h>
 #endif
 
+#include "sge_bootstrap.h"
+
 #include "sge.h"
 #include "symbols.h"
 #include "sge_log.h"
@@ -1124,7 +1126,7 @@ lWriteListTo(environmentList, stderr);
    else
       fprintf(fp, "use_afs=0\n");
 
-   fprintf(fp, "admin_user=%s\n", conf.admin_user);
+   fprintf(fp, "admin_user=%s\n", bootstrap_get_admin_user());
 
    /* notify method */
    fprintf(fp, "notify_kill_type=%d\n", notify_kill_type);

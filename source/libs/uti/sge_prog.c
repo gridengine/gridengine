@@ -102,7 +102,7 @@ const char *prognames[] =
 pthread_key_t   uti_state_key;
 #else
 static struct uti_state_t uti_state_opaque = {
-  NULL, NULL, NULL, QUSERDEFINED, 0, 0, 0, NULL, NULL, NULL, 1, 0, NULL };
+  NULL, NULL, NULL, QUSERDEFINED, 0, 0, 0, NULL, NULL, NULL, 1 };
 struct uti_state_t *uti_state = &uti_state_opaque;
 #endif
 
@@ -134,8 +134,6 @@ void uti_state_init(struct uti_state_t* state) {
    state->default_cell = NULL;
    state->exit_func = NULL;
    state->exit_on_error = 1;
-   state->fqdn_cmp = 0;
-   state->default_domain = NULL;
 }
 #endif
 

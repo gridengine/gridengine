@@ -42,17 +42,17 @@
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sge_prog.h"
-#include "sge_gdiP.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "setup_path.h"
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_dstring.h"
 
-#include "msg_gdilib.h"
+#include "msg_utilib.h"
 #include "msg_common.h"
+
+#include "setup_path.h"
 
 struct path_state_t {
     char       *sge_root;      
@@ -221,7 +221,7 @@ void path_state_set_product_mode_file(const char *path)
 *     sge_setup_paths() -- setup global pathes 
 *
 *  SYNOPSIS
-*     int sge_setup_paths(const char *sge_cell, lList **alpp) 
+*     bool sge_setup_paths(const char *sge_cell, dstring *error_dstring) 
 *
 *  FUNCTION
 *     Set SGE_ROOT and SGE_CELL dependent path components. The spool 
@@ -232,19 +232,18 @@ void path_state_set_product_mode_file(const char *path)
 *     const char *sge_cell - the SGE cell to be used
 * 
 *  OUTPUT
-*     lList **alpp         - The answer list. Also used by caller to indicate 
-*                            if setup function should exit on errror or not.
+*     dstring *error_dstring - A string buffer to return error messages.
+*                              Also used by caller to indicate 
+*                              if setup function should exit on errror or not.
 *
 *  RESULT
-*     int - 0 on success 
+*     bool - true on success, else false
 *
 *  NOTES
 *     MT-NOTE: sge_setup_paths() is MT safe
 *******************************************************************************/
-int sge_setup_paths(
-const char *sge_cell,
-lList **alpp 
-) {
+bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
+{
    char *cell_root;
    const char *sge_root;
    char *common_dir;
@@ -256,62 +255,65 @@ lList **alpp
   
    sge_dstring_init(&bw, buffer, sizeof(buffer)); 
 
-   if (!(sge_root = sge_get_root_dir(alpp?0:1, buffer, sizeof(buffer)-1, 1))) {
+   if (!(sge_root = sge_get_root_dir(error_dstring == NULL ? 1 : 0, 
+                                     buffer, sizeof(buffer)-1, 1))) {
       /* in exit-on-error case program already exited */
-      answer_list_add(alpp, buffer, STATUS_EDISK, 0);
+      if (error_dstring != NULL) {
+         sge_dstring_sprintf(error_dstring, buffer);
+      }
       DEXIT;
-      return -1;
+      return false;
    }
 
    if (SGE_STAT(sge_root, &sbuf)) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S, sge_root));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }   
-      else
+      if (error_dstring == NULL) {
+         CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S, sge_root));
          SGE_EXIT(1);
+      } else {
+         sge_dstring_sprintf(error_dstring, MSG_SGETEXT_SGEROOTNOTFOUND_S, 
+                             sge_root);
+         DEXIT;
+         return false;
+      }   
    }
    
    if (!S_ISDIR(sbuf.st_mode)) {
-      CRITICAL((SGE_EVENT, MSG_GDI_SGEROOTNOTADIRECTORY_S , sge_root));
-      if (alpp) { 
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
-      else
+      if (error_dstring == NULL) { 
+         CRITICAL((SGE_EVENT, MSG_UTI_SGEROOTNOTADIRECTORY_S , sge_root));
          SGE_EXIT(1);
-      DEXIT;
+      } else {   
+         sge_dstring_sprintf(error_dstring, MSG_UTI_SGEROOTNOTADIRECTORY_S , 
+                             sge_root);
+         DEXIT;
+         return false;
+      }
    } 
 
    cell_root = sge_malloc(strlen(sge_root) + strlen(sge_cell) + 2);
    if (!cell_root) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
-      else
+      if (error_dstring == NULL) {
+         CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
          SGE_EXIT(1);
-      DEXIT;
+      } else {
+         sge_dstring_sprintf(error_dstring, MSG_SGETEXT_NOMEM);
+         DEXIT;
+         return false;
+      }
    }
 
    sprintf(cell_root, "%s"PATH_SEPARATOR"%s", sge_root, sge_cell);   
 
    if (SGE_STAT(cell_root, &sbuf)) {
       if (uti_state_get_mewho() != QMASTER) {
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_NOSGECELL_S, cell_root));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
-         else
+         if (error_dstring == NULL) {
+            CRITICAL((SGE_EVENT, MSG_SGETEXT_NOSGECELL_S, cell_root));
             SGE_EXIT(1);
-         DEXIT;
+         } else {
+            sge_dstring_sprintf(error_dstring, MSG_SGETEXT_NOSGECELL_S, 
+                                cell_root);
+            DEXIT;
+            return false;
+         }
       }   
    }
 
@@ -319,17 +321,18 @@ lList **alpp
    sprintf(common_dir, "%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR);
    if (SGE_STAT(common_dir, &sbuf)) {
       if (uti_state_get_mewho() != QMASTER) {  
-         CRITICAL((SGE_EVENT, MSG_GDI_DIRECTORYNOTEXIST_S , common_dir));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
-         else
+         if (error_dstring == NULL) {
+            CRITICAL((SGE_EVENT, MSG_UTI_DIRECTORYNOTEXIST_S , common_dir));
             SGE_EXIT(1);
-         DEXIT;
+         } else {
+            sge_dstring_sprintf(error_dstring, MSG_UTI_DIRECTORYNOTEXIST_S , 
+                                common_dir);
+            DEXIT;
+            return false;
+         }
       }   
    }       
+
    FREE(common_dir);
 
    path_state_set_sge_root(sge_root);
@@ -375,7 +378,7 @@ lList **alpp
    DPRINTF(("product_mode_file   >%s<\n", path_state_get_product_mode_file()));
    
    DEXIT;
-   return 0;
+   return true;
 }
 
 #ifdef WIN32NATIVE

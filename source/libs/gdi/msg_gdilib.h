@@ -116,13 +116,6 @@
 
 
 /* 
-** gdilib/setup_path.c
-*/
-#define MSG_GDI_SGEROOTNOTADIRECTORY_S                   _MESSAGE(43113, _("$SGE_ROOT="SFN" is not a directory\n"))
-#define MSG_GDI_DIRECTORYNOTEXIST_S                      _MESSAGE(43114, _("directory doesn't exist: "SFN"\n"))
-#define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(43115, _("cell directory "SFQ" doesn't exist\n"))
-
-/* 
 ** gdilib/sge_gdi_request.c
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))

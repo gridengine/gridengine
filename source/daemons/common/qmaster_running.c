@@ -91,7 +91,7 @@ bool *enrolled
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
    if (!sge_hostcmp(master, uti_state_get_qualified_hostname())) {
-      if ((cp = sge_get_confval("qmaster_spool_dir", path_state_get_sched_conf_file()))) {
+      if ((cp = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
          sprintf(pidfile, "%s/%s", cp, QMASTER_PID_FILE);
 	      DPRINTF(("pidfilename: %s\n", pidfile));
          if ((pid = sge_readpid(pidfile))) {

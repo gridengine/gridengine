@@ -39,6 +39,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
+#include "sge_bootstrap.h"
 #include "sge_stdio.h"
 #include "sge_unistd.h"
 #include "sge.h"
@@ -185,7 +186,6 @@ char **argv
    char *cp;
    fd_set fds;
    int fd;
-   const char *admin_user;
    char err_str[1024];
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
@@ -274,10 +274,7 @@ char **argv
       SGE_EXIT(1);
    }
 
-   admin_user = read_adminuser_from_configuration(NULL, path_state_get_conf_file(), 
-      SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
-
-   if (sge_set_admin_username(admin_user, err_str)) {
+   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }

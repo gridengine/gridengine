@@ -2252,7 +2252,6 @@ proc setup_conf {} {
   # set finished_job in global config
   set params(finished_jobs) "0"  
   set params(load_report_time) "00:00:15"
-  set params(default_domain) "$CHECK_DEFAULT_DOMAIN"
   set params(reschedule_unknown) "00:00:00"
   set params(loglevel) "log_info"
   set params(load_sensor) "none"
@@ -2274,9 +2273,17 @@ proc setup_conf {} {
   set params(schedd_params) "none"
   set params(execd_params) "none"
   set params(qlogin_command) "telnet"
-  set params(ignore_fqdn) "true"
   set params(max_aj_instances) "2000"
   set params(max_aj_tasks) "75000"
+
+  # default domain and ignore_fqdn have moved to the bootstrap file
+  # in SGE 6.0. Only check them in older systems.
+  if [info exists old_config(default_domain)] {
+    set params(default_domain) "$CHECK_DEFAULT_DOMAIN"
+  }
+  if [info exists old_config(ignore_fqdn)] {
+    set params(ignore_fqdn) "true"
+  }
 
   if { $CHECK_PRODUCT_TYPE == "sgeee" } {
     set params(execd_params)    "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0"

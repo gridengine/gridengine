@@ -226,9 +226,6 @@ char *rhost
       char  *deniedParams[] = { 
           "execd_spool_dir", 
           "qmaster_spool_dir", 
-          "admin_user",
-          "default_domain",
-          "ignore_fqdn",
           NULL 
       };
 

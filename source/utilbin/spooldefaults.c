@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "sge_bootstrap.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_unistd.h"
@@ -75,58 +76,32 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
 }
 
-static bool 
-init_spooling_params(const char **shlib, const char **args)
-{
-   const char *name[2] = { "spooling_lib", "spooling_params" };
-   char value[2][1025];
-
-   DENTER(TOP_LAYER, "init_spooling_params");
-
-   if (sge_get_confval_array(path_state_get_bootstrap_file(), 2, name, value)) {
-      ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTREADSPOOLPARAMS));
-      DEXIT;
-      return false;
-   }
-   
-   *shlib = value[0];
-   *args  = value[1];
-
-   DEXIT;
-   return true;
-}
-
 static int init_framework(void)
 {
    int ret = EXIT_FAILURE;
 
-   const char *shlib;
-   const char *args;
-
    lList *answer_list = NULL;
+   lListElem *spooling_context = NULL;
 
    DENTER(TOP_LAYER, "init_framework");
 
-   /* read arguments for spooling framework */
-   if (init_spooling_params(&shlib, &args)) {
-      /* create spooling context */
-      lListElem *spooling_context = NULL;
+   /* create spooling context */
+   spooling_context = spool_create_dynamic_context(&answer_list, 
+                              bootstrap_get_spooling_lib(), 
+                              bootstrap_get_spooling_params());
+   answer_list_output(&answer_list);
+   if (spooling_context == NULL) {
+      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
+   } else {
+      spool_set_default_context(spooling_context);
 
-      spooling_context = spool_create_dynamic_context(&answer_list, shlib, args);
-      answer_list_output(&answer_list);
-      if (spooling_context == NULL) {
-         CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
+      /* initialize spooling context */
+      if (!spool_startup_context(&answer_list, spooling_context, true)) {
+         CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
       } else {
-         spool_set_default_context(spooling_context);
-
-         /* initialize spooling context */
-         if (!spool_startup_context(&answer_list, spooling_context, true)) {
-            CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
-         } else {
-            ret = EXIT_SUCCESS;
-         }
-         answer_list_output(&answer_list);
+         ret = EXIT_SUCCESS;
       }
+      answer_list_output(&answer_list);
    }
 
    DEXIT;
@@ -332,12 +307,14 @@ int main(int argc, char *argv[])
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (sge_setup_paths(sge_get_default_cell(), &answer_list)) {
-      answer_list_output(&answer_list);
+   if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
+      /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
    } else if (feature_initialize_from_file(path_state_get_product_mode_file(),
                                            &answer_list)) {
       answer_list_output(&answer_list);
+      ret = EXIT_FAILURE;
+   } else if (!sge_bootstrap(NULL)) {
       ret = EXIT_FAILURE;
    } else {
       /* parse commandline */

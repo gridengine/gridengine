@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "sge_bootstrap.h"
 #include "sge_unistd.h"
 
 #include "sgermon.h"
@@ -1165,7 +1166,7 @@ int read_all_configurations(lList **lpp,
       char err_str[MAX_STRING_SIZE];
       int lret;
 
-      admin_user = sge_get_confval("admin_user", global_config_file);
+      admin_user = bootstrap_get_admin_user();
       lret = sge_set_admin_username(admin_user, err_str);
       if (lret == -1) {
          ERROR((SGE_EVENT, err_str));

@@ -523,16 +523,16 @@ PrintConf()
    $ECHO "execd_params           none"
    $ECHO "finished_jobs          100"
    $ECHO "gid_range              $CFG_GID_RANGE"
-   if [ $ADMINUSER != default ]; then
-      $ECHO "admin_user             $ADMINUSER"
-   else
-      $ECHO "admin_user             none"
-   fi
+#   if [ $ADMINUSER != default ]; then
+#      $ECHO "admin_user             $ADMINUSER"
+#   else
+#      $ECHO "admin_user             none"
+#   fi
    $ECHO "qlogin_command         $QLOGIN_COMMAND"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
-   $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
-   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
+#   $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
+#   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"

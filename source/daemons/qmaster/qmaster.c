@@ -171,17 +171,14 @@ static void qmaster_init(char **anArgv)
 
    sge_setup(QMASTER, NULL); /* misc setup */
 
-   communication_setup(anArgv);
-
    INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
+
+   communication_setup(anArgv);
 
    if (sge_setup_qmaster()) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
       SGE_EXIT(1);
    }
-
-   /* make essential non spool directories: $CELL/common/... */
-   sge_mkdir(path_state_get_local_conf_dir(), 0755, 1, 0);
 
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
 
@@ -217,9 +214,17 @@ static void communication_setup(char **anArgv)
       uti_state_set_qualified_hostname(host);
    }
 
+   /* JG: TODO: problem: we need a running commd to be able to read qmaster's
+    *           database (as some hostname resolving is done when checking the
+    *           read objects), but check_for_running_qmaster already needs 
+    *           the global configuration (qmaster_spool_dir).
+    *           Disable check_for_running_qmaster. This part will change
+    *           anyhow with the new communication model without commd
+    *
    if ((enrolled = check_for_running_qmaster())> 0) {
       remove_pending_messages(NULL, 0, 0, 0);
    }
+    */
 
    set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_qualified_hostname(), NULL);
    commlib_state_set_logging_function(sge_log);     

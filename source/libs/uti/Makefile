@@ -38,10 +38,13 @@ UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
 UTILIB_DRMAA_SRC = \
          config_file.c \
+         config_file.c \
+         setup_path.c \
          sge_afsutil.c \
          sge_arch.c \
          sge_bitfield.c \
          sge_bitop.c \
+         sge_bootstrap.c \
          sge_crc.c \
          sge_hostname.c \
          sge_htable.c \
@@ -117,6 +120,9 @@ include $(UTILIB_DIR)/uti_dependencies
 config_file.o:  $(UTILIB_DIR)/config_file.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/config_file.c
 
+setup_path.o:  $(UTILIB_DIR)/setup_path.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/setup_path.c
+
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
 
@@ -149,6 +155,9 @@ sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
 
 sge_bitop.o:	$(UTILIB_DIR)/sge_bitop.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitop.c
+
+sge_bootstrap.o:	$(UTILIB_DIR)/sge_bootstrap.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bootstrap.c
 
 sge_prog.o:	$(UTILIB_DIR)/sge_prog.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_prog.c

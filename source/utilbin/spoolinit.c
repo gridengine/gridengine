@@ -114,7 +114,8 @@ int main(int argc, char *argv[])
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (sge_setup_paths(sge_get_default_cell(), NULL)) {
+   if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
+      /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
    } else {
       spooling_maintenance_command cmd = SPM_info;

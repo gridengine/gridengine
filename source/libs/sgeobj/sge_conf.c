@@ -251,7 +251,6 @@ static tConfEntry conf_entries[] = {
  { "schedd_params",     0, "none",              1, NULL }, 
  { "execd_params",      1, "none",              1, NULL }, 
  { "gid_range",         1, "none",              1, NULL },
- { "admin_user",        0, ADMIN_USER,          1, NULL },
  { "finished_jobs",     0, FINISHED_JOBS,       1, NULL },
  { "qlogin_daemon",     1, "none",              1, NULL },
  { "qlogin_command",    1, "none",              1, NULL },
@@ -259,9 +258,7 @@ static tConfEntry conf_entries[] = {
  { "rsh_command",       1, "none",              1, NULL },
  { "rlogin_daemon",     1, "none",              1, NULL },
  { "rlogin_command",    1, "none",              1, NULL },
- { "default_domain",    1, "none",              1, NULL },
  { "reschedule_unknown",1, RESCHEDULE_UNKNOWN,  1, NULL },
- { "ignore_fqdn",       0, IGNORE_FQDN,         1, NULL },
  { "max_aj_instances",  0, MAX_AJ_INSTANCES,    1, NULL },
  { "max_aj_tasks",      0, MAX_AJ_TASKS,        1, NULL },
  { "max_u_jobs",        0, MAX_U_JOBS,          1, NULL },
@@ -366,8 +363,6 @@ sge_conf_type *mconf,
 lList *lpCfg 
 ) {
    lListElem *ep;
-   u_long32 uval_tmp;
-   char *t = NULL;
 
    DENTER(TOP_LAYER, "setConfFromCull");
    
@@ -435,7 +430,6 @@ lList *lpCfg
    chg_conf_val(lpCfg, "qmaster_params", &mconf->qmaster_params, NULL, 0);
    chg_conf_val(lpCfg, "schedd_params", &mconf->schedd_params, NULL, 0);
    chg_conf_val(lpCfg, "execd_params",  &mconf->execd_params, NULL, 0);
-   chg_conf_val(lpCfg, "admin_user", &mconf->admin_user, NULL, 0);
    chg_conf_val(lpCfg, "finished_jobs", NULL, &mconf->zombie_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "qlogin_daemon", &mconf->qlogin_daemon, NULL, 0);
    chg_conf_val(lpCfg, "qlogin_command", &mconf->qlogin_command, NULL, 0);
@@ -444,15 +438,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "rlogin_daemon", &mconf->rlogin_daemon, NULL, 0);
    chg_conf_val(lpCfg, "rlogin_command", &mconf->rlogin_command, NULL, 0);
 
-   chg_conf_val(lpCfg, "default_domain", &t, NULL, 0);
-   if (t) {
-      uti_state_set_default_domain(t);
-      free(t);
-   }
    chg_conf_val(lpCfg, "reschedule_unknown", NULL, &mconf->reschedule_unknown, TYPE_TIM);
-
-   chg_conf_val(lpCfg, "ignore_fqdn", NULL, &uval_tmp, TYPE_TIM);  
-   uti_state_set_fqdn_cmp(!uval_tmp);/* logic of ignore_fqdn and fqdn_cmp are contrary */
 
    chg_conf_val(lpCfg, "max_aj_instances", NULL, &mconf->max_aj_instances, TYPE_INT);
    chg_conf_val(lpCfg, "max_aj_tasks", NULL, &mconf->max_aj_tasks, TYPE_INT);
@@ -858,7 +844,6 @@ int merge_configuration(lListElem *global, lListElem *local,
 void sge_show_conf()
 {
    lListElem *ep;
-   const char *s;
 
    DENTER(TOP_LAYER, "sge_show_conf");
 
@@ -889,7 +874,6 @@ void sge_show_conf()
    DPRINTF(("conf.schedd_params          >%s<\n", conf.schedd_params?conf.schedd_params:"none"));
    DPRINTF(("conf.execd_params           >%s<\n", conf.execd_params?conf.execd_params:"none"));
    DPRINTF(("conf.gid_range              >%s<\n", conf.gid_range?conf.gid_range:"none")); 
-   DPRINTF(("conf.admin_user             >%s<\n", conf.admin_user?conf.admin_user:"none"));
    DPRINTF(("conf.zombie_jobs            >%u<\n", (unsigned) conf.zombie_jobs));
    DPRINTF(("conf.qlogin_daemon          >%s<\n", conf.qlogin_daemon?conf.qlogin_daemon:"none"));
    DPRINTF(("conf.qlogin_command         >%s<\n", conf.qlogin_command?conf.qlogin_command:"none"));
@@ -897,9 +881,7 @@ void sge_show_conf()
    DPRINTF(("conf.rsh_command            >%s<\n", conf.rsh_command?conf.rsh_command:"none"));
    DPRINTF(("conf.rlogin_daemon          >%s<\n", conf.rlogin_daemon?conf.rlogin_daemon:"none"));
    DPRINTF(("conf.rlogin_command         >%s<\n", conf.rlogin_command?conf.rlogin_command:"none"));
-   DPRINTF(("default_domain              >%s<\n", (s=uti_state_get_default_domain())?s:"none"));
    DPRINTF(("conf.reschedule_unknown     >%u<\n", (unsigned) conf.reschedule_unknown));
-   DPRINTF(("ignore_fqdn                 >%d<\n", !uti_state_get_fqdn_cmp()));
    DPRINTF(("conf.max_aj_instances       >%u<\n", (unsigned) conf.max_aj_instances));
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) conf.max_u_jobs));
@@ -960,7 +942,6 @@ sge_conf_type *conf
    FREE(conf->schedd_params);
    FREE(conf->execd_params);
    FREE(conf->gid_range);
-   FREE(conf->admin_user);
    FREE(conf->qlogin_daemon);
    FREE(conf->qlogin_command);
    FREE(conf->rsh_daemon);

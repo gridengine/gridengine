@@ -1,5 +1,5 @@
-#ifndef __RW_CONFIGURATION_H
-#define __RW_CONFIGURATION_H
+#ifndef __SGE_BOOTSTRAP_H
+#define __SGE_BOOTSTRAP_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,13 +32,33 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define FLG_CONF_SPOOL  0x00000001L
-#define FLG_CONF_STDOUT 0x00000002L
+#include "basis_types.h"
+#include "sge.h"
 
-#define GID_RANGE_NOT_ALLOWED_ID 100
+#include "sge_dstring.h"
 
-int write_configuration(int write_configuration, lList **alpp, const char *fname, const lListElem *conf_list, FILE *fpout, u_long32 flags);
+#if defined(SGE_MT)
+void bootstrap_init_mt(void);
+#endif
 
-lListElem *read_configuration(const char *fname, const char *conf_name, u_long32 flags);
+const char *bootstrap_get_admin_user(void);
+const char *bootstrap_get_default_domain(void);
+bool        bootstrap_get_ignore_fqdn(void);
+const char *bootstrap_get_spooling_method(void);
+const char *bootstrap_get_spooling_lib(void);
+const char *bootstrap_get_spooling_params(void);
 
-#endif /* __RW_CONFIGURATION_H */
+void bootstrap_set_admin_user(const char *value);
+void bootstrap_set_default_domain(const char *value);
+void bootstrap_set_ignore_fqdn(bool value);
+void bootstrap_set_spooling_method(const char *value);
+void bootstrap_set_spooling_lib(const char *value);
+void bootstrap_set_spooling_params(const char *value);
+
+int sge_bootstrap(dstring *error_dstring);
+
+#ifdef WIN32NATIVE
+void sge_delete_bootstrap ();
+#endif /* WIN32NATIVE */
+
+#endif /* __SGE_BOOTSTRAP_H */

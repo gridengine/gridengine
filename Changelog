@@ -1,3 +1,8 @@
+JG-2003-10-07-0: Enhancem.: Bootstrapping: Removed admin_user, ignore_fqdn and 
+                            default_domain from global configuration. All core 
+                            components (except shadowd) use the bootstrapping 
+                            functions.
+
 EB-2003-10-07-0: Bugfix.:   Fixed bug (SG-2003-09-25-1)
 
 EB-2003-10-06-0: Enhancem.: Fixed many bugs concerning CQs-APIBASE package

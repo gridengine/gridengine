@@ -379,6 +379,8 @@ proc usage_parse_cpu {s_cpu} {
 
    return $cpu
 }
+
+# JG: TODO: for online usage take the max of current qstat and former qstat - with tightly integrated jobs, the qstat -j usage can decline
 proc usage_check {jobid qstat_j_info slots} {
    global CHECK_OUTPUT
 

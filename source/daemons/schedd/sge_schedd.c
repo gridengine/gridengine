@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge.h"
 #include "setup.h"
@@ -503,7 +504,7 @@ static int sge_setup_sge_schedd()
    /*
    ** switch to admin user
    */
-   if (sge_set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }

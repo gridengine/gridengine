@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "sge_bootstrap.h"
 #include "sge_prog.h"
 #include "sge_gdiP.h"
 #include "sgermon.h"
@@ -57,8 +58,6 @@
 
 extern long compression_level;
 extern long compression_threshold;
-
-static int init_hostcpy_policy(lList **alpp);
 
 /****** setup/sge_setup() ******************************************************
 *  NAME
@@ -102,9 +101,24 @@ lList **alpp
 
    sge_getme(sge_formal_prog_name);
 
-   if (sge_setup_paths(uti_state_get_default_cell(), alpp)) {
-      DEXIT;
-      return -1;
+   {
+      dstring error_dstring = DSTRING_INIT;
+
+      if (!sge_setup_paths(uti_state_get_default_cell(), &error_dstring)) {
+         answer_list_add(alpp, sge_dstring_get_string(&error_dstring), 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
+         sge_dstring_free(&error_dstring);
+         DEXIT;
+         return -1;
+      }
+   }
+
+   if (!sge_bootstrap(NULL)) {
+      if (!uti_state_get_exit_on_error()) {
+         DEXIT;
+         return -1;
+      }
+      SGE_EXIT(1);
    }
 
    if (feature_initialize_from_file(path_state_get_product_mode_file(), alpp)) {
@@ -115,16 +129,6 @@ lList **alpp
       SGE_EXIT(1);
    }
 
-   /* initialize hostcompare policy consisting 
-      of default_domain and ignore_fqdn settings */
-   if (init_hostcpy_policy(alpp)) {
-      if (!uti_state_get_exit_on_error()) {
-         DEXIT;
-         return -1;
-      }
-      SGE_EXIT(1);
-   }
-      
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == SHADOWD) && !sge_get_master(1)) {
       if (!uti_state_get_exit_on_error()) {
@@ -211,47 +215,3 @@ int reresolve_me_qualified_hostname(void)
    return CL_OK;
 }
 
-/****** setup/init_hostcpy_policy() ********************************************
-*  NAME
-*     init_hostcpy_policy() -- initialize sge_hostcmp() policy
-*
-*  SYNOPSIS
-*     static int init_hostcpy_policy(lList **alpp) 
-*
-*  FUNCTION
-*     The settings ignore_fqdn and default_domain are taken directly
-*     from the clusters configuration file in the common directory.
-*
-*  INPUTS
-*     lList **alpp - answer list
-*
-*  RESULT
-*     static int - 0 on success
-*
-*  NOTES
-*     MT-NOTE: init_hostcpy_policy() is MT safe
-*******************************************************************************/
-static int init_hostcpy_policy(lList **alpp)
-{
-   const char *name[2] = { "ignore_fqdn", "default_domain" };
-   u_long32 uval;
-   char value[2][1025];
-
-   DENTER(TOP_LAYER, "init_hostcpy_policy");
-
-   if (sge_get_confval_array(path_state_get_conf_file(), 2, name, value)) {
-      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
-      path_state_get_conf_file()));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
-   }
-
-   DPRINTF(("ignore_fqdn: %s default_domain: %s\n", value[0], value[1]));
-   parse_ulong_val(NULL, &uval, TYPE_BOO, value[0], NULL, 0);
-   uti_state_set_fqdn_cmp(!uval);
-   uti_state_set_default_domain(value[1]);
-
-   DEXIT;
-   return 0;
-}

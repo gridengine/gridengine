@@ -12,11 +12,6 @@ struct uti_state_t {
    char        *default_cell;
    sge_exit_func_t exit_func;
    int         exit_on_error;
-
-   /* sge_hostname.c */
-   int         fqdn_cmp;
-   char        *default_domain;   
-
 };
 
 

@@ -119,32 +119,6 @@ FPRINTF_ERROR:
    return -1;
 }
 
-const char *read_adminuser_from_configuration(
-const lListElem *el,
-const char *fname, 
-const char *conf_name,
-u_long32 flags 
-) {
-   lListElem *conf = NULL;
-   const char *ret = NULL;
-
-   DENTER(TOP_LAYER, "read_adminuser_from_configuration");
-
-   if (el == NULL) {
-      el = read_configuration(fname, conf_name, flags);
-   }
-
-   for_each(conf, lGetList(el, CONF_entries)) {
-      if (!strcmp(lGetString(conf, CF_name), "admin_user")) {
-         ret = lGetString(conf, CF_value); 
-         break;
-      } 
-   } 
-   DPRINTF(("admin_user: "SFN"\n", ret));
-   DEXIT;
-   return ret;
-}
-
 /*---------------------------------------------------------
  * read_configuration()
  * read configuration from file

@@ -46,7 +46,6 @@ GDILIB_SRC = gdi_setup.c \
          sge_gdi_request$(QIDLEXT).c \
          sge_ack.c \
          sge_qexec.c \
-         setup_path.c \
          qm_name.c \
          sge_security.c \
          setup.c \
@@ -114,9 +113,6 @@ sge_gdi_request$(QIDLEXT).o:	$(GDILIB_DIR)/sge_gdi_request.c
 
 sge_any_request.o:	$(GDILIB_DIR)/sge_any_request.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_any_request.c
-
-setup_path.o: 	$(GDILIB_DIR)/setup_path.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/setup_path.c
 
 pack_job_delivery.o:	$(GDILIB_DIR)/pack_job_delivery.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/pack_job_delivery.c

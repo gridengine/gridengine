@@ -44,7 +44,7 @@
 #include <pthread.h>
 #endif
 
-
+#include "sge_bootstrap.h"
 #include "sge_hostname.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -113,31 +113,6 @@ host *uti_state_get_localhost(void)
    /* so far called only by commd */ 
    return localhost;
 }
-
-const char *uti_state_get_default_domain(void)
-{
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
-   return uti_state->default_domain;
-}
-
-int uti_state_get_fqdn_cmp(void)
-{
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
-   return uti_state->fqdn_cmp;
-}
-
-void uti_state_set_default_domain(const char *s)
-{
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
-   uti_state->default_domain = sge_strdup(uti_state->default_domain, s);
-}
-
-void uti_state_set_fqdn_cmp(int value)
-{
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
-   uti_state->fqdn_cmp = value;
-}
-
 
 #define MAX_RESOLVER_BLOCKING 15
 
@@ -1004,7 +979,7 @@ void sge_hostcpy(char *dst, const char *raw)
 {
    char *s;
  
-   if (!uti_state_get_fqdn_cmp()) {
+   if (bootstrap_get_ignore_fqdn()) {
  
       /* standard: simply ignore FQDN */
  
@@ -1012,15 +987,15 @@ void sge_hostcpy(char *dst, const char *raw)
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
-   } else if (uti_state_get_default_domain() && 
-              SGE_STRCASECMP(uti_state_get_default_domain(), "none")) {
+   } else if (bootstrap_get_default_domain() != NULL && 
+              SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
  
       /* exotic: honor FQDN but use default_domain */
  
       if (!strchr(raw, '.')) {
          strncpy(dst, raw, MAXHOSTLEN);
          strncat(dst, ".", MAXHOSTLEN);
-         strncat(dst, uti_state_get_default_domain(), MAXHOSTLEN);
+         strncat(dst, bootstrap_get_default_domain(), MAXHOSTLEN);
       } else {
          strncpy(dst, raw, MAXHOSTLEN);
       }

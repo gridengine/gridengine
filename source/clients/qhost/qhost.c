@@ -38,6 +38,9 @@
 
 #include "basis_types.h"
 #include "sge.h"
+
+#include "sge_bootstrap.h"
+
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
@@ -268,9 +271,9 @@ lListElem *hep
    */
    host = lGetHost(hep, EH_name);
 
-   /* cut away domain in case of fqdn_cmp */
+   /* cut away domain in case of ignore_fqdn */
    strncpy(host_print, host, MAXHOSTLEN);
-   if (!uti_state_get_fqdn_cmp() && (s = strchr(host_print, '.')))
+   if (bootstrap_get_ignore_fqdn() && (s = strchr(host_print, '.')))
       *s = '\0';
 
    /*

@@ -36,6 +36,8 @@
 #include "cull_list.h"
 #include "sge.h"
 
+#include "sge_dstring.h"
+
 /* These files and directories will be found in COMMON_DIR
  * They must be accessed with an absolute path. Do not use these defines!
  */
@@ -84,7 +86,7 @@ void path_state_set_local_conf_dir(const char *path);
 void path_state_set_shadow_masters_file(const char *path);
 void path_state_set_product_mode_file(const char *path);
 
-int sge_setup_paths(const char *cell, lList **alpp);
+bool sge_setup_paths(const char *cell, dstring *error_dstring);
 
 #ifdef WIN32NATIVE
 void sge_delete_paths ();

@@ -1,3 +1,7 @@
+SG-2003-12-02-0: Bugfix.:   The enhancement AH-2003-11-11-0 disabled the use
+                            REStrings as a complex type.
+                 Changed:   qmaster, scheduler,...                            
+
 DT-2003-11-28-0: Enhancem.: Made sge_gethostbyname() reentrant in four of the
                             five possible ways depending on the architecture.
                             I'll let AD do the fifth way: mutex locking.

@@ -43,7 +43,7 @@ void job_enroll(lListElem *job, u_long32 task_number);
 void job_set_hold_state(lListElem *job, lListElem *ja_task,
                         u_long32 new_hold_state);
 
-int job_add_job(lList **job_list, char *name, lListElem *job, int check,
-                 int hash, HashTable* Job_Hash_Table); 
+int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
+                     int check, int hash, HashTable* Job_Hash_Table); 
 
 #endif /* __SGE_JOB_JATASK_H */    

@@ -38,9 +38,8 @@
 #include "sge_getpwnam.h"
 #include "sge_max_nis_retries.h"
 
-struct passwd *sge_getpwnam(
-char *name 
-) {
+struct passwd *sge_getpwnam(const char *name) 
+{
 #ifndef WIN32 /* var not needed */
    int i = MAX_NIS_RETRIES;      
 #endif

@@ -49,8 +49,8 @@
 **
 */
 lList *gdi_tsm(
-char *schedd_name,
-char *cell 
+const char *schedd_name,
+const char *cell 
 ) {
    lList *alp = NULL;
 
@@ -80,7 +80,7 @@ char *cell
 */
 lList *gdi_kill(
 lList *host_list,
-char *cell,
+const char *cell,
 u_long32 option_flags,
 u_long32 action_flag 
 ) {

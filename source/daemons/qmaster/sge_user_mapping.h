@@ -38,7 +38,7 @@
 
 
 
-char* sge_getUserNameForHost(lList *hostGroupList, lList *mapList, char *hostName);
+const char* sge_getUserNameForHost(lList *hostGroupList, lList *mapList, char *hostName);
 
 int   sge_map_gdi_request(lList *hostGroupList, lList *userMappingEntryList, sge_gdi_request *pApiRequest);
 

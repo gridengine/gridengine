@@ -83,7 +83,7 @@ lList *cull_parse_qsh_parameter(
 lList *cmdline,
 lListElem **pjob 
 ) {
-   char *cp;
+   const char *cp;
    lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
@@ -175,7 +175,7 @@ lListElem **pjob
    */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-clear"))) {
       lListElem *ep_run;
-      char *cp_switch;
+      const char *cp_switch;
 
       for (ep_run = lFirst(cmdline); ep_run;) {
          /*
@@ -532,7 +532,8 @@ lListElem **pjob
 
    if (!(ep = lGetElemStr(lGetList(*pjob, JB_env_list), VA_variable, 
          "DISPLAY"))) {
-      char *display;
+      const char *display;
+      char *new_display = NULL;
       lList  *lp;
       lListElem *vep;
       char str[1024 + 1];
@@ -540,7 +541,7 @@ lListElem **pjob
       display = sge_getenv("DISPLAY");
       if (!display || (*display == ':')) {
          lListElem *hep;
-         char *ending = NULL;
+         const char *ending = NULL;
 
          if (display) {
             ending = display;
@@ -555,28 +556,30 @@ lListElem **pjob
             case -1:
                sprintf(str, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S,
                   cl_errstr(-1));
-            sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
                lFreeElem(hep);
                DEXIT;
             return answer;
             default:
-               sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(hep, EH_name));
-            sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+               sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, 
+                       lGetString(hep, EH_name));
+               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
                lFreeElem(hep);
             DEXIT;
             return answer;
          }
-         display = malloc(strlen(lGetString(hep, EH_name)) + 4 + 1 +
+         new_display = malloc(strlen(lGetString(hep, EH_name)) + 4 + 1 +
                            (ending ? strlen(ending) : 0));
-         strcpy(display, lGetString(hep, EH_name));
-         strcat(display, (ending ? ending : ":0.0"));
+         strcpy(new_display, lGetString(hep, EH_name));
+         strcat(new_display, (ending ? ending : ":0.0"));
          lFreeElem(hep);
       }
 
       lp = lGetList(*pjob, JB_env_list);
       vep = lCreateElem(VA_Type);
       lSetString(vep, VA_variable, "DISPLAY");
-      lSetString(vep, VA_value, display);
+      lSetString(vep, VA_value, new_display);
+      FREE(new_display);
       if (!lp) {
          lp = lCreateList("env list", VA_Type);
          lSetList(*pjob, JB_env_list, lp);

@@ -316,7 +316,7 @@ lList **finished_jobs
          lListElem *gep, *lcep;
          if ((gep = lGetElemHost(lists->host_list, EH_name, "global"))) {
             for_each (lcep, scheddconf.job_load_adjustments) {
-               char *attr = lGetString(lcep, CE_name);
+               const char *attr = lGetString(lcep, CE_name);
                if (lGetSubStr(gep, HL_name, attr, EH_load_list)) {
                   DPRINTF(("GLOBAL LOAD CORRECTION \"%s\"\n", attr));
                   global_lc = 1;
@@ -644,9 +644,9 @@ lList **finished_jobs
       u_long32 job_id; 
       u_long32 ja_task_id; 
       lListElem *pe;
-      char *pe_name;
+      const char *pe_name;
       lListElem *ckpt;
-      char *ckpt_name;
+      const char *ckpt_name;
       int dispatched_a_job;
 
       /* sort the hostlist */

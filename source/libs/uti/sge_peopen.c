@@ -67,10 +67,10 @@ static void addenv(char *, char *);
 */
 
 pid_t peopen(
-char *shell,     /* which shell to use */    
+const char *shell,     /* which shell to use */    
 int login_shell, /* make it a login shell ? */
-char *command,   /* name of the program */
-char *user,      /* user under which to start (for root only) */
+const char *command,   /* name of the program */
+const char *user,      /* user under which to start (for root only) */
 char **env,      /* environment variables to add to child */
 FILE **fp_in, 
 FILE **fp_out, 

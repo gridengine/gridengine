@@ -92,10 +92,7 @@ enum {
  COMMDCNTL               /* 37 */ 
 };
 
- 
-
-char *get_progname(int which);
-extern char *prognames[];
+extern const char *prognames[];
 
 #endif /* __SGE_PROGNAMES_H */
 

@@ -98,8 +98,8 @@ lListElem *jatep
 ) {
    lListElem *qep, *queueep;
    const char *err_str;
-   char *qname; 
-   char *host;
+   const char *qname; 
+   const char *host;
    u_long32 jobid, state, jataskid;
    lListElem *hep;
    int enhanced_product_mode;

@@ -32,13 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include <sys/param.h>
 
-int setuidgidaddgrp(char *user, char *intermediate_user, int min_gid, int min_uid, int add_grp, char *err_str, int use_qsub_gid, gid_t qsub_gid);
-int add_group(gid_t newgid);
+int setuidgidaddgrp(const char *user, const char *intermediate_user, 
+                    int min_gid, int min_uid, int add_grp, char *err_str, 
+                    int use_qsub_gid, gid_t qsub_gid);
 
+int add_group(gid_t newgid);
  
 #endif /* __SGE_SET_UID_GID_H */
 

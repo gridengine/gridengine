@@ -48,7 +48,7 @@
 
 
 void qmonBrowserOpen(Widget w, XtPointer cld, XtPointer cad);
-void qmonBrowserShow(char *s);
+void qmonBrowserShow(const char *s);
 void qmonBrowserMessages(Widget w, XtPointer cld, XtPointer cad);
 Boolean qmonBrowserObjectEnabled(int obj_id);
 

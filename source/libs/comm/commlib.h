@@ -170,27 +170,27 @@ extern char COMMLIB_BUFFER[2048];
 
 void commlib_init(void);
 
-int set_commlib_param(int param, int intval, char *strval, int *intval_array);
+int set_commlib_param(int param, int intval, const char *strval, int *intval_array);
 
 int receive_message(char *fromcommproc, u_short *fromid, char *fromhost, int *tag, char **buffer, u_long32 *buflen, int synchron, u_short *compressed);
 
-int send_message(int synchron, char *tocomproc, int toid, char *tohost, int tag, char *buffer, int buflen, u_long32 *mid, int compressed);
+int send_message(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, char *buffer, int buflen, u_long32 *mid, int compressed);
 
 int leave_commd(void);
 
 int cntl(u_short cntl_operation, u_long32 *arg, char *carg);
 
-unsigned int ask_commproc(char *host, char *commprocname, u_short commprocid);
+unsigned int ask_commproc(const char *host, const char *commprocname, u_short commprocid);
 
 const char *cl_errstr(int n);
 
-int getuniquehostname(char *hostin, char *hostout, int refresh_aliases);
+int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases);
 
 int remove_pending_messages(char *fromcommproc, u_short fromid, char *fromhost, int tag);
 
-u_long last_heard_from(char *commproc, u_short *id, char *host);
+u_long last_heard_from(const char *commproc, u_short *id, const char *host);
 
-int set_last_heard_from(char *commproc, u_short id, char *host, u_long time);
+int set_last_heard_from(const char *commproc, u_short id, const char *host, u_long time);
 
 int reset_last_heard(void);
 
@@ -277,16 +277,16 @@ int get_commlib_state_changed_flag(void);
 void set_commlib_state_enrolled(int state);
 void set_commlib_state_ever_enrolled(int state);
 void set_commlib_state_stored_tag_priority_list(int *state);
-void set_commlib_state_componentname(char *state);
+void set_commlib_state_componentname(const char *state);
 void set_commlib_state_componentid(u_short state);
 void set_commlib_state_commdport(int state);
-void set_commlib_state_commdservice(char *state);
+void set_commlib_state_commdservice(const char *state);
 void set_commlib_state_commdaddr_length(int state);
 void set_commlib_state_sfd(int state);
 void set_commlib_state_lastmid(u_long state);
 void set_commlib_state_lastgc(u_long state);
 void set_commlib_state_reserved_port(int state);
-void set_commlib_state_commdhost(char *state);
+void set_commlib_state_commdhost(const char *state);
 void set_commlib_state_timeout(int state);
 void set_commlib_state_timeout_srcv(int state);
 void set_commlib_state_timeout_ssnd(int state);

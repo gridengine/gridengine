@@ -567,7 +567,7 @@ int name
    (runtime type checking)
 
  */
-char *lGetPosString(
+const char *lGetPosString(
 const lListElem *ep,
 int pos 
 ) {
@@ -614,7 +614,7 @@ int nm
    (runtime type checking)
 
  */
-char *lGetString(
+const char *lGetString(
 const lListElem *ep,
 int name 
 ) {
@@ -2018,7 +2018,6 @@ const char *str
       DEXIT;
       abort();
    }
-
    /* seek element */
    ep = lGetElemStr(*lpp, nm, str);
    if (ep) {
@@ -2249,7 +2248,7 @@ const char *str
 ) {
    lListElem *ep;
    int str_pos;
-   char *s;
+   const char *s;
 
    DENTER(CULL_LAYER, "lGetElemStr");
    if (!str) {
@@ -2897,7 +2896,7 @@ const char *str
 ) {
    lListElem *ep;
    int str_pos;
-   char *s;
+   const char *s;
 
    DENTER(CULL_LAYER, "lGetElemCaseStr");
    if (!str) {
@@ -2963,7 +2962,7 @@ const char *str
 ) {
    lListElem *ep;
    int str_pos;
-   char *s;
+   const char *s;
    char uhost[MAXHOSTLEN+1], cmphost[MAXHOSTLEN+1];
 
    DENTER(TOP_LAYER, "lGetElemHost");

@@ -203,7 +203,7 @@ typedef struct {
 static double mem, cpu, io, ltmem, ltcpu, ltio, level, total,
        lt_share, st_share, actual_share, combined_usage;
 static lUlong current_time, time_stamp, shares, job_count;
-static char *node_name, *user_name, *project_name;
+static const char *node_name, *user_name, *project_name;
 
 static item_t item[] = {
     { "curr_time", DATE_T, &current_time },

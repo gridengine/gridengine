@@ -99,7 +99,7 @@ int is_array
    char sge_mail_end[128];
    char str_general[512] = "";
    u_long32 jobid, jataskid, failed, general;
-   char *q, *h;
+   const char *q, *h;
    lListElem *ep;
    lList *lp_mail = NULL;
    u_long32 now;
@@ -116,7 +116,7 @@ int is_array
    int sge_mail_body_total_size = 0;
    FILE *fp;
    int start = 0;
-   char *job_owner;   
+   const char *job_owner;   
 
    DENTER(TOP_LAYER, "job_related_adminmail");
 
@@ -157,7 +157,7 @@ int is_array
    now = sge_get_gmt();
    
    if (failed) {
-      char *err_str;
+      const char *err_str;
 
       if (failed <= MAX_SSTATE) {
          /*

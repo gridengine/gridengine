@@ -105,7 +105,8 @@ int job_log(u_long32 job_number, u_long32 task_number, const char *str)
    FILE *fp;
    time_t now;
    char dummy_str[256], date[256];
-   char *progname, *hostname;
+   const char *progname;
+   char *hostname;
 
    if (!job_log_file[0])
       return 1;

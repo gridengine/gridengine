@@ -1065,7 +1065,7 @@ int nm0,
 int nm1 
 ) {
    lListElem *ep;
-   String name;
+   StringConst name;
    int tickets;
    char buf[128];
    char buf2[128];
@@ -1099,7 +1099,8 @@ int nm1
                            1);         /* we add 1 row         */
          max_rows++;
       }
-      XbaeMatrixSetCell(matrix, row, 0, name ? name : "");
+      /* FIX_CONST_GUI */
+      XbaeMatrixSetCell(matrix, row, 0, name ? (const String) name : "");
       XbaeMatrixSetCell(matrix, row, 1, buf);
    }
 

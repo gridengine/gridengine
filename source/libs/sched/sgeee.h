@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_boundaries.h"
 #include "cull.h"
 #include "sge_schedd.h"
@@ -71,7 +69,7 @@ typedef struct {
 #define SGE_USAGE_INTERVAL 60
 
 int sge_calc_tickets ( sge_Sdescr_t *lists,
-		       lList *queued_jobs,
+	          	       lList *queued_jobs,
                        lList *running_jobs,
                        lList *finished_jobs,
                        int do_usage );
@@ -88,7 +86,7 @@ void sge_job_inactive ( lListElem *job,
 
 void sge_dump_list ( lList *list );
 
-void dump_list_to_file ( lList *list, char *file );
+void dump_list_to_file ( lList *list, const char *file );
 
 void sge_clear_job ( lListElem *job );
 
@@ -101,6 +99,7 @@ lList *sge_build_sge_orders ( sge_Sdescr_t *lists,
                               lList *order_list,
                               int update_usage_and_configuration,
                               int seqno );
+
 int sge_scheduler ( sge_Sdescr_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,

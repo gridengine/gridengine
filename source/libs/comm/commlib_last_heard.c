@@ -50,11 +50,15 @@
 
 extern int commlib_debug;
 
-static void new_entry(char *commproc, u_short id, char *host, u_long time);
-static entry *find_entry(char *commproc, u_short id, char *host, u_long now);
+static void new_entry(const char *commproc, u_short id, const char *host, 
+                      u_long time);
 
-static int set_last_heard_from_(char *commproc, u_short id, char *host, u_long time);
-static u_long last_heard_from_(char *commproc, u_short *id, char *host);
+static entry *find_entry(const char *commproc, u_short id, const char *host, 
+                         u_long now);
+
+static int set_last_heard_from_(const char *commproc, u_short id, const char *host, u_long time);
+static u_long last_heard_from_(char *commproc, u_short *id, 
+                               char *host);
 
 /*****************************************************************
  ask about last alive sign of other commproc *without* doing
@@ -76,13 +80,14 @@ static u_long last_heard_from_(char *commproc, u_short *id, char *host);
     time (seconds since epoch) we've last heard from this commproc
  *****************************************************************/
 u_long last_heard_from(
-char *commproc,
+const char *commproc,
 u_short *id,
-char *host 
+const char *host 
 ) {
    u_long time;
 
-   time = last_heard_from_(commproc, id, host);
+   /* FIX_CONST */
+   time = last_heard_from_((char*)commproc, id, (char*)host);
    if (commlib_debug) {
       printf(MSG_COMMLIB_LAST_HEARD_USIS ,
          u32c (time), commproc ? commproc : "", (int) (id ? *id : 0) , host ? host : "");
@@ -118,10 +123,11 @@ char *host
 
 
    if (commproc && commproc[0] == '\0') {
-      if (ptr->commproc)
+      if (ptr->commproc) {
          strcpy(commproc, ptr->commproc);
-      else
-         commproc[0] = '\0';
+      } else {
+         (commproc)[0] = '\0';
+      }
    }      
 
    if (id && *id == 0)
@@ -154,7 +160,8 @@ char *host
  unheard.
 
  ****************************************************************/
-int set_last_heard_from(char *commproc, u_short id, char *host, u_long time)
+int set_last_heard_from(const char *commproc, u_short id, const char *host, 
+                        u_long time)
 {
    int ret;
 
@@ -167,7 +174,7 @@ int set_last_heard_from(char *commproc, u_short id, char *host, u_long time)
    return ret;
 }
 
-static int set_last_heard_from_(char *commproc, u_short id, char *host, u_long time)
+static int set_last_heard_from_(const char *commproc, u_short id, const char *host, u_long time)
 {
    /* throw away old stuff every 5 minutes (if we are called) */
    if (time && (time - get_commlib_state_lastgc() > 5 * 60)) {
@@ -202,7 +209,7 @@ static int set_last_heard_from_(char *commproc, u_short id, char *host, u_long t
  find_entry() searches for an entry in the last heard from list.
  He throws away old stuff.
  *************************************************************/
-static entry *find_entry(char *commproc, u_short id, char *host,
+static entry *find_entry(const char *commproc, u_short id, const char *host,
                          u_long now)
 {
    entry *ptr = NULL, *last = NULL;
@@ -272,7 +279,7 @@ static entry *find_entry(char *commproc, u_short id, char *host,
 }
 
 /***************************************/
-static void new_entry(char *commproc, u_short id, char *host,
+static void new_entry(const char *commproc, u_short id, const char *host,
                       u_long time)
 {
    entry *new;

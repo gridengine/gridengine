@@ -117,7 +117,7 @@ lList **topp  /* ticket orders ptr ptr */
 ) {
    int allowed;
    u_long32 job_number, task_number;
-   char *or_pe, *q_name=NULL;
+   const char *or_pe, *q_name=NULL;
    u_long32 or_type;
    int seq_no;
    lList *acl, *xacl;
@@ -685,7 +685,7 @@ lList **topp  /* ticket orders ptr ptr */
                all job slots being used on the host */
 
             if ((oeql=lCopyList(NULL, lGetList(ep, OR_queuelist)))) {
-               char *oep_qname=NULL, *oep_hname=NULL;
+               const char *oep_qname=NULL, *oep_hname=NULL;
                lListElem *oep_qep=NULL;
 
                /* set granted slot tickets */
@@ -706,7 +706,7 @@ lList **topp  /* ticket orders ptr ptr */
                       ((oep_qep = sge_locate_queue(oep_qname))) &&
                       ((oep_hname=lGetString(oep_qep, QU_qhostname)))) {
 
-                     char *curr_oep_qname=NULL, *curr_oep_hname=NULL;
+                     const char *curr_oep_qname=NULL, *curr_oep_hname=NULL;
                      lListElem *curr_oep, *next_oep, *curr_oep_qep=NULL;
                      double job_tickets_on_host = lGetDouble(oep, OQ_ticket);
                      lListElem *newep;
@@ -845,7 +845,7 @@ DTRACE;
       if (feature_is_enabled(FEATURE_SGEEE)) {
          lListElem *up_order, *up, *ju, *up_ju, *next;
          int pos;
-         char *up_name;
+         const char *up_name;
          lList *tlp;
          char fname[SGE_PATH_MAX];
 
@@ -1018,7 +1018,7 @@ DTRACE;
             /* don't panic - it is probably an exiting job */
             WARNING((SGE_EVENT, MSG_JOB_SUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
          } else {
-            char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
+            const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
             queueep = sge_locate_queue(qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU,
@@ -1041,7 +1041,7 @@ DTRACE;
             lSetUlong(jatp, JAT_state, state);
 
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+            job_write_spool_file(jep, 0, SPOOL_DEFAULT);
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
@@ -1067,7 +1067,7 @@ DTRACE;
             WARNING((SGE_EVENT, MSG_JOB_UNSUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
          } 
          else {
-            char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
+            const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
             queueep = sge_locate_queue(qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, qnm, u32c(jobid)));
@@ -1088,7 +1088,7 @@ DTRACE;
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+            job_write_spool_file(jep, 0, SPOOL_DEFAULT);
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
@@ -1129,7 +1129,8 @@ lList *ticket_orders
 ) {
    u_long32 jobid, jataskid; 
    lList *to_send;
-   char *host_name, *master_host_name;
+   const char *host_name;
+   const char *master_host_name;
    lListElem *jep, *other_jep, *ep, *ep2, *next, *other, *jatask = NULL, *other_jatask;
    sge_pack_buffer pb;
    int cl_err = 0;
@@ -1194,7 +1195,8 @@ lList *ticket_orders
       n = lGetNumberOfElem(to_send);
 
       if (  hep && 
-            last_heard_from(prognames[EXECD], &number_one, master_host_name)
+            last_heard_from(prognames[EXECD], &number_one, 
+            master_host_name) 
             +10*conf.load_report_time > now) {
 
          /* should have now all ticket orders for 'host' in 'to_send' */ 

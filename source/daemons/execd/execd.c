@@ -70,8 +70,8 @@
 #include "startprog.h"
 #include "usage.h"
 #include "sge_switch_user.h"
-#include "sge_file_path.h"
 #include "read_write_job.h"
+#include "sge_file_path.h"
 
 #include "basis_types.h"
 #include "msg_utilib.h"
@@ -290,10 +290,10 @@ char **argv
 #endif
 
    Master_Job_List = lCreateList("Master_Job_List", JB_Type);
-   job_read_job_list_from_disk(&Master_Job_List, "Master_Job_List",
-                               0, 0, NULL, SPOOL_WITHIN_EXECD, 
-                               job_initialize_job);
-
+   job_list_read_from_disk(&Master_Job_List, "Master_Job_List",
+                           0, 0, NULL, SPOOL_WITHIN_EXECD, 
+                          job_initialize_job);
+   
    /* clean up jobs hanging around (look in active_dir) */
    clean_up_old_jobs(1);
    sge_send_all_reports(0, NUM_REP_REPORT_JOB, execd_report_sources);

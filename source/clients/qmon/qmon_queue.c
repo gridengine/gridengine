@@ -89,7 +89,7 @@ static void qmonQueueStopUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQueueHash(lList *qlp, lList *hl);
 static void qmonQueueSetPos(lList *qlp);
 static void qmonQueueRemove(tQueueIcon *qI);
-static char *qmonQueueGetArch(char *qhostname);
+static char *qmonQueueGetArch(const char *qhostname);
 static char *qmonQueueGetSymbol(char *arch);
 static String qmonQueueShowBrowserInfo(lListElem *qep);
 static void qmonDrawQueueButton(Widget w, XtPointer cld, XtPointer cad);
@@ -527,7 +527,7 @@ lList *new_hl
    lListElem *qep;
    tQueueIcon *queueIcon;
    long id;
-   char *qname, *qhostname;
+   const char *qname, *qhostname;
    Boolean already_hashed;
    
    DENTER(GUI_LAYER, "qmonQueueHash");
@@ -647,7 +647,7 @@ lList *qlp
    int grid_x = 0;
    int grid_y = 0;
    long q;
-   char *qname = NULL;
+   const char *qname = NULL;
    tQueueIcon *qI = NULL;
    int i, j;
    int max_count = 0;
@@ -825,7 +825,7 @@ lListElem *qep
    lList *ncl = NULL;
    lList *ehl = NULL;
    lList *cl = NULL; 
-   String new_row[3];
+   StringConst new_row[3];
    int rows;
    float fval;
    XmString xstr;
@@ -852,9 +852,9 @@ lListElem *qep
       int n;
       u_long32 type;
       char unit;
-      String name;
-      String slot_limit;
-      String job_limit;
+      StringConst name;
+      StringConst slot_limit;
+      StringConst job_limit;
       if (!(name = lGetString(ep, CE_name))) 
          continue;
       /* don't view value entry from complex */
@@ -887,7 +887,8 @@ lListElem *qep
       new_row[0] = name; 
       new_row[1] = slot_limit ? slot_limit : "";
       new_row[2] = job_limit ? job_limit : ""; 
-      XbaeMatrixAddRows(matrix, 0, new_row, NULL, NULL, 1); 
+      /* FIX_CONST_GUI */
+      XbaeMatrixAddRows(matrix, 0, (String*) new_row, NULL, NULL, 1); 
 
       rows++;
    }
@@ -909,7 +910,7 @@ lListElem *qep
    char buf[BUFSIZ];
    String qtypes[] = { "BATCH", "INTERACTIVE", "CHECKPOINT", "PARALLEL", 
                      "TRANSFER" };
-   char *str, *str2;
+   const char *str, *str2;
 
    DENTER(GUI_LAYER, "qmonQueueShowBrowserInfo");
 
@@ -1114,7 +1115,7 @@ XtPointer cld, cad;
    char buf[BUFSIZ];
    char hostname[128];
    char qstates[128];
-   char *qname = NULL, *qhostname = NULL;
+   const char *qname = NULL, *qhostname = NULL;
    unsigned long job_slots = 0, job_slots_used = 0;
    unsigned long qstate = 0, alarm_set = 0, suspend_threshold_alarm = 0;
    int i; 
@@ -1502,7 +1503,7 @@ XtPointer cld, cad;
 
 /*-------------------------------------------------------------------------*/
 static char *qmonQueueGetArch(
-char *qhostname 
+const char *qhostname 
 ) {
    lList *ehl = NULL;
    lListElem *ehp = NULL;

@@ -44,7 +44,8 @@ int count_suspended_on_subordinate(lListElem *queueep);
 
 /* parameters for check_subordinate_list(how) */
 enum { CHECK4ADD, CHECK4MOD, CHECK4SETUP }; 
-int check_subordinate_list(lList **alpp, char *qname, char *host, u_long32 slots, lList *sol, int how);
+int check_subordinate_list(lList **alpp, const char *qname, const char *host, 
+                           u_long32 slots, lList *sol, int how);
 
 int copy_suspended(lList **sol_out, lList *sol_in, int unused, int total, int suspended_on_subordinate);
 

@@ -123,7 +123,7 @@ static int has_to_use_gnu_load_sensor = 0;
 static pid_t sge_ls_get_pid(lListElem *this_ls)
 {
    pid_t pid = -1;
-   char *pid_string;
+   const char *pid_string;
 
    pid_string = lGetString(this_ls, LS_pid);
    if (pid_string) {
@@ -952,8 +952,8 @@ int sge_ls_get(lList **lpp)
    for_each(ls_elem, ls_list) {
       int restart = 0;
       SGE_STRUCT_STAT st;
-      char *ls_command;
-      char *ls_name;
+      const char *ls_command;
+      const char *ls_name;
 
       ls_command = lGetString(ls_elem, LS_command);
       ls_name = lGetString(ls_elem, LS_name);

@@ -56,8 +56,8 @@
 int get_pids(
 pid_t *pids,
 int max_pids,
-char *name,
-char *pscommand 
+const char *name,
+const char *pscommand 
 ) {
    FILE *fp_in, *fp_out, *fp_err;
    char buf[10000], *ptr;
@@ -149,8 +149,8 @@ int npids
  *-----------------------------------------------------------------------*/
 int checkprog(
 pid_t pid,
-char *name,
-char *pscommand 
+const char *name,
+const char *pscommand 
 ) {
    FILE *fp_in, *fp_out, *fp_err;
    char buf[1000], *ptr;

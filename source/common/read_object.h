@@ -40,7 +40,7 @@ struct read_object_args {
    ReadWorkFuncT work_func;
 };
 
-lListElem *read_object(char *dirname, char *filename, int spool, int flag, int read_config_list_flag, struct read_object_args *args, int *tag, int fields[]);
+lListElem *read_object(const char *dirname, const char *filename, int spool, int flag, int read_config_list_flag, struct read_object_args *args, int *tag, int fields[]);
 
 #define NULL_OUT_NONE(ep, nm) \
    if (lGetString(ep, nm) && !strcasecmp(lGetString(ep, nm), "none")) \

@@ -83,7 +83,7 @@ lList *acl_args
 ) {
    lListElem *userarg, *aclarg;
    lList *acl=NULL, *answers=NULL;
-   char *acl_name, *user_name;
+   const char *acl_name, *user_name;
    lCondition *where;
    lEnumeration *what;
    u_long32 status;
@@ -135,7 +135,7 @@ lList *acl_args
          }
          else {
             if ((status = lGetUlong(lFirst(answers), AN_status))!=STATUS_OK) {
-               char *cp;
+               const char *cp;
             
                cp = lGetString(lFirst(answers), AN_text);
                if (cp) {
@@ -178,7 +178,7 @@ lList *acl_args
 ) {
    lListElem *userarg, *aclarg;
    lList *acl=NULL, *answers=NULL;
-   char *acl_name, *user_name;
+   const char *acl_name, *user_name;
    lCondition *where;
    lEnumeration *what;
    u_long32 status;
@@ -278,7 +278,7 @@ lList **dst
    lListElem *aclarg;
    lCondition *where, *newcp;
    lEnumeration *what;
-   char *acl_name;
+   const char *acl_name;
    
    DENTER(TOP_LAYER, "sge_client_get_acls");
 

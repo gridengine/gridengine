@@ -53,8 +53,8 @@
  *          static buffer.
  *--------------------------------------------------------------------*/
 char *get_confval(
-char *conf_val,
-char *fname    
+const char *conf_val,
+const char *fname    
 ) {
    FILE *fp;
    char buf[1024], *cp;
@@ -110,7 +110,7 @@ char *fname
  *          Any characters or lines after a valid pid are ignored
  *--------------------------------------------------------------------*/
 pid_t readpid(
-char *fname 
+const char *fname 
 ) {
    FILE *fp;
    char buf[512], *cp;

@@ -87,7 +87,7 @@ static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = {
    {0, 1, 1, 1, 1, 1,   0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_RESERVED_PORT */
 };
 
-static struct feature_names_t feature_list[] = {
+static feature_names_t feature_list[] = {
    {FEATURE_USE_OSJOB_ID,           "use_osjob_id"},
    {FEATURE_REPRIORISATION,         "repriorisation"},
    {FEATURE_REPORT_USAGE,           "report_usage"},
@@ -99,7 +99,7 @@ static struct feature_names_t feature_list[] = {
    {0, NULL}
 };  
 
-static struct feature_names_t featureset_list[] = {
+static feature_names_t featureset_list[] = {
    {FEATURESET_SGE,                 "sge"},
    {FEATURESET_SGEEE,               "sgeee"},
    {FEATURESET_SGE_AFS,             "sge-afs"},
@@ -188,7 +188,8 @@ static void feature_initialize(void)
 *
 *******************************************************************************
 */
-int feature_initialize_from_file(char *filename) {
+int feature_initialize_from_file(const char *filename) 
+{
    int ret;
 
    DENTER(TOP_LAYER, "featureset_initialize_from_file");
@@ -246,8 +247,8 @@ int feature_initialize_from_file(char *filename) {
 *
 *******************************************************************************
 */
-int feature_initialize_from_string(char *mode) {
-   enum featureset_id_t id;
+int feature_initialize_from_string(const char *mode) {
+   featureset_id_t id;
    int ret;
 
    DENTER(TOP_LAYER, "featureset_initialize_from_string");
@@ -268,7 +269,7 @@ int feature_initialize_from_string(char *mode) {
 *     feature_activate() -- switches the active featureset 
 *
 *  SYNOPSIS
-*     void feature_activate(enum featureset_ id) 
+*     void feature_activate(featureset_ id) 
 *
 *  FUNCTION
 *     Marks the current active featureset within the Master_FeatureSet_List
@@ -284,7 +285,7 @@ int feature_initialize_from_string(char *mode) {
 *******************************************************************************
 */
 void feature_activate(
-enum featureset_id_t id 
+featureset_id_t id 
 ) {
    lListElem *active_set;
    lListElem *inactive_set;
@@ -315,7 +316,7 @@ enum featureset_id_t id
 *     feature_is_active() -- is featureset active? 
 *
 *  SYNOPSIS
-*     int feature_is_active(enum featureset_id_t id) 
+*     int feature_is_active(featureset_id_t id) 
 *
 *  FUNCTION
 *     returns true or false whether the given featureset whithin the 
@@ -331,7 +332,7 @@ enum featureset_id_t id
 *******************************************************************************
 */
 int feature_is_active(
-enum featureset_id_t id 
+featureset_id_t id 
 ) {
    lListElem *feature;
    int ret = 0;
@@ -350,17 +351,17 @@ enum featureset_id_t id
 *     feature_get_active_featureset_id() -- current active featureset 
 *
 *  SYNOPSIS
-*     enum featureset_id_t feature_get_active_featureset_id() 
+*     featureset_id_t feature_get_active_featureset_id() 
 *
 *  FUNCTION
 *     return an id of the current active featureset 
 *
 *  RESULT
-*     enum featureset_id_t - (find the definition in the .h file)
+*     featureset_id_t - (find the definition in the .h file)
 *
 ******************************************************************************
 */
-enum featureset_id_t feature_get_active_featureset_id(void) 
+featureset_id_t feature_get_active_featureset_id(void) 
 {
    lListElem *feature;
    int ret = FEATURESET_UNINITIALIZED;
@@ -381,21 +382,21 @@ enum featureset_id_t feature_get_active_featureset_id(void)
 *     feature_get_featureset_name() -- return the product mode string
 *
 *  SYNOPSIS
-*     char* feature_get_featureset_name(enum featureset_id_t id) 
+*     char* feature_get_featureset_name(featureset_id_t id) 
 *
 *  FUNCTION
 *     returns the corresponding modestring for a featureset constant 
 *
 *  INPUTS
-*     enum featureset_id_t id - constant
+*     featureset_id_t id - constant
 *
 *  RESULT
 *     mode string 
 *
 ******************************************************************************
 */
-char *feature_get_featureset_name(
-enum featureset_id_t id 
+const char *feature_get_featureset_name(
+featureset_id_t id 
 ) {
    int i = 0;
    char *ret = "<<unknown>>";
@@ -416,7 +417,7 @@ enum featureset_id_t id
 *     feature_get_featureset_id() -- returns a constant for a featureset string 
 *
 *  SYNOPSIS
-*     enum featureset_id_t feature_get_featureset_id(char* name) 
+*     featureset_id_t feature_get_featureset_id(char* name) 
 *
 *  FUNCTION
 *     This function returns the corresponding enum value for
@@ -426,15 +427,15 @@ enum featureset_id_t id
 *     char* name - feature set name earlier known as product mode string 
 *
 *  RESULT
-*     enum featureset_id_t 
+*     featureset_id_t 
 *
 *******************************************************************************
 */
-enum featureset_id_t feature_get_featureset_id(
-char *name 
+featureset_id_t feature_get_featureset_id(
+const char *name 
 ) {
    int i = 0;
-   enum featureset_id_t ret = FEATURESET_UNINITIALIZED;
+   featureset_id_t ret = FEATURESET_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "featureset_get_id");
    if (!name) {
@@ -456,7 +457,7 @@ char *name
 *     feature_get_product_name() -- get product name string 
 *
 *  SYNOPSIS
-*     char* feature_get_product_name(enum featureset_product_name_id_t style) 
+*     char* feature_get_product_name(featureset_product_name_id_t style) 
 *
 *  FUNCTION
 *     This function will return a text string containing the 
@@ -476,13 +477,13 @@ char *name
 *
 *******************************************************************************
 */
-char *feature_get_product_name(
-enum featureset_product_name_id_t style 
+const char *feature_get_product_name(
+featureset_product_name_id_t style 
 ) {
-   char *long_name  = "";
-   char *short_name = "";
-   char *version    = "";
-   char *ret = NULL;  
+   const char *long_name  = "";
+   const char *short_name = "";
+   const char *version    = "";
+   const char *ret = NULL;  
    DENTER(TOP_LAYER, "feature_get_product_name");
 
    if (feature_get_active_featureset_id() != FEATURESET_UNINITIALIZED ) {
@@ -532,14 +533,14 @@ enum featureset_product_name_id_t style
 *     feature_is_enabled() -- 0/1 whether the feature is enabled 
 *
 *  SYNOPSIS
-*     int feature_is_enabled(enum feature_id_t id) 
+*     int feature_is_enabled(feature_id_t id) 
 *
 *  FUNCTION
 *     return true or false whether the given feature is enabled or disabled
 *     in the current active featureset 
 *
 *  INPUTS
-*     enum feature_id_t id 
+*     feature_id_t id 
 *
 *  RESULT
 *     0 (false)
@@ -548,7 +549,7 @@ enum featureset_product_name_id_t style
 *******************************************************************************
 */
 int feature_is_enabled(
-enum feature_id_t id 
+feature_id_t id 
 ) {
    lListElem *active_set;
    lListElem *feature = NULL;
@@ -571,13 +572,13 @@ enum feature_id_t id
 *     feature_get_name() -- returns the feature as string 
 *
 *  SYNOPSIS
-*     char* feature_get_name(enum feature_id_t id) 
+*     char* feature_get_name(feature_id_t id) 
 *
 *  FUNCTION
 *     return the corresponding feature name 
 *
 *  INPUTS
-*     enum feature_ id 
+*     feature_ id 
 *
 *  RESULT
 *     char* - name of the given feature constant 
@@ -585,8 +586,8 @@ enum feature_id_t id
 *
 *******************************************************************************
 */
-char *feature_get_name(
-enum feature_id_t id 
+const char *feature_get_name(
+feature_id_t id 
 ) {
    int i = 0;
    char *ret = "<<unknown>>";
@@ -607,7 +608,7 @@ enum feature_id_t id
 *     feature_get_id() -- translates a feature string into the constant 
 *
 *  SYNOPSIS
-*     enum feature_id_t feature_get_id(char* name) 
+*     feature_id_t feature_get_id(char* name) 
 *
 *  FUNCTION
 *     returns the corresponding constant for a given feature string 
@@ -616,15 +617,15 @@ enum feature_id_t id
 *     char* name - valid strings are mentioned above (feature_list[]) 
 *
 *  RESULT
-*     enum feature_id_t 
+*     feature_id_t 
 *
 *******************************************************************************
 */
-enum feature_id_t feature_get_id(
-char *name 
+feature_id_t feature_get_id(
+const char *name 
 ) {
    int i = 0;
-   enum feature_id_t ret = FEATURESET_UNINITIALIZED;
+   feature_id_t ret = FEATURESET_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "feature_get_id");
    while (feature_list[i].name && strcmp(feature_list[i].name, name)) {

@@ -283,7 +283,7 @@ REM
 
 */
 int replace_params(
-char *src,
+const char *src,
 char *dst,
 int dst_len,
 char **allowed  
@@ -291,7 +291,8 @@ char **allowed
    char err_str[4096];
    char name[256];
    int name_len;
-   char *sp, *dp;
+   const char *sp;
+   char *dp;
    char **spp, *value = NULL;
    int just_check = 0;
 

@@ -46,7 +46,8 @@
 #include "sge_string.h"
 #include "msg_gdilib.h"
 
-static int sge_parse_enum(char *str, char *enumv[], u_long32 *uptr, char *name, lList **alpp); 
+static int sge_parse_enum(const char *str, char *enumv[], u_long32 *uptr, 
+                          const char *name, lList **alpp); 
 /* 
 **
 ** DESCRIPTION
@@ -63,21 +64,14 @@ static int sge_parse_enum(char *str, char *enumv[], u_long32 *uptr, char *name, 
 ** RETURN
 **    A NULL pointer as answer list signals success.
 */
-int read_config_list(
-FILE *fp,
-lList **lpp,
-lList **alpp,
-lDescr *dp,
-int nm1,
-int nm2,
-int nm3,
-char *delimitor,
-int flag,
-char *buffer,
-int buffer_size 
-) {
+int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
+                     int nm2, int nm3, char *delimitor, int flag, char *buffer,
+                     int buffer_size) 
+{
    lListElem *ep;
-   char *name, *value, *tmp;
+   char *name; 
+   char *value;
+   char *tmp;
    char *s;
    struct saved_vars_s *last = NULL;
    int force_value;
@@ -200,13 +194,9 @@ Error:
 **    Returns sub-list value or NULL if such a list
 **    does not exist.
 */
-lList *get_conf_sublist(
-lList **alpp,
-lList *lp,
-int name_nm,
-int value_nm,
-char *key 
-) {
+lList *get_conf_sublist(lList **alpp, lList *lp, int name_nm, int value_nm,
+                        const char *key) 
+{
    lList *value;
    lListElem *ep;
 
@@ -244,17 +234,12 @@ char *key
 **    Returns string value or NULL if such a value
 **    does not exist.
 */
-char *get_conf_value(
-lList **alpp,
-lList *lp,
-int name_nm,
-int value_nm,
-char *key 
-) {
+char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm,
+                           const char *key) {
    char *value;
    lListElem *ep;
 
-   DENTER(CULL_LAYER, "get_conf_value");
+   DENTER(TOP_LAYER, "get_conf_value");
    
    if (!(ep=lGetElemStr(lp, name_nm, key))) {
       if (alpp) {
@@ -266,7 +251,8 @@ char *key
       return NULL;
    }
 
-   value = lGetString(ep, value_nm);
+   /* FIX_CONST */
+   value = (char*) lGetString(ep, value_nm);
    DPRINTF(("%s = %s\n", key, value?value:"<null ptr>"));
 
    DEXIT;
@@ -290,11 +276,11 @@ int set_conf_string(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm 
 ) {
-   char *str;
+   const char *str;
 
    DENTER(CULL_LAYER, "set_conf_string");
 
@@ -329,11 +315,11 @@ int set_conf_bool(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm 
 ) {
-   char *str;
+   const char *str;
 
    DENTER(CULL_LAYER, "set_conf_boolean");
 
@@ -371,11 +357,11 @@ int set_conf_ulong(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm 
 ) {
-   char *str;
+   const char *str;
    u_long32 uval;
 
    DENTER(CULL_LAYER, "set_conf_ulong");
@@ -418,12 +404,12 @@ int set_conf_double(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm,
 int operation_nm 
 ) {
-   char *str;
+   const char *str;
    double dval;
 
    DENTER(CULL_LAYER, "set_conf_double"); 
@@ -491,7 +477,7 @@ int set_conf_deflist(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm,
 lDescr *descr,
@@ -544,11 +530,11 @@ int set_conf_timestr(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm 
 ) {
-   char *str;
+   const char *str;
 
    DENTER(CULL_LAYER, "set_conf_timestring");
 
@@ -593,11 +579,11 @@ int set_conf_memstr(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm 
 ) {
-   char *str;
+   const char *str;
 
    DENTER(CULL_LAYER, "set_conf_memstr");
 
@@ -633,16 +619,10 @@ int name_nm
  ****
  **** The function returns FALSE on error, otherwise TRUE.
  ****/
-int set_conf_enum(
-lList **alpp,
-lList **clpp,
-int fields[],
-char *key,
-lListElem *ep,
-int name_nm,
-char **enum_strings 
-) {
-   char *str;
+int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
+                  lListElem *ep, int name_nm, char **enum_strings) 
+{
+   const char *str;
    u_long32 uval = 0;
 
    DENTER(CULL_LAYER, "set_conf_enum");
@@ -687,18 +667,11 @@ char **enum_strings
  ****
  **** The function returns FALSE on error, otherwise TRUE.
  ****/
-int set_conf_list(
-lList **alpp,
-lList **clpp,
-int fields[],
-char *key,
-lListElem *ep,
-int name_nm,
-lDescr *descr,
-int sub_name_nm 
-) {
+int set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, 
+                  lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm) 
+{
    lList *tmplp = NULL;
-   char *str;
+   const char *str;
    char delims[] = "\t \v\r,"; 
 
    DENTER(TOP_LAYER, "set_conf_list");
@@ -708,7 +681,7 @@ int sub_name_nm
       return fields?TRUE:FALSE;
    }
    lString2List(str, &tmplp, descr, sub_name_nm, delims); 
-   
+
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 
@@ -717,8 +690,7 @@ int sub_name_nm
       DEXIT;
       return TRUE;
    }
-   if(tmplp)
-      lFreeList(tmplp);
+   lFreeList(tmplp);
 
    DEXIT;
    return TRUE;
@@ -748,7 +720,7 @@ int set_conf_subordlist(
 lList **alpp,
 lList **clpp,
 int fields[],
-char *key,
+const char *key,
 lListElem *ep,
 int name_nm,
 lDescr *descr,
@@ -757,7 +729,9 @@ int subval_nm
 ) {
    lList *tmplp = NULL;
    lListElem *tmpep;
-   char *str, *s, *endptr;
+   const char *str;
+   const char *s;
+   char *endptr;
 
    DENTER(CULL_LAYER, "set_conf_subordlist");
 
@@ -840,14 +814,11 @@ int name_nm
    -1 error
 
 */
-static int sge_parse_enum(
-char *str,
-char *set_specifier[],
-u_long32 *value,
-char *name,
-lList **alpp 
-) {
-   char *s, **cpp;
+static int sge_parse_enum(const char *str, char *set_specifier[], 
+                          u_long32 *value, const char *name, lList **alpp) 
+{
+   const char *s;
+   char **cpp;
    u_long32 bitmask;
    /* isspace() character plus "," */
    static char delim[] = ", \t\v\n\f\r";

@@ -41,7 +41,7 @@
 
 /****************************************************************/
 int sge_chdir(
-char *path,
+const char *path,
 int exit_on_error 
 ) {
 

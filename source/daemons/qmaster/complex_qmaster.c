@@ -77,8 +77,8 @@ extern lList *Master_Complex_List;
 extern lList *Master_Exechost_List;
 extern lList *Master_Sched_Config_List;
 
-static void sge_change_queue_version_complex(char *cmplx_name);
-static int verify_complex_deletion(lList **alpp, char *userset_name);
+static void sge_change_queue_version_complex(const char *cmplx_name);
+static int verify_complex_deletion(lList **alpp, const char *userset_name);
 
 
 
@@ -94,7 +94,7 @@ char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {
-   char *complex_name;
+   const char *complex_name;
    lListElem *cep;
 
    DENTER(TOP_LAYER, "complex_mod");
@@ -126,7 +126,7 @@ int sub_command
                lListElem *qep;
                lListElem *hep;
                lListElem *scep;
-               char* load_formula;
+               const char* load_formula;
 
                /* try to find reference for CE element in each queue */
                for_each(qep, Master_Queue_List) {
@@ -213,7 +213,7 @@ int sub_command
       for_each(cep, lGetList(ep, CX_entries)) {
 
          lListElem *cr, *qep, *hep, *cxep;
-         char *name;
+         const char *name;
 
          name = lGetString(cep, CE_name);
 
@@ -511,7 +511,7 @@ char *ruser,
 char *rhost 
 ) {
    lListElem *ep;
-   char *cmplxname;
+   const char *cmplxname;
    int ret;
 
    DENTER(TOP_LAYER, "sge_del_complex");
@@ -590,7 +590,7 @@ char *rhost
    of all queues containing this complex;
 */
 static void sge_change_queue_version_complex(
-char *cmplx_name 
+const char *cmplx_name 
 ) {
    lListElem *ep;
 
@@ -610,7 +610,7 @@ char *cmplx_name
 
 static int verify_complex_deletion(
 lList **alpp,
-char *complex_name 
+const char *complex_name 
 ) {
    int ret = STATUS_OK;
    lListElem *ep;

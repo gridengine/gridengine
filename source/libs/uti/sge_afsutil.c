@@ -51,7 +51,7 @@
  * return pointer to buffer
  *------------------------------------------------------*/
 char *read_token(
-char *file 
+const char *file 
 ) {
    SGE_STRUCT_STAT sb;
    int fd;
@@ -98,9 +98,9 @@ char *file
  *        -1 in case of failure
  *-------------------------------------------------------------------*/
 int extend_afs_token(
-char *command,
+const char *command,
 char *tokenbuf,
-char *user,
+const char *user,
 int token_extend_time,
 char *err_str 
 ) {
@@ -149,7 +149,7 @@ char *err_str
  *        1 in case of error
  *-------------------------------------------------------------------*/
 int get_token_cmd(
-char *tokencmdname,
+const char *tokencmdname,
 char *buf 
 ) {
     SGE_STRUCT_STAT sb;

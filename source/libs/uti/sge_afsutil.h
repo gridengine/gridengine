@@ -32,13 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #define TOKEN_FILE "token.afs"
 
-char *read_token(char *);
-int extend_afs_token(char *, char *, char *, int, char *);
-int get_token_cmd(char *, char *);
+char *read_token(const char *file);
 
-#endif /* __SGE_COPY_APPEND_H */
+int extend_afs_token(const char *command, char *tokenbuf, const char *user, 
+                     int token_extend_time, char *err_str);
+
+int get_token_cmd(const char *tokencmdname, char *buf);
+
+#endif /* __SGE_AFSUTIL_H */
 

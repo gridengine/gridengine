@@ -52,7 +52,7 @@ int sge_load_alarm(lListElem *queue, lList *threshold, lList *exechost_list, lLi
  * get reason for alarm state on queue
  * 
  */
-char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, char  *reason, int reason_size, char *type); 
+char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, char  *reason, int reason_size, const char *type); 
 
 /* 
  * split queue list into unloaded and overloaded

@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-int cull_parse_mail_list(lList **lpp, char *mail_str);
+int cull_parse_mail_list(lList **lpp, const char *mail_str);
 
 #endif /* __PARSE_MAIL_H */
 

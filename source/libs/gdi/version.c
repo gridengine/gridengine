@@ -34,13 +34,13 @@
 #  include "copyright.h"
 #endif
 
-char GDI_VERSION[] = "5.3 maintrunc";
+const char GDI_VERSION[] = "5.3 maintrunc";
 
-char DQS_ACK[] = "\n\
+const char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\
 Florida State University in creating the DQS program.\n";
 
-char SISSL[] = "\n\
+const char SISSL[] = "\n\
 The Contents of this file are made available subject to the terms of\n\
 the Sun Industry Standards Source License Version 1.2\n\
 \n\

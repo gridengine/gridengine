@@ -44,10 +44,10 @@
  */
 int cull_parse_mail_list(
 lList **lpp,
-char *mail_str 
+const char *mail_str 
 ) {
-   char *user;
-   char *host;
+   const char *user;
+   const char *host;
    char **str_str;
    char **pstr;
    lListElem *ep, *tmp;

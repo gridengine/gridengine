@@ -488,7 +488,7 @@ int sge_process_all_events(lList *event_list) {
    lList *data_list, **lpp;
    lListElem *event, *ep, *ja_task = NULL;
    u_long32 number, type, intkey, intkey2;
-   char *strkey;
+   const char *strkey;
    int ret;
    int sge_mode = feature_is_enabled(FEATURE_SGEEE);
    int rebuild_categories = 0, 

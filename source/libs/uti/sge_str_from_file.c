@@ -159,9 +159,9 @@ char *str_from_stream(FILE *fp, int *len)
 
 /***************************************************/
 int str2file(
-char *str,
+const char *str,
 int len,
-char *fname 
+const char *fname 
 ) {
    FILE *fp;
 

@@ -192,7 +192,7 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 static void ptf_get_usage_from_data_collector(void);
 
 static lListElem *ptf_process_job(osjobid_t os_job_id,
-                                  char *task_id_str,
+                                  const char *task_id_str,
                                   lListElem *new_job, u_long32 jataskid);
 
 static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
@@ -201,7 +201,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
 static void ptf_set_job_priority(lListElem *job);
 
 static lList *_ptf_get_job_usage(lListElem *job, u_long ja_task_id,
-                                 char *task_id);
+                                 const char *task_id);
 
 static osjobid_t ptf_get_osjobid(lListElem *osjob);
 
@@ -395,7 +395,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
 *
 *  FUNCTION
 *     If execd switches from SGEEE to SGE mode this functions is used to
-*     reinitialize static priorities of all jobs currenty running.
+*     reinitialize static priorities of all jobs currently running.
 *
 *  INPUTS
 *     u_long32 job_id      - job id 
@@ -404,7 +404,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
 *     u_long32 priority    - new static priority 
 ******************************************************************************/
 void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_id,
-                               char *pe_task_id_str, u_long32 priority)
+                               const char *pe_task_id_str, u_long32 priority)
 {
    lListElem *job_elem;
    DENTER(TOP_LAYER, "ptf_reinit_queue_priority");
@@ -936,7 +936,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
  * the PTF.
  *--------------------------------------------------------------------*/
 
-static lListElem *ptf_process_job(osjobid_t os_job_id, char *task_id_str,
+static lListElem *ptf_process_job(osjobid_t os_job_id, const char *task_id_str,
                                   lListElem *new_job, u_long32 jataskid)
 {
    lListElem *job, *osjob;
@@ -1039,7 +1039,7 @@ static void ptf_get_usage_from_data_collector(void)
    struct psProc_s *procs;
    uint64 jobcount;
    int proccount;
-   char *tid;
+   const char *tid;
    int i, j;
 
    DENTER(TOP_LAYER, "ptf_get_usage_from_data_collector");
@@ -1523,8 +1523,8 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 /*--------------------------------------------------------------------
  * ptf_job_started - process new job
  *--------------------------------------------------------------------*/
-int ptf_job_started(osjobid_t os_job_id, char *task_id_str, lListElem *new_job,
-                    u_long32 jataskid)
+int ptf_job_started(osjobid_t os_job_id, const char *task_id_str, 
+                    lListElem *new_job, u_long32 jataskid)
 {
    lListElem *job;
 
@@ -1573,7 +1573,7 @@ int ptf_job_complete(lListElem *completed_job)
    lList *job_list = ptf_jobs;
    lListElem *job, *osjob, *ja_task;
    u_long job_id = lGetUlong(completed_job, JB_job_number);
-   char *tid;
+   const char *tid;
    int job_complete;
    lListElem *completed_task = NULL;
    u_long32 ja_task_id = 0;
@@ -1612,7 +1612,8 @@ int ptf_job_complete(lListElem *completed_job)
     */
    job_complete = 1;
    for_each(osjob, lGetList(job, JL_OS_job_list)) {
-      char *osjob_tid = lGetString(osjob, JO_task_id_str);
+      const char *osjob_tid = lGetString(osjob, JO_task_id_str);
+
       u_long jstate = lGetUlong(osjob, JO_state);
 
       if ((!tid && !osjob_tid)
@@ -1866,17 +1867,18 @@ int ptf_adjust_job_priorities(void)
  * ptf_get_job_usage - routine to return a single usage list for the
  * entire job.
  *--------------------------------------------------------------------*/
-lList *ptf_get_job_usage(u_long job_id, u_long ja_task_id, char *task_id)
+lList *ptf_get_job_usage(u_long job_id, u_long ja_task_id, 
+                         const char *task_id)
 {
    return _ptf_get_job_usage(ptf_get_job(job_id), ja_task_id, task_id);
 }
 
 static lList *_ptf_get_job_usage(lListElem *job, u_long ja_task_id,
-                                 char *task_id)
+                                 const char *task_id)
 {
    lListElem *osjob, *usrc, *udst;
    lList *job_usage = NULL;
-   char *task_id_str;
+   const char *task_id_str;
 
    if (job == NULL)
       return NULL;
@@ -2065,7 +2067,7 @@ void ptf_show_registered_jobs(void)
       for_each(os_job, os_job_list) {
          lList *process_list;
          lListElem *process;
-         char *pe_task_id_str;
+         const char *pe_task_id_str;
 
          pe_task_id_str = lGetString(os_job, JO_task_id_str);
          pe_task_id_str = pe_task_id_str ? pe_task_id_str : "<<NONE>>";

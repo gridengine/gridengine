@@ -46,8 +46,8 @@ typedef struct report_source {
 int sge_send_all_reports(u_long32 now, int which, report_source *report_sources);
 
 int sge_add_double2load_report(lList **lpp, char *name, double value, int global, char *units);
-int sge_add_int2load_report(lList **lpp, char *name, int value, int global);
-int sge_add_str2load_report(lList **lpp, char *name, char *value, int global);
+int sge_add_int2load_report(lList **lpp, const char *name, int value, int global);
+int sge_add_str2load_report(lList **lpp, const char *name, const char *value, int global);
 
 #endif /* _REPORT_H */
 

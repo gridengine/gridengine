@@ -170,7 +170,8 @@ lList **lpp
 
       {
          char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
-         char *old_name, *new_name;
+         const char *new_name;
+         char *old_name;
          lList *alp = NULL;
 
          /* resolve config name */
@@ -240,7 +241,7 @@ char *ruser,
 char *rhost 
 ) {
    lListElem *ep;
-   char *config_name;
+   const char *config_name;
 
    DENTER(TOP_LAYER, "sge_del_configuration");
 
@@ -309,7 +310,7 @@ char *ruser,
 char *rhost 
 ) {
    lListElem *ep;
-   char *config_name;
+   const char *config_name;
    const char *cp;
    int added;
    char fname[SGE_PATH_MAX];
@@ -431,8 +432,8 @@ lList **alpp,
 lListElem *conf 
 ) {
    lListElem *ep;
-   char *name, *value;
-   char *conf_name;
+   const char *name, *value;
+   const char *conf_name;
  
    DENTER(TOP_LAYER, "check_config");
  
@@ -564,7 +565,7 @@ lListElem *conf
       if (!strcmp(name, "prolog")||!strcmp(name, "epilog")) {
        
          if (value && strcasecmp(value, "none")) {
-            char *t, *script = value;
+            const char *t, *script = value;
 
             /* skip user name */
             if ((t = strpbrk(script, "@ ")) && *t == '@')
@@ -615,7 +616,7 @@ lListElem *conf
  *   configuration list, by case insensitive search.
  *-------------------------------------------------------------------------*/
 int select_configuration(
-char *config_name,
+const char *config_name,
 lList *lp,
 lListElem **cepp 
 ) {

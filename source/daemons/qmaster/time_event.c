@@ -48,7 +48,7 @@ te_tab_t *tab
    int i, n;
    u_long32 this_type;
    lListElem *event;
-   char *sval;
+   const char *sval;
    static u_long32 last = 0;
    
    DENTER(TOP_LAYER, "te_deliver");
@@ -106,7 +106,7 @@ u_long32 type,
 u_long32 when,
 u_long32 uval0,
 u_long32 uval1,
-char *sval 
+const char *sval 
 ) {
    static lSortOrder *te_so = NULL;
    static int seqno = 0;
@@ -141,7 +141,7 @@ char *sval
 /* removes all pending events of type 'type' with 'str' as key */
 int te_delete(
 u_long32 type,
-char *str,
+const char *str,
 u_long32 uval0,
 u_long32 uval1 
 ) {

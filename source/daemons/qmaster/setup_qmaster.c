@@ -104,10 +104,10 @@
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "reschedule.h"
-#include "sge_file_path.h"
 #include "sge_washing_machine.h"
 #include "sge_hash.h"
 #include "sge_job_jatask.h"
+#include "sge_file_path.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;
@@ -377,7 +377,7 @@ int sge_setup_qmaster()
          printf(MSG_CONFIG_READINGINUSERSETS);
 
       for_each(direntry, direntries) {
-         char *userset = lGetString(direntry, STR);
+         const char *userset = lGetString(direntry, STR);
 
          if (userset[0] != '.') {
             if (!silent()) {
@@ -426,7 +426,7 @@ int sge_setup_qmaster()
    DPRINTF(("queue_list---------------------------------\n"));
    direntries = sge_get_dirents(QUEUE_DIR);
    if (direntries) {
-      char *queue_str;
+      const char *queue_str;
       
       if (!silent()) 
          printf(MSG_CONFIG_READINGINQUEUES);
@@ -567,16 +567,16 @@ int sge_setup_qmaster()
    }
 
    DPRINTF(("job_list-----------------------------------\n"));
-   if (job_read_job_list_from_disk(&Master_Job_List, "Master_Job_List", 
-                                   1, 1, &Master_Job_Hash_Table, 
-                                   SPOOL_DEFAULT, NULL)) {
+   if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 
+                               1, 1, &Master_Job_Hash_Table, 
+                               SPOOL_DEFAULT, NULL)) {
       DEXIT;
       return -1;
    }
 
    if (conf.zombie_jobs > 0) {
       DPRINTF(("zombie_list--------------------------------------\n"));
-      if (job_read_job_list_from_disk(&Master_Zombie_List, 
+      if (job_list_read_from_disk(&Master_Zombie_List, 
                                       "Master_Zombie_List", 0, 0, NULL, 
                                       SPOOL_HANDLE_AS_ZOMBIE, NULL)) {
          DEXIT;
@@ -660,7 +660,7 @@ int sge_setup_qmaster()
             printf(MSG_CONFIG_READINGINUSERS);
          
          for_each(direntry, direntries) {
-            char *direntry_str;
+            const char *direntry_str;
             
             direntry_str = lGetString(direntry, STR); 
             if (direntry_str[0] != '.') { 
@@ -697,7 +697,7 @@ int sge_setup_qmaster()
             printf(MSG_CONFIG_READINGINPROJECTS);
 
          for_each(direntry, direntries) {
-            char *userprj_str;
+            const char *userprj_str;
 
             userprj_str = lGetString(direntry, STR);
             if (userprj_str[0] != '.') {
@@ -931,7 +931,7 @@ static int sge_read_host_list_from_disk()
 {
    lList *direntries;
    lListElem *ep, *direntry;
-   char *host;
+   const char *host;
 
    DENTER(TOP_LAYER, "sge_read_host_list_from_disk");
 
@@ -1099,7 +1099,7 @@ static int sge_read_pe_list_from_disk()
    lList *alp = NULL;
    lListElem *ep, *direntry;
    int ret = 0;
-   char *pe;
+   const char *pe;
 
    DENTER(TOP_LAYER, "sge_read_pe_list_from_disk");
    
@@ -1153,7 +1153,7 @@ static int sge_read_cal_list_from_disk()
    lList *direntries;
    lListElem *aep, *ep, *direntry;
    int ret = 0;
-   char *cal;
+   const char *cal;
    const char *s;
    lList *alp = NULL;
 
@@ -1212,7 +1212,7 @@ static int sge_read_ckpt_list_from_disk()
 {
    lList *direntries;
    lListElem *ep, *direntry;
-   char *ckpt;
+   const char *ckpt;
 
    DENTER(TOP_LAYER, "sge_read_ckpt_list_from_disk");
    
@@ -1312,7 +1312,7 @@ static int debit_all_jobs_from_qs()
 {
    lListElem *gdi;
    u_long32 slots, jid, tid;
-   char *queue_name;
+   const char *queue_name;
    lListElem *hep, *master_hep, *next_jep, *jep, *qep, *next_jatep, *jatep;
    int ret = 0;
 
@@ -1374,7 +1374,8 @@ int nm,
 char *object_name,
 char *object_dir 
 ) {
-   char *old_name, *new_name;
+   char *old_name;
+   const char *new_name;
    int ret;
 
    DENTER(TOP_LAYER, "reresolve_host");

@@ -1157,7 +1157,7 @@ static lList *parse_qrsh_command(lList *opts_cmdline, char *name, const char **h
       }  
 
       if(ep) {
-         char *new_name = NULL;
+         const char *new_name = NULL;
 
          lDechainElem(opts_cmdline, ep);
          lAppendElem(opts_qrsh, ep);

@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-char *sge_arch(void);
-char *sge_sge_root(void);
-char *sge_default_cell(void); 
+const char *sge_arch(void);
+
+const char *sge_sge_root(void);
+
+const char *sge_default_cell(void); 
 
 #endif /* __SGE_ARCH_H */
 

@@ -46,19 +46,24 @@
 #   include "krb_lib.h"
 #endif
 
-int sge_security_initialize(char *name);
+int sge_security_initialize(const char *name);
+
 int set_sec_cred(lListElem *job);
+
 void delete_credentials(lListElem *jep);
-void cache_sec_cred(lListElem *jep, char *rhost);
+
+void cache_sec_cred(lListElem *jep, const char *rhost);
+
 int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authentication, lList **alpp);
+
 int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char *err_str);
 
 #ifdef KERBEROS
 int kerb_job(lListElem *jelem, struct dispatch_entry *de);
 #endif
 
-void tgt2cc(lListElem *jep, char *rhost, char* target);
-void tgtcclr(lListElem *jep, char *rhost, char* target);
+void tgt2cc(lListElem *jep, const char *rhost, const char* target);
+void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 
 
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 

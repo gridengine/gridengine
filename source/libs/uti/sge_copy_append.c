@@ -49,76 +49,73 @@
  * sge_copy_append
  * Append content from src to dst.
  *------------------------------------------------------*/
-int sge_copy_append(src, dst, mode)
-char *dst;
-char *src;
-int mode;
+int sge_copy_append(char *src, const char *dst, int mode)
 {
 #define CPBUF 1024
 
- char buf[CPBUF];
- int fdsrc, fddst, error, modus, rs, ws;
+   char buf[CPBUF];
+   int fdsrc, fddst, error, modus, rs, ws;
 
- DENTER(TOP_LAYER, "sge_copy_append");
+   DENTER(TOP_LAYER, "sge_copy_append");
   
- if (src == NULL || dst == NULL || strlen(src) == 0 || strlen(dst) == 0 ||
-    !(mode == SGE_APPEND || mode == SGE_COPY)) {
-    DEXIT;
-    return -1;   
- }
- if (!strcmp(src, dst)) {
-    DEXIT;
-    return -1;
- }   
+   if (src == NULL || dst == NULL || strlen(src) == 0 || strlen(dst) == 0 ||
+      !(mode == SGE_APPEND || mode == SGE_COPY)) {
+      DEXIT;
+      return -1;   
+   }
+   if (!strcmp(src, dst)) {
+      DEXIT;
+      return -1;
+   }   
  
- /* Return if source file doesn't exist */
- if ((fdsrc = open(src, O_RDONLY)) == -1) {
-    DEXIT;
-    return -1;
- }   
+   /* Return if source file doesn't exist */
+   if ((fdsrc = open(src, O_RDONLY)) == -1) {
+      DEXIT;
+      return -1;
+   }   
      
- if (mode == SGE_APPEND)
-    modus = O_WRONLY | O_APPEND | O_CREAT;
- else
-    modus = O_WRONLY | O_CREAT;      
+   if (mode == SGE_APPEND)
+      modus = O_WRONLY | O_APPEND | O_CREAT;
+   else
+      modus = O_WRONLY | O_CREAT;      
     
- if ((fddst = open(dst, modus, 0666)) == -1) {
-    DEXIT;
-    return -1;
- }    
+   if ((fddst = open(dst, modus, 0666)) == -1) {
+      DEXIT;
+      return -1;
+   }    
     
- error = FALSE;
- while (TRUE) {
-    rs = read(fdsrc, buf, 512);
-    if (rs == -1 && errno == EINTR)
-       continue;
-    else if (rs == -1)
-       error = TRUE;
+   error = FALSE;
+   while (TRUE) {
+      rs = read(fdsrc, buf, 512);
+      if (rs == -1 && errno == EINTR)
+         continue;
+      else if (rs == -1)
+         error = TRUE;
     
-    if (!error && rs > 0) {      
-       while (TRUE) {   
-          ws = write(fddst, buf, rs);
-          if (ws == -1 && errno == EINTR)   
-             continue;
-          else if (ws == -1) {
-             error = TRUE;
-             break;
-          } 
-          else
-             break;
-       }
-    }
-    if (error)
-       break;
-    if (rs == 0)
-       break;   
- }         
+      if (!error && rs > 0) {      
+         while (TRUE) {   
+            ws = write(fddst, buf, rs);
+            if (ws == -1 && errno == EINTR)   
+               continue;
+            else if (ws == -1) {
+               error = TRUE;
+               break;
+            } 
+            else
+               break;
+         }
+      }
+      if (error)
+         break;
+      if (rs == 0)
+         break;   
+   }           
     
- close(fdsrc);
- close(fddst);
+   close(fdsrc);
+   close(fddst);
  
- DEXIT;
- return (error ? -1: 0);
+   DEXIT;
+   return (error ? -1: 0);
 }
 
 
@@ -148,7 +145,6 @@ int size
        chunksize,       /* chunks for realloc */
        lastpos,         /* last position in destination buffer */
        error;
-
    
    if ((fd = fileno(fp)) == -1)
       return NULL;
@@ -228,7 +224,7 @@ int size
  *------------------------------------------------------*/
 int sge_string2bin(
 FILE *fp,
-char *buf 
+const char *buf 
 ) {
    char outbuf[BUFFER];
    char *outp;

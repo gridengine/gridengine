@@ -1027,7 +1027,7 @@ lList *queue_list,
 lList *hql 
 ) {
    int nqueues = 0;
-   char *qrnm;
+   const char *qrnm;
    lListElem *qrep, *qep;
    int need_hit;
 
@@ -1096,7 +1096,8 @@ lList *pe_list
 
    /* untag all queues not referenced by a pe in the selected pe list */
    for_each(qep, queue_list) {
-      char *qname;
+      const char *qname;
+
       lListElem* found = NULL;
       qname = lGetString(qep, QU_qname);
       for_each (pe, pe_selected) 
@@ -1134,7 +1135,7 @@ lList *acl_list
    for_each(qep, queue_list) {
       int access = 0;
       for_each (qu, queue_user_list) {
-         char *name = lGetString(qu, STR);
+         const char *name = lGetString(qu, STR);
          if ((access = (name[0]=='@')?
                sge_has_access(NULL, &name[1], qep, acl_list): /* group */
                sge_has_access(name, NULL, qep, acl_list))) /*user */

@@ -411,7 +411,7 @@ Cardinal size
    if (type == QmonQMR_Type) {
       String *str_table = NULL;
       Cardinal itemCount;
-      String str1, str2;
+      StringConst str1, str2;
       int size, i;
       char buf[BUFSIZ];
       lListElem *ep = NULL;
@@ -731,7 +731,7 @@ int type
    lListElem *ep;
    static char pair_string[ 10 * BUFSIZ];
    int nm1 = 0, nm2 = 0;
-   String field1, field2;
+   StringConst field1, field2;
    char delimitor[10];
    char comma[10];
    int set_comma = 0;

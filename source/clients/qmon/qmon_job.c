@@ -514,7 +514,7 @@ void updateJobList(void)
    lEnumeration *what_queue = NULL;
    lSortOrder *job_so = NULL;
    u_long32 jstate, qstate;
-   String qnm;
+   StringConst qnm;
    lList *ehl = NULL;
    lList *cl = NULL;
    lList *ol = NULL;
@@ -1344,7 +1344,7 @@ lListElem *jep
 
    static char info[60000];
    char buf[1024];
-   char *str;
+   const char *str;
 
 /*    int status; */
 

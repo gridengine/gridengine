@@ -137,7 +137,7 @@ char COMMLIB_BUFFER[2048];
 #if defined(CRAYTSIEEE) || defined(CRAYTS)
 static unsigned int send_message_ ();
 #else
-static unsigned int send_message_(int synchron, char *tocomproc, int toid, char *tohost, int tag, unsigned char *buffer, int buflen, u_long32 *mid, int ask_commproc, u_short compressed);
+static unsigned int send_message_(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, unsigned char *buffer, int buflen, u_long32 *mid, int ask_commproc, u_short compressed);
 #endif
 static int receive_message_(char *fromcommproc, u_short *fromid, char *fromhost, int *tag, char **buffer, u_long32 *buflen, int synchron, u_short *compressed);
 static int enroll_(char *name, u_short *id, int *tag_priority_list);
@@ -298,7 +298,7 @@ const char *cl_errstr(int i) {
 int set_commlib_param(
 int param,
 int intval,
-char *strval,
+const char *strval,
 int *intval_array 
 ) {
    DENTER(COMMD_LAYER, "set_commlib_param");
@@ -420,9 +420,9 @@ int *intval_array
  **********************************************************************/
 int send_message(
 int synchron,
-char *tocomproc,
+const char *tocomproc,
 int toid,
-char *tohost,
+const char *tohost,
 int tag,
 char *buffer,
 int buflen,
@@ -478,9 +478,9 @@ int compressed
 
 static unsigned int send_message_(
 int synchron,
-char *tocomproc,
+const char *tocomproc,
 int toid,
-char *tohost,
+const char *tohost,
 int tag,
 unsigned char *buffer,
 int buflen,
@@ -933,8 +933,9 @@ u_short *compressed
    if (!fromhost[0])
       strcpy(fromhost, nfromhost);
 
-   if (fromcommproc && !fromcommproc[0])
+   if (fromcommproc && !fromcommproc[0]) {
       strcpy(fromcommproc, nfromcommproc);
+   }
 
    if (fromid && !*fromid)
       *fromid = nfromid;
@@ -1303,7 +1304,8 @@ static int leave_()
     commprocname "" = any
     commprocid (0=any)
  **********************************************************************/
-unsigned int ask_commproc (char *h, char *commprocname, u_short commprocid)
+unsigned int ask_commproc (const char *h, const char *commprocname, 
+                           u_short commprocid)
 {
    unsigned int i;
 #ifndef WIN32NATIVE
@@ -1867,11 +1869,8 @@ int force
    0  = OK
    !0 = CL_... errorcode
  **********************************************************************/
-int getuniquehostname(
-char *hostin,
-char *hostout,
-int refresh_aliases 
-) {
+int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) 
+{
    unsigned char *cp;
    unsigned char ackchar, *ackcharptr = &ackchar;
    unsigned int i;
@@ -2565,7 +2564,7 @@ int *state
 }
 
 void set_commlib_state_componentname(
-char *state 
+const char *state 
 ) {
 #ifdef QIDL
    struct commlib_state_t* commlib_state;
@@ -2615,7 +2614,7 @@ int state
 }
 
 void set_commlib_state_commdservice(
-char *state 
+const char *state 
 ) {
 #ifdef QIDL
    struct commlib_state_t* commlib_state;
@@ -2711,7 +2710,7 @@ int state
 }
 
 void set_commlib_state_commdhost(
-char *state 
+const char *state 
 ) {
 #ifdef QIDL
    struct commlib_state_t* commlib_state;

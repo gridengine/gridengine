@@ -32,11 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int sge_has_access(const char *user, const char *group, lListElem *q, 
+                   lList *acl_list);
 
+int sge_has_access_(const char *user, const char *group, lList *q_acl, 
+                    lList *q_xacl, lList *acl_list);
 
-int sge_has_access(char *user, char *group, lListElem *q, lList *acl_list);
-int sge_has_access_(char *user, char *group, lList *q_acl, lList *q_xacl, lList *acl_list);
-int sge_contained_in_access_list(char *user, char *group, lListElem *acl, lList **alpp);
+int sge_contained_in_access_list(const char *user, const char *group, 
+                                 lListElem *acl, lList **alpp);
 
 #endif /* __VALID_QUEUE_USER_H */
 

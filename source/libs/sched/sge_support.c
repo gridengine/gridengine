@@ -310,7 +310,7 @@ sge_calc_node_usage( lListElem *node,
                      lList *config_list,
                      lList *decay_list,
                      u_long curr_time,
-                     char *projname,
+                     const char *projname,
                      u_long seqno )
 {
    double usage_value = 0;
@@ -321,7 +321,7 @@ sge_calc_node_usage( lListElem *node,
    lList *usage_weight_list=NULL, *usage_list=NULL;
    lListElem *usage_weight, *config, *usage_elem;
    double sum_of_usage_weights = 0;
-   char *usage_name;
+   const char *usage_name;
    static int sn_children_pos = -1;
    static int sn_combined_usage_pos = -1;
    static int sn_name_pos = -1;
@@ -453,7 +453,7 @@ sge_calc_node_usage( lListElem *node,
        *-------------------------------------------------------------*/
 
       for_each(usage_elem, usage_list) {
-         char *nm = lGetPosString(usage_elem, ua_name_pos);
+         const char *nm = lGetPosString(usage_elem, ua_name_pos);
          lListElem *u;
          if (strcmp(nm, USAGE_ATTR_CPU) != 0 &&
              strcmp(nm, USAGE_ATTR_MEM) != 0 &&
@@ -488,7 +488,7 @@ sge_calc_node_usage( lListElem *node,
 
          if (!project_node)
             for_each(nu, lGetPosList(child_node, sn_usage_list_pos)) {
-               char *nm = lGetPosString(nu, ua_name_pos);
+               const char *nm = lGetPosString(nu, ua_name_pos);
                lListElem *u;
                if (((u=lGetElemStr(lGetPosList(node, sn_usage_list_pos),
                                    UA_name, nm))) ||
@@ -663,15 +663,15 @@ sge_calc_share_tree_proportions( lList *share_tree,
  ********************************************************/
 lListElem *
 search_userprj_node( lListElem *ep,      /* root of the tree */
-                     char *username,
-                     char *projname,
+                     const char *username,
+                     const char *projname,
                      lListElem **pep )   /* parent of found node */
 {
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
    static int sn_name_pos = -1;
    static int sn_project_pos = -1;
-   char *nodename;
+   const char *nodename;
    lList *children;
 
    DENTER(TOP_LAYER, "search_userprj_node");
@@ -806,7 +806,7 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
  share tree
  ********************************************************/
 lListElem *search_named_node( lListElem *ep,  /* root of the tree */
-                              char *name )
+                              const char *name )
 {
    lListElem *cep, *fep;
    static int sn_children_pos = -1;
@@ -860,8 +860,8 @@ void free_ancestors( ancestors_t *ancestors )
 
 static lListElem *
 search_by_path( lListElem *ep,  /* root of the [sub]tree */
-                char *name,
-                char *path,
+                const char *name,
+                const char *path,
                 int delim,
                 ancestors_t *ancestors,
                 int depth )
@@ -917,7 +917,7 @@ search_by_path( lListElem *ep,  /* root of the [sub]tree */
  ********************************************************/
 lListElem *
 search_named_node_path( lListElem *ep,  /* root of the tree */
-                        char *path,
+                        const char *path,
                         ancestors_t *ancestors )
 {
    return search_by_path(ep, NULL, path, 0, ancestors, 0);

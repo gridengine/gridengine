@@ -78,7 +78,7 @@ print_func_t ostream
    FILE *fp;
    lList *clp_cluster = NULL, *clp_user = NULL;
    lListElem *nxt, *cep_dest, *cep, *next;
-   char *task_name;
+   const char *task_name;
 
    /* cell global settings */
    sprintf(fname, "%s/common/qtask", path.cell_root);
@@ -226,7 +226,8 @@ char *path,   /* this is how tcsh tries to start the command */
 char *argv[],
 char *expath  /* this is how user typed in the command */
 ) {
-   char *value, *taskname = NULL, *s, *resreq;
+   const char *value; 
+   char *taskname = NULL, *s, *resreq;
    lListElem *task;
    int i, narg_resreq = 0, narg_argv = 0;
    char **argv_iter, 
@@ -289,7 +290,8 @@ char *expath  /* this is how user typed in the command */
 
    /* add optionally qrsh arguments from qtask file */
    if (value) {
-      char *s, *d;
+      const char *s; 
+      char *d;
       char quote;
       char *start;
       int finished;
@@ -358,7 +360,7 @@ print_func_t ostream
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
    if (sge_gdi_setup("qtcsh")==AE_OK) {
       if (init_qtask_config(&alp, ostream)) {
-         char *s;
+         const char *s;
          if (!alp || !(aep=lFirst(alp)) || !(s=lGetString(aep, AN_text)))
             s = "unknown reason";
          mode_remote = 0;          

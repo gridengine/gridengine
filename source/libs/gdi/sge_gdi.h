@@ -140,7 +140,7 @@ enum {
    SGE_GDI_SHOW
 };
 
-int sge_gdi_setup(char *programname);
+int sge_gdi_setup(const char *programname);
 
 int sge_gdi_param(int, int, char *);
 

@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-int filecmp(char *file0, char *file1);
+int filecmp(const char *file0, const char *file1);
 
 #endif /* __SGE_FILECMP_H */
 

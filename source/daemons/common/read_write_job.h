@@ -35,19 +35,16 @@
 #include "sge_file_path.h"
 #include "sge_hash.h"
 
-lListElem *cull_create_job_from_disk(u_long32 job_id, u_long32 task_id,
-                                     sge_spool_flags_t flags);
+int job_write_spool_file(lListElem *jep, u_long32 ja_taskid, 
+                         sge_spool_flags_t flags);
 
-int cull_write_jobtask_to_disk(lListElem *jep, u_long32 ja_taskid, 
-                               sge_spool_flags_t flags);
+int job_remove_spool_file(u_long32 job_id, u_long32 ja_taskid, 
+                          sge_spool_flags_t flags);
 
-int cull_remove_jobtask_from_disk(u_long32 job_id, u_long32 ja_taskid, 
-                                sge_spool_flags_t flags);
-
-int job_read_job_list_from_disk(lList **job_list, char *list_name, int check,
-                                int hash, HashTable* Job_Hash_Table,
-                                sge_spool_flags_t flags,
-                                int (*init_function)(lListElem*)); 
+int job_list_read_from_disk(lList **job_list, char *list_name, int check,
+                            int hash, HashTable* Job_Hash_Table,
+                            sge_spool_flags_t flags,
+                            int (*init_function)(lListElem*)); 
 
 int job_remove_script_file(u_long32 job_id);
 

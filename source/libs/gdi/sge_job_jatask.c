@@ -166,9 +166,9 @@ void job_set_hold_state(lListElem *job, lListElem *ja_task,
    lSetUlong(ja_task, JAT_hold, new_hold_state); 
 }
 
-int job_add_job(lList **job_list, char *name, lListElem *job, int check, 
-                 int hash, HashTable* Job_Hash_Table) {
-   DENTER(TOP_LAYER, "job_add_job");
+int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
+                     int check, int hash, HashTable* Job_Hash_Table) {
+   DENTER(TOP_LAYER, "job_list_add_job");
 
    if (!job_list) {
       ERROR((SGE_EVENT, MSG_JOB_JLPPNULL));

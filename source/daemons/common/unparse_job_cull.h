@@ -46,7 +46,7 @@ int sge_unparse_string_option(lListElem *job, int nm, char *option, lList **pcmd
 
 int sge_unparse_id_list(lListElem *job, int nm, char *option, lList **pcmdline, lList **alpp);
 
-int sge_unparse_acl(char *owner, char *group, char *option, lList *acl_list, lList **pcmdline, lList **alpp);
+int sge_unparse_acl(const char *owner, const char *group, const char *option, lList *acl_list, lList **pcmdline, lList **alpp);
 
 
 

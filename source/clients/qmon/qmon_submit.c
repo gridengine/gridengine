@@ -338,7 +338,7 @@ static void qmonFreeSMData(tSMEntry *data);
 static void qmonInitSMData(tSMEntry *data);
 static u_long32 ConvertMailOptions(int mail_options);
 static int MailOptionsToDialog(u_long32 mail_options);
-static String cwd_string(String sge_o_home);
+static String cwd_string(StringConst sge_o_home);
 static void qmonSubmitChangeResourcesPixmap(void); 
 static void qmonSubmitReadScript(Widget w, String file, String merges, int r_defaults);
 static void qmonSubmitSetSensitive(int mode, int submode);
@@ -1648,17 +1648,17 @@ lListElem *jep,
 tSMEntry *data,
 char *prefix 
 ) {
-   String job_script;
+   StringConst job_script;
    StringBufferT dyn_job_tasks = {NULL, 0};
    char pe_tasks[BUFSIZ];
    char pe_range[BUFSIZ];
-   String job_name;
-   String directive_prefix;
-   String cell;
-   String account_string;
-   String pe;
-   String project;
-   String ckpt_obj;
+   StringConst job_name;
+   StringConst directive_prefix;
+   StringConst cell;
+   StringConst account_string;
+   StringConst pe;
+   StringConst project;
+   StringConst ckpt_obj;
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -1822,7 +1822,8 @@ int save
 ) {
    int len;
    char *job_script;
-   char *cp, *s;
+   const char *cp;
+   char *s;
    int reduced_job;
    char pe_tasks[BUFSIZ];
    char *pe = NULL;
@@ -2194,7 +2195,7 @@ int save
 
 /*-------------------------------------------------------------------------*/
 static String cwd_string(
-String sge_o_home 
+StringConst sge_o_home 
 ) {
    static char cwd_str[BUFSIZ];
    char cwd_str2[BUFSIZ];
@@ -2509,7 +2510,7 @@ XtPointer cld, cad;
    lList *pel = NULL;
    lListElem *pep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonSubmitAskForPE");
@@ -2517,7 +2518,7 @@ XtPointer cld, cad;
    pel = qmonMirrorList(SGE_PE_LIST);
    n = lGetNumberOfElem(pel);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (pep=lFirst(pel), i=0; i<n; pep=lNext(pep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -2526,9 +2527,10 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a Parallel Environment}",
-                        "@{Available Parallel Environments}", strs, n,
-                        False, buf, BUFSIZ, NULL); 
+                        "@{Available Parallel Environments}", 
+                        (String*) strs, n, False, buf, BUFSIZ, NULL); 
       
       if (status) {
          strcat(buf, " 1");
@@ -2562,7 +2564,7 @@ XtPointer cld, cad;
    lList *ckptl = NULL;
    lListElem *cep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonSubmitAskForCkpt");
@@ -2571,7 +2573,7 @@ XtPointer cld, cad;
    ckptl = qmonMirrorList(SGE_CKPT_LIST);
    n = lGetNumberOfElem(ckptl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (cep=lFirst(ckptl), i=0; i<n; cep=lNext(cep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -2580,9 +2582,10 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a checkpoint object}",
-                        "@{Available checkpoint objects}", strs, n,
-                        False, buf, BUFSIZ, NULL); 
+                        "@{Available checkpoint objects}", 
+                        (String*) strs, n, False, buf, BUFSIZ, NULL); 
       
       if (status) {
          XmtInputFieldSetString(submit_ckpt_obj, buf);
@@ -2608,7 +2611,7 @@ XtPointer cld, cad;
    lList *pl = NULL;
    lListElem *cep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonSubmitAskForProject");
@@ -2617,7 +2620,7 @@ XtPointer cld, cad;
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (cep=lFirst(pl), i=0; i<n; cep=lNext(cep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -2626,8 +2629,9 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a project}",
-                        "@{Available projects}", strs, n,
+                        "@{Available projects}", (String*) strs, n,
                         False, buf, BUFSIZ, NULL); 
       
       if (status) {

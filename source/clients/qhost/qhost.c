@@ -81,7 +81,7 @@ static void sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lL
 static void qtype(char *type_string, u_long32 type);
 static void sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show);
 static void sge_print_host(lListElem *hep);
-static int reformatDoubleValue(char *result, char *format, char *oldmem);
+static int reformatDoubleValue(char *result, char *format, const char *oldmem);
 static void get_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
 
 extern char **environ;
@@ -269,7 +269,8 @@ static void sge_print_host(
 lListElem *hep 
 ) {
    lListElem *lep;
-   char *s, *host, host_print[MAXHOSTLEN+1], *arch, *num_proc;
+   char *s,host_print[MAXHOSTLEN+1];
+   const char *host, *arch, *num_proc;
    char load_avg[20], mem_total[20], mem_used[20], swap_total[20], swap_used[20];
 
    DENTER(TOP_LAYER, "sge_print_host");
@@ -443,7 +444,8 @@ u_long32 show
 ) {
    lList *rlp = NULL;
    lListElem *rep;
-   char dom[5], *s;
+   char dom[5];
+   const char *s;
    u_long32 dominant;
    int first = 1;
 
@@ -754,7 +756,7 @@ lListElem *ep;
 static int reformatDoubleValue(
 char *result,
 char *format,
-char *oldmem 
+const char *oldmem 
 ) {
    char c;
    double dval;

@@ -47,7 +47,7 @@ uid_t uid,
 gid_t gid,
 char *tmpdir 
 ) {
-   char *t;
+   const char *t;
 
    DENTER(TOP_LAYER, "sge_make_tmpdir");
 
@@ -73,11 +73,11 @@ char *tmpdir
 
 /************************************************************************/
 int sge_remove_tmpdir(
-char *dir,
-char *job_owner,
+const char *dir,
+const char *job_owner,
 u_long32 jobid,
 u_long32 jataskid,
-char *queue_name 
+const char *queue_name 
 ) {
    stringT tmpstr;
    char err_str[1024];
@@ -103,7 +103,7 @@ char *queue_name
 
 char *sge_get_tmpdir(lListElem *qep, u_long32 jobid, u_long32 jataskid, char *tmpdir)
 {
-   char *t;
+   const char *t;
 
    DENTER(TOP_LAYER, "sge_get_tmpdir");
 

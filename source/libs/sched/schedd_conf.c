@@ -74,7 +74,7 @@ typedef struct {
 
 static intprt_type load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 static intprt_type usage_fields[] = { UA_name, UA_value, 0 };
-static char *delis[] = {"=", ",", ""};
+static const char *delis[] = {"=", ",", ""};
 
 int sc_set(
 lList **alpp,             /* AN_Type */ 
@@ -84,7 +84,7 @@ u_long32 *si              /* here scheduling interval gets written */
 ) {
    char tmp_buffer[1024], tmp_error[1024];
    u_long32 uval;
-   char *s;
+   const char *s;
    lList *lval;
    double dval;
 

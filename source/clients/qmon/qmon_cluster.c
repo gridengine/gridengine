@@ -1829,10 +1829,10 @@ tCClEntry *clen
 ) {
    lList *confl;
    lListElem *ep;
-   String str = NULL;
-   String min_uid;
-   String min_gid;
-   String zombie_jobs;
+   StringConst str = NULL;
+   StringConst min_uid;
+   StringConst min_gid;
+   StringConst zombie_jobs;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
 

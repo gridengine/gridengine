@@ -61,12 +61,13 @@ sge_path_type path = { NULL };
  * This routine may be called as often as is is necessary.
  *-----------------------------------------------------------------------*/
 void sge_setup_paths(
-char *sge_cell,
+const char *sge_cell,
 sge_path_type *p,
 lList **alpp 
 ) {
    char *cell_root;
-   char *sge_root, *common_dir;
+   const char *sge_root;
+   char *common_dir;
    SGE_STRUCT_STAT sbuf;
    int cell_root_len, common_len;
    

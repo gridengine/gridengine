@@ -46,7 +46,7 @@ int sge_change_queue_version(lListElem *qep, int add, int write_history);
 
 /* old functions underlaying the gdi functions */
 int sge_add_queue(lListElem *qep);
-int sge_del_queue(char *qname);
+int sge_del_queue(const char *qname);
 
 void sge_add_queue_event(u_long32 type, lListElem *qep);
 
@@ -56,11 +56,13 @@ int check_qsiq_lic(int licensed_qsi_queues, int verbose);
 int verify_project_list(lList **alpp, char *obj_name, char *qname, lList *project_list);
 #endif
 
-int verify_complex_list(lList **alpp, char *obj_name, char *qname, lList *complex_list);
+int verify_complex_list(lList **alpp, const char *obj_name, const char *qname, 
+                        lList *complex_list);
+
 int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
 
 void sge_clear_tags(void);
-lListElem *sge_locate_queue(char *cp);
+lListElem *sge_locate_queue(const char *cp);
 
 #endif /* __SGE_QUEUE_QMASTER_H */
 

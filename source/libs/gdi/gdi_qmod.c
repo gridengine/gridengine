@@ -61,7 +61,7 @@ u_long32 action_flag
 ) {
    lListElem *ref;
    lListElem *idp;
-   char *name;
+   const char *name;
    lList *alp = NULL;
    lList *id_list = NULL;
    static lEnumeration *what_all = NULL;

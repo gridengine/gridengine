@@ -34,6 +34,6 @@
 
 #include <time.h>
 
-u_long sge_parse_date_time(char *date_str, struct tm *time, lList **alpp);
+u_long sge_parse_date_time(const char *date_str, struct tm *time, lList **alpp);
 
 #endif /* __SGE_PARSE_DATE_TIME_H */

@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #if defined(SUN4) || defined(LINUX)
 #  define PSCMD "/bin/ps -axc"
 #elif defined(ALPHA)
@@ -44,9 +42,9 @@
 #  define PSCMD "/bin/ps -e"
 #endif
 
-int get_pids(pid_t *, int, char *, char *);
+int get_pids(pid_t *, int, const char *, const char *);
 int contains_pid(pid_t, pid_t *, int);
-int checkprog(pid_t, char *, char *);
+int checkprog(pid_t, const char *, const char *);
  
 #endif /* __SGE_PIDS_H */
 

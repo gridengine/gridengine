@@ -69,7 +69,7 @@ static char lasterror[1024];
 static char program_name[1024] = "libgdi.a";
 static int rcv_from_execd(int options, int tag); 
 
-char *qexec_last_err(void)
+const char *qexec_last_err(void)
 {
    return lasterror;
 }
@@ -105,7 +105,9 @@ char *qexec_last_err(void)
 *                 a value <= 0 indicates an error.
 *
 *******************************************************************************/
-sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *argv[], const lList *env_lp, int is_qrsh)
+sge_tid_t sge_qexecve(const char *hostname, const char *path, 
+                      const char *argv[], const lList *env_lp, 
+                      int is_qrsh)
 {
 char localhost[1000];
 char myname[256];
@@ -245,7 +247,7 @@ const char *s;
    lSetList(jep, JB_env_list, env);
    env = NULL;
 
-   set_commlib_param(CL_P_COMMDHOST, 0, (char *)hostname, NULL); /* FIX_CONST */
+   set_commlib_param(CL_P_COMMDHOST, 0, hostname, NULL); 
 
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
       lFreeElem(jep);
@@ -257,7 +259,7 @@ const char *s;
 
    pack_job_delivery(&pb, jep, NULL, NULL);
 
-   ret = send_message_pb(1, prognames[EXECD], 0, (char *)hostname, /* FIX_CONST */
+   ret = send_message_pb(1, prognames[EXECD], 0, hostname,
             TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);
@@ -359,7 +361,8 @@ int tag
    host[0] = '\0';
    from_id = 1;
    do {
-      if ((ret = receive_message(prognames[EXECD], &from_id, host, 
+      /* FIX_CONST */
+      if ((ret = receive_message((char*)prognames[EXECD], &from_id, host, 
             &tag, &msg, &msg_len, (options&OPT_SYNCHRON)?1:0, &compressed))!=0 
                   && ret!=NACK_TIMEOUT) {
          sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , 

@@ -40,7 +40,7 @@
 #include "msg_utilib.h"
 #include "sgermon.h"
 
-char *sge_arch()
+const char *sge_arch()
 {
 
 #if defined(AIX42)
@@ -92,7 +92,7 @@ char *sge_arch()
    return ARCHBIN;
 }
 
-char *sge_sge_root(void)
+const char *sge_sge_root(void)
 {
    char *s;
 
@@ -109,7 +109,7 @@ char *sge_sge_root(void)
 }
 
 /* get cell name - remove trailing slash */
-char *sge_default_cell(void)
+const char *sge_default_cell(void)
 {
    char *cp;
 

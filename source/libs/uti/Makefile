@@ -74,8 +74,9 @@ UTILIB_SRC = sge_afsutil.c \
          sge_timestop.c \
          sge_tmpnam.c \
          sge_spoolmsg.c \
-         sge_file_path.c \
          sge_washing_machine.c \
+         sge_stdio.c \
+         sge_file_path.c \
          sge_uidgid$(QIDLEXT).c 
 
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -203,6 +204,9 @@ sge_file_path.o:   $(UTILIB_DIR)/sge_file_path.c
 
 sge_washing_machine.o:   $(UTILIB_DIR)/sge_washing_machine.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_washing_machine.c
+
+sge_stdio.o:   $(UTILIB_DIR)/sge_stdio.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_stdio.c
 
 sge_nprocs.o:	$(UTILIB_DIR)/sge_nprocs.c
 		$(CC) $(CFLAGS) $(COD_NPROCS_CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_nprocs.c

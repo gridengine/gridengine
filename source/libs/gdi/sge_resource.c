@@ -45,7 +45,7 @@
 #include "sge_log.h"
 #include "msg_gdilib.h"
 
-static void sge_show_ce_type_list(lList *cel, char *indent, char *separator);
+static void sge_show_ce_type_list(lList *cel, const char *indent, const char *separator);
 
 
 
@@ -75,14 +75,16 @@ resources
  ***********************************************************************/
 lList *sge_parse_resources(
 lList *resources,
-char *range_str,
-char *str,
-char *hard_soft         /* for name of resources list */
+const char *range_str,
+const char *str,
+const char *hard_soft         /* for name of resources list */
 ) {
    lListElem *request_el;
    lList *complex_attributes=NULL;
    lListElem *complex_attribute;
-   char *cp, *attr, *value;
+   const char *cp;
+   const char *attr;
+   char *value;
    char name[256];
 
    DENTER(TOP_LAYER, "sge_parse_resources");
@@ -182,7 +184,7 @@ u_long32 max_len,
 lList *rlp 
 ) {
    intprt_type attr_fields[] = { CE_name, CE_stringval, 0 };
-   char *attr_delis[] = {"=", ",", "\n"};
+   const char *attr_delis[] = {"=", ",", "\n"};
    lListElem *rep;
    int ret;
    u_long32 cb = 0;
@@ -283,25 +285,26 @@ lList *rel  /* RE_Type List */
 
 static void sge_show_ce_type_list(
 lList *cel, /* CE_Type List */
-char *indent,
-char *separator 
+const char *indent,
+const char *separator 
 ) {
    int first = 1;
    lListElem *ce;
-   char *s;
+   const char *s;
    
    DENTER(TOP_LAYER, "sge_show_ce_type_list");
 
    /* walk through complex entries */
    for_each (ce, cel) { 
-      if (first)
+      if (first) {
          first = 0;
-      else {
+      } else {
          printf("%s", separator);
          printf("%s", indent);
       }
-     
-      if((s=lGetString(ce, CE_stringval))) {
+    
+      s = lGetString(ce, CE_stringval); 
+      if(s) {
          printf("%s=%s", lGetString(ce, CE_name), s);
       } else {
          printf("%s", lGetString(ce, CE_name));
@@ -314,8 +317,8 @@ char *separator
 
 /*************************************************************/
 void sge_show_re_type_list_line_by_line(
-char *label,
-char *indent,
+const char *label,
+const char *indent,
 lList *rel  /* RE_Type List */
 ) {
    lListElem* res;

@@ -58,7 +58,7 @@ static lSortOrder *so_pgr = NULL,
            *so_jrl = NULL;
 static lListElem *current_pgrp = NULL;
 
-static void at_job_counter_impl(u_long32 priority, char *owner, int slots);
+static void at_job_counter_impl(u_long32 priority, const char *owner, int slots);
 static lListElem *at_first_in_jrl(lListElem *jrl_container, int nm_jrl, int nm_sort, int nm_curr);
 static void at_trace(void);
 
@@ -140,7 +140,7 @@ lListElem *job_array
    lSetRef(jr, JRL_category, lGetRef(job_array, JB_category));
 
    if (user_sort) {
-      char *owner = lGetString(job_array, JB_owner);
+      const char *owner = lGetString(job_array, JB_owner);
       if (!(user=lGetSubStr(pgr, USR_name, owner, PGR_subordinated_list))) {
          user = lAddSubStr(pgr, USR_name, owner, PGR_subordinated_list, USR_Type);
          DPRINTF(("AT + %d %s\n", priority, owner));
@@ -242,7 +242,7 @@ lListElem *job
 
    if (set_user_sort(-1)) {
       lListElem *user;
-      char *owner = lGetString(job, JB_owner);
+      const char *owner = lGetString(job, JB_owner);
       user = lGetSubStr(pgrp, USR_name, owner, PGR_subordinated_list);
 
       lDelSubUlong(user, JRL_jobid, jobid, USR_job_references);
@@ -269,7 +269,7 @@ lListElem *job
    running/pending per user and per priority group */
 void at_inc_job_counter(
 u_long32 priority,
-char *owner,
+const char *owner,
 int slots 
 ) {
    at_job_counter_impl(priority, owner, slots);
@@ -277,7 +277,7 @@ int slots
 
 void at_dec_job_counter(
 u_long32 priority,
-char *owner,
+const char *owner,
 int slots 
 ) {
    at_job_counter_impl(priority, owner, -slots);
@@ -285,7 +285,7 @@ int slots
 
 static void at_job_counter_impl(
 u_long32 priority,
-char *owner,
+const char *owner,
 int slots 
 ) {
    int nrunning, resulting;

@@ -43,22 +43,24 @@
 #include "get_path.h"
 #include "msg_execd.h"
 
-static char* expand_path(char *path_in, u_long32 job_id, u_long32 ja_task_id, char *job_name, char *user, char *fqhost);
-static int getHomeDir(char *exp_path, char *user);
+static const char* expand_path(const char *path_in, u_long32 job_id, 
+                               u_long32 ja_task_id, const char *job_name, 
+                               const char *user, const char *fqhost);
 
+static int getHomeDir(char *exp_path, const char *user);
 
 int sge_get_path(
 lList *lp,
-char *cwd,
-char *owner,
-char *job_name,
+const char *cwd,
+const char *owner,
+const char *job_name,
 u_long32 job_number,
 u_long32 ja_task_number,
 int type,
 char *pathstr 
 ) {
    lListElem *ep;
-   char *path = NULL, *host;
+   const char *path = NULL, *host;
 
    DENTER(TOP_LAYER, "sge_get_path");
 
@@ -101,16 +103,16 @@ char *pathstr
    return 0;
 }
 
-static char* expand_path(
-char *in_path,
+static const char* expand_path(
+const char *in_path,
 u_long32 job_id,
 u_long32 ja_task_id,
-char *job_name,
-char *user,
-char *host 
+const char *job_name,
+const char *user,
+const char *host 
 ) {
    char *t;
-   char *s;
+   const char *s;
    static char exp_path[10000];
    char tmp[255];
    
@@ -186,7 +188,7 @@ char *host
 
 static int getHomeDir(
 char *exp_path,
-char *user 
+const char *user 
 ) {
    struct passwd *pwd;
 

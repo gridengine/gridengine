@@ -69,8 +69,10 @@ int main(int argc, char **argv)
 #endif
 
 /******************************************************/
-int recursive_rmdir(char *cp, char *err_str) 
-{
+int recursive_rmdir(
+const char *cp,
+char *err_str 
+) {
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;

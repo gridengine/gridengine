@@ -66,6 +66,7 @@
 #include "sge_security.h"
 
 static int sge_send_receive_gdi_request(char *rhost, char *commproc, u_short id, sge_gdi_request *out, sge_gdi_request **in);
+
 static int sge_get_gdi_request(char *rhost, char *commproc, u_short *id, sge_gdi_request **arp);
 
 #ifdef QIDL
@@ -401,7 +402,11 @@ lList **malpp
 #ifdef QIDL      
       if (me.who != QMASTER)
 #endif
-            status = sge_send_receive_gdi_request(sge_get_master(reread_qmaster_file), prognames[QMASTER], 0, first, &answer);
+         /* FIX_CONST */
+         status = sge_send_receive_gdi_request(
+            (char*)sge_get_master(reread_qmaster_file), 
+            (char*)prognames[QMASTER], 
+            0, first, &answer);
 #ifdef QIDL
       else
             status = sge_handle_local_gdi_request(first, &answer);
@@ -581,9 +586,10 @@ lList **olpp
  *     -4 check_isalive() failed
  *     -5 failed due to a received signal
  *-----------------------------------------------------*/
-static int sge_send_receive_gdi_request(char *rhost, char *commproc, 
-                                 u_short id, sge_gdi_request *out,
-                                 sge_gdi_request **in)
+static int sge_send_receive_gdi_request(char *rhost, 
+                                        char *commproc, 
+                                        u_short id, sge_gdi_request *out,
+                                        sge_gdi_request **in)
 {
    int ret;
    
@@ -660,8 +666,8 @@ static int sge_send_receive_gdi_request(char *rhost, char *commproc,
  *-----------------------------------------------------------------*/
 int sge_send_gdi_request(
 int sync,
-char *rhost,
-char *commproc,
+const char *rhost,
+const char *commproc,
 int id,
 sge_gdi_request *ar 
 ) {
@@ -729,8 +735,8 @@ sge_gdi_request *ar
  *     -5 no peer enrolled
  *
  *-----------------------------------------------------------------*/
-static int sge_get_gdi_request(char *host, char *commproc, u_short *id, 
-                        sge_gdi_request** arp)
+static int sge_get_gdi_request(char *host, char *commproc, 
+                               u_short *id, sge_gdi_request** arp)
 {
    sge_pack_buffer pb;
    int tag = TAG_GDI_REQUEST; /* this is what we want */
@@ -1043,7 +1049,7 @@ u_long32 quality
 }
 
 /*-----------------------------------------------------------------------*/
-char *quality_text(
+const char *quality_text(
 lListElem *aep 
 ) {
    u_long32 q;

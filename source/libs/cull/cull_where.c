@@ -1186,7 +1186,7 @@ const lListElem *ep,
 const lCondition *cp 
 ) {
    int result = 0;
-   char *str1, *str2;
+   const char *str1, *str2;
 
    DENTER(CULL_LAYER, "lCompare");
 

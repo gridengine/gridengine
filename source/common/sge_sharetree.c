@@ -96,7 +96,7 @@ int root_node
 ) {
    FILE *fp; 
    intprt_type print_elements[] = { STN_id, 0 };
-   char *delis[] = {":", ",", NULL};
+   const char *delis[] = {":", ",", NULL};
    lListElem *cep;
    int i;
 
@@ -510,7 +510,7 @@ char *indent
  ************************************************************************/
 int show_sharetree_path(
 lListElem *root,
-char *path 
+const char *path 
 ) {
    lListElem *cep;
    lListElem *node;

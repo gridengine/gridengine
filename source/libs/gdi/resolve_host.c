@@ -48,7 +48,7 @@ int nm
 ) {
    int pos, ret;
    char unique[MAXHOSTLEN];
-   char *hostname;
+   const char *hostname;
 
    DENTER(TOP_LAYER, "sge_resolve_host");
 
@@ -78,7 +78,7 @@ int nm
 
 /* ------------------------------------------------------------ */
 int sge_resolve_hostname(
-char *hostname,
+const char *hostname,
 char *unique,
 int nm 
 ) {

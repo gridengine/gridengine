@@ -44,9 +44,9 @@ int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_
 
 int sge_del_calendar(lListElem *ep, lList **alpp, char *ruser, char *rhost);
 
-void calendar_event(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, char *sval);
+void calendar_event(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, const char *sval);
 
-lListElem *sge_locate_calendar(char *cal_name);
+lListElem *sge_locate_calendar(const char *cal_name);
 
 u_long32 act_cal_state(lListElem *cep, time_t *then);
     

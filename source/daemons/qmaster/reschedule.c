@@ -100,7 +100,7 @@ u_long32 add_time = 0;
 *     void - none
 *******************************************************************************/
 void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 timeout,
-                              u_long32 not_used2, char *hostname) 
+                              u_long32 not_used2, const char *hostname) 
 {
    lListElem *qep;            /* QU_Type */
    lList *answer_list = NULL; /* AN_Type */
@@ -207,7 +207,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
    lListElem *hep = NULL;        /* EH_Type */
    lListElem *qep = NULL;        /* QU_Type */
    lListElem *jep;               /* JB_Type */
-   char *hostname = NULL;
+   const char *hostname = NULL;
    int ret = 0;
  
    DENTER(TOP_LAYER, "reschedule_jobs");
@@ -292,7 +292,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
    char mail_type[256];
    u_long32 job_number;
    u_long32 job_now;
-   char *hostname;
+   const char *hostname;
    int ret = 0;
    DENTER(TOP_LAYER, "reschedule_job");
  
@@ -901,7 +901,7 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
    static int not_init = 1;
    u_long32 timeout;
    lListElem *cfep;
-   char *host;
+   const char *host;
  
    DENTER(TOP_LAYER, "reschedule_unknown_timeout");
  

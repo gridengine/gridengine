@@ -58,8 +58,8 @@
  *---------------------------------------------------------------------*/
 
 int setuidgidaddgrp(
-char *user,
-char *intermediate_user,
+const char *user,
+const char *intermediate_user,
 int min_gid,
 int min_uid,
 int add_grp,

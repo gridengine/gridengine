@@ -40,6 +40,6 @@
       goto FPRINTF_ERROR; \
    }
 
-int __fprintf_ret;
+extern int __fprintf_ret;
 
 #endif /* __SGE_STDIO_H */

@@ -52,7 +52,7 @@ void cull_show_job(
 lListElem *job,
 int flags 
 ) {
-   char *delis[] = {NULL, ",", "\n"};
+   const char *delis[] = {NULL, ",", "\n"};
    time_t ultime;   /* used to be u_long32, but problem w/ 64 bit times */
 
    DENTER(TOP_LAYER, "cull_show_job");

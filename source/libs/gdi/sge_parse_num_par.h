@@ -60,21 +60,24 @@ int rlimcmp(sge_rlim_t r1, sge_rlim_t r2);
 
 sge_rlim_t mul_infinity(sge_rlim_t rlim, sge_rlim_t muli);
 
-int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, char *s, char *err_str, int err_len);
+int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, 
+                    const char *s, char *err_str, int err_len);
 
-int sge_parse_loglevel_val(u_long32 *uval, char *s);
+int sge_parse_loglevel_val(u_long32 *uval, const char *s);
 
 
-int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, char *s, char *err_str, int err_len, int enable_infinity);
+int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, 
+                             const char *s, char *err_str, int err_len, 
+                             int enable_infinity);
 
 
 int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str, int error_len);
 
-int sge_parse_checkpoint_attr(char *attr_str);
+int sge_parse_checkpoint_attr(const char *attr_str);
 
 char *resource_descr(double dval, u_long32 type, char *buffer);
 
-char *get_checkpoint_when(int bitmask);
+const char *get_checkpoint_when(int bitmask);
 
 int is_checkpoint_when_valid(int bitmask);
 

@@ -1693,8 +1693,8 @@ int flags
 
 int
 krb_get_tgt(
-char *host,
-char *comproc,
+const char *host,
+const char *comproc,
 int id,
 u_long tgt_id,
 krb5_creds ***tgt_creds 
@@ -1772,8 +1772,8 @@ all_done:
 
 int
 krb_put_tgt(
-char *host,
-char *comproc,
+const char *host,
+const char *comproc,
 int id,
 u_long tgt_id,
 krb5_creds **tgt_creds 

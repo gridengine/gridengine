@@ -1199,7 +1199,7 @@ char **argv
          ep = lFirst(sorted_list);
 
       while (totals.ru_wallclock) {
-         char *cp;
+         const char *cp;
 
          if (host[0]) {
             printf("%-30.29s", host);

@@ -94,7 +94,7 @@ int spool,
 int user        /* =1 user, =0 project */
 ) {
    FILE *fp; 
-   char *delis[] = {"=", ",", "", NULL};
+   const char *delis[] = {"=", ",", "", NULL};
    lListElem *ju;
    char filename[SGE_PATH_MAX];
    int ret;
@@ -162,7 +162,8 @@ int user        /* =1 user, =0 project */
          if ((pul=lGetList(ep, UP_project))) {
             FPRINTF((fp, "{\n"));
             for_each (ju, pul) {
-               char *upp_name = lGetString(ju, UPP_name);
+               const char *upp_name = lGetString(ju, UPP_name);
+
                if (strpbrk(upp_name, " \t`~!@#$%^&*()-_=+{}[]|:;'<>?,.")) {
                   FPRINTF((fp, "   \"%s\" {\n", upp_name));
                } else {
@@ -192,7 +193,7 @@ int user        /* =1 user, =0 project */
    }
 
    if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR) && user) {
-      char *dproj = lGetString(ep, UP_default_project);
+      const char *dproj = lGetString(ep, UP_default_project);
       FPRINTF((fp, "default_project %s\n", dproj ? dproj : "NONE"));
    }
    
@@ -253,7 +254,7 @@ int *tag,
 int parsing_type 
 ) {
    char *rest;
-   char *name;
+   const char *name;
    u_long32 job_number;
    lListElem *upu = NULL;
    lListElem *cp = NULL;
@@ -293,7 +294,7 @@ int parsing_type
       if (spool) {
 
          lList *sclp = NULL, *ssclp = NULL;
-         char *val;
+         const char *val;
 
          /* --------- UP_usage */
          if (!set_conf_deflist(alpp, clpp, fields, "usage", ep, 
@@ -434,7 +435,7 @@ int parsing_type
 }
 
 void
-dump_list_to_file(lList *list, char *file)
+dump_list_to_file(lList *list, const char *file)
 {
    FILE *f;
 
@@ -480,8 +481,8 @@ lListElem *getUserPrjTemplate()
  **** cull_read_in_userprj
  ****/
 lListElem *cull_read_in_userprj(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int user,
 int *tag 

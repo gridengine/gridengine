@@ -58,9 +58,8 @@ char *spoolmsg_message[] = {
 *
 *  RESULT
 *     -1 on error else 0 
-*******************************************************************************
-*/
-int sge_spoolmsg_write(FILE *file, char comment_char, char *version)
+******************************************************************************/
+int sge_spoolmsg_write(FILE *file, const char comment_char, const char *version)
 {
    int i;
 

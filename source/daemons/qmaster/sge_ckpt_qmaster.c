@@ -134,7 +134,7 @@ char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {
-   char *ckpt_name;
+   const char *ckpt_name;
 
    DENTER(TOP_LAYER, "ckpt_mod");
 
@@ -311,7 +311,7 @@ lListElem *ep,
 lListElem *old_ep,
 gdi_object_t *object 
 ) {
-   char *ckpt_name;
+   const char *ckpt_name;
 
    DENTER(TOP_LAYER, "ckpt_success");
 
@@ -366,7 +366,7 @@ char *rhost
 ) {
    lListElem *found;
    int pos;
-   char *ckpt_name;
+   const char *ckpt_name;
    lList **lpp = &Master_Ckpt_List;
 
    DENTER(TOP_LAYER, "sge_del_ckpt");
@@ -458,7 +458,7 @@ char *rhost
 */         
 
 lListElem *sge_locate_ckpt(
-char *ckpt_name 
+const char *ckpt_name 
 ) {
    return lGetElemStr(Master_Ckpt_List, CK_name, ckpt_name);
 }
@@ -498,7 +498,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
                                       const char *obj_name,
                                       const char *ckpt_name) 
 {
-   char *q_name;
+   const char *q_name;
    lListElem *qrep, *qep;
 
    DENTER(TOP_LAYER, "sge_change_queue_version_qr_list");
@@ -587,7 +587,7 @@ lList **alpp
 
    int i;
    int found = 0;
-   char *s, *interface;
+   const char *s, *interface;
 
    DENTER(TOP_LAYER, "validate_ckpt_obj");
 

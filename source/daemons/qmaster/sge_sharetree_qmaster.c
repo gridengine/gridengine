@@ -225,7 +225,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
    lList *childs;
    lListElem *child, *remaining;
    lList *save_found = NULL;
-   char *name = lGetString(node, STN_name);
+   const char *name = lGetString(node, STN_name);
    lListElem *pep;
 
    DENTER(TOP_LAYER, "check_sharetree");
@@ -409,9 +409,9 @@ lList *src
    static int depth = 0;
    lListElem *dnode, *snode;
 #ifdef notdef
-   char *d_name;
+   const char *d_name;
 #endif
-   char *s_name;
+   const char *s_name;
    
    DENTER(TOP_LAYER, "update_sharetree");
 
@@ -482,7 +482,7 @@ lList *src
 /* seek user/prj node (depends on node_type STT_USER|STT_PROJECT) in actual share tree */
 lListElem *getNode(
 lList *share_tree,
-char *name,
+const char *name,
 int node_type,
 int recurse 
 ) {

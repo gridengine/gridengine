@@ -69,8 +69,8 @@ static int read_userset_work(lList **alpp, lList **clpp, int fields[], lListElem
  **** cull_read_in_userset
  ****/
 lListElem *cull_read_in_userset(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int flag,
 int *tag 
@@ -148,7 +148,7 @@ int spool
 ) {
    FILE *fp;
    intprt_type print_elements[] = { UE_name, 0 };
-   char *delis[] = {":", ",", NULL};
+   const char *delis[] = {":", ",", NULL};
    char **ptr;
    u_long32 bitmask, type;
    char filename[SGE_PATH_MAX];

@@ -108,7 +108,7 @@ lList *cull_parse_job_parameter(
 lList *cmdline,
 lListElem **pjob 
 ) {
-   char *cp;
+   const char *cp;
    lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
@@ -259,7 +259,7 @@ lListElem **pjob
    */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-clear"))) {
       lListElem *ep_run;
-      char *cp_switch;
+      const char *cp_switch;
 
       for (ep_run = lFirst(cmdline); ep_run;) {
          /*

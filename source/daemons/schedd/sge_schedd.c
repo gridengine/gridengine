@@ -114,7 +114,7 @@ int argc,
 char *argv[] 
 ) {
    int check_qmaster;
-   char *master_host;
+   const char *master_host;
    int ret;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
@@ -472,7 +472,7 @@ static int sge_ck_qmaster()
      2 if sched_func_struct.event_func function changed 
 */
 int use_alg(
-char *alg_name 
+const char *alg_name 
 ) {
    int i = 0;
    int scheduler_before = current_scheduler;

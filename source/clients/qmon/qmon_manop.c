@@ -1020,7 +1020,7 @@ XtPointer cld, cad;
    lList *pl = NULL;
    lListElem *cep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    lList *lp = NULL;
    lList *alp = NULL;
@@ -1042,7 +1042,7 @@ XtPointer cld, cad;
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*(n+1)); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*(n+1)); 
       strs[0] = "NONE";
       for (cep=lFirst(pl), i=0; i<n; cep=lNext(cep), i++) {
         /*
@@ -1052,8 +1052,9 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a project}",
-                        "@{Available projects}", strs, n+1,
+                        "@{Available projects}", (String*)strs, n+1,
                         False, buf, BUFSIZ, NULL); 
       
       if (status) {

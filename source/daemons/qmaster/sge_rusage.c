@@ -92,7 +92,7 @@ char *category_str
    int fprintf_count;
    lListElem *ep;
    lList *usage_list;
-   char *s;
+   const char *s;
 #ifdef NEC_ACCOUNTING_ENTRIES
    char arch_dep_usage_string[256] = "";
 #endif

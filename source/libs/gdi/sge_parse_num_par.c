@@ -88,8 +88,12 @@
 double strtod(const char *str, char **ptr);
 #endif
 
-static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, char *str, char *where, char *err_str, int err_len);
-static double get_multiplier(sge_rlim_t *rlimp, char **, char *, char *, int);
+static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
+                                  const char *str, const char *where, 
+                                  char *err_str, int err_len);
+
+static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
+                             const char *where, char *err_str, int err_len);
 
 static sge_rlim_t add_infinity(sge_rlim_t rlim, sge_rlim_t offset);
 
@@ -126,14 +130,9 @@ RETURN
       0 - parsing error
 
 */
-int parse_ulong_val(
-double *dvalp,
-u_long32 *uvalp,
-u_long32 type,
-char *s,
-char *error_str,
-int error_len 
-) {
+int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, 
+                    const char *s, char *error_str, int error_len) 
+{
    return extended_parse_ulong_val(dvalp,uvalp,type,s,error_str,error_len,1);
 }
 
@@ -142,7 +141,7 @@ int extended_parse_ulong_val(
 double *dvalp,
 u_long32 *uvalp,
 u_long32 type,
-char *s,
+const char *s,
 char *error_str,
 int error_len,
 int enable_infinity  
@@ -225,7 +224,7 @@ int enable_infinity
 /*----------------------------------------------------------------------*/
 int sge_parse_loglevel_val(
 u_long32 *uval, 
-char *s 
+const char *s 
 ) {
   int retval = 1;
 
@@ -266,7 +265,7 @@ char *s
  *    0 if attr_str == NULL or nothing set or value may be a time value
  *-----------------------------------------------------------*/
 int sge_parse_checkpoint_attr(
-char *attr_str 
+const char *attr_str 
 ) {
    int opr;
 
@@ -306,7 +305,7 @@ char *attr_str
    return opr;
 }
 
-char *get_checkpoint_when(
+const char *get_checkpoint_when(
 int bitmask  
 ) {
    int i = 0;
@@ -492,7 +491,8 @@ sge_rlim_t offset
  *                G : Multiplier = 1024*1024*1024
  **********************************************************************/
 
-static double get_multiplier( sge_rlim_t *rlimp, char **dptr, char *where, char *err_str, int err_len)
+static double get_multiplier(sge_rlim_t *rlimp, char **dptr, 
+                             const char *where, char *err_str, int err_len)
 {
    double mul = 1;
    *rlimp = 1;
@@ -571,7 +571,9 @@ static double get_multiplier( sge_rlim_t *rlimp, char **dptr, char *where, char 
  *
  **********************************************************************/
 
-u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, char *str, char *where, char *err_str, int err_len)
+static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
+                                  const char *str, const char *where, 
+                                  char *err_str, int err_len)
 {
    double dummy;
    sge_rlim_t rlim, rlmuli;

@@ -88,7 +88,7 @@ u_long32 sge_count_dirents(char *directory_name)
 
    dir_entries = sge_get_dirents(directory_name);
    for_each(dir_entry, dir_entries) {
-      char *entry;
+      const char *entry;
 
       entry = lGetString(dir_entry, STR);
       if (strcmp(entry, ".") && strcmp(entry, "..")) {
@@ -108,7 +108,7 @@ int has_more_dirents(char *directory_name, u_long32 number_of_entries)
  
    dir_entries = sge_get_dirents(directory_name);
    for_each(dir_entry, dir_entries) {
-      char *entry;
+      const char *entry;
  
       entry = lGetString(dir_entry, STR);
       if (strcmp(entry, ".") && strcmp(entry, "..")) {

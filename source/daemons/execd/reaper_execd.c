@@ -370,7 +370,7 @@ int is_array
    char error[10000];
    FILE *fp;
    u_long32 jobid, job_pid, ckpt_arena, general_failure = 0, jataskid;
-   char *pe_task_id_str = NULL;
+   const char *pe_task_id_str = NULL;
    lListElem *du;
 
    DENTER(TOP_LAYER, "clean_up_job");
@@ -761,7 +761,7 @@ int is_array
       if (jatep && (tep = lGetSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, 
             JAT_task_list))) {
          if (!lGetSubStr(tep, VA_variable, OVERWRITE_NO_ACK, JB_env_list)) {
-            char *host, *commproc;
+            const char *host, *commproc;
             u_short id;
             sge_pack_buffer pb;
             u_long32 exit_status = 1;
@@ -810,7 +810,7 @@ lListElem *jr
    SGE_STRUCT_STAT statbuf;
    lListElem *jep, *job, *tep = NULL, *jatep = NULL;
    lListElem *master_q;
-   char *pe_task_id_str; 
+   const char *pe_task_id_str; 
    const void *iterator;
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
@@ -909,7 +909,7 @@ lListElem *jr
       }
 
       if (!pe_task_id_str) {
-         cull_remove_jobtask_from_disk(jobid, jataskid, SPOOL_WITHIN_EXECD);
+         job_remove_spool_file(jobid, jataskid, SPOOL_WITHIN_EXECD);
 
          if (lGetString(job, JB_exec_file)) {
             int task_number = 0;
@@ -1002,7 +1002,7 @@ lListElem *jr
          }
 
          /* job */
-         cull_remove_jobtask_from_disk(jobid, jataskid, SPOOL_WITHIN_EXECD); 
+         job_remove_spool_file(jobid, jataskid, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
          if (!getenv("SGE_KEEP_ACTIVE")) {
@@ -1292,7 +1292,7 @@ int npids
    pid_t pid;           /* pid of shepherd */
    char err_str[1024];
    u_long32 jobid, jataskid;
-   char *pe_task_id_str;
+   const char *pe_task_id_str;
    static u_long32 startup_time = 0;
 
    DENTER(TOP_LAYER, "examine_job_task_from_file");
@@ -1679,7 +1679,7 @@ lListElem *jr,
 char *name,
 u_long32 udefault 
 ) {
-   char *s;
+   const char *s;
 
    s = get_conf_value(NULL, *cflpp, CF_name, CF_value, name);
    add_usage(jr, name, s, (double)udefault);
@@ -1704,9 +1704,9 @@ lListElem *jr
    char pdc_usage[1024];
    u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
    int exit_status = -1, signo = -1;
-   char *q, *h, *u;
+   const char *q, *h, *u;
    lListElem *ep;
-   char *pe_task_id_str;
+   const char *pe_task_id_str;
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 

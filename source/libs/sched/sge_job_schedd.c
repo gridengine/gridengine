@@ -105,7 +105,7 @@ const lDescr *dp
 int sge_split_job_finished(
 lList **jobs,        /* JB_Type */
 lList **finished,     /* JB_Type */
-char *finished_name 
+const char *finished_name 
 ) {
    lCondition *where;
    int ret;
@@ -183,7 +183,7 @@ char *finished_name
 int sge_split_job_running(
 lList **jobs,        /* JB_Type */
 lList **running,     /* JB_Type */
-char *running_name 
+const char *running_name 
 ) {
    lListElem *job, *nxt_job;
 
@@ -323,7 +323,7 @@ lListElem *job
 int sge_split_job_wait_at_time(
 lList **jobs,        /* JB_Type */
 lList **waiting,     /* JB_Type */
-char *waiting_name,
+const char *waiting_name,
 u_long32 now 
 ) {
    lCondition *where;
@@ -385,7 +385,7 @@ u_long32 now
 int sge_split_job_error(
 lList **jobs,        /* JB_Type */
 lList **error,     /* JB_Type */
-char *error_name 
+const char *error_name 
 ) {
    lCondition *where;
    int ret;
@@ -492,7 +492,7 @@ char *error_name
 int sge_split_job_hold(
 lList **jobs,        /* JB_Type */
 lList **waiting,     /* JB_Type */
-char *waiting_name 
+const char *waiting_name 
 ) {
    lCondition *where;
    int ret;
@@ -623,7 +623,7 @@ char *waiting_name
 int sge_split_job_wait_predecessor(
 lList **jobs,        /* JB_Type */
 lList **waiting,     /* JB_Type */
-char *waiting_name 
+const char *waiting_name 
 ) {
    lList *pre_jobs;
    lListElem *job, *nxt_job;
@@ -686,12 +686,12 @@ char *waiting_name
 int sge_split_job_ckpt_restricted(
 lList **jobs,           /* JB_Type */
 lList **restricted,     /* JB_Type */
-char *restricted_name,
+const char *restricted_name,
 lList *ckpt_list        /* CK_Type */
 ) {
    int ret;
    lListElem *job, *ckpt;
-   char *ckpt_name;
+   const char *ckpt_name;
    lCondition *where;
 
    DENTER(TOP_LAYER, "sge_split_job_ckpt_restricted");
@@ -814,11 +814,9 @@ int elem             /* either JB_owner or JB_group */
    return pending_jobs;
 }
 
-void sge_dec_jc(
-lList **jcpp, /* JC_Type */
-char *name,
-int slots 
-) {
+/* jcpp: JC_Type */
+void sge_dec_jc(lList **jcpp, const char *name, int slots) 
+{
    int n = 0;
    lListElem *ep;
 
@@ -837,11 +835,9 @@ int slots
    return;
 }
 
-void sge_inc_jc(
-lList **jcpp, /* JC_Type */
-char *name,
-int slots 
-) {
+/* jcpp: JC_Type */
+void sge_inc_jc(lList **jcpp, const char *name, int slots) 
+{
    int n = 0;
    lListElem *ep;
 
@@ -925,7 +921,7 @@ lList *job_list
 int resort_jobs(
 lList *jc,
 lList *job_list,
-char *owner,
+const char *owner,
 lSortOrder *so 
 ) {
    lListElem *job, *jc_owner;
@@ -1031,7 +1027,7 @@ lSortOrder *so
 /*---------------------------------------------------------*/
 lListElem *explicit_job_request(
 lListElem *jep,
-char *name 
+const char *name 
 ) {
    lListElem *ep = NULL, *res;
 
@@ -1050,11 +1046,11 @@ char *name
 /*---------------------------------------------------------*/
 int get_job_contribution(
 double *dvalp,
-char *name,
+const char *name,
 lListElem *jep,
 lListElem *dcep 
 ) {
-   char *strval;
+   const char *strval;
    char error_str[256];
    lListElem *ep;
 
@@ -1084,7 +1080,7 @@ lListElem *dcep
 /*---------------------------------------------------------*/
 int nslots_granted(
 lList *granted,
-char *qhostname 
+const char *qhostname 
 ) {
    lListElem *gdil_ep;
    int nslots = 0;
@@ -1105,11 +1101,11 @@ char *qhostname
 
 int active_subtasks(
 lListElem *job,
-char *qname 
+const char *qname 
 ) {
    lListElem *task, *ep, *ja_task, *task_task;
-   char *task_qname;
-   char *master_qname;
+   const char *task_qname;
+   const char *master_qname;
 
    for_each(ja_task, lGetList(job, JB_ja_tasks)) {
       master_qname = lGetString(ja_task, JAT_master_queue);
@@ -1137,7 +1133,7 @@ char *qname
 int active_nslots_granted(
 lListElem *job,
 lList *granted,
-char *qhostname 
+const char *qhostname 
 ) {
    lList *task_list;
    lListElem *gdil_ep, *ja_task;

@@ -32,15 +32,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 typedef struct {
    char *s;
    size_t size;
 } StringBufferT;
 
-char* sge_string_append(StringBufferT *sb, char *a);
-char* sge_string_printf(StringBufferT *sb, char *fmt, ...);
+char* sge_string_append(StringBufferT *sb, const char *a);
+
+char* sge_string_printf(StringBufferT *sb, const char *fmt, ...);
+
 void sge_string_free(StringBufferT *sb);
 
 #endif /* __SGE_STRING_APPEND_H */

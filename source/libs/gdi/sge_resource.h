@@ -32,13 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+lList *sge_parse_resources(lList *resources, const char *range_str, const char *str, const char *hard_soft);
 
-
-lList *sge_parse_resources(lList *resources, char *range_str, char *str, char *hard_soft);
 int unparse_resources(FILE *fp, char *buff, u_long32 max_len, lList *rlp);
+
 void sge_show_resource_list(lList *reqlist); /* RQ_Type */
+
 void sge_show_re_type_list(lList *reqlist); /* RE_Type */
-void sge_show_re_type_list_line_by_line(char *label, char *indent, lList *reqlist); /*RE_Type*/
+
+void sge_show_re_type_list_line_by_line(const char *label, const char *indent, lList *reqlist); /*RE_Type*/
+
 void sge_compress_resources(lList *rlp); 
 
 #endif /* __SGE_RESOURCE_H */

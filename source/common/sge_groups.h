@@ -37,25 +37,25 @@
 #include "sge_c_gdi.h"
 
 /* get functions */
-lListElem* sge_get_group_elem(lList *groupList, char *groupName);
+lListElem* sge_get_group_elem(lList *groupList, const char *groupName);
 
 /* check functions */
-int        sge_is_group(lList *groupList, char *groupName);
-int        sge_is_member_in_group(lList *groupList, char *groupName, char *memberName, lList *rec_list);
-int        sge_is_group_supergroup(lListElem *groupElem, char *groupName);
-int        sge_is_group_subgroup(lList *groupList, lListElem *groupElem, char *groupName, lList *rec_list);
+int        sge_is_group(lList *groupList, const char *groupName);
+int        sge_is_member_in_group(lList *groupList, const char *groupName, const char *memberName, lList *rec_list);
+int        sge_is_group_supergroup(lListElem *groupElem, const char *groupName);
+int        sge_is_group_subgroup(lList *groupList, lListElem *groupElem, const char *groupName, lList *rec_list);
 
 /* add functions */
-int        sge_add_group_elem(lList *groupList, char *groupName, char *subGroupName, char *superGroupName);
-int        sge_add_member2group(lListElem *groupElem, char *memberName);   
-int        sge_add_subgroup2group(lList **alpp, lList *groupList, lListElem *groupElem, char *subGroupName, int makeChanges);
-int        sge_add_supergroup2group(lList *groupList, lListElem *groupElem, char *superGroupName);
+int        sge_add_group_elem(lList *groupList, const char *groupName, const char *subGroupName, const char *superGroupName);
+int        sge_add_member2group(lListElem *groupElem, const char *memberName);   
+int        sge_add_subgroup2group(lList **alpp, lList *groupList, lListElem *groupElem, const char *subGroupName, int makeChanges);
+int        sge_add_supergroup2group(lList *groupList, lListElem *groupElem, const char *superGroupName);
 
 /* del functions */
-int        sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem, char *subGroupName);
+int        sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem, const char *subGroupName);
 
 /* verify functions */
-int        sge_verify_host_group_entry(lList **alpp, lList *hostGroupList, lListElem *hostGroupElem, char *filename);
+int        sge_verify_host_group_entry(lList **alpp, lList *hostGroupList, lListElem *hostGroupElem, const char *filename);
 
 
 #endif /* __SGE_GROUPS_H__ */

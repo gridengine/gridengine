@@ -49,8 +49,8 @@ void at_unregister_job_array(lListElem *job_array);
 
 /* notify access tree of jobs state transitions between 
    running/pending per user and per priority group */
-void at_inc_job_counter(u_long32 priority, char *owner, int slots);
-void at_dec_job_counter(u_long32 priority, char *owner, int slots);
+void at_inc_job_counter(u_long32 priority, const char *owner, int slots);
+void at_dec_job_counter(u_long32 priority, const char *owner, int slots);
 
 /*
 ** ------------ to be called from within the decision-making layer 

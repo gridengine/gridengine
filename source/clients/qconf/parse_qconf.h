@@ -45,7 +45,7 @@ typedef struct object_info_entry {
    char *attribute_name;
    int nm_name;
    int (*read_objectname_work)(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);    
-   lListElem *(*cull_read_in_object)(char *dirname, char *filename, int spool, int type, int *tag, int fields[]);
+   lListElem *(*cull_read_in_object)(const char *dirname, const char *filename, int spool, int type, int *tag, int fields[]);
 } object_info_entry;
 
 #endif /* __PARSE_QCONF_H */

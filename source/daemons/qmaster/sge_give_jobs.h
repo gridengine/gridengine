@@ -40,7 +40,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, int mode, int spool_job);
 
 void ck_4_zombie_jobs(u_long now);
 
-void resend_job(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, char *queue);
+void resend_job(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);
 
 #if 0
 

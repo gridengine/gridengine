@@ -194,7 +194,8 @@ lList *granted
    lSetUlong(ep, OR_job_version, lGetUlong(job, JB_version));
    lSetList(ep, OR_queuelist, ql);
    {
-      char *s;
+      const char *s;
+
       s = lGetString(ja_task, JAT_granted_pe);
       if (s)
          lSetString(ep, OR_pe, s);
@@ -251,7 +252,8 @@ lList *orders
    else {
       success = (lGetUlong(aep, AN_status)==STATUS_OK);
       if (!success) {
-         char *s;
+         const char *s;
+
          if (aep) {
             s = lGetString(aep, AN_text);
             ERROR((SGE_EVENT, MSG_LIST_SENDORDERXFAILED_S , s?s:MSG_NULL));

@@ -35,9 +35,9 @@
 
 /* test for a number */
 int isint(
-char *str 
+const char *str 
 ) {
-   char *cp = str;
+   const char *cp = str;
 
    while (*cp) {
       if (!isdigit((int) *cp++))

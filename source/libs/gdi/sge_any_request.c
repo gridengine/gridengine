@@ -55,7 +55,7 @@ static int commd_monitor(int cl_err);
  * prepare_enroll
  * just store values for later enroll() of commlib
  *-----------------------------------------------------------------------*/
-void prepare_enroll(char *name, u_short id, int *tag_priority_list)
+void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 {
    DENTER(BASIS_LAYER, "prepare_enroll");
 
@@ -73,7 +73,7 @@ void prepare_enroll(char *name, u_short id, int *tag_priority_list)
    set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
 
    if (!(me.who == QMASTER || me.who == EXECD || me.who == SCHEDD || me.who == COMMDCNTL)) {
-      char *masterhost; 
+      const char *masterhost; 
 
       if ((masterhost = sge_get_master(0))) {
          set_commlib_param(CL_P_COMMDHOST, 0, masterhost, NULL);
@@ -146,8 +146,8 @@ int cl_err
 int sge_send_any_request(
 int synchron,
 u_long32 *mid,
-char *rhost,
-char *commproc,
+const char *rhost,
+const char *commproc,
 int id,
 sge_pack_buffer *pb,
 int tag 
@@ -258,8 +258,8 @@ int synchron
    if (tag) 
       dummytag = *tag;
 
-   i = receive_message(commproc, &usid, host, &dummytag, &buffer, &buflen,
-                       synchron, &compressed);
+   i = receive_message(commproc, &usid, host, &dummytag, &buffer, 
+                       &buflen, synchron, &compressed);
    
    if (tag) 
       *tag = dummytag;                    
@@ -304,8 +304,9 @@ int synchron
    /* fill it in the packing buffer */
    init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
 
-   if (rhost[0] == '\0')      /* If we receive from anybody return the sender */
+   if (rhost[0] == '\0') {    /* If we receive from anybody return the sender */
       strcpy(rhost, host);
+   }
 
    DEXIT;
    return 0;
@@ -323,9 +324,9 @@ int synchron
 **********************************************************************/
 int send_message_pb(
 int synchron,
-char *tocomproc,
+const char *tocomproc,
 int toid,
-char *tohost,
+const char *tohost,
 int tag,
 sge_pack_buffer *pb,
 u_long32 *mid 

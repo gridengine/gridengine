@@ -903,7 +903,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
    if (answer->lp == NULL)
    { 
       char* mappingName = NULL;
-      char* requestedHost = NULL;
+      const char* requestedHost = NULL;
 
       lUlong value;
       /* create PERM_Type list for answer structure*/
@@ -1399,7 +1399,7 @@ char *ruser,
 char *rhost,
 int sub_command 
 ) {
-   char *name;
+   const char *name;
    lList *tmp_alp = NULL;
    lListElem *new_obj = NULL,
              *old_obj;

@@ -145,10 +145,10 @@ static int del_host_group_entry(char *group);
 static int add_host_group_entry_from_file(char *filename);
 static int mod_host_group_entry_from_file(char *filename);
 #endif
-static int print_cmplx(char *cmplx_name);
-static int print_config(char *config_name);
-static int delete_config(char *config_name);
-static int add_modify_config(char *config_name, char *filename, u_long32 flags);
+static int print_cmplx(const char *cmplx_name);
+static int print_config(const char *config_name);
+static int delete_config(const char *config_name);
+static int add_modify_config(const char *config_name, const char *filename, u_long32 flags);
 static lList* edit_sched_conf(lList *confl);
 static lListElem* edit_userprj(lListElem *ep, int user);
 static lListElem *edit_sharetree(lListElem *ep);
@@ -192,7 +192,7 @@ char *argv[]
    lList *lp=NULL, *arglp=NULL, *alp=NULL, *newlp=NULL;
    lListElem *hep, *ep, *argep, *aep, *newep;
 
-   char *host = NULL;
+   const char *host = NULL;
    char fname[SGE_PATH_MAX];
    char *filename;
    char *templatename;
@@ -363,6 +363,7 @@ DPRINTF(("ep: %s %s\n",
 /*----------------------------------------------------------------------------*/
       /* "-ae [server_name]" */
       if (!strcmp("-ae", *spp)) {
+         char *host = NULL;
          lListElem *hep;
 
          cp = NULL;
@@ -392,7 +393,7 @@ DPRINTF(("ep: %s %s\n",
                break;
             }
             
-            host = lGetString(hep, EH_name);
+            host = sge_strdup(host, lGetString(hep, EH_name));
          }
          else {
             /* no template name given - then use "template" as name */
@@ -1413,7 +1414,7 @@ DPRINTF(("ep: %s %s\n",
          for_each(argep, arglp) {
 
             lListElem *node;
-            char *nodepath;
+            const char *nodepath;
             ancestors_t ancestors;
 
             nodepath = lGetString(argep, STN_name);
@@ -2384,7 +2385,7 @@ DPRINTF(("ep: %s %s\n",
 
       if (!strcmp("-Mu", *spp)) {
          char* file = NULL;
-         char* usersetname = NULL;
+         const char* usersetname = NULL;
          lList *acl=NULL;
 
          /* no adminhost/manager check needed here */
@@ -2626,7 +2627,7 @@ DPRINTF(("ep: %s %s\n",
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-Mprj", *spp)) {
          char* file = NULL;
-         char* projectname = NULL;
+         const char* projectname = NULL;
    
          /* no adminhost/manager check needed here */
 
@@ -2775,7 +2776,7 @@ DPRINTF(("ep: %s %s\n",
          char *host_list = NULL;
          int ret, first = 1;
          lListElem *hep;
-         char *host;
+         const char *host;
 
          if (!strcmp("-aconf", *spp)) {
             sge_gdi_is_manager(me.user_name);
@@ -2908,7 +2909,7 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-dconf", *spp)) {
          char *host_list = NULL;
          lListElem *hep;
-         char *host;
+         const char *host;
          int ret;
 
          /* no adminhost/manager check needed here */
@@ -3213,7 +3214,7 @@ DPRINTF(("ep: %s %s\n",
          for_each(argep, arglp) {
 
             lListElem *node;
-            char *nodepath;
+            const char *nodepath;
             ancestors_t ancestors;
 
             nodepath = lGetString(argep, STN_name);
@@ -3278,7 +3279,7 @@ DPRINTF(("ep: %s %s\n",
          lString2List(*spp, &arglp, STN_Type, STN_name, ", ");
 
          for_each(argep, arglp) {
-            char *nodepath;
+            const char *nodepath;
             nodepath = lGetString(argep, STN_name);
             if (nodepath) {
                show_sharetree_path(ep, nodepath);
@@ -3632,7 +3633,7 @@ DPRINTF(("ep: %s %s\n",
       /* "-suser username" */
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-suser", *spp)) {
-         char*  user = NULL;
+         const char*  user = NULL;
          lList* uList = NULL;
          lListElem* uep = NULL;
 
@@ -3885,7 +3886,7 @@ char *fname
       }
    }
    else {
-      char *cp = NULL;
+      const char *cp = NULL;
 
       sge_set_def_sig_mask(0, NULL);   
       setuid(getuid());
@@ -3949,7 +3950,7 @@ u_long32 target
 ) {
    lListElem *argep, *ep;
    lList *lp, *alp;
-   char *host;
+   const char *host;
    int nm = NoName;
    lDescr *type = NULL;
    char *name = NULL;
@@ -4304,7 +4305,7 @@ char *name
 
    if (lp) {
       for_each (ep, lp) {
-         char *line;
+         const char *line;
 
          line = lGetString(ep, keynm);
          if (line && line[0] != COMMENT_CHAR) { 
@@ -4328,7 +4329,7 @@ static int show_processors()
    lCondition *where;
    lList *alp = NULL, *lp = NULL;
    lListElem *ep;
-   char *cp;
+   const char *cp;
    u_long32 sum = 0;
 
    DENTER(TOP_LAYER, "show_processors");
@@ -5604,7 +5605,7 @@ lList *arglp
    lList *acls = NULL;
    lListElem *argep, *ep;
    int fail=0;
-   char *acl_name;
+   const char *acl_name;
    lList *alpp=NULL;
    int first_time = 1;
 
@@ -5655,7 +5656,7 @@ lList *arglp
    lList *usersets = NULL;
    lListElem *argep, *ep, *aep, *changed_ep;
    int status;
-   char *userset_name;
+   const char *userset_name;
    lList *alp, *lp;
    char fname[SGE_PATH_MAX];
    int cmd;
@@ -5732,7 +5733,7 @@ lList *arglp
   -sc option 
  ***************************************************************************/
 static int print_cmplx(
-char *cmplx_name 
+const char *cmplx_name 
 ) {
    lCondition *where;
    lEnumeration *what;
@@ -5774,14 +5775,14 @@ char *cmplx_name
   -sconf option 
  ***************************************************************************/
 static int print_config(
-char *config_name 
+const char *config_name 
 ) {
    lCondition *where;
    lEnumeration *what;
    lList *alp = NULL, *lp = NULL;
    lListElem *ep;
    int fail=0;
-   char *cfn;
+   const char *cfn;
    
    DENTER(TOP_LAYER, "print_config");
 
@@ -5823,7 +5824,7 @@ char *config_name
  * delete_config
  *------------------------------------------------------------------------*/
 static int delete_config(
-char *config_name 
+const char *config_name 
 ) {
    lList *alp = NULL, *lp = NULL;
    lListElem *ep;
@@ -5851,8 +5852,8 @@ char *config_name
  ** flags = 1 = add, 2 = modify, 3 = modify if exists, add if not
  *------------------------------------------------------------------------*/
 static int add_modify_config(
-char *cfn,
-char *filename,
+const char *cfn,
+const char *filename,
 u_long32 flags 
 ) {
    stringT str;

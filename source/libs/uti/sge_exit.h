@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -58,7 +56,9 @@ typedef struct fd_set {
 #endif /* WIN32NATIVE */
 
 typedef void (*exit_func_type)(int);
+
 void sge_exit(int i);
+
 exit_func_type install_exit_func(exit_func_type);
 
 void sge_close_all_fds(fd_set *keep_open);

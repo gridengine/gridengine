@@ -64,13 +64,22 @@
 #include "sge_string.h"
 
 static intprt_type intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
-static intprt_type intprt_as_usage[] = { UA_name, UA_value, 0 };
-static char *delis[] = {"=", ",", "\n"};
 
-static int str2qsm(char *qsm_str);
+static intprt_type intprt_as_usage[] = { UA_name, UA_value, 0 };
+
+static const char *delis[] = {"=", ",", "\n"};
+
+static int str2qsm(const char *qsm_str);
+
 static char *qsm2str(u_long32 qsm_val);
-static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
-static lListElem *cull_read_in_schedd_conf(char *dirname, char *fname, int spool, int *tag);
+
+static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[], 
+                                 lListElem *ep, int spool, int flag, int *tag, 
+                                 int parsing_type);
+
+static lListElem *cull_read_in_schedd_conf(char *dirname, char *fname, 
+                                           int spool, int *tag);
+
 static lListElem *create_default_sched_conf(void);
 
 #define DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME "0:7:30"
@@ -108,12 +117,9 @@ static lListElem *create_default_sched_conf(void);
 *     char* 
 *        how == 0: NULL
 *        how != 0: filename or NULL in case of an error
-********************************************************************************/
-char *write_sched_configuration(
-int spool,
-int how,
-lListElem *ep 
-) {
+*******************************************************************************/
+char *write_sched_configuration(int spool, int how, lListElem *ep) 
+{
    FILE *fp; 
    char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
    int fret;
@@ -210,9 +216,7 @@ FPRINTF_ERROR:
 }
 
 /* mapping func for SC_queue_sort_method uval -> str */
-static char *qsm2str(
-u_long32 qsm_val 
-) {
+static char *qsm2str(u_long32 qsm_val) {
    switch (qsm_val) {
    case QSM_SEQNUM:
       return "seqno";
@@ -224,9 +228,8 @@ u_long32 qsm_val
 }
 
 /* mapping func for SC_queue_sort_method str -> uval */
-static int str2qsm(
-char *qsm_str 
-) {
+static int str2qsm(const char *qsm_str) 
+{
    if (!qsm_str)
       return -1;
 
@@ -245,17 +248,10 @@ char *qsm_str
  **** read_schedd_conf_work
  ****
  ****/
-static int read_schedd_conf_work(
-lList **alpp,
-lList **clpp,
-int fields[], 
-lListElem *ep,
-int spool,
-int flag,
-int *tag,
-int parsing_type 
-) {
-   char *str;
+static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[], 
+                                 lListElem *ep, int spool, int flag, int *tag,
+                                 int parsing_type) {
+   const char *str;
    lList *alp = NULL;
    u_long32 ul;
    
@@ -442,17 +438,12 @@ int parsing_type
    return 0;
 }
 
-
-
 /****
  **** cull_read_in_schedd_conf
  ****/
-static lListElem *cull_read_in_schedd_conf(
-char *dirname,
-char *filename,
-int spool,
-int *tag 
-) {
+static lListElem *cull_read_in_schedd_conf(char *dirname, char *filename,
+                                           int spool, int *tag) 
+{
    lListElem *ep;
    struct read_object_args args = { SC_Type, "schedd_conf", read_schedd_conf_work };
    int intern_tag = 0;
@@ -468,12 +459,11 @@ int *tag
 
 /***************************************************
  Read scheduler configuration
+
+ spool: from spooled file (may contain additional fields)
  ***************************************************/
-lList *read_sched_configuration(
-char *fname,
-int spool,      /* from spooled file (may contain additional fields */
-lList **alpp 
-) {
+lList *read_sched_configuration(char *fname, int spool, lList **alpp) 
+{
    lList *confl = NULL;
    lListElem *ep;
    int write_default_config = 0;

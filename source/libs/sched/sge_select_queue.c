@@ -73,33 +73,62 @@
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
 
-static int is_requested(lList *req, char *attr);
+static int is_requested(lList *req, const char *attr);
 
 static lListElem *get_util_max(lListElem *cplx_el, lList *ccl[3]);
 
-static int sge_select_resource(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots, lList *ccl[3], int force_attr_existence);
+static int sge_select_resource(lList *complex_attributes, 
+                               lList *resources, int allow_non_requestable, 
+                               char *reason, int reason_size, int slots, 
+                               lList *ccl[3], int force_attr_existence);
 
-static int available_slots_global(lList **global_resources, lListElem *job, lListElem *ja_task, lListElem *pe, lList *host_list, lList *complex_list, int global_slots, lList *ccl[3], lList *acl_list);
+static int available_slots_global(lList **global_resources, lListElem *job, 
+                                  lListElem *ja_task, lListElem *pe, 
+                                  lList *host_list, lList *complex_list, 
+                                  int global_slots, lList *ccl[3], 
+                                  lList *acl_list);
 
-static int available_slots_at_host(lList *host_resources, lListElem *job, lListElem *ja_task, lListElem *host, int global_slots, int minslots, int allocation_rule, lList *ccl[3], lList *complex_list, lList *acl_list);
+static int available_slots_at_host(lList *host_resources, lListElem *job, 
+                                   lListElem *ja_task, lListElem *host, 
+                                   int global_slots, int minslots, 
+                                   int allocation_rule, lList *ccl[3], 
+                                   lList *complex_list, lList *acl_list);
 
-static int sge_soft_violations(lList *complex_attributes, lListElem *queue, lListElem *job, lListElem *pe, lList *cplx_list, lList *ccl[3]);
+static int sge_soft_violations(lList *complex_attributes, lListElem *queue, 
+                               lListElem *job, lListElem *pe, lList *cplx_list,
+                               lList *ccl[3]);
 
-static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job, lListElem *pe, lListElem *ckpt, lList *cplx_list, lList *host_list, lList *acl_list);
+static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job, 
+                                        lListElem *pe, lListElem *ckpt, 
+                                        lList *cplx_list, lList *host_list, 
+                                        lList *acl_list);
 
-static int sge_why_not_job2host(lListElem *job, lListElem *ja_task, lListElem *host, lList *complex_list, lList *acl_list);
+static int sge_why_not_job2host(lListElem *job, lListElem *ja_task, 
+                                lListElem *host, lList *complex_list, 
+                                lList *acl_list);
 
-static int fulfilled(lListElem *rep, lList *given_attr, char *reason, int reason_size, int allow_non_requestable, int is_a_request, int slots, lList *ccl[3], int force_existence);
+static int fulfilled(lListElem *rep, lList *given_attr, char *reason, 
+                     int reason_size, int allow_non_requestable, 
+                     int is_a_request, int slots, lList *ccl[3], 
+                     int force_existence);
 
 static int resource_cmp(u_long32 relop, double req, double src_dl);
 
-static int requested_forced_attr(lListElem *job, lListElem *cplx, char *obj_name, char *obj_key);
-static int ensure_forced(lListElem *job, char *main_cplx_name, char *obj_name, char *obj_kex, lList *user_complex, lList *cplx_list);
+static int requested_forced_attr(lListElem *job, lListElem *cplx, 
+                                 char *obj_name, const char *obj_key);
 
+static int ensure_forced(lListElem *job, char *main_cplx_name, char *obj_name, 
+                         const char *obj_kex, lList *user_complex, 
+                         lList *cplx_list);
 
-char* trace_resource(
-lListElem *ep 
-) {
+static int sge_check_load_alarm(const char *name, const char *load_value,
+                                const char *limit_value, u_long32 relop,
+                                u_long32 type, lListElem *hep,
+                                lListElem *hlep, u_long32 lc_host,
+                                u_long32 lc_global, lList *load_adjustments); 
+
+char* trace_resource(lListElem *ep) 
+{
    int jl, sl;
    char slot_dom[4], job_dom[4];
    u_long32 dom;
@@ -138,9 +167,8 @@ lListElem *ep
    return buffer;
 }
 
-void trace_resources(
-lList *resources 
-) {
+void trace_resources(lList *resources) 
+{
    lListElem *ep;
    char *ret;
    
@@ -167,24 +195,22 @@ lList *resources
    resources: resources generated from -l requests
    reason: if non NULL a reason is stored in case of no matching 
    reason_size: max. size of reason char array
+
+complex_attributes: CX_Type
+resources: RE_Type
  
 ************************************************************************/
 
-int sge_select_queue(complex_attributes, resources, allow_non_requestable, reason, reason_size, slots, ccl)
-lList *complex_attributes; /* CX_Type */
-lList *resources;          /* RE_Type */
-int allow_non_requestable;
-char *reason;
-int reason_size;
-int slots;
-lList *ccl[3];
+int sge_select_queue(lList *complex_attributes, lList *resources, 
+                     int allow_non_requestable, char *reason, 
+                     int reason_size, int slots, lList *ccl[3]) 
 {
    int ret;
 
    DENTER(TOP_LAYER, "sge_select_queue");
-   
-   ret = sge_select_resource(complex_attributes, resources, allow_non_requestable, 
-         reason, reason_size, slots, ccl, 1);
+   ret = sge_select_resource(complex_attributes, resources, 
+                             allow_non_requestable, reason, reason_size, 
+                             slots, ccl, 1);
 
    DEXIT;
    return ret;
@@ -196,16 +222,13 @@ lList *ccl[3];
  * - consumablel default requests
  * - jobs implicit slot request 
  *
+ * complex_attributes: CX_Type
+ * resources: RE_Type
  */ 
-static int sge_select_resource(complex_attributes, resources, allow_non_requestable, reason, reason_size, slots, ccl, force_attr_existence)
-lList *complex_attributes; /* CX_Type */
-lList *resources;          /* RE_Type */
-int allow_non_requestable;
-char *reason;
-int reason_size;
-int slots;
-lList *ccl[3];
-int force_attr_existence;
+static int sge_select_resource(lList *complex_attributes, lList *resources,
+                               int allow_non_requestable, char *reason,
+                               int reason_size, int slots, lList *ccl[3],
+                               int force_attr_existence) 
 {
    lListElem *res;
    static lListElem *implicit_slots_request = NULL;
@@ -231,11 +254,11 @@ int force_attr_existence;
    if (slots != -1 && !allow_non_requestable) {
       lListElem *attr;
       int ff;
-      char *name, *def_req; 
+      const char *name;
+      const char *def_req; 
       double dval;
 
       for_each (attr, complex_attributes) {
-         
          name = lGetString(attr, CE_name);
          if (!strcmp(name, "slots"))
             continue;
@@ -244,7 +267,8 @@ int force_attr_existence;
          if (lGetUlong(attr, CE_consumable) &&  !is_requested(resources, name)) {   
             lListElem *default_request;
             char tmp_reason[2048];
-            def_req=lGetString(attr, CE_default);
+
+            def_req = lGetString(attr, CE_default);
             parse_ulong_val(&dval, NULL, lGetUlong(attr, CE_valtype), def_req, NULL, 0);
 
             /* ignore default request if the value is 0 */
@@ -291,10 +315,11 @@ int force_attr_existence;
 
 /* 'attrname' can be found in all three lists 
    it depends on dominance layer which 
-   ccl is responsible */ 
-static lListElem *get_util_max(cplx_el, ccl)
-lListElem *cplx_el;
-lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue */
+   ccl is responsible 
+
+   ccl: needed to pass maximum utilization of global, host and queue
+*/ 
+static lListElem *get_util_max(lListElem *cplx_el, lList *ccl[3])
 {
    u_long32 relop, mask;
    int i;
@@ -305,7 +330,7 @@ lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue *
    relop = lGetUlong(cplx_el, CE_relop);
 
    if (relop == CMPLXGE_OP || relop == CMPLXGT_OP) {
-      char *name = lGetString(cplx_el, CE_name);
+      const char *name = lGetString(cplx_el, CE_name);
 
       switch ((mask=lGetUlong(cplx_el, CE_dominant)) & DOMINANT_LAYER_MASK) {
       case DOMINANT_LAYER_GLOBAL:
@@ -373,18 +398,15 @@ lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue *
       else
          returns number of non-matching req_attrs, 0 if all match.
 
+given_attr: CE_Type list
+requested_attr: CE_Type list
+ccl: needed to pass maximum utilization of global, host and queue
 */
-int sge_match_complex_attributes(given_attr, requested_attr, quick_exit, allow_non_requestable, reason, reason_size, is_a_request, slots, ccl, force_existence)
-lList *given_attr;     /* CE_Type list */
-lList *requested_attr; /* CE_Type list */
-int quick_exit;
-int allow_non_requestable;
-char *reason;
-int reason_size;
-int is_a_request; 
-int slots;
-lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue */
-int force_existence;
+int sge_match_complex_attributes(lList *given_attr, lList *requested_attr, 
+                                 int quick_exit, int allow_non_requestable,
+                                 char *reason, int reason_size, 
+                                 int is_a_request, int slots, lList *ccl[3],
+                                 int force_existence) 
 {
    lListElem *rep; /* a requested element */
    int ret=0;
@@ -406,19 +428,17 @@ int force_existence;
    return ret;
 }
 
-static int fulfilled(rep, given_attr, reason, reason_size, allow_non_requestable, is_a_request, slots, ccl, force_existence)
-lListElem *rep;
-lList *given_attr;
-char *reason;
-int reason_size;
-int allow_non_requestable;
-int is_a_request;
-int slots;
-lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue */
-int force_existence;
+/*
+ccl: needed to pass maximum utilization of global, host and queue
+*/
+static int fulfilled(lListElem *rep, lList *given_attr, char *reason,
+                     int reason_size, int allow_non_requestable, 
+                     int is_a_request, int slots, lList *ccl[3],
+                     int force_existence) 
 {
    lListElem *cplx_el; /* a complex element */
-   char *attrname, availability_text[2048];
+   const char *attrname; 
+   char availability_text[2048];
    int match;
    lListElem *util_max_ep = NULL;
 
@@ -506,21 +526,17 @@ int force_existence;
    9 sorry, job has not access according to project list of queue
 
 */
-static int sge_why_not_job2queue_static(
-lListElem *queue,
-lListElem *job,
-lListElem *pe,
-lListElem *ckpt,
-lList *cplx_list,
-lList *host_list,
-lList *acl_list 
-) {
+static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
+                                        lListElem *pe, lListElem *ckpt,
+                                        lList *cplx_list, lList *host_list,
+                                        lList *acl_list) 
+{
    u_long32 job_id;
-   char *queue_name;
+   const char *queue_name;
    char reason[1024 + 1];
    char buff[1024 + 1];
    lList *projects;
-   char *project;
+   const char *project;
 
    DENTER(TOP_LAYER, "sge_why_not_job2queue_static");
 
@@ -713,7 +729,8 @@ lList *acl_list
    return 0;
 }
 
-static int ensure_forced(lListElem* job, char *main_complex, char *obj_name, char *obj_key, lList* usercplx, lList* cplx_list)
+static int ensure_forced(lListElem* job, char *main_complex, char *obj_name, 
+                         const char *obj_key, lList* usercplx, lList* cplx_list)
 {
 
    DENTER(TOP_LAYER, "ensure_forced");
@@ -747,7 +764,8 @@ static int ensure_forced(lListElem* job, char *main_complex, char *obj_name, cha
 }
 
 
-static int requested_forced_attr(lListElem *job, lListElem *cplx, char *obj_name, char *obj_key)
+static int requested_forced_attr(lListElem *job, lListElem *cplx, 
+                                 char *obj_name, const char *obj_key)
 {
    lListElem *attr;
 
@@ -768,18 +786,14 @@ static int requested_forced_attr(lListElem *job, lListElem *cplx, char *obj_name
    return 1;
 }
 
+/* ccl: needed to pass maximum utilization of global, host and queue */
 
-
-static int sge_soft_violations(complex_attributes, queue, job, pe, cplx_list, ccl)
-lList *complex_attributes;
-lListElem *queue;
-lListElem *job;
-lListElem *pe;
-lList *cplx_list;
-lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue */
+static int sge_soft_violations(lList *complex_attributes, lListElem *queue,
+                               lListElem *job, lListElem *pe, lList *cplx_list,
+                               lList *ccl[3]) 
 {
    u_long32 job_id;
-   char *queue_name;
+   const char *queue_name;
    char reason[1024 + 1];
    char buff[1024 + 1];
    unsigned int soft_violation = 0; 
@@ -820,17 +834,14 @@ lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue *
 }
 
 
-static int sge_why_not_job2host(
-lListElem *job,
-lListElem *ja_task,
-lListElem *host,
-lList *complex_list,
-lList *acl_list 
-) {
+static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
+                                lListElem *host, lList *complex_list,
+                                lList *acl_list) 
+{
    lList *projects;
-   char *project;
+   const char *project;
    u_long32 job_id;
-   char *eh_name;
+   const char *eh_name;
 
    DENTER(TOP_LAYER, "sge_why_not_job2host");
 
@@ -919,11 +930,8 @@ lList *acl_list
    return 0;
 }
 
-
-static int is_requested(
-lList *req,
-char *attr 
-) {
+static int is_requested(lList *req, const char *attr) 
+{
    lListElem *res;
 
    for_each (res, req) {
@@ -935,10 +943,12 @@ char *attr
    return 0;
 }
 
-
-int sge_check_load_alarm(char *name, char *load_value, char *limit_value, u_long32 relop, u_long32 type,
-                         lListElem *hep, lListElem *hlep, u_long32 lc_host, u_long32 lc_global, 
-                         lList *load_adjustments) {
+static int sge_check_load_alarm(const char *name, const char *load_value, 
+                                const char *limit_value, u_long32 relop, 
+                                u_long32 type, lListElem *hep, 
+                                lListElem *hlep, u_long32 lc_host, 
+                                u_long32 lc_global, lList *load_adjustments) 
+{
    lListElem *job_load;
    double limit, load;
    int match;
@@ -959,8 +969,9 @@ int sge_check_load_alarm(char *name, char *load_value, char *limit_value, u_long
          /* load correction */
          if (((hlep && lc_host) || lc_global) &&
             (job_load = lGetElemStr(load_adjustments, CE_name, name))) {  
-            char *s;
+            const char *s;
             double load_correction;
+
             s = lGetString(job_load, CE_stringval);
             if (!parse_ulong_val(&load_correction, NULL, type, s, NULL, 0)) {
                DEXIT;
@@ -973,7 +984,7 @@ int sge_check_load_alarm(char *name, char *load_value, char *limit_value, u_long
                if (!strncmp(name, "np_", 3)) {
                   int nproc = 1;
                   lListElem *ep_nproc;
-                  char *cp;
+                  const char *cp;
 
                   if ((ep_nproc = lGetSubStr(hep, HL_name, LOAD_ATTR_NUM_PROC, EH_load_list))) {
                      cp = lGetString(ep_nproc, HL_value);
@@ -1039,14 +1050,8 @@ int sge_check_load_alarm(char *name, char *load_value, char *limit_value, u_long
    return 0;
 }
 
-
-
-
-static int resource_cmp(
-u_long32 relop,
-double req,
-double src_dl 
-) {
+static int resource_cmp(u_long32 relop, double req, double src_dl) 
+{
    int match;
 
    switch(relop) { 
@@ -1088,11 +1093,13 @@ double src_dl
       0 no
 */
 
-int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, lList *complex_list, lList *load_adjustments) {
-   lListElem   *hep, *global_hep, *tep;
-   u_long32    ulc_factor; 
-   char        *load_value, *limit_value;
-   double      lc_host = 0, lc_global = 0;
+int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, 
+                   lList *complex_list, lList *load_adjustments) {
+   lListElem *hep, *global_hep, *tep;
+   u_long32 ulc_factor; 
+   const char *load_value; 
+   const char *limit_value;
+   double lc_host = 0, lc_global = 0;
    
    DENTER(TOP_LAYER, "sge_load_alarm");
 
@@ -1123,7 +1130,7 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, lList
 
    for_each (tep, threshold) {
       lListElem *hlep = NULL, *glep = NULL, *cep  = NULL;
-      char *name;
+      const char *name;
       u_long32 relop, type;
 
       name = lGetString(tep, CE_name);
@@ -1145,10 +1152,11 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, lList
          }   
       }
 
-      if (hlep) 
+      if (hlep) {
          load_value = lGetString(hlep, HL_value);
-      else
+      } else {
          load_value = lGetString(glep, HL_value);
+      }
 
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
@@ -1176,10 +1184,14 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, lList
    fills and returns string buffer containing reasons for alarm states
 */
 
-char *sge_load_alarm_reason(lListElem *qep, lList *threshold, lList *exechost_list, lList *complex_list, 
-                            char *reason, int reason_size, char *threshold_type) {
-   lListElem   *hep, *global_hep, *tep;
-   char        *load_value, *limit_value;
+char *sge_load_alarm_reason(lListElem *qep, lList *threshold, 
+                            lList *exechost_list, lList *complex_list, 
+                            char *reason, int reason_size, 
+                            const char *threshold_type) 
+{
+   lListElem *hep, *global_hep, *tep;
+   const char *load_value; 
+   const char *limit_value;
    char buffer[1024];  /* buffer for one line */
    
    DENTER(TOP_LAYER, "sge_load_alarm_reason");
@@ -1205,7 +1217,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold, lList *exechost_li
 
    for_each (tep, threshold) {
       lListElem *hlep = NULL, *glep = NULL, *cep  = NULL;
-      char *name;
+      const char *name;
       u_long32 relop, type;
 
       name = lGetString(tep, CE_name);
@@ -1585,7 +1597,7 @@ int host_order_changed) {
 
       int max_slots_all_hosts, accu_host_slots;
       int have_master_host, suited_as_master_host;
-      char *eh_name, *qname;
+      const char *eh_name, *qname;
 
       /* untag all queues */
       for_each(qep, queues)
@@ -1610,7 +1622,7 @@ int host_order_changed) {
             double previous_load = 0;
             int previous_load_inited = 0;
             int host_seqno = 0;
-            char *eh_name;
+            const char *eh_name;
 
             host_order_changed = 0;
 
@@ -2054,7 +2066,8 @@ int host_order_changed) {
       int max_host_seq_no, start_seq_no, last_accu_host_slots, accu_host_slots = 0;
       int host_slots;
       lList *gdil = NULL;
-      char *eh_name, *qname;
+      const char *eh_name;
+      const char *qname;
       lListElem *hep, *qep;
 
       int host_seq_no = 1;
@@ -2086,7 +2099,7 @@ int host_order_changed) {
       /* find best suited master host */ 
       if (need_master_host) {
          lListElem *master_hep = NULL;
-         char *master_eh_name;
+         const char *master_eh_name;
 
          /* find master host with the lowest host seq no */
          for_each (hep, host_list) {
@@ -2236,7 +2249,8 @@ lListElem *hep;
 {
    int qslots;
    lListElem *cep;
-   char *qname, reason[1024];
+   const char *qname; 
+   char reason[1024];
    lList *queue_resources = NULL;
    u_long32 job_id;
 
@@ -2385,21 +2399,15 @@ lListElem *hep;
 *     int - the # of slots
 *
 *******************************************************************************/
-static int available_slots_at_host(host_resources, job, ja_task, host, hslots, minslots, allocation_rule, ccl, complex_list, acl_list)
-lList *host_resources;
-lListElem *job;
-lListElem *ja_task;
-lListElem *host;
-int hslots;
-int minslots;
-int allocation_rule;
-lList *ccl[3];
-lList *complex_list;
-lList *acl_list;
+static int available_slots_at_host(lList *host_resources, lListElem *job,
+                                   lListElem *ja_task, lListElem *host,
+                                   int hslots, int minslots, 
+                                   int allocation_rule, lList *ccl[3],
+                                   lList *complex_list, lList *acl_list) 
 {
    lListElem *cep;
    char reason[1024];
-   char *eh_name;
+   const char *eh_name;
    u_long32 job_id;
 
    DENTER(TOP_LAYER, "available_slots_at_host");
@@ -2719,7 +2727,7 @@ u_long32 *total_slotsp
    int pe_slots = 0;
    int qslots, total;
    unsigned int tagged;
-   char *qname;
+   const char *qname;
    lListElem *gel, *qep, *so;
    int ret = 0;
 

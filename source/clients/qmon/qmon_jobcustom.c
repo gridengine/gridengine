@@ -584,7 +584,7 @@ int nm
    lList *ql = NULL;
    lListElem *qgep = NULL;
    int n, len;
-   String queue;
+   StringConst queue;
 
    DENTER(GUI_LAYER, "PrintGrantedQueue");
 
@@ -886,7 +886,7 @@ int nm
 ) {
 
    String str;
-   String temp;
+   StringConst temp;
    
    DENTER(GUI_LAYER, "PrintString");
 
@@ -1589,7 +1589,7 @@ XtPointer cld, cad;
    int type;
    char stringval[MAXHOSTLEN];
    Boolean status = False;
-   String name, value, strval;
+   StringConst name, value, strval;
    Boolean found = False;
    lListElem *fill_in_request = NULL;
    
@@ -1664,7 +1664,7 @@ XtPointer cld, cad;
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
    lListElem *dep = NULL;
    Boolean found = False;
-   String name, value;
+   StringConst name, value;
 
    DENTER(GUI_LAYER, "qmonJobFilterRemoveResource");
 

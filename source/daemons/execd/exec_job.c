@@ -141,7 +141,7 @@ lListElem *slave_jatep
          JAT_granted_destin_identifier_list)), JG_queue));
    else {
       /* seek responsible queue for this task in gdil of slave job */
-      char *qnm;
+      const char *qnm;
       lListElem *gdil_ep;
 
       qnm = lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
@@ -496,7 +496,8 @@ static void set_sharedlib_path(lList *environmentList) {
 
    /* if allready in environment: extend by SGE sharedlib path, else set */
    if((sharedlib_elem = lGetElemStr(environmentList, VA_variable, sharedlib_path_name)) != NULL) {
-      char *old_value = lGetString(sharedlib_elem, VA_value);
+      const char *old_value = lGetString(sharedlib_elem, VA_value);
+
       if(old_value && strlen(old_value) > 0) {
          DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + strlen(sge_sharedlib_path) + 1);
@@ -548,7 +549,8 @@ char *err_str
    SGE_STRUCT_STAT buf;
    int used_slots, pe_slots = 0, host_slots = 0, nhosts = 0;
    static lList *processor_set = NULL;
-   char *cp, *shell;
+   const char *cp;
+   char *shell;
    char *cwd;
    lList *cplx;
    char dce_wrapper_cmd[128];
@@ -719,7 +721,7 @@ char *err_str
          int slots;
          lListElem *qep;
          lList *alp = NULL;
-         char *q_set;
+         const char *q_set;
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
          qep = lFirst(lGetList(gdil_ep, JG_queue)); 
@@ -773,7 +775,7 @@ char *err_str
    }
 
    if (slave_jep) {
-      char *s, *name;
+      const char *s, *name;
       int n = strlen(COMPLEX2ENV_PREFIX);
       for_each(env, lGetList(slave_jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
@@ -786,7 +788,7 @@ char *err_str
    }
 
    {
-      char *s, *name;
+      const char *s, *name;
       int n = strlen(COMPLEX2ENV_PREFIX);
       for_each(env, lGetList(jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
@@ -897,7 +899,8 @@ char *err_str
    ** login jobs have LOGIN
    */
    if (lGetString(jep, JB_script_file)) {
-      char *s;
+      const char *s;
+
       /* build basename */ 
       s=strrchr(lGetString(jep, JB_script_file), '/');
       if (s) 
@@ -1426,7 +1429,7 @@ char *err_str
    /* config for interactive jobs */
    {
       lListElem *tmp_elem;
-      char *tmp_string;
+      const char *tmp_string;
       u_long32 qrsh_task_id = 0;
       u_long32 jb_now = lGetUlong(jep, JB_now); 
 
@@ -1548,7 +1551,7 @@ char *err_str
    else if (feature_is_enabled(FEATURE_AFS_SECURITY) && conf.pag_cmd &&
             strlen(conf.pag_cmd) && strcasecmp(conf.pag_cmd, "none")) {
       int fd, len;
-      char *cp;
+      const char *cp;
 
       if (SGE_STAT(coshepherd_path, &buf)) {
          shepherd_name = SGE_COSHEPHERD;
@@ -1860,7 +1863,7 @@ char *err_str
    };
 
    int i, failed = 0;
-   char *s;
+   const char *s;
    lListElem *attr;
 
    DENTER(TOP_LAYER, "arch_dep_config");
@@ -1895,7 +1898,7 @@ lList *cplx,
 lListElem *job,
 char *err_str 
 ) {
-   char *s, *name;
+   const char *s, *name;
    lListElem *env, *attr;
    int n;
 

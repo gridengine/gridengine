@@ -287,7 +287,7 @@ lListElem **ppelem
    char filename[SGE_PATH_MAX + 1];
    int i_ret;
    unsigned long ulfiledate;
-   char *str;
+   const char *str;
    static int files_cached = 0;
    lList *answer = NULL;
 
@@ -386,7 +386,7 @@ lListElem **ppelem
          lSetString(cmplx, CX_name, lGetString(version_subdir, HD_name));
          str = lGetString(cmplx, CX_name);
          if (str && *str && (str[strlen(str) - 1] == '/')) {
-            str[strlen(str) - 1] = 0;
+            ((char*)str)[strlen(str) - 1] = 0;
          }
          lSetList(cmplx,
                   CX_entries, 
@@ -456,7 +456,7 @@ lListElem **ppelem
          lSetString(cmplx, CX_name, lGetString(version_subdir, HD_name));
          str = lGetString(cmplx, CX_name);
          if (str && *str && (str[strlen(str) - 1] == '/')) {
-            str[strlen(str) - 1] = 0;
+            ((char*)str)[strlen(str) - 1] = 0;
          }
          lSetList(cmplx, 
                   CX_entries, 
@@ -526,7 +526,7 @@ lListElem **ppelem
             lSetString(cmplx, CX_name, lGetString(version_subdir, HD_name));
             str = lGetString(cmplx, CX_name);
             if (str && *str && (str[strlen(str) - 1] == '/')) {
-               str[strlen(str) - 1] = 0;
+               ((char*)str)[strlen(str) - 1] = 0;
             }
             lSetList(cmplx, 
                      CX_entries, 
@@ -1189,7 +1189,8 @@ lListElem **ppelem,
 unsigned long flags 
 ) {
    lListElem *queue_subdir;
-   char *dirname, *str;
+   const char *dirname;
+   char *str;
    int i_ret;
    int not_the_same;
    
@@ -1278,7 +1279,8 @@ lListElem **ppelem,
 unsigned long flags 
 ) {
    lListElem *complex_subdir;
-   char *dirname, *str;
+   const char *dirname;
+   char *str;
    int i_ret;
    int not_the_same;
    
@@ -1368,7 +1370,8 @@ lListElem **ppelem,
 unsigned long flags 
 ) {
    lListElem *host_subdir;
-   char *dirname, *str;
+   const char *dirname;
+   char *str;
    int i_ret;
    int not_the_same;
    
@@ -1432,7 +1435,7 @@ unsigned long flags
 }
 
 time_t version_filename_to_t_time(
-char *timestr 
+const char *timestr 
 ) {
    struct tm tm_time; 
 
@@ -1471,7 +1474,7 @@ time_t t_time
 */
 int create_version_subdir(
 lList *ldir,
-char *dirname,
+const char *dirname,
 lListElem **ppelem 
 ) {
    char *pathname;
@@ -1570,11 +1573,12 @@ lListElem **ppelem
 */
 int find_version_subdir_by_name(
 lList *ldir,
-char *dirname,
+const char *dirname,
 lListElem **ppelem,
 unsigned long flags 
 ) {
-   char *a_dirname, *str;
+   const char *a_dirname;
+   char *str;
    lListElem *version_subdir;
    int not_the_same;
 
@@ -2104,8 +2108,8 @@ lListElem *complex
 */
 int prepare_version_subdir(
 lList **pldir,
-char *sname,
-char *name,
+const char *sname,
+const char *name,
 lListElem **pversion_subdir 
 ) {
    int i_ret;
@@ -2218,8 +2222,8 @@ lListElem **pversion_subdir
 **   is_there = is_object_in_history(STR_DIR_COMPLEXES, "complex1");
 */
 int is_object_in_history(
-char *sname,
-char *name 
+const char *sname,
+const char *name 
 ) {
    char *str_dir;
    SGE_STRUCT_STAT sbuf;

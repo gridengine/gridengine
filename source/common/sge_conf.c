@@ -310,7 +310,7 @@ u_long32 *val,
 int type 
 ) {
    lListElem *ep;
-   char *s;
+   const char *s;
 
    char SGE_EVENT[MAX_STRING_SIZE];
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -518,7 +518,7 @@ lList **lpp
    /* put contents of qmaster_params and execd_params  
       into some convenient global variables */
    {
-      char *s;
+      const char *s;
       forbid_reschedule = 0;
       enable_forced_qdel = 0;
       do_credentials = 1;
@@ -737,7 +737,7 @@ lList **lpp
          } else if (!strncasecmp(s, "HALFLIFE_DECAY_LIST=",
                     sizeof("HALFLIFE_DECAY_LIST=")-1)) {
             lListElem *ep;
-            char *s0,*s1,*s2,*s3;
+            const char *s0,*s1,*s2,*s3;
             double value;
             struct saved_vars_s *sv1=NULL, *sv2=NULL;
             if (halflife_decay_list) {

@@ -458,7 +458,7 @@ FILE *fp
    static int nesting_level = 0;
    char space[128];
    lList *tlp;
-   char *str;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElem");
 

@@ -37,7 +37,8 @@
 #include "cull.h"
  
 int sge_resolve_host(lListElem *ep, int nm);
-int sge_resolve_hostname(char *hostname, char *unique, int nm);
+
+int sge_resolve_hostname(const char *hostname, char *unique, int nm);
 
 #endif /* __RESOLVE_HOST_H */
 

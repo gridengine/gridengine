@@ -94,9 +94,9 @@ int direction
 
 
 int print_area(
-char *fname,
-char *label,
-char *area,
+const char *fname,
+const char *label,
+const char *area,
 int area_len 
 ) {
    int i;
@@ -124,7 +124,7 @@ int area_len
 void xor_area(
 char *area,
 int area_len,
-char *key,
+const char *key,
 int key_len 
 ) {
    int i, k, n, len, rest;
@@ -164,8 +164,8 @@ int key_len
  * size bytes.
  */
 int areacmp(
-char *a1,
-char *a2,
+const char *a1,
+const char *a2,
 int size 
 ) {
    int i;

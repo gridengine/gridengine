@@ -32,10 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+char *get_confval(const char *conf_val, const char *file);
 
-
-char *get_confval(char *conf_val, char *file);
-pid_t readpid(char *fname);
+pid_t readpid(const char *fname);
 
 #endif /* __SGE_GET_CONFVAL_H */
 

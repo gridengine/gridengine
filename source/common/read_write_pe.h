@@ -34,7 +34,7 @@
 
 
 
-lListElem *cull_read_in_pe(char *dirname, char *filename, int spool, int type, int *tag, int fields[]);
+lListElem *cull_read_in_pe(const char *dirname, const char *filename, int spool, int type, int *tag, int fields[]);
 
 char *write_pe(int spool, int how, lListElem *pep);
 

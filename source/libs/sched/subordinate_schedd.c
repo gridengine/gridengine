@@ -94,11 +94,12 @@ lListElem *so  /* SO_Type referencing to a queue C               */
    return ( (u_long32) (used) >= threshold);
 }
 
-int sos_schedd(
-char *qname, /* name of a queue that needs suspension on subordinate */
-lList *qlist /* complete queue list for recursivly suspension of other queues
- */ 
-) {
+/*
+qname: name of a queue that needs suspension on subordinate
+qlist: complete queue list for recursivly suspension of other queues
+*/
+int sos_schedd(const char *qname, lList *qlist) 
+{
    lListElem *q;
    u_long32 sos, state;
    int ret = 0;

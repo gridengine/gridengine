@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "cull.h"
 
 u_long32 num_in_range(u_long32 num, lList *r);

@@ -184,7 +184,7 @@ int slave
    int mail_on_error = 0, general = GFSTATE_QUEUE;
    lListElem *qep, *gdil_ep;
    lList *tmp_qlp, *qlp = NULL;
-   char *qnm;
+   const char *qnm;
    int slots;
    int fd;
    const void *iterator;
@@ -350,8 +350,8 @@ int slave
 
 
    lSetUlong(jelem, JB_script_size, 0);
-   if (cull_write_jobtask_to_disk(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
-      /* SGE_EVENT is written by cull_write_jobtask_to_disk() */
+   if (job_write_spool_file(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
+      /* SGE_EVENT is written by job_write_spool_file() */
       strcpy(err_str, SGE_EVENT);
       DEXIT;
       goto Error;
@@ -409,7 +409,7 @@ Ignore:
 *
 ****************************************************************************
 */
-static lList *set_queue_info_in_task(char *qname, lListElem *jatask)
+static lList *set_queue_info_in_task(const char *qname, lListElem *jatask)
 {
    lListElem *jge;
 
@@ -489,7 +489,7 @@ static lList *get_queue_with_task_about_to_exit(lListElem *jatep, lListElem *jat
          pe_task_queue = lFirst(lGetList(pe_task_ja_task, JAT_granted_destin_identifier_list));
          if(pe_task_queue != NULL) {
             char shepherd_about_to_exit[SGE_PATH_MAX + 1];
-            char *pe_task_no = NULL;
+            const char *pe_task_no = NULL;
             SGE_STRUCT_STAT stat_buffer;
             
             pe_task_no = lGetString(pe_task, JB_pe_task_id_str);
@@ -575,7 +575,7 @@ int *synchron;
    u_long32 jobid, jataskid;
    lListElem *jep, *tep, *ep, *pe, *jatep;
    char job_source[1024], new_task_id[12];
-   char *task_str;
+   const char *task_str;
    lList *gdil = NULL;
    int tid = 0;
    char err_str[256+SGE_PATH_MAX];
@@ -695,7 +695,7 @@ int *synchron;
                    lGetString(jelem, JB_owner), de->host, me.qualified_hostname));
          }
       } else { /* look whether requested queue fits for task */
-         char *qnm = lGetString(lFirst(gdil), JG_qname); 
+         const char *qnm = lGetString(lFirst(gdil), JG_qname); 
          lListElem *job_gdil;
 
          job_gdil = lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qname, qnm);
@@ -721,7 +721,7 @@ int *synchron;
    }
 
    lSetUlong(jelem, JB_script_size, 0);
-   if (cull_write_jobtask_to_disk(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
+   if (job_write_spool_file(jelem, jataskid, SPOOL_WITHIN_EXECD)) {
       strcpy(err_str, SGE_EVENT);
       execd_job_start_failure(jelem, jatask, err_str, 1);
       goto Error;

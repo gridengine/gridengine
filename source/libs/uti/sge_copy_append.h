@@ -32,14 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #define SGE_APPEND 1
 #define SGE_COPY   2
 
-int sge_copy_append(char *dst, char *src, int mode); 
+int sge_copy_append(char *dst, const char *src, int mode); 
+
 char *sge_bin2string(FILE *fp, int size);
-int sge_string2bin(FILE *fp, char *buf);
+
+int sge_string2bin(FILE *fp, const char *buf);
 
 #endif /* __SGE_COPY_APPEND_H */
 

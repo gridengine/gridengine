@@ -117,7 +117,7 @@ int schedd_log(const char *logstr) {
 
 int schedd_log_list(const char *logstr, lList *lp, int nm) {
    intprt_type fields[] = { 0, 0 };
-   char *delis[] = {NULL, " ", NULL};
+   const char *delis[] = {NULL, " ", NULL};
    lList *lp_part = NULL;
    lListElem *ep = NULL;
 
@@ -162,7 +162,7 @@ int schedd_log_list(const char *logstr, lList *lp, int nm) {
 }
 
 
-char *job_descr(
+const char *job_descr(
 u_long32 jobid 
 ) {
    static char descr[20];

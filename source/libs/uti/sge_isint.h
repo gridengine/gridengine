@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-int isint(char *str);
+int isint(const char *str);
  
 #endif /* __SGE_ISINT_H */
 

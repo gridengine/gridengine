@@ -302,7 +302,7 @@ static void qmonQCLimitCheck(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad);
 static Boolean check_qname(char *name);
 static void qmonInitQCEntry(tQCEntry *data);
-static void qmonQCSetData(tQCEntry *data, String qname, int how);
+static void qmonQCSetData(tQCEntry *data, StringConst qname, int how);
 static Boolean qmonCullToQC(lListElem *qep, tQCEntry *data, int how);
 static Boolean qmonQCToCull(tQCEntry *data, lListElem *qep);
 
@@ -431,7 +431,7 @@ XtPointer cld, cad;
    if (!ql) 
       qmonQCSetData(&current_entry, "template", QC_ALL);
    else {
-      char *qname = lGetString(lFirst(ql), QU_qname);
+      const char *qname = lGetString(lFirst(ql), QU_qname);
       qmonQCSetData(&current_entry, qname, QC_ALL);
    }
       
@@ -884,7 +884,7 @@ XtPointer cld, cad;
    lList *ql = NULL;
    lListElem *qep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonQCClone");
@@ -893,7 +893,7 @@ XtPointer cld, cad;
    ql = qmonMirrorList(SGE_QUEUE_LIST);
    n = lGetNumberOfElem(ql);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (qep=lFirst(ql), i=0; i<n; qep=lNext(qep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -902,8 +902,9 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Get Queue Attributes from}",
-                        "@{Available Queues}", strs, n,
+                        "@{Available Queues}", (String*)strs, n,
                         False, buf, BUFSIZ, NULL); 
       
       if (status) {
@@ -1132,7 +1133,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 static void qmonQCSetData(
 tQCEntry *data,
-String qname,
+StringConst qname,
 int how 
 ) {
    lListElem *qep;
@@ -1188,11 +1189,11 @@ lListElem *qep,
 tQCEntry *data,
 int how 
 ) {
-   String qhostname;
+   StringConst qhostname;
    lList *migr_load_thresholds = NULL;
    lListElem *ep = NULL;
    int i;
-   char *str;
+   const char *str;
    static lCondition *where = NULL;
    static lEnumeration *what = NULL;
    static char *hard_variable[] = {
@@ -1358,7 +1359,7 @@ DTRACE;
    /* suspend threshold config */
    /**************************/
    if (how == QC_ALL || how == QC_SUSPENDTHRESHOLD || how == QC_ALMOST) {
-      char *susp_interval;
+      const char *susp_interval;
       data->suspend_thresholds = lFreeList(data->suspend_thresholds);
       data->suspend_thresholds = lCopyList("suspend_thresholds", 
                                   lGetList(qep, QU_suspend_thresholds));
@@ -1719,7 +1720,7 @@ XtPointer cld, cad;
    Boolean status = False;
    lList *cl = NULL;
    lListElem *cep = NULL;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    int n, i;
 
    DENTER(GUI_LAYER, "qmonQCCalendar");
@@ -1728,7 +1729,7 @@ XtPointer cld, cad;
    cl = qmonMirrorList(SGE_CALENDAR_LIST);
    n = lGetNumberOfElem(cl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (cep=lFirst(cl), i=0; i<n; cep=lNext(cep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -1737,8 +1738,9 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Get calendar}",
-                        "@{Available Calendars}", strs, n,
+                        "@{Available Calendars}", (String*)strs, n,
                         False, buf, 256, NULL); 
 
 
@@ -1918,7 +1920,7 @@ XtPointer cld, cad;
    lList *ql = NULL;
    lListElem *qep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonQCSOQ");
@@ -1928,7 +1930,7 @@ XtPointer cld, cad;
       ql = qmonMirrorList(SGE_QUEUE_LIST);
       n = lGetNumberOfElem(ql);
       if (n>0) {
-         strs = (String*)XtMalloc(sizeof(String)*n); 
+         strs = (StringConst*)XtMalloc(sizeof(String)*n); 
          for (qep=lFirst(ql), i=0; i<n; qep=lNext(qep), i++) {
            /*
            ** we get only references don't free, the strings
@@ -1937,8 +1939,9 @@ XtPointer cld, cad;
          }
        
          strcpy(buf, "");
+         /* FIX_CONST_GUI */
          status = XmtAskForItem(w, NULL, "@{Get Queue}",
-                           "@{Available Queues}", strs, n,
+                           "@{Available Queues}", (String*)strs, n,
                            False, buf, BUFSIZ, NULL); 
          
          if (status) {

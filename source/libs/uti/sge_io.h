@@ -32,10 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 int sge_readnbytes(register int sfd, register char *ptr, register int n);
-int sge_writenbytes(register int sfd, register char *ptr, register int n);
+int sge_writenbytes(register int sfd, register const char *ptr, register int n);
  
 #endif /* __SGE_IO_H */
 

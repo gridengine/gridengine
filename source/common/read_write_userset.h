@@ -34,7 +34,7 @@
 
 
 
-lListElem *cull_read_in_userset(char *dirname, char *filename, int spool, int flag, int *tag);
+lListElem *cull_read_in_userset(const char *dirname, const char *filename, int spool, int flag, int *tag);
 int write_userset(lList **alpp, lListElem *ep, char *fname, FILE *fpout, int spool);
 
 #endif /* _READ_WRITE_USERSET_H */

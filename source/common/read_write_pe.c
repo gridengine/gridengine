@@ -56,8 +56,8 @@
  **** cull_read_in_pe
  ****/
 lListElem *cull_read_in_pe(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int type,
 int *tag,
@@ -189,7 +189,8 @@ lListElem *ep
 ) {
    FILE *fp;
    lListElem *sep;
-   char *s, filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
+   const char *s; 
+   char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "write_pe");
 

@@ -68,7 +68,9 @@ extern lList *Master_Pe_List;
 
 static void total_update_schedd(lListElem *schedd);
 static void sge_total_update_event(lListElem *er, u_long32 type, lList *lp);
-static int sge_add_list_event_(u_long32 type, u_long32 intkey, u_long32 intkey2, char *strkey, lList *list, int need_copy_elem);
+static int sge_add_list_event_(u_long32 type, u_long32 intkey, 
+                               u_long32 intkey2, const char *strkey, 
+                               lList *list, int need_copy_elem);
 
 #define FLUSH_INTERVAL 15
 
@@ -400,7 +402,8 @@ u_long32 now
    lList *report_list;
    u_long32 timeout;
    lListElem *er, *tmp;
-   char *host, *commproc;
+   const char *host;
+   const char *commproc;
    int ret, id; 
 
    DENTER(TOP_LAYER, "ck_4_deliver_events");
@@ -523,7 +526,7 @@ void sge_add_list_event(
 u_long32 type,
 u_long32 intkey,
 u_long32 intkey2,
-char *strkey,
+const char *strkey,
 lList *list 
 ) {
    sge_add_list_event_(type, intkey, intkey2, strkey, list, 1);
@@ -533,7 +536,7 @@ void sge_add_event(
 u_long32 type,
 u_long32 intkey,
 u_long32 intkey2,
-char *strkey,
+const char *strkey,
 lListElem *element 
 ) {
    const lDescr *dp;
@@ -582,7 +585,7 @@ static int sge_add_list_event_(
 u_long32 type,
 u_long32 intkey,
 u_long32 intkey2,
-char *strkey,
+const char *strkey,
 lList *list,
 int need_copy_list  /* to reduce overhead */ 
 ) {

@@ -53,28 +53,28 @@ enum {
 
 int read_config_list(FILE *fp, lList **clpp, lList **alpp, lDescr *dp, int nm1, int nm2, int nm3, char *delimitor, int flag, char *buf, int size);
 
-char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm, char *key);
+char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm, const char *key);
 
-lList *get_conf_sublist(lList **alpp, lList *lp, int name_nm, int value_nm, char *key);
+lList *get_conf_sublist(lList **alpp, lList *lp, int name_nm, int value_nm, const char *key);
 
-int set_conf_string(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm);
+int set_conf_string(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
-int set_conf_bool(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm);
+int set_conf_bool(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
-int set_conf_ulong(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm);
+int set_conf_ulong(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
-int set_conf_double(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm, int operation_nm);
+int set_conf_double(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, int operation_nm);
 
-int set_conf_deflist(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm, lDescr *descr, intprt_type *interpretation_rule);
+int set_conf_deflist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, intprt_type *interpretation_rule);
 
-int set_conf_timestr(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm);
+int set_conf_timestr(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
-int set_conf_memstr(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm);
+int set_conf_memstr(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
-int set_conf_enum(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm, char **enum_strings);
+int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, char **enum_strings);
 
-int set_conf_list(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm);
+int set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm);
 
-int set_conf_subordlist(lList **alpp, lList **clpp, int fields[], char *key, lListElem *ep, int name_nm, lDescr *descr, int subname_nm, int subval_nm);
+int set_conf_subordlist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int subname_nm, int subval_nm);
 
 #endif /* _CONFIG_H_ */

@@ -57,17 +57,17 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 
-static int   sge_isHostInHostList(lList *hostGroupList, lList *hostList, char *hostName);
-static int   sge_isNameInMappingList(lList *mapList, char *mappedName);
-static int   sge_isHostInMappingListForUser(lList *hostGroupList, lList *mapList, char *mappedName, char *host);
+static int   sge_isHostInHostList(lList *hostGroupList, lList *hostList, const char *hostName);
+static int   sge_isNameInMappingList(lList *mapList, const char *mappedName);
+static int   sge_isHostInMappingListForUser(lList *hostGroupList, lList *mapList, const char *mappedName, const char *host);
 static int   sge_isGuiltyMappingEntry(lList *hostGroupList, lList *mapList, char *foreignName, char *hostName);
 static char* sge_malloc_map_in_going_username(lList *hostGroupList, lList *userMappingEntryList, char *foreignName, char *hostName);
 
-static int   sge_addHostToHostList(lList* hostGroupList, lList* stringList, char* newHostName, int doResolving);
+static int   sge_addHostToHostList(lList* hostGroupList, lList* stringList, const char* newHostName, int doResolving);
 
 
 static lList* sge_getMappingListForUser(lList *userMappingEntryList, char *clusterName);
-static lList* sge_getHostListForMappedUser(lList *userMappingList, char *mapName);
+static lList* sge_getHostListForMappedUser(lList *userMappingList, const char *mapName);
 static lList* sge_getHostListForUser(lList *userMappingEntryList, char *clusterName, char *mapName);
 static int    sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hostList);
 
@@ -119,7 +119,7 @@ static int    sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hos
 static int sge_isHostInHostList(
 lList *hostGroupList,
 lList *hostList,
-char *hostName 
+const char *hostName 
 ) { 
   lListElem* ep = NULL;
   DENTER(TOP_LAYER,"sge_isHostInHostList" );
@@ -130,7 +130,7 @@ char *hostName
     if (sge_is_group(hostGroupList,hostName) != TRUE) {
        /* hostName is host name */ 
        for_each ( ep, hostList ) {
-          char* tmpHost = NULL;
+          const char* tmpHost = NULL;
           
           tmpHost = lGetString ( ep , STR ); 
           if (tmpHost != NULL) {
@@ -155,7 +155,7 @@ char *hostName
        DPRINTF(("got group name as host name, checking if group name is in host list\n"));
        
        for_each ( ep, hostList ) {
-          char* tmpHost = NULL;
+          const char *tmpHost = NULL;
           
           tmpHost = lGetString ( ep , STR ); 
           if (tmpHost != NULL) {
@@ -237,7 +237,7 @@ char *hostName
     DPRINTF(("searching for user '%s' on host '%s' in list\n",foreignName ,hostName));
     
     for_each( ep , mapList ) {
-       char* tmpName = NULL;
+       const char *tmpName = NULL;
        lList* hostList = NULL;
 
        tmpName = lGetString(ep , UM_mapped_user);
@@ -337,7 +337,8 @@ char *hostName
             
          for_each( ep , userMappingEntryList ) {
             lList* mapList = NULL;
-            char*  clusterUser = NULL;
+            const char*  clusterUser = NULL;
+
             clusterUser = lGetString(ep , UME_cluster_user);
             if (clusterUser != NULL) {
                /*DPRINTF(("searching for map entry for cluster user '%s'\n", clusterUser));*/
@@ -434,7 +435,8 @@ char *hostName
       
       mapList = sge_getMappingListForUser(userMappingEntryList, clusterName);
       if (mapList != NULL) {
-         char*  foreignName = NULL;
+         const char*  foreignName = NULL;
+
          foreignName = sge_getUserNameForHost(hostGroupList, mapList, hostName);
          if (foreignName != NULL) {
             mapName = sge_strdup(NULL, foreignName);
@@ -594,12 +596,12 @@ sge_gdi_request *pApiRequest
 *     
 ****************************************************************************
 */
-char* sge_getUserNameForHost(
+const char* sge_getUserNameForHost(
 lList *hostGroupList,
 lList *mapList,
 char *hostName 
 ) {
-  char* returnUserName = NULL;
+  const char* returnUserName = NULL;
   int matches = 0;
   DENTER(TOP_LAYER,"sge_getUserNameForHost" );
 
@@ -608,8 +610,9 @@ char *hostName
      DPRINTF(("searching for username at exec host %s\n", hostName));
      
      for_each( ep , mapList ) {
-        char* userName = NULL;
+        const char *userName = NULL;
         lList* hostList = NULL;
+
         userName = lGetString ( ep , UM_mapped_user );
         hostList = lGetList ( ep , UM_host_list );
         if ((userName != NULL) && (hostList != NULL)) {
@@ -747,7 +750,8 @@ char *clusterName
   if ((userMappingEntryList != NULL) && (clusterName != NULL)) {
      lListElem* ep = NULL;
      for_each ( ep , userMappingEntryList ) {
-        char* tmpName = NULL;
+        const char *tmpName = NULL;
+
         tmpName = lGetString ( ep , UME_cluster_user );
         if (tmpName != NULL) {
           if (strcmp(clusterName, tmpName) == 0 ) {
@@ -809,14 +813,16 @@ char *clusterName
 */
 static lList* sge_getHostListForMappedUser(
 lList *userMappingList,
-char *mapName 
+const char *mapName 
 ) {
   DENTER(TOP_LAYER,"sge_getHostListForMappedUser" );
   
   if ((userMappingList != NULL) && (mapName != NULL)) {
      lListElem* ep = NULL;
+
      for_each ( ep , userMappingList ) {
-        char* tmpName = NULL;
+        const char *tmpName = NULL;
+
         tmpName = lGetString ( ep , UM_mapped_user );
         if (tmpName != NULL) {
           if (strcmp(mapName, tmpName) == 0 ) {
@@ -1054,7 +1060,7 @@ int doResolving
                        *----STR  (SGE_STRING)  String list (ST_Type)
    */
   if ((mapList != NULL) && (actMapName != NULL) && (actHostList != NULL)) {
-    char* tmpName = NULL;
+    const char* tmpName = NULL;
     lList* tmpHostList = NULL;
     int back = TRUE;
     lListElem* mapElem = NULL;
@@ -1094,7 +1100,8 @@ int doResolving
        newHostList = lCreateList("host list",ST_Type);        
 
        for_each(tep, actHostList) {
-          char* actHostName = NULL;
+          const char* actHostName = NULL;
+
           actHostName = lGetString(tep,STR);
           /* we don't want group resolving, so we use NULL as grouplist */
           if (sge_isHostInHostList(NULL,newHostList, actHostName) == FALSE) {
@@ -1116,7 +1123,7 @@ int doResolving
       /* list is existing, just add new hosts */ 
       lListElem* tep = NULL;
       for_each(tep, actHostList) {
-         char* actHostName = NULL;
+         const char* actHostName = NULL;
          actHostName = lGetString(tep,STR);
          /* we don't want group resolving, so we use NULL as grouplist */
          if (sge_isHostInHostList(NULL,tmpHostList, actHostName) == FALSE) {
@@ -1193,7 +1200,7 @@ int doResolving
 static int sge_addHostToHostList(
 lList *hostGroupList,
 lList *stringList,
-char *newHostName,
+const char *newHostName,
 int doResolving 
 ) {  
    DENTER(TOP_LAYER,"sge_addHostToHostList" );
@@ -1282,14 +1289,15 @@ int doResolving
 */
 static int sge_isNameInMappingList(
 lList *mapList,
-char *mappedName 
+const char *mappedName 
 ) { 
   DENTER(TOP_LAYER, "sge_isNameInMappingList");
   if ( (mapList != NULL) && (mappedName != NULL) ) {
     lListElem* ep = NULL;
   
     for_each(ep,mapList) {
-       char* tmpName = NULL;
+       const char* tmpName = NULL;
+
        tmpName = lGetString(ep, UM_mapped_user);
        if (tmpName != NULL) {
           if (strcmp(tmpName, mappedName) == 0) {
@@ -1355,8 +1363,8 @@ char *mappedName
 static int sge_isHostInMappingListForUser(
 lList *hostGroupList,
 lList *mapList,
-char *mappedName,
-char *host  
+const char *mappedName,
+const char *host  
 ) {
    DENTER(TOP_LAYER, "sge_isHostInMappingListForUser");
    if ((mapList!= NULL) && (mappedName!= NULL) && (host!= NULL)) {
@@ -1430,7 +1438,7 @@ lListElem *newListElem,     /* ListElement with perhaps to much entries */
 lListElem *origListElem     /* ListElement to compare with */
 ) { 
   int dirty = FALSE;
-  char* clusterUser = NULL;
+  const char* clusterUser = NULL;
   DENTER(TOP_LAYER,"sge_removeOverstock" );
 
   if ((newListElem != NULL) && (origListElem != NULL)) {
@@ -1449,7 +1457,7 @@ lListElem *origListElem     /* ListElement to compare with */
     /* check UM_mapped_user */
     ep = lFirst(newMap);
     while (ep != NULL) {
-      char* mapName = NULL;
+      const char* mapName = NULL;
       
       mapName = lGetString(ep,UM_mapped_user);
       if (sge_isNameInMappingList(orgMap, mapName) == FALSE) {
@@ -1472,7 +1480,7 @@ lListElem *origListElem     /* ListElement to compare with */
         newHostList = lGetList(ep, UM_host_list);
         ephost = lFirst(newHostList);
         while (ephost != NULL) {
-           char* hostName = NULL;
+           const char* hostName = NULL;
  
            hostName = lGetString(ephost, STR);
          
@@ -1635,9 +1643,9 @@ char*      filename; /* filename for spooling (usermapping dir of qmaster) */
   DENTER(TOP_LAYER, "sge_verifyMappingEntry");
 
   if (mapEntry != NULL) {
-     char* clusterName = NULL;
-     clusterName = lGetString(mapEntry,UME_cluster_user);
+     const char* clusterName = NULL;
 
+     clusterName = lGetString(mapEntry,UME_cluster_user);
      if ((clusterName != NULL) && (filename != NULL)) {
         
         /* compare UME_Cluster_user with filename */
@@ -1662,22 +1670,22 @@ char*      filename; /* filename for spooling (usermapping dir of qmaster) */
            for_each ( ep ,  list ) {
               lListElem* lep = NULL;
               lList* hostList = NULL;
-              char*  mapname = NULL; 
+              const char *mapname = NULL; 
               hostList = lGetList(ep, UM_host_list);
               mapname = lGetString(ep, UM_mapped_user);
             
               if ((hostList != NULL) && (mapname != NULL)) {
                  int matches = 0;
-                 char* lastMapName = NULL;
+                 char *lastMapName = NULL;
 
                  for_each ( lep , hostList ) {
-                    char* hostName = NULL;
+                    const char* hostName = NULL;
                     lListElem* leep = NULL;
       
                     hostName = lGetString ( lep , STR ); 
                     matches = 0; 
                     for_each ( leep ,  list ) {
-                       char* tmpMapName = NULL;
+                       const char *tmpMapName = NULL;
                        
                        tmpMapName = lGetString(leep, UM_mapped_user);
                        if (tmpMapName != NULL) {
@@ -1713,8 +1721,9 @@ char*      filename; /* filename for spooling (usermapping dir of qmaster) */
 
            for_each( ep, userMappingEntryList ) { 
               lList* mapList = NULL;
-              char*  clusterUser = NULL;
-              char*  newClusterUser = NULL;
+              const char*  clusterUser = NULL;
+              const char*  newClusterUser = NULL;
+
               clusterUser = lGetString(ep , UME_cluster_user);
               newClusterUser = filename;
               if ((clusterUser != NULL) && (newClusterUser != NULL)) {
@@ -1725,7 +1734,7 @@ char*      filename; /* filename for spooling (usermapping dir of qmaster) */
                  if (list != NULL) {
                     lListElem* new_ep = NULL;
                     for_each ( new_ep ,  list ) {
-                       char*  newMappingName = NULL; 
+                       const char*  newMappingName = NULL; 
                        newMappingName = lGetString(new_ep, UM_mapped_user);
                        
                        if (sge_isNameInMappingList(mapList, newMappingName) == TRUE) {
@@ -1735,7 +1744,8 @@ char*      filename; /* filename for spooling (usermapping dir of qmaster) */
                           newHostList = lGetList(new_ep, UM_host_list);
                           if (newHostList != NULL) {
                              for_each ( host_ep , newHostList ) {
-                                char* hostName = NULL;
+                                const char *hostName = NULL;
+
                                 hostName = lGetString (host_ep , STR);
                                 if (hostName != NULL) {
                                    if (sge_isHostInHostList(hostGroupList ,
@@ -1822,7 +1832,7 @@ lList *hostList
   DENTER(TOP_LAYER,"sge_resolveHostList" );
   if ((hostList != NULL)) {
     for_each( ep , hostList ) {
-       char* tmpHost = NULL;
+       const char *tmpHost = NULL;
        int back;
        char resolveHost[500];
        

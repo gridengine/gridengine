@@ -103,7 +103,7 @@ lList *hl,           /* EH_Type */
 lList *cplx_list     /* CX_Type */
 ) {
    lListElem *hlp;
-   char *host;
+   const char *host;
    double load;
    lListElem *host_complex;
    lList *host_complex_attributes = NULL, *tcl = NULL;
@@ -337,7 +337,7 @@ int *sort_hostlist
 ) {
    lSortOrder *so = NULL;
    lListElem *gel, *hep;
-   char *hnm;
+   const char *hnm;
    double old_sort_value, new_sort_value;
 
    DENTER(TOP_LAYER, "debit_job_from_hosts");
@@ -353,7 +353,8 @@ int *sort_hostlist
       lList *tcl;
       int slots = lGetUlong(gel, JG_slots);
 
-      hep = lGetElemHost(host_list, EH_name, hnm = lGetString(gel, JG_qhostname)); 
+      hnm = lGetString(gel, JG_qhostname);
+      hep = lGetElemHost(host_list, EH_name, hnm); 
 
       if (scheddconf.load_adjustment_decay_time && lGetNumberOfElem(scheddconf.job_load_adjustments)) {
          /* increase host load for each scheduled job slot */

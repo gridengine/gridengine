@@ -52,7 +52,7 @@ u_long32 decay_time
    double lcf_global = 0, add_lcf; /* additional load correction factor */
    u_long32 jstate, qstate;
    u_long32 jobid, ja_taskid, running_time;
-   char *qnm, *hnm;
+   const char *qnm, *hnm;
    lListElem *gdil, *hep;
    u_long32 slots;
    lListElem  *qep, *job, *ja_task;
@@ -98,7 +98,8 @@ u_long32 decay_time
          for_each (gdil, lGetList(ja_task, JAT_granted_destin_identifier_list)) {
             
             /* search for this queue */
-            qep=lGetElemStr(lp_queue, QU_qname, qnm=lGetString(gdil, JG_qname));
+            qnm=lGetString(gdil, JG_qname);
+            qep=lGetElemStr(lp_queue, QU_qname, qnm);
             if (!qep) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
                   "list of job "u32"."u32"\n", qnm, jobid, ja_taskid));
@@ -186,9 +187,10 @@ lList *complex_list
    DENTER(TOP_LAYER, "correct_capacities");
  
    for_each (hep, host_list) {
-      char *host_name = lGetString(hep, EH_name);
+      const char *host_name = lGetString(hep, EH_name);
+
       for_each (ep, lGetList(hep, EH_load_list)) {
-         char *attr_name = lGetString(ep, HL_name);
+         const char *attr_name = lGetString(ep, HL_name);
  
          /* seach for appropriate complex attribute */
          if (!(cep=sge_locate_complex_attr(attr_name, complex_list)))
@@ -232,7 +234,8 @@ lList *complex_list
          load_correction = 0;
          if ((job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, attr_name))) {
             double lc_factor;
-            char *s = lGetString(job_load, CE_stringval);
+            const char *s = lGetString(job_load, CE_stringval);
+
             if (parse_ulong_val(&load_correction, NULL, type, s, NULL, 0)) {
                lc_factor = ((double)lGetUlong(hep, EH_load_correction_factor))/100.0;
                load_correction *= lc_factor;

@@ -181,13 +181,16 @@ int ptf_is_running(void);
 
 void ptf_unregister_registered_jobs(void);
 
-void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_idr, char *pe_task_id_str, u_long32 priority);
+void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_idr, 
+                               const char *pe_task_id_str, u_long32 priority);
 
-int ptf_job_started(osjobid_t os_jobid, char *task_id_str, lListElem *job, u_long32 jataskid);
+int ptf_job_started(osjobid_t os_jobid, const char *task_id_str, 
+                    lListElem *job, u_long32 jataskid);
 
 int ptf_get_usage(lList **jobs);
 
-lList *ptf_get_job_usage(u_long job_id, u_long ja_task_id, char *task_id);
+lList *ptf_get_job_usage(u_long job_id, u_long ja_task_id, 
+                         const char *task_id);
 
 int ptf_process_job_ticket_list(lList *jobs);
 

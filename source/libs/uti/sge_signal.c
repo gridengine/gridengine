@@ -135,7 +135,7 @@ int sys_sig
    or the signal number (Take care numbers are system dependent).
  **************************************************************/
 u_long32 str2signal(
-char *str 
+const char *str 
 ) {
    sig_mapT *mapptr=sig_map;
    u_long32 signum;
@@ -162,7 +162,7 @@ char *str
 }
 
 u_long32 sys_str2signal(
-char *str 
+const char *str 
 ) {
    sig_mapT *mapptr=sig_map;
    u_long32 signum;

@@ -446,7 +446,7 @@ XtPointer cld, cad;
    lEnumeration *what;
    Boolean status = False;
    XmString xprjname = NULL;
-   String prjname = NULL;
+   StringConst prjname = NULL;
    lListElem *new_prep = NULL;
    lListElem *prep = NULL;
 
@@ -581,7 +581,7 @@ XtPointer cld, cad;
 static void qmonProjectSetAsk(
 lListElem *prjp 
 ) {
-   String prj_name = NULL;
+   StringConst prj_name = NULL;
    lList *acl = NULL;
    lList *xacl = NULL;
 

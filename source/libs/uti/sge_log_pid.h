@@ -32,10 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-void sge_log_pid(char *logfile);
-int read_pid(char *pid_log_file);
+void sge_log_pid(const char *logfile);
+int read_pid(const char *pid_log_file);
  
 #endif /* __SGE_LOG_PID_H */
 

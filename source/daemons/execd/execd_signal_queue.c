@@ -107,7 +107,7 @@ int answer_error;
    } else {            /* signal a queue */
       for_each(jep, Master_Job_List) {
          lListElem *gdil_ep, *master_q, *jatep;
-         char *qnm;
+         const char *qnm;
 
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
 
@@ -152,7 +152,7 @@ int answer_error;
                   }
                   found = lGetUlong(jep, JB_job_number);
 
-                  cull_write_jobtask_to_disk(jep, 
+                  job_write_spool_file(jep, 
                      lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
                      JAT_task_number), SPOOL_WITHIN_EXECD);
 
@@ -268,7 +268,7 @@ int pid,
 u_long32 sge_signal,
 u_long32 jobid,
 u_long32 jataskid,
-char *petask 
+const char *petask 
 ) {
    int sig;
    int status=0;
@@ -484,7 +484,7 @@ u_long32 signal
 
    /* now save this job/queue so we are up to date on restart */
    if (!getridofjob)
-      cull_write_jobtask_to_disk(jep, jataskid, SPOOL_WITHIN_EXECD);
+      job_write_spool_file(jep, jataskid, SPOOL_WITHIN_EXECD);
    else
       DPRINTF(("Job  "u32"."u32" is no longer running\n", jobid, jataskid));
 

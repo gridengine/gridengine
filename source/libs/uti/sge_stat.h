@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include <sys/stat.h>
 
 #ifdef IRIX6
@@ -58,7 +56,6 @@
 #  define SGE_INO_T ino_t
 #  define SGE_OFF_T off_t
 #endif
-
 
 #endif /* __SGE_STAT_H */
 

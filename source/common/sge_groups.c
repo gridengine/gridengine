@@ -52,7 +52,7 @@
 #include "sge_log.h"
 #include "sge_answerL.h"
 #include "msg_common.h"
-static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, char* extraSubgroupCheck , int ignoreSupergroupLinks);
+static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, const char* extraSubgroupCheck , int ignoreSupergroupLinks);
 
 /****** src/sge_verify_host_group_entry() **********************************
 *
@@ -100,16 +100,16 @@ static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem*
 ****************************************************************************
 */
 int sge_verify_host_group_entry(
-lList **alpp,                 /* answer list pointer reference */
-lList *hostGroupList,         /* master GRP_Type list (can be NULL, then only host name resolving) */
-lListElem *hostGroupElem,     /* pointer to GRP_Type element */
-char *filename                /* filename for spooling (hostgroups dir of qmaster) */
+lList **alpp,          
+lList *hostGroupList,
+lListElem *hostGroupElem,
+const char *filename 
 ) {
-   char* groupName = NULL;
+   const char* groupName = NULL;
    lList* memberList = NULL;
    lList* subGroupList = NULL;
-   char* hostName = NULL;
-   char* superGroupName = NULL;
+   const char* hostName = NULL;
+   const char* superGroupName = NULL;
    char  resolveHost[500];
    lListElem* ep = NULL;
    int back;
@@ -216,9 +216,9 @@ char *filename                /* filename for spooling (hostgroups dir of qmaste
 */
 int sge_add_group_elem(
 lList *groupList,
-char *groupName,
-char *subGroupName,
-char *superGroupName 
+const char *groupName,
+const char *subGroupName,
+const char *superGroupName 
 ) {
   lListElem* newGroupElem = NULL;
   int error = 0;
@@ -265,15 +265,15 @@ static int sge_verify_group_entry(
 lList **alpp,                 /* answer list pointer reference */
 lList *hostGroupList,         /* master GRP_Type list  */
 lListElem *hostGroupElem,     /* pointer to GRP_Type element */
-char *extraSubgroupCheck,
+const char *extraSubgroupCheck,
 int ignoreSupergroupLinks 
 ) {  
-   char* groupName = NULL;
+   const char* groupName = NULL;
    lListElem* ep = NULL;
    lList* subGroupList = NULL;
    lListElem* tmp_ep = NULL;
-   char* subGroupName = NULL;
-   char* superGroupName = NULL;
+   const char* subGroupName = NULL;
+   const char* superGroupName = NULL;
 
    DENTER(TOP_LAYER, "sge_verify_group_entry");
 
@@ -432,12 +432,12 @@ int sge_add_subgroup2group(
 lList **alpp,                 /* answer list pointer reference */
 lList *groupList,
 lListElem *groupElem,
-char *subGroupName,
+const char *subGroupName,
 int makeChanges 
 ) {
   lList* subGroupList = NULL;
   lListElem* subGroupElem = NULL;
-  char*  groupName = NULL;
+  const char*  groupName = NULL;
   DENTER(TOP_LAYER,"sge_add_subgroup2group");
 
   if ( (groupElem != NULL) && (subGroupName != NULL)) {
@@ -557,7 +557,7 @@ int makeChanges
 int sge_del_subgroup_from_group(
 lList *groupList,
 lListElem *groupElem,
-char *subGroupName 
+const char *subGroupName 
 ) {
   lList*  subgroupList = NULL;
   lListElem* ep = NULL; 
@@ -573,7 +573,8 @@ char *subGroupName
      } 
 
      for_each(ep,subgroupList) {
-        char* tmpName = NULL;
+        const char* tmpName = NULL;
+
         tmpName = lGetString(ep,STR);
         if (tmpName != NULL) {
            if(strcasecmp(tmpName,subGroupName) == 0) {
@@ -649,11 +650,11 @@ char *subGroupName
 int sge_add_supergroup2group(
 lList *groupList,
 lListElem *groupElem,
-char *superGroupName 
+const char *superGroupName 
 ) {
   lList* subGroupList = NULL;
   lListElem* superGroupElem = NULL;
-  char*  groupName = NULL;
+  const char*  groupName = NULL;
 
   DENTER(TOP_LAYER,"sge_add_supergroup2group");
 
@@ -754,9 +755,9 @@ char *superGroupName
 */
 int sge_is_group_supergroup(
 lListElem *groupElem,
-char *groupName 
+const char *groupName 
 ) {
-  char*  superGroupName = NULL;
+  const char*  superGroupName = NULL;
   DENTER(TOP_LAYER,"sge_is_group_in_supergroup");
 
   if ( (groupElem != NULL) && (groupName != NULL) ) {
@@ -824,13 +825,13 @@ char *groupName
 int sge_is_group_subgroup(
 lList *hostGroupList,
 lListElem *groupElem,
-char *groupName,
+const char *groupName,
 lList *rec_list    /* STR ST_Type list, defines allready searched groups 
                       (must be NULL for first call in normal case) */
 ) {
   lListElem* ep = NULL;
   lList* subGroupList = NULL;
-  char* tmpSubGroupName = NULL;
+  const char* tmpSubGroupName = NULL;
   int answer = FALSE;
   lList* rec_groupList = NULL;
   int listCreated = FALSE;
@@ -963,7 +964,7 @@ lList *rec_list    /* STR ST_Type list, defines allready searched groups
 */
 int sge_add_member2group(
 lListElem *groupElem,
-char *memberName 
+const char *memberName 
 ) {
   lList* memberList = NULL;
   DENTER(TOP_LAYER,"sge_add_member2group");
@@ -1029,10 +1030,10 @@ char *memberName
 */
 int sge_is_group(
 lList *groupList,
-char *groupName 
+const char *groupName 
 ) {
   lListElem* ep = NULL;
-  char* tmpName = NULL;
+  const char* tmpName = NULL;
   int matches = 0;
   DENTER(TOP_LAYER,"sge_is_group");
  
@@ -1098,11 +1099,11 @@ char *groupName
 */
 lListElem* sge_get_group_elem(
 lList *groupList,
-char *groupName 
+const char *groupName 
 ) {
   lListElem* ep = NULL;
   lListElem* answer = NULL;
-  char* tmpName = NULL;
+  const char* tmpName = NULL;
   int matches = 0;
   
 
@@ -1183,8 +1184,8 @@ char *groupName
 */
 int sge_is_member_in_group(
 lList *hostGroupList,
-char *groupName,
-char *memberName,
+const char *groupName,
+const char *memberName,
 lList *rec_list    /* STR ST_Type list, defines allready searched groups 
                       (must be NULL for first call in normal case) */
 ) {
@@ -1194,8 +1195,8 @@ lList *rec_list    /* STR ST_Type list, defines allready searched groups
    lList*     memberList = NULL;
    lList*     subGroupList = NULL;
    lList*     rec_groupList = NULL;
-   char*      tmpName = NULL;
-   char*      tmpSubGroupName = NULL;
+   const char* tmpName = NULL;
+   const char* tmpSubGroupName = NULL;
    int        answer = FALSE;
    int        listCreated = FALSE;
 

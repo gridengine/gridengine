@@ -90,6 +90,8 @@ static int sge_calc_sharetree_targets(lListElem *root, sge_Sdescr_t *lists,
                            lList *decay_list, u_long curr_time,
                            u_long seqno);
 
+static lListElem *locate_user_or_project(lList *user_list, const char *name);
+
 #define SGE_MIN_USAGE 1.0
 
 /*--------------------------------------------------------------------
@@ -118,9 +120,7 @@ job_is_active( lListElem *job,
  * locate_user_or_project - locate the user or project object by name
  *--------------------------------------------------------------------*/
 
-static lListElem *
-locate_user_or_project( lList *user_list,
-                        char *name )
+static lListElem *locate_user_or_project(lList *user_list, const char *name)
 {
    if (!name)
       return NULL;
@@ -139,7 +139,7 @@ locate_user_or_project( lList *user_list,
 
 static lListElem *
 locate_department( lList *dept_list,
-                   char *name )
+                   const char *name )
 {
    if (!name)
       return NULL;
@@ -158,7 +158,7 @@ locate_department( lList *dept_list,
 
 static lListElem *
 locate_jobclass( lList *job_class_list,
-                 char *name )
+                 const char *name )
 {
    if (!name)
       return NULL;
@@ -184,7 +184,7 @@ sge_set_job_refs( lListElem *job,
    lListElem *root;
    lList *granted;
    lListElem *pe, *granted_el;
-   char *pe_str;
+   const char *pe_str;
 
    if (ref->task_jobclass)
       free(ref->task_jobclass);
@@ -743,9 +743,9 @@ set_share_tree_project_flags( lList *project_list,
  * get_usage - return usage entry based on name
  *--------------------------------------------------------------------*/
 
-lListElem *
+static lListElem *
 get_usage( lList *usage_list,
-           char *name )
+           const char *name )
 {
    return lGetElemStr(usage_list, UA_name, name);
 }
@@ -756,7 +756,7 @@ get_usage( lList *usage_list,
  *--------------------------------------------------------------------*/
 
 lListElem *
-create_usage_elem( char *name )
+create_usage_elem( const char *name )
 {
    lListElem *usage;
     
@@ -888,7 +888,7 @@ combine_usage( sge_ref_t *ref )
       lList *usage_weight_list=NULL, *usage_list=NULL;
       lListElem *usage_weight, *config, *usage_elem;
       double sum_of_usage_weights = 0;
-      char *usage_name;
+      const char *usage_name;
 
       /*-------------------------------------------------------------
        * Sum usage weighting factors
@@ -1042,7 +1042,7 @@ decay_and_sum_usage( sge_ref_t *ref,
       if (project) {
          lList *upp_list = lGetList(user, UP_project);
          lListElem *upp;
-         char *project_name = lGetString(project, UP_name);
+         const char *project_name = lGetString(project, UP_name);
 
          if (!upp_list) {
             upp_list = lCreateList("", UPP_Type);
@@ -1106,7 +1106,7 @@ decay_and_sum_usage( sge_ref_t *ref,
                    *user_usage=NULL, *project_usage=NULL,
                    *user_long_term_usage=NULL,
                    *project_long_term_usage=NULL;
-         char *usage_name = lGetString(job_usage, UA_name);
+         const char *usage_name = lGetString(job_usage, UA_name);
 
          /* only copy CPU, memory, and I/O usage */
          /* or usage explicitly in decay list */
@@ -1913,7 +1913,7 @@ calc_job_tickets ( sge_ref_t *ref )
              *ja_task = ref->ja_task;
    double job_tickets;
    lListElem *pe, *granted_el;
-   char *pe_str;
+   const char *pe_str;
 
    /*-------------------------------------------------------------
     * Sum up all tickets for job
@@ -3146,43 +3146,6 @@ sge_dump_list( lList *list )
    }
 }
 
-
-void
-dump_list_to_file( lList *list,
-                   char *file )
-{
-   FILE *f;
-
-   if (!(f=fopen(file, "w+"))) {
-      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED);
-      exit(1);
-   }
-
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_SGE_UNABLETODUMPJOBLIST );
-   }
-
-   fclose(f);
-}
-
-void
-dump_elem_to_file( lListElem *ep,
-                   char *file )
-{
-   FILE *f;
-
-   if (!(f=fopen(file, "w+"))) {
-      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED);
-      exit(1);
-   }
-
-   if (lDumpElemFp(f, ep, 0) == EOF) {
-      fprintf(stderr, MSG_SGE_UNABLETODUMPJOBLIST );
-   }
-
-   fclose(f);
-}
-
 /*--------------------------------------------------------------------
  * get_mod_share_tree - return reduced modified share tree
  *--------------------------------------------------------------------*/
@@ -3278,7 +3241,7 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
       DPRINTF(("   got %d running jobs\n", lGetNumberOfElem(running_jobs)));
 
       for_each(job, running_jobs) {
-         char *pe_str;
+         const char *pe_str;
          lList *granted;
          lListElem *pe;
          lListElem *ja_task;
@@ -3560,7 +3523,7 @@ int
 calculate_host_tickets( lList **running,   /* JB_Type */
                         lList **hosts )    /* EH_Type */
 {
-   char *host_name;
+   const char *host_name;
    double host_sge_tickets;
    lListElem *hep, *running_job_elem, *rjq;
 
@@ -3626,7 +3589,7 @@ sort_host_list_by_share_load( lList *hl,
                               lList *cplx_list )
 {
    lListElem *hlp;
-   char *host;
+   const char *host;
    double total_SGE_tickets = 0;
    double total_resource_capability_factor = 0.0;
    double resource_allocation_factor = 0.0;

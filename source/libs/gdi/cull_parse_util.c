@@ -173,7 +173,7 @@ char **pstr
 */
 int cull_parse_string_list(
 char **pstrlist,
-char *listname,
+const char *listname,
 lDescr *descr,
 intprt_type *interpretation_rule,
 lList **pplist 
@@ -375,7 +375,7 @@ lList **pplist
 int cull_parse_definition_list(
 char *str,
 lList **lpp,
-char *name,
+const char *name,
 lDescr *descr,
 intprt_type *interpretation_rule 
 ) {
@@ -801,7 +801,7 @@ char *buff,
 u_long32 max_len,
 lList *lp,
 intprt_type *which_elements_rule,
-char *pdelis[],
+const char *pdelis[],
 unsigned long flags 
 ) {
    lListElem *ep;
@@ -812,7 +812,7 @@ unsigned long flags
    u_long32 cb;
    u_long32 cb_sum = 0;
    char str[256];
-   char *cp;
+   const char *cp;
 
    DENTER(BASIS_LAYER, "uni_print_list");
 
@@ -1096,7 +1096,8 @@ int print_slots
 ) {
    lListElem *lep;
    int printed = 0;
-   char *s, buffer[1024];
+   const char *s;
+   char buffer[1024];
 
    DENTER(TOP_LAYER, "fprint_thresholds");
 

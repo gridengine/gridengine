@@ -32,14 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+lListElem *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp);
 
-
-lListElem *read_cmplx(char *fname, char *cmplx_name, lList **alpp);
-int write_cmplx(int spool, char *fname, lList *lpc, FILE *fpout, lList **alpp);
+int write_cmplx(int spool, const char *fname, lList *lpc, FILE *fpout, lList **alpp);
 
 int sge_fill_requests(lList *reql, lList *complex_list, int allow_non_requestable, int allow_empty_boolean, int allow_neg_consumable);
-int fill_and_check_attribute(lListElem *alp, int allow_empty_boolean, int allow_neg_consumable);
 
+int fill_and_check_attribute(lListElem *alp, int allow_empty_boolean, int allow_neg_consumable);
 
 void init_complex_double_values(lList *cl);
 

@@ -44,10 +44,10 @@
 #include "msg_utilib.h"
 #include "sge_stat.h" 
 
-static int sge_domkdir(char *, int, int);
+static int sge_domkdir(const char *, int, int);
 
 int sge_mkdir(
-char *path,
+const char *path,
 int fmode,
 int exit_on_error 
 ) {
@@ -91,7 +91,7 @@ int exit_on_error
 
 /*********************************************************/
 static int sge_domkdir(
-char *path_,
+const char *path_,
 int fmode,
 int exit_on_error 
 ) {

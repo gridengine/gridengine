@@ -90,11 +90,11 @@ static token_set_t statev[] = {
 
 
 /* parsing */
-static int disabled_year_list(lList **alpp, char *s, lList **cal, char *cal_name);
-static int disabled_week_list(lList **alpp, char *s, lList **cal, char *cal_name); 
+static int disabled_year_list(lList **alpp, const char *s, lList **cal, const char *cal_name);
+static int disabled_week_list(lList **alpp, const char *s, lList **cal, const char *cal_name); 
 static int state_at(time_t now, lList *ycal, lList *wcal, time_t *then);
 static char parse_error[1000];
-static int scan(char *s, token_set_t token_set[]);
+static int scan(const char *s, token_set_t token_set[]);
 static char *get_string(void);
 static int get_number(void);
 static void eat_token(void);
@@ -607,9 +607,9 @@ cmp_func_t cmp_func
 /* disabled_year_list := disabled_year_entry[<space>disabled_year_entry] */
 static int disabled_year_list(
 lList **alpp,
-char *s, 
+const char *s, 
 lList **cal,
-char *cal_name  
+const char *cal_name  
 ) { 
    lListElem *calep;
 
@@ -1232,9 +1232,9 @@ int *sp
 
 static int disabled_week_list(
 lList **alpp,
-char *s, 
+const char *s, 
 lList **cal,
-char *cal_name  
+const char *cal_name  
 ) {
    lListElem *calep;
    static token_set_t token_set[] = {
@@ -1565,10 +1565,10 @@ static void eat_token()
 }
 
 static int scan(
-char *s,
+const char *s,
 token_set_t token_set[] 
 ) {
-   static char *t = NULL;
+   static const char *t = NULL;
    static token_set_t *ts = NULL;
    static int token;
 
@@ -1780,7 +1780,7 @@ char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {
-   char *cal_name;
+   const char *cal_name;
 
    DENTER(TOP_LAYER, "calendar_mod");
 
@@ -1841,7 +1841,7 @@ char *ruser,
 char *rhost 
 ) {
    lListElem *qep;
-   char *cal_name;
+   const char *cal_name;
 
    DENTER(TOP_LAYER, "sge_del_calendar");
 
@@ -1871,7 +1871,7 @@ char *rhost
 
    /* prevent deletion of a still referenced calendar */
    for_each (qep, Master_Queue_List) {
-      char *s;
+      const char *s;
 
       if ((s=lGetString(qep, QU_calendar)) && !strcmp(cal_name, s)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS, 
@@ -1904,7 +1904,7 @@ u_long32 type,
 u_long32 when,
 u_long32 uval0,
 u_long32 uval1,
-char *cal_name 
+const char *cal_name 
 ) {
    lListElem *cep;
 
@@ -1929,7 +1929,7 @@ lListElem *cep,
 lListElem *old_cep,
 gdi_object_t *object 
 ) {
-   char *cal_name, *s;
+   const char *cal_name, *s;
    time_t next_event;
    u_long32 new_state, old_state;
    lListElem *qep;
@@ -1957,7 +1957,7 @@ gdi_object_t *object
 }
 
 lListElem *sge_locate_calendar(
-char *cal_name 
+const char *cal_name 
 ) {
    return lGetElemStr(Master_Calendar_List, CAL_name, cal_name);
 }

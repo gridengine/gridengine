@@ -191,8 +191,8 @@ int *tag,       /* user return value */
 int parsing_type 
 ) {
    lListElem* confListElem = NULL;
-   char*      fileEntry = NULL;
-   char*      fileValue = NULL;
+   const char*      fileEntry = NULL;
+   const char*      fileValue = NULL;
    int        back = 0;
 
    DENTER(TOP_LAYER, "read_host_group_work");
@@ -362,7 +362,7 @@ lListElem *ep
   
    if (subGroupList != NULL) {
       for_each ( listElem, subGroupList ) {
-         char* subGroupName = NULL;
+         const char* subGroupName = NULL;
          subGroupName = lGetString( listElem , STR);
          if (subGroupName != NULL) {
             FPRINTF((fp, "@%s\n",subGroupName));
@@ -372,7 +372,7 @@ lListElem *ep
 
    if (memberList != NULL) {
       for_each ( listElem, memberList ) {
-         char* memberName = NULL;
+         const char* memberName = NULL;
          memberName = lGetString( listElem , STR);
          if (memberName != NULL) {
             FPRINTF((fp, "%s\n", memberName));

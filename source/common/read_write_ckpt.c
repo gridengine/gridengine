@@ -56,8 +56,8 @@
  **** cull_read_in_ckpt
  ****/
 lListElem *cull_read_in_ckpt(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int flag,
 int *tag,

@@ -90,7 +90,7 @@ char **argv
    int scheduled = 0;
    int just_verify;
    lListElem *ep;
-   char *dprefix = NULL;
+   const char *dprefix = NULL;
    int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
@@ -115,7 +115,8 @@ char **argv
    */
    alp = get_all_defaults_files(&opts_defaults, environ);
    for_each(aep, alp) {
-      char *s;
+      const char *s;
+
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
       if (quality == NUM_AN_ERROR) {
@@ -271,7 +272,7 @@ char **argv
    job = lFirst(lp_jobs);
 
    for_each(aep, alp) {
-      char *s;
+      const char *s;
 
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);

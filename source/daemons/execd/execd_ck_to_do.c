@@ -160,7 +160,7 @@ static void notify_ptf()
                }
             }
             if (write_job)
-               cull_write_jobtask_to_disk(jep, 
+               job_write_spool_file(jep, 
                   lGetUlong(jatep, JAT_task_number), SPOOL_WITHIN_EXECD);
          }
       }
@@ -519,7 +519,7 @@ static int sge_start_jobs()
 
          /* now save this job so we are up to date on restart */
          if (state_changed)
-            cull_write_jobtask_to_disk(jep, lGetUlong(jatep, JAT_task_number), 
+            job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
                SPOOL_WITHIN_EXECD);
       }
    }
@@ -537,7 +537,7 @@ lListElem *slave_jatep
 ) {
    char err_str[256];
    int pid;
-   char *tid;
+   const char *tid;
    u_long32 now;
 
    DENTER(TOP_LAYER, "exec_job_or_task");
@@ -600,7 +600,7 @@ lListElem *jep,
 lListElem *jatep,
 lListElem *tep 
 ) {
-   char *task_id_str=NULL;
+   const char *task_id_str=NULL;
    u_long32 jobid;   
    u_long32 jataskid;   
    int success, newerrno;

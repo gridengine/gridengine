@@ -66,7 +66,7 @@ char *ruser,
 char *rhost,
 u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 ) {
-   char *manop_name;
+   const char *manop_name;
    const char *object_name;
    lList **lpp = NULL;
    lListElem *added;
@@ -156,7 +156,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 ) {
    lListElem *found;
    int pos;
-   char *manop_name;
+   const char *manop_name;
    const char *object_name;
    lList **lpp = NULL;
 

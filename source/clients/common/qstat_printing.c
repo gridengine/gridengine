@@ -192,7 +192,8 @@ lList *qresource_list
    if ((full_listing & QSTAT_DISPLAY_QRESOURCES)) {
       lList *rlp;
       lListElem *rep;
-      char dom[5], *s;
+      char dom[5];
+      const char *s;
       u_long32 dominant;
 
       rlp = NULL;
@@ -265,7 +266,7 @@ int indent
    char task_state_string[8];
    u_long32 tstate, tstatus;
    int task_running;
-   char *str;
+   const char *str;
    lListElem *ep, *task_task;
    int sge_mode = feature_is_enabled(FEATURE_SGEEE);
 
@@ -390,7 +391,7 @@ char *indent
    u_long32 job_tag;
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
-   char *qnm;
+   const char *qnm;
    StringBufferT dyn_task_str = {NULL, 0};
 
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
@@ -425,7 +426,7 @@ char *indent
                      JAT_granted_destin_identifier_list)), JG_qname));
 
                if (master) {
-                  char *pe_name;
+                  const char *pe_name;
                   lListElem *pe;
                   if (((pe_name=lGetString(jatep, JAT_granted_pe))) &&
                       ((pe=lGetElemStr(pe_list, PE_name, pe_name))) &&
@@ -776,7 +777,7 @@ char *indent
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
-   char *queue_name;
+   const char *queue_name;
    int tsk_ext;
    u_long tickets,otickets,dtickets,stickets,ftickets;
 
@@ -843,7 +844,7 @@ char *indent
    printf("%-12.12s ", lGetString(job, JB_owner)); 
 
    if (sge_ext) {
-      char *s;
+      const char *s;
 
       /* job project */
       printf("%-16.16s ", (s=lGetString(job, JB_project))?s:"NA"); 
@@ -884,7 +885,7 @@ char *indent
    if (sge_ext) {
       lListElem *up, *pe, *task;
       lList *job_usage_list;
-      char *pe_name;
+      const char *pe_name;
       
       if (!master || !strcmp(master, "MASTER"))
          job_usage_list = lCopyList(NULL, lGetList(jatep, JAT_scaled_usage_list));
@@ -896,7 +897,7 @@ char *indent
          int subtask_ndx=1;
          for_each(task, lGetList(jatep, JAT_task_list)) {
             lListElem *dst, *src, *ep, *task_task;
-            char *qname;
+            const char *qname;
 
             task_task = lFirst(lGetList(task, JB_ja_tasks));
             if (!slots ||
@@ -1027,7 +1028,7 @@ char *indent
    if (tsk_ext) {
       lList *task_list = lGetList(jatep, JAT_task_list);
       lListElem *task, *ep;
-      char *qname;
+      const char *qname;
       int indent=0;
       int subtask_ndx=1;
       int num_spaces = sizeof(jhul1)-1 + (sge_ext?sizeof(jhul2)-1:0) - 
@@ -1097,7 +1098,7 @@ char *indent
          {
             lList *attributes = NULL;
             lListElem *ce;
-            char *name;
+            const char *name;
             lListElem *hep;
 
             queue_complexes2scheduler(&attributes, qep, exechost_list, complex_list, 0);

@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 int qslots_used(lListElem *qep);
 void set_qslots_used(lListElem *qep, int slots);
 void slots2config_list(lListElem *qep);

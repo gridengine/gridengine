@@ -88,7 +88,7 @@ static u_long32 crctab[256] =
 };
 
 u_long32 cksum(
-char *buf,
+const char *buf,
 int buf_len 
 ) {
    u_long32 crc=0;

@@ -36,23 +36,35 @@
 #define GROUP_TASK_GROUPS              0x00000000
 #define GROUP_NO_TASK_GROUPS           0x00000001
 
-char **parse_noopt(char **sp, char *shortopt, char *longopt, lList **ppcmdline, lList **alpp);
-char **parse_until_next_opt(char **sp, char *shortopt, char *longopt, lList **ppcmdline, lList **alpp);
-char **parse_until_next_opt2(char **sp, char *shortopt, char *longopt, lList **ppcmdline, lList **alpp);
-char **parse_param(char **sp, char *opt, lList **ppcmdline, lList **alpp);
+char **parse_noopt(char **sp, const char *shortopt, const char *longopt, lList **ppcmdline, lList **alpp);
 
-lListElem *sge_add_arg(lList **popt_list, u_long32 opt_number, u_long32 opt_type, char *opt_switch, char *opt_switch_arg);
-lListElem *sge_add_noarg(lList **popt_list, u_long32 opt_number, char *opt_switch, char *opt_switch_arg);
+char **parse_until_next_opt(char **sp, const char *shortopt, const char *longopt, lList **ppcmdline, lList **alpp);
 
-int parse_multi_stringlist(lList **ppcmdline, char *opt, lList **ppal, lList **ppdestlist, lDescr *type, int field);
-int parse_flag(lList **ppcmdline, char *opt, lList **ppal, u_long32 *pflag);
-int parse_string(lList **ppcmdline, char *opt, lList **ppal, char **str);
+char **parse_until_next_opt2(char **sp, const char *shortopt, const char *longopt, lList **ppcmdline, lList **alpp);
 
-int parse_multi_jobtaskslist(lList **ppcmdline, char *opt, lList **ppal, lList **ppdestlist);
+char **parse_param(char **sp, const char *opt, lList **ppcmdline, lList **alpp);
 
-void sge_parse_string_list(lList **lp, char *str, int field, lDescr *descr);
+lListElem *sge_add_arg(lList **popt_list, u_long32 opt_number, 
+                       u_long32 opt_type, const char *opt_switch, 
+                       const char *opt_switch_arg);
+
+lListElem *sge_add_noarg(lList **popt_list, u_long32 opt_number, const char *opt_switch, const char *opt_switch_arg);
+
+int parse_multi_stringlist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist, lDescr *type, int field);
+
+int parse_flag(lList **ppcmdline, const char *opt, lList **ppal, u_long32 *pflag);
+
+int parse_string(lList **ppcmdline, const char *opt, lList **ppal, char **str);
+
+int parse_multi_jobtaskslist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist);
+
+void sge_parse_string_list(lList **lp, const char *str, int field, 
+                           lDescr *descr);
+
 int sge_unparse_ma_list(lList *head, char *mail_str, unsigned int mail_str_len); 
-int sge_parse_jobtasks(lList **lp, lListElem **idp, char *str, lList **alpp);
+
+int sge_parse_jobtasks(lList **lp, lListElem **idp, const char *str, lList **alpp);
+
 u_long32 parse_group_options(lList *string_list);
 
 #endif /* __PARSE_H */

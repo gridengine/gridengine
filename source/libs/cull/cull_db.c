@@ -787,7 +787,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
 }
 
 int lString2ListNone(
-char *s,
+const char *s,
 lList **lpp,
 const lDescr *dp,
 int nm,
@@ -818,7 +818,7 @@ int nm,
 lList **lpp1,
 lList **lpp2 
 ) {
-   char *key;
+   const char *key;
    lListElem *ep, *to_check, *to_del;
 
    DENTER(CULL_LAYER, "lDiffListStr");

@@ -496,7 +496,7 @@ static int startJob(char *command, char *wrapper, int noshell)
       char *shell    = NULL;
       char *userName = NULL;
       int    argc = 0;
-      char **args = NULL;
+      const char **args = NULL;
       struct passwd *pw = NULL;
       char *cmd = NULL;
       int cmdargc;
@@ -577,7 +577,7 @@ static int startJob(char *command, char *wrapper, int noshell)
 #endif
 
       SETPGRP;
-      execvp(cmd, args);
+      execvp(cmd, (char *const *)args);
       /* exec failed */
       fprintf(stderr, MSG_QRSH_STARTER_EXECCHILDFAILED_S, args[0], strerror(errno));
       exit(EXIT_FAILURE);

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_mkdir(char *path, int fmode, int exit_on_error);
+int sge_mkdir(const char *path, int fmode, int exit_on_error);
                   
 #endif /* __SGE_MKDIR_H */
 

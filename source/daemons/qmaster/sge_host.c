@@ -47,7 +47,7 @@ extern lList *Master_Submithost_List;
 /* ------------------------------------------------------------ */
 
 lListElem *sge_locate_host(
-char *unique,
+const char *unique,
 u_long32 target 
 ) {
    lListElem *ep = NULL;

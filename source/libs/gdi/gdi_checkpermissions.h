@@ -32,14 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #define MANAGER_CHECK     (1<<0)
 #define OPERATOR_CHECK    (1<<1)
 /*#define USER_CHECK        (1<<2)
 #define SGE_USER_CHECK (1<<3)
 */
-int sge_gdi_get_mapping_name(char *requestedHost, char *buf, int buflen);
+int sge_gdi_get_mapping_name(const char *requestedHost, char *buf, int buflen);
                                             /* requestedHost is for getting information for this host */
 int sge_gdi_check_permission(int option); 
                                             /* option is MANAGER_CHECK, OPERATOR_CHECK, USER_CHECK ... */

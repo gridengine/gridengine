@@ -213,7 +213,7 @@ lList *sge_build_load_report()
    lListElem *ep;
    int nprocs = 1;
    double load;
-   char *s;
+   const char *s;
 #if defined(NECSX4) || defined(NECSX5)
    char lv_name[256];
    int rsg_id;
@@ -616,7 +616,7 @@ static void update_job_usage()
    /* replace existing usage in the job report with the new one */
    for_each(usage, usage_list) {
       u_long32 jobid;
-      char *taskidstr;
+      const char *taskidstr;
       lList* ja_tasks;
       lListElem *ja_task, *uep;
 
@@ -670,7 +670,8 @@ lList **job_usage_list
    lListElem *q=NULL, *jep, *gdil_ep, *jatep, *new_job, *new_ja_task;
    double cpu_val, vmem_val, io_val, iow_val, vmem;
    u_long32 jobid;
-   char err_str[128], *taskidstr;
+   char err_str[128];
+   const char *taskidstr;
    lEnumeration *what;
    u_long32 now;
    double wall_clock_time;

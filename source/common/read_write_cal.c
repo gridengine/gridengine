@@ -54,8 +54,8 @@
  **** cull_read_in_cal
  ****/
 lListElem *cull_read_in_cal(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int flag,
 int *tag,
@@ -138,7 +138,8 @@ int how,
 lListElem *ep 
 ) {
    FILE *fp;
-   char *s, filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
+   const char *s;
+   char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "write_cal");
 

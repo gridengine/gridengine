@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 void starttime(int);
+
 void endtime(int);  
-void log_time(int, char *);
+
+void log_time(int, const char *);
 
 #endif /* __SGE_TIMESTOP_H */
 

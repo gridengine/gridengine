@@ -52,14 +52,14 @@
 */
 
 u_long sge_parse_date_time(
-char *date_str,
+const char *date_str,
 struct tm *time,
 lList **alpp 
 ) {
    int i;
    int year_fieldlen=2;
-   char *seconds;
-   char *non_seconds;
+   const char *seconds;
+   const char *non_seconds;
    stringT tmp_str;
    stringT inp_date_str;
 

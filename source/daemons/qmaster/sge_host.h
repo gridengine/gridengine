@@ -38,7 +38,7 @@ extern lList *exechost_list;
 extern lList *submithost_list;
 extern lList *adminhost_list;
 
-lListElem *sge_locate_host(char *, u_long32);
+lListElem *sge_locate_host(const char *unique, u_long32 target);
 
 #endif /* __SGE_HOST_H */
 

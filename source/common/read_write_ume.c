@@ -195,7 +195,7 @@ int parsing_type
 ) {
    lListElem* confListElem = NULL;
    lList*     mapList = NULL;
-   char* mappedUser = NULL;
+   const char* mappedUser = NULL;
 
    DENTER(TOP_LAYER, "read_ume_work");
    /* try to fill the ep pointer with all data */
@@ -206,7 +206,7 @@ int parsing_type
    while ((confListElem=lFirst(*clpp)) != NULL) {
       mappedUser = lGetString( confListElem , CF_name);
       if (mappedUser != NULL) {
-         char* hostList = NULL;
+         const char* hostList = NULL;
          if (strcmp(mappedUser,"cluster_user") == 0) {
             /* cluster_user keyword found */
             hostList = lGetString(confListElem, CF_value);
@@ -369,7 +369,7 @@ lListElem *ep
    mapList = lGetList(ep, UME_mapping_list);
    if (mapList != NULL) {
       for_each ( mapElem, mapList ) {
-         char* mapName = NULL;
+         const char* mapName = NULL;
          lList* hostList = NULL;
  
          mapName = lGetString( mapElem , UM_mapped_user);
@@ -388,7 +388,7 @@ lListElem *ep
             } while (i> 0);
            
             for_each(hostElem , hostList) {
-               char* tmpHost = NULL;
+               const char* tmpHost = NULL;
                tmpHost = lGetString( hostElem , STR);
                if (tmpHost != NULL) {
                   FPRINTF((fp, "%s", tmpHost));

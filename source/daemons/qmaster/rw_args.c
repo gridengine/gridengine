@@ -193,7 +193,7 @@ char *file
    int i, len, fd;
    char **ptr, *buf;
    SGE_STRUCT_STAT sb;
-   char *cp;
+   const char *cp;
    size_t size;
    
    DENTER(TOP_LAYER, "read_args_from_file");

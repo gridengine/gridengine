@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 enum {
    ALLOC_RULE_FILLUP = -1,
    ALLOC_RULE_ROUNDROBIN = -2
@@ -42,10 +40,11 @@ enum {
 #define ALLOC_RULE_IS_BALANCED(x) (x>0)
 
 int sge_pe_slots_per_host(lListElem *pep, int slots);
+
 int or_sge_pe_slots_per_host(lListElem *pep, lList *hosts, lListElem *h_elem, int *sm);
 
-
 int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots);
+
 int pe_restricted(lListElem *job, lListElem *pe, lList *acl_list);
 
 #endif /* __SGE_PE_SCHEDD_H */

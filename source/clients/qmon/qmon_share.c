@@ -60,6 +60,7 @@
 #include "qmon_globals.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_support.h"
 
 enum _modes {
    ADD_MODE,
@@ -1387,7 +1388,7 @@ lList *shac
    lListElem *ep = NULL;
    ListTreeItem *node = NULL;
    ListTreeItem *ret = NULL;
-   String name = NULL;
+   StringConst name = NULL;
    lList *sublist = NULL;
    char buf[1024];
    static int level = 0;

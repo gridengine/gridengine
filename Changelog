@@ -1,4 +1,7 @@
-JG-2003-04-9-0   Enhancem.: Enable use of flatfile spooling for qmaster.
+JG-2003-04-09-1 Bugfix:     utilbin/spooldefaults didn't write managers and
+                            operators in classic spooling.
+
+JG-2003-04-09-0 Enhancem.:  Enable use of flatfile spooling for qmaster.
                             Changed the installation process to call a special 
                             spooling client to create default configurations 
                             using the selected spooling method.

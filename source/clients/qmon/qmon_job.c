@@ -162,6 +162,8 @@ XtPointer cld, cad;
       if (alp) {
          qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);
+         /* set normal cursor */
+         XmtDisplayDefaultCursor(w);
          DEXIT;
          return;
       }

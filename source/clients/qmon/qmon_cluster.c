@@ -415,6 +415,7 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget shell;
+   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "qmonPopupClusterConfig");
 
@@ -430,6 +431,15 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_cluster), 0);
    XmUpdateDisplay(qmon_cluster);
 
+   qmonMirrorMultiAnswer(CONFIG_T | EXECHOST_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
    qmonTimerAddUpdateProc(CONFIG_T, "updateClusterList", updateClusterList);
    qmonStartTimer(CONFIG_T | EXECHOST_T);
    updateClusterList();

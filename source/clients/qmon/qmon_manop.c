@@ -119,6 +119,7 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget shell;
+   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonPopupManopConfig");
 
@@ -137,6 +138,15 @@ XtPointer cld, cad;
                         SetMinShellSize, NULL);
    } 
    
+   qmonMirrorMultiAnswer(MANAGER_T | OPERATOR_T | USERSET_T | USER_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
    qmonTimerAddUpdateProc(USERSET_T, "updateUsersetList", updateUsersetList);
    qmonStartTimer(MANAGER_T | OPERATOR_T | USERSET_T | USER_T);
    qmonManopFillList();

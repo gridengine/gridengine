@@ -89,6 +89,7 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget shell;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonPopupCalendarConfig");
 
@@ -109,6 +110,15 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_cal), 0);
    XmUpdateDisplay(qmon_cal);
 
+   qmonMirrorMultiAnswer(CALENDAR_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
    qmonTimerAddUpdateProc(CALENDAR_T, "updateCalendarList", updateCalendarList);
    qmonStartTimer(CALENDAR_T);
    updateCalendarList();

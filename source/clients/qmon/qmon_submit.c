@@ -433,6 +433,8 @@ XtPointer cld, cad;
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
       DEXIT;
       return;
    }
@@ -511,6 +513,8 @@ XtPointer cld, cad;
       if (alp) {
          qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);
+         /* set default cursor */
+         XmtDisplayDefaultCursor(w);
          DEXIT;
          return;
       }
@@ -1327,6 +1331,8 @@ XtPointer cld, cad;
          qmonMirrorMultiAnswer(USERSET_T, &alp);
          if (alp) {
             qmonMessageBox(w, alp, 0);
+            /* set default cursor */
+            XmtDisplayDefaultCursor(w);
             alp = lFreeList(alp);
             DEXIT;
             return;

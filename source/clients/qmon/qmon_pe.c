@@ -109,6 +109,7 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget shell;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonPopupPEConfig");
 
@@ -129,6 +130,16 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_pe), 0);
    XmUpdateDisplay(qmon_pe);
 
+   qmonMirrorMultiAnswer(PE_T | QUEUE_T | USERSET_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
+   
    qmonTimerAddUpdateProc(PE_T, "updatePeList", updatePeList);
    qmonStartTimer(PE_T | QUEUE_T | USERSET_T);
    updatePeList();

@@ -96,7 +96,6 @@ static Widget cplx_attributes_title = 0;
 static void qmonPopdownCplxConfig(Widget w, XtPointer cld, XtPointer cad);
 static Widget qmonCreateCplxConfig(Widget parent);
 static Widget qmonCreateCplxAsk(Widget parent);
-static void qmonCplxUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxDelete(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxSelect(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxChange(Widget w, XtPointer cld, XtPointer cad);
@@ -121,6 +120,7 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget shell;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonPopupCplxConfig");
 
@@ -147,9 +147,16 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_cplx), 0);
    XmUpdateDisplay(qmon_cplx);
 
-#if AUTOMATIC_UPDATE == 0
-   qmonCplxUpdate(w, NULL, NULL);
-#endif
+   qmonMirrorMultiAnswer(COMPLEX_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
+   updateCplxList();
 
    XtManageChild(qmon_cplx);
    XRaiseWindow(XtDisplay(XtParent(qmon_cplx)), 
@@ -296,26 +303,6 @@ XtPointer cld, cad;
    XtUnmanageChild(qmon_cplx);
    XtPopdown(XtParent(qmon_cplx));
 
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonCplxUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   lList *alp = NULL;
-   DENTER(TOP_LAYER, "qmonCplxUpdate");
-
-   qmonMirrorMultiAnswer(COMPLEX_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
-   updateCplxList();
-   
    DEXIT;
 }
 

@@ -223,6 +223,7 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget shell;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonPopupHostConfig");
 
@@ -238,6 +239,17 @@ XtPointer cld, cad;
                                 SetMinShellSize, NULL);
    }
 
+   qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | COMPLEX_T |
+                         USERSET_T | PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
+   
    qmonTimerAddUpdateProc(ADMINHOST_T, "updateHostList", updateHostList);
    qmonStartTimer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | COMPLEX_T |
                   USERSET_T | PROJECT_T);

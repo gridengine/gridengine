@@ -213,7 +213,7 @@ char **argv
    else {
       XtSetArg(args[ac], XmtNconfigDir, SGE_ROOT); ac++;
    }                                                                          
-   XtSetArg(args[ac], XmtNconfigPath, "%R/locale/%l/%N%S:%R/locale/%l_%t.%c/%N%S:%R/qmon/%N%S"); ac++;
+   XtSetArg(args[ac], XmtNconfigPath, "%R/locale/%L/%N%S:%R/locale/%l/%N%S:%R/locale/%l_%t.%c/%N%S:%R/qmon/%N%S"); ac++;
 /*    XtSetArg(args[ac], XmtNpixmapFilePath, "%R/qmon/PIXMAPS/%N.xpm"); ac++; */
 /*    XtSetArg(args[ac], XmtNcontextHelpFile, "qmon_help"); ac++; */
    XtSetArg(args[ac], XtNtitle, "QMON +++ Main Control"); ac++;

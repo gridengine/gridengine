@@ -1,3 +1,7 @@
+EB-2002-10-02-0  Cleanup:   division by zero does not cause core
+                 IZ:        390
+                 Changed:   all binaries for solaris[64|86] architecture
+
 JG-2002-10-01-0  Enhancem.  Initial Part of port for HP-UX 11 64 bit
 
 CR-2002-10-01-0  Bugfix:    got compiler warning "unused variable `src_qname'"

@@ -1336,6 +1336,7 @@ case SOLARIS86:
    endif
 
    set LOADAVGLIBS = "-lkvm -lkstat"
+   set DIVBYZERO = "-fns -ftrap=division"
 #  set PARALLEL = "-j 1"
 #  set MAKE=gmake
    if ( $CC == gcc ) then
@@ -1381,7 +1382,7 @@ case SOLARIS86:
       set SOL64BITFLAG = ""
       if ( $CC == cc || $CC == insure ) then
          set MEMCFLAG=-Xa
-         set LFLAGS = "-xildoff $LFLAGS"
+         set LFLAGS = "$DIVBYZERO -xildoff $LFLAGS"
       endif
    endif
 
@@ -1391,8 +1392,8 @@ case SOLARIS86:
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 
-   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
-   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG -DHAVE_STD -mt"
+   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO"
+   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO -DHAVE_STD -mt"
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then

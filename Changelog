@@ -1,3 +1,6 @@
+AD-2004-01-26-0: Bugfix:    Decrease delivery interval for remote events.
+                 Changed:   qmaster
+
 EB-2004-01-25-1: Enhancem.: Added ADOC comment
 
 EB-2004-01-25-0: Enhancem.: Changed some man-pages concerning CQs

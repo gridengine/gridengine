@@ -576,7 +576,7 @@ static void start_periodic_tasks(void)
    te_free_event(ev);
 
    te_register_event_handler(sge_remote_event_delivery_handler, TYPE_REMOTE_EVENT_DELIVERY_EVENT);
-   ev = te_new_event(5, TYPE_REMOTE_EVENT_DELIVERY_EVENT, RECURRING_EVENT, 0, 0, "remote-event-delivery");
+   ev = te_new_event(1, TYPE_REMOTE_EVENT_DELIVERY_EVENT, RECURRING_EVENT, 0, 0, "remote-event-delivery");
    te_add_event(ev);
    te_free_event(ev);
 

@@ -92,7 +92,7 @@ QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lspool -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
+QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lspool -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon $(DLLIB)
 
 QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
                       $(SPOOLING_DEPS) $(SPOOLLIB) $(SGEOBJDLIB) \

@@ -44,7 +44,7 @@ QDEL_OBJS = $(QDEL_SRC:.c=.o)
 
 QDEL_ADD_OBJS = $(QDEL_ADD_SRC:.c=.o)
 
-QDEL_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
+QDEL_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon $(DLLIB)
 
 QDEL_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 

@@ -41,6 +41,30 @@
 #include <pwd.h>
 #include <pthread.h>
 
+#ifdef LOAD_OPENSSL
+#ifdef LINUX
+#ifndef __USE_GNU
+#define __USE_GNU
+#endif /* __USE_GNU */
+#endif /* LINUX */
+
+#include <dlfcn.h>
+
+#ifdef LINUX
+#ifndef __USE_GNU
+#undef __USE_GNU
+#endif /* __USE_GNU */
+#endif /* LINUX */
+
+#ifdef SOLARIS
+#include <link.h>
+#endif /* SOLARIS */
+
+/* This is the handle to the crypto library used to dyanmically load the
+ * OpenSSL symbols. */
+static void *handle = NULL;
+#endif /* LOAD_OPENSSL */
+
 #include "commlib.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -76,6 +100,7 @@
 #define CaCert          "cacert.pem"
 #define CA_DIR          "common/sgeCA"
 #define CA_LOCAL_DIR    "/var/sgeCA"
+#define USER_CA_LOCAL_DIR "/tmp/sgeCA"
 #define UserKey         "key.pem"
 #define UserCert        "cert.pem"
 #define RandFile        "rand.seed"
@@ -151,6 +176,156 @@ void sec_mt_init(void) {
 #define GSD_KEY_MAT_32     32
 #define GSD_KEY_MAT_16     16
 
+/* Symbol table */
+/* In order to reduce SGE's dependecy on OpenSSL, we no longer use OpenSSL
+ * functions directly.  Instead, we use the function pointers below.  On
+ * platforms with dlopen, i.e. Solaris and Linux, the functions will be
+ * dynamically loaded from the OpenSSL library.  All such function pointers
+ * start with "sec_" and have the same parameters as the OpenSSL functions.
+ * Some of the functions in OpenSSL aren't really functions, but rather
+ * #define's.  In order to maintain consistency, #define's that are used like
+ * functions also begin with "sec_".  The prefix is then removed via a #define
+ * so that OpenSSL's #define's can find them.
+ * In some cases, a function is #define'd to another function.  In those cases
+ * we simply load the new function instead of the #define'd one.
+ * In some cases, a function is #define'd to another function with a different
+ * set of parameters.  In those cases, we #define the "sec_" version with the
+ * original parameters to a "_sec_" prefixed function pointer with the new
+ * parameters.  The function pointer is then loaded with the new function.
+ * Data types were left as they were.  Because of this the OpenSSL header files
+ * are still needed for compiling.  The difficulty involved both technically and
+ * legally in copying the data types out of the OpenSSL header files outweighed
+ * the gain.
+ * No new OpenSSL calls should be added to this file.  Instead, a new function
+ * pointer should be created here and initialized in the sec_build_symbol_table()
+ * method.
+ */
+static void (*sec_ASN1_UTCTIME_free)(ASN1_UTCTIME *a);
+static ASN1_UTCTIME *(*sec_ASN1_UTCTIME_new)(void);
+static int (*sec_ASN1_UTCTIME_print)(BIO *fp, ASN1_UTCTIME *a);
+static int (*sec_BIO_free)(BIO *a);
+static BIO *(*sec_BIO_new_file)(const char *filename, const char *mode);
+static BIO *(*sec_BIO_new_fp)(FILE *stream, int close_flag);
+static int (*sec_BIO_read)(BIO *b, void *data, int len);
+static int (*sec_BIO_write)(BIO *b, const void *data, int len);
+static const char *(*sec_CRYPTO_get_lock_name)(int type);
+static int (*sec_CRYPTO_num_locks)(void);
+static void (*sec_CRYPTO_set_id_callback)(unsigned long (*func)(void));
+static void (*sec_CRYPTO_set_locking_callback)(void (*func)(int mode, int type,
+					      const char *file, int line));
+static ASN1_UTCTIME *(*sec_d2i_ASN1_UTCTIME)(ASN1_UTCTIME **a, unsigned char **in,
+                     long len);
+static X509 *(*sec_d2i_X509)(X509 **a, unsigned char **in, long len);
+static void (*sec_ERR_clear_error)(void);
+static char *(*sec_ERR_error_string)(unsigned long e, char *buf);
+static unsigned long (*sec_ERR_get_error)(void);
+static void (*sec_ERR_load_crypto_strings)(void);
+static int (*sec_EVP_add_cipher)(const EVP_CIPHER *cipher);
+static int (*sec_EVP_add_digest)(const EVP_MD *digest);
+/* EVP_add_digest_alias is #define'd to OBJ_NAME_add */
+#define sec_EVP_add_digest_alias(n, alias) \
+	_sec_EVP_add_digest_alias((alias), OBJ_NAME_TYPE_MD_METH|OBJ_NAME_ALIAS, (n))
+static int (*_sec_EVP_add_digest_alias)(const char *name, int type, const char *data);
+/* EVP_CIPHER_block_size is a #define for structure member access */
+#define sec_EVP_CIPHER_block_size EVP_CIPHER_block_size
+static int (*sec_EVP_CIPHER_CTX_cleanup)(EVP_CIPHER_CTX *a);
+/* EVP_CIPHER_CTX_iv_length is a #define for structure member access */
+#define sec_EVP_CIPHER_CTX_iv_length EVP_CIPHER_CTX_iv_length
+static int (*sec_EVP_DecryptFinal)(EVP_CIPHER_CTX *ctx, unsigned char *outm, int *outl);
+static int (*sec_EVP_DecryptInit)(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher,
+		const unsigned char *key, const unsigned char *iv);
+static int (*sec_EVP_DecryptUpdate)(EVP_CIPHER_CTX *ctx, unsigned char *out,
+		int *outl, const unsigned char *in, int inl);
+static int (*sec_EVP_DigestInit)(EVP_MD_CTX *ctx, const EVP_MD *type);
+static int (*sec_EVP_DigestFinal)(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s);
+static int (*sec_EVP_DigestUpdate)(EVP_MD_CTX *ctx, const void *d, unsigned int cnt);
+static int (*sec_EVP_EncryptInit)(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher,
+		const unsigned char *key, const unsigned char *iv);
+static int (*sec_EVP_EncryptUpdate)(EVP_CIPHER_CTX *ctx, unsigned char *out,
+		int *outl, const unsigned char *in, int inl);
+static int (*sec_EVP_EncryptFinal)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+static const EVP_MD *(*sec_EVP_md5)(void);
+static int (*sec_EVP_OpenInit)(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+		unsigned char *ek, int ekl, unsigned char *iv, EVP_PKEY *priv);
+static int (*sec_EVP_OpenFinal)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+/* EVP_OpenUpdate is #define'd to EVP_DecryptUpdate */
+static int (*sec_EVP_OpenUpdate)(EVP_CIPHER_CTX *ctx, unsigned char *out,
+		int *outl, const unsigned char *in, int inl);
+static void (*sec_EVP_PKEY_free)(EVP_PKEY *pkey);
+static int (*sec_EVP_PKEY_size)(EVP_PKEY *pkey);
+static const EVP_CIPHER *(*sec_EVP_rc4)(void);
+static int (*sec_EVP_SealInit)(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type, unsigned char **ek,
+		int *ekl, unsigned char *iv, EVP_PKEY **pubk, int npubk);
+static int (*sec_EVP_SealFinal)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+static int (*sec_EVP_SignFinal)(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s,
+		EVP_PKEY *pkey);
+/* EVP_SignInit is #define'd to EVP_DigestInit */
+static int (*sec_EVP_SignInit)(EVP_MD_CTX *ctx, const EVP_MD *type);
+/* EVP_SignUpdate is #define'd to EVP_DigestUpdate */
+static int (*sec_EVP_SignUpdate)(EVP_MD_CTX *ctx, const void *d, unsigned int cnt);
+static int (*sec_EVP_VerifyFinal)(EVP_MD_CTX *ctx, unsigned char *sigbuf,
+		unsigned int siglen, EVP_PKEY *pkey);
+/* EVP_VerifyInit is #define'd to EVP_DigestInit */
+static int (*sec_EVP_VerifyInit)(EVP_MD_CTX *ctx, const EVP_MD *type);
+/* EVP_VerifyUpdate is #define'd to EVP_DigestUpdate */
+static int (*sec_EVP_VerifyUpdate)(EVP_MD_CTX *ctx, const void *d, unsigned int cnt);
+static int (*sec_i2d_ASN1_UTCTIME)(ASN1_UTCTIME *a, unsigned char **out);
+static int (*sec_i2d_X509)(X509 *a, unsigned char** out);
+static ASN1_OBJECT *(*sec_OBJ_nid2obj)(int n);
+/* OPENSSL_free is #define'd to CRYPTO_free */
+static void (*sec_OPENSSL_free)(void *a);
+/* OPENSSL_malloc is #define'd to CRYPTO_malloc */
+#define sec_OPENSSL_malloc(num)	_sec_OPENSSL_malloc((int)num,__FILE__,__LINE__)
+static void *(*_sec_OPENSSL_malloc)(int num, const char *file, int line);
+#ifdef SSLEAY_MACROS
+/* PEM_read_PrivateKey is #define'd to PEM_ASN1_read when SSLEAY_MACROS is defined */
+#define sec_PEM_read_PrivateKey(fp,x,cb,u) (EVP_PKEY *)_sec_PEM_read_PrivateKey( \
+	(char *(*)())sec_d2i_PrivateKey,PEM_STRING_EVP_PKEY,fp,(char **)x,cb,u)
+static char *(*_sec_PEM_read_PrivateKey)(char *(*d2i)(), const char *name, 
+   FILE *fp, char **x, pem_password_cb *cb, void *u);
+/* We also now need sec_d2i_PrivateKey */
+static EVP_PKEY *(*sec_d2i_PrivateKey)(int type, EVP_PKEY **a, unsigned char **pp, long length);
+/* PEM_read_X509 is #define'd to PEM_ASN1_read when SSLEAY_MACROS is defined */
+#define sec_PEM_read_X509(fp,x,cb,u) (X509 *)_sec_PEM_read_X509( \
+	(char *(*)())sec_d2i_X509,PEM_STRING_X509,fp,(char **)x,cb,u)
+static char *(*_sec_PEM_read_X509)(char *(*d2i)(), const char *name, FILE *fp,
+   char **x, pem_password_cb *cb, void *u);
+#else
+static EVP_PKEY *(*sec_PEM_read_PrivateKey)(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u);
+static X509 *(*sec_PEM_read_X509)(FILE *fp, X509 **x, pem_password_cb *cb, void *u);
+#endif
+static int (*sec_RAND_load_file)(const char *file,long max_bytes);
+static int (*sec_RAND_pseudo_bytes)(unsigned char *buf, int num);
+static int (*sec_RAND_status)(void);
+static int	(*sec_RSA_private_decrypt)(int flen, const unsigned char *from, 
+		unsigned char *to, RSA *rsa, int padding);
+static int	(*sec_RSA_public_encrypt)(int flen, const unsigned char *from,
+		unsigned char *to, RSA *rsa, int padding);
+static X509 *(*sec_X509_STORE_CTX_get_current_cert)(X509_STORE_CTX *ctx);
+static int (*sec_X509_cmp_current_time)(ASN1_TIME *s);
+static void (*sec_X509_free)(X509 *a);
+/* X509_get_notBefore is a #define for structure member access */
+#define sec_X509_get_notBefore X509_get_notBefore
+/* X509_get_notAfter is a #define for structure member access */
+#define sec_X509_get_notAfter X509_get_notAfter
+static EVP_PKEY *(*sec_X509_get_pubkey)(X509 *x);
+static int	(*sec_X509_get_pubkey_parameters)(EVP_PKEY *pkey, STACK_OF(X509) *chain);
+static X509_NAME *(*sec_X509_get_subject_name)(X509 *a);
+static ASN1_TIME *(*sec_X509_gmtime_adj)(ASN1_TIME *s, long adj);
+static int (*sec_X509_print_fp)(FILE *bp,X509 *x);
+static int	(*sec_X509_NAME_get_text_by_OBJ)(X509_NAME *name, ASN1_OBJECT *obj,
+			char *buf,int len);
+static char *(*sec_X509_NAME_oneline)(X509_NAME *a, char *buf, int size);
+static void (*sec_X509_STORE_CTX_cleanup)(X509_STORE_CTX *ctx);
+static int	(*sec_X509_STORE_CTX_get_error)(X509_STORE_CTX *ctx);
+static int (*sec_X509_STORE_CTX_init)(X509_STORE_CTX *ctx, X509_STORE *store,
+			 X509 *x509, STACK_OF(X509) *chain);
+static void (*sec_X509_STORE_free)(X509_STORE *v);
+static int	(*sec_X509_STORE_load_locations)(X509_STORE *ctx,	const char *file, const char *dir);
+static X509_STORE *(*sec_X509_STORE_new)(void);
+/* X509_STORE_set_verify_cb_func is a #define a structure member access */
+#define sec_X509_STORE_set_verify_cb_func X509_STORE_set_verify_cb_func
+static int	(*sec_X509_verify_cert)(X509_STORE_CTX *ctx);
 
 /*
 ** prototypes needed to make openssl library MT safe
@@ -166,7 +341,7 @@ static void sec_dealloc_key_mat(void);
 #endif
 
 /* 
-** prototypes for per thead data access functions
+** prototypes for per thread data access functions
 */
 static void sec_state_set_key_mat(u_char *);
 static u_char *sec_state_get_key_mat(void);
@@ -257,7 +432,7 @@ static int sec_unpack_response(u_long32 *len, u_char **buf,
                         sge_pack_buffer *pb);
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len);
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg);
-
+static int sec_build_symbol_table(void);
 
 /****** security/sec_lib/debug_print_ASN1_UTCTIME() *************************************
 *  NAME
@@ -278,7 +453,7 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
 *
 *  EXAMPLE
 *     debug_print_ASN1_UTCTIME("refresh_time: ", sec_state_get_refresh_time());
-*     debug_print_ASN1_UTCTIME("Certificate not valid before: ", X509_get_notBefore(cert));
+*     debug_print_ASN1_UTCTIME("Certificate not valid before: ", sec_X509_get_notBefore(cert));
 *
 *  SEE ALSO
 *     security/sec_lib/debug_print_buffer()
@@ -290,9 +465,9 @@ static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
 {
    BIO *out;
    printf("%s", label);
-   out = BIO_new_fp(stdout, BIO_NOCLOSE);
-   ASN1_UTCTIME_print(out, time);   
-   BIO_free(out);
+   out = sec_BIO_new_fp(stdout, BIO_NOCLOSE);
+   sec_ASN1_UTCTIME_print(out, time);   
+   sec_BIO_free(out);
    printf("\n");
 }   
    
@@ -520,15 +695,15 @@ static void sge_thread_setup(void)
 
    DENTER(TOP_LAYER, "sge_thread_setup");
 
-   lock_cs=OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
-   lock_count=OPENSSL_malloc(CRYPTO_num_locks() * sizeof(long));
-   for (i=0; i<CRYPTO_num_locks(); i++) {
+   lock_cs=sec_OPENSSL_malloc(sec_CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+   lock_count=sec_OPENSSL_malloc(sec_CRYPTO_num_locks() * sizeof(long));
+   for (i=0; i<sec_CRYPTO_num_locks(); i++) {
       lock_count[i]=0;
       pthread_mutex_init(&(lock_cs[i]),NULL);
    }
 
-   CRYPTO_set_id_callback((unsigned long (*)())sec_crypto_thread_id);
-   CRYPTO_set_locking_callback((void (*)())sec_crypto_locking_callback);
+   sec_CRYPTO_set_id_callback((unsigned long (*)())sec_crypto_thread_id);
+   sec_CRYPTO_set_locking_callback((void (*)())sec_crypto_locking_callback);
 
    DEXIT;
    return;
@@ -558,14 +733,14 @@ static void sec_thread_cleanup(void)
 
    DENTER(TOP_LAYER, "sec_thread_cleanup");
 
-   CRYPTO_set_locking_callback(NULL);
+   sec_CRYPTO_set_locking_callback(NULL);
 
-   for (i=0; i<CRYPTO_num_locks(); i++) {
+   for (i=0; i<sec_CRYPTO_num_locks(); i++) {
       pthread_mutex_destroy(&(lock_cs[i]));
-      DPRINTF(("%8ld:%s\n", lock_count[i], CRYPTO_get_lock_name(i)));
+      DPRINTF(("%8ld:%s\n", lock_count[i], sec_CRYPTO_get_lock_name(i)));
    }
-   OPENSSL_free(lock_cs);
-   OPENSSL_free(lock_count);
+   sec_OPENSSL_free(lock_cs);
+   sec_OPENSSL_free(lock_count);
 
    DEXIT;
    return;
@@ -714,7 +889,7 @@ static void sec_state_set_refresh_time(ASN1_UTCTIME *refresh_time)
    GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_refresh_time");
 #if 0
    if (sec_state->refresh_time) {
-      ASN1_UTCTIME_free(sec_state->refresh_time);
+      sec_ASN1_UTCTIME_free(sec_state->refresh_time);
       sec_state->refresh_time = NULL;   
    }
 #endif
@@ -769,6 +944,14 @@ int sec_init(const char *progname)
       DEXIT;
       return 0;
    }   
+   
+   /* Build dynamic symbol table */
+   if (sec_build_symbol_table () == 1) {
+         SEC_UNLOCK_INITIALIZED();
+         ERROR((SGE_EVENT, MSG_SEC_DLLOADFAILED));
+         DEXIT;
+         return -1;
+   }
 
    /* use -lcrypto threads(3) interface here to allow OpenSSL 
       safely be used by multiple threads */
@@ -782,8 +965,8 @@ int sec_init(const char *progname)
    /*
    ** initialize error strings
    */
-   ERR_clear_error();
-   ERR_load_crypto_strings();
+   sec_ERR_clear_error();
+   sec_ERR_load_crypto_strings();
 
    /*
    ** load all algorithms and digests
@@ -791,15 +974,15 @@ int sec_init(const char *progname)
 /*    OpenSSL_add_all_algorithms(); */
 #ifdef CITIGROUP
    OpenSSL_add_all_algorithms();
-/*    EVP_add_cipher(EVP_rc4()); */
-/*    EVP_add_digest(EVP_sha1()); */
-/*    EVP_add_digest_alias(SN_sha1,"ssl3-sha1"); */
-/*    EVP_add_digest_alias(SN_sha1WithRSAEncryption,SN_sha1WithRSA); */
+/*    sec_EVP_add_cipher(sec_EVP_rc4()); */
+/*    sec_EVP_add_digest(sec_EVP_sha1()); */
+/*    sec_EVP_add_digest_alias(SN_sha1,"ssl3-sha1"); */
+/*    sec_EVP_add_digest_alias(SN_sha1WithRSAEncryption,SN_sha1WithRSA); */
 #else
-   EVP_add_cipher(EVP_rc4());
-   EVP_add_digest(EVP_md5());
-   EVP_add_digest_alias(SN_md5,"ssl2-md5");
-   EVP_add_digest_alias(SN_md5,"ssl3-md5");
+   sec_EVP_add_cipher(sec_EVP_rc4());
+   sec_EVP_add_digest(sec_EVP_md5());
+   sec_EVP_add_digest_alias(SN_md5,"ssl2-md5");
+   sec_EVP_add_digest_alias(SN_md5,"ssl3-md5");
 #endif
 
    /* 
@@ -818,12 +1001,12 @@ int sec_init(const char *progname)
    ** if RANDFILE is set it is used
    ** otherwise rand_file is used
    */
-   if (!RAND_status()) {
+   if (!sec_RAND_status()) {
       randfile = getenv("RANDFILE");
       if (!SGE_STAT(randfile, &file_info)) {
-         RAND_load_file(randfile, 2048);
+         sec_RAND_load_file(randfile, 2048);
       } else if (rand_file) {   
-         RAND_load_file(rand_file, 2048); 
+         sec_RAND_load_file(rand_file, 2048); 
       } else {
          SEC_UNLOCK_INITIALIZED();
          ERROR((SGE_EVENT, MSG_SEC_RANDFILENOTSET));
@@ -836,20 +1019,20 @@ int sec_init(const char *progname)
    ** FIXME: init all the other stuff
    */
 #ifdef CITIGROUP   
-   gsd.digest = EVP_sha1();
-   gsd.cipher = EVP_rc4();
+   gsd.digest = sec_EVP_sha1();
+   gsd.cipher = sec_EVP_rc4();
 #else   
-   gsd.digest = EVP_md5();
-   gsd.cipher = EVP_rc4();
-/*    gsd.cipher = EVP_des_cbc(); */
-/*    gsd.cipher = EVP_enc_null(); */
+   gsd.digest = sec_EVP_md5();
+   gsd.cipher = sec_EVP_rc4();
+/*    gsd.cipher = sec_EVP_des_cbc(); */
+/*    gsd.cipher = sec_EVP_enc_null(); */
 #endif   
 
    if(strcmp(progname, prognames[QMASTER])) {
       /* 
       ** time after client makes a new announce to master   
       */
-      sec_state_set_refresh_time(X509_gmtime_adj(sec_state_get_refresh_time(), (long) 60*VALID_MINUTES));
+      sec_state_set_refresh_time(sec_X509_gmtime_adj(sec_state_get_refresh_time(), (long) 60*VALID_MINUTES));
    }   
 
    sec_state_set_connid(0);
@@ -919,9 +1102,13 @@ int sec_exit(void)
 #endif
 
    sec_thread_cleanup();
-
+   
+#ifdef LOAD_OPENSSL
+   dlclose (handle);
+#endif
+   
    sec_initialized = 0;   
-   SEC_LOCK_INITIALIZED();
+   SEC_UNLOCK_INITIALIZED();
 
    DEXIT;
    return 0;
@@ -1191,7 +1378,7 @@ static int sec_files()
        goto error;
    }
 
-   gsd.x509 = PEM_read_X509(fp, NULL, NULL, PREDEFINED_PW);
+   gsd.x509 = sec_PEM_read_X509(fp, NULL, NULL, PREDEFINED_PW);
    if (gsd.x509 == NULL) {
       sec_error();
       i = -1;
@@ -1215,7 +1402,7 @@ static int sec_files()
       i = -1;
       goto error;
    }
-   gsd.private_key = PEM_read_PrivateKey(fp, NULL, NULL, PREDEFINED_PW);
+   gsd.private_key = sec_PEM_read_PrivateKey(fp, NULL, NULL, PREDEFINED_PW);
    fclose(fp);
 
    if (!gsd.private_key) {
@@ -1267,20 +1454,20 @@ static int sec_verify_certificate(X509 *cert)
 
    DENTER(GDI_LAYER, "sec_verify_certificate");
 
-   x509_name = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
+   x509_name = sec_X509_NAME_oneline(sec_X509_get_subject_name(cert), NULL, 0);
    DPRINTF(("subject: %s\n", x509_name));
    free(x509_name);
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
-   ctx = X509_STORE_new();
-   X509_STORE_load_locations(ctx, ca_cert_file, NULL);
-   X509_STORE_CTX_init(&csc, ctx, cert, NULL);
+   ctx = sec_X509_STORE_new();
+   sec_X509_STORE_load_locations(ctx, ca_cert_file, NULL);
+   sec_X509_STORE_CTX_init(&csc, ctx, cert, NULL);
    if (getenv("SGE_CERT_DEBUG")) {
-      X509_STORE_set_verify_cb_func(&csc, sec_verify_callback);
+      sec_X509_STORE_set_verify_cb_func(&csc, sec_verify_callback);
    }   
-   ret = X509_verify_cert(&csc);
-   err = X509_STORE_CTX_get_error(&csc);
-   X509_STORE_free(ctx);
-   X509_STORE_CTX_cleanup(&csc);
+   ret = sec_X509_verify_cert(&csc);
+   err = sec_X509_STORE_CTX_get_error(&csc);
+   sec_X509_STORE_free(ctx);
+   sec_X509_STORE_CTX_cleanup(&csc);
    
    switch (err) {
       case X509_V_ERR_CERT_NOT_YET_VALID:
@@ -1461,7 +1648,7 @@ const char *tohost
    */
    if (sec_state_get_connect()) {
 /* debug_print_ASN1_UTCTIME("refresh_time: ", sec_state_get_refresh_time()); */
-      if (sec_state_get_refresh_time() && (X509_cmp_current_time(sec_state_get_refresh_time()) > 0)) {
+      if (sec_state_get_refresh_time() && (sec_X509_cmp_current_time(sec_state_get_refresh_time()) > 0)) {
          DPRINTF(("++++ Connection %d still valid\n", (int) sec_state_get_connid()));      
          DEXIT;      
          return 0;
@@ -1478,9 +1665,9 @@ const char *tohost
    /* 
    ** write x509 to buffer
    */
-   x509_len = i2d_X509(gsd->x509, NULL);
+   x509_len = sec_i2d_X509(gsd->x509, NULL);
    tmp = x509_buf = (unsigned char *) malloc(x509_len);
-   x509_len = i2d_X509(gsd->x509, &tmp);
+   x509_len = sec_i2d_X509(gsd->x509, &tmp);
    
    if (!x509_len) {
       ERROR((SGE_EVENT, MSG_SEC_I2DX509FAILED));
@@ -1491,7 +1678,7 @@ const char *tohost
    /* 
    ** build challenge and challenge mac
    */
-   RAND_pseudo_bytes(challenge, CHALL_LEN);
+   sec_RAND_pseudo_bytes(challenge, CHALL_LEN);
 
    /* 
    ** prepare packing buffer
@@ -1590,7 +1777,7 @@ const char *tohost
    ** read x509 certificate from buffer
    */
    tmp = x509_master_buf;
-   x509_master = d2i_X509(NULL, &tmp, x509_master_len);
+   x509_master = sec_d2i_X509(NULL, &tmp, x509_master_len);
    if (!x509_master) {
       ERROR((SGE_EVENT, MSG_SEC_MASTERCERTREADFAILED));
       sec_error();
@@ -1614,7 +1801,7 @@ const char *tohost
    /*
    ** extract public key 
    */
-   master_key = X509_get_pubkey(x509_master);
+   master_key = sec_X509_get_pubkey(x509_master);
    
    if(!master_key){
       ERROR((SGE_EVENT, MSG_SEC_MASTERGETPUBKEYFAILED));
@@ -1626,9 +1813,9 @@ const char *tohost
    /* 
    ** decrypt challenge with master public key
    */
-   EVP_VerifyInit(&ctx, gsd->digest);
-   EVP_VerifyUpdate(&ctx, challenge, CHALL_LEN);
-   if (!EVP_VerifyFinal(&ctx, enc_challenge, chall_enc_len, master_key)) {
+   sec_EVP_VerifyInit(&ctx, gsd->digest);
+   sec_EVP_VerifyUpdate(&ctx, challenge, CHALL_LEN);
+   if (!sec_EVP_VerifyFinal(&ctx, enc_challenge, chall_enc_len, master_key)) {
       ERROR((SGE_EVENT, MSG_SEC_MASTERBADCHALLENGE));
       i = -1;
       goto error;
@@ -1644,25 +1831,25 @@ const char *tohost
    /*
    ** decrypt secret key
    */
-   if (!EVP_OpenInit(&ectx, gsd->cipher, enc_key, enc_key_len, iv, gsd->private_key)) {
+   if (!sec_EVP_OpenInit(&ectx, gsd->cipher, enc_key, enc_key_len, iv, gsd->private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_EVPOPENINITFAILED));
-      EVP_CIPHER_CTX_cleanup(&ectx);
+      sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i=-1;
       goto error;
    }
-   if (!EVP_OpenUpdate(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len, enc_key_mat, (int) enc_key_mat_len)) {
+   if (!sec_EVP_OpenUpdate(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len, enc_key_mat, (int) enc_key_mat_len)) {
       ERROR((SGE_EVENT, MSG_SEC_EVPOPENUPDATEFAILED));
-      EVP_CIPHER_CTX_cleanup(&ectx);
+      sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i = -1;
       goto error;
    }
    sec_state_set_key_mat_len(tmp_key_mat_len);
 
-   EVP_OpenFinal(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len);
+   sec_EVP_OpenFinal(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len);
    sec_state_set_key_mat_len(tmp_key_mat_len);
-   EVP_CIPHER_CTX_cleanup(&ectx);
+   sec_EVP_CIPHER_CTX_cleanup(&ectx);
    /* FIXME: problem in EVP_* lib for stream ciphers */
    sec_state_set_key_mat_len(enc_key_mat_len);
 
@@ -1675,7 +1862,7 @@ const char *tohost
    */
    sec_state_set_connect(1);
    sec_state_set_connid(connid);
-   sec_state_set_refresh_time(X509_gmtime_adj(sec_state_get_refresh_time(), 
+   sec_state_set_refresh_time(sec_X509_gmtime_adj(sec_state_get_refresh_time(), 
                                        (long) 60*VALID_MINUTES));
 
    i=0;
@@ -1687,7 +1874,7 @@ const char *tohost
    if (x509_master_buf)
       free(x509_master_buf);
    if (x509_master)
-      X509_free(x509_master);
+      sec_X509_free(x509_master);
    if (enc_challenge) 
       free(enc_challenge);
    if (enc_key) 
@@ -1697,7 +1884,7 @@ const char *tohost
    if (enc_key_mat) 
       free(enc_key_mat);
    if (master_key)
-      EVP_PKEY_free(master_key);
+      sec_EVP_PKEY_free(master_key);
 
    DEXIT;
    return i;
@@ -1780,7 +1967,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** read x509 certificate
    */
    tmp = x509_buf;
-   x509 = d2i_X509(NULL, &tmp, x509_len);
+   x509 = sec_d2i_X509(NULL, &tmp, x509_len);
    free(x509_buf);
    x509_buf = NULL;
 
@@ -1807,8 +1994,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** reset uniqueIdentifier and get uniqueIdentifier from client cert
    */
    memset(uniqueIdentifier, '\0', BUFSIZ);
-   if (X509_NAME_get_text_by_OBJ(X509_get_subject_name(x509), 
-      OBJ_nid2obj(NID_userId), uniqueIdentifier, 
+   if (sec_X509_NAME_get_text_by_OBJ(sec_X509_get_subject_name(x509), 
+      sec_OBJ_nid2obj(NID_userId), uniqueIdentifier, 
                   sizeof(uniqueIdentifier))) {
       DPRINTF(("UID: %s\n", uniqueIdentifier));
    }   
@@ -1816,9 +2003,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /*
    ** extract public key 
    */
-   public_key[0] = X509_get_pubkey(x509);
+   public_key[0] = sec_X509_get_pubkey(x509);
 
-   X509_free(x509);
+   sec_X509_free(x509);
    x509 = NULL;
    
    if(!public_key[0]){
@@ -1829,7 +2016,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       i=-1;
       goto error;
    }
-   public_key_size = EVP_PKEY_size(public_key[0]);
+   public_key_size = sec_EVP_PKEY_size(public_key[0]);
 
    /* 
    ** malloc several buffers
@@ -1855,16 +2042,16 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** write x509 certificate to buffer
    */
-   x509_len = i2d_X509(gsd.x509, NULL);
+   x509_len = sec_i2d_X509(gsd.x509, NULL);
    tmp = x509_buf = (u_char *) malloc(x509_len);
-   x509_len = i2d_X509(gsd.x509, &tmp);
+   x509_len = sec_i2d_X509(gsd.x509, &tmp);
 
    /*
    ** sign the challenge with master's private key
    */
-   EVP_SignInit(&ctx, gsd.digest);
-   EVP_SignUpdate(&ctx, challenge, CHALL_LEN);
-   if (!EVP_SignFinal(&ctx, enc_challenge, (unsigned int*) &chall_enc_len, gsd.private_key)) {
+   sec_EVP_SignInit(&ctx, gsd.digest);
+   sec_EVP_SignUpdate(&ctx, challenge, CHALL_LEN);
+   if (!sec_EVP_SignFinal(&ctx, enc_challenge, (unsigned int*) &chall_enc_len, gsd.private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTCHALLENGEFAILED));
       sec_error();
       sec_send_err(commproc, id, host, &pb_respond,
@@ -1876,7 +2063,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** make key material
    */
-   RAND_pseudo_bytes(sec_state_get_key_mat(), sec_state_get_key_mat_len());
+   sec_RAND_pseudo_bytes(sec_state_get_key_mat(), sec_state_get_key_mat_len());
    DEBUG_PRINT_BUFFER("Sent key material", sec_state_get_key_mat(), sec_state_get_key_mat_len());
    DEBUG_PRINT_BUFFER("Sent enc_challenge", enc_challenge, chall_enc_len);
    
@@ -1884,23 +2071,23 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** seal secret key with client's public key
    */
    memset(iv, '\0', sizeof(iv));
-   if (!EVP_SealInit(&ectx, gsd.cipher, ekey, &ekeylen, iv, public_key, 1)) {
+   if (!sec_EVP_SealInit(&ectx, gsd.cipher, ekey, &ekeylen, iv, public_key, 1)) {
       ERROR((SGE_EVENT, MSG_SEC_SEALINITFAILED));;
-      EVP_CIPHER_CTX_cleanup(&ectx);
+      sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       sec_send_err(commproc,id,host,&pb_respond, MSG_SEC_SEALINITFAILED);
       i = -1;
       goto error;
    }
-   if (!EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, sec_state_get_key_mat(), sec_state_get_key_mat_len())) {
+   if (!sec_EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, sec_state_get_key_mat(), sec_state_get_key_mat_len())) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
-      EVP_CIPHER_CTX_cleanup(&ectx);
+      sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       sec_send_err(commproc,id,host,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED);
       i = -1;
       goto error;
    }
-   EVP_SealFinal(&ectx, enc_key_mat, (int*) &enc_key_mat_len);
+   sec_EVP_SealFinal(&ectx, enc_key_mat, (int*) &enc_key_mat_len);
 
    enc_key_mat_len = sec_state_get_key_mat_len();
 
@@ -1913,11 +2100,11 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    i=sec_pack_response(x509_len, x509_buf, chall_enc_len, enc_challenge,
                        sec_state_get_connid(), 
                        ekeylen, ekey[0], 
-                       EVP_CIPHER_CTX_iv_length(&ectx), iv,
+                       sec_EVP_CIPHER_CTX_iv_length(&ectx), iv,
                        enc_key_mat_len, enc_key_mat,
                        &pb_respond);
 
-   EVP_CIPHER_CTX_cleanup(&ectx);
+   sec_EVP_CIPHER_CTX_cleanup(&ectx);
 
    if (i) {
       ERROR((SGE_EVENT, MSG_SEC_PACKRESPONSEFAILED));
@@ -1962,9 +2149,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       if (ekey[0])
          free(ekey[0]);
       if (x509) 
-         X509_free(x509);
+         sec_X509_free(x509);
       if (public_key[0]) 
-         EVP_PKEY_free(public_key[0]);
+         sec_EVP_PKEY_free(public_key[0]);
 
       DEXIT;   
       return i;
@@ -2017,16 +2204,16 @@ int inbuflen
    /*
    ** create digest
    */
-   EVP_DigestInit(&mdctx, gsd.digest);
-   EVP_DigestUpdate(&mdctx, sec_state_get_key_mat(), sec_state_get_key_mat_len());
-   EVP_DigestUpdate(&mdctx, seq_str, INTSIZE);
-   EVP_DigestUpdate(&mdctx, inbuf, inbuflen);
-   EVP_DigestFinal(&mdctx, md_value, &md_len);
+   sec_EVP_DigestInit(&mdctx, gsd.digest);
+   sec_EVP_DigestUpdate(&mdctx, sec_state_get_key_mat(), sec_state_get_key_mat_len());
+   sec_EVP_DigestUpdate(&mdctx, seq_str, INTSIZE);
+   sec_EVP_DigestUpdate(&mdctx, inbuf, inbuflen);
+   sec_EVP_DigestFinal(&mdctx, md_value, &md_len);
    
    /*
    ** malloc outbuf 
    */
-   outbuf = malloc(inbuflen + EVP_CIPHER_block_size(gsd.cipher));
+   outbuf = malloc(inbuflen + sec_EVP_CIPHER_block_size(gsd.cipher));
    if (!outbuf) {
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
       i=-1;
@@ -2038,38 +2225,38 @@ int inbuflen
    */
    
    memset(iv, '\0', sizeof(iv));
-   EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
-   if (!EVP_EncryptUpdate(&ctx, md_value, (int*) &enc_md_len, md_value, md_len)) {
+   sec_EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
+   if (!sec_EVP_EncryptUpdate(&ctx, md_value, (int*) &enc_md_len, md_value, md_len)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
       sec_error();
       i=-1;
       goto error;
    }
-   if (!EVP_EncryptFinal(&ctx, md_value, (int*) &enc_md_len)) {
+   if (!sec_EVP_EncryptFinal(&ctx, md_value, (int*) &enc_md_len)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
       sec_error();
       i=-1;
       goto error;
    }
-   EVP_CIPHER_CTX_cleanup(&ctx);
+   sec_EVP_CIPHER_CTX_cleanup(&ctx);
 
 
    memset(iv, '\0', sizeof(iv));
-   EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
-   if (!EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
+   sec_EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
+   if (!sec_EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
                            (unsigned char*)inbuf, inbuflen)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
       sec_error();
       i=-1;
       goto error;
    }
-   if (!EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
+   if (!sec_EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
       sec_error();
       i=-1;
       goto error;
    }
-   EVP_CIPHER_CTX_cleanup(&ctx);
+   sec_EVP_CIPHER_CTX_cleanup(&ctx);
    if (!outlen)
       outlen = inbuflen;
 
@@ -2112,7 +2299,7 @@ int inbuflen
    i=0;
 
    error:
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       if (outbuf)
          free(outbuf);
       DEXIT;
@@ -2268,10 +2455,10 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       */
       if (getenv("SGE_DEBUG_CONNLIST")) {
          lListElem *el;
-         ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
+         ASN1_UTCTIME *utctime = sec_ASN1_UTCTIME_new();
          for_each(el, sec_conn_list) {
             const char *dtime = lGetString(el, SEC_ExpiryDate);
-            utctime = d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
+            utctime = sec_d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
                                              strlen(dtime));
             debug_print_ASN1_UTCTIME("Valid Time: ", utctime);
             printf("Connection: %d (%s, %s, %d)\n", 
@@ -2280,7 +2467,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
                       lGetString(el, SEC_Commproc),
                       lGetInt(el, SEC_Id));
          }
-         ASN1_UTCTIME_free(utctime);
+         sec_ASN1_UTCTIME_free(utctime);
       }
    
       /* 
@@ -2320,7 +2507,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    /*
    ** malloc *buffer 
    */
-   *buffer = malloc(*buflen + EVP_CIPHER_block_size(gsd.cipher));
+   *buffer = malloc(*buflen + sec_EVP_CIPHER_block_size(gsd.cipher));
    if (!*buffer) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
@@ -2342,64 +2529,64 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    ** decrypt digest and message
    */
    memset(iv, '\0', sizeof(iv));
-   if (!EVP_DecryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv)) {
+   if (!sec_EVP_DecryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv)) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
 
-   if (!EVP_DecryptUpdate(&ctx, md_value, (int*) &md_len, 
+   if (!sec_EVP_DecryptUpdate(&ctx, md_value, (int*) &md_len, 
                            enc_mac, enc_mac_len)) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
-   if (!EVP_DecryptFinal(&ctx, md_value, (int*) &md_len)) {
+   if (!sec_EVP_DecryptFinal(&ctx, md_value, (int*) &md_len)) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
-   EVP_CIPHER_CTX_cleanup(&ctx);
+   sec_EVP_CIPHER_CTX_cleanup(&ctx);
    if (!md_len)
       md_len = enc_mac_len;   
 
 
    memset(iv, '\0', sizeof(iv));
-   if (!EVP_DecryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv)) {
+   if (!sec_EVP_DecryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv)) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
-   if (!EVP_DecryptUpdate(&ctx, (unsigned char*) *buffer, (int*) &outlen,
+   if (!sec_EVP_DecryptUpdate(&ctx, (unsigned char*) *buffer, (int*) &outlen,
                            (unsigned char*)enc_msg, enc_msg_len)) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
-   if (!EVP_DecryptFinal(&ctx, (unsigned char*) *buffer, (int*)&outlen)) {
+   if (!sec_EVP_DecryptFinal(&ctx, (unsigned char*) *buffer, (int*)&outlen)) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
-      EVP_CIPHER_CTX_cleanup(&ctx);
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
       i = -1;
       goto error;
    }
-   EVP_CIPHER_CTX_cleanup(&ctx);
+   sec_EVP_CIPHER_CTX_cleanup(&ctx);
    if (!outlen)
       outlen = enc_msg_len;
 
@@ -2484,17 +2671,17 @@ static int sec_reconnect()
    /* 
    ** read encrypted buffer from file
    */
-   bio = BIO_new_file(reconnect_file, "rb");
-   i = BIO_read(bio, pb.head_ptr, file_info.st_size);
+   bio = sec_BIO_new_file(reconnect_file, "rb");
+   i = sec_BIO_read(bio, pb.head_ptr, file_info.st_size);
    if (!i) {
       ERROR((SGE_EVENT, MSG_SEC_CANTREAD));
       i = -1;
       goto error;
    }
-   BIO_free(bio);
+   sec_BIO_free(bio);
 
    /* decrypt data with own rsa privat key            */
-   nbytes = RSA_private_decrypt((SGE_OFF_T)file_info.st_size, 
+   nbytes = sec_RSA_private_decrypt((SGE_OFF_T)file_info.st_size, 
                                 (u_char*) pb.cur_ptr, (u_char*) pb.cur_ptr, 
                                  gsd.private_key->pkey.rsa, RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
@@ -2521,7 +2708,7 @@ static int sec_reconnect()
    ptr = time_str;
    {
       ASN1_UTCTIME *tmp_refresh_time;
-      d2i_ASN1_UTCTIME(&tmp_refresh_time, (unsigned char **)&time_str, len);
+      sec_d2i_ASN1_UTCTIME(&tmp_refresh_time, (unsigned char **)&time_str, len);
       sec_state_set_refresh_time(tmp_refresh_time);
    } 
    free((char*) ptr);
@@ -2582,7 +2769,7 @@ static int sec_write_data2hd()
    }
    
    tmp = time_str;
-   len = i2d_ASN1_UTCTIME(sec_state_get_refresh_time(), &tmp);
+   len = sec_i2d_ASN1_UTCTIME(sec_state_get_refresh_time(), &tmp);
    time_str[len] = '\0';
   
    if (sec_alloc_key_mat()) {
@@ -2605,8 +2792,8 @@ static int sec_write_data2hd()
    /* 
    ** encrypt data with own public rsa key
    */
-   evp = X509_get_pubkey(gsd.x509);
-   nbytes = RSA_public_encrypt(pb.bytes_used, (u_char*)pb.head_ptr, 
+   evp = sec_X509_get_pubkey(gsd.x509);
+   nbytes = sec_RSA_public_encrypt(pb.bytes_used, (u_char*)pb.head_ptr, 
                                (u_char*)pb.head_ptr, evp->pkey.rsa, 
                                RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
@@ -2619,14 +2806,14 @@ static int sec_write_data2hd()
    /* 
    ** write encrypted buffer to file
    */
-   bio = BIO_file_new(reconnect_file, "w");
+   bio = sec_BIO_new_file(reconnect_file, "w");
    if (!bio) {
       ERROR((SGE_EVENT, MSG_SEC_CANTWRITE_SS,
                reconnect_file, strerror(errno)));
       i = -1;
       goto error;
    }
-   i = BIO_write(bio, pb.head_ptr, nbytes);
+   i = sec_BIO_write(bio, pb.head_ptr, nbytes);
    if (!i) {
       ERROR((SGE_EVENT, MSG_SEC_CANTWRITE_SS, reconnect_file, 
                strerror(errno)));
@@ -2638,7 +2825,7 @@ static int sec_write_data2hd()
    i=0;
 
    error:
-      BIO_free(bio);
+      sec_BIO_free(bio);
       clear_packbuffer(&pb);   
       DEXIT;
       return i;
@@ -2668,8 +2855,8 @@ static void sec_error(void)
    long   l;
 
    DENTER(GDI_LAYER,"sec_error");
-   while ((l=ERR_get_error())){
-      ERROR((SGE_EVENT, "%s\n", ERR_error_string(l, NULL)));
+   while ((l=sec_ERR_get_error())){
+      ERROR((SGE_EVENT, "%s\n", sec_ERR_error_string(l, NULL)));
    }
    DEXIT;
 }
@@ -3021,11 +3208,11 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    ASN1_UTCTIME *asn1_time_str = NULL;
    unsigned char time_str[50]; 
 
-   asn1_time_str = X509_gmtime_adj(asn1_time_str, 60*VALID_MINUTES);
+   asn1_time_str = sec_X509_gmtime_adj(asn1_time_str, 60*VALID_MINUTES);
    tmp = time_str;
-   len = i2d_ASN1_UTCTIME(asn1_time_str, &tmp);
+   len = sec_i2d_ASN1_UTCTIME(asn1_time_str, &tmp);
    time_str[len] = '\0';
-   ASN1_UTCTIME_free(asn1_time_str);
+   sec_ASN1_UTCTIME_free(asn1_time_str);
 
    lSetString(element, SEC_ExpiryDate, (char*) time_str);
 }   
@@ -3175,15 +3362,25 @@ int is_master
       if (getenv("SGE_NO_CA_LOCAL_ROOT")) {
          ca_local_root = ca_root;
       } else {
-         len = strlen(CA_LOCAL_DIR) + 
+         char *ca_local_dir = NULL;
+         
+         /* If the user is root, use /var/sgeCA.  Otherwise, use /tmp/sgeCA */
+         if (geteuid () == 0) {
+            ca_local_dir = CA_LOCAL_DIR;
+         }
+         else {
+            ca_local_dir = USER_CA_LOCAL_DIR;
+         }
+         
+         len = strlen(ca_local_dir) + 
                (cp ? strlen(cp)+4:strlen(SGE_COMMD_SERVICE)) +
                strlen(sge_get_default_cell()) + 3;
          ca_local_root = sge_malloc(len);
          if (cp)
-            sprintf(ca_local_root, "%s/port%s/%s", CA_LOCAL_DIR, cp, 
+            sprintf(ca_local_root, "%s/port%s/%s", ca_local_dir, cp, 
                      sge_get_default_cell());
          else
-            sprintf(ca_local_root, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, 
+            sprintf(ca_local_root, "%s/%s/%s", ca_local_dir, SGE_COMMD_SERVICE, 
                      sge_get_default_cell());
       }   
       if (is_daemon && SGE_STAT(ca_local_root, &sbuf)) { 
@@ -3252,7 +3449,7 @@ int is_master
       sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
    }   
 
-   if (!RAND_status()) {
+   if (!sec_RAND_status()) {
       rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
       sprintf(rand_file, "%s/private/%s", user_local_dir, RandFile);
 
@@ -3269,7 +3466,7 @@ int is_master
    }
    DPRINTF(("key_file: %s\n", key_file));
 
-   if (!RAND_status()) {
+   if (!sec_RAND_status()) {
       if (SGE_STAT(rand_file, &sbuf)) { 
          WARNING((SGE_EVENT, MSG_SEC_RANDFILENOTFOUND_S, rand_file));
       }
@@ -3598,13 +3795,13 @@ static int sec_verify_callback(int ok, X509_STORE_CTX *ctx)
    X509 *cert;
    
    printf("ok = %d\n", ok);
-   cert = X509_STORE_CTX_get_current_cert(ctx);
+   cert = sec_X509_STORE_CTX_get_current_cert(ctx);
    if (cert) {
-      X509_print_fp(stdout, cert);
-debug_print_ASN1_UTCTIME("not_before: ", X509_get_notBefore(cert));
-debug_print_ASN1_UTCTIME("not_after: ", X509_get_notAfter(cert));
-printf(" notBefore X509_cmp_current_time = %d\n",  X509_cmp_current_time(X509_get_notBefore(cert)));
-printf(" notAfter X509_cmp_current_time = %d\n",  X509_cmp_current_time(X509_get_notAfter(cert)));
+      sec_X509_print_fp(stdout, cert);
+debug_print_ASN1_UTCTIME("not_before: ", sec_X509_get_notBefore(cert));
+debug_print_ASN1_UTCTIME("not_after: ", sec_X509_get_notAfter(cert));
+printf(" notBefore X509_cmp_current_time = %d\n",  sec_X509_cmp_current_time(sec_X509_get_notBefore(cert)));
+printf(" notAfter X509_cmp_current_time = %d\n",  sec_X509_cmp_current_time(sec_X509_get_notAfter(cert)));
    }
    else
       printf("No cert\n");
@@ -3626,18 +3823,18 @@ int sec_clear_connectionlist(void)
    */
    SEC_LOCK_CONN_LIST();
    if (sec_conn_list) {
-      ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
+      ASN1_UTCTIME *utctime = sec_ASN1_UTCTIME_new();
 
       element = lFirst(sec_conn_list);
       while (element) {
          lListElem *del_el;
          const char *dtime = lGetString(element, SEC_ExpiryDate);
-         utctime = d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
+         utctime = sec_d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
                                           strlen(dtime));
          /* debug_print_ASN1_UTCTIME("utctime: ", utctime); */
          del_el = element;
          element = lNext(element);
-         if ((X509_cmp_current_time(utctime) < 0)) { 
+         if ((sec_X509_cmp_current_time(utctime) < 0)) { 
             DPRINTF(("---- removed %d (%s, %s, %d) from sec_conn_list\n", 
                       (int) lGetUlong(del_el, SEC_ConnectionID), 
                       lGetHost(del_el, SEC_Host),
@@ -3648,10 +3845,190 @@ int sec_clear_connectionlist(void)
             }
          }   
       }
-      ASN1_UTCTIME_free(utctime);
+      sec_ASN1_UTCTIME_free(utctime);
    }
    SEC_UNLOCK_CONN_LIST();
 
    DEXIT;
    return True;
+}
+
+static int sec_build_symbol_table (void)
+{
+   DENTER(GDI_LAYER, "sec_build_symbol_table");
+   
+#ifdef LOAD_OPENSSL
+   handle = dlopen ("libcrypto.so", RTLD_LAZY);
+
+   if (handle == NULL) {
+      return 1;
+   }
+
+   if ((sec_ASN1_UTCTIME_free = (void (*)(ASN1_UTCTIME *))dlsym (handle, "ASN1_UTCTIME_free")) == NULL) return 1;
+   if ((sec_ASN1_UTCTIME_new = (ASN1_UTCTIME *(*)(void))dlsym (handle, "ASN1_UTCTIME_new")) == NULL) return 1;
+   if ((sec_ASN1_UTCTIME_print = (int (*)(BIO *, ASN1_UTCTIME *))dlsym (handle, "ASN1_UTCTIME_print")) == NULL) return 1;
+   if ((sec_BIO_free = (int (*)(BIO *))dlsym (handle, "BIO_free")) == NULL) return 1;
+   if ((sec_BIO_new_file = (BIO *(*)(const char *, const char *))dlsym (handle, "BIO_new_file")) == NULL) return 1;
+   if ((sec_BIO_new_fp = (BIO *(*)(FILE *, int))dlsym (handle, "BIO_new_fp")) == NULL) return 1;
+   if ((sec_BIO_read = (int (*)(BIO *, void *, int))dlsym (handle, "BIO_read")) == NULL) return 1;
+   if ((sec_BIO_write = (int (*)(BIO *b, const void *data, int len))dlsym (handle, "BIO_write")) == NULL) return 1;
+   if ((sec_CRYPTO_get_lock_name = (const char *(*)(int))dlsym (handle, "CRYPTO_get_lock_name")) == NULL) return 1;
+   if ((sec_CRYPTO_num_locks = (int (*)(void))dlsym (handle, "CRYPTO_num_locks")) == NULL) return 1;
+   if ((sec_CRYPTO_set_id_callback = (void (*)(unsigned long (*)(void)))dlsym (handle, "CRYPTO_set_id_callback")) == NULL) return 1;
+   if ((sec_CRYPTO_set_locking_callback = (void (*)(void (*)(int, int, const char *, int)))dlsym (handle, "CRYPTO_set_locking_callback")) == NULL) return 1;
+   if ((sec_d2i_ASN1_UTCTIME = (ASN1_UTCTIME *(*)(ASN1_UTCTIME **, unsigned char **, long ))dlsym (handle, "d2i_ASN1_UTCTIME")) == NULL) return 1;
+   if ((sec_d2i_X509 = (X509 *(*)(X509 **, unsigned char **, long))dlsym (handle, "d2i_X509")) == NULL) return 1;
+   if ((sec_ERR_clear_error = (void (*)(void))dlsym (handle, "ERR_clear_error")) == NULL) return 1;
+   if ((sec_ERR_error_string = (char *(*)(unsigned long, char *))dlsym (handle, "ERR_error_string")) == NULL) return 1;
+   if ((sec_ERR_get_error = (unsigned long (*)(void))dlsym (handle, "ERR_get_error")) == NULL) return 1;
+   if ((sec_ERR_load_crypto_strings = (void (*)(void))dlsym (handle, "ERR_load_crypto_strings")) == NULL) return 1;
+   if ((sec_EVP_add_cipher = (int (*)(const EVP_CIPHER *))dlsym (handle, "EVP_add_cipher")) == NULL) return 1;
+   if ((sec_EVP_add_digest = (int (*)(const EVP_MD *))dlsym (handle, "EVP_add_digest")) == NULL) return 1;
+   if ((_sec_EVP_add_digest_alias = (int (*)(const char *, int, const char *))dlsym (handle, "OBJ_NAME_add")) == NULL) return 1;
+   if ((sec_EVP_CIPHER_CTX_cleanup = (int (*)(EVP_CIPHER_CTX *))dlsym (handle, "EVP_CIPHER_CTX_cleanup")) == NULL) return 1;
+   if ((sec_EVP_DecryptFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_DecryptFinal")) == NULL) return 1;
+   if ((sec_EVP_DecryptInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, const unsigned char *, const unsigned char *))dlsym (handle, "EVP_DecryptInit")) == NULL) return 1;
+   if ((sec_EVP_DecryptUpdate = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int))dlsym (handle, "EVP_DecryptUpdate")) == NULL) return 1;
+   if ((sec_EVP_DigestInit = (int (*)(EVP_MD_CTX *, const EVP_MD *))dlsym (handle, "EVP_DigestInit")) == NULL) return 1;
+   if ((sec_EVP_DigestFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *))dlsym (handle, "EVP_DigestFinal")) == NULL) return 1;
+   if ((sec_EVP_DigestUpdate = (int (*)(EVP_MD_CTX *, const void *, unsigned int))dlsym (handle, "EVP_DigestUpdate")) == NULL) return 1;
+   if ((sec_EVP_EncryptInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, const unsigned char *, const unsigned char *))dlsym (handle, "EVP_EncryptInit")) == NULL) return 1;
+   if ((sec_EVP_EncryptUpdate = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int))dlsym (handle, "EVP_EncryptUpdate")) == NULL) return 1;
+   if ((sec_EVP_EncryptFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_EncryptFinal")) == NULL) return 1;
+   if ((sec_EVP_md5 = (const EVP_MD *(*)(void))dlsym (handle, "EVP_md5")) == NULL) return 1;
+   if ((sec_EVP_OpenInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, unsigned char *, int, unsigned char *, EVP_PKEY *))dlsym (handle, "EVP_OpenInit")) == NULL) return 1;
+   if ((sec_EVP_OpenFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_OpenFinal")) == NULL) return 1;
+   sec_EVP_OpenUpdate = sec_EVP_DecryptUpdate;
+   if ((sec_EVP_PKEY_free = (void (*)(EVP_PKEY *))dlsym (handle, "EVP_PKEY_free")) == NULL) return 1;
+   if ((sec_EVP_PKEY_size = (int (*)(EVP_PKEY *))dlsym (handle, "EVP_PKEY_size")) == NULL) return 1;
+   if ((sec_EVP_rc4 = (const EVP_CIPHER *(*)(void))dlsym (handle, "EVP_rc4")) == NULL) return 1;
+   if ((sec_EVP_SealInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, unsigned char **, int *, unsigned char *, EVP_PKEY **, int))dlsym (handle, "EVP_SealInit")) == NULL) return 1;
+   if ((sec_EVP_SealFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_SealFinal")) == NULL) return 1;
+   if ((sec_EVP_SignFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *, EVP_PKEY *))dlsym (handle, "EVP_SignFinal")) == NULL) return 1;
+   sec_EVP_SignInit = sec_EVP_DigestInit;
+   sec_EVP_SignUpdate = sec_EVP_DigestUpdate;
+   if ((sec_EVP_VerifyFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int, EVP_PKEY *))dlsym (handle, "EVP_VerifyFinal")) == NULL) return 1;
+   sec_EVP_VerifyInit = sec_EVP_DigestInit;
+   sec_EVP_VerifyUpdate = sec_EVP_DigestUpdate;
+   if ((sec_i2d_ASN1_UTCTIME = (int (*)(ASN1_UTCTIME *, unsigned char **))dlsym (handle, "i2d_ASN1_UTCTIME")) == NULL) return 1;
+   if ((sec_i2d_X509 = (int (*)(X509 *, unsigned char**))dlsym (handle, "i2d_X509")) == NULL) return 1;
+   if ((sec_OBJ_nid2obj = (ASN1_OBJECT *(*)(int))dlsym (handle, "OBJ_nid2obj")) == NULL) return 1;
+   if ((sec_OPENSSL_free = (void (*)(void *))dlsym (handle, "CRYPTO_free")) == NULL) return 1;
+   if ((_sec_OPENSSL_malloc = (void *(*)(int, const char *, int))dlsym (handle, "CRYPTO_malloc")) == NULL) return 1;
+#ifdef SSLEAY_MACROS
+   if ((_sec_PEM_read_PrivateKey = (char *(*)(char *(*)(), const char *, FILE *, char **, pem_password_cb *, void *))dlsym (handle, "PEM_ASN1_read")) == NULL) return 1;
+   if ((sec_d2i_PrivateKey = (EVP_PKEY *(*)(int type, EVP_PKEY **a, unsigned char **pp, long length))dlsym (handle, "d2i_PrivateKey")) == NULL) return 1;
+   _sec_PEM_read_X509 = _sec_PEM_read_PrivateKey;
+#else
+   if ((sec_PEM_read_PrivateKey = (EVP_PKEY *(*)(FILE *, EVP_PKEY **, pem_password_cb *, void *))dlsym (handle, "PEM_read_PrivateKey")) == NULL) return 1;
+   if ((sec_PEM_read_X509 = (X509 *(*)(FILE *, X509 **, pem_password_cb *, void *))dlsym (handle, "PEM_read_X509")) == NULL) return 1;
+#endif
+   if ((sec_RAND_load_file = (int (*)(const char *, long))dlsym (handle, "RAND_load_file")) == NULL) return 1;
+   if ((sec_RAND_pseudo_bytes = (int (*)(unsigned char *, int))dlsym (handle, "RAND_pseudo_bytes")) == NULL) return 1;
+   if ((sec_RAND_status = (int (*)(void))dlsym (handle, "RAND_status")) == NULL) return 1;
+   if ((sec_RSA_private_decrypt = (int (*)(int, const unsigned char *, unsigned char *, RSA *, int))dlsym (handle, "RSA_private_decrypt")) == NULL) return 1;
+   if ((sec_RSA_public_encrypt = (int (*)(int, const unsigned char *, unsigned char *, RSA *, int))dlsym (handle, "RSA_public_encrypt")) == NULL) return 1;
+   if ((sec_X509_STORE_CTX_get_current_cert = (X509 *(*)(X509_STORE_CTX *ctx))dlsym (handle, "X509_STORE_CTX_get_current_cert")) == NULL) return 1;
+   if ((sec_X509_cmp_current_time = (int (*)(ASN1_TIME *))dlsym (handle, "X509_cmp_current_time")) == NULL) return 1;
+   if ((sec_X509_free = (void (*)(X509 *))dlsym (handle, "X509_free")) == NULL) return 1;
+   if ((sec_X509_get_pubkey = (EVP_PKEY *(*)(X509 *x))dlsym (handle, "X509_get_pubkey")) == NULL) return 1;
+   if ((sec_X509_get_pubkey_parameters = (int (*)(EVP_PKEY *, STACK_OF(X509) *))dlsym (handle, "X509_get_pubkey_parameters")) == NULL) return 1;
+   if ((sec_X509_get_subject_name = (X509_NAME *(*)(X509 *))dlsym (handle, "X509_get_subject_name")) == NULL) return 1;
+   if ((sec_X509_gmtime_adj = (ASN1_TIME *(*)(ASN1_TIME *, long))dlsym (handle, "X509_gmtime_adj")) == NULL) return 1;
+   if ((sec_X509_print_fp = (int (*)(FILE *, X509 *))dlsym (handle, "X509_print_fp")) == NULL) return 1;
+   if ((sec_X509_NAME_get_text_by_OBJ = (int (*)(X509_NAME *, ASN1_OBJECT *, char *, int))dlsym (handle, "X509_NAME_get_text_by_OBJ")) == NULL) return 1;
+   if ((sec_X509_NAME_oneline = (char *(*)(X509_NAME *, char *, int))dlsym (handle, "X509_NAME_oneline")) == NULL) return 1;
+   if ((sec_X509_STORE_CTX_cleanup = (void (*)(X509_STORE_CTX *))dlsym (handle, "X509_STORE_CTX_cleanup")) == NULL) return 1;
+   if ((sec_X509_STORE_CTX_get_error = (int (*)(X509_STORE_CTX *))dlsym (handle, "X509_STORE_CTX_get_error")) == NULL) return 1;
+   if ((sec_X509_STORE_CTX_init = (int (*)(X509_STORE_CTX *, X509_STORE *, X509 *, STACK_OF(X509) *))dlsym (handle, "X509_STORE_CTX_init")) == NULL) return 1;
+   if ((sec_X509_STORE_free = (void (*)(X509_STORE *))dlsym (handle, "X509_STORE_free")) == NULL) return 1;
+   if ((sec_X509_STORE_load_locations = (int (*)(X509_STORE *, const char *, const char *))dlsym (handle, "X509_STORE_load_locations")) == NULL) return 1;
+   if ((sec_X509_STORE_new = (X509_STORE *(*)(void))dlsym (handle, "X509_STORE_new")) == NULL) return 1;
+   if ((sec_X509_verify_cert = (int (*)(X509_STORE_CTX *))dlsym (handle, "X509_verify_cert")) == NULL) return 1;
+#else
+   sec_ASN1_UTCTIME_free = ASN1_UTCTIME_free;
+   sec_ASN1_UTCTIME_new = ASN1_UTCTIME_new;
+   sec_ASN1_UTCTIME_print = ASN1_UTCTIME_print;
+   sec_BIO_free = BIO_free;
+   sec_BIO_new_file = BIO_new_file;
+   sec_BIO_new_fp = BIO_new_fp;
+   sec_BIO_read = BIO_read;
+   sec_BIO_write = BIO_write;
+   sec_CRYPTO_get_lock_name = CRYPTO_get_lock_name;
+   sec_CRYPTO_num_locks = CRYPTO_num_locks;
+   sec_CRYPTO_set_id_callback = CRYPTO_set_id_callback;
+   sec_CRYPTO_set_locking_callback = CRYPTO_set_locking_callback;
+   sec_d2i_ASN1_UTCTIME = d2i_ASN1_UTCTIME;
+   sec_d2i_X509 = d2i_X509;
+   sec_ERR_clear_error = ERR_clear_error;
+   sec_ERR_error_string = ERR_error_string;
+   sec_ERR_get_error = ERR_get_error;
+   sec_ERR_load_crypto_strings = ERR_load_crypto_strings;
+   sec_EVP_add_cipher = EVP_add_cipher;
+   sec_EVP_add_digest = EVP_add_digest;
+   _sec_EVP_add_digest_alias = OBJ_NAME_add;
+   sec_EVP_CIPHER_CTX_cleanup = EVP_CIPHER_CTX_cleanup;
+   sec_EVP_DecryptFinal = EVP_DecryptFinal;
+   sec_EVP_DecryptInit = EVP_DecryptInit;
+   sec_EVP_DecryptUpdate = EVP_DecryptUpdate;
+   sec_EVP_DigestInit = EVP_DigestInit;
+   sec_EVP_DigestFinal = EVP_DigestFinal;
+   sec_EVP_DigestUpdate = EVP_DigestUpdate;
+   sec_EVP_EncryptInit = EVP_EncryptInit;
+   sec_EVP_EncryptUpdate = EVP_EncryptUpdate;
+   sec_EVP_EncryptFinal = EVP_EncryptFinal;
+   sec_EVP_md5 = EVP_md5;
+   sec_EVP_OpenInit = EVP_OpenInit;
+   sec_EVP_OpenFinal = EVP_OpenFinal;
+   sec_EVP_OpenUpdate = EVP_DecryptUpdate;
+   sec_EVP_PKEY_free = EVP_PKEY_free;
+   sec_EVP_PKEY_size = EVP_PKEY_size;
+   sec_EVP_rc4 = EVP_rc4;
+   sec_EVP_SealInit = EVP_SealInit;
+   sec_EVP_SealFinal = EVP_SealFinal;
+   sec_EVP_SignFinal = EVP_SignFinal;
+   sec_EVP_SignInit = EVP_DigestInit;
+   sec_EVP_SignUpdate = EVP_DigestUpdate;
+   sec_EVP_VerifyFinal = EVP_VerifyFinal;
+   sec_EVP_VerifyInit = EVP_DigestInit;
+   sec_EVP_VerifyUpdate = EVP_DigestUpdate;
+   sec_i2d_ASN1_UTCTIME = i2d_ASN1_UTCTIME;
+   sec_i2d_X509 = i2d_X509;
+   sec_OBJ_nid2obj = OBJ_nid2obj;
+   sec_OPENSSL_free = CRYPTO_free;
+   _sec_OPENSSL_malloc = CRYPTO_malloc;
+#ifdef SSLEAY_MACROS
+   _sec_PEM_read_PrivateKey = PEM_ASN1_read;
+   sec_d2i_PrivateKey = d2i_PrivateKey;
+   _sec_PEM_read_X509 = PEM_ASN1_read;
+#else
+   sec_PEM_read_PrivateKey = PEM_read_PrivateKey;
+   sec_PEM_read_X509 = PEM_read_X509;
+#endif
+   sec_RAND_load_file = RAND_load_file;
+   sec_RAND_pseudo_bytes = RAND_pseudo_bytes;
+   sec_RAND_status = RAND_status;
+   sec_RSA_private_decrypt = RSA_private_decrypt;
+   sec_RSA_public_encrypt = RSA_public_encrypt;
+   sec_X509_STORE_CTX_get_current_cert = X509_STORE_CTX_get_current_cert;
+   sec_X509_cmp_current_time = X509_cmp_current_time;
+   sec_X509_free = X509_free;
+   sec_X509_get_pubkey = X509_get_pubkey;
+   sec_X509_get_pubkey_parameters = X509_get_pubkey_parameters;
+   sec_X509_get_subject_name = X509_get_subject_name;
+   sec_X509_gmtime_adj = X509_gmtime_adj;
+   sec_X509_print_fp = X509_print_fp;
+   sec_X509_NAME_get_text_by_OBJ = X509_NAME_get_text_by_OBJ;
+   sec_X509_NAME_oneline = X509_NAME_oneline;
+   sec_X509_STORE_CTX_cleanup = X509_STORE_CTX_cleanup;
+   sec_X509_STORE_CTX_get_error = X509_STORE_CTX_get_error;
+   sec_X509_STORE_CTX_init = X509_STORE_CTX_init;
+   sec_X509_STORE_free = X509_STORE_free;
+   sec_X509_STORE_load_locations = X509_STORE_load_locations;
+   sec_X509_STORE_new = X509_STORE_new;
+   sec_X509_verify_cert = X509_verify_cert;
+#endif
+
+   DEXIT;   
+   return 0;
 }

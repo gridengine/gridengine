@@ -1,3 +1,11 @@
+DT-2004-01-09-0: Enhancem.: OpenSSL is now loaded dynamically on Solaris and
+                            Linux via dlopen.  For more information please see
+                            the comments in sec_lib.c starting around line 170.
+                 Bugfix:    Certificates are now usable when SGE is installed as
+                            or running as a user other than root.
+                 Changed:   sec lib, aimk, inst_sge, miriad Makefiles, qmaster
+                 Review:    AA
+
 JG-2004-01-09-0: Testsuite: Fixed some installation problems.
 
 AD-2004-01-08-1: Bugfix:    'prog_state_t' and 'cull_state_t' has only been
@@ -49,6 +57,7 @@ SG-2003-01-07-1: Enhancem:  added qstat -qs and qselect -qs feature.
 
 DT-2004-01-07-1: Bugfix:    Fixed install for -secure
                  Changed:   util/arch_variables, inst_sge
+                 Review:    AA
 
 DT-2004-01-07-0: Bugfix:    Fixed dependency problem for -secure with Sun make
                  Changed:   utilbin/Makefile

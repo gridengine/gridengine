@@ -461,9 +461,20 @@ while ($#argv >= 1 && $?found)
      set ZLIBBASE = "$SOURCE/3rdparty/zlib"
      breaksw
    case "-crypto":
-      set CFLAGS  = " -DCRYPTO -I$OPENSSL_HOME/include  $CFLAGS"
+      set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
-      set KLIBS = "-lcrypto"
+
+      switch ($BUILDARCH)
+        case SOLARIS:
+        case SOLARIS64:
+        case SOLARIS86:
+        case LINUX6:
+           set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+           set KLIBS = ""
+           breaksw
+        default:
+           set KLIBS = "-lcrypto"
+      endsw
       breaksw
    case "-D*":
       set CFLAGS = "$argv[1] $CFLAGS"
@@ -742,13 +753,23 @@ while ($#argv >= 1 && $?found)
       set SECLIB = "-lsec"
       set SECLIB_OBJS = "sec_lib.o"
       set CFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CFLAGS"
+      set KLFLAGS  = "-L$OPENSSL_HOME/lib"
 
       if ( $STATIC_SECURE == 1 ) then
          set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
       else 
-         set KLIBS = "-lcrypto"
+        switch ($BUILDARCH)
+          case SOLARIS:
+          case SOLARIS64:
+          case SOLARIS86:
+          case LINUX6:
+             set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+             set KLIBS = ""
+             breaksw
+          default:
+             set KLIBS = "-lcrypto"
+        endsw
       endif
-      set KLFLAGS  = "-L$OPENSSL_HOME/lib"
       breaksw
 
    case "-shared":
@@ -2029,7 +2050,7 @@ if ( "$QMON" == 1) then
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "GLIBEXT=$GLIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-       "MEMCFLAG=$MEMCFLAG" $argv $TARGET
+       "MEMCFLAG=$MEMCFLAG" "DLLIB=$DLLIB" $argv $TARGET
    if ( $status != 0 ) then
       echo not done
       exit 1

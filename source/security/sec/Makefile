@@ -57,8 +57,8 @@ libsec.a: $(SECLIBOBJS)
 	$(AR) $(ARFLAGS) libsec.a $(SECLIBOBJS)
 	$(RANLIB) libsec.a
 
-libsec$(SHAREDEXT):  $(SECLIBOBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsec$(SHAREDEXT) $(SECLIBOBJS)
+libsec$(SHAREDEXT):  $(SECLIBOBJS) $(GDILIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsec$(SHAREDEXT) $(SECLIBOBJS) -lgdi
 
 #---------------------------------------------------------------------------
 

@@ -189,6 +189,7 @@ static void qmaster_init(char **anArgv)
    lInit(nmv); /* set CULL namespace */
 
    sge_setup(QMASTER, NULL); /* misc setup */
+   prepare_enroll(prognames[QMASTER], 1, NULL);
 
    INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 

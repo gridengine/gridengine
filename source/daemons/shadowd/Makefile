@@ -46,7 +46,7 @@ SHADOWD_OBJS = $(SHADOWD_SRC:.c=.o)
 
 SHADOWD_ADD_OBJS = $(SHADOWD_ADD_SRC:.c=.o) 
 
-SHADOWD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck
+SHADOWD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck $(DLLIB)
 
 SHADOWD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(ZLIB) $(TPLIB)
 

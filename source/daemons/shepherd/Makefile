@@ -60,7 +60,7 @@ SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 
 SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o) 
 
-SHEPHERD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
+SHEPHERD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon $(DLLIB)
 
 SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 

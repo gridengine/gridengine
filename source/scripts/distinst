@@ -36,10 +36,10 @@
 
 umask 022
 
-BASEDIR=/dist/SGEDIST
-MANUALPDF=undefined
+BASEDIR=undef
 VERSIONDIR=SGE53
 SGE_PRODUCT_MODE=ge
+instmanual=false
 
 if [ -f scripts/distinst.site ]; then
    . scripts/distinst.site
@@ -356,11 +356,13 @@ elif [ $cmdname = myinst ]; then
    setfileperm=false
 elif [ $cmdname = sgeinst ]; then 
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGE53final
+   BASEDIR=/dist/SGEDIST
+   VERSIONDIR=SGE53
    SGE_PRODUCT_MODE=sge
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGEEE53final
+   BASEDIR=/dist/SGEDIST
+   VERSIONDIR=SGEEE53
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
 else
@@ -444,7 +446,7 @@ while [ $# -ge 1 ]; do
    --)
       break
       ;;
-   --*)
+   -*)
       echo option \"$1\" is not supported. Installation failed
       exit 1
       ;;
@@ -456,6 +458,11 @@ while [ $# -ge 1 ]; do
 done
 
 if [ $localinst = false ]; then
+   if [ $BASEDIR = undef ]; then
+      echo set basedir with -basedir switch. Installation failed
+      exit 1
+   fi
+
    DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
    mkdir -p $DEST_SGE_ROOT
 fi
@@ -747,10 +754,18 @@ if [ $instcommon = true ]; then
 
    if [ $instdoc = true ]; then
       echo Installing \"doc/\"
-      echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      Execute cp $MANUALPDF $DEST_SGE_ROOT/doc
+      if [ $instmanual != false ]; then
+         if [ $sgeee = false ]; then
+            docfiles="$SGEDOCS"
+         else
+            docfiles="$SGEEEDOCS"
+         fi
+         for fd in $docfiles; do
+            Execute cp $fd $DEST_SGE_ROOT/doc
+         done
+      fi 
    fi
 
    # this rule must come *after* the "instdoc" rule
@@ -885,7 +900,7 @@ for i in $ARCH; do
             elif [ -f $OPENSSLBASE/bin/openssl ]; then
                InstallProg $OPENSSLBASE/bin/openssl
             else
-               echo openssl binary not found
+               echo \"openssl\" binary not found
             fi
          elif [ $prog = testsuidroot ]; then
             InstallProgSUID $prog
@@ -938,7 +953,7 @@ for i in $ARCH; do
 
       Execute rm -f $DEST_SGE_ROOT/$UTILPREFIX/$i/*
       for lib in $SHARED_LIBRARIES; do
-         echo checking $lib.$shlibext
+         # echo checking $lib.$shlibext
          if [ -f $lib.$shlibext ]; then
             InstallProg $lib.$shlibext
          fi

@@ -365,7 +365,7 @@
 #define MSG_JOB_CHANGEOVERRIDETICKS   _MESSAGE(33265, _("change amount of override tickets"))
 #define MSG_JOB_SETOVERRIDETICKS_SSUU _MESSAGE(33266, _("%s@%s sets override tickets of job "U32CFormat" to "U32CFormat"\n"))
 #define MSG_JOB_PRIOINC               _MESSAGE(33267, _("increase job priority"))
-#define MSG_JOB_PRIOSET_SSUU          _MESSAGE(33268, _("%s@%s sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
+#define MSG_JOB_PRIOSET_SSUI          _MESSAGE(33268, _("%s@%s sets scheduling priority of job "U32CFormat" to %d\n"))
 #define MSG_JOB_ACCOUNT               _MESSAGE(33269, _("account"))
 #define MSG_JOB_WD                    _MESSAGE(33270, _("working directory"))
 #define MSG_JOB_STARTTIME             _MESSAGE(33271, _("start time"))

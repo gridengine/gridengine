@@ -1,3 +1,10 @@
+SG-2004-11-02-0: Bugfix:    - fixed a memory leak in the scheduler. It ocoured,
+                              when consumables were used as load thresholds.
+                 Review:    AA
+                 Changed:   scheduler
+                 Issue:     1315
+                 Bugtraq:   6189286
+
 DT-2004-10-07-0: Bugfix:    o Enabled qsub/qrsh -v VAR again
                  Review:    CR
                  Changed:   qsub/qrsh

@@ -1909,6 +1909,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       lListElem *hlep = NULL, *glep = NULL, *queue_ep = NULL, *cep  = NULL;
       const char *name;
       u_long32 relop, type;
+      bool need_free_cep = false;
 
       name = lGetString(tep, CE_name);
       /* complex attriute definition */
@@ -1953,13 +1954,13 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       }
       else {
          /* load thesholds... */
-         if (!(cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list, DISPATCH_TIME_NOW, 0))) {
+         if ((cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list, DISPATCH_TIME_NOW, 0)) == NULL) {
             if (reason)
                sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
             DEXIT;
             return 1;
          }
-     
+         need_free_cep = true;
          load_value = lGetString(cep, CE_pj_stringval);
          load_is_value = (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_MASK) != DOMINANT_TYPE_CLOAD; 
       }
@@ -1971,10 +1972,16 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       if(sge_check_load_alarm(reason, name, load_value, limit_value, relop, 
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
+         if (need_free_cep) {
+            cep = lFreeElem(cep);
+         }                              
          DEXIT;
          return 1;
       }   
 
+      if (need_free_cep) {
+          cep = lFreeElem(cep);
+      }   
    } 
 
    DEXIT;

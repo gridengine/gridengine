@@ -62,8 +62,6 @@ int main(int argc, char **argv)
 
    lInit(nmv);
 
-   log_state_set_log_gui(0);
-
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
    if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
@@ -72,12 +70,12 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QCONF);
 
+#ifdef ENABLE_NGC
    if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
-      fprintf(stderr, cl_get_error_text(ret));
       SGE_EXIT(1);
    }
-
-   if (argc == 1) {
+#else
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
       sge_usage(stderr);
       SGE_EXIT(1);
    }

@@ -1,3 +1,9 @@
+DT-2004-03-04-0: Bugfix:    o Reenabled GUI logging in qconf in order to have
+                              flatfile spooling error messages printed.
+                 Changed:   qconf
+                 Review:    pending
+                 Issue:     768
+
 AA-2004-03-03-1: Bugfix:    - qi editability
                  Isssue:    727
                  Changed:   qmon

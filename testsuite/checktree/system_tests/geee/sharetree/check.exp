@@ -364,6 +364,7 @@ proc share_tree_setup  {} {
    set my_config(weight_tickets_share) "10000"
    set my_config(job_load_adjustments) "np_load_avg=0.0"
    set my_config(schedule_interval)    "2:0:0"
+# set my_config(sgeee_schedule_interval) "00:00:08"
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
    set my_config(halftime)             "10"
    set_schedd_config my_config
@@ -416,14 +417,14 @@ proc share_tree_test {} {
    set prj3_id_list ""
    set counter $share_tree_job_counter
    while { $counter > 0 } {
-      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
-      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
-      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
+      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/sleeper.sh 5 $CHECK_PROTOCOL_DIR"]
+      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/sleeper.sh 5 $CHECK_PROTOCOL_DIR"]
+      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/sleeper.sh 5 $CHECK_PROTOCOL_DIR"]
       lappend prj3_id_list $last_job      
       incr counter -1
    }
 
-   wait_for_jobpending $last_job "orker" 60
+   wait_for_jobpending $last_job "leeper" 60
 
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
    puts $CHECK_OUTPUT $result
@@ -490,14 +491,17 @@ proc share_tree_test {} {
       }
    }
 
+#   set mod_config(schedule_interval)    "0:0:10"
+#   set_schedd_config mod_config
    enable_queue share_test
 
    set done 0
    set my_timeout [timestamp]
-   incr my_timeout 10000
+   incr my_timeout 2500
+   set nr_of_jobs 0
+   set last_job_count 0
    while { $done == 0 && [timestamp] < $my_timeout} {
       set done 1
-      set nr_of_jobs 0
       foreach job $prj2_id_list {
          set file_here [file isfile $CHECK_PROTOCOL_DIR/$job]
          if { $file_here == 0 } {
@@ -509,11 +513,20 @@ proc share_tree_test {} {
          continue
       }
 
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-      puts -nonewline $CHECK_OUTPUT "."
-      flush $CHECK_OUTPUT
+      set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -s r" } result ]
+      set rjobout [split $result "\n"]
+      set running_jobs [llength $rjobout]
+      if { $running_jobs > 0 } {
+         incr running_jobs -2 ;# 2 header lines
+      }
+      if { $running_jobs == 0 } {
+         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+         puts -nonewline $CHECK_OUTPUT "."
+         flush $CHECK_OUTPUT
+      }
       sleep 2
    }
+   disable_queue share_test
    if { [timestamp] >= $my_timeout } {
       add_proc_error "share_tree_test" -1 "timeout while waiting for start of jobs"
    }

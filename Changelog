@@ -1,3 +1,7 @@
+CR-2003-04-16-0  Testsuite: sharetree test:
+                            Don't trigger scheduler run when a job is already
+                            running in a queue. 
+
 JG-2003-04-15-0  Enhancem.: Added infrastructure for spooling to PostgreSQL 
                             database.
                             Use relative include paths for spooling related 

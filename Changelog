@@ -1,3 +1,9 @@
+DT-2004-11-15-0: Bugfix:    o Fixed typo in id_list_build_from_str_list()
+                            o Fixed logic error in qmod
+                            o Fixed typo in qmod man page
+                 Review:    AH
+                 Changed    qmod, sge_id.c                 
+
 MD-2004-11-15-1: Bugfix:    Confusing text
                  Review:    HP 
                  Changed:   inst_qmaster.sh

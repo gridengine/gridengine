@@ -72,7 +72,7 @@ id_list_build_from_str_list(lList **id_list,
           * or add string (queue pattern) 
           */
 
-         if ((transition && QUEUE_DO_ACTION) == 0) { 
+         if ((transition & QUEUE_DO_ACTION) == 0) { 
             sge_parse_jobtasks(id_list, &new_id, string, answer_list, false, NULL);
          }   
 

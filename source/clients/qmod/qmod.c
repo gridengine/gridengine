@@ -393,7 +393,7 @@ int usageshowed = 0;
 
       i = 0;
       while (options[i] != NULL) {
-         if ((transitions[i] & JOB_DO_ACTION) > 0) {
+         if ((transitions[i] & QUEUE_DO_ACTION) == 0) {
             parse_multi_jobtaskslist(ppcmdline, options[i], &alp, ppreflist, true, transitions[i]);
          } else {
             lList *queueList = NULL;

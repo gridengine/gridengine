@@ -1,3 +1,9 @@
+SD-2002-01-15-1: Enhancem.: NEC SX-6 compilation changes:
+                            Added missing strptime and fnmatch functions (from BSD)
+                            Added support for NECSX6 architecture (maps to NECSX5)
+                            Updated aimk and Makefiles
+                            A few minor compiler related changes to source code
+
 EB-2002-01-15-0: Enhancem.: 'qdel all' and 'qdel -uall' requests will
                             be split up into multiple requests
 

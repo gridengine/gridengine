@@ -47,7 +47,7 @@ QALTER_ADD_OBJS = $(QALTER_ADD_SRC:.c=.o)
                
 QALTER_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QALTER_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+QALTER_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -55,7 +55,7 @@ QACCT_ADD_OBJS = $(QACCT_ADD_SRC:.c=.o)
 
 QACCT_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lsched -lcull -lcom -luti -lrmon
 
-QACCT_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+QACCT_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

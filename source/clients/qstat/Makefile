@@ -54,7 +54,8 @@ QSTAT_ADD_OBJS = $(QSTAT_ADD_SRC:.c=.o)
 QSTAT_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
 QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
-	                 $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+	                 $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
+                         $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

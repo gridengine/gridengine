@@ -48,7 +48,7 @@ QSH_ADD_OBJS = $(QSH_ADD_SRC:.c=.o)
 
 QSH_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QSH_LIB_DEPENDS = $(GDILIB) $(CULLLIB) $(COMMLIB) $(SECLIBS) $(KRBLIBS) $(UTILIB) $(RMONLIB) $(ZLIB)
+QSH_LIB_DEPENDS = $(GDILIB) $(CULLLIB) $(COMMLIB) $(SECLIBS) $(KRBLIBS) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

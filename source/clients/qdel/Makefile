@@ -46,7 +46,7 @@ QDEL_ADD_OBJS = $(QDEL_ADD_SRC:.c=.o)
 
 QDEL_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QDEL_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+QDEL_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

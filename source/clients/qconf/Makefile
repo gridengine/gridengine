@@ -55,7 +55,7 @@ QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o)
 
 QCONF_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QCONF_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+QCONF_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

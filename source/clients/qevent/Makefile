@@ -48,7 +48,7 @@ QEVENT_ADD_OBJS = $(QEVENT_ADD_SRC:.c=.o)
 
 QEVENT_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QEVENT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+QEVENT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

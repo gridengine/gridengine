@@ -115,7 +115,8 @@ QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o)
 QMASTER_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
 QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
-                      $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+                      $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
+                      $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

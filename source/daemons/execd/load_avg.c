@@ -369,13 +369,13 @@ lList **lpp
       memset(loadv, 0, 3*sizeof(double));
       if (getloadavg_necsx_rsg(rsg_id, loadv) != -1) {
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_AVG);
-         sge_add_double2load_report(lpp, lv_name, loadv[1], 0);
+         sge_add_double2load_report(lpp, lv_name, loadv[1], 0, NULL);
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_SHORT);
-         sge_add_double2load_report(lpp, lv_name, loadv[0], 0);
+         sge_add_double2load_report(lpp, lv_name, loadv[0], 0, NULL);
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_MEDIUM);
-         sge_add_double2load_report(lpp, lv_name, loadv[1], 0);
+         sge_add_double2load_report(lpp, lv_name, loadv[1], 0, NULL);
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_LONG);
-         sge_add_double2load_report(lpp, lv_name, loadv[2], 0);
+         sge_add_double2load_report(lpp, lv_name, loadv[2], 0, NULL);
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_NUM_PROC);
          sge_add_int2load_report(lpp, lv_name, sge_nprocs_rsg(rsg_id), 0);
       }

@@ -181,6 +181,8 @@ SetArchBin()
       ARCHBIN=NECSX4
    elif [ $i = necsx5 ]; then
       ARCHBIN=NECSX5
+   elif [ $i = necsx6 ]; then
+      ARCHBIN=NECSX5
    else
       echo No ARCHBIN name for \"$i\"
       exit 1

@@ -49,7 +49,8 @@ QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o)
 QSUB_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
 QSUB_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
-	                $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+	                $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) \
+                        $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -85,7 +85,8 @@ EXECD_ADD_OBJS = $(EXECD_ADD_SRC:.c=.o)
 EXECD_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
 EXECD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
-                    $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+                    $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
+                    $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

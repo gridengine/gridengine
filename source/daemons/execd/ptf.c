@@ -759,7 +759,7 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
    }
 #  endif
 
-#  if defined(NECSX4 || NECSX5)
+#  if defined(NECSX4) || defined(NECSX5)
    if (nicej(ptf_get_osjobid(osjob), pri) == -1) {
       if (errno != ESRCH) {
          ERROR((SGE_EVENT, "job " u32 " setpriority failure: %s\n",

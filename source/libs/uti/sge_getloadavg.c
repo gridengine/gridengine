@@ -893,7 +893,7 @@ int k_fd;
    }
 }
 
-static int getloadavg(
+static int get_load_avg(
 double loadv[],
 int nelem 
 ) {
@@ -1012,7 +1012,7 @@ double loadv[]
    return 0;
 }       
 
-static int getloadavg(
+static int get_load_avg(
 double loadv[],
 int nelem 
 ) {

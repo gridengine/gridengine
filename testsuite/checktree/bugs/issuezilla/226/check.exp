@@ -108,7 +108,7 @@ proc issue_226_check {} {
 
    # TODO: set_config should result in an error
    #       only then this test is successfull
-   # set_config my_cluster_conf "global"
+   set_config my_cluster_conf "global"
  
    set_error 0 "ok"
 }

@@ -1,3 +1,6 @@
+EB-2003-02-18-0  Testsuite: Added missing test for issue #226
+                 Review:    CR
+
 JG-2003-02-17-0  Enhancem.  Created new libraries:
                             - libevc (event client code)
                             - libevm (event master code)

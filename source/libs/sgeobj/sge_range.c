@@ -329,7 +329,7 @@ void range_list_initialize(lList **range_list, lList **answer_list)
          *range_list = lCreateList("", RN_Type);
          if (*range_list == NULL) {
             answer_list_add(answer_list, "unable to create range list",
-                           STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+                            STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          }
       }
    }

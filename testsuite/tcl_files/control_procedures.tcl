@@ -47,7 +47,8 @@ set module_name "control_procedures.tcl"
 #  SYNOPSIS
 #     handle_vi_edit { prog_binary prog_args vi_command_sequence 
 #     expected_result {additional_expected_result "___ABCDEFG___"} 
-#     {additional_expected_result2 "___ABCDEFG___"} } 
+#     {additional_expected_result2 "___ABCDEFG___"} 
+#     {additional_expected_result3 "___ABCDEFG___"}} 
 #
 #  FUNCTION
 #     Start an application which and send special command strings to it. Wait
@@ -65,12 +66,14 @@ set module_name "control_procedures.tcl"
 #                                                     case (e.g. modified) 
 #     {additional_expected_result "___ABCDEFG___"}  - additional expected_result 
 #     {additional_expected_result2 "___ABCDEFG___"} - additional expected_result 
+#     {additional_expected_result3 "___ABCDEFG___"} - additional expected_result
 #
 #  RESULT
 #     0 when the output of the application contents the expected_result 
 #    -1 on timeout
 #    -2 on additional_expected_result
 #    -3 on additional_expected_result2 
+#    -4 on additional_expected_result3
 #
 #  EXAMPLE
 #     ??? 
@@ -84,7 +87,7 @@ set module_name "control_procedures.tcl"
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"}} {
+proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
 
@@ -117,6 +120,17 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       if { $help1 == $help2 } {
          incr help2 -1 
          set additional_expected_result2 [string range $additional_expected_result2 0 $help2 ]
+      } else {
+         break
+      }
+   }
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result3]] >= 0 } {
+      set help1 [string last "*" $additional_expected_result3]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result3 [string range $additional_expected_result3 0 $help2 ]
       } else {
          break
       }
@@ -242,6 +256,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                -i $sp_id -- "$additional_expected_result2" {
                   set result -3
                }
+               -i $sp_id -- "$additional_expected_result3" {
+                  set result -4
+               }
                -i $sp_id timeout {
                   set result -1
                   set doStop 1
@@ -254,7 +271,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                }
                -i $sp_id "_exit_status_" {
                   if { $result == -100 } {
-
+        
                      set pos [string last "\n" $expect_out(buffer)]
                      incr pos -2
                      set buffer_message [string range $expect_out(buffer) 0 $pos ]
@@ -263,12 +280,14 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                      set buffer_message [string range $buffer_message $pos end] 
 
                      set message_txt ""
+                     append message_txt "expect_out(buffer)=\"$expect_out(buffer)\""
                      append message_txt "expect out buffer is:\n"
                      append message_txt "   \"$buffer_message\"\n"
                      append message_txt "this doesn't match any given expression:\n"
                      append message_txt "   \"$expected_result\"\n"
                      append message_txt "   \"$additional_expected_result\"\n"
                      append message_txt "   \"$additional_expected_result2\"\n"
+                     append message_txt "   \"$additional_expected_result3\"\n"
                      add_proc_error "handle_vi_edit" -1 $message_txt
                   }
                   set doStop 1

@@ -1532,13 +1532,17 @@ int main(int argc, char **argv)
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
+#if 0
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       /* leave_commd() for old commlib */
       cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
                                  (char*) sge_get_master(0),
                                  (char*) prognames[QMASTER],
                                  1, CL_FALSE);
-   
+#else
+      cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),CL_FALSE);
+#endif
+
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 
                         lGetList(job, JB_env_list),

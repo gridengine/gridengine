@@ -76,6 +76,12 @@
 
 #ifdef SECURE
 const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
+
+static pthread_mutex_t sec_rw_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define SEC_LOCK_RW()      sge_mutex_lock("sec_rw_mutex", SGE_FUNC, __LINE__, &sec_rw_mutex)
+#define SEC_UNLOCK_RW()    sge_mutex_unlock("sec_rw_mutex", SGE_FUNC, __LINE__, &sec_rw_mutex)
+
 #endif 
 
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
@@ -170,7 +176,9 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
 
 #ifdef SECURE   
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      SEC_LOCK_RW();
       ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
+      SEC_UNLOCK_RW();
       DEXIT;
       return ret;
    }                      
@@ -196,9 +204,11 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      SEC_LOCK_RW();
       ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
                                   mid,  response_mid,  tag , copy_data, wait_for_ack);
+      SEC_UNLOCK_RW();
       DEXIT;
       return ret;
    }                      

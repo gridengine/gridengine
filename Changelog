@@ -1,3 +1,9 @@
+AA-2004-08-05-0: Bugfix:    tight integration doesn't work with CSP
+                 Issue:     1080
+                 Bugtraq:   5063314
+                 Changed:   all
+                 Review:    CR
+
 EB-2004-08-05-0: Bugfix:    hostgroup changes do not always take effect.
                  Issues:    1185
                  Bugtraq:   5083102

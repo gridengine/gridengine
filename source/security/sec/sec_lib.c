@@ -93,7 +93,7 @@ static void *handle = NULL;
 #endif
 
 #define CHALL_LEN       16
-#define VALID_MINUTES    10          /* expiry of connection        */
+#define VALID_MINUTES    7          /* expiry of connection        */
 #define SGESecPath      ".sge"
 #define CaKey           "cakey.pem"
 #define CaCert          "cacert.pem"
@@ -1407,7 +1407,6 @@ int sec_exit(void)
 *  NOTES
 *     MT-NOTE: sec_send_message() is not MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
 int sec_send_message(cl_com_handle_t* cl_handle,
                      char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                      cl_xml_ack_type_t ack_type, 
@@ -1423,6 +1422,21 @@ int sec_send_message(cl_com_handle_t* cl_handle,
    cl_com_endpoint_t *destination = NULL;
 
    DENTER(GDI_LAYER, "sec_send_message");
+
+   /*
+   ** tight integration send case
+   */
+   if ((cl_handle && cl_handle->local && 
+       !strcmp(cl_handle->local->comp_name, "execd_handle")) || 
+       !strcmp(component_name, "execd_handle")) {
+      int ret = cl_commlib_send_message(cl_handle, un_resolved_hostname,  
+                                    component_name,  component_id, 
+                                    ack_type, data,  size ,
+                                    mid,  response_mid,  tag , 
+                                    copy_data, wait_for_ack);
+      DEXIT;
+      return ret;
+   }
 
    destination = cl_com_create_endpoint(un_resolved_hostname, component_name, component_id);
 
@@ -1488,81 +1502,6 @@ int sec_send_message(cl_com_handle_t* cl_handle,
    DEXIT;
    return i;
 }
-#else
-int sec_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
-   int i = 0;
-   sge_pack_buffer pb;
-
-   DENTER(GDI_LAYER, "sec_send_message");
-
-   /*
-   ** every component has to negotiate its connection with qmaster
-   */
-   if (uti_state_get_mewho() != QMASTER) {
-      if (sec_announce_connection(&gsd, tocomproc,tohost)) {
-/*          ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED)); */
-         DPRINTF((MSG_SEC_ANNOUNCEFAILED));
-         DEXIT;
-         return SEC_ANNOUNCE_FAILED;
-      }
-   }   
-      
-   if (sec_set_encrypt(tag)) {
-      if (uti_state_get_mewho() == QMASTER) {
-         SEC_LOCK_CONN_LIST();
-         if (sec_conn_list) {
-            /*
-            ** set the corresponding key and connection information
-            ** in the connection list for commd triple 
-            ** (tohost, tocomproc, toid)
-            */
-            if (sec_set_secdata(tohost,tocomproc,toid)) {
-               SEC_UNLOCK_CONN_LIST();
-               ERROR((SGE_EVENT, MSG_SEC_SETSECDATAFAILED));
-               DEXIT;
-               return SEC_SEND_FAILED;
-            }
-            SEC_UNLOCK_CONN_LIST();
-         }
-      }
-      DEBUG_PRINT_BUFFER("Message before encryption", (unsigned char*) buffer, buflen);
-
-      if (sec_encrypt(&pb, buffer, buflen)) {
-         ERROR((SGE_EVENT, MSG_SEC_MSGENCFAILED));
-         DEXIT;
-         return SEC_SEND_FAILED;
-      }
-
-      DEBUG_PRINT_BUFFER("Message after encryption",
-                               pb.head_ptr, pb.bytes_used);
-   }
-   else if (uti_state_get_mewho() != QMASTER) {
-      if (sec_set_connid(&buffer, &buflen)) {
-         ERROR((SGE_EVENT, MSG_SEC_CONNIDSETFAILED));
-         DEXIT;
-         return SEC_SEND_FAILED;
-      }
-   }
-
-   i = send_message(synchron, tocomproc, toid, tohost, tag, 
-                    pb.head_ptr, pb.bytes_used, mid, compressed);
-   
-   clear_packbuffer(&pb);
-   
-   DEXIT;
-   return i;
-}
-#endif
 
 /****** security/sec_lib/sec_receive_message() *******************************
 *  NAME
@@ -1594,7 +1533,6 @@ int compressed
 *  NOTES
 *     MT-NOTE: sec_receive_message() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
 int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender)
 {
    int i;
@@ -1635,6 +1573,21 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
    if (sender == NULL || *sender == NULL) {
       DEXIT;
       return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
+   }
+
+   /*
+   ** tight integration receive case
+   */
+/* printf("(*sender)->comp_name:%s\ncl_handle->local->comp_name: %s\n", */
+/*          (*sender)->comp_name, cl_handle->local->comp_name); */
+
+   if (!strcmp((*sender)->comp_name, "execd_handle") ||
+/*        (cl_handle && cl_handle->local */
+/*         && !strcmp(cl_handle->local->comp_name, "qrsh")) ||  */
+       (cl_handle && cl_handle->local 
+        && !strcmp(cl_handle->local->comp_name, "execd_handle"))) {
+      DEXIT;
+      return CL_RETVAL_OK;
    }
 
    if (tag == TAG_SEC_ANNOUNCE) {
@@ -1691,58 +1644,6 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
    DEXIT;
    return CL_RETVAL_OK;
 }
-#else
-int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
-                        int *tag, char **buffer, u_long32 *buflen, 
-                        int synchron, u_short* compressed)
-{
-   int i;
-
-   DENTER(GDI_LAYER, "sec_receive_message");
-
-   if ((i=receive_message(fromcommproc, fromid, fromhost, tag, buffer, buflen,
-                       synchron, compressed))) {
-      DEXIT;
-      return i;
-   }
-
-   if (*tag == TAG_SEC_ANNOUNCE) {
-      if (sec_handle_announce(fromcommproc,*fromid,fromhost,*buffer,*buflen)) {
-         ERROR((SGE_EVENT, MSG_SEC_HANDLEANNOUNCEFAILED_SSI,
-                  fromhost, fromcommproc, *fromid));
-         DEXIT;
-         return SEC_ANNOUNCE_FAILED;
-      }
-   }
-   else if (sec_set_encrypt(*tag)) {
-      DEBUG_PRINT_BUFFER("Encrypted incoming message", 
-                         (unsigned char*) (*buffer), (int)(*buflen));
-
-      if (sec_decrypt(buffer,buflen,fromhost,fromcommproc,*fromid)) {
-         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSI,
-                  fromhost,fromcommproc,*fromid));
-         if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0))
-            ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
-         DEXIT;
-         return SEC_RECEIVE_FAILED;
-      }
-
-      DEBUG_PRINT_BUFFER("Decrypted incoming message", 
-                         (unsigned char*) (*buffer), (int)(*buflen));
-   }
-   else if (uti_state_get_mewho() == QMASTER) {
-      if (sec_get_connid(buffer,buflen) ||
-               sec_update_connlist(fromhost,fromcommproc,*fromid)) {
-         ERROR((SGE_EVENT, MSG_SEC_CONNIDGETFAILED));
-         DEXIT;
-         return SEC_RECEIVE_FAILED;
-      }
-   }
-
-   DEXIT;
-   return 0;
-}
-#endif
 
 
 /****** security/sec_lib/sec_set_encrypt() ***********************************

@@ -1,3 +1,5 @@
+CR-2002-05-21-0: Bugfix:    smaller bugfixes in infotext binary
+
 JG-2002-05-21-0: Cleanup:   Moved job_report related commodity functions to 
                             libs/gdi.
                             Common code to create paths.

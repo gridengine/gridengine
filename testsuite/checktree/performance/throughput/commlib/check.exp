@@ -40,14 +40,15 @@ set check_init_level_procedure "init_level"
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
 set check_name                "commlib_throughput"
 set check_description(0)      "run virtual qmaster/ gdi /event client tests"
-set check_needs               ""      ;# dependencies of this check (name of other check)
+set check_description(100)    "run virtual qmaster/ gdi /event client tests"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
 set check_functions           ""
 lappend check_functions       "cl_throughput_setup"          ;# functions to call (in order)
 lappend check_functions       "cl_throughput_run"
 lappend check_functions       "cl_throughput_analize" 
 lappend check_functions       "cl_throughput_cleanup"
-set check_highest_level       0
+set check_highest_level       100
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config CHECK_PROTOCOL_DIR
@@ -77,7 +78,7 @@ proc init_level {} {
 proc cl_throughput_setup {} {
    global ts_config CHECK_HOST
 
-   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
+   shutdown_core_system
 
    set_error 0 "ok"
 }
@@ -89,7 +90,12 @@ proc cl_throughput_start_clients { host count user binary args} {
 
    for {set i 0} { $i < $count} { incr i 1} {
       puts $CHECK_OUTPUT "staring \"$binary $arguments\" in background ..."
-      start_remote_prog $host $user $binary $arguments prg_exit_state 60 1
+      set retval [start_remote_prog $host $user $binary $arguments prg_exit_state 120 1]
+      puts $CHECK_OUTPUT $retval
+
+      if { [string match "*not found*" $retval ] } {
+         add_proc_error "cl_throughput_start_clients" -1 "$retval"
+      }
    }
 }
 
@@ -192,6 +198,10 @@ proc cl_throughput_parse_result { ff evc gdi dresult darray} {
    set i $ai
    incr i -1
    puts $CHECK_OUTPUT "parsed $ai output lines, test run took $data($ff,$evc,$gdi,$i,time) seconds"
+   if { $ai < $data(lines) } {
+      puts $CHECK_OUTPUT "error test test test:"
+      add_proc_error "cl_throughput_parse_result" -1 "got not enough data lines"
+   }
 
 }
 
@@ -503,6 +513,8 @@ proc cl_throughput_analize {} {
          set rcv_sum($elem) 0
          set snd_sum($elem) 0
          set evc_sum($elem) 0
+         set max_ngc 0 
+         set max_nec 0
          for { set nec $data(ne_start) } { $nec <= $data(ne_end) } { incr nec $data(ne_step)  } {
             for { set ngc $data(ng_start) } { $ngc <= $data(ng_end) } { incr ngc $data(ng_step) } {
        
@@ -514,20 +526,22 @@ proc cl_throughput_analize {} {
                set snd_sum($elem) [ expr ( $snd_sum($elem)  + $data($elem,$nec,$ngc,$ai,snd_sec) ) ]
                set evc_sum($elem) [ expr ( $evc_sum($elem)  + $data($elem,$nec,$ngc,$ai,ev_snd_sec) ) ]
 
-               if { $nec == $data(ne_end) && $ngc == $data(ng_end) } {
-                  set create_chart 1;
-               } else {
-                  set create_chart 0;
-               }
-               if { $create_chart == 1 } {
-                  if { $do_report == 0 } {
-                     puts $CHECK_OUTPUT "skipping chart creation for file $file (analize directory already exists)"
-                  } else {
-                     cl_throughput_plot_test_run data $nec $ngc $elem "$cl_throughput_prot_output_dir/$file_root_name"
-                  }
+               if { $max_ngc < $ngc } {
+                  set max_ngc $ngc
+               } 
+               if { $max_nec < $nec } {
+                  set max_nec $nec
                }
             }
          }
+
+         if { $do_report == 0 } {
+            puts $CHECK_OUTPUT "skipping chart creation for file $file (analize directory already exists)"
+         } else {
+            cl_throughput_plot_test_run data $max_nec $max_ngc $elem "$cl_throughput_prot_output_dir/$file_root_name"
+         }
+
+
          puts $CHECK_OUTPUT "\n=== results of >$elem< test run ==="
          puts $CHECK_OUTPUT "avg. received gdi requests \[1/s\]: [ expr ( $rcv_sum($elem) / $test_runs ) ]"
          puts $CHECK_OUTPUT "avg. sent gdi request      \[1/s\]: [ expr ( $snd_sum($elem) / $test_runs ) ]"
@@ -594,7 +608,6 @@ proc cl_throughput_analize {} {
       cl_throughput_plot_test_history history $history_index "remote" $cl_throughput_prot_output_dir
    }
 
-   wait_for_enter
    set_error 0 "ok"
 }
 
@@ -626,12 +639,26 @@ proc cl_throughput_run  {} {
       "100" {
          set vqmaster_interval 60
          set data(ne_start) 1
-         set data(ne_end) 5
-         set data(ne_step) 2
+         set data(ne_end) [ expr ( 5 / $nr_of_remote_hosts ) ]
+         if { $data(ne_end) < 1 } {
+            set data(ne_end) 1
+         }
+
+         set data(ne_step) [ expr ( $data(ne_end) / 5 ) ] 
+         if { $data(ne_step) < 1 } {
+            set data(ne_step) 1
+         }
+
          set data(ng_start) 1
-         set data(ng_step) 2 
-         set data(ng_end) 21
-         break
+         set data(ng_end) [ expr ( 20 / $nr_of_remote_hosts ) ]
+         if { $data(ng_end) < 1 } {
+            set data(ng_end) 1
+         }
+
+         set data(ng_step) [ expr ( $data(ng_end) / 5 ) ] 
+         if { $data(ng_step) < 1 } {
+            set data(ng_step) 1
+         }
       }
       default {
          set vqmaster_interval 30
@@ -649,12 +676,15 @@ proc cl_throughput_run  {} {
       puts $CHECK_OUTPUT $host
    }
 
-   puts $CHECK_OUTPUT "$data(ne_start) $data(ng_start) $data(ne_end) $data(ng_end)"
+   puts $CHECK_OUTPUT "$data(ne_start) $data(ne_step) $data(ne_end) | $data(ng_start) $data(ng_step) $data(ng_end)"
 
    for { set nr_event_clients $data(ne_start) } { $nr_event_clients <= $data(ne_end) } { incr nr_event_clients $data(ne_step)  } {
       for { set nr_gdi_clients $data(ng_start) } { $nr_gdi_clients <= $data(ng_end) } { incr nr_gdi_clients $data(ng_step) } {
             
          puts $CHECK_OUTPUT "\nstarting measurement of local host \"$vqmaster_host\" ..."
+         set up_arch [resolve_build_arch $vqmaster_host]
+         set vevc_binary       $ts_config(source_dir)/$up_arch/test_virtual_event_client
+         set vgdi_binary       $ts_config(source_dir)/$up_arch/test_virtual_gdi_client
          #first check local host
          set vevc_args "$vqmaster_debug $vqmaster_port $vqmaster_host no_output"
          cl_throughput_start_clients $vqmaster_host $nr_event_clients $user $vevc_binary vevc_args
@@ -665,7 +695,8 @@ proc cl_throughput_run  {} {
          # give clients time to startup
          set vqmaster_args     "$vqmaster_debug $vqmaster_port $vqmaster_interval"
          puts $CHECK_OUTPUT "running $vqmaster_binary $vqmaster_args"
-         set result [start_remote_prog $vqmaster_host $user $vqmaster_binary $vqmaster_args ]
+         set result [start_remote_prog $vqmaster_host $user $vqmaster_binary $vqmaster_args prg_exit_state 120 ]
+         puts $CHECK_OUTPUT $result
          cl_throughput_parse_result "local" $nr_event_clients $nr_gdi_clients result data
          set data(test_host) "$vqmaster_host"
     
@@ -686,7 +717,7 @@ proc cl_throughput_run  {} {
          # give clients time to startup
          set vqmaster_args     "$vqmaster_debug $vqmaster_port $vqmaster_interval"
          puts $CHECK_OUTPUT "running $vqmaster_binary $vqmaster_args"
-         set result [start_remote_prog $vqmaster_host $user $vqmaster_binary $vqmaster_args ]
+         set result [start_remote_prog $vqmaster_host $user $vqmaster_binary $vqmaster_args prg_exit_state 120 ]
          cl_throughput_parse_result "remote" $nr_event_clients $nr_gdi_clients result data
          set data(test_hostlist) "$host_list"
       }  
@@ -707,7 +738,7 @@ proc cl_throughput_run  {} {
 proc cl_throughput_cleanup {} {
    global ts_config 
 
-   startup_qmaster
+   startup_core_system
    set_error 0 "ok"
 }
 

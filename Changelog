@@ -1,6 +1,8 @@
-SG-2004-10-22-0: Bugfix:   - fixed SG-2004-10-21-1
-                 Changed:  scheduler
-                 Review:   JG
+CR-2004-10-22-0: Testsuite: - some fixes for new commlib_throughput test
+
+SG-2004-10-22-0: Bugfix:    - fixed SG-2004-10-21-1
+                 Changed:   scheduler
+                 Review:    JG
 
 AH-2004-10-22-0: Doc:       Checkpoint README refers to wrong script
                             queue_conf(5) incomplete for owner_list description

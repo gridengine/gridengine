@@ -64,6 +64,7 @@
 #include "sge_subordinate.h"
 #include "sge_parse_num_par.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_calendar_qmaster.h"
 
 #include "msg_qmaster.h"
 
@@ -76,6 +77,9 @@ typedef struct {
    bool set;
    const char *success_msg;
 } change_state_t;
+
+static bool
+qinstance_change_state_on_calender_(lListElem *qi_elem, u_long32 cal_order, lList **state_change_list);
 
 bool
 qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
@@ -702,55 +706,177 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
    return ret;
 }
 
-bool
-qinstance_change_state_on_calendar(lListElem *this_elem, 
+
+/****** sge_qinstance_qmaster/qinstance_change_state_on_calendar() *************
+*  NAME
+*     qinstance_change_state_on_calendar() --- changes the state of a given qi (wraper)
+*
+*  SYNOPSIS
+*     bool qinstance_change_state_on_calendar(lListElem *this_elem, const 
+*     lListElem *calendar) 
+*
+*  FUNCTION
+*     Changes the state of a given qi based on its calendar.
+*
+*  INPUTS
+*     lListElem *this_elem      - quinstance
+*     const lListElem *calendar - calendar
+*
+*  RESULT
+*     bool - state got changed or not
+*
+*  NOTES
+*     MT-NOTE: qinstance_change_state_on_calendar() is MT safe 
+*
+*******************************************************************************/
+bool qinstance_change_state_on_calendar(lListElem *this_elem, 
                                    const lListElem *calendar)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar");
+
    if (this_elem != NULL && calendar != NULL) {
-      time_t time;
-      u_long32 cal_order = calendar_get_current_state_and_end(calendar, &time);
-      bool old_cal_disabled = qinstance_state_is_cal_disabled(this_elem);
-      bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
-      bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE);
-      bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND);
-      bool state_changed = false;
+      lList *state_changes_list = NULL;
+      u_long32 state;
+      time_t when = 0; 
 
-      if (old_cal_disabled != new_cal_disabled) {
-         qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
-         state_changed = true;
-      }
-      if (old_cal_suspended != new_cal_suspended) {
-         const char *name = lGetString(this_elem, QU_qname);
+      state = calender_state_changes(calendar, &state_changes_list, &when, NULL);
 
-         qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
-         if (new_cal_suspended) {
-            if (qinstance_state_is_susp_on_sub(this_elem)) {
-               INFO((SGE_EVENT, MSG_QINSTANCE_NOUSSOS_S, name));
-            } else if (qinstance_state_is_manual_suspended(this_elem)) {
-               INFO((SGE_EVENT, MSG_QINSTANCE_NOUSADM_S, name));
-            } else {
-               sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
-            }
-         } else {
-            if (qinstance_state_is_susp_on_sub(this_elem)) {
-               INFO((SGE_EVENT, MSG_QINSTANCE_NOSSOS_S, name));
-            } else if (qinstance_state_is_manual_suspended(this_elem)) {
-               INFO((SGE_EVENT, MSG_QINSTANCE_NOSADM_S, name));
-            } else {
-               sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
-            }
-         }
-         state_changed = true;
-      }
-      if (state_changed) {
-         qinstance_add_event(this_elem, sgeE_QINSTANCE_MOD);
-         reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
-      }
+      ret = qinstance_change_state_on_calender_(this_elem, state, &state_changes_list);
+
    }
    DEXIT;
    return ret;
+}
+
+/****** sge_qinstance_qmaster/qinstance_change_state_on_calendar_all() *********
+*  NAME
+*     qinstance_change_state_on_calendar_all() -- changes the state of all qis (wraper)
+*
+*  SYNOPSIS
+*     bool qinstance_change_state_on_calendar_all(const char* cal_name, 
+*     u_long32 cal_order, const lList *state_change_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const char* cal_name     - calendar name
+*     u_long32 cal_order       - calendar state (todo)
+*     const lList *state_change_list - state list for the qis
+*
+*  RESULT
+*     bool - true, if it worked
+*
+*  NOTES
+*     MT-NOTE: qinstance_change_state_on_calendar_all() is not MT safe 
+*     Directly access the cluster queue list
+*
+*******************************************************************************/
+bool qinstance_change_state_on_calendar_all(const char* cal_name, 
+                                            u_long32 cal_order, const lList *state_change_list)
+{
+   bool ret = true;
+   lListElem *cqueue;
+
+   DENTER(TOP_LAYER, "qinstance_signal_on_calendar_all");
+
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
+   {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+
+      for_each(qinstance, qinstance_list)
+      {
+         const char *queue_calendar = lGetString(qinstance, QU_calendar);
+
+         if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
+            lList *copy_state_change_list = lCopyList("state list", state_change_list);
+            ret = qinstance_change_state_on_calender_(qinstance, cal_order, &copy_state_change_list);
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sge_qinstance_qmaster/qinstance_change_state_on_calender_() ************
+*  NAME
+*     qinstance_change_state_on_calender_() -- changes qi state based on calendar
+*
+*  SYNOPSIS
+*     static bool qinstance_change_state_on_calender_(lListElem *this_elem, 
+*     u_long32 cal_order, lList **state_change_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lListElem *this_elem     - qi
+*     u_long32 cal_order       - next state (order)
+*     lList **state_change_list - qi state list
+*
+*  RESULT
+*     static bool - true, if it worked
+*
+*  NOTES
+*     MT-NOTE: qinstance_change_state_on_calender_() is MT safe 
+*
+*******************************************************************************/
+static bool qinstance_change_state_on_calender_(lListElem *this_elem, 
+                                                u_long32 cal_order, lList **state_change_list) 
+{
+   bool ret = true;
+   bool old_cal_disabled = qinstance_state_is_cal_disabled(this_elem);
+   bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
+   bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE);
+   bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND);
+   bool state_changed = false;
+
+   DENTER(TOP_LAYER, "qinstance_signal_on_calendar_");
+
+   lSetList(this_elem, QU_state_changes, *state_change_list);
+   *state_change_list = NULL;
+
+   if (old_cal_disabled != new_cal_disabled) {
+      qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
+      state_changed = true;
+   }
+   
+   if (old_cal_suspended != new_cal_suspended) {
+      const char *name = lGetString(this_elem, QU_full_name);
+
+      qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
+      if (new_cal_suspended) {
+         if (qinstance_state_is_susp_on_sub(this_elem)) {
+            INFO((SGE_EVENT, MSG_QINSTANCE_NOUSSOS_S, name));
+         } else if (qinstance_state_is_manual_suspended(this_elem)) {
+            INFO((SGE_EVENT, MSG_QINSTANCE_NOUSADM_S, name));
+         } else {
+            sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
+         }
+      } else {
+         if (qinstance_state_is_susp_on_sub(this_elem)) {
+            INFO((SGE_EVENT, MSG_QINSTANCE_NOSSOS_S, name));
+         } else if (qinstance_state_is_manual_suspended(this_elem)) {
+            INFO((SGE_EVENT, MSG_QINSTANCE_NOSADM_S, name));
+         } else {
+            sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
+         }
+      }
+      state_changed = true;
+   }
+
+   if (state_changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+   qinstance_add_event(this_elem, sgeE_QINSTANCE_MOD);
+   
+
+   DEXIT;
+   return ret;
+
 }
 

@@ -456,10 +456,7 @@ DTRACE;
          QU_consumable_config_list,
          QU_projects,
          QU_xprojects,
-#if 0
-         QU_fshare,
-         QU_oticket,
-#endif
+
          QU_resource_utilization,
          QU_tagged4schedule,
          QU_available_at,
@@ -474,6 +471,9 @@ DTRACE;
          QU_host_seq_no,
          QU_pe_list,
          QU_ckpt_list,
+
+         QU_state_changes,
+         
          NoName
       };
    

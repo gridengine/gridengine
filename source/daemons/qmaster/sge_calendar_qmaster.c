@@ -52,6 +52,7 @@
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
 #include "sge_lock.h"
+#include "sge_qinstance_state.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -237,34 +238,24 @@ void sge_calendar_event_handler(te_event_t anEvent)
 int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object)
 {
    const char *cal_name = lGetString(cep, CAL_name);
-   lListElem *cqueue = NULL;
-   time_t when = 0;
-
+   lList *state_changes_list = NULL;
+   u_long32 state;
+   time_t when = 0; 
    DENTER(TOP_LAYER, "calendar_update_queue_states");
 
-   sge_add_event( 0, old_cep ? sgeE_CALENDAR_MOD : sgeE_CALENDAR_ADD, 
-                 0, 0, cal_name, NULL, NULL, cep);
-   lListElem_clear_changed_info(cep);
-
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
-   {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-
-      for_each(qinstance, qinstance_list)
-      {
-         const char *queue_calendar = lGetString(qinstance, QU_calendar);
-
-         if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
-            qinstance_change_state_on_calendar(qinstance, cep);
-         }
-      }
+   if (lListElem_is_changed(cep)) {
+      sge_add_event( 0, old_cep ? sgeE_CALENDAR_MOD : sgeE_CALENDAR_ADD, 
+                    0, 0, cal_name, NULL, NULL, cep);
+      lListElem_clear_changed_info(cep);
    }
 
-   calendar_get_current_state_and_end(cep, &when);
+   state = calender_state_changes(cep, &state_changes_list, &when, NULL);
+   
+   qinstance_change_state_on_calendar_all(cal_name, state, state_changes_list);
 
-   if (when)
-   {
+   state_changes_list = lFreeList(state_changes_list);
+
+   if (when) {
       te_event_t ev;
 
       ev = te_new_event(when, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, cal_name);

@@ -253,6 +253,8 @@ extern "C" {
       {QRL_LOWERBOUND, QRL_S, QRL_N},           /* queue consumables load alarm structure */
 
       {CCT_LOWERBOUND, CCTS, CCTN},
+
+      {CQU_LOWERBOUND, CQUS, CQUN},             /* queue state changes structure */
       
       {0, 0, NULL}
    };

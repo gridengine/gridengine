@@ -123,6 +123,31 @@ NAMEEND
 
 #define TMRS sizeof(TMRN)/sizeof(char*)
 
+
+/**
+ *
+ * this structure is needed to store the state changes of a queue based on its
+ * calendar^
+ *
+ */
+enum {
+   CQU_state = CQU_LOWERBOUND,
+   CQU_till
+};
+
+LISTDEF(CQU_Type)
+   SGE_ULONG(CQU_state, CULL_DEFAULT)        /* current state*/
+   SGE_ULONG(CQU_till, CULL_DEFAULT)          /* point in time for the next state change*/
+LISTEND 
+
+NAMEDEF(CQUN)
+   NAME("CQU_state")
+   NAME("CQU_till")
+NAMEEND
+
+#define CQUS sizeof(CQUN)/sizeof(char*)
+
+
 /* 
  * this data structure is used for 
  *    yeardays 

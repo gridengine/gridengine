@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   if((copy = lUndumpElem(fd, TEST_Type)) == NULL) {
+   if((copy = lUndumpElemFp(fd, TEST_Type)) == NULL) {
       fclose(fd);
       printf("error undumping element\n");
       return EXIT_FAILURE;

@@ -130,7 +130,7 @@ bdb_create(const char *server, const char *path)
 
    info->next_clear = 0;
    info->next_checkpoint = 0;
-   info->recover = true;
+   info->recover = false;
 
    return info;
 }

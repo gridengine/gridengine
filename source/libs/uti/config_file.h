@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
+
 extern char err_msg[]; /* JG: TODO: thats potentially very dangerous! */
 void set_error(const char *err_str);
 

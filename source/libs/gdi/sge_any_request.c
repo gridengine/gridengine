@@ -445,7 +445,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
    if (i != CL_RETVAL_OK) {
       if (i != CL_RETVAL_NO_MESSAGE) {
          /* This if for errors */
-         INFO((SGE_EVENT, MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS , 
+         DEBUG((SGE_EVENT, MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS , 
                (commproc[0] ? commproc : "any"), 
                (unsigned int) usid, 
                (host[0] ? host : "any"),

@@ -172,8 +172,11 @@
 #define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57300,         _("database query and maintenance\n"))
 #define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57301,         _("following are the valid commands:\n"))
 #define MSG_DBSTAT_LIST            _MESSAGE(57302,         _("list [object type]  list all objects [matching object type]\n"))
-#define MSG_DBSTAT_DUMP            _MESSAGE(57303,         _("dump key            dump the objects matching key\n"))
-#define MSG_DBSTAT_DELETE          _MESSAGE(57304,         _("delete key          delete the objects matching key\n"))
+#define MSG_DBSTAT_DUMP            _MESSAGE(57303,         _("dump key            dump the object matching key\n"))
+#define MSG_DBSTAT_LOAD            _MESSAGE(57304,         _("load key file       load an object from file and store it using key\n"))
+#define MSG_DBSTAT_DELETE          _MESSAGE(57305,         _("delete key          delete the object matching key\n"))
+#define MSG_DBSTAT_ERRORUNDUMPING_S _MESSAGE(57306,         _("error reading object from file "SFN"\n"))
+#define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57306,         _("invalid key "SFQ"\n"))
 
 
 #endif /* __MSG_UTILBIN_H */

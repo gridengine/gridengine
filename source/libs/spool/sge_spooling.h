@@ -168,6 +168,9 @@ typedef lListElem *
 (*spooling_create_context_func)(lList **answer_list, const char *args);
 
 typedef bool
+(*spooling_option_func)(lList **answer_list, lListElem *rule, 
+                        const char *option); 
+typedef bool
 (*spooling_startup_func)(lList **answer_list, const lListElem *rule, 
                          bool check); 
 typedef bool
@@ -240,6 +243,7 @@ spool_context_search_rule(const lListElem *context, const char *name);
 lListElem *
 spool_context_create_rule(lList **answer_list, lListElem *context, 
                           const char *name, const char *url,
+                          spooling_option_func option_func, 
                           spooling_startup_func startup_func, 
                           spooling_shutdown_func shutdown_func, 
                           spooling_maintenance_func maintenance_func,
@@ -266,6 +270,9 @@ spool_type_search_default_rule(const lListElem *spool_type);
 lListElem 
 *spool_type_add_rule(lList **answer_list, lListElem *spool_type, 
                      const lListElem *rule, lBool is_default);
+
+bool
+spool_set_option(lList **answer_list, lListElem *context, const char *option);
 
 /* startup and shutdown */
 bool 

@@ -36,9 +36,11 @@
 
 #include "rmon/sgermon.h"
 
+#include "uti/config_file.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"
 #include "uti/sge_profiling.h"
+#include "uti/sge_string.h"
 #include "uti/sge_unistd.h"
 
 #include "sgeobj/sge_answer.h"
@@ -66,6 +68,10 @@ const char *get_spooling_method(void)
 {
    return spooling_method;
 }
+
+static bool
+spool_berkeleydb_option_func(lList **answer_list, lListElem *rule, 
+                             const char *option);
 
 /****** spool/berkeleydb/spool_berkeleydb_create_context() ********************
 *  NAME
@@ -119,6 +125,7 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
       rule = spool_context_create_rule(answer_list, context, 
                                        "default rule", 
                                        args,
+                                       spool_berkeleydb_option_func,
                                        spool_berkeleydb_default_startup_func,
                                        spool_berkeleydb_default_shutdown_func,
                                        spool_berkeleydb_default_maintenance_func,
@@ -1097,3 +1104,40 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
    return ret;
 }
 
+bool
+spool_berkeleydb_option_func(lList **answer_list, lListElem *rule, 
+                             const char *option) 
+{
+   bool ret = true;
+   const char *delimiter = ",; ";
+   bdb_info info;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_option_func");
+
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
+
+   if (info != NULL && option != NULL && strlen(option) != 0) {
+      struct saved_vars_s *context = NULL;
+      const char *token;
+      bool recover = false;
+
+      for (token = sge_strtok_r(option, delimiter, &context); token != NULL; 
+           token = sge_strtok_r(NULL, delimiter, &context)) {
+         if (parse_bool_param(token, "RECOVER", &recover)) {
+            bdb_set_recover(info, recover);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_INFO, 
+                                    MSG_BERKELEY_SETOPTIONTO_SS,
+                                    "RECOVER",
+                                    recover ? TRUE_STR : FALSE_STR);
+            
+            continue;
+         }
+      }
+
+      sge_free_saved_vars(context);
+   }
+
+   DEXIT;
+   return ret;
+}

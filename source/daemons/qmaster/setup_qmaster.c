@@ -743,6 +743,7 @@ static int setup_qmaster(void)
       DEXIT;
       return -1;
    } else {
+      answer_list_output(&answer_list);
       spooling_context = spool_get_default_context();
    }
 

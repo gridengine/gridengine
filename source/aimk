@@ -1676,6 +1676,38 @@ if ( "$CORE" == 1 ) then
       touch 12121212 libdrmaa.so example test_drmaa
    endif
 
+   # spooledit is only available if berkeleydb is available.
+   # if we build with spooling method classic, touch spooledit
+   if ($SPOOLING_METHOD == classic) then
+      touch libspoolb.a spooledit.o
+      sleep 1
+      touch spooledit
+   endif
+
+   # we must map the symbolic spooling lib names the target filenames,
+   # otherwise make will always relink qmaster, spoolinit ...
+   set new_deps = ""
+   foreach dep ( $SPOOLING_DEPS )
+      switch ( $dep )
+         case spoolloaderlib:
+            set new_deps = "$new_deps libspoolloader$LIBEXT"
+            breaksw
+         case spooldlib:
+            set new_deps = "$new_deps libspoold$LIBEXT"
+            breaksw
+         case spoolblib:
+            set new_deps = "$new_deps libspoolb$SPOOLLIBEXT"
+            breaksw
+         case spoolclib:
+            set new_deps = "$new_deps libspoolc$SPOOLLIBEXT"
+            breaksw
+         case spoollib:
+            set new_deps = "$new_deps libspool$LIBEXT"
+            breaksw
+      endsw
+   end
+   set SPOOLING_DEPS = "$new_deps"
+
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \

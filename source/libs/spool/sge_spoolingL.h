@@ -127,6 +127,10 @@ NAMEEND
 *     SGE_STRING(SPR_url, CULL_DEFAULT)
 *        An url, e.g. a spool directory, a database url etc.
 *
+*     SGE_REF(SPR_option_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        function pointer to a function to set any database specific options, 
+*        e.g. whether to do database recovery at startup or not.
+*
 *     SGE_REF(SPR_startup_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        function pointer to a startup function, 
 *        e.g. establishing a connection to a database.        
@@ -196,6 +200,7 @@ NAMEEND
 enum {
    SPR_name = SPR_LOWERBOUND,        /* name of the rule */
    SPR_url,                          /* an url, e.g. base dir, database url */
+   SPR_option_func,                 /* function pointer: option, e.g. set db specific parameters */
    SPR_startup_func,                 /* function pointer: startup, e.g. connect to database */
    SPR_shutdown_func,                /* function pointer: shutdown, e.g. disconnect from db */
    SPR_maintenance_func,             /* function pointer: maintenance, e.g. backup of db */
@@ -213,6 +218,7 @@ enum {
 LISTDEF(SPR_Type)
    SGE_STRING(SPR_name, CULL_HASH | CULL_UNIQUE)
    SGE_STRING(SPR_url, CULL_DEFAULT)
+   SGE_REF(SPR_option_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_startup_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_shutdown_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_maintenance_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
@@ -230,6 +236,7 @@ LISTEND
 NAMEDEF(SPRN)
    NAME("SPR_name")
    NAME("SPR_url")
+   NAME("SPR_option_func")
    NAME("SPR_startup_func")
    NAME("SPR_shutdown_func")
    NAME("SPR_maintenance_func")

@@ -226,6 +226,7 @@ spool_postgres_create_context(lList **answer_list, const char *args)
       rule = spool_context_create_rule(answer_list, context, 
                                        "default rule", 
                                        args,
+                                       NULL,
                                        spool_postgres_default_startup_func,
                                        spool_postgres_default_shutdown_func,
                                        spool_postgres_default_maintenance_func,

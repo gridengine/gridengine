@@ -69,6 +69,9 @@ sge_initialize_persistence(lList **answer_list)
       /* error message created in spool_create_dynamic_context */
       ret = false;
    } else {
+      /* set options: enable recovery at startup (bdb) */
+      spool_set_option(answer_list, spooling_context, "recover=true");
+
       /* startup spooling context */
       if (!spool_startup_context(answer_list, spooling_context, true)) {
          /* error message created in spool_startup_context */

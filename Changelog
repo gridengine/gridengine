@@ -1,3 +1,22 @@
+JG-2004-05-07-0: Bugfix:    Calling dbstat while qmaster was running caused
+                            a spooling error in qmaster.
+                            Fixed dependencies to spooling libs (qmaster, 
+                            spoolinint and spooldefaults were linked with every
+                            aimk call.
+                 Enhancem.: Allow dbstat to write objects - renamed it to 
+                            spooledit. Change dump format from lWriteElem to 
+                            lDumpElem.
+                            Install spooledit to utilbin.
+                 Issue:     762
+                 Changed:   qmaster, spooledit (dbstat), libspool*
+                 Review:    AD
+
+CR-2004-05-06-0: Enhancem.: added new test binaries to setup a communication
+                            test: 
+                               test_virtual_event_client, 
+                               test_virtual_gdi_client and
+                               test_virtual_qmaster
+                 
 DT-2004-04-06-0: Bugfix:    o Fixed bad error messages for qconf -mc
                             o Fixed return code for qsub when max jobs reached
                             o Improved qconf error messages
@@ -11,7 +30,7 @@ AA-2004-05-06-0: Bugfix:    qtcsh shows strange error messages on AIX 43/51
                  Changed:   qtcsh
                  Review:    CR
 
-JG-2004-04-05-1: Bugfix:    Fixed parsing of report_variables in qconf. It now 
+JG-2004-05-05-1: Bugfix:    Fixed parsing of report_variables in qconf. It now 
                             uses a comma separated list of variables. Adjusted 
                             man page accordingly.
                             Check if entries listed as report_variables exist 

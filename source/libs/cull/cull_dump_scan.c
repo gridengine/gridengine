@@ -476,7 +476,6 @@ int lDumpList(FILE *fp, const lList *lp, int indent)
    return (ret == EOF) ? -1 : 0;
 
 }
-
 /****** cull/dump_scan/lUndumpElem() ******************************************
 *  NAME
 *     lUndumpElem() -- Read element from FILE stream 
@@ -494,7 +493,42 @@ int lDumpList(FILE *fp, const lList *lp, int indent)
 *  RESULT
 *     lListElem* - Read element 
 ******************************************************************************/
-lListElem *lUndumpElem(FILE *fp, const lDescr *dp) 
+lListElem *lUndumpElem(const char *fname, const lDescr *dp) 
+{
+   lListElem *ep = NULL;
+   FILE *fp;
+
+   DENTER(CULL_LAYER, "lUndumpElemFp");
+
+   fp = fopen(fname, "r");
+   if (fp == NULL) {
+      LERROR(LEOPEN);
+   } else {
+      ep = lUndumpElemFp(fp, dp);
+   }
+
+   DEXIT;
+   return ep;
+}
+
+/****** cull/dump_scan/lUndumpElemFp() ******************************************
+*  NAME
+*     lUndumpElemFp() -- Read element from FILE stream 
+*
+*  SYNOPSIS
+*     lListElem* lUndumpElemFp(FILE *fp, const lDescr *dp) 
+*
+*  FUNCTION
+*     Read element from FILE stream 
+*
+*  INPUTS
+*     FILE *fp         - file stream 
+*     const lDescr *dp - descriptor 
+*
+*  RESULT
+*     lListElem* - Read element 
+******************************************************************************/
+lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp) 
 {
    lListElem *ep;
    int n, i;
@@ -502,7 +536,7 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
    char *str;
    u_long32 dummy;
 
-   DENTER(CULL_LAYER, "lUndumpElem");
+   DENTER(CULL_LAYER, "lUndumpElemFp");
 
    if (!fp) {
       LERROR(LEFILENULL);
@@ -582,7 +616,7 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
          break;
       default:
          lFreeElem(ep);
-         unknownType("lUndumpElem");
+         unknownType("lUndumpElemFp");
       }
    }
 
@@ -660,7 +694,7 @@ lListElem *lUndumpObject(FILE *fp)
       return NULL;
    }
 
-   if ((ep = lUndumpElem(fp, dp)) == NULL) {
+   if ((ep = lUndumpElemFp(fp, dp)) == NULL) {
       LERROR(LEUNDUMPELEM);
       free(dp);
       DEXIT;
@@ -811,7 +845,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    /* LOOP OVER THE LIST ELEMENTS */
    for (k = 0; k < nelem; k++) {
-      if (!(fep = lUndumpElem(fp, fdp))) {
+      if (!(fep = lUndumpElemFp(fp, fdp))) {
          LERROR(LEUNDUMPELEM);
          lFreeList(lp);
          free(found);

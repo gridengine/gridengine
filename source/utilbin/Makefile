@@ -38,14 +38,14 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot infotext spooldefaults spoolinit \
+                 testsuidroot infotext spooldefaults spooledit spoolinit \
                  tst_pthread_signals fstype qping
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
-               spooldefaults.c spoolinit.c \
+               spooldefaults.c spooledit.c spoolinit.c \
                tst_pthread_signals.c fstype.c qping.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
@@ -230,8 +230,8 @@ tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/tst_pthread_signals.c
 
 #---------------------------------------------------------------------
-dbstat: dbstat.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(CC) -o $@ dbstat.o version.o sge_mt_init.o $(LFLAGS) -lspool -lspoolloader -lspoolb -lspoold -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+spooledit: spooledit.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+		$(CC) -o $@ spooledit.o version.o sge_mt_init.o $(LFLAGS) -lspoolb $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon -ldb $(DLLIB) $(SLIBS) $(LIBS)
 
-dbstat.o: $(UTILBIN_DIR)/dbstat.c
-		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/dbstat.c
+spooledit.o: $(UTILBIN_DIR)/spooledit.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooledit.c

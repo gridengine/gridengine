@@ -59,6 +59,7 @@
 #define MSG_SPOOL_MAINTENANCEOFRULEFAILED_SS  _MESSAGE(59022,_("maintenance function of rule "SFQ" in context "SFQ" failed\n"))
 #define MSG_SPOOL_TRIGGEROFRULEFAILED_SS  _MESSAGE(59023,_("trigger function of rule "SFQ" in context "SFQ" failed\n"))
 #define MSG_SPOOL_TRANSACTIONOFRULEFAILED_SS  _MESSAGE(59024,_("transaction function of rule "SFQ" in context "SFQ" failed\n"))
+#define MSG_SPOOL_SETOPTIONOFRULEFAILED_SS  _MESSAGE(59025,_("set_option function of rule "SFQ" in context "SFQ" failed\n"))
 /* 
  * libs/spool/sge_spooling_utilities.c
  */

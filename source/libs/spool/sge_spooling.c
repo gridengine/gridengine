@@ -148,6 +148,42 @@ spool_free_context(lList **answer_list, lListElem *context)
    return context;
 }
 
+bool
+spool_set_option(lList **answer_list, lListElem *context, const char *option)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_set_option");
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
+  
+   if (context == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S, 
+                              SGE_FUNC);
+   } else {
+      lListElem *rule;
+
+      for_each (rule, lGetList(context, SPC_rules)) {
+         spooling_option_func func = (spooling_option_func)
+                                       lGetRef(rule, SPR_option_func);
+         if (func != NULL) {
+            if (!func(answer_list, rule, option)) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_SPOOL_SETOPTIONOFRULEFAILED_SS,
+                                       lGetString(rule, SPR_name), 
+                                       lGetString(context, SPC_name));
+               ret = false;
+               break;
+            }
+         }
+      }
+   }
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   DEXIT;
+   return ret;
+}
 
 /****** spool/spool_startup_context() ***********************************
 *  NAME
@@ -592,6 +628,7 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *     lListElem* 
 *     spool_context_create_rule(lList **answer_list, lListElem *context, 
 *                               const char *name, const char *url, 
+*                               spooling_option_func option_func, 
 *                               spooling_startup_func startup_func, 
 *                               spooling_shutdown_func shutdown_func,
 *                               spooling_maintenance_func maintenance_func,
@@ -609,6 +646,7 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *     lListElem *context                   - the context to contain the new rule
 *     const char *name                     - the name of the rule
 *     const char *url                      - the name of the url
+*     spooling_option_func option_func     - function to set options for the rule
 *     spooling_startup_func startup_func   - startup function for the rule
 *     spooling_shutdown_func shutdown_func - shutdown function
 *     spooling_maintenance_func shutdown_func - maintenance function 
@@ -634,6 +672,7 @@ spool_context_search_rule(const lListElem *context, const char *name)
 lListElem *
 spool_context_create_rule(lList **answer_list, lListElem *context, 
                           const char *name, const char *url,
+                          spooling_option_func option_func, 
                           spooling_startup_func startup_func, 
                           spooling_shutdown_func shutdown_func, 
                           spooling_maintenance_func maintenance_func, 
@@ -669,6 +708,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
       ep = lCreateElem(SPR_Type);
       lSetString(ep, SPR_name, name);
       lSetString(ep, SPR_url, url);
+      lSetRef(ep, SPR_option_func, (void *)option_func);
       lSetRef(ep, SPR_startup_func, (void *)startup_func);
       lSetRef(ep, SPR_shutdown_func, (void *)shutdown_func);
       lSetRef(ep, SPR_maintenance_func, (void *)maintenance_func);

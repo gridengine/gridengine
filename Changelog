@@ -1,3 +1,9 @@
+CR-2004-07-07-0: Bugfix:    qping doesn't support host_aliases file
+                 Changed:   qping binary
+                 Issue:     1124
+                 Bugtraq:   5071539
+                 Review:    AA
+       
 MD-2004-07-08-0: Bugfix:    Qmaster requires a local conf in order to start
                  Issue:     1104 
                  Bugtraq:   5071987

@@ -351,6 +351,8 @@ int answer_error
          if (reprioritization_enabled) {
             lListElem *job, *jatask, *petask;
 
+            sge_switch2start_user();
+
             for_each(job, Master_Job_List) {
                lListElem *master_queue;
 
@@ -389,6 +391,7 @@ int answer_error
                   }
                }
             }
+            sge_switch2admin_user();
          } else {
             DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
          }

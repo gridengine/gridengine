@@ -44,6 +44,7 @@ int verydummypdc;
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sge_os.h"
+#include "sge_log.h"
 
 int main(int argc,char *argv[])
 {
@@ -153,6 +154,7 @@ int getpagesize(void);
 #include "cull.h"
 #include "ptf.h"
 #include "sge_language.h"
+#include "sgermon.h"
 
 typedef struct {
    int job_collection_interval;  /* max job data collection interval */
@@ -1355,8 +1357,10 @@ psRetrieveOSJobData(void)
    static int clk_tck;
 #endif
 
+   DENTER(TOP_LAYER, "psRetrieveOSJobData");
 
    if (time_stamp <= next_time) {
+      DEXIT;
       return 0;
    }
    next_time = time_stamp + ps_config.job_collection_interval;
@@ -1444,11 +1448,15 @@ psRetrieveOSJobData(void)
    if (clk_tck == 0)
       clk_tck = sysconf(_SC_CLK_TCK);
 
-   if (read_kernel_table(SESS, (void **)&st, &st_size, &nsess)<0)
+   if (read_kernel_table(SESS, (void **)&st, &st_size, &nsess)<0) {
+      DEXIT;
       return -1;
+   }
 
-   if (read_kernel_table(PROCTAB, (void **)&pt, &pt_size, &nproc)<0)
+   if (read_kernel_table(PROCTAB, (void **)&pt, &pt_size, &nproc)<0) {
+      DEXIT;
       return -1;
+   }
 
    /* scan session table */
 
@@ -1514,6 +1522,7 @@ psRetrieveOSJobData(void)
          proc_elem = (proc_elem_t *)malloc(sizeof(proc_elem_t));
          if (!proc_elem) {
             sprintf(ps_errstr, MSG_MEMORY_MALLOCFAILURE );
+            DEXIT;
             return -1;
          }
          memset(proc_elem, 0, sizeof(proc_elem_t));
@@ -1947,7 +1956,6 @@ psRetrieveOSJobData(void)
                job->jd_vmem += proc_elem->vmem;    
                job->jd_rss += proc_elem->rss;    
                job->jd_mem += (proc_elem->mem/1024.0);    
-/* fprintf(stderr, "pid %d: mem " UINT64_FMT" vmem " UINT64_FMT"\n", proc->pd_pid, proc_elem->mem, proc_elem->vmem); */
 #if defined(ALPHA)
                job->jd_chars += proc_elem->delta_chars;     
 #endif
@@ -1958,9 +1966,10 @@ psRetrieveOSJobData(void)
                job->jd_proccount--;
               
                /* remove process entry from list */
-#if 0
-               fprintf(stderr, "removing process with pid %d from job with sid %d\n",
-                  proc->pd_pid, job->jd_jid);
+#ifdef MONITOR_PDC
+               INFO((SGE_EVENT, "lost process "pid_t_fmt" for job "pid_t_fmt" (utime
+= %f stime = %f)\n", 
+                     proc->pd_pid, job->jd_jid, proc->pd_utime, proc->pd_stime));
 #endif
                LNK_DELETE(currp);
                free(proc_elem);
@@ -2036,6 +2045,7 @@ psRetrieveOSJobData(void)
       pnext_time = time_stamp + ps_config.prc_collection_interval;
 
    sprintf(ps_errstr, MSG_SGE_PSRETRIEVEOSJOBDATASUCCESSFULLYCOMPLETED );
+   DEXIT;
    return 0;
 }
 

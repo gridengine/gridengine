@@ -61,6 +61,11 @@
          - if the sort order of the host_list is changed, 
            sort_hostlist is set to 1
 
+      orders_list
+         - needed to warn on jobs that were dispatched into 
+           queues and get suspended on subordinate in the very 
+           same interval
+
    The other objects get not changed and are needed to present
    and interprete the debitations on the upper objects:
 

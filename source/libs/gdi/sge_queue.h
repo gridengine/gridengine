@@ -58,7 +58,9 @@ void queue_list_clear_tags(lList *queue_list);
 int queue_update_master_list(sge_event_type type, sge_event_action action,
                              lListElem *event, void *clientdata);
 
-int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
+int queue_reference_list_validate(lList **alpp, lList *qr_list, 
+                                  const char *attr_name, const char *obj_descr, 
+                                  const char *obj_name);  
 
 void queue_list_set_unknown_state_to(lList *queue_list, 
                                      const char *hostname,
@@ -67,7 +69,8 @@ void queue_list_set_unknown_state_to(lList *queue_list,
 
 void sge_add_queue_event(u_long32 type, lListElem *qep);
 
-int sge_add_queue(lListElem *qep);
+int queue_list_add_queue(lListElem *queue);
 
-int sge_owner(const char *cp, const lList *lp);
+int queue_check_owner(const lListElem *queue, const char *user_name);
+
 #endif /* __SGE_QUEUE_H */

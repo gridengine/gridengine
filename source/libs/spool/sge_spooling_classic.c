@@ -82,13 +82,67 @@
 
 #include "sge_spooling_classic.h"
 
-/* We expect the two directories to exist:
- * common_dir
- * spool_dir
- * cwd should be spool_dir, if it is not, a warning is output and
- * the directory is changed.
- */
+/****** spool/classic/--Classic-Spooling ***************************************
+*
+*  NAME
+*     Classic Spooling -- the old Grid Engine spooling code
+*
+*  FUNCTION
+*     The classic spooling instantiation of the spooling framework
+*     provides access to the old Grid Engine spooling code through
+*     the spooling framework.
+*
+*     It uses two spool directories:
+*        - the common directory (usually $SGE_ROOT/$SGE_CELL/common) containing
+*          the global and local configurations and the scheduler configuration
+*        - the spool directory (usually $SGE_ROOT/$SGE_CELL/spool/qmaster or
+*          a local spool directory configured in the global configuration) 
+*          contains all other data.
+*     Other spooling clients than qmaster can use any directories for spooling
+*     data through the classic spooling context.
+*
+*     The spool directory should be the current working directory, if it is not,
+*     the startup function of the classic spooling changes the current working
+*     directory to the spool directory.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/classic/spool_classic_create_context()
+****************************************************************************
+*/
 
+/****** spool/classic/spool_classic_create_context() ********************
+*  NAME
+*     spool_classic_create_context() -- create a classic spooling context
+*
+*  SYNOPSIS
+*     lListElem* spool_classic_create_context(const char *common_dir, 
+*                                             const char *spool_dir) 
+*
+*  FUNCTION
+*     Create a spooling context for the classic spooling.
+* 
+*     Two rules are created: One for spooling in the common directory, the
+*     other for spooling in the spool directory.
+*
+*     The following object type descriptions are create:
+*        - for SGE_EMT_CONFIG, referencing the rule for the common directory
+*        - for SGE_EMT_SCHEDD_CONF, also referencing the rule for the common
+*          directory
+*        - for SGE_EMT_ALL (default for all object types), referencing the rule
+*          for the spool directory
+*
+*  INPUTS
+*     const char *common_dir - absolute path to the common directory
+*     const char *spool_dir  - absolute path to the spool directory
+*
+*  RESULT
+*     lListElem* - on success, the new spooling context, else NULL
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/classic/--Classic-Spooling
+*******************************************************************************/
 lListElem *spool_classic_create_context(const char *common_dir, 
                                         const char *spool_dir)
 {
@@ -138,6 +192,35 @@ lListElem *spool_classic_create_context(const char *common_dir,
    return context;
 }
 
+/****** spool/classic/spool_classic_default_startup_func() **************
+*  NAME
+*     spool_classic_default_startup_func() -- setup the spool directory
+*
+*  SYNOPSIS
+*     int spool_classic_default_startup_func(const lListElem *rule) 
+*
+*  FUNCTION
+*     Checks the existence of the spool directory.
+*     If the current working directory is not yet the spool direcotry,
+*     changes the current working directory.
+*     If the subdirectories for the different object types do not yet
+*     exist, they are created.
+*
+*  INPUTS
+*     const lListElem *rule - the rule containing data necessary for
+*                             the startup (e.g. path to the spool directory)
+*
+*  RESULT
+*     int - TRUE, if the startup succeeded, else FALSE
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/Classic-Spooling
+*     spool/spool_startup_context()
+*******************************************************************************/
 int spool_classic_default_startup_func(const lListElem *rule)
 {
    char *cwd;
@@ -180,6 +263,33 @@ int spool_classic_default_startup_func(const lListElem *rule)
    return TRUE;
 }
 
+/****** spool/classic/spool_classic_common_startup_func() ***************
+*  NAME
+*     spool_classic_common_startup_func() -- setup the common directory
+*
+*  SYNOPSIS
+*     int spool_classic_common_startup_func(const lListElem *rule) 
+*
+*  FUNCTION
+*     Checks the existence of the common directory.
+*     If the subdirectory for the local configurtations does not yet exist,
+*     it is created.
+*
+*  INPUTS
+*     const lListElem *rule - rule containing data like the path to the common 
+*                             directory
+*
+*  RESULT
+*     int - TRUE, on success, else FALSE
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Classic-Spooling
+*     spool/spool_startup_context()
+*******************************************************************************/
 int spool_classic_common_startup_func(const lListElem *rule)
 {
    const char *url;
@@ -197,11 +307,44 @@ int spool_classic_common_startup_func(const lListElem *rule)
    /* create directory for local configurations */
    sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
    sge_mkdir(sge_dstring_get_string(&local_dir), 0755, TRUE);
+   sge_dstring_free(&local_dir);
 
    DEXIT;
    return TRUE;
 }
 
+/****** spool/classic/spool_classic_default_list_func() *****************
+*  NAME
+*     spool_classic_default_list_func() -- read lists through classic spooling
+*
+*  SYNOPSIS
+*     int spool_classic_default_list_func(const lListElem *type, 
+*                                         const lListElem *rule, 
+*                                         lList **list, 
+*                                         const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Depending on the object type given, calls the appropriate functions
+*     reading the correspondent list of objects using the old spooling
+*     functions.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to be used 
+*     lList **list                    - target list
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     int - TRUE, on success, else FALSE
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Classic-Spooling
+*     spool/spool_read_list()
+*******************************************************************************/
 int spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
                                     lList **list, const sge_event_type event_type)
 {
@@ -300,6 +443,37 @@ int spool_classic_default_list_func(const lListElem *type, const lListElem *rule
    return TRUE;
 }
 
+/****** spool/classic/spool_classic_default_read_func() *****************
+*  NAME
+*     spool_classic_default_read_func() -- read objects through classic spooling
+*
+*  SYNOPSIS
+*     lListElem* spool_classic_default_read_func(const lListElem *type, 
+*                                                const lListElem *rule, 
+*                                                const char *key, 
+*                                                const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Reads an individual object by calling the appropriate classic spooling 
+*     function.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const char *key                 - unique key specifying the object
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     lListElem* - the object, if it could be read, else NULL
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Classic-Spooling
+*     spool/spool_read_object()
+*******************************************************************************/
 lListElem *spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
                                            const char *key, const sge_event_type event_type)
 {
@@ -387,6 +561,38 @@ lListElem *spool_classic_default_read_func(const lListElem *type, const lListEle
    return NULL;
 }
 
+/****** spool/classic/spool_classic_default_write_func() ****************
+*  NAME
+*     spool_classic_default_write_func() -- write objects through classic spooling
+*
+*  SYNOPSIS
+*     int spool_classic_default_write_func(const lListElem *type, 
+*                                          const lListElem *rule, 
+*                                          const lListElem *object, 
+*                                          const char *key, 
+*                                          const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Writes an object through the appropriate classic spooling functions.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const lListElem *object         - object to spool
+*     const char *key                 - unique key
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     int - TRUE on success, else FALSE
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Classic-Spooling
+*     spool/spool_delete_object()
+*******************************************************************************/
 int spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
                                      const lListElem *object, const char *key, 
                                      const sge_event_type event_type)
@@ -487,6 +693,38 @@ int spool_classic_default_write_func(const lListElem *type, const lListElem *rul
    return TRUE;
 }
 
+/****** spool/classic/spool_classic_default_delete_func() ***************
+*  NAME
+*     spool_classic_default_delete_func() -- delete object in classic spooling
+*
+*  SYNOPSIS
+*     int spool_classic_default_delete_func(const lListElem *type, 
+*                                           const lListElem *rule, 
+*                                           const char *key, 
+*                                           const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Deletes an object in the classic spooling.
+*     In most cases, the correspondent spool file is deleted, in some cases
+*     (e.g. jobs), a special remove function is called.
+*
+*  INPUTS
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const char *key                 - unique key 
+*     const sge_event_type event_type - object type
+*
+*  RESULT
+*     int - TRUE on success, else FALSE
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Classic-Spooling
+*     spool/spool_delete_object()
+*******************************************************************************/
 int spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
                                       const char *key, const sge_event_type event_type)
 {

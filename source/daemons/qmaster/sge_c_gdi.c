@@ -947,14 +947,14 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
     /* check for manager permission */
     value = 0;
-    if (sge_locate_manager(user) != NULL) {
+    if (manop_is_manager(user)) {
        value = 1; 
     }   
     lSetUlong(ep, PERM_manager, value);
 
     /* check for operator permission */
     value = 0;
-    if (sge_locate_operator(user) != NULL) {
+    if (manop_is_operator(user)) {
        value = 1; 
     }   
     lSetUlong(ep, PERM_operator, value);
@@ -1195,7 +1195,7 @@ char *user
    case SGE_HOST_GROUP_LIST:
    case SGE_FEATURESET_LIST:
       /* user must be a manager */
-      if (sge_manager(user)) {
+      if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -1205,7 +1205,7 @@ char *user
 
    case SGE_USERSET_LIST:
       /* user must be a operator */
-      if (sge_operator(user)) {
+      if (!manop_is_operator(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEOPERATOR_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
          DEXIT;

@@ -101,7 +101,7 @@ int sub_command
 
    /* ---- PE_queue_list */
    if (lGetPosViaElem(pe, PE_queue_list)>=0) {
-      if (verify_qr_list(alpp, lGetList(pe, PE_queue_list), MSG_OBJ_QLIST,
+      if (queue_reference_list_validate(alpp, lGetList(pe, PE_queue_list), MSG_OBJ_QLIST,
                   MSG_OBJ_PE, pe_name)!=STATUS_OK /* && !startup */)
          goto ERROR;
 
@@ -114,7 +114,7 @@ int sub_command
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
-      if (verify_acl_list(alpp, lGetList(pe, PE_user_list), MSG_OBJ_USERLIST,
+      if (userset_list_validate_acl_list(alpp, lGetList(pe, PE_user_list), MSG_OBJ_USERLIST,
             object_name, pe_name)!=STATUS_OK)
          goto ERROR;
 
@@ -127,7 +127,7 @@ int sub_command
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
-      if (verify_acl_list(alpp, lGetList(pe, PE_xuser_list), MSG_OBJ_XUSERLIST,
+      if (userset_list_validate_acl_list(alpp, lGetList(pe, PE_xuser_list), MSG_OBJ_XUSERLIST,
             object_name, pe_name)!=STATUS_OK)
          goto ERROR;
       attr_mod_sub_list(alpp, new_pe, PE_xuser_list,

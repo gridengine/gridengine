@@ -128,7 +128,7 @@ char *rhost
       lSetUlong(ep, US_type, US_ACL);
 
    /* interpret user/group names */
-   ret=sge_verify_userset_entries(lGetList(ep, US_entries), alpp, 0);
+   ret=userset_validate_entries(ep, alpp, 0);
    if ( ret != STATUS_OK ) {
       DEXIT;
       return ret;
@@ -311,7 +311,7 @@ char *rhost
    }
 
    /* interpret user/group names */
-   ret=sge_verify_userset_entries(lGetList(ep, US_entries), alpp, 0);
+   ret=userset_validate_entries(ep, alpp, 0);
    if (ret!=STATUS_OK) {
       DEXIT;
       return ret;

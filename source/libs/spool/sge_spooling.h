@@ -35,7 +35,102 @@
 #include "sge_mirror.h"
 #include "sge_spoolingL.h"
 
-/* function prototypes for spooling functions */
+/****** spool/--Spooling ***************************************
+*
+*  NAME
+*     Spooling -- Spooling framework
+*
+*  FUNCTION
+*     The spooling framework provides an abstraction layer between the 
+*     application requiring the spooling of configuration and data, 
+*     and the concrete data representation layer.
+*
+*  SEE ALSO
+*     spool/spool_create_context()
+*     spool/spool_free_context()
+*
+*     spool/spool_set_default_context()
+*     spool/spool_get_default_context()
+*
+*     spool/spool_context_search_rule()
+*     spool/spool_context_create_rule()
+*     spool/spool_context_search_type()
+*     spool/spool_context_create_type()
+*
+*     spool/spool_type_search_default_rule()
+*     spool/spool_type_add_rule()
+*
+*     spool/spool_startup_context()
+*     spool/spool_shutdown_context()
+*
+*     spool/spool_read_list()
+*     spool/spool_read_object()
+*
+*     spool/spool_write_object()
+*
+*     spool/spool_delete_object()
+*
+*     spool/spool_compare_objects()
+*
+****************************************************************************
+*/
+
+/****** spool/-Spooling-Typedefs ***************************************
+*
+*  NAME
+*     Typedefs -- type definitions for the spooling framework
+*
+*  SYNOPSIS
+*     typedef int (*spooling_startup_func)(const lListElem *rule); 
+*     typedef int (*spooling_shutdown_func)(const lListElem *rule); 
+*
+*     typedef int (*spooling_list_func)(const lListElem *type, 
+*                                       const lListElem *rule, 
+*                                       lList **list, 
+*                                       const sge_event_type event_type);
+*
+*     typedef int (*spooling_write_func)(const lListElem *type, 
+*                                        const lListElem *rule, 
+*                                        const lListElem *object, 
+*                                        const char *key, 
+*                                        const sge_event_type event_type);
+*
+*     typedef lListElem *(*spooling_read_func)(const lListElem *type, 
+*                                              const lListElem *rule, 
+*                                              const char *key, 
+*                                              const sge_event_type event_type);
+*
+*     typedef int (*spooling_delete_func)(const lListElem *type, 
+*                                         const lListElem *rule, 
+*                                         const char *key, 
+*                                         const sge_event_type event_type);
+*
+*  FUNCTION
+*     These functions have to be provided by a target implementation for the 
+*     spooling framework.
+*
+*     The startup and shutdown function initialize the spooling system and
+*     shut it down (e.g. establish a database connection and close it again.
+*
+*     The list, read, write and delete functions are performing the data
+*     storage and retrieval into / from the used storage system.
+*
+*     Instances of these function types will be used as callback in calls
+*     to spool_startup_context, spool_shutdown_context, spool_read_list etc.
+*
+*  SEE ALSO
+*     spool/spool_startup_context()
+*     spool/spool_shutdown_context()
+*
+*     spool/spool_read_list()
+*     spool/spool_read_object()
+*
+*     spool/spool_write_object()
+*
+*     spool/spool_delete_object()
+*
+****************************************************************************
+*/
 typedef int (*spooling_startup_func)(const lListElem *rule); 
 typedef int (*spooling_shutdown_func)(const lListElem *rule); 
 

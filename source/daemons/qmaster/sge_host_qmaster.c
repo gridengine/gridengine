@@ -425,7 +425,7 @@ int sub_command
       if (lGetPosViaElem(ep, EH_acl)>=0) {
          DPRINTF(("got new EH_acl\n"));
          /* check acl list */
-         if (verify_acl_list(alpp, lGetList(ep, EH_acl), "user_lists",
+         if (userset_list_validate_acl_list(alpp, lGetList(ep, EH_acl), "user_lists",
                   object->object_name, host)!=STATUS_OK)
             goto ERROR;
          attr_mod_sub_list(alpp, new_host, EH_acl, US_name, ep,
@@ -436,7 +436,7 @@ int sub_command
       if (lGetPosViaElem(ep, EH_xacl)>=0) {
          DPRINTF(("got new EH_xacl\n"));
          /* check xacl list */
-         if (verify_acl_list(alpp, lGetList(ep, EH_xacl), "xuser_lists",
+         if (userset_list_validate_acl_list(alpp, lGetList(ep, EH_xacl), "xuser_lists",
                   object->object_name, host)!=STATUS_OK)
             goto ERROR;
          attr_mod_sub_list(alpp, new_host, EH_xacl, US_name, ep,
@@ -1040,7 +1040,7 @@ void sge_gdi_kill_exechost(char *host,
       return;
    }
 
-   if (sge_manager(user)) {
+   if (!manop_is_manager(user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);

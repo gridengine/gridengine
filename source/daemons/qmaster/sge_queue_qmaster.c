@@ -433,7 +433,7 @@ int sub_command
       DPRINTF(("got new QU_acl\n"));
       /* check user_lists */
       normalize_sublist(qep, QU_acl);
-      if (verify_acl_list(alpp, lGetList(qep, QU_acl), "user_lists", 
+      if (userset_list_validate_acl_list(alpp, lGetList(qep, QU_acl), "user_lists", 
             "queue", qname)!=STATUS_OK) 
          goto ERROR;            
 #if 0
@@ -449,7 +449,7 @@ int sub_command
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(qep, QU_xacl);
-      if (verify_acl_list(alpp, lGetList(qep, QU_xacl), "xuser_lists", 
+      if (userset_list_validate_acl_list(alpp, lGetList(qep, QU_xacl), "xuser_lists", 
             "queue", qname)!=STATUS_OK)
          goto ERROR;            
 #if 0
@@ -875,7 +875,7 @@ int sub_command
 
 
    /* chain in new */
-   sge_add_queue(new_queue);
+   queue_list_add_queue(new_queue);
 
 #ifdef QIDL
    if(add)

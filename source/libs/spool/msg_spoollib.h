@@ -51,5 +51,13 @@
 #define MSG_SPOOL_CONTEXTNEEDSNAME  _MESSAGE(59008, _("spooling context has to have a name\n"))
 #define MSG_SPOOL_NOVALIDSPOOLTYPE_S _MESSAGE(59009, _("no valid spool type passed to "SFQ"\n"))
 #define MSG_SPOOL_NOVALIDRULE_S _MESSAGE(59010, _("no valid spooling rule passed to "SFQ"\n"))
+#define MSG_SPOOL_CONTEXTCONTAINSNOTYPES_S   _MESSAGE(59011, _("spooling context "SFQ" does not contain any object type descriptions\n"))
+#define MSG_SPOOL_CONTEXTCONTAINSNORULES_S   _MESSAGE(59012, _("spooling context "SFQ" does not contain any spooling\n"))
+#define MSG_SPOOL_TYPECONTAINSNORULES_SS     _MESSAGE(59013, _("type definition "SFQ" in spooling context "SFQ" contains no references to rules\n"))
+#define MSG_SPOOL_TYPEHASNODEFAULTRULE_SS    _MESSAGE(59014, _("type definition "SFQ" in spooling context "SFQ" has no default rule\n"))
+#define MSG_SPOOL_TYPEHASMORETHANONEDEFAULTRULE_SS  _MESSAGE(59015, _("type definition "SFQ" in spooling context "SFQ" has more than one default rule\n"))
+#define MSG_SPOOL_RULEALREADYEXISTS_SS       _MESSAGE(59016, _("a rule named "SFQ" already exists in spooling context "SFQ"\n"))
+#define MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S _MESSAGE(59017, _("spooling type "SFQ" already has a default rule, cannot add a second one\n"))
+
 
 #endif /* __MSG_SPOOLLIB_H */

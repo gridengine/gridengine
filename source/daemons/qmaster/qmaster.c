@@ -674,7 +674,7 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
       return;
    }
 
-   if (sge_manager(username)) {
+   if (!manop_is_manager(username)) {
       ERROR((SGE_EVENT, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;

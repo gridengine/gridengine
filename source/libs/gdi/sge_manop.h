@@ -38,14 +38,8 @@
 extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;
 
-lListElem *manop_list_locate(lList *manop_list, const char *name);
-
-lListElem* sge_locate_manager(const char *cp);
-
-lListElem* sge_locate_operator(const char *cp);
-
-int sge_manager(const char *cp);
-int sge_operator(const char *cp);
+int manop_is_manager(const char *user_name);
+int manop_is_operator(const char *cp);
 
 int manop_update_master_list(sge_event_type type, sge_event_action action,
                              lListElem *event, void *clientdata);

@@ -317,10 +317,31 @@ int queue_update_master_list(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
-/* verify that all queue names in a 
-   QR_Type list refer to existing queues */
-/* JG: TODO: naming, ADOC */   
-int verify_qr_list(
+/****** gdi/queue/queue_reference_list_validate() ******************************
+*  NAME
+*     queue_reference_list_validate() -- verify a queue reference list
+*
+*  SYNOPSIS
+*     int queue_reference_list_validate(lList **alpp, lList *qr_list, 
+*                                       const char *attr_name, 
+*                                       const char *obj_descr, 
+*                                       const char *obj_name) 
+*
+*  FUNCTION
+*     verify that all queue names in a QR_Type list refer to existing queues
+*
+*  INPUTS
+*     lList **alpp          - pointer to an answer list
+*     lList *qr_list        - the queue reference list
+*     const char *attr_name - the attribute name in the referencing object
+*     const char *obj_descr - the descriptor of the referencing object
+*     const char *obj_name  - the name of the referencing object
+*
+*  RESULT
+*     int - STATUS_OK, if everything is OK, else another status code,
+*           see libs/gdi/sge_answer.h
+*******************************************************************************/
+int queue_reference_list_validate(
 lList **alpp,
 lList *qr_list,
 const char *attr_name, /* e.g. "queue_list" */
@@ -331,7 +352,7 @@ const char *obj_name   /* e.g. "pvm", "hibernator"  */
    int all_name_exists = 0;
    int queue_exist = 0;
 
-   DENTER(TOP_LAYER, "verify_qr_list");
+   DENTER(TOP_LAYER, "queue_reference_list_validate");
 
    for_each (qrep, qr_list) {
       if (!strcasecmp(lGetString(qrep, QR_name), SGE_ATTRVAL_ALL)) {
@@ -426,7 +447,7 @@ void queue_list_set_unknown_state_to(lList *queue_list,
    }
 } 
 
-/* JG: TODO: naming, ADOC, is it really needed? */
+/* JG: TODO: is it really needed? */
 void sge_add_queue_event(
 u_long32 type,
 lListElem *qep 
@@ -446,66 +467,106 @@ lListElem *qep
    0 if successful;
 */
 /* JG: TODO: naming, ADOC */
-int sge_add_queue(
-lListElem *qep 
-) {
+/****** gdi/queue/queue_list_add_queue() ***************************************
+*  NAME
+*     queue_list_add_queue() -- add a new queue to the queue masterlist
+*
+*  SYNOPSIS
+*     int queue_list_add_queue(lListElem *qep) 
+*
+*  FUNCTION
+*     Adds the queue to the queue masterlist.
+*     The queue is inserted in the sort order of the queue (by queue name).
+*
+*  INPUTS
+*     lListElem *qep - the queue to insert
+*
+*  RESULT
+*     int - TRUE, if the queue could be inserted, else FALSE
+*
+*  NOTES
+*     Appending the queue and quick sorting the queue list would probably
+*     be much faster in systems with many queues.
+*
+*******************************************************************************/
+int queue_list_add_queue(lListElem *queue) 
+{
    static lSortOrder *so = NULL;
 
-   DENTER(TOP_LAYER, "sge_add_queue");
+   DENTER(TOP_LAYER, "queue_list_add_queue");
 
-   if (!qep) {
+   if (queue == NULL) {
       ERROR((SGE_EVENT, MSG_QUEUE_NULLPTR));
       DEXIT;
-      return -1;
+      return FALSE;
    }
 
    /* create SortOrder: */
-   if(!so) {
+   if(so == NULL) {
       so = lParseSortOrderVarArg(QU_Type, "%I+", QU_qname);
    };
   
    /* insert Element: */
-   if(!Master_Queue_List)
+   if(Master_Queue_List == NULL) {
       Master_Queue_List = lCreateList("Master_Queue_List", QU_Type);
-   lInsertSorted(so, qep, Master_Queue_List);
+   }
+
+   lInsertSorted(so, queue, Master_Queue_List);
 
    DEXIT;
-   return 0;
+   return TRUE;
 }
 
-/* JG: TODO: naming, ADOC */
-int sge_owner(
-const char *cp,
-const lList *lp 
-
-/*
-   Note: a manager/operator is implicitly an "owner".
- */
-) {
+/****** gdi/queue/queue_check_owner() ******************************************
+*  NAME
+*     queue_check_owner() -- check if a user is queue owner
+*
+*  SYNOPSIS
+*     int queue_check_owner(const lListElem *queue, const char *user_name) 
+*
+*  FUNCTION
+*     Checks if the given user is an owner of the given queue.
+*     Managers and operators are implicitly owner of all queues.
+*
+*  INPUTS
+*     const lListElem *queue - the queue to check
+*     const char *user_name  - the user name to check
+*
+*  RESULT
+*     int - TRUE, if the user is owner, else FALSE
+*
+*******************************************************************************/
+int queue_check_owner(const lListElem *queue, const char *user_name)
+{
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "sge_owner");
+   DENTER(TOP_LAYER, "queue_check_owner");
 
-   if (!cp) {
+   if (queue == NULL) {
       DEXIT;
-      return -1;
+      return FALSE;
    }
 
-   if (!sge_operator(cp)) {
+   if (user_name == NULL) {
       DEXIT;
-      return 0;
+      return FALSE;
    }
 
-   for_each(ep, lp) {
-      DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n", cp, 
-         lGetString(ep, US_name)));
-      if (!strcmp(cp, lGetString(ep, US_name))) {
+   if (manop_is_operator(user_name)) {
+      DEXIT;
+      return TRUE;
+   }
+
+   for_each(ep, lGetList(queue, QU_owner_list)) {
+      DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n", 
+               user_name, lGetString(ep, US_name)));
+      if (!strcmp(user_name, lGetString(ep, US_name))) {
          DEXIT;
-         return 0;
+         return TRUE;
       }
    }
 
    DEXIT;
-   return -1;
+   return FALSE;
 }
 

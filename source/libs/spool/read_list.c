@@ -450,7 +450,7 @@ int sge_read_pe_list_from_disk()
                break;
             }
 
-            if (validate_pe(1, ep, NULL)!=STATUS_OK) {
+            if (pe_validate(1, ep, NULL)!=STATUS_OK) {
                ret = -1;
                break;
             }
@@ -656,7 +656,7 @@ int sge_read_queue_list_from_disk()
                   return -1;
                }
 
-               sge_add_queue(qep);
+               queue_list_add_queue(qep);
                state = lGetUlong(qep, QU_state);
                SETBIT(QUNKNOWN, state);
                state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
@@ -851,7 +851,7 @@ int sge_read_userset_list_from_disk()
                return -1;
             }
 
-            if(sge_verify_userset_entries(lGetList(ep, US_entries), NULL, 1) == STATUS_OK) {
+            if(userset_validate_entries(ep, NULL, 1) == STATUS_OK) {
                lAppendElem(Master_Userset_List, ep);
             } else {
                lFreeElem(ep);

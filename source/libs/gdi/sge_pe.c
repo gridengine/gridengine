@@ -224,17 +224,39 @@ int pe_update_master_list(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
-/* JG: TODO: ADOC, naming */
-int validate_pe(
-int startup,
-lListElem *pep,
-lList **alpp 
-) {
+/****** gdi/pe/pe_validate() ***************************************************
+*  NAME
+*     pe_validate() -- validate a parallel environment
+*
+*  SYNOPSIS
+*     int pe_validate(int startup, lListElem *pep, lList **alpp) 
+*
+*  FUNCTION
+*     Ensures that a new pe is not a duplicate of an already existing one
+*     and checks consistency of the parallel environment:
+*        - pseudo parameters in start and stop proc
+*        - validity of the allocation rule
+*        - correctness of the queue list, the user list and the xuser list
+*     
+*
+*  INPUTS
+*     int startup    - are we in qmaster startup phase?
+*     lListElem *pep - the pe to check
+*     lList **alpp   - answer list pointer, if an answer shall be created, else
+*                      NULL - errors will in any case be output using the
+*                      Grid Engine error logging macros.
+*
+*  RESULT
+*     int - STATUS_OK, if everything is ok, else other status values,
+*           see libs/gdi/sge_answer.h
+*******************************************************************************/
+int pe_validate(int startup, lListElem *pep, lList **alpp) 
+{
    const char *s;
    const char *pe_name;
    int ret;
 
-   DENTER(TOP_LAYER, "validate_pe");
+   DENTER(TOP_LAYER, "pe_validate");
 
    pe_name = lGetString(pep, PE_name);
    if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
@@ -283,21 +305,21 @@ lList **alpp
    }
 
    /* -------- PE_queue_list */
-   if ((ret=verify_qr_list(alpp, lGetList(pep, PE_queue_list), MSG_OBJ_QLIST, 
+   if ((ret=queue_reference_list_validate(alpp, lGetList(pep, PE_queue_list), MSG_OBJ_QLIST, 
                MSG_OBJ_PE, pe_name))!=STATUS_OK && !startup) {
       DEXIT;
       return ret;
    }
 
    /* -------- PE_user_list */
-   if ((ret=verify_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST, 
+   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST, 
                MSG_OBJ_PE, pe_name))!=STATUS_OK) {
       DEXIT;
       return ret;
    }
 
    /* -------- PE_xuser_list */
-   if ((ret=verify_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST, 
+   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST, 
                MSG_OBJ_PE, pe_name))!=STATUS_OK) {
       DEXIT;
       return ret;

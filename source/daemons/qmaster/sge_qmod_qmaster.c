@@ -248,8 +248,8 @@ lList **answer
    
    DENTER(TOP_LAYER, "sge_change_queue_state");
 
-   isowner = !sge_owner(user, lGetList(qep, QU_owner_list));
-   isoperator = !sge_operator(user);
+   isowner = queue_check_owner(qep, user);
+   isoperator = manop_is_operator(user);
 
    if (!isowner) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOCHANGEQPERMS_SS, user, lGetString(qep, QU_qname)));
@@ -312,7 +312,7 @@ lList **answer
 
    DENTER(TOP_LAYER, "sge_change_job_state");
    
-   if (strcmp(user, lGetString(jep, JB_owner)) && sge_operator(user)) {
+   if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
       WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, u32c(lGetUlong(jep, JB_job_number))));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
@@ -788,7 +788,7 @@ int isowner
 
    DPRINTF(("cleaning queue >%s<\n", lGetString(qep, QU_qname)));
    
-   if (sge_manager(user)) {
+   if (!manop_is_manager(user)) {
       WARNING((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS)); 
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;

@@ -283,7 +283,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
    }
 
    /* -------- CK_queue_list */
-   if (verify_qr_list(alpp, lGetList(ep, CK_queue_list), MSG_OBJ_QLIST,
+   if (queue_reference_list_validate(alpp, lGetList(ep, CK_queue_list), MSG_OBJ_QLIST,
                MSG_OBJ_CKPTI, lGetString(ep, CK_name))!=STATUS_OK) {
       DEXIT;
       return STATUS_EEXIST;

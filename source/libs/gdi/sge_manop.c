@@ -38,22 +38,6 @@
 lList *Master_Manager_List = NULL;
 lList *Master_Operator_List = NULL;
 
-lListElem *manop_list_locate(lList *manop_list, const char *name) 
-{
-   return lGetElemStr(manop_list, MO_name, name);
-}
-
-lListElem* sge_locate_manager(const char *cp) 
-{
-   return manop_list_locate(Master_Manager_List, cp);
-}
-
-
-lListElem* sge_locate_operator(const char *cp) 
-{
-   return manop_list_locate(Master_Operator_List, cp);
-}
-
 /****** gdi/manop/manop_update_master_list() *****************************
 *  NAME
 *     manop_update_master_list() -- update the master list of managers/operators
@@ -124,58 +108,92 @@ int manop_update_master_list(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
-/* JG: TODO: naming, ADOC */
-int sge_manager(
-const char *cp 
-) {
+/****** gdi/manop/manop_is_manager() *******************************************
+*  NAME
+*     manop_is_manager() -- is a certain user manager?
+*
+*  SYNOPSIS
+*     int manop_is_manager(const char *user_name) 
+*
+*  FUNCTION
+*     Checks if the user given by user name is a manager.
+*
+*  INPUTS
+*     const char *user_name - user name
+*
+*  RESULT
+*     int - TRUE, if the user is manager, else FALSE
+*
+*  NOTES
+*     Operator/Manager should be a property of a user.
+*     Then the function would be user_is_manager - much more plausible
+*
+*  SEE ALSO
+*     gdi/manop/manop_is_operator()
+*******************************************************************************/
+int manop_is_manager(const char *user_name) 
+{
+   DENTER(TOP_LAYER, "manop_is_manager");
 
-   DENTER(TOP_LAYER, "sge_manager");
-
-   if (!cp) {
+   if (user_name == NULL) {
       DEXIT;
-      return -1;
+      return FALSE;
    }
 
-   if (sge_locate_manager(cp)) {
+   if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
       DEXIT;
-      return 0;
+      return TRUE;
    }
 
    DEXIT;
-   return -1;
+   return FALSE;
 
 }
 
-/***********************************************************************/
-/* JG: TODO: naming, ADOC */
-int sge_operator(
-const char *cp 
+/****** gdi/manop/manop_is_operator() ******************************************
+*  NAME
+*     manop_is_operator() -- is a certain user operator?
+*
+*  SYNOPSIS
+*     int manop_is_operator(const char *user_name) 
+*
+*  FUNCTION
+*     Checks if the user given by user name is a operator.
+*     A manager is implicitly also an operator.
+*
+*  INPUTS
+*     const char *user_name - user name
+*
+*  RESULT
+*     int - TRUE, if the user is operator, else FALSE
+*
+*  NOTES
+*     Operator/Manager should be a property of a user.
+*     Then the function would be user_is_operator - much more plausible
+*
+*  SEE ALSO
+*     gdi/manop/manop_is_manager()
+*******************************************************************************/
+int manop_is_operator(const char *user_name) {
 
-/*
-   Note: a manager is implicitly an "operator".
- */
+   DENTER(TOP_LAYER, "manop_is_operator");
 
-) {
-
-   DENTER(TOP_LAYER, "sge_operator");
-
-   if (!cp) {
+   if (user_name == NULL) {
       DEXIT;
-      return -1;
+      return FALSE;
    }
 
-   if (sge_locate_operator(cp)) {
+   if (lGetElemStr(Master_Operator_List, MO_name, user_name) != NULL) {
       DEXIT;
-      return 0;
+      return TRUE;
    }
 
-   if (sge_locate_manager(cp)) {
+   if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
       DEXIT;
-      return 0;
+      return TRUE;
    }
 
    DEXIT;
-   return -1;
-
+   return FALSE;
 }
 

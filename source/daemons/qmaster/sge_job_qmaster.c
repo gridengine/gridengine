@@ -557,7 +557,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
     * jobs with higher priority than 0 (=BASE_PRIORITY)
     * we silently lower it to 0 in case someone tries to cheat
     */
-   if (lGetUlong(jep, JB_priority)>BASE_PRIORITY && sge_operator(ruser))
+   if (lGetUlong(jep, JB_priority)>BASE_PRIORITY && !manop_is_operator(ruser))
       lSetUlong(jep, JB_priority, BASE_PRIORITY);
 
    lSetUlong(jep, JB_submission_time, sge_get_gmt());
@@ -816,7 +816,7 @@ int sub_command
    /* first lets make sure they have permission if a force is involved */
    if (enable_forced_qdel != 1) {/* Flag ENABLE_FORCED_QDEL in qmaster_params */
       if (lGetUlong(idep, ID_force)) {
-         if (sge_manager(ruser)) {
+         if (!manop_is_manager(ruser)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELETEPERMS_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             lFreeWhere(where);
@@ -847,8 +847,8 @@ int sub_command
       job_number = lGetUlong(job, JB_job_number);
 
       /* Does user have privileges to delete the job/task? */
-      if (sge_job_owner(ruser, lGetUlong(job, JB_job_number)) && 
-          sge_manager(ruser)) {
+      if (job_check_owner(ruser, lGetUlong(job, JB_job_number)) && 
+          !manop_is_manager(ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
                 u32c(lGetUlong(job, JB_job_number))));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1233,7 +1233,7 @@ char *ruser
    }                            
 
    /* case 1,3: Only manager can modify all jobs of all users */
-   if (all_users_flag && !jid_flag && !(sge_manager(ruser) == 0)) {
+   if (all_users_flag && !jid_flag && !manop_is_manager(ruser)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_MGR_TO_SS, ruser, 
              "modify all jobs"));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1550,7 +1550,7 @@ int sub_command
       jobid = lGetUlong(jobep, JB_job_number);
 
       /* general check whether ruser is allowed to modify this job */
-      if (strcmp(ruser, lGetString(jobep, JB_owner)) && sge_operator(ruser) && sge_manager(ruser)) {
+      if (strcmp(ruser, lGetString(jobep, JB_owner)) && !manop_is_operator(ruser) && !manop_is_manager(ruser)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, u32c(jobid), MSG_JOB_CHANGEATTR));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          lFreeWhere(where);
@@ -1824,7 +1824,7 @@ int is_task_enrolled
          u_long32 uval; 
 
          /* need to be operator */
-         if (sge_operator(ruser)) {
+         if (!manop_is_operator(ruser)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, 
                    MSG_JOB_CHANGESHAREFUNC));
             answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
@@ -1859,7 +1859,7 @@ int is_task_enrolled
       }
 
       if ((target & MINUS_H_TGT_SYSTEM) != (old_hold & MINUS_H_TGT_SYSTEM)) {
-         if (sge_manager(ruser)) {
+         if (!manop_is_manager(ruser)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_MGR_TO_SS, ruser, 
                   is_sub_op_code ? MSG_JOB_RMHOLDMNG : MSG_JOB_SETHOLDMNG)); 
             answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
@@ -1869,7 +1869,7 @@ int is_task_enrolled
       }
       if ((target & MINUS_H_TGT_OPERATOR) !=
             (old_hold & MINUS_H_TGT_OPERATOR)) {
-         if (sge_operator(ruser)) {
+         if (!manop_is_operator(ruser)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, 
                    is_sub_op_code ? MSG_JOB_RMHOLDOP : MSG_JOB_SETHOLDOP));  
             answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
@@ -1879,7 +1879,7 @@ int is_task_enrolled
       }
       if ((target & MINUS_H_TGT_USER) != (old_hold & MINUS_H_TGT_USER)) {
          if (strcmp(ruser, lGetString(job, JB_owner)) && 
-             sge_operator(ruser)) {
+             !manop_is_operator(ruser)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, 
                    u32c(jobid), is_sub_op_code ? 
                    MSG_JOB_RMHOLDUSER : MSG_JOB_SETHOLDUSER));  
@@ -2240,7 +2240,7 @@ int *trigger
       uval=lGetPosUlong(jep, pos);
 
       /* need to be operator */
-      if (sge_operator(ruser)) {
+      if (!manop_is_operator(ruser)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, 
                MSG_JOB_CHANGEOVERRIDETICKS));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
@@ -2265,7 +2265,7 @@ int *trigger
       uval=lGetPosUlong(jep, pos);
       if (uval > (old_priority=lGetUlong(new_job, JB_priority))) { 
          /* need to be at least operator */
-         if (sge_operator(ruser)) {
+         if (!manop_is_operator(ruser)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, MSG_JOB_PRIOINC));
             answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -3317,7 +3317,7 @@ sge_gdi_request *request
    } 
 
    /* ensure copy is allowed */
-   if (strcmp(ruser, lGetString(old_jep, JB_owner)) && sge_manager(ruser)) {
+   if (strcmp(ruser, lGetString(old_jep, JB_owner)) && !manop_is_manager(ruser)) {
       ERROR((SGE_EVENT, MSG_JOB_NORESUBPERMS_SSS, ruser, rhost, lGetString(old_jep, JB_owner)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;

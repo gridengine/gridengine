@@ -1630,7 +1630,7 @@ void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const 
    DENTER(GDI_LAYER, "sge_gdi_kill_eventclient_");
 
    /* must be either manager or owner of the event client */
-   if (sge_manager(user) && uid != lGetUlong(event_client, EV_uid)) {
+   if (!manop_is_manager(user) && uid != lGetUlong(event_client, EV_uid)) {
       ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
       answer_list_add(&(answer->alp), SGE_EVENT, 
                       STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
@@ -1690,7 +1690,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       return;
    }
 
-   if (sge_manager(user)) {
+   if (!manop_is_manager(user)) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
       DEXIT;

@@ -299,7 +299,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("manager_list----------------------------\n"));
    read_manop(SGE_MANAGER_LIST);
-   if (!sge_locate_manager("root")) {
+   if (!manop_is_manager("root")) {
       lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
       if (write_manop(1, SGE_MANAGER_LIST)) {
@@ -320,7 +320,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("operator_list----------------------------\n"));
    read_manop(SGE_OPERATOR_LIST);
-   if (!sge_locate_operator("root")) {
+   if (!manop_is_operator("root")) {
       lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
       if (write_manop(1, SGE_OPERATOR_LIST)) {

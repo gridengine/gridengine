@@ -172,6 +172,6 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
 
 int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning);
 
-int sge_job_owner(const char *user_name, u_long32);
+int job_check_owner(const char *user_name, u_long32 job_id);
 
 #endif /* __SGE_JOB_H */    

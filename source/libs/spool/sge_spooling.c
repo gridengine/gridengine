@@ -41,6 +41,39 @@ lListElem *Default_Spool_Context;
 
 /* creation and maintenance of the spooling context */
 
+/****** spool/spool_create_context() ************************************
+*  NAME
+*     spool_create_context() -- create a new spooing context
+*
+*  SYNOPSIS
+*     lListElem* spool_create_context(const char *name) 
+*
+*  FUNCTION
+*     Create a new spooling context.
+*
+*  INPUTS
+*     const char *name - name of the context
+*
+*  RESULT
+*     lListElem* - the new spooling context
+*
+*  EXAMPLE
+*     lListElem *context;
+*     
+*     context = spool_create_context("my spooling context");
+*     ...
+*
+*
+*  NOTES
+*     Usually, a service function creating a spooling context
+*     for a certain storage system will be called, e.g. 
+*     spool_classic_create_context().
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_free_context()
+*     spool/classic/spool_classic_create_context()
+*******************************************************************************/
 lListElem *spool_create_context(const char *name)
 {
    lListElem *ep;
@@ -60,6 +93,33 @@ lListElem *spool_create_context(const char *name)
    return ep;
 }
 
+/****** spool/spool_free_context() **************************************
+*  NAME
+*     spool_free_context() -- free resources of a spooling context
+*
+*  SYNOPSIS
+*     lListElem* spool_free_context(lListElem *context) 
+*
+*  FUNCTION
+*     Performs a shutdown of the spooling context and releases
+*     all allocated resources.
+*
+*  INPUTS
+*     lListElem *context - the context to free
+*
+*  RESULT
+*     lListElem* - NULL
+*
+*  EXAMPLE
+*     lListElem *context;
+*     ...
+*     context = spool_free_context(context);
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_create_context()
+*     spool/spool_shutdown_context()
+*******************************************************************************/
 lListElem *spool_free_context(lListElem *context)
 {
    DENTER(TOP_LAYER, "spool_free_context");
@@ -78,10 +138,37 @@ lListElem *spool_free_context(lListElem *context)
 }
 
 
+/****** spool/spool_startup_context() ***********************************
+*  NAME
+*     spool_startup_context() -- startup a spooling context
+*
+*  SYNOPSIS
+*     int spool_startup_context(lListElem *context) 
+*
+*  FUNCTION
+*     Checks consistency of the spooling context, e.g. a default rule exists 
+*     for  all types handled by the context.
+*
+*     If the context is OK, the startup callback for all rules will be called.
+*     These startup callbacks will for example create spool directories,
+*     connect to a database system etc.
+*
+*  INPUTS
+*     lListElem *context - the context to startup
+*
+*  RESULT
+*     int - TRUE, if the context is OK and all startup callbacks reported
+*                 success,
+*           else FALSE
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_shutdown_context()
+*******************************************************************************/
 int spool_startup_context(lListElem *context)
 {
-   lListElem *rule;
-/* JG: TODO: check if all types have a default rule */
+   lListElem *rule, *type;
+
    DENTER(TOP_LAYER, "spool_startup_context");
 
    if(context == NULL) {
@@ -89,7 +176,61 @@ int spool_startup_context(lListElem *context)
       DEXIT;
       return FALSE;
    }
+
+   /* check consistency */
+   /* the context has to contain types */
+   if(lGetNumberOfElem(lGetList(context, SPC_types)) == 0) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CONTEXTCONTAINSNOTYPES_S, 
+             lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
   
+   /* each type needs at least one rule and exactly one default rule */
+   for_each(type, lGetList(context, SPC_types)) {
+      lListElem *type_rule;
+      int default_rules = 0;
+      
+      if(lGetNumberOfElem(lGetList(type, SPT_rules)) == 0) {
+         ERROR((SGE_EVENT, MSG_SPOOL_TYPECONTAINSNORULES_SS, 
+                lGetString(type, SPT_name),
+                lGetString(context, SPC_name)));
+         DEXIT;
+         return FALSE;
+      }
+
+      /* count default rules */
+      for_each(type_rule, lGetList(type, SPT_rules)) {
+         if(lGetBool(type_rule, SPTR_default)) {
+            default_rules++;
+         }
+      }
+      
+      if(default_rules == 0) {
+         ERROR((SGE_EVENT, MSG_SPOOL_TYPEHASNODEFAULTRULE_SS,
+                lGetString(type, SPT_name),
+                lGetString(context, SPC_name)));
+         DEXIT;
+         return FALSE;
+      }
+
+      if(default_rules > 1) {
+         ERROR((SGE_EVENT, MSG_SPOOL_TYPEHASMORETHANONEDEFAULTRULE_SS,
+                lGetString(type, SPT_name),
+                lGetString(context, SPC_name)));
+         DEXIT;
+         return FALSE;
+      }
+   }
+  
+   /* the context has to contain rules */
+   if(lGetNumberOfElem(lGetList(context, SPC_rules)) == 0) {
+      ERROR((SGE_EVENT, MSG_SPOOL_CONTEXTCONTAINSNORULES_S, 
+             lGetString(context, SPC_name)));
+      DEXIT;
+      return FALSE;
+   }
+   
    for_each(rule, lGetList(context, SPC_rules)) {
       spooling_startup_func func = (spooling_startup_func)lGetRef(rule, SPR_startup_func);
       if(func != NULL) {
@@ -106,6 +247,33 @@ int spool_startup_context(lListElem *context)
    return TRUE;
 }
 
+/****** spool/spool_shutdown_context() **********************************
+*  NAME
+*     spool_shutdown_context() -- shutdown a context
+*
+*  SYNOPSIS
+*     int spool_shutdown_context(lListElem *context) 
+*
+*  FUNCTION
+*     Shut down a spooling context.
+*     Calls the shutdown callback for all defined spooling rules.
+*     Usually these callbacks will flush unwritten data, close
+*     file handles, close database connections etc.
+*
+*     A context that has been shutdown can be reused by calling
+*     spool_startup_context()
+*
+*  INPUTS
+*     lListElem *context - the context to shutdown
+*
+*  RESULT
+*     int - TRUE, if all shutdown callbacks reported success,
+*           else FALSE
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_startup_context()
+*******************************************************************************/
 int spool_shutdown_context(lListElem *context)
 {
    lListElem *rule;
@@ -135,22 +303,123 @@ int spool_shutdown_context(lListElem *context)
 }
 
 
+/****** spool/spool_set_default_context() *******************************
+*  NAME
+*     spool_set_default_context() -- set a default context
+*
+*  SYNOPSIS
+*     void spool_set_default_context(lListElem *context) 
+*
+*  FUNCTION
+*     The spooling framework can have a default context.
+*     A context that has been created before can be set as 
+*     default context using this function.
+*     The default context can be retrieved later with the function
+*     spool_get_default_context().
+*
+*  INPUTS
+*     lListElem *context - the context to be the default context
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_get_default_context()
+*******************************************************************************/
 void spool_set_default_context(lListElem *context)
 {
    Default_Spool_Context = context;
 }
 
+/****** spool/spool_get_default_context() *******************************
+*  NAME
+*     spool_get_default_context() -- retrieve the default spooling context 
+*
+*  SYNOPSIS
+*     lListElem* spool_get_default_context(void) 
+*
+*  FUNCTION
+*     Retrieves a spooling context that has been set earlier using the function
+*     spool_set_default_context()
+*
+*  RESULT
+*     lListElem* - the spooling context, or NULL, if no default context
+*                  has been set.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_set_default_context()
+*******************************************************************************/
 lListElem *spool_get_default_context(void)
 {
    return Default_Spool_Context;
 }
 
+/****** spool/spool_context_search_rule() *******************************
+*  NAME
+*     spool_context_search_rule() -- search a certain rule 
+*
+*  SYNOPSIS
+*     lListElem* spool_context_search_rule(const lListElem *context, 
+*                                          const char *name) 
+*
+*  FUNCTION
+*     Searches a certain rule (given by its name) in a given spooling context.
+*
+*  INPUTS
+*     const lListElem *context - the context to search
+*     const char *name         - name of the rule
+*
+*  RESULT
+*     lListElem* - the rule, if it exists, else NULL
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 lListElem *spool_context_search_rule(const lListElem *context, const char *name)
 {
    return lGetElemStr(lGetList(context, SPC_rules), SPR_name, name);
 }
 
-lListElem *spool_context_create_rule(lListElem *context, const char *name, const char *url,
+/****** spool/spool_context_create_rule() *******************************
+*  NAME
+*     spool_context_create_rule() -- create a rule in a spooling context
+*
+*  SYNOPSIS
+*     lListElem* spool_context_create_rule(lListElem *context, 
+*                                          const char *name, 
+*                                          const char *url, 
+*                                          spooling_startup_func startup_func, 
+*                                          spooling_shutdown_func shutdown_func,
+*                                          spooling_list_func list_func, 
+*                                          spooling_read_func read_func, 
+*                                          spooling_write_func write_func, 
+*                                          spooling_delete_func delete_func) 
+*
+*  FUNCTION
+*     Creates a rule in the given context and assigns it the given attributes.
+*
+*  INPUTS
+*     lListElem *context                   - the context to contain the new rule
+*     const char *name                     - the name of the rule
+*     const char *url                      - the name of the url
+*     spooling_startup_func startup_func   - startup function for the rule
+*     spooling_shutdown_func shutdown_func - shutdown function
+*     spooling_list_func list_func         - function reading a list of objects
+*     spooling_read_func read_func         - function reading an individual 
+*                                            object 
+*     spooling_write_func write_func       - function writing an individual 
+*                                            object
+*     spooling_delete_func delete_func     - function deleting an individual 
+*                                            object
+*
+*  RESULT
+*     lListElem* - the new rule, if it could be created, else NULL
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
+lListElem *spool_context_create_rule(lListElem *context, 
+                                     const char *name, 
+                                     const char *url,
                                      spooling_startup_func startup_func, 
                                      spooling_shutdown_func shutdown_func, 
                                      spooling_list_func list_func, 
@@ -168,7 +437,16 @@ lListElem *spool_context_create_rule(lListElem *context, const char *name, const
       DEXIT;
       return NULL;
    }
-  
+
+   /* check for duplicates */
+   if(lGetElemStr(lGetList(context, SPC_rules), SPR_name, name) != NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_RULEALREADYEXISTS_SS, 
+             name, lGetString(context, SPC_name)));
+      DEXIT;
+      return NULL;
+   }
+
+   /* create rule */
    ep = lCreateElem(SPR_Type);
    lSetString(ep, SPR_name, name);
    lSetString(ep, SPR_url, url);
@@ -179,6 +457,7 @@ lListElem *spool_context_create_rule(lListElem *context, const char *name, const
    lSetRef(ep, SPR_write_func, (void *)write_func);
    lSetRef(ep, SPR_delete_func, (void *)delete_func);
 
+   /* append rule to rule list */
    lp = lGetList(context, SPC_rules);
    if(lp == NULL) {
       lp = lCreateList("spooling rules", SPR_Type);
@@ -191,6 +470,31 @@ lListElem *spool_context_create_rule(lListElem *context, const char *name, const
    return ep;
 }
 
+/****** spool/spool_context_search_type() *******************************
+*  NAME
+*     spool_context_search_type() -- search an object type description
+*
+*  SYNOPSIS
+*     lListElem* spool_context_search_type(const lListElem *context, 
+*                                          const  sge_event_type event_type) 
+*
+*  FUNCTION
+*     Searches the object type description with the given type in the 
+*     given context.
+*     If no specific description for the given type is found, but a 
+*     default type description (for all object types) exists, this
+*     default type description is returned.
+*
+*  INPUTS
+*     const lListElem *context        - the context to search
+*     const sge_event_type event_type - the object type to search
+*
+*  RESULT
+*     lListElem* - an object type description or NULL, if none was found.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 lListElem *spool_context_search_type(const lListElem *context, const sge_event_type event_type)
 {
    lListElem *ep;
@@ -206,6 +510,33 @@ lListElem *spool_context_search_type(const lListElem *context, const sge_event_t
    return ep;
 }
 
+/****** spool/spool_context_create_type() *******************************
+*  NAME
+*     spool_context_create_type() -- create an object type description 
+*
+*  SYNOPSIS
+*     lListElem* spool_context_create_type(lListElem *context, 
+*                                          const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Creates a new description how a certain object type shall be 
+*     spooled.
+*
+*     If the given event_type is SGE_EMT_ALL, the description will
+*     be the default for object types that are not individually
+*     handled.
+*
+*  INPUTS
+*     lListElem *context              - the context to contain the new 
+*                                       description
+*     const sge_event_type event_type - the object type
+*
+*  RESULT
+*     lListElem* - the new object type description
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 lListElem *spool_context_create_type(lListElem *context, const sge_event_type event_type)
 {
    lList *lp;
@@ -218,11 +549,13 @@ lListElem *spool_context_create_type(lListElem *context, const sge_event_type ev
       DEXIT;
       return NULL;
    }
-  
+ 
+   /* create new type */
    ep = lCreateElem(SPT_Type);
    lSetUlong(ep, SPT_type, event_type);
    lSetString(ep, SPT_name, sge_mirror_get_type_name(event_type));
-  
+ 
+   /* append it to the types list of the context */
    lp = lGetList(context, SPC_types);
    if(lp == NULL) {
       lp = lCreateList("spooling object types", SPT_Type);
@@ -235,6 +568,25 @@ lListElem *spool_context_create_type(lListElem *context, const sge_event_type ev
    return ep;
 }
 
+/****** spool/spool_type_search_default_rule() **************************
+*  NAME
+*     spool_type_search_default_rule() -- search the default rule
+*
+*  SYNOPSIS
+*     lListElem* spool_type_search_default_rule(const lListElem *spool_type) 
+*
+*  FUNCTION
+*     Searches and returns the default spooling rule for a certain object type.
+*
+*  INPUTS
+*     const lListElem *spool_type - the object type
+*
+*  RESULT
+*     lListElem* - the default rule, or NULL, if no rule could be found.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 lListElem *spool_type_search_default_rule(const lListElem *spool_type)
 {  
    lList *lp;
@@ -250,11 +602,37 @@ lListElem *spool_type_search_default_rule(const lListElem *spool_type)
    return NULL;
 }
 
+/****** spool/spool_type_add_rule() *************************************
+*  NAME
+*     spool_type_add_rule() -- adds a rule for a spooling object type 
+*
+*  SYNOPSIS
+*     lListElem* spool_type_add_rule(lListElem *spool_type, 
+*                                    const lListElem *rule, lBool is_default) 
+*
+*  FUNCTION
+*     Adds a spooling rule to an object type description.
+*     The rule can be installed as default rule for this object type.
+*
+*  INPUTS
+*     lListElem *spool_type - the object type description
+*     const lListElem *rule - the rule to add 
+*     lBool is_default      - is the rule the default rule?
+*
+*  RESULT
+*     lListElem* - the newly created mapping object between type and rule 
+*                  (SPTR_Type), or NULL, if an error occured.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_context_create_type()
+*     spool/spool_context_create_rule()
+*******************************************************************************/
 lListElem *spool_type_add_rule(lListElem *spool_type, const lListElem *rule, lBool is_default)
 {
    lList *lp;
    lListElem *ep;
-/* JG: TODO: check for former default rules */
+
    DENTER(TOP_LAYER, "spool_type_add_rule");
 
    if(spool_type == NULL) {
@@ -269,11 +647,20 @@ lListElem *spool_type_add_rule(lListElem *spool_type, const lListElem *rule, lBo
       return NULL;
    }
 
+   if(is_default && spool_type_search_default_rule(spool_type) != NULL) {
+      ERROR((SGE_EVENT, MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S, 
+             lGetString(spool_type, SPT_name)));
+      DEXIT;
+      return NULL;
+   }
+
+   /* create mapping object */
    ep = lCreateElem(SPTR_Type);
    lSetBool(ep, SPTR_default, is_default);
    lSetString(ep, SPTR_rule_name, lGetString(rule, SPR_name));
    lSetRef(ep, SPTR_rule, (void *)rule);
 
+   /* append it to the list of mapping for this type */
    lp = lGetList(spool_type, SPT_rules);
    if(lp == NULL) {
       lp = lCreateList("spooling object type rules", SPTR_Type);
@@ -286,7 +673,36 @@ lListElem *spool_type_add_rule(lListElem *spool_type, const lListElem *rule, lBo
    return ep;
 }
 
-/* reading */
+/****** spool/spool_read_list() *****************************************
+*  NAME
+*     spool_read_list() -- read a list of objects from spooled data
+*
+*  SYNOPSIS
+*     int spool_read_list(const lListElem *context, lList **list, 
+*                         const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Read the list of objects associated with a certain object type
+*     from the spooled data and store it into the given list.
+*
+*     The function will call the read_list callback from the default rule
+*     for the given object type.
+*
+*  INPUTS
+*     const lListElem *context        - the context to use for reading
+*     lList **list                    - the target list
+*     const sge_event_type event_type - the object type
+*
+*  RESULT
+*     int - TRUE, on success, FALSE, if an error occured
+*
+*  EXAMPLE
+*     spool_read_list(context, &Master_Job_List, SGE_EMT_JOB);
+*     will read the job list.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 int spool_read_list(const lListElem *context, lList **list, const sge_event_type event_type)
 {
    lListElem *type;
@@ -302,7 +718,8 @@ int spool_read_list(const lListElem *context, lList **list, const sge_event_type
       DEXIT;
       return FALSE;
    }
-  
+
+   /* find the object type description */
    type = spool_context_search_type(context, event_type);
    if(type == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS, 
@@ -320,6 +737,7 @@ int spool_read_list(const lListElem *context, lList **list, const sge_event_type
       return FALSE;
    }
 
+   /* read and call the list callback function */
    func = (spooling_list_func)lGetRef(rule, SPR_list_func);
    if(func == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
@@ -336,6 +754,33 @@ int spool_read_list(const lListElem *context, lList **list, const sge_event_type
    return ret;
 }
 
+/****** spool/spool_read_object() ***************************************
+*  NAME
+*     spool_read_object() -- read a single object from spooled data
+*
+*  SYNOPSIS
+*     lListElem* spool_read_object(const lListElem *context, 
+*                                  const  sge_event_type event_type, 
+*                                  const char *key) 
+*
+*  FUNCTION
+*     Read an objects characterized by its type and a unique key
+*     from the spooled data.
+*
+*     The function will call the read callback from the default rule
+*     for the given object type.
+*
+*  INPUTS
+*     const lListElem *context        - the context to use
+*     const sge_event_type event_type - object type
+*     const char *key                 - unique key
+*
+*  RESULT
+*     lListElem* - the object, if it could be read, else NULL
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 lListElem *spool_read_object(const lListElem *context, const sge_event_type event_type, const char *key)
 {
    lListElem *type;
@@ -351,6 +796,7 @@ lListElem *spool_read_object(const lListElem *context, const sge_event_type even
       return NULL;
    }
   
+   /* find the object type description */
    type = spool_context_search_type(context, event_type);
    if(type == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
@@ -368,6 +814,7 @@ lListElem *spool_read_object(const lListElem *context, const sge_event_type even
       return FALSE;
    }
 
+   /* retrieve and execute the read callback */
    func = (spooling_read_func)lGetRef(rule, SPR_read_func);
    if(func == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS,
@@ -383,7 +830,31 @@ lListElem *spool_read_object(const lListElem *context, const sge_event_type even
    return result;
 }
 
-/* writing */
+/****** spool/spool_write_object() **************************************
+*  NAME
+*     spool_write_object() -- write (spool) a single object 
+*
+*  SYNOPSIS
+*     int spool_write_object(const lListElem *context, const lListElem *object, 
+*                            const char *key, const sge_event_type event_type) 
+*
+*  FUNCTION
+*     Writes a single object using the given spooling context.
+*     The function calls all rules associated with the object type
+*     description for the given object type.
+*
+*  INPUTS
+*     const lListElem *context        - context to use
+*     const lListElem *object         - object to spool
+*     const char *key                 - unique key
+*     const sge_event_type event_type - type of the object
+*
+*  RESULT
+*     int - TRUE, if writing was successfull, else FALSE
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 int spool_write_object(const lListElem *context, const lListElem *object, const char *key, const sge_event_type event_type)
 {
    lListElem *type;
@@ -407,6 +878,7 @@ int spool_write_object(const lListElem *context, const lListElem *object, const 
       return FALSE;
    }
   
+   /* find the object type description */
    type = spool_context_search_type(context, event_type);
    if(type == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
@@ -415,6 +887,7 @@ int spool_write_object(const lListElem *context, const lListElem *object, const 
       return FALSE;
    }
 
+   /* loop over all rules and call the writing callbacks */
    type_rules = lGetList(type, SPT_rules);
    if(type_rules == NULL || lGetNumberOfElem(type_rules) == 0) {
       ERROR((SGE_EVENT, MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
@@ -447,7 +920,32 @@ int spool_write_object(const lListElem *context, const lListElem *object, const 
    return ret;
 }
 
-/* deleting */
+/****** spool/spool_delete_object() *************************************
+*  NAME
+*     spool_delete_object() -- delete a single object 
+*
+*  SYNOPSIS
+*     int spool_delete_object(const lListElem *context, 
+*                             const sge_event_type event_type, 
+*                             const char *key) 
+*
+*  FUNCTION
+*     Deletes a certain object characterized by type and a unique key
+*     in the spooled data.
+*     Calls the delete callback in all rules defined for the given
+*     object type.
+*
+*  INPUTS
+*     const lListElem *context        - the context to use
+*     const sge_event_type event_type - object type
+*     const char *key                 - unique key
+*
+*  RESULT
+*     int - TRUE, if all rules reported success, else FALSE
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 int spool_delete_object(const lListElem *context, const sge_event_type event_type, const char *key)
 {
    lListElem *type;
@@ -464,6 +962,7 @@ int spool_delete_object(const lListElem *context, const sge_event_type event_typ
       return FALSE;
    }
   
+   /* find the object type description */
    type = spool_context_search_type(context, event_type);
    if(type == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
@@ -472,6 +971,7 @@ int spool_delete_object(const lListElem *context, const sge_event_type event_typ
       return FALSE;
    }
 
+   /* loop over all rules and call the deleting callbacks */
    type_rules = lGetList(type, SPT_rules);
    if(type_rules == NULL || lGetNumberOfElem(type_rules) == 0) {
       ERROR((SGE_EVENT, MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
@@ -504,6 +1004,36 @@ int spool_delete_object(const lListElem *context, const sge_event_type event_typ
    return ret;
 }
 
+/****** spool/spool_compare_objects() ***********************************
+*  NAME
+*     spool_compare_objects() -- compare objects by spooled data
+*
+*  SYNOPSIS
+*     int spool_compare_objects(const lListElem *context, 
+*                               const sge_event_type event_type, 
+*                               const lListElem *ep1, const lListElem *ep2) 
+*
+*  FUNCTION
+*     Compares two objects by comparing only the attributes that shall be 
+*     spooled.
+*
+*  INPUTS
+*     const lListElem *context        - context to use
+*     const sge_event_type event_type - type of the object
+*     const lListElem *ep1            - object 1
+*     const lListElem *ep2            - object 2
+*
+*  RESULT
+*     int - 0, if the objects have no differences, else != 0
+*
+*  NOTES
+*     Not yet implemented. 
+*     First the attributes to be spooled have to be defined in the 
+*     object definitions (libs/gdi/sge_*L.h).
+*
+*  SEE ALSO
+*     spool/--Spooling
+*******************************************************************************/
 int spool_compare_objects(const lListElem *context, const sge_event_type event_type, const lListElem *ep1, const lListElem *ep2)
 {
    DENTER(TOP_LAYER, "spool_compare_objects");

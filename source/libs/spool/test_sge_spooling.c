@@ -77,6 +77,19 @@
  *           special handling and processing still contained
  *           in the reading functions (classic spooling) into
  *           other interfaces, e.g. use callbacks).
+ *            
+ *           Instead of hardcoding each list, we could loop over
+ *           the sge_event_type enum. Problem is currently that
+ *           a certain order of unspooling is required.
+ *           This could be eliminated by splitting the read list 
+ *           functions (from classic spooling) into reading and 
+ *           post processing.
+ *           
+ *           If we do not need to spool/unspool all lists in a certain
+ *           spooling client, we could even require that subscription
+ *           has been done before calling this functions and call
+ *           a function sge_mirror_is_subscribed function to check if we have
+ *           to unspool a certain list or not.
  */
 static int read_spooled_data(void)
 {  

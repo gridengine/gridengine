@@ -289,7 +289,7 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
    
 }
 
-/****** sge/job/job_write_spool_file() ****************************************
+/****** spool/classic/job_write_spool_file() ****************************************
 *  NAME
 *     job_write_spool_file() -- makes a job/task persistent 
 *

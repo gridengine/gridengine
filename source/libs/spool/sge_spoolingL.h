@@ -64,7 +64,8 @@ extern "C" {
 *        connection.
 *
 *        It also contains a list of types that can be spooled.
-*        A default entry for all types can be created.
+*        A default entry for all types can be created; if type entries
+*        for individual types exist, these entries will be used for spooling.
 *        A type references one or multiple rules which will 
 *        be executed for writing or deleting data.
 *        Exactly one rule can be defined to be the default rule
@@ -88,7 +89,9 @@ extern "C" {
 *
 *  SEE ALSO
 *     spool/--Spooling
-*
+*     spool/--SPR_Type
+*     spool/--SPT_Type
+*     spool/--SPTR_Type
 ****************************************************************************
 */
 
@@ -111,6 +114,60 @@ NAMEDEF(SPCN)
 NAMEEND
 
 #define SPCS sizeof(SPCN)/sizeof(char *)
+
+/****** spool/--SPR_Type ***************************************
+*
+*  NAME
+*     SPR_Type -- Spooling rule
+*
+*  ELEMENTS
+*     SGE_STRING(SPR_name, CULL_HASH | CULL_UNIQUE)
+*        Unique name of the rule.
+*
+*     SGE_STRING(SPR_url, CULL_DEFAULT)
+*        An url, e.g. a spool directory, a database url etc.
+*
+*     SGE_REF(SPR_startup_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        function pointer to a startup function, 
+*        e.g. establishing a connection to a database.        
+*
+*     SGE_REF(SPR_shutdown_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        function pointer to a shutdown function,
+*        e.g. disconnecting from a database or closing file handles.
+*
+*     SGE_REF(SPR_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        pointer to a function reading complete lists (master lists)
+*        from the spooling data source.
+*
+*     SGE_REF(SPR_read_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        pointer to a function reading a single object from the
+*        spooling data source.
+*
+*     SGE_REF(SPR_write_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        pointer to a function writing a single object.
+*
+*     SGE_REF(SPR_delete_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        pointer to a function deleting a single object.
+*
+*     SGE_REF(SPR_clientdata, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        clientdata; any pointer, can be used to store and
+*        reference rule specific data, e.g. file or database handles.
+*
+*  FUNCTION
+*     A spooling rule describes a certain way to store and retrieve
+*     data from a defined storage facility.
+*     
+*     Spooling rules can implement spooling to files in a certain
+*     directory or spooling into a database, to an LDAP repository
+*     etc.
+*  
+*     A spooling context can contain multiple spooling rules.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/--SPC_Type
+****************************************************************************
+*/
 
 enum {
    SPR_name = SPR_LOWERBOUND,        /* name of the rule */
@@ -150,6 +207,50 @@ NAMEEND
 
 #define SPRS sizeof(SPRN)/sizeof(char *)
 
+/****** spool/--SPT_Type ***************************************
+*
+*  NAME
+*     SPT_Type -- Spooling object types
+*
+*  ELEMENTS
+*     SGE_ULONG(SPT_type, CULL_HASH | CULL_UNIQUE)
+*        Unique type identifier.
+*        See enum sge_event_type in libs/gdi/sge_mirror.h
+*        SGE_EMT_ALL describes a default type entry for all
+*        object types.
+*
+*     SGE_STRING(SPT_name, CULL_DEFAULT)
+*        Name of the type - used for informational messages etc.
+*
+*     SGE_LIST(SPT_rules, SPTR_Type, CULL_DEFAULT)
+*        List of rules that can be applied for a certain object type.
+*        Does not reference the rules themselves, but contains mapping
+*        objects mapping between type and rule.
+*
+*
+*  FUNCTION
+*     Objects to be spooled have a certain type that can be identified
+*     by the sge_event_type enum.
+*     A spooling context can contain information about individual
+*     types and/or define a default behaviour for all (not individually
+*     handled) types.
+*
+*     The spooling behaviour for a type is defined by a list of references
+*     to rules in the spooling context.
+*     One of the referenced spooling rules has to be made default rule
+*     for reading objects.
+*
+*  NOTES
+*     The type identifiers should not come from the mirroring interface,
+*     but be part of a more general type information handling in libgdi.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/--SPC_Type
+*     spool/--SPTR_Type
+****************************************************************************
+*/
+
 enum {
    SPT_type = SPT_LOWERBOUND,      /* sge_event_type, SGE_EMT_ALL = default */
    SPT_name,                       /* name of the type, e.g. "JB_Type" */
@@ -170,6 +271,38 @@ NAMEEND
 
 #define SPTS sizeof(SPTN)/sizeof(char *)
 
+
+/****** spool/--SPTR_Type ***************************************
+*
+*  NAME
+*     SPTR_Type -- references to rules for certain object types
+*
+*  ELEMENTS
+*     SGE_BOOL(SPTR_default, CULL_DEFAULT)
+*        Defines whether the referenced rule is the default rule
+*        for reading the defined object type.
+*
+*     SGE_STRING(SPTR_rule_name, CULL_UNIQUE)
+*        Name of the referenced rule.
+*
+*     SGE_REF(SPTR_rule, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        Pointer/reference to the rule to be used with the
+*        defined object type.
+*
+*
+*  FUNCTION
+*     Elements of SPTR_Type define a mapping between object type (SPT_Type)
+*     and spooling rules (SPR_Type).
+*     One object type can be spooled (written) using multiple spooling rules.
+*     One object type will be read using one (the default) spooling rule.
+*     One spooling rule can be referenced by multiple object types.
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/--SPC_Type
+*     spool/--SPT_Type
+****************************************************************************
+*/
 
 enum {
    SPTR_default = SPTR_LOWERBOUND,  /* is this the default rule for this object type? */

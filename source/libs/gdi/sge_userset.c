@@ -144,8 +144,33 @@ int userset_update_master_list(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
-/* JG: TODO: naming, ADOC */
-int verify_acl_list(
+/****** gdi/userset/userset_list_validate_acl_list() ***************************
+*  NAME
+*     userset_list_validate_acl_list() -- validate an acl list 
+*
+*  SYNOPSIS
+*     int userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
+*                                        const char *attr_name, 
+*                                        const char *obj_descr, 
+*                                        const char *obj_name) 
+*
+*  FUNCTION
+*     Checks if all entries of an acl list (e.g. user list of a pe) are
+*     contained in the master userset list.
+*
+*  INPUTS
+*     lList **alpp          - answer list pointer
+*     lList *acl_list       - the acl list to check
+*     const char *attr_name - the attribute name in the referencing object
+*     const char *obj_descr - the descriptor of the referencing object
+*     const char *obj_name  - the name of the referencing object
+*
+*  RESULT
+*     int - STATUS_OK, if everything is OK, else another status code,
+*           see libs/gdi/sge_answer.h
+*
+*******************************************************************************/
+int userset_list_validate_acl_list(
 lList **alpp,
 lList *acl_list,
 const char *attr_name, /* e.g. "user_lists" */
@@ -154,7 +179,7 @@ const char *obj_name   /* e.g. "fangorn.q"  */
 ) {
    lListElem *usp;
 
-   DENTER(TOP_LAYER, "verify_acl_list");
+   DENTER(TOP_LAYER, "userset_list_validate_acl_list");
 
    for_each (usp, acl_list) {
       if (!lGetElemStr(Master_Userset_List, US_name, lGetString(usp, US_name))) {
@@ -170,45 +195,51 @@ const char *obj_name   /* e.g. "fangorn.q"  */
    return STATUS_OK;
 }
 
-/******************************************************
-   sge_verify_userset_entries()
-      resolves user set/department
-
-   usep
-      cull list (UE_Type)
-   alpp
-      may be NULL
-      is used to build up an answer
-      element in case of error
-
-   returns
-      STATUS_OK         - on success
-      STATUS_ESEMANTIC  - on error
- ******************************************************/
- /* JG: TODO: naming, ADOC */
-int sge_verify_userset_entries(
-lList *userset_entries,
-lList **alpp,
-int start_up 
-) {
+/****** gdi/userset/userset_validate_entries() *******************************
+*  NAME
+*     userset_validate_entries() -- verify entries of a user set
+*
+*  SYNOPSIS
+*     int userset_validate_entries(lListElem *userset, lList **alpp, 
+*                                  int start_up) 
+*
+*  FUNCTION
+*     Validates all entries of a userset.
+*
+*  INPUTS
+*     lListElem *userset - the userset to check
+*     lList **alpp       - answer list pointer, if answer is expected. In any
+*                          case, errors are output using the ERROR macro.
+*     int start_up       - are we in the qmaster startup phase?
+*
+*  RESULT
+*     int - STATUS_OK, if everything is OK, else another status code,
+*           see libs/gdi/sge_answer.h
+*
+*******************************************************************************/
+int userset_validate_entries(lListElem *userset, lList **alpp, int start_up)
+{
    lListElem *ep;
    int name_pos;
 
-   DENTER(TOP_LAYER, "sge_verify_userset_entries");
+   DENTER(TOP_LAYER, "userset_validate_entries");
 
    /*
       resolve cull names to positions
       for faster access in loop
    */
+
    name_pos = lGetPosInDescr(UE_Type, UE_name);
 
-   for_each(ep, userset_entries)
+   for_each(ep, lGetList(userset, US_entries)) {
       if (!lGetPosString(ep, name_pos)) {
          ERROR((SGE_EVENT, MSG_US_INVALIDUSERNAME));
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 
+                         ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESEMANTIC;
       }
+   }
 
    DEXIT;
    return STATUS_OK;

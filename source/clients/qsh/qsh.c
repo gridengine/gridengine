@@ -109,7 +109,7 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is
 static lList *parse_qrsh_command(lList *opts_cmdline, char *name, const char **hostname, int existing_job);
 static lList *merge_and_order_options(lList **opts_defaults, lList **opts_scriptfile, lList **opts_cmdline);
 
-static void remove_unknown_opts(lList *lp); 
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error); 
 static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
@@ -1477,8 +1477,11 @@ char **argv
       }   
    }
 
+   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_now), existing_job, TRUE);
+   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_now), existing_job, FALSE);
+   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_now), existing_job, FALSE);
+
    opts_all = merge_and_order_options(&opts_defaults, &opts_scriptfile, &opts_cmdline);
-   remove_unknown_opts(opts_all);
 
    if (!job) {
       lList *answer = NULL;
@@ -1842,46 +1845,97 @@ static void delete_job(u_long32 job_id, lList *jlp)
    */
 }
 
-static void remove_unknown_opts(lList *lp)
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error)
 {
-   lListElem *ep;
-   const char *cp;
+   lListElem *ep, *next;
 
-   if (!lp || !lFirst(lp)) {
+   DENTER(TOP_LAYER, "remove_unknown_opts");
+
+   /* no options given - nothing to remove */
+   if (lp == NULL) {
+      DEXIT;
       return;
    }
 
-   /* lWriteListTo(lp, stdout); */
-   
-   ep = lFirst(lp);
-   while (ep) {
+   /* loop over all options and remove the ones that are not allowed */
+   next = lFirst(lp);
+   while ((ep = next) != NULL) {
+      const char *cp;
+      
+      next = lNext(ep);
       cp = lGetString(ep, SPA_switch);
-      if (!cp) {
-         ep = lNext(ep);
-         continue;
-      }
-      if (strcmp(cp, "jobarg") && strcmp(cp, "script") &&
-          strcmp(cp, "-clear") && strcmp(cp, "-A") && strcmp(cp, "-cell") &&
-          strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
-          strcmp(cp, "-hold_jid") && strcmp(cp, "-h") &&
-          strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
-          strcmp(cp, "-N") && strcmp(cp, "-noshell") && strcmp(cp, "-now") &&
-          strcmp(cp, "-P") &&
-          strcmp(cp, "-p") && strcmp(cp, "-pe") && strcmp(cp, "-q") && strcmp(cp, "-v") &&
-          strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
-          strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
-          strcmp(cp, "-S")) {
-         if (ep == lFirst(lp)) {
-            lRemoveElem(lp, ep);
-            ep = lFirst(lp);
+
+      if(cp != NULL) {
+         /* these are the options allowed for all flavors of interactive jobs
+          * all other will be deleted
+          */
+         if(strcmp(cp, "jobarg") && strcmp(cp, "script") &&
+            strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
+            strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
+            strcmp(cp, "-hold_jid") && strcmp(cp, "-h") &&
+            strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
+            strcmp(cp, "-N") && strcmp(cp, "-noshell") && strcmp(cp, "-now") &&
+            strcmp(cp, "-P") &&
+            strcmp(cp, "-p") && strcmp(cp, "-pe") && strcmp(cp, "-q") && strcmp(cp, "-v") &&
+            strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
+            strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
+            strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
+            strcmp(cp, "-S") && strcmp(cp, "-w")
+           ) {
+            if(error) {
+               ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+               SGE_EXIT(EXIT_FAILURE);
+            } else {
+               lRemoveElem(lp, ep);
+            }
          }
-         else {
-            ep = lPrev(ep);
-            lRemoveElem(lp, lNext(ep));
+
+         /* the login type interactive jobs do not allow some options - delete these ones */
+         if(JB_NOW_IS_QLOGIN(jb_now) || JB_NOW_IS_QRLOGIN(jb_now)) {
+            if(strcmp(cp, "-display") == 0 ||
+               strcmp(cp, "-cwd") == 0 ||
+               strcmp(cp, "-v") == 0 ||
+               strcmp(cp, "-V") == 0
+              ) {
+               if(error) {
+                  ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+                  SGE_EXIT(EXIT_FAILURE);
+               } else {
+                  lRemoveElem(lp, ep);
+               }
+            }
          }
-      }
-      else {
-         if (!strcmp(cp, "-m")) {
+
+         /* the -S switch is only allowed for qsh */
+         if(!JB_NOW_IS_QSH(jb_now)) {
+            if(strcmp(cp, "-S") == 0) {
+               if(error) {
+                  ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+                  SGE_EXIT(EXIT_FAILURE);
+               } else {
+                  lRemoveElem(lp, ep);
+               }
+            }
+         }
+
+         /* qrsh -inherit only allowes -cwd and setting of environment */
+         if(tightly_integrated) {
+            if(strcmp(cp, "-cwd") &&
+               strcmp(cp, "-display") &&
+               strcmp(cp, "-v") &&
+               strcmp(cp, "-V")
+              ) {
+               if(error) {
+                  ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
+                  SGE_EXIT(EXIT_FAILURE);
+               } else {
+                  lRemoveElem(lp, ep);
+               }
+            }
+         }
+         
+         /* set defaults for mail delivery */
+         if (strcmp(cp, "-m") == 0) {
             int m;
             
             m = lGetInt(ep, SPA_argval_lIntT);
@@ -1889,9 +1943,9 @@ static void remove_unknown_opts(lList *lp)
             m &= ~MAIL_AT_EXIT;
             lSetInt(ep, SPA_argval_lIntT, m);
          }
-         ep = lNext(ep);
       }
    }
 
-   /* lWriteListTo(lp, stdout); */
-} 
+   DEXIT;
+}
+

@@ -1,3 +1,10 @@
+JG-2002-09-12-1  Bugfix     qrsh and qlogin accept unexpected options.
+                            qsh/qrsh/qlogin did not accept options
+                            -ac, -dc, -sc and -w
+                 IZ:        #325
+                 Bugtraq:   #4716824
+                 Changed:   qsh
+
 JG-2002-09-12-0  Bugfix:    qmake without information about parallel execution
                             on commandline failed.
                             qmake made an incorrect resource request if the

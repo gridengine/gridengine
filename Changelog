@@ -1,3 +1,7 @@
+RH-2004-03-22-0: Bugfix:    test case for issue 799 added to testsuite
+                 Issues:    799
+                 Review:    CR
+
 DT-2004-3-22-0:  Bugfix:    o Added -shell y|n option to qsub and update man
                               page
                             o Made -shell n the default for DRMAA clients

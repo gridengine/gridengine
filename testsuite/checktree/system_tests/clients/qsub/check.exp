@@ -3135,6 +3135,23 @@ proc check_option_t {} {
    # first clean up output directory:  
    setup_output_directory
 
+   set option "-t 1-2:-1"
+   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+
+   set result [submit_job $jobargs 0]
+   if { $result != -20 } {
+      add_proc_error "check_option_t" -1 "Negative step in range should produce an error"
+   } 
+ 
+   set option "-t 1-2:xx"
+   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+
+   set result [submit_job $jobargs 0]
+
+   if { $result != -21 } {
+      add_proc_error "check_option_t" -1 "Invalid range spec should produce an error"
+   }
+
    set option "-t 2-8:2"
    set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
   
@@ -3145,6 +3162,7 @@ proc check_option_t {} {
       set_error -1 "could not submit job"
       return
    }
+
 
    set time [ expr ( [timestamp] + 300  ) ] 
 

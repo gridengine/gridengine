@@ -1,0 +1,4 @@
+Issue 799:  qsub -t Ignore Negative Step
+
+Test:       system_tests/clients/qsub
+Function:   check_option_t

@@ -3784,6 +3784,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
   set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
+  set GDI_NEGATIVSTEP [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_NEGATIVSTEP]] 
+  set GDI_INITIALPORTIONSTRINGNODECIMAL_S [translate $CHECK_HOST 0 0 0 [sge_macro MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S] "*" ] 
 
   if { $ts_config(gridengine_version) == 60 } {
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
@@ -3807,7 +3809,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   }
   set sp_id [ lindex $id 1 ]
 
-  set timeout $submit_timeout
+  set timeout 10 ;# $submit_timeout
   set do_again 1
 
 
@@ -4106,6 +4108,14 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- "two files are specified for the same host" { 
              set return_value -19
           }
+         
+          -i $sp_id -- $GDI_NEGATIVSTEP { 
+             set return_value -20
+          }
+
+          -i $sp_id -- $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
+             set return_value -21
+          }
         }
      }
  
@@ -4138,6 +4148,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-17" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-18" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-19" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-20" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -4193,6 +4206,9 @@ proc get_submit_error { error_id } {
       "-17" { return "colon not allowed in account string - error" }
       "-18" { return "-t option only allows one range specification" } 
       "-19" { return "two files are specified for the same host" }
+      "-20" { return "negative step in range is not allowed" }
+      "-21" { return "-t step of range must be a decimal number" }
+
 
       default { return "unknown error" }
    }

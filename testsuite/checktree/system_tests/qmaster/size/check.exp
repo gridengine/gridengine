@@ -61,16 +61,17 @@ lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
-lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
+# JG: TODO: check setup with zombies in an additional runlevel
+# lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
-lappend check_functions {check_size_cleanup}           ;# cleanup, restore initial config
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_size_cleanup}           ;# cleanup, restore initial config
 
 # constants / global variables for monitor_size
 global MONITOR_SIZE_FILENAME MONITOR_SIZE_INTERVAL MONITOR_SIZE_ERROR
@@ -135,6 +136,8 @@ proc init_level {} {
    upvar CHECK_FLOOD_AMOUNTS      check_flood_amounts
    upvar CHECK_FLOOD_TYPES        check_flood_types
    upvar CHECK_FLOOD_INTERVAL     check_flood_interval
+   upvar CHECK_FLOOD_STABILIZE_DELAY flood_stab_delay
+   upvar CHECK_FLOOD_STABILIZE_INTERVAL flood_stab_interval
    upvar check_idle_after         when
 
    set when "startup"
@@ -144,19 +147,21 @@ proc init_level {} {
          set monitor_size_interval   10
          set schedule_interval       "00:00:10"
          set num_zombies             10
-         set check_idle_delay         5
-         set check_idle_duration     10
+         set check_idle_delay        20
+         set check_idle_duration      0
          set check_idle_interval      5
-         set check_qstat_delay        5
-         set check_qstat_duration    10
+         set check_qstat_delay       20
+         set check_qstat_duration     0
          set check_qstat_interval     5
          set check_miniworm_types    "5"
          set check_miniworm_delay    30
-         set check_miniworm_duration 30
+         set check_miniworm_duration 10
          set check_miniworm_interval 10
          set check_flood_amounts     "10"
          set check_flood_types       "1 5 10"
          set check_flood_interval    10
+         set flood_stab_delay        20
+         set flood_stab_interval     5
          return 0
       }
       200 {
@@ -176,6 +181,8 @@ proc init_level {} {
          set check_flood_amounts     "10 100 10"
          set check_flood_types       "5 10 20 30 60 120"
          set check_flood_interval     30
+         set flood_stab_delay        60
+         set flood_stab_interval     10
          return 0
       }
       400 {
@@ -195,6 +202,8 @@ proc init_level {} {
          set check_flood_amounts     "10 100 1000 100 10"
          set check_flood_types       "1 5 10 20 30 60 120 300 600 1200"
          set check_flood_interval      60
+         set flood_stab_delay        120
+         set flood_stab_interval     20
          return 0
       }
    }
@@ -624,18 +633,20 @@ proc monitor_size {jobs {when ""}} {
 proc stabilize {text delay interval commands} {
    global CHECK_OUTPUT
 
-   puts $CHECK_OUTPUT "waiting $delay s for system to stabilize $text"
+   if { $delay > 0 } {
+      puts $CHECK_OUTPUT "waiting $delay s for system to stabilize $text"
 
-   set end [expr [clock seconds] + $delay]
-   set now 0
-   while { $now < $end } {
-      foreach i $commands {
-         eval $i
-      }
-      monitor_size [get_job_count]
-      sleep $interval
-      set now [clock seconds]
-   }   
+      set end [expr [clock seconds] + $delay]
+      set now 0
+      while { $now < $end } {
+         foreach i $commands {
+            eval $i
+         }
+         monitor_size [get_job_count]
+         sleep $interval
+         set now [clock seconds]
+      }   
+   }
 }
 
 #                                                             max. column:     |
@@ -723,23 +734,26 @@ proc output_monitor_result {start_size end_size} {
 #*******************************
 proc monitor {text duration interval commands} {
    global CHECK_OUTPUT
-   global size_unit
 
-   puts $CHECK_OUTPUT "monitoring size for $duration s $text"
+   if { $duration > 0 } {
+      puts $CHECK_OUTPUT "monitoring size for $duration s $text"
 
-   set start_size [get_size master]
-   set now 0
-   set end [expr [clock seconds] + $duration]
-   while { $now < $end } {
-      foreach i $commands {
-         eval $i
+      set start_size [get_size master]
+      set now 0
+      set end [expr [clock seconds] + $duration]
+      while { $now < $end } {
+         foreach i $commands {
+            eval $i
+         }
+         set size [monitor_size [get_job_count]]
+         sleep $interval
+         set now [clock seconds]
       }
-      set size [monitor_size [get_job_count]]
-      sleep $interval
-      set now [clock seconds]
-   }
 
-   output_monitor_result $start_size $size
+      output_monitor_result $start_size $size
+   } else {
+      set_error 0 "monitoring requested for 0 secs - nothing to do"
+   }
 }
 
 #                                                             max. column:     |
@@ -1084,6 +1098,8 @@ proc check_flood {} {
    upvar CHECK_FLOOD_INTERVAL interval
    upvar CHECK_IDLE_DELAY idle_delay
    upvar CHECK_IDLE_INTERVAL idle_interval
+   upvar CHECK_FLOOD_STABILIZE_DELAY flood_stab_delay
+   upvar CHECK_FLOOD_STABILIZE_INTERVAL flood_stab_interval
 
    set num_hosts [llength $CHECK_CORE_EXECD]
 
@@ -1180,6 +1196,8 @@ proc check_flood {} {
       puts $CHECK_OUTPUT "enabling queues $queue_list"
       enable_queue $queue_list
      
+      stabilize "after enabling queues" $flood_stab_delay $flood_stab_interval {}
+
       puts $CHECK_OUTPUT "monitoring size until no jobs remain"
       set start_size [get_size master]
       set job_count [get_job_count]
@@ -1230,9 +1248,17 @@ proc check_flood {} {
 #     ???/???
 #*******************************
 proc check_size_config {} {
+   global ts_config
+
    upvar SCHEDULE_INTERVAL        schedule_interval
 
    set default_array(schedule_interval)   $schedule_interval
+
+   if { $ts_config(gridengine_version) != 53 } {
+      set default_array(flush_submit_sec) 1
+      set default_array(flush_finish_sec) 1
+   }
+
    set_schedd_config default_array
 
    monitor_size [get_job_count] "set initial parameters"
@@ -1310,7 +1336,6 @@ proc check_size_config_zombies {} {
 #     ???/???
 #*******************************
 proc check_size_cleanup {} {
-
    reset_schedd_config
 
    set default_array(finished_jobs)   0

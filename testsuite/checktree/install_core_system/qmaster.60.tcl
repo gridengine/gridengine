@@ -106,6 +106,7 @@ proc install_qmaster {} {
  set CURRENT_GRID_ROOT_DIRECTORY  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
  set CELL_NAME_FOR_QMASTER        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] "*"]
  set VERIFY_FILE_PERMISSIONS      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_VERIFY_FILE_PERMISSIONS] ]
+ set WILL_NOT_VERIFY_FILE_PERMISSIONS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_WILL_NOT_VERIFY_FILE_PERMISSIONS] ]
  set NOT_COMPILED_IN_SECURE_MODE  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_NOT_COMPILED_IN_SECURE_MODE] ] 
  set ENTER_HOSTS                  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_HOSTS] ]
  set MASTER_INSTALLATION_COMPLETE [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_MASTER_INSTALLATION_COMPLETE] ]
@@ -378,14 +379,29 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $VERIFY_FILE_PERMISSIONS { 
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(5)"
+         if { $ts_config(package_type) == "tar" } {
+            set input "$ANSWER_YES"
+         } else {
+            set input "$ANSWER_NO"
+         }
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$input<(5)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "$ANSWER_YES\n"
+          send -i $sp_id "$input\n"
           continue;
        }
+
+      -i $sp_id $WILL_NOT_VERIFY_FILE_PERMISSIONS {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+      }
 
        -i $sp_id $USE_CONFIGURATION_PARAMS {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(1)"

@@ -2301,7 +2301,9 @@ static void* event_deliver_thread(void *anArg)
 
    sge_qmaster_thread_init(true);
 
+   /* register at profiling module */
    set_thread_name(pthread_self(),"Deliver Thread");
+   conf_update_thread_profiling("Deliver Thread");
 
    report_list = lCreateListHash("report list", REP_Type, false);
    report = lCreateElem(REP_Type);

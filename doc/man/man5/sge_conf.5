@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/03/15 14:16:35 $     Revision: $Revision: 1.42 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/03/31 08:56:09 $     Revision: $Revision: 1.43 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/03/15 14:16:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/03/31 08:56:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -985,6 +985,10 @@ Enables the profiling for qmaster event deliver thread.
 Enables the profiling for qmaster timed event thread.
 (e.g. PROF_TEVENT=true)
 .PP
+Please note, that the cpu utime and stime values contained in the profiling output
+are not per thread cpu times.
+These cpu usage statistics are per process statistics.
+So the printed profiling values for cpu mean "cpu time consumed by sge_qmaster (all threads) while the reported profiling level was active".
 .IP "\fISTREE_SPOOL_INTERVAL\fP"
 Sets the time interval for spooling the sharetree usage. The
 default is set to 00:04:00. The setting accepts colon-separated

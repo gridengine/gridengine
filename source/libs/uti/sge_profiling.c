@@ -126,12 +126,19 @@
 *              all threads which make profiling calls have been stopped!
 *              sge_prof_cleanup() is used to free  the profiling array 
 *
+*  BUGS
+*     In a multithreaded program, the values delivered by the times system call
+*     for cpu system and user time are per process times.
+*     This module assumes that the values delivered by times are per thread
+*     values. 
+*     In the profiling output, the sum of user and system time can be higher 
+*     than the wallclock time, the utilization greater 100%.
+*
 *  TODO
 *     - Replace all pthread_mutex_(un)lock() calls with sge_mutex_(un)lock()
 *     - Separate public and private interfaces so that thread index can be
 *       passed around instead of always being rediscovered
 *     - Replace static array with thread specific storage?
-*     - Nested measurements can result in negative numbers ( A->B->B )
 *     - Document static functions
 *     - Print levels without names
 *******************************************************************************/
@@ -334,13 +341,12 @@ bool prof_is_active(prof_level level)
    pthread_t thread_id;
    bool ret = false;
 
-   if (profiling_enabled && (level < SGE_PROF_ALL)) {
+   if (profiling_enabled && (level <= SGE_PROF_ALL)) {
       thread_id = pthread_self();
       
       init_array(thread_id); 
 
       thread_num = get_prof_info_thread_id(thread_id);
-
       if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM)) {
          ret = theInfo[thread_num][level].prof_is_started;
       }
@@ -572,7 +578,6 @@ bool prof_start_measurement(prof_level level, dstring *error)
          theInfo[thread_num][SGE_PROF_ALL].akt_level = level;
 
          theInfo[thread_num][level].start = times(&(theInfo[thread_num][level].tms_start));
-
          /* when we start a level, we have no sub usage */
          theInfo[thread_num][level].sub = 0;
          theInfo[thread_num][level].sub_utime = 0;
@@ -636,13 +641,17 @@ bool prof_stop_measurement(prof_level level, dstring *error)
 
          if (theInfo[thread_num][level].nested_calls > 0) {
             theInfo[thread_num][level].nested_calls--;
-printf ("%d %d -- previous level is %d\n", thread_num, level, level);
          } else {
             theInfo[thread_num][level].end = times(&(theInfo[thread_num][level].tms_end));
             time  = theInfo[thread_num][level].end - theInfo[thread_num][level].start;
             utime = theInfo[thread_num][level].tms_end.tms_utime - theInfo[thread_num][level].tms_start.tms_utime;
             stime = theInfo[thread_num][level].tms_end.tms_stime - theInfo[thread_num][level].tms_start.tms_stime;
 
+#if 0
+if (time < (utime + stime)) {
+   DPRINTF(("---> utime + stime > time, difference is %d clock ticks\n", (utime + stime) - time));
+}
+#endif
             theInfo[thread_num][level].total += time;
             theInfo[thread_num][level].total_utime += utime;
             theInfo[thread_num][level].total_stime += stime;
@@ -650,7 +659,6 @@ printf ("%d %d -- previous level is %d\n", thread_num, level, level);
 
             if (theInfo[thread_num][level].pre != SGE_PROF_NONE) {
                prof_level pre = theInfo[thread_num][level].pre;
-printf ("%d %d -- previous level is %d\n", thread_num, level, pre);
 
                theInfo[thread_num][pre].sub += time;
                theInfo[thread_num][pre].sub_utime += utime;
@@ -1370,7 +1378,7 @@ static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...)
       if (ret != NULL) {
          ret = sge_dstring_append_dstring(buffer, &new_buffer);
       }
-
+      
       sge_dstring_free(&new_buffer);
    }
    
@@ -1386,9 +1394,8 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
    pthread_t thread_id;
 
    DENTER(TOP_LAYER, "prof_output_info");
-
    
-   if (profiling_enabled && (level < SGE_PROF_ALL)) {
+   if (profiling_enabled && (level <= SGE_PROF_ALL)) {
       thread_id = pthread_self();
 
       init_array(thread_id); 
@@ -1403,7 +1410,8 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
          log_state_set_log_level(LOG_INFO);
          info_message = prof_get_info_string(level, with_sub, NULL);
          INFO((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
-         for (message = strtok_r((char*)info_message, "\n", &pos); message; message = strtok_r(NULL, "\n", &pos)) {
+         for (message = strtok_r((char*)info_message, "\n", &pos); message; 
+              message = strtok_r(NULL, "\n", &pos)) {
             INFO((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
 
@@ -1861,10 +1869,8 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
    
    for (i = 0; i < MAX_THREAD_NUM; i++) {
       if (thrdInfo[i].thrd_name != NULL) {
-         if (strstr(thrdInfo[i].thrd_name, thread_name)) {
-
+         if (strcmp(thrdInfo[i].thrd_name, thread_name)) {
             thrdInfo[i].prof_is_active = prof_status;
-
          }
       }
    }
@@ -1872,7 +1878,6 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
    pthread_mutex_unlock(&thrdInfo_mutex);
 
    return 0;
-
 }
 
 
@@ -2235,7 +2240,7 @@ thread_output_profiling(const char *title, time_t *next_prof_output)
          unsigned int seed = (unsigned int)pthread_self();
          *next_prof_output = now + (rand_r(&seed) % 20);
       } else {
-         if (now > *next_prof_output) {
+         if (now >= *next_prof_output) {
             prof_output_info(SGE_PROF_ALL, false, title);
             *next_prof_output = now + 60;
          }

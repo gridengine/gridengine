@@ -48,6 +48,8 @@
 #include "msg_qmaster.h"
 #include "sge_time.h"
 
+#include "sgeobj/sge_conf.h"
+
 
 struct te_event {
    time_t      when;        /* event delivery time                */
@@ -838,7 +840,9 @@ static void* timed_event_thread(void* anArg)
 
    sge_qmaster_thread_init(true);
 
+   /* register at profiling module */
    set_thread_name(pthread_self(),"TEvent Thread");
+   conf_update_thread_profiling("TEvent Thread");
 
    while (should_exit() == false) {
       thread_start_stop_profiling();

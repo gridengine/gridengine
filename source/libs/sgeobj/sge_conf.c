@@ -613,13 +613,7 @@ int merge_configuration(lListElem *global, lListElem *local,
          }
       }
 
-      /* If profiling configuration has changed, 
-         set_thread_prof_status_by_name has to be called for each thread
-      */
-      set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
-      set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
-      set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
-      set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
+      conf_update_thread_profiling(NULL);
 
       /* always initialize to defaults before we check execd_params */
 #ifdef COMPILE_DC
@@ -877,4 +871,45 @@ sge_conf_type *conf
    memset(conf, 0, sizeof(sge_conf_type));
 
    return;
+}
+
+/****** sge_conf/conf_update_thread_profiling() ********************************
+*  NAME
+*     conf_update_thread_profiling() -- enable/disable profiling for thread
+*
+*  SYNOPSIS
+*     void conf_update_thread_profiling(const char *thread_name) 
+*
+*  FUNCTION
+*     Enables or disables profiling for thread(s) according to the actual
+*     global config, qmaster_params.
+*
+*     If no thread name (NULL pointer) is given, profiling information of all
+*     threads is updated.
+*     If a name is given, all threads with that name are updated.
+*
+*  INPUTS
+*     const char *thread_name - thread name, NULL for all threads
+*
+*  NOTES
+*     MT-NOTE: conf_update_thread_profiling() is not MT safe 
+*******************************************************************************/
+void conf_update_thread_profiling(const char *thread_name) 
+{
+   if (thread_name == NULL) {
+      set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
+      set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
+      set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
+   } else {
+      if (strcmp(thread_name, "Signal Thread") == 0) {
+         set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
+      } else if (strcmp(thread_name, "Message Thread") == 0) {
+         set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      } else if (strcmp(thread_name, "Deliver Thread") == 0) {
+         set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
+      } else if (strcmp(thread_name, "TEvent Thread") == 0) {
+         set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
+      }
+   }
 }

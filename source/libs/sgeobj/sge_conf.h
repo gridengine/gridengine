@@ -139,5 +139,6 @@ extern int skip_unheared_host;
 lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);
 void sge_show_conf(void);
+void conf_update_thread_profiling(const char *thread_name);
 
 #endif /* __SGE_CONF_H */

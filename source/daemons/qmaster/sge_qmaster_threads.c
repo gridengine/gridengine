@@ -82,6 +82,7 @@
 #include "reschedule.h"
 #include "sge_job_qmaster.h"
 #include "sge_profiling.h"
+#include "sgeobj/sge_conf.h"
 
 
 /*
@@ -938,7 +939,6 @@ static bool should_terminate(void)
 *******************************************************************************/
 static void* signal_thread(void* anArg)
 {
-   enum { true = 1 };
    bool is_continue = true;
    sigset_t sig_set;
    int sig_num;
@@ -955,7 +955,9 @@ static void* signal_thread(void* anArg)
    /* Set thread alive time to current time */
    sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
 
+   /* register at profiling module */
    set_thread_name(pthread_self(),"Signal Thread");
+   conf_update_thread_profiling("Signal Thread");
 
    while (is_continue)
    {
@@ -1019,7 +1021,9 @@ static void* message_thread(void* anArg)
 
    sge_qmaster_thread_init(true);
 
+   /* register at profiling module */
    set_thread_name(pthread_self(),"Message Thread");
+   conf_update_thread_profiling("Message Thread");
 
    while (should_terminate() == false) {
       thread_start_stop_profiling();

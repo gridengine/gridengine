@@ -1,3 +1,11 @@
+JG-2005-03-31-0: Bugfix:    Fixed qmaster profiling:
+                            - profiling was not activated at qmaster startup
+                            - cpu stime and utime are not per thread values
+                 Issue:     1486, 1487
+                 BugTraq:   6239642, 6239660
+                 Changed:   sge_qmaster, man
+                 Review:    SG
+
 AH-2005-03-30-0: Doc:       Fixes with man pages:
                             o mismatch of man page for host_aliases
                             o bad example in man page for complex

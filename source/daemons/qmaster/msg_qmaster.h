@@ -409,6 +409,7 @@
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _("verification: found possible assignment with %d slots\n")
 #define MSG_OBJ_PE                    _("parallel environment")
 #define MSG_OBJ_CKPT                  _("checkpointing environment")
+#define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _("denied: soft requests on consumables like "SFQ" are not supported\n")
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request\n")
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _("denied: resource request on consumable "SFQ" of running job was not contained former resource request\n")
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _("denied: can't change consumable resource request "SFQ" of running job\n")

@@ -133,6 +133,10 @@ static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs
 static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
+static int changes_consumables(lList **alpp, lList* new, lList* old);
+static int deny_soft_consumables(lList **alpp, lList *srl);
+
+
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
@@ -271,7 +275,11 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          return STATUS_EUNKNOWN;
       }
    }
-   if (compress_ressources(alpp, lGetList(jep,JB_soft_resource_list))) {
+   if (compress_ressources(alpp, lGetList(jep, JB_soft_resource_list))) {
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+   if (deny_soft_consumables(alpp, lGetList(jep, JB_soft_resource_list))) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -2030,6 +2038,61 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
    return 0;
 }
 
+
+/****** sge_job/deny_soft_consumables() ****************************************
+*  NAME
+*     deny_soft_consumables() -- Deny soft consumables
+*
+*  SYNOPSIS
+*     static int deny_soft_consumables(lList **alpp, lList *srl)
+*
+*  FUNCTION
+*     Find out if consumables are requested and deny them.
+*
+*  INPUTS
+*     lList** alpp - answer list pointer pointer
+*     lList *srl   - jobs JB_soft_resource_list
+*
+*  RESULT
+*     static int - 0 request can pass
+*                !=0 consumables requested soft
+*
+*******************************************************************************/
+static int deny_soft_consumables(lList **alpp, lList *srl)
+{
+   lListElem *reqep, *entry, *dcep;
+   const char *name;
+
+   DENTER(TOP_LAYER, "deny_soft_consumables");
+
+   /* ensure no consumables are requested in JB_soft_resource_list */
+   for_each(reqep, srl) {
+      for_each(entry, lGetList(reqep, RE_entries)) {
+         name = lGetString(entry, CE_name);
+
+         if (!(dcep = sge_locate_complex_attr(name, Master_Complex_List))) {
+            ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1;
+         }
+
+         /* ignore non-consumables */
+         if (lGetUlong(dcep, CE_consumable)) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_SOFTREQCONSUMABLE_S, name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1;
+         }
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+
+
+
 static int mod_job_attributes(
 lListElem *new_job,            /* new job */
 lListElem *jep,                /* reduced job element */
@@ -2331,10 +2394,15 @@ int *trigger
             return STATUS_EUNKNOWN;
          }
       }
-      if (compress_ressources(alpp, lGetList(jep,JB_soft_resource_list))) {
+      if (compress_ressources(alpp, lGetList(jep, JB_soft_resource_list))) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }
+      if (deny_soft_consumables(alpp, lGetList(jep, JB_soft_resource_list))) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
       lSetList(new_job, JB_soft_resource_list, 
                lCopyList("", lGetList(jep, JB_soft_resource_list)));
       *trigger |= MOD_EVENT;

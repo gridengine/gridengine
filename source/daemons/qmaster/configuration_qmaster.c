@@ -125,14 +125,13 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
 
    if ((local = sge_get_configuration_for_host(uti_state_get_qualified_hostname())) == NULL)
    {
-      ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_S, uti_state_get_qualified_hostname()));
-      DEXIT;
-      return -1;      
+      /* write a warning into messages file, if no local config exists*/
+      WARNING((SGE_EVENT, MSG_CONFIG_NOLOCAL_S, uti_state_get_qualified_hostname()));
    }
          
    if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL)
    {
-      ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_S, SGE_GLOBAL_NAME));
+      ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL, SGE_GLOBAL_NAME));
       DEXIT;
       return -1;
    }
@@ -307,12 +306,12 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
 
       if ((local = sge_get_configuration_for_host(uti_state_get_qualified_hostname())) == NULL)
       {
-         ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_S, uti_state_get_qualified_hostname()));
+         WARNING((SGE_EVENT, MSG_CONFIG_NOLOCAL_S, uti_state_get_qualified_hostname()));
       }
       
       if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL)
       {
-         ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_S, SGE_GLOBAL_NAME));
+         ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL, SGE_GLOBAL_NAME));
       }
             
       if (merge_configuration(global, local, &conf, NULL) != 0) 

@@ -979,7 +979,7 @@ int sub_command
       }
    
       time = sge_get_gmt();
-      if (time - start_time > 2) {
+      if (time - start_time > 6) {
          INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
                u32c(job_number)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, NUM_AN_INFO); 

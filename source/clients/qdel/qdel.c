@@ -198,7 +198,15 @@ int main(int argc, char **argv) {
           * transaction (STATUS_OK_DOAGAIN). In this case the client has 
           * to redo the transaction.
           */ 
+         do_again = 0;
          do {
+            if (do_again) {
+               /*
+                * Give other clients (gdi requests) the chance to
+                * be handled by the commd before we repeat this request
+                */
+               sleep(1);
+            }
             do_again = 0;
             error_occured = 0;
             alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);

@@ -1,3 +1,8 @@
+EB-2002-01-24-1: Bugfix:    Give other clients (gdi requests) the chance to
+                            be handled by the commd before 
+                            we send a next request of a fragmented qdel 
+                            request.
+
 JG-2002-01-24-2: Bugfix:    np_load_avg was not correctly computed for multi
                             processor machines.
 

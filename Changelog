@@ -1,3 +1,10 @@
+DT-2004-03-04-2  Bugfix:    o Removed duplicate error messages for missing
+                              SGE_ROOT in execd and schedd
+                            o Added missing error message for missing SGE_ROOT
+                              in qmon
+                 Changed:   execd, schedd, setup_gdi.c
+                 Issue:     774
+
 DT-2004-03-04-1  Bugfix:    o Removed duplicate error message for missing
                               SGE_ROOT
                  Changed:   age_arch.c

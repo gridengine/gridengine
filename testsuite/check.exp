@@ -1969,21 +1969,28 @@ proc check_executable_files {  } {
 }
 
 proc set_users_environment {{variable_name env}} {
-   global CHECK_REMOTE_ENVIRONMENT CHECK_OUTPUT
+   global CHECK_REMOTE_ENVIRONMENT CHECK_OUTPUT env
 
    upvar $variable_name environment
 
    foreach u_env $CHECK_REMOTE_ENVIRONMENT {
+      debug_puts "environment: $u_env"
       set help [split $u_env "="]
       set env_name  [lindex $help 0]
       set env_value [lindex $help 1]
+      debug_puts "env_name: $env_name"
       if { [string compare $env_name ""] == 0 } {
          puts $CHECK_OUTPUT "error setting users environment (setup parameter user_environment)"
          return -1
       }
+      debug_puts "env_value: $env_value"
       if { [string compare $env_value ""] == 0 } {
-         puts $CHECK_OUTPUT "error setting users environment (setup parameter user_environment)"
-         return -1
+         if { [info exists env($env_name)] } {
+            set env_value $env($env_name)
+         } else {
+            puts $CHECK_OUTPUT "error setting users environment (setup parameter user_environment)"
+            return -1
+         }
       }
       if { [string compare $variable_name "env"] == 0 } {
          puts $CHECK_OUTPUT "setting local user environment variable $env_name to \"$env_value\""
@@ -4930,7 +4937,6 @@ proc compile_source {} {
          }
       }
    }
-
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
       if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {

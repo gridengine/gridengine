@@ -1,3 +1,8 @@
+HP-2004-04-01-0  Bugfix:	 shepherd created world writable file
+					  Issue:		 931
+					  Review:	 AS
+					  Changed:   shepherd
+					  
 BD-2004-03-29-0  Bugfix:    qmon does not link on fbsd-amd64.
                  Changed:   qmon
 

@@ -32,20 +32,30 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-typedef int (*tShepherd_trace)(char *str);
-
-void shepherd_error(char *str);
-void shepherd_error_impl(char *str, int do_exit);
-int shepherd_trace(char *str);
-void err_trace_chown_files(int uid);
-extern int foreground;      /* != 0 if we can write to stderr/out     */
-void shepherd_log_as_admin_user(void);
-int count_exit_status(void);
-
 #define SHEPHERD_ERROR(x) (sprintf x, shepherd_error(err_str))
 #define SHEPHERD_TRACE(x) (sprintf x, shepherd_trace(err_str))
+
+typedef int (*tShepherd_trace)(char *str); 
+
+extern int foreground;      /* != 0 if we can write to stderr/out     */
+
+void shepherd_trace_init( void );
+void shepherd_trace_exit( void );
+void shepherd_trace_chown( char* job_owner );
+
+void shepherd_error_init( void );
+void shepherd_error_exit( void );
+void shepherd_error_chown( char* job_owner );
+
+int  shepherd_trace( char *str);
+
+void shepherd_error( char *str);
+void shepherd_error_impl(char *str, int do_exit);
+
+void shepherd_write_exit_status( char *exit_status );
+
+int  is_shepherd_trace_fd( int fd );
+int  count_exit_status(void);
 
 #endif /* __ERR_TRACE_H */
 

@@ -513,7 +513,9 @@ char **argv
    int ckpt_type;
    int return_code = 0;
    int run_epilog, run_pe_stop;
-  
+ 
+	shepherd_trace_init( );
+ 
    sprintf(err_str, "shepherd called with uid = "uid_t_fmt", euid = "uid_t_fmt, getuid(), geteuid());
    shepherd_trace(err_str);
 
@@ -565,6 +567,12 @@ char **argv
 
    if (switch2admin_user())
       shepherd_error(err_str);
+
+   /* finalize initialization of shepherd_trace - give the trace file
+    * to the job owner so not only root/admin user but also he can use
+    * the trace file later.
+    */
+   shepherd_trace_chown( get_conf_val("job_owner"));
 
    sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION));
    if (shepherd_trace(err_str))
@@ -799,11 +807,7 @@ char **argv
       fclose(fp);
    } else {
       /* ensure an exit status file exists */
-      fp = fopen("exit_status", "w");
-      if (fp) {
-         fprintf(fp, "0\n");
-         fclose(fp);
-      }  
+		shepherd_write_exit_status( "0" );
       return_code = 0;
    }
 
@@ -815,6 +819,7 @@ char **argv
       write_exit_code_to_qrsh(exit_status_for_qrsh);
    }   
 
+	shepherd_trace_exit( );
    return return_code;
 }
 
@@ -1030,9 +1035,6 @@ int ckpt_type
 
    sprintf(err_str, "reaped \"%s\" with pid %d", childname, pid);
    shepherd_trace(err_str);
-
-   /* make us the owner of the error/trace/exit_status file again */
-   err_trace_chown_files(geteuid());
 
    if (ckpt_type) {
       /* empty file is a hint to reschedule that job. If we already have a
@@ -2662,7 +2664,8 @@ static int start_async_command(char *descr, char *cmd)
       shepherd_error(err_str);
    }
 
-   err_trace_chown_files(pw->pw_uid);
+   /* Create "error" and "exit_status" files here */
+   shepherd_error_init( );
                             
    if ((pid = fork()) == -1) {
       sprintf(err_str, "can't fork for starting %s command", descr);

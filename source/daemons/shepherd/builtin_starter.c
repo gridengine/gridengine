@@ -261,13 +261,14 @@ int truncate_stderr_out
 
    set_environment();
 
-   /* make job owner the owner of error/trace file. So we can write
-    *  diagnostics after changing to this user
+   /* Create the "error" and the "exit" status file here.
+    * The "exit_status" file indicates that the son is started.
     *
-    * also makes job owner own the exit_status file
-    * the "exit_status" is created here and indicates that son is started
+    * We are here (normally) uid=root, euid=admin_user, but we give the
+    * file ownership to the job owner immediately after opening the file, 
+    * so the job owner can reopen the file if the exec() fails.
     */
-   err_trace_chown_files(pw->pw_uid);
+   shepherd_error_init( );
 
    min_gid = atoi(get_conf_val("min_gid"));
    min_uid = atoi(get_conf_val("min_uid"));
@@ -311,11 +312,20 @@ int truncate_stderr_out
    fflush(stdin);
    fflush(stdout);
    fflush(stderr);
-   
    {
+		/* Close all file descriptors except the ones used by tracing
+	    * (for the files "trace", "error" and "exit_status").
+	    * These files will be closed automatically in the exec() call
+	    * due to the FD_CLOEXEC flag.
+	    */
+
       int fdmax = sysconf(_SC_OPEN_MAX);
-      for (i = 0; i < fdmax; i++)
-         close(i);
+
+	   for (i = 0; i < fdmax; i++) {
+	      if( !is_shepherd_trace_fd( i )) {
+		      close(i);
+			}
+		}
    }
    foreground = 0;
 

@@ -350,46 +350,63 @@ proc del_queue { q_name } {
   return 0
 }
 
+proc get_queue_list {} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+
+   set NO_QUEUE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "cqueue list"]
+
+   # try to get queue list
+   if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result] != 0 } {
+      # if command fails: output error
+      add_proc_error "get_queue_list" -1 "error reading queue list: $result"
+      set result {}
+   } else {
+      # command succeeded: queue list can be empty
+      if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+         puts $CHECK_OUTPUT $result
+         set result {}
+      }
+   }
+
+   return $result
+}
+
 proc unassign_queues_with_pe_object { pe_obj } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH
 
    puts $CHECK_OUTPUT "searching for references in all defined queues ..."
-   set NO_QUEUE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
-   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result
-   if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
-      puts $CHECK_OUTPUT "no queue defined"
-   } else {
-      foreach elem $result {
-         puts $CHECK_OUTPUT "queue: $elem"
-         if {[info exists params]} {
-            unset params
+   set queue_list [get_queue_list]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if {[info exists params]} {
+         unset params
+      }
+
+      get_queue $elem params
+      if { [string first $pe_obj $params(pe_list)] >= 0 } {
+         puts $CHECK_OUTPUT "pe obj $pe_obj is referenced in queue $elem, removing entry."
+         set new_params ""
+         set help_list [split $params(pe_list) ","]
+         set help_list2 ""
+         foreach element $help_list {
+            append help_list2 "$element "
          }
 
-         get_queue $elem params
-         if { [string first $pe_obj $params(pe_list)] >= 0 } {
-            puts $CHECK_OUTPUT "pe obj $pe_obj is referenced in queue $elem, removing entry."
-            set new_params ""
-            set help_list [split $params(pe_list) ","]
-            set help_list2 ""
-            foreach element $help_list {
-               append help_list2 "$element "
+         set help_list [string trim $help_list2] 
+         foreach help_pe $help_list {
+            if { [string match $pe_obj $help_pe] != 1 } {
+               append new_params "$help_pe "
             }
-
-            set help_list [string trim $help_list2] 
-            foreach help_pe $help_list {
-               if { [string match $pe_obj $help_pe] != 1 } {
-                  append new_params "$help_pe "
-               }
-            }
-
-            if { [llength $new_params ] == 0 } {
-               set new_params "NONE"
-            }
-
-            set mod_params(pe_list) [string trim $new_params]
-            set_queue $elem "" mod_params 
          }
+
+         if { [llength $new_params ] == 0 } {
+            set new_params "NONE"
+         }
+
+         set mod_params(pe_list) [string trim $new_params]
+         set_queue $elem "" mod_params 
       }
    }
 }
@@ -399,41 +416,36 @@ proc unassign_queues_with_ckpt_object { ckpt_obj } {
    global CHECK_OUTPUT CHECK_ARCH
 
    puts $CHECK_OUTPUT "searching for references in all defined queues ..."
-   set NO_QUEUE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
-   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result
-   if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
-      puts $CHECK_OUTPUT "no queue defined"
-   } else {
-      foreach elem $result {
-         puts $CHECK_OUTPUT "queue: $elem"
-         if {[info exists params]} {
-            unset params
+   set queue_list [get_queue_list]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if {[info exists params]} {
+         unset params
+      }
+
+      get_queue $elem params
+      if { [string first $ckpt_obj $params(ckpt_list)] >= 0 } {
+         puts $CHECK_OUTPUT "ckpt obj $ckpt_obj is referenced in queue $elem, removing entry."
+         set new_params ""
+         set help_list [split $params(ckpt_list) ","]
+         set help_list2 ""
+         foreach element $help_list {
+            append help_list2 "$element "
          }
 
-         get_queue $elem params
-         if { [string first $ckpt_obj $params(ckpt_list)] >= 0 } {
-            puts $CHECK_OUTPUT "ckpt obj $ckpt_obj is referenced in queue $elem, removing entry."
-            set new_params ""
-            set help_list [split $params(ckpt_list) ","]
-            set help_list2 ""
-            foreach element $help_list {
-               append help_list2 "$element "
+         set help_list [string trim $help_list2] 
+         foreach help_ckpt $help_list {
+            if { [string match $ckpt_obj $help_ckpt] != 1 } {
+               append new_params "$help_ckpt "
             }
-
-            set help_list [string trim $help_list2] 
-            foreach help_ckpt $help_list {
-               if { [string match $ckpt_obj $help_ckpt] != 1 } {
-                  append new_params "$help_ckpt "
-               }
-            }
-
-            if { [llength $new_params ] == 0 } {
-               set new_params "NONE"
-            }
-
-            set mod_params(ckpt_list) [string trim $new_params]
-            set_queue $elem "" mod_params 
          }
+
+         if { [llength $new_params ] == 0 } {
+            set new_params "NONE"
+         }
+
+         set mod_params(ckpt_list) [string trim $new_params]
+         set_queue $elem "" mod_params 
       }
    }
 }

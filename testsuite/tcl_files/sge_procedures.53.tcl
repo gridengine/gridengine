@@ -245,6 +245,28 @@ proc del_queue { q_name } {
   return 0
 }
 
+proc get_queue_list {} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+
+   set NO_QUEUE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
+
+   # try to get queue list
+   if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result] != 0 } {
+      # if command fails: output error
+      add_proc_error "get_queue_list" -1 "error reading queue list: $result"
+      set result {}
+   } else {
+      # command succeeded: queue list can be empty
+      if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+         puts $CHECK_OUTPUT $result
+         set result {}
+      }
+   }
+
+   return $result
+}
+
 proc unassign_queues_with_pe_object { pe_obj } {
    # nothing to be done for SGE 5.3
 }

@@ -1,3 +1,5 @@
+JG-2003-12-17-1: Testsuite: Fixed testsuite problem with empty queue list.
+
 AD-2003-12-17-0: Enhancem.: Added new timed event module
                  Changed:   qmaster
                  Reviewed:  AH

@@ -1,3 +1,7 @@
+AS-2005-01-25-0  Bugfix:    set file permissions in destination directory"
+                 Changed:   scripts/distinst
+                 Review:    MD
+
 DT-2005-01-19-2: Testsuite: o Fixed drmaa-j test
                             - merged from maintrunk DT-2005-01-19-0
                  Changed:   DRMAA
@@ -12,6 +16,7 @@ DT-2005-01-19-0: Cleanup:   o Made JAPI Makefile more readable
                  Changed:   DRMAA
 
 AS-2005-01-19-0: CVS        Created V60u3_TAG
+---------------------------------------------
 
 DT-2005-01-16-0: Enhancem.: o aimk can now build javadocs with or without
                               protected fields and methods.

@@ -39,7 +39,7 @@
 
 
 typedef enum {
-   JL_UNKNOWN,       /* job is in unknown state - should never be seen */
+   JL_UNKNOWN = 0,   /* job is in unknown state - should never be seen */
    JL_PENDING,       /* job is pending */
    JL_SENT,          /* job has been sent to execd */
    JL_RESENT,        /* job has been resent to execd - sent hasn't been ack */
@@ -53,7 +53,9 @@ typedef enum {
    JL_MIGRATE,       /* a migration was requested */
    JL_DELETED,       /* the job has been deleted */
    JL_FINISHED,      /* the job has finished */
-   JL_ERROR          /* job is in error state */
+   JL_ERROR,         /* job is in error state */
+
+   JL_ALL
 } job_log_t;
 
 bool

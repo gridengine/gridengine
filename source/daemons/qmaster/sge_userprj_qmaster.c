@@ -384,7 +384,6 @@ int user        /* =1 user, =0 project */
          DEXIT;
          return STATUS_EEXIST;
       }
-
    }
 
    /* delete user or project file */
@@ -392,7 +391,6 @@ int user        /* =1 user, =0 project */
                         0, 0, name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
 
-      lRemoveElem(*upl, ep);
       DEXIT;
       return STATUS_EDISK;
    }
@@ -456,7 +454,7 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
       next = lNext(user);
       if (delete_time > 0 && delete_time < now) {
          if (sge_del_userprj(user, NULL, &Master_User_List, root,
-                             (char *)qmaster_host, 1)) {
+                              (char *)qmaster_host, 1) != STATUS_OK) {
             /* only try to delete it once ... */
             lSetUlong(user, UP_delete_time, 0);
          }

@@ -1232,7 +1232,7 @@ static const char *
 reporting_get_job_log_name(const job_log_t type)
 {
    /* JG: TODO: using a switch() would be safer! */
-   static const char *names[] = {
+   static const char *names[JL_ALL] = {
       "unknown",
       "pending",
       "sent",
@@ -1246,7 +1246,8 @@ reporting_get_job_log_name(const job_log_t type)
       "restart",
       "migrate",
       "deleted",
-      "finished"
+      "finished",
+      "error"
    };
 
    return names[type];

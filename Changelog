@@ -1,3 +1,5 @@
+JG-2002-05-23-1: Bugfix:    qlogin jobs made execd crash.
+
 JG-2002-05-23-0: Cleanup:   Made behaviour of sge_dstring_sprintf conformable 
                             to sprintf. 
                             New functions sge_dstring_sprintf_append 

@@ -543,6 +543,7 @@ char *err_str
    ** set JOB_NAME variable
    ** for interactive jobs a fixed name is set,
    ** for batch jobs the script name is used.
+   ** JG: TODO (265): shouldn't JOB_NAME be the name specified with -N option?
    */
    {
       u_long32 jb_now;
@@ -620,6 +621,7 @@ char *err_str
    /*
    ** interactive and login jobs have no script file
    */
+
    if(petep != NULL) {
       /* JG: TODO (255): passing information if it is an interactive job and which type, should not be
        *           be done in scriptfile - find a better solution, e.g. a config variable 

@@ -68,7 +68,7 @@
 #define JB_NOW_STR_QRSH       "QRSH"
 #define JB_NOW_STR_QRLOGIN    "QRLOGIN"
 
-#define JB_NOW_CLEAR_IMMEDIATE(jb_now)    jb_now = jb_now & 0xF8L 
+#define JB_NOW_CLEAR_IMMEDIATE(jb_now)    jb_now = jb_now & 0xFEL 
 
 #define JB_NOW_SET_IMMEDIATE(jb_now)      jb_now =  jb_now | JB_NOW_IMMEDIATE
 #define JB_NOW_SET_QSH(jb_now)            jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QSH

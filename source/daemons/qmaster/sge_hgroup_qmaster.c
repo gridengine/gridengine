@@ -376,7 +376,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                   }
    
                   /*
-                   * Mopdify QIs of CQ
+                   * Modify QIs of CQ
                    */
                   if (ret) {
                      bool refresh_all_values = ((add_hosts != NULL) ||

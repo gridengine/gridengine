@@ -112,6 +112,9 @@ if [ -x /bin/uname ]; then
          esac
       esac
       ;;
+   HP-UX,ia64)
+      ARCH=hp11-64
+      ;;
    *,9000/*)
       rev=`/bin/uname -r`
       case $rev in

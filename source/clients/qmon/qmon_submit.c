@@ -842,6 +842,12 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
+   if (!cbs->set) {
+      submit_mode_data.sub_mode = SUBMIT_NORMAL;
+   } else {
+      submit_mode_data.sub_mode = SUBMIT_QSH;
+   }   
+   
    /*
    ** clear the entries and set default name of job
    */
@@ -850,10 +856,7 @@ XtPointer cld, cad;
    /*
    ** reset the sensitivity depending on state
    */
-   if (!cbs->set) {
-      submit_mode_data.sub_mode = SUBMIT_NORMAL;
-   } else {
-      submit_mode_data.sub_mode = SUBMIT_QSH;
+   if (submit_mode_data.sub_mode == SUBMIT_QSH) {
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
@@ -1567,7 +1570,7 @@ tSMEntry *data
 ) {
    DENTER(GUI_LAYER, "qmonInitSMData");
    
-   memset((void*)data, sizeof(tSMEntry), 0);
+   memset((void*)data, 0, sizeof(tSMEntry));
    data->verify_mode = SKIP_VERIFY;
 
    DEXIT;
@@ -2839,6 +2842,21 @@ XtPointer cld, cad;
       XtSetSensitive(submit_stderror, True);
       XtSetSensitive(submit_stderrorPB, True);
    }
+   else {
+      char buf[512];
+      String dsp = NULL;
+
+      XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
+      dsp = DisplayString(XtDisplay(w));
+      if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
+         sprintf(buf, "DISPLAY=%s%s", me.qualified_hostname, 
+                        dsp); 
+      else
+         sprintf(buf, "DISPLAY=%s", dsp); 
+      XmtInputFieldSetString(submit_env, buf); 
+      XmToggleButtonSetState(submit_now, 1, True);
+   }
+
 
    /*
    ** change the resources pixmap icon if necessary
@@ -2849,7 +2867,6 @@ XtPointer cld, cad;
    ** clear message line
    */
    XmtMsgLineClear(submit_message, XmtMsgLineNow); 
-
 
    DEXIT;
 }

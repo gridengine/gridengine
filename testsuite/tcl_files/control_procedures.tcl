@@ -770,6 +770,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set command_pos 8
       }
       "alinux" -
+      "lx22-alpha" -
       "lx24-alpha" {
          if { $additional_run == 0 } {
             # this is the first ps without any size position

@@ -1431,8 +1431,6 @@ char **argv
       SGE_EXIT(1);
    }
 
-   remove_unknown_opts(opts_defaults);
-
    /*
    ** append the commandline switches to the list
    */
@@ -1504,7 +1502,7 @@ char **argv
    }
 
    opts_all = merge_and_order_options(&opts_defaults, &opts_scriptfile, &opts_cmdline);
-   /* remove_unknown_opts(opts_all); */
+   remove_unknown_opts(opts_all);
 
    if (!job) {
       lList *answer = NULL;
@@ -1884,7 +1882,8 @@ static void remove_unknown_opts(lList *lp)
           strcmp(cp, "-P") &&
           strcmp(cp, "-p") && strcmp(cp, "-pe") && strcmp(cp, "-q") && strcmp(cp, "-v") &&
           strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
-          strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose")) {
+          strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
+          strcmp(cp, "-S")) {
          if (ep == lFirst(lp)) {
             lRemoveElem(lp, ep);
             ep = lFirst(lp);

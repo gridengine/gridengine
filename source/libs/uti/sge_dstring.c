@@ -112,8 +112,57 @@ char* sge_dstring_append(dstring *sb, const char *a)
 *
 *  RESULT
 *     char* - result string 
+*
+*  NOTES
+*     JG: TODO (265): Do not use a fixed size buffer and vprintf!
+*                     This undoes the benefits of a dynamic string
+*                     implementation.
+*                     Either use a vsnprintf implementation (if available for
+*                     all platforms) or find other means to prevent buffer
+*                     overflows.
 ******************************************************************************/
 char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
+{
+   char buf[BUFSIZ];
+   va_list ap;
+
+   va_start(ap, format);
+   if (!format) {
+      return sb ? sb->s : NULL;
+   }
+   vsprintf(buf, format, ap);
+   return sge_dstring_copy_string(sb, buf);
+}
+
+/****** uti/dstring/sge_dstring_sprintf_append() *************************************
+*  NAME
+*     sge_dstring_sprintf_append() -- sprintf() and append for dstring's 
+*
+*  SYNOPSIS
+*     char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...) 
+*
+*  FUNCTION
+*     See sprintf() 
+*     The string created by sprintf is appended already existing contents of
+*     the dstring.
+*
+*  INPUTS
+*     dstring *sb        - dynamic string 
+*     const char *format - format string 
+*     ...                - additional parameters 
+*
+*  RESULT
+*     char* - result string 
+*
+*  NOTES
+*     JG: TODO (265): Do not use a fixed size buffer and vprintf!
+*                     This undoes the benefits of a dynamic string
+*                     implementation.
+*                     Either use a vsnprintf implementation (if available for
+*                     all platforms) or find other means to prevent buffer
+*                     overflows.
+******************************************************************************/
+char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
    char buf[BUFSIZ];
    va_list ap;
@@ -213,6 +262,26 @@ void sge_dstring_free(dstring *sb)
       free(sb->s);
       sb->s = NULL;
       sb->size = 0;
+   }
+}   
+
+/****** uti/dstring/sge_dstring_clear() ****************************************
+*  NAME
+*     sge_dstring_clear() -- empty a dstring
+*
+*  SYNOPSIS
+*     void sge_dstring_clear(dstring *sb) 
+*
+*  FUNCTION
+*     Set a dstring to an empty string.
+*
+*  INPUTS
+*     dstring *sb - dynamic string 
+******************************************************************************/
+void sge_dstring_clear(dstring *sb) 
+{
+   if (sb && sb->s) {
+      sb->s[0] = 0;
    }
 }   
 

@@ -258,11 +258,12 @@ const char *user
 *******************************************************************************/
 const char *sge_get_active_job_file_path(char *buffer, int size, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename) 
 {
-   dstring path = DSTRING_INIT;
+   static dstring path = DSTRING_INIT;
    char id_buffer[30];
 
    DENTER(TOP_LAYER, "sge_get_active_job_file_path");
 
+   sge_dstring_clear(&path);
    sge_dstring_append(&path, ACTIVE_DIR);
 
    sprintf(id_buffer, "/"u32"."u32, job_id, ja_task_id);

@@ -236,7 +236,6 @@ lListElem *ep
       (void) sge_dstring_append(&sb, " NONE"); 
 /*    items[i++] = XmStringCreateLtoR(sb.s, "LIST"); */
    items[i++] = XmStringCreateLocalized((char*)sge_dstring_get_string(&sb));
-   sge_dstring_free(&sb);
    
    /* users list */
    ul = lGetList(ep, PE_user_list);
@@ -248,7 +247,6 @@ lListElem *ep
    if (!lGetNumberOfElem(ul))
       (void) sge_dstring_append(&sb, " NONE"); 
    items[i++] = XmStringCreateLocalized(sb.s);
-   sge_dstring_free(&sb);
    
    /* xusers list */
    ul = lGetList(ep, PE_xuser_list);

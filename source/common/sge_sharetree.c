@@ -516,6 +516,7 @@ const char *path
    FILE *fp = stdout;
    ancestors_t ancestors;
    int i;
+   dstring sb = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "show_sharetree_path");
  
@@ -541,7 +542,6 @@ const char *path
          fprintf(fp, "="u32"\n", lGetUlong(node, STN_shares));
       free_ancestors(&ancestors);
       for_each(cep, lGetList(node, STN_children)) {
-         dstring sb = DSTRING_INIT;
 
          if (!strcmp(path, "/"))
             sge_dstring_sprintf(&sb, "/%s", lGetString(cep, STN_name));
@@ -549,12 +549,13 @@ const char *path
             sge_dstring_sprintf(&sb, "%s/%s", path,
                                  lGetString(cep, STN_name));
          show_sharetree_path(root, sge_dstring_get_string(&sb));
-         sge_dstring_free(&sb);
       }
    }
    else {
       fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S, path);
    }
  
-   DEXIT;                                                                          return 0;
+   sge_dstring_free(&sb);
+   DEXIT;
+   return 0;
 }                                                                               

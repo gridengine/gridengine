@@ -197,7 +197,6 @@ lListElem *ep
    sge_dstring_sprintf(&sb, "%-20.20s ", "Year");
    sge_dstring_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:"NONE");
    items[i++] = XmStringCreateLtoR(sb.s, "LIST");
-   sge_dstring_free(&sb);
 
    /* week calendar */
    sge_dstring_sprintf(&sb, "%-20.20s ", "Week");

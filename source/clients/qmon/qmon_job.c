@@ -1801,7 +1801,7 @@ dstring *sb
       lListElem *sme;
  
       if (line_separator)
-         sge_dstring_sprintf(sb, "\n");
+         sge_dstring_sprintf_append(sb, "\n");
       else
          line_separator = 1;
 /*       cull_show_job(j_elem, 0); */
@@ -1812,12 +1812,12 @@ dstring *sb
             /* global schduling info */
             for_each (mes, lGetList(sme, SME_global_message_list)) {
                if (first_run) {
-                  sge_dstring_sprintf(sb, "%s", "scheduling info:            ");
+                  sge_dstring_sprintf_append(sb, "%s", "scheduling info:            ");
                   first_run = 0;
                }
                else
-                  sge_dstring_sprintf(sb, "%s", "                            ");
-               sge_dstring_sprintf(sb, "%s\n", lGetString(mes, MES_message));
+                  sge_dstring_sprintf_append(sb, "%s", "                            ");
+               sge_dstring_sprintf_append(sb, "%s\n", lGetString(mes, MES_message));
             }
  
             /* job scheduling info */
@@ -1826,14 +1826,14 @@ dstring *sb
             mes = lFindFirst(lGetList(sme, SME_message_list), where);
             if (mes) {
                if (first_run) {
-                  sge_dstring_sprintf(sb, "%s", "scheduling info:            ");
+                  sge_dstring_sprintf_append(sb, "%s", "scheduling info:            ");
                   first_run = 0;
                }
                else
-                  sge_dstring_sprintf(sb, "%s\n", lGetString(mes, MES_message));
+                  sge_dstring_sprintf_append(sb, "%s\n", lGetString(mes, MES_message));
             }
             while ((mes = lFindNext(mes, where)))
-               sge_dstring_sprintf(sb, "                            %s\n",
+               sge_dstring_sprintf_append(sb, "                            %s\n",
                                     lGetString(mes, MES_message));
             lFreeWhere(where);
          }
@@ -1896,15 +1896,15 @@ dstring *sb
       first_run = 1;
       for_each (mes, lGetList(sme, SME_global_message_list)) {
          if (first_run) {
-            sge_dstring_sprintf(sb, "%s", "scheduling info:            ");
+            sge_dstring_sprintf_append(sb, "%s", "scheduling info:            ");
             first_run = 0;
          }
          else
-            sge_dstring_sprintf(sb, "%s", "                            ");
-         sge_dstring_sprintf(sb, "%s\n", lGetString(mes, MES_message));
+            sge_dstring_sprintf_append(sb, "%s", "                            ");
+         sge_dstring_sprintf_append(sb, "%s\n", lGetString(mes, MES_message));
       }                                               
       if (!first_run)
-         sge_dstring_sprintf(sb, "\n");
+         sge_dstring_sprintf_append(sb, "\n");
  
       first_run = 1;
  
@@ -1936,7 +1936,7 @@ dstring *sb
             }
  
             if (strlen(text) >= MAX_LINE_LEN || ids_per_line >= MAX_IDS_PER_LINE || header) {
-               sge_dstring_sprintf(sb, "%s", text);
+               sge_dstring_sprintf_append(sb, "%s", text);
                text[0] = 0;
                ids_per_line = 0;
                first_row = 0;
@@ -1947,7 +1947,7 @@ dstring *sb
                   printf("\n\n");
                else
                   first_run = 0;
-               sge_dstring_sprintf(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
+               sge_dstring_sprintf_append(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
                first_row = 1;
             }
  
@@ -1969,7 +1969,7 @@ dstring *sb
          }
       }
       if (text[0] != 0)
-         sge_dstring_sprintf(sb, "%s\n", text);
+         sge_dstring_sprintf_append(sb, "%s\n", text);
    }
  
    lFreeList(ilp);

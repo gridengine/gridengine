@@ -57,7 +57,9 @@ typedef struct {
 char* sge_dstring_append(dstring *sb, const char *a);
 
 char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
+char* sge_dstring_sprintf_append(dstring *sb, const char *fmt, ...);
 
+void sge_dstring_clear(dstring *sb);
 void sge_dstring_free(dstring *sb);
 
 const char *sge_dstring_get_string(const dstring *string);

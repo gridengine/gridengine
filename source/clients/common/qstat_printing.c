@@ -464,7 +464,6 @@ char *indent
                         jid = lGetUlong(jlep, JB_job_number);
                         old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
-                        sge_dstring_free(&dyn_task_str);
                         sge_dstring_sprintf(&dyn_task_str, u32, jataskid);
                         different = (jid != old_jid) || (jataskid != old_jataskid);
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
@@ -587,7 +586,6 @@ u_long32 group_opt
 
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
                    group_opt != GROUP_TASK_GROUPS) {
-                  sge_dstring_free(&dyn_task_str);
                   sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL,
@@ -663,12 +661,12 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
    lList *range_list[8];         /* RN_Type */
    u_long32 hold_state[8];
    int i;
+   dstring ja_task_id_string = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "sge_print_jobs_not_enrolled");
  
    job_create_hold_id_lists(job, range_list, hold_state); 
    for (i = 0; i <= 7; i++) {
-      dstring ja_task_id_string = DSTRING_INIT;
       lList *answer_list = NULL;
       u_long32 first_id;
       int show = 0;
@@ -720,7 +718,6 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                   lListElem *ja_task = job_get_ja_task_template_hold(job,
                                                           start, hold_state[i]);
 
-                  sge_dstring_free(&ja_task_id_string);
                   sge_dstring_sprintf(&ja_task_id_string, u32, start);
                   sge_print_job(job, ja_task, NULL, 1, NULL,
                                 &ja_task_id_string, full_listing, 0, 0, 
@@ -731,6 +728,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
       }
    }
    job_destroy_hold_id_lists(job, range_list); 
+   sge_dstring_free(&ja_task_id_string);
    DEXIT;
    return STATUS_OK;
 }                          
@@ -775,7 +773,6 @@ u_long32 full_listing
                      printf(MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING);
                      printf(  "################################################################################%s\n", sge_ext?hashes:"");
                   }
-                  sge_dstring_free(&dyn_task_str);
                   sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
@@ -823,7 +820,6 @@ u_long32 full_listing
                   printf(MSG_QSTAT_PRT_ERRORJOBS);
                   printf("################################################################################%s\n", sge_ext?hashes:"");
                }
-               sge_dstring_free(&dyn_task_str);
                sge_dstring_sprintf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
                sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");
             }

@@ -838,4 +838,3 @@ proc get_queue_state { queue } {
   return ""
 }
 
-

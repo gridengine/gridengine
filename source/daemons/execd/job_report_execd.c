@@ -47,6 +47,7 @@
 #include "sge_string.h"
 #include "job.h"
 #include "msg_execd.h"
+#include "sge_job_jatask.h"
 
 lList *jr_list = NULL;
 int flush_jr = 0;
@@ -90,7 +91,8 @@ lListElem *jep
    lSetUlong(jr, JR_ja_task_number, jataskid);
    lAppendElem(jr_list, jr);
 
-   if (jep && (jatep = search_task(jataskid, jep))) { /* jep is optional */
+   jatep = job_search_task(jep, NULL, jataskid, 0);
+   if (jep != NULL && jatep != NULL) { 
       init_from_job(jr, jep, jatep);
    }
  

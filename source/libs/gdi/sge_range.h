@@ -38,17 +38,17 @@
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
-#define for_each_id_in_range_list(id, elem, list) \
+/*
    for_each(elem, list) \
       for(id = lGetUlong(elem, RN_min); id <= lGetUlong(elem, RN_max); \
-          id += lGetUlong(elem, RN_step)) \
-   
-#if 0
-   for (elem = lFirst(list), (elem ? id = lGetUlong(elem, RN_min) : 0); \
-        (elem ? ((id <= lGetUlong(elem, RN_max)) ? 1 : (elem = lNext(elem), \
-               (elem ? (id = lGetUlong(elem, RN_min), 1) : 0))) : 0); \
-        id += lGetUlong(elem, RN_step))   
-#endif
+          id += lGetUlong(elem, RN_step)) 
+
+*/
+#define for_each_id_in_range_list(id, elem, list) \
+   for (id = ((elem = lFirst(list)) ? lGetUlong(elem, RN_min) : 0); \
+        (elem ? (id <= lGetUlong(elem, RN_max)) : 0); \
+        (elem ? (id += lGetUlong(elem, RN_step)) : \
+                ((elem = lNext(elem)) ? (id = lGetUlong(elem, RN_min)) : 0)))
 
 void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
 
@@ -56,31 +56,51 @@ lList* split_task_group(lList **in_list);
 
 /* *** */
 
-void range_calculate_union_set(lList *range_list1, lList *range_list2, 
-                               lList **range_list3);
+void range_list_calculate_union_set(lList **range_list, lList **answer_list,
+                                    const lList *range_list1, 
+                                    const lList *range_list2);
 
-void range_calculate_difference_set(lList *range_list1, lList *range_list2,
-                                    lList **range_list3);
+void range_calculate_difference_set(lList **range_list, lList **answer_list,
+                                    const lList *range_list1,
+                                    const lList *range_list2);  
 
-void range_calculate_intersection_set(lList *range_list1, lList *range_list2,
-                                      lList **range_list3);
+void range_calculate_intersection_set(lList **range_list, lList **answer_list,
+                                      const lList *range_list1,
+                                      const lList *range_list2); 
 
-void range_get_all_ids(lListElem *range_elem, u_long32 *min, u_long32 *max,
-                       u_long32 *step);
+void range_get_all_ids(const lListElem *range_elem, u_long32 *min, 
+                       u_long32 *max, u_long32 *step);
 
 void range_set_all_ids(lListElem *range_elem, u_long32 min, u_long32 max,
                        u_long32 step);
 
-void range_print_to_string(lList *range_list, StringBufferT *string);
+void range_print_to_string(const lList *range_list, StringBufferT *string);
 
-void range_sort_uniq_compress(lList *range_list);  
+void range_sort_uniq_compress(lList *range_list, lList **answer_list);  
 
-void range_insert_id(lList *range_list, u_long32 id);
+void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id);
  
-void range_remove_id(lList *range_list, u_long32 id);
+void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id);
+
+void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
+                                 lList **range_list2, u_long32 n);
+
+typedef void (*range_remove_insert_t)(lList**, lList**, u_long32);
  
-int range_is_within(lList *range_list, u_long32 id);   
+int range_is_id_within(const lListElem *range, u_long32 id);   
+
+int range_list_is_id_within(const lList *range_list, u_long32 id);   
 
 void range_compress(lList *range_list);    
+
+u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list);
+
+u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list);
+
+void range_list_initialize(lList **range_list, lList **answer_list);
+
+u_long32 range_list_get_number_of_ids(const lList *range_list);
+ 
+u_long32 range_get_number_of_ids(const lListElem *range);
 
 #endif /* __SGE_RANGE_H */

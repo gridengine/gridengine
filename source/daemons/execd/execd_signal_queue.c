@@ -61,6 +61,7 @@
 #include "job_report_execd.h"
 #include "sge_stat.h" 
 #include "msg_execd.h"
+#include "sge_job_jatask.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -419,7 +420,9 @@ u_long32 signal
    /* search appropriate array task and job */
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
-      if((jatep = search_task(jataskid, jep)) != NULL) {
+      jatep = job_search_task(jep, NULL, jataskid, 0);
+
+      if(jatep != NULL) {
          break;
       }
       jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);

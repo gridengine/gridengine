@@ -293,9 +293,9 @@ lListElem **pjob
       return answer;
    }     
    lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
-   lSetList(*pjob, JB_ja_u_h_ids, u_h_list);
-   lSetList(*pjob, JB_ja_o_h_ids, o_h_list);
-   lSetList(*pjob, JB_ja_s_h_ids, s_h_list);
+   lSetList(*pjob, JB_ja_u_h_ids, NULL);
+   lSetList(*pjob, JB_ja_o_h_ids, NULL);
+   lSetList(*pjob, JB_ja_s_h_ids, NULL);
 }
 #endif
 
@@ -320,6 +320,9 @@ lListElem **pjob
       if (in_hold_state) {
          lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
       }
+#if 1 /* EB: TODO */
+      lWriteElemTo(*pjob, stderr);
+#endif
       lRemoveElem(cmdline, ep);
    }
 

@@ -568,7 +568,7 @@ feature_id_t id
    lListElem *feature = NULL;
    int ret = 0;
 
-   DENTER(TOP_LAYER, "feature_is_enabled");
+   DENTER(BASIS_LAYER, "feature_is_enabled");
    active_set = lGetElemUlong(Master_FeatureSet_List, FES_active, 1);
    if (active_set) {
       feature = lGetSubUlong(active_set, FE_id, id, FES_features);

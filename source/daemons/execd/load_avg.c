@@ -592,7 +592,6 @@ static void update_job_usage()
    }
 
    dp = lGetListDescr(usage_list);
-
    if ((job_id_index = lGetPosInDescr(dp, JB_job_number))<0) {
       ERROR((SGE_EVENT, "missing job number in usage list from ptf"));
       lFreeList(usage_list);

@@ -499,8 +499,10 @@ char **argv
          }
          jatep = tmp_jatep;
       }
+#if 0 /* EB: we need the container for the pending jobs */
       if (lGetNumberOfElem(task_list) == 0)
          lRemoveElem(job_list, jep);
+#endif
       jep = tmp;
    }
 
@@ -630,18 +632,18 @@ u_long32 show
       if (show & QSTAT_DISPLAY_FINISHED) {
          show |= ~QSTAT_DISPLAY_PENDING;
       }  
-
+#if 1 /* EB: TODO: implement (%I != NULL) for lists within cull */
       if (!(show & QSTAT_DISPLAY_PENDING)) {
-
          DPRINTF(("==> No pending jobs\n")); 
 
-         nw = lWhere("%T(%I->%T(!(%I m= %u)))", JB_Type, JB_ja_tasks, JAT_Type, 
-            JAT_state, JQUEUED);
+         nw = lWhere("%T(%I->%T(!(%I >= %u)))", JB_Type, JB_ja_n_h_ids, 
+               RN_Type, RN_min, 0);
          if (!jw)
             jw = nw;
          else
             jw = lAndWhere(jw, nw);
       }
+#endif
       if (!(show & QSTAT_DISPLAY_RUNNING)) {
 
          DPRINTF(("==> No running/transiting jobs\n"));
@@ -666,7 +668,7 @@ u_long32 show
          else
             jw = lAndWhere(jw, nw);
       }
-      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_5 ")", JB_Type, 
+      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_script_file,
@@ -691,6 +693,11 @@ u_long32 show
                      JB_master_hard_queue_list,
                      JB_ja_structure, 
                      JB_ja_tasks,
+                     JB_ja_n_h_ids,
+                     JB_ja_u_h_ids,
+                     JB_ja_o_h_ids,
+                     JB_ja_s_h_ids,
+                     JB_ja_template,
                      JB_execution_time );
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
@@ -715,7 +722,7 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_2 ")", JB_Type, 
+      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_5 FORMAT_I_2")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_group,
@@ -737,6 +744,11 @@ u_long32 show
                      JB_hard_queue_list,
                      JB_soft_queue_list,
                      JB_ja_structure,
+                     JB_ja_n_h_ids,
+                     JB_ja_u_h_ids,
+                     JB_ja_o_h_ids,
+                     JB_ja_s_h_ids, 
+                     JB_ja_template,
                      JB_ja_tasks );
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 

@@ -66,24 +66,594 @@
 #include "sge_schedd_text.h"
 #include "job.h"
 
-#if 0
-   for (elem = lFirst(list);
-        elem;
-        elem = lNext(elem)) {
-      for(id = lGetUlong(elem, RN_start); 
-          id <= lGetUlong(elem, RN_end); 
-          id += lGetUlong(elem, RN_step)) {
-      }
-   }
-#endif
-
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, StringBufferT *dyn_taskrange_str);
 
-static void range_correct_end(lListElem *range_elem);
+static void range_correct_end(lListElem *range);
  
-static int range_is_overlapping(lListElem *range_elem1,
-                                lListElem *range_elem2);
+static int range_is_overlapping(const lListElem *range1, 
+                                const lListElem *range2);
+
+static void range_correct_end(lListElem *range) 
+{
+   if (range) {
+      u_long32 start, end, step;
+
+      range_get_all_ids(range, &start, &end, &step);  
+      if ((end - start) % step) {
+         u_long32 factor;
+
+         factor = (end - start) / step;
+         end = start + factor * step;
+         range_set_all_ids(range, start, end, step);
+      } 
+   }
+}
+
+static int range_is_overlapping(const lListElem *range1, 
+                                const lListElem *range2)
+{
+   int ret = 0;
+
+   if (range1 != NULL && range2 != NULL) {
+      u_long32 start1, end1, step1;
+      u_long32 start2, end2, step2;
+
+      range_get_all_ids(range1, &start1, &end1, &step1);
+      range_get_all_ids(range2, &start2, &end2, &step2);
+      if (end1 >= start2) {
+         ret = 1;
+      } 
+   }
+   return ret;
+}
+
+void range_list_initialize(lList **range_list, lList **answer_list) 
+{
+   if (range_list != NULL) {
+      if (*range_list != NULL) {
+         lListElem *range;
+         lListElem *next_range;
+
+         next_range = lFirst(*range_list);
+         while ((range = next_range)) {
+            next_range = lNext(range);
+
+            lRemoveElem(*range_list, range);
+         } 
+      } else {
+         *range_list = lCreateList("range list", RN_Type);
+         if (*range_list == NULL) {
+            sge_add_answer(answer_list, "unable to create range list",
+                           STATUS_ERROR1, NUM_AN_ERROR);
+         }
+      }
+   }
+}
+
+u_long32 range_list_get_number_of_ids(const lList *range_list)
+{
+   u_long32 ret = 0;
+   lListElem *range;
+
+   for_each(range, range_list) {
+      ret += range_get_number_of_ids(range);
+   } 
+   return ret;
+}
+
+u_long32 range_get_number_of_ids(const lListElem *range) 
+{
+   u_long32 start, end, step;
+
+   range_get_all_ids(range, &start, &end, &step);
+   return 1 + (end - start) / step;
+}
+
+void range_print_to_string(const lList *range_list, StringBufferT *string) 
+{
+   if (range_list != NULL && string != NULL) {
+      lListElem *range;
+      u_long32 start, end, step;
+
+      for_each(range, range_list) {
+         range_get_all_ids(range, &start, &end, &step);
+         add_taskrange_str(start, end, step, string);
+      }
+   }
+}
+
+u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list) 
+{
+   u_long32 start = 0;
+   lListElem *range = lFirst(range_list);
+   DENTER(BASIS_LAYER, "range_list_get_first_id");
+
+   if (range) {
+      u_long32 end, step;
+
+      range_get_all_ids(range, &start, &end, &step);
+   } else {
+      DTRACE;
+      sge_add_answer(answer_list, "range_list containes no elements",
+                     STATUS_ERROR1, NUM_AN_ERROR);
+   }
+   DEXIT;
+   return start;
+}
+
+u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list) 
+{
+   u_long32 end = 0;
+   lListElem *range = lLast(range_list);
+
+   if (range) {
+      u_long32 start, step;
+
+      range_get_all_ids(range, &start, &end, &step);
+   } else {
+      sge_add_answer(answer_list, "range_list containes no elements",
+                     STATUS_ERROR1, NUM_AN_ERROR);
+   }
+   return end;
+}
+
+void range_sort_uniq_compress(lList *range_list, lList **answer_list)
+{
+   if (range_list) {
+      lListElem *range1, *next_range1;
+      lListElem *range2, *next_range2;
+      lList *tmp_list;
+
+      lSortList2(range_list, "%I+", RN_min);
+
+      /* 
+       * Remove overlapping ranges
+       */ 
+      tmp_list = lCreateList("tmp list", RN_Type); 
+      if (tmp_list) {
+         next_range1 = lFirst(range_list);
+         while ((range1 = next_range1)) {
+            next_range2 = lNext(next_range1); 
+            range_correct_end(range1);
+            while ((range2 = next_range2)) {
+               next_range2 = lNext(range2);
+               range_correct_end(range2);
+               if (range_is_overlapping(range1, range2)) {
+                  range2 = lDechainElem(range_list, range2);
+                  lAppendElem(tmp_list, range2);
+               } else {
+                  break;
+               } 
+            }
+            next_range1 = lNext(range1);
+         }
+
+         /*
+          * Insert all removed entries at the correct position
+          */
+         for_each(range1, tmp_list) {
+            u_long32 start1, end1, step1;
+
+            range_get_all_ids(range1, &start1, &end1, &step1);
+            for (; start1 <= end1; start1 += step1) {
+               range_list_insert_id(&range_list, answer_list, start1);
+            }
+         }
+
+         lFreeList(tmp_list);
+         range_compress(range_list);
+      } else {
+         sge_add_answer(answer_list, "unable to create range list",
+                        STATUS_ERROR1, NUM_AN_ERROR);            
+      }
+   }
+}
+
+void range_compress(lList *range_list) 
+{
+   if (range_list != NULL) {
+      lListElem *range1 = NULL;
+      lListElem *range2 = NULL;
+      lListElem *next_range1 = lFirst(range_list);
+      lListElem *next_range2 = lNext(next_range1);   
+
+      while ((range1 = next_range1) &&
+             (range2 = next_range2)) {
+         u_long32 start1, end1, step1;
+         u_long32 start2, end2, step2;
+    
+         range_get_all_ids(range1, &start1, &end1, &step1);
+         range_get_all_ids(range2, &start2, &end2, &step2);
+         if (end1 + step1 == start2 && step1 == step2) { 
+            end1 = end2;
+            step1 = step2;
+            range_set_all_ids(range1, start1, end1, step1);
+            lRemoveElem(range_list, range2);
+            range2 = NULL;
+            next_range1 = range1;
+         } else if (start1 == end1 && step1 == 1 && end1 == start2 - step2) {
+            end1 = end2;
+            step1 = step2;
+            range_set_all_ids(range1, start1, end1, step1);
+            lRemoveElem(range_list, range2);
+            range2 = NULL;
+            next_range1 = range1;
+         } else if (start2 == end2 && step2 == 1 && end1 + step1 == end2) {
+            end1 = end2;
+            range_set_all_ids(range1, start1, end1, step1);
+            lRemoveElem(range_list, range2);
+            range2 = NULL;
+            next_range1 = range1;
+         } else if (start1 == end1 && start2 == end2 && step1 == step2 &&
+                    step1 == 1) {
+            end1 = start2;
+            step1 = end1 - start1;
+            range_set_all_ids(range1, start1, end1, step1);
+            lRemoveElem(range_list, range2);
+            range2 = NULL;
+            next_range1 = range1;
+         } else {
+            next_range1 = lNext(range1);
+         }
+         next_range2 = lNext(next_range1);
+      }             
+   }
+}
+
+int range_list_is_id_within(const lList *range_list, u_long32 id) 
+{
+   lListElem *range = NULL;
+   int ret = 0;
+
+   for_each(range, range_list) {
+      if (range_is_id_within(range, id)) {
+         ret = 1;
+         break;
+      }
+   } 
+   return ret;
+}
+
+int range_is_id_within(const lListElem *range, u_long32 id) 
+{
+   int ret = 0;
+
+   if (range) {
+      u_long32 start, end, step; 
+
+      range_get_all_ids(range, &start, &end, &step); 
+      if (id >= start && id <= end && ((id - start) % step) == 0) {
+         ret = 1;
+      } 
+   }
+   return ret;
+}
+
+void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id) 
+{
+   lListElem *range = NULL;
+   lListElem *next_range = lFirst(*range_list);
+
+   if (range_list != NULL && *range_list != NULL) {
+      while ((range = next_range)) {
+         u_long32 start, end, step;
+         
+         next_range = lNext(range); 
+         range_get_all_ids(range, &start, &end, &step);      
+         if (id >= start && id <= end && ((id - start) % step) == 0) { 
+            if (id == start && id == end) {
+               lRemoveElem(*range_list, range);
+               break;
+            } else if (id  == start) {
+               start += step;
+               range_set_all_ids(range, start, end, step);
+               break;
+            } else if (id == end) {
+               end -= step;
+               range_set_all_ids(range, start, end, step);
+               break;
+            } else {
+               lListElem *new_range = lCreateElem(RN_Type);
+
+               if (new_range != NULL) {
+                  range_set_all_ids(range, start, id - step, step);
+                  range_set_all_ids(new_range, id + step, end, step);
+                  lInsertElem(*range_list, range, new_range);
+               } else {
+                  sge_add_answer(answer_list, "unable to split range element",
+                                 STATUS_ERROR1, NUM_AN_ERROR);     
+               }
+               break;
+            }
+         }
+      }
+      if (lGetNumberOfElem(*range_list) == 0) {
+         *range_list = lFreeList(*range_list);
+      } 
+   }
+}
+
+void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
+                                 lList **range_list2, u_long32 n) 
+{
+   DENTER(TOP_LAYER, "range_list_move_first_n_ids");
+   if (range_list && *range_list && range_list2) {
+      lListElem *range = NULL;
+      u_long32 id;
+
+      for_each_id_in_range_list(id, range, *range_list) {
+         range_list_insert_id(range_list2, answer_list, id);
+         if (--n == 0) {
+            break;
+         }
+      }
+      for_each_id_in_range_list(id, range, *range_list2) {
+         range_list_remove_id(range_list, answer_list, id); 
+      }
+   }
+   DEXIT;
+}
+
+void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
+{
+   lListElem *range, *prev_range, *next_range;
+   int inserted = 0;
+   DENTER(TOP_LAYER, "range_insert_id");
+
+   lSortList2(*range_list, "%I+", RN_min);
+
+   range = NULL;
+   if (*range_list == NULL) {
+      *range_list = lCreateList("range list", RN_Type);
+      if (*range_list == NULL) {
+         sge_add_answer(answer_list, "unable to insert id into range",
+                        STATUS_ERROR1, NUM_AN_ERROR);  
+      }
+   }
+   prev_range = lLast(*range_list);
+   while((next_range = range, range = prev_range)) {
+      u_long32 start, end, step;
+      u_long32 prev_start, prev_end, prev_step;
+      u_long32 next_start, next_end, next_step;
+   
+      prev_range = lPrev(range);
+      range_get_all_ids(range, &start, &end, &step);
+
+      /* 1 */
+      if (id < end) {
+         if (prev_range) {
+            DTRACE;
+            continue;
+         } else {
+            DTRACE;
+            next_range = range;
+            range = prev_range;
+            prev_range = NULL;
+         }
+      }
+      
+      if (next_range) {
+         range_get_all_ids(next_range, &next_start, &next_end, &next_step);
+      }
+      if (prev_range) {
+         range_get_all_ids(prev_range, &prev_start, &prev_end, &prev_step);
+      }
+
+      /* 2 */
+      if (next_range && id > next_start) {
+         if (((id - next_start) % next_step == 0)) {
+            /* id is already part of the range */
+            DTRACE;
+            inserted = 1;
+         } else {
+            lListElem *new_range1, *new_range2;
+            u_long32 factor, prev_id, next_id;
+
+            DTRACE;
+            factor = ((id - next_start) / next_step);
+            prev_id = next_start + factor * next_step;
+            next_id = next_start + (factor + 1) * next_step;
+            range_set_all_ids(next_range, next_start, prev_id, 
+                              next_step);
+            new_range1 = lCreateElem(RN_Type);  
+            range_set_all_ids(new_range1, id, id, 1);
+            lInsertElem(*range_list, next_range, new_range1);
+            new_range2 = lCreateElem(RN_Type);  
+            range_set_all_ids(new_range2, next_id, next_end, 
+                              next_step);
+            lInsertElem(*range_list, new_range1, new_range2);
+            inserted = 1;
+         }
+      } else {
+         if ((range && (end == id)) ||
+             (next_range && (next_start == id))) {
+            /* id is already part of the range */
+            DTRACE;
+            inserted = 1;
+         } else if (range && (end + step == id)) {
+            /* 3 */
+            DTRACE;
+            end = id;
+            range_set_all_ids(range, start, end, step);
+            inserted = 1;
+         } else if (next_range && (next_start - next_step == id)) {
+            /* 4 */
+            DTRACE;
+            next_start = id;
+            range_set_all_ids(next_range, next_start, next_end, next_step);
+            inserted = 1;
+         } else {
+            lListElem *new_range;
+            
+            /* 5 */
+            DTRACE;
+            new_range = lCreateElem(RN_Type);
+            range_set_all_ids(new_range, id, id, 1);
+            lInsertElem(*range_list, range, new_range);
+            inserted = 1;
+         }
+      }
+      if (inserted) {
+         break;
+      }
+   } 
+   if (!inserted) {
+      lListElem *new_range;
  
+      DTRACE;
+      new_range = lCreateElem(RN_Type);
+      range_set_all_ids(new_range, id, id, 1);
+      lAppendElem(*range_list, new_range);
+      inserted = 1;  
+   }
+   DEXIT;
+}
+
+void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
+                       u_long32 *step)
+{
+   if (range) {
+      *min = lGetUlong(range, RN_min);
+      *max = lGetUlong(range, RN_max);
+      *step = lGetUlong(range, RN_step);
+   }
+}
+
+void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
+                       u_long32 step)
+{
+   if (range != NULL) {
+      lSetUlong(range, RN_min, min);
+      lSetUlong(range, RN_max, max);
+      lSetUlong(range, RN_step, (min != max) ? step : 1);
+   }
+}     
+
+void range_list_calculate_union_set(lList **range_list, lList **answer_list,
+                                    const lList *range_list1,
+                                    const lList *range_list2)
+{
+   if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
+      *range_list = lFreeList(*range_list);
+      *range_list = lCopyList("union_set range list",
+                              range_list1 ? range_list1 : range_list2);
+      if (*range_list) {
+         goto error;
+      }
+
+      range_sort_uniq_compress(*range_list, answer_list);
+      if (answer_list_is_error_in_list(answer_list)) {
+         goto error;
+      }
+
+      if (range_list1 != NULL && range_list2 != NULL) {
+         lListElem *range2 = NULL;
+
+         for_each(range2, range_list2) {
+            u_long32 start2, end2, step2;
+
+            range_get_all_ids(range2, &start2, &end2, &step2);
+            for (; start2 <= end2; start2 += step2) {
+               range_list_insert_id(range_list, answer_list, start2);
+            }
+         }
+         range_compress(*range_list); 
+      }
+   }
+   return;
+
+error:
+   *range_list = lFreeList(*range_list);
+   sge_add_answer(answer_list, "unable to calculate union set", 
+                  STATUS_ERROR1, NUM_AN_ERROR);
+}
+
+void range_calculate_difference_set(lList **range_list, lList **answer_list,
+                                    const lList *range_list1, 
+                                    const lList *range_list2)
+{
+   DENTER(TOP_LAYER, "range_calculate_difference_set");
+   if (range_list != NULL && range_list1 != NULL) {
+      *range_list = lFreeList(*range_list);
+      *range_list = lCopyList("difference_set range list", range_list1);
+      if (*range_list == NULL) {
+         goto error;
+      }
+
+      range_sort_uniq_compress(*range_list, answer_list);
+      if (answer_list_is_error_in_list(answer_list)) {
+         goto error;
+      }            
+
+      if (range_list2 != NULL) {
+         lListElem *range2 = NULL;
+ 
+         for_each(range2, range_list2) {
+            u_long32 start2, end2, step2;
+ 
+            range_get_all_ids(range2, &start2, &end2, &step2);
+            for (; start2 <= end2; start2 += step2) {
+               range_list_remove_id(range_list, answer_list, start2);
+               if (answer_list_is_error_in_list(answer_list)) {
+                  goto error;
+               }
+            }
+         }
+         range_compress(*range_list);
+      }            
+   }
+   DEXIT;
+   return;
+ 
+error:
+   *range_list = lFreeList(*range_list);
+   sge_add_answer(answer_list, "unable to calculate union set",
+                  STATUS_ERROR1, NUM_AN_ERROR); 
+   DEXIT;
+}
+
+void range_calculate_intersection_set(lList **range_list, lList **answer_list,
+                                      const lList *range_list1, 
+                                      const lList *range_list2)
+{ 
+   *range_list = lFreeList(*range_list);
+   if (range_list1 && range_list2) {
+      lListElem *range;
+
+      for_each(range, range_list1) {
+         u_long32 start, end, step;
+ 
+         range_get_all_ids(range, &start, &end, &step);
+         for (; start <= end; start += step) {
+            if (range_list_is_id_within(range_list2, start)) {
+               lListElem *new_range;
+
+               if (*range_list == NULL) {
+                  *range_list = lCreateList("intersection_set", RN_Type);
+                  if (*range_list == NULL) {
+                     goto error;
+                  }
+               }
+               new_range = lCreateElem(RN_Type);
+               if (new_range == NULL) {
+                  goto error;
+               }
+               range_set_all_ids(new_range, start, start, 1);
+               lAppendElem(*range_list, new_range);  
+            }
+         }
+      }
+      range_compress(*range_list);
+   }
+   return;
+
+error:
+   *range_list = lFreeList(*range_list);
+   sge_add_answer(answer_list, "unable to calculate intersection set",
+                  STATUS_ERROR1, NUM_AN_ERROR);
+}
+
+
 void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str) {
    lListElem *jatep, *nxt_jatep;
    u_long32 before_last_id = (u_long32)-1;
@@ -245,393 +815,4 @@ lList **in_list
    }
 
    return out_list;
-}
-
-void range_print_to_string(lList *range_list, StringBufferT *string) 
-{
-   lListElem *range_elem;
-   u_long32 start, end, step;
-
-   for_each(range_elem, range_list) {
-      range_get_all_ids(range_elem, &start, &end, &step);
-      add_taskrange_str(start, end, step, string);
-   }
-}
-
-void range_sort_uniq_compress(lList *range_list)
-{
-   lListElem *range_elem1, *next_range_elem1;
-   lListElem *range_elem2, *next_range_elem2;
-   lList *tmp_list;
-
-   lSortList2(range_list, "%I+", RN_min);
-
-   /* 
-    * Remove overlapping ranges
-    */ 
-   tmp_list = lCreateList("tmp list", RN_Type); 
-   next_range_elem1 = lFirst(range_list);
-   while ((range_elem1 = next_range_elem1)) {
-      next_range_elem2 = lNext(next_range_elem1); 
-      range_correct_end(range_elem1);
-      while ((range_elem2 = next_range_elem2)) {
-         next_range_elem2 = lNext(range_elem2);
-         range_correct_end(range_elem2);
-         if (range_is_overlapping(range_elem1, range_elem2)) {
-            range_elem2 = lDechainElem(range_list, range_elem2);
-            lAppendElem(tmp_list, range_elem2);
-         } else {
-            break;
-         } 
-      }
-      next_range_elem1 = lNext(range_elem1);
-   }
-
-   /*
-    * Insert all removed entries at the correct position
-    */
-   for_each(range_elem1, tmp_list) {
-      u_long32 start1, end1, step1;
-
-      range_get_all_ids(range_elem1, &start1, &end1, &step1);
-      for (; start1 <= end1; start1 += step1) {
-         range_insert_id(range_list, start1);
-      }
-   }
-
-   lFreeList(tmp_list);
-
-   range_compress(range_list);
-}
-
-void range_compress(lList *range_list) 
-{
-   lListElem *range_elem1, *next_range_elem1;
-   lListElem *range_elem2, *next_range_elem2;   
-
-   next_range_elem1 = lFirst(range_list);
-   next_range_elem2 = lNext(next_range_elem1);
-   while ((range_elem1 = next_range_elem1) &&
-          (range_elem2 = next_range_elem2)) {
-      u_long32 start1, end1, step1;
-      u_long32 start2, end2, step2;
- 
-      range_get_all_ids(range_elem1, &start1, &end1, &step1);
-      range_get_all_ids(range_elem2, &start2, &end2, &step2);
-      if ((end1 + step1 == start2 && step1 == step2)) { 
-         end1 = end2;
-         step1 = step2;
-         range_set_all_ids(range_elem1, start1, end1, step1);
-         lRemoveElem(range_list, range_elem2);
-         range_elem2 = NULL;
-         next_range_elem1 = range_elem1;
-      } else if (start1 == end1 && step1 == 1 && end1 == start2 - step2) {
-         end1 = end2;
-         step1 = step2;
-         range_set_all_ids(range_elem1, start1, end1, step1);
-         lRemoveElem(range_list, range_elem2);
-         range_elem2 = NULL;
-         next_range_elem1 = range_elem1;
-      } else if (start2 == end2 && step2 == 1 && end1 + step1 == end2) {
-         end1 = end2;
-         range_set_all_ids(range_elem1, start1, end1, step1);
-         lRemoveElem(range_list, range_elem2);
-         range_elem2 = NULL;
-         next_range_elem1 = range_elem1;
-      } else if (start1 == end1 && start2 == end2 && step1 == step2 &&
-                 step1 == 1) {
-         end1 = start2;
-         step1 = end1 - start1;
-         range_set_all_ids(range_elem1, start1, end1, step1);
-         lRemoveElem(range_list, range_elem2);
-         range_elem2 = NULL;
-         next_range_elem1 = range_elem1;
-      } else {
-         next_range_elem1 = lNext(range_elem1);
-      }
-      next_range_elem2 = lNext(next_range_elem1);
-   }             
-}
-
-static void range_correct_end(lListElem *range_elem) 
-{
-   u_long32 start, end, step;
-   u_long32 factor;
-
-   range_get_all_ids(range_elem, &start, &end, &step);  
-   if ((end - start) % step) {
-      factor = (end - start) / step;
-      end = start + factor * step;
-      range_set_all_ids(range_elem, start, end, step);
-   } 
-}
-
-static int range_is_overlapping(lListElem *range_elem1, lListElem *range_elem2)
-{
-   u_long32 start1, end1, step1;
-   u_long32 start2, end2, step2;
-   int ret;
-
-   range_get_all_ids(range_elem1, &start1, &end1, &step1);
-   range_get_all_ids(range_elem2, &start2, &end2, &step2);
-   if (end1 >= start2) {
-      ret = 1;
-   } else {
-      ret = 0;
-   }
-   return ret;
-}
-
-int range_is_within(lList *range_list, u_long32 id) 
-{
-   lListElem *range_elem;
-   int ret = 0;
-
-   for_each(range_elem, range_list) {
-      u_long32 start, end, step;
-      
-      range_get_all_ids(range_elem, &start, &end, &step);      
-      if (id >= start && id <= end && ((id - start) % step) == 0) {
-         ret = 1;
-         break;
-      }
-   } 
-   return ret;
-}
-
-void range_remove_id(lList *range_list, u_long32 id) 
-{
-   lListElem *range_elem, *next_range_elem;
-
-   next_range_elem = lFirst(range_list);
-   while ((range_elem = next_range_elem)) {
-      u_long32 start, end, step;
-      
-      next_range_elem = lNext(range_elem); 
-      range_get_all_ids(range_elem, &start, &end, &step);      
-      if (id >= start && id <= end && ((id - start) % step) == 0) { 
-         if (id == start && id == end) {
-            lRemoveElem(range_list, range_elem);
-            break;
-         } else if (id  == start) {
-            start += step;
-            range_set_all_ids(range_elem, start, end, step);
-            break;
-         } else if (id == end) {
-            end -= step;
-            range_set_all_ids(range_elem, start, end, step);
-            break;
-         } else {
-            lListElem *new_range_elem;
-
-            range_set_all_ids(range_elem, start, id - step, step);
-            new_range_elem = lCreateElem(RN_Type);
-            range_set_all_ids(new_range_elem, id + step, end, step);
-            lInsertElem(range_list, range_elem, new_range_elem);
-            break;
-         }
-      }
-   } 
-}
-
-void range_insert_id(lList *range_list, u_long32 id)
-{
-   lListElem *range_elem, *prev_range_elem, *next_range_elem;
-   int inserted = 0;
-   DENTER(TOP_LAYER, "range_insert_id");
-
-   lSortList2(range_list, "%I+", RN_min);
-
-   range_elem = NULL;
-   prev_range_elem = lLast(range_list);
-   while((next_range_elem = range_elem, range_elem = prev_range_elem)) {
-      u_long32 start, end, step;
-      u_long32 prev_start, prev_end, prev_step;
-      u_long32 next_start, next_end, next_step;
-   
-      prev_range_elem = lPrev(range_elem);
-      range_get_all_ids(range_elem, &start, &end, &step);
-
-      /* 1 */
-      if (id < end) {
-         if (prev_range_elem) {
-            DTRACE;
-            continue;
-         } else {
-            DTRACE;
-            next_range_elem = range_elem;
-            range_elem = prev_range_elem;
-            prev_range_elem = NULL;
-         }
-      }
-      
-      if (next_range_elem) {
-         range_get_all_ids(next_range_elem, &next_start, &next_end, &next_step);
-      }
-      if (prev_range_elem) {
-         range_get_all_ids(prev_range_elem, &prev_start, &prev_end, &prev_step);
-      }
-
-      /* 2 */
-      if (next_range_elem && id > next_start) {
-         if (((id - next_start) % next_step == 0)) {
-            /* id is already part of the range */
-            DTRACE;
-            inserted = 1;
-         } else {
-            lListElem *new_range_elem1, *new_range_elem2;
-            u_long32 factor, prev_id, next_id;
-
-            DTRACE;
-            factor = ((id - next_start) / next_step);
-            prev_id = next_start + factor * next_step;
-            next_id = next_start + (factor + 1) * next_step;
-            range_set_all_ids(next_range_elem, next_start, prev_id, 
-                              next_step);
-            new_range_elem1 = lCreateElem(RN_Type);  
-            range_set_all_ids(new_range_elem1, id, id, 1);
-            lInsertElem(range_list, next_range_elem, new_range_elem1);
-            new_range_elem2 = lCreateElem(RN_Type);  
-            range_set_all_ids(new_range_elem2, next_id, next_end, 
-                              next_step);
-            lInsertElem(range_list, new_range_elem1, new_range_elem2);
-            inserted = 1;
-         }
-      } else {
-         if ((range_elem && (end == id)) ||
-             (next_range_elem && (next_start == id))) {
-            /* id is already part of the range */
-            DTRACE;
-            inserted = 1;
-         } else if (range_elem && (end + step == id)) {
-            /* 3 */
-            DTRACE;
-            end = id;
-            range_set_all_ids(range_elem, start, end, step);
-            inserted = 1;
-         } else if (next_range_elem && (next_start - next_step == id)) {
-            /* 4 */
-            DTRACE;
-            next_start = id;
-            range_set_all_ids(next_range_elem, next_start, next_end, next_step);
-            inserted = 1;
-         } else {
-            lListElem *new_range_elem;
-            
-            /* 5 */
-            DTRACE;
-            new_range_elem = lCreateElem(RN_Type);
-            range_set_all_ids(new_range_elem, id, id, 1);
-            lInsertElem(range_list, range_elem, new_range_elem);
-            inserted = 1;
-         }
-      }
-      if (inserted) {
-         break;
-      }
-   } 
-   if (!inserted) {
-      lListElem *new_range_elem;
- 
-      DTRACE;
-      new_range_elem = lCreateElem(RN_Type);
-      range_set_all_ids(new_range_elem, id, id, 1);
-      lAppendElem(range_list, new_range_elem);
-      inserted = 1;  
-   }
-   DEXIT;
-}
-
-void range_get_all_ids(lListElem *range_elem, u_long32 *min, u_long32 *max,
-                       u_long32 *step)
-{
-   *min = lGetUlong(range_elem, RN_min);
-   *max = lGetUlong(range_elem, RN_max);
-   *step = lGetUlong(range_elem, RN_step);
-}
-
-void range_set_all_ids(lListElem *range_elem, u_long32 min, u_long32 max,
-                       u_long32 step)
-{
-   lSetUlong(range_elem, RN_min, min);
-   lSetUlong(range_elem, RN_max, max);
-   lSetUlong(range_elem, RN_step, (min != max) ? step : 1);
-}     
-
-void range_calculate_union_set(lList *range_list1, lList *range_list2,
-                               lList **range_list3)
-{
-   lListElem *range_elem2;
-
-   *range_list3 = lFreeList(*range_list3);
-   if (range_list1 && range_list2) {
-      *range_list3 = lCopyList("union_set range list", range_list1); 
-      range_sort_uniq_compress(*range_list3);
-      for_each(range_elem2, range_list2) {
-         u_long32 start2, end2, step2;
-    
-         range_get_all_ids(range_elem2, &start2, &end2, &step2);
-         for (; start2 <= end2; start2 += step2) {
-            range_insert_id(*range_list3, start2);
-         }
-      }       
-      range_compress(*range_list3); 
-   } else if (range_list1 || range_list2) {
-      *range_list3 = lCopyList("union_set range list",
-                               range_list1 ? range_list1 : range_list2);
-      range_sort_uniq_compress(*range_list3);
-   } 
-}          
-
-void range_calculate_difference_set(lList *range_list1, lList *range_list2,
-                                    lList **range_list3)
-{
-   lListElem *range_elem2;
-
-   *range_list3 = lFreeList(*range_list3);
-   if (range_list1 && range_list2) {
-      *range_list3 = lCopyList("union_set range list", range_list1); 
-      range_sort_uniq_compress(*range_list3);
-      for_each(range_elem2, range_list2) {
-         u_long32 start2, end2, step2;
- 
-         range_get_all_ids(range_elem2, &start2, &end2, &step2);
-         for (; start2 <= end2; start2 += step2) {
-            range_remove_id(*range_list3, start2);
-         }
-      }
-      range_compress(*range_list3);
-   } else if (range_list1) {
-      *range_list3 = lCopyList("union_set range list", range_list1);
-      range_sort_uniq_compress(*range_list3);
-   }
-}
-
-void range_calculate_intersection_set(lList *range_list1, lList *range_list2,
-                                      lList **range_list3)
-{ 
-   lListElem *range_elem;
-
-   *range_list3 = lFreeList(*range_list3);
-   if (range_list1 && range_list2) {
-      range_sort_uniq_compress(range_list1); 
-      for_each(range_elem, range_list1) {
-         u_long32 start, end, step;
- 
-         range_get_all_ids(range_elem, &start, &end, &step);
-         for (; start <= end; start += step) {
-            if (range_is_within(range_list2, start)) {
-               lListElem *new_range_elem;
-
-               if (!(*range_list3)) {
-                  *range_list3 = lCreateList("intersection_set", RN_Type);
-               }
-               new_range_elem = lCreateElem(RN_Type);
-               range_set_all_ids(new_range_elem, start, start, 1);
-               lAppendElem(*range_list3, new_range_elem);  
-            }
-         }
-      }
-      range_compress(*range_list3);
-   }
 }

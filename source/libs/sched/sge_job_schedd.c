@@ -36,6 +36,7 @@
 #include "sge_log.h"
 #include "sge_peL.h"
 #include "sge_jobL.h"
+#include "sge_queueL.h"
 #include "sge_ckptL.h"
 #include "sge_usersetL.h"
 #include "sge_complexL.h"
@@ -54,6 +55,9 @@
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"
 #include "sge_string.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
+#include "jb_now.h"
 
 static int user_sort = 0;
 
@@ -63,6 +67,548 @@ static int user_sort = 0;
 #	define strcasecmp( a, b) stricmp( a, b)
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
 #endif
+
+const char *get_name_of_split_value(int value) 
+{
+   const char *name;
+   switch (value) {
+   case SPLIT_FINISHED:
+      name = "SPLIT_FINISHED"; 
+      break;
+   case SPLIT_WAITING_DUE_TO_PREDECESSOR:
+      name = "SPLIT_WAITING_DUE_TO_PREDECESSOR";
+      break;
+   case SPLIT_HOLD:
+      name = "SPLIT_HOLD";
+      break;
+   case SPLIT_ERROR:
+      name = "SPLIT_ERROR";
+      break;
+   case SPLIT_WAITING_DUE_TO_TIME:
+      name = "SPLIT_WAITING_DUE_TO_TIME";
+      break;
+   case SPLIT_RUNNING:
+      name = "SPLIT_RUNNING";
+      break;
+   case SPLIT_PENDING:
+      name = "SPLIT_PENDING";
+      break;
+   case SPLIT_PENDING_EXCLUDED:
+      name = "SPLIT_PENDING_EXCLUDED";
+      break;
+   case SPLIT_SUSPENDED:
+      name = "SPLIT_SUSPENDED";
+      break;
+   case SPLIT_PENDING_EXCLUDED_INSTANCES:
+      name = "SPLIT_PENDING_EXCLUDED_INSTANCES";
+      break;   
+   default:
+      name = "undefined";
+      break;
+   }
+   return name;
+}
+
+void job_move_first_pending_to_running(lListElem **pending_job,
+                                       lList **splitted_jobs[]) 
+{
+   lList *range_id_list = NULL;  /* RN_Type */
+   u_long32 job_id;
+   u_long32 ja_task_id;
+
+   DENTER(TOP_LAYER, "job_move_first_pending_to_running");
+   range_id_list = lGetList(*pending_job, JB_ja_n_h_ids);
+   ja_task_id = range_list_get_first_id(range_id_list, NULL);
+   job_id = lGetUlong(*pending_job, JB_job_number);
+   if (ja_task_id > 0) {
+      lListElem *running_job = NULL;   /* JAT_Type */
+      lListElem *new_ja_task = NULL;   /* JAT_Type */
+
+      new_ja_task = lCopyElem(job_get_ja_task_template_pending(*pending_job, ja_task_id));
+      running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]), 
+                                  JB_job_number, job_id);
+      if (running_job) {
+         lList *tmp_range_list = NULL;    /* RN_Type */
+
+         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
+         range_list_remove_id(&tmp_range_list, NULL, ja_task_id);
+         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
+         range_compress(lGetList(*pending_job, JB_ja_n_h_ids));
+         lAppendElem(lGetList(running_job, JB_ja_tasks), new_ja_task);
+      } else {
+         lListElem *new_job = NULL; /* JB_Type */
+         lList *ja_tasks = NULL;    /* JAT_Type */
+         lList *tmp_range_list = NULL;    /* RN_Type */
+
+         new_job = lCopyElem(*pending_job);
+         lSetList(new_job, JB_ja_n_h_ids, NULL);
+         lSetList(new_job, JB_ja_u_h_ids, NULL);
+         lSetList(new_job, JB_ja_o_h_ids, NULL);
+         lSetList(new_job, JB_ja_s_h_ids, NULL);
+         ja_tasks = lCreateList("", JAT_Type);
+         lAppendElem(ja_tasks, new_ja_task);
+         lSetList(new_job, JB_ja_tasks, ja_tasks);
+         if (*(splitted_jobs[SPLIT_RUNNING]) == NULL) {
+            *(splitted_jobs[SPLIT_RUNNING]) = lCreateList("", 
+                  lGetElemDescr(new_job));
+         }
+         lAppendElem(*(splitted_jobs[SPLIT_RUNNING]), new_job);
+
+         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
+         range_list_remove_id(&tmp_range_list, NULL, ja_task_id);
+         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
+         range_compress(lGetList(*pending_job, JB_ja_n_h_ids));
+      }
+      if (!job_has_tasks(*pending_job)) {
+         lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
+         *pending_job = lFreeElem(*pending_job); 
+      }
+   }
+   job_lists_print(splitted_jobs);
+   DEXIT;
+}
+
+/* user_list: JC_Type */
+/* max_jobs_per_user: conf.maxujobs */
+/* owner_or_group: either JB_owner or JB_group */
+void job_lists_split_with_reference_to_max_running(lList **job_lists[],
+                                                   lList **user_list,
+                                                   int max_jobs_per_user)
+{
+   DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
+   if (max_jobs_per_user != 0 && 
+       job_lists[SPLIT_PENDING] != NULL && job_lists[SPLIT_RUNNING] != NULL && 
+       job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
+      lListElem *job = NULL;                           
+      lListElem *user = NULL;
+ 
+      /* inc. the # of jobs a user is running */
+      for_each(job, *(job_lists[SPLIT_RUNNING])) {
+         sge_inc_jc(user_list, lGetString(job, JB_owner), 
+                    job_get_ja_tasks(job));
+      }
+
+      for_each(user, *user_list) {
+         u_long32 jobs_for_user = lGetUlong(user, JC_jobs);
+         const char *user_name = lGetString(user, JC_name);
+
+         if (jobs_for_user >= max_jobs_per_user) {
+#if 0 
+            const void *user_iterator = NULL;
+#endif
+            lListElem *user_job = NULL;         /* JB_Type */
+            lListElem *next_user_job = NULL;    /* JB_Type */
+
+            DPRINTF(("USER %s reached limit of %d jobs\n", user_name, 
+                     max_jobs_per_user));
+
+#if 0 /* 
+       * EB: 
+       *    This code seems to have a bug !!!! 
+       *    The loop will be only executed once even if 
+       *    '*(job_lists[SPLIT_PENDING])' containes more than one job
+       *    for user 'user_name'. 
+       *    Is the 'lDechainElem'-call reason for this error?
+       */
+            next_user_job = lGetElemStrFirst(*(job_lists[SPLIT_PENDING]), 
+                                             JB_owner, user_name, 
+                                             &user_iterator);
+            while ((user_job = next_user_job)) {
+               next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
+                                               JB_owner, user_name, 
+                                               &user_iterator);
+#else
+            next_user_job = lFirst(*(job_lists[SPLIT_PENDING]));
+            while ((user_job = next_user_job)) {
+               next_user_job = lNext(user_job); 
+      
+               if (strcmp(lGetString(user_job, JB_owner), user_name) != 0) {
+                  continue;
+               }
+#endif
+
+               if (monitor_next_run) {
+                  schedd_add_message(lGetUlong(user_job, JB_job_number),
+                                     SCHEDD_INFO_USRGRPLIMIT_);
+               }
+               lDechainElem(*(job_lists[SPLIT_PENDING]), user_job);
+               if (*(job_lists[SPLIT_PENDING_EXCLUDED]) == NULL) {
+                  *(job_lists[SPLIT_PENDING_EXCLUDED]) =
+                                      lCreateList("", lGetElemDescr(user_job));
+               }
+               lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);
+            }
+         }
+      } 
+   }
+   DEXIT;
+}      
+
+void split_jobs(lList **job_list, lList **answer_list,
+                lList *queue_list, u_long32 max_aj_instances, 
+                lList **result_list[])
+{
+#if 1 /* EB: enable debug messagbes for this function */
+#define JOB_SPLIT_DEBUG
+#endif
+   lListElem *job = NULL;
+   lListElem *next_job = NULL;
+   lListElem *previous_job = NULL;
+   DENTER(TOP_LAYER, "job_split_with_reference_to_state");
+
+   next_job = lFirst(*job_list);
+   while ((job = next_job)) {
+      lList *ja_task_list = NULL;
+      lList *n_h_ids = NULL;
+      lList *excluded_n_h_ids = NULL;
+      lList *u_h_ids = NULL;
+      lList *o_h_ids = NULL;
+      lList *s_h_ids = NULL;
+      lList *target_tasks[SPLIT_LAST];
+      lListElem *target_job[SPLIT_LAST];
+      lList *target_ids = NULL;
+      u_long32 target_for_ids = SPLIT_LAST;
+      lListElem *ja_task = NULL;
+      lListElem *next_ja_task = NULL;
+      u_long32 task_instances;
+      int i, move_job;
+#ifdef JOB_SPLIT_DEBUG
+      u_long32 job_id = lGetUlong(job, JB_job_number);
+#endif
+
+      previous_job = lPrev(job);
+      next_job = lNext(job);
+
+      /*
+       * Initialize
+       */
+      for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+         target_job[i] = NULL;
+         target_tasks[i] = NULL;
+      }
+      task_instances = lGetNumberOfElem(lGetList(job, JB_ja_tasks)); 
+
+      /*
+       * Remove all ballast for a minimal copy operation of the job
+       */
+      lXchgList(job, JB_ja_tasks, &ja_task_list);
+      lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
+      lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
+      lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+      lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+
+      /*
+       * Split enrolled tasks
+       */
+#ifdef JOB_SPLIT_DEBUG
+      DPRINTF(("Split enrolled tasks for job "u32":\n", job_id));
+#endif
+      next_ja_task = lFirst(ja_task_list);
+      while ((ja_task = next_ja_task)) {
+         u_long32 ja_task_status = lGetUlong(ja_task, JAT_status);
+         u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);
+         u_long32 ja_task_hold = lGetUlong(ja_task, JAT_hold);
+         lList **target = NULL;
+#ifdef JOB_SPLIT_DEBUG
+         u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
+#endif
+         next_ja_task = lNext(ja_task);
+
+#ifdef JOB_SPLIT_DEBUG
+         DPRINTF(("Task "u32": status="u32" state="u32"\n", ja_task_id,
+                     ja_task_status, ja_task_state));
+#endif
+
+         /*
+          * Check the state of the task
+          * (ORDER IS IMPORTANT!)
+          */
+         if (target == NULL && result_list[SPLIT_FINISHED] && 
+             (ja_task_status & JFINISHED)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in finished state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_FINISHED]);
+         } 
+         if (target == NULL && result_list[SPLIT_HOLD] &&
+             (ja_task_hold & MINUS_H_TGT_ALL)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in hold state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_HOLD]);
+         } 
+         if (target == NULL && result_list[SPLIT_ERROR] && 
+             (ja_task_state & JERROR)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in error state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_ERROR]);
+         } 
+         if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_TIME] &&
+             (lGetUlong(job, JB_execution_time) > 0)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is waiting due to time.\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_WAITING_DUE_TO_TIME]);
+         }
+         if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_PREDECESSOR] &&
+             (lGetList(job, JB_jid_predecessor_list) != NULL)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is waiting due to pred.\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_WAITING_DUE_TO_PREDECESSOR]);
+         }
+         if (target == NULL && result_list[SPLIT_PENDING] && 
+             (ja_task_status == JIDLE)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in pending state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_PENDING]);
+         } 
+         if (target == NULL && result_list[SPLIT_SUSPENDED]) {
+            if ((ja_task_state & JSUSPENDED) ||
+                (ja_task_state & JSUSPENDED_ON_THRESHOLD)) {
+#ifdef JOB_SPLIT_DEBUG
+               DPRINTF(("Task "u32" is in suspended state\n", ja_task_id));
+#endif
+               target = &(target_tasks[SPLIT_SUSPENDED]);
+            } else {
+               /*
+                * Jobs in suspended queues are not in suspend state.
+                * Therefore we have to take this info from the queue state.
+                */
+               lList *granted_queue_list = lGetList(ja_task, 
+                             JAT_granted_destin_identifier_list); /* QU_Type */
+               lListElem *granted_queue = NULL;    /* QU_Type */
+
+               for_each(granted_queue, granted_queue_list) {
+                  const char *queue_name = NULL; 
+                  lListElem *queue = NULL;
+                  u_long32 queue_state;
+
+                  queue_name = lGetString(granted_queue, JG_qname);  
+                  queue = lGetElemStr(queue_list, QU_qname, queue_name);
+                  queue_state = lGetUlong(queue, QU_state);
+                  
+                  if ((queue_state & QSUSPENDED) ||
+                      (queue_state & QSUSPENDED_ON_SUBORDINATE)) {
+#ifdef JOB_SPLIT_DEBUG
+                     DPRINTF(("Task "u32" is in suspended state\n",ja_task_id));
+#endif
+                     target = &(target_tasks[SPLIT_SUSPENDED]);
+                     break;
+                  }     
+               }
+            }
+         } 
+         if (target == NULL && result_list[SPLIT_RUNNING] && 
+             ja_task_status != JIDLE) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in running state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_RUNNING]);
+         } 
+#ifdef JOB_SPLIT_DEBUG
+         if (target == NULL) {
+            ERROR((SGE_EVENT, "Task "u32" has no known state: "
+                   "status="u32" state="u32"\n",
+                   ja_task_id, ja_task_status, ja_task_state));  
+         }
+#endif
+
+         /* 
+          * Move the task into the target list
+          */
+         if (target != NULL) {
+            if (*target == NULL) {
+               *target = lCreateList(NULL, lGetElemDescr(ja_task));
+            }
+            lDechainElem(ja_task_list, ja_task);
+            lAppendElem(*target, ja_task);
+         }
+      }
+
+      if (target_for_ids == SPLIT_LAST &&
+          result_list[SPLIT_WAITING_DUE_TO_PREDECESSOR] &&
+          lGetList(job, JB_jid_predecessor_list) != NULL) {
+#ifdef JOB_SPLIT_DEBUG
+         DPRINTF(("Unenrolled tasks are waiting for pred. jobs\n"));
+#endif
+         target_for_ids = SPLIT_WAITING_DUE_TO_PREDECESSOR;
+         target_ids = n_h_ids;
+         n_h_ids = NULL;
+      }
+      if (target_for_ids == SPLIT_LAST &&
+          result_list[SPLIT_WAITING_DUE_TO_TIME] &&
+          lGetUlong(job, JB_execution_time) > 0) {
+#ifdef JOB_SPLIT_DEBUG
+         DPRINTF(("Unenrolled tasks are waiting due to time\n"));
+#endif
+         target_for_ids = SPLIT_WAITING_DUE_TO_TIME;
+         target_ids = n_h_ids;
+         n_h_ids = NULL;
+      }
+      if (target_for_ids == SPLIT_LAST &&
+          result_list[SPLIT_PENDING_EXCLUDED_INSTANCES] &&
+          max_aj_instances > 0) {
+         excluded_n_h_ids = n_h_ids;
+         n_h_ids = NULL;
+         if (task_instances < max_aj_instances) {
+            u_long32 allowed_instances = max_aj_instances - task_instances;
+
+            range_list_move_first_n_ids(&excluded_n_h_ids, NULL, &n_h_ids,
+                                        allowed_instances);
+         }
+         target_for_ids = SPLIT_PENDING_EXCLUDED_INSTANCES;
+         target_ids = excluded_n_h_ids;
+      }
+
+      /*
+       * Copy/Move and insert job into the target lists
+       */
+      move_job = 1;
+      for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+         if ((target_tasks[i] != NULL) ||
+             (i == target_for_ids && target_ids != NULL) ||
+             (i == SPLIT_PENDING && n_h_ids != NULL ) ||
+             (i == SPLIT_HOLD && (u_h_ids != NULL ||
+                                         o_h_ids != NULL || s_h_ids != NULL))) {
+            if (*(result_list[i]) == NULL) {
+               const lDescr *reduced_decriptor = lGetElemDescr(job);
+
+#ifdef JOB_SPLIT_DEBUG               
+               DPRINTF(("Create "SFN"-list\n", get_name_of_split_value(i)));
+#endif
+               *(result_list[i]) = lCreateList("", reduced_decriptor);
+            } 
+            if (move_job == 1) {
+#ifdef JOB_SPLIT_DEBUG
+               DPRINTF(("Reuse job element "u32" for "SFN"-list\n", 
+                        lGetUlong(job, JB_job_number), 
+                        get_name_of_split_value(i)));
+#endif
+               move_job = 0;
+               lDechainElem(*job_list, job);
+               target_job[i] = job;
+            } else {
+#ifdef JOB_SPLIT_DEBUG
+               DPRINTF(("Copy job element "u32" for "SFN"-list\n", 
+                        lGetUlong(job, JB_job_number), 
+                        get_name_of_split_value(i)));
+#endif
+               target_job[i] = lCopyElem(job);
+            }
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Add job element "u32" into "SFN"-list\n",
+                     lGetUlong(target_job[i], JB_job_number),
+                     get_name_of_split_value(i))); 
+#endif
+            lAppendElem(*(result_list[i]), target_job[i]);
+         }
+      }
+      job = NULL;
+
+      /*
+       * Do we have remaining tasks which won't fit into the target lists?
+       */
+      if ((lGetNumberOfElem(ja_task_list) > 0) ||
+          (result_list[SPLIT_PENDING] == NULL && n_h_ids != NULL) ||
+          (result_list[SPLIT_HOLD] == NULL && 
+                   (u_h_ids != NULL || o_h_ids != NULL || s_h_ids != NULL))) {
+         if (move_job == 0) {
+            /* 
+             * We moved 'job' into a target list therefore it is necessary 
+             * to create a new job.
+             */ 
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Put the remaining tasks into the initial container\n"));
+#endif
+            job = lCopyElem(job);
+            lInsertElem(*job_list, previous_job, job);
+         }
+      } 
+
+      /* 
+       * Insert array task information for not enrolled tasks
+       */
+      if (result_list[target_for_ids] != NULL && target_ids != NULL) {
+#ifdef JOB_SPLIT_DEBUG
+         DPRINTF(("Move not enrolled %s tasks\n",
+                  get_name_of_split_value(target_for_ids)));
+#endif
+         lXchgList(target_job[target_for_ids], JB_ja_n_h_ids, &target_ids);
+      }
+      if (result_list[SPLIT_PENDING] != NULL && n_h_ids != NULL) {
+#ifdef JOB_SPLIT_DEBUG 
+         DPRINTF(("Move not enrolled pending tasks\n"));
+#endif
+         lXchgList(target_job[SPLIT_PENDING], JB_ja_n_h_ids, &n_h_ids);
+      }
+      if (result_list[SPLIT_HOLD] != NULL && 
+          (u_h_ids != NULL || o_h_ids != NULL || s_h_ids != NULL)) {
+#ifdef JOB_SPLIT_DEBUG
+         DPRINTF(("Move not enrolled hold tasks\n"));
+#endif
+         lXchgList(target_job[SPLIT_HOLD], JB_ja_u_h_ids, &u_h_ids);
+         lXchgList(target_job[SPLIT_HOLD], JB_ja_o_h_ids, &o_h_ids);
+         lXchgList(target_job[SPLIT_HOLD], JB_ja_s_h_ids, &s_h_ids);
+      }
+      for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+         if (target_tasks[i] != NULL) {
+#ifdef JOB_SPLIT_DEBUG 
+            DPRINTF(("Put "SFQ"-tasks into job\n", get_name_of_split_value(i)));
+#endif
+            lSetList(target_job[i], JB_ja_tasks, target_tasks[i]);
+         }
+      }
+      
+      /* 
+       * Put remaining tasks into job 
+       */
+      if (job) {
+#ifdef JOB_SPLIT_DEBUG
+         DPRINTF(("Put unenrolled tasks back into initial container\n"));
+#endif
+         lXchgList(job, JB_ja_tasks, &ja_task_list);
+         lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
+         lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
+         lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+         lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+      } else {
+         ja_task_list = lFreeList(ja_task_list);
+      }
+   }
+
+   /*
+    * Could we dispense all jobs?
+    */
+   if (lGetNumberOfElem(*job_list) == 0) {
+      *job_list = lFreeList(*job_list);
+   }
+
+   DEXIT;
+   return;
+}  
+
+void job_lists_print(lList **job_list[]) 
+{
+   lListElem *job;
+   int i;
+
+   for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+      u_long32 ids = 0;
+
+      if (job_list[i] && *(job_list[i])) {
+         for_each(job, *(job_list[i])) {
+            ids += job_get_enrolled_ja_tasks(job);
+            ids += job_get_not_enrolled_ja_tasks(job);
+         }
+         DPRINTF(("job_list[%s] CONTAINES "u32" JOB(S) ("u32" TASK(S))\n",
+            get_name_of_split_value(i),
+            lGetNumberOfElem(*(job_list[i])), ids));
+      }
+   } 
+} 
 
 int set_user_sort(
 int i /* 0/1/-1 = on/off/ask */
@@ -90,729 +636,6 @@ const lDescr *dp
    return so;
 }
 
-/* ----------------------------------------
-
-   sge_split_job_finished()
-
-   splits from the incoming job list (1st arg) all 
-   jobs that are waiting to be deleted JFINISHED (2nd arg)
-
-   returns:
-      0 successful
-     -1 errors in functions called by sge_split_job_finished
-
-*/
-int sge_split_job_finished(
-lList **jobs,        /* JB_Type */
-lList **finished,     /* JB_Type */
-const char *finished_name 
-) {
-   lCondition *where;
-   int ret;
-   lListElem *job;
-   lCondition *where1, *where2;
-
-   DENTER(TOP_LAYER, "sge_split_job_finished");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   /* split jobs */
-   where = lWhere("%T(%I->%T(%I!=%u))", lGetListDescr(*jobs), JB_ja_tasks, JAT_Type, 
-      JAT_status, JFINISHED);
-   ret = lSplit(jobs, finished, finished_name, where);
-
-   where1 = lWhere("%T(%I!=%u)", JAT_Type, JAT_status, JFINISHED);
-   where2 = lWhere("%T(%I==%u)", JAT_Type, JAT_status, JFINISHED); 
-
-   for_each(job, *jobs) {
-      lListElem *task, *new_job;
-      int CopyJob = 0;
-
-      for_each(task, lGetList(job, JB_ja_tasks)) {
-         u_long32 status;
-
-         status = lGetUlong(task, JAT_status);
-         if (!(status != JFINISHED)) {
-            CopyJob = 1;
-            break;
-         }
-      }
-      if (CopyJob) {
-         lList *tmp_lp = NULL;
-
-         if (*finished == NULL)
-            *finished = lCreateList(finished_name?finished_name:"", (*jobs)->descr);
-         new_job = lCopyElem(job);
-
-         lXchgList(job, JB_ja_tasks, &tmp_lp);
-         tmp_lp = lSelectDestroy(tmp_lp, where1);
-         lXchgList(job, JB_ja_tasks, &tmp_lp);
-
-         lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-         tmp_lp = lSelectDestroy(tmp_lp, where2);
-         lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-         
-         ret=lAppendElem(*finished, new_job);
-      }
-   }
-
-   lFreeWhere(where1);
-   lFreeWhere(where2);
-   lFreeWhere(where);
-
-   DEXIT;
-   return ret;
-}
-
-
-/* ----------------------------------------
-
-   sge_split_job_running()
-
-   splits from the incoming job list (1st arg) all 
-   jobs that are running (2nd arg)
-
-   returns:
-      0 successful
-     -1 errors in functions called by sge_split_job_running
-
-*/
-int sge_split_job_running(
-lList **jobs,        /* JB_Type */
-lList **running,     /* JB_Type */
-const char *running_name 
-) {
-   lListElem *job, *nxt_job;
-
-   DENTER(TOP_LAYER, "sge_split_job_running");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   if (!*jobs) {
-      /* no jobs - nothing to do -  no error */
-      DEXIT;
-      return 0;
-   }
-
-   nxt_job = lFirst(*jobs);
-   while ((job=nxt_job)) {
-      lListElem *task, *nxt_task;
-      lList *pending_task_lp = lGetList(job, JB_ja_tasks), 
-            *running_task_lp = NULL;
-      nxt_job = lNext(job);
-
-      /* dechain all non-pending tasks, collect them in running_task_lp */ 
-      nxt_task = lFirst(pending_task_lp);
-      while ((task=nxt_task)) {
-         nxt_task = lNext(task);
-         if (lGetUlong(task, JAT_status) != IDLE) {
-            lDechainElem(pending_task_lp, task);
-            if (!running_task_lp)
-               running_task_lp = lCreateList("running", JAT_Type);
-            lAppendElem(running_task_lp, task);
-         }
-      }
-
-      /* ensure a running task job-array container exists and store running tasks there */
-      if (running_task_lp) {
-         lListElem *running_job;
-         if (!(running_job = lGetElemUlong(*running, JB_job_number, lGetUlong(job, JB_job_number)))) {
-             running_job = lCopyElem(job); /* AH: in worst case this copies in vain 1.000.000
-                                              elements in JB_ja_tasks. Need masked lCopyElem()
-                                              to improve this */
-             if (!*running)
-                *running = lCreateList("running", (*jobs)->descr);
-             lAppendElem(*running, running_job);
-         }
-         lSetList(running_job, JB_ja_tasks, running_task_lp);
-      }
-
-      /* remove pending task job-array container if empty */
-      if (!lGetNumberOfElem(pending_task_lp)) {
-         lRemoveElem(*jobs, job);
-      }
-   } 
-
-   DEXIT;
-   return 0;
-}
-
-
-/****** sge_job_schedd/sge_move_to_running() ***********************************
-*  NAME
-*     sge_move_to_running() -- move first task in job to running list
-*
-*  SYNOPSIS
-*     int sge_move_to_running(lList **jobs, lList **running, lListElem *job) 
-*
-*******************************************************************************/
-int sge_move_to_running(
-lList **jobs,        /* JB_Type */
-lList **running,     /* JB_Type */
-lListElem *job
-) {
-   lList *pending_task_lp;
-   lListElem *running_job, *task;
-   int ntasks;
-
-   DENTER(TOP_LAYER, "sge_move_to_running");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   if (!*jobs) {
-      /* no jobs - nothing to do -  no error */
-      DEXIT;
-      return 0;
-   }
-
-   /* dechain first task of this job */ 
-   pending_task_lp = lGetList(job, JB_ja_tasks);
-   ntasks = lGetNumberOfElem(pending_task_lp);
-   task = lFirst(pending_task_lp);
-   lSetUlong(task, JAT_status, JRUNNING);
-   lDechainElem(pending_task_lp, task);
-
-   /* ensure a running task job-array container exists and store the running task */
-   if (!(running_job = lGetElemUlong(*running, JB_job_number, lGetUlong(job, JB_job_number)))) {
-      lList *tmp = NULL;
-       /* do not copy the JB_ja_tasks list, because the entries are not needed 
-          for the running task job-array container and can be very long */
-      lXchgList(job, JB_ja_tasks, &tmp);
-      running_job = lCopyElem(job); 
-      lXchgList(job, JB_ja_tasks, &tmp);
-      if (!*running)
-          *running = lCreateList("running", (*jobs)->descr);
-      lAppendElem(*running, running_job);
-      lSetList(running_job, JB_ja_tasks, lCreateList("running tasks", JAT_Type));
-   }
-   lAppendElem(lGetList(running_job, JB_ja_tasks), task);
-
-   DPRINTF(("STILL %d of formerly %d tasks\n", 
-         lGetNumberOfElem(pending_task_lp), ntasks));
-
-   /* remove pending task job-array container if empty */
-   if (!lGetNumberOfElem(pending_task_lp)) {
-      lRemoveElem(*jobs, job);
-   }
-
-   DEXIT;
-   return 0;
-}
-
-/* ----------------------------------------
-
-   sge_split_job_wait_at_time()
-
-   splits from the incoming job list (1st arg) all 
-   jobs that are running (2nd arg)
-
-   returns:
-      0 successful
-     -1 errors in functions called by sge_split_job_wait_at_time
-
-*/
-int sge_split_job_wait_at_time(
-lList **jobs,        /* JB_Type */
-lList **waiting,     /* JB_Type */
-const char *waiting_name,
-u_long32 now 
-) {
-   lCondition *where;
-   int ret;
-   lList *lp = NULL;
-   int do_free_list = 0;
-
-   DENTER(TOP_LAYER, "sge_split_job_wait_at_time");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   if (!waiting) {
-       waiting = &lp;
-       do_free_list = 1;
-   }
-
-   /* split jobs */
-   where = lWhere("%T(%I == %u || %I <= %u)", 
-         lGetListDescr(*jobs),
-            JB_execution_time, 0,
-            JB_execution_time, now);
-   ret = lSplit(jobs, waiting, waiting_name, where);
-
-   if (*waiting) {
-      lListElem *job;
-
-      for_each(job, *waiting) 
-         schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_EXECTIME_);
-
-      if (monitor_next_run)
-         schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED  , *waiting, JB_job_number);
-
-      DPRINTF(("execution time: " u32 "\n", lGetUlong(lFirst(*waiting), JB_execution_time)));
-      if (do_free_list) {
-         lFreeList(*waiting);
-         *waiting = NULL;
-      }
-   }
-   lFreeWhere(where);
-
-   DEXIT;
-   return ret;
-}
-
-/*-------------------------------------------------------
- *
- *  sge_split_job_error()
- *
- *  splits from the incoming job list (1st arg) all 
- *  jobs that are in error state
- *
- *  returns:
- *     0 successful
- *    -1 errors in called functions 
- *-------------------------------------------------------*/
-int sge_split_job_error(
-lList **jobs,        /* JB_Type */
-lList **error,     /* JB_Type */
-const char *error_name 
-) {
-   lCondition *where;
-   int ret;
-   lListElem *job, *ja_task;
-   lList *lp = NULL;
-   int do_free_list = 0;
-   lCondition *where1, *where2;
-
-   DENTER(TOP_LAYER, "sge_split_job_error");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   where = lWhere("%T(%I->%T(%I==%u))", lGetListDescr(*jobs), JB_ja_tasks, JAT_Type, JAT_suitable, 1);
-   where1 = lWhere("%T(%I==%u)", JAT_Type, JAT_suitable, 1);
-   where2 = lWhere("%T(%I!=%u)", JAT_Type, JAT_suitable, 1);
-
-   for_each(job, *jobs) {
-      DPRINTF(("sge_split_job_error(1): visiting %d array-jobs\n", 
-            lGetNumberOfElem(lGetList(job, JB_ja_tasks))));
-      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-         if ((lGetUlong(ja_task, JAT_state) & JERROR)) {
-            lSetUlong(ja_task, JAT_suitable, 0);
-            continue;
-         }
-         lSetUlong(ja_task, JAT_suitable, 1);
-      }
-   }
-
-   if (!error) {
-       error = &lp;
-       do_free_list = 1;
-   }
-
-   /* split jobs */
-   ret = lSplit(jobs, error, error_name, where);
-
-   for_each(job, *jobs) {
-      lListElem *task, *new_job;
-      int CopyJob = 0;
-
-      DPRINTF(("sge_split_job_error(2): visiting %d array-jobs\n", 
-            lGetNumberOfElem(lGetList(job, JB_ja_tasks))));
-      for_each(task, lGetList(job, JB_ja_tasks)) {
-         u_long32 Suitable;
-
-         Suitable = lGetUlong(task, JAT_suitable);
-         if (!(Suitable == 1)) {
-            CopyJob = 1;
-            break;
-         }
-      }
-      if (CopyJob) {
-         lList *tmp_lp = NULL; 
-         if (lp == NULL)
-            lp=lCreateList(error_name?error_name:"", (*jobs)->descr);
-         new_job = lCopyElem(job);
-
-         lXchgList(job, JB_ja_tasks, &tmp_lp);
-         tmp_lp = lSelectDestroy(tmp_lp, where1);
-         lXchgList(job, JB_ja_tasks, &tmp_lp);
-
-         lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-         tmp_lp = lSelectDestroy(tmp_lp, where2);
-         lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-
-         ret=lAppendElem(lp, new_job);
-      }
-   }
-   if (*error) {
-      lListElem* job;
-
-      for_each(job, *error)
-         schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_JOBINERROR_);
-      if (monitor_next_run)
-         schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED , *error, JB_job_number);
-      if (do_free_list) {
-         lFreeList(*error);
-         *error = NULL;
-      }
-   }
-
-   lFreeWhere(where);
-   lFreeWhere(where1);
-   lFreeWhere(where2);
-
-   DEXIT;
-   return ret;
-}
-
-/*------------------------------------------------------
- *  sge_split_job_hold()
- *
- *  splits from the incoming job list (1st arg) all 
- *
- *  jobs that are set on hold 
- *
- *  returns:
- *     0 successful
- *    -1 errors in called functions 
- *------------------------------------------------------*/
-int sge_split_job_hold(
-lList **jobs,        /* JB_Type */
-lList **waiting,     /* JB_Type */
-const char *waiting_name 
-) {
-   lCondition *where;
-   int ret;
-   lListElem *job, *ja_task;
-   lList *lp = NULL;
-   int i, do_free_list = 0;
-   char buffer[256];
-   lCondition *where1, *where2;
-
-   static int bitmask[] = { 
-      MINUS_H_TGT_USER,
-      MINUS_H_TGT_OPERATOR,
-      MINUS_H_TGT_SYSTEM
-   };
-
-   static char *perm_name[] = {
-      "user",
-      "operator",
-      "system",
-   };
-
-   DENTER(CULL_LAYER, "sge_split_job_hold");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   where = lWhere("%T(%I->%T(%I==%u))", lGetListDescr(*jobs), JB_ja_tasks, JAT_Type, JAT_suitable, 1);
-   where1 = lWhere("%T(%I==%u)", JAT_Type, JAT_suitable, 1);
-   where2 = lWhere("%T(%I!=%u)", JAT_Type, JAT_suitable, 1);
-
-   for (i=0; i<3; i++) {
-
-      for_each(job, *jobs) {
-         DPRINTF(("sge_split_job_hold(1): visiting %d array-jobs\n", 
-               lGetNumberOfElem(lGetList(job, JB_ja_tasks))));
-         for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-            if (lGetUlong(ja_task, JAT_hold) & bitmask[i]) {
-               DPRINTF(("job "u32"."u32" is blocked by a %s hold\n",
-                    lGetUlong(job, JB_job_number), lGetUlong(ja_task, JAT_task_number), perm_name[i]));
-               lSetUlong(ja_task, JAT_suitable, 0);
-               continue;
-            }
-            lSetUlong(ja_task, JAT_suitable, 1);
-         }
-      }
-
-      if (!waiting) {
-          waiting = &lp;
-          do_free_list = 1;
-      }
-
-      /* split jobs */
-      ret = lSplit(jobs, waiting, waiting_name, where);
-
-      for_each(job, *jobs) {
-         lListElem *task, *new_job;
-         int CopyJob = 0;
-
-         DPRINTF(("sge_split_job_hold(2): visiting %d array-jobs\n", 
-               lGetNumberOfElem(lGetList(job, JB_ja_tasks))));
-         for_each(task, lGetList(job, JB_ja_tasks)) {
-            u_long32 Suitable;
-
-            Suitable = lGetUlong(task, JAT_suitable);
-            if (!(Suitable == 1)) {
-               CopyJob = 1;
-               break;
-            }
-         }
-         if (CopyJob) {
-            lList *tmp_lp;
-
-            if (lp == NULL)
-               lp=lCreateList(waiting_name?waiting_name:"", (*jobs)->descr);
-            new_job = lCopyElem(job);
-            lXchgList(job, JB_ja_tasks, &tmp_lp);
-            tmp_lp = lSelectDestroy(tmp_lp, where1);
-            lXchgList(job, JB_ja_tasks, &tmp_lp);
-
-            lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-            tmp_lp = lSelectDestroy(tmp_lp, where2);
-            lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-
-            ret=lAppendElem(lp, new_job);
-         }
-      }
-
-      if (*waiting) {
-         lListElem* mes_job;
-        
-         for_each(mes_job, *waiting) 
-            schedd_add_message(lGetUlong(mes_job, JB_job_number), SCHEDD_INFO_JOBHOLD_S, perm_name[i]);
-
-         sprintf(buffer, MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD_S , perm_name[i]);
-
-         if (monitor_next_run)
-            schedd_log_list(buffer, *waiting, JB_job_number);
-
-         if (do_free_list) {
-            lFreeList(*waiting);
-            *waiting = NULL;
-         }
-      }
-
-   }
-
-   lFreeWhere(where2);
-   lFreeWhere(where1);
-   lFreeWhere(where);
-   DEXIT;
-   return ret;
-}
-
-
-/*--------------------------------------------------------------
-   sge_split_job_wait_predecessor()
-
-   splits from the incoming job list (1st arg) all 
-   jobs that wait for completion of other jobs (2nd arg)
-
-   returns:
-      0 successful
-     -1 errors in functions called by sge_split_job_wait_predecessor
-
- *--------------------------------------------------------------*/
-int sge_split_job_wait_predecessor(
-lList **jobs,        /* JB_Type */
-lList **waiting,     /* JB_Type */
-const char *waiting_name 
-) {
-   lList *pre_jobs;
-   lListElem *job, *nxt_job;
-   lList *lp = NULL;
-   int do_free_list = 0;
-
-   DENTER(TOP_LAYER, "sge_split_job_wait_predecessor");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   if (!waiting) {
-      waiting = &lp;
-      do_free_list = 1;
-   }
-
-   /* put jobs waiting for a predecessor job in *waiting list */
-   nxt_job = lFirst(*jobs);
-   while ((job=nxt_job)) {
-      nxt_job = lNext(job);
-
-      if ((pre_jobs=lGetList(job, JB_jid_predecessor_list))) {
-         lDechainElem(*jobs, job);
-         if (!*waiting)
-            *waiting = lCreateList("waiting", lGetElemDescr(job));
-         lAppendElem(*waiting, job);
-      }
-   }
-
-   for_each(job, *waiting)
-      schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_JOBDEPEND_);
-
-   if (monitor_next_run)
-      schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES , *waiting, JB_job_number);
-
-   if (do_free_list) {
-      lFreeList(*waiting);
-      *waiting = NULL;
-   }
-
-   DEXIT;
-   return 0;
-}
-
-
-/*------------------------------------------------------------------------------
-   sge_split_job_ckpt_restricted()
-
-   splits those jobs from the incoming job list (1st arg)
-   which cannot be processed due to their ckpt requirements
-   (e.g. the requested CKPT-object is currently not configured).
-   The jobs which cannot run are returned to list arg 2.
-
-   returns:
-      0 successful
-     -1 errors in functions called by sge_split_job_pe_restricted
- *------------------------------------------------------------------------------*/
-int sge_split_job_ckpt_restricted(
-lList **jobs,           /* JB_Type */
-lList **restricted,     /* JB_Type */
-const char *restricted_name,
-lList *ckpt_list        /* CK_Type */
-) {
-   int ret;
-   lListElem *job, *ckpt;
-   const char *ckpt_name;
-   lCondition *where;
-
-   DENTER(TOP_LAYER, "sge_split_job_ckpt_restricted");
-
-   if (!jobs) {
-      DEXIT;
-      return -1;
-   }
-
-   for_each(job, *jobs) {
-      lListElem *ja_task;
-
-      DPRINTF(("sge_split_job_ckpt_restricted(1): visiting %d array-jobs\n", 
-            lGetNumberOfElem(lGetList(job, JB_ja_tasks))));
-      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-         if ((ckpt_name = lGetString(job, JB_checkpoint_object))) {
-
-            ckpt = lGetElemStr(ckpt_list, CK_name, ckpt_name);
-            if (!ckpt) {
-               CRITICAL((SGE_EVENT, MSG_EVENT_CKPTOBJXFORJOBYNOTFOUND_SI ,
-                        ckpt_name, (int)lGetUlong(job, JB_job_number)));
-               lSetUlong(ja_task, JAT_suitable, 0);
-               schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_CKPTNOTFOUND_S,
-                  ckpt_name);
-               continue;
-            }
-
-         }
-         lSetUlong(ja_task, JAT_suitable, 1);
-      }
-   }
-
-   /* split jobs */
-   where = lWhere("%T(%I->%T(%I==%u))", lGetListDescr(*jobs), JB_ja_tasks, JAT_Type, JAT_suitable, 1);
-   ret = lSplit(jobs, restricted, restricted_name, where);
-   lFreeWhere(where);
-
-   DEXIT;
-   return ret;
-}
-
-
-
-
-/*------------------------------------------------------------------*/
-lList *filter_max_running(
-lList *pending_jobs,
-lList *jc_list,      /* user_list */
-int max_jobs,        /* maxujobs */
-int elem             /* JB_owner */
-) {
-   lCondition *where, *exceed;
-   lListElem *jce;
-
-   if (!max_jobs)    /* no limitations --> nothing to do */
-      return pending_jobs;
-
-   /* for all elements of jc_list exceeding the limits */
-   exceed = lWhere("%T(%I>=%u)", JC_Type, JC_jobs, max_jobs);
-   for_each_where(jce, jc_list, exceed) {
-
-      DPRINTF(("USER %s reached limit of %d jobs\n", 
-            lGetString(jce, JC_name), max_jobs));
-      /* for all users/groups exceeding the limits drop their pending jobs */
-      where = lWhere("%T(%I!=%s)", lGetListDescr(pending_jobs), 
-            elem, lGetString(jce, JC_name));
-
-      if (monitor_next_run && pending_jobs) {
-         lList *lp_dropped;
-         lEnumeration *what;
-         lCondition *nowhere;
-
-         what = lWhat("%T(%I)", lGetListDescr(pending_jobs), JB_job_number);
-         if (what) {
-            lListElem* new_elem;
-
-            nowhere = lWhere("%T(%I==%s)", lGetListDescr(pending_jobs), 
-                  elem, lGetString(jce, JC_name));
-            lp_dropped = lSelect("dropped", pending_jobs, nowhere, what);
-
-            for_each(new_elem, lp_dropped)
-               schedd_add_message(lGetUlong(new_elem, JB_job_number), SCHEDD_INFO_USRGRPLIMIT_); 
-            schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEUSRGRPLIMIT , lp_dropped, JB_job_number);
-
-            lFreeWhat(what);
-            lFreeWhere(nowhere);
-            lFreeList(lp_dropped);
-         }
-      }
-      
-      /* re-assignment of pending_jobs in case NULL is returned */
-      pending_jobs = lSelectDestroy(pending_jobs, where);
-
-      lFreeWhere(where);
-   }
-   lFreeWhere(exceed);
-
-   return pending_jobs;
-}
-
-
-lList *filter_max_running_1step(
-lList *pending_jobs,
-lList *running_jobs,
-lList **jc_list,     /* user_list */
-int max_jobs,        /* maxujobs */
-int elem             /* JB_owner */
-) {
-   lListElem *job;
-
-   if (!max_jobs)    /* no limitations --> nothing to do */
-      return pending_jobs;
-
-   for_each(job, running_jobs) /* inc. the # of jobs a user/group is running */
-      sge_inc_jc(jc_list, lGetString(job, elem), lGetNumberOfElem(lGetList(job, JB_ja_tasks)));
-
-
-   pending_jobs = filter_max_running(pending_jobs, *jc_list, max_jobs, elem);
-
-   return pending_jobs;
-}
 
 /* jcpp: JC_Type */
 void sge_dec_jc(lList **jcpp, const char *name, int slots) 
@@ -874,8 +697,11 @@ lList *job_list
 
    /* prepare job counter list */
    for_each (job, job_list) {
-      DPRINTF(("rebuild_jc(1): visiting %d array-jobs\n", 
-            lGetNumberOfElem(lGetList(job, JB_ja_tasks))));
+      u_long32 number_of_tasks;
+
+
+      number_of_tasks = job_get_ja_tasks(job);
+      DPRINTF(("rebuild_jc(1): visiting %d array-jobs\n", number_of_tasks));
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {
          if (running_status(lGetUlong(ja_task, JAT_status))) {
             sge_inc_jc(jcpp, lGetString(job, JB_owner), 1);      

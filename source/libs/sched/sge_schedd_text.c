@@ -125,8 +125,8 @@ int nr
       case SCHEDD_INFO_NOGLOBFORCEDRES_SS       :
          return MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS        ;   
  
-      case SCHEDD_INFO_CKPTNOTFOUND_S           :
-         return MSG_SCHEDD_INFO_CKPTNOTFOUND_S            ;   
+      case SCHEDD_INFO_CKPTNOTFOUND_            :
+         return MSG_SCHEDD_INFO_CKPTNOTFOUND_             ;   
  
       case SCHEDD_INFO_PESLOTSNOTINRANGE_S      :
          return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S       ;  
@@ -155,8 +155,8 @@ int nr
       case SCHEDD_INFO_JOBINERROR_              :
          return MSG_SCHEDD_INFO_JOBINERROR_               ;   
  
-      case SCHEDD_INFO_JOBHOLD_S                :
-         return MSG_SCHEDD_INFO_JOBHOLD_S                 ;   
+      case SCHEDD_INFO_JOBHOLD_                :
+         return MSG_SCHEDD_INFO_JOBHOLD_                  ;   
  
       case SCHEDD_INFO_USRGRPLIMIT_             :
          return MSG_SCHEDD_INFO_USRGRPLIMIT_              ;     
@@ -190,6 +190,9 @@ int nr
 
       case SCHEDD_INFO_CLEANUPNECESSARY_S :
          return MSG_SCHEDD_INFO_CLEANUPNECESSARY_S;
+
+      case SCHEDD_INFO_MAX_AJ_INSTANCES_:
+         return MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_;
 
 /* */
 
@@ -324,6 +327,9 @@ int nr
 
       case SCHEDD_INFO_CLEANUPNECESSARY :
          return MSG_SCHEDD_INFO_CLEANUPNECESSARY;
+
+      case SCHEDD_INFO_MAX_AJ_INSTANCES:
+         return MSG_SCHEDD_INFO_MAX_AJ_INSTANCES;
 
       default:
          return "";

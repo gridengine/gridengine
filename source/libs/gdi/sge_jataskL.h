@@ -67,7 +67,9 @@ enum {
 
    JAT_suitable,
    JAT_task_list,
-   JAT_previous_usage_list
+   JAT_previous_usage_list,
+
+   JAT_reference
 };
 
 SLISTDEF(JAT_Type, Task)
@@ -139,6 +141,7 @@ SLISTDEF(JAT_Type, Task)
    /* JB_Type - sublist containing all */
    /* pe task info */
    SGE_LIST(JAT_previous_usage_list)
+   SGE_REF(JAT_reference)
 LISTEND 
 
 NAMEDEF(JATN)
@@ -170,6 +173,7 @@ NAMEDEF(JATN)
    NAME("JAT_suitable")
    NAME("JAT_task_list")
    NAME("JAT_previous_usage_list")
+   NAME("JAT_reference")
 NAMEEND
 
 /* *INDENT-ON* */

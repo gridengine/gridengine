@@ -70,6 +70,7 @@
 #include "msg_qmaster.h"
 #include "reschedule.h"
 #include "sge_security.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -811,7 +812,7 @@ int isowner
 
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             if (!strcmp(lGetString(qep, QU_qname), lGetString(gdil_ep, JG_qname))) {
-               sge_commit_job(jep, jatep, 3, 1);
+               sge_commit_job(jep, jatep, 3, COMMIT_DEFAULT);
                break;
             }
          }
@@ -1147,7 +1148,8 @@ const char *queue
    DENTER(TOP_LAYER, "resend_signal_event");
 
    if (!queue) {
-      if (!(jep = sge_locate_job(jobid)) || !(jatep=search_task(jataskid, jep))) {
+      if (!(jep = sge_locate_job(jobid)) || 
+          !(jatep=job_search_task(jep, NULL, jataskid, 0))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
          DEXIT;
          return;

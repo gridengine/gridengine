@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-int correct_load(lList *lp_job, lList *lp_queue, lList **lpp_host, u_long32 decay_time);
+int correct_load(lList *lp_job, lList *lp_queue, lList *lpp_host, u_long32 decay_time);
 
 int correct_capacities(lList *host_list, lList *complex_list);
 

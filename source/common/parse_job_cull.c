@@ -195,57 +195,26 @@ lListElem **pjob
     */
    {
       lList *range_list = NULL;
-      lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+      lList *n_h_list;
 
       ep = lGetElemStr(cmdline, SPA_switch, "-t");
       if (ep) {
-         lListElem *range_elem = NULL; /* RN_Type */
-         u_long32 start, end, step;
-
          range_list = lGetList(ep, SPA_argval_lListT);
-         range_elem = lFirst(range_list);
-         start = lGetUlong(range_elem, RN_min);
-         end = lGetUlong(range_elem, RN_max);
-         step = lGetUlong(range_elem, RN_step);
-         job_set_ja_task_ids(*pjob, start, end, step);
+         lSetList(*pjob, JB_ja_structure, lCopyList("range list", range_list)); 
       } else {
          job_set_ja_task_ids(*pjob, 1, 1, 1);
          range_list = lGetList(*pjob, JB_ja_structure);
       }
       n_h_list = lCopyList("range list", range_list);
-      u_h_list = lCreateList("user hold list", RN_Type);
-      o_h_list = lCreateList("operator hold list", RN_Type);
-      s_h_list = lCreateList("system hold list", RN_Type);
-      if (!n_h_list || !u_h_list || !o_h_list || !s_h_list) {
+      if (!n_h_list) {
          sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
          DEXIT;
          return answer;
       }     
       lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
-      lSetList(*pjob, JB_ja_u_h_ids, u_h_list);
-      lSetList(*pjob, JB_ja_o_h_ids, o_h_list);
-      lSetList(*pjob, JB_ja_s_h_ids, s_h_list);
-
-#if 0 /* EB: Test */
-      {
-         lListElem *elem;
-         u_long32 id;
-
-         StringBufferT string = {NULL, 0};
-         lWriteListTo(range_list, stderr);
-      
-         range_remove_id(range_list, 5);
-
-         range_print_to_string(range_list, &string);
-         fprintf(stderr, "%s\n", string.s);
-         sge_string_free(&string);
-         for_each_id_in_range_list(id, elem, range_list) {
-            fprintf(stderr, u32"\n", id); 
-         }
-         exit (1); 
-      }
-#endif
-
+      lSetList(*pjob, JB_ja_u_h_ids, NULL);
+      lSetList(*pjob, JB_ja_o_h_ids, NULL);
+      lSetList(*pjob, JB_ja_s_h_ids, NULL);
 
       if (ep) {
          lRemoveElem(cmdline, ep);
@@ -399,25 +368,10 @@ lListElem **pjob
 
    /* -h */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
-      int in_hold_state = 0;
-
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
          lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
-            lGetList(*pjob, JB_ja_n_h_ids)));
-         in_hold_state = 1;
-      }
-      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_OPERATOR) {
-         lSetList(*pjob, JB_ja_o_h_ids, lCopyList("operator hold ids",
-            lGetList(*pjob, JB_ja_n_h_ids)));
-         in_hold_state = 1;
-      }
-      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_SYSTEM) {
-         lSetList(*pjob, JB_ja_s_h_ids, lCopyList("system hold ids",
-            lGetList(*pjob, JB_ja_n_h_ids)));
-         in_hold_state = 1;
-      }
-      if (in_hold_state) {
-         lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+                  lGetList(*pjob, JB_ja_n_h_ids)));
+         lSetList(*pjob, JB_ja_n_h_ids, NULL);
       }
       lRemoveElem(cmdline, ep);
    }
@@ -651,17 +605,6 @@ lListElem **pjob
       cp = sge_basename(lGetString(*pjob, JB_script_file), '/');
       lSetString(*pjob, JB_job_name,  cp);
    }
-
-#if 0
-   {
-      lListElem *tmpl_task = NULL;
-   
-      tmpl_task = lFirst(lGetList(*pjob, JB_ja_tasks));
-      if (lGetUlong(tmpl_task, JAT_hold)) {
-         lSetUlong(tmpl_task, JAT_state, JHELD);
-      }
-   }
-#endif
 
    DEXIT;
    return answer;

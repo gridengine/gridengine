@@ -42,14 +42,16 @@ lDescr *descr
    int ret = 0;
  
    /*
-   ** we assume that object is of the given type when the primary key is contained
-   ** in the element
+   ** we assume that object is of the given type when the 
+   ** primary key is contained in the element
    **
    ** --> additional objects will be added when we need them
    */
-   if ((descr == EH_Type && -1 != lGetPosInDescr(ep->descr, EH_name))
-       || (descr == QU_Type && -1 != lGetPosInDescr(ep->descr, QU_qname))
-       || (descr == JB_Type && -1 != lGetPosInDescr(ep->descr, JB_job_number))
+   if ((descr == EH_Type && lGetPosInDescr(ep->descr, EH_name) != -1)
+       || (descr == QU_Type && lGetPosInDescr(ep->descr, QU_qname) != -1)
+       || (descr == JB_Type && lGetPosInDescr(ep->descr, JB_job_number) != -1)
+       || (descr == JAT_Type && lGetPosInDescr(ep->descr, JAT_task_number) !=-1)
+       || (descr == RN_Type && lGetPosInDescr(ep->descr, RN_min) !=-1)
       ) {
       ret = 1;
    };

@@ -93,7 +93,7 @@
 */ 
 #define MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED    _("jobs dropped because execution time not reached: ")
 #define MSG_LOG_JOBSDROPPEDERRORSTATEREACHED          _("jobs dropped because of error state: ")
-#define MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD_S           _("jobs dropped because of %s hold: ")
+#define MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD             _("jobs dropped because of hold: ")
 #define MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES        _("jobs dropped because of job dependencies: ")
 #define MSG_LOG_JOBSDROPPEDBECAUSEUSRGRPLIMIT         _("jobs dropped because of user/group limitations: ")
 #define MSG_EVENT_CKPTOBJXFORJOBYNOTFOUND_SI          _("can't find requested CKPT object \"%s\" for job %d\n")
@@ -140,7 +140,7 @@
 #define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _("(-l"SFN") cannot run globally because "SFN"\n") 
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _("does not request 'forced' resource "SFQ" of host "SFN"")  
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS            _("does not request globally 'forced' resource "SFQ"")    
-#define MSG_SCHEDD_INFO_CKPTNOTFOUND_S                _("cannot run because requested ckpt object "SFQ" not found")    
+#define MSG_SCHEDD_INFO_CKPTNOTFOUND_                 _("cannot run because requested ckpt object not found")
 #define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S           _("cannot run because free slots of pe "SFQ" not in range of job")
 #define MSG_SCHEDD_INFO_NOACCESSTOPE_S                _("cannot run because no access to pe "SFQ"") 
 #define MSG_SCHEDD_INFO_QUEUEINALARM_S                _("queue "SFQ" is in suspend alarm")        
@@ -150,7 +150,7 @@
 #define MSG_SCHEDD_INFO_JOBLIST_                      _("(Scheduler job information not available for every job)" )  
 #define MSG_SCHEDD_INFO_EXECTIME_                     _("execution time not reached") 
 #define MSG_SCHEDD_INFO_JOBINERROR_                   _("job is in error state")  
-#define MSG_SCHEDD_INFO_JOBHOLD_S                     _("job dropped because of "SFN" hold")  
+#define MSG_SCHEDD_INFO_JOBHOLD_                     _("job dropped because of hold")  
 #define MSG_SCHEDD_INFO_USRGRPLIMIT_                  _("job dropped because of user/group limitations")    
 #define MSG_SCHEDD_INFO_JOBDEPEND_                    _("job dropped because of job dependencies")     
 #define MSG_SCHEDD_INFO_NOMESSAGE_                    _("there are no messages available") 
@@ -162,6 +162,7 @@
 #define MSG_SCHEDD_INFO_PEALLOCRULE_S                 _("pe "SFQ" dropped because allocation rule is not suitable")
 #define MSG_SCHEDD_INFO_NOPEMATCH_                    _("no matching pe found")
 #define MSG_SCHEDD_INFO_CLEANUPNECESSARY_S            _("cannot run on host "SFQ" until clean up of an previous run has finished")
+#define MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_             _("not all array task may be started due to \'max_aj_instances\'")
 
 
 #define MSG_SCHEDD_INFO_CANNOTRUNATHOST               _("Jobs can not run because no host can satisfy the resource requirements")
@@ -208,6 +209,7 @@
 #define MSG_SCHEDD_INFO_PEALLOCRULE                   _("PE dropped because allocation rule is not suitable")
 #define MSG_SCHEDD_INFO_NOPEMATCH                     _("Parallel job dropped because no matching PE found")
 #define MSG_SCHEDD_INFO_CLEANUPNECESSARY              _("Jobs can not run because host cleanup has not finished")
+#define MSG_SCHEDD_INFO_MAX_AJ_INSTANCES              _("Not all array tasks may be started due to \'max_aj_instances\'")
 
 #define MSG_SYSTEM_INVALIDERRORNUMBER                 _("invalid error number")
 #define MSG_SYSTEM_GOTNULLASERRORTEXT                 _("no error text available")

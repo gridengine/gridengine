@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #define running_status(x) ((x)!=0 && (x)!=JFINISHED)
 
 /* 
@@ -121,6 +119,83 @@ int active_nslots_granted(lListElem *job, lList *granted, const char *qhostname)
 lListElem *explicit_job_request(lListElem *jep, const char *name);
 
 int sge_granted_slots(lList *gdil);
+
+/* EB: */
+
+const char *get_name_of_split_value(int value);
+
+enum {
+   SPLIT_FIRST,
+
+   /*
+    * Pending jobs/tasks which may be dispatched
+    */
+   SPLIT_PENDING = SPLIT_FIRST,
+
+   /* 
+    * Pending jobs/tasks which won't be dispatched because this would
+    * exceed 'maxujobs'
+    */
+   SPLIT_PENDING_EXCLUDED,
+
+   /*
+    * Pending jobs/tasks which won't be dispatched because this whould
+    * exceed 'max_aj_instances'
+    */
+   SPLIT_PENDING_EXCLUDED_INSTANCES,
+   
+   /*
+    * Suspended jobs/tasks
+    */
+   SPLIT_SUSPENDED,
+
+   /* 
+    * Jobs/Tasks waiting for others to finish
+    */
+   SPLIT_WAITING_DUE_TO_PREDECESSOR,
+
+   /*
+    * Jobs/Tasks in user/operator/system hold
+    */
+   SPLIT_HOLD,
+
+   /*
+    * Jobs/Tasks which are in error state
+    */
+   SPLIT_ERROR,
+   
+   /*
+    * These jobs/tasks are not dispatched because start time is in future
+    */
+   SPLIT_WAITING_DUE_TO_TIME,
+
+   /*
+    * These Jobs/Tasks won't be dispatched because they are already running
+    */
+   SPLIT_RUNNING,
+
+   /*
+    * Already finished jobs/tasks
+    */
+   SPLIT_FINISHED,
+
+   /*
+    * This id is used in loops
+    */
+   SPLIT_LAST
+};
+
+void split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
+                u_long32 max_aj_instances, lList **result_lists[]); 
+
+void job_lists_split_with_reference_to_max_running(lList **job_lists[],
+                                                   lList **user_list,
+                                                   int max_jobs_per_user);
+
+void job_move_first_pending_to_running(lListElem **pending_job,
+                                       lList **result_lists[]);
+
+void job_lists_print(lList **job_list[]);
 
 #endif /* __SGE_JOB_SCHEDD_H */
 

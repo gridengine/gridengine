@@ -48,6 +48,7 @@
 #include "sge_time_eventL.h"
 #include "time_event.h"
 #include "msg_qmaster.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -143,7 +144,8 @@ u_long32 ack_ulong2
          DEXIT;
          return;
       }
-      if (!(jatep = search_task(ack_ulong2, jep))) {
+      jatep = job_search_task(jep, NULL, ack_ulong2, 0);
+      if (jatep == NULL) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
          DEXIT;
          return;

@@ -156,8 +156,15 @@ lList *granted
          lAppendElem(tlist, lCopyElem(ja_task));
          { 
             lEnumeration *what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
-                  lGetElemDescr(ja_task), JAT_task_number, JAT_status, JAT_ticket,
-                  JAT_oticket, JAT_dticket, JAT_fticket, JAT_sticket, JAT_share,
+                  lGetElemDescr(ja_task), 
+                  JAT_task_number, 
+                  JAT_status, 
+                  JAT_ticket,
+                  JAT_oticket, 
+                  JAT_dticket, 
+                  JAT_fticket, 
+                  JAT_sticket, 
+                  JAT_share,
                   JAT_granted_destin_identifier_list);
             lList *tmp_list;
             if ((tmp_list = lSelect("", tlist, NULL, what))) {
@@ -175,7 +182,9 @@ lList *granted
          lAppendElem(jlist, jep);
          {
             lEnumeration *what = lWhat("%T(%I %I)", 
-                  lGetElemDescr(job), JB_job_number, JB_ja_tasks);
+                  lGetElemDescr(job), 
+                  JB_job_number, 
+                  JB_ja_tasks);
             lList *tmp_list;
             if ((tmp_list = lSelect("", jlist, NULL, what))) {
                lFreeList(jlist);

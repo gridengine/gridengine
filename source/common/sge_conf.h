@@ -74,7 +74,8 @@ struct confel {                       /* cluster configuration parameters */
     char        *rsh_command;      /* eg rsh -p $PORT $HOST command */
     char        *rlogin_daemon;       /* eg /usr/sbin/in.rlogind */
     char        *rlogin_command;      /* eg rlogin -p $PORT $HOST */
-    u_long32    reschedule_unknown; 
+    u_long32    reschedule_unknown;   /* timout value used for auto. resch. */ 
+    u_long32    max_aj_instances;     /* max. number of ja instances of a job */
 };
 
 typedef struct confel sge_conf_type;

@@ -47,9 +47,10 @@ typedef enum {
 } sge_file_path_id_t;
 
 typedef enum {
-   SPOOL_DEFAULT             = 0x0000,
-   SPOOL_HANDLE_AS_ZOMBIE    = 0x0001,
-   SPOOL_WITHIN_EXECD        = 0x0002
+   SPOOL_DEFAULT               = 0x0000,
+   SPOOL_HANDLE_AS_ZOMBIE      = 0x0001,
+   SPOOL_WITHIN_EXECD          = 0x0002,
+   SPOOL_IGNORE_TASK_INSTANCES = 0x0004
 } sge_spool_flags_t; 
 
 typedef enum {

@@ -34,9 +34,16 @@
 
 #define MAX_JOB_DELIVER_TIME (5*60)
 
+typedef enum {
+   COMMIT_DEFAULT          = 0x0000,
+   COMMIT_NO_SPOOLING      = 0x0001,   /* don't spool the job */
+   COMMIT_NO_EVENTS        = 0x0002,   /* don't create events */
+   COMMIT_UNENROLLED_TASK  = 0x0004    /* handle unenrolled pending tasks */ 
+} sge_commit_flags_t; 
+
 int sge_give_job(lListElem *jep, lListElem *jatep, lListElem *master_qep, lListElem *pep, lListElem *hep);
 
-void sge_commit_job(lListElem *jep, lListElem *jatep, int mode, int spool_job);
+void sge_commit_job(lListElem *jep, lListElem *jatep, int mode, sge_commit_flags_t commit_flags);
 
 void ck_4_zombie_jobs(u_long now);
 

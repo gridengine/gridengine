@@ -80,6 +80,8 @@
 #include "sge_schedd_text.h"
 #include "sgeee.h"
 #include "sge_support.h"
+#include "sge_job_jatask.h"
+#include "sge_range.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -415,8 +417,20 @@ int row
       /*
       ** do show the different job states we show the job id in a different           ** color
       */
-      if (!jat)
-         jat = lFirst(tasks);
+
+#if 1 /* EB: review with Andre */
+      if (!jat) {
+         lListElem *first_elem = lFirst(tasks);
+
+         if (is_obj_of_type(first_elem, JAT_Type)) {
+            jat = lFirst(tasks);
+         } else if (is_obj_of_type(first_elem, RN_Type)) {
+            u_long32 task_id = range_list_get_first_id(tasks, NULL);
+
+            jat = job_get_ja_task_template(job, task_id);       
+         }
+      }
+#endif
       color = qmonJobStateToColor(w, jat);
       XbaeMatrixSetRowColors(w, row, &color, 1);
    }
@@ -658,16 +672,22 @@ void updateJobList(void)
       lList *rtasks = lCopyList("rtasks", lGetList(jep, JB_ja_tasks));
       lList *ptasks = NULL;
       lListElem *jap;
+      int tow = 0;
       /*
       ** split into running and pending tasks
       */
       lSplit(&rtasks, &ptasks, "rtasks", where_run);
-/* printf("========> where_run\n"); */
-/* lWriteWhereTo(where_run, stdout); */
-/* printf("========> rtasks\n"); */
-/* lWriteListTo(rtasks, stdout); */
-/* printf("========> ptasks\n"); */
-/* lWriteListTo(ptasks, stdout); */
+
+#if 0 /* EB: debug code */
+      printf("========> jep\n");
+      lWriteElemTo(jep, stdout);
+      printf("========> where_run\n"); 
+      lWriteWhereTo(where_run, stdout); 
+      printf("========> rtasks\n"); 
+      lWriteListTo(rtasks, stdout); 
+      printf("========> ptasks\n"); 
+      lWriteListTo(ptasks, stdout); 
+#endif
       /*
       ** for running tasks we have to set the suspend_on_subordinate flag
       ** if the granted queues are suspended the jat_state field must set
@@ -709,6 +729,7 @@ void updateJobList(void)
       if (lGetNumberOfElem(ptasks) > 0) {
          if (qmonJobFilterArraysCompressed()) {
             lList *task_group;
+
             lSplit(&ptasks, NULL, NULL, where_notexiting);
             while (( task_group = split_task_group(&ptasks))) {
                qmonJobToMatrix(job_pending_jobs, jep, NULL, task_group,
@@ -716,18 +737,54 @@ void updateJobList(void)
                task_group = lFreeList(task_group);
                pow++;
             }
-         }
-         else {
-            int tow = 0;
+         } else {
             for_each(jap, ptasks) {
+#if 1 /* EB: is JOB_DISPLAY_MODE_RUNNING correct? */
                qmonJobToMatrix(job_pending_jobs, jep, jap, NULL,
                                  JOB_DISPLAY_MODE_RUNNING, pow + tow);
+#endif
                tow++;
             }
             pow++;
          }
          ptasks = lFreeList(ptasks);
       }
+#if 1 /* EB: review with Andre */
+      if (lGetList(jep, JB_ja_n_h_ids) || lGetList(jep, JB_ja_u_h_ids) ||
+          lGetList(jep, JB_ja_o_h_ids) || lGetList(jep, JB_ja_s_h_ids)) {
+         lList *range_list[8];         /* RN_Type */
+         u_long32 hold_state[8];
+         int i;
+
+         job_create_hold_id_lists(jep, range_list, hold_state);
+         for (i = 0; i <= 7; i++) {
+            if (range_list[i] != NULL) {
+               lList *task_ids = range_list[i]; 
+
+               if (task_ids != NULL) {
+                  tow = 0;
+                  if (qmonJobFilterArraysCompressed()) {
+                     qmonJobToMatrix(job_pending_jobs, jep, NULL, task_ids,
+                                       JOB_DISPLAY_MODE_PENDING, pow + tow);
+                     tow++;
+                  } else {
+                     lListElem *range = NULL;   /* RN_Type */
+                     u_long32 task_id;
+
+                     for_each_id_in_range_list(task_id, range, task_ids) {
+                        jap = job_get_ja_task_template(jep, task_id);
+                        qmonJobToMatrix(job_pending_jobs, jep, jap, NULL,
+                                        JOB_DISPLAY_MODE_RUNNING, pow + tow);
+                        tow++;
+                     }
+                  }
+                  pow += tow;
+               }
+            }
+         }
+         job_destroy_hold_id_lists(jep, range_list);
+      }
+#endif
    }
 
    /*
@@ -1118,9 +1175,9 @@ XtPointer cld, cad;
    };
    
    DENTER(GUI_LAYER, "qmonJobHold");
-   
+
    rl = qmonJobBuildSelectedList(job_running_jobs, hold_descr, JB_job_number);
-   
+
    /*
    ** set priority works only for pending jobs
    */
@@ -1134,17 +1191,31 @@ XtPointer cld, cad;
    if (jl) {
       StringBufferT dyn_tasks = {NULL, 0};
       StringBufferT dyn_oldtasks = {NULL, 0};
+      lListElem *selected_job;
+      lListElem *selected_ja_task;
+      u_long32 selected_job_id;
+      u_long32 selected_ja_task_id;
 
+#if 1 /* EB: Review with Andre */
       /*
       ** get the first job in list and its first task to preset 
       ** the hold dialog
       */
+      selected_job = lFirst(jl);
+      selected_job_id = lGetUlong(selected_job, JB_job_number);
       job = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), JB_job_number, 
-                              lGetUlong(lFirst(jl), JB_job_number));
-      new_hold = lGetUlong(lFirst(lGetList(job, JB_ja_tasks)), JAT_hold);
+                          selected_job_id);
+      selected_ja_task = lFirst(lGetList(selected_job, JB_ja_tasks));
+      selected_ja_task_id = lGetUlong(selected_ja_task, JAT_task_number);
+      if (job_is_enrolled(job, selected_ja_task_id)) {
+         new_hold = lGetUlong(lFirst(lGetList(job, JB_ja_tasks)), JAT_hold);
+      } else {
+         new_hold = job_get_ja_task_hold_state(job, selected_ja_task_id);
+      }
+#endif
 
       if (lGetNumberOfElem(jl) == 1 && is_array(job)) {
-         get_taskrange_str(lGetList(job, JB_ja_tasks), &dyn_tasks);
+         get_taskrange_str(lGetList(selected_job, JB_ja_tasks), &dyn_tasks);
          sge_string_append(&dyn_oldtasks, dyn_tasks.s);
       }
 

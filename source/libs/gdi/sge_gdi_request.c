@@ -1049,6 +1049,22 @@ u_long32 quality
    return 0;
 }
 
+int answer_list_is_error_in_list(lList **answer_list)
+{
+   lListElem *answer = NULL;
+   int ret = 0;
+
+   if (answer_list != NULL) {
+      for_each(answer, *answer_list) {
+         if (lGetUlong(answer, AN_quality) ==  NUM_AN_ERROR) {
+            ret = 1;
+            break;
+         }
+      }
+   }
+   return ret;
+}                   
+
 /*-----------------------------------------------------------------------*/
 const char *quality_text(
 lListElem *aep 

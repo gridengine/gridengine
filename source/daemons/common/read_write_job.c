@@ -72,9 +72,6 @@ static lListElem *ja_task_create_from_file(u_long32 job_id,
 static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
                                  sge_spool_flags_t flags); 
 
-static int job_write_common_part(lListElem *job, u_long32 ja_task_id,
-                                 sge_spool_flags_t flags);
-
 static int job_write_ja_task_part(lListElem *job, u_long32 ja_task_id,
                                   sge_spool_flags_t flags);
 
@@ -113,9 +110,6 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
          DTRACE; 
          goto error;
       }
-      if (!(flags & SPOOL_WITHIN_EXECD)) {
-         job_initialize_ja_tasks(job);
-      }
       ja_tasks = ja_task_list_create_from_file(job_id, ja_task_id, flags); 
       if (ja_tasks) {
          lList *ja_task_list;
@@ -127,12 +121,8 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
             lSetList(job, JB_ja_tasks, ja_tasks);
          }
          ja_tasks = NULL;
+         lPSortList(ja_tasks, "%I+", JAT_task_number); 
       }
-      if (!lGetNumberOfElem(lGetList(job, JB_ja_tasks))) {
-         DTRACE;
-         goto error;
-      }
-      lPSortList(lGetList(job, JB_ja_tasks), "%I+", JAT_task_number); 
    } else {
       job = lReadElemFromDisk(NULL, spool_path, JB_Type, "job");
       if (!job) { 
@@ -280,13 +270,14 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    int ret;
    int spool_single_task_files;
    int within_execd = flags & SPOOL_WITHIN_EXECD;
+   int ignore_instances = flags & SPOOL_IGNORE_TASK_INSTANCES;
    DENTER(TOP_LAYER, "job_write_spool_file");
 
    spool_single_task_files = (!within_execd && 
       job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
    if (spool_single_task_files) {
       ret = job_write_common_part(job, ja_taskid, flags);
-      if (!ret) {
+      if (!ret && !ignore_instances) {
          ret = job_write_ja_task_part(job, ja_taskid, flags); 
       }
    } else {
@@ -362,7 +353,7 @@ static int job_write_ja_task_part(lListElem *job, u_long32 ja_task_id,
    return ret;
 }
 
-static int job_write_common_part(lListElem *job, u_long32 ja_task_id,
+int job_write_common_part(lListElem *job, u_long32 ja_task_id,
                                  sge_spool_flags_t flags) 
 {
    int ret = 0;

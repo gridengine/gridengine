@@ -270,13 +270,16 @@ lListElem **ja_taskp
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {
          /* job must be suspended */ 
          jstate = lGetUlong(ja_task, JAT_state);
-         if (!(jstate & JSUSPENDED_ON_THRESHOLD)) 
+         if (!(jstate & JSUSPENDED_ON_THRESHOLD)) {
             continue;
+         }
 
          /* is this the master queue of this job ? */
          if (strcmp(qnm, lGetString(lFirst(lGetList(ja_task, 
-               JAT_granted_destin_identifier_list)), JG_qname))) 
+               JAT_granted_destin_identifier_list)), JG_qname))) {
+            DTRACE;
             continue;
+         }
          
          /* select task that runs longest time for unsuspension */
          if (!longest ||lGetUlong(longest, JAT_start_time) > lGetUlong(ja_task, JAT_start_time)) {

@@ -42,80 +42,64 @@
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 
-int correct_load(
-lList *lp_job,
-lList *lp_queue,
-lList **lpp_host,
-u_long32 decay_time 
-) {
+int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
+                  u_long32 decay_time) 
+{
+   lListElem *job = NULL;
    u_long32 now;
-   double lcf_global = 0, add_lcf; /* additional load correction factor */
-   u_long32 jstate, qstate;
-   u_long32 jobid, ja_taskid, running_time;
-   const char *qnm, *hnm;
-   lListElem *gdil, *hep;
-   u_long32 slots;
-   lListElem  *qep, *job, *ja_task;
    
    DENTER(TOP_LAYER, "correct_load");
 
-   now = sge_get_gmt();
-
-   if (!lpp_host) {
+   if (queue_list == NULL || host_list == NULL) {
       DEXIT;
       return 1;
    }
-   for_each (job, lp_job) {
 
-      /* increase host load only for RUNNING jobs             */
-      /* SUSPENDED Jobs may not increase the load of the host */
-      jobid = lGetUlong(job, JB_job_number);
+   now = sge_get_gmt();
+
+   for_each (job, running_jobs) {
+      u_long32 job_id = lGetUlong(job, JB_job_number);
+      lListElem *global_host = NULL;
+      lListElem *ja_task = NULL;
+      double global_lcf = 0.0;
+
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-         jstate = lGetUlong(ja_task, JAT_state);
-         if (!(jstate & JRUNNING) || 
-             (jstate & JSUSPENDED) || 
-             (jstate & JSUSPENDED_ON_THRESHOLD)) {
-            continue;
-         }
-         ja_taskid = lGetUlong(ja_task, JAT_task_number); 
-         /* may be job runs longer than load_adjustment_decay_time */
-         running_time = now - lGetUlong(ja_task, JAT_start_time);
-#if 0
+         u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number); 
+         u_long32 running_time = now - lGetUlong(ja_task, JAT_start_time);
+         lListElem *granted_queue = NULL;
+         lList *granted_list = NULL;
+         double host_lcf = 0.0;
+
+#if 1
          DPRINTF(("JOB "u32"."u32" start_time = "u32" running_time "u32
-            " decay_time = "u32"\n", jobid, ja_taskid, 
+            " decay_time = "u32"\n", job_id, ja_task_id, 
             lGetUlong(ja_task, JAT_start_time), running_time, 
             decay_time));
 #endif
-         if (running_time > decay_time)
+         if (running_time > decay_time) {
             continue;
-         
-         /* Problem: Jobs in SUSPENDED queues have no SUSPENDED  */
-         /*          flag set. So we have to take this info      */
-         /*          directly from the queues state field.       */
-         /*
-         ** the gdil contains the queue(s) the job runs in
-         */
-         for_each (gdil, lGetList(ja_task, JAT_granted_destin_identifier_list)) {
+         }
+         granted_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
+         for_each (granted_queue, granted_list) {   
+            const char *qnm = NULL;
+            const char *hnm = NULL;
+            lListElem *qep = NULL;
+            lListElem *hep = NULL;
+            u_long32 slots;
             
-            /* search for this queue */
-            qnm=lGetString(gdil, JG_qname);
-            qep=lGetElemStr(lp_queue, QU_qname, qnm);
-            if (!qep) {
+            qnm = lGetString(granted_queue, JG_qname);
+            qep = lGetElemStr(queue_list, QU_qname, qnm);
+            if (qep == NULL) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
-                  "list of job "u32"."u32"\n", qnm, jobid, ja_taskid));
+                        "list of job "u32"."u32"\n", qnm, job_id, ja_task_id));
                continue;
             }
-            
-            qstate = lGetUlong(qep, QU_state); 
-            if ((qstate & QSUSPENDED) || (qstate & QSUSPENDED_ON_SUBORDINATE))
-               continue; /* queue suspended - no load correction */
-            
-            /* search this host */
-            hep = lGetElemHost(*lpp_host, EH_name, 
-               hnm=lGetHost(gdil, JG_qhostname));
-            if (!hep) {
+           
+            hnm=lGetHost(granted_queue, JG_qhostname); 
+            hep = lGetElemHost(host_list, EH_name, hnm);
+            if (hep == NULL) {
                DPRINTF(("Unable to find host \"%s\" from gdil "
-                  "list of job "u32"."u32"\n", hnm, jobid, ja_taskid));
+                        "list of job "u32"."u32"\n", hnm, job_id, ja_task_id));
                continue;
             } 
 
@@ -132,41 +116,41 @@ u_long32 decay_time
                correction(t) = 1 - ---------------- 
                                     decay_time
             */
-            add_lcf = 1 - ((double) running_time/
-                           (double) decay_time);
-
-            lcf_global += add_lcf;
+            host_lcf = 1 - ((double) running_time / (double) decay_time);
+            global_lcf += host_lcf;
 
             /* multiply it for each slot on this host */
-            slots = lGetUlong(gdil, JG_slots);
-            add_lcf *= slots;
+            slots = lGetUlong(granted_queue, JG_slots);
+            host_lcf *= slots;
             
-            /* add this factor (multiplied with 100 for being able to use u_long32) */
+            /* add this factor (multiplied with 100 for being able to use 
+               u_long32) */
             lSetUlong(hep, EH_load_correction_factor, 
-                      (100*add_lcf) + lGetUlong(hep, EH_load_correction_factor));
+                      host_lcf * 100 + 
+                      lGetUlong(hep, EH_load_correction_factor));
 
 #if 0
             DPRINTF(("JOB "u32"."u32" ["u32" slots] in queue %s increased lc of host "
-                     "%s by "u32" to "u32"\n", jobid, ja_taskid, slots, qnm, hnm, 
-                     (u_long32)(100*add_lcf), lGetUlong(hep, EH_load_correction_factor)));
+                     "%s by "u32" to "u32"\n", job_id, ja_task_id, slots, qnm, hnm, 
+                     (u_long32)(100*host_lcf), lGetUlong(hep, EH_load_correction_factor)));
 #endif
-            SCHED_MON((log_string, "JOB "u32"."u32" ["u32"] in queue %s increased "
-                        "absolute lc of host "
-                       "%s by "u32" to "u32"", jobid, ja_taskid, slots, qnm, hnm, 
-                       (u_long32)(100*add_lcf), lGetUlong(hep, 
+            SCHED_MON((log_string, "JOB "u32"."u32" ["u32"] in queue "SFN
+                       " increased absolute lc of host "SFN" by "u32" to "
+                       u32"", job_id, ja_task_id, slots, qnm, hnm, 
+                       (u_long32)(host_lcf*100), lGetUlong(hep, 
                         EH_load_correction_factor)));
          }
       }
 
-      hep = lGetElemHost(*lpp_host, EH_name, "global");
-      lSetUlong(hep, EH_load_correction_factor, 
-                (100*lcf_global) + lGetUlong(hep, EH_load_correction_factor));
+      global_host = lGetElemHost(host_list, EH_name, "global");
+      lSetUlong(global_host, EH_load_correction_factor, 
+                global_lcf * 100 + 
+                lGetUlong(global_host, EH_load_correction_factor));
    }
 
    DEXIT;
    return 0;
 }
-
 
 
 /*

@@ -40,6 +40,7 @@
 #include <time.h>
 #include <math.h>
 #include <fnmatch.h>
+#include <unistd.h>
 
 #include "sge_conf.h"
 #include "sge_string.h"
@@ -71,6 +72,8 @@
 #include "sge_schedd_text.h"
 #include "jb_now.h"
 #include "job_log.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
 
 
 /* profiling info */
@@ -81,7 +84,8 @@ extern int scheduled_complex_jobs;
 sge_Sdescr_t lists =
 {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
-static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, lList **running_jobs, lList **finished_jobs);
+static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, 
+                         lList **splitted_job_list[]);
 
 static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, double *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
 
@@ -110,12 +114,22 @@ int my_scheduler(sge_Sdescr_t *lists)
    return scheduler(lists);
 }
 #endif
-int scheduler( sge_Sdescr_t *lists ) {
+int scheduler(sge_Sdescr_t *lists) {
    lList *orderlist=NULL;
-   lList *running_jobs=NULL;
-   lList *finished_jobs = NULL;
+   lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
+   lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
+   lList *waiting_due_to_time_list = NULL;         /* JB_Type */
+   lList *pending_excluded_list = NULL;            /* JB_Type */
+   lList *suspended_list = NULL;                   /* JB_Type */
+   lList *finished_list = NULL;                    /* JB_Type */
+   lList *pending_list = NULL;                     /* JB_Type */
+   lList *pending_excludedlist = NULL;                     /* JB_Type */
+   lList *running_list = NULL;                     /* JB_Type */
+   lList *error_list = NULL;                       /* JB_Type */
+   lList *hold_list = NULL;                        /* JB_Type */
    time_t start;
    int ret;
+   int i;
 #ifdef TEST_DEMO
    FILE *fpdjp;
 #endif
@@ -126,25 +140,88 @@ int scheduler( sge_Sdescr_t *lists ) {
 #endif
 
    start = time(0);
-
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
-
    schedd_initialize_messages();
    schedd_log_schedd_info(1); 
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {  
-      /* finished jobs are handled in sge_calc_tickets */
+   for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+      splitted_job_lists[i] = NULL;
+   }
+   splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = 
+                                               &waiting_due_to_pedecessor_list;
+   splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME] = &waiting_due_to_time_list;
+   splitted_job_lists[SPLIT_PENDING_EXCLUDED] = &pending_excluded_list;
+   splitted_job_lists[SPLIT_SUSPENDED] = &suspended_list;
+   splitted_job_lists[SPLIT_FINISHED] = &finished_list;
+   splitted_job_lists[SPLIT_PENDING] = &pending_list;
+   splitted_job_lists[SPLIT_PENDING_EXCLUDED_INSTANCES] = &pending_excludedlist;
+   splitted_job_lists[SPLIT_RUNNING] = &running_list;
+   splitted_job_lists[SPLIT_ERROR] = &error_list;
+   splitted_job_lists[SPLIT_HOLD] = &hold_list;
 
-      /* split job list in running jobs and others */
-      if (sge_split_job_finished(
-            &(lists->job_list), /* source list                        */
-            &finished_jobs,     /* put the finished jobs at this location */
-            "finished jobs")) {
-         DPRINTF(("couldn't split job list concerning finished state\n"));
+   split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
+              conf.max_aj_instances, splitted_job_lists);
+ 
+#if 1
+   job_lists_print(splitted_job_lists);
+#endif                      
 
-         DEXIT;
-         return -1;
+   {
+      int split_id_a[] = {
+         SPLIT_ERROR, 
+         SPLIT_HOLD, 
+         SPLIT_WAITING_DUE_TO_TIME,
+         SPLIT_WAITING_DUE_TO_PREDECESSOR,
+         SPLIT_PENDING_EXCLUDED_INSTANCES,
+         SPLIT_LAST
+      }; 
+      int i = -1;
+   
+      while (split_id_a[++i] != SPLIT_LAST) { 
+         lList **job_list = splitted_job_lists[split_id_a[i]];
+         lListElem *job = NULL;
+
+         for_each (job, *job_list) {
+            u_long32 job_id = lGetUlong(job, JB_job_number);
+
+            switch (split_id_a[i]) {
+            case SPLIT_ERROR:
+               schedd_add_message(job_id, SCHEDD_INFO_JOBINERROR_);
+               if (monitor_next_run) {
+                  schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
+                                  *job_list, JB_job_number);
+               }
+               break;
+            case SPLIT_HOLD:
+               schedd_add_message(job_id, SCHEDD_INFO_JOBHOLD_);
+               if (monitor_next_run) {
+                  schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
+                                  *job_list, JB_job_number);
+               }
+               break;
+            case SPLIT_WAITING_DUE_TO_TIME:
+               schedd_add_message(job_id, SCHEDD_INFO_EXECTIME_);
+               if (monitor_next_run) {
+                  schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
+                                  *job_list, JB_job_number);
+               }
+               break;
+            case SPLIT_WAITING_DUE_TO_PREDECESSOR:
+               schedd_add_message(job_id, SCHEDD_INFO_JOBDEPEND_);
+               if (monitor_next_run) {
+                  schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
+                                  *job_list, JB_job_number);
+               }
+               break;
+            case SPLIT_PENDING_EXCLUDED_INSTANCES:
+               schedd_add_message(job_id, SCHEDD_INFO_MAX_AJ_INSTANCES_);
+               break;
+            default:
+               ;
+            }
+         } 
+         *job_list = lFreeList(*job_list);
       }
    }
 
@@ -161,12 +238,12 @@ int scheduler( sge_Sdescr_t *lists ) {
          "|| %I m= %u "
          "|| %I m= %u "
          "|| %I m= %u)",
-            dp,
-               QU_state, QSUSPENDED,        /* only not suspended queues      */
-               QU_state, QSUSPENDED_ON_SUBORDINATE,
-               QU_state, QCAL_SUSPENDED,
-               QU_state, QERROR,            /* no queues in error state       */
-               QU_state, QUNKNOWN);         /* only known queues              */
+         dp,
+         QU_state, QSUSPENDED,        /* only not suspended queues      */
+         QU_state, QSUSPENDED_ON_SUBORDINATE,
+         QU_state, QCAL_SUSPENDED,
+         QU_state, QERROR,            /* no queues in error state       */
+         QU_state, QUNKNOWN);         /* only known queues              */
 
       if (!what || !where) {
          DPRINTF(("failed creating where or what describing non available queues\n")); 
@@ -174,17 +251,17 @@ int scheduler( sge_Sdescr_t *lists ) {
       qlp = lSelect("", lists->all_queue_list, where, what);
 
       for_each(mes_queues, qlp)
-         schedd_add_global_message(SCHEDD_INFO_QUEUENOTAVAIL_, lGetString(mes_queues, QU_qname));
+         schedd_add_global_message(SCHEDD_INFO_QUEUENOTAVAIL_, 
+                                   lGetString(mes_queues, QU_qname));
 
-      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED , qlp, QU_qname);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED, 
+                      qlp, QU_qname);
       lFreeList(qlp);
       lFreeWhere(where);
       lFreeWhat(what);
    }
 
-   ret = dispatch_jobs(lists, &orderlist, &running_jobs, &finished_jobs);
-   lFreeList(running_jobs);
-   lFreeList(finished_jobs);
+   ret = dispatch_jobs(lists, &orderlist, splitted_job_lists);
 
 #if 0
    if (ret) {
@@ -225,8 +302,15 @@ int scheduler( sge_Sdescr_t *lists ) {
       logginglevel = saved_logginglevel;
    }
 
-   remove_immediate_jobs(lists->job_list, &orderlist);
+   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), &orderlist);
    orderlist = sge_add_schedd_info(orderlist);
+
+   for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+      if (splitted_job_lists[i]) {
+         *(splitted_job_lists[i]) = lFreeList(*(splitted_job_lists[i]));
+         splitted_job_lists[i] = NULL;
+      }
+   }
 
    if (orderlist) {
 #ifdef TEST_DEMO
@@ -273,13 +357,13 @@ int scheduler( sge_Sdescr_t *lists ) {
 static int dispatch_jobs(
 sge_Sdescr_t *lists,
 lList **orderlist,
-lList **running_jobs,
-lList **finished_jobs 
+lList **splitted_job_lists[]
 ) {
    lList *user_list=NULL, *group_list=NULL;
-   lListElem *orig_job, *job, *queue, *cat;
+   lListElem *orig_job, *job, *cat;
    lList *susp_queues = NULL;
-   lListElem *rjob, *rja_task;  
+   lListElem *rjob, *rja_task;
+   lListElem *queue;  
    double total_running_job_tickets=0; 
    int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    int ndispatched = 0;
@@ -302,11 +386,11 @@ lList **finished_jobs
     * of an exechost for each job started before load adjustment decay time.
     * load_adjustment_decay_time is a configuration value. 
     *---------------------------------------------------------------------*/
-   
+
    if (scheddconf.load_adjustment_decay_time ) {
-      correct_load(lists->job_list,
+      correct_load(*(splitted_job_lists[SPLIT_RUNNING]),
 		   lists->queue_list,
-		   &lists->host_list,
+		   lists->host_list,
 		   scheddconf.load_adjustment_decay_time);
 
       /* is there a "global" load value in the job_load_adjustments?
@@ -350,9 +434,12 @@ lList **finished_jobs
       return -1;
    }
 
-
-   unsuspend_job_in_queues(lists->queue_list, lists->job_list, orderlist); 
-   suspend_job_in_queues(susp_queues, lists->job_list, orderlist); 
+   unsuspend_job_in_queues(lists->queue_list, 
+                           *(splitted_job_lists[SPLIT_SUSPENDED]), 
+                           orderlist); 
+   suspend_job_in_queues(susp_queues, 
+                         *(splitted_job_lists[SPLIT_RUNNING]), 
+                         orderlist); 
    lFreeList(susp_queues);
 
    /*---------------------------------------------------------------------
@@ -400,24 +487,17 @@ lList **finished_jobs
     * FILTER JOBS
     *---------------------------------------------------------------------*/
 
-   DPRINTF(("STARTING PASS 1 WITH %d JOBS\n", lGetNumberOfElem(lists->job_list)));
+   DPRINTF(("STARTING PASS 1 WITH %d PENDING JOBS\n", 
+            lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))));
 
-   /* split job list in running jobs and others */
-   if (sge_split_job_running(
-         &(lists->job_list),   /* source list                              */
-         running_jobs,         /* put the running jobs at this location    */
-         "running jobs")) {
-      DPRINTF(("couldn't split job list in running and non running ones\n"));
-      DEXIT;
-      return -1;
-   }
-
-   queue=lFirst(lists->queue_list);
-   if(!queue) {
-      /* no queues to schedule on */
-
+   queue = lFirst(lists->queue_list);
+   if(queue == NULL) {
       if (sgeee_mode) {
-         sge_scheduler(lists, *running_jobs, *finished_jobs, orderlist);
+         sge_scheduler(lists, 
+                       *(splitted_job_lists[SPLIT_RUNNING]), 
+                       *(splitted_job_lists[SPLIT_FINISHED]), 
+                       *(splitted_job_lists[SPLIT_PENDING]),
+                       orderlist);
       }
 
       DPRINTF(("queues dropped because of overload or full: ALL\n"));
@@ -427,72 +507,9 @@ lList **finished_jobs
       return 0;
    }
 
-
-   /* 
-   ** filter pending jobs with maxujobs violation 
-   */
-   lists->job_list = filter_max_running_1step(
-      lists->job_list,        /* pending jobs to be filtered                */ 
-      *running_jobs,          /* running jobs to get number of running jobs */
-      &user_list,             /* store here a list with the number of running jobs per user */ 
-      scheddconf.maxujobs,    /* max. jobs per user or 0 if no limitations  */
-      JB_owner);              /* take job owner for compare                 */ 
-
-   /*  THE FOLLOWING STATEMENT IS NOT TRUE IN THE SGE CODESTREAM:
-   ** running_jobs is not referenced after this point
-   ** contains all jobs that are not idle, i.e. also snoozed jobs
-   ** could be used as input for suspend threshold job filtering
-   */
-
-   /* 
-   ** remove jobs that wait because of [-a time] option 
-   */
-   if (sge_split_job_wait_at_time(
-      &(lists->job_list),  /* pending jobs to reduce            */
-      NULL,                /* no location to store waiting jobs */
-      NULL,                /* no name for list of waiting jobs  */ 
-      sge_get_gmt())) {    /* actual time                       */
-      DPRINTF(("couldn't split job list concerning at time\n"));
-      DEXIT;
-      return -1;
-   } 
-
-   /* 
-   ** remove jobs in error state 
-   */
-   if (sge_split_job_error(&(lists->job_list), NULL, NULL)) {
-      DPRINTF(("couldn't split job list concerning error\n"));
-      DEXIT;
-      return -1;
-   }
-
-   /* 
-   ** remove jobs in hold state 
-   */
-   if (sge_split_job_hold(&(lists->job_list), NULL, NULL)) {
-      DPRINTF(("couldn't split job list concerning hold\n"));
-      DEXIT;
-      return -1;
-   }
-
-   /* 
-   ** remove jobs that wait for other jobs to exit 
-   */
-   if (sge_split_job_wait_predecessor(&(lists->job_list), NULL, NULL)) {
-      DPRINTF(("couldn't split job list concerning wait for predecessor\n"));
-      DEXIT;
-      return -1;
-   } 
-
-   /* 
-   ** remove jobs that can't get scheduled because of ckpt restrictions 
-   */
-   if (sge_split_job_ckpt_restricted(&(lists->job_list), NULL, NULL, 
-         lists->ckpt_list)) {
-      DPRINTF(("couldn't split job list concerning ckpt restrictions\n"));
-      DEXIT;
-      return -1;
-   }
+   job_lists_split_with_reference_to_max_running(splitted_job_lists,
+                                                 &user_list,
+                                                 scheddconf.maxujobs);
 
    /*--------------------------------------------------------------------
     * CALL SGEEE SCHEDULER TO
@@ -500,12 +517,17 @@ lList **finished_jobs
     *------------------------------------------------------------------*/
 
    if (sgeee_mode) {
-      sge_scheduler(lists, *running_jobs, *finished_jobs, orderlist);
+      sge_scheduler(lists, 
+                    *(splitted_job_lists[SPLIT_RUNNING]),
+                    *(splitted_job_lists[SPLIT_FINISHED]),
+                    *(splitted_job_lists[SPLIT_PENDING]),
+                    orderlist);     
    }
 
+   DPRINTF(("STARTING PASS 2 WITH %d PENDING JOBS\n",
+            lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))));
 
-   DPRINTF(("STARTING PASS 2 WITH %d JOBS\n", lGetNumberOfElem(lists->job_list)));
-   if (lGetNumberOfElem(lists->job_list)==0) {
+   if (lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING])) == 0) {
       /* no jobs to schedule */
       SCHED_MON((log_string, MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON ));
       lFreeList(user_list);
@@ -515,8 +537,12 @@ lList **finished_jobs
    }
 
    if (sgeee_mode) {
-      /* calculate the number of tickets for all jobs already running on the host */
-      if (calculate_host_tickets(running_jobs, &(lists->host_list)))  {
+      /* 
+       * calculate the number of tickets for all jobs already 
+       * running on the host 
+       */
+      if (calculate_host_tickets(splitted_job_lists[SPLIT_RUNNING], 
+                                 &(lists->host_list)))  {
          DPRINTF(("no host for which to calculate host tickets\n"));
          lFreeList(user_list);
          lFreeList(group_list);
@@ -524,20 +550,30 @@ lList **finished_jobs
          return -1;
       }
 
-      /* temporary job placement workaround - calc tickets for running and queued jobs */
+      /* 
+       * temporary job placement workaround - 
+       * calc tickets for running and queued jobs 
+       */
       if (classic_sgeee_scheduling) {
          int seqno;
-         seqno = sge_calc_tickets(lists, lists->job_list, *running_jobs, NULL, 0);
+
+         seqno = sge_calc_tickets(lists, 
+                                  *(splitted_job_lists[SPLIT_RUNNING]), 
+                                  NULL, 
+                                  *(splitted_job_lists[SPLIT_PENDING]),
+                                  0);
+
          *orderlist = sge_build_sge_orders(lists, NULL, lists->job_list, NULL,
                                            *orderlist, 0, seqno);
       }
 
-      /* Order Jobs in descending order according to tickets and then job number */
-
-      sgeee_sort_jobs(&(lists->job_list));
+      /* 
+       * Order Jobs in descending order according to tickets and 
+       * then job number 
+       */
+      sgeee_sort_jobs(splitted_job_lists[SPLIT_PENDING]);
 
    }  /* if sgeee_mode */
-
 
    /*---------------------------------------------------------------------
     * SORT QUEUES OR HOSTS
@@ -609,11 +645,14 @@ lList **finished_jobs
    /*---------------------------------------------------------------------
     * DISPATCH JOBS TO QUEUES
     *---------------------------------------------------------------------*/
-   /* Calculate the total number of tickets for running jobs - to be used
-      later for SGE job placement */
+
+   /* 
+    * Calculate the total number of tickets for running jobs - to be used
+    * later for SGE job placement 
+    */
    if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
       total_running_job_tickets = 0;
-      for_each(rjob, *running_jobs) {
+      for_each(rjob, *splitted_job_lists[SPLIT_RUNNING]) {
          for_each(rja_task, lGetList(rjob, JB_ja_tasks)) {
             total_running_job_tickets += lGetDouble(rja_task, JAT_ticket);
          }
@@ -621,25 +660,25 @@ lList **finished_jobs
    }
 
    /*
-   ** job categories are reset here, we need an update of the rejected field
-   ** for every new run
-   */
+    * job categories are reset here, we need an update of the rejected field
+    * for every new run
+    */
    sge_reset_job_category(); 
 
    if (!sgeee_mode) {
       /* 
-      ** establish the access tree for all job arrays containing runnable tasks 
-      */
-      at_notice_runnable_job_arrays(lists->job_list);
+       * establish the access tree for all job arrays containing runnable tasks 
+       */
+      at_notice_runnable_job_arrays(*splitted_job_lists[SPLIT_PENDING]);
    }
 
 
    /*
-   ** loop over the jobs that are left in priority order
-   */
-   while ( (job = lCopyElem(
-   orig_job=(sgeee_mode? lFirst(lists->job_list) :at_get_actual_job_array(lists->job_list))
-   ))) {
+    * loop over the jobs that are left in priority order
+    */
+   while ((orig_job=(sgeee_mode?lFirst(*(splitted_job_lists[SPLIT_PENDING]))
+          : at_get_actual_job_array(*(splitted_job_lists[SPLIT_PENDING])))) &&
+         (job = lCopyElem(orig_job))) {
       u_long32 job_id; 
       u_long32 ja_task_id; 
       lListElem *pe;
@@ -647,7 +686,7 @@ lList **finished_jobs
       lListElem *ckpt;
       const char *ckpt_name;
       int dispatched_a_job;
-      lListElem *next_job;
+
 
       /* sort the hostlist */
       if(sort_hostlist) {
@@ -658,7 +697,7 @@ lList **finished_jobs
          host_order_changed = 0;
       }   
 
-      schedd_initialize_messages_joblist(lists->job_list);
+      schedd_initialize_messages_joblist(*splitted_job_lists[SPLIT_PENDING]);
 
       dispatched_a_job = 0;
       job_id = lGetUlong(job, JB_job_number);
@@ -677,11 +716,22 @@ lList **finished_jobs
 
       ja_task = lFirst(lGetList(job, JB_ja_tasks));
       if (!ja_task) {
-         DPRINTF(("Found job "u32" with no job array tasks\n", job_id));
-         goto SKIP_THIS_JOB;
-      } else 
-         ja_task_id = lGetUlong(ja_task, JAT_task_number);
+         lList *answer_list = NULL;
 
+         ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
+                                              &answer_list);
+         if (answer_list_is_error_in_list(&answer_list)) {
+            answer_list = lFreeList(answer_list);
+            DPRINTF(("Found job "u32" with no job array tasks\n", job_id));
+            goto SKIP_THIS_JOB; 
+         } else {
+            ja_task = job_get_ja_task_template_pending(job, ja_task_id);
+         }
+      } else {
+         ja_task_id = lGetUlong(ja_task, JAT_task_number);
+      }
+
+      DPRINTF(("Found pending job "u32"."u32"\n", job_id, ja_task_id));
       DPRINTF(("-----------------------------------------\n"));
 
       /*------------------------------------------------------------------ 
@@ -692,6 +742,8 @@ lList **finished_jobs
       if ((ckpt_name = lGetString(job, JB_checkpoint_object))) {
          ckpt = lGetElemStr(lists->ckpt_list, CK_name, ckpt_name);
          if (!ckpt) {
+            schedd_add_message(lGetUlong(job, JB_job_number), 
+               SCHEDD_INFO_CKPTNOTFOUND_);
             goto SKIP_THIS_JOB;
          }
       }
@@ -716,7 +768,7 @@ lList **finished_jobs
                ja_task_id)); 
             if (select_assign_debit(
                   &(lists->queue_list), 
-                  &(lists->job_list), 
+                  splitted_job_lists[SPLIT_PENDING], 
                   job, ja_task, pe, ckpt, 
                   lists->complex_list, 
                   lists->host_list, 
@@ -745,7 +797,7 @@ lList **finished_jobs
          DPRINTF(("handling job "u32"."u32"\n", job_id, ja_task_id)); 
          if (!select_assign_debit(
                &(lists->queue_list), 
-               &(lists->job_list), 
+               splitted_job_lists[SPLIT_PENDING], 
                job, ja_task, NULL, ckpt, 
                lists->complex_list, 
                lists->host_list, 
@@ -765,9 +817,12 @@ lList **finished_jobs
 
 SKIP_THIS_JOB:
       if (dispatched_a_job) {
-         sge_move_to_running(&(lists->job_list), running_jobs, orig_job);
+         job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
-         /* after sge_move_to_running() orig_job can be removed and job should be used instead */
+         /* 
+          * after sge_move_to_running() orig_job can be removed and job 
+          * should be used instead 
+          */
          orig_job = NULL;
 
          /* notify access tree */
@@ -785,18 +840,32 @@ SKIP_THIS_JOB:
 
       /* prevent that we get the same job next time again */
       if (!dispatched_a_job) {
-         lDelElemUlong(&lists->job_list, JB_job_number, job_id); 
+         lDelElemUlong(splitted_job_lists[SPLIT_PENDING], JB_job_number, job_id); 
       }
 
       /* drop idle jobs that exceed maxujobs limit */
       /* should be done after resort_job() 'cause job is referenced */
-      if (sgeee_mode /* || !set_user_sort(-1) */) {
-         DPRINTF(("FILTER_MAX_RUNNING\n"));
-         lists->job_list = filter_max_running(lists->job_list, user_list, 
-               scheddconf.maxujobs, JB_owner);
+      if (sgeee_mode) {
+         job_lists_split_with_reference_to_max_running(splitted_job_lists,
+                                                       &user_list,
+                                                       scheddconf.maxujobs);
       }
-
       lFreeElem(job);
+
+      /*------------------------------------------------------------------ 
+       * SGEEE mode - if we dispatch a job sub-task and the job has more
+       * sub-tasks, then the job is still first in the job list.
+       * We need to remove and reinsert the job back into the sorted job
+       * list in case another job is higher priority (i.e. has more tickets)
+       *------------------------------------------------------------------*/
+
+      if (sgeee_mode && dispatched_a_job) {
+         sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
+         *orderlist = sge_build_sge_orders(lists, NULL, 
+                                           *splitted_job_lists[SPLIT_PENDING], 
+                                           NULL, *orderlist, 0, 
+                                           sgeee_get_scheduling_run_id()); 
+      }
 
       /* no more free queues - then exit */
       if (lGetNumberOfElem(lists->queue_list)==0)
@@ -823,7 +892,7 @@ SKIP_THIS_JOB:
         }
 #endif
 
-      if (dispatched_a_job && !(lGetNumberOfElem(lists->job_list)==0))  {
+      if (dispatched_a_job && !(lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))==0))  {
          if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
             sort_host_list_by_share_load(lists->host_list, lists->complex_list);
 
@@ -845,37 +914,7 @@ SKIP_THIS_JOB:
 #endif
 
          } /* sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE */
-      } /* !lGetNumberOfElem(lists->job_list)==0 */
-
-      /*------------------------------------------------------------------ 
-       * SGEEE mode - if we dispatch a job sub-task and the job has more
-       * sub-tasks, then the job is still first in the job list.
-       * We need to remove and reinsert the job back into the sorted job
-       * list in case another job is higher priority (i.e. has more tickets)
-       *------------------------------------------------------------------*/
-
-      if (sgeee_mode && dispatched_a_job &&
-          lGetNumberOfElem(lists->job_list)>1 &&
-          ((next_job = lFirst(lists->job_list))) &&
-          job_id == lGetUlong(next_job, JB_job_number)) {
-         
-         lListElem *jep, *insert_jep=NULL;
-         double ticket;
-
-         lDechainElem(lists->job_list, next_job);
-
-         ticket = lGetDouble(lFirst(lGetList(next_job, JB_ja_tasks)), JAT_ticket);
-         for_each(jep, lists->job_list) {
-            double ticket2 = lGetDouble(lFirst(lGetList(jep, JB_ja_tasks)), JAT_ticket);
-            if (ticket > ticket2 ||
-                (ticket == ticket2 && job_id < lGetUlong(jep, JB_job_number)))
-               break;
-            insert_jep = jep;
-         }
-
-         lInsertElem(lists->job_list, insert_jep, next_job);
       }
-
    } /* end of while */
 
    lFreeList(user_list);

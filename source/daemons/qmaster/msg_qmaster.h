@@ -362,7 +362,6 @@
 #define MSG_JOB_SETHOLDUSER           _("set user hold")
 #define MSG_JOB_HOLD                  _("hold")
 #define MSG_JOB_NOJOBARRAY_U          _(U32CFormat " is no job array\n")
-#define MSG_JOB_NOSUCHTASK_UU         _("denied: no such task "U32CFormat" in job "U32CFormat"\n")
 #define MSG_JOB_CHANGEOVERRIDETICKS   _("change amount of override tickets")
 #define MSG_JOB_SETOVERRIDETICKS_SSUU _("%s@%s sets override tickets of job "U32CFormat" to "U32CFormat"\n")
 #define MSG_JOB_PRIOINC               _("increase job priority")

@@ -75,6 +75,8 @@
 #include "qmon_preferences.h"
 #include "qmon_message.h"
 #include "utility.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -202,11 +204,43 @@ int nm
    DENTER(GUI_LAYER, "PrintUlong");
 
    if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
+      int show_value = 0;
+ 
+#if 1 /* EB: review with Andre */
+      if (jal && !jat) {
+         lListElem *first_elem = lFirst(jal);
+ 
+         if (is_obj_of_type(first_elem, JAT_Type)) {
+            jat = lFirst(jal);
+         } else if (is_obj_of_type(first_elem, RN_Type)) {
+            u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+            jat = job_get_ja_task_template(ep, task_id);
+            show_value = 1;
+         }
+      } else if (jat) {
+         lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids);
+         u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
+ 
+         /*
+          * only show value for the first pending task of a job
+          */
+         if (task_id == lGetUlong(jat, JAT_task_number)) {
+            show_value = 1;
+         }
+      }
+#else
       jat = lFirst(lGetList(ep, JB_ja_tasks));
-      sprintf(buf, "%d", (int)lGetUlong(jat, nm));
-   }
-   else
+#endif
+ 
+      if (show_value) {
+         sprintf(buf, "%d", (int)lGetUlong(jat, nm));
+      } else {
+         sprintf(buf, "NA");
+      }                      
+   } else {
       sprintf(buf, "%d", (int)lGetUlong(ep, nm));
+   }
 
    str = XtNewString(buf);
 
@@ -227,11 +261,43 @@ int nm
    DENTER(GUI_LAYER, "PrintDoubleAsUlong");
 
    if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
+      int show_value = 0;
+
+#if 1 /* EB: review with Andre */
+      if (jal && !jat) {
+         lListElem *first_elem = lFirst(jal);
+    
+         if (is_obj_of_type(first_elem, JAT_Type)) {
+            jat = lFirst(jal);
+         } else if (is_obj_of_type(first_elem, RN_Type)) {
+            u_long32 task_id = range_list_get_first_id(jal, NULL);
+    
+            jat = job_get_ja_task_template(ep, task_id);
+            show_value = 1;
+         }
+      } else if (jat) {
+         lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids); 
+         u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
+
+         /*
+          * only show value for the first pending task of a job
+          */
+         if (task_id == lGetUlong(jat, JAT_task_number)) {
+            show_value = 1;
+         }
+      }
+#else
       jat = lFirst(lGetList(ep, JB_ja_tasks));
-      sprintf(buf, "%d", (int)lGetDouble(jat, nm));
-   }
-   else
+#endif     
+
+      if (show_value) {
+         sprintf(buf, "%d", (int)lGetDouble(jat, nm));
+      } else {
+         sprintf(buf, "NA");
+      }
+   } else {
       sprintf(buf, "%d", (int)lGetDouble(ep, nm));
+   }
 
    str = XtNewString(buf);
 
@@ -252,8 +318,40 @@ int nm
    DENTER(GUI_LAYER, "PrintDouble");
 
    if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
+      int show_value = 0;
+ 
+#if 1 /* EB: review with Andre */
+      if (jal && !jat) {
+         lListElem *first_elem = lFirst(jal);
+ 
+         if (is_obj_of_type(first_elem, JAT_Type)) {
+            jat = lFirst(jal);
+         } else if (is_obj_of_type(first_elem, RN_Type)) {
+            u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+            jat = job_get_ja_task_template(ep, task_id);
+            show_value = 1;
+         }
+      } else if (jat) {
+         lList *n_h_ids = lGetList(ep, JB_ja_n_h_ids);
+         u_long32 task_id = range_list_get_first_id(n_h_ids, NULL);
+ 
+         /*
+          * only show value for the first pending task of a job
+          */
+         if (task_id == lGetUlong(jat, JAT_task_number)) {
+            show_value = 1;
+         }
+      }
+#else
       jat = lFirst(lGetList(ep, JB_ja_tasks));
-      sprintf(buf, "%f", lGetDouble(jat, nm));
+#endif
+ 
+      if (show_value) {
+         sprintf(buf, "%f", lGetDouble(jat, nm));
+      } else {
+         sprintf(buf, "NA");
+      }                                
    }
    else
       sprintf(buf, "%f", lGetDouble(ep, nm));
@@ -396,8 +494,17 @@ int nm
 
    DENTER(GUI_LAYER, "PrintCPU");
 
-   if (!jat)
-      jat = lFirst(jal);
+   if (jal && !jat) {
+      lListElem *first_elem = lFirst(jal);
+
+      if (is_obj_of_type(first_elem, JAT_Type)) {
+         jat = lFirst(jal);
+      } else if (is_obj_of_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(jal, NULL);
+
+         jat = job_get_ja_task_template(ep, task_id);
+      }
+   }
 
    running = lGetUlong(jat, JAT_status)==JRUNNING ||
                lGetUlong(jat, JAT_status)==JTRANSITING;
@@ -442,8 +549,17 @@ int nm
 
    DENTER(GUI_LAYER, "PrintMEM");
 
-   if (!jat)
-      jat = lFirst(jal);
+   if (jal && !jat) {
+      lListElem *first_elem = lFirst(jal);
+ 
+      if (is_obj_of_type(first_elem, JAT_Type)) {
+         jat = lFirst(jal);
+      } else if (is_obj_of_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+         jat = job_get_ja_task_template(ep, task_id);
+      }
+   }     
 
    running = lGetUlong(jat, JAT_status)==JRUNNING ||
                lGetUlong(jat, JAT_status)==JTRANSITING;
@@ -475,8 +591,17 @@ int nm
 
    DENTER(GUI_LAYER, "PrintIO");
 
-   if (!jat)
-      jat = lFirst(jal);
+   if (jal && !jat) {
+      lListElem *first_elem = lFirst(jal);
+ 
+      if (is_obj_of_type(first_elem, JAT_Type)) {
+         jat = lFirst(jal);
+      } else if (is_obj_of_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+         jat = job_get_ja_task_template(ep, task_id);
+      }
+   }     
 
    running = lGetUlong(jat, JAT_status)==JRUNNING ||
                lGetUlong(jat, JAT_status)==JTRANSITING;
@@ -611,9 +736,19 @@ int nm
       str = XtNewString(queue);
 #endif
 
+#if 1 /* EB: review with Andre */
    if (jal && !jat) {
-      jat = lFirst(jal);
+      lListElem *first_elem = lFirst(jal);
+ 
+      if (is_obj_of_type(first_elem, JAT_Type)) {
+         jat = lFirst(jal);
+      } else if (is_obj_of_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+         jat = job_get_ja_task_template(ep, task_id);
+      }
    }
+#endif      
 
    if (jat) {
       ql = lGetList(jat, JAT_granted_destin_identifier_list);
@@ -717,12 +852,19 @@ int nm
    if (is_array(ep)) {
       StringBufferT dyn_buf2 = {NULL, 0};
 
+#if 1 /* EB: review with Andre */
       if (jat) {
          sge_string_printf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
+      } else if (jal) {
+         lListElem *first_elem = lFirst(jal);
+
+         if (is_obj_of_type(first_elem, JAT_Type)) {
+            get_taskrange_str(jal, &dyn_buf2);
+         } else if (is_obj_of_type(first_elem, RN_Type)) {
+            range_print_to_string(jal, &dyn_buf2);
+         }
       }
-      else if (jal) {
-         get_taskrange_str(jal, &dyn_buf2);
-      }
+#endif
       if (dyn_buf2.s) {
          sge_string_append(&dyn_buf, ".");
          sge_string_append(&dyn_buf, dyn_buf2.s);
@@ -757,8 +899,19 @@ int nm
 
    DENTER(GUI_LAYER, "PrintStatus");
 
-   if (jal && !jat)
-      jat = lFirst(jal);
+#if 1 /* EB: review with Andre */
+   if (jal && !jat) {
+      lListElem *first_elem = lFirst(jal);
+ 
+      if (is_obj_of_type(first_elem, JAT_Type)) {
+         jat = lFirst(jal);
+      } else if (is_obj_of_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+         jat = job_get_ja_task_template(ep, task_id);  
+      }
+   }
+#endif  
 
    if (jat) {
       ql = lGetList(jat, JAT_granted_destin_identifier_list);
@@ -845,10 +998,21 @@ int nm
 
    DENTER(GUI_LAYER, "PrintHold");
 
-   if (jat)
-      value = (int)lGetUlong(jat, nm);
-   else if (jal)
-      value = (int)lGetUlong(lFirst(jal), nm);
+#if 1 /* EB: review with Andre */
+   if (jal && !jat) {
+      lListElem *first_elem = lFirst(jal);
+ 
+      if (is_obj_of_type(first_elem, JAT_Type)) {
+         jat = lFirst(jal);
+      } else if (is_obj_of_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(jal, NULL);
+ 
+         jat = job_get_ja_task_template(ep, task_id);
+      }         
+   }
+#endif
+
+   value = (int)lGetUlong(jat, nm);
    strcpy(buf, "");
    for (i=0; i<3; i++) {
       if (value & (1<<i))

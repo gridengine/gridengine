@@ -1660,7 +1660,8 @@ char **argv
          lEnumeration *what;
          u_long32 job_status;
          int do_shut = 0;
-         lList  *lp_poll = NULL;
+         lList *lp_poll = NULL;
+         lListElem *ja_task = NULL;
          lListElem* jep;
          int msgsock = -1;
          int random_poll = polling_interval + (rand() % polling_interval);
@@ -1731,9 +1732,15 @@ char **argv
             exit_status = 1;
             continue;
          }
-   
-         job_status = lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_status);
-         DPRINTF(("Job Status is: %lx\n", job_status));
+         
+         ja_task = lFirst(lGetList(jep, JB_ja_tasks)); 
+         if (ja_task) {
+            job_status = lGetUlong(ja_task, JAT_status);
+            DPRINTF(("Job Status is: %lx\n", job_status));
+         } else {
+            job_status = JIDLE;
+            DPRINTF(("Job Status is: %lx (unenrolled)\n", job_status));
+         }
    
          switch(job_status) {
             /* qsh or future -wait case */

@@ -74,6 +74,7 @@
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
+#include "sge_job_jatask.h"
 
 extern volatile int jobs_to_start;
 extern lList *Master_Job_List;
@@ -209,7 +210,8 @@ int slave
     */
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
-      if((jep_jatep = search_task(jataskid, jep)) != NULL) {
+      jep_jatep = job_search_task(jep, NULL, jataskid, 0);
+      if(jep_jatep != NULL) {
          DPRINTF(("Job "u32"."u32" is already running - skip the new one\n", 
                   jobid, jataskid));
          DEXIT;
@@ -319,9 +321,13 @@ int slave
          goto Error;
       }
 
+#if 1 /* EB */
+      lWriteElemTo(jelem, stderr);
+#endif
       if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
          lGetUlong(jelem, JB_script_size))) !=
          lGetUlong(jelem, JB_script_size)) {
+         DPRINTF(("errno: %d\n", errno));
          sprintf(err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, lGetString(jelem, JB_exec_file), 
                nwritten, u32c(lGetUlong(jelem, JB_script_size)), strerror(errno));
          close(fd);
@@ -601,7 +607,8 @@ int *synchron;
       goto Error;
    }
    jataskid = lGetUlong(jatask, JAT_task_number);
-   if (!(jatep=search_task(jataskid, jep))) { 
+   jatep=job_search_task(jep, NULL, jataskid, 0);
+   if (jatep == NULL) { 
       ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, u32c(jobid), u32c(jataskid)));
       goto Error;
    }

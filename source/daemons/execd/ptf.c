@@ -56,6 +56,7 @@
 #include "exec_ifm.h"
 #include "pdc.h"
 #include "sge_feature.h"
+#include "sge_job_jatask.h"
 
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
@@ -1601,7 +1602,7 @@ int ptf_job_complete(lListElem *completed_job)
    for_each(ja_task, lGetList(completed_job, JB_ja_tasks)) {
       ja_task_id = lGetUlong(ja_task, JAT_task_number);
 
-      completed_task = search_task(ja_task_id, completed_job);
+      completed_task = job_search_task(completed_job, NULL, ja_task_id, 0);
       lSetList(completed_task, JAT_usage_list,
                _ptf_get_job_usage(job, ja_task_id, tid));
    }

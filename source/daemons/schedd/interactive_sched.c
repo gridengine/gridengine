@@ -37,8 +37,9 @@
 #include "sge_orders.h"
 #include "interactive_sched.h"
 #include "sgermon.h"
-
+#include "sge_range.h"
 #include "jb_now.h"
+#include "sge_job_jatask.h"
 
 /*------------------------------------------------------------------
  * CHECK ALL REMAINING JOBS WHETHER THEY ARE IMMEDIATE JOBS
@@ -57,18 +58,29 @@ lList **opp      /* OR_Type */
 
    next_job = lFirst(job_list);
    while ((job = next_job)) {
+      lListElem *range = NULL;
+      lList *range_list = NULL;
+      u_long32 ja_task_id;
       next_job = lNext(job);
 
       /* skip non immediate .. */
       if (!JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now)))
          continue;
+
       /* .. and non idle jobs */
-      if (!(lp =lGetList(job, JB_ja_tasks)) || 
-            lGetUlong(lFirst(lp), JAT_status)!=JIDLE) 
+      if ((lp =lGetList(job, JB_ja_tasks)) && 
+            lGetUlong(lFirst(lp), JAT_status)==JIDLE) 
          continue;    
   
-      for_each (ja_task, lGetList(job, JB_ja_tasks))  
+      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
          order_remove_immediate(job, ja_task, opp);
+      }
+lWriteElemTo(job, stderr);
+      range_list = lGetList(job, JB_ja_n_h_ids);
+      for_each_id_in_range_list(ja_task_id, range, range_list) {
+         ja_task = job_get_ja_task_template_pending(job, ja_task_id);
+         order_remove_immediate(job, ja_task, opp);
+      }
       lRemoveElem(job_list, job);
    }
 

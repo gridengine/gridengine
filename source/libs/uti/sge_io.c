@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 
 #include "sgermon.h"
 #include "sge_io.h"
@@ -100,7 +102,11 @@ register int n
    while (nleft > 0) {
       DTRACE;
       i = write(sfd, ptr, nleft);
-      DPRINTF(("wrote %d bytes on fd %d\n", i, sfd));
+      if (i == -1) {
+         DPRINTF(("wrote %d bytes on fd %d\n", i, sfd));
+      } else {
+         DPRINTF(("write failed with error %d: %s\n", i, strerror(errno)));
+      }
 
       if (i <= 0) {
          DPRINTF(("sge_writenbytes: returning %d\n", i));

@@ -67,7 +67,6 @@
 #include "sge_queueL.h"
 #include "sge_usersetL.h"
 
-
 const long sge_usage_interval = SGE_USAGE_INTERVAL;
 static double sge_decay_rate;
 static double sge_decay_constant;
@@ -989,7 +988,6 @@ search_ancestors( lListElem *ep,
    return NULL;
 }
 
-
 /*--------------------------------------------------------------------
  * sgeee_sort_jobs - sort jobs according the task-tickets and job number 
  *--------------------------------------------------------------------*/
@@ -1006,7 +1004,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       return;
    }
 
-#if 0
+#if 1
    DPRINTF(("+ + + + + + + + + + + + + + + + \n"));
    DPRINTF(("     SORTING SGEEE JOB LIST     \n"));
    DPRINTF(("+ + + + + + + + + + + + + + + + \n"));
@@ -1024,10 +1022,10 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       nxt_job = lNext(nxt_job);
       tmp_sge_job = lCreateElem(SGEJ_Type);
       lSetDouble(tmp_sge_job, SGEJ_ticket, 
-         lGetDouble(lFirst(lGetList(job, JB_ja_tasks)), JAT_ticket));
+         lGetDouble(lFirst(lGetList(job, JB_ja_template)), JAT_ticket));
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
-#if 0
+#if 1
       DPRINTF(("JOB: "u32" TICKETS: "u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
          lGetDouble(tmp_sge_job, SGEJ_ticket)));

@@ -1124,7 +1124,7 @@ lListElem *find_attribute_in_complex_list(const char *attrname,
    const char *str;
    int pos_CE_name, pos_CE_shortcut;
 
-   DENTER(TOP_LAYER, "find_attribute_in_complex_list");
+   DENTER(CULL_LAYER, "find_attribute_in_complex_list");
 
    if (!attrname || !cmplxl) {
       DEXIT;

@@ -82,6 +82,7 @@
 #include "sge_security.h"
 #include "jb_now.h"
 #include "sge_range.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Userset_List;
 extern lList *Master_Project_List;
@@ -179,27 +180,32 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -1;
       }
-      jatp = search_task(task_number, jep);
+      jatp = job_search_task(jep, NULL, task_number, 1);
       if (!jatp) {
-         WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
+         WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
+                  u32c(job_number)));
          /* try to repair schedd data */
          sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
          DEXIT;
          return -1;
       }
 
-      DPRINTF(("ORDER to start Job %ld Task %ld\n", (long) job_number, (long) task_number));      
+      DPRINTF(("ORDER to start Job %ld Task %ld\n", (long) job_number, 
+               (long) task_number));      
 
-      if (!force && lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
+      if (!force && 
+          lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
          ERROR((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
-               u32c(lGetUlong(ep, OR_job_version)), u32c(job_number), u32c(task_number)));
+               u32c(lGetUlong(ep, OR_job_version)), u32c(job_number), 
+               u32c(task_number)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
          DEXIT;
          return -1;
       }
 
       if (lGetUlong(jatp, JAT_status) != JIDLE) {
-         ERROR((SGE_EVENT, MSG_ORD_TWICE_UU, u32c(job_number), u32c(task_number)));
+         ERROR((SGE_EVENT, MSG_ORD_TWICE_UU, u32c(job_number), 
+                u32c(task_number)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
          DEXIT;
          return -1;
@@ -232,8 +238,10 @@ lList **topp  /* ticket orders ptr ptr */
 #else
          /* fill number of tickets into job */
          lSetDouble(jatp, JAT_ticket, lGetDouble(ep, OR_ticket));
-         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c((u_long32)lGetDouble(ep, OR_ticket)));
+         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, 
+                 u32c((u_long32)lGetDouble(ep, OR_ticket)));
 #endif
+
          if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
             lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
             lSetDouble(jatp, JAT_fticket, lGetDouble(oep, OQ_fticket));
@@ -261,8 +269,10 @@ lList **topp  /* ticket orders ptr ptr */
             return -2;
          }
 
-         DPRINTF(("%sORDER #%d: start %d slots of job \"%d\" on queue \"%s\" v%d%s\n", 
-            force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, (int)q_version, 
+         DPRINTF(("%sORDER #%d: start %d slots of job \"%d\" on"
+                  " queue \"%s\" v%d%s\n", 
+            force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, 
+               (int)q_version, 
                (feature_is_enabled(FEATURE_SGEEE) ? opt_sge : "") ));
 
          qep = sge_locate_queue(q_name);
@@ -447,7 +457,7 @@ lList **topp  /* ticket orders ptr ptr */
       if (sge_give_job(jep, jatp, master_qep, pe, master_host)) {
 
          /* setting of queues in state unheard is done by sge_give_job() */
-         sge_commit_job(jep, jatp, 7, 1);
+         sge_commit_job(jep, jatp, 7, COMMIT_DEFAULT);
          /* CB - This was sge_commit_job(jep, 2). It raised problems if a job
             could not be delivered. The jobslotsfree had been increased even if
             they where not decreased bevore. */
@@ -458,7 +468,7 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -3;
       }
-      sge_commit_job(jep, jatp, 0, 1);   /* mode==0 -> really accept when execd acks */
+      sge_commit_job(jep, jatp, 0, COMMIT_DEFAULT);   /* mode==0 -> really accept when execd acks */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
 
       if (pe) {
@@ -517,7 +527,10 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -2;
          }
-         jatp = search_task(task_number, jep);
+         jatp = job_search_task(jep, NULL, task_number, 0);
+         if (!jatp) {
+            jatp = job_get_ja_task_template_pending(jep, task_number);
+         }
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
@@ -621,7 +634,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -2;
          }
-         jatp = search_task(task_number, jep);
+         jatp = job_search_task(jep, NULL, task_number, 0);
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
@@ -788,7 +801,7 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -1;
       }
-      jatp = search_task(task_number, jep);
+      jatp = job_search_task(jep, NULL, task_number, 1);
       if (!jatp) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
          sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
@@ -808,7 +821,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
     
          /* remove it */
-         sge_commit_job(jep, jatp, 5, 1);
+         sge_commit_job(jep, jatp, 5, COMMIT_DEFAULT);
       } else {
          if (!JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
             if(lGetString(jep, JB_script_file))
@@ -828,8 +841,7 @@ lList **topp  /* ticket orders ptr ptr */
          INFO((SGE_EVENT, MSG_JOB_NOFREERESOURCEIA_U, u32c(lGetUlong(jep, JB_job_number))));
 
          /* remove it */
-DTRACE;
-         sge_commit_job(jep, jatp, 6, 1);
+         sge_commit_job(jep, jatp, 6, COMMIT_DEFAULT);
       }
       break;
 
@@ -1018,7 +1030,7 @@ DTRACE;
          task_number = lGetUlong(ep, OR_ja_task_number);
 
          if (!(jep = sge_locate_job(jobid))
-            || !(jatp = search_task(task_number, jep))
+            || !(jatp = job_search_task(jep, NULL, task_number, 0))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */
             WARNING((SGE_EVENT, MSG_JOB_SUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
@@ -1066,7 +1078,7 @@ DTRACE;
          task_number = lGetUlong(ep, OR_ja_task_number);
 
          if (!(jep = sge_locate_job(jobid))
-            || !(jatp = search_task(task_number, jep))
+            || !(jatp = job_search_task(jep, NULL,task_number, 0))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */  
             WARNING((SGE_EVENT, MSG_JOB_UNSUSPOTNOTRUN_UU, u32c(jobid), u32c(task_number)));
@@ -1159,7 +1171,8 @@ lList *ticket_orders
       DPRINTF(("Job: %ld, Task: %ld", jobid, jataskid));
 
       /* seek job element */
-      if (!(jep = sge_locate_job(jobid)) || !(jatask = search_task(jataskid, jep))) { 
+      if (!(jep = sge_locate_job(jobid)) || 
+          !(jatask = job_search_task(jep, NULL, jataskid, 0))) { 
          ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, u32c(jobid), u32c(jataskid)));
          lRemoveElem(ticket_orders, ep);
       }
@@ -1183,7 +1196,7 @@ lList *ticket_orders
          next = lNext(other);
 
          other_jep = sge_locate_job(lGetUlong(other, OR_job_number)); 
-         other_jatask = search_task(lGetUlong(other, OR_ja_task_number), other_jep);
+         other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number), 0);
          if (!other_jep || !other_jatask) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, u32c(jobid), u32c(jataskid)));
             lRemoveElem(ticket_orders, other);

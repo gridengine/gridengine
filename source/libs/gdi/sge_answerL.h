@@ -66,8 +66,11 @@ enum {
    STATUS_ENOTOWNER,         /* need to be owner for this operation */
    STATUS_ESUBHLIC,          /* too few submit host licenses */
    STATUS_DENIED,            /* not allowed to do whatever you try */
-   STATUS_EVERSION           /* qmaster GDI version differs from clients
+   STATUS_EVERSION,          /* qmaster GDI version differs from clients
                               * GDI version */
+   STATUS_ERROR1,            /* general error 1 */
+   STATUS_ERROR2,            /* general error 2 */
+   STATUS_ERROR3             /* general error 3 */
 };
 
 /*

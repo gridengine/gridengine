@@ -166,7 +166,7 @@ lListElem *jatep
       job_log(jobid, jataskid, MSG_LOG_JREMOVED);
       sge_log_dusage(jr, jep, jatep);
 
-      sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), 1);
+      sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), COMMIT_DEFAULT);
    } 
      /*
       * case 2: set job in error state
@@ -180,7 +180,7 @@ lListElem *jatep
          jataskid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 8, 1);
+      sge_commit_job(jep, jatep, 8, COMMIT_DEFAULT);
    }
       /*
        * case 3: job being rescheduled because it wasnt even started
@@ -190,7 +190,7 @@ lListElem *jatep
         general_failure)) {
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE);
-      sge_commit_job(jep, jatep, 2, 1);
+      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
    }
@@ -210,7 +210,7 @@ lListElem *jatep
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 2, 1);
+      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
    }
    else if (failed == SSTATE_MIGRATE) {
       DTRACE;
@@ -222,7 +222,7 @@ lListElem *jatep
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 2, 1);
+      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
    }
    else if (failed == SSTATE_AGAIN) {
       job_log(jobid, jataskid, MSG_LOG_JNORESRESCHEDULE);
@@ -232,12 +232,12 @@ lListElem *jatep
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 2, 1);
+      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
    }
    else {
       job_log(jobid, jataskid, MSG_LOG_EXITED);
       sge_log_dusage(jr, jep, jatep);
-      sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), 1);
+      sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), COMMIT_DEFAULT);
    }
 
    if (queueep) {

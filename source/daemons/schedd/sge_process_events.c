@@ -84,6 +84,7 @@
 #include "msg_schedd.h"
 #include "scheduler.h"
 #include "job_log.h"
+#include "sge_job_jatask.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -374,8 +375,7 @@ DTRACE;
 #define NM2  "%I%I"
 #define NM1  "%I"
 
-      what_job = lWhat("%T(" NM10 NM10 NM10 NM5 NM2 NM1")", 
-         JB_Type,
+      what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM2 NM2")", JB_Type,
             JB_job_number, 
             JB_script_file,
             JB_submission_time,
@@ -386,6 +386,7 @@ DTRACE;
             JB_gid,        /* x*/
             JB_nrunning,
             JB_execution_time,
+
             JB_checkpoint_attr,     /* x*/
             JB_checkpoint_interval, /* x*/
             JB_checkpoint_object,   
@@ -396,6 +397,7 @@ DTRACE;
             JB_job_name,   /* x*/
             JB_priority,
             JB_hard_queue_list,
+
             JB_soft_queue_list,
             JB_master_hard_queue_list,
             JB_pe,
@@ -406,13 +408,21 @@ DTRACE;
             JB_hard_wallclock_gmt,
             JB_version,
             JB_now,
+
             JB_project,
   /* SGE */ JB_department,
             JB_jobclass, /*x*/
             JB_deadline,
             JB_host,
             JB_override_tickets,
+            JB_ja_structure,
+            JB_ja_n_h_ids,
+            JB_ja_u_h_ids,
+            JB_ja_s_h_ids,
+
+            JB_ja_o_h_ids,   
 	         JB_ja_tasks,
+            JB_ja_template,
             JB_category);
    if (!what_job) 
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED ));
@@ -724,6 +734,11 @@ int sge_process_all_events(lList *event_list) {
                JB_soft_resource_list,
                JB_master_hard_queue_list,
                JB_mail_list,
+               JB_ja_n_h_ids,
+               JB_ja_u_h_ids,
+               JB_ja_o_h_ids,
+               JB_ja_s_h_ids,
+               JB_ja_template,
                NoName
             };
 
@@ -819,9 +834,7 @@ int sge_process_all_events(lList *event_list) {
                JAT_pid,
                JAT_fshare,
                JAT_suitable,
-
                JAT_job_restarted, /* BOOL <-> ULONG */
-
                NoName
             };
             static int list_nm[] =
@@ -833,7 +846,10 @@ int sge_process_all_events(lList *event_list) {
                JAT_previous_usage_list,
                NoName
             };
-   
+            static int ref_nm[] =
+            {
+               NoName
+            };
             static int double_nm[] =
             {
                JAT_share,
@@ -857,10 +873,12 @@ int sge_process_all_events(lList *event_list) {
                DEXIT;
                goto Error;
             }
-            ja_task = lGetElemUlong(lGetList(ep, JB_ja_tasks), JAT_task_number, intkey2);
+            
+            ja_task = job_search_task(ep, NULL, intkey2, 1);
             if (!ja_task) {
                /* usually caused by the precautionally sent delete event */
-               WARNING((SGE_EVENT, MSG_JOB_CANTFINDJOBARRAYTASKXYTOMODIFY_UU , u32c(intkey), u32c(intkey2)));
+               WARNING((SGE_EVENT,MSG_JOB_CANTFINDJOBARRAYTASKXYTOMODIFY_UU,
+                        u32c(intkey), u32c(intkey2)));
                DEXIT;
                goto Error;
             } 
@@ -879,6 +897,11 @@ int sge_process_all_events(lList *event_list) {
             for (i = 0; ulong_nm[i] != NoName; i++)
                if (lGetPosViaElem(new_ja_task, ulong_nm[i]))
                   lSetUlong(ja_task, ulong_nm[i], lGetUlong(new_ja_task, ulong_nm[i]));
+   
+            /* copy all references */
+            for (i = 0; ref_nm[i] != NoName; i++)
+               if (lGetPosViaElem(new_ja_task, ref_nm[i]))
+                  lSetRef(ja_task, ref_nm[i], lGetRef(new_ja_task, ref_nm[i])); 
 
             /* copy all doubles */
             for (i = 0; double_nm[i] != NoName; i++)
@@ -1501,34 +1524,42 @@ int sge_process_all_events(lList *event_list) {
 
             ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
             if (!ep) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTODELETEJOBARRAYTASK_U , u32c(intkey)));
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTODELETEJOBARRAYTASK_U , 
+                      u32c(intkey)));
                DEXIT;
                goto Error;
             } else {
-               for_each(ja_task, (lGetList(ep, JB_ja_tasks))) {
-                  if (intkey2 == lGetUlong(ja_task, JAT_task_number)) {
-                     break;
+               int is_enrolled = job_is_enrolled(ep, intkey2);
+
+               if (is_enrolled) {
+                  lList *ja_tasks = lGetList(ep, JB_ja_tasks);
+
+                  ja_task = lGetElemUlong(ja_tasks, JAT_task_number, intkey2);
+                  if (!ja_task) {
+                     ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBARRAYTASKXTODELETE_U,
+                            u32c(intkey2)));
+                     DEXIT;
+                     goto Error;
+                  } else {
+                     was_running = running_status(lGetUlong(ja_task, JAT_status));
+                     if (was_running) {
+                        sge_dec_jc(&lists.running_per_user, 
+                                   lGetString(ep, JB_owner), 1);
+                        if (!sge_mode && user_sort)
+                           at_dec_job_counter(lGetUlong(ep, JB_priority), 
+                                              lGetString(ep, JB_owner), 1);
+                     }
+                     lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
+                     /* delete job category if necessary and delete job */
+                     if (job_get_ja_tasks(ep) == 0) {
+                        sge_delete_job_category(ep);
+                        if (!sge_mode)
+                           at_unregister_job_array(ep);
+                        lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
+                     } 
                   }
-               }
-               if (!ja_task) {
-                  ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBARRAYTASKXTODELETE_U , u32c(intkey2)));
-                  DEXIT;
-                  goto Error;
                } else {
-                  was_running = running_status(lGetUlong(ja_task, JAT_status));
-                  if (was_running) {
-                     sge_dec_jc(&lists.running_per_user, lGetString(ep, JB_owner), 1);
-                     if (!sge_mode && user_sort)
-                        at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-                  }
-                  lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
-                  /* delete job category if necessary and delete job */
-                  if (lGetNumberOfElem(lGetList(ep, JB_ja_tasks)) == 0) {
-                     sge_delete_job_category(ep);
-                     if (!sge_mode)
-                        at_unregister_job_array(ep);
-                     lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
-                  } 
+                  job_delete_not_enrolled_ja_task(ep, NULL, intkey2);
                }
             }
          }

@@ -47,4 +47,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
 
 int job_remove_script_file(u_long32 job_id);
 
+int job_write_common_part(lListElem *job, u_long32 ja_task_id,
+                          sge_spool_flags_t flags);
+
 #endif /* _READ_WRITE_JOB_H_ */

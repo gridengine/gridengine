@@ -43,12 +43,6 @@
 extern lList *Master_Job_List;
 
 /**********************************************************************
-*/
-lListElem *search_task(u_long32 jataskid, lListElem *job) {
-   return job?lGetSubUlong(job, JAT_task_number, jataskid, JB_ja_tasks):NULL;
-}
-
-/**********************************************************************
   return
     ==JTYPE_JOB          -  job is a real job
     ==JTYPE_JOB_ARRAY    -  job is job array

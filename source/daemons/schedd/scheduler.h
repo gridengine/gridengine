@@ -69,4 +69,6 @@ int event_handler_my_scheduler(lList *event_list);
 int my_scheduler(sge_Sdescr_t *lists);
 #endif
 
+u_long32 sgeee_get_scheduling_run_id(void);
+
 #endif /* _SCHEDULER_H */

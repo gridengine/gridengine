@@ -34,16 +34,61 @@
 
 #include "sge_hash.h"
 
-int job_initialize_ja_tasks(lListElem *job);
+int job_is_enrolled(const lListElem *job, 
+                    u_long32 ja_task_number);
 
-int job_is_enrolled(lListElem *job, u_long32 task_number);
+u_long32 job_get_ja_tasks(const lListElem *job);
+
+u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job);
+
+u_long32 job_get_enrolled_ja_tasks(const lListElem *job);
  
-void job_enroll(lListElem *job, u_long32 task_number);   
+void job_enroll(lListElem *job, lList **answer_list, 
+                u_long32 task_number);  
 
-void job_set_hold_state(lListElem *job, lListElem *ja_task,
+void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
+                                     u_long32 ja_task_number);
+
+int job_has_job_pending_tasks(lListElem *job);
+
+int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number);
+
+void job_set_hold_state(lListElem *job, 
+                        lList **answer_list, u_long32 ja_task_id,
                         u_long32 new_hold_state);
+
+u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id);
+
+/* int job_add_job(lList **job_list, char *name, lListElem *job, int check,
+                 int hash, HashTable* Job_Hash_Table); */
+
+void job_list_print(lList *job_list);
+
+lListElem *job_get_ja_task_template(const lListElem *job, u_long32 ja_task_id); 
+
+lListElem *job_get_ja_task_template_hold(const lListElem *job,
+                                         u_long32 ja_task_id, 
+                                         u_long32 hold_state);
+
+lListElem *job_get_ja_task_template_pending(const lListElem *job,
+                                            u_long32 ja_task_id);
+
+lListElem *job_search_task(lListElem *job, lList **answer_list, 
+                           u_long32 ja_task_id, int enroll_if_not_existing);
+
+void job_add_not_enrolled_as_zombie(lListElem *zombie, const lListElem *job,
+                                    lList **answer_list, u_long32 ja_task_id);
 
 int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
                      int check); 
+
+int job_has_tasks(lListElem *job);
+
+u_long32 job_get_ja_task_hold_state(const lListElem *job, u_long32 ja_task_id);
+
+void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]);
+
+void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
+                              u_long32 hold_state[8]);
 
 #endif /* __SGE_JOB_JATASK_H */    

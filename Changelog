@@ -1,3 +1,6 @@
+CR-2002-07-22-1: Bugfix:    Junk messages in installation
+                 Bugtraq:   #4705066
+
 CR-2002-07-22-0: Testsuite: New version strings for 5.3.1beta3 and beta4
                  Enhancem.:
 

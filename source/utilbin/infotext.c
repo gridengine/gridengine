@@ -827,6 +827,12 @@ char **argv
       printf("used -auto -ask options without -def option\n");
       args_ok = 0;
    }   
+
+   if (do_ask == 1 && do_wait == 1) {
+      printf("used -wait with -ask option\n");
+      args_ok = 0;
+   } 
+
    DPRINTF(("pass 1\n"));
    /* first pass - get number of %s arguments */
    sge_dstring_copy_string(&buffer,"");
@@ -1023,7 +1029,6 @@ char **argv
             if (do_wait == 1) {
                break;
             }
-           
             strcpy(input_buffer,_SGE_GETTEXT__(options.def));
          }
 
@@ -1035,6 +1040,14 @@ char **argv
             ret_val = 1;
             done = 1;
          }
+         if (  (strcmp(_SGE_GETTEXT__(options.yes),"") == 0) && 
+               (strcmp(_SGE_GETTEXT__(options.no) ,"") == 0) ) {
+            ret_val = 0;
+            done = 1;
+            strcpy(input_buffer,"");
+            /* no default values given, return empty string */
+         } 
+ 
          if (done != 1) {
             printf( SGE_INFOTEXT_ONLY_ALLOWED_SS , _SGE_GETTEXT__(options.yes), _SGE_GETTEXT__(options.no));
             if (do_auto != 0) {

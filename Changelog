@@ -1,3 +1,9 @@
+SG-2005-02-07-4: Bugfix:    sharetree has a usage leak
+                 Changed:   qmaster
+                 Issue:     1449
+                 Bugtraq:   6225570
+                 Review:    DT
+
 SG-2005-02-07-3: Bugfix:    some changes to build the source on sol10-amd64
                             missed some files in (SG-2005-02-07-0)
                  Changed:   all

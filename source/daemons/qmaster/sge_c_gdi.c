@@ -615,6 +615,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
             switch (request->target) {
 
                case SGE_ORDER_LIST:
+                 sge_set_commit_required(); 
                  switch (sge_follow_order(ep, &(answer->alp), user, host, &ticket_orders)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */
@@ -631,6 +632,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                     default :  DPRINTF(("--> FAILED: unexpected state from in the order processing <--\n"));
                        break;        
                   }
+                  sge_commit();
                   break;
                
                case SGE_MANAGER_LIST:

@@ -325,7 +325,9 @@ int answer_error
       notify_ptf();
    }
    if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+      switch2start_user();
       ptf_update_job_usage();
+      switch2admin_user();
    }
    if (feature_is_enabled(FEATURE_REPRIORISATION)) {
       switch2start_user();

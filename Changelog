@@ -1,3 +1,5 @@
+CR-2002-11-29-1  Testsuite: L10N bugfixes
+
 CR-2002-11-29-0  Testsuite: a) using testsuite root directory for lockfile, not
                  Bugfix:       testsuite results directory.
                             b) get_version_info() may not reset install_core_system

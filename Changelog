@@ -1,3 +1,8 @@
+AH-2002-06-07-1: Bugfix:    Prevent qalter -l res=val on running jobs for consumable
+                            resources to prevent corruption of consumable managment
+                 Issue:     #251
+                 Bugtraq:   #4683852
+
 JG-2002-06-07-0: Cleanup:   Replaced %s in messages with macros SFN and SFQ
                             for all libs. Fixed problems with multiply defined
                             messages.
@@ -679,7 +684,7 @@ EB-2002-03-13-0: Bugfix:    handling of faulty migrate script
                             - improved logging
                             - shepherd internal state will be reset.
                               Further migrate requests will be initiated
-                 Issue:     #146 (patially)
+                 Issue:     #146 (partially)
 
 JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the 
                             necessity to use the options -v PATH and -cwd.

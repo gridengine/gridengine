@@ -47,7 +47,7 @@ extern "C" {
 #define JQUEUED                              0x00000040
 #define JRUNNING                             0x00000080
 #define JSUSPENDED                           0x00000100
-#define JTRANSFERING                          0x00000200
+#define JTRANSFERING                         0x00000200
 #define JDELETED                             0x00000400
 #define JWAITING                             0x00000800
 #define JEXITING                             0x00001000

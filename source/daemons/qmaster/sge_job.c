@@ -84,6 +84,7 @@
 #include "sge_afsutil.h"
 #include "sge_ulongL.h"
 #include "setup_path.h"
+#include "msg_schedd.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -1913,6 +1914,120 @@ int is_task_enrolled
    return 0;
 }
 
+/****** sge_job/changes_consumables() ******************************************
+*  NAME
+*     changes_consumables() -- detect changes with consumable resource request
+*
+*  SYNOPSIS
+*     static int changes_consumables(lList* new, lList* old) 
+*
+*  INPUTS
+*     lList** alpp - answer list pointer pointer
+*     lList* new - jobs new JB_hard_resource_list
+*     lList* old - jobs old JB_hard_resource_list
+*
+*  RESULT
+*     static int - 0     nothing changed 
+*                  other it changed 
+*******************************************************************************/
+static int changes_consumables(lList **alpp, lList* new, lList* old)
+{
+   lListElem *old_reqep, *dcep, *new_reqep, *old_entry, *new_entry;
+   const char *name;
+   int found_it;
+
+   DENTER(TOP_LAYER, "changes_consumables");
+
+   /* ensure all old resource requests implying consumables 
+      debitation are still contained in new resource request list */
+   for_each(old_reqep, old) {
+      for_each(old_entry, lGetList(old_reqep, RE_entries)) { 
+         name = lGetString(old_entry, CE_name);
+
+         if (!(dcep = sge_locate_complex_attr(name, Master_Complex_List))) {
+            /* complex attribute definition has been removed though
+               job still requests resource */ 
+            ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1; 
+         }
+
+         /* ignore non-consumables */
+         if (!lGetUlong(dcep, CE_consumable))
+            continue;
+ 
+         /* search it in new hard resource list */
+         found_it = 0;
+         for_each (new_reqep, new) {
+            if (lGetSubStr(new_reqep, CE_name, name, RE_entries)) {
+               found_it = 1;
+               break;
+            }
+         }
+
+         if (!found_it) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S, name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1;
+         }
+      }
+   }
+   
+   /* ensure all new resource requests implying consumable 
+      debitation were also contained in old resource request list
+      AND have not changed the requested amount */ 
+   for_each(new_reqep, new) {
+      for_each(new_entry, lGetList(new_reqep, RE_entries)) { 
+         name = lGetString(new_entry, CE_name);
+
+         if (!(dcep = sge_locate_complex_attr(name, Master_Complex_List))) {
+            /* refers to a not existing complex attribute definition */ 
+            ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1; 
+         }
+
+         /* ignore non-consumables */
+         if (!lGetUlong(dcep, CE_consumable))
+            continue;
+
+         /* search it in old hard resource list */
+         found_it = 0;
+         for_each (old_reqep, old) {
+            if ((old_entry=lGetSubStr(old_reqep, CE_name, name, RE_entries))) {
+               found_it = 1;
+               break;
+            }
+         }
+
+         if (!found_it) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S, name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1;
+         }
+
+         /* compare request in old_entry with new_entry */
+         DPRINTF(("request: \"%s\" old: %f new: %f\n", name, 
+            lGetDouble(old_entry, CE_doubleval), 
+            lGetDouble(new_entry, CE_doubleval)));
+         if (lGetDouble(old_entry, CE_doubleval) != 
+            lGetDouble(new_entry, CE_doubleval)) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S, name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return -1;
+         }
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+
 static int mod_job_attributes(
 lListElem *new_job,            /* new job */
 lListElem *jep,                /* reduced job element */
@@ -1922,11 +2037,22 @@ char *rhost,
 int *trigger  
 ) {
    int pos;
-   int may_not_be_running = 0; 
+   int is_running = 0, may_not_be_running = 0; 
    u_long32 uval;
    u_long32 jobid = lGetUlong(new_job, JB_job_number);
 
    DENTER(TOP_LAYER, "mod_job_attributes");
+
+   /* is job running ? */
+   {
+      lListElem *ja_task;
+      for_each(ja_task, lGetList(new_job, JB_ja_tasks)) {
+         if (lGetUlong(ja_task, JAT_status) & JTRANSFERING ||
+             lGetUlong(ja_task, JAT_status) & JRUNNING) {
+            is_running = 1;
+         }
+      }
+   }
 
    /* 
     * ---- JB_ja_tasks
@@ -2175,6 +2301,16 @@ int *trigger
          DEXIT;
          return STATUS_EUNKNOWN;
       }
+
+      /* to prevent inconsistent consumable mgmnt:
+         - deny resource requests changes on consumables for running jobs (IZ #251)
+         - a better solution is to store for each running job the amount of resources */
+      if (is_running && changes_consumables(alpp, lGetList(jep, JB_hard_resource_list), 
+            lGetList(new_job, JB_hard_resource_list))) {
+         DEXIT;
+         return STATUS_EUNKNOWN;   
+      }
+
       lSetList(new_job, JB_hard_resource_list, 
             lCopyList("", lGetList(jep, JB_hard_resource_list)));
       *trigger |= MOD_EVENT;
@@ -2533,18 +2669,12 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
-   if (may_not_be_running) { 
-      lListElem *ja_task;
-   
-      for_each(ja_task, lGetList(new_job, JB_ja_tasks)) {
-         if (lGetUlong(ja_task, JAT_status) & JTRANSFERING || 
-             lGetUlong(ja_task, JAT_status) & JRUNNING) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, u32c(jobid)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EEXIST;
-         }
-      }
+   /* deny certain modifications of running jobs */
+   if (may_not_be_running && is_running) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, u32c(jobid)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      DEXIT;
+      return STATUS_EEXIST;
    }
 
    DEXIT;

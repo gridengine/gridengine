@@ -463,10 +463,19 @@ DTRACE;
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
          double cpu, mem, io, vmem, maxvmem;
          static char cpu_usage[100], vmem_usage[100], maxvmem_usage[100];
+         int first_task = 1;
 
-         if (!lPrev(jatep))
+         /* jobs whose job start orders were not processed to the end
+            due to a qmaster/schedd collision appear in the JB_ja_tasks
+            list but are not running - thus we may not print usage for those */
+         if (lGetUlong(jatep, JAT_status)!=JRUNNING &&
+             lGetUlong(jatep, JAT_status)!=JTRANSFERING)
+            continue;
+
+         if (first_task) {
             printf("usage %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
-         else
+            first_task = 0;
+         } else
             printf("      %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
 
          cpu = mem = io = vmem = maxvmem = 0.0;

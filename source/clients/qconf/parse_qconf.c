@@ -380,7 +380,7 @@ char *argv[]
    lEnumeration *what;
    lCondition *where;
    lList *lp=NULL, *arglp=NULL, *alp=NULL, *newlp=NULL;
-   lListElem *hep, *ep, *argep, *aep, *newep;
+   lListElem *hep, *ep, *argep, *aep, *newep = NULL;
    const char *host = NULL;
    char *filename;
 
@@ -5415,7 +5415,7 @@ lListElem *ep
 #endif
 
    /* used for generating filenames */
-   char *filename;
+   char *filename = NULL;
 
    DENTER(TOP_LAYER, "edit_exechost");
 
@@ -5475,8 +5475,8 @@ lList *confl
 ) {
    int status;
    lListElem *aep;
-   char *fname;
-   lList *alp=NULL, *newconfl;
+   char *fname = NULL;
+   lList *alp=NULL, *newconfl = NULL;
 #ifdef QCONF_FLATFILE
    spooling_field* fields = sge_build_SC_field_list ();
    lListElem *ep = NULL;
@@ -6042,7 +6042,7 @@ lList *arglp
    int status;
    const char *userset_name;
    lList *alp, *lp;
-   char *fname;
+   char *fname = NULL;
    int cmd;
 #ifdef QCONF_FLATFILE
    spooling_field *fields = sge_build_US_field_list ();
@@ -6240,7 +6240,7 @@ u_long32 flags
    lList *alp = NULL, *lp = NULL;
    lListElem *ep;
    int failed=0;
-   char *tmpname;
+   char *tmpname = NULL;
    int status;
 #ifndef QCONF_FLATFILE
    stringT str;

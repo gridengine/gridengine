@@ -1,3 +1,5 @@
+SG_2004-02-14-0: Bugfix:    fixed the build for linux
+
 DT-2004-02-13-0: Enhancem:  qconf now uses flatfile spooling instead of classic
                             spooling.  Might be broken for EH and PE because of
                             the new RUE type.  Not yet fully cleaned and

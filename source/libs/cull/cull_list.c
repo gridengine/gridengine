@@ -141,14 +141,20 @@ lListElem *lCopyElem(const lListElem *ep)
    /*    if (lCopySwitch(ep, new, i, i) != 0)  */
       
    for (p = &(ep->descr[0]); p->nm != NoName; p++) {
-      
-      if (lCopySwitch(ep, new, p - &(ep->descr[0]), p - &(ep->descr[0])) != 0) {
+      int index =  p - &(ep->descr[0]); 
+
+      if (lCopySwitch(ep, new, index, index) != 0) {
          lFreeElem(new);
          LERROR(LECOPYSWITCH);
          DEXIT;
          return NULL;
       }
+      /* copy changed field information */
+      if(sge_bitfield_get(ep->changed, index)) {
+         sge_bitfield_set(new->changed, index);
+      }
    }
+
    new->status = FREE_ELEM;
 
    DEXIT;
@@ -235,6 +241,10 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
             DEXIT;
             return -1;
          }
+         /* copy changed field information */
+         if(sge_bitfield_get(src->changed, i)) {
+            sge_bitfield_set(dst->changed, *jp);
+         }
       }
       break;
 
@@ -247,6 +257,10 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
             LERROR(LECOPYSWITCH);
             DEXIT;
             return -1;
+         }
+         /* copy changed field information */
+         if(sge_bitfield_get(src->changed, enp[i].pos)) {
+            sge_bitfield_set(dst->changed, *jp);
          }
       }
    }
@@ -623,51 +637,52 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
       fprintf(fp, "%s-------------------------------\n", space);
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
+      int changed = sge_bitfield_get(ep->changed, i);
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Integer) = %d\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i)));
+            DPRINTF(("%s%-20.20s (Integer) %c = %d\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Integer) = %d\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i));
+            fprintf(fp, "%s%-20.20s (Integer) %c = %d\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Ulong)   = " u32"\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i)));
+            DPRINTF(("%s%-20.20s (Ulong)   %c = " u32"\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Ulong)   = " u32"\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i));
+            fprintf(fp, "%s%-20.20s (Ulong)   %c = " u32"\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
          if (!fp)
-            DPRINTF(("%s%-20.20s (String)  = %s\n", space,
-                     lNm2Str(ep->descr[i].nm), str ? str : "(null)"));
+            DPRINTF(("%s%-20.20s (String)  %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
          else
-            fprintf(fp, "%s%-20.20s (String)  = %s\n", space,
-                    lNm2Str(ep->descr[i].nm), str ? str : "(null)");
+            fprintf(fp, "%s%-20.20s (String)  %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
          break;
 
       case lHostT:
          str = lGetPosHost(ep, i);
          if (!fp)
-            DPRINTF(("%s%-20.20s (Host)  = %s\n", space,
-                     lNm2Str(ep->descr[i].nm), str ? str : "(null)"));
+            DPRINTF(("%s%-20.20s (Host)    %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
          else
-            fprintf(fp, "%s%-20.20s (Host)  = %s\n", space,
-                    lNm2Str(ep->descr[i].nm), str ? str : "(null)");
+            fprintf(fp, "%s%-20.20s (Host)    %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
          break;
 
       case lListT:
          tlp = lGetPosList(ep, i);
          if (!fp)
-            DPRINTF(("%s%-20.20s (List)    = %s\n", space,
-                     lNm2Str(ep->descr[i].nm), tlp ? "full {" : "empty"));
+            DPRINTF(("%s%-20.20s (List)    %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty"));
          else
-            fprintf(fp, "%s%-20.20s (List)    = %s\n", space,
-                    lNm2Str(ep->descr[i].nm), tlp ? "full {" : "empty");
+            fprintf(fp, "%s%-20.20s (List)    %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
          if (tlp) {
             nesting_level++;
             lWriteList_(tlp, nesting_level, fp);
@@ -680,43 +695,43 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
          break;
       case lFloatT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Float)   = %f\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosFloat(ep, i)));
+            DPRINTF(("%s%-20.20s (Float)   %c = %f\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Float)   = %f\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosFloat(ep, i));
+            fprintf(fp, "%s%-20.20s (Float)   %c = %f\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
          break;
       case lDoubleT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Double)  = %f\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosDouble(ep, i)));
+            DPRINTF(("%s%-20.20s (Double)  %c = %f\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Double)  = %f\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosDouble(ep, i));
+            fprintf(fp, "%s%-20.20s (Double)  %c = %f\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
          break;
       case lLongT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Long)    = %ld\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosLong(ep, i)));
+            DPRINTF(("%s%-20.20s (Long)    %c = %ld\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Long)    = %ld\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosLong(ep, i));
+            fprintf(fp, "%s%-20.20s (Long)    %c = %ld\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
          break;
       case lCharT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Char)    = %c\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosChar(ep, i)));
+            DPRINTF(("%s%-20.20s (Char)    %c = %c\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Char)    = %c\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosChar(ep, i));
+            fprintf(fp, "%s%-20.20s (Char)    %c = %c\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i));
          break;
       case lRefT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Ref)    = %p\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosRef(ep, i)));
+            DPRINTF(("%s%-20.20s (Ref)     %c = %p\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Ref)    = %p\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosRef(ep, i));
+            fprintf(fp, "%s%-20.20s (Ref)     %c = %p\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
          break;
       default:
          unknownType("lWriteElem");
@@ -793,15 +808,17 @@ static void lWriteList_(const lList *lp, int nesting_level, FILE *fp)
    indent[i] = '\0';
 
    if (!fp) {
-      DPRINTF(("\n%sList: <%s> #Elements: %d\n",
+      DPRINTF(("\n%sList: <%s> %c #Elements: %d\n",
                indent,
                lGetListName(lp),
+               lp->changed ? '*' : ' ',
                lGetNumberOfElem(lp)));
    }
    else {
-      fprintf(fp, MSG_CULL_LISTXYNROFELEMENTSZ_SSI ,
+      fprintf(fp, "\n%sList: <%s> %c #Elements: %d\n",
               indent,
               lGetListName(lp),
+              lp->changed ? '*' : ' ',
               lGetNumberOfElem(lp));
    }
 
@@ -869,8 +886,17 @@ lListElem *lCreateElem(const lDescr *dp)
    ep->status = FREE_ELEM;
    if (!(ep->cont = (lMultiType *) calloc(1, sizeof(lMultiType) * n))) {
       LERROR(LEMALLOC);
+      free(ep->descr);
       free(ep);
       DEXIT;
+      return NULL;
+   }
+
+   if((ep->changed = sge_bitfield_new(n)) == NULL) {
+      LERROR(LEMALLOC);
+      free(ep->cont);
+      free(ep->descr);
+      free(ep);
       return NULL;
    }
 
@@ -951,6 +977,8 @@ lList *lCreateList(const char *listname, const lDescr *descr)
       }
    }
 
+   lp->changed = 0;
+
    DEXIT;
    return lp;
 }
@@ -1025,12 +1053,12 @@ lListElem *lFreeElem(lListElem *ep)
 
    DENTER(CULL_LAYER, "lFreeElem");
 
-   if (!ep) {
+   if (ep == NULL) {
       DEXIT;
       return NULL;
    }
 
-   if (!(ep->descr)) {
+   if (ep->descr == NULL) {
       LERROR(LEDESCRNULL);
       DPRINTF(("NULL descriptor not allowed !!!\n"));
       abort();
@@ -1075,13 +1103,18 @@ lListElem *lFreeElem(lListElem *ep)
    }
 
    /* lFreeElem is not responsible for descriptor array */
-   if (ep->status == FREE_ELEM) {
+   if(ep->status == FREE_ELEM) {
       cull_hash_free_descr(ep->descr); 
       free(ep->descr);
    }   
 
-   if (ep->cont)
+   if(ep->cont != NULL) {
       free(ep->cont);
+   }   
+
+   if(ep->changed != NULL) {
+      ep->changed = sge_bitfield_free(ep->changed);
+   }
 
    free(ep);
 
@@ -1386,6 +1419,7 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
    cull_hash_elem(new);
    
    lp->nelem++;
+   lp->changed = 1;
 
    DEXIT;
    return 0;
@@ -1457,6 +1491,7 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
 
    cull_hash_elem(ep);
    lp->nelem++;
+   lp->changed = 1;
 
    DEXIT;
    return 0;
@@ -1516,6 +1551,7 @@ int lRemoveElem(lList *lp, lListElem *ep)
    ep->prev = ep->next = NULL;
 
    lp->nelem--;
+   lp->changed = 1;
 
    lFreeElem(ep);
 
@@ -1583,6 +1619,7 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
    ep->descr = lCopyDescr(ep->descr);
    ep->status = FREE_ELEM;
    lp->nelem--;
+   lp->changed = 1;
 
    DEXIT;
    return ep;
@@ -2052,6 +2089,8 @@ int lSortList(lList *lp, const lSortOrder *sp)
    }
 
    free(pointer);
+
+   /* JG: TODO: is sorting changing the list? */
 
    DEXIT;
    return 0;

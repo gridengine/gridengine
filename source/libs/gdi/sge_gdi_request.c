@@ -869,8 +869,15 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       if ((ret=unpackint(pb, &(ar->op)) )) goto error;
       if ((ret=unpackint(pb, &(ar->target)) )) goto error;
 
-
       if ((ret=unpackint(pb, &(ar->version)) )) goto error;
+      /* JG: TODO (322): At this point we should check the version! 
+      **                 The existent check function verify_request_version
+      **                 cannot be called as neccesary data structures are 
+      **                 available here (e.g. answer list).
+      **                 Better do these changes at a more general place 
+      **                 together with (hopefully coming) further communication
+      **                 redesign.
+      */
 DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->lp)) )) goto error;
 DTRACE;      

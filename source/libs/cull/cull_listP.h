@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull_list.h"
+#include "sge_bitfield.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -48,11 +49,14 @@ struct _lListElem {
    lUlong status;               /* status: element in list/ element free     */
    lDescr *descr;               /* pointer to the descriptor array           */
    lMultiType *cont;            /* pointer to the lMultiType array           */
+   bitfield changed;            /* bitfield describing which fields have     */
+                                /* changed since last spooling               */
 };
 
 struct _lList {
    int nelem;                   /* number of elements in the list            */
    char *listname;              /* name of the list                          */
+   int changed;                 /* the list has been changed                 */
    lDescr *descr;               /* pointer to the descriptor array           */
    lListElem *first;            /* pointer to the first element of the list  */
    lListElem *last;             /* pointer to the last element of the list   */

@@ -379,30 +379,33 @@ const lDescr *dp
    PACK_FORMAT
 
  */
-int cull_pack_elem(
-sge_pack_buffer *pb,
-const lListElem *ep 
-) {
+int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep) 
+{
    int ret;
 
    DENTER(CULL_LAYER, "cull_pack_elem");
 
-   if (!(ep->descr)) {
+   if(ep->descr == NULL) {
       DPRINTF(("element descriptor NULL not allowed !!!\n"));
       DEXIT;
       abort();
    }
 
-   if ((ret = packint(pb, ep->status))) {
+   if((ret = packint(pb, ep->status)) != PACK_SUCCESS) {
       DEXIT;
       return ret;
    }
 
-   if (ep->status == FREE_ELEM) {
-      if ((ret = cull_pack_descr(pb, ep->descr))) {
+   if(ep->status == FREE_ELEM) {
+      if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
+   }
+
+   if((ret = packbitfield(pb, ep->changed)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
    }
 
    ret = cull_pack_cont(pb, ep->cont, ep->descr);
@@ -434,30 +437,29 @@ const lDescr *dp                  /* has to be NULL in case of free elements
 
    *epp = NULL;
 
-   if ((ep = (lListElem *) calloc(1, sizeof(lListElem))) == NULL) {
+   if((ep = (lListElem *) calloc(1, sizeof(lListElem))) == NULL) {
       DEXIT;
       return PACK_ENOMEM;
    }
 
-   if ((ret = unpackint(pb, &(ep->status)))) {
+   if((ret = unpackint(pb, &(ep->status))) != PACK_SUCCESS) {
       free(ep);
       DEXIT;
       return ret;
    }
 
-   if (ep->status == FREE_ELEM) {
-      if ((ret = cull_unpack_descr(pb, &(ep->descr)))) {
+   if(ep->status == FREE_ELEM) {
+      if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
          free(ep);
          DEXIT;
          return ret;
       }
-   }
-   else {
+   } else {
       /* 
          if it is not a free element we need 
-         an descriptor from outside 
+         a descriptor from outside 
        */
-      if (!(ep->descr = (lDescr *) dp)) {
+      if((ep->descr = (lDescr *) dp) == NULL) {
          free(ep);
          DEXIT;
          return PACK_BADARG;
@@ -465,7 +467,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
    }
 
    /* This is a hack, to avoid aborts in lAppendElem */
-   if (ep->status == BOUND_ELEM)
+   if(ep->status == BOUND_ELEM)
       ep->status = TRANS_BOUND_ELEM;
 
    /* 
@@ -473,9 +475,20 @@ const lDescr *dp                  /* has to be NULL in case of free elements
       an element in a defined state - so we may
       call lFreeElem() in case of errors 
     */
-   if ((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr))) {
-      if (ep->status == FREE_ELEM)
+
+   if((ret = unpackbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
+      if(ep->status == FREE_ELEM) {
          free(ep->descr);
+      }
+      free(ep);
+      DEXIT;
+      return ret;
+   }
+    
+   if((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr))) {
+      if(ep->status == FREE_ELEM) {
+         free(ep->descr);
+      }   
       free(ep);
       DEXIT;
       return ret;
@@ -508,33 +521,39 @@ const lList *lp
 
    DENTER(CULL_LAYER, "cull_pack_list");
 
-   if ((ret = packint(pb, lp != NULL))) {
+   if((ret = packint(pb, lp != NULL)) != PACK_SUCCESS) {
       DEXIT;
       return ret;
    }
 
-   if (lp) {
-
-      if ((ret = packint(pb, lp->nelem))) {
+   if(lp != NULL) {
+      if((ret = packint(pb, lp->nelem)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
-      if ((ret = packstr(pb, lp->listname))) {
+      
+      if((ret = packstr(pb, lp->listname)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+      
+      if((ret = packint(pb, lp->changed)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
 
       /* pack descriptor */
-      if ((ret = cull_pack_descr(pb, lp->descr))) {
+      if((ret = cull_pack_descr(pb, lp->descr)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
 
       /* pack each list element */
-      for_each(ep, lp)
-         if ((ret = cull_pack_elem(pb, ep))) {
-         DEXIT;
-         return ret;
+      for_each(ep, lp) {
+         if((ret = cull_pack_elem(pb, ep)) != PACK_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
       }
    }
 
@@ -563,41 +582,49 @@ lList **lpp
 
    u_long32 i=0;
    u_long32 n=0;
+   u_long32 c=0;
 
    DENTER(CULL_LAYER, "cull_unpack_list");
 
    *lpp = NULL;
 
-   if ((ret = unpackint(pb, &i))) {
+   if((ret = unpackint(pb, &i))) {
       DEXIT;
       return ret;
    }
 
    /* do we have an empty list (NULL) ? */
-   if (!i) {
+   if(!i) {
       DEXIT;
       return PACK_SUCCESS;
    }
 
-   if ((lp = (lList *) calloc(1, sizeof(lList))) == NULL) {
+   if((lp = (lList *) calloc(1, sizeof(lList))) == NULL) {
       DEXIT;
       return PACK_ENOMEM;
    }
 
-   if ((ret = unpackint(pb, &n))) {
+   if((ret = unpackint(pb, &n)) != PACK_SUCCESS) {
       lFreeList(lp);
       DEXIT;
       return ret;
    }
 
-   if ((ret = unpackstr(pb, &(lp->listname)))) {
+   if((ret = unpackstr(pb, &(lp->listname))) != PACK_SUCCESS) {
       lFreeList(lp);
       DEXIT;
       return ret;
    }
+
+   if((ret = unpackint(pb, &c)) != PACK_SUCCESS) {
+      lFreeList(lp);
+      DEXIT;
+      return ret;
+   }
+   lp->changed = c;
 
    /* unpack descriptor */
-   if ((ret = cull_unpack_descr(pb, &(lp->descr)))) {
+   if((ret = cull_unpack_descr(pb, &(lp->descr))) != PACK_SUCCESS) {
       lFreeList(lp);
       DEXIT;
       return ret;
@@ -606,8 +633,8 @@ lList **lpp
    cull_hash_create_hashtables(lp);
 
    /* unpack each list element */
-   for (i = 0; i < n; i++) {
-      if ((ret = cull_unpack_elem(pb, &ep, lp->descr))) {
+   for(i = 0; i < n; i++) {
+      if((ret = cull_unpack_elem(pb, &ep, lp->descr)) != PACK_SUCCESS) {
          lFreeList(lp);
          DEXIT;
          return ret;

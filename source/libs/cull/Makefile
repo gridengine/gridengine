@@ -155,3 +155,12 @@ example2: $(EXAMPLE2_OBJS)
 
 example2.o: $(CULLLIB_DIR)/example2.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example2.c
+
+#---------------------------------------------------------------------
+# test program
+test_cull_list: test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_cull_list.o: $(CULLLIB_DIR)/test_cull_list.c
+	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_list.c
+

@@ -1,3 +1,6 @@
+JG-2002-07-23-0: Enhancem.: CULL objects and CULL lists "know" which of their
+                            attributes have changed.
+
 EB-2002-07-23-1: Bugfix:    job array task index values range not documented
                  Issue:     #283
 

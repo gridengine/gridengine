@@ -56,11 +56,6 @@
 
 
 /* 
-** cull/src/cull_list.c
-*/ 
-#define MSG_CULL_LISTXYNROFELEMENTSZ_SSI                 _MESSAGE(41017, _("\n"SFN"List: <"SFN"> #Elements: %d\n"))
-
-/* 
 ** cull/src/cull_multitype.c
 */ 
 #define MSG_CULL_POINTER_GETLISTREF_NULLELEMENTFORX_S    _MESSAGE(41018, _("!!!!!!!!!! lGetListRef(): got NULL element for "SFN" !!!!!!!!!!\n"))

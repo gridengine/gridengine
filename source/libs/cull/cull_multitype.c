@@ -1318,7 +1318,12 @@ int lSetPosInt(const lListElem *ep, int pos, int value)
       return -1;
    }
 
-   ep->cont[pos].i = value;
+   if(ep->cont[pos].i != value) {
+      ep->cont[pos].i = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -1368,7 +1373,13 @@ int lSetInt(lListElem *ep, int name, int value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].i = value;
+
+   if(value != ep->cont[pos].i) {
+      ep->cont[pos].i = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }   
 
    DEXIT;
    return 0;
@@ -1415,17 +1426,22 @@ int lSetPosUlong(const lListElem *ep, int pos, lUlong value)
       return -1;
    }
 
-   /* remove old hash entry */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
-   ep->cont[pos].ul = value;
+   if(value != ep->cont[pos].ul) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      ep->cont[pos].ul = value;
 
-   /* create entry in hash table */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_insert(ep, pos);
-   }
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }   
 
    DEXIT;
    return 0;
@@ -1462,6 +1478,7 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
       DEXIT;
       return -1;
    }
+
    pos = lGetPosViaElem(ep, name);
    if (pos < 0) {
       DPRINTF(("!!!!!!!!!! lSetUlong(): %s not found in element !!!!!!!!!!\n",
@@ -1476,18 +1493,23 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
       return -1;
    }
 
-   /* remove old hash entry */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
-   ep->cont[pos].ul = value;
+   if(value != ep->cont[pos].ul) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      ep->cont[pos].ul = value;
 
-   /* create entry in hash table */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_insert(ep, pos);
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
    }
-   
+
    DEXIT;
    return 0;
 }
@@ -1515,6 +1537,7 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
 int lSetPosString(const lListElem *ep, int pos, const char *value) 
 {
    char *str = NULL;
+   int changed;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosString");
 
@@ -1536,34 +1559,55 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
       return -1;
    }
 
-   /* remove old hash entry */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
-   /* strdup new string value */
-   if (value) {
-      if (!(str = strdup(value))) {
-         LERROR(LESTRDUP);
-         DEXIT;
-         return -1;
+   /* has the string value changed?
+   ** if both new and old are NULL, nothing changed,
+   ** if one of them is NULL, it changed,
+   ** else do a string compare
+   */
+   str = ep->cont[pos].str;
+   if(value == NULL && str == NULL) {
+      changed = 0;
+   } else {
+      if(value == NULL || str == NULL) {
+         changed = 1;
+      } else {
+         changed = strcmp(value, str);
       }
-   }                            /* these brackets are required */
-   else
-      str = NULL;               /* value is NULL */
-
-   /* free old string value */
-   if (ep->cont[pos].str) {
-      free(ep->cont[pos].str);
-      ep->cont[pos].str = NULL;
-   }   
-
-   ep->cont[pos].str = str;
-
-   /* create entry in hash table */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_insert(ep, pos);
    }
+
+   if(changed) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      /* strdup new string value */
+      if (value) {
+         if (!(str = strdup(value))) {
+            LERROR(LESTRDUP);
+            DEXIT;
+            return -1;
+         }
+      }                            /* these brackets are required */
+      else
+         str = NULL;               /* value is NULL */
+
+      /* free old string value */
+      if (ep->cont[pos].str) {
+         free(ep->cont[pos].str);
+         ep->cont[pos].str = NULL;
+      }   
+
+      ep->cont[pos].str = str;
+
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }   
    
    DEXIT;
    return 0;
@@ -1592,6 +1636,7 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
 int lSetPosHost(const lListElem *ep, int pos, const char *value) 
 {
    char *str = NULL;
+   int changed;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosHost");
 
@@ -1613,34 +1658,56 @@ int lSetPosHost(const lListElem *ep, int pos, const char *value)
       return -1;
    }
 
-   /* remove old hash entry */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
-   /* strdup new string value */
-   if (value) {
-      if (!(str = strdup(value))) {
-         LERROR(LESTRDUP);
-         DEXIT;
-         return -1;
+   /* has the host value changed?
+   ** if both new and old are NULL, nothing changed,
+   ** if one of them is NULL, it changed,
+   ** else do a string compare (a hostcmp would be more accurate,
+   ** but most probably not neccessary and too expensive
+   */
+   str = ep->cont[pos].host;
+   if(value == NULL && str == NULL) {
+      changed = 0;
+   } else {
+      if(value == NULL || str == NULL) {
+         changed = 1;
+      } else {
+         changed = strcmp(value, str);
       }
-   }                            /* these brackets are required */
-   else
-      str = NULL;               /* value is NULL */
-
-   /* free old string value */
-   if (ep->cont[pos].host != NULL) {
-      free(ep->cont[pos].host);
-      ep->cont[pos].host = NULL;
-   }   
-
-   ep->cont[pos].host = str;
-
-   /* create entry in hash table */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_insert(ep, pos);
    }
+
+   if(changed) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      /* strdup new string value */
+      if (value) {
+         if (!(str = strdup(value))) {
+            LERROR(LESTRDUP);
+            DEXIT;
+            return -1;
+         }
+      }                            /* these brackets are required */
+      else
+         str = NULL;               /* value is NULL */
+
+      /* free old string value */
+      if (ep->cont[pos].host != NULL) {
+         free(ep->cont[pos].host);
+         ep->cont[pos].host = NULL;
+      }   
+
+      ep->cont[pos].host = str;
+
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }   
    
    DEXIT;
    return 0;
@@ -1670,6 +1737,7 @@ int lSetString(lListElem *ep, int name, const char *value)
 {
    char *str;
    int pos;
+   int changed;
 
    DENTER(CULL_BASIS_LAYER, "lSetString");
 
@@ -1693,36 +1761,57 @@ int lSetString(lListElem *ep, int name, const char *value)
       return -1;
    }
 
-   /* remove old hash entry */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
-   /* strdup new string value */
-   /* do so before freeing the old one - they could point to the same object! */
-   if (value) {
-      if (!(str = strdup(value))) {
-         LERROR(LESTRDUP);
-         DEXIT;
-         return -1;
-      }
+   /* has the string value changed?
+   ** if both new and old are NULL, nothing changed,
+   ** if one of them is NULL, it changed,
+   ** else do a string compare
+   */
+   str = ep->cont[pos].str;
+   if(value == NULL && str == NULL) {
+      changed = 0;
    } else {
-      str = NULL;               /* value is NULL */
+      if(value == NULL || str == NULL) {
+         changed = 1;
+      } else {
+         changed = strcmp(value, str);
+      }
    }
 
-   /* free old string value */
-   if (ep->cont[pos].str) {
-      free(ep->cont[pos].str);
-   }   
+   if(changed) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      /* strdup new string value */
+      /* do so before freeing the old one - they could point to the same object! */
+      if (value) {
+         if (!(str = strdup(value))) {
+            LERROR(LESTRDUP);
+            DEXIT;
+            return -1;
+         }
+      } else {
+         str = NULL;               /* value is NULL */
+      }
+
+      /* free old string value */
+      if (ep->cont[pos].str) {
+         free(ep->cont[pos].str);
+      }   
 
 
-   ep->cont[pos].str = str;
+      ep->cont[pos].str = str;
 
-   /* create entry in hash table */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_insert(ep, pos);
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
    }
-   
+
    DEXIT;
    return 0;
 }
@@ -1754,6 +1843,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
 {
    char *str;
    int pos;
+   int changed;
 
    DENTER(CULL_BASIS_LAYER, "lSetHost");
 
@@ -1778,35 +1868,58 @@ int lSetHost(lListElem *ep, int name, const char *value)
       return -1;
    }
 
-   /* remove old hash entry */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
-   /* strdup new string value */
-   /* do so before freeing the old one - they could point to the same object! */
-   if (value) {
-      if (!(str = strdup(value))) {
-         LERROR(LESTRDUP);
-         DEXIT;
-         return -1;
-      }
+   /* has the host value changed?
+   ** if both new and old are NULL, nothing changed,
+   ** if one of them is NULL, it changed,
+   ** else do a string compare (a hostcmp would be more accurate,
+   ** but most probably not neccessary and too expensive
+   */
+   str = ep->cont[pos].host;
+   if(value == NULL && str == NULL) {
+      changed = 0;
    } else {
-      str = NULL;               /* value is NULL */
+      if(value == NULL || str == NULL) {
+         changed = 1;
+      } else {
+         changed = strcmp(value, str);
+      }
    }
 
-   /* free old string value */
-   if (ep->cont[pos].host) {
-      free(ep->cont[pos].host);
-   }   
+   if(changed) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      /* strdup new string value */
+      /* do so before freeing the old one - they could point to the same object! */
+      if (value) {
+         if (!(str = strdup(value))) {
+            LERROR(LESTRDUP);
+            DEXIT;
+            return -1;
+         }
+      } else {
+         str = NULL;               /* value is NULL */
+      }
+
+      /* free old string value */
+      if (ep->cont[pos].host) {
+         free(ep->cont[pos].host);
+      }   
 
 
-   ep->cont[pos].host = str;
+      ep->cont[pos].host = str;
 
-   /* create entry in hash table */
-   if(ep->descr[pos].ht != NULL) {
-      cull_hash_insert(ep, pos);
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
    }
+
    DEXIT;
    return 0;
 }
@@ -1852,13 +1965,19 @@ int lSetPosList(const lListElem *ep, int pos, lList *value)
       DEXIT;
       return -1;
    }
+   
+   if(value != ep->cont[pos].glp) {
+      /* free old list */
+      if (ep->cont[pos].glp) {
+         lFreeList(ep->cont[pos].glp);
+      }
 
-   /* free old list */
-   if (ep->cont[pos].glp) {
-      lFreeList(ep->cont[pos].glp);
+      /* set new list */
+      ep->cont[pos].glp = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
    }
-   /* set new list */
-   ep->cont[pos].glp = value;
 
    DEXIT;
    return 0;
@@ -1910,9 +2029,14 @@ int lXchgList(lListElem *ep, int name, lList **lpp)
       return -1;
    }
 
-   tmp = ep->cont[pos].glp;
-   ep->cont[pos].glp = *lpp;
-   *lpp = tmp;
+   if(*lpp != ep->cont[pos].glp) {
+      tmp = ep->cont[pos].glp;
+      ep->cont[pos].glp = *lpp;
+      *lpp = tmp;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2008,12 +2132,18 @@ int lSetList(lListElem *ep, int name, lList *value)
       return -1;
    }
 
-   /* free old list */
-   if (ep->cont[pos].glp) {
-      lFreeList(ep->cont[pos].glp);
+   if(value != ep->cont[pos].glp) {
+      /* free old list */
+      if (ep->cont[pos].glp) {
+         lFreeList(ep->cont[pos].glp);
+      }
+
+      /* set new list */
+      ep->cont[pos].glp = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
    }
-   /* set new list */
-   ep->cont[pos].glp = value;
 
    DEXIT;
    return 0;
@@ -2060,7 +2190,12 @@ int lSetPosFloat(const lListElem * ep, int pos, lFloat value)
       return -1;
    }
 
-   ep->cont[pos].fl = value;
+   if(value != ep->cont[pos].fl) {
+      ep->cont[pos].fl = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2110,7 +2245,12 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
       return -1;
    }
 
-   ep->cont[pos].fl = value;
+   if(value != ep->cont[pos].fl) {
+      ep->cont[pos].fl = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2156,7 +2296,13 @@ int lSetPosDouble(const lListElem *ep, int pos, lDouble value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].db = value;
+
+   if(value != ep->cont[pos].db) {
+      ep->cont[pos].db = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2205,7 +2351,13 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].db = value;
+
+   if(value != ep->cont[pos].db) {
+      ep->cont[pos].db = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2251,7 +2403,13 @@ int lSetPosLong(const lListElem *ep, int pos, lLong value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].l = value;
+   
+   if(value != ep->cont[pos].l) {
+      ep->cont[pos].l = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2300,7 +2458,13 @@ int lSetLong(lListElem *ep, int name, lLong value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].l = value;
+   
+   if(value != ep->cont[pos].l) {
+      ep->cont[pos].l = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2346,7 +2510,13 @@ int lSetPosChar(const lListElem *ep, int pos, lChar value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].c = value;
+
+   if(value != ep->cont[pos].c) {
+      ep->cont[pos].c = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2395,7 +2565,13 @@ int lSetChar(lListElem * ep, int name, lChar value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].c = value;
+
+   if(value != ep->cont[pos].c) {
+      ep->cont[pos].c = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2441,7 +2617,13 @@ int lSetPosRef(const lListElem * ep, int pos, lRef value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].ref = value;
+
+   if(value != ep->cont[pos].ref) {
+      ep->cont[pos].ref = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;
@@ -2490,7 +2672,13 @@ int lSetRef(lListElem * ep, int name, lRef value)
       DEXIT;
       return -1;
    }
-   ep->cont[pos].ref = value;
+
+   if(value != ep->cont[pos].ref) {
+      ep->cont[pos].ref = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
 
    DEXIT;
    return 0;

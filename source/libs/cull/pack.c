@@ -75,6 +75,32 @@
 #endif
 
 
+/****** cull/pack/--CULL_Packing ***************************************
+*
+*  NAME
+*     CULL_Packing -- platform independent exchange format
+*
+*  FUNCTION
+*     The cull packing functions provide a framework for a 
+*     platform independent data representation.
+*
+*     Data is written into a packbuffer. Individual data words
+*     are written in network byte order.
+*
+*     Data in the packbuffer can be compressed.
+*
+*  NOTES
+*     Other platform independent formats, like XML, should be 
+*     implemented.
+*
+*  SEE ALSO
+*     cull/pack/-Versioncontrol
+*
+*     cull/pack/packbitfield()
+*     cull/pack/unpackbitfield()
+****************************************************************************
+*/
+
 static int chunk_size = CHUNK;
 
 #ifdef COMMCOMPRESS
@@ -333,7 +359,6 @@ int compressed
       DEXIT;
       return PACK_FORMAT;
    }   
-
 #ifndef COMMCOMPRESS
    /* don't understand compressed buffers */
    if(compressed) {
@@ -360,8 +385,8 @@ int compressed
    pb->bytes_used = 0;
    pb->mode = compressed?1:-1;    /* must decompress or not ? */
 
-   /* check cull version */
-   {
+   /* check cull version (only if buffer contains any data) */
+   if(buflen > 0) {
       int ret;
       u_long32 pad, version;
 
@@ -380,6 +405,10 @@ int compressed
          DEXIT;
          return PACK_VERSION;
       }
+
+      pb->version = version;
+   } else {
+      pb->version = CULL_VERSION;
    }
 
    DEXIT;
@@ -725,6 +754,54 @@ register const char *str
    return PACK_SUCCESS;
 }
 
+
+/****** cull/pack/packbitfield() ****************************************************
+*  NAME
+*     packbitfield() -- pack a bitfield 
+*
+*  SYNOPSIS
+*     int packbitfield(sge_pack_buffer *pb, bitfield bitfield) 
+*
+*  FUNCTION
+*     Writes the bitfield into the given packbuffer.
+*     The following information will be written:
+*        - the size of the bitfield in bits
+*        - the bitfield itself as binary buffer
+*
+*  INPUTS
+*     sge_pack_buffer *pb - the target packbuffer
+*     bitfield bitfield   - the bitfield to pack
+*
+*  RESULT
+*     int - PACK_SUCCESS on success,
+*           else PACK_* error codes
+*
+*  SEE ALSO
+*     uti/bitfield/--Bitfield
+*     cull/pack/unpackbitfield()
+*******************************************************************************/
+int packbitfield(sge_pack_buffer *pb, bitfield bitfield)
+{
+   int ret;
+   u_long32 char_size;
+
+   DENTER(PACK_LAYER, "packbitfield");
+
+   if((ret = packint(pb, bitfield->size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+   
+   char_size = bitfield->size / 8 + ((bitfield->size % 8) > 0 ? 1 : 0);
+   if((ret = packbuf(pb, bitfield->bf, char_size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
 /* ---------------------------------------------------------
 
    return values:
@@ -788,6 +865,7 @@ u_long32 buf_size
    DEXIT;
    return PACK_SUCCESS;
 }
+
 
 /* --------------------------------------------------------- */
 /*                                                           */
@@ -1098,6 +1176,64 @@ int buf_size
       pb->cur_ptr += buf_size;
    }
    pb->bytes_used += buf_size;
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
+/****** cull/pack/packbitfield() ****************************************************
+*  NAME
+*     unpackbitfield() -- unpack a bitfield 
+*
+*  SYNOPSIS
+*     int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield) 
+*
+*  FUNCTION
+*     Unpacks a bitfield from a packbuffer.
+*
+*  INPUTS
+*     sge_pack_buffer *pb - the source packbuffer
+*     bitfield *bitfield  - used to return the unpacked bitfield
+*
+*  RESULT
+*     int - PACK_SUCCESS on success,
+*           else PACK_* error codes
+*
+*  SEE ALSO
+*     uti/bitfield/--Bitfield
+*     cull/pack/packbitfield()
+*******************************************************************************/
+int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield)
+{
+   int ret;
+   u_long32 size, char_size;
+   char *buffer;
+
+   DENTER(PACK_LAYER, "unpackbitfield");
+
+   /* unpack the size in bits */
+   if((ret = unpackint(pb, &size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   /* create new bitfield */
+   *bitfield = sge_bitfield_new(size);
+   if(*bitfield == NULL) {
+      DEXIT;
+      return PACK_ENOMEM;
+   }
+
+   /* unpack contents of the bitfield */
+   char_size = size / 8 + ((size % 8) > 0 ? 1 : 0);
+   if((ret = unpackbuf(pb, &buffer, char_size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+ 
+   /* copy and free buffer */
+   memcpy((*bitfield)->bf, buffer, char_size);
+   free(buffer);
 
    DEXIT;
    return PACK_SUCCESS;

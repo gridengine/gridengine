@@ -38,6 +38,7 @@ UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
 UTILIB_SRC = sge_afsutil.c \
          sge_arch.c \
+         sge_bitfield.c \
          sge_bitop.c \
          sge_crc.c \
          sge_hostname.c \
@@ -167,6 +168,9 @@ sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 
 sge_htable.o:	$(UTILIB_DIR)/sge_htable.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_htable.c
+
+sge_bitfield.o:	$(UTILIB_DIR)/sge_bitfield.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitfield.c
 
 sge_dstring.o:	$(UTILIB_DIR)/sge_dstring.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_dstring.c

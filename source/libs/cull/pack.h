@@ -46,9 +46,55 @@
 extern "C" {
 #endif
 
+#include "sge_bitfield.h"
+
 #define CHUNK  (1024*1024)
 
-#define CULL_VERSION 0x10000000
+/****** cull/pack/-Versioncontrol ***************************************
+*
+*  NAME
+*     Versioncontrol -- handling of different cull versions
+*
+*  SYNOPSIS
+*     #define CULL_VERSION 0x10010000
+*
+*  FUNCTION
+*     Enhancements of the product may make it necessary to change the
+*     way how (in which format) data is represented for spooling and  
+*     communication.
+*
+*     To ensure that components of different cull versions, that cannot
+*     communicate, cleanly reject data of a different format, a cull
+*     version check has been implemented.
+*
+*     A cull version id has been introduced that will be checked when
+*     cull packbuffers are read.
+*
+*     Currently the 2 highest bytes of the 4 byte integer used to
+*     encode version information are used for a version number.
+*     The 2 lower bytes could be used to encode for example a 
+*     subversion / subprotocol like cull binary format (the current 
+*     implementation) and XML format.
+*
+*  NOTES
+*     Older Grid Engine versions that had no version controll cannot 
+*     properly handle messages with version information.
+*     Therefore the version information is preceeded by a 0 value
+*     4 byte integer, which will result in some sort of error handling
+*     for all known/used message formats.
+*
+*     Current CULL_VERSION:   0x10010000
+*                             Added information about attribute changes.
+*     
+*     Former  CULL_VERSIONs:  0x10000000
+*                             Introduction of version control.
+*
+*  SEE ALSO
+*     cull/pack/--CULL_Packing
+*
+****************************************************************************
+*/
+#define CULL_VERSION 0x10010000
 
 typedef struct {
 #ifdef COMMCOMPRESS
@@ -80,11 +126,13 @@ int packint(register sge_pack_buffer *, register u_long32);
 int packdouble(register sge_pack_buffer *, double);
 int packstr(register sge_pack_buffer *, register const char *);
 int packbuf(sge_pack_buffer *, char *, u_long32);
+int packbitfield(sge_pack_buffer *, bitfield);
 
 int unpackint(register sge_pack_buffer *, register u_long32 *);
 int unpackdouble(register sge_pack_buffer *, register double *);
 int unpackstr(register sge_pack_buffer *, register char **);
 int unpackbuf(sge_pack_buffer *, char **, int);
+int unpackbitfield(sge_pack_buffer *, bitfield *);
 
 void debugpack(int on_off); 
 

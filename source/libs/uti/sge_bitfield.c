@@ -33,6 +33,7 @@
 #include "sge_bitfield.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /****** uti/bitfield/--Bitfield ****************************************
 *  NAME

@@ -56,7 +56,7 @@ static void dump_eventlist(lList *event_list)
    lListElem *event;
    for_each(event, event_list) {
       fprintf(stdout, event_text(event));
-#if 0 /* EB: debug */
+#if 1 /* EB: debug */
       lWriteElemTo(event, stdout); 
 #endif
       switch(lGetUlong(event, ET_type)) {
@@ -72,8 +72,6 @@ static void dump_eventlist(lList *event_list)
       }
    }
 }
-
-#define TEST
 
 /************************************************************************/
 int main(int argc, char **argv)

@@ -2358,13 +2358,13 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
          } else {
             /* check timeouts */
             if ( elem->connection->read_buffer_timeout_time != 0) {
-               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
+               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE  ) {
                   CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
                }
             }
             if ( elem->connection->write_buffer_timeout_time != 0) {
-               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
+               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                   CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
                }
@@ -5172,6 +5172,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    cl_com_connection_t* connection = NULL;
    cl_connection_list_elem_t* elem = NULL;
    int message_added = 0;
+   int new_message_added = 0;
    unsigned long my_mid = 0;
    int return_value = CL_RETVAL_OK;
    cl_com_endpoint_t receiver;
@@ -5331,9 +5332,46 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                   message->message_sirm = NULL;
                   cl_com_free_message(&message);
                   cl_raw_list_unlock(connection->send_message_list);
+
+                  if (connection->ccm_received == 1) {
+                     CL_LOG(CL_LOG_INFO,"received ccm");
+              
+                     CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
+                     CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
+                     CL_LOG_INT(CL_LOG_WARNING,"ccm_received  :",(int)connection->ccm_received);
+           
+                     if( cl_raw_list_get_elem_count(connection->send_message_list) == 0 && 
+                         cl_raw_list_get_elem_count(connection->received_message_list) == 0 ) {
+                        connection->ccm_received = 2;
+                        connection->connection_sub_state = CL_COM_SENDING_CCRM;
+                        /* disable #if 1 if you want to test a client, that is frozen! */
+                        cl_commlib_send_ccrm_message(connection);
+                        new_message_added = 1;
+                        CL_LOG(CL_LOG_WARNING,"sending ccrm");
+                     } else {
+                        CL_LOG(CL_LOG_WARNING,"can't send ccrm, still messages in buffer");
+                     }
+                  }
+
+
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
                   CL_LOG_INT(CL_LOG_WARNING,"got SIRM for SIM with id:",(int)my_mid);
+
+                  if (new_message_added) {
+                     switch(cl_com_create_threads) {
+                        case CL_NO_THREAD:
+                           CL_LOG(CL_LOG_INFO,"no threads enabled");
+                           /* we just want to trigger write , no wait for read*/
+                           cl_commlib_trigger(handle);
+                           break;
+                        case CL_ONE_THREAD:
+                           /* we just want to trigger write , no wait for read*/
+                           cl_thread_trigger_event(handle->write_thread);
+                           break;
+                     }
+                  }
+
                   return CL_RETVAL_OK;
                } else {
                   CL_LOG_INT(CL_LOG_WARNING,"no SRIM for SIM with id", (int)my_mid);
@@ -6007,13 +6045,13 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                   } else {
                      /* check timeouts */
                      if ( elem->connection->read_buffer_timeout_time != 0) {
-                        if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
+                        if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                            elem->connection->connection_state = CL_CLOSING;
                         }
                      }
                      if ( elem->connection->write_buffer_timeout_time != 0) {
-                        if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
+                        if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                            elem->connection->connection_state = CL_CLOSING;
                         }
@@ -6336,13 +6374,13 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                         } else {
                            /* check timeouts */
                            if ( elem->connection->read_buffer_timeout_time != 0) {
-                              if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
+                              if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                                  CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                                  elem->connection->connection_state = CL_CLOSING;
                               }
                            }
                            if ( elem->connection->write_buffer_timeout_time != 0) {
-                              if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
+                              if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                                  CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                                  elem->connection->connection_state = CL_CLOSING;
                               }

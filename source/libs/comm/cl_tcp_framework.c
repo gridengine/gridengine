@@ -249,7 +249,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       struct timeval now;
       int res_port = IPPORT_RESERVED -1;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_INIT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_INIT");
       private->sockfd = -1;
       
       switch(connection->tcp_connect_mode) {
@@ -326,7 +326,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       int i;
       cl_bool_t connect_state = CL_FALSE;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT");
 
       errno = 0;
       i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
@@ -388,7 +388,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
       int    do_stop      = 0;
       fd_set writefds;
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
 
       while (do_stop == 0) {
          int select_back = 0;
@@ -457,7 +457,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECTED) {
       int on = 1; 
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECTED");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECTED");
 
   
 #if defined(SOLARIS) && !defined(SOLARIS64)
@@ -1504,15 +1504,28 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   }
                   break;
                case CL_OPENING:
-                  /* this is to come out of select when connection socket is ready to connect */
+                  CL_LOG_STR(CL_LOG_DEBUG,"connection_sub_state:", cl_com_get_connection_sub_state(connection));
                   switch(connection->connection_sub_state) {
-                     case CL_COM_OPEN_CONNECTED:
-                     case CL_COM_OPEN_CONNECT_IN_PROGRESS:
+                     case CL_COM_OPEN_INIT:
                      case CL_COM_OPEN_CONNECT: {
-                        if ( con_private->sockfd > 0 && do_read_select != 0) {
+                        if (do_read_select != 0) {
+                           connection->data_read_flag = CL_COM_DATA_READY;
+                        }
+                        break;
+                     }
+                     case CL_COM_OPEN_CONNECTED:
+                     case CL_COM_OPEN_CONNECT_IN_PROGRESS: {
+                        if (do_read_select != 0) {
+                           max_fd = MAX(max_fd,con_private->sockfd);
+                           FD_SET(con_private->sockfd,&my_read_fds); 
+                           nr_of_descriptors++;
+                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                        }
+                        if ( do_write_select != 0) {
                            max_fd = MAX(max_fd, con_private->sockfd);
                            FD_SET(con_private->sockfd,&my_write_fds);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                           connection->data_write_flag = CL_COM_DATA_READY;
                         } 
                         break;
                      }

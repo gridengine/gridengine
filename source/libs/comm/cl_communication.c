@@ -666,6 +666,7 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    (*connection)->data_read_flag = CL_COM_DATA_NOT_READY;
    (*connection)->fd_ready_for_write = CL_COM_DATA_NOT_READY;
    (*connection)->connection_state = CL_DISCONNECTED;
+   (*connection)->connection_sub_state = CL_COM_SUB_STATE_UNDEFINED;
    (*connection)->data_flow_type = CL_CM_CT_UNDEFINED;
    (*connection)->was_accepted = CL_FALSE;
    (*connection)->was_opened = CL_FALSE;
@@ -972,7 +973,12 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
 
    switch(connection->connection_state ) {
       case CL_DISCONNECTED: {
-         return "UNEXPECTED CONNECTION SUB STATE";
+         switch( connection->connection_sub_state ) {
+            case CL_COM_SUB_STATE_UNDEFINED:
+               return "CL_COM_SUB_STATE_UNDEFINED";
+            default:
+               return "UNEXPECTED CONNECTION SUB STATE";
+         }
       }
       case CL_CLOSING: {
          switch( connection->connection_sub_state ) {
@@ -990,6 +996,8 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_OPEN_CONNECT";
             case CL_COM_OPEN_CONNECTED:
                return "CL_COM_OPEN_CONNECTED";
+            case CL_COM_OPEN_CONNECT_IN_PROGRESS:
+               return "CL_COM_OPEN_CONNECT_IN_PROGRESS";
             case CL_COM_OPEN_SSL_CONNECT_INIT:
                return "CL_COM_OPEN_SSL_CONNECT_INIT";
             case CL_COM_OPEN_SSL_CONNECT:
@@ -1153,6 +1161,11 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
       CL_LOG(CL_LOG_ERROR,"unexpected connection state");
       return CL_RETVAL_CONNECTION_STATE_ERROR;
    }
+
+#if CL_DO_COMMUNICATION_DEBUG
+      CL_LOG_STR(CL_LOG_INFO,"connection state:    ",cl_com_get_connection_state(connection));
+      CL_LOG_STR(CL_LOG_INFO,"connection sub state:",cl_com_get_connection_sub_state(connection));
+#endif
 
    /* starting this function the first time */
    if (connection->connection_state == CL_DISCONNECTED) {

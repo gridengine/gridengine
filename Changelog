@@ -1,3 +1,9 @@
+CR-2005-01-25-0: Bugfix:    - fixed qping connect problem checked in with
+                              CR-2005-01-21-0
+                 Enhancem.: - qping to a running service (e.g. telnet) did
+                              not cancel when pressing CTRL + C.
+                 Review:    SG
+
 SG-2005-01-25-0: Bugfix:    the scheduler crashed in case of a restart and
                             a running MPI job.
                  Changed:   scheduler

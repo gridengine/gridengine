@@ -66,6 +66,7 @@ int sig
    printf("do_shutdown\n");
    /* shutdown all sockets */
    do_shutdown = 1;
+   cl_com_ignore_timeouts(CL_TRUE);
 }
 
 

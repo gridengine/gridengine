@@ -126,9 +126,11 @@ typedef enum cl_connection_state_type {
 
 /*connection types for cl_com_connection_t->connection_sub_state */
 typedef enum cl_connection_sub_state_type {
+   /* when CL_DISCONNECTED */
+   CL_COM_SUB_STATE_UNDEFINED = 1,
 
    /* when CL_COM_OPENING */
-   CL_COM_OPEN_INIT = 1,
+   CL_COM_OPEN_INIT, 
    CL_COM_OPEN_CONNECT,
    CL_COM_OPEN_CONNECT_IN_PROGRESS,
    CL_COM_OPEN_CONNECTED,

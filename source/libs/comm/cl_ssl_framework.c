@@ -304,7 +304,9 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_locking_callback()"
 static void cl_com_ssl_locking_callback(int mode, int type, const char *file, int line) {
+#if 0
    char tmp_buffer[1024];
+#endif
    const char* tmp_filename = "n.a.";
    /* 
     * locking cl_com_ssl_global_config_mutex would cause a deadlock
@@ -322,10 +324,11 @@ static void cl_com_ssl_locking_callback(int mode, int type, const char *file, in
    }
    if (cl_com_ssl_global_config_object != NULL) {
       if (mode & CRYPTO_LOCK) {
-         
+#if 0         
          snprintf(tmp_buffer,1024,"locking ssl object:   %d, file: %s, line: %d", 
                   type, tmp_filename, line);
-         CL_LOG(CL_LOG_INFO, tmp_buffer); 
+         CL_LOG(CL_LOG_DEBUG, tmp_buffer); 
+#endif
 
          if (type < cl_com_ssl_global_config_object->ssl_lib_lock_num) {
             pthread_mutex_lock(&(cl_com_ssl_global_config_object->ssl_lib_lock_mutex_array[type]));
@@ -333,9 +336,11 @@ static void cl_com_ssl_locking_callback(int mode, int type, const char *file, in
             CL_LOG(CL_LOG_ERROR,"lock type is larger than log array");
          }
       } else {
+#if 0
          snprintf(tmp_buffer,1024,"unlocking ssl object: %d, file: %s, line: %d", 
                   type, tmp_filename, line);
-         CL_LOG(CL_LOG_INFO,tmp_buffer); 
+         CL_LOG(CL_LOG_DEBUG,tmp_buffer); 
+#endif
          if (type < cl_com_ssl_global_config_object->ssl_lib_lock_num) {
             pthread_mutex_unlock(&(cl_com_ssl_global_config_object->ssl_lib_lock_mutex_array[type]));
          } else {
@@ -1807,7 +1812,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       int res_port = IPPORT_RESERVED -1;
 
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_INIT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_INIT");
       private->sockfd = -1;
   
       if( (tmp_error=cl_com_ssl_setup_context(connection, CL_FALSE)) != CL_RETVAL_OK) {
@@ -1887,7 +1892,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       int i;
       cl_bool_t connect_state = CL_FALSE;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT");
 
       errno = 0;
       i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
@@ -1949,7 +1954,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
       int do_stop = 0;
       fd_set writefds;
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
 
       while (do_stop == 0) {
          int select_back = 0;
@@ -2019,7 +2024,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECTED) {
       int on = 1; 
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECTED");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECTED");
 
   
 #if defined(SOLARIS) && !defined(SOLARIS64)
@@ -2037,7 +2042,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_SSL_CONNECT_INIT) {
       struct timeval now;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_SSL_CONNECT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_SSL_CONNECT");
       /* now connect the tcp socket to SSL socket */
 
       /* create a new ssl object */
@@ -2078,7 +2083,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       int ssl_error = 0;
       struct timeval now;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_SSL_CONNECT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_SSL_CONNECT");
 
        /* now do a SSL Connect */
       ssl_connect_error = cl_com_ssl_func__SSL_connect(private->ssl_obj);
@@ -2628,15 +2633,28 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 
 
                case CL_OPENING:
-                  /* this is to come out of select when connection socket is ready to connect */
+                  CL_LOG_STR(CL_LOG_DEBUG,"connection_sub_state:", cl_com_get_connection_sub_state(connection));
                   switch(connection->connection_sub_state) {
-                     case CL_COM_OPEN_CONNECTED:
-                     case CL_COM_OPEN_CONNECT_IN_PROGRESS:
+                     case CL_COM_OPEN_INIT:
                      case CL_COM_OPEN_CONNECT: {
-                        if ( con_private->sockfd > 0 && do_read_select != 0) {
+                        if (do_read_select != 0) {
+                           connection->data_read_flag = CL_COM_DATA_READY;
+                        }
+                        break;
+                     }
+                     case CL_COM_OPEN_CONNECTED:
+                     case CL_COM_OPEN_CONNECT_IN_PROGRESS: {
+                        if (do_read_select != 0) {
+                           max_fd = MAX(max_fd,con_private->sockfd);
+                           FD_SET(con_private->sockfd,&my_read_fds); 
+                           nr_of_descriptors++;
+                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                        }
+                        if ( do_write_select != 0) {
                            max_fd = MAX(max_fd, con_private->sockfd);
                            FD_SET(con_private->sockfd,&my_write_fds);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                           connection->data_write_flag = CL_COM_DATA_READY;
                         }
                         break;
                      }

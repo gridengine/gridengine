@@ -98,6 +98,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST;
      case OA_JOB_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST; 
+     case OA_JOB_IDENTIFIER_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST; 
      case OA_JOB_QUEUE_DEST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST; 
      case OA_LISTNAME_LIST:
@@ -551,7 +553,7 @@ FILE *fp
 
    if (VALID_OPT(hold_jid_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_hold_jid_OPT , MSG_GDI_UTEXT_hold_jid_OPT );
-      MARK(OA_JOB_ID_LIST);
+      MARK(OA_JOB_IDENTIFIER_LIST);
    }
 
    if (VALID_OPT(inherit_OPT, me.who)) {

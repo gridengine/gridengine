@@ -32,10 +32,20 @@
 ##########################################################################
 #___INFO__MARK_END__
 #
-# This is a sample script to demonstrate use of job dependencies. 
+# This is a sample script to demonstrate use of job dependencies. The 
+# sample submits one job for each node in the pascal triangle: 
 #
-# The sample submits one job for each node in the pascal triangle. Data 
-# exchange between jobs is done via files in jobnet_dir. 
+#                        1               depth 1
+#                       / \
+#                      1   1             depth 2
+#                     / \ / \
+#                    1   2   1           depth 3
+#                   / \ / \ / \
+#                  1   3   3   1         depth 4
+#                  
+#                  :   :   :   :
+#
+# Data exchange between jobs is done via files in jobnet_dir. 
 #
 # Usage: pascal.sh <depth of pascal triangle>
 

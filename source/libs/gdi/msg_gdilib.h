@@ -257,6 +257,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name}[,{job_id|job_name},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST        "listname_list           listname[,listname,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
@@ -486,8 +487,8 @@
 #define MSG_GDI_USAGE_help_OPT                           "[-help]"
 #define MSG_GDI_UTEXT_help_OPT                           _("print this help")
 
-#define MSG_GDI_USAGE_hold_jid_OPT                       "[-hold_jid]"
-#define MSG_GDI_UTEXT_hold_jid_OPT                       _("define job dependencies")
+#define MSG_GDI_USAGE_hold_jid_OPT                       "[-hold_jid job_identifier_list]"
+#define MSG_GDI_UTEXT_hold_jid_OPT                       _("define jobnet interdependencies")
 
 #define MSG_GDI_USAGE_j_OPT_YN                           "[-j y|n]"
 #define MSG_GDI_UTEXT_j_OPT_YN                           _("merge stdout and stderr stream of job")

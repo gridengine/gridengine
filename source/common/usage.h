@@ -37,7 +37,7 @@
 /* 
    for use in mark_argument_syntax() calls:
 
-   these values korrespond to an array of 
+   these values correspond to an array of 
    argument syntax description texts in usage.c
 
    note: both are sorted alphabetically (array and enum)
@@ -53,6 +53,7 @@ enum {
    OA_HOLD_LIST,
    OA_HOST_ID_LIST,
    OA_JOB_ID_LIST,
+   OA_JOB_IDENTIFIER_LIST,
    OA_JOB_QUEUE_DEST,
    OA_LISTNAME_LIST,
    OA_MAIL_ADDRESS,

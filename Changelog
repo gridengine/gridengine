@@ -1,4 +1,7 @@
-AH-2002-04-29-1: Enhancem.  make maxujobs limitation work SGE and SGEEE mode
+JG-2002-04-29-1: Enhancem.: Contribution of Guiseppe Palumbo: Make the
+                            ibm-loadsensor script work with AIX 5.1.0
+
+AH-2002-04-29-1: Enhancem.: make maxujobs limitation work SGE and SGEEE mode
 
 CR-2002-04-29-1: Testsuite: - check if qmaster/scheduler are alive before starting
                               any test

@@ -1290,9 +1290,10 @@ lListElem *ep
 
    case SGE_EXECHOST_LIST:
       
-      /* host must be SGE_ADMINHOST_LIST */
-      if ( strcmp(commproc, prognames[EXECD]) && 
-            !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+      /* host must be either admin host or exec host and execd */
+
+      if (!(sge_locate_host(host, SGE_ADMINHOST_LIST) ||
+         (sge_locate_host(host, SGE_EXECHOST_LIST) && !strcmp(commproc, prognames[EXECD])))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
          DEXIT;
@@ -1371,7 +1372,6 @@ char *commproc
    case SGE_QUEUE_LIST:
    case SGE_COMPLEX_LIST:
    case SGE_PE_LIST:
-   case SGE_CONFIG_LIST:
    case SGE_SC_LIST:
    case SGE_USER_LIST:
    case SGE_USERSET_LIST:
@@ -1387,9 +1387,21 @@ char *commproc
    case SGE_ZOMBIE_LIST:
    case SGE_JOB_SCHEDD_INFO:
       
-      /* host must be SGE_ADMINHOST_LIST */
+      /* host must be admin or submit host */
       if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
            !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         DEXIT;
+         return 1;
+      }
+      break;
+
+   case SGE_CONFIG_LIST:
+      /* host must be admin or submit host or exec host */
+      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
+           !sge_locate_host(host, SGE_SUBMITHOST_LIST) &&
+           !sge_locate_host(host, SGE_EXECHOST_LIST)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
          DEXIT;

@@ -37,7 +37,7 @@
 umask 022
 
 BASEDIR=/dist/SGEDIST
-MANUALPDF=/dist/SGEDIST/gridengine-download/www/SGE5_3alpha.pdf
+MANUALPDF=/scratch1/as114086/gridengine-download/www/SGE5_3alpha.pdf
 VERSIONDIR=SGE53
 SGE_PRODUCT_MODE=ge
 

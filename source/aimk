@@ -253,7 +253,7 @@ set   FC           = f77
 set   LFLAGS       = "-L."
 set   LIBS         = "-lm"
 set   OPTIMIZATION = 0
-set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.11"
+set   GETTEXTBASE = "$SOURCE/3rdparty/gettext"
 set   MAKEZLIB    = 0
 set   TPLIB       = ""	# 3rdparty libs
 set   MAKESTRPTIME = 0
@@ -269,7 +269,7 @@ set   ARFLAGS     = rscv
 set   MAKE        = make
 set   PARALLEL    = ""
 set   USE_QMAKE   = 0
-set   MESSAGES    = "../dist/locale/gridengine.pot"
+set   MESSAGES    = "../dist/locale/gridenginenotuniq.pot"
 set   MESSAGES_BIN = "gridengine.mo"
 set   SGE_DEPEND  = 0
 set   QMON        = 1
@@ -629,7 +629,7 @@ while ($#argv >= 1 && $?found)
       set PERLGUI_CLEAN = "perlgui_clean"
       breaksw
    case  "-po"
-      if ( $BUILDARCH == glinux ) then
+      if ( $buildarch == glinux ) then
          scripts/msgmerge.csh merge
          echo ""
          echo "==========READY FOR TRANSLATION========="
@@ -639,6 +639,12 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-pot"
       $0 -intl -only-core messages
+      echo "Adding script messages"
+      setenv BUILDARCH $BUILDARCH
+      $TCLSH scripts/infotext_msg_parse.tcl -F /tmp/scripts.pot dist/inst_sge
+      echo "Concatenating pot files"
+      cat /tmp/scripts.pot >> dist/locale/gridenginenotuniq.pot
+      rm /tmp/scripts.pot
       exit 0
       breaksw
    case "-pr-geee":  
@@ -1496,7 +1502,7 @@ endif
 if ( "$BUILDGETTEXT" == 1 ) then
    echo ________G_E_T_T_E_X_T___________
 
-   cd $SOURCE/3rdparty/gettext-0.11
+   cd $SOURCE/3rdparty/gettext
    $SOURCE/scripts/install.gridware $COMPILE_ARCH
    if ( $status != 0 ) then
       echo not done

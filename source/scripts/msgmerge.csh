@@ -32,15 +32,25 @@
 #___INFO__MARK_END__
 
 set cmd = $1 
-set ARCH = `./aimk -nomk`
-set MSGMERGE = /home/codine/gettext/${ARCH}/bin/msgmerge
+setenv ARCH `./aimk -no-mk`
+set MSGMERGE = ./3rdparty/gettext/${ARCH}/bin/msgmerge
+set MSGFMT = ./3rdparty/gettext/${ARCH}/bin/msgfmt
+set MSGUNIQ = ./3rdparty/gettext/${ARCH}/bin/msguniq
+#set MSGFMT = /usr/bin/msgfmt
 #set MSGFMT = /home/codine/gettext/${ARCH}/bin/msgfmt
-set MSGFMT = /usr/bin/msgfmt
-set LOCALEDIR = "./locale"
+#set MSGFMT = /usr/bin/msgfmt
+set LOCALEDIR = "./dist/locale"
 set LANGUAGES = "de en en_FW.MBE en_FW.ASCII"
 set MSGPO = "gridengine.po"
 set MSGMO = "gridengine.mo"
 set MSGPOT = "gridengine.pot"
+set MSGPOTNOTUNIQ = "gridenginenotuniq.pot"
+
+# uniq the pot file
+sed 's/charset=CHARSET/charset=ascii/' ${LOCALEDIR}/${MSGPOTNOTUNIQ} > /tmp/${MSGPOTNOTUNIQ}
+$MSGUNIQ -o "${LOCALEDIR}/${MSGPOT}" "/tmp/${MSGPOTNOTUNIQ}"
+rm "/tmp/${MSGPOTNOTUNIQ}"
+
 
 if ( $cmd == "merge") then
    foreach I ($LANGUAGES)
@@ -56,7 +66,6 @@ if ( $cmd == "merge") then
       else
          cp ${LOCALEDIR}/${MSGPOT} ${LOCALEDIR}/${I}/LC_MESSAGES/${MSGPO} 
       endif
-
    end
    echo ""
    echo "######################################################################"
@@ -68,7 +77,6 @@ if ( $cmd == "merge") then
    echo "# If you think a fuzzy translation is correct then remove the fuzzy  #"
    echo "# comment. Thank you.                                                #"
    echo "######################################################################"
-
 else
    if ( $ARCH == "SOLARIS" || $ARCH == "SOLARIS64" ) then
       foreach I ($LANGUAGES)

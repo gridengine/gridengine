@@ -1,3 +1,7 @@
+AS-2005-01-25-1  Bugfix:    set file permissions in destination directory"
+                 Changed:   scripts/distinst
+                 Review:    MD
+
 AA-2005-01-24-0: Bugfix:    labels of AFS section shwon twice
                  Changed:   qmon
 

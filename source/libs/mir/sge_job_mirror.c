@@ -145,7 +145,6 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "job_update_master_list");
 
    list = &Master_Job_List;
-/*   list_descr = JB_Type;*/
    list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
    job_id = lGetUlong(event, ET_intkey);
    job = job_list_locate(*list, job_id);
@@ -160,12 +159,6 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
          return false;
       }
 
-#if 0
-      if (event_type == sgeE_JOB_FINISH) {
-         /* no direct impact on master list */
-         ;
-      } else
-#endif
       if (event_type == sgeE_JOB_USAGE || event_type == sgeE_JOB_FINAL_USAGE ) {
          /* special handling needed for JOB_USAGE and JOB_FINAL_USAGE events.
          * they are sent for jobs, ja_tasks and pe_tasks and only contain
@@ -190,7 +183,8 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
 
           modified_job = lFirst(lGetList(event, ET_new_version));
           if(job != NULL && modified_job != NULL) {
-            lXchgList(modified_job, JB_ja_tasks, &ja_tasks);
+            /* we want to preserve the old ja_tasks, sinece job update events to not contain them */
+            lXchgList(job, JB_ja_tasks, &ja_tasks);
             lSetHost(modified_job, JB_host, lGetHost(job, JB_host));
             lSetRef(modified_job, JB_category, lGetRef(job, JB_category));
           }
@@ -198,7 +192,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
    }
 
    if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL), action, event) != SGE_EM_OK) {
-      lFreeList(ja_tasks);
+      ja_tasks = lFreeList(ja_tasks);
       DEXIT;
       return false;
    }
@@ -210,7 +204,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
       if(job == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
                 job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
-         lFreeList(ja_tasks);
+         ja_tasks = lFreeList(ja_tasks);
          DEXIT;
          return false;
       }

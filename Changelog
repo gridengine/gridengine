@@ -1,3 +1,14 @@
+SG-2004-05-05-1: Bugfix:    event master:
+                            - event ack are processed before a client can
+                              deregister
+                            - a client will not get events, after it got a
+                              shutdown event
+                            - in case of job_mod and cqueue_mod events are 
+                              the sub-lists (ja_tasks / qinstance) removed
+                              from the event.
+                 Review:    DT
+                 Changed:   qmaster, scheduler
+
 CR-2004-05-05-2: Testsuite: debug_starter.sh did not set SGE_ND 
 
 CR-2004-05-05-1: Bugfix:    o qmaster not responding (no client will receive a 

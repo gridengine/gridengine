@@ -69,6 +69,12 @@ typedef enum {
    EV_THROTTLE_FLUSH
 } ev_busy_handling;
 
+typedef enum {
+   EV_subscribing = 0,
+   EV_connected,
+   EV_closing,
+   EV_terminated
+} ev_state_handling;
 
 /* documentation see libs/evc/sge_event_client.c */
 enum {
@@ -106,7 +112,8 @@ enum {
    EV_sub_array,             /* contains an array of subscribed events, only used in qmaster */      
    
    /* for free use */
-   EV_clientdata             /* can be used by client or master for any purposes */
+   EV_clientdata,             /* can be used by client or master for any purposes */
+   EV_state                   /* identifies the state the event client is in. Sofar we have: connected, closing, terminated */
 };
 
 LISTDEF(EV_Type)
@@ -135,6 +142,7 @@ LISTDEF(EV_Type)
    SGE_REF(EV_sub_array, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 
    SGE_ULONG(EV_clientdata, CULL_DEFAULT)
+   SGE_ULONG(EV_state, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(EVN)
@@ -163,6 +171,7 @@ NAMEDEF(EVN)
    NAME("EV_sub_array")
 
    NAME("EV_clientdata")
+   NAME("EV_state")
 NAMEEND
 
 #define EVS sizeof(EVN)/sizeof(char*)

@@ -223,17 +223,17 @@ typedef struct {
 
 const int EVENT_LIST[LIST_MAX][6] = {
    {sgeE_JOB_LIST, sgeE_JOB_ADD, sgeE_JOB_DEL, sgeE_JOB_MOD, sgeE_JOB_MOD_SCHED_PRIORITY, -1},
-   {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1},
+   {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1}
 };
 
 const int FIELD_LIST[LIST_MAX][3] = {
    {JB_ja_tasks, JB_ja_template, -1},
-   {CQ_qinstances, -1, -1},
+   {CQ_qinstances, -1, -1}
 };
 
 const int SOURCE_LIST[LIST_MAX][3] = {
    {sgeE_JATASK_MOD, sgeE_JATASK_ADD, -1},
-   {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1},
+   {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1}
 };
 
 /********************************************************************
@@ -258,19 +258,6 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  *******************************************************************/
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
-/* Just skipping this client until the next pass could result in starvation if a
- * series of events falls in sync with the attempts to send events.  To get
- * around the starvation issue, I've implemented this redo list that gives busy
- * clients another chance.  However, complexity is bad, so until we can show
- * that it's needed, it would be better to leave it out. */
-/* It's looking like it may be needed, so I'm including it. */
-/* #define USE_REDO_LIST */
-
-/* See comments on USE_REDO_LIST define above. */
-#ifdef USE_REDO_LIST
-#define REDO_SIZE 5
-#endif
-
 static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_COND_INITIALIZER, 
                                                 PTHREAD_COND_INITIALIZER, 
@@ -294,6 +281,7 @@ static void       send_events(lListElem *report, lList *report_list);
 static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*);
 static void       build_subscription(lListElem*);
+static void       remove_event_client(lListElem *client, int aClientID);
 static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
 static int        eventclient_subscribed(const lListElem *, ev_event, const char*);
 static int        purge_event_list(lList* aList, ev_event anEvent); 
@@ -498,6 +486,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    lSetUlong(ep, EV_last_send_time, 0);
    lSetUlong(ep, EV_next_send_time, now + lGetUlong(ep, EV_d_time));
    lSetUlong(ep, EV_last_heard_from, now);
+   lSetUlong(ep, EV_state, EV_connected);
 
    /* return new event client object to event client */
    if (eclpp != NULL) {
@@ -683,6 +672,8 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       lSetUlong(event_client, EV_busy, busy);
    }
 
+   lSetUlong(event_client, EV_state, EV_connected);
+
    DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
          ruser, rhost, lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -766,8 +757,6 @@ bool sge_event_client_registered(u_long32 aClientID)
 *******************************************************************************/
 void sge_remove_event_client(u_long32 aClientID) {
    lListElem *client;
-   int i;
-   subscription_t *old_sub = NULL;
 
    DENTER(TOP_LAYER, "sge_remove_event_client");
 
@@ -804,33 +793,7 @@ void sge_remove_event_client(u_long32 aClientID) {
       
       return;
    }
-
-   old_sub = lGetRef(client, EV_sub_array);
-
-   INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(client, EV_name),
-         u32c(lGetUlong(client, EV_id))));
-
-   if (old_sub) {
-      for (i=0; i<sgeE_EVENTSIZE; i++){ 
-         if (old_sub[i].where)
-            lFreeWhere(old_sub[i].where);
-         if (old_sub[i].what)
-            lFreeWhat(old_sub[i].what);
-         if (old_sub[i].descr){
-            cull_hash_free_descr(old_sub[i].descr);
-            free(old_sub[i].descr);
-         }
-      } 
-
-      free(old_sub);
-      lSetRef(client, EV_sub_array, NULL);
-   }
-
-   set_event_client (aClientID, NULL);
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-   lRemoveElem(Master_Control.clients, client);
-   Master_Control.indices_dirty = true;
-   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   lSetUlong(client, EV_state, EV_terminated);
 
    /* We have to remove the entry from the list before we release the client
     * lock.  Otherwise there will be a gap where the array will have a NULL
@@ -1348,12 +1311,30 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
    const char *session, lListElem *element) 
 {
    lList *lp = NULL;
+   lList *temp_sub_lp = NULL;
+   int sub_list_elem = 0;
    
    pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (element != NULL) {
-      lp = lCreateListHash("Events", lGetElemDescr(element), false);   
+      /* ignore the sublist in case of the following events. We have
+         extra events to handle the sub-lists */
+      if (type == sgeE_JOB_MOD) {
+         sub_list_elem = JB_ja_tasks;
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
+      else if(type == sgeE_CQUEUE_MOD) {
+         sub_list_elem = CQ_qinstances;
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
+      
+      lp = lCreateListHash("Events", lGetElemDescr(element), false);       
       lAppendElem (lp, lCopyElemHash(element, false));
+
+      /* restore the original event object */
+      if (temp_sub_lp != NULL) {
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
    }
    
    return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
@@ -1376,24 +1357,26 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
 *  INPUTS
 *     u_long32 aClientID   - event client id 
 *     u_long32 aTimestamp  - event delivery time, 0 -> deliver now 
-*     ev_event anID        - event id 
+*     ev_event type        - event id 
 *     u_long32 anIntKey1   - 1st numeric key 
 *     u_long32 anIntKey2   - 2nd numeric key 
 *     const char *aStrKey1 - 1st alphanumeric key 
 *     const char *aStrKey2 - 2nd alphanumeric key 
 *     const char *aSession - event session 
-*     lListElem *anObject  - object to be delivered with the event 
+*     lListElem *element   - object to be delivered with the event 
 *
 *  NOTES
 *     MT-NOTE: sge_add_event_for_client() is not MT safe 
 *
 *******************************************************************************/
-bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event anID, u_long32 anIntKey1, 
+bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event type, u_long32 anIntKey1, 
                               u_long32 anIntKey2, const char *aStrKey1, const char *aStrKey2, 
-                              const char *aSession, lListElem *anObject)
+                              const char *aSession, lListElem *element)
 {
    lList *lp = NULL;
-   
+   lList *temp_sub_lp = NULL;
+   int sub_list_elem =0; 
+
    DENTER (TOP_LAYER, "sge_add_event_for_client");
    
    pthread_once(&Event_Master_Once, event_master_once_init);
@@ -1409,13 +1392,29 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
       return false;
    }
    
-   if (anObject != NULL) {
-      lp = lCreateListHash("Events", lGetElemDescr(anObject), false);
-      lAppendElem (lp, lCopyElemHash(anObject, false));
+   if (element!= NULL) {
+      /* ignore the sublist in case of the following events. We have
+         extra events to handle the sub-lists */
+      if (type == sgeE_JOB_MOD) {
+         sub_list_elem = JB_ja_tasks;
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
+      else if(type == sgeE_CQUEUE_MOD) {
+         sub_list_elem = CQ_qinstances;
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }
+      
+      lp = lCreateListHash("Events", lGetElemDescr(element), false);       
+      lAppendElem (lp, lCopyElemHash(element, false));
+
+      /* restore the original event object */
+      if (temp_sub_lp != NULL) {
+         lXchgList(element, sub_list_elem, &temp_sub_lp);
+      }      
    }
    
    DEXIT;
-   return add_list_event_for_client (aClientID, aTimestamp, anID, anIntKey1, anIntKey2,
+   return add_list_event_for_client (aClientID, aTimestamp, type, anIntKey1, anIntKey2,
                                      aStrKey1, aStrKey2, aSession, lp, false);
 }
 
@@ -1455,11 +1454,35 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
                         const char *strkey2, const char *session, lList *list) 
 {
    lList *lp = NULL;
-   
+   lList *temp_sub_lp = NULL;
+   int sub_list_elem = 0;
+   lListElem *element = NULL;   
    pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (list != NULL) {
-      lp = lCopyListHash(lGetListName (list), list, false);
+      lp = lCreateListHash("Events", lGetElemDescr(element), false); 
+
+      for_each(element, list) {
+      
+         /* ignore the sublist in case of the following events. We have
+            extra events to handle the sub-lists */
+         if (type == sgeE_JOB_MOD) {
+            sub_list_elem = JB_ja_tasks;
+            lXchgList(element, sub_list_elem, &temp_sub_lp);
+         }
+         else if(type == sgeE_CQUEUE_MOD) {
+            sub_list_elem = CQ_qinstances;
+            lXchgList(element, sub_list_elem, &temp_sub_lp);
+         }
+         
+         lp = lCreateListHash("Events", lGetElemDescr(element), false);       
+         lAppendElem(lp, lCopyElemHash(element, false));
+
+         /* restore the original event object */
+         if (temp_sub_lp != NULL) {
+            lXchgList(element, sub_list_elem, &temp_sub_lp);
+         }
+      }
    }
    
    return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
@@ -1624,16 +1647,6 @@ static void process_sends ()
    while (send != NULL) {
       send = lDechainElem (Master_Control.send_events, send);
       
-/* See comment on ifdef below. */
-#if 0
-      /* It's OK that we calculate this here and use it later because we don't
-       * need to be terribly exact.  The worst that can happen is that we block
-       * for a client when we could have just moved on to another event.  The
-       * reason we calculate it here is to keep from having to lock and unlock
-       * again later. */
-      num_events = lGetNumberOfElem (Master_Control.send_events);
-#endif
-      
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
    
       ec_id = lGetUlong (send, EV_id);
@@ -1655,43 +1668,7 @@ static void process_sends ()
 
                DPRINTF (("Preparing event for client %ld\n", ec_id));
 
-/* Using soft locks, i.e. lock_client (id, false), can cause events to get out
- * of order.  At the moment, they really aren't needed because only one thread
- * is working on clients on a regular basis.  This may, however, be needed in
- * the future, at which point the ordering problem will have to be solved. */
-#if 1
                lock_client (ec_id, true);
-#else
-               /* If the client is locked, make a copy of just this event for just
-                * this client and put it at the end of the list.  The next time
-                * through the loop, it will end up in the part that deals with
-                * events targeted at a specific event client. */
-               if (!lock_client (ec_id, false)) {
-                  lListElem *copy = NULL;
-                  lList *lcopy = NULL;
-                  lListElem *ecopy = NULL;
-                  
-                  DPRINTF (("Client %d is locked.  Putting event back on queue.\n", ec_id));
-
-                  /* Make a copy of the event for this client */
-                  ecopy = lCopyElemHash (event, false);                  
-                  copy = lCreateElem(EV_Type);
-                  lcopy = lCreateListHash ("Event_List", ET_Type, false);
-                  /* Set the EV_id to this client's id. */
-                  lSetUlong (copy, EV_id, ec_id);
-                  lSetString (copy, EV_session, session);
-                  lSetList (copy, EV_events, lcopy);
-                  lAppendElem (lcopy, ecopy);
-                  
-                  sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-
-                  lAppendElem (Master_Control.send_events, copy);
-
-                  sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-
-                  continue; /* for */
-               } /* if */
-#endif
                
                event_client = get_event_client (ec_id);
                
@@ -1702,114 +1679,14 @@ static void process_sends ()
                   continue; /* while */
                }
 
-/* This is the default, non-optimized way of doing things. */
-#if 1
                if (eventclient_subscribed(event_client, type, session)) {
                   add_list_event_direct (event_client, event, true);
                }
                
                unlock_client (ec_id);
-/* This is an attempt to make things faster by reusing the original event
- * instead of making a copy whereever possible.  This creates, however, the
- * need to lock each element twice. */
-#else
-#   if 0
-               if (eventclient_subscribed(event_client, type, session)) {
-                  /* Unlock this client so we can lock the next one. */
-                  unlock_client (ec_id);
-                  
-                  /* I am adding events in an off-by-one fashion because I don't
-                   * want to make a copy if I don't have to.  If an event is
-                   * going to n clients, the first n-1 have to get copies, but
-                   * the nth client can get the orignial.  Even more important,
-                   * if there is only one client, it should always get the
-                   * original.  We cannot know in advance how many clients are
-                   * subscribed for this event.  Instead of looping through once
-                   * to figure that out, and then looping through again to send
-                   * the event off, I don't let an event go until I know that
-                   * there's another client coming that also wants this event.
-                   * That means in the loop I can always make a copy of the
-                   * event since I know that there will always be one more
-                   * coming, and after the loop I can always use the original
-                   * since I know it's the nth client. */
-                  /* This off-by-one scheme makes the locking work oddly, too.
-                   * Each subscribed client will be locked and unlocked twice.
-                   * This means that there is a chance the event client could
-                   * be removed between unlocking and locking again.  This
-                   * double locking is required because otherwise, this loop 
-                   * must hold each lock until the client is processed in the
-                   * next loop iteration, resulting in the thread holding two
-                   * client locks, which can cause a deadlock with
-                   * lock_all_clients(). */
-                  if (ev_buffer != NULL) {
-                     lock_client (id_buffer, true);
-                     
-                     /* Make sure that the event client wasn't removed since we
-                      * last held the lock. */
-                     if (get_event_client (id_buffer) != NULL) {
-                        add_list_event_direct (ev_buffer, et_buffer, true,
-                                               true);
-                     }
-                     
-                     unlock_client (id_buffer);
-                  }
-                  
-                  ev_buffer = event_client;
-                  et_buffer = event;
-                  id_buffer = ec_id;
-               } /* if */
-               else {
-                  unlock_client (ec_id);
-               }
-/* This is a cheaper way of doing the same thing as above.  Instead of needing
- * to lock each client twice, we do a simple comparison.  This is much cheaper
- * to test, and in the usual case of just one event client, i.e. the scheduler,
- * it will achieve the same results.  When there is more than one event client,
- * the comparison becomes a little more expensive, and the optimization is lost.
- * There is a third way of doing this, which is to loop through the entire list
- * once to see who's subscribed, and then to loop through the subscribed list
- * to process the events.  In this way, we know which is the last client and
- * can reuse the original event for that client, but we double two loops. */
-#   else
-               if (eventclient_subscribed(event_client, type, session)) {
-                  /* If the count is 1, that means that we're actually working
-                   * on the first element.  (Count gets incremented after we
-                   * use it to get the ec_id.) */
-                  if ((count == 1) &&
-                      (Master_Control.clients_indices[count] == 0)) {
-                     /* If this is the first element, and there is no next
-                      * element, just reuse the event. */
-                     add_list_event_direct (ev_buffer, et_buffer, false);
-                  }
-                  else {
-                     add_list_event_direct (ev_buffer, et_buffer, true);
-                  }
-               }
-               
-               unlock_client (ec_id);
-#   endif
-#endif
+
             } /* while */
 
-/* See comment on #if above. */
-#if 0
-            /* Send the original event to the nth client.  See the comment
-             * above. */
-            if (ev_buffer != NULL) {
-               ec_id = id_buffer;
-               lock_client (ec_id, true);
-               add_list_event_direct (ev_buffer, et_buffer, false);
-               unlock_client (ec_id);
-
-               /* We can't free the event when we're done because it now belongs
-                * to send_events(). */
-               
-               /* Clear these out for next time. */
-               id_buffer = 0;
-               ev_buffer = NULL;
-               et_buffer = NULL;
-            }
-#endif
             event = lFreeElem(event);
             event = lFirst (event_list);
          } /* while */
@@ -1817,30 +1694,7 @@ static void process_sends ()
       else {
          DPRINTF (("Processing event for client %d.\n", ec_id));
 
-/* Using soft locks, i.e. lock_client (id, false), can cause events to get out
- * of order.  At the moment, they really aren't needed because only one thread
- * is working on clients on a regular basis.  This may, however, be needed in
- * the future, at which point the ordering problem will have to be solved. */
-#if 1
          lock_client (ec_id, true);
-#else         
-         /* If the client is locked, put this entry at the end of the list. */
-         /* If this is the only client in the list, to avoid a spinlock we
-          * wait for the lock to become available. */
-         if (num_events == 0) {
-            lock_client (ec_id, true);
-         }
-         else if (!lock_client (ec_id, false)) {
-            sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-
-            /* This is OK because we're skipping the part that frees send. */
-            lAppendElem (Master_Control.send_events, send);
-
-            sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-
-            continue; /* while */
-         } /* if */
-#endif
 
          event_client = get_event_client (ec_id);
 
@@ -2521,6 +2375,67 @@ static bool should_exit(void)
    return res;
 } /* should_exit() */
 
+
+
+/****** sge_event_master/remove_event_client() *********************************
+*  NAME
+*     remove_event_client() -- removes an event client
+*
+*  SYNOPSIS
+*     static void remove_event_client(lListElem *client, int aClientID) 
+*
+*  FUNCTION
+*     removes a event client, marks the index as dirty and frees the memory
+*
+*  INPUTS
+*     lListElem *client - event client to remove
+*     int aClientID     - event client id to remove
+*
+*  NOTES
+*     MT-NOTE: remove_event_client() is not MT safe
+*     - it locks the event master mutex to modify the event client list
+*     - it assums that the event client is locked before this method is called
+*
+*******************************************************************************/
+static void remove_event_client(lListElem *client, int aClientID) {
+   subscription_t *old_sub = NULL;
+   int i;
+
+   DENTER(TOP_LAYER, "remove_event_client");
+
+   old_sub = lGetRef(client, EV_sub_array);
+
+   INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(client, EV_name),
+         u32c(lGetUlong(client, EV_id))));
+
+   if (old_sub) {
+      for (i=0; i<sgeE_EVENTSIZE; i++){ 
+         if (old_sub[i].where)
+            lFreeWhere(old_sub[i].where);
+         if (old_sub[i].what)
+            lFreeWhat(old_sub[i].what);
+         if (old_sub[i].descr){
+            cull_hash_free_descr(old_sub[i].descr);
+            free(old_sub[i].descr);
+         }
+      } 
+
+      free(old_sub);
+      lSetRef(client, EV_sub_array, NULL);
+   }
+
+   set_event_client (aClientID, NULL);
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   lRemoveElem(Master_Control.clients, client);
+   Master_Control.indices_dirty = true;
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DEXIT;
+   return;
+}
+
+
+
 /****** evm/sge_event_master/send_events() *************************************
 *  NAME
 *     send_events() -- send events to event clients 
@@ -2561,108 +2476,19 @@ static void send_events(lListElem *report, lList *report_list) {
    time_t now = time(NULL);
    u_long32 ec_id = 0;
    int count = 0;
-/* See comments on USE_REDO_LIST define at top. */
-#ifdef USE_REDO_LIST
-   int redo[REDO_SIZE];
-   int redo_index = 0;
-   bool handling_redos = false;
-#endif
 
    DENTER(TOP_LAYER, "send_events");
 
-/* See comments on USE_REDO_LIST define at top. */
-#ifndef USE_REDO_LIST
    while (Master_Control.clients_indices[count] != 0) {
       ec_id = (u_long32)Master_Control.clients_indices[count++];
-#else
-   memset (redo, '\0', REDO_SIZE * sizeof (int));
-   
-   /* Handle any left over redos.  We keep going until we have dealt with all
-    * clients in the client indices and all clients in the redo list. */
-   while (!handling_redos || (redo[redo_index] != 0)) {
-      if (Master_Control.clients_indices[count] != 0) {
-         ec_id = (u_long32)Master_Control.clients_indices[count++];
-      }
-      /* When we run out of clients in the indices, switch to the redo list. */
-      else if (!handling_redos) {
-         /* Either this list starts at 0, or it is full and has looped around.
-          * In the later case, we can still start at 0.  It will just take the
-          * clients a little out of order. */
-         redo_index = 0;         
-         handling_redos = true;
 
-         /* We do this continue here because we need to start the loop over at
-          * the beginning of the redo list.  It's really cheating to get two
-          * loop out of one. */
-         continue;
-      }
-      else {
-         DPRINTF (("Processing redo list.\n"));
-         
-         ec_id = redo[redo_index++];
-      }
-#endif
-
-/* See comments on USE_REDO_LIST define at top. */
-#ifndef USE_REDO_LIST
       if (!lock_client (ec_id, false)) {
-#else
-      /* This if uses short-circuiting to lock the client hard if it's a redo
-       * or soft if it's not, and if it's not and the client is already locked,
-       * to add the event to the redo list. */
-      if ((handling_redos && !lock_client (ec_id, true)) ||
-          (!lock_client (ec_id, false))) {
-#endif
+
          /* If we can't get access to this client right now, just leave it to
           * be handled in the next run. */
          DPRINTF (("Skipping event client %d because it's locked.\n", ec_id));
 
-/* See comments on USE_REDO_LIST define at top. */
-#ifndef USE_REDO_LIST
          continue; /* while */
-#else
-         /* If there's an empty spot in the redo list, put the client there. */
-         if (redo[redo_index] == 0) {
-            redo[redo_index] = ec_id;
-            redo_index = (redo_index + 1) % REDO_SIZE;
-
-            DPRINTF (("Adding to the redo list.\n"));
-            
-            continue; /* while */
-         }
-         /* If not, interate through the redo list until we find a client that
-          * is not locked and swap it with the current client. */
-         else {
-            count = redo_index;
-
-            DPRINTF (("Redo list is full.  Trying to make space...\n"));
-            
-            /* Since there's nothing we can do if all the the clients are still
-             * locked, we just go through the list again, until something is
-             * eventually free.  As long as the REDO_SIZE is set to be at least
-             * as large as the number of threads simultaneouly in the library,
-             * this loop should never repeat. */
-            while (true) {
-               if (lock_client ((u_long32)redo[count], false)) {
-                  u_long32 temp_id = 0;
-         
-                  DPRINTF (("Client %d is now free.\n", redo[count]));
-                  
-                  temp_id = redo[redo_index];
-                  redo[redo_index] = ec_id;
-                  redo_index = (redo_index + 1) % REDO_SIZE;
-                  ec_id = temp_id;            
-
-                  break; /* while */
-               }
-               
-               DPRINTF (("Client %d still locked...\n", redo[count]));
-               
-               /* Circular increment. */
-               count = (count + 1) % REDO_SIZE;
-            } /* while */
-         } /* else */
-#endif
       } /* if */
       
       event_client = get_event_client (ec_id);
@@ -2672,7 +2498,15 @@ static void send_events(lListElem *report, lList *report_list) {
          unlock_client (ec_id);
          continue; /* while */
       }
-      
+     
+      /* is the event client in state terminated? remove it*/
+      if (lGetUlong(event_client, EV_state) == EV_terminated) {
+         remove_event_client(event_client, ec_id);
+         unlock_client (ec_id);
+         /* we removed a client, continue with the next one */
+         continue;
+      }
+     
       /* extract address of event client */
       host = lGetHost(event_client, EV_host);
       commproc = lGetString(event_client, EV_commproc);
@@ -2709,13 +2543,8 @@ static void send_events(lListElem *report, lList *report_list) {
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, 
                (int) timeout, commproc, (int) id, host));
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-         lRemoveElem(Master_Control.clients, event_client);
-         Master_Control.indices_dirty = true;
-         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-         set_event_client (ec_id, NULL);               
+         remove_event_client(event_client, ec_id);      
          unlock_client (ec_id);
-         
          continue; /* while */
       }
 
@@ -3187,7 +3016,13 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    DENTER(TOP_LAYER, "add_list_event_direct"); 
 
    SGE_ASSERT (event_client != NULL);
-   
+  
+   if (lGetUlong(event_client, EV_state) != EV_connected) {
+      /* the event client is not connected anymore, so we are not
+         adding new events to it*/
+      return;
+   }
+  
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    /* Pull out payload for selecting */
@@ -3299,6 +3134,9 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    else if (type == sgeE_SHUTDOWN) {
       flush_events(event_client, 0);
       flush = true;
+      /* the event client should be shutdown, so we do not add any events to it, after
+         the shutdown event */
+      lSetUlong(event_client, EV_state, EV_closing);   
    }
    else if (subscription[type].flush) {
       DPRINTF(("flushing event client\n"));

@@ -256,6 +256,11 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonShareTreePopup");
 
+   /*
+   ** reset dirty flag
+   */
+   dirty = False;
+
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
@@ -1044,6 +1049,7 @@ XtPointer cld, cad;
       ListTreeOpenToLevel(tree, NULL, 1);
    
    ListTreeHighlightItem(tree, root_node, True);
+   ListTreeMakeItemVisible(tree, root_node);
    ListTreeRefreshOn(tree);
 
    /*

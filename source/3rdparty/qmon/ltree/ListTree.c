@@ -626,6 +626,8 @@ Cardinal * num;
    w->list.hsbPos=0;
    w->list.hsbMax=1;
 
+   w->list.viewY=0;
+
    InitializeScrollBars(w);
 
    InitializeGC(w);
@@ -1374,6 +1376,7 @@ Cardinal *num_params;
 #endif
 {
    ListTreeWidget w = (ListTreeWidget) aw;
+
 
    w->list.timer_item=NULL;
    w->list.timer_x = event->xbutton.x - w->list.XOffset;
@@ -3415,18 +3418,24 @@ ListTreeItem *item;
    int item_pos;
    
    pos = GetPosition(lw, item);
-   item_pos = pos / lw->list.itemHeight + ((pos % lw->list.itemHeight) ? 1 : 0);
    
+/* printf("topItemPos = %d, botItemPos = %d, visibleCount = %d, pos = %d\n", */
+/*            lw->list.topItemPos, lw->list.bottomItemPos, */
+/*            lw->list.visibleCount, item_pos); */
+
    if (item_pos > lw->list.visibleCount) {
-/*       printf("topItemPos = %d, botItemPos = %d, visibleCount = %d, pos = %d\n", */
-/*               lw->list.topItemPos, lw->list.bottomItemPos, */
-/*               lw->list.visibleCount, item_pos); */
       lw->list.topItemPos = item_pos - lw->list.visibleCount;   
       if (lw->list.topItemPos!=lw->list.lastItemPos) {
          GotoPosition(lw);
          DrawAll(lw);
          SetScrollbars(lw);
       }
+   }
+
+   if (item_pos < lw->list.topItemPos) {
+      GotoPosition(lw);
+      DrawAll(lw);
+      SetScrollbars(lw);
    }
 }
 

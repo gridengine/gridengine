@@ -1600,6 +1600,7 @@ u_long32 *isXML
       if (parse_string(ppcmdline, "-explain", &alp, &argstr)) {
          u_long32 filter = QI_AMBIGUOUS | QI_ALARM | QI_SUSPEND_ALARM | QI_ERROR;
          *explain_bits = qinstance_state_from_string(argstr, &alp, filter);
+         (*pfull) |= QSTAT_DISPLAY_FULL;
          FREE(argstr);
          continue;
       }

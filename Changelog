@@ -1,3 +1,10 @@
+EB-2004-02-26-0: Bugfix:    qstat -explain did not show messages
+                            qalter -q <queue_pattern_which_will_never_match>
+                            is not rejected. (reintroduced by AA-2004-02-21-0)
+                 Changed:   qstat, sge_qmaster
+                 Issue:     705, 688
+                 Review:    SG 
+
 SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
                             execd to run out of file descriptors
                  Changed:   execd
@@ -25,7 +32,7 @@ AD-2004-02-24-1: Bugfix:    Did fix NULL pointer assignment.
                  Issue:     696
 
 MD-2004-02-24-0: Bugfix:    changed messages
-                 Issue:     #676
+                 Issue:     676
                  Changed:   inst_sgeee
 
 AD-2004-02-24-0: Bugfix:    Did fix CULL run time type error.
@@ -102,7 +109,7 @@ EB-2004-02-20-0: Bugfix:    Soft queue requests are not rejected if queues
                             is not rejected.
                  Changed:   sge_qmaster
                  Issue:     688, 689
-                 Review:    pending
+                 Review:    SG
 
 MD-2004-02-20-0: Bugfix:    - new dialog messages
                  Changed    inst_sgeee, testsuite

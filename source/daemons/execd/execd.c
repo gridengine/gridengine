@@ -327,7 +327,7 @@ static void execd_register()
    lList *hlp = NULL, *alp = NULL; 
    lListElem *hep;
    int had_problems = 0; /* to ensure single logging */
-   bool is_logged_communication_error = false;
+   int last_commlib_error = CL_RETVAL_OK;
 
    DENTER(TOP_LAYER, "execd_register");
 
@@ -361,32 +361,15 @@ static void execd_register()
                sleep(1);
             }
 
-            if ( (commlib_error = sge_get_communication_error()) != CL_RETVAL_OK ) {
-               /*
-                * always log CL_RETVAL_ACCESS_DENIED error into messages file 
-                * otherwise log first error
-                */
-               if (commlib_error == CL_RETVAL_ACCESS_DENIED) {
-                  CRITICAL((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                            uti_state_get_qualified_hostname(),
-                            (char*) prognames[uti_state_get_mewho()],
-                            u32c(handle->local->comp_id), 
-                            u32c(handle->service_port),
-                            cl_get_error_text(commlib_error)));
-
-                  SGE_EXIT(1);
-               }
-
-               if ( is_logged_communication_error == false ) {
-                  is_logged_communication_error = true;
-                  ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                            uti_state_get_qualified_hostname(),
-                            (char*) prognames[uti_state_get_mewho()],
-                            u32c(handle->local->comp_id), 
-                            u32c(handle->service_port),
-                            cl_get_error_text(commlib_error)));
-               }
-
+            commlib_error = sge_get_communication_error();
+            if ( commlib_error != CL_RETVAL_OK && commlib_error != last_commlib_error ) {
+               last_commlib_error = commlib_error;
+               ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                 uti_state_get_qualified_hostname(),
+                                 (char*) prognames[uti_state_get_mewho()],
+                                 u32c(handle->local->comp_id), 
+                                 u32c(handle->service_port),
+                                 cl_get_error_text(commlib_error)));
             }
          }
       }

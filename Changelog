@@ -1,3 +1,8 @@
+CR-2004-08-09-0: Bugfix:    fixed fix for CR-2004-08-05-2
+                            execd may exit when hostname resolving is changed
+                            or not available.
+                 Review:    AA
+
 SG-2004-08-09-0: Bugfix:    the reporting file was not written correctly under
                             linux on opteron.
                  Issue:     1207

@@ -17,7 +17,7 @@ job classes. Strict means that higher privileged jobs are started
 before less privileged jobs if appropriate resources are available.</P>
 <P>HOWTO:</P>
 <UL>
-	<LI><P>use SHARE_FUNCTIONAL_SHARES=0 in schedd_params section of sge_conf(5)</P>
+	<LI><P>use SHARE_FUNCTIONAL_SHARES=0 in schedd_params section of global configuration sge_conf(5)</P>
 	<LI><P>jobs are submitted with -p &lt;priority&gt;</P>
 	<LI><P>scheduler uses jobs priority to derive per job functional
 	share</P>
@@ -60,8 +60,8 @@ scheduling is used among jobs of the same user.</P>
 <P>       userB     (20)</P>
 <P>       userC     (20)</P>
 <P>       userD     (50)</P>
-	<LI><P>use SHARE_FUNCTIONAL_SHARES=1 in schedd_params section of
-	sge_conf(5)</P>
+	<LI><P>use SHARE_FUNCTIONAL_SHARES=1 in schedd_params section of global configuration sge_conf(5)</P>
+	<LI><P>specify functional tickets (e.g. 1000000) in scheduler configuration sched_conf(5)</P>
 </UL>
 <H2>b) Project based functional scheduling</H2>
 <P>The objective of this setup is a certain share assignment of all
@@ -73,8 +73,8 @@ FCFS scheduling is used among jobs of the same project.</P>
 	<LI><P>assign functional shares to each project</P>
 <P>       projectA     (55)</P>
 <P>       projectB     (45)</P>
-	<LI><P>use SHARE_FUNCTIONAL_SHARES=1 in schedd_params section of
-	sge_conf(5)</P>
+	<LI><P>use SHARE_FUNCTIONAL_SHARES=1 in schedd_params section of global configuration sge_conf(5)</P>
+	<LI><P>specify functional tickets (e.g. 1000000) in scheduler configuration sched_conf(5)</P>
 </UL>
 <H2>c) Department based functional scheduling</H2>
 <P>The objective of this setup is a certain share assignment of all
@@ -87,8 +87,8 @@ FCFS scheduling is used among jobs of the same department.</P>
 <P>       departmentA (90)</P>
 <P>       departmentB (5)</P>
 <P>       departmentC (5)</P>
-	<LI><P>use SHARE_FUNCTIONAL_SHARES=1 in schedd_params section of
-	sge_conf(5)</P>
+	<LI><P>use SHARE_FUNCTIONAL_SHARES=1 in schedd_params section of global configuration sge_conf(5)</P>
+	<LI><P>specify functional tickets (e.g. 1000000) in scheduler configuration sched_conf(5)</P>
 </UL>
 <H1>3. Control resource shares over time</H1>
 <H2>a) Project based share-tree scheduling with FCFS within each
@@ -107,7 +107,7 @@ root ------ projectA (75)
  +--------- projectB (25)
 </PRE>
 	<LI><P>assign share tree shares to the projects</P>
-	<LI><P>specify share tree tickets (e.g. 1000000)</P>
+	<LI><P>specify share tree tickets (e.g. 1000000) in scheduler configuration sched_conf(5)</P>
 </UL>
 <H2>b) Project based share-tree scheduling with equal share for each
 user within each project</H2>
@@ -127,7 +127,7 @@ root ------ projectA (75) ------- default (10)
 	<LI><P>assign share tree shares to the projects</P>
 	<LI><P>add the user &quot;default&quot; as leaf in the tree below
 	each of these projects</P>
-	<LI><P>specify share tree tickets (e.g. 1000000)</P>
+	<LI><P>specify share tree tickets (e.g. 1000000) in scheduler configuration sched_conf(5)</P>
 </UL>
 <H2>c) Project based share-tree scheduling with per user individual
 shares within each project</H2>
@@ -153,7 +153,7 @@ root ------ projectA (75) ------- user1 (5)
 	<LI><P>assign share tree shares to the projects</P>
 	<LI><P>add each user as leaf to the projects where they have access
 	and assign individual shares</P>
-	<LI><P>specify share tree tickets (e.g. 1000000)</P>
+	<LI><P>specify share tree tickets (e.g. 1000000) in scheduler configuration sched_conf(5)</P>
 </UL>
 <P><BR><BR>
 </P>

@@ -988,7 +988,7 @@ static int parse_options(int *p_argc, char **p_argv[])
    
    /* detect if there are any sge parameters and count them */
    first_gmake_option = 0;
-   for(i = 0; i < argc; i++) {
+   for(i = 1; i < argc; i++) {
       if(!strcmp(argv[i], "--")) {
          first_gmake_option = i;
          break;

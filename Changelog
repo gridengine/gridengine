@@ -1,3 +1,7 @@
+RC-2003-04-03-0  Enhancem:  Start checking at argv[1] instead of
+                            argv[0] for sge parameters.
+                 Changed:   qmake
+
 EB-2003-04-03-0  Bugfix:    Unable to delete task array job with negative
                             increment
                  Issue:     509

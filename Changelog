@@ -1,3 +1,13 @@
+CR-2002-04-25-0: Testsuite: - checking compile hosts on setup
+                            - project_access_lists test: 
+                              -> do not wait for jobs with negative job id!
+                            - remote_procedures.tcl:
+                              -> return without spawn_id if host is not
+                                 reachable or if shell can't be started!
+                            - sge_procedures.tcl:
+                              do a qconf -tsm before getting schedd info
+                            
+
 CR-2002-04-24-0: Testsuite: - creating CHECK_PRODUCT_ROOT directory if it
                               is not existing on setup()
                             - procedure gethostname -> try to get hostname

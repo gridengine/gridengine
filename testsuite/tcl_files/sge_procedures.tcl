@@ -2229,7 +2229,7 @@ proc add_exechost { change_array {fast_add 0} } {
 # 
 #*******************************************************************************
 proc get_scheduling_info { job_id { check_pending 1 }} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_ARCH CHECK_PRODUCT_ROOT 
 
    if { $check_pending == 1 } {
       set result [ wait_for_jobpending $job_id "leeper" 120 ]
@@ -2237,6 +2237,10 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          return "job not pending"
       }
    }
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
+
    set my_timeout [ expr ( [timestamp] + 120 ) ]
    while { 1 } {
       if { [get_qstat_j_info $job_id ] } {
@@ -6518,7 +6522,7 @@ proc gethostname {} {
 #*******************************
 proc resolve_arch { { host "none" } } {
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
 
 
   if { [ info exists arch_cache($host) ] } {
@@ -6530,7 +6534,8 @@ proc resolve_arch { { host "none" } } {
      return "unknown"
   }
 
-  if { [ string compare $host "none" ] == 0 } {
+  if { [ string compare $host "none" ] == 0 || 
+       [ string compare $host $CHECK_HOST ] == 0 } {
       set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
   } else {
       puts $CHECK_OUTPUT "resolve_arch: resolving architecture for host $host"

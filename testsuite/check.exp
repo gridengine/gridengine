@@ -2391,6 +2391,14 @@ proc setup { {do_only_hostname_resolving 0} } {
          get_binary_path $host "vim"
       }
 
+      foreach host $CHECK_SOURCE_COMPILE_HOSTS {
+         start_remote_prog "$host" "$CHECK_USER" "cd" "$CHECK_CURRENT_WORKING_DIR" 
+         if { $prg_exit_state != 0 } {
+             puts $CHECK_OUTPUT "directory \"$CHECK_CURRENT_WORKING_DIR\" is not available on compile host \"$host\""
+             set setup_ok -1
+         } 
+      }
+
 
       if {$setup_ok == 0} {
          set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols

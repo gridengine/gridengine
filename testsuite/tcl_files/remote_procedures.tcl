@@ -551,8 +551,8 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
       }
       match_max -i $sp_id $CHECK_EXPECT_MATCH_MAX_BUFFER
       debug_puts "open_remote_spawn_process -> buffer size is: [match_max]"
-       # wait for shell to start
-      catch {
+      # wait for shell to start
+      set catch_return [ catch {
           uplevel 1 {
              log_user 0
              if { $CHECK_DEBUG_LEVEL != 0 } {
@@ -584,9 +584,10 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                 }
              }
    
-             set mytries 20
+             set mytries 10
              debug_puts "waiting for shell response ..."
              set timeout 1
+             set next_timeout 1
              set ok 0
              # send -i $spawn_id "\necho \"__ my id is ->\`id\`<-\"\n\n"  (caused problems on some arch's)
              while { $ok != 1 } {
@@ -600,12 +601,31 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                       
                       flush $CHECK_OUTPUT
                       send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
-                      set timeout 5
+                      set timeout $next_timeout
+                      if { $next_timeout < 6 } {
+                         incr next_timeout 1
+                      }
                       incr mytries -1 ; 
                       if  { $mytries < 0 } { 
                           set ok 1
                           add_proc_error "open_remote_spawn_process" -2 "shell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
+                          puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
+                          flush $CHECK_OUTPUT
+                          
+                          catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
+                          puts $CHECK_OUTPUT "closing spawn process ..."
+                          flush $CHECK_OUTPUT
+                          catch { close -i $spawn_id }
+                          puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
+                          return ""
                       }
+                   }
+                   -i $spawn_id -- "assword" {
+                      set ok 1
+                      puts $CHECK_OUTPUT "--> ERROR <--"
+                      puts $CHECK_OUTPUT "unexpected password question for user $open_remote_spawn__check_user on host $open_remote_spawn__hostname"
+                      puts $CHECK_OUTPUT "please check .rhosts file"
+                      exit 1
                    }
                    -i $spawn_id -- "Terminal type?" {
                       send -i $spawn_id -- "vt100\n"
@@ -628,6 +648,10 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
              set timeout 60
              log_user 1
          }
+      } ]
+      if { $catch_return != 0 } {
+         add_proc_error "open_remote_spawn_process" -2 "error starting shell" 
+         return ""
       }
       catch {
          uplevel 1 {

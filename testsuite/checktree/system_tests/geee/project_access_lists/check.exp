@@ -158,8 +158,12 @@ proc test_job_run { id_string job_id } {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   if { [wait_for_jobstart $job_id "leeper" 120] != 0 } {
-      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
+   if { $job_id < 1 } {
+     add_proc_error "test_job_run" -1 "wrong job id: $job_id, id_string: $id_string" 
+   } else {
+      if { [wait_for_jobstart $job_id "leeper" 120] != 0 } {
+         add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
+      }
    }
    delete_job $job_id
 #   wait_for_jobend $job_id "leeper" 60
@@ -178,6 +182,8 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
 
    puts $CHECK_OUTPUT "id_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
+   sleep 1
+   
 
    if { [ string first "-P" $jobargs] >= 0 } {
       set no_P 1

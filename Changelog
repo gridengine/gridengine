@@ -1,3 +1,6 @@
+MD-2004-01-03-1  Bugfix:    - DB_CONFIG file copy as adminuser
+                 Changed:   inst_sgeee
+
 MD-2004-01-03-0  Enhancem:  - Add DB_CONFIG file (Berkeley Config)
                             - Added new entry to schedd profiles
                  Changed:   inst_sgeee

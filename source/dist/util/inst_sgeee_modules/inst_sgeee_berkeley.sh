@@ -92,7 +92,8 @@ SpoolingCheckParams()
       # TODO: we should check if the hostname can be resolved
       # create a script to start the rpc server
       Makedir $SPOOLING_DIR
-      ExecuteAsAdmin `cp ./util/inst_sgeee_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG`
+      DB_CONFIG_COPY="cp ./util/inst_sgeee_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
+      ExecuteAsAdmin $DB_CONFIG_COPY
       CreateRPCServerScript
       $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
       $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "

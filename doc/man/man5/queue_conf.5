@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:09 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/07/22 15:44:36 $     Revision: $Revision: 1.18.4.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2004/04/19 10:52:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2004/07/22 15:44:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -180,14 +180,11 @@ default is zero (which means no nice value is set explicitly). Negative
 values (up to -20) correspond to a higher scheduling priority, positive 
 values (up to +20) correspond to a lower scheduling priority.
 .PP
-In a SGEEE system the value of \fBpriority\fP has no effect because SGEEE
-adjusts priorities dynamically to implement the SGEEE entitlement policy
-goals. Dynamic priority adjustment can be switched off, however, by setting
-the \fBexecd_param\fP NO_REPRIORITIZATION to true in the global or
-execution daemon local cluster configuration, see
-.M xxqs_name_sxx_conf 5 .
-In this case, the setting of \fBpriority\fP also will haven an effect in
-SGEEE.
+The value of \fBpriority\fP has no effect because SGE
+adjusts priorities dynamically to implement the SGE entitlement policy
+goals. Dynamic priority adjustment can be switched off, by setting
+the reprioritize_interval to 00:00:00, which is the default value. 
+In this case, the setting of \fBpriority\fP also will haven't an effect.
 .SS "\fBmin_cpu_interval\fP"
 The time between two automatic checkpoints in case of
 transparently checkpointing jobs. The maximum of the time requested by

@@ -471,8 +471,8 @@ set SPOOLING_METHOD = "dynamic"
 set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
 set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
 # we generate a berkeley db shared lib, so we need bdb include and lib path
-set CFLAGS            = "-I$BERKELEYDB_HOME/include $CFLAGS"
-set LFLAGS            = "-L$BERKELEYDB_HOME/lib $LFLAGS"
+set CFLAGS            = "-I$BERKELEYDB_HOME/include/${BDB_INCLUDE_SUBDIR} $CFLAGS"
+set LFLAGS            = "-L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR} $LFLAGS"
 set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
 
 # Compile with gettext and libintl - we have platform dependent defaults
@@ -814,7 +814,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-spool-berkeleydb":
       set SPOOLING_METHOD   = "berkeleydb"
-      set SPOOLING_LIBS     = "-lspoolloader -lspoolb -lspool -ldb"
+      set SPOOLING_LIBS     = "-lspoolloader -lspoolb -lspool -ldb${BDB_LIB_SUFFIX}"
       set SPOOLING_DEPS     = "spoolloaderlib spoolblib spoollib"
       breaksw
    case "-spool-classic":
@@ -1761,6 +1761,7 @@ if ( "$CORE" == 1 ) then
          "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
          "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
          "SPOOLLIBEXT=$SPOOLLIBEXT" \
+         "BDB_LIB_SUFFIX=${BDB_LIB_SUFFIX}" \
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \

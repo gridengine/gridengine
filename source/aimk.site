@@ -48,6 +48,9 @@ set POSTGRES_HOME = /vol2/tools/SW/postgresql-7.3.2/$buildarch
 #
 set BERKELEYDB_HOME = /vol2/SW/db-4.2.52/$buildarch
 #set BERKELEYDB_HOME = /vol2/SW/db-4.3.3/$buildarch
+set BDB_INCLUDE_SUBDIR =
+set BDB_LIB_SUBDIR =
+set BDB_LIB_SUFFIX =
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is

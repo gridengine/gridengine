@@ -1,3 +1,12 @@
+BD-2004-05-19-4: Enhamcem:  - Add three new variables to aimk.site and
+                              use them in aimk and Makefiles to allow
+			      Berkeley DB's headers and libraries to
+			      live in subdirectories of include/ and
+			      lib/ as well as allowing the library to
+			      have a suffix.  This is needed to allow
+			      FreeBSD and NetBSD to build against the
+			      DB version from ports/pkgsrc.
+
 BD-2004-05-19-3: Bugfix:    - Revert incomplete rename of RC_FILE value
                               "freebsd" to "fbsd"
 

@@ -1,3 +1,9 @@
+JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd (qlogin_starter
+                            for qlogin/qrsh jobs).
+                 Changed:   sge_shepherd
+                 Issue:     871
+                 Review:    CR
+
 EB-2004-03-16-0: Bugfix:    mail bomb upon abort with tightly int. par. job
                  Issue:     637
                  Changed:   sge_execd

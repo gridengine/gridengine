@@ -494,6 +494,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    
    if(ret != 0) {
       SHEPHERD_TRACE((err_str, "cannot bind socket: %s", strerror(errno)));
+      shutdown(sockfd, 2);
       close(sockfd);
       return 6;
    }
@@ -502,6 +503,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    length = sizeof(serv_addr);
    if (getsockname(sockfd,(struct sockaddr *) &serv_addr, &length) == -1) {
       SHEPHERD_TRACE((err_str, "getting socket name failed: %s", strerror(errno)));
+      shutdown(sockfd, 2);
       close(sockfd);
       return 7;
    }
@@ -515,20 +517,28 @@ int qlogin_starter(const char *cwd, char *daemon)
    
    if(sge_root == NULL || arch == NULL) {
       SHEPHERD_TRACE((err_str, "reading environment SGE_ROOT and ARC failed"));
+      shutdown(sockfd, 2);
       close(sockfd);
       return 8;
    }
-   
+  
+   if (listen(sockfd, 1) != 0) {
+      SHEPHERD_TRACE((err_str, "listen failed: %s", strerror(errno)));
+      shutdown(sockfd, 2);
+      close(sockfd);
+      return 9;
+   }
+
    sprintf(buffer, "0:%d:%s/utilbin/%s:%s:%s", port, sge_root, arch, cwd, get_conf_val("host"));
    if(write_to_qrsh(buffer) != 0) {
       SHEPHERD_TRACE((err_str, "communication with qrsh failed"));
+      shutdown(sockfd, 2);
       close(sockfd);
-      return 9;
+      return 10;
    }
    
    /* wait for connection */
    SHEPHERD_TRACE((err_str, "waiting for connection."));
-   listen(sockfd, 1);
    /* use a reasonable timeout (60 seconds) to prevent hanging here forever */
    FD_ZERO(&fds);
    FD_SET(sockfd, &fds);
@@ -538,14 +548,14 @@ int qlogin_starter(const char *cwd, char *daemon)
       SHEPHERD_TRACE((err_str, "nobody connected to the socket"));
       shutdown(sockfd, 2);
       close(sockfd);
-      return 10;
+      return 11;
    }
    newsfd = accept(sockfd, (struct sockaddr *)(&serv_addr), &len);
    if(newsfd == -1) {
       SHEPHERD_TRACE((err_str, "error when accepting socket conection"));
       shutdown(sockfd, 2);
       close(sockfd);
-      return 11;
+      return 12;
    }
    shutdown(sockfd, 2);
    close(sockfd);
@@ -587,5 +597,7 @@ int qlogin_starter(const char *cwd, char *daemon)
    /* oh oh, exec failed */
    /* no way to tell anyone, becuase all FDs are closed */
    /* last chance -> tell parent process */
-   return 12;
+   shutdown(newsfd, 2);
+   close(newsfd);
+   return 13;
 }

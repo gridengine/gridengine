@@ -529,7 +529,7 @@ void cull_show_job(lListElem *job, int flags)
             SUM_UP_PETASK_USAGE(pe_task_ep, vmem, USAGE_ATTR_VMEM);
             SUM_UP_PETASK_USAGE(pe_task_ep, mem, USAGE_ATTR_MEM);
             SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_IO);
-/* SG: fix?? */            
+
 /*            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_MAXVMEM); */
             SUM_UP_PETASK_USAGE(pe_task_ep, maxvmem, USAGE_ATTR_MAXVMEM);
          }

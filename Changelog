@@ -1,3 +1,5 @@
+CR-2005-01-25-1: Enhancem.: - code cleanup 
+
 CR-2005-01-25-0: Bugfix:    - fixed qping connect problem checked in with
                               CR-2005-01-21-0
                  Enhancem.: - qping to a running service (e.g. telnet) did

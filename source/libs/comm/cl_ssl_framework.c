@@ -308,6 +308,7 @@ static void cl_com_ssl_locking_callback(int mode, int type, const char *file, in
    char tmp_buffer[1024];
 #endif
    const char* tmp_filename = "n.a.";
+
    /* 
     * locking cl_com_ssl_global_config_mutex would cause a deadlock
     * because it is locked when setting the callback function with
@@ -349,6 +350,13 @@ static void cl_com_ssl_locking_callback(int mode, int type, const char *file, in
       }
    } else {
       CL_LOG(CL_LOG_ERROR,"global ssl config object not initalized");
+
+      /* this two debug messages are only used to prevent compiler 
+         warnings on IRIX65 compiler (when -Werror is set) 
+         (unused symbols line and tmp_filename) when the if-endif parts
+         above are disabled */
+      CL_LOG_INT(CL_LOG_DEBUG,"dummy debug:", line);
+      CL_LOG_STR(CL_LOG_DEBUG,"dummy debug:", tmp_filename);
    }
 }
 

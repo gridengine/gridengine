@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.8 2002/09/11 10:42:33 ernst Exp $	*/
+/*	$Id: rshd.c,v 1.9 2003/03/09 00:55:52 ron Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -98,7 +98,7 @@
 #define _PATH_DEFPATH "/usr/bin:/bin"
 #endif
 
-#if defined ALPHA4 || HP10 || IRIX6 || LINUX5 || SUN4 || (SOLARIS && ! SOLARIS64 && !SOLARIS86) || NECSX5 || CRAY
+#if defined ALPHA4 || HP10 || IRIX6 || LINUX5 || SUN4 || (SOLARIS && ! SOLARIS64 && !SOLARIS86) || NECSX5 || CRAY || DARWIN
 typedef int socklen_t;
 #endif
 

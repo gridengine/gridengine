@@ -1,3 +1,5 @@
+HP-2005-01-10-1: Added:     qmake configure files for Interix
+
 HP-2005-01-10-0: Enhancem.: Changed name of function in libwingrid
                  Changed:   sge_load_sensor.c
 

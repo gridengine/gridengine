@@ -688,6 +688,8 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
          lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
          lListElem *job;
 
+         lSetUlong(qinstance, QU_gdi_do_later, 0);
+
          for_each(job, master_job_list) {
             lList *ja_tasks = lGetList(job, JB_ja_tasks);
             lListElem *ja_task;

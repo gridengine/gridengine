@@ -1146,6 +1146,8 @@ proc set_error {erno errtext} {
       }
     }
   }
+
+  return $erno
 }
 
 #****** check/get_testsuite_root_dir_from_file() *******************************
@@ -3442,13 +3444,6 @@ proc run_tests { path runcompleted } {
             append mail_body "Date: [ lindex $check_ok_date $index ]\n" 
             append mail_body "Test: [ lindex $check_ok_name $index ]\n"
             append mail_body "Info: Pass[lindex $check_ok_pass $index], State: [lindex $check_ok_state $index]\n\n"
-#            foreach err_message $check_ok_text("[ lindex $check_ok_name $index ]") {
-#                foreach sm $err_message {
-#                   set error_output [ create_error_message $sm ]
-#                   puts $CHECK_OUTPUT $error_output 
-#                   append mail_body $error_output
-#                }
-#            }
         }
         set nr_complete [llength $check_ok_name] 
         append mail_body "Number of completed tests: $nr_complete"        
@@ -3728,6 +3723,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS
    global CHECK_CURRENT_WORKING_DIR check_init_level_procedure CHECK_ACT_LEVEL
    global set_error_proc_called errorInfo CHECK_CORE_MASTER
+   global check_setup_level_function check_cleanup_level_function
    
    # do not run allready completed tests
    debug_puts "runcompleted is $runcompleted"
@@ -3750,6 +3746,9 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    puts $CHECK_OUTPUT "starting test functions (runlevel is $CHECK_ACT_LEVEL)..."
  
    # call init_check_level procedure!
+   # JG: TODO: init_check_level is run twice (already in run_test.
+   #           do we really have to call it twice?
+   #           or call it here and return if it doesn't return 0
    if {[info exists check_init_level_procedure] == 1 } {
        if {[ string compare $check_init_level_procedure "--"] != 0 } {
           puts $CHECK_OUTPUT "\ncalling init level function \"$check_init_level_procedure\" ..."
@@ -3766,7 +3765,9 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    set was_unsupported 0
    set complete_errstr ""
    set complete_errno ""
+   set catch_return 0
 
+   # unless we are in install - check if system is running
    if { [ string compare $check_name "init_core_system" ] != 0 && 
         [ string compare $check_needs "" ] != 0 } {
       if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
@@ -3775,9 +3776,25 @@ proc run_test_level {path runcompleted level {do_save 1}} {
       wait_for_load_from_all_queues 60
    }
 
-   if { [info exists check_functions] == 1 } {
+   if { [info exists check_functions] } {
+      # if we have a level specific setup function: execute it
+      set setup_error 0
+      if { $check_setup_level_function != "" } {
+         set CHECK_CUR_PROC_NAME $check_setup_level_function
+         puts $CHECK_OUTPUT "starting level setup function $check_setup_level_function"
+         set setup_catch_return [ catch { $check_setup_level_function } setup_catch_message ]
+         if { $setup_catch_return != 0 } {
+            add_proc_error "run_test_level" "-2" "setup level function failed\n${errorInfo}" 
+            set setup_error 1
+         } else {
+            if { $setup_catch_message != 0 } {
+               add_proc_error "run_test_level" "-2" "setup level function returned error $setup_catch_message"
+               set setup_error 1
+            }
+         }
+      }
+      if { ! $setup_error } {
       foreach elem $check_functions {
-         
          puts $CHECK_OUTPUT "\n>>>>>>>>>>>>>>>>>>>>>>"
          puts $CHECK_OUTPUT "$elem"    
          puts $CHECK_OUTPUT "runlevel: [get_run_level_name $level]($level)"
@@ -3794,8 +3811,6 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          set CHECK_CUR_PROC_RESULTS "" 
          set CHECK_CUR_PROC_NAME $elem
          set set_error_proc_called 0  
-
-         
 
          # this starts the test procedure
          set catch_return [ catch { $elem } errMsg ]
@@ -3823,11 +3838,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
              lappend procedure_errno "-1"
              set was_empty 1
          }
-
-
-
  
-         # flush output file
          flush $CHECK_OUTPUT  
       
          set stop 0 
@@ -3858,25 +3869,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
               set was_unsupported 1
               incr was_error -1
 
-#              set myindex 0
-#              foreach element $procedure_errno {
-#                 if { $element != 0 } {
-#                    lappend complete_errstr [lindex $procedure_error_text $myindex]
-#                    lappend complete_errno  $element
-#                 }
-#                 incr myindex 1
-#              }
-#              set check_errstr $complete_errstr
-#              set check_errno $complete_errno
               puts $CHECK_OUTPUT "U N S U P P O R T E D   test \"$check_name\" in run level $level, procedure $elem !"
-#              set end_time [clock seconds]
-#              if { $do_save == 1 } {  
-#                  delete_result $path [expr ($end_time - $start_time)] $level
-#              }
-#              unlock_testsuite
-#              return -2
-
-
             }
          } else {
             debug_puts "status: $check_errstr"
@@ -3893,8 +3886,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          if {$stop == 1} {
            break;
          }
-
-      } 
+      }
       
       if { [llength $check_functions] == 0 } {   
          set no_func_error "{none|check_functions list has length 0 ( level: $level)|$check_name|run_test_level}"
@@ -3903,8 +3895,28 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          show_proc_error -1 "$no_func_error"
          set was_error 1
       }
+      }
 
-      
+      # if we have a level specific cleanup function: execute it
+      if { $check_cleanup_level_function != "" } {
+         set CHECK_CUR_PROC_NAME $check_cleanup_level_function
+         puts $CHECK_OUTPUT "starting level cleanup function $check_cleanup_level_function"
+         set setup_catch_return [ catch { $check_cleanup_level_function } setup_catch_message ]
+         if { $setup_catch_return != 0 } {
+            add_proc_error "run_test_level" "-2" "cleanup level function returns not 0\n${errorInfo}" 
+            set was_error 1
+         } else {
+            if { $setup_catch_message != 0 } {
+               add_proc_error "run_test_level" "-2" "cleanup level function returned error $setup_catch_message"
+               set was_error 1
+            }
+         } 
+      }
+
+      if { $setup_error } {
+         set was_error 1
+      }
+
       if { $catch_return != 0 } {
          set check_errstr $complete_errstr
          set check_errno $complete_errno
@@ -3926,7 +3938,6 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          return -2
       }
 
-
       if {$was_error == 0} {
          set check_errstr $complete_errstr
          set check_errno $complete_errno
@@ -3943,7 +3954,6 @@ proc run_test_level {path runcompleted level {do_save 1}} {
      lappend complete_errstr "$no_func_error"
      lappend complete_errno -1
      show_proc_error -1 "$no_func_error"
-
    }
  
    # check function does not exist or had an error
@@ -4063,6 +4073,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
   global check_category CHECK_GROUP
+  global check_setup_function check_cleanup_function check_setup_level_function check_cleanup_level_function
 
   cd $CHECK_CURRENT_WORKING_DIR
 
@@ -4074,6 +4085,10 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   set check_category      ""
   set check_needs         ""
   set check_functions     ""
+  set check_setup_function ""
+  set check_cleanup_function ""
+  set check_setup_level_function ""
+  set check_cleanup_level_function ""
   set check_highest_level 0
   set check_init_level_procedure "--"
   set check_root_access_needs   "" 
@@ -4132,9 +4147,25 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   set do_send_mail 0
   set no_level_calls 0 
 
+   set immediate_return 0
 
+   # if we have a specific setup function: execute it
+   if { $check_setup_function != "" } {
+      puts $CHECK_OUTPUT "starting setup function $check_setup_function"
+      set setup_catch_return [ catch { $check_setup_function } setup_catch_message ]
+      if { $setup_catch_return != 0 } {
+         add_proc_error "run_test" "-2" "setup function returns not 0\n${errorInfo}" 
+         set immediate_return -1
+      } else {
+         if { $setup_catch_message != 0 } {
+            add_proc_error "run_test" "-2" "setup function returned error $setup_catch_message"
+            set immediate_return -1
+         }
+      }
+   }
+
+   if { ! $immediate_return } {
   for {set level 0} { $level <= $check_highest_level} {incr level 1} {
-
      if {[is_level_enabled $level] == -1 } {
         continue
      } 
@@ -4165,18 +4196,18 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
      if {$back == -101  } { 
         incr nr_errors 1
         debug_puts "--> TCL ERROR in check $path in level $level <--"
-        return -101
+        set immediate_return -101
+        break
      }
      if {$back == -1} {
         incr nr_errors 1     ;# we had an error
         debug_puts "--> ERROR in check $path in level $level <--"
-        return -1
+        set immediate_return -1
+        break
      }
      if {$back == -2} {
         incr nr_warnings 1     ;# check can not run
         debug_puts "--> check $path in level $level: can't start test <--"
-        
-#        return -3
      }
      if {$back == 0} {
         set do_send_mail 1  ;# a successfull test run
@@ -4190,10 +4221,26 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
      }
      debug_puts "calls=$no_level_calls, allready done=$nr_allready_done"
   }
+   }
 
-#  if { $nr_warnings != 0 } {
-#     return -3 ;# warning
-#  }
+   # if we have a specific cleanup function: execute it
+   if { $check_cleanup_function != "" } {
+      puts $CHECK_OUTPUT "starting cleanup function $check_cleanup_function"
+      set setup_catch_return [ catch { $check_cleanup_function } setup_catch_message ]
+      if { $setup_catch_return != 0 } {
+         add_proc_error "run_test" "-2" "cleanup function returns not 0\n${errorInfo}" 
+         set immediate_return -1
+      } else {
+         if { $setup_catch_message != 0 } {
+            add_proc_error "run_test" "-2" "cleanup function returned error $setup_catch_message"
+            set immediate_return -1
+         }
+      } 
+   }
+
+   if { $immediate_return != 0 } {
+      return $immediate_return
+   }
 
   if { $nr_allready_done == $no_level_calls } {
      return 1  ;# was done time before

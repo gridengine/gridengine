@@ -69,11 +69,13 @@ for {set i 0} {$i < $check_126_num_hosts} {incr i} {
 set check_needs           "init_core_system" 
 
 
+# setup and cleanup functions
+set check_setup_function "issue_126_setup"
+set check_cleanup_function "issue_126_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_126_setup"
 lappend check_functions "issue_126_check"
-lappend check_functions "issue_126_cleanup"
 
 proc issue_126_init_level {} {
    global ts_config 

@@ -42,10 +42,18 @@ set check_name                "issue_1126"
 set check_description(0)      "qmaster clients may not reconnect after qmaster outage"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
+
+# startup and cleanup functions
+# Shutdown of master cannot be done as startup function
+# as availability of system is checked before first check_function
+# is started
+# The restart is established as cleanup function to have it 
+# called in any case, even if test fails with tcl error.
+set check_cleanup_function "issue_1126_restart_master"
+
 set check_functions           ""
-lappend check_functions       "issue_1126_setup"          ;# functions to call (in order)
+lappend check_functions       "issue_1126_shutdown_master"
 lappend check_functions       "issue_1126_run"
-lappend check_functions       "issue_1126_cleanup"
 set check_highest_level       0
 
 proc init_level {} {
@@ -70,18 +78,16 @@ proc init_level {} {
 
 
 
-proc issue_1126_setup {} {
+proc issue_1126_shutdown_master {} {
    global ts_config CHECK_HOST
 
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
 
    set_error 0 "ok"
 }
+
 proc issue_1126_run  {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
-
-   
-
 
    set up_arch [resolve_build_arch $ts_config(master_host)]
    set client_binary $ts_config(source_dir)/$up_arch/test_cl_commlib_client
@@ -207,7 +213,7 @@ proc issue_1126_run  {} {
 }
 
 
-proc issue_1126_cleanup {} {
+proc issue_1126_restart_master {} {
    global ts_config 
 
    startup_qmaster

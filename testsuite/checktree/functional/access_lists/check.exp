@@ -59,16 +59,17 @@ set check_description(0)  "Test (x)user_lists access for queue/cluster/pe"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "access_lists_setup"
+set check_cleanup_function "access_lists_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "access_lists_setup"
 lappend check_functions "access_lists_global_host"
 lappend check_functions "access_lists_exec_host"
 lappend check_functions "access_lists_queue"
 lappend check_functions "access_lists_cluster_config"
 lappend check_functions "access_lists_pe"
-lappend check_functions "access_lists_cleanup"
 
 proc access_lists_init_level {} {
    global CHECK_ACT_LEVEL
@@ -960,6 +961,8 @@ proc access_lists_pe {} {
 proc access_lists_cleanup  {} {
    global access_lists_schedd_conf access_lists_queue
    global CHECK_CORE_EXECD CHECK_OUTPUT
+
+   delete_all_jobs
 
    set_schedd_config access_lists_schedd_conf
 

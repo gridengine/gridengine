@@ -60,17 +60,20 @@ set check_description(1)  "check tightly integrated parallel jobs submitted with
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function tight_integration_setup
+set check_cleanup_function tight_integration_cleanup
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "tight_integration_setup"
+lappend check_functions "tight_integration_init_messages_check"
 lappend check_functions "tight_integration_function"
 lappend check_functions "tight_integration_iz_578";# env vars NSLOTS and NHOSTS
 lappend check_functions "tight_integration_master_killed"
 lappend check_functions "tight_integration_slave_killed"
 lappend check_functions "tight_integration_iz_575";# wallclock limit for tasks
 lappend check_functions "tight_integration_massive"
-lappend check_functions "tight_integration_cleanup"
+lappend check_functions "tight_integration_messages_check"
 
 # constants to be used by the tight integration test
 global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS 
@@ -190,18 +193,46 @@ proc tight_integration_check_messages { mode1 mode2 } {
 
 }
 
+proc tight_integration_init_messages_check {} {
+   tight_integration_parse_execd_messages startup
+   set_error 0 "ok"
+}
+
+proc tight_integration_messages_check {} {
+   global CHECK_OUTPUT
+
+   get_config global_config
+   puts $CHECK_OUTPUT "load_report_time is set to $global_config(load_report_time)"
+   set report_time [transform_date_time $global_config(load_report_time)]
+   set zero_time [transform_date_time "00:00:00"]
+   set sleep_time [expr ( $report_time - $zero_time )]
+
+   puts $CHECK_OUTPUT "sleeping for $sleep_time seconds to let each execd report its final state ..."
+   sleep $sleep_time
+
+   puts $CHECK_OUTPUT "additional sleep of 5 seconds ..."
+   sleep 5
+
+   puts $CHECK_OUTPUT "reading messages files ..."
+   tight_integration_parse_execd_messages cleanup
+
+   puts $CHECK_OUTPUT "compare error messages ..."
+   tight_integration_check_messages startup cleanup
+   
+   set_error 0 ok
+}
 
 proc tight_integration_setup  {} {
-   global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD TIGHT_INTEGRATION_MASSIVE_SLOTS
-   global ts_config CHECK_OUTPUT CHECK_USER
-   global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
+   global ts_config CHECK_OUTPUT
 
 
    # shutdown and restart an execd
+   # JG: Why?
+if {0} {
    set execd_host [ lindex $ts_config(execd_hosts) 0 ]
    shutdown_system_daemon $execd_host execd
    startup_execd $execd_host
-
+}
    # create parallel environment
    set pe(pe_name)            tight
    set pe(slots)              1000
@@ -222,33 +253,12 @@ proc tight_integration_setup  {} {
    # assign queue with pe
    assign_queues_with_pe_object tight.q "" tight
 
-   tight_integration_parse_execd_messages startup
-
    set_error 0 "ok"
 }
 
 proc tight_integration_cleanup  {} {
-   global CHECK_PRODUCT_TYPE CHECK_OUTPUT
-   global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
+   global ts_config CHECK_OUTPUT
 
-   get_config global_config
-   puts $CHECK_OUTPUT "load_report_time is set to $global_config(load_report_time)"
-   set report_time [transform_date_time $global_config(load_report_time)]
-   set zero_time [transform_date_time "00:00:00"]
-   set sleep_time [expr ( $report_time - $zero_time )]
-
-   puts $CHECK_OUTPUT "sleeping for $sleep_time seconds to let each execd report its final state ..."
-   sleep $sleep_time
-
-   puts $CHECK_OUTPUT "additional sleep of 5 seconds ..."
-   sleep 5
-
-   puts $CHECK_OUTPUT "reading messages files ..."
-   tight_integration_parse_execd_messages cleanup
-
-   puts $CHECK_OUTPUT "compare error messages ..."
-   tight_integration_check_messages startup cleanup
-   
    unassign_queues_with_pe_object tight
    del_pe tight
    del_queue tight.q "" 0 1

@@ -1,9 +1,16 @@
-RD-2005-03-02-0: Cleanup:  compile with gcc-3.3
-                 Issue:    558
-                 Review:   SG
+JG-2005-03-02-0: Testsuite: Provide means to configure explicit setup and 
+                            cleanup functions both for whole checks and per 
+                            check level.
+                            Changed a number of checks to use this feature, 
+                            other checks still have to be changed.
+                 Issue:     888
 
-SG-2005-03-02-0: Bugfix:   fixed build for lx24-amd
-                 Review:   RD
+RD-2005-03-02-0: Cleanup:   compile with gcc-3.3
+                 Issue:     558
+                 Review:    SG
+
+SG-2005-03-02-0: Bugfix:    fixed build for lx24-amd
+                 Review:    RD
 
 RD-2005-03-01-1: Enhancem.: -purge switch added
                             purge host specific cluster queue profiles

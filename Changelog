@@ -1,3 +1,8 @@
+CR-2004-03-12-0: Enhancm.   Added a script to check install script syntax
+                            of infotext calls: 
+                 Added:     source/scripts/infotext_check_script_syntax.tcl
+                 Modified:  source/scripts/infotext_msg_parse.tcl
+
 SG-2004-03-12-1: Bugfix:    wrong qstat -F output with no requestable 
                             attributes
                  Issue:     837

@@ -106,13 +106,13 @@ japi.o: $(JAPILIB_DIR)/japi.c
 #---------------------------------------------------------------------
 
 test_drmaa: test_drmaa.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o $(SHARED_LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
 
 test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c
 
 example: example.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(SHARED_LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
 
 example.o: $(JAPILIB_DIR)/example.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/example.c

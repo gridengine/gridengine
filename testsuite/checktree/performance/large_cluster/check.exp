@@ -110,7 +110,6 @@ proc large_cluster_init_level {} {
    if { $CHECK_ACT_LEVEL >= 300 && $CHECK_ACT_LEVEL <= $check_highest_level } {
       return 0 
    }
-   
 
    set real_hosts [lrange $CHECK_CORE_EXECD 0 $CHECK_ACT_LEVEL]
    return -1;

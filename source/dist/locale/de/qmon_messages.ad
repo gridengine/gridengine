@@ -29,6 +29,31 @@
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!___INFO__MARK_END__
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! REMARKS FOR TRANSLATION (SEE ANY ADDITIONAL COMMENTS INTERSPERSED)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!! The following file contains a pseudo german translation of qmon labels/strings.
+!! It serves as an example for translation. 
+!!
+!! CHANGE THE STRING AFTER THE FIRST COLON AND DON'T LEAVE WHITESPACE AFTER THE 
+!! LAST LETTER OF THE TRANSLATION !
+!!
+!! After translation save the file under dist/locale/<countrycode>/qmon_messages.ad after
+!! having changed _Messages_.de to _Messages_.<countrycode> (replace <countrycode> by the 
+!! corresponding country codes e.g. en, fr etc. )
+!!
+!! For Xmt the Font tags are important, so keep these for the translation
+!! e.g. @fBAttributes  -> @fBEigenschaften -> @fbAttribut
+!!         en                   de                 fr
+!! The used font tags are @fB, @fI, @f[BIG] just in front of the word/phrase
+!! Some more complicated sentences have not been used as keys, but have been
+!! replaced by a different key e.g. about_msg
+!! For these cases the original version is contained as a comment.
+!! Otherwise use the key as the english version for translation.
+!! If there arise questions contact andre.alefeld@sun.com
+!!
 _Messages_.de.@fBAttributes: @fBEigenschaften
 _Messages_.de.@fBType: @fBTyp
 _Messages_.de.@fBAFS Parameters: @fBAFS Parameter
@@ -266,11 +291,23 @@ _Messages_.de.Deny Access: Zugriffsverbot
 _Messages_.de.Department [%]: Abteilung [%]
 _Messages_.de.Department: Abteilung
 _Messages_.de.Disable: Abschalten
+!! pe.askdel: 
+!! Do you really want to delete the\nselected Parallel Environment\nConfiguration ?
 _Messages_.de.pe.askdel: Wollen Sie die markierte Parallelumgebungskonfiguration wirklich loeschen ?
+!! project.askdel:
+!! Do you really want to delete the\nselected Project Configuration ?
 _Messages_.de.project.askdel: Wollen Sie die markierte Projektkonfiguration wirklich loeschen ?
+!! userset.askdel:
+!! Do you really want to delete\nthe selected userset lists ?
 _Messages_.de.userset.askdel: Wollen Sie die markierte Benutzermenge wirklich loeschen ?
+!! queue.askdel:
+!! Do you really want to\ndelete the selected queues ?
 _Messages_.de.queue.askdel: Wollen Sie die markierten Warteschlangen wirklich loeschen ?
+!! stree.asksave:
+!! Do you want to save your changes ?
 _Messages_.de.stree.asksave: Wollen Sie Ihre Änderungen speichern ?
+!! ticket.asksave:
+!! Do you want to save your changes ?
 _Messages_.de.ticket.asksave: Wollen Sie Ihre Änderungen speichern ?
 _Messages_.de.Done: Erledigt
 _Messages_.de.Double click on values to change limits: Doppelklicken, um die Grenzwerte zu ändern
@@ -287,7 +324,11 @@ _Messages_.de.Enter a uppercase string value: Großbuchstabenbezeichner eingeben
 _Messages_.de.Enter a valid hostname: Gültigen Rechnernamen eingeben
 _Messages_.de.Enter an integer value: Ganzzahl eingeben
 _Messages_.de.Enter item name: Bezeichner eingeben
+!! submit.askdeadlinetime:
+!! Enter the deadline time in the\nfollowing format: [[CC]]YY]MMDDhhmm.[ss]\nor leave the current time and press ok
 _Messages_.de.submit.askdeadlinetime:  Stichtermin im folgenden Format eingeben: [[CC]]YY]MMDDhhmm.[ss]\noder aktuelle Zeit belassen und 'Erledigt' wählen
+!! submit.asksubmittime:
+!! Enter the submit time in the\nfollowing format: [[CC]]YY]MMDDhhmm[.ss]\nor leave the current time and press ok
 _Messages_.de.submit.asksubmittime:  Versandzeit im folgenden Format eingeben: [[CC]]YY]MMDDhhmm.[ss]\noder aktuelle Zeit belassen und 'Erledigt' wählen
 _Messages_.de.Enter time: Zeitwert eingeben
 _Messages_.de.Environment Variable List: Umgebungsvariablenliste
@@ -336,6 +377,8 @@ _Messages_.de.INT: GANZZAHL
 _Messages_.de.IO: IO 
 _Messages_.de.Id: Id
 _Messages_.de.Identifier: Identifizierer
+!! qaction.max_slots:
+!! If 'Max Slots' are filled in the current queue,\nthe queues in column one are suspended.
 _Messages_.de.qaction.max_slots: Wenn 'Max Schlitze' in der aktuellen Warteschlange gefuellt sind,\nwerden die Warteschlangen in Spalte eins angehalten.
 _Messages_.de.Infinity: Unendlich
 _Messages_.de.Interactive: Interaktiv
@@ -605,18 +648,36 @@ _Messages_.de.YES: JA
 _Messages_.de.Year: Jahr
 _Messages_.de.Yes: Ja
 _Messages_.de._Delete: _Löschen
+!! calendar.askdel:
+!! Do you really want to delete the\nselected Calendar Configuration ?
 _Messages_.de.calendar.askdel: Wollen Sie wirklich die markierten Kalenderkonfigurationen löschen ?
+!! calendar.year_example:
+!! Year\n1.1.1997,30.3.1997-31.3.1997,26.12.1997[=suspended]
 _Messages_.de.calendar.year_example: Jahr\n1.1.1997,30.3.1997-31.3.1997,26.12.1997[=suspended]
+!! calendar.week_example:
+!! Week\nmon-fri=20-6[=suspended] sat-sun[=suspended]
 _Messages_.de.calendar.week_example: Woche\nmon-fri=20-6[=suspended] sat-sun[=suspended]
+!! ckpt.askdel:
+!! Do you really want to delete the\nselected Checkpointing Configuration ?
 _Messages_.de.ckpt.askdel: Wollen Sie wirklich die markierten Checkpoint Konfigurationen löschen ?
+!! cluster.askdel:
+!! Do you really want to delete the\nselected cluster configuration ?
 _Messages_.de.cluster.askdel: Wollen Sie die markierte Rechnerverbundkonfiguration wirklich löschen ?
 _Messages_.de.cplx.Load: Laden
+!! cplx.askdel:
+!! Do you really want to\ndelete the selected complexes ?
 _Messages_.de.cplx.askdel: Wollen Sie die makierten Komplexe wirklich löschen ?
 _Messages_.de.default: standard
 _Messages_.de.disabled: ausgeschaltet
 _Messages_.de.enabled: eingeschaltet
+!! fticket.functional:
+!! Functional\nShares
 _Messages_.de.fticket.functional: Funktionale\nAnteile
+!! fticket.load:
+!! Load
 _Messages_.de.fticket.load: Laden
+!! fticket.ratio:
+!! @fBRatio Between Sorts Of\nFunctional Tickets
 _Messages_.de.fticket.ratio: @fBVerhältnis zwischen Arten\nFunctionaler Anteilsscheine
 _Messages_.de.gByte (1000x1000x1000): gByte (1000x1000x1000)
 _Messages_.de.kByte (1000): kByte (1000)
@@ -624,6 +685,8 @@ _Messages_.de.log_err: Protokollstufe Fehler
 _Messages_.de.log_info: Protokollstufe Info
 _Messages_.de.log_warning: Protokollstufe Warnung 
 _Messages_.de.mByte (1000x1000): mByte (1000x1000)
+!! oticket.load:
+!! Load
 _Messages_.de.oticket.load: Laden
 _Messages_.de.pag command: pag Kommando
 _Messages_.de.posix_compliant: Posixkonform
@@ -632,9 +695,17 @@ _Messages_.de.set_token command: set_token Kommando
 _Messages_.de.stderr: Standardfehlerausgabe
 _Messages_.de.stdout: Standardausgabe
 _Messages_.de.token_extend_time: Token Verlängerungszeit
+!! tov.deadline:
+!! Users Allowed\nTo Submit\nDeadline Jobs
 _Messages_.de.tov.deadline: Benutzer mit\nErlaubnis fuer\nStichterminauftraege
+!! tov.functional:
+!! Functional\nPolicy
 _Messages_.de.tov.functional: Funktionale\nPolitik
+!! tov.override:
+!! Override\nPolicy
 _Messages_.de.tov.override: Ueberrunde\nPolitik
+!! tov.sharetree:
+!! Share Tree\nPolicy
 _Messages_.de.tov.sharetree: Anteilsbaum\nPolitik
 _Messages_.de.unix_behavior: Unix Verhalten
 _Messages_.de.rsh Daemon: rsh Dämon
@@ -642,24 +713,64 @@ _Messages_.de.rsh Command: rsh Kommando
 _Messages_.de.rlogin Daemon: rlogin Dämon
 _Messages_.de.rlogin Command: rlogin Kommando
 _Messages_.de.@fBInteractive Parameters: @fBInteraktive Parameter
+!! XmtDisplayMessage.warningTitle:
+!! Warning
 _Messages_.de.XmtDisplayMessage.warningTitle: Warnung
+!! XmtDisplayMessage.errorTitle:
+!! Error
 _Messages_.de.XmtDisplayMessage.errorTitle: Fehler
+!! XmtDisplayMessage.messageTitle:
+!! Message
 _Messages_.de.XmtDisplayMessage.messageTitle: Meldung
+!! XmtDisplayMessage.helpTitle:
+!! Help
 _Messages_.de.XmtDisplayMessage.helpTitle: Hilfe
 _Messages_.de.qmon_fticket.Sum: Summe
+!! qmon_usage.usageTitle:
+!! usage: qmon\n
 _Messages_.de.qmon_usage.usageTitle: Kommandozeile: qmon\n
+!! qmon_usage.cmapOption:
+!! use own colormap\n
 _Messages_.de.qmon_usage.cmapOption: eigene Farbtabelle benutzen\n
+!! qmon_usage.helpOption:
+!! show this information and exit\n
 _Messages_.de.qmon_usage.helpOption: Optionen anzeigen und beenden\n
+!! qmon_usage.fontFamilyOption:
+!! use small/medium/big fonts\n
 _Messages_.de.qmon_usage.fontFamilyOption: kleine/mittlere/grosse Schrift benutzen\n
+!! qmon_usage.nologoOption: 
+!! startup without logo\n
 _Messages_.de.qmon_usage.nologoOption: ohne Logo starten\n
+!! qmon_usage.X11OptionInfo:
+!! Additionally the default X commandline switches can be used.\nFor further information see the manual page X(1)\n
 _Messages_.de.qmon_usage.X11OptionInfo: Zusätzlich können die Standard X Kommandozeilenoptionen verwendet werden.\nWeitere Informationen in der Handbuchseite X(1).\n
-Qmon*about_msg.message: @f[BIG]Willkommen @fB%s@@%s\nbei %s qmon\n\n@fRCopyright \251 1996-1999\n\n\nGridware, Inc.\n1265 S. Bascom Ave.\nSuite 110\nSan Jose, CA 95128\nU.S.A.\nPhone: (+1) 408 866-4100\nFax: (+1) 408 559-2090\nEmail: support@@gridware.com\nhttp://www.gridware.com\n\nGridware GmbH\nErzgebirgstr. 2\nD-93073 Neutraubling\nGermany\nTel.: (+49) 9401 9200-0\nFax: (+49) 9401 9200-92\nEmail: support@@gridware.de\nhttp://www.gridware.de
+!! about_msg.message:
+!! @fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s
+Qmon*about_msg.message: @fBWillkommen %s@@%s, @fR\n\nSie benutzen @fB%s@fR in der Zelle @fB'%s'@fR.\n%s
+!! cancelLabelString:
+!! Cancel
 Qmon*cancelLabelString: Verwerfen
+!! okLabelString:
+!! Ok
 Qmon*okLabelString: Erledigt
+!! helpLabelString:
+!! Help
 Qmon*helpLabelString: Hilfe
+!! dirListLabelString:
+!! Directories
 Qmon*dirListLabelString: Verzeichnisse
+!! fileListLabelString:
+!! Files
 Qmon*fileListLabelString: Dateien
+!! filterLabelString:
+!! Filter
 Qmon*filterLabelString: Filter
+!! applyLabelString:
+!! Filter
 Qmon*applyLabelString: Filtern
+!! xmtBooleanDialog*title:
+!! Question
 Qmon*xmtBooleanDialog*title: Frage
+!! xmtAskForString*title:
+!! Enter a String
 Qmon*xmtAskForString*title: Bezeichner eingeben

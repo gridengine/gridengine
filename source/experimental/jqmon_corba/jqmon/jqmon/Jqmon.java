@@ -60,7 +60,7 @@ import jqmon.debug.*;
 public class Jqmon extends JFrame {
 
 	// all members of this class are declared 
-	// as ´static´ , due to the fact, that there must
+	// as ³static³ , due to the fact, that there must
 	// exist only one instance of this class
 
 	// menu entries
@@ -302,7 +302,7 @@ public class Jqmon extends JFrame {
 			in.close();
 		} catch (IOException e) {
 			//FIXME
-			System.err.println("Couldn´t load Jqmon.properties.");
+			System.err.println("Couldn³t load Jqmon.properties.");
 			System.err.println("Using Defaults.");
 		}
 
@@ -442,7 +442,7 @@ public class Jqmon extends JFrame {
 
 		
 		// load the images and create the buttons
-      nullIcon = new ImageIcon("images/blank-2ß.gif");      
+      nullIcon = new ImageIcon("images/blank-2ž.gif");      
       newIcon  = new ImageIcon("images/New.gif");
       newButton = new JFlatButton(newIcon);
 

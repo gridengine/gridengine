@@ -47,7 +47,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer);
 int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer);
  
 lListElem* add_to_reschedule_unknown_list(lListElem *hostr, u_long32 job_number, u_long32 task_number, u_long32 state);
- 
+
 lListElem* get_from_reschedule_unknown_list(lListElem *host, u_long32 job_number, u_long32 task_number);
  
 void delete_from_reschedule_unknown_list(lListElem *host);
@@ -65,4 +65,13 @@ u_long32 reschedule_unknown_timeout(lListElem *hep);
 void reschedule_unknown_trigger(lListElem *hep); 
 
 void reschedule_add_additional_time(u_long32 time); 
+
+void
+remove_from_reschedule_unknown_list(lListElem *host, u_long32 job_number,
+                                    u_long32 task_number);
+
+void
+remove_from_reschedule_unknown_lists(u_long32 job_number,
+                                     u_long32 task_number);
+
 #endif /* __RESCHEDULE_H */

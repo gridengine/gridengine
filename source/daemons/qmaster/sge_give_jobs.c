@@ -868,6 +868,8 @@ sge_commit_flags_t commit_flags
 
    case 3:
       job_log(jid, ja_task_id, MSG_LOG_EXITED);
+
+      remove_from_reschedule_unknown_lists(jid, ja_task_id);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
@@ -883,6 +885,7 @@ sge_commit_flags_t commit_flags
       jid = lGetUlong(jep, JB_job_number);
       job_log(jid, ja_task_id, MSG_LOG_WAIT4SGEDEL);
 
+      remove_from_reschedule_unknown_lists(jid, ja_task_id);
       lSetUlong(jatep, JAT_status, JFINISHED);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);

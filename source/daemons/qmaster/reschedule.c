@@ -1082,3 +1082,50 @@ void reschedule_add_additional_time(u_long32 time)
    DEXIT;
 }  
 
+void 
+remove_from_reschedule_unknown_list(lListElem *host, u_long32 job_number,
+                                    u_long32 task_number)
+{
+   lListElem* ruep = NULL;
+
+   DENTER(TOP_LAYER, "remove_from_reschedule_unknown_list");
+   if (host) {
+      lList *unknown_list = lGetList(host, EH_reschedule_unknown_list);
+      lListElem *elem;
+      lListElem *next;
+      int is_modified = 0;
+
+      next = lFirst(unknown_list);
+      while ((elem = next) != NULL) {
+         next = lNext(elem);
+   
+         if (lGetUlong(elem, RU_job_number) == job_number &&
+             lGetUlong(elem, RU_task_number) == task_number) {
+            lRemoveElem(unknown_list, elem);
+            is_modified = 1;
+         }
+      }
+
+      if (is_modified == 1) { 
+         write_host(1, 2, host, EH_name, NULL); 
+         sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, 
+                       lGetHost(host, EH_name), host);
+      }
+   }
+   DEXIT;
+   return;
+}
+
+void
+remove_from_reschedule_unknown_lists(u_long32 job_number, 
+                                     u_long32 task_number)
+{
+   lListElem *host;
+
+   DENTER(TOP_LAYER, "remove_from_reschedule_unknown_lists");
+   for_each(host, Master_Exechost_List) {
+      remove_from_reschedule_unknown_list(host, job_number, task_number);
+   }
+   DEXIT;
+   return;
+}

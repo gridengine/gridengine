@@ -1,3 +1,8 @@
+EB-2004-04-19-0: Bugfix:    stale resource_unknown_list
+                 Issue:     942
+                 Changed:   sge_qmaster
+                 Review:    JG
+
 RC-2004-04-11-0: Bugfix:    Fixed a minor typo in manpage
                  Changed:   sge_conf.5
 

@@ -1,3 +1,7 @@
+MD-2004-03-09-0: Bugfix:    install_execd ignores ignore_fqdn in bootstrap(5)
+                 Issue:     805
+                 Changed:   inst_sge
+         
 AH-2004-03-09-1: Bugfix:    Fixed qsub -w v to print more than one single 
                             reason. 
                             Fix problem with qstat -j scheduling info being

@@ -206,7 +206,7 @@ CheckCSP()
 CheckHostNameResolving()
 {
 
-   resolve_get_configuration=`ExecuteAsAdmin $SGE_BIN/qconf -sconf global | grep "^ignore_fqdn" `
+   resolve_get_configuration=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^ignore_fqdn" | awk '{print $2}'`
    resolve_qmaster_params=`echo $resolve_get_configuration | egrep -i "true|1"`
    if [ "x$resolve_qmaster_params" = "x" ]; then
       $ECHO ""
@@ -214,6 +214,7 @@ CheckHostNameResolving()
    else
 #     don't need this check when IGNORE_FQDN=true in qmaster_params
       set IGNORE_FQDN_DEFAULT=true
+      CheckIfAdminHost
       return
    fi
 
@@ -291,6 +292,45 @@ CheckHostNameResolving()
 }
 
 
+CheckIfAdminHost()
+{
+   done=false
+   while [ $done = false ]; do
+       done=false
+       $CLEAR
+
+       resolve_admin_hosts=`ExecuteAsAdmin $SGE_BIN/qconf -sh`
+       resolve_this_hostname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
+       resolve_default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}'`
+
+
+       resolve_upper_this_hostname=`echo $resolve_this_hostname | tr "[a-z]" "[A-Z]"`
+       for i in $resolve_admin_hosts; do
+           resolve_upper_admin_hostname=`echo $i | tr "[a-z]" "[A-Z]"`
+           if [ "$resolve_upper_admin_hostname" = "$resolve_upper_this_hostname" ]; then
+              done=true
+              break
+           fi
+       done
+
+       if [ $done = false ]; then
+           $INFOTEXT -u "\nChecking for Adminhost"
+           $INFOTEXT "This host is unknown on the qmaster host.\n\n" \
+                     "Please make sure that you added this host as administrative host!\n" \
+                     "If you did not, please add this host now with the command\n\n" \
+                     "   # qconf -ah HOSTNAME\n\n" \
+                     "on your qmaster host.\n"
+
+           $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Check again (y/n) [y] >> "
+           if [ $? = 0 ]; then
+              done=false
+           else
+              done=true
+           fi
+       fi
+   done
+
+}
 #-------------------------------------------------------------------------
 # AddLocalConfiguration_With_Qconf
 #

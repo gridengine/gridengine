@@ -327,8 +327,8 @@ ErrUsage()
    $ECHO >&2
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux|-sm|-usm|-db|-upd <SGE_ROOT> <SGE_CELL>\n" \
-             "              [-auto filename ] [-csp] [-resport] [-afs]\n" \
-             "              [-host] [-rsh] [-noremote]\n" \
+             "              |-bup|-rst [-auto filename ] [-csp] [-resport] \n" \
+             "              [-afs] [-host] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -336,6 +336,8 @@ ErrUsage()
              "   -sm        install shadow host\n" \
              "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated Spooling Server\n" \
+             "   -bup       backup of your configuration (Berkeley DB spooling)\n" \
+             "   -rst       restore backuped configuration (Berkeley DB spooling)\n" \
              "   -upd       upgrade your cluster from 5.x to 6.0\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
@@ -1074,7 +1076,8 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H:%M:%S'`
-   BUP_FILE_LIST="bootstrap sge_aliases" 
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
+   BUP_SPOOL_FILE_LIST=" "
 
    $INFOTEXT -u "SGE Configuration Backup"
    $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \
@@ -1099,13 +1102,17 @@ BackupConfig()
    $INFOTEXT -n "\n... starting with backup\n"    
    $SGE_UTILBIN/db_dump -f $backup_dir/$DATE.dump -h $db_home sge
 
-   cp -f $SGE_ROOT/$SGE_CELL/common/bootstrap $SGE_ROOT/$SGE_CELL/common/sge_aliases $backup_dir
+   for f in $BUP_COMMON_FILE_LIST; do
+      if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+         cp -f $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+      fi
+   done
 
    if [ $TAR = "true" ]; then
       $INFOTEXT "\nPlease enter a filename for your backupfile. Default: [backup.tar]"
       bup_file=`Enter backup.tar`
       cd $backup_dir
-      tar -cvf $bup_file $DATE.dump bootstrap sge_aliases
+      tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST 
       gzip -9 $bup_file 
 
       cd $SGE_ROOT
@@ -1113,7 +1120,7 @@ BackupConfig()
       $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz"
 
       cd $backup_dir      
-      rm -f $DATE.dump.tar $DATE.dump bootstrap sge_aliases
+      rm -f $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST
 
       exit 0
    fi
@@ -1131,6 +1138,8 @@ BackupConfig()
 #
 RestoreConfig()
 {
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
+
    $INFOTEXT -u "SGE Configuration Restore"
    $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \
                 "previously."
@@ -1154,14 +1163,19 @@ RestoreConfig()
       cd $SGE_ROOT 
       db_home=`cat /tmp/bup_tmp/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
       $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
-      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path "
+      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >>"
       db_home=`Enter $db_home`
       
       $SGE_UTILBIN/db_load -f /tmp/bup_tmp/*.dump -h $db_home sge
-      $INFOTEXT -n "\nYour configuration has been restored"
+
+      for f in $BUP_COMMON_FILE_LIST; do
+         cp -f /tmp/bup_tmp/$f $SGE_ROOT/$SGE_CELL/common/
+      done
+
+      $INFOTEXT -n "\nYour configuration has been restored\n"
       rm -fR /tmp/bup_tmp
    else
-      $INFOTEXT -n "\nPlease enter the full path  your backup file."
+      $INFOTEXT -n "\nPlease enter the full path to your backup files."
       bup_file=`Enter $SGE_ROOT/$SGE_CELL/default/spool/backup`
       db_home=`cat bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
       $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
@@ -1169,6 +1183,11 @@ RestoreConfig()
       db_home=`Enter $db_home`
       
       $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge
+
+      for f in $BUP_COMMON_FILE_LIST; do
+         cp -f /tmp/bup_tmp/$f $SGE_ROOT/$SGE_CELL/common/
+      done
+
       $INFOTEXT -n "\nYour configuration has been restored\n"
    fi
 }

@@ -2002,6 +2002,8 @@ tCClEntry *clen
          str = (StringConst)lGetString(ep, CF_value);
       if (str && !strcasecmp(str, "true"))
          clen->enforce_user = 0;
+      else if (str && !strcasecmp(str, "auto"))
+         clen->enforce_user = 2;
       else
          clen->enforce_user = 1;
 

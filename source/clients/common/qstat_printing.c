@@ -1004,6 +1004,8 @@ static char jhul3[] = "---------------------------------------------------------
 static char jhul4[] = "-----------------------------------------------------";
 /* -urg */
 static char jhul5[] = "----------------------------------------------------------------";
+/* -pri */
+static char jhul6[] = "-----------------------------------";
 
 static int sge_print_job(
 lListElem *job,
@@ -1026,7 +1028,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_urg, sge_ext, sgeee_mode;
+   int sge_urg, sge_pri, sge_ext, sgeee_mode;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -1054,16 +1056,20 @@ int slots_per_line  /* number of slots to be printed in slots column
    sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
    sge_urg = sgeee_mode && (full_listing & QSTAT_DISPLAY_URGENCY);
+   sge_pri = sgeee_mode && (full_listing & QSTAT_DISPLAY_PRIORITY);
 
    if (first_time) {
       first_time = 0;
       if (!(full_listing & QSTAT_DISPLAY_FULL)) {
-         printf("%s%-7.7s %s %s%s %-10.10s %-12.12s %s%-5.5s %s%s%s%s%s%s%s%s%s%-10.10s %s %s%s%s%s%s%s", 
+         printf("%s%-7.7s %s %s%s%s%s%s %-10.10s %-12.12s %s%-5.5s %s%s%s%s%s%s%s%s%s%-10.10s %s %s%s%s%s%s%s", 
                indent,
                   "job-ID",
                sgeee_mode?"prior ":"prior",
-               sge_urg?" nurgenc urgency  rrcontr  wtcontr  dlcontr ":"",
-               sge_ext?" ntckts ":"",
+               (sge_pri||sge_urg)?" nurgenc":"",
+               sge_pri?" npprior":"",
+               (sge_pri||sge_ext)?" ntckts ":"",
+               sge_urg?" urgency  rrcontr  wtcontr  dlcontr ":"",
+               sge_pri?"  ppri":"",
                   "name",
                   "user",
                sge_ext?"project          department ":"",
@@ -1086,12 +1092,13 @@ int slots_per_line  /* number of slots to be printed in slots column
                tsk_ext?"stat ":"",
                tsk_ext?"failed ":"" );
 
-         printf("\n%s%s%s%s%s%s\n", indent, 
+         printf("\n%s%s%s%s%s%s%s\n", indent, 
                jhul1, 
                (group_opt & GROUP_NO_PETASK_GROUPS)?jhul2:"",
                sge_ext ? jhul3 : "", 
                tsk_ext ? jhul4 : "",
-               sge_urg ? jhul5 : "");
+               sge_urg ? jhul5 : "",
+               sge_pri ? jhul6 : "");
       }
    }
       
@@ -1105,12 +1112,27 @@ int slots_per_line  /* number of slots to be printed in slots column
 
    /* per job priority information */
    if (sgeee_mode) {
+
       if (print_jobid)
          printf("%7.5f ", lGetDouble(jatep, JAT_prio)); /* nprio 0.0 - 1.0 */
       else 
          printf("        ");
 
-      if (sge_ext) {
+      if (sge_pri || sge_urg) {
+         if (print_jobid)
+            printf("%7.5f ", lGetDouble(job, JB_nurg)); /* nurg 0.0 - 1.0 */
+         else
+            printf("        ");
+      }
+
+      if (sge_pri) {
+         if (print_jobid)
+            printf("%7.5f ", lGetDouble(job, JB_nppri)); /* nppri 0.0 - 1.0 */
+         else
+            printf("        ");
+      }
+
+      if (sge_pri || sge_ext) {
          if (print_jobid)
             printf("%7.5f ", lGetDouble(jatep, JAT_ntix)); /* ntix 0.0 - 1.0 */
          else
@@ -1119,19 +1141,27 @@ int slots_per_line  /* number of slots to be printed in slots column
 
       if (sge_urg) {
          if (print_jobid) {
-            printf("%7.5f ", lGetDouble(job, JB_nurg));
             OPTI_PRINT8(lGetDouble(job, JB_urg));
             OPTI_PRINT8(lGetDouble(job, JB_rrcontr));
             OPTI_PRINT8(lGetDouble(job, JB_wtcontr));
             OPTI_PRINT8(lGetDouble(job, JB_dlcontr));
          } else {
-            printf("        "
-                   "         "
+            printf("         "
                    "         "
                    "         "
                    "         ");
          }
       } 
+
+      if (sge_pri) {
+         if (print_jobid) {
+            printf("%5d ", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY); 
+         } else {
+            printf("         "
+                   "         ");
+         }
+      }
+
    } 
    else {
       /* job priority */

@@ -69,12 +69,13 @@ typedef struct _TOVEntry {
    double weight_deadline;
    double weight_waiting_time;
    double weight_urgency;
+   double weight_priority;
    double weight_ticket;
    char *policy_hierarchy;
    char *halflife_decay_list;
 } tTOVEntry;
 
-static tTOVEntry cdata = {0, 0, 0, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, NULL, NULL};
+static tTOVEntry cdata = {0, 0, 0, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, NULL, NULL};
 static Boolean data_changed = False;
 
 static Widget qmon_tov = 0;
@@ -140,6 +141,11 @@ XtResource tov_resources[] = {
    { "weight_urgency", "weight_urgency", XmtRDouble,
       sizeof(double),
       XtOffsetOf(tTOVEntry, weight_urgency),
+      XtRImmediate, (XtPointer) 0 },
+
+   { "weight_priority", "weight_priority", XmtRDouble,
+      sizeof(double),
+      XtOffsetOf(tTOVEntry, weight_priority),
       XtRImmediate, (XtPointer) 0 },
 
    { "weight_ticket", "weight_ticket", XmtRDouble,
@@ -412,6 +418,10 @@ XtPointer cld, cad;
       cdata.weight_urgency = data.weight_urgency;
       data_changed = True;
    }
+   if (data.weight_priority != cdata.weight_priority) {
+      cdata.weight_priority = data.weight_priority;
+      data_changed = True;
+   }
    if (data.weight_ticket != cdata.weight_ticket) {
       cdata.weight_ticket = data.weight_ticket;
       data_changed = True;
@@ -539,6 +549,7 @@ static Boolean qmonTOVEntryReset(tTOVEntry *tov_data)
    tov_data->weight_deadline = 0.0;
    tov_data->weight_waiting_time = 0.0;
    tov_data->weight_urgency = 0.0;
+   tov_data->weight_priority = 0.0;
    tov_data->weight_ticket = 0.0;
    if (tov_data->policy_hierarchy)
       free(tov_data->policy_hierarchy);
@@ -588,6 +599,7 @@ lListElem *scep
    tov_data->weight_deadline = lGetDouble(scep, SC_weight_deadline);
    tov_data->weight_waiting_time = lGetDouble(scep, SC_weight_waiting_time);
    tov_data->weight_urgency = lGetDouble(scep, SC_weight_urgency);
+   tov_data->weight_priority = lGetDouble(scep, SC_weight_priority);
    tov_data->weight_ticket = lGetDouble(scep, SC_weight_ticket);
    tov_data->policy_hierarchy = sge_strdup(tov_data->policy_hierarchy,
                                     lGetString(scep, SC_policy_hierarchy));
@@ -625,6 +637,7 @@ tTOVEntry *tov_data
    lSetDouble(scep, SC_weight_deadline, tov_data->weight_deadline);
    lSetDouble(scep, SC_weight_waiting_time, tov_data->weight_waiting_time);
    lSetDouble(scep, SC_weight_urgency, tov_data->weight_urgency);
+   lSetDouble(scep, SC_weight_priority, tov_data->weight_priority);
    lSetDouble(scep, SC_weight_ticket, tov_data->weight_ticket);
    
    if (tov_data->policy_hierarchy && tov_data->policy_hierarchy[0] !='\0')

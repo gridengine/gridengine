@@ -159,11 +159,10 @@ Qmon*sconf_general*sconf_flush_finish_secs.incrementLarge: 10
 Qmon*sconf_general*sconf_queue_sort_method.chooserType: ChooserOption
 Qmon*sconf_general*sconf_queue_sort_method.strings: \
    "@{Sort by load}", \
-   "@{Sort by sequence number}", \
-   "@{Sort by share}"
+   "@{Sort by sequence number}"
 
-Qmon*sconf_general*sconf_user_sort.labelString:    @{User Sort}
-Qmon*sconf_general*sconf_user_sort.alignment:      ALIGNMENT_BEGINNING
+!!Qmon*sconf_general*sconf_user_sort.labelString:    @{User Sort}
+!!Qmon*sconf_general*sconf_user_sort.alignment:      ALIGNMENT_BEGINNING
 
 Qmon*sconf_general*sconf_job_info.chooserType: ChooserOption
 Qmon*sconf_general*sconf_job_info.strings: \

@@ -47,6 +47,7 @@ Qmon*tov_layout.xmtChildren: \
                      functional_tickets_field = total_functional_tickets, \
                      weight_deadline=weight_deadline, \
                      weight_urgency=weight_urgency, \
+                     weight_priority=weight_priority, \
                      weight_ticket=weight_ticket, \
                      weight_waiting_time=weight_waiting_time, \
                      halflife_decay_list=halflife_decay_list, \
@@ -91,6 +92,10 @@ Qmon*tov_layout.layout: \
                Col { \
                   Centered Color "blue" "@{@fBWeight Urgency Policy}" \
                   weight_urgency \
+               } \
+               Col { \
+                  Centered Color "blue" "@{@fBWeight Priority Policy}" \
+                  weight_priority \
                } \
                Col { \
                   Centered Color "blue" "@{@fBWeight Ticket Policy}" \

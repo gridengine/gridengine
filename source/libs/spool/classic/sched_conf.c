@@ -203,6 +203,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
       FPRINTF((fp, "weight_waiting_time              %.10g\n", lGetDouble(ep, SC_weight_waiting_time)));
       FPRINTF((fp, "weight_deadline                  %.10g\n", lGetDouble(ep, SC_weight_deadline)));
       FPRINTF((fp, "weight_urgency                   %.10g\n", lGetDouble(ep, SC_weight_urgency)));
+      FPRINTF((fp, "weight_priority                  %.10g\n", lGetDouble(ep, SC_weight_priority)));
    }
 
    if (how != 0) {
@@ -403,6 +404,13 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       /* --------- SC_weight_urgency */
       if (!set_conf_double(alpp, clpp, fields, "weight_urgency", ep, 
                SC_weight_urgency, 0)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_weight_priority */
+      if (!set_conf_double(alpp, clpp, fields, "weight_priority", ep, 
+               SC_weight_priority, 0)) {
          DEXIT;
          return -1;
       }

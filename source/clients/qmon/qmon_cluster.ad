@@ -213,7 +213,7 @@ Qmon*cluster_global_layout.layout: \
          } \
          ## \
          Equal Row { \
-            Caption "@{Maximal Jobs\nIn Cluster}" <> cluster_max_jobs \
+            Caption "@{Maximum Jobs\nIn Cluster}" <> cluster_max_jobs \
          } \
          ### \
          Equal Row { \
@@ -281,9 +281,9 @@ Qmon*cluster_global_layout.layout: \
 Qmon*cluster_global_layout*cluster_execd_spool_dir_label.labelString: @{Execd Spool Dir}
 Qmon*cluster_global_layout*cluster_admin_mail_label.labelString: @{Admin Mail}
 Qmon*cluster_global_layout*cluster_login_shells_label.labelString: @{Login Shells}
-Qmon*cluster_global_layout*cluster_max_aj_instances_label.labelString: @{cluster.max_aj_instances.Maximal Array\nJob Instances}
-Qmon*cluster_global_layout*cluster_max_aj_tasks_label.labelString: @{cluster.max_aj_tasks.Maximal Array\nJob Tasks}
-Qmon*cluster_global_layout*cluster_max_job_per_user_label.labelString: @{cluster.max_job_per_user.Maximal Jobs\nPer User}
+Qmon*cluster_global_layout*cluster_max_aj_instances_label.labelString: @{cluster.max_aj_instances.Maximum Array\nJob Instances}
+Qmon*cluster_global_layout*cluster_max_aj_tasks_label.labelString: @{cluster.max_aj_tasks.Maximum Array\nJob Tasks}
+Qmon*cluster_global_layout*cluster_max_job_per_user_label.labelString: @{cluster.max_job_per_user.Maximum Jobs\nPer User}
 
 Qmon*cluster_global_layout.cluster_min_uid*columns: 5
 Qmon*cluster_global_layout.cluster_min_gid*columns: 5
@@ -310,7 +310,7 @@ Qmon*cluster_global_layout.cluster_enforce_project.strings: \
 
 Qmon*cluster_global_layout.cluster_enforce_user.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_enforce_user.strings: \
-   "@{True}", "@{False}"
+   "@{True}", "@{False}", "@{Auto}"
 
 Qmon*cluster_global_layout.cluster_usersPB.labelType:               PIXMAP
 Qmon*cluster_global_layout.cluster_usersPB.labelPixmap:             aclask

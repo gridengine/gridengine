@@ -78,6 +78,7 @@
 #define MSG_QSTAT_XML_OUTPUT                          _MESSAGE(19042, _("display the information in XML-Format\n"))
 #define MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY          _MESSAGE(19043, _("display cluster queue summary\n"))
 #define MSG_QSTAT_URGENCYINFO                         _MESSAGE(19044, _("display job urgency information\n"))
+#define MSG_QSTAT_PRIORITYINFO                         _MESSAGE(19044, _("display job priority information\n"))
 
 #endif /* __MSG_QSTAT_H */
 

@@ -1031,6 +1031,7 @@ u_long32 show
 
             JB_ja_template,
             JB_execution_time,
+            JB_nppri,
             JB_nurg,
             JB_urg,
             JB_rrcontr,
@@ -1104,6 +1105,7 @@ u_long32 show
             JB_ja_tasks,
             
             JB_execution_time,
+            JB_nppri,
             JB_nurg,
             JB_urg,
             JB_rrcontr,
@@ -1718,6 +1720,10 @@ lList *alp = NULL;
          if ((rp = parse_noopt(sp, "-urg", NULL, ppcmdline, &alp)) != sp)
             continue;
 
+         /* -urg option */
+         if ((rp = parse_noopt(sp, "-pri", NULL, ppcmdline, &alp)) != sp)
+            continue;
+
          /* -xml option */
          if ((rp = parse_noopt(sp, "-xml", NULL, ppcmdline, &alp)) != sp)
             continue;
@@ -1985,6 +1991,16 @@ u_long32 *isXML
          }
       }
 
+      if (!qselect_mode && feature_is_enabled(FEATURE_SGEEE)) {
+         if(parse_flag(ppcmdline, "-pri", &alp, &full)) {
+            if(full) {
+               (*pfull) |= QSTAT_DISPLAY_PRIORITY;
+               full = 0;
+            }
+            continue;
+         }
+      }
+
       if(parse_flag(ppcmdline, "-r", &alp, &full)) {
          if(full) {
             (*pfull) |= QSTAT_DISPLAY_RESOURCES;
@@ -2112,8 +2128,9 @@ char *what
       }   
       fprintf(fp, "        [-U user_list]                  %s",MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS);
 
-      if (!qselect_mode){
+      if (!qselect_mode) {
          fprintf(fp, "        [-urg]                          %s",MSG_QSTAT_URGENCYINFO );
+         fprintf(fp, "        [-pri]                          %s",MSG_QSTAT_PRIORITYINFO );
          fprintf(fp, "        [-xml]                          %s", MSG_QSTAT_XML_OUTPUT );
       }   
       

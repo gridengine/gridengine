@@ -1,3 +1,11 @@
+SD-2004-02-09-0: Enhancem.: - Added POSIX priority support to the SGEEE
+                              priority formula.
+                            - Added -pri qstat option.
+                            - Added weight_priority to scheduler configuration
+                            - Various qmon updates for issue #636
+                 Changed:   qmaster, schedd, qstat, qmon
+                 Issue:     636
+
 CR-2004-02-09-2: Testuiste: Fixed problems with admin mail address in install
                             core system test
 

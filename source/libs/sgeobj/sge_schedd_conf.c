@@ -187,6 +187,7 @@ typedef struct{
    int weight_waiting_time;
    int weight_deadline;
    int weight_urgency;
+   int weight_priority;
 }config_pos_type;
 
 
@@ -210,7 +211,7 @@ static config_pos_type pos = {true,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
-                       -1, -1, -1, -1};
+                       -1, -1, -1, -1, -1};
 
 /*
  * a list of all valid "params" parameters
@@ -296,6 +297,7 @@ static void sconf_clear_pos(void){
          pos.weight_waiting_time = -1;
          pos.weight_deadline = -1;
          pos.weight_urgency = -1;
+         pos.weight_priority = -1;
 }
 
 static bool sconf_calc_pos(void){
@@ -350,6 +352,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time)) != -1;
          ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline)) != -1;
          ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
+         ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority)) != -1;
       }
       else
          ret = false;
@@ -626,6 +629,7 @@ lListElem *sconf_create_default()
       lSetDouble(ep, SC_weight_waiting_time, 0.278); 
       lSetDouble(ep, SC_weight_deadline, 3600000 );
       lSetDouble(ep, SC_weight_urgency, 0.5 );
+      lSetDouble(ep, SC_weight_priority, 0.0 );
    }
 
    DEXIT;
@@ -1447,6 +1451,34 @@ double sconf_get_weight_urgency(void) {
       return 0;
 }     
 
+/****** sge_schedd_conf/sconf_get_weight_priority() ****************************
+*  NAME
+*     sconf_get_weight_priority() -- ??? 
+*
+*  SYNOPSIS
+*     double sconf_get_weight_priority(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     double - 
+*******************************************************************************/
+double sconf_get_weight_priority(void) {
+   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   
+   if (pos.empty)
+      sconf_calc_pos();
+      
+   if (pos.weight_priority != -1)
+      return lGetPosDouble(sc_ep, pos.weight_priority);
+   else
+      return 0;
+}     
+
 /****** sge_schedd_conf/sconf_get_share_override_tickets() *********************
 *  NAME
 *     sconf_get_share_override_tickets() -- ??? 
@@ -1902,6 +1934,10 @@ void sconf_print_config(void){
       /* --- SC_weight_urgency */
       dval = sconf_get_weight_urgency();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_urgency"));
+
+      /* --- SC_weight_priority */
+      dval = sconf_get_weight_priority();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_priority"));
    }
 
    DEXIT;

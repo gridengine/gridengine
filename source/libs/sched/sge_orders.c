@@ -230,6 +230,7 @@ bool update_execd
 
          jep = lCreateElem(lGetElemDescr(job));
          lSetUlong(jep, JB_job_number, lGetUlong(job, JB_job_number));
+         lSetDouble(jep, JB_nppri,   lGetDouble(job, JB_nppri));
          lSetDouble(jep, JB_nurg,    lGetDouble(job, JB_nurg));
          lSetDouble(jep, JB_urg,     lGetDouble(job, JB_urg));
          lSetDouble(jep, JB_rrcontr, lGetDouble(job, JB_rrcontr));
@@ -240,9 +241,10 @@ bool update_execd
          {        
             lList *tmp_list;
             if(!job_what)
-               job_what = lWhat("%T(%I %I %I %I %I %I %I)", 
+               job_what = lWhat("%T(%I %I %I %I %I %I %I %I)", 
                   lGetElemDescr(job), 
                   JB_job_number, 
+                  JB_nppri, 
                   JB_nurg, 
                   JB_urg, 
                   JB_rrcontr, 

@@ -438,6 +438,12 @@ enum {
 *        and deadline remain job attributes.
 *        Not spooled.
 *
+*     SGE_DOUBLE(JB_nppri )         
+*        SGEEE. Relative importance due to Posix priority in the range between 0.0 
+*        and 1.0. No need to make this a per task attribute as long as the POSIX
+*        priority remains a job attribute.
+*        Not spooled.
+*
 *     SGE_DOUBLE(JB_rrcontr )         
 *        SGEEE. Combined contribution to static urgency from all resources. This can 
 *        be any value. Actually this is a property of job category. This field is 
@@ -585,6 +591,7 @@ enum {
    JB_path_aliases,
    JB_urg,
    JB_nurg,
+   JB_nppri,
    JB_rrcontr,
    JB_dlcontr,
    JB_wtcontr
@@ -683,8 +690,9 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_qs_args, ST_Type, CULL_DEFAULT)   
    SGE_LIST(JB_path_aliases, PA_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_DOUBLE(JB_urg, CULL_DEFAULT)         
-   SGE_DOUBLE(JB_rrcontr, CULL_DEFAULT)         
    SGE_DOUBLE(JB_nurg, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_nppri, CULL_DEFAULT)         
+   SGE_DOUBLE(JB_rrcontr, CULL_DEFAULT)         
    SGE_DOUBLE(JB_dlcontr, CULL_DEFAULT)         
    SGE_DOUBLE(JB_wtcontr, CULL_DEFAULT)         
 
@@ -828,6 +836,7 @@ NAMEDEF(JBN)
    NAME("JB_path_aliases")
    NAME("JB_urg")
    NAME("JB_nurg")
+   NAME("JB_nppri")
    NAME("JB_rrcontr")
    NAME("JB_dlcontr")
    NAME("JB_wtcontr")

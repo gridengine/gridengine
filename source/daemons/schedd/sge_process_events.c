@@ -598,6 +598,7 @@ DTRACE;
             JB_ja_o_h_ids,   
 	         JB_ja_tasks,
    
+	         JB_nppri,
 	         JB_urg,
 	         JB_nurg,
 	         JB_dlcontr,

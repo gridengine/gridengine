@@ -593,17 +593,19 @@ lWriteElemTo(master_qep, stderr);
             if ((pos=lGetPosViaElem(joker_task, JAT_ntix))>=0) 
                lSetDouble(jatp, JAT_ntix, lGetPosDouble(joker_task, pos));
 
+            lSetDouble(jep, JB_nppri,                     lGetDouble(joker, JB_nppri));
             lSetDouble(jep, JB_nurg,                      lGetDouble(joker, JB_nurg));
             lSetDouble(jep, JB_urg,                       lGetDouble(joker, JB_urg));
             lSetDouble(jep, JB_rrcontr,                   lGetDouble(joker, JB_rrcontr));
             lSetDouble(jep, JB_dlcontr,                   lGetDouble(joker, JB_dlcontr));
             lSetDouble(jep, JB_wtcontr,                   lGetDouble(joker, JB_wtcontr));
          }
-         DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f/%f urg/nurg %f prio\n",
+         DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f npri %f/%f urg/nurg %f prio\n",
             lGetUlong(jep, JB_job_number),
             lGetUlong(jatp, JAT_task_number),
             lGetDouble(jatp, JAT_tix),
             lGetDouble(jatp, JAT_ntix),
+            lGetDouble(jep, JB_nppri),
             lGetDouble(jep, JB_urg),
             lGetDouble(jep, JB_nurg),
             lGetDouble(jatp, JAT_prio)));
@@ -717,6 +719,7 @@ lWriteElemTo(master_qep, stderr);
 
                destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) >-1); 
 
+               lSetDouble(jep, JB_nppri,                     lGetDouble(joker, JB_nppri));
                lSetDouble(jep, JB_nurg,                      lGetDouble(joker, JB_nurg));
                lSetDouble(jep, JB_urg,                       lGetDouble(joker, JB_urg));
                lSetDouble(jep, JB_rrcontr,                   lGetDouble(joker, JB_rrcontr));

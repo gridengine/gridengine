@@ -550,7 +550,6 @@ _Messages_.de.Soft Request: Weiche Anforderung
 _Messages_.de.Soft Resources: Weiche Betriebsmittel
 _Messages_.de.Sort by load: Nach Last sortieren
 _Messages_.de.Sort by sequence number: Nach Folgenummer sortieren 
-_Messages_.de.Sort by share: Nach Anteilen sortieren
 _Messages_.de.Start At: Starten um
 _Messages_.de.Start Job Immediately: Auftrag sofort starten
 _Messages_.de.Start Proc Args: Startprozedurargumente
@@ -594,7 +593,6 @@ _Messages_.de.Usage: Verbrauch
 _Messages_.de.User Configuration: Benutzerkonfiguration
 _Messages_.de.User Lists: Benutzerliste
 _Messages_.de.User Share Tree: Benutzeranteilsscheinbaum
-_Messages_.de.User Sort: Benutzersortierung
 _Messages_.de.User [%]: Benutzer [%]
 _Messages_.de.User/Group: Benutzer/Gruppe
 _Messages_.de.User: Benutzer

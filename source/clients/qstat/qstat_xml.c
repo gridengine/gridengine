@@ -522,7 +522,7 @@ int slots_per_line  /* number of slots to be printed in slots column
 ) {
    char state_string[8];
    u_long32 jstate;
-   int sge_urg, sge_ext, sgeee_mode;
+   int sge_urg, sge_ext, sge_pri, sgeee_mode;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -556,6 +556,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
    sge_urg = sgeee_mode && (full_listing & QSTAT_DISPLAY_URGENCY);
+   sge_pri = sgeee_mode && (full_listing & QSTAT_DISPLAY_PRIORITY);
 
    /* job number / ja task id */
    if (print_jobid){
@@ -579,6 +580,13 @@ int slots_per_line  /* number of slots to be printed in slots column
             xml_append_Attr_D8(attributeList, "JB_rrcontr", lGetDouble(job, JB_rrcontr));
             xml_append_Attr_D8(attributeList, "JB_wtcontr", lGetDouble(job, JB_wtcontr));
             xml_append_Attr_D8(attributeList, "JB_dlcontr", lGetDouble(job, JB_dlcontr));
+         }
+      } 
+
+      if (sge_pri) {
+         if (print_jobid) {
+            xml_append_Attr_D(attributeList, "JB_nppri", lGetDouble(job, JB_nppri));
+            xml_append_Attr_I(attributeList, "JB_priority", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY);
          }
       } 
    } 

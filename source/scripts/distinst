@@ -83,6 +83,13 @@ PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 MPIFILES="README README.atm hostname mpi.template mpich.template mpi.sh \
           mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
 
+SUNHPC_FILES="README batch.sunmpi.template sunmpi.pe.template"
+SUNHPC_SCRIPTS="HPC_GE_Integration.sh MPRUN PRISM resume_sunmpi.sh \
+                startsunmpi.sh stopsunmpi.sh suspend_sunmpi.sh \
+                terminate_sunmpi.sh"
+SUNHPCACCT_FILES="README"
+SUNHPCACCT_SCRIPTS="MPRUN PRISM ctacct1.pl ctacct2.pl stopsunmpi.sh"
+
 SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
           security/gss/delete_cred.c security/gss/sge_gsslib.c \
           security/gss/sge_gsslib.h security/gss/renew_cred.ksh \
@@ -703,8 +710,31 @@ if [ $instcommon = true ]; then
       for f in $MPIFILES; do
          Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
       done
-      chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname
-   fi      
+      chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname $DEST_SGE_ROOT/mpi/rsh
+
+      HPCBASE=mpi/sunhpc/loose-integration
+      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE/accounting
+      
+      for f in $SUNHPC_FILES; do
+         Execute cp dist/$HPCBASE/$f $DEST_SGE_ROOT/$HPCBASE
+         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE/$f
+      done
+   
+      for f in $SUNHPC_SCRIPTS; do
+         Execute cp dist/$HPCBASE/$f $DEST_SGE_ROOT/$HPCBASE
+         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE/$f
+      done
+
+      for f in $SUNHPCACCT_FILES; do
+         Execute cp dist/$HPCBASE/accounting/$f $DEST_SGE_ROOT/$HPCBASE/accounting
+         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE/accounting/$f
+      done
+   
+      for f in $SUNHPCACCT_SCRIPTS; do
+         Execute cp dist/$HPCBASE/accounting/$f $DEST_SGE_ROOT/$HPCBASE/accounting
+          Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE/accounting/$f
+      done
+   fi
 
    if [ $instman = true ]; then
       echo Installing \"man/\" and \"catman/\"

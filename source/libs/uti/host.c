@@ -63,6 +63,7 @@ static host *hostlist = NULL;
 
 host *localhost = NULL;
 
+static void delete_host(host *h);
 static int copy_hostent(struct hostent *heto, struct hostent *hefrom);
 static int matches_addr(struct hostent *he, char *addr);
 static host *search_pred_alias(host *h);
@@ -192,7 +193,7 @@ host *create_host()
 /********************************/
 /* delete host with all aliases */
 /********************************/
-void delete_host(
+static void delete_host(
 host *h 
 ) {
    host *last = NULL, *hl = hostlist;

@@ -1,3 +1,11 @@
+AH-2002-10-08-0  Bugfix:    Commd read the host alias file each time when 
+                            a hostname was not found in commd's host list.
+                            Now host alias file only read at commd startup
+                            or when a COMMD_UNIQUEHOST request with
+                            refresh_aliases = true is received. 
+                 Review:    AS
+                 Changed:   sge_commd
+
 AH-2002-10-07-0  Bugfix:    Fixed problem with non-resvolvable hosts in host_aliases 
                             file causing wrong resolving results.
                  IZ:        392

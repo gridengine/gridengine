@@ -135,7 +135,6 @@ int commdport
       DEBUG((SGE_EVENT, "* enrolling commproc"));
 
       if (!h) {
-         read_aliasfile(aliasfile);
          h = newhost_addr(&mp->fromaddr);
 
          if (!h) {
@@ -238,7 +237,6 @@ int commdport
       DEBUG((SGE_EVENT, "* controlling operation"));
      
       if (!h) {
-         read_aliasfile(aliasfile);
          h = newhost_addr(&mp->fromaddr);
 
          if (!h) {
@@ -310,7 +308,6 @@ int commdport
                  int i = 0;
   
                  DEBUG((SGE_EVENT, "adding master host name %s", master_name ));  
-                 read_aliasfile(aliasfile);
                  master_host = newhost_name( master_name ,&i);
             }
          }
@@ -429,7 +426,6 @@ int commdport
 
    /* unknown host ? */
    if (!h && (mp->flags & COMMD_SCOMMD)) {
-      read_aliasfile(aliasfile);
       h = newhost_addr(&mp->fromaddr);
    }
    if (!h) {
@@ -499,11 +495,6 @@ int commdport
          read_aliasfile(aliasfile);
 
       h = search_host(hostname, NULL);
-      if (!h && !refresh_aliases) {
-         read_aliasfile(aliasfile);
-         h = search_host(hostname, NULL);
-      }
-
       if (!h)
          h = newhost_name(hostname, NULL);
 
@@ -592,7 +583,6 @@ int commdport
       if (fromhost[0]) {
          fhost = search_host(fromhost, NULL);
          if (!fhost) {
-            read_aliasfile(aliasfile);
             fhost = newhost_name(fromhost, NULL);
          }
 
@@ -721,7 +711,6 @@ int commdport
    thost = search_host(tohost, NULL);
 
    if (!thost) {
-      read_aliasfile(aliasfile);
       thost = newhost_name(tohost, NULL);
    }
 
@@ -748,7 +737,6 @@ int commdport
    if (mp->flags & COMMD_SCOMMD) {
       fhost = search_host(fromhost, NULL);
       if (!fhost) {
-         read_aliasfile(aliasfile);
          fhost = newhost_name(fromhost, NULL);
          if (!fhost) {
             ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S , fromhost));

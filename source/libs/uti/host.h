@@ -61,7 +61,6 @@ void host_initialize(void);
 host *newhost_addr(const struct in_addr *addr);
 host *newhost_name(const char *name, int *not_really_new);
 host *create_host(void);
-void delete_host(host *h);
 host *search_host(const char *name, char *addr);
 int alias_host(host *h1, host *h2);
 int alias_hoststr(char *host1, char *host2);

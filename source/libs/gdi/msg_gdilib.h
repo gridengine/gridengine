@@ -55,6 +55,7 @@
 ** gdilib/sge_any_request.c
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data\n"))
+#define MSG_GDI_INITCOMMLIBFAILED                     _MESSAGE(43046, _("failed initialize communication library\n"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
 #define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"\n"))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))

@@ -584,7 +584,6 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
             complete, we must try it later !!!!!!!!!!!!!!! */
 
    while ( data_complete != size ) {
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
       gettimeofday(&now,NULL);
       if ( now.tv_sec >= timeout_time ) {
          CL_LOG(CL_LOG_ERROR,"send timeout error");
@@ -611,11 +610,8 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
                if (only_one_write != NULL) {
                   *only_one_write = data_complete;
                   if (data_complete != size) {
-                     CL_LOG_INT(CL_LOG_INFO,"incomplete write, bytes to write:", size);
-                     CL_LOG_INT(CL_LOG_INFO,"bytes written:", data_complete);
                      return CL_RETVAL_UNCOMPLETE_WRITE;
                   }
-                  CL_LOG_INT(CL_LOG_INFO,"all bytes written:",data_complete );
                   return CL_RETVAL_OK;
                }
             }
@@ -631,22 +627,17 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
             if (only_one_write != NULL) {
                *only_one_write = data_complete;
                if (data_complete != size) {
-                  CL_LOG_INT(CL_LOG_INFO,"incomplete write, bytes to write:", size);
-                  CL_LOG_INT(CL_LOG_INFO,"bytes written:", data_complete);
                   return CL_RETVAL_UNCOMPLETE_WRITE;
                }
-               CL_LOG_INT(CL_LOG_INFO,"all bytes written:",data_complete );
                return CL_RETVAL_OK;
             }
          }
       }
       if (only_one_write != NULL) {
          *only_one_write = 0;
-         CL_LOG_INT(CL_LOG_INFO,"bytes written", 0 );
          return CL_RETVAL_UNCOMPLETE_WRITE;
       }
    }
-   CL_LOG_INT(CL_LOG_INFO,"all bytes written:",data_complete );
    return CL_RETVAL_OK;
 }
 
@@ -724,7 +715,6 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
 
 
    while ( data_complete != size ) {
-      CL_LOG(CL_LOG_INFO,"gettimeofday");
       gettimeofday(&now,NULL);
       if ( now.tv_sec >= timeout_time ) {
          return CL_RETVAL_READ_TIMEOUT;
@@ -751,11 +741,8 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
                if (only_one_read != NULL) {
                   *only_one_read = data_complete;
                   if (data_complete != size) {
-                     CL_LOG_INT(CL_LOG_INFO,"incomplete read, bytes to read:", size);
-                     CL_LOG_INT(CL_LOG_INFO,"bytes read:", data_complete);
                      return CL_RETVAL_UNCOMPLETE_READ;
                   }
-                  CL_LOG_INT(CL_LOG_INFO,"all bytes read:",data_complete );
                   return CL_RETVAL_OK;
                }
             }
@@ -776,11 +763,8 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
             if (only_one_read != NULL) {
                *only_one_read = data_complete;
                if (data_complete != size) {
-                  CL_LOG_INT(CL_LOG_INFO,"incomplete read, bytes to read:", size);
-                  CL_LOG_INT(CL_LOG_INFO,"bytes read:", data_complete);
                   return CL_RETVAL_UNCOMPLETE_READ;
                }
-               CL_LOG_INT(CL_LOG_INFO,"all bytes read:",data_complete );
                return CL_RETVAL_OK;
             }
          }
@@ -789,12 +773,9 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
       }
       if (only_one_read != NULL) {
          *only_one_read = 0;
-         CL_LOG_INT(CL_LOG_INFO,"bytes read:", 0);
          return CL_RETVAL_UNCOMPLETE_READ;
       }
    }
-   CL_LOG_INT(CL_LOG_INFO,"all bytes read:",data_complete );
-
    return CL_RETVAL_OK;
 }
 

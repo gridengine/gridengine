@@ -362,6 +362,8 @@ void prepare_enroll(const char *name)
    }
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+      CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
+      SGE_EXIT(1);
    }
  
    /* set alias file */

@@ -6288,6 +6288,8 @@ proc compile_source { { do_only_install 0 } } {
 
    catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
    puts $result
+   catch { exec "touch" "$CHECK_PRODUCT_ROOT"  } result
+   puts $result
    catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
    puts $result
  

@@ -1,3 +1,12 @@
+CR-2004-10-05-0: Bugfix:    o removed unnecessary logging information in
+                              commlib
+                            o prepare_enroll() will now terminate application
+                              on cl_com_setup_commlib() errors
+                 Review:    pending
+                 Changed:   commlib, gdi
+                 Issue:     not available
+                 Bugtraq:   not available
+
 DT-2004-10-04-0: Bugfix:    o Fixed testsuite test for 1269
                             o Execd now also looks in $SGE_ROOT/bin for qidle
                               and qloadsensor

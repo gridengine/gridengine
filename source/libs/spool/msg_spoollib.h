@@ -1,0 +1,55 @@
+#ifndef __MSG_SPOOLLIB_H
+#define __MSG_SPOOLLIB_H
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
+#include "basis_types.h"
+
+
+/* 
+ * libs/gdi/sge_spooling.c
+ */
+#define MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS  _MESSAGE(59000, _("object type "SFQ" is not handled in spooling context "SFQ"\n")) 
+#define MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS _MESSAGE(59001, _("no default rule for object type "SFQ" in spooling context "SFQ"\n"))
+#define MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS _MESSAGE(59002, _("no rules for object type "SFQ" in spooling context "SFQ"\n"))
+#define MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS   _MESSAGE(59003, _("corrupt rule "SFQ" in spooling context "SFQ": "SFQ" is missing\n"))
+#define MSG_SPOOL_CANNOTSPOOLFREEOBJECT      _MESSAGE(59004, _("cannot spool free object\n"))
+#define MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS   _MESSAGE(59005, _("rule "SFQ" in spooling context "SFQ" failed writing an object\n"))
+#define MSG_SPOOL_INVALIDSPOOLEDOBJECTTYPE_D _MESSAGE(59005, _("invalid spooled object type %d\n"))
+#define MSG_SPOOL_NODESCRIPTORFOROBJECTTYPEALL _MESSAGE(59006, _("no descriptor available for object type ALL\n"))
+#define MSG_SPOOL_NOKEYFOROBJECTTYPEALL _MESSAGE(59006, _("no key field available for object type ALL\n"))
+#define MSG_SPOOL_NOVALIDCONTEXT_S  _MESSAGE(59007, _("no valid spooling context passed to "SFQ"\n"))
+#define MSG_SPOOL_CONTEXTNEEDSNAME  _MESSAGE(59008, _("spooling context has to have a name\n"))
+#define MSG_SPOOL_NOVALIDSPOOLTYPE_S _MESSAGE(59009, _("no valid spool type passed to "SFQ"\n"))
+#define MSG_SPOOL_NOVALIDRULE_S _MESSAGE(59010, _("no valid spooling rule passed to "SFQ"\n"))
+
+#endif /* __MSG_SPOOLLIB_H */

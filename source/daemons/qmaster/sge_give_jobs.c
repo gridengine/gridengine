@@ -1227,7 +1227,7 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task, int spool_job)
        * Add the zombie task id
        */
       if (zombie) {
-         job_add_as_zombie(zombie, job, NULL, ja_task_id); 
+         job_add_as_zombie(zombie, NULL, ja_task_id); 
       } 
 
       /* 

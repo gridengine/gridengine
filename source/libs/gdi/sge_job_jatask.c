@@ -516,7 +516,7 @@ u_long32 job_get_enrolled_ja_tasks(const lListElem *job)
    return lGetNumberOfElem(lGetList(job, JB_ja_tasks));
 }
  
-/****** sge_job_jatask/job_enroll() ********************************************
+/****** gdi/job_jatask/job_enroll() ********************************************
 *  NAME
 *     job_enroll() -- enrolls a array task into the JB_ja_tasks lists 
 *
@@ -576,7 +576,7 @@ void job_enroll(lListElem *job, lList **answer_list, u_long32 ja_task_number)
    DEXIT;
 }  
 
-/****** sge_job_jatask/job_has_tasks() *****************************************
+/****** gdi/job_jatask/job_has_tasks() *****************************************
 *  NAME
 *     job_has_tasks() -- Returns true if there exist unenrolled tasks 
 *
@@ -610,6 +610,25 @@ int job_has_tasks(lListElem *job)
    return ret;
 }
 
+/****** gdi/job_jatask/job_delete_not_enrolled_ja_task() ***********************
+*  NAME
+*     job_delete_not_enrolled_ja_task() -- remove unenrolled pending task 
+*
+*  SYNOPSIS
+*     void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list, 
+*                                          u_long32 ja_task_number) 
+*
+*  FUNCTION
+*     Removes an unenrolled pending task from the id lists.
+*
+*  INPUTS
+*     lListElem *job          - JB_Type 
+*     lList **answer_list     - AN_Type 
+*     u_long32 ja_task_number - Task to be removed 
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_add_as_zombie()
+*******************************************************************************/
 void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list, 
                                      u_long32 ja_task_number) 
 {
@@ -630,8 +649,27 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
    DEXIT;
 } 
 
-void job_add_as_zombie(lListElem *zombie, const lListElem *job, 
-                                lList **answer_list, u_long32 ja_task_id) 
+/****** gdi/job_jatask/job_add_as_zombie() *************************************
+*  NAME
+*     job_add_as_zombie() -- add task into zombie id list 
+*
+*  SYNOPSIS
+*     void job_add_as_zombie(lListElem *zombie, lList **answer_list, 
+*                            u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     Adds a task into the zombie id list (JB_ja_z_ids)
+*
+*  INPUTS
+*     lListElem *zombie    - JB_Type 
+*     lList **answer_list  - AN_Type 
+*     u_long32 ja_task_id  - Task id to be inserted
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_delete_not_enrolled_ja_task()
+*******************************************************************************/
+void job_add_as_zombie(lListElem *zombie, lList **answer_list, 
+                       u_long32 ja_task_id) 
 {
    lList *z_ids = NULL;    /* RN_Type */
 
@@ -643,6 +681,22 @@ void job_add_as_zombie(lListElem *zombie, const lListElem *job,
    DEXIT;
 }
 
+/****** sge/job_jatask/job_has_job_pending_tasks() *****************************
+*  NAME
+*     job_has_job_pending_tasks() -- Has the job unenrolled pending tasks? 
+*
+*  SYNOPSIS
+*     int job_has_job_pending_tasks(lListElem *job) 
+*
+*  FUNCTION
+*     True (1) will be returned if the job has unenrolled pending tasks.
+*
+*  INPUTS
+*     lListElem *job - JB_Type 
+*
+*  RESULT
+*     int - True (1) or false (0)
+*******************************************************************************/
 int job_has_job_pending_tasks(lListElem *job) 
 {
    int ret = 0;
@@ -656,6 +710,23 @@ int job_has_job_pending_tasks(lListElem *job)
    return ret;
 }
 
+/****** gdi/job_jatask/job_set_hold_state() ************************************
+*  NAME
+*     job_set_hold_state() -- Changes the hold state of a job/array-task.
+*
+*  SYNOPSIS
+*     void job_set_hold_state(lListElem *job, lList **answer_list, 
+*                             u_long32 ja_task_id, u_long32 new_hold_state) 
+*
+*  FUNCTION
+*     This function changes the hold state of a job/array-task.
+*
+*  INPUTS
+*     lListElem *job          - JB_Type 
+*     lList **answer_list     - AN_Type 
+*     u_long32 ja_task_id     - Array task id 
+*     u_long32 new_hold_state - hold state (see MINUS_H_TGT_*)
+*******************************************************************************/
 void job_set_hold_state(lListElem *job, lList **answer_list, 
                         u_long32 ja_task_id,
                         u_long32 new_hold_state)
@@ -704,6 +775,23 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
    DEXIT;
 }
 
+/****** gdi/job_jatask/job_get_hold_state() ************************************
+*  NAME
+*     job_get_hold_state() -- Returns the hold state of a job/array-task
+*
+*  SYNOPSIS
+*     u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     Returns the hold state of a job/array-task 
+*
+*  INPUTS
+*     lListElem *job      - JB_Type 
+*     u_long32 ja_task_id - array task id 
+*
+*  RESULT
+*     u_long32 - hold state (see MINUS_H_TGT_*)
+*******************************************************************************/
 u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
 {
    u_long32 ret = 0;
@@ -731,6 +819,33 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
    return ret;
 }
 
+/****** gdi/job_jatask/job_search_task() ***************************************
+*  NAME
+*     job_search_task() -- Search an array task (possibly enroll it) 
+*
+*  SYNOPSIS
+*     lListElem* job_search_task(lListElem *job, lList **answer_list, 
+*                                u_long32 ja_task_id, 
+*                                int enroll_if_not_existing) 
+*
+*  FUNCTION
+*     This function return the array task with the id 'ja_task_id' if it exists
+*     in the JB_ja_tasks-sublist of 'job'. If this task does not exist in this
+*     list, NULL will be returned. 
+*     If the task is not found in the sublist and if 'enroll_if_not_existing'  
+*     is true (1) than a new element will be created in the sublist
+*     of 'job' and a pointer to the new element will be returned.
+*     Errors may be found in the 'answer_list'
+*
+*  INPUTS
+*     lListElem *job             - JB_Type 
+*     lList **answer_list        - AN_Type 
+*     u_long32 ja_task_id        - array task id 
+*     int enroll_if_not_existing - True (1) or false (0) 
+*
+*  RESULT
+*     lListElem* - JAT_Type element
+*******************************************************************************/
 lListElem *job_search_task(lListElem *job, lList **answer_list,
                            u_long32 ja_task_id, int enroll_if_not_existing) 
 {
@@ -749,6 +864,36 @@ lListElem *job_search_task(lListElem *job, lList **answer_list,
    return ja_task;
 }
                             
+/****** sge_job_jatask/job_list_add_job() **************************************
+*  NAME
+*     job_list_add_job() -- Creates a joblist and adds an job into it 
+*
+*  SYNOPSIS
+*     int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
+*                          int check) 
+*
+*  FUNCTION
+*     A 'job_list' will be created by this function if it does not already 
+*     exist and 'job' will be inserted into this 'job_list'. 'name' will
+*     be the name of the new list.
+*
+*     If 'check' is true (1) than the function will test whether there is 
+*     already an element in 'job_list' which has the same 'JB_job_number' like
+*     'job'. If this is true than -1 will be returned by this function.
+*      
+*
+*  INPUTS
+*     lList **job_list - JB_Type
+*     const char *name - name of the list
+*     lListElem *job   - JB_Type element 
+*     int check        - Does the element already exist? 
+*
+*  RESULT
+*     int - error code
+*           1 => invalid parameter
+*          -1 => check failed: element already exists
+*           0 => OK
+*******************************************************************************/
 int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
                      int check) {
    DENTER(TOP_LAYER, "job_list_add_job");

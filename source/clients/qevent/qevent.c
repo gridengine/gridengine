@@ -60,7 +60,9 @@ static void dump_eventlist(lList *event_list)
    lListElem *event;
    for_each(event, event_list) {
       fprintf(stdout, event_text(event));
-/*       lWriteElemTo(event, stdout); */
+#if 0 /* EB: debug */
+      lWriteElemTo(event, stdout); 
+#endif
       switch(lGetUlong(event, ET_type)) {
          case sgeE_SHUTDOWN:
             shut_me_down = 1;

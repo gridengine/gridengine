@@ -444,7 +444,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
      
       sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_S,
               job_get_id_string(job_id, ja_task_id, pe_task_id));
-      ERROR((SGE_EVENT, SFQ , error));    
+      ERROR((SGE_EVENT, error));    
  
       /* 
        * failed = ESSTATE_SHEPHERD_EXIT or exit status of shepherd if we are
@@ -553,7 +553,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             job_get_id_string(job_id, ja_task_id, pe_task_id));
       }
       
-      ERROR((SGE_EVENT, SFQ, error));
+      ERROR((SGE_EVENT, error));
       
       if (!failed) {
          failed = SSTATE_FAILURE_AFTER_JOB;

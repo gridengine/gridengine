@@ -1146,10 +1146,10 @@ AddSGEStartUpScript()
 
       rm -f $TMP_SGE_STARTUP_FILE ${TMP_SGE_STARTUP_FILE}.0 ${TMP_SGE_STARTUP_FILE}.1
 
-      if [ $euid = 0 -a $ADMINUSER != default -a $QMASTER = "install" ]; then
+      if [ $euid = 0 -a $ADMINUSER != default -a $QMASTER = "install" -a $hosttype = "master" ]; then
          AddDefaultManager root $ADMINUSER
          AddDefaultOperator $ADMINUSER
-      elif [ $euid != 0 ]; then
+      elif [ $euid != 0 -a $hosttype = "master" ]; then
          AddDefaultManager $USER
          AddDefaultOperator $USER
       fi

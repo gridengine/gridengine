@@ -1,3 +1,10 @@
+MD-2004-01-28-0: Bugfix:    - spooling without rpc-server damaged
+                              berkeleydb configuration -> no spooling
+                            - default domain input didn't work  
+                 Changed:   sge_config_common.sh, sge_config_qmaster.sh,
+                            sge.conf, execd_template, master_template
+                            rpc_startup_template 
+
 AD-2004-01-28-0: Bugfix:    'inc_qmaster_heartbeat()' should only be called
                             from within the heartbeat event handler.
                  Changed:   qmaster

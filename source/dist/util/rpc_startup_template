@@ -78,8 +78,6 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 ### END INIT INFO
 #---------------------------------------------------------------------------
 
-COMMD_STARTUP_DELAY=2
-
 SGE_ROOT=GENROOT; export SGE_ROOT
 SGE_CELL=GENCELL; export SGE_CELL
 
@@ -247,7 +245,7 @@ CheckIfLocal()
          fi
          ;;
       *linux)
-         df -l $FS | grep $FS >/dev/null 2>&1
+         df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 1
          else
@@ -259,8 +257,6 @@ CheckIfLocal()
          exit 1
          ;;
    esac
-
-   return 0
 
 }
 

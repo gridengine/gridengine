@@ -253,6 +253,7 @@ SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSelect spooling method"
    SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
+   $ECHO $SPOOLING_METHOD
    $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
    case $SPOOLING_METHOD in 
       classic)
@@ -321,6 +322,7 @@ SpoolingCheckParams()
                    "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
          return 0
       fi
+      return 1
    else 
       # TODO: we should check if the hostname can be resolved
       # create a script to start the rpc server
@@ -338,9 +340,8 @@ SpoolingCheckParams()
          $INFOTEXT "Please start the rc script >%s< on the RPC server machine\n" $COMMONDIR/sgebdb       
       fi
 
-   fi
-
    return 1
+   fi
 }
 
 CreateRPCServerScript()
@@ -378,6 +379,7 @@ CheckLocalFilesystem()
          ;;
       *)
          $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
+         $INFOTEXT -wait -n "\nPlease make sure that the directory $FS is on a local filesystem!\nHit <RETURN> to continue >> "
          exit 1
          ;;
    esac
@@ -396,32 +398,34 @@ SelectHostNameResolving()
      IGNORE_FQDN_DEFAULT=$HOSTNAME_RESOLVING
      $INFOTEXT -log "Using >%s< as IGNORE_FQDN_DEFAULT." "$IGNORE_FQDN_DEFAULT"
      $INFOTEXT -log "If it's >true<, the domainname will be ignored."
+     
    else
-   $CLEAR
-   $INFOTEXT -u "\nSelect default Grid Engine hostname resolving method"
-   $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If thisis\n" \
-             "the case the hostnames\n\n" \
-             "   >hostA< and >hostA.foo.com<\n\n" \
-             "would be treated as eqal, because the DNS domain name >foo.com<\n" \
-             "is ignored when comparing hostnames.\n\n"
+     $CLEAR
+     $INFOTEXT -u "\nSelect default Grid Engine hostname resolving method"
+     $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If thisis\n" \
+               "the case the hostnames\n\n" \
+               "   >hostA< and >hostA.foo.com<\n\n" \
+               "would be treated as eqal, because the DNS domain name >foo.com<\n" \
+               "is ignored when comparing hostnames.\n\n"
 
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-             "Are all hosts of your cluster in a single DNS domain (y/n) [y] >> "
-   if [ $? = 0 ]; then
-      IGNORE_FQDN_DEFAULT=true
-      $INFOTEXT "Ignoring domainname when comparing hostnames."
+     $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+               "Are all hosts of your cluster in a single DNS domain (y/n) [y] >> "
+     if [ $? = 0 ]; then
+        IGNORE_FQDN_DEFAULT=true
+        $INFOTEXT "Ignoring domainname when comparing hostnames."
+     else
+        IGNORE_FQDN_DEFAULT=false
+        $INFOTEXT "The domainname is not ignored when comparing hostnames."
+     fi
+     $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+     $CLEAR
+   fi
+
+   if [ "$IGNORE_FQDN_DEFAULT" = false ]; then
+      GetDefaultDomain
    else
-      IGNORE_FQDN_DEFAULT=false
-      $INFOTEXT "The domainname is not ignored when comparing hostnames."
-   fi
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-   $CLEAR
-   fi
-   #if [ $fast = false -a "$IGNORE_FQDN_DEFAULT" = false ]; then
-    #  GetDefaultDomain
-   #else
       CFG_DEFAULT_DOMAIN=none
-   #fi
+   fi
 }
 
 
@@ -646,27 +650,6 @@ PrintConf()
    $ECHO "max_u_jobs             0"
    $ECHO "max_jobs               0"
 }
-
-
-#-------------------------------------------------------------------------
-# PrintLocalConf:  print execution host local SGE/SGEEE configuration
-#
-#PrintLocalConf()
-#{
-#
-#   arg=$1
-#   if [ $arg = 1 ]; then
-#      $ECHO "# Version: pre6.0"
-#      $ECHO "#"
-#      $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
-#      $ECHO "#"
-#      $ECHO "conf_version           0"
-#   fi
-#   $ECHO "mailer                 $MAILER"
-#   $ECHO "xterm                  $XTERM"
-#   $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
-#   $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
-#}
 
 
 #-------------------------------------------------------------------------
@@ -963,168 +946,6 @@ InitCA()
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
-
-#-------------------------------------------------------------------------
-# AddSGEStartUpScript: Add startup script to rc files if root installs
-#
-#AddSGEStartUpScript()
-#{
-#   euid=$1
-#   create=$2
-#
-#   $CLEAR
-#   $INFOTEXT -u "\nGrid Engine startup script"
-#   $ECHO
-#   TMP_SGE_STARTUP_FILE=/tmp/rcsge.$$
-#   STARTUP_FILE_NAME=rcsgedefault
-#   S95NAME=S95rcsge
-#
-#   if [ -f $TMP_SGE_STARTUP_FILE ]; then
-#      Execute rm $TMP_SGE_STARTUP_FILE
-#   fi
-#   if [ -f ${TMP_SGE_STARTUP_FILE}.0 ]; then
-#      Execute rm ${TMP_SGE_STARTUP_FILE}.0
-#   fi
-#   if [ -f ${TMP_SGE_STARTUP_FILE}.1 ]; then
-#      Execute rm ${TMP_SGE_STARTUP_FILE}.1
-#   fi
-#
-#   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
-#
-#   if [ $create = true ]; then
-#
-#      Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-#                  -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-#                  -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-#                  util/startup_template > ${TMP_SGE_STARTUP_FILE}.0
-#
-#      if [ "$COMMD_PORT" != "" ]; then
-#         Execute sed -e "s/=GENCOMMD_PORT/=$COMMD_PORT/" \
-#                     ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE
-#      else
-#         Execute sed -e "/GENCOMMD_PORT/d" \
-#                     ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE
-#      fi
-#
-#      ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE
-#      ExecuteAsAdmin $CHMOD a+x $SGE_STARTUP_FILE
-#
-#      rm -f $TMP_SGE_STARTUP_FILE ${TMP_SGE_STARTUP_FILE}.0 ${TMP_SGE_STARTUP_FILE}.1
-#
-#      if [ $euid = 0 -a $ADMINUSER != default -a $QMASTER = "install" ]; then
-#         AddDefaultManager root $ADMINUSER
-#         AddDefaultOperator $ADMINUSER
-#      elif [ $euid != 0 ]; then
-#         AddDefaultManager $USER
-#         AddDefaultOperator $USER
-#      fi
-#
-#      $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
-#                "   %s<\n\n" $SGE_STARTUP_FILE
-#      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-#   fi
-#
-#   $CLEAR
-#
-#   if [ $euid != 0 ]; then
-#      return 0
-#   fi
-#
-#   $INFOTEXT -u "\nGrid Engine startup script"
-#
-#   # --- from here only if root installs ---
-#   $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
-#             "\nWe can install the startup script that\n" \
-#             "Grid Engine is started at machine boot (y/n) [n] >> "
-#
-#   if [ $AUTO = true -a $ADD_TO_RC = true ]; then
-#      :
-#   else
-#      if [ $? = 1 ]; then
-#         $CLEAR
-#         return
-#      fi
-#   fi
-#
-#   # If we have System V we need to put the startup script to $RC_PREFIX/init.d
-#   # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-#   if [ "$RC_FILE" = "sysv_rc" ]; then
-#      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
-#      Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
-#      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
-#      Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
-#      Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$S95NAME
-#
-#      # runlevel management in Linux is different -
-#      # each runlevel contains full set of links
-#      # RedHat uses runlevel 5 and SUSE runlevel 3 for xdm
-#      # RedHat uses runlevel 3 for full networked mode
-#      # Suse uses runlevel 2 for full networked mode
-#      # we already installed the script in level 3
-#      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
-#         runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
-#         if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-#            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
-#            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
-#            Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
-#         fi
-#      fi
-#   elif [ "$RC_FILE" = "insserv-linux" ]; then
-#      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-#      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-#      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-#      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-#   elif [ "$RC_FILE" = "freebsd" ]; then
-#      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-#      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-#   else
-#      # if this is not System V we simple add the call to the
-#      # startup script to RC_FILE
-#
-#      # Start-up script already installed?
-#      #------------------------------------
-#      grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
-#      status=$?
-#      if [ $status != 0 ]; then
-#         $INFOTEXT "Adding application startup to %s" $RC_FILE
-#         # Add the procedure
-#         #------------------
-#         $ECHO "" >> $RC_FILE
-#         $ECHO "" >> $RC_FILE
-#         $ECHO "# Grid Engine start up" >> $RC_FILE
-#         $ECHO "#-$LINE---------" >> $RC_FILE
-#         $ECHO $SGE_STARTUP_FILE >> $RC_FILE
-#      else
-#         $INFOTEXT "Found a call of %s in %s. Replacing with new call.\n" \
-#                   "Your old file %s is saved as %s" $STARTUP_FILE_NAME $RC_FILE $RC_FILE $RC_FILE.org.1
-#
-#         mv $RC_FILE.org.3 $RC_FILE.org.4    2>/dev/null
-#         mv $RC_FILE.org.2 $RC_FILE.org.3    2>/dev/null
-#         mv $RC_FILE.org.1 $RC_FILE.org.2    2>/dev/null
-#
-#         # save original file modes of RC_FILE
-#         uid=`$SGE_UTILBIN/filestat -uid $RC_FILE`
-#         gid=`$SGE_UTILBIN/filestat -gid $RC_FILE`
-#         perm=`$SGE_UTILBIN/filestat -mode $RC_FILE`
-#
-#         Execute cp $RC_FILE $RC_FILE.org.1
-#
-#         savedfile=`basename $RC_FILE`
-#
-#         sed -e "s%.*$STARTUP_FILE_NAME.*%$SGE_STARTUP_FILE%" \
-#                 $RC_FILE > /tmp/$savedfile.1
-#
-#         Execute cp /tmp/$savedfile.1 $RC_FILE
-#         Execute chown $uid $RC_FILE
-#         Execute chgrp $gid $RC_FILE
-#         Execute chmod $perm $RC_FILE
-#         Execute rm -f /tmp/$savedfile.1
-#      fi
-#   fi
-#
-#   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-#   $CLEAR
-#}
 
 
 #--------------------------------------------------------------------------
@@ -1582,5 +1403,51 @@ GetExecdPort()
    fi
 
    export SGE_EXECD_PORT
+}
+
+
+#-------------------------------------------------------------------------
+# GetDefaultDomain
+#
+GetDefaultDomain()
+{
+   done=false
+
+   if [ $AUTO = "true" ]; then
+      $INFOTEXT -log "Using >%< as default domain." $DEFAULT_DOMAIN
+      CFG_DEFAULT_DOMAIN=$DEFAULT_DOMAIN
+      done=true
+   fi
+
+   while [ $done = false ]; do
+      $CLEAR
+      $INFOTEXT -u "\nDefault domain for hostnames"
+
+      $INFOTEXT "\nSometimes the primary hostname of machines returns the short hostname\n" \
+                  "without a domain suffix like >foo.com<.\n\n" \
+                  "This can cause problems with getting load values of your execution hosts.\n" \
+                  "If you are using DNS or you are using domains in your >/etc/hosts< file or\n" \
+                  "your NIS configuration it is usually safe to define a default domain\n" \
+                  "because it is only used if your execution hosts return the short hostname\n" \
+                  "as their primary name.\n\n" \
+                  "If your execution hosts reside in more than one domain, the default domain\n" \
+                  "parameter must be set on all execution hosts individually.\n"
+
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                "Do you want to configure a default domain (y/n) [y] >> "
+      if [ $? = 0 ]; then
+         $INFOTEXT -n "\nPlease enter your default domain >> "
+         CFG_DEFAULT_DOMAIN=`Enter ""`
+         if [ "$CFG_DEFAULT_DOMAIN" != "" ]; then
+            $INFOTEXT -wait -auto $AUTO -n "\nUsing >%s< as default domain. Hit <RETURN> to continue >> " \
+                      $CFG_DEFAULT_DOMAIN
+            $CLEAR
+            done=true
+         fi
+      else
+         CFG_DEFAULT_DOMAIN=none
+         done=true
+      fi
+   done
 }
 

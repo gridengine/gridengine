@@ -206,7 +206,6 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
    if (pos >= 0) {
       lList *mod_list = lGetPosList(reduced_elem, pos);
       lList *org_list = lGetList(this_elem, attribute_name);
-      lList *new_org_list = NULL;
       lListElem *mod_elem;
 
       /* 

@@ -147,7 +147,7 @@ XtPointer cld, cad;
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | COMPLEX_T, &alp);
+   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -211,7 +211,7 @@ void updateQueueList(void)
    
    DENTER(GUI_LAYER, "updateQueueList");
 
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
    /*
    ** copy of host list
    */
@@ -273,7 +273,7 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *alp = NULL;
-   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | COMPLEX_T, &alp);
+   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -310,7 +310,7 @@ XtPointer cld, cad;
     * of host that the queue is attached to
     */
    qmonTimerAddUpdateProc(QUEUE_T, "updateQueueList", updateQueueList);
-   qmonStartTimer(QUEUE_T | EXECHOST_T | COMPLEX_T);
+   qmonStartTimer(QUEUE_T | EXECHOST_T);
    
    DEXIT;
 }
@@ -328,7 +328,7 @@ XtPointer cld, cad;
     * stop queue timer for queue info and exechost timer for infos
     * of host that the queue is attached to
     */
-   qmonStopTimer(QUEUE_T | EXECHOST_T | COMPLEX_T);
+   qmonStopTimer(QUEUE_T | EXECHOST_T);
    qmonTimerRmUpdateProc(QUEUE_T, "updateQueueList");
    
    DEXIT;
@@ -832,7 +832,7 @@ lListElem *qep
    DENTER(GUI_LAYER, "qmonQueueSetLoad");
 
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
 
    correct_capacities(ehl, cl);
    queue_complexes2scheduler(&ncl, qep, ehl, cl, 0);
@@ -998,12 +998,6 @@ lListElem *qep
    }
    sprintf(info, "%s\n", info); 
 
-   sprintf(info, WIDTH"", info, "Complex List:");
-   for_each(ep, lGetList(qep, QU_complex_list)) {
-      sprintf(info, "%s%s ", info, lGetString(ep, CX_name));
-   }
-   sprintf(info, "%s\n", info); 
-
    DPRINTF(("info is %d long\n", strlen(info)));
    
    DEXIT;
@@ -1145,7 +1139,7 @@ XtPointer cld, cad;
       */
       if (qB->qI->qp) {
          ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-         cl = qmonMirrorList(SGE_COMPLEX_LIST);
+         cl = qmonMirrorList(SGE_CENTRY_LIST);
          q = qB->qI->qp;
 
          qname     = lGetString(q, QU_qname);

@@ -320,55 +320,15 @@ Qmon*eh_usage_scaling*editable:            True
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*eh_complexes.tabLabel: @{@fBConsumables/Fixed Attributes}
 Qmon*eh_complexes.xmtChildren: \
-   StringList     complexes_attached = complex_list; \
-   XmScrolledList complexes_available; \
    Matrix_2xN     complexes_ccl = consumable_config_list; \
-   XmPushButton   complexes_dialog, complexes_add, complexes_remove, \
-                  complexes_ccl_remove;
+   XmPushButton   complexes_ccl_remove;
 
 Qmon*eh_complexes.layout: \
-   Row { \
-      Etched Through Caption tc "@{@fBComplex Selection}" Row { \
-         20 em Caption tl "@{Available Complexes}" complexes_available \
-         Col { \
-            <> \
-            Fixed Centered complexes_add \
-            Fixed Centered complexes_remove \
-            ### \
-            Fixed Centered complexes_dialog \
-            <> \
-         } \
-         20 em Caption tl "@{Attached Complexes}" complexes_attached \
-      } \
-      ## \
-      Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Col { \
-         Centered complexes_ccl \
-         Fixed Centered complexes_ccl_remove \
-      } \
-      <> \
+   Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Col { \
+      Centered complexes_ccl \
+      Fixed Centered complexes_ccl_remove \
    }
 
-
-Qmon*eh_complexes.complexes_dialog.labelType:     PIXMAP
-Qmon*eh_complexes.complexes_dialog.labelPixmap:   toolbar_cplx
-
-Qmon*eh_complexes.complexes_add.labelType:        PIXMAP
-Qmon*eh_complexes.complexes_add.labelPixmap:      rightarrow
-Qmon*eh_complexes.complexes_remove.labelType:     PIXMAP
-Qmon*eh_complexes.complexes_remove.labelPixmap:   leftarrow
-
-Qmon*eh_complexes*scrollBarDisplayPolicy:  AS_NEEDED
-Qmon*eh_complexes*listSizePolicy:          CONSTANT
-
-Qmon*eh_complexes*complexes_available.fontList:          $fixed_font
-Qmon*eh_complexes*complexes_available.selectionPolicy:   EXTENDED_SELECT
-Qmon*eh_complexes*complexes_available.scrollingPolicy:   AUTOMATIC
-Qmon*eh_complexes*complexes_available.visualPolicy:      CONSTANT
-
-Qmon*eh_complexes*complexes_attached.fontList:          $fixed_font
-Qmon*eh_complexes*complexes_attached.selectionPolicy:   EXTENDED_SELECT
-Qmon*eh_complexes*complexes_attached.scrollingPolicy:   AUTOMATIC
-Qmon*eh_complexes*complexes_attached.visualPolicy:      CONSTANT
 
 Qmon*eh_complexes*complexes_ccl_remove.labelType: PIXMAP
 Qmon*eh_complexes*complexes_ccl_remove.labelPixmap: trashcan

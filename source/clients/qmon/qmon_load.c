@@ -85,13 +85,6 @@ String name
    int row;
    String str;
    String new_row[2];
-#if 0
-   int num_columns = 2;
-   int i;
-   lList *cl = NULL;
-   lList *ce = NULL;
-   lListElem *cep = NULL;
-#endif
 
    DENTER(GUI_LAYER, "qmonLoadAddEntry");
 
@@ -103,27 +96,6 @@ String name
       DEXIT;
       return;
    }
-
-#if 0
-   /*
-   ** is it a valid load name ?
-   */
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
-   cep = lGetElemStr(cl, CX_name, "host");
-   
-   if (cep && name && name[0] != '\0') {
-      ce = lGetList(cep, CX_entries);
-      cep = lGetElemStr(ce, CE_name, name);
-      /*
-      ** don't get out of the field
-      */
-      if (!cep) {
-         qmonMessageShow(w, True, "No valid load parameter name !\n");
-         DEXIT;
-         return;
-      }
-   }
-#endif
 
    /*
    ** add to attribute matrix, search if item already exists

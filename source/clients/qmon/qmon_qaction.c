@@ -375,8 +375,6 @@ static void qmonQCProjectToggle(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCProjectAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCProjectRemove(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCOwnerAdd(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCComplexesAdd(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCComplexesRemove(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCCheckHost(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCCheckName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCUpdate(Widget w, XtPointer cld, XtPointer cad);
@@ -400,7 +398,6 @@ static void qmonQCModify(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCDelete(Widget w, XtPointer cld, XtPointer cad);
 
 static void qmonLoadNamesQueue(Widget w, XtPointer cld, XtPointer cad); 
-static void updateQCC(void);
 static void updateQCA(void);
 static void updateQCP(void);
 
@@ -413,8 +410,6 @@ static Widget qc_reset = 0;
 static Widget qc_folder = 0;
 static Widget qc_qname = 0;
 static Widget qc_qhostname = 0;
-static Widget complexes_attached = 0;
-static Widget complexes_available = 0;
 static Widget subordinates_attached = 0;
 static Widget access_list = 0;
 static Widget access_allow = 0;
@@ -659,11 +654,7 @@ Widget parent
                               "limits_hard", &limits_hard,
                               "limits_soft", &limits_soft,
                               /* complexes_config */
-                              "complexes_attached", &complexes_attached,
-                              "complexes_available", &complexes_available,
                               "complexes_dialog", &complexes_dialog,
-                              "complexes_add", &complexes_add,
-                              "complexes_remove", &complexes_remove,
                               "consumable_delete", &consumable_delete,
                               "complexes_ccl", &complexes_ccl,
                               /* subordinates_config */
@@ -777,12 +768,6 @@ Widget parent
    /*
    ** Complexes & Consumables
    */
-   XtAddCallback(complexes_dialog, XmNactivateCallback, 
-                  qmonPopupCplxConfig, NULL);
-   XtAddCallback(complexes_add, XmNactivateCallback, 
-                  qmonQCComplexesAdd, NULL);
-   XtAddCallback(complexes_remove, XmNactivateCallback, 
-                  qmonQCComplexesRemove, NULL);
 #if 0
    XtAddCallback(consumable_delete, XmNactivateCallback,
                   qmonLoadDelLines, (XtPointer) complexes_ccl); 
@@ -886,14 +871,13 @@ XtPointer cld, cad;
    lList *alp = NULL;
    DENTER(GUI_LAYER, "qmonQCUpdate");
    
-   qmonMirrorMultiAnswer(COMPLEX_T | USERSET_T | PROJECT_T, &alp);
+   qmonMirrorMultiAnswer(USERSET_T | PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
       DEXIT;
       return;
    }
-   updateQCC();
    updateQCA();
    updateQCP();
 
@@ -1484,16 +1468,13 @@ DTRACE;
          where = lWhere("%T(%I != %s)", CE_Type, CE_name, "slots");
          what = lWhat("%T(ALL)", CE_Type);
       }
-      data->complexes = lFreeList(data->complexes);
-      data->complexes = lCopyList("complexes", lGetList(qep, QU_complex_list));
       data->consumable_config_list = lFreeList(data->consumable_config_list);
       data->consumable_config_list = lSelect("consumable_config_list", 
                                       lGetList(qep, QU_consumable_config_list),
                                       where, what);
-/*       data->consumable_config_list = lCopyList("consumable_config_list",  */
-/*                                      lGetList(qep, QU_consumable_config_list)); */
    }
-   
+
+
 DTRACE;
    /**************************/
    /* subordinates config    */
@@ -1680,12 +1661,9 @@ lListElem *qep
    lSetString(qep, QU_suspend_interval, data->suspend_interval);
    lSetUlong(qep, QU_nsuspend, data->nsuspend);
 
-   
-   /****************************/
-   /* attached complexes       */
-   /****************************/
-   lSetList(qep, QU_complex_list, data->complexes);
-   data->complexes = NULL;
+   /*******************************/
+   /* attached complex attributes */
+   /*******************************/
    lSetList(qep, QU_consumable_config_list, data->consumable_config_list);
    data->consumable_config_list = NULL;
 
@@ -2009,49 +1987,6 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* C O M P L E X E S    P A G E                                            */
 /*-------------------------------------------------------------------------*/
-static void qmonQCComplexesAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
-{
-   XmString *selectedItems;
-   Cardinal selectedItemCount, i;
-   
-   DENTER(GUI_LAYER, "qmonQCComplexesAdd");
-
-   XtVaGetValues( complexes_available,
-                  XmNselectedItems, &selectedItems,
-                  XmNselectedItemCount, &selectedItemCount,
-                  NULL);
-
-   for (i=0; i<selectedItemCount; i++) {
-      if (!XmListItemExists(complexes_attached, selectedItems[i]))
-         XmListAddItem(complexes_attached, selectedItems[i], 0);
-   }
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCComplexesRemove(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
-{
-   XmString *selectedItems;
-   Cardinal selectedItemCount;
-   
-   DENTER(GUI_LAYER, "qmonQCComplexesRemove");
-
-   XtVaGetValues( complexes_attached,
-                  XmNselectedItems, &selectedItems,
-                  XmNselectedItemCount, &selectedItemCount,
-                  NULL);
-
-   if (selectedItems)
-      XmListDeleteItems(complexes_attached, selectedItems, selectedItemCount); 
-
-   DEXIT;
-}
-
 
 
 /*-------------------------------------------------------------------------*/
@@ -2356,40 +2291,6 @@ void updateQCQ(void)
 #endif
 
 /*-------------------------------------------------------------------------*/
-static void updateQCC(void)
-{
-   lList *cl;
-   lList *rcl;
-   static lCondition *where = NULL;
-   static lEnumeration *what = NULL;
-   
-   DENTER(GUI_LAYER, "updateQCC");
-   
-   /* What about sorting */
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
-
-   if (!cl) {
-      DPRINTF(("Complex list corrupted\n"));
-   }
-   if (!where) {
-      where = lWhere("%T(%I != %s && %I != %s && %I != %s)", CX_Type,
-                  CX_name, "global", CX_name, "queue", CX_name, "host");
-      what = lWhat("%T(ALL)", CX_Type);
-   }
-   rcl = lSelect("rcl", cl, where, what);
-   lPSortList(rcl, "%I+", CX_name);
-
-   /* disable/enable redisplay while updating */
-   XmtLayoutDisableLayout(qc_dialog);
-   UpdateXmListFromCull(complexes_available, XmFONTLIST_DEFAULT_TAG,
-                           rcl, CX_name);
-   XmtLayoutEnableLayout(qc_dialog);
-   rcl = lFreeList(rcl);
-
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
 static void updateQCA(void)
 {
    lList *al;
@@ -2438,13 +2339,12 @@ XtPointer cld, cad;
    lList *cl = NULL;
    lList *ehl = NULL;
    lList *entries = NULL;
-   lList *attached_cplx_list = NULL;
    lListElem *qep = NULL;
    static lCondition *where = NULL;
 
    DENTER(GUI_LAYER, "qmonLoadNamesQueue");
 
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 
    /*
@@ -2452,13 +2352,10 @@ XtPointer cld, cad;
    */
    qname = XmtInputFieldGetString(qc_qname);
    qhostname = XmtInputFieldGetString(qc_qhostname);
-   attached_cplx_list = XmStringToCull(complexes_attached, CX_Type, CX_name,
-                                          ALL_ITEMS);
 
    qep = lCreateElem(QU_Type);
    lSetString(qep, QU_qname, qname);
    lSetHost(qep, QU_qhostname, qhostname);
-   lSetList(qep, QU_complex_list, attached_cplx_list);
    queue_complexes2scheduler(&entries, qep, ehl, cl, 0);   
    qep = lFreeElem(qep);
    
@@ -2473,132 +2370,3 @@ XtPointer cld, cad;
    */
    entries = lFreeList(entries);
 }
-
-
-#if 0
-/*-------------------------------------------------------------------------*/
-static void qmonQCStartUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   DENTER(GUI_LAYER, "qmonQCStartUpdate");
-  
-   qmonTimerAddUpdateProc(QUEUE_T, "updateQCQ", updateQCQ);
-   qmonTimerAddUpdateProc(COMPLEX_T, "updateQCC", updateQCC);
-   qmonTimerAddUpdateProc(USERSET_T, "updateQCA", updateQCA);
-   qmonTimerAddUpdateProc(PROJECT_T, "updateQCP", updateQCP);
-   
-   qmonStartTimer(QUEUE | COMPLEX | USERSET | PROJECT);
-   
-   DEXIT;
-}
-
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCStopUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   DENTER(GUI_LAYER, "qmonQCStopUpdate");
-  
-   qmonStopTimer(QUEUE | COMPLEX | USERSET | PROJECT);
-   
-   qmonTimerRmUpdateProc(QUEUE_T, "updateQCQ");
-   qmonTimerRmUpdateProc(COMPLEX_T, "updateQCC");
-   qmonTimerRmUpdateProc(USERSET_T, "updateQCA");
-   qmonTimerRmUpdateProc(PROJECT_T, "updateQCP");
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCReset(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   int state;
-   
-   DENTER(GUI_LAYER, "qmonQCReset");
-   
-   /* 
-   ** reset single page to template 
-   */
-   state = XmtChooserGetState(qc_subdialogs);
-   qmonQCSetData(&current_entry, "template", state);
-   XmtDialogSetDialogValues(qc_dialog, &current_entry);
-
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCShowEntry(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   XmListCallbackStruct *cbs = (XmListCallbackStruct *)cad;
-   char *str;
-   
-   DENTER(TOP_LAYER, "qmonQCShowEntry");
-
-   /* 
-   ** get currently selected queue and fill all pages
-   */
-   XmStringGetLtoR(cbs->item, XmFONTLIST_DEFAULT_TAG, &str);
-   qmonQCSetData(&current_entry, str, QC_ALL);
-   XtFree((char*)str);
-   
-   XmtDialogSetDialogValues(qc_dialog, &current_entry);
-
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCShowTemp(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   XmListCallbackStruct *cbs = (XmListCallbackStruct *)cad;
-   char *str;
-   int state;
-   
-   DENTER(TOP_LAYER, "qmonQCShowTemp");
-
-   XmtDialogGetDialogValues(qc_dialog, &current_entry);
-
-   /* what subdialog is active ? */
-   state = XmtChooserGetState(qc_subdialogs);
-   
-   /* 
-   ** copy the values of current_entry to temp_entry 
-   ** we have to make a copy of the list otherwise we get in trouble 
-   ** with lFreeList
-   */
-   memcpy(&temp_entry, &current_entry, sizeof(tQCEntry));
-   temp_entry.load_thresholds = lCopyList("lt", current_entry.load_thresholds);
-   temp_entry.suspend_thresholds = lCopyList("st", 
-                                       current_entry.suspend_thresholds);
-   temp_entry.limits_hard = lCopyList("lh", current_entry.limits_hard);
-   temp_entry.limits_soft = lCopyList("ls", current_entry.limits_soft);
-   temp_entry.complexes = lCopyList("cplx", current_entry.complexes);
-   temp_entry.consumable_config_list = 
-                  lCopyList("cons", current_entry.consumable_config_list);
-   temp_entry.acl = lCopyList("acl", current_entry.acl);
-   temp_entry.xacl = lCopyList("xacl", current_entry.xacl);
-   temp_entry.prj = lCopyList("prj", current_entry.prj);
-   temp_entry.xprj = lCopyList("xprj", current_entry.xprj);
-   temp_entry.owner_list = lCopyList("ol", current_entry.owner_list);
-   temp_entry.subordinates = lCopyList("so", current_entry.subordinates);
-   
-   /* 
-   ** get currently selected queue 
-   */
-   XmStringGetLtoR(cbs->item, XmFONTLIST_DEFAULT_TAG, &str);
-   qmonQCSetData(&temp_entry, str, state);
-   XtFree((char*)str);
-   
-   XmtDialogSetDialogValues(qc_dialog, &temp_entry);
-
-   DEXIT;
-}
-
-#endif

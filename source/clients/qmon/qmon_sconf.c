@@ -634,14 +634,14 @@ XtPointer cad
 
    DENTER(GUI_LAYER, "qmonLoadNamesSC");
 
-   qmonMirrorMultiAnswer(COMPLEX_T | EXECHOST_T, &alp);
+   qmonMirrorMultiAnswer(CENTRY_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
       DEXIT;
       return;
    }
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 
    for_each (hep, ehl) {

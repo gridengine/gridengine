@@ -77,6 +77,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
+#include "sge_centry.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -1795,7 +1796,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonJobFilterSet");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
 
    for_each (ep, jobfilter_resources) {
       rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
@@ -1837,7 +1838,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonJobFilterEditResource");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
 
 
    if (!how) {

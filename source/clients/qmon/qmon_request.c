@@ -103,6 +103,7 @@ XtPointer cld, cad;
    lList *rll = NULL;
    lListElem *ep = NULL;
    lListElem *rp = NULL;
+   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonRequestPopup");
 
@@ -151,7 +152,16 @@ XtPointer cld, cad;
    */
    XtVaSetValues(request_rtype, XmtNlabel, qmonSubmitRequestType(), NULL);
 
-   rll = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), 
+   qmonMirrorMultiAnswer(CENTRY_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set normal cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
+   rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
                                        REQUESTABLE_RESOURCES);
 
    hrl = qmonSubmitHR();
@@ -328,25 +338,22 @@ XtPointer cld, cad;
 
 /*-------------------------------------------------------------------------*/
 lList *qmonGetResources(
-lList *cx_list,
+lList *ce_list,
 int how 
 ) {
-   lListElem *ep = NULL;
    lList *lp = NULL;
    lList *entries = NULL;
    lCondition *where = NULL;
 
-
    DENTER(GUI_LAYER, "qmonGetResources");
 
-   for_each(ep, cx_list) {
-      entries = lGetList(ep, CX_entries);
-      if (entries) {
-         if (!lp) 
-            lp = lCopyList("CX_entries", entries);
-         else
-            lAddList(lp, lCopyList("CX_entries", entries));
-      }
+   entries = ce_list;
+   
+   if (entries) {
+      if (!lp) 
+         lp = lCopyList("CE_entries", entries);
+      else
+         lAddList(lp, lCopyList("CE_entries", entries));
    }
 
    lUniqStr(lp, CE_name);
@@ -489,7 +496,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonRequestEditResource");
 
-   rll = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), 
+   rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
                                        REQUESTABLE_RESOURCES); 
 
    if (!how)

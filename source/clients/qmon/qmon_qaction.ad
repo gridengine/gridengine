@@ -468,51 +468,12 @@ Qmon*qc_dialog.qc_folder*limits_soft.cellShadowThickness: 1
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*complexes_config.tabLabel: @{@fBComplexes}
 Qmon*complexes_config.xmtChildren: \
-   StringList     complexes_attached = complex_list; \
-   XmScrolledList complexes_available; \
-   Matrix_2xN     complexes_ccl = consumable_config_list; \
-   XmPushButton   complexes_dialog, complexes_add, complexes_remove;
+   Matrix_2xN     complexes_ccl = consumable_config_list;
 
 Qmon*complexes_config.layout: \
-   Row { \
-      Etched Through Caption tc "@{@fBComplex Selection}" Row { \
-         Fixed Caption tl "@{Available Complexes}"  3 in complexes_available \
-         Col { \
-            <> \
-            Fixed Centered complexes_add \
-            Fixed Centered complexes_remove \
-            ### \
-            Fixed Centered complexes_dialog \
-            <> \
-         } \
-         Fixed Caption tl "@{Attached Complexes}" 3 in complexes_attached \
-      } \
-      ## \
-      Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Col { \
-         Margin 10 Centered complexes_ccl \
-      } \
+   Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Col { \
+      Margin 10 Centered complexes_ccl \
    }
-
-Qmon*complexes_config.complexes_dialog.labelType:    PIXMAP
-Qmon*complexes_config.complexes_dialog.labelPixmap:  toolbar_cplx
-
-Qmon*complexes_config.complexes_add.labelType:       PIXMAP
-Qmon*complexes_config.complexes_add.labelPixmap:     rightarrow
-Qmon*complexes_config.complexes_remove.labelType:    PIXMAP
-Qmon*complexes_config.complexes_remove.labelPixmap:  leftarrow
-
-Qmon*complexes_config*scrollBarDisplayPolicy:  AS_NEEDED
-Qmon*complexes_config*listSizePolicy:          CONSTANT
-
-Qmon*complexes_config*complexes_available.fontList:          $fixed_font
-Qmon*complexes_config*complexes_available.selectionPolicy:   EXTENDED_SELECT
-Qmon*complexes_config*complexes_available.scrollingPolicy:   AUTOMATIC
-Qmon*complexes_config*complexes_available.visualPolicy:      CONSTANT
-
-Qmon*complexes_config*complexes_attached.fontList:          $fixed_font
-Qmon*complexes_config*complexes_attached.selectionPolicy:   EXTENDED_SELECT
-Qmon*complexes_config*complexes_attached.scrollingPolicy:   AUTOMATIC
-Qmon*complexes_config*complexes_attached.visualPolicy:      CONSTANT
 
 Qmon*qc_dialog*complexes_ccl.xmtChildren: unmanaged XmtPopupMenu qc_menu;
 Qmon*qc_dialog*complexes_ccl*menuPost: <Btn3Down>

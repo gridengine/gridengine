@@ -157,7 +157,8 @@ XtPointer cld, cad;
    XmtDisplayBusyCursor(w);
 
    if (!qmon_job) {
-      qmonMirrorMultiAnswer(JOB_T | QUEUE_T | COMPLEX_T | EXECHOST_T | ZOMBIE_T,&alp);
+      qmonMirrorMultiAnswer(JOB_T | QUEUE_T | EXECHOST_T | CENTRY_T | ZOMBIE_T,
+                            &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);
@@ -221,7 +222,7 @@ XtPointer cld, cad;
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMultiAnswer(JOB_T|QUEUE_T|COMPLEX_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T, &alp);
+   qmonMirrorMultiAnswer(JOB_T|QUEUE_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -260,8 +261,8 @@ XtPointer cld, cad;
 {
    DENTER(GUI_LAYER, "qmonJobStartUpdate");
   
-   qmonTimerAddUpdateProc(JOB_T|ZOMBIE_T, "updateJobList", updateJobList);
-   qmonStartTimer(JOB_T | QUEUE_T | COMPLEX_T | EXECHOST_T | ZOMBIE_T);
+   qmonTimerAddUpdateProc(JOB_T|ZOMBIE_T|CENTRY_T, "updateJobList", updateJobList);
+   qmonStartTimer(JOB_T | QUEUE_T | EXECHOST_T | ZOMBIE_T | CENTRY_T);
    
    DEXIT;
 }
@@ -274,8 +275,8 @@ XtPointer cld, cad;
 {
    DENTER(GUI_LAYER, "qmonJobStopUpdate");
   
-   qmonStopTimer(JOB_T | QUEUE_T | COMPLEX_T | EXECHOST_T | ZOMBIE_T);
-   qmonTimerRmUpdateProc(JOB_T|ZOMBIE_T, "updateJobList");
+   qmonStopTimer(JOB_T | QUEUE_T | EXECHOST_T | CENTRY_T | ZOMBIE_T);
+   qmonTimerRmUpdateProc(JOB_T|ZOMBIE_T|CENTRY_T, "updateJobList");
    
    DEXIT;
 }
@@ -585,7 +586,7 @@ void updateJobList(void)
    ql = lSelect("ql", qmonMirrorList(SGE_QUEUE_LIST), where_no_template, 
                   what_queue);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
    /* don't free rl, ol they are maintained in qmon_jobcustom.c */
    rl = qmonJobFilterResources();
    ol = qmonJobFilterOwners();
@@ -710,7 +711,7 @@ void updateJobList(void)
             ql = lGetList(jap, JAT_granted_destin_identifier_list);
             if (ql) {
                lList *ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-               lList *cl = qmonMirrorList(SGE_COMPLEX_LIST);
+               lList *cl = qmonMirrorList(SGE_CENTRY_LIST);
                qnm = lGetString(lFirst(ql), JG_qname);
                qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), qnm);
                if (qep) {

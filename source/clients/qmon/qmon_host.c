@@ -83,7 +83,6 @@
 /*-------------------------------------------------------------------------*/
 typedef struct _tHostEntry {
    lList *consumable_config_list;
-   lList *complex_list;
    lList *scaling_list;
    lList *usage_scaling_list;
    char *name;
@@ -114,10 +113,6 @@ XtResource host_resources[] = {
       XtRImmediate, NULL },
 
 /*---- consumables  ----*/
-   { "complex_list", "complex_list", QmonRCX_Type,
-      sizeof(lList*), XtOffsetOf(tHostEntry, complex_list),
-      XtRImmediate, NULL },
-
    { "consumable_config_list", "consumable_config_list", QmonRCE2_Type,
       sizeof(lList*), XtOffsetOf(tHostEntry, consumable_config_list),
       XtRImmediate, NULL },
@@ -169,12 +164,9 @@ static void qmonExecHostCheckName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostCheckScaling(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostSetAsk(String name);
 static lList* qmonExecHostGetAsk(void);
-static void qmonHostAvailableComplexes(void);
 static void qmonHostAvailableAcls(void);
 static void qmonHostAvailableProjects(void);
 
-static void qmonExecHostComplexesAdd(Widget w, XtPointer cld, XtPointer cad);
-static void qmonExecHostComplexesRemove(Widget w, XtPointer cld, XtPointer cad);
 static void qmonLoadNamesHost(Widget w, XtPointer cld, XtPointer cad); 
 static lList* GetAttributes(char *qhostname, lList *attached_cplx_list);
 
@@ -201,8 +193,6 @@ static Widget exechost_rcf = 0;
 static Widget eh_ask_layout = 0;
 static Widget eh_name_w = 0;
 static Widget eh_folder = 0;
-static Widget complexes_available = 0;
-static Widget complexes_attached = 0;
 static Widget access_list = 0;
 static Widget access_allow = 0;
 static Widget access_deny = 0;
@@ -240,7 +230,7 @@ XtPointer cld, cad;
                                 SetMinShellSize, NULL);
    }
 
-   qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | COMPLEX_T |
+   qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | CENTRY_T |
                          USERSET_T | PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
@@ -252,7 +242,7 @@ XtPointer cld, cad;
    }
    
    qmonTimerAddUpdateProc(ADMINHOST_T, "updateHostList", updateHostList);
-   qmonStartTimer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | COMPLEX_T |
+   qmonStartTimer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T |
                   USERSET_T | PROJECT_T);
    qmonHostFillList();
 
@@ -272,7 +262,7 @@ XtPointer cld, cad;
 {
    DENTER(GUI_LAYER, "qmonPopdownHostConfig");
 
-   qmonStopTimer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | COMPLEX_T |
+   qmonStopTimer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T |
                  USERSET_T | PROJECT_T);
    qmonTimerRmUpdateProc(ADMINHOST_T, "updateHostList");
    xmui_unmanage(qmon_host);
@@ -384,31 +374,6 @@ static void qmonHostFillList(void)
    XmListMoveItemToPos(exechost_list, "global", 1);
    lp = lFreeList(lp);
    XmListSelectPos(exechost_list, 1, True);
-
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonHostAvailableComplexes(void)
-{
-   lList *lp;
-   static lCondition *where = NULL;
-   static lEnumeration *what = NULL;
-   
-   DENTER(GUI_LAYER, "qmonHostAvailableComplexes");
-
-   /* complexlist */
-   if (!where)
-      where = lWhere("%T(%I!=%s && %I!=%s && %I!=%s)", CX_Type, 
-               CX_name, "global", CX_name, "host", CX_name, "queue");
-   if (!what)
-      what = lWhat("%T(%I)", CX_Type, CX_name);
-   
-   lp = qmonMirrorList(SGE_COMPLEX_LIST);
-   lp = lSelect("CL", lp, where, what);
-   lPSortList(lp, "%I+", CX_name);
-   UpdateXmListFromCull(complexes_available, XmFONTLIST_DEFAULT_TAG, lp, CX_name);
-   lp = lFreeList(lp);
 
    DEXIT;
 }
@@ -660,8 +625,7 @@ static Widget qmonCreateExecHostAsk(
 Widget parent 
 ) {
    Widget eh_ok, eh_cancel, eh_load_scaling, eh_usage_scaling, 
-          eh_rcf, complexes_ccl, complexes_add,
-          complexes_remove, complexes_dialog;
+          eh_rcf, complexes_ccl;
    Widget access_add, access_remove, access_dialog;
    Widget project_add, project_remove, project_dialog, eh_project;
 
@@ -677,11 +641,6 @@ Widget parent
                            "eh_usage_scaling", &eh_usage_scaling,
                            "eh_rcf", &eh_rcf,
                            "complexes_ccl", &complexes_ccl,
-                           "complexes_add", &complexes_add,
-                           "complexes_remove", &complexes_remove,
-                           "complexes_dialog", &complexes_dialog,
-                           "complexes_available", &complexes_available,
-                           "complexes_attached", &complexes_attached,
                            /* access_config */
                            "access_list", &access_list,
                            "access_allow", &access_allow,
@@ -722,12 +681,6 @@ Widget parent
    XtAddCallback(eh_usage_scaling, XmNleaveCellCallback, 
                      qmonExecHostCheckScaling, NULL);
 
-   XtAddCallback(complexes_dialog, XmNactivateCallback, 
-                  qmonPopupCplxConfig, NULL);
-   XtAddCallback(complexes_add, XmNactivateCallback, 
-                  qmonExecHostComplexesAdd, NULL);
-   XtAddCallback(complexes_remove, XmNactivateCallback, 
-                  qmonExecHostComplexesRemove, NULL);
    XtAddCallback(complexes_ccl, XmNselectCellCallback,
                   qmonLoadSelectEntry, NULL);
 #if 0
@@ -882,12 +835,6 @@ static lList* qmonExecHostGetAsk(void)
       host_data.consumable_config_list = NULL;
 
       /*
-      ** complex_list 
-      */
-      lSetList(lFirst(lp), EH_complex_list, host_data.complex_list);
-      host_data.complex_list = NULL;
-
-      /*
       ** (x)acl 
       */
       lSetList(lFirst(lp), EH_acl, host_data.acl);
@@ -950,7 +897,7 @@ String name
    
    DENTER(GUI_LAYER, "qmonExecHostSetAsk");
 
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
    acls = qmonMirrorList(SGE_USERSET_LIST);
    prjs = qmonMirrorList(SGE_PROJECT_LIST);
@@ -1009,14 +956,11 @@ String name
    /*
    ** set the consumable/per slot limit entries
    */
-/*    host_data.complex_list = lFreeList(host_data.complex_list); */
    if (ehp) {
-      host_data.complex_list = lGetList(ehp, EH_complex_list);
       host_data.consumable_config_list = lGetList(ehp, 
                                              EH_consumable_config_list);
    }
    else {
-      host_data.complex_list = NULL;
       host_data.consumable_config_list = NULL;
    }
 
@@ -1096,11 +1040,6 @@ String name
    */
    XmtDialogSetDialogValues(eh_ask_layout, &host_data);
    
-   /*
-   ** fill the complexes list
-   */
-   qmonHostAvailableComplexes();
-
    /*
    ** fill the acl list
    */
@@ -1334,7 +1273,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonExecHostChange");
 
-   qmonMirrorMultiAnswer(COMPLEX_T | EXECHOST_T | USERSET_T | PROJECT_T, 
+   qmonMirrorMultiAnswer(EXECHOST_T | USERSET_T | PROJECT_T, 
                            &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
@@ -1493,62 +1432,6 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/* FIX THIS, is copied from qmon_qaction.c                                 */
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------*/
-static void qmonExecHostComplexesAdd(
-Widget w,
-XtPointer cld,
-XtPointer cad  
-) {
-   XmString *selectedItems;
-   Cardinal selectedItemCount, i;
-   
-   DENTER(GUI_LAYER, "qmonExecHostComplexesAdd");
-
-   XtVaGetValues( complexes_available,
-                  XmNselectedItems, &selectedItems,
-                  XmNselectedItemCount, &selectedItemCount,
-                  NULL);
-
-   for (i=0; i<selectedItemCount; i++) {
-      if (!XmListItemExists(complexes_attached, selectedItems[i]))
-         XmListAddItem(complexes_attached, selectedItems[i], 0);
-   }
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonExecHostComplexesRemove(
-Widget w,
-XtPointer cld,
-XtPointer cad  
-) {
-   XmString *selectedItems;
-   Cardinal selectedItemCount;
-   
-   DENTER(GUI_LAYER, "qmonExecHostComplexesRemove");
-
-   XtVaGetValues( complexes_attached,
-                  XmNselectedItems, &selectedItems,
-                  XmNselectedItemCount, &selectedItemCount,
-                  NULL);
-
-   if (selectedItems)
-      XmListDeleteItems(complexes_attached, selectedItems, selectedItemCount); 
-
-   DEXIT;
-}
-
 
 /*-------------------------------------------------------------------------*/
 static void qmonLoadNamesHost(
@@ -1556,25 +1439,27 @@ Widget w,
 XtPointer cld,
 XtPointer cad  
 ) {
-   char *qhostname;
+
    lList *entries = NULL;
-   lList *attached_cplx_list = NULL;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonLoadNamesHost");
 
-   qhostname = XmtInputFieldGetString(eh_name_w);
-   attached_cplx_list = XmStringToCull(complexes_attached, CX_Type, CX_name,
-                                          ALL_ITEMS);
+   qmonMirrorMultiAnswer(CENTRY_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
 
-   entries = GetAttributes(qhostname, attached_cplx_list);
-
+   entries = qmonMirrorList(SGE_CENTRY_LIST);
    ShowLoadNames(w, entries);
-
-   /*
-   ** free the copied list
-   */
-   entries = lFreeList(entries);
 }
+
+#ifdef ANDRE
+  FIXME  folgende Funktion pruefen
+#endif
 
 /*-------------------------------------------------------------------------*/
 static lList* GetAttributes(
@@ -1587,8 +1472,10 @@ lList *attached_cplx_list
    lListElem *hep = NULL;
 
    DENTER(GUI_LAYER, "GetAttributes");
+#ifdef ANDRE   
+   FIXME
+#endif
 
-   cl = qmonMirrorList(SGE_COMPLEX_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 
    /*
@@ -1596,7 +1483,6 @@ lList *attached_cplx_list
    */
    hep = lCreateElem(EH_Type);
    lSetHost(hep, EH_name, qhostname);
-   lSetList(hep, EH_complex_list, attached_cplx_list);
    if (qhostname && !strcasecmp(qhostname, "global"))
       global_complexes2scheduler(&entries, hep, cl, 0);
    else 

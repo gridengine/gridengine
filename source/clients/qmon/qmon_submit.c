@@ -480,7 +480,7 @@ XtPointer cld, cad;
    /* 
    ** start up job timer  
    */
-   qmonStartTimer(JOB_T | COMPLEX_T | PE_T);
+   qmonStartTimer(JOB_T | PE_T);
 
    /*
    ** reset interactive mode
@@ -845,7 +845,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonSubmitPopdown");
 
    if (qmon_submit) {
-      qmonStopTimer(JOB_T | COMPLEX_T | PE_T);
+      qmonStopTimer(JOB_T | PE_T);
       xmui_unmanage(qmon_submit);
    } 
    DEXIT;

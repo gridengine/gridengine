@@ -380,9 +380,8 @@ Cardinal size
     * Here special Qmon Quarks are used. Does it work ?
     */
 
-   if (type != QmonQUS_Type && type != QmonQCX_Type &&
-       type != QmonQMR_Type && type != QmonQUP_Type &&
-       type != QmonQSTR_Type ) {
+   if (type != QmonQUS_Type && type != QmonQMR_Type && 
+       type != QmonQUP_Type && type != QmonQSTR_Type ) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't set widget values"
          " from a resource of type '%s'",
@@ -411,10 +410,6 @@ Cardinal size
       UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, UP_name);
    }
    
-   if (type == QmonQCX_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, CX_name);
-   }
-
    if (type == QmonQMR_Type) {
       String *str_table = NULL;
       Cardinal itemCount;
@@ -477,9 +472,8 @@ Cardinal size
     * Here special Qmon Quarks are used. Does it work ?
     */
 
-   if (type != QmonQUS_Type && type != QmonQCX_Type &&
-       type != QmonQMR_Type && type != QmonQUP_Type &&
-       type != QmonQSTR_Type ) {
+   if (type != QmonQUS_Type && type != QmonQMR_Type && 
+       type != QmonQUP_Type && type != QmonQSTR_Type ) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'",
@@ -495,10 +489,6 @@ Cardinal size
       lp = XmStringToCull(w, UP_Type, UP_name, ALL_ITEMS);
    }
          
-   if (type == QmonQCX_Type) {
-      lp = XmStringToCull(w, CX_Type, CX_name, ALL_ITEMS);
-   }
-
    if (type == QmonQMR_Type) {
       lp = XmStringToCull(w, MR_Type, MR_user, ALL_ITEMS);
    }

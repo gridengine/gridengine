@@ -237,7 +237,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonQFilterSet");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
 
    for_each (ep, qfilter_resources) {
       rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
@@ -274,11 +274,10 @@ XtPointer cld, cad;
    StringConst name, value, strval;
    Boolean found = False;
    lListElem *fill_in_request = NULL;
-   
 
    DENTER(GUI_LAYER, "qmonQFilterEditResource");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_COMPLEX_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
 
    if (!how)
       fill_in_request = lGetElemStr(arl, CE_name, cbs->element->string[0]);

@@ -85,7 +85,7 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_QUEUE_LIST, 0, 1, 0, NULL },  
    { SGE_JOB_LIST, 0, 1, 0, NULL },  
    { SGE_EVENT_LIST, 0, 1, 0, NULL },  
-   { SGE_COMPLEX_LIST, 0, 1, 0, NULL },  
+   { SGE_CENTRY_LIST, 0, 1, 0, NULL },  
    { SGE_ORDER_LIST, 0, 1, 0, NULL },  
    { SGE_MASTER_EVENT, 0, 1, 0, NULL },  
    { SGE_CONFIG_LIST, 0, 1, 0, NULL },  

@@ -149,7 +149,7 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    }
    lFreeList(alp);
    alp = NULL;
-      if (sc_set(&alp, &scheddconf, lFirst(*config), NULL))
+      if (sc_set(&alp, &scheddconf, lFirst(*config), NULL, NULL))
         fprintf(stderr, "%s\n", lGetString(lFirst(alp), AN_text));
 
 

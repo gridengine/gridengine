@@ -454,7 +454,6 @@
 #define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _("%s is not a valid interval\n")
 #define MSG_ERROR_XISNOTAVALIDCOUNT_S           _("%s is not a valid count\n")
 #define MSG_FILE_COULDNOTOPENXFORY_SS           _("could not open %s for %s\n")
-
 /* 
 ** schedd/schedd_conf.c
 */ 
@@ -468,7 +467,9 @@
 #define MSG_ATTRIB_USINGXFORY_6FS               _("using %.6g for %s\n")
 #define MSG_TRUE                                _("true")
 #define MSG_FALSE                               _("false")
-
+#define MSG_NONE_NOT_ALLOWED                    _("The keyword \"none\" is not allowed in \"load_formula\"\n")
+#define MSG_NOTEXISTING_ATTRIBUTE_S             _("\"load_formula\" references not existing complex attribute "SFQ"\n")
+#define MSG_WRONGTYPE_ATTRIBUTE_S               _("String, CString or Host attributes are not allowed in \"load_formula\": " SFQ "\n")
 
 /* 
 ** schedd/schedd_message.c

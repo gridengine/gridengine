@@ -58,6 +58,9 @@
 #include "parse_range.h"
 #include "msg_schedd.h"
 #include "sge_dirent.h"
+#include "sge_complex_schedd.h"
+
+extern lList *Master_Complex_List;
 
 sge_schedd_conf_type scheddconf = { 
    NULL, 0, 0, 0, 0, NULL, 0, NULL 
@@ -71,6 +74,9 @@ typedef struct {
   char *envp;              /* pointer to environment variable */
 } tScheddConfEntry;
 
+static int schedd_conf_is_valid_load_formula(lListElem *sc, 
+                                             lList **answer_list,
+                                             lList *cmplx_list);
 
 static intprt_type load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 static intprt_type usage_fields[] = { UA_name, UA_value, 0 };
@@ -80,7 +86,8 @@ int sc_set(
 lList **alpp,             /* AN_Type */ 
 sge_schedd_conf_type *sc, /* if NULL we just check sc_ep */
 lListElem *sc_ep,         /* SC_Type */  
-u_long32 *si              /* here scheduling interval gets written */
+u_long32 *si,             /* here scheduling interval gets written */
+lList *cmplx_list
 ) {
    char tmp_buffer[1024], tmp_error[1024];
    u_long32 uval;
@@ -186,7 +193,13 @@ u_long32 *si              /* here scheduling interval gets written */
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
 
    /* --- SC_load_formula */
+   if (cmplx_list != NULL &&
+       !schedd_conf_is_valid_load_formula(sc_ep, alpp, cmplx_list)) {
+      DEXIT;
+      return -1;
+   }
    if (sc) {
+
       sc->load_formula = sge_strdup(sc->load_formula, 
          lGetString(sc_ep, SC_load_formula));
       strip_blanks(sc->load_formula);
@@ -306,3 +319,67 @@ u_long32 *si              /* here scheduling interval gets written */
    DEXIT;
    return 0;
 }
+
+static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
+                                             lList **answer_list,
+                                             lList *cmplx_list) 
+{
+   const char *load_formula = NULL;
+   int ret = 1;
+   DENTER(TOP_LAYER, "schedd_conf_is_valid_load_formula");
+
+   /* Modify input */
+   {
+      char *new_load_formula = NULL;
+   
+      load_formula = lGetString(schedd_conf, SC_load_formula);
+      new_load_formula = sge_strdup(new_load_formula, load_formula);
+      strip_blanks(new_load_formula);
+      lSetString(schedd_conf, SC_load_formula, new_load_formula);
+      free(new_load_formula);
+   }
+   load_formula = lGetString(schedd_conf, SC_load_formula);
+
+   /* Check for keyword 'none' */
+   if (ret == 1) {
+      if (!strcasecmp(load_formula, "none")) {
+         sge_add_answer(answer_list, MSG_NONE_NOT_ALLOWED, STATUS_ESYNTAX, 0);
+         ret = 0;
+      }
+   }
+
+   /* Check complex attributes and type */
+   if (ret == 1) {
+      const char *delimitor = "+-*";
+      const char *attr, *next_attr;
+
+      next_attr = sge_strtok(load_formula, delimitor);
+      while ((attr = next_attr)) {
+         lListElem *cmplx_attr = NULL;
+
+         next_attr = sge_strtok(NULL, delimitor);
+
+         cmplx_attr = sge_locate_complex_attr(attr, cmplx_list);
+         if (cmplx_attr != NULL) {
+            int type = lGetUlong(cmplx_attr, CE_valtype);
+   
+            if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+               sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr);
+               sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0); 
+               ret = 0;
+            }
+         } else {
+            sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr);
+            sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
+            ret = 0;
+         }
+      }
+   }
+
+   return ret;
+   DEXIT;
+}
+
+
+
+

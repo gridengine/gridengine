@@ -416,7 +416,7 @@ static int sge_ck_qmaster()
    }
 
    alp = NULL;
-   if (sc_set(&alp, &scheddconf, lFirst(lp), NULL))
+   if (sc_set(&alp, &scheddconf, lFirst(lp), NULL, NULL))
       ERROR((SGE_EVENT, "%s", lGetString(lFirst(alp), AN_text)));
 
    ec_set_edtime(scheddconf.schedule_interval);

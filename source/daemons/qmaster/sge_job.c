@@ -1922,7 +1922,8 @@ int is_task_enrolled
 *******************************************************************************/
 static int changes_consumables(lList **alpp, lList* new, lList* old)
 {
-   lListElem *old_reqep, *dcep, *new_reqep, *old_entry, *new_entry;
+   lListElem *old_reqep, *dcep, *new_reqep, *new_entry;
+   lListElem *old_entry = NULL;
    const char *name;
    int found_it;
 

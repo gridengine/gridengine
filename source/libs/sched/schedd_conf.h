@@ -67,6 +67,6 @@ int setScheddConfFromCmdLine(sge_schedd_conf_type *);
 
 /* should get used to access job_load_adjustments */
 
-int sc_set(lList **alpp, sge_schedd_conf_type *sc, lListElem *sc_ep, u_long32 *sip);
+int sc_set(lList **alpp, sge_schedd_conf_type *sc, lListElem *sc_ep, u_long32 *sip, lList *cmplx_list);
 
 #endif /* __SCHEDD_CONF_H */

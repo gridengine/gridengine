@@ -52,6 +52,9 @@
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
+
+extern lList *Master_Complex_List;
+
 /************************************************************
   sge_mod_sched_configuration - Master code
 
@@ -79,7 +82,7 @@ char *rhost
    }
 
    /* just check and log */
-   if (sc_set(alpp, NULL, confp, &si)) {
+   if (sc_set(alpp, NULL, confp, &si, Master_Complex_List)) {
       /* alpp gets filled by sc_set() */
       ERROR((SGE_EVENT, lGetString(lLast(*alpp), AN_text))); 
       DEXIT;

@@ -552,7 +552,7 @@ int sge_process_all_events(lList *event_list) {
                lists.config_list = lCreateList("config_list",
                  lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
                ep = lDechainElem(src, lFirst(src));
-               sc_set(NULL, &scheddconf, ep, NULL);
+               sc_set(NULL, &scheddconf, ep, NULL, NULL);
 
                if (ec_set_edtime(scheddconf.schedule_interval) ||
                    (ret=use_alg(lGetString(ep, SC_algorithm)))==2) {

@@ -289,7 +289,7 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
    
 }
 
-/****** spool/classic/job_write_spool_file() ****************************************
+/****** spool/classic/job_write_spool_file() **********************************
 *  NAME
 *     job_write_spool_file() -- makes a job/task persistent 
 *
@@ -423,7 +423,6 @@ static int job_write_as_single_file(lListElem *job, u_long32 ja_task_id,
                      flags, job_id, ja_task_id, NULL);
    sge_get_file_path(tmp_spool_file, JOB_SPOOL_DIR, FORMAT_DOT_FILENAME,
                      flags, job_id, ja_task_id, NULL);
-
    ret = lWriteElemToDisk(job, tmp_spool_file, NULL, "job");
    if (!ret && (rename(tmp_spool_file, spool_file) == -1)) {
       DTRACE;

@@ -716,6 +716,7 @@ int queue_name_length
       sge_dstring_free(&dyn_task_str);
       nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       FoundTasks = 0;
+
       while((jatep = nxt_jatep)) { 
          if (shut_me_down) {
             SGE_EXIT(1);
@@ -786,7 +787,7 @@ int queue_name_length
          ja_task_list = lFreeList(ja_task_list);
       }
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
-         sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
+         sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, (full_listing & QSTAT_DISPLAY_FULL) | (full_listing & QSTAT_DISPLAY_PENDING),
                                      0, 0, ehl, centry_list, pe_list, "", sge_ext, 
                                      group_opt, queue_name_length);
       }
@@ -811,12 +812,13 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)
             sge_ext?hashes:"");
       }
    } 
-   if (full_listing & QSTAT_DISPLAY_ZOMBIES) {
+   if ((full_listing & QSTAT_DISPLAY_ZOMBIES) &&
+       (full_listing & QSTAT_DISPLAY_FULL)) {
       if (first_zombie) {
          first_zombie = 0;
-         printf("\n################################################################################%s\n", sge_ext?hashes:"");
+         printf("\n############################################################################%s\n", sge_ext?hashes:"");
          printf(MSG_QSTAT_PRT_FINISHEDJOBS);
-         printf(  "################################################################################%s\n", sge_ext?hashes:""); 
+         printf("############################################################################%s\n", sge_ext?hashes:""); 
       }
    }
 }

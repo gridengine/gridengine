@@ -370,7 +370,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    */
    uid = getuid();
    if (sge_uid2user(uid, username, sizeof(username), MAX_NIS_RETRIES)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETPWUIDXFAILEDERRORX_IS , 
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FUNC_GETPWUIDXFAILED_IS , 
               (int)uid, strerror(errno)));
       goto error;
    }

@@ -502,7 +502,7 @@ int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep)
 {
    int ret;
 
-   DENTER(CULL_LAYER, "cull_pack_elem");
+   DENTER(TOP_LAYER, "cull_pack_elem");
    ret = cull_pack_elem_partial(pb, ep, 0);
    DEXIT;
    return ret;
@@ -513,7 +513,7 @@ int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags)
 {
    int ret;
 
-   DENTER(CULL_LAYER, "cull_pack_elem_partial");
+   DENTER(TOP_LAYER, "cull_pack_elem_partial");
 
    PROF_START_MEASUREMENT(SGE_PROF_PACKING);
    if(ep->descr == NULL) {

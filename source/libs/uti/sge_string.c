@@ -953,6 +953,59 @@ char **sge_stracasecmp(const char *cp, char **cpp)
    return NULL;
 }   
 
+void
+stra_printf(char *stra[])
+{
+   int i = 0;
+
+   while (stra[i] != NULL) {
+      fprintf(stdout, "%s\n", stra[i]);
+      i++;
+   }
+}
+
+char **
+stra_from_str(const char *source_str, const char *delim)
+{
+   char **ret = NULL;
+
+   if (source_str != NULL && delim != NULL) {
+      struct saved_vars_s *context = NULL;
+      const char *token = NULL;
+      int n = 0;
+
+      /* count token */
+      context = NULL;
+      token = sge_strtok_r(source_str, delim, &context);
+      while (token != NULL) {
+         n++;
+         token = sge_strtok_r(NULL, delim, &context);
+      }
+      sge_free_saved_vars(context);
+   
+      /* malloc array memory */
+      ret = (char **) malloc(sizeof(char*) * (n+1));
+
+      if (ret != NULL) {
+
+         /* malloc/copy each token */
+         n = 0;
+         context = NULL;
+         token = sge_strtok_r(source_str, delim, &context);
+         while (token != NULL) {
+            ret[n] = malloc(strlen(token) + 1);
+            strcpy(ret[n], token);
+
+            token = sge_strtok_r(NULL, delim, &context);
+            n++;
+         }
+         ret[n] = NULL;
+         sge_free_saved_vars(context);
+      } 
+   }
+   return ret;
+}
+
 /****** uti/string/sge_compress_slashes() *************************************
 *  NAME
 *     sge_compress_slashes() -- compresses sequences of slashes 

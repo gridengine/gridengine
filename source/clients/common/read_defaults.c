@@ -121,7 +121,7 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * now read all the defaults files, unaware of where they came from
     */
-    append_opts_from_default_files (pcmdline,  answer_list, envp, def_files);
+   append_opts_from_default_files (pcmdline,  answer_list, envp, def_files);
     
    DEXIT;
    return;

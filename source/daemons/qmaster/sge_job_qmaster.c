@@ -1038,10 +1038,13 @@ int sub_command
                    * a copy of the job session before calling sge_commit_job(). This copy
                    * must be free'd!
                    */
-                  if (lGetString(job, JB_session))
+                  if (lGetString(job, JB_session)) {
                      dupped_session = strdup(lGetString(job, JB_session));
-                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
-                  sge_add_event( start_time, sgeE_JATASK_DEL, 
+                  }
+                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
+                                           ruser, rhost, NULL, job, tmp_task, 
+                                           NULL, MSG_LOG_DELETED);
+                  sge_add_event(start_time, sgeE_JATASK_DEL, 
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
                   /* TODO: change to _EE ????*/                                
@@ -1068,6 +1071,11 @@ int sub_command
                }
             }
 #endif            
+
+fprintf(stderr, "deleted_unenrolled_tasks: %d\n", deleted_unenrolled_tasks);
+fprintf(stderr, "existing_tasks: %ld\n", existing_tasks);
+fprintf(stderr, "deleted_tasks: %ld\n", deleted_tasks);
+
             if (existing_tasks > deleted_tasks) {
                dstring buffer = DSTRING_INIT;
                /* write only the common part - pass only the jobid, no jatask or petask id */

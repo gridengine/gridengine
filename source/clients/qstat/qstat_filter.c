@@ -42,9 +42,12 @@
 #include "sge_time.h"
 #include "sge_log.h"
 #include "cull_list.h"
-
+#include "qstat_printing.h"
+#include "sge_job_refL.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
+#include "sge_str.h"
+#include "sge_range.h"
 
 #include "qstat_filter.h"
 
@@ -72,6 +75,7 @@ void qstat_filter_add_core_attributes(void)
       JB_ja_s_h_ids,
       JB_ja_z_ids,
       JB_ja_template,
+      JB_execution_time,
       NoName
    };
    const int nm_JAT_Type_template[] = {
@@ -251,7 +255,195 @@ lEnumeration *qstat_get_JB_Type_filter(void)
    return what_JB_Type;
 }
 
+lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
+{
+   lCondition *jw = NULL;
+   lCondition *nw = NULL;
 
+   /*
+    * Retrieve jobs only for those users specified via -u switch
+    */
+   {
+      lListElem *ep = NULL;
 
+      for_each(ep, user_list) {
+         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
+         if (jw == NULL) {
+            jw = nw;
+         } else {
+            jw = lOrWhere(jw, nw);
+         }
+      }
+   }
 
+   /*
+    * Select jobs according to current state
+    */
+   {
+      lCondition *tmp_nw = NULL;
+
+      /*
+       * Pending jobs (all that are not running) 
+       */
+      if ((show & QSTAT_DISPLAY_PENDING) == QSTAT_DISPLAY_PENDING) {
+         const u_long32 all_pending_flags = (QSTAT_DISPLAY_USERHOLD|QSTAT_DISPLAY_OPERATORHOLD|
+                    QSTAT_DISPLAY_SYSTEMHOLD|QSTAT_DISPLAY_JOBHOLD|
+                    QSTAT_DISPLAY_STARTTIMEHOLD|QSTAT_DISPLAY_PEND_REMAIN);
+         /*
+          * Fine grained stated selection for pending jobs
+          * or simply all pending jobs
+          */
+         if (((show & all_pending_flags) == all_pending_flags) ||
+             ((show & all_pending_flags) == 0)) {
+            /*
+             * All jobs not running (= all pending)
+             */
+            tmp_nw = lWhere("%T(!(%I -> %T((%I m= %u))))", JB_Type, JB_ja_tasks, 
+                        JAT_Type, JAT_status, JRUNNING);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+         } else {
+            /*
+             * User Hold 
+             */
+            if ((show & QSTAT_DISPLAY_USERHOLD) == QSTAT_DISPLAY_USERHOLD) {
+               tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_u_h_ids, 
+                           RN_Type, RN_min, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+            }
+            /*
+             * Operator Hold 
+             */
+            if ((show & QSTAT_DISPLAY_OPERATORHOLD) == QSTAT_DISPLAY_OPERATORHOLD) {
+               tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_o_h_ids, 
+                           RN_Type, RN_min, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+            }
+            /*
+             * System Hold 
+             */
+            if ((show & QSTAT_DISPLAY_SYSTEMHOLD) == QSTAT_DISPLAY_SYSTEMHOLD) {
+               tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_s_h_ids, 
+                           RN_Type, RN_min, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+            }
+            /*
+             * Start Time Hold 
+             */
+            if ((show & QSTAT_DISPLAY_STARTTIMEHOLD) == QSTAT_DISPLAY_STARTTIMEHOLD) {
+               tmp_nw = lWhere("%T(%I > %u)", JB_Type, JB_execution_time, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+            }
+            /*
+             * Job Dependency Hold 
+             */
+            if ((show & QSTAT_DISPLAY_JOBHOLD) == QSTAT_DISPLAY_JOBHOLD) {
+               tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_jid_predecessor_list, JRE_Type, JRE_job_number, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+            }
+            /*
+             * Rescheduled and jobs in error state (not in hold/no start time/no dependency) 
+             * and regular pending jobs
+             */
+            if ((show & QSTAT_DISPLAY_PEND_REMAIN) == QSTAT_DISPLAY_PEND_REMAIN) {
+               tmp_nw = lWhere("%T(%I -> %T((%I != %u)))", JB_Type, JB_ja_tasks, 
+                           JAT_Type, JAT_job_restarted, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+               tmp_nw = lWhere("%T(%I -> %T((%I m= %u)))", JB_Type, JB_ja_tasks, 
+                           JAT_Type, JAT_state, JERROR);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+               tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_n_h_ids, 
+                           RN_Type, RN_min, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+            }
+         }
+      }
+      /*
+       * Running jobs (which are not suspended) 
+       *
+       * NOTE: 
+       *    This code is not quite correct. It select jobs
+       *    which are running and not suspended (qmod -s)
+       * 
+       *    Jobs which are suspended due to other mechanisms
+       *    (suspend on subordinate, thresholds, calendar)
+       *    should be rejected too, but this is not possible
+       *    because this information is not stored within
+       *    job or job array task.
+       *    
+       *    As a result to many jobs will be requested by qsub.
+       */   
+      if ((show & QSTAT_DISPLAY_RUNNING) == QSTAT_DISPLAY_RUNNING) {
+         tmp_nw = lWhere("%T(((%I -> %T(%I m= %u)) || (%I -> %T(%I m= %u))) && !(%I -> %T((%I m= %u))))", JB_Type, 
+                         JB_ja_tasks, JAT_Type, JAT_status, JRUNNING,
+                         JB_ja_tasks, JAT_Type, JAT_status, JTRANSFERING,
+                         JB_ja_tasks, JAT_Type, JAT_state, JSUSPENDED);
+         if (nw == NULL) {
+            nw = tmp_nw;
+         } else {
+            nw = lOrWhere(nw, tmp_nw);
+         } 
+      }
+
+      /*
+       * Suspended jobs
+       *
+       * NOTE:
+       *    see comment above
+       */
+      if ((show & QSTAT_DISPLAY_SUSPENDED) == QSTAT_DISPLAY_SUSPENDED) {
+         tmp_nw = lWhere("%T((%I -> %T(%I m= %u)) || (%I -> %T(%I m= %u)) || (%I -> %T(%I m= %u)))", JB_Type, 
+                         JB_ja_tasks, JAT_Type, JAT_status, JRUNNING,
+                         JB_ja_tasks, JAT_Type, JAT_status, JTRANSFERING,
+                         JB_ja_tasks, JAT_Type, JAT_state, JSUSPENDED);
+         if (nw == NULL) {
+            nw = tmp_nw;
+         } else {
+            nw = lOrWhere(nw, tmp_nw);
+         } 
+      }
+
+      if (jw == NULL) {
+         jw = nw;
+      } else {
+         jw = lAndWhere(jw, nw);
+      } 
+   }
+   return jw;
+}
 

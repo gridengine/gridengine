@@ -1048,6 +1048,7 @@
 
 #define MSG_GDI_USAGE_sick_OPT             "[-sds]"
 #define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show detached settings"))
+#define MSG_FUNC_GETPWUIDXFAILED_IS        _MESSAGE(60613, _("failed to getpwuid(%d): "SFN"\n"))
 
 /*
  * Objects and components

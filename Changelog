@@ -1,3 +1,9 @@
+MD-2004-01-29-1: Bugfix:    command (eg. qstat) crashes, 
+                            if -u -q option get an empty argument
+                 Issue:     #600
+                 Changed:   qstat, qalter, qhost, qmod, qsub
+                 Review:    EB
+
 JG-2004-01-29-0: Bugfix:    If a loadsensor did output to stderr, the loadsensor
                             blocked when the pipe buffer between loadsensor and
                             execd was full.

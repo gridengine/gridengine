@@ -1,3 +1,6 @@
+EB-2002-03-04-0: Bugfix:    schedd_runlog file was not written by a
+                            'qconf -tsm' command  
+
 EB-2002-03-01-1: Bugfix:    inconsistences between qstat and qmon output
                  Issue:     #148
 

@@ -706,7 +706,7 @@ static void sge_subscribe_schedd(void)
    ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
 
    ec_subscribe(sgeE_SCHED_CONF);
-
+   ec_subscribe(sgeE_SCHEDDMONITOR); 
    ec_subscribe(sgeE_SHUTDOWN);
 
    ec_subscribe(sgeE_USER_LIST);

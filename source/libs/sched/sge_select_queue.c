@@ -2527,8 +2527,9 @@ lList *acl_list;
       global_slots = num_in_range(global_slots, lGetList(job, JB_pe_range));
 
       if (!global_slots) {
-         schedd_add_message (lGetUlong(job, JB_job_number) , SCHEDD_INFO_NOSLOTSUPPORTBYPE_S, 
-                  lGetString(pe_object, PE_name));
+            /* resources requested are not available for parallel job 
+               it's hard to be more specific in this case */
+            schedd_add_message(lGetUlong(job, JB_job_number) , SCHEDD_INFO_NORESOURCESPE_);
          DEXIT;
          return 0;
       }

@@ -198,13 +198,26 @@ lListElem *job,
 lListElem *pe,
 lList *acl_list 
 ) {
-   int free_slots;
+   int free_slots, total_slots;
    DENTER(TOP_LAYER, "pe_restricted");
+
+   total_slots = (int)lGetUlong(pe, PE_slots);
+   if (total_slots == 0 ||
+      !num_in_range(total_slots, lGetList(job, JB_pe_range))) {
+      /* because there are not enough PE slots in total */
+      DPRINTF(("total slots of PE \"%s\" not in range of job %d\n",
+            lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
+         schedd_add_message((lGetUlong(job, JB_job_number)), SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S, 
+            lGetString(pe, PE_name));
+      DEXIT;
+      return 1;
+   }
 
    free_slots = (int)lGetUlong(pe, PE_slots) - 
       (int)lGetUlong(pe, PE_used_slots);
    if (!lGetUlong(pe, PE_slots)
        || free_slots <= 0) {
+      /* because there are not enough free PE slots */
       DPRINTF(("no free slots in PE \"%s\" for job %d\n",
             lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
          schedd_add_message((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S,

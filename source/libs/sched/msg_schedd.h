@@ -120,7 +120,7 @@
 #define MSG_SCHEDD_INFO_WOULDSETQEUEINALARM_IS        _MESSAGE(47069, _("(%d slots) would set queue "SFQ" in load alarm state") ) 
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE_S              _MESSAGE(47070, _("cannot run in queue "SFQ" because it has \"0\" slots"))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47071, _("(-l"SFN") cannot run in queue "SFQ" because "SFN"") ) 
-#define MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE_S           _MESSAGE(47072, _("cannot run because requested amount of slots is not supported by pe "SFQ""))
+#define MSG_SCHEDD_INFO_NORESOURCESPE_                _MESSAGE(47072, _("cannot run because resources requested are not available for parallel job"))
 #define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47073, _("(-l"SFN") cannot run globally because "SFN"\n") ) 
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _MESSAGE(47074, _("does not request 'forced' resource "SFQ" of host "SFN"") )  
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS            _MESSAGE(47075, _("does not request globally 'forced' resource "SFQ"") )    
@@ -167,7 +167,7 @@
 #define MSG_SCHEDD_INFO_WOULDSETQEUEINALARM           _MESSAGE(47114, _("Jobs would set queue in load alarm state") )     
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE                _MESSAGE(47115, _("Jobs can not run because queue has 0 slots") )    
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE              _MESSAGE(47116, _("Jobs can not run because the resource requirements can not be satified"))
-#define MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE             _MESSAGE(47117, _("Jobs can not run because requested amount of slots is not supported by pe"))
+#define MSG_SCHEDD_INFO_NORESOURCESPE                 _MESSAGE(47117, _("Jobs cannot run because resources requested are not available for parallel job"))
 #define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY             _MESSAGE(47118, _("Jobs can not run globally because the resource requirements can not be satified"))
 #define MSG_SCHEDD_INFO_NOFORCEDRES                   _MESSAGE(47119, _("Jobs can not run because they do not request 'forced' resource"))
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES               _MESSAGE(47120, _("Jobs can not run globally because they do not request 'forced' resource"))
@@ -499,6 +499,8 @@
 #define MSG_LOADFORMHASTOSTART         _MESSAGE(47377, _("\"load_formula\" has to start with a load value or consumable resource\n"))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS  _MESSAGE(47378, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 #define MSG_QMASTERMOVEDEXITING_SS     _MESSAGE(47379, _("qmaster moved from "SFQ" to "SFQ": exiting\n"))
+#define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S _MESSAGE(47380, _("cannot run because total slots of pe "SFQ" not in range of job"))
+#define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE   _MESSAGE(47381, _("Jobs can not run because total slots of pe are not in range of job") ) 
 
 
 #endif /* __MSG_SCHEDD_H */

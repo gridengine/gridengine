@@ -113,8 +113,8 @@ int nr
       case SCHEDD_INFO_CANNOTRUNINQUEUE_SSS     :
          return MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS      ;   
  
-      case SCHEDD_INFO_NOSLOTSUPPORTBYPE_S      :
-         return MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE_S       ;   
+      case SCHEDD_INFO_NORESOURCESPE_      :
+         return MSG_SCHEDD_INFO_NORESOURCESPE_  ;   
  
       case SCHEDD_INFO_CANNOTRUNGLOBALLY_SS     :
          return MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS      ;   
@@ -130,6 +130,9 @@ int nr
  
       case SCHEDD_INFO_PESLOTSNOTINRANGE_S      :
          return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S       ;  
+ 
+      case SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S :
+         return MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S  ;  
  
       case SCHEDD_INFO_NOACCESSTOPE_S           :
          return MSG_SCHEDD_INFO_NOACCESSTOPE_S            ;   
@@ -250,8 +253,8 @@ int nr
       case SCHEDD_INFO_CANNOTRUNINQUEUE         :
          return MSG_SCHEDD_INFO_CANNOTRUNINQUEUE          ;   
  
-      case SCHEDD_INFO_NOSLOTSUPPORTBYPE        :
-         return MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE         ;  
+      case SCHEDD_INFO_NORESOURCESPE            :
+         return MSG_SCHEDD_INFO_NORESOURCESPE             ;  
  
       case SCHEDD_INFO_CANNOTRUNGLOBALLY        :
          return MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY         ;  
@@ -267,6 +270,9 @@ int nr
  
       case SCHEDD_INFO_PESLOTSNOTINRANGE        :
          return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE         ; 
+ 
+      case SCHEDD_INFO_TOTALPESLOTSNOTINRANGE   :
+         return MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE    ;  
  
       case SCHEDD_INFO_NOACCESSTOPE             :
          return MSG_SCHEDD_INFO_NOACCESSTOPE              ;  

@@ -1,3 +1,10 @@
+AH-2003-03-27-0  Bugfix:    qrong qstat -j diagnosis message wrongly indicates 
+                            not enough PE slots
+                 Issue:     #415
+                 Bugtraq:   #4775325
+                 Review:    AS
+                 Changed:   qstat, sge_qmaster, sge_schedd
+
 JG-2003-03-27-0  Bugfix:    qstat -alarm was broken.
                  Issue:     #469, #489
                  Bugtraq:   #481579

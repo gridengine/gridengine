@@ -1,3 +1,6 @@
+CR-2001-12-11-0: Testsuite: Using catch{} construct to suppress tcl errors when
+                            creating a report message
+
 JG-2001-12-11-0: Bugfix:    qrsh can not really ignore CTRL-Z (as intended by
                             JG-2001-12-10-0). Pressing CTRL-Z in a 
                             qrsh <command> session will suspend the rsh client.

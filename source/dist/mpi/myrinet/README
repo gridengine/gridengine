@@ -190,7 +190,7 @@ Environment Interface of Grid Engine.
 10) Notes
 ---------
 
-   The main reason for implementing the a queue-per-processor is
+   The main reason for implementing the a queue-per-processor method is
    the simplicity and built-in fault tolerance of this design versus
    maintaining a port database which tracks which ports are in use.
    Since the port numbers are allocated and cleaned up by Grid Engine

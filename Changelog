@@ -1,3 +1,13 @@
+RH-2004-07-22-0: Bugfix:    Wrong parameter for -Mc option argument qconf(1)
+                            man page fixed.
+                            Enhancements in man page for sched_conf(5).
+                            In man pages submit(1) the '$' and '.' as forbidden
+                            characters for job names removed.
+                 Issue:     1114, 969, ???????
+                 Bugtraq:   ????, ???, 5076358
+                 Changed:   qconf(1), sched_conf(5), submit(1)
+                 Review:    SG
+
 JG-2004-07-21-0: Bugfix:    Fixed a bug in aimk -shared-libs.
                             Fixed default busy handling in event client.
                  Doc.:      Described use of bdb_checkpoint.sh in Berkeley DB

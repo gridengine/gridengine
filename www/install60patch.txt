@@ -1,0 +1,298 @@
+              Installing a Grid Engine 6 Update Release
+              -----------------------------------------
+
+1) Who needs to read this document
+2) Prerequisites
+3) Stopping the Grid Engine cluster to start jobs
+4) Shutting down the Grid Engine qmaster, scheduler and execution daemons
+5) Installing the patch and restarting the software
+6) Berkeley DB database update needed
+   6.1) Backup BDB
+   6.2) Update BDB
+7) New startup script template for qmaster and execd startup (6.0u1)
+   7.1) Recreate the startup script
+   7.2) Copy the new startup scripts
+8) Restarting the software
+9) New functionality delivered with SGE 6.0 update releases
+   9.1. Avoid setting of LD_LIBRARY_PATH; inherited job environment (6.0u2)
+   9.2. DRMAA Java[TM] language binding available (6.0u2)
+   9.3. New options to optimize memory overhead and speed of qstat (6.0u2)
+   9.4. Tuning parameter for sharetree spooling (6.0u2)
+   9.5. New man pages (6.0u2)
+
+1) Who needs to read this document
+----------------------------------
+
+   This document describes how to install a Grid Engine 6.0 update release
+   for an installing 6.0 cluster from a previous revision.
+
+   If you make a new installation of Grid Engine 6.0 or a newer update
+   release please follow the directions in the N1 Grid Engine manuals which
+   can be found at http://docs.sun.com.
+
+   The terms "update release", "patch", "patch release", and "distribution"
+   in this document are used interchangeably and refer to the most recent
+   courtesy distribution of Grid Engine which includes binaries,
+   documentation and architecture independent files (the "common" package)
+   available on the binary download page.
+
+
+2) Prerequisites
+-----------------
+
+   The courtesy binary distribution always contains a full set of all
+   binaries.
+
+   These installation instructions assume that you are running a homogenous
+   Grid Engine cluster (called "the software") where all hosts share the
+   same directory for the binaries. If you are running the software in a
+   heterogenous environment (mix of different binary architectures), you
+   need to apply the patch installation for all binary architectures as well
+   as the "common" and "arco" packages. See the patch matrix above for
+   details about the available patches.
+
+   If you installed the software on local filesystems, you need to install
+   all relevant patches on all hosts where you installed the software
+   locally.
+
+   By default, there should by no running jobs when the patch is installed.
+   There may pending batch jobs, but no pending interactive jobs (qrsh,
+   qmake, qsh, qtcsh).
+
+   It is possible to install the patch with running batch jobs. To avoid a
+   failure (and possible loss of your jobs) of a running 'sge_shepherd'
+   process, it is necessary to move the old sge_shepherd binary (and copy it
+   back prior to the installation of the patch).
+
+   You cannot install the patch with running interactive jobs, 'qmake' jobs
+   or with running parallel jobs which use the tight integration support
+   (control_slaves=true in PE configuration is set).
+
+   It is required to update all binaries and the "common" package to the
+   same revision level. A mix if different versions of Grid Engine daemons
+   and commands is not supported.
+
+
+3. Stopping the Grid Engine cluster to start jobs
+-------------------------------------------------
+
+   Disable all queues so that no new jobs are started:
+
+      # qmod -d '*'
+
+   Optional (only needed if there are running jobs which should continue to
+   run when the patch is installed):
+
+      # cd $SGE_ROOT/bin
+      # mv <arch>/sge_shepherd <arch>/sge_shepherd.sge60
+
+   It is important that the binary is moved with the "mv" command. It should
+   not be copied because this could cause the crash of an active shepherd
+   process which is currently running job when the patch is installed.
+
+
+4. Shutting down the Grid Engine qmaster, scheduler and execution daemons
+-------------------------------------------------------------------------
+
+   You need to shutdown (and restart) the qmaster and scheduler daemon and
+   all running execution daemons.
+
+   Shutdown all your execution hosts. Login to all your execution hosts and
+   stop the execution daemons:
+
+      # /etc/init.d/sgeexecd softstop
+
+   Then login to your qmaster machine and stop qmaster and scheduler:
+
+      # /etc/init.d/sgemaster stop
+
+   Now verify with the 'ps' command that all Grid Engine daemons on all
+   hosts are stopped. If you decided to rename the 'sge_shepherd' binary so
+   that running jobs can continue to run during the patch installation, you
+   must not kill the 'sge_shepherd' binary (process).
+
+
+5. Installing the patch and restarting the software
+---------------------------------------------------
+
+   Now install the update release by unpacking all 'tar.gz' files (all
+   binary packages and the "common" package.
+
+
+6) Berkeley DB database update needed
+-------------------------------------
+
+   After installing this patch, and before restarting your cluster you need
+   to update your Berkeley DB (BDB) database in the following cases:
+
+      - you choose the BDB spooling option (not needed for classic
+        spooling) either locally or with the BDB RPC option, and you are
+        upgrading your cluster from SGE 6.0 or SGE 6.0u1 to SGE 6.0u2 or
+        higher.
+
+   6.1. Backup BDB
+   ---------------
+
+      For safety reasons, please make a full backup of your existing
+      configuration. To perform a backup use this command
+
+         % inst_sge -bup
+
+   6.2. Update BDB
+   ---------------
+
+      Upgrade your BDB database. This is done as follows:
+
+         % inst_sge -updatedb
+
+
+7. New startup script template for qmaster and execd startup (6.0u1)
+--------------------------------------------------------------------
+
+   This patch changes the startup script of qmaster/scheduler/shadowd (the
+   "sgemaster" script) and the startup script of the execution daemon
+   ("sgeexecd"). Since these scripts are created from a template it is
+   necessary to recreate the startup scripts and install them in the system
+   wide boot script directory (e.g. /etc/init.d).
+
+   The patch for Grid Engine 6.0u1 or higher comes with a few fixes for the
+   startup script templates. If you are updating from Grid Engine 6.0 to a
+   newer release you should create a new startup script. If you already
+   updated to Grid Engine 6.0u1 or higher and you already executed the steps
+   outlined below you don't need to repeat them.
+
+   7.1. Recreate the startup script
+   --------------------------------
+
+      The new scripts are installed in <sge_root>/<cell>/common. A backup of
+      the original scripts is saved in this directory as
+
+         sgemaster_YYYY-MM-DD_HH:MM:ss
+         sgeexecd_YYYY-MM-DD_HH:MM:ss
+
+      where YYYY-MM-DD_HH:MM:ss defines the current date and time.
+
+      Login as the root or admin user and source the environment settings
+      for Grid Engine. The example below assumes your current shell is the
+      Bourne shell or Korn shell
+
+         # cd <sge_root>
+         # . <cell>/common/settings.sh
+         # ./inst_sge -rccreate
+
+      The new startup scripts will be installed in <sge_root>/<cell>/common.
+
+   7.2. Copy the new startup scripts
+   ---------------------------------
+
+      Copy the new startup scripts to the system wide rc file location on
+      all qmaster, shadowd and execution hosts. Depending on the operating
+      system this can be one of the following directories:
+
+      - /etc/init.d
+      - /etc/rc.d
+      - /sbin/init.d
+
+
+8. Restarting the software
+--------------------------
+
+   Please login to your qmaster machine and execution hosts and enter:
+
+      # /etc/init.d/sgemaster etc/init.d/sgeexecd
+
+   After restarting the software, you may again enable your queues:
+
+      # qmod -e '*'
+
+   If you renamed the shepherd binary, you may safely delete the old binary
+   when all jobs which where running prior the patch installation have
+   finished.
+
+
+9. New functionality delivered with this patch
+----------------------------------------------
+
+   9.1. Avoid setting of LD_LIBRARY_PATH; inherited job environment (6.0u2)
+   ------------------------------------------------------------------------
+
+   There are two new "execd_params" (defined in the global or local cluster
+   configuration) which control the environment inherited by a job:
+
+      SET_LIB_PATH
+      INHERIT_ENV
+
+   By default, SET_LIB_PATH is false and INHERIT_ENV is true.  If
+   SET_LIB_PATH is true and INHERIT_ENV is true, each job will inherit the
+   environment of the shell that started the execd, with the SGE lib
+   directory prepended to the lib path.  If SET_LIB_PATH is true and
+   INHERIT_ENV is false, the environment of the shell that started the execd
+   will not be inherited by jobs, and the lib path will contain only the
+   SGE lib directory.  If SET_LIB_PATH is false and INHERIT_ENV is true,
+   each job will inherit the environment of the shell that started the execd
+   with no additional changes to the lib path.  If SET_LIB_PATH is false and
+   INHERIT_ENV is false, the environment of the shell that started the execd
+   will not be inherited by jobs, and the lib path will be empty.
+   Environment variables which are normally overwritten by the shepherd,
+   such as PATH or LOGNAME, are unaffected by these new parameters.
+
+   9.2. DRMAA Java[TM] language binding available (6.0u2)
+   ------------------------------------------------------
+
+   The DRMAA Java language binding is now available. The DRMAA Java language
+   binding library and documentation is contained in the patch for the
+   "common" package. The DRMAA Java language binding library is located in
+   the directory
+
+      <sge_root>/lib/drmaa.jar
+
+   The documentation can be found in
+
+      <sge_root>/doc/javadocs
+
+   9.3. New options to optimize memory overhead and speed of qstat (6.0u2)
+   -----------------------------------------------------------------------
+
+   The qstat client command has been enhanced to reduce the overall amount
+   of memory which is requested from the qmaster. To enable these changes it
+   is necessary to change the qstat default behavior. This is possible by
+   defining a cluster-global or user-specific sge_qstat file. More
+   information can be found in sge_qstat(5) manual page. In addition two new
+   qstat options ("-u" and "-s") have been introduced to be used with the
+   sge_qstat default file. Find more information in qstat(1).
+
+   9.4. Tuning parameter for sharetree spooling (6.0u2)
+   ----------------------------------------------------
+
+   A new "qmaster_param" (configured in the global cluster configuration):
+
+      STREE_SPOOL_INTERVAL=<time>
+
+   can be configured to control the interval for how often the sharetree
+   usage is spooled. The interval can be set to any time in the following
+   formats:
+
+       HH:MM:SS or
+       <int>
+
+   E.g.:
+
+      STREE_SPOOL_INTERVAL=0:05:00
+      STREE_SPOOL_INTERVAL=300
+
+   This parameter is a tuning parameter only. It has the biggest effect on a
+   system using classic spooling and bigger sharetrees and a slow
+   filesystem.
+
+   9.5. New man pages (6.0u2)
+   --------------------------
+
+   The following man pages have been added to the distribution:
+
+      sge_qstat(5)     - new default request file for qstat(1)
+      gethostbyaddr(1) - man page for commands in <sge_root>/utilbin/<arch>
+      gethostbyname(1) - man page for commands in <sge_root>/utilbin/<arch>
+      gethostname(1)   - man page for commands in <sge_root>/utilbin/<arch>
+      getservbyname(1) - man page for commands in <sge_root>/utilbin/<arch>
+      qping(1)         - man page for utility to monitor Grid Engine daemon
+                         communication

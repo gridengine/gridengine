@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/01/24 17:50:17 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/01/25 14:04:54 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/01/24 17:50:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/01/25 14:04:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -547,7 +547,7 @@ to constitute the standard error stream path name. The following
 pseudo environment variables are supported currently:
 .sp 1
 .nf
-.ta \w'$SGE_TASK_ID   'u
+.ta \w'$JOB_NAME   'u
 $HOME	home directory on execution machine
 $USER	user ID of job owner
 $JOB_ID	current job ID
@@ -652,13 +652,15 @@ however.
 .IP "\fB\-help\fP"
 Prints  a listing of all options.
 .\"
-.IP "\fB\-hold_jid job_id,...\fP"
+.IP "\fB\-hold_jid [job_id|job_name],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
-Defines or redefines the job dependency list of the submitted job. The
-submitted job is not eligible for execution unless all jobs referenced
-in the coma separated job id list have completed successfully.
+Defines or redefines the job dependency list of the submitted job. A 
+reference by job name is only accepted if the referenced job is owend
+by the same user as the refering job. The submitted job is not eligible 
+for execution unless all jobs referenced in the coma separated job id 
+and/or job name list have completed successfully.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes. The modified
@@ -853,7 +855,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 The name of the job. The name can be any printable set
-of characters.
+of characters, starting with an alphabetic character.
 .br
 If the \fB\-N\fP option is not present xxQS_NAMExx assigns
 the name of the job script to the job after 

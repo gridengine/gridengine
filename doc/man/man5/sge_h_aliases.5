@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_h_aliases.5,v $     Last Update: $Date: 2001/07/20 08:19:16 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_h_aliases.5,v $     Last Update: $Date: 2002/01/25 14:04:54 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_H_ALIASES 5 "$Date: 2001/07/20 08:19:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_H_ALIASES 5 "$Date: 2002/01/25 14:04:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_h_aliases \- xxQS_NAMExx host aliases file format
@@ -47,7 +47,10 @@ for one or all hosts which can be used on all hosts. In such situations
 a xxQS_NAMExx host aliases file can be used to provide the communication
 daemons with a private and consistent hostname resolution database.
 .PP
-If a host aliases file is used, it must be specified explicitly to
+The default location for the host aliases file is 
+\fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
+To use a different 
+host aliases, it must be specified explicitly to
 .M xxqs_name_sxx_commd 8
 via the \fB\-a\fP command line option.
 .\"

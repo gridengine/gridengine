@@ -2623,22 +2623,27 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          }
 
          range_list = lGetList(job, JB_ja_n_h_ids); 
-         for_each_id_in_range_list(id, range, range_list) {
-            sge_ref_t *jref = &job_ref[job_ndx];
-            sge_task_ref_t *tref = task_ref_get_entry(ja_task_ndx);
+         for_each(range, range_list) {
+            for(id = lGetUlong(range, RN_min);
+                id <= lGetUlong(range, RN_max);
+                id += lGetUlong(range, RN_step)) {  
+               sge_ref_t *jref = &job_ref[job_ndx];
+               sge_task_ref_t *tref = task_ref_get_entry(ja_task_ndx);
 
-            if (++task_cnt > MIN(max_pending_tasks_per_job, free_qslots+1)) {
-               break;
-            } 
-            ja_task = job_get_ja_task_template_pending(job, id);
-            sge_set_job_refs(job, ja_task, jref, tref, lists); 
-            jref->queued = 1;
-            if (jref->node) {
-               lSetUlong(jref->node, STN_job_ref_count,
-                         lGetUlong(jref->node, STN_job_ref_count)+1);
+               if (++task_cnt > MIN(max_pending_tasks_per_job, 
+                                    free_qslots+1)) {
+                  break;
+               } 
+               ja_task = job_get_ja_task_template_pending(job, id);
+               sge_set_job_refs(job, ja_task, jref, tref, lists); 
+               jref->queued = 1;
+               if (jref->node) {
+                  lSetUlong(jref->node, STN_job_ref_count,
+                            lGetUlong(jref->node, STN_job_ref_count)+1);
+               }
+               ja_task_ndx++;
+               job_ndx++;
             }
-            ja_task_ndx++;
-            job_ndx++;
          }
       }
    }

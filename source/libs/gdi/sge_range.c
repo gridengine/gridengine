@@ -381,14 +381,22 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
       lListElem *range = NULL;
       u_long32 id;
 
-      for_each_id_in_range_list(id, range, *range_list) {
-         range_list_insert_id(range_list2, answer_list, id);
-         if (--n == 0) {
-            break;
+      for_each(range, *range_list) {
+         for(id = lGetUlong(range, RN_min);
+             id <= lGetUlong(range, RN_max);
+             id += lGetUlong(range, RN_step)) {  
+            range_list_insert_id(range_list2, answer_list, id);
+            if (--n == 0) {
+               break;
+            }
          }
       }
-      for_each_id_in_range_list(id, range, *range_list2) {
-         range_list_remove_id(range_list, answer_list, id); 
+      for_each(range, *range_list2) {
+         for(id = lGetUlong(range, RN_min);
+             id <= lGetUlong(range, RN_max);
+             id += lGetUlong(range, RN_step)) {  
+            range_list_remove_id(range_list, answer_list, id); 
+         }
       }
    }
    DEXIT;

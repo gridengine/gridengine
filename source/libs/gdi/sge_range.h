@@ -38,17 +38,24 @@
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
+#if 0
+
 /*
-   for_each(elem, list) \
-      for(id = lGetUlong(elem, RN_min); id <= lGetUlong(elem, RN_max); \
-          id += lGetUlong(elem, RN_step)) 
+   for_each(range, range_list) { 
+      for(id = lGetUlong(range, RN_min); 
+          id <= lGetUlong(range, RN_max); 
+          id += lGetUlong(range, RN_step)) {
 
 */
+
 #define for_each_id_in_range_list(id, elem, list) \
-   for (id = ((elem = lFirst(list)) ? lGetUlong(elem, RN_min) : 0); \
-        (elem ? (id <= lGetUlong(elem, RN_max)) : 0); \
-        (elem ? (id += lGetUlong(elem, RN_step)) : \
-                ((elem = lNext(elem)) ? (id = lGetUlong(elem, RN_min)) : 0)))
+   if (list) \
+      for (id = ((elem = lFirst(list)) ? lGetUlong(elem, RN_min) : 0); \
+           (elem ? (id <= lGetUlong(elem, RN_max)) : 0); \
+           (elem ? (id += lGetUlong(elem, RN_step)) : \
+              ((elem = lNext(elem)) ? (id = lGetUlong(elem, RN_min)) : 0)))
+
+#endif
 
 void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
 

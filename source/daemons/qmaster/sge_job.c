@@ -1773,15 +1773,17 @@ int is_task_enrolled
 
       job_set_hold_state(job, NULL, jataskid, new_hold); 
       *trigger |= MOD_EVENT;
-    
-      if (is_array) { 
-         sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JATASK_SUU, MSG_JOB_HOLD, 
-                 u32c(jobid), u32c(jataskid));
-      } else {
-         sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_HOLD, 
-                 u32c(jobid));
+   
+      if (new_hold != old_hold) { 
+         if (is_array) { 
+            sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JATASK_SUU, MSG_JOB_HOLD, 
+                    u32c(jobid), u32c(jataskid));
+         } else {
+            sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_HOLD, 
+                    u32c(jobid));
+         }
+         sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
       }
-      sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    }
 
    DEXIT;
@@ -1841,26 +1843,75 @@ int *trigger
       }    
 
       /* 
-       * Visit the tasks 
+       * Visit tasks
        */
-      for_each (ja_task, ja_task_list) {
-         u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
-         int is_defined = job_is_ja_task_defined(new_job, ja_task_id);
+      if (ja_task_list != NULL) {
+         lListElem *first = lFirst(ja_task_list);
+         u_long32 handle_all_tasks = !lGetUlong(first, JAT_task_number);
 
-         if (is_defined) {
+         if (handle_all_tasks) {
+            int list_id[] = {JB_ja_n_h_ids, JB_ja_u_h_ids, JB_ja_o_h_ids,
+                             JB_ja_s_h_ids, -1};
             lListElem *dst_ja_task = NULL;
-            int is_enrolled = 1;
+            int i = -1;
 
-            dst_ja_task = job_search_task(new_job, NULL, ja_task_id, 0);
-            if (dst_ja_task == NULL) {
-               is_enrolled = 0;
-               dst_ja_task = job_get_ja_task_template_pending(new_job, 
-                                                              ja_task_id); 
+            /*
+             * Visit all unenrolled tasks
+             */
+            while(list_id[++i] != -1) {
+               lList *range_list = 
+                              lCopyList("", lGetList(new_job, list_id[i]));
+               lListElem *range = NULL;
+               u_long32 id;
+ 
+               for_each(range, range_list) {
+                  lWriteElemTo(range, stderr);
+                  for(id = lGetUlong(range, RN_min); 
+                      id <= lGetUlong(range, RN_max); 
+                      id += lGetUlong(range, RN_step)) {
+
+                     dst_ja_task = 
+                            job_get_ja_task_template_pending(new_job, id);
+
+                     mod_task_attributes(new_job, dst_ja_task, ja_task, 
+                                         alpp, ruser, rhost, trigger, 
+                                         is_array(new_job), 0);
+                  }
+               }
+               range_list = lFreeList(range_list);
             }
-            mod_task_attributes(new_job, dst_ja_task, ja_task, alpp,
-                                ruser, rhost, trigger, is_array(jep), 
-                                is_enrolled);
-         } 
+            /*
+             * Visit enrolled tasks
+             */
+            for_each (dst_ja_task, lGetList(new_job, JB_ja_tasks)) {
+               mod_task_attributes(new_job, dst_ja_task, ja_task, alpp,
+                                   ruser, rhost, trigger, 
+                                   is_array(new_job), 1);
+            }
+         } else {
+            for_each (ja_task, ja_task_list) {
+               u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
+               int is_defined = job_is_ja_task_defined(new_job, ja_task_id);
+
+               if (is_defined) {
+                  lListElem *dst_ja_task = NULL;
+                  int is_enrolled = 1;
+
+                  dst_ja_task = job_search_task(new_job, NULL, ja_task_id, 0);
+                  if (dst_ja_task == NULL) {
+                     is_enrolled = 0;
+                     dst_ja_task = 
+                         job_get_ja_task_template_pending(new_job, 
+                                                          ja_task_id); 
+                  }
+                  mod_task_attributes(new_job, dst_ja_task, ja_task, alpp,
+                                      ruser, rhost, trigger, 
+                                      is_array(new_job), is_enrolled);
+               } else {
+                  ; /* Ignore silently */
+               }
+            }
+         }
       }
    }
 

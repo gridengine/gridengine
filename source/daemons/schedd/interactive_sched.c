@@ -75,11 +75,14 @@ lList **opp      /* OR_Type */
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {
          order_remove_immediate(job, ja_task, opp);
       }
-lWriteElemTo(job, stderr);
       range_list = lGetList(job, JB_ja_n_h_ids);
-      for_each_id_in_range_list(ja_task_id, range, range_list) {
-         ja_task = job_get_ja_task_template_pending(job, ja_task_id);
-         order_remove_immediate(job, ja_task, opp);
+      for_each(range, range_list) {
+         for(ja_task_id = lGetUlong(range, RN_min);
+             ja_task_id <= lGetUlong(range, RN_max);
+             ja_task_id += lGetUlong(range, RN_step)) {  
+            ja_task = job_get_ja_task_template_pending(job, ja_task_id);
+            order_remove_immediate(job, ja_task, opp);
+         }
       }
       lRemoveElem(job_list, job);
    }

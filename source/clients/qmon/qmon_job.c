@@ -771,11 +771,16 @@ void updateJobList(void)
                      lListElem *range = NULL;   /* RN_Type */
                      u_long32 task_id;
 
-                     for_each_id_in_range_list(task_id, range, task_ids) {
-                        jap = job_get_ja_task_template(jep, task_id);
-                        qmonJobToMatrix(job_pending_jobs, jep, jap, NULL,
-                                        JOB_DISPLAY_MODE_RUNNING, pow + tow);
-                        tow++;
+                     for_each(range, task_ids) {
+                        for(task_id = lGetUlong(range, RN_min);
+                            task_id <= lGetUlong(range, RN_max);
+                            task_id += lGetUlong(range, RN_step)) {     
+                           jap = job_get_ja_task_template(jep, task_id);
+                           qmonJobToMatrix(job_pending_jobs, jep, jap, 
+                                           NULL, JOB_DISPLAY_MODE_RUNNING,
+                                           pow + tow);
+                           tow++;
+                        }
                      }
                   }
                   pow += tow;

@@ -1,3 +1,8 @@
+EB-2001-12-06-0: Bugfix:    It was not possible to modify the hold state
+                            of tasks without task id specification.
+                            (e.g. qalter -h u <jobid> failed)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
+
 JG-2001-12-05-0: Testsuite: Adapt qrsh test to use newer spawn function
                             open_remote_spawn_process.
 

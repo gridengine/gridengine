@@ -1313,6 +1313,16 @@ FF_DEBUG("detected end_token");
       /* skip newlines */
       while (*token == SPFT_NEWLINE) {
 FF_DEBUG("skip newline");
+         /* DT: TODO: There is a potential problem here that just hasn't come up
+          * yet.  If an object type with a NULL field name were to disable value
+          * parsing, it wouldn't work because the field name is always expected
+          * to be a WORD.  Therefore, with a NULL field name value parsing is
+          * always assumed to be false.
+          * To fix this, we would need to allow text to be pushed back onto the
+          * spool_text so that we could read the name as a WORD, and if it turns
+          * out to be a field with a NULL name with value parsing disabled we
+          * could push the WORD back onto the spool_text and read it again with
+          * value parsing disabled. */
          *token = spool_lex();
       }
 

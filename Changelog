@@ -1,3 +1,6 @@
+DT-2004-05-28-2: Cleanup:   o Documented issue in sge_flatfile.c
+                 Changed:   Flatfile spooling
+
 DT-2004-05-28-1: Bugfix:    o Clarified drmaa_wait() man page
                  Changed:   docs
 

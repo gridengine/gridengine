@@ -62,6 +62,8 @@
 #include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_feature.h"
+#include "sge_bootstrap.h"
+
 
 static void default_exit_func(int i);
 #if defined(SGE_MT)
@@ -107,6 +109,9 @@ void gdi_once_init(void) {
    prog_mt_init();
    log_mt_init();
    uidgid_mt_init();
+
+   bootstrap_mt_init();
+   feature_mt_init();
 
    /* cull */
    cull_mt_init();

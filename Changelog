@@ -1,3 +1,6 @@
+AD-2003-10-28-3: Bugfix.:   MT initialization for GDI was incomplete.
+                 Changed:   gdi
+
 AD-2003-10-28-2: Bugfix.:   MT initialization for 'commdcntl' was incomplete.
                  Changed:   commdcntl
 

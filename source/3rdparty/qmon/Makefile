@@ -15,9 +15,9 @@ all: $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
      $(XLTREELIB) $(XTABLIB)
 
 depend: 
-	@echo "No dependencies for 3rd_party qmon libs yet     
+	@echo "No dependencies for 3rd_party qmon libs yet" 
 
 messages: 
-	@echo "No messages for 3rd_party qmon libs yet     
+	@echo "No messages for 3rd_party qmon libs yet"
 
 clean: Xicon_clean Xltree_clean Xspin_clean Xtab_clean Xbae_clean Xmt_clean

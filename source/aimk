@@ -983,6 +983,8 @@ case LINUX6:
       set CXXFLAGS = "-Wno-error $CXXFLAGS"
       set LIBS = "$LIBS"
    endif
+   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
+   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    if ( $SHAREDLIBS == 1 ) then
@@ -1005,8 +1007,8 @@ case LINUX6:
    else
      set GLIBC20DEF = ""
    endif
-   set CFLAGS   = "$OFLAG -Wall -Werror -DLINUX -D$BUILDARCH $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
-   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes -DLINUX -D$BUILDARCH $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
+   set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"

@@ -1,3 +1,5 @@
+EB-2001-07-25-1: (Issue# 4) fixed build error (LINUX6, ALINUX)
+
 EB-2001-07-25-0: (Issue# 5) qmaster - qconf:
                  - qconf -so|sm does not show comments anymore. 
                  - Comments will only be inserted into spoolfiles. 

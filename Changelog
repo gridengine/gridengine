@@ -1,9 +1,7 @@
 RC-2005-03-24-2: Enhancem.: Failed to compile on Cray unicos
                  Changed:   - pdc.c (include file is now sge_unistd.h)
                             - sge_c_gdi.c, configuration_qmaster.c (conflict
-                              in proto.: static missing)
- 
-
+                              in function prototype: "static" missing)
 
 RC-2005-03-24-1: Enhancem.: moved function declarations into sge_uidgid.h
                  Changed  : get*_r routines for BSD (and other OSes with

@@ -363,6 +363,9 @@
 #define MSG_GDI_USAGE_AUSER                              "[-auser]"
 #define MSG_GDI_UTEXT_AUSER                              _("add user")
 
+#define MSG_GDI_USAGE_Auser                              "[-Auser fname]"
+#define MSG_GDI_UTEXT_Auser                              _("add user from file")
+
 #define MSG_GDI_USAGE_APRJ                               "[-aprj]"
 #define MSG_GDI_UTEXT_APRJ                               _("add project")
 
@@ -574,6 +577,9 @@
 
 #define MSG_GDI_USAGE_muser_OPT_USER                     "[-muser user]"
 #define MSG_GDI_UTEXT_muser_OPT_USER                     _("modify a user")
+
+#define MSG_GDI_USAGE_Muser_OPT_USER                     "[-Muser fname]"
+#define MSG_GDI_UTEXT_Muser_OPT_USER                     _("modify a user from file")
 
 #define MSG_GDI_USAGE_mprj_OPT_PROJECT                   "[-mprj project]"
 #define MSG_GDI_UTEXT_mprj_OPT_PROJECT                   _("modify a project")

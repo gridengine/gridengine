@@ -702,6 +702,50 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
+      /* "-Auser" */
+
+      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-Auser", *spp)) {
+         char* file = NULL;
+         /* no adminhost/manager check needed here */
+
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            file = *spp;
+         } else {
+            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
+         }        
+
+
+         /* get project  */
+         ep = NULL;
+         ep = cull_read_in_userprj(NULL, file ,0 ,1 ,0 ); 
+         if (ep == NULL) {
+            sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE); 
+         }
+        
+         /* send it to qmaster */
+         lp = lCreateList("User to add", UP_Type); 
+         lAppendElem(lp, ep);
+
+         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
+
+         aep = lFirst(alp);
+         if (sge_get_recoverable(aep) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text)); 
+            alp = lFreeList(alp);
+            lp = lFreeList(lp);
+            SGE_EXIT(1);
+         }
+         alp = lFreeList(alp);
+         lp = lFreeList(lp);
+
+         spp++;
+         continue;
+      }
+
+
+/*----------------------------------------------------------------------------*/
+
       /* "-Aprj" */
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-Aprj", *spp)) {
@@ -2620,6 +2664,82 @@ DPRINTF(("ep: %s %s\n",
 
 
 
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-Muser file" */
+
+      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-Muser", *spp)) {
+         char* file = NULL;
+         const char* username = NULL;
+   
+         /* no adminhost/manager check needed here */
+
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            file = *spp;
+         } else {
+            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
+         }
+
+         /* get user from file */
+         newep = NULL;
+         newep = cull_read_in_userprj(NULL, file ,0 ,1 ,0 ); 
+         if (newep == NULL) {
+            sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE); 
+         } 
+         username = lGetString(newep, UP_name); 
+                 
+         /* get user */
+         where = lWhere("%T( %I==%s )", UP_Type, UP_name, username);
+         what = lWhat("%T(ALL)", UP_Type);
+         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
+         where = lFreeWhere(where);
+         what = lFreeWhat(what);
+                  
+         aep = lFirst(alp);
+         if (sge_get_recoverable(aep) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            alp = lFreeList(alp);
+            newep = lFreeElem(newep);
+            lp = lFreeList(lp);
+            SGE_EXIT(1); 
+         }
+
+         if (!lp) {
+            fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, username);
+            fflush(stdout);
+            fflush(stderr);
+            alp = lFreeList(alp);
+            newep = lFreeElem(newep);
+            SGE_EXIT(1); 
+         }
+         alp = lFreeList(alp);
+         ep = lFirst(lp);
+         
+         /* edit user */
+         /* newep = edit_userprj(ep, 1); */
+
+         /* send it to qmaster */
+         lp = lCreateList("User list to modify", UP_Type); 
+         lAppendElem(lp, newep);
+
+         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+
+         aep = lFirst(alp);
+         if (sge_get_recoverable(aep) != STATUS_OK) {
+           fprintf(stderr, "%s", lGetString(aep, AN_text));
+           alp = lFreeList(alp);
+           lp = lFreeList(lp);
+           SGE_EXIT(1);
+         }
+          
+         alp = lFreeList(alp);
+         lp = lFreeList(lp);
+
+         spp++;
+         continue;
+      }
 
 /*----------------------------------------------------------------------------*/
 

@@ -168,7 +168,9 @@ enum {
    msconf_OPT,   /* modify SGE scheduler configuration */
    lj_OPT,
    aus_OPT,     /* SGE add user */
+   Aus_OPT,     /* SGE add user from file */
    mus_OPT,     /* SGE modify user */
+   Mus_OPT,     /* SGE modify user from file */
    dus_OPT,     /* SGE delete user */
    sus_OPT,     /* SGE show user */
 

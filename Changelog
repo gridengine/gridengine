@@ -1,3 +1,8 @@
+JG-2001-11-08-1: (Issue #89): New qconf options:
+                    -Auser: add user from file
+                    -Muser: modify user from file
+                 Corrected sorting of options in help output.   
+
 JG-2001-11-08-0: Updated recent GDI versions for version check and error 
                  handling in qmaster.
 

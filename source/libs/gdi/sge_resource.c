@@ -157,14 +157,6 @@ const char *hard_soft         /* for name of resources list */
          DEXIT;
          return NULL;
       }
-      if (value == NULL || *value == '\0') {
-         ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
-         lFreeList(resources);
-         lFreeList(complex_attributes);
-         lFreeElem(request_el);
-         DEXIT;
-         return NULL;
-      }
 
       lSetString(complex_attribute, CE_name, attr);
       lSetString(complex_attribute, CE_stringval, value);

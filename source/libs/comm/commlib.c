@@ -1249,15 +1249,13 @@ static int force_reenroll() {
 
       i = leave_commd(); 
       if (i) {
-         COMMLIB_ERROR((COMMLIB_BUFFER, "enrolled but leave_commd failed"
-                  " with %s", cl_errstr(i)));
+         COMMLIB_ERROR((COMMLIB_BUFFER, MSG_ENROLLEDBUTLEAVECOMMDERR_S , cl_errstr(i)));
          set_commlib_state_enrolled(0);
       } 
    }    
    ret = enroll();
    if (ret) {
-      COMMLIB_ERROR((COMMLIB_BUFFER, "enroll failed with status %s", 
-                     cl_errstr(ret)));
+      COMMLIB_ERROR((COMMLIB_BUFFER, MSG_ENROLLFAILEDWITHSTATUS_S, cl_errstr(ret)));
    } 
    set_commlib_state_changed_flag(0);
 

@@ -48,17 +48,17 @@ PATH=/bin:/usr/bin:/usr/sbin
 ARCH=UNKNOWN
 
 if [ -x /usr/bin/uname ]; then
-    os="`/usr/bin/uname -s`"
-    ht="`/usr/bin/uname -m`"
-    osht="$os,$ht"
-    case $osht in
-    Darwin,*)
-       ARCH=darwin
-       ;;
-    FreeBSD,*)
+   os="`/usr/bin/uname -s`"
+   ht="`/usr/bin/uname -m`"
+   osht="$os,$ht"
+   case $osht in
+   Darwin,*)
+      ARCH=darwin
+      ;;
+   FreeBSD,*)
       ARCH=freebsd
       ;;
-    esac
+   esac
 fi
 
 if [ -x /bin/uname ]; then

@@ -45,25 +45,10 @@
 #include "sge_getloadavg.h"
 
 #if defined(SOLARIS) 
-#  include <kvm.h>
 #  include <nlist.h> 
 #  include <sys/cpuvar.h>
-#  if defined(SOLARIS64) || defined(SOLARISAMD64)
-#     include <sys/loadavg.h> 
-#  endif
-#  define USE_KSTAT
-#  ifdef USE_KSTAT
-#     include <kstat.h>
-/*
- * Some kstats are fixed at 32 bits, these will be specified as ui32; some
- * are "natural" size (32 bit on 32 bit Solaris, 64 on 64 bit Solaris
- * we'll make those unsigned long)
- * Older Solaris doesn't define KSTAT_DATA_UINT32, those are always 32 bit.
- */
-#     ifndef KSTAT_DATA_UINT32
-#        define ui32 ul
-#     endif
-#  endif
+#  include <kstat.h> 
+#  include <sys/loadavg.h> 
 #elif defined(LINUX)
 #  include <ctype.h>
 #elif defined(ALPHA4) || defined(ALPHA5)
@@ -195,7 +180,7 @@
 #  define SGE_FSCALE 1024.0
 #endif
 
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
+#if defined(FREEBSD)
 typedef kvm_t* kernel_fd_type;
 #else 
 typedef int kernel_fd_type;
@@ -205,7 +190,7 @@ typedef int kernel_fd_type;
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARISAMD64) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARIS) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
 
 #ifndef DARWIN
 static int get_load_avg(double loadv[], int nelem);    
@@ -219,7 +204,7 @@ static double get_cpu_load(void);
 static char* skip_token(char *p); 
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64)|| defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
 static int sge_get_kernel_fd(kernel_fd_type *kernel_fd);
 
@@ -236,7 +221,7 @@ static int kernel_initialized = 0;
 static kernel_fd_type kernel_fd;
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
 static int sge_get_kernel_address(
 char *name,
@@ -256,11 +241,11 @@ long *address
    }
 #else
    {
-#if defined(AIX51)
+#  if defined(AIX51)
       struct nlist64 kernel_nlist[2];
-#else
+#  else
       struct nlist kernel_nlist[2];
-#endif
+#  endif
 
       kernel_nlist[0].n_name = name;
       kernel_nlist[1].n_name = NULL;
@@ -324,7 +309,7 @@ char *refstr
 ) {
    kernel_fd_type kernel_fd;
 
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
+#if defined(FREEBSD)
    if (sge_get_kernel_fd(&kernel_fd)
        && kvm_read (kernel_fd, offset, (char *) ptr, size) != size) {
       if (*refstr == '!') {
@@ -353,21 +338,27 @@ char *refstr
    return 0;
 }
 
+#endif
 
 #if defined(SOLARIS)
+/* MT-NOTE kstat is not thread save */
 int get_freemem(
 long *freememp 
 ) {
-   kvm_t *kd;
-
-   long address_freemem;
-   if (sge_get_kernel_fd(&kd) && sge_get_kernel_address("freemem", &address_freemem)) {
-      getkval(address_freemem, (int *)freememp, sizeof(long), "freemem");
-      return 0;
-   } else
+   kstat_ctl_t   *kc;  
+   kstat_t       *ksp;  
+   kstat_named_t *knp;
+   kc = kstat_open();  
+   ksp = kstat_lookup(kc, "unix", 0, "system_pages");
+   if (kstat_read(kc, ksp, NULL) == -1) {
+      kstat_close(kc);
       return -1;
+   } 
+   knp = kstat_data_lookup(ksp, "freemem");
+   *freememp = (long)knp -> value.ul;
+   kstat_close(kc);
+   return 0;
 }
-#endif
 
 
 #elif defined(CRAY)
@@ -388,9 +379,8 @@ int Ncpus;
 #endif 
 
 
-#if defined(SOLARIS) || defined(SOLARIS64)
+#if defined(SOLARIS)
 
-#ifdef USE_KSTAT
 static kstat_ctl_t *kc = NULL;
 static kstat_t **cpu_ks;
 static cpu_stat_t *cpu_stat;
@@ -519,14 +509,9 @@ int kupdate(int avenrun[3])
    /* return the number of cpus found */
    return(ncpu);
 }
-#endif
 
 double get_cpu_load() {
-#ifndef USE_KSTAT
    static unsigned long *cpu_offset = NULL;
-#else
-   int avenrun[3];
-#endif
    kernel_fd_type kernel_fd;
    static long address_cpu = 0;
    static long address_ncpus = 0;
@@ -537,10 +522,10 @@ double get_cpu_load() {
    static long cpu_old[CPUSTATES]  = { 0L, 0L, 0L, 0L, 0L};
    static long cpu_diff[CPUSTATES] = { 0L, 0L, 0L, 0L, 0L}; 
    double cpu_states[CPUSTATES];
+   int avenrun[3];
 
    DENTER(CULL_LAYER, "get_cpu_load.solaris");
 
-#ifdef USE_KSTAT
    /* use kstat to update all processor information */
    if ((cpus_found = kupdate(avenrun)) < 0 ) {
       DEXIT;
@@ -577,59 +562,6 @@ double get_cpu_load() {
    DPRINTF(("avenrun(%d %d %d) -> (%f %f %f)\n", avenrun[0], avenrun[1], avenrun[2],
       KERNEL_TO_USER_AVG(avenrun[0]), KERNEL_TO_USER_AVG(avenrun[1]), KERNEL_TO_USER_AVG(avenrun[2])));
 #endif
-#endif
-
-#else /* !USE_KSTAT */
-   if (sge_get_kernel_fd(&kernel_fd)
-       && (address_cpu || sge_get_kernel_address("cpu", &address_cpu))
-       && (address_ncpus || sge_get_kernel_address("ncpus", &address_ncpus))) {
-
-      /* how many cpu's ? */
-      if (getkval(address_ncpus, &number_of_cpus, sizeof(number_of_cpus), 
-         "ncpus")) {
-         DEXIT;
-         return -1.0;
-      }
-
-      /* alloc adress array */
-      if (!cpu_offset) {
-         cpu_offset = (unsigned long*)malloc(
-                                     number_of_cpus * sizeof (unsigned long));
-      }
-      if (cpu_offset) {
-         for(i = cpus_found = 0; cpus_found < number_of_cpus; i++) {
-            if (getkval(address_cpu + i*sizeof(unsigned long), 
-               (int*)&cpu_offset[cpus_found], sizeof(unsigned long), "cpu")) {
-               DEXIT;
-               return -1.0;
-            }
-            if (cpu_offset[cpus_found] != 0) {
-               cpus_found++;
-            }
-         }  
-         for (i=0; i<CPUSTATES; i++) {
-            cpu_time[i] = 0;
-         }
-         for (i=0; i<number_of_cpus; i++) {
-            if (cpu_offset[i] != 0) {
-               struct cpu cpu;
-
-               if (getkval(cpu_offset[i], (int*)&cpu, sizeof(struct cpu), "cpu")) {
-                  DEXIT;
-                  return -1.0;
-               }
-               for (j=0; j < CPU_WAIT; j++) {
-                  cpu_time[j] += (long) cpu.cpu_stat.cpu_sysinfo.cpu[j];
-               }
-               cpu_time[CPUSTATE_IOWAIT] += (long) cpu.cpu_stat.cpu_sysinfo.wait[W_IO] 
-                  + (long) cpu.cpu_stat.cpu_sysinfo.wait[W_PIO];
-               cpu_time[CPUSTATE_SWAP] += (long) cpu.cpu_stat.cpu_sysinfo.wait[W_SWAP]; 
-            }
-         }
-         percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff); 
-         cpu_load = cpu_states[1] + cpu_states[2] + cpu_states[3] + cpu_states[4];
-      }
-   }
 #endif
 
    DEXIT;
@@ -883,7 +815,7 @@ double get_cpu_load()
 }
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARISAMD64) && !defined(SOLARIS64)) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(TEST_AIX51)
 
 static int get_load_avg(
 double loadavg[],
@@ -1162,7 +1094,7 @@ int nelem
 int get_channel_fd()
 {
    if (kernel_initialized) {
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(LINUX) || defined(HP11) || defined(HP1164) || defined(FREEBSD)
+#if defined(SOLARIS) || defined(LINUX) || defined(HP11) || defined(HP1164) || defined(FREEBSD)
       return -1;
 #else
       return kernel_fd;
@@ -1178,9 +1110,9 @@ int nelem
 ) {
    int   elem = 0;   
 
-#if defined(SOLARIS64) || defined(SOLARISAMD64) || defined(FREEBSD) || defined(DARWIN)
+#if defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
-#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
+#elif defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
    elem = get_load_avg(loadavg, nelem); 
 #else
    elem = -1;    

@@ -1,3 +1,10 @@
+RD-2005-02-21-0: Bugfix:    switched use of /dev/kmem to kstat
+                            code cleanup - kvm dependency and code removed 
+                 Issue:     1403
+                 Bugtraq:   6218430
+                 Changed:   loadcheck, execd, aimk 
+                 Review:    CR
+
 AA-2005-02-11-0: Bugfix:    amd64 bit qmon, what a stupid problem
                             a wrong define in aimk (MOTIF12_HEADERS)
                             was the reason for the problems under amd64

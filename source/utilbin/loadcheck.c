@@ -41,6 +41,7 @@
 #include "sge_language.h"
 #include "sge_prog.h"
 #include "sge_host.h"
+#include "sgermon.h"
 
 void usage(void);
 void print_mem_load(char *, char *, int, double, char*);
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
    int i, pos = 0, print_as_int = 0, precision;
    char *m;
 
-  
+   DENTER_MAIN(TOP_LAYER, "loadcheck");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
@@ -129,6 +130,7 @@ int main(int argc, char *argv[])
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
    if (sge_loadmem(&mem_info)) {
       fprintf(stderr, MSG_SYSTEM_RETMEMORYINDICESFAILED );
+      DEXIT;
       return 1;
    }
 
@@ -158,6 +160,7 @@ int main(int argc, char *argv[])
    }
 #endif /* SGE_LOADCPU */
 
+   DEXIT;
 	return 0;
 }
 

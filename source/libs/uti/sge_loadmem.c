@@ -346,7 +346,6 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 #include <nlist.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <kvm.h>               
 
 int sge_loadmem(sge_mem_info_t *mem_info) 
 {

@@ -1,3 +1,8 @@
+CR-2004-02-16-0: Testsuite: Fixed still existing problem: 
+                            don't send job start command
+                            to a remote shell when a former job start is
+                            not yet executed. 
+
 AA-2004-02-16-0: Bugfix:    dependencies in Makefiles from ancient paths ;) removed
 
 JG-2004-02-16-0: Testsuite: Checked and fixed test functional/usage.

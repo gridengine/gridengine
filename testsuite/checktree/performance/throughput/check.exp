@@ -636,6 +636,9 @@ proc run_throughput_test {} {
 
    set my_submitted_jobs 0
    set max_jobs_per_loop [llength $host_list]
+   foreach host $host_list {
+      set host_submit_count($host) 0
+   }
 
    # here the throughput test starts
    while { $result(jobs_done) < $end_job_count } {
@@ -646,7 +649,7 @@ proc run_throughput_test {} {
               # get first host in next_submit_list hand submit job on that host
               set sub_host   [lindex $next_submit_list 0 ]       
               set host_index [lsearch $host_list $sub_host]
-              if { $host_index >= 0 } {
+              if { $host_index >= 0 && $host_submit_count($sub_host) == 0 } {
                  set spawn_id [lindex $spawn_list $host_index]
                  set next_submit_list [lrange $next_submit_list 1 end]
 
@@ -668,6 +671,7 @@ proc run_throughput_test {} {
                  set job_data($sent_jobs,run_start_time) 0
                  set job_data($sent_jobs,run_end_time) 0
                  incr sent_jobs 1
+                 set host_submit_count($sub_host) 1
 #                 puts $CHECK_OUTPUT "submitted job from host $sub_host, expect id: $spawn_id"
               }
            } else {
@@ -843,6 +847,9 @@ proc run_throughput_test {} {
                                   return -1
                                }
                             }
+                            set thost_nr [lsearch $spawn_list $expect_out(spawn_id)]
+                            set thost_name [lindex $host_list $thost_nr]
+                            set host_submit_count($thost_name) 0
                             incr my_submitted_jobs -1
                          }
                      }

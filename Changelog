@@ -1,3 +1,9 @@
+MD-2004-03-04-1: Bugfix:    - Pattern matching for -l q= doesn't work 
+                              per default 
+                 Issue:     759
+                 Review:    SG
+                 Changed:   install
+
 DT-2004-03-04-2  Bugfix:    o Removed duplicate error messages for missing
                               SGE_ROOT in execd and schedd
                             o Added missing error message for missing SGE_ROOT

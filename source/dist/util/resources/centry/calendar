@@ -4,7 +4,7 @@
 # 
 name        calendar
 shortcut    c
-type        STRING
+type        RESTRING
 relop       ==
 requestable YES
 consumable  NO

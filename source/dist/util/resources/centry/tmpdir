@@ -4,7 +4,7 @@
 # 
 name        tmpdir
 shortcut    tmp
-type        STRING
+type        RESTRING
 relop       ==
 requestable NO
 consumable  NO

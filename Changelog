@@ -1,3 +1,8 @@
+JG-2004-02-16-0: Testsuite: Checked and fixed test functional/usage.
+                            Source tcl_files/private.tcl to enable private
+                            installation settings.
+                            Make testsuite run with architecture lx2[46]_amd64.
+
 EB-2004-02-16-0: Bugfix:    eliminated ambiguous message ids
                             removed obsolete messages
                  Changed:   all

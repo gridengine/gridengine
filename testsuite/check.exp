@@ -6983,6 +6983,10 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_job
    ts_source $libdir/sge_queue
    ts_source $libdir/sge_sched_conf
+
+   # source a user private tcl file, e.g. to contain a 
+   # inhouse_cluster_post_install function
+   ts_source $libdir/private
 }
 
 # Main programm:

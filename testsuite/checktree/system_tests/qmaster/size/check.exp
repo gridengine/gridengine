@@ -380,15 +380,18 @@ proc init_ps {} {
          #set cmd_ps(schedd) "ps -eo 'pid vsz' | awk '{print \$1 \" \" \$2}' | grep '^$schedd_pid ' | awk '{print \$2}'"
          set size_unit kB
       }
-      alinux -
-      lx24-alpha {
+      "alinux" -
+      "lx24-alpha" {
          set cmd_ps(master) "ps lhp $qmaster_pid | awk '{print \$7}'"
          set cmd_ps(schedd) "ps lhp $schedd_pid  | awk '{print \$7}'"
          set size_unit kB
       }
-      lx24-x86 {
-         set cmd_ps(master) "ps -p $qmaster_pid -h -o vsz"
-         set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
+      "lx24-x86" -
+      "lx26-x86" -
+      "lx24-amd64" -
+      "lx26-amd64" {
+         set cmd_ps(master) "ps -p $qmaster_pid --no-heading -o vsz"
+         set cmd_ps(schedd) "ps -p $schedd_pid --no-heading -o vsz"
          set size_unit kB
       }
       "hp10" - 

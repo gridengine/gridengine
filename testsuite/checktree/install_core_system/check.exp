@@ -688,7 +688,7 @@ proc setup_conf {} {
   if { $ts_config(gridengine_version) == 53 } {
      set params(schedd_params) "none"
   } else {
-     set params(reporting_params) "accounting=true reporting=true flush_time=00:00:15 joblog=true sharelog=00:10:00"
+     set params(reporting_params) "accounting=true reporting=false flush_time=00:00:15 joblog=true sharelog=00:10:00"
   }
   set params(execd_params) "none"
   set params(qlogin_command) "telnet"

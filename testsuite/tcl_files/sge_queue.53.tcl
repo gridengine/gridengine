@@ -200,8 +200,8 @@ proc set_queue_work { qname change_array } {
 #
 #  INPUTS
 #     qname        - name of the (cluster) queue
-#     hostlist     - list of hosts. If "@allhosts" is given, the attributes are changed
-#                    for all hosts. If an empty list is given, the queuename is only
+#     hostlist     - list of hosts. If "@allhosts" or an empty list is given, the attributes are changed
+#                    for all hosts. 
 #                    built from the qname parameter.
 #     change_array - array containing the changed attributes.
 #

@@ -44,7 +44,7 @@ extern "C" {
 
 enum {
    FES_id = FES_LOWERBOUND,
-   FES_active,
+   FES_active
 };
 
 LISTDEF(FES_Type)

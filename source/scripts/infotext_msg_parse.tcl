@@ -196,25 +196,14 @@ if { [info exists argc ] != 0 } {
 
 
             # try if error occur
-            while { 1 } {
-               
-               set catch_return [ catch { eval exec [create_script $command] } output ]
-               if { $catch_return != 0 } {
-                  # we had an error  
-                  
-                  if { [ string first "no such variable" $output] >= 0 || 
-                       [ string first "to less arguments" $output] >= 0 } {
-                     # can't read variable, we have a $VAR in command line, replace
-                     # last $VAR
-                     set command [ do_replace $command "$" "_" 1 ]
-                     continue
-                  } 
-                  puts "syntax error!"
-                  break
-               } else {
-                 break;
-               }
-            }
+            set command [ do_replace $command "$" "_NOT_A_VARIABLE_ERROR" 0 ]
+            set catch_return [ catch { eval exec [create_script $command] } output ]
+            if { $catch_return != 0 } {
+               # we had an error  
+               set line_nr [expr ($i +1)]
+               puts "syntax error! parsing line $line_nr"
+               exit -1
+            } 
 
             # remove \$
             set command [ do_replace $command "_THIS_IS_A_PLACEHOLDER__" "\\$" ]
@@ -231,6 +220,15 @@ if { [info exists argc ] != 0 } {
                # gets stdin test
             } else {
                # write output
+               
+               if { [string first "_NOT_A_VARIABLE_ERROR" $output ] >= 0 } { 
+                   set line_nr [expr ($i +1)]
+                   puts "---------ERROR-------:"
+                   puts $command
+                   puts $output
+                   puts "line: $line_nr - _NOT_A_VARIABLE_ERROR can't be message text"
+                   exit -1
+               }
                set line_nr [expr ($i +1)]
                puts $output_file "###########################################################"
                puts $output_file "# file: [file tail $INPUTFILE], line $line_nr"

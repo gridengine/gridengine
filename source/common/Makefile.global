@@ -45,8 +45,7 @@ clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshep
 
 depend: common_depend libs_depend clients_depend daemons_depend utilbin_depend $(SECDEPEND) $(KRBDEPEND) $(GSSDEPEND)
 
-messages: common_messages clients_messages daemons_messages utilbin_messages coshepherd_messages sec_messages
-
+messages: common_messages libs_messages clients_messages daemons_messages utilbin_messages coshepherd_messages sec_messages
 ###############################################################################
 # include sub Makefiles
 ###############################################################################

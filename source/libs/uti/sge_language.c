@@ -39,9 +39,12 @@
 #include "sge_language.h"
 #include "sgermon.h"
 #include "sge_prog.h"
+#include "sge_htable.h"
+
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 
+#define SGE_ENABLE_MSG_ID "SGE_ENABLE_MSG_ID"
 #define PACKAGE "GRIDPACKAGE"
 #define LOCALEDIR "GRIDLOCALEDIR"
 #define SGE_DEFAULT_PACKAGE      "gridengine"
@@ -60,6 +63,7 @@ typedef struct {
 typedef struct {
    int id;                    /* message identification number */
    int category;              /* message category:             0 = common */
+   u_long32 counter;          /* number of calls */
    const char* message;       /* message string */
    const char* local_message;  /* local translated message */
 } sge_error_message_t;
@@ -68,8 +72,8 @@ typedef struct {
 
 static language_functions_struct sge_language_functions;
 static int sge_message_id_view_flag = 0;
-static char sge_message_buffer[MAX_STRING_SIZE+500];
-static int sge_enable_msg_id = 0;
+static int sge_enable_msg_id = 0;    /* used to enable/disable message ids */
+static htable sge_message_hash_table = NULL; 
 
 
 /* this is to find out if the sge_init_language_func() was called */
@@ -121,6 +125,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   char* locDir   = NULL;
   char* language = NULL;
   char* pathName = NULL;
+  char* sge_enable_msg_id_string = NULL;
   int   success  = FALSE;  
   int   back;
 
@@ -230,6 +235,33 @@ int sge_init_languagefunc(char *package, char *localeDir)
   locDir   = NULL;
   language = NULL; 
   pathName = NULL;
+
+  if (success == TRUE) {
+     if ( (strcmp(language, "en") == 0) ) {
+        sge_enable_msg_id=0;
+     } else {
+        sge_enable_msg_id=1;
+     }
+  } 
+
+  sge_enable_msg_id_string = getenv(SGE_ENABLE_MSG_ID);
+  if (sge_enable_msg_id_string != NULL) {
+     int env_value = 0;
+     DPRINTF(("SGE_ENABLE_MSG_ID is set to \"%s\"\n",sge_enable_msg_id_string));  
+     env_value = atoi(sge_enable_msg_id_string);
+     if (env_value == 0) {
+         sge_enable_msg_id = 0;
+     } else {
+         sge_enable_msg_id = 1;
+     }
+  }
+
+
+  if (sge_enable_msg_id == 0) {
+     DPRINTF(("error id output     : disabled\n"));
+  } else {
+     DPRINTF(("error id output     : enabled\n"));
+  }
 
   if (success == TRUE) {
     DPRINTF(("****** starting localisation procedure ... success **\n"));
@@ -428,18 +460,77 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 #ifndef __SGE_COMPILE_WITH_GETTEXT__
    return msg_str;
 #else
-   sge_error_message_t message;
+   sge_error_message_t* message_p = NULL;
+   long key;
 
-   message.id = msg_id;
-   message.message = msg_str;
-   message.local_message = sge_gettext__((char*)msg_str);
+   DENTER(TOP_LAYER, "sge_gettext_");
+
+   if (msg_str == NULL) {
+      DEXIT;
+      return NULL;
+   } 
+
+   key = msg_id;
    /* check if message is not just one word (strstr) */
    if ( (sge_get_message_id_output() != 0)  && 
-        (strstr(message.local_message, " ") != NULL)   ) {  
-      sprintf( (char*)sge_message_buffer , "(%d) %-.2000s", message.id , message.local_message );
-      return sge_message_buffer;  
+        (strstr(msg_str, " ") != NULL)   ) {  
+       
+      if (sge_message_hash_table == NULL) {
+         sge_message_hash_table = sge_htable_create(8,   /* 2^8 = 256 table start size */
+                                                    dup_func_long, 
+                                                    hash_func_long, 
+                                                    hash_compare_long);
+      }
+      if (sge_htable_lookup(sge_message_hash_table, &key, (const void**)&message_p) == False) {
+         /* add element */ 
+         sge_error_message_t* new_mp = NULL;
+         char* org_message = NULL;
+         char* trans_message = NULL;
+         const char* gettext_return_string = NULL;
+
+         
+         gettext_return_string = sge_gettext__((char*)msg_str);
+
+         org_message   = malloc(strlen(msg_str)+1);
+         trans_message = malloc(strlen(gettext_return_string)+1+8); /* max "(99999) "*/
+         new_mp        = malloc(sizeof(sge_error_message_t));
+         if (new_mp != NULL && org_message != NULL && trans_message != NULL) {
+            DPRINTF(("add new hash table entry for message id: %d\n",msg_id));
+            new_mp->id = msg_id;
+            new_mp->category = 0;
+            new_mp->counter = 1;
+            strcpy(org_message, msg_str);
+            new_mp->message = org_message;
+            if (msg_id <= 99999) {
+               sprintf( trans_message , "[%d] %s", msg_id, gettext_return_string);
+            } else {
+               sprintf( trans_message , "%s", gettext_return_string);
+            }
+            new_mp->local_message = trans_message;
+
+            sge_htable_store(sge_message_hash_table, &key, new_mp);
+            DEXIT;
+            return new_mp->local_message;
+         }
+      } else {
+         /* check element */
+         DPRINTF(("using old hash entry for message id: %d\n",msg_id));
+         if (strcmp(msg_str,message_p->message) != 0) {
+            DPRINTF(("duplicate message id error: returning gettext() message"));
+            DPRINTF(("msg in : \"%s\"\n",msg_str));
+            DPRINTF(("msg out: \"%s\"\n",message_p->message));
+            DEXIT;
+            return sge_gettext__((char*)msg_str);
+         } else {
+            message_p->counter = (message_p->counter) + 1;
+            DPRINTF(("message count: "U32CFormat"\n", u32c(message_p->counter)));
+            DEXIT;
+            return message_p->local_message;
+         }
+      } 
    }
-   return msg_str;
+   DEXIT;
+   return sge_gettext__((char*)msg_str);
 #endif
 }
 

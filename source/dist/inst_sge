@@ -433,6 +433,10 @@ PrintLocalConf()
 {
    arg=$1
    if [ $arg = 1 ]; then
+      $ECHO "# Version: pre6.0"
+      $ECHO "#"
+      $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
+      $ECHO "#"
       $ECHO "conf_version           0"
    fi
    $ECHO "mailer                 $MAILER"
@@ -446,6 +450,10 @@ PrintLocalConf()
 #
 PrintConf()
 {
+   $ECHO "# Version: pre6.0"
+   $ECHO "#"
+   $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
+   $ECHO "#"
    $ECHO "conf_version           0"
    $ECHO "qmaster_spool_dir      $QMDIR"
    $ECHO "execd_spool_dir        $CFG_EXE_SPOOL"
@@ -1979,7 +1987,7 @@ CheckCSP()
 
    $V5UTILBIN/adminrun $ADMINUSER test -f $HOME/.sge/$CA_PORT/$SGE_CELL
    if [ ! $? ]; then
-      $INFOTEXT -e "Please remove the old CSP security directory $HOME/.sge/$CA_PORT/$SGE_CELL. Exit."
+      $INFOTEXT -e "Please remove the old CSP security directory \$HOME/.sge/\$CA_PORT/\$SGE_CELL. Exit."
       exit 1
    fi
 }
@@ -2047,6 +2055,7 @@ if [ ! -f util/arch ]; then
    exit 1
 fi
 
+
 umask 022
 
 unset GRD_DEBUG_LEVEL
@@ -2078,8 +2087,9 @@ FILEPERM=644
 # setup INFOTEXT
 #-----------------------------
 INFOTEXT=$V5UTILBIN/infotext
-if [ ! -f $INFOTEXT ]; then
-   $ECHO "can't find \"$INFOTEXT\""
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+if [ ! -f $INFOTXT_DUMMY ]; then
+   $ECHO "can't find \"$INFOTXT_DUMMY\""
    $ECHO "Installation failed."
    exit 1
 fi

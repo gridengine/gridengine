@@ -56,7 +56,7 @@ $(SGELIB)_clean:
 
 libs_depend: gdilib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend
 
-libs_messages: gdilib_messages commlib_messages culllib_messages rmonlib_messages schedlib_messages utilib_messages
+libs_messages: gdilib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages
 
 
 ###############################################################################

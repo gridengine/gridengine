@@ -389,6 +389,7 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
    line_length = 0;
    lc = 0;
    line_buf = (char*)sge_dstring_get_string(&line);
+   
    for(i=0;i<sge_dstring_strlen(&line);i++) {
       lc++;
       if (line_buf[i] == '\n') {
@@ -399,6 +400,8 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
       }
    }
 
+
+/*   line_length = sge_dstring_wcstrlen(&line); */
 
    /* output */
    output=stdout;  
@@ -902,7 +905,7 @@ char **argv
       }
 
       if (strlen(options.yes) > 0) {
-         printf("#\n# This is used as shortcut for yes\n");
+         printf("# This is used as shortcut for yes\n");
          printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.yes));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));
@@ -915,7 +918,7 @@ char **argv
          }
       }
       if (strlen(options.no) > 0) {
-         printf("#\n# This is used as shortcut for no\n");
+         printf("# This is used as shortcut for no\n");
          printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.no));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));
@@ -928,7 +931,7 @@ char **argv
          }
       }
       if (strlen(options.def) > 0) {
-         printf("#\n# This is a default sign, must be shortcut for yes or no\n");
+         printf("# This is shortcut default value\n");
          printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.def));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));

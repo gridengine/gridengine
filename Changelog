@@ -1,3 +1,6 @@
+AS-2002-09-27-0  Fix:       Update for loose Sun HPC cluster tools
+                            integration
+
 AA-2002-09-26-0  Fix:       aimk - ENABLE_213_FIX, ENABLE_214_FIX define
                             !! Attention, aimk clean !!
                             qmon_matrix.c DPRINTF() debug message added

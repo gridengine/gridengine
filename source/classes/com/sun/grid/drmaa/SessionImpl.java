@@ -105,9 +105,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native void nativeControl (String jobId, int action) throws DrmaaException;
-	//   private void nativeControl (String jobId, int action) throws DrmaaException {
-	//      System.out.println("Call to drmaa_control");
-	//   }
 	
    /** <p>The exit() method closes the DRMAA session for all threads and must be
     * called before process termination.  The exit() method may be called only
@@ -132,9 +129,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native void nativeExit () throws DrmaaException;
-	//   private void nativeExit () throws DrmaaException {
-	//      System.out.println("Call to drmaa_exit");
-	//   }
 	
    /** <p>getContact() returns an opaque string containing contact information
     * related to the current DRMAA session to be used with the init() method.
@@ -151,10 +145,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native String nativeGetContact ();
-	//   private String nativeGetContact () {
-	//      System.out.println("Call to drmaa_get_contact");
-	//      return "CONTACT";
-	//   }
 	
    /** The getDRMSystem() method returns a string containing the DRM product and 
     * version information.  The getDRMSystem() function returns the same value
@@ -166,10 +156,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native String nativeGetDRMSInfo ();
-	//   private String nativeGetDRMSInfo () {
-	//      System.out.println("Call to drmaa_get_DRM_system");
-	//      return "DRMS";
-	//   }
 	
 	/** <p>Get the program status of the job identified by jobId.
     * The possible return values and their meanings are:</p>
@@ -207,10 +193,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native int nativeGetJobProgramStatus (String jobId) throws DrmaaException;
-	//   private int nativeGetJobProgramStatus (String jobId) throws DrmaaException {
-	//      System.out.println("Call to drmaa_job_ps");
-	//      return RUNNING;
-	//   }
 	
 	/** Get a new job template.  The job template is used to set the
 	 * environment for submitted jobs.
@@ -236,7 +218,15 @@ public class SessionImpl implements Session {
     * </UL>
     */
    public void deleteJobTemplate (JobTemplate jt) throws DrmaaException {
-      nativeDeleteJobTemplate (((JobTemplateImpl)jt).getId ());
+      if (jt == null) {
+         throw new NullPointerException ("JobTemplate is null");
+      }
+      else if (jt instanceof JobTemplateImpl) {
+         nativeDeleteJobTemplate (((JobTemplateImpl)jt).getId ());
+      }
+      else {
+         throw new InvalidJobTemplateException ();
+      }
    }
 
 	/** The getVersion() method returns a Version object containing
@@ -281,9 +271,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native void nativeInit (String contact) throws DrmaaException;
-	//   private void nativeInit (String contact) throws DrmaaException {
-	//      System.out.println("Call to drmaa_init");
-	//   }
 	
    /** <p>The runBulkJobs() method submits a Grid Engine array job very much as if
     * the qsub option `-t <i>start</i>-<i>end</i>:<i>incr</i>' had been used
@@ -308,16 +295,20 @@ public class SessionImpl implements Session {
     * </UL>
     */
 	public List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException {
-		String[] jobIds = this.nativeRunBulkJobs (((JobTemplateImpl)jt).getId (), start, end, incr);
-		
-		return Arrays.asList (jobIds);
+      if (jt == null) {
+         throw new NullPointerException ("JobTemplate is null");
+      }
+      else if (jt instanceof JobTemplateImpl) {
+         String[] jobIds = this.nativeRunBulkJobs (((JobTemplateImpl)jt).getId (), start, end, incr);
+
+         return Arrays.asList (jobIds);
+      }
+      else {
+         throw new InvalidJobTemplateException ();
+      }
 	}
 	
 	private native String[] nativeRunBulkJobs (int jtId, int start, int end, int incr) throws DrmaaException;
-	//   private String[] nativeRunBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException {
-	//      System.out.println("Call to drmaa_run_bulk_jobs");
-	//      return new String[] {"123.1", "123.2"};
-	//   }
 	
    /** The runJob() method submits a Grid Engine job with attributes defined in
     * the DRMAA JobTemplate <i>jt</i>. On success, the job identifier is
@@ -334,14 +325,18 @@ public class SessionImpl implements Session {
 	 * underlying DRM system
 	 */
 	public String runJob (JobTemplate jt) throws DrmaaException {
-		return this.nativeRunJob (((JobTemplateImpl)jt).getId ());
+      if (jt == null) {
+         throw new NullPointerException ("JobTemplate is null");
+      }
+      else if (jt instanceof JobTemplateImpl) {
+   		return this.nativeRunJob (((JobTemplateImpl)jt).getId ());
+      }
+      else {
+         throw new InvalidJobTemplateException ();
+      }
 	}
 	
 	private native String nativeRunJob (int jtId) throws DrmaaException;
-	//   private String nativeRunJob (JobTemplate jt) throws DrmaaException {
-	//      System.out.println("Call to drmaa_run_job");
-	//      return "321";
-	//   }
 	
 	/** <p>The synchronize() method blocks the calling thread until all jobs
     * specified in <i>jobIds</i> have failed or finished execution. If
@@ -377,9 +372,6 @@ public class SessionImpl implements Session {
 	}
 	
 	private native void nativeSynchronize (String[] jobIds, long timeout, boolean dispose) throws DrmaaException;
-	//   private void nativeSynchronize (List jobIds, long timeout, boolean dispose) throws DrmaaException {
-	//      System.out.println("Call to drmaa_synchronize");
-	//   }
 	
    /** <p>The wait() function blocks the calling thread until a job fails or
     * finishes execution.  This routine is modeled on the UNIX wait4(3) routine.
@@ -425,63 +417,17 @@ public class SessionImpl implements Session {
 	
 	private native JobInfoImpl nativeWait (String jobId, long timeout) throws DrmaaException;
 	
-	//   private JobInfoImpl nativeWait (String jobId, long timeout) throws DrmaaException {
-	//      System.out.println("Call to drmaa_wait");
-	//      return new JobInfoImpl (jobId, 1, Collections.singletonMap ("user", "100.00"));
-	//   }
-	
-	//   private void allocateJobTemplate (JobTemplate jt) {
-	//      Set names = jt.getAttributeNames ();
-	//      Iterator i = names.iterator ();
-	//
-	//      /* This could have mutli-threading issues... */
-	//      nativeAllocateJobTemplate ();
-	//
-	//      while (i.hasNext ()) {
-	//         String name = (String)i.next ();
-	//         List value = jt.getAttribute (name);
-	//
-	//         if (value.size () == 1) {
-	//            nativeSetAttributeValue (name, (String)value.get (0));
-	//         }
-	//         else {
-	//            nativeSetAttributeValues (name, (String[])value.toArray (new String[value.size ()]));
-	//         }
-	//      }
-	//   }
-	
 	private native int nativeAllocateJobTemplate ();
-	//   private int nativeAllocateJobTemplate () {
-	//      System.out.println("Call to drmaa_allocate_job_template");
-	//      return 0;
-	//   }
 	
 	native void nativeSetAttributeValue (int jtId, String name, String value);
-	//   void nativeSetAttributeValue (String name, String value) {
-	//      System.out.println("Call to drmaa_set_attribute");
-	//   }
 	
 	native void nativeSetAttributeValues (int jtId, String name, String[] values);
-	//   void nativeSetAttributeValues (String name, String[] values) {
-	//      System.out.println("Call to drmaa_set_vector_attribute");
-	//   }
 	
 	native String[] nativeGetAttributeNames (int jtId);
-	//   String[] nativeGetAttributeNames () {
-	//      System.out.println("Call to drmaa_get_attribute_names");
-	//      return new String[] {"DRMAA_WD", "DRMAA_REMOTE_COMMAND"};
-	//   }
 	
 	native String[] nativeGetAttribute (int jtId, String name);
-	//   String[] nativeGetAttribute (String name) {
-	//      System.out.println("Call to drmaa_get_attribute & drmaa_get_vector_attribute");
-	//      return new String[] {"/tmp", "/var/tmp"};
-	//   }
 	
 	native void nativeDeleteJobTemplate (int jtId);
-	//   void nativeDeleteJobTemplate (JobTemplate jt) {
-	//      System.out.println("Call to drmaa_delete_job_template");
-	//   }
 	
    /** The getDRMAAImplementation() method returns a string containing the DRMAA
     * Java language binding implementation version information.  The

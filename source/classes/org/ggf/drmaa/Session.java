@@ -191,6 +191,7 @@ public abstract interface Session {
     * @throws DrmaaException May be one of the following:
     * <UL>
     * <LI>DrmCommunicationException</LI>
+    * <LI>InvalidJobTemplateException</LI>
     * </UL>
     */
    public abstract void deleteJobTemplate (JobTemplate jt) throws DrmaaException;
@@ -205,6 +206,7 @@ public abstract interface Session {
     * <LI>DeniedByDrmException</LI>
     * <LI>DrmCommunicationException</LI>
     * <LI>AuthorizationException</LI>
+    * <LI>InvalidJobTemplateException</LI>
     * </UL>
     * @return job identifier String identical to that returned from the
     * underlying DRM system
@@ -230,6 +232,7 @@ public abstract interface Session {
     * <LI>DeniedByDrmException</LI>
     * <LI>DrmCommunicationException</LI>
     * <LI>AuthorizationException</LI>
+    * <LI>InvalidJobTemplateException</LI>
     * </UL>
     */
 	public abstract List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException;

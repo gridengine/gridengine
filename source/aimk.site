@@ -118,35 +118,12 @@ switch ($BUILDARCH)
 endsw
 
 if ( ! $?JAVA_HOME ) then
-   set JAVA_BIN = `which java`
+   set JAVA_BIN = `which \java`
 
    if ( -e "$JAVA_BIN" ) then
       set JAVA_HOME = `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
    endif
 endif
-
-if ( ! $?JAVA_HOME ) then
-   set ARCO_JAVA_HOME = /usr/lib/java
-else
-   set ARCO_JAVA_HOME = $JAVA_HOME
-endif
-
-switch($buildarch)
-   case "lx24-x86":
-   case "lx26-x86":
-   case "lx24-amd64":
-   case "glinux":
-      set JNI_INCLUDES  = "-I$ARCO_JAVA_HOME/include -I$ARCO_JAVA_HOME/include/linux"
-      breaksw
-   case "sol-sparc":
-   case "sol-sparc64":
-   case "sol-x86":
-   case "solaris":
-      set JNI_INCLUDES  = "-I$ARCO_JAVA_HOME/include -I$ARCO_JAVA_HOME/include/solaris"
-      breaksw
-   default:
-      set JNI_INCLUDES = ""
-endsw
 
 # set some variables which are necessary to compile GE for win32 architecture
 #

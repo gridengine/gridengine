@@ -1299,7 +1299,7 @@ for i in $ARCH; do
                rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
             fi
 
-            ln $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+            ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
          fi
 
          for filename in $DRMAAJ_FILES; do

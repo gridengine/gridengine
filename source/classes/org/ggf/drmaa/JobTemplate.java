@@ -148,7 +148,11 @@ public class JobTemplate {
    protected String errorPath = null;
    /** Whether the error stream should be intermixed with the output stream */   
    protected boolean join = false;
-      
+
+   /* Create a new instance of a JobTemplate. */
+   public JobTemplate () {
+   }
+   
    /** Set the command string to execute as the job.  The command
     * is relative to the execution host and is evaluated on the
     * execution host.  No binary file management is done.
@@ -902,10 +906,6 @@ public class JobTemplate {
    public long getSoftRunDurationLimit () {
       throw new UnsupportedAttributeException ("The softRunDurationLimit attribute is not supported.");
    }
-	
-	/** Creates a new instance of JobTemplate */
-	protected JobTemplate () {
-	}
 	
    /** Returns the list of supported property names.  This list
     * includes supported DRMAA reserved property names (both required and optional)

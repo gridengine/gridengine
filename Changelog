@@ -1,3 +1,13 @@
+DT-2005-01-05-0: Bugfix:    o Fixed minor DRMAA-J bugs
+                            o Removed JGDI flags from aimk
+                            o Reduced MAX_STRING_SIZE to 2048
+                            o Added DRMAA-J testsuite test
+                            o Made symlink to JNI lib on MacOS X
+                 Changed:   DRMAA, aimk, basis_types, job, stdlib, testsuite,
+                            distinst
+                 Issue:     538
+                 Review:    SG, AS
+
 HP-2005-01-04-1: Bugfix:    Fixed bug in aimk in code for Interix and Win32 
                  Changed:   aimk
 

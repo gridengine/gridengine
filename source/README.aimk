@@ -1,4 +1,4 @@
-                             README.aimk
+              README.aimk
 			     -----------
 
 Content
@@ -143,7 +143,8 @@ Content
 
    Note that in order to compile the DRMAA Java language binding, ant 1.5 or
    better must be in the classpath, and JAVA_HOME must point to JDK 1.4 or
-   better.
+   better.  Also note that as there is no JDK 1.4 or better available for AIX
+   4.3, the -no-jni (and -no-java) must always be used on AIX 4.3 platforms.
 
    4.4 'cc' or 'gcc'
    -----------------

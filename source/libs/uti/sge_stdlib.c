@@ -168,8 +168,6 @@ char *sge_free(char *cp)
 *  FUNCTION
 *     The function searches the environment list for a
 *     string that matches the string pointed to by 'env_str'.
-*     If the resultstring is longer than MAX_STRING_SIZE
-*     the application will be terminated.
 *
 *  INPUTS
 *     const char *env_str - name of env. varibale 
@@ -191,18 +189,6 @@ const char *sge_getenv(const char *env_str)
    DENTER(BASIS_LAYER, "sge_getenv");
  
    cp = (char *) getenv(env_str);
-   if (!cp) {
-
-      DEXIT;
-      return (cp);
-   }
- 
-   if (strlen(cp) >= MAX_STRING_SIZE) {
-      CRITICAL((SGE_EVENT, MSG_GDI_STRING_LENGTHEXCEEDED_SI, env_str, 
-                (int) MAX_STRING_SIZE));
-      DCLOSE;
-      abort();
-   }
  
    DEXIT;
    return (cp);

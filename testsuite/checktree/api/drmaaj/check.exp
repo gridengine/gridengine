@@ -1,0 +1,155 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "drmaaj_init_level"
+
+# define test's name and run level descriptions
+set check_name            "drmaa-j"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   210
+set check_description(210)  "tests to verify DRMAA-J library"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "drmaaj_check"
+
+# this function is called each time before
+# a new run level is started
+proc drmaaj_init_level {} {
+  global CHECK_ACT_LEVEL
+
+  # returning -1 causes disabling a certain runlevel
+  # here per run level settings can be prepared
+  switch -- $CHECK_ACT_LEVEL {
+     "210" { 
+           return 0
+     } 
+  } 
+  return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+# here the actual test is done
+proc drmaaj_check {} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_CORE_EXECD
+   global CHECK_HOST CHECK_SOURCE_DIR CHECK_ARCH CHECK_USER
+
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error -3 "drmaaj_check - sge/ee version \"5.3\" doesn't support multi threading"
+      return 1
+   }
+
+
+   puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
+   puts $CHECK_OUTPUT "host is $CHECK_HOST"
+
+   get_config old_config
+   # must forbit reschedule on job exiting with 99 
+   # must forbit job error upon job exiting with 100
+   set new_config(delegated_file_staging) "true"
+   set new_config(qmaster_params) "FORBID_RESCHEDULE FORBID_APPERROR"
+   set_config new_config
+
+   foreach host $CHECK_CORE_EXECD {
+      set binary_arch "[resolve_arch $host]"
+      set JAVA "[get_binary_path $host java]"
+
+      puts $CHECK_OUTPUT "Java binary is $JAVA"
+
+      switch -- $binary_arch {
+         "sol-sparc" -
+         "sol-sparc64" -
+         "sol-x86" -
+         "lx24-x86" -
+         "lx24-amd64" -
+         "aix51" -
+         "irix65" -
+         "hp11" -
+         "hp11-64" -
+         "tru64" -
+         "darwin" -
+         "alpha5" {
+            puts $CHECK_OUTPUT "architecture $binary_arch is supported"
+         }
+
+         default {
+            puts $CHECK_OUTPUT "DRMAA-J not supported for binary architecture $binary_arch"
+            continue
+         }
+      }   
+
+      set compile_arch_mt "[resolve_build_arch $host]"
+      set classpath "$CHECK_SOURCE_DIR/CLASSES/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
+      puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt with classpath $classpath"
+
+      set options ""
+
+      if { $CHECK_ARCH == "sol-sparc64" } {
+         set options "-d64 $options"
+      }
+
+      set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options -cp $classpath junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
+
+      if { $prg_exit_state != 0 } {
+         add_proc_error drmaa_check -1 "DRMAA-J JUnit test suite failed at host $host:\n$test_output"
+      }
+   }
+
+   # undo configuration changes that were made for this test
+   set_config old_config
+
+   set_error 0 "ok"
+}

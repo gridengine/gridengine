@@ -2176,6 +2176,7 @@ int *trigger
       /* preform checks only if job name _really_ changes */
       if (strcmp(new_name, lGetString(new_job, JB_job_name))) {
          char job_descr[100];
+         const char *job_name;
 
          /* reject changing job name if at least one other job points to this job
             in it's -hold_jid list using the job name */
@@ -2188,14 +2189,15 @@ int *trigger
          }
 
          sprintf(job_descr, "job "u32, jobid);
-         if (job_verify_name(jep, alpp, job_descr)) {
+         job_name = lGetString(new_job, JB_job_name);
+         lSetString(new_job, JB_job_name, new_name);
+         if (job_verify_name(new_job, alpp, job_descr)) {
+            lSetString(new_job, JB_job_name, job_name);
             DEXIT;
             return STATUS_EUNKNOWN;
          }
       }
-      
-      lSetString(new_job, JB_job_name, new_name);
-
+     
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_JOBNAME, u32c(jobid));
       sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);

@@ -1,3 +1,5 @@
+EB-2002-01-18-1: Bugfix:    - qalter of job name caused core of master
+
 JG-2002-01-18-0: Enhancem.  Simulation mode for large clusters.
                             When the qmaster_param simulate_host=1 is set,
                             a cluster with a high number of hosts can be 

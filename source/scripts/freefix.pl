@@ -30,7 +30,7 @@
 # 
 #########################################################################
 #
-# This scripts processes all .c files in the selected directory and makes
+# This script processes all .c files in the selected directory and makes
 # sure that all calls to lFreeElem, lFreeList, lFreeWhat, lFreeWhere, and
 # lFreeSortOrder assign the call result to the freed variable.  When the
 # script finds a file that does not assign the result to the freed variable,

@@ -1,3 +1,6 @@
+DT-2004-07-26-0: Enhancem.: o Added script to locate files by CVS log header
+                 Changed:   scripts
+
 RH-2004-07-26-1: Bugfix:    man page indicated that qsub accepts "-r yes|no"
                  Issue:     1103
                  Bugtraq:   ????
@@ -13,7 +16,7 @@ RH-2004-07-26-0: Bugfix:    Wrong parameter for -Mc option argument qconf(1)
                  Review:    SG
 
 SG-2004-07-26-0: Bugfix:    - first part of the event_master changes. The total
-                            update of a event client is now thread save.
+                            update of a event client is now thread safe.
                             - excluded the flowwing character from a job name: "\"
                  Changed:   qmaster, submit.1
                  Review:    JG

@@ -653,6 +653,11 @@ lList *lp
          hepp = &host_ep;
       }
 
+#if 0
+      /* AH: this section needs to be rewritten:
+         - hepp must refer either to global_ep or host_ep
+         - this code sends exec host modify events for each load value for simulated
+      */
       /* we get load values for another host */
       if(*hepp && hostcmp(lGetHost(*hepp, EH_name), host)) {
          /* output error from previous host, if any */
@@ -698,6 +703,7 @@ lList *lp
          *hepp = NULL;
          report_host = NULL;
       }
+#endif
 
       /* update load value list of rhost */
       if ( !*hepp) {
@@ -783,8 +789,12 @@ lList *lp
       }
    }
 
-   if(*hepp) {
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
+   if (global_ep) {
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, SGE_GLOBAL_NAME, global_ep);
+   }
+
+   if (host_ep) {
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host_ep, EH_name), host_ep);
    }
 
    DEXIT;

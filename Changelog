@@ -1,3 +1,13 @@
+AH-2002-07-10-4: Enhancem.: Further improved load alarm/suspend alarm
+                            diagnosis messages
+                 Changed:   sge_schedd
+
+AH-2002-07-10-3: Bugfix:    Fixed problems with global load values
+                            preventing job dispatching
+                 Changed:   sge_qmaster
+                 Issue:     #311
+                 Bugtraq:   #4712023
+                            
 CR-2002-07-09-1  Testsuite: - added new SGE/SGEEE version strings for
                               5.3.1beta2 and SGE_5.3p1
                  Enhancem.: - new check "functional/job_environment" testing
@@ -21,6 +31,11 @@ CR-2002-07-04-0  Enhancem.: I18N : added message ids (part 1)
 
 AS-2002-07-04-2  CVS        Created V53p1_rc1_TAG and V53p1_rc1_BRANCH
 ----------------------------------------------------------------------
+
+AH-2002-07-02-2: Bugfix:    Fix problem with flittering load adjustment
+                 Issue:     #309
+                 Bugtraq:   #4710514
+                 Changed:   sge_schedd
 
 JG-2002-07-02-0: Bugfix:    qrsh -inherit failed with error 
                             "COMMPROC ALREADY REGISTERED"

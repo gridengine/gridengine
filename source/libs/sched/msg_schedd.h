@@ -303,6 +303,7 @@
 /* 
 ** schedd/sge_select_queue.c
 */ 
+
 #define MSG_SCHEDD_FORDEFAULTREQUEST                        _MESSAGE(47215, _("for default request "  ))
 #define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE                _MESSAGE(47216, _("job requests unknown resource \""))
 #define MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE        _MESSAGE(47217, _("job requests non requestable resource \""))
@@ -321,17 +322,16 @@
 #define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS                 _MESSAGE(47229, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN))
 #define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS                _MESSAGE(47230, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN))
 #define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS                _MESSAGE(47231, _(SFN"="SFN" "SFN" "SFN))
-#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S                   _MESSAGE(47232, _("unknown complex attribute type for theshold "SFN))
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S                   _MESSAGE(47232, _("unknown complex attribute type for threshold "SFN))
 #define MSG_SCHEDD_WHYEXCEEDNOHOST_S                        _MESSAGE(47233, _("no such host "SFN" for that queue"))
 #define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S                     _MESSAGE(47234, _("no such complex attribute for threshold "SFQ))
 
-#define MSG_SCHEDD_LCDIAGHOSTNP_SFI                         _MESSAGE(47235, _("%s * %f with nproc=%d"))
-#define MSG_SCHEDD_LCDIAGHOST_SF                            _MESSAGE(47236, _("%s * %f"))
-#define MSG_SCHEDD_LCDIAGGLOBAL_SF                          _MESSAGE(47237, _("%s * %f global"))
+#define MSG_SCHEDD_LCDIAGHOSTNP_SFI                         _MESSAGE(47235, _(SFN" * %f with nproc=%d"))
+#define MSG_SCHEDD_LCDIAGHOST_SF                            _MESSAGE(47236, _(SFN" * %f"))
+#define MSG_SCHEDD_LCDIAGGLOBAL_SF                          _MESSAGE(47237, _(SFN" * %f global"))
 #define MSG_SCHEDD_LCDIAGPOSITIVE_SS                        _MESSAGE(47238, _("= "SFN" + "SFN))
 #define MSG_SCHEDD_LCDIAGNEGATIVE_SS                        _MESSAGE(47239, _("= "SFN" - "SFN))
 #define MSG_SCHEDD_LCDIAGNONE                               _MESSAGE(47240, _("no load adjustment"))
-
 
 
 

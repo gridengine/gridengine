@@ -100,7 +100,8 @@ sub processFile {
 
    # First make sure there's something that needs to be fixed.
    while (<FILE>) {
-      if (/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List|What|Where|SortOrder)(\s*\(\s*(\**[a-zA-Z0-9\->\[\].]+)\s*\))\s*;)(.*)$/) {
+      if ((/^\s*([a-zA-Z0-9]+\s*=\s*)?lFree(Elem|List|What|Where|SortOrder)\s*\(\s*[a-zA-Z0-9\->[\].*&]+\s*\)\s*;.*$/) &&
+          ($1 eq "")) {
          print "Fixing $file";
          print " => $file.fix" if ($commit == 0);
          print "\n";
@@ -117,7 +118,7 @@ sub processFile {
       open (TMP, ">$file.fix");
 
       while (<FILE>) {
-         if ((/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List|What|Where|SortOrder)(\s*\(\s*(\**[a-zA-Z0-9\->\[\].]+)\s*\))\s*;.*)$/) &&
+         if ((/^(\s*)(([a-zA-Z0-9]+\s*=\s*)?)(lFree(Elem|List|What|Where|SortOrder)(\s*\(\s*([a-zA-Z0-9\->[\].*&]+)\s*\))\s*;.*)$/) &&
              ($2 eq "")) {
             print TMP "$1$7 = $4\n";
          }

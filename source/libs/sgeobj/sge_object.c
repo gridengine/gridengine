@@ -1474,15 +1474,15 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(OBJECT_LAYER, "object_parse_ulong32_from_string");
    if (this_elem != NULL && string != NULL) {
       int pos = lGetPosViaElem(this_elem, name);
-      u_long32 value;
+      long value;
 
       if (strlen(string) == 0) {
          /*
           * Empty string will be parsed as '0'
           */
-         lSetPosUlong(this_elem, pos, 0);
-      } else if (sscanf(string, u32, &value) == 1) {
-         lSetPosUlong(this_elem, pos, value);
+         lSetPosUlong(this_elem, pos, (u_long32)0);
+      } else if ((sscanf(string, "%ld", &value) == 1) && (value >= 0)) {
+         lSetPosUlong(this_elem, pos, (u_long32)value);
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,

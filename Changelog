@@ -1,3 +1,10 @@
+DT-2004-03-02-1  Bugfix:    o Ulong parsing now complains about negative numbers
+                            o Tweaked freefix.pl search parameters
+                            NOTE: I have to check this in before I can compile
+                                  or test it...
+                 Changed:   o sge_object.c, freefix.pl
+                 Issue:     745 (not done yet)
+
 DT-2004-03-02-0  Bugfix:    o Fixed qconf -mq help output.
                             o Added -commit option to freefix.pl to overwrite
                               original files.

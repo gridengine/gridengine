@@ -135,7 +135,6 @@ int commdport
       DEBUG((SGE_EVENT, "* enrolling commproc"));
 
       if (!h) {
-         sge_host_list_read_aliasfile(aliasfile);
          h = sge_host_new_addr(&mp->fromaddr);
 
          if (!h) {
@@ -238,7 +237,6 @@ int commdport
       DEBUG((SGE_EVENT, "* controlling operation"));
      
       if (!h) {
-         sge_host_list_read_aliasfile(aliasfile);
          h = sge_host_new_addr(&mp->fromaddr);
 
          if (!h) {
@@ -310,7 +308,6 @@ int commdport
                  int i = 0;
   
                  DEBUG((SGE_EVENT, "adding master host name %s", master_name ));  
-                 sge_host_list_read_aliasfile(aliasfile);
                  master_host = sge_host_new_name( master_name ,&i);
             }
          }
@@ -429,7 +426,6 @@ int commdport
 
    /* unknown host ? */
    if (!h && (mp->flags & COMMD_SCOMMD)) {
-      sge_host_list_read_aliasfile(aliasfile);
       h = sge_host_new_addr(&mp->fromaddr);
    }
    if (!h) {
@@ -499,11 +495,6 @@ int commdport
          sge_host_list_read_aliasfile(aliasfile);
 
       h = sge_host_search(hostname, NULL);
-      if (!h && !refresh_aliases) {
-         sge_host_list_read_aliasfile(aliasfile);
-         h = sge_host_search(hostname, NULL);
-      }
-
       if (!h)
          h = sge_host_new_name(hostname, NULL);
 
@@ -592,7 +583,6 @@ int commdport
       if (fromhost[0]) {
          fhost = sge_host_search(fromhost, NULL);
          if (!fhost) {
-            sge_host_list_read_aliasfile(aliasfile);
             fhost = sge_host_new_name(fromhost, NULL);
          }
 
@@ -721,7 +711,6 @@ int commdport
    thost = sge_host_search(tohost, NULL);
 
    if (!thost) {
-      sge_host_list_read_aliasfile(aliasfile);
       thost = sge_host_new_name(tohost, NULL);
    }
 
@@ -748,7 +737,6 @@ int commdport
    if (mp->flags & COMMD_SCOMMD) {
       fhost = sge_host_search(fromhost, NULL);
       if (!fhost) {
-         sge_host_list_read_aliasfile(aliasfile);
          fhost = sge_host_new_name(fromhost, NULL);
          if (!fhost) {
             ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S , fromhost));

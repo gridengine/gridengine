@@ -1,3 +1,11 @@
+AH-2002-10-08-1  Bugfix:    Commd read the host alias file each time when
+                            a hostname was not found in commd's host list.
+                            Now host alias file is read only at commd 
+                            startup or when a COMMD_UNIQUEHOST request with
+                            refresh_aliases = true is received.
+                 Review:    AS
+                 Changed:   sge_commd
+
 JG-2002-10-08-1  Bugfix:    Fixed memory access problem in event mirror 
                             interface.
 

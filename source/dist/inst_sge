@@ -54,7 +54,7 @@ ECHO=echo
 #
 PWD=`pwd`
 . ./util/arch_variables
-. ./util/inst_sgeee_modules/inst_sgeee_common.sh
+. ./util/install_modules/inst_sgeee_common.sh
 
 #---------------------------------------
 # commandline argument parsing
@@ -119,20 +119,20 @@ while [ $ARGC != 0 ]; do
      ;;
    -m)
      QMASTER="install"
-     . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
-     . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
+     . ./util/install_modules/inst_sgeee_qmaster.sh
+     . ./util/install_modules/inst_sgeee_berkeley.sh
      ;;
    -um)
      QMASTER="uninstall"
-     . ./util/inst_sgeee_modules/inst_sgeee_qmaster_uninst.sh
+     . ./util/install_modules/inst_sgeee_qmaster_uninst.sh
      ;; 
    -x)
      EXECD="install"
-     . ./util/inst_sgeee_modules/inst_sgeee_execd.sh
+     . ./util/install_modules/inst_sgeee_execd.sh
      ;;
    -ux)
      EXECD="uninstall"
-     . ./util/inst_sgeee_modules/inst_sgeee_execd_uninst.sh
+     . ./util/install_modules/inst_sgeee_execd_uninst.sh
      ;;
    -sm)
      SHADOW="install"
@@ -141,8 +141,8 @@ while [ $ARGC != 0 ]; do
    -db)
      BERKELEY="install"
      SPOOLING_SERVER=`hostname`
-     . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
-     . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
+     . ./util/install_modules/inst_sgeee_qmaster.sh
+     . ./util/install_modules/inst_sgeee_berkeley.sh
      ;;
    -host)
      if [ $AUTO = "false" -a $QMASTER = "install" ]; then

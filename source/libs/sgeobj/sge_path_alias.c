@@ -316,8 +316,6 @@ int path_alias_list_initialize(lList **path_alias_list,
       int i;
 
       for (i=0; i<2; i++) {
-         sprintf(err, "can't read path aliasing file \"%s\": %s\n", 
-                 filename[i], strerror(errno));
          if (path_alias_read_from_file(path_alias_list, 
                                        alpp, filename[i]) != 0) {
             sprintf(err, MSG_ALIAS_CANTREAD_SS, filename[i], strerror(errno));

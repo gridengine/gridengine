@@ -205,7 +205,7 @@ SGESessionFactory.class: $(CLASSES_DIR)/com/sun/grid/drmaa/SGESessionFactory.jav
 #------------------------------------------------------------------------------
 
 test_jdrmaa: $(CLASSES_DIR)/TestDRMAA.java
-	$(JAVA_HOME)/bin/javac -classpath $(CLASSES_DIR) -d . $(CLASSES_DIR)/TestDRMAA.java
+	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/TestDRMAA.java
 
 jdrmaa_example: $(CLASSES_DIR)/DRMAAExample.java
-	$(JAVA_HOME)/bin/javac -classpath $(CLASSES_DIR) -d . $(CLASSES_DIR)/DRMAAExample.java
+	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/DRMAAExample.java

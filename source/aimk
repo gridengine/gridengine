@@ -310,7 +310,7 @@ usage:
    echo "-javadoc          -> create JavaDoc for Java sources such as DRMAA Java binding"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
-   echo "-mankv		      -> generate man pages checked out with '-kv' flag"
+   echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"

@@ -69,7 +69,8 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-JDRMAA_FILES="drmaa.jar libjdrmaa.so"
+JDRMAA_SHARED_LIBRARIES="libjdrmaa"
+JDRMAA_FILES="drmaa.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -1275,6 +1276,13 @@ for i in $ARCH; do
                InstallProg $libname
             elif [ $exit_on_error = true ]; then
                echo "\"$libname\" not found. Installation failed."
+            fi
+         done
+
+         for lib in $JDRMAA_SHARED_LIBRARIES; do
+            libname=$lib.$shlibext
+            if [ -f $libname ]; then
+               InstallProg $libname
             fi
          done
 

@@ -48,6 +48,8 @@ import com.sun.grid.jgrid.ComputeEngine;
 import com.sun.grid.jgrid.ComputeException;
 import com.sun.grid.jgrid.Job;
 
+import org.ggf.drmaa.*;
+
 /** This class is the central contact point for clients wishing to run jobs on the
  * grid.  It offers the ability to run jobs synchonously and asynchronously and to
  * check on the results of jobs.
@@ -83,14 +85,11 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 	/** The path to the serialized job files
 	 */	
 	private static String jobPath = "ser/";
-	/** The command used to submit job to the grid engine queue
-	 */	
-	private static String submitCommand = "qsub -notify";
 	/** The command for the grid engine execution engine to run on
 	 * the execution host
 	 */	
 	private static String skeletonCommand = "skel.sh submit";
-	/** The port on which to start the fake server
+	/** The port on which to start the server
 	 */	
 	private static int server_port = Registry.REGISTRY_PORT;
 	/** The port for the return data channel RMI registry */	
@@ -98,11 +97,59 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 	/** Whether debug information should be printed
 	 */	
 	private static boolean debug = false;
+   private JobTemplate template = null;
+   private DRMAASession drmaa = null;
 	
 	/** Creates a new instance of ComputeServer
 	 * @throws RemoteException thrown when an RMI error occurs
 	 */
 	public ComputeServer () throws RemoteException {
+      try {
+         DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
+         
+         drmaa = factory.getSession ();
+         template = drmaa.createJobTemplate ();
+      }
+      catch (DRMAAException e) {
+         throw new RemoteException ("Unable to initialize DRM interface", e);
+      }
+      
+      StringTokenizer cmd = new StringTokenizer (skeletonCommand);
+      int numTokens = cmd.countTokens ();
+      
+      if (numTokens >= 1) {
+         try {
+            template.setRemoteCommand (cmd.nextToken ());
+         }
+         catch (DRMAAException e) {
+            throw new RemoteException ("Invalid skeleton command", e);
+         }
+      }
+      else {
+         throw new RemoteException ("Invalid skeleton command");
+      }
+
+      if (numTokens > 1) {
+         //-1 for the command +3 for the additional parameters
+         String[] skelArgs = new String[numTokens - 1 + 3];
+         int count = 0;
+         
+         while (cmd.hasMoreTokens ()) {
+            skelArgs[count++] = cmd.nextToken ();
+         }
+
+         //JOBID is a placeholder to be filled in during submitJob()
+         skelArgs[count++] = "JOBID";
+         skelArgs[count++] = "-d";
+         skelArgs[count++] = jobPath;
+         
+         try {
+            template.setInputParameters (skelArgs);
+         }
+         catch (DRMAAException e) {
+            throw new RemoteException ("Invalid skeleton command argument(s)", e);
+         }
+      }                  
 	}
 	
 	/** The main method creates a registry on 1100 for return channel
@@ -248,15 +295,6 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 				}
 				
 				log.log (Level.FINE, "Job path set to " + jobPath);
-			}
-			else if (args[count].equals ("-sub")) {
-				count++;
-				
-				if (count < args.length) {
-					submitCommand = args[count++];
-				}
-				
-				log.log (Level.FINE, "Submit command set to \"" + submitCommand + "\"");
 			}
 			else if (args[count].equals ("-skel")) {
 				count++;
@@ -456,6 +494,9 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 		catch (IOException e) {
 			throw new RemoteException ("Unable to submit job", e);
 		}
+      catch (DRMAAException e) {
+			throw new RemoteException ("Unable to submit job", e);
+      }
 		
 		log.exiting ("com.sun.grid.jgrid.proxy.ComputeServer", "compute");
                 
@@ -502,6 +543,9 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 		catch (IOException e) {
 			throw new RemoteException ("Unable to submit job", e);
 		}
+      catch (DRMAAException e) {
+			throw new RemoteException ("Unable to submit job", e);
+      }
 		
 		log.exiting ("com.sun.grid.jgrid.proxy.computeAsynch", "compute");
                 
@@ -566,38 +610,32 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 	 * @throws IOException thrown if the job cannot be spooled
 	 * @return the results of running the job
 	 */	
-	private Object submitJob (Job job) throws IOException {
+	private Object submitJob (Job job) throws IOException, DRMAAException {
 		Object result = null;
 		
 		log.log (Level.FINE, "Writing job to disk");
-		this.writeJobToDisk (job, job.getAnnotation ());
+		this.writeJobToDisk (job);
 		
 		this.setLock (job.getJobId ());
 		
-		//Create command string
-		String[] cmd = createCommandStringArray (new String[] {submitCommand, skeletonCommand, job.getJobId (), "-d", jobPath});
+		//Update command args
+      String[] args = template.getInputParameters ();
+
+      //This JOBID placeholder is 3rd from the end
+      args[args.length - 3] = job.getJobId ();
+      template.setInputParameters (args);      
 
 		//Execute command string
 		log.log (Level.FINE, "Submitting job to queue");
-		Process proc = Runtime.getRuntime ().exec (cmd);
+      /* I don't care what the DRMAA id is because at this point the job is
+       * already written to disk, so I have nowhere to store the DRMAA id.  The
+       * downside is that without the DRMAA job id, I can't offer services like
+       * hold, suspend, and terminate, and I can't get the job's final exit
+       * status and resource usage.  This should be handled at some point,
+       * by storing the job in the lock box and the results in the job... */
+      drmaa.runJob (template);
 
 		if (!job.isAsynch ()) {
-			//Wait until the process completes
-			try {
-				log.log (Level.FINEST, "Waiting for process to complete");
-				proc.waitFor ();
-			}
-			catch (InterruptedException e) {
-				//Don't care
-				log.throwing ("com.sun.grid.jgrid.proxy.ComputeServer", "process", e);
-			}
-
-			if (proc.exitValue () == 1) {
-				log.severe ("Unable to execute submit command");
-
-				return null;
-			}
-
 			log.log (Level.FINER, "Waiting for results");
 			result = this.getResult (job.getJobId ());
 
@@ -615,10 +653,9 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 	/** This method serializes the Job object to disk at the location
 	 * given by jobPath.  The job file name is the job id.
 	 * @param job the job to be serialized
-	 * @param annotation the location of the client class files
 	 * @throws IOException if an error occurs while writing the job to disk
 	 */	
-	private void writeJobToDisk (Job job, String annotation) throws IOException {
+	private void writeJobToDisk (Job job) throws IOException {
 		log.entering ("com.sun.grid.jgrid.proxy.ComputeServer", "writeJobToDisk");
 		
 		log.log (Level.FINEST, "Opening file for writing");
@@ -626,7 +663,7 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 		ObjectOutputStream oos = new ProxyOutputStream (new FileOutputStream (file));
 		
 		job.setFilename (file.getAbsolutePath ());
-		((ProxyOutputStream)oos).setAnnotation (annotation);
+		((ProxyOutputStream)oos).setAnnotation (job.getAnnotation ());
 		
 		log.log (Level.FINEST, "Writing job file");
 		oos.writeObject (job);

@@ -1,3 +1,10 @@
+DT-2004-06-15-1: Bugfix:    o Fixed DRMAA Java binding Makefile
+                            o Fixed installation of libjdrmaa in distinst
+                 Cleanup:   o Removed tabs from aimk help output
+                            o Removed unused code from sge_path_alias.c
+                 Enhancem.: o Ported JGrid to DRMAA Java binding
+                 Changed:   aimk, distinst, sge_path_alias, DRMAA, JGrid
+
 DT-2004-06-15-0: Bugfix:    o Fixed minor bugs in DRMAA Java binding
                             o Fixed bad link in DRMAA howto
                  Enhancem.: o Added Java binding README and started howto

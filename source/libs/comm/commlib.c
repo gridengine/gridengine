@@ -89,7 +89,6 @@ int gethostname(char *name, int namelen);
 
 #ifdef COMMLIB_ENABLE_DEBUG
 #include "sge_log.h"
-int stored_errno = 0;
 #endif
 
 #ifdef QIDL
@@ -1121,6 +1120,7 @@ int *tag_priority_list
                      , "enroll_(#01)"
 #endif
                  );
+
    if (!i) {
       i = recvfromcommd(&bufptr, NULL, 1, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
@@ -2083,8 +2083,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
       break;
    }
 
-   i = recvfromcommd((unsigned char **) &headerptr, NULL, 2, NULL, NULL, 
-                     NULL
+   i = recvfromcommd((unsigned char **) &headerptr, NULL, 2, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
                      , "getuniquehostname (#2)"
 #endif 

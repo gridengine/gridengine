@@ -52,6 +52,10 @@
 #include "commd_io.h"
 #include "sgermon.h"
 
+#ifdef COMMLIB_ENABLE_DEBUG
+int stored_errno = 0;
+#endif
+
 #ifndef MIN
 #   define MIN(a,b) (((a)<(b))?(a):(b))       
 #endif

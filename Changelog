@@ -1,3 +1,8 @@
+CR-2003-01-14-1  Testsuite: New command line parameter for testsuite:
+                               no_main2 : don't run main part and don't  
+                                          start setup ( used for sourcing 
+                                          this file) 
+
 CR-2003-01-14-0  Bugfix:    Fixed broken bild for glinux/alinux from 
                             CR-2003-01-13-0
 

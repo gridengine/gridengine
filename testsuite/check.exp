@@ -14359,6 +14359,9 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "" 
       puts "no_main               don't run main part (usefull for sourceing this file)"
       puts ""
+      puts "no_main2              don't run main part and don't do setup"
+      puts "                      (usefull for sourceing this file)"
+      puts ""
       puts "reset_conf            reset test cluster"
       puts ""
       puts "debug LEVEL           run testsuite in debuglevel 0,1 or 2"
@@ -14554,6 +14557,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       set do_nomain 1
       set no_action 0
       continue
+   }
+   if { ( [string compare [lindex $argv $i] "--no_main2"] == 0 ) || ([string compare [lindex $argv $i] "no_main2"] == 0 ) } {
+      set do_nomain 1
+      set no_action 0
+      puts "no_main2 active"
+      return
    }
 }   
 

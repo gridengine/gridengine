@@ -2564,8 +2564,8 @@ int is_daemon
          CRITICAL((SGE_EVENT, MSG_SEC_CALOCALROOTNOTFOUND_S, ca_local_root));
          SGE_EXIT(1);
       }
-      ca_key_file = sge_malloc(strlen(ca_local_root) + strlen("private") + strlen(CaKey) + 3);
-      sprintf(ca_key_file, "%s/%s/%s", ca_local_root, "private", CaKey);
+      ca_key_file = sge_malloc(strlen(ca_local_root) + (sizeof("private")-1) + strlen(CaKey) + 3);
+      sprintf(ca_key_file, "%s/private/%s", ca_local_root, CaKey);
    }
 
    if (is_daemon && SGE_STAT(ca_key_file, &sbuf)) { 
@@ -2615,26 +2615,26 @@ int is_daemon
    if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
       key_file = strdup(sge_keyfile);
    } else {   
-      key_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(UserKey) + 3);
+      key_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(UserKey) + 3);
       sprintf(key_file, "%s/private/%s", user_local_dir, UserKey);
    }   
 
    if (SGE_STAT(key_file, &sbuf)) { 
       free(key_file);
-      key_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+      key_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
                               strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
-      sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", uti_state_get_user_name(), UserKey);
+      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
    }   
 
    if (!RAND_status()) {
-      rand_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(RandFile) + 3);
+      rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
       sprintf(rand_file, "%s/private/%s", user_local_dir, RandFile);
 
       if (SGE_STAT(rand_file, &sbuf)) { 
          free(rand_file);
-         rand_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+         rand_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
                                  strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
-         sprintf(rand_file, "%s/%s/%s/%s", ca_local_root, "userkeys", uti_state_get_user_name(), RandFile);
+         sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), RandFile);
       }   
    }   
    if (SGE_STAT(key_file, &sbuf)) { 
@@ -2655,15 +2655,15 @@ int is_daemon
    if ((sge_certfile = getenv("SGE_CERTFILE"))) {
       cert_file = strdup(sge_certfile);
    } else {   
-      cert_file = sge_malloc(strlen(userdir) + strlen("certs") + strlen(UserCert) + 3);
+      cert_file = sge_malloc(strlen(userdir) + (sizeof("certs")-1) + strlen(UserCert) + 3);
       sprintf(cert_file, "%s/certs/%s", userdir, UserCert);
    }
 
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);
-      cert_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+      cert_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
                               strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
-      sprintf(cert_file, "%s/%s/%s/%s", ca_local_root, "userkeys", uti_state_get_user_name(), UserCert);
+      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserCert);
    }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 

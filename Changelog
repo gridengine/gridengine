@@ -1,3 +1,5 @@
+SD-2002-01-10-2: Enhancem: Updated security modules aimk for linux
+
 CR-2002-01-10-1: Testsuite: 
                             a) new sge_procedures:
                               - wait_for_job_state()

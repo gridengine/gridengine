@@ -173,9 +173,9 @@ case hp10:
    breaksw
 
 
-case linux:
+case *linux:
    set CC = gcc
-   set CFLAGS = "-O -Wall -Werror -Wstrict-prototypes -DLINUX $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "-O -Wall -DLINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS = "$DEBUG_FLAG $LFLAGS"
    set LIBS = "$LIBS"
    set START_FILE = "/usr/lib/crti.o /usr/lib/crtbegin.o"

@@ -91,9 +91,7 @@ proc cl_throughput_start_clients { host count user binary args} {
    # arguments of binary_starter: 1=count 2=binary 3=binary arguments
    set script_arguments "$count $binary \"$arguments\""
    set start_script "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/binary_starter.sh"
-  
-   
-   puts $CHECK_OUTPUT "starting \"$start_script $script_arguments\""
+   puts $CHECK_OUTPUT "$user is starting \"$start_script $script_arguments\""
    set retval [start_remote_prog $host $user $start_script $script_arguments prg_exit_state 120 0]
    puts $CHECK_OUTPUT $retval
    if { [string match "*not found*" $retval ] } {
@@ -652,26 +650,30 @@ proc cl_throughput_run  {} {
       "100" {
          set vqmaster_interval 60
          set data(ne_start) 1
-         set data(ne_end) [ expr ( 5 / $nr_of_remote_hosts ) ]
-         if { $data(ne_end) < 1 } {
-            set data(ne_end) 1
-         }
+#         set data(ne_end) [ expr ( 5 / $nr_of_remote_hosts ) ]
+#         if { $data(ne_end) < 1 } {
+#            set data(ne_end) 1
+#         }
+         set data(ne_end) 5
 
-         set data(ne_step) [ expr ( $data(ne_end) / 5 ) ] 
-         if { $data(ne_step) < 1 } {
-            set data(ne_step) 1
-         }
+#         set data(ne_step) [ expr ( $data(ne_end) / 5 ) ] 
+#         if { $data(ne_step) < 1 } {
+#            set data(ne_step) 1
+#         }
+         set data(ne_step) 1
 
          set data(ng_start) 1
-         set data(ng_end) [ expr ( 20 / $nr_of_remote_hosts ) ]
-         if { $data(ng_end) < 1 } {
-            set data(ng_end) 1
-         }
+#         set data(ng_end) [ expr ( 20 / $nr_of_remote_hosts ) ]
+#         if { $data(ng_end) < 1 } {
+#            set data(ng_end) 1
+#         }
+         set data(ng_end) 10
 
          set data(ng_step) [ expr ( $data(ng_end) / 5 ) ] 
-         if { $data(ng_step) < 1 } {
-            set data(ng_step) 1
-         }
+#         if { $data(ng_step) < 1 } {
+#            set data(ng_step) 1
+#         }
+         set data(ng_step) 1
       }
       default {
          set vqmaster_interval 30
@@ -693,16 +695,16 @@ proc cl_throughput_run  {} {
 
    for { set nr_event_clients $data(ne_start) } { $nr_event_clients <= $data(ne_end) } { incr nr_event_clients $data(ne_step)  } {
       for { set nr_gdi_clients $data(ng_start) } { $nr_gdi_clients <= $data(ng_end) } { incr nr_gdi_clients $data(ng_step) } {
-            
+      
          puts $CHECK_OUTPUT "\nstarting measurement of local host \"$vqmaster_host\" ..."
          set up_arch [resolve_build_arch $vqmaster_host]
          set vevc_binary       $ts_config(source_dir)/$up_arch/test_virtual_event_client
          set vgdi_binary       $ts_config(source_dir)/$up_arch/test_virtual_gdi_client
          #first check local host
          set vevc_args "$vqmaster_debug $vqmaster_port $vqmaster_host no_output"
-         cl_throughput_start_clients $vqmaster_host $nr_event_clients $user $vevc_binary vevc_args
+         cl_throughput_start_clients $vqmaster_host $nr_event_clients $CHECK_USER $vevc_binary vevc_args
          set vgdi_args "$vqmaster_debug $vqmaster_port $vqmaster_host no_output"
-         cl_throughput_start_clients $vqmaster_host $nr_gdi_clients   $user $vgdi_binary vgdi_args
+         cl_throughput_start_clients $vqmaster_host $nr_gdi_clients   $CHECK_USER $vgdi_binary vgdi_args
       
       
          # give clients time to startup
@@ -722,9 +724,9 @@ proc cl_throughput_run  {} {
             set vgdi_binary       $ts_config(source_dir)/$up_arch/test_virtual_gdi_client
       
             set vevc_args "$vqmaster_debug $vqmaster_port $vqmaster_host no_output"
-            cl_throughput_start_clients $host $nr_event_clients $user $vevc_binary vevc_args
+            cl_throughput_start_clients $host $nr_event_clients $CHECK_USER $vevc_binary vevc_args
             set vgdi_args "$vqmaster_debug $vqmaster_port $vqmaster_host no_output"
-            cl_throughput_start_clients $host $nr_gdi_clients   $user $vgdi_binary vgdi_args
+            cl_throughput_start_clients $host $nr_gdi_clients   $CHECK_USER $vgdi_binary vgdi_args
          }
       
          # give clients time to startup

@@ -1,3 +1,6 @@
+CR-2004-11-17-0: Testsuite: Fixed some problems for commlib performance tests
+                            when grid engine port is < 1024
+
 DT-2004-11-17-0: Bugfix:    o Check drmaa_wait() and drmaa_synchronize() for
                               negative timeouts.
                             o drmaa_synchronize() now waits for all tasks ids of

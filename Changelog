@@ -1,4 +1,10 @@
-SD-2002-01-10-2: Enhancem: Updated security modules aimk for linux
+JG-2002-01-11-0: Bugfix:    Fixed a memory corruption bug (READ_DANGLING and 
+                            FREE_DANGLING) in libcull.
+                            Added code to suppress warnings from the Insure++
+                            debugger for some correct code sections.
+                            Make Insure++ output filenames and line numbers.
+
+SD-2002-01-10-2: Enhancem:  Updated security modules aimk for linux
 
 CR-2002-01-10-1: Testsuite: 
                             a) new sge_procedures:

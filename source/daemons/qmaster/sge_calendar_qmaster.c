@@ -1570,6 +1570,10 @@ static int scan(
 const char *s,
 token_set_t token_set[] 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for token_set */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    static const char *t = NULL;
    static token_set_t *ts = NULL;
    static int token;
@@ -1667,6 +1671,9 @@ token_set_t token_set[]
    token = ERR_TOKEN;
    DEXIT;
    return token;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 static int cheap_scan(

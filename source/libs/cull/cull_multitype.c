@@ -857,6 +857,10 @@ lList *lGetList(
 const lListElem *ep,
 int name 
 ) {
+#ifdef __INSIGHT__
+/* JG: this code is thorougly tested and really should be ok, but insure complains */
+_Insight_set_option("suppress", "LEAK_ASSIGN");
+#endif
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetList");
 
@@ -882,6 +886,9 @@ int name
                         lNm2Str(name), multitypes[ep->descr[pos].mt]);
    DEXIT;
    return (lList *) ep->cont[pos].glp;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "LEAK_ASSIGN");
+#endif
 }
 
 /* ------------------------------------------------------------ 
@@ -1271,24 +1278,11 @@ const char *value
       return -1;
    }
 
-   DPRINTF(("remove old hash entry\n"));
-
    /* remove old hash entry */
    if(ep->descr[pos].hash != NULL) {
       cull_hash_remove(ep, pos);
    }
    
-   DPRINTF(("free old string value\n"));
-
-   /* free old string value */
-   if (ep->cont[pos].str) {
-      free(ep->cont[pos].str);
-      ep->cont[pos].str = NULL;
-   }   
-
-
-   DPRINTF(("strdup new string value\n"));
-
    /* strdup new string value */
    if (value) {
       if (!(str = strdup(value))) {
@@ -1300,9 +1294,13 @@ const char *value
    else
       str = NULL;               /* value is NULL */
 
-   ep->cont[pos].str = str;
+   /* free old string value */
+   if (ep->cont[pos].str) {
+      free(ep->cont[pos].str);
+      ep->cont[pos].str = NULL;
+   }   
 
-   DPRINTF(("create entry in hash table\n"));
+   ep->cont[pos].str = str;
 
    /* create entry in hash table */
    if(ep->descr[pos].hash != NULL) {
@@ -1325,7 +1323,7 @@ const lListElem *ep,
 int pos,
 const char *value 
 ) {
-   char *str;
+   char *str = NULL;
 
    DENTER(CULL_BASIS_LAYER, "lSetPosHost");
 
@@ -1352,11 +1350,6 @@ const char *value
       cull_hash_remove(ep, pos);
    }
    
-   /* free old string value */
-   if (ep->cont[pos].host) {
-      free(ep->cont[pos].host);
-   }   
-
    /* strdup new string value */
    if (value) {
       if (!(str = strdup(value))) {
@@ -1367,6 +1360,12 @@ const char *value
    }                            /* these brackets are required */
    else
       str = NULL;               /* value is NULL */
+
+   /* free old string value */
+   if (ep->cont[pos].host != NULL) {
+      free(ep->cont[pos].host);
+      ep->cont[pos].host = NULL;
+   }   
 
    ep->cont[pos].host = str;
 

@@ -255,7 +255,17 @@ va_list ap
 
    scan(fmt);                   /* Initialize scan */
    for (i = 0; i < n; i++) {
+/* JG: va_arg produces a READ_OVERFLOW with insure.
+ * nothing we can do about it (except not using c variable argument lists)
+ * so make insure ignore it.
+ */
+#ifdef __INSIGHT__
+      _Insight_set_option("suppress", "READ_OVERFLOW");
+#endif      
       sp[i].nm = va_arg(ap, int);
+#ifdef __INSIGHT__
+      _Insight_set_option("unsuppress", "READ_OVERFLOW");
+#endif
       if ((sp[i].pos = lGetPosInDescr(dp, sp[i].nm)) < 0) {;
          free(sp);
          LERROR(LENAMENOT);

@@ -391,8 +391,11 @@ int sge_setup_qmaster()
                return -1;
             }
 
-            sge_verify_userset_entries(lGetList(ep, US_entries), NULL, 1);
-            lAppendElem(Master_Userset_List, ep);
+            if(sge_verify_userset_entries(lGetList(ep, US_entries), NULL, 1) == STATUS_OK) {
+               lAppendElem(Master_Userset_List, ep);
+            } else {
+               lFreeElem(ep);
+            }
          } else {
             char buffer[256];
 

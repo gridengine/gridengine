@@ -703,10 +703,6 @@ if ($?nomk) then
    exit 0
 endif
 
-if ( "$CC" == "insure" ) then
-   set COMPILE_ARCH = ${COMPILE_ARCH}.insure
-endif
-
 if ( ! -d $COMPILE_ARCH ) then
    echo " INFO: Architecture dir $COMPILE_ARCH not existing. Making"
    mkdir $COMPILE_ARCH
@@ -765,7 +761,7 @@ case ALINUX:
    set CXX = "g++"
 
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-ggdb"
+      set DEBUG_FLAG = "-g"
    endif
    if ( $GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
@@ -1086,7 +1082,7 @@ case LINUX6:
    set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
 
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-ggdb $INSURE_FLAG"
+      set DEBUG_FLAG = "-g $INSURE_FLAG"
       set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
@@ -1174,7 +1170,7 @@ case SLINUX:
    set CXX = "g++"
 
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-ggdb"
+      set DEBUG_FLAG = "-g"
       set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then

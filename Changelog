@@ -1,3 +1,7 @@
+CR-2001-10-09-2: (sge_rusage.c)
+                 - Issue #68 (The accounting file handles only entries < 2048 
+                              chars/line)
+
 CR-2001-10-09-1: (rmon_macros.c)
                  - don't use vnsprintf() for ALPHA4 and IRIX6
 

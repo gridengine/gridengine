@@ -1,3 +1,6 @@
+JG-2002-01-24-3: Bugfix:    Scheduler profiling could not be switched off
+                            at runtime once it was enabled.
+
 EB-2002-01-24-1: Bugfix:    Give other clients (gdi requests) the chance to
                             be handled by the commd before 
                             we send a next request of a fragmented qdel 

@@ -708,6 +708,7 @@ lList **lpp
 
       flush_submit_sec = -1;
       flush_finish_sec = -1;
+      profile_schedd = 0;
       classic_sgeee_scheduling = 0;
       share_override_tickets = 1;
       share_functional_shares = 1;
@@ -786,7 +787,7 @@ lList **lpp
             }
             if (sv1)
                free(sv1);
-         } else if (!strncasecmp(s, "PROFILE", sizeof("PROFILE")-1)) {
+         } else if (!strncasecmp(s, "PROFILE=1", sizeof("PROFILE=1")-1)) {
             profile_schedd = 1;
          }
       }

@@ -1,3 +1,8 @@
+SG-2004-01-22-3: Bugfix:    fixed the counting for running jobs in the qevent
+                            client.
+                 Changed:   qevent
+                 Review:    CR
+
 SG-2004-01-22-2: Enhancem.: updated man page for qmod
                  Changed:   man1/qmod.1
 

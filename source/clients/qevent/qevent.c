@@ -156,22 +156,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 /*         lWriteElemTo(event, stdout); 
          fflush(stdout); */
       }
-      if (type == sgeE_JATASK_DEL) { 
-/*
-         lList *jat = lGetList(event,ET_new_version);
-*/
-         u_long job_id  = lGetUlong(event, ET_intkey);
-         u_long task_id = lGetUlong(event, ET_intkey2);
-/*
-         lListElem *ep = lFirst(jat);
-*/
-
-         fprintf(stdout,"JA_TASK  JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id, u32c(timestamp));
-         Global_jobs_running--;
-         fflush(stdout);  
-/*         lWriteElemTo(event, stdout); 
-         fflush(stdout);  */
-      }
+   
       if (type == sgeE_JOB_FINAL_USAGE) { 
          /* lList *jat = lGetList(event,ET_new_version); */
          u_long job_id = lGetUlong(event, ET_intkey);

@@ -53,7 +53,7 @@
 
 static char *def_files[3 + 1];
 
-/****** read_defaults/get_all_defaults_files() *********************************
+/****** sge/sge/get_all_defaults_files() *********************************
 *  NAME
 *     get_all_defaults_files() -- reads default files and parses them 
 *

@@ -5005,7 +5005,7 @@ char *hostname
 }
 
 
-/***p** src/add_host_group_entry() **********************************
+/***p** src/add_host_group_entry() ********************************************
 *
 *  NAME
 *     add_host_group_entry() -- Option qconf -ahgrp
@@ -5029,22 +5029,7 @@ char *hostname
 *
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int add_host_group_entry(
 char *group 
 ) {
@@ -5117,16 +5102,11 @@ char *group
 }
 
 
-/***p** src/mod_user_map_entry() **********************************
-*
+/***p** src/mod_user_map_entry() **********************************************
 *  NAME
 *     mod_user_map_entry() -- Option -mumap 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int mod_user_map_entry (char* user);  
 *
 *  FUNCTION
@@ -5137,29 +5117,12 @@ char *group
 *     can modify the file. At least the modified entries are sent to
 *     the qmaster.
 *
-*
 *  INPUTS
 *     char* user     - name of the cluster user to define the mapping 
-*    
 *
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+*******************************************************************************/
 static int mod_user_map_entry(
 char *user 
 ) {
@@ -5228,8 +5191,7 @@ char *user
    return 0;  
 }
 
-/***p** src/mod_host_group_entry() **********************************
-*
+/***p** src/mod_host_group_entry() ********************************************
 *  NAME
 *     mod_host_group_entry() -- Option qconf -mhgrp 
 *
@@ -5248,29 +5210,12 @@ char *user
 *     can modify the file. At least the modified entries are sent to
 *     the qmaster.
 *
-*
 *  INPUTS
 *     char* group  - name of the host group to modify 
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 int mod_host_group_entry(
 char *group 
 ) { 
@@ -5339,17 +5284,11 @@ char *group
    return 0;  
 }
 
-
-/***p** src/del_host_group_entry() **********************************
-*
+/***p** src/del_host_group_entry() ********************************************
 *  NAME
 *     del_host_group_entry() -- Option qconf -dhgrp
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-*   
 *     static int del_host_group_entry( char* group );  
 *
 *  FUNCTION
@@ -5358,29 +5297,12 @@ char *group
 *     the list to the qmaster in order to remove all entries for
 *     the host group specified in the parameter group.
 *
-*
 *  INPUTS
 *     char* group   - name of the host group to delete
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int del_host_group_entry(
 char *group 
 ) { 
@@ -5410,50 +5332,26 @@ char *group
    return 0; 
 }
 
-
 /***p** src/add_host_group_entry_from_file() **********************************
-*
 *  NAME
 *     add_host_group_entry_from_file() -- Option -Ahgrp 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int add_host_group_entry_from_file (char* filename); 
-*       
 *
 *  FUNCTION
-*     This function is used in the -Ahgrp option of qconf. It will open the file with 
-*     host group entries and send it to the qmaster. The entries in the file are used 
-*     to define host groups for user mapping.
-*
+*     This function is used in the -Ahgrp option of qconf. It will 
+*     open the file with host group entries and send it to the 
+*     qmaster. The entries in the file are used to define host groups 
+*     for user mapping.
 *
 *  INPUTS
 *     char* filename - file with host group definition
 *
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-static int add_host_group_entry_from_file(
-char *filename 
-) {
+******************************************************************************/
+static int add_host_group_entry_from_file(char *filename) {
    lListElem* genericElem = NULL;
    lList* addList         = NULL;
    lList* alp             = NULL; 
@@ -5508,7 +5406,6 @@ char *filename
 
 
 /***p** src/mod_host_group_entry_from_file() **********************************
-*
 *  NAME
 *     mod_host_group_entry_from_file() -- Option -Mhgrp 
 *
@@ -5520,32 +5417,15 @@ char *filename
 *     static int mod_host_group_entry_from_file (char* filename);
 *
 *  FUNCTION
-*     This function is used in the -Mhgrp Option in qconf. It will open the file
-*     with mapping entries and send it to the qmaster. 
-*
+*     This function is used in the -Mhgrp Option in qconf. It will open i
+*     the file with mapping entries and send it to the qmaster. 
 *
 *  INPUTS
 *     char* filename - file with host group definition 
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int mod_host_group_entry_from_file(
 char *filename 
 ) {
@@ -5598,47 +5478,25 @@ char *filename
    return 0;  
 }
 
-
-/***p** src/mod_user_map_entry_from_file() **********************************
-*
+/***p** src/mod_user_map_entry_from_file() ************************************
 *  NAME
 *     mod_user_map_entry_from_file() -- Option -Mumap 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int mod_user_map_entry_from_file (char* filename);
 *
 *  FUNCTION
-*     This function is used in the -Mumap Option. It will open the file with mapping 
-*     entries and send it to the qmaster. The entries in the file are used to define
-*     the mapping for the cluster user specified in the parameter user. 
-*
+*     This function is used in the -Mumap Option. It will open 
+*     the file with mapping entries and send it to the qmaster. 
+*     The entries in the file are used to define the mapping 
+*     for the cluster user specified in the parameter user. 
 *
 *  INPUTS
 *     char* filename - file with user mapping definition 
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int mod_user_map_entry_from_file(
 char *filename 
 ) {
@@ -5691,12 +5549,7 @@ char *filename
    return 0;  
 }
 
-
-
-
-
-
-/***p** src/del_user_map_entry() **********************************
+/***p** src/del_user_map_entry() **********************************************
 *
 *  NAME
 *     del_user_map_entry() -- Option -dumap
@@ -5714,29 +5567,12 @@ char *filename
 *     the list to the qmaster in order to remove all entries for
 *     the cluster user specified in the parameter user.
 *
-*
 *  INPUTS
 *     char* user     - name of the cluster user to delete the mapping
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int del_user_map_entry(
 char *user 
 ) {   
@@ -6432,21 +6268,15 @@ char *host
    return 0;
 }
 
-
-/****** src/qconf_modify_attribute() **********************************
-*
+/****** src/qconf_modify_attribute() ******************************************
 *  NAME
 *     qconf_modify_attribute() -- sends a modify request to the master 
 *
 *  SYNOPSIS
 *
-*     static int qconf_modify_attribute (
-*        lList **alpp, 
-*        int from_file,
-*        char ***spp, 
-*        int sub_command,
-*        struct object_info_entry *info_entry
-*     );  
+*     static int qconf_modify_attribute (lList **alpp, int from_file,
+*                                        char ***spp, int sub_command,
+*                                        struct object_info_entry *info_entry); 
 *
 *
 *  FUNCTION
@@ -6482,26 +6312,12 @@ char *host
 *
 *     info_entry -  pointer to a structure with function 
 *                   pointers, string pointers, and CULL names
-*                   
-*                  
 *
 *  RESULT
 *     [alpp] Masters answer for the gdi request
 *     1 for error
 *     0 for success
-*     
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*       
-**************************************************************************
-*/
-
+******************************************************************************/
 static int qconf_modify_attribute(
 lList **alpp,
 int from_file,
@@ -6623,18 +6439,12 @@ struct object_info_entry *info_entry
 }
 
 #ifndef __SGE_NO_USERMAPPING__
-/***p** src/get_user_mapping_list_from_master() **********************************
-*
+/***p** src/get_user_mapping_list_from_master() ******************************
 *  NAME
-*     get_user_mapping_list_from_master() -- get user mapping entry list from master 
+*     get_user_mapping_list_from_master() -- get u. mapping entry list 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static lList*     get_user_mapping_list_from_master(char* user);
-*       
 *
 *  FUNCTION
 *     The function performs a SGE_GDI_GET request to the qmaster in
@@ -6646,22 +6456,7 @@ struct object_info_entry *info_entry
 *  RESULT
 *     lList*     - pointer to UME_Type list (caller must free the list)
 *     NULL       - on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+*******************************************************************************/
 lList* get_user_mapping_list_from_master(
 const char *user 
 ) {
@@ -6702,16 +6497,11 @@ const char *user
    return umlp; 
 }
 
-/****** src/get_host_group_list_from_master() **********************************
-*
+/****** src/get_host_group_list_from_master() *********************************
 *  NAME
-*     get_host_group_list_from_master() -- get GRP_List from master per GDI request 
+*     get_host_group_list_from_master() -- get GRP_List using GDI request 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static lList*     get_host_group_list_from_master(char* group);
 *       
 *  FUNCTION
@@ -6724,19 +6514,7 @@ const char *user
 *  RESULT
 *     lList*      - pointer to GRP_Type list (caller must free the list)
 *     NULL        - on error
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 lList*  get_host_group_list_from_master(
 const char *group 
 ) {
@@ -6778,18 +6556,12 @@ const char *group
 }
 
 #endif /* __SGE_NO_USERMAPPING__ */
-/***p** src/show_user_map_entry() **********************************
-*
+/***p** src/show_user_map_entry() *********************************************
 *  NAME
 *     show_user_map_entry() -- print user map entries of cluster user 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int show_user_map_entry(char *user);
-*       
 *
 *  FUNCTION
 *     print current user mapping entries to stdout. The parameter
@@ -6800,22 +6572,7 @@ const char *group
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 #ifndef __SGE_NO_USERMAPPING__
 static int show_user_map_entry(char *user)
 { 
@@ -6851,20 +6608,12 @@ static int show_user_map_entry(char *user)
 
 #ifndef __SGE_NO_USERMAPPING__
 
-
-
-
-/****** src/show_host_group_entry() **********************************
-*
+/****** src/show_host_group_entry() *******************************************
 *  NAME
 *     show_host_group_entry() -- print houst group to stdout 
 *
 *  SYNOPSIS
-*
-*     "parse_qconf.c"
-* 
 *     static int show_host_group_entry(char* group);
-*       
 *
 *  FUNCTION
 *     This function uses gdi request to get group from qmaster and
@@ -6872,23 +6621,9 @@ static int show_user_map_entry(char *user)
 *      
 *  INPUTS
 *     char* group - name of group
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-static int show_host_group_entry(
-char *group 
-) { 
+******************************************************************************/
+static int show_host_group_entry(char *group) 
+{ 
     lList *grp_lp = NULL;
     lListElem *ep = NULL;
  

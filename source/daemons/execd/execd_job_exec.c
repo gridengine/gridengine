@@ -382,17 +382,17 @@ Ignore:
    return -1;  
 }
 
-/****** execd/set_queue_info_in_task() ***************************************
-*
+/****** execd/job_jatask/job_set_queue_info_in_task() *************************
 *  NAME
-*    set_queue_info_in_task() -- set queue to use for task
+*     job_set_queue_info_in_task() -- set queue to use for task
 *
 *  SYNOPSIS
-*     static lList *set_queue_info_in_task(char *qname, lListElem *jatask);
+*     static lList *job_set_queue_info_in_task(char *qname, lListElem *jatask);
 *
 *  FUNCTION
-*     Extend the task structure of task <jatask> by a JAT_granted_destin_identifier
-*     list, which contains the queue <qname> and uses one slot.
+*     Extend the task structure of task <jatask> by a 
+*     JAT_granted_destin_identifier list, which contains 
+*     the queue <qname> and uses one slot.
 *
 *  INPUTS
 *     qname  - name of queue to set
@@ -400,22 +400,13 @@ Ignore:
 *
 *  RESULT
 *     the new created JAT_granted_destin_identifier list
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
-static lList *set_queue_info_in_task(const char *qname, lListElem *jatask)
+******************************************************************************/
+static lList *job_set_queue_info_in_task(const char *qname, lListElem *jatask)
 {
    lListElem *jge;
 
-   jge = lAddSubStr(jatask, JG_qname, qname, JAT_granted_destin_identifier_list, JG_Type);
+   jge = lAddSubStr(jatask, JG_qname, qname, 
+                    JAT_granted_destin_identifier_list, JG_Type);
    lSetHost(jge, JG_qhostname, me.qualified_hostname);
    lSetUlong(jge, JG_slots, 1);
    DPRINTF(("selected queue %s for task\n", qname));
@@ -423,16 +414,15 @@ static lList *set_queue_info_in_task(const char *qname, lListElem *jatask)
    return lGetList(jatask, JAT_granted_destin_identifier_list);
 }
 
-/****** execd/get_queue_with_task_about_to_exit() ***************************************
-*
+/****** execd/job_jatask/job_get_queue_with_task_about_to_exit() **************
 *  NAME
-*     get_queue_with_task_about_to_exit -- find queue with already exited task
+*     job_get_queue_with_task_about_to_exit -- find Q with already exited task
 *
 *  SYNOPSIS
-*     static lList *get_queue_with_task_about_to_exit(lListElem *jatep, 
-*                                              lListElem *jatask,
-*                                              u_long32 jobid,
-*                                              u_long32 jataskid);
+*     static lList *job_get_queue_with_task_about_to_exit(lListElem *jatep, 
+*                                                         lListElem *jatask,
+*                                                         u_long32 jobid,
+*                                                         u_long32 jataskid);
 *
 *  FUNCTION
 *     tries to find a pe task in the job (array task) <jatep> that has
@@ -456,25 +446,18 @@ static lList *set_queue_info_in_task(const char *qname, lListElem *jatask)
 *     on success, the JAT_granted_destin_identifier list of the new pe task
 *     else NULL
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     execd/set_queue_info_in_task()
-*
-****************************************************************************
-*/
-
-static lList *get_queue_with_task_about_to_exit(lListElem *jatep, lListElem *jatask,
-                                                u_long32 jobid, u_long32 jataskid)
+*     execd/job_jatask/job_set_queue_info_in_task()
+******************************************************************************/
+static lList *job_get_queue_with_task_about_to_exit(lListElem *jatep, 
+                                                    lListElem *jatask,
+                                                    u_long32 jobid, 
+                                                    u_long32 jataskid)
 {
    char cwd[SGE_PATH_MAX + 1];
    lListElem *pe_task;
    
-   DENTER(TOP_LAYER, "get_queue_with_task_about_to_exit");
+   DENTER(TOP_LAYER, "job_get_queue_with_task_about_to_exit");
    
    if(getcwd(cwd, SGE_PATH_MAX) == NULL) {
       DEXIT;
@@ -503,7 +486,7 @@ static lList *get_queue_with_task_about_to_exit(lListElem *jatep, lListElem *jat
                DPRINTF(("task %s of job %d.%d already exited, using his slot for new task\n", 
                         pe_task_no, jobid, jataskid));
                DEXIT;         
-               return set_queue_info_in_task(lGetString(pe_task_queue, JG_qname), jatask); 
+               return job_set_queue_info_in_task(lGetString(pe_task_queue, JG_qname), jatask); 
             }
          }
       }   
@@ -513,14 +496,13 @@ static lList *get_queue_with_task_about_to_exit(lListElem *jatep, lListElem *jat
    return NULL;
 }
 
-/****** execd/get_queue_for_task() ***************************************
-*
+/****** execd/job_jatask/job_get_queue_for_task() *****************************
 *  NAME
-*     get_queue_for_task() -- find a queue suited for task execution
+*     job_get_queue_for_task() -- find a queue suited for task execution
 *
 *  SYNOPSIS
-*     static lList *get_queue_for_task(lListElem *jatep,
-*                                      lListElem *jatask);
+*     static lList *job_get_queue_for_task(lListElem *jatep,
+*                                          lListElem *jatask);
 *
 *  FUNCTION
 *     Search for a queue, that 
@@ -537,32 +519,26 @@ static lList *get_queue_with_task_about_to_exit(lListElem *jatep, lListElem *jat
 *     on success, the JAT_granted_destin_identifier list of the new pe task
 *     else NULL
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     execd/set_queue_info_in_task()
-*
-****************************************************************************
-*/
-
-static lList *get_queue_for_task(lListElem *jatep, lListElem *jatask) 
+*     execd/job_jatask/job_set_queue_info_in_task()
+******************************************************************************/
+static lList *job_get_queue_for_task(lListElem *jatep, lListElem *jatask) 
 {
    lListElem *this_q, *gdil_ep;
 
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       this_q = lFirst(lGetList(gdil_ep, JG_queue));
 
-      /* must be at this host and either must have free slots or task about to exit */
-      if(this_q  && !hostcmp(lGetHost(gdil_ep, JG_qhostname), me.qualified_hostname) 
-                 && qslots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
-         return set_queue_info_in_task(lGetString(gdil_ep, JG_qname), jatask);
+      /* 
+       * must be at this host and either must have free slots 
+       * or task about to exit 
+       */
+      if(this_q && 
+         !hostcmp(lGetHost(gdil_ep, JG_qhostname), me.qualified_hostname) &&
+         qslots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
+         return job_set_queue_info_in_task(lGetString(gdil_ep, JG_qname), jatask);
       } 
    }
-
    return NULL;
 }
 
@@ -685,10 +661,11 @@ int *synchron;
       lListElem *this_q; 
 
       if (!gdil) {    /* got task without queue selection - do this for the task */
-         gdil = get_queue_for_task(jatep, jatask);
+         gdil = job_get_queue_for_task(jatep, jatask);
          
          if (!gdil) { /* ran through list without finding matching queue */ 
-            gdil = get_queue_with_task_about_to_exit(jatep, jatask, jobid, jataskid);
+            gdil = job_get_queue_with_task_about_to_exit(jatep, jatask, 
+                                                         jobid, jataskid);
          }
          
          if(!gdil) {  /* also no already exited task found -> no way to start new task */

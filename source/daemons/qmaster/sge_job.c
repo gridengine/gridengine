@@ -129,7 +129,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
 static lCondition *job_list_filter(int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);
 static int job_verify_predecessors(const lListElem *job, lList **alpp, lList *predecessors);
 static int job_verify_name(const lListElem *job, lList **alpp, const char *job_descr);
-static u_long32 is_referenced_by_jobname(lListElem *jep);
+static u_long32 job_is_referenced_by_jobname(lListElem *jep);
 static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs_flag, int jid_flag, int user_list_flag, char *ruser);
 static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
@@ -2193,7 +2193,7 @@ int *trigger
 
          /* reject changing job name if at least one other job points to this job
             in it's -hold_jid list using the job name */
-         if ((succ_jid = is_referenced_by_jobname(new_job))) {
+         if ((succ_jid = job_is_referenced_by_jobname(new_job))) {
             ERROR((SGE_EVENT, MSG_JOB_MOD_CHGJOBNAMEDESTROYSREF_UU,
                       u32c(jobid), u32c(succ_jid)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
@@ -2503,7 +2503,7 @@ int *trigger
    return 0;
 }
 
-/****** qmaster/job_jatask/verify_jobname() ***********************************
+/****** qmaster/job_jatask/job_verify_name() **********************************
 *  NAME
 *     job_verify_name() - verifies job name
 *
@@ -2546,7 +2546,7 @@ static int job_verify_name(const lListElem *job, lList **alpp,
          const char *job_owner = lGetString(job, JB_owner);
 
          if (!strcmp(job_name, jep_name) && !strcmp(job_owner, jep_owner)) {
-            u_long32 succ_jid = is_referenced_by_jobname(jep);
+            u_long32 succ_jid = job_is_referenced_by_jobname(jep);
 
             if (succ_jid) {
                ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU, 
@@ -2565,12 +2565,12 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 }
 
 
-/****** qmaster/job_jatask/is_referenced_by_jobname() *************************
+/****** qmaster/job_jatask/job_is_referenced_by_jobname() *********************
 *  NAME
-*     is_referenced_by_jobname() -- is job referenced by another one
+*     job_is_referenced_by_jobname() -- is job referenced by another one
 *
 *  SYNOPSIS
-*     static u_long32 is_referenced_by_jobname(lListElem *jep) 
+*     static u_long32 job_is_referenced_by_jobname(lListElem *jep) 
 *
 *  FUNCTION
 *     Check whether a certain job is (still) referenced by a second
@@ -2582,11 +2582,11 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 *  RESULT
 *     static u_long32 - job ID of the job referencing 'jep' or 0 if no such
 ******************************************************************************/
-static u_long32 is_referenced_by_jobname(lListElem *jep)
+static u_long32 job_is_referenced_by_jobname(lListElem *jep)
 {
    lList *succ_lp;
 
-   DENTER(TOP_LAYER, "is_referenced_by_jobname");
+   DENTER(TOP_LAYER, "job_is_referenced_by_jobname");
 
    succ_lp = lGetList(jep, JB_jid_sucessor_list);
    if (succ_lp) {
@@ -2597,7 +2597,8 @@ static u_long32 is_referenced_by_jobname(lListElem *jep)
          u_long32 succ_jid;
          succ_jid = lGetUlong(succ_ep, JRE_job_number);
          if ((succ_jep = sge_locate_job(succ_jid)) &&
-            lGetSubStr(succ_jep, JRE_job_name, job_name, JB_jid_predecessor_list)) {
+            lGetSubStr(succ_jep, JRE_job_name, 
+                       job_name, JB_jid_predecessor_list)) {
             DEXIT;
             return succ_jid;
          }

@@ -3142,27 +3142,52 @@ proc add_pe { change_array } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc add_user { change_array } {
-
-# returns 
-# -100 on unknown error
-# -1   on timeout
-# -2   if queue allready exists
-# 0    if ok
-
-# name            template
-# oticket         0
-# fshare          0
-# default_project NONE  
-# 
+proc add_user { change_array { from_file 0 } } {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
-  global CHECK_CORE_MASTER CHECK_USER
+  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
   upvar $change_array chgar
   set values [array names chgar]
 
   if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
      add_proc_error "add_user" -1 "not possible for sge systems"
-     return
+     return -3
+  }
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
+
+  if { $from_file != 0 } {
+     set f_name [get_tmp_file_name]
+     set fd [open $f_name "w"]
+     set org_struct(name) "template"
+     set org_struct(oticket) "0"
+     set org_struct(fshare) "0"
+     set org_struct(default_project) "NONE"
+     foreach elem $values {
+        set org_struct($elem) $chgar($elem)
+     }
+     set ogr_struct_names [array names org_struct]
+     foreach elem  $ogr_struct_names {
+        puts $CHECK_OUTPUT "$elem $org_struct($elem)"
+        puts $fd "$elem $org_struct($elem)"
+     }
+     close $fd 
+     puts $CHECK_OUTPUT "using file $f_name"
+     set result [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-Auser $f_name"]
+     if { $prg_exit_state != 0 } {
+        add_proc_error "add_user" -1 "error running qconf -Auser"
+     }
+     set result [string trim $result]
+     puts $CHECK_OUTPUT "\"$result\""
+#     puts $CHECK_OUTPUT "\"$ADDED\"" 
+     if { [ string match "*$ADDED" $result] } {
+        return 0
+     }
+     if { [ string match "*$ALREADY_EXISTS" $result] } {
+        add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists"
+        return -2
+     }
+     add_proc_error "add_user" -1 "\"error adding [set chgar(name)]\""
+     return -100
   }
 
   set vi_commands ""
@@ -3174,9 +3199,6 @@ proc add_user { change_array } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-
   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands $ADDED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_user" -1 "timeout error" }
@@ -3185,6 +3207,121 @@ proc add_user { change_array } {
 
   return $result
 }
+
+
+
+
+#****** sge_procedures/mod_user() **********************************************
+#  NAME
+#     mod_user() -- ??? 
+#
+#  SYNOPSIS
+#     mod_user { change_array { from_file 0 } } 
+#
+#  FUNCTION
+#     modify user with qconf -muser or -Muser
+#
+#  INPUTS
+#     change_array    - array name with settings to modifiy
+#                       (e.g. set my_settings(default_project) NONE )
+#                       -> array name "name" must be set (for username)
+#
+#     { from_file 0 } - if 0: use -mconf , else use -Mconf
+#
+#  RESULT
+#     0 on success
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc mod_user { change_array { from_file 0 } } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
+  upvar $change_array chgar
+  set values [array names chgar]
+
+  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+     add_proc_error "mod_user" -1 "not possible for sge systems"
+     return -3
+  }
+  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS ] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
+
+  if { $from_file != 0 } {
+     set orginal_settings [ start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser $chgar(name)" ]
+     if { $prg_exit_state != 0 } {
+        add_proc_error "mod_user" -1 "\"error modify user [set chgar(name)]\""
+        return -100
+     }
+
+     if { [string first "default_project" $orginal_settings] < 0  } {
+         add_proc_error "mod_user" -1 "\"error modify user [set chgar(name)]\""
+        return -100
+     }
+
+     set orginal_settings [split $orginal_settings "\n"]
+
+     set config_elements "name oticket fshare default_project"
+     foreach elem $config_elements {
+        foreach line $orginal_settings {
+           set line [string trim $line]
+           if { [ string compare $elem [lindex $line 0] ] == 0 } {
+              set org_struct($elem) [lrange $line 1 end]
+           }
+        }
+     }
+     set ogr_struct_names [array names org_struct]
+     foreach elem $ogr_struct_names {
+        puts $CHECK_OUTPUT ">$elem=$org_struct($elem)<"
+     }
+     set f_name [get_tmp_file_name]
+     set fd [open $f_name "w"]
+     foreach elem $values {
+        set org_struct($elem) $chgar($elem)
+     }
+     set ogr_struct_names [array names org_struct]
+     foreach elem  $ogr_struct_names {
+        puts $CHECK_OUTPUT "$elem $org_struct($elem)"
+        puts $fd "$elem $org_struct($elem)"
+     }
+     close $fd 
+     puts $CHECK_OUTPUT "using file $f_name"
+     set result [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-Muser $f_name"]
+     if { $prg_exit_state != 0 } {
+        add_proc_error "mod_user" -1 "error running qconf -Auser"
+     }
+     set result [string trim $result]
+     puts $CHECK_OUTPUT "\"$result\""
+     puts $CHECK_OUTPUT "\"$MODIFIED\"" 
+     if { [ string match "*$MODIFIED" $result] } {
+        return 0
+     }
+     if { [ string match "*$ALREADY_EXISTS" $result] } {
+        add_proc_error "mod_user" -1 "\"[set chgar(name)]\" already exists"
+        return -2
+     }
+     add_proc_error "mod_user" -1 "\"modifiy user error  [set chgar(name)]\""
+     return -100
+  }
+
+  set vi_commands ""
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal [set chgar($elem)]
+     set newVal1 [split $newVal {/}]
+     set newVal [join $newVal1 {\/}]
+     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+  } 
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
+  
+  if {$result == -1 } { add_proc_error "mod_user" -1 "timeout error" }
+  if {$result == -2 } { add_proc_error "mod_user" -1 "\"[set chgar(name)]\" already exists" }
+  if {$result != 0  } { add_proc_error "mod_user" -1 "could not mod user \"[set chgar(name)]\"" }
+
+  return $result
+}
+
 
 #                                                             max. column:     |
 #****** sge_procedures/add_prj() ******
@@ -3428,7 +3565,7 @@ proc del_prj { myprj_name } {
 #     ???/???
 #*******************************
 proc del_user { myuser_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER CHECK_OUTPUT
 
   if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
      set_error -1 "del_user - not possible for sge systems"
@@ -3463,6 +3600,8 @@ proc del_user { myuser_name } {
   log_user 1
   if { $result != 0 } {
      add_proc_error "del_user" -1 "could not delete user \"$myuser_name\""
+  } else {
+     puts $CHECK_OUTPUT "removed user \"$myuser_name\""
   }
   return $result
 }

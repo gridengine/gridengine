@@ -57,18 +57,25 @@ set check_description(0)  "add/remove queues"
 # define test's dependencies
 set check_needs        "init_core_system qstat qsub"       ;# dependencies of this check (name of other check)
 
-set check_functions     "qconf_addqueues"             ;# functions to call (in order)
+set check_functions     ""
+lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+lappend check_functions "qconf_removequeues"
+lappend check_functions "qconf_auser"
+lappend check_functions "qconf_duser"
+lappend check_functions "qconf_Auser"
+lappend check_functions "qconf_muser"
+lappend check_functions "qconf_Muser"
+
+# TODO: check all options
 #lappend check_functions "qconf_aattr_check"
 #lappend check_functions "qconf_rattr_check"
 #lappend check_functions "qconf_Aattr_check"
 #lappend check_functions "qconf_Rattr_check"
-
 #lappend check_functions "qconf_dattr_check"
 #lappend check_functions "qconf_Dattr_check"
 #lappend check_functions "qconf_mattr_check"
 #lappend check_functions "qconf_Mattr_check"
 
-lappend check_functions "qconf_removequeues"
 
 
 global queue_names
@@ -118,6 +125,130 @@ proc init_level {} {
      "0" {  return 0   } 
   } 
   return -1  ;# no other level else
+}
+
+proc qconf_auser {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
+
+   puts $CHECK_OUTPUT "testing qconf -auser ..."
+
+   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] == 0 } {
+      set new_user(name) "qconf_test_user"
+      set new_user(default_project) "mytestproject"
+      add_user new_user
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      if { [string first "mytestproject" $output] < 0  } {
+         add_proc_error "qconf_auser" -1 "error showing user qconf_test_user"
+      }
+      set_error 0 "ok"
+   } else {
+      set_error 0 "not tested for sge system"
+   }
+}
+
+proc qconf_duser {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
+   puts $CHECK_OUTPUT "testing qconf -duser ..."
+
+   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] == 0 } {
+      del_user "qconf_test_user"
+
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      if { [string first "mytestproject" $output] >= 0  } {
+         add_proc_error "qconf_auser" -1 "error user qconf_test_user should have been deleted"
+      }
+      set_error 0 "ok"
+   } else {
+      set_error 0 "not tested for sge system"
+   }
+}
+
+
+proc qconf_Auser {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
+
+   puts $CHECK_OUTPUT "testing qconf -Auser ..."
+
+   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] == 0 } {
+      set new_user(name) "qconf_test_user"
+      set new_user(default_project) "mytestproject"
+      add_user new_user 1
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      if { [string first "mytestproject" $output] < 0  } {
+         add_proc_error "qconf_auser" -1 "error showing user qconf_test_user"
+      }
+      del_user "qconf_test_user"
+      set_error 0 "ok"
+   } else {
+      set_error 0 "not tested for sge system"
+   }
+}
+
+
+proc qconf_muser {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
+
+   puts $CHECK_OUTPUT "testing qconf -muser ..."
+
+   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] == 0 } {
+      set new_user(name) "qconf_test_user"
+      set new_user(default_project) "mytestproject"
+      add_user new_user
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      if { [string first "mytestproject" $output] < 0  } {
+         add_proc_error "qconf_muser" -1 "error showing user qconf_test_user"
+      }
+      # now modifiy user
+      set new_conf(name)  "qconf_test_user"
+      set new_conf(default_project) "NONE"
+      mod_user new_conf 
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      puts $CHECK_OUTPUT $output
+      if { [string first "mytestproject" $output] >= 0  } {
+         add_proc_error "qconf_muser" -1 "error modify user qconf_test_user"
+      }
+
+      # now delete user
+      del_user "qconf_test_user"
+
+
+      set_error 0 "ok"
+   } else {
+      set_error 0 "not tested for sge system"
+   }
+}
+
+proc qconf_Muser {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
+
+   puts $CHECK_OUTPUT "testing qconf -Muser ..."
+
+   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] == 0 } {
+      set new_user(name) "qconf_test_user"
+      set new_user(default_project) "mytestproject"
+      add_user new_user
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      if { [string first "mytestproject" $output] < 0  } {
+         add_proc_error "qconf_Muser" -1 "error showing user qconf_test_user"
+      }
+      # now modifiy user
+      set new_conf(name)  "qconf_test_user"
+      set new_conf(default_project) "NONE"
+      mod_user new_conf 1
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-suser qconf_test_user" ]
+      puts $CHECK_OUTPUT $output
+      if { [string first "mytestproject" $output] >= 0  } {
+         add_proc_error "qconf_Muser" -1 "error modify user qconf_test_user"
+      }
+
+      # now delete user
+      del_user "qconf_test_user"
+
+
+      set_error 0 "ok"
+   } else {
+      set_error 0 "not tested for sge system"
+   }
 }
 
 

@@ -76,6 +76,94 @@
 #include "sge_qmod_qmaster.h"
 #include "reschedule.h"
 #include "sge_qmaster_threads.h"
+#include "sge_profiling.h"
+
+
+/****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
+*  NAME
+*     sge_qmaster_application_status() -- commlib status callback function  
+*
+*  SYNOPSIS
+*      unsigned long sge_qmaster_application_status(char** info_message) 
+*
+*  FUNCTION
+*      This is the implementation of the commlib application status callback
+*      function. This function is called from the commlib when a connected
+*      client wants to get a SIRM (Status Information Response Message).
+*      The standard client for this action is the qping command.
+*
+*      The callback function is set with cl_com_set_status_func() after
+*      commlib initalization.
+*
+*      The function is called by a commlib thread which is not in the
+*      context of the qmaster application. This means no qmaster specific
+*      functions should be called (locking of global variables).
+*
+*
+*  INPUTS
+*     char** info_message - pointer to an char* inside commlib.
+*                           info message must be malloced, commlib will
+*                           free this memory. 
+*  RESULT
+*     unsigned long status - status of application
+*
+*  NOTES
+*     This function is MT save
+* 
+*******************************************************************************/
+unsigned long sge_qmaster_application_status(char** info_message) {
+   char buffer[1024];
+   char* status_message = "ok";
+   unsigned long status = 0;
+   double last_send_thread_time          = 0.0;
+   double last_deliver_event_thread_time = 0.0;
+   double last_message_thread_time       = 0.0;
+   double last_signal_thread_time        = 0.0;
+   sge_thread_alive_times_t* thread_times       = NULL;
+
+   struct timeval now;
+
+   sge_lock_alive_time_mutex();
+
+   gettimeofday(&now,NULL);
+   thread_times = sge_get_thread_alive_times();
+   if ( thread_times != NULL ) {
+      double time1;
+      double time2;
+      time1 = now.tv_sec + (now.tv_usec / 1000000.0);
+
+      time2 = thread_times->send_thread.tv_sec + (thread_times->send_thread.tv_usec / 1000000.0);
+      last_send_thread_time          = time1 - time2;
+
+      time2 = thread_times->deliver_event_thread.tv_sec + (thread_times->deliver_event_thread.tv_usec / 1000000.0);
+      last_deliver_event_thread_time = time1 - time2;
+
+      time2 = thread_times->message_thread.tv_sec + (thread_times->message_thread.tv_usec / 1000000.0);
+      last_message_thread_time       = time1 - time2;
+
+      time2 = thread_times->signal_thread.tv_sec + (thread_times->signal_thread.tv_usec / 1000000.0);
+      last_signal_thread_time        = time1 - time2;
+   
+      if ( last_send_thread_time > 10.0 || last_deliver_event_thread_time > 10.0 || last_message_thread_time > 10.0 ) {
+         status = 1;
+         status_message = "thread timeout error";
+      }
+   }
+
+   snprintf(buffer, 1024, "st: %.3f|det: %.3f|mt: %.3f|sigt: %.3f|%s",
+                    last_send_thread_time,
+                    last_deliver_event_thread_time,
+                    last_message_thread_time,
+                    last_signal_thread_time,
+                    status_message);
+   if (info_message != NULL && *info_message == NULL) {
+      *info_message = strdup(buffer);
+   }
+
+   sge_unlock_alive_time_mutex();
+   return status;
+}
+
 
 /****** qmaster/sge_qmaster_main/main() ****************************************
 *  NAME
@@ -111,6 +199,7 @@ int main(int argc, char* argv[])
 {
    sigset_t sig_set;
    int max_enroll_tries;
+   int ret_val;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
@@ -157,6 +246,16 @@ int main(int argc, char* argv[])
         /* sleep when prepare_enroll() failed */
         sleep(1);
       }
+   }
+
+   /*
+    * now the commlib up and running. Set qmaster application status function 
+    * ( commlib callback function for qping status information response 
+    *   messages (SIRM) )
+    */
+   ret_val = cl_com_set_status_func(sge_qmaster_application_status);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
    /* now we become admin user */

@@ -32,9 +32,11 @@
 
 #include <stdarg.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/times.h>
 #include <limits.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "basis_types.h"
 
@@ -161,6 +163,10 @@
 *     MT-NOTE: The use of global variables makes the whole module non thread
 *              safe.
 *******************************************************************************/
+
+/* This is for thread alive timeout measurement */
+static pthread_mutex_t thread_times_mutex = PTHREAD_MUTEX_INITIALIZER;
+static sge_thread_alive_times_t thread_times;
 
 static bool prof_is_started = false;
 static clock_t start_clock  = 0;
@@ -1081,3 +1087,104 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
    return ret;
 }
 
+/****** uti/profiling/sge_lock_alive_time_mutex() ******************************
+*  NAME
+*     sge_lock_alive_time_mutex() -- lock alive time mutex 
+*
+*  SYNOPSIS
+*     void sge_lock_alive_time_mutex(void); 
+*
+*  FUNCTION
+*     This function is called to lock the alive time mutex before modifying
+*     thread_times structure returned by sge_get_thread_alive_times().
+*
+*  NOTES
+*     MT-NOTE: sge_lock_alive_time_mutex() is MT safe
+*******************************************************************************/
+void sge_lock_alive_time_mutex(void) {
+   pthread_mutex_lock(&thread_times_mutex);
+}
+
+/****** uti/profiling/sge_unlock_alive_time_mutex() ******************************
+*  NAME
+*     sge_unlock_alive_time_mutex() -- unlock alive time mutex 
+*
+*  SYNOPSIS
+*     void sge_unlock_alive_time_mutex(void); 
+*
+*  FUNCTION
+*     This function is called to unlock the alive time mutex before modifying
+*     thread_times structure returned by sge_get_thread_alive_times().
+*
+*  NOTES
+*     MT-NOTE: sge_unlock_alive_time_mutex() is MT safe
+*******************************************************************************/
+void sge_unlock_alive_time_mutex(void) {
+   pthread_mutex_unlock(&thread_times_mutex);
+}
+
+
+/****** uti/profiling/sge_get_thread_alive_times() ******************************
+*  NAME
+*     sge_get_thread_alive_times() -- get thread_times structure 
+*
+*  SYNOPSIS
+*     sge_thread_alive_times_t* sge_get_thread_alive_times(void);
+*
+*  FUNCTION
+*     This function returns the pointer to the global tread_times structure.
+*     Use sge_lock_alive_time_mutex() and sge_unlock_alive_time_mutex() before
+*     modifiying this structure.
+*
+*  RESULT
+*     sge_thread_alive_times_t* - pointer to global thread_times structure
+*
+*  NOTES
+*     MT-NOTE: sge_get_thread_alive_times() is MT safe
+*******************************************************************************/
+sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
+   return &thread_times;
+}
+
+
+/****** uti/profiling/sge_update_thread_alive_time() ******************************
+*  NAME
+*     sge_update_thread_alive_time() -- set alive time for specified thread
+*
+*  SYNOPSIS
+*     void sge_update_thread_alive_time(sge_thread_name_t thread);
+*
+*  FUNCTION
+*     This function must be called to update the last timestamp information
+*     for the specified thread.
+*
+*     Actual thread identifier are SGE_MASTER_SEND_THREAD, 
+*     SGE_MASTER_DELIVER_EVENT_THREAD, SGE_MASTER_MESSAGE_THREAD and
+*     SGE_MASTER_SIGNAL_THREAD.
+*
+*  INPUTS
+*     sge_thread_name_t thread - thread id
+*
+*  NOTES
+*     MT-NOTE: sge_update_thread_alive_time() is MT safe
+*******************************************************************************/
+void sge_update_thread_alive_time(sge_thread_name_t thread) {
+   DENTER(TOP_LAYER, "sge_update_thread_alive_time");
+   pthread_mutex_lock(&thread_times_mutex);  
+   switch(thread) {
+      case SGE_MASTER_SEND_THREAD:
+         gettimeofday(&(thread_times.send_thread),NULL);
+         break;
+      case SGE_MASTER_DELIVER_EVENT_THREAD:
+         gettimeofday(&(thread_times.deliver_event_thread),NULL);
+         break;
+      case SGE_MASTER_MESSAGE_THREAD:
+         gettimeofday(&(thread_times.message_thread),NULL);
+         break;
+      case SGE_MASTER_SIGNAL_THREAD:
+         gettimeofday(&(thread_times.signal_thread),NULL);
+         break;
+   }
+   pthread_mutex_unlock(&thread_times_mutex);  
+   DEXIT;  
+}

@@ -75,6 +75,7 @@
 #include "sge.h"
 #include "sge_qmod_qmaster.h"
 #include "reschedule.h"
+#include "sge_profiling.h"
 
 
 /*
@@ -918,9 +919,18 @@ static void* signal_thread(void* anArg)
    sigaddset(&sig_set, SIGINT);
    sigaddset(&sig_set, SIGTERM);
 
+   /* Set thread alive time to current time */
+   sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
+
    while (is_continue)
    {
       sigwait(&sig_set, &sig_num);
+
+      /* 
+       * This thread will only wake up on signals, so the
+       * alive time will not be set in an specified intervall
+       */
+      sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
 
       DPRINTF(("%s: got signal %d\n", SGE_FUNC, sig_num));
 
@@ -969,6 +979,10 @@ static void* message_thread(void* anArg)
 
    while (should_terminate() == false)
    {
+      /* 
+       * Update thread alive time 
+       */
+      sge_update_thread_alive_time(SGE_MASTER_MESSAGE_THREAD);
       sge_qmaster_process_message(anArg);
    }
 

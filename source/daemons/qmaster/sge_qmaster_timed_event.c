@@ -43,6 +43,7 @@
 #include "sge_prog.h"
 #include "setup.h"
 #include "setup_qmaster.h"
+#include "sge_profiling.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -836,6 +837,8 @@ static void* deliver_events(void* anArg)
    sge_qmaster_thread_init(true);
 
    while (should_exit() == false) {
+      /* update thread alive time */
+      sge_update_thread_alive_time(SGE_MASTER_DELIVER_EVENT_THREAD);
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
       check_time(time(NULL));

@@ -72,6 +72,7 @@
 #include "configuration_qmaster.h"
 #include "cl_errors.h"
 #include "cl_commlib.h"
+#include "sge_profiling.h"
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
@@ -2162,6 +2163,8 @@ static void* send_thread(void *anArg)
    lAppendElem(report_list, report);
 
    while (!should_exit()) {
+      /* update thread alive time */
+      sge_update_thread_alive_time(SGE_MASTER_SEND_THREAD);
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       /*
        * did a new event arrive which has a flush time of 0 seconds?

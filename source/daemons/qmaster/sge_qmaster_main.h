@@ -35,6 +35,7 @@
 #include "sge_gdi_request.h"
 
 int main(int argc, char* argv[]);
+unsigned long sge_qmaster_application_status(char** info_message);
 
 #endif /* _SGE_QMASTER_MAIN_H_ */
 

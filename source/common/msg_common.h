@@ -1077,6 +1077,9 @@
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN"\n"))
 #define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN"\n"))
 #define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
+#define MSG_ERRORREADINGCWD_S             _MESSAGE(60208, _("error reading current working directory: "SFN"\n"))
+#define MSG_ERRORCHANGINGCWD_SS            _MESSAGE(60209, _("error changing current working directory to "SFN": "SFN"\n"))
+#define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming "SFQ" to "SFQ": "SFN"\n"))
 
 /* parsing of parameters */
 #define MSG_NULLELEMENTPASSEDTO_S         _MESSAGE(60301, _("NULL object pointer passed to function "SFQ"\n"))

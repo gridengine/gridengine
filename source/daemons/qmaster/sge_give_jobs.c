@@ -698,8 +698,12 @@ sge_commit_flags_t commit_flags
       /* JG: TODO: shouldn't the start time better be set on the exec host? */
       lSetUlong(jatep, JAT_start_time, now);
       job_enroll(jep, NULL, jataskid);
-      spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+      {
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+         answer_list_output(&answer_list);
+      }
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
@@ -707,8 +711,12 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_status, JRUNNING);
       job_log(jobid, jataskid, "job received by execd");
       job_enroll(jep, NULL, jataskid);
-      spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+      {
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+         answer_list_output(&answer_list);
+      }
       break;
 
    case 2:
@@ -814,8 +822,12 @@ sge_commit_flags_t commit_flags
       sge_clear_granted_resources(jep, jatep, 1);
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
-      spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+      {
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+         answer_list_output(&answer_list);
+      }
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
@@ -839,8 +851,12 @@ sge_commit_flags_t commit_flags
       }
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
-      spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+      {
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+         answer_list_output(&answer_list);
+      }
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
             lGetUlong(jatep, JAT_task_number),
@@ -887,8 +903,12 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
       job_enroll(jep, NULL, jataskid);
-      spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+      {
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+         answer_list_output(&answer_list);
+      }
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
    }
@@ -1113,8 +1133,13 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       if (lGetString(job, JB_script_file)) {
          unlink(lGetString(job, JB_exec_file));
       }
-      spool_delete_object(spool_get_default_context(), SGE_TYPE_JOB, 
-                          job_get_key(job_id, 0, NULL));
+      {
+         lList *answer_list = NULL;
+         spool_delete_object(&answer_list, spool_get_default_context(), 
+                             SGE_TYPE_JOB, 
+                             job_get_key(job_id, 0, NULL));
+         answer_list_output(&answer_list);
+      }
       /*
        * remove the job
        */
@@ -1137,15 +1162,20 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        * remove the task
        */
       if (is_enrolled) {
-         spool_delete_object(spool_get_default_context(), SGE_TYPE_JOB, 
+         lList *answer_list = NULL;
+         spool_delete_object(&answer_list, spool_get_default_context(), 
+                             SGE_TYPE_JOB, 
                              job_get_key(job_id, ja_task_id, NULL));
+         answer_list_output(&answer_list);
          lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
       } else {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          if (spool_job) {
-            spool_write_object(spool_get_default_context(), job, 
+            lList *answer_list = NULL;
+            spool_write_object(&answer_list, spool_get_default_context(), job, 
                                job_get_key(job_id, ja_task_id, NULL), 
                                SGE_TYPE_JOB);
+            answer_list_output(&answer_list);
          }
       }
 #if 0

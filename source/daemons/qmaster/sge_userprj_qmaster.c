@@ -228,7 +228,7 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "userprj_spool");
 
    /* write user or project to file */
-   if (!spool_write_object(spool_get_default_context(), upe, 
+   if (!spool_write_object(alpp, spool_get_default_context(), upe, 
                            lGetString(upe, object->key_nm), 
                            user_flag ? SGE_TYPE_USER : SGE_TYPE_PROJECT)) {
       /* answer list gets filled in write_userprj() */
@@ -350,7 +350,7 @@ int user        /* =1 user, =0 project */
    lRemoveElem(*upl, ep);
 
    /* delete user or project file */
-   if (!spool_delete_object(spool_get_default_context(), 
+   if (!spool_delete_object(alpp, spool_get_default_context(), 
                             user ? SGE_TYPE_USER : SGE_TYPE_PROJECT, name)) {
       DEXIT;
       return STATUS_EDISK;

@@ -248,8 +248,13 @@ lListElem *jatep
          state = lGetUlong(queueep, QU_state);
          SETBIT(QERROR, state);
          lSetUlong(queueep, QU_state, state);
-         spool_write_object(spool_get_default_context(), queueep, 
-                            lGetString(queueep, QU_qname), SGE_TYPE_QUEUE);
+         {
+            lList *answer_list = NULL;
+            spool_write_object(&answer_list, spool_get_default_context(), 
+                               queueep, lGetString(queueep, QU_qname), 
+                               SGE_TYPE_QUEUE);
+            answer_list_output(&answer_list);
+         }
          ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid)));    
       }
       /*
@@ -269,8 +274,13 @@ lListElem *jatep
 /*                   DPRINTF(("queue %s marked QERROR\n", lGetString(qep, QU_qname))); */
                   ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qep, QU_qname), u32c(jobid), host));    
                   
-                  spool_write_object(spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+                  {
+                     lList *answer_list = NULL;
+                     spool_write_object(&answer_list, 
+                               spool_get_default_context(), qep, 
+                               lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+                     answer_list_output(&answer_list);
+                  }
                   sge_add_queue_event(sgeE_QUEUE_MOD, qep);
                }
             }

@@ -57,12 +57,13 @@ const char *get_spooling_method(void)
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_template_create_context(int argc, char *argv[])
+*     spool_template_create_context(lList **answer_list, const char *args)
 *
 *  FUNCTION
 *     Create a spooling context for the template spooling.
 * 
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     int argc     - number of arguments in argv
 *     char *argv[] - argument vector
 *
@@ -74,7 +75,7 @@ const char *get_spooling_method(void)
 *     spool/template/--Template-Spooling
 *******************************************************************************/
 lListElem *
-spool_template_create_context(int argc, char *argv[])
+spool_template_create_context(lList **answer_list, const char *args)
 {
    lListElem *context = NULL;
 
@@ -91,11 +92,13 @@ spool_template_create_context(int argc, char *argv[])
 *
 *  SYNOPSIS
 *     bool 
-*     spool_template_default_startup_func(const lListElem *rule) 
+*     spool_template_default_startup_func(lList **answer_list, 
+*                                         const char *args)
 *
 *  FUNCTION
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
 *
@@ -111,7 +114,8 @@ spool_template_create_context(int argc, char *argv[])
 *     spool/spool_startup_context()
 *******************************************************************************/
 bool
-spool_template_default_startup_func(const lListElem *rule)
+spool_template_default_startup_func(lList **answer_list, 
+                                    const lListElem *rule)
 {
    const char *url;
 
@@ -129,14 +133,16 @@ spool_template_default_startup_func(const lListElem *rule)
 *
 *  SYNOPSIS
 *     bool 
-*     spool_template_default_list_func(const lListElem *type, 
-*                                      const lListElem *rule, 
-*                                      lList **list, 
+*     spool_template_default_list_func(
+*                                      lList **answer_list, 
+*                                      const lListElem *type, 
+*                                      const lListElem *rule, lList **list, 
 *                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
@@ -154,8 +160,10 @@ spool_template_default_startup_func(const lListElem *rule)
 *     spool/spool_read_list()
 *******************************************************************************/
 bool
-spool_template_default_list_func(const lListElem *type, const lListElem *rule,
-                                    lList **list, const sge_object_type event_type)
+spool_template_default_list_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule, lList **list, 
+                                 const sge_object_type event_type)
 {
    DENTER(TOP_LAYER, "spool_template_default_list_func");
 
@@ -169,14 +177,15 @@ spool_template_default_list_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_template_default_read_func(const lListElem *type, 
-*                                      const lListElem *rule, 
-*                                      const char *key, 
+*     spool_template_default_read_func(lList **answer_list, 
+*                                      const lListElem *type, 
+*                                      const lListElem *rule, const char *key, 
 *                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
@@ -194,8 +203,9 @@ spool_template_default_list_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_read_object()
 *******************************************************************************/
 lListElem *
-spool_template_default_read_func(const lListElem *type, const lListElem *rule,
-                                 const char *key, 
+spool_template_default_read_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule, const char *key, 
                                  const sge_object_type event_type)
 {
    lListElem *ep = NULL;
@@ -212,7 +222,8 @@ spool_template_default_read_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     bool
-*     spool_template_default_write_func(const lListElem *type, 
+*     spool_template_default_write_func(lList **answer_list, 
+*                                       const lListElem *type, 
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
@@ -222,6 +233,7 @@ spool_template_default_read_func(const lListElem *type, const lListElem *rule,
 *     Writes an object through the appropriate template spooling functions.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
@@ -240,8 +252,11 @@ spool_template_default_read_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_delete_object()
 *******************************************************************************/
 bool
-spool_template_default_write_func(const lListElem *type, const lListElem *rule, 
-                                  const lListElem *object, const char *key, 
+spool_template_default_write_func(lList **answer_list, 
+                                  const lListElem *type, 
+                                  const lListElem *rule, 
+                                  const lListElem *object, 
+                                  const char *key, 
                                   const sge_object_type event_type)
 {
    DENTER(TOP_LAYER, "spool_template_default_write_func");
@@ -256,7 +271,8 @@ spool_template_default_write_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     bool
-*     spool_template_default_delete_func(const lListElem *type, 
+*     spool_template_default_delete_func(lList **answer_list, 
+*                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
 *                                        const sge_object_type event_type) 
@@ -265,6 +281,7 @@ spool_template_default_write_func(const lListElem *type, const lListElem *rule,
 *     Deletes an object in the template spooling.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
@@ -282,7 +299,9 @@ spool_template_default_write_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_delete_object()
 *******************************************************************************/
 bool
-spool_template_default_delete_func(const lListElem *type, const lListElem *rule,
+spool_template_default_delete_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
                                    const char *key, 
                                    const sge_object_type event_type)
 {

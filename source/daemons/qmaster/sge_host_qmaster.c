@@ -313,19 +313,31 @@ u_long32 target
    /* remove host file and send event */
    switch(target) {
       case SGE_ADMINHOST_LIST:
-         spool_delete_object(spool_get_default_context(), SGE_TYPE_ADMINHOST,
-                             host);
+         {
+            lList *answer_list = NULL;
+            spool_delete_object(&answer_list, spool_get_default_context(), 
+                                SGE_TYPE_ADMINHOST, host);
+            answer_list_output(&answer_list);
+         }
          sge_add_event(NULL, 0, sgeE_ADMINHOST_DEL, 0, 0, host, NULL);
          break;
       case SGE_EXECHOST_LIST:
+         {
+            lList *answer_list = NULL;
+            spool_delete_object(&answer_list, spool_get_default_context(), 
+                                SGE_TYPE_EXECHOST, host);
+            answer_list_output(&answer_list);
+         }
          sge_add_event(NULL, 0, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
-         spool_delete_object(spool_get_default_context(), SGE_TYPE_EXECHOST,
-                             host);
          break;
       case SGE_SUBMITHOST_LIST:
+         {
+            lList *answer_list = NULL;
+            spool_delete_object(&answer_list, spool_get_default_context(), 
+                                SGE_TYPE_SUBMITHOST, host);
+            answer_list_output(&answer_list);
+         }
          sge_add_event(NULL, 0, sgeE_SUBMITHOST_DEL, 0, 0, host, NULL);
-         spool_delete_object(spool_get_default_context(), SGE_TYPE_SUBMITHOST,
-                             host);
          break;
    }
 
@@ -526,7 +538,7 @@ gdi_object_t *object
          break;
    }
      
-   if (!spool_write_object(spool_get_default_context(), ep, key, host_type)) {
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, key, host_type)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object->object_name, key));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -750,8 +762,10 @@ lList *lp
    ** then spool
    */
    if (statics_changed && host_ep) {
-      spool_write_object(spool_get_default_context(), host_ep, 
+      lList *answer_list = NULL;
+      spool_write_object(&answer_list, spool_get_default_context(), host_ep, 
                          lGetHost(host_ep, EH_name), SGE_TYPE_EXECHOST);
+      answer_list_output(&answer_list);
    }
 
    /* if non static load values arrived, this indicates that 
@@ -983,18 +997,22 @@ const char *exechost_name
 
    if (change_all) {
       for_each(qep, Master_Queue_List) {   
+         lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(spool_get_default_context(), qep, 
+         spool_write_object(&answer_list, spool_get_default_context(), qep, 
                             lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+         answer_list_output(&answer_list);
       }
    } else {
       qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
       while (qep != NULL) {
+         lList *answer_list = NULL;
          DPRINTF(("increasing version of queue "SFQ" because exec host "
                   SFQ" changed\n", lGetString(qep, QU_qname), exechost_name));
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(spool_get_default_context(), qep, 
+         spool_write_object(&answer_list, spool_get_default_context(), qep, 
                             lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+         answer_list_output(&answer_list);
          qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
       }
    } 
@@ -1201,11 +1219,16 @@ int force
                   SETBIT(JDELETED, state);
                   lSetUlong(jatep, JAT_state, state);
                   /* spool job */
-                  spool_write_object(spool_get_default_context(), jep,
-                                     job_get_key(lGetUlong(jep, JB_job_number), 
+                  {
+                     lList *answer_list = NULL;
+                     spool_write_object(&answer_list, 
+                                        spool_get_default_context(), jep,
+                                        job_get_key(lGetUlong(jep, JB_job_number), 
                                             lGetUlong(jatep, JAT_task_number), 
                                             NULL), 
-                                     SGE_TYPE_JOB);
+                                        SGE_TYPE_JOB);
+                     answer_list_output(&answer_list);
+                  }
                }
             }
          }
@@ -1277,9 +1300,11 @@ u_long32 target) {
    qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, rhost, &iterator); 
    while (qep != NULL) {
       if (queue_set_initial_state(qep, rhost)) {
+         lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(spool_get_default_context(), qep, 
+         spool_write_object(&answer_list, spool_get_default_context(), qep, 
                             lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+         answer_list_output(&answer_list);
       } 
       qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, rhost, &iterator); 
    }

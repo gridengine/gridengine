@@ -142,7 +142,7 @@ char *rhost
 #endif   
 
     
-   spool_delete_object(spool_get_default_context(), SGE_TYPE_CONFIG, 
+   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_CONFIG, 
                        config_name);
     
    /* now remove it from our internal list*/
@@ -297,7 +297,7 @@ char *rhost
       sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
    }
    
-   spool_write_object(spool_get_default_context(), confp, 
+   spool_write_object(alpp, spool_get_default_context(), confp, 
                       lGetHost(confp, CONF_hname), SGE_TYPE_CONFIG);
    /*
    ** is the configuration change relevant for the qmaster itsself?

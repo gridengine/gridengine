@@ -95,82 +95,83 @@
  */
 static bool read_spooled_data(void)
 {  
+   lList *answer_list = NULL;
    lListElem *context;
 
    context = spool_get_default_context();
 
    /* cluster configuration */
-   spool_read_list(context, &Master_Config_List, SGE_TYPE_CONFIG);
+   spool_read_list(&answer_list, context, &Master_Config_List, SGE_TYPE_CONFIG);
    DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
 
    /* cluster configuration */
-   spool_read_list(context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   spool_read_list(&answer_list, context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
    DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(Master_Sched_Config_List)));
 
    /* complexes */
-   spool_read_list(context, &Master_Complex_List, SGE_TYPE_COMPLEX);
+   spool_read_list(&answer_list, context, &Master_Complex_List, SGE_TYPE_COMPLEX);
    DPRINTF(("read %d entries to Master_Complex_List\n", lGetNumberOfElem(Master_Complex_List)));
 
    /* hosts */
-   spool_read_list(context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
+   spool_read_list(&answer_list, context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
    DPRINTF(("read %d entries to Master_Exechost_List\n", lGetNumberOfElem(Master_Exechost_List)));
-   spool_read_list(context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
+   spool_read_list(&answer_list, context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
    DPRINTF(("read %d entries to Master_Adminhost_List\n", lGetNumberOfElem(Master_Adminhost_List)));
-   spool_read_list(context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
+   spool_read_list(&answer_list, context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
    DPRINTF(("read %d entries to Master_Submithost_List\n", lGetNumberOfElem(Master_Submithost_List)));
 
    /* managers */
-   spool_read_list(context, &Master_Manager_List, SGE_TYPE_MANAGER);
+   spool_read_list(&answer_list, context, &Master_Manager_List, SGE_TYPE_MANAGER);
    DPRINTF(("read %d entries to Master_Manager_List\n", lGetNumberOfElem(Master_Manager_List)));
 
    /* host groups */
-   spool_read_list(context, &Master_HGroup_List, SGE_TYPE_HGROUP);
+   spool_read_list(&answer_list, context, &Master_HGroup_List, SGE_TYPE_HGROUP);
    DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_HGroup_List)));
 
    /* operators */
-   spool_read_list(context, &Master_Operator_List, SGE_TYPE_OPERATOR);
+   spool_read_list(&answer_list, context, &Master_Operator_List, SGE_TYPE_OPERATOR);
    DPRINTF(("read %d entries to Master_Operator_List\n", lGetNumberOfElem(Master_Operator_List)));
 
    /* usersets */
-   spool_read_list(context, &Master_Userset_List, SGE_TYPE_USERSET);
+   spool_read_list(&answer_list, context, &Master_Userset_List, SGE_TYPE_USERSET);
    DPRINTF(("read %d entries to Master_Userset_List\n", lGetNumberOfElem(Master_Userset_List)));
 
    /* calendars */
-   spool_read_list(context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
+   spool_read_list(&answer_list, context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
    DPRINTF(("read %d entries to Master_Calendar_List\n", lGetNumberOfElem(Master_Calendar_List)));
 
 #ifndef __SGE_NO_USERMAPPING__
    /* user mapping */
-   spool_read_list(context, &Master_Cuser_List, SGE_TYPE_CUSER);
+   spool_read_list(&answer_list, context, &Master_Cuser_List, SGE_TYPE_CUSER);
    DPRINTF(("read %d entries to Master_Cuser_List\n", lGetNumberOfElem(Master_Cuser_List)));
 #endif
 
    /* queues */
-   spool_read_list(context, &Master_Queue_List, SGE_TYPE_QUEUE);
+   spool_read_list(&answer_list, context, &Master_Queue_List, SGE_TYPE_QUEUE);
    DPRINTF(("read %d entries to Master_Queue_List\n", lGetNumberOfElem(Master_Queue_List)));
 
    /* pes */
-   spool_read_list(context, &Master_Pe_List, SGE_TYPE_PE);
+   spool_read_list(&answer_list, context, &Master_Pe_List, SGE_TYPE_PE);
    DPRINTF(("read %d entries to Master_Pe_List\n", lGetNumberOfElem(Master_Pe_List)));
 
    /* ckpt */
-   spool_read_list(context, &Master_Ckpt_List, SGE_TYPE_CKPT);
+   spool_read_list(&answer_list, context, &Master_Ckpt_List, SGE_TYPE_CKPT);
    DPRINTF(("read %d entries to Master_Ckpt_List\n", lGetNumberOfElem(Master_Ckpt_List)));
 
    /* jobs */
-   spool_read_list(context, &Master_Job_List, SGE_TYPE_JOB);
+   spool_read_list(&answer_list, context, &Master_Job_List, SGE_TYPE_JOB);
    DPRINTF(("read %d entries to Master_Job_List\n", lGetNumberOfElem(Master_Job_List)));
 
    /* user list */
-   spool_read_list(context, &Master_User_List, SGE_TYPE_USER);
+   spool_read_list(&answer_list, context, &Master_User_List, SGE_TYPE_USER);
    DPRINTF(("read %d entries to Master_User_List\n", lGetNumberOfElem(Master_User_List)));
 
    /* project list */
-   spool_read_list(context, &Master_Project_List, SGE_TYPE_PROJECT);
+   spool_read_list(&answer_list, context, &Master_Project_List, SGE_TYPE_PROJECT);
    DPRINTF(("read %d entries to Master_Project_List\n", lGetNumberOfElem(Master_Project_List)));
 
    /* sharetree */
-   spool_read_list(context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
+   spool_read_list(&answer_list, context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
    DPRINTF(("read %d entries to Master_Sharetree_List\n", lGetNumberOfElem(Master_Sharetree_List)));
 
    return true;
@@ -179,6 +180,7 @@ static bool read_spooled_data(void)
 bool spool_event_before(sge_object_type type, sge_event_action action, 
                        lListElem *event, void *clientdata)
 {
+   lList *answer_list = NULL;
    lListElem *context, *ep;
    lList **master_list, *new_list;
    int key_nm;
@@ -204,7 +206,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                new_ep = lGetElemHost(new_list, key_nm, lGetHost(ep, key_nm));
                if(new_ep == NULL) {
                   /* object not contained in new list, delete it */
-                  spool_delete_object(context, type, lGetHost(ep, key_nm));
+                  spool_delete_object(&answer_list, context, type, lGetHost(ep, key_nm));
                }
             }   
 
@@ -218,8 +220,8 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                 * if yes, spool the object.
                 */
                if(old_ep == NULL || 
-                  spool_compare_objects(context, type, ep, old_ep) != 0)  {
-                  spool_write_object(context, ep, key, type);
+                  spool_compare_objects(&answer_list, context, type, ep, old_ep) != 0)  {
+                  spool_write_object(&answer_list, context, ep, key, type);
                }
             }
             break;
@@ -242,7 +244,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                new_ep = lGetElemStr(new_list, key_nm, lGetString(ep, key_nm));
                if(new_ep == NULL) {
                   /* object not contained in new list, delete it */
-                  spool_delete_object(context, type, lGetString(ep, key_nm));
+                  spool_delete_object(&answer_list, context, type, lGetString(ep, key_nm));
                }
             }
 
@@ -256,8 +258,8 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                 * if yes, spool the object.
                 */
                if(old_ep == NULL || 
-                  spool_compare_objects(context, type, ep, old_ep) != 0)  {
-                  spool_write_object(context, ep, key, type);
+                  spool_compare_objects(&answer_list, context, type, ep, old_ep) != 0)  {
+                  spool_write_object(&answer_list, context, ep, key, type);
                }
             }
             break;
@@ -280,7 +282,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                   pe_task_id = lGetString(event, ET_strkey);
 
                   job_key = job_get_key(job_id, ja_task_id, pe_task_id);
-                  spool_delete_object(context, type, job_key);
+                  spool_delete_object(&answer_list, context, type, job_key);
                }
                break;
             case SGE_TYPE_JOB:
@@ -291,7 +293,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                   job_id = lGetUlong(event, ET_intkey);
 
                   job_key = job_get_key(job_id, 0, NULL);
-                  spool_delete_object(context, type, job_key);
+                  spool_delete_object(&answer_list, context, type, job_key);
                }
                break;
 
@@ -306,6 +308,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 bool spool_event_after(sge_object_type type, sge_event_action action, 
                       lListElem *event, void *clientdata)
 {
+   lList *answer_list = NULL;
    lListElem *context, *ep;
    lList **master_list;
    int key_nm;
@@ -325,10 +328,10 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                ep = lFirst(*master_list);
                if(ep == NULL) {
                   /* delete sharetree */
-                  spool_delete_object(context, type, SHARETREE_FILE);
+                  spool_delete_object(&answer_list, context, type, SHARETREE_FILE);
                } else {
                   /* spool sharetree */
-                  spool_write_object(context, ep, NULL, type);
+                  spool_write_object(&answer_list, context, ep, NULL, type);
                }
                break;
             case SGE_TYPE_MANAGER:
@@ -341,7 +344,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(strcmp(lGetString(context, SPC_name), "classic spooling") == 0) {
                   ep = lFirst(*master_list);
                   if(ep != NULL) {
-                     spool_write_object(context, ep, NULL, type);
+                     spool_write_object(&answer_list, context, ep, NULL, type);
                   }
                }   
             default:
@@ -370,7 +373,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
 #endif   
             case SGE_TYPE_HGROUP:
                key = lGetString(event, ET_strkey);
-               spool_delete_object(context, type, key);
+               spool_delete_object(&answer_list, context, type, key);
 
             default:
                break;
@@ -393,7 +396,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   return false;
                }
 
-               spool_write_object(context, ep, key, type);
+               spool_write_object(&answer_list, context, ep, key, type);
                break;
 
             case SGE_TYPE_CALENDAR:
@@ -419,7 +422,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   return false;
                }
 
-               spool_write_object(context, ep, key, type);
+               spool_write_object(&answer_list, context, ep, key, type);
                break;
 
             case SGE_TYPE_SCHEDD_CONF:
@@ -430,7 +433,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   DEXIT;
                   return false;
                }
-               spool_write_object(context, ep, NULL, type);
+               spool_write_object(&answer_list, context, ep, NULL, type);
                break;
             case SGE_TYPE_JATASK:
             case SGE_TYPE_PETASK:
@@ -446,7 +449,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
 
                   ep = lGetElemUlong(Master_Job_List, JB_job_number, job_id);
                   job_key = job_get_key(job_id, ja_task_id, pe_task_id);
-                  spool_write_object(context, ep, job_key, type);
+                  spool_write_object(&answer_list, context, ep, job_key, type);
                }
                break;
             
@@ -468,6 +471,7 @@ int main(int argc, char *argv[])
    int cl_err = 0;
    lListElem *spooling_context;
    time_t next_prof_output = 0;
+   lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
@@ -492,14 +496,14 @@ int main(int argc, char *argv[])
 #define defstring(str) #str
 
    /* initialize spooling */
-   spooling_context = spool_create_dynamic_context(argv[1], argv[2]); 
+   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2]); 
    if(spooling_context == NULL) {
       SGE_EXIT(EXIT_FAILURE);
    }
 
    spool_set_default_context(spooling_context);
 
-   if(!spool_startup_context(spooling_context)) {
+   if(!spool_startup_context(&answer_list, spooling_context)) {
       SGE_EXIT(EXIT_FAILURE);
    }
    

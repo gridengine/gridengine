@@ -147,7 +147,7 @@ char *rhost
    }
 
    /* update on file */
-   if (!spool_write_object(spool_get_default_context(), ep, userset_name, SGE_TYPE_USERSET)) {
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, userset_name, SGE_TYPE_USERSET)) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }   
@@ -234,7 +234,7 @@ char *rhost
 
    lFreeElem(lDechainElem(*userset_list, found));
    /* remove userset file */
-   spool_delete_object(spool_get_default_context(), SGE_TYPE_USERSET, 
+   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_USERSET, 
                        userset_name);
    sge_add_event(NULL, 0, sgeE_USERSET_DEL, 0, 0, userset_name, NULL);
 
@@ -332,7 +332,7 @@ char *rhost
    lAppendElem(*userset_list, lCopyElem(ep));
 
    /* update on file */
-   if (!spool_write_object(spool_get_default_context(), ep, userset_name, 
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, userset_name, 
                            SGE_TYPE_USERSET)) {
       DEXIT;
       return STATUS_EDISK;
@@ -369,9 +369,11 @@ const char *acl_name
    for_each(qep, Master_Queue_List) {
       if (lGetElemStr(lGetList(qep, QU_acl), US_name, acl_name) ||
           lGetElemStr(lGetList(qep, QU_xacl), US_name, acl_name)) {
+         lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(spool_get_default_context(), qep, 
+         spool_write_object(&answer_list, spool_get_default_context(), qep, 
                             lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+         answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue "SFQ" because acl "
                        SFQ" changed\n", lGetString(qep, QU_qname), acl_name));
       }

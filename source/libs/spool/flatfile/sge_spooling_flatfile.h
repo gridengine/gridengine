@@ -130,30 +130,42 @@ const char *
 get_spooling_method(void);
 
 lListElem *
-spool_flatfile_create_context(const char *args);
+spool_flatfile_create_context(lList **answer_list, const char *args);
 
 bool 
-spool_flatfile_default_startup_func(const lListElem *rule);
+spool_flatfile_default_startup_func(lList **answer_list, 
+                                    const lListElem *rule);
 bool 
-spool_flatfile_common_startup_func(const lListElem *rule);
+spool_flatfile_common_startup_func(lList **answer_list, 
+                                   const lListElem *rule);
 
 bool 
-spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
-                                 lList **list, const sge_object_type event_type);
+spool_flatfile_default_list_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule,
+                                 lList **list, 
+                                 const sge_object_type event_type);
 lListElem *
-spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
+spool_flatfile_default_read_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule,
                                  const char *key, 
                                  const sge_object_type event_type);
 bool 
-spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule, 
-                                  const lListElem *object, const char *key, 
+spool_flatfile_default_write_func(lList **answer_list, 
+                                  const lListElem *type, 
+                                  const lListElem *rule, 
+                                  const lListElem *object, 
+                                  const char *key, 
                                   const sge_object_type event_type);
 bool 
-spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
+spool_flatfile_default_delete_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
                                    const char *key, 
                                    const sge_object_type event_type);
 bool
-spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
+spool_flatfile_default_verify_func(lList **answer_list, const lListElem *type, const lListElem *rule,
                                    lListElem *object,
                                    const sge_object_type event_type);
 /*

@@ -233,7 +233,7 @@ int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
 {
    DENTER(TOP_LAYER, "ckpt_spool");
 
-   if (!spool_write_object(spool_get_default_context(), ep, 
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, 
                            lGetString(ep, CK_name), SGE_TYPE_CKPT)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(ep, CK_name)));
@@ -376,7 +376,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove ckpt file 1st */
-   if (!spool_delete_object(spool_get_default_context(), SGE_TYPE_CKPT, 
+   if (!spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_CKPT, 
                             ckpt_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -413,9 +413,11 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    for_each (qrep, nq) {
       q_name = lGetString(qrep, QR_name);
       if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
+         lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(spool_get_default_context(), qep, 
+         spool_write_object(&answer_list, spool_get_default_context(), qep, 
                             lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+         answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue \"%s\" because %s"
             " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
       }
@@ -429,9 +431,11 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
       q_name = lGetString(qrep, QR_name);
       if (!lGetElemStr(nq, QR_name, q_name) 
           && (qep = queue_list_locate(Master_Queue_List, q_name))) {
+         lList *answer_list = NULL;
          sge_change_queue_version(qep, 0, 0);
-         spool_write_object(spool_get_default_context(), qep, 
+         spool_write_object(&answer_list, spool_get_default_context(), qep, 
                             lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+         answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue \"%s\" because %s"
                " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
       }

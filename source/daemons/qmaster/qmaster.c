@@ -806,10 +806,13 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
    ** we spool, cf. cod_update_load_values()
    */
    if (processors != old_processors) {
+      lList *answer_list = NULL;
+
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
-      spool_write_object(spool_get_default_context(), hep, 
+      spool_write_object(&answer_list, spool_get_default_context(), hep, 
                          lGetHost(hep, EH_name), SGE_TYPE_EXECHOST);
+      answer_list_output(&answer_list);
    }
    DEXIT;
    return 0;

@@ -125,6 +125,7 @@ int sge_setup_qmaster()
 #endif   
    extern int new_config;
    lListElem *spooling_context = NULL;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
@@ -167,16 +168,19 @@ int sge_setup_qmaster()
          SGE_EXIT(1);
       }
       
-      spooling_context = spool_create_dynamic_context(shlib, args);
+      spooling_context = spool_create_dynamic_context(&answer_list, 
+                                                      shlib, args);
+      answer_list_output(&answer_list);
       if (spooling_context == NULL) {
          CRITICAL((SGE_EVENT, "unable to create spooling context\n"));
          SGE_EXIT(1);
       }
 
-      if (!spool_startup_context(spooling_context)) {
+      if (!spool_startup_context(&answer_list, spooling_context)) {
          CRITICAL((SGE_EVENT, "unable to startup spooling context\n"));
          SGE_EXIT(1);
       }
+      answer_list_output(&answer_list);
 
       spool_set_default_context(spooling_context);
    }
@@ -184,7 +188,8 @@ int sge_setup_qmaster()
    /*
    ** get cluster configuration
    */
-   spool_read_list(spooling_context, &Master_Config_List, SGE_TYPE_CONFIG);
+   spool_read_list(&answer_list, spooling_context, &Master_Config_List, SGE_TYPE_CONFIG);
+   answer_list_output(&answer_list);
 
    ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
    if (ret) {
@@ -252,12 +257,14 @@ int sge_setup_qmaster()
    ** read in all objects and check for correctness
    */
    DPRINTF(("Complexes-------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Complex_List, SGE_TYPE_COMPLEX);
+   spool_read_list(&answer_list, spooling_context, &Master_Complex_List, SGE_TYPE_COMPLEX);
+   answer_list_output(&answer_list);
 
    DPRINTF(("host_list----------------------------\n"));
-   spool_read_list(spooling_context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
-   spool_read_list(spooling_context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
-   spool_read_list(spooling_context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
+   spool_read_list(&answer_list, spooling_context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
+   spool_read_list(&answer_list, spooling_context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
+   spool_read_list(&answer_list, spooling_context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
+   answer_list_output(&answer_list);
 
    if (!host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
@@ -298,11 +305,13 @@ int sge_setup_qmaster()
 #endif
 
    DPRINTF(("manager_list----------------------------\n"));
-   spool_read_list(spooling_context, &Master_Manager_List, SGE_TYPE_MANAGER);
+   spool_read_list(&answer_list, spooling_context, &Master_Manager_List, SGE_TYPE_MANAGER);
+   answer_list_output(&answer_list);
    if (!manop_is_manager("root")) {
       ep = lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
-      if (!spool_write_object(spooling_context, ep, "root", SGE_TYPE_MANAGER)) {
+      if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_MANAGER)) {
+         answer_list_output(&answer_list);
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
          return -1;
       }
@@ -311,15 +320,18 @@ int sge_setup_qmaster()
       DPRINTF(("%s\n", lGetString(ep, MO_name)));
 
    DPRINTF(("host group definitions-----------\n"));
-   spool_read_list(spooling_context, hgroup_list_get_master_list(), 
+   spool_read_list(&answer_list, spooling_context, hgroup_list_get_master_list(), 
                    SGE_TYPE_HGROUP);
+   answer_list_output(&answer_list);
 
    DPRINTF(("operator_list----------------------------\n"));
-   spool_read_list(spooling_context, &Master_Operator_List, SGE_TYPE_OPERATOR);
+   spool_read_list(&answer_list, spooling_context, &Master_Operator_List, SGE_TYPE_OPERATOR);
+   answer_list_output(&answer_list);
    if (!manop_is_operator("root")) {
       ep = lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
-      if (!spool_write_object(spooling_context, ep, "root", SGE_TYPE_OPERATOR)) {
+      if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_OPERATOR)) {
+         answer_list_output(&answer_list);
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEOPERATORLIST)); 
          return -1;
       }
@@ -329,29 +341,36 @@ int sge_setup_qmaster()
 
 
    DPRINTF(("userset_list------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Userset_List, SGE_TYPE_USERSET);
+   spool_read_list(&answer_list, spooling_context, &Master_Userset_List, SGE_TYPE_USERSET);
+   answer_list_output(&answer_list);
 
    DPRINTF(("calendar list ------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
+   spool_read_list(&answer_list, spooling_context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
+   answer_list_output(&answer_list);
 
 #ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("administrator user mapping-----------\n"));
-   spool_read_list(spooling_context, cuser_list_get_master_list(), SGE_TYPE_CUSER);
+   spool_read_list(&answer_list, spooling_context, cuser_list_get_master_list(), SGE_TYPE_CUSER);
+   answer_list_output(&answer_list);
 #endif
 
    DPRINTF(("queue_list---------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Queue_List, SGE_TYPE_QUEUE);
+   spool_read_list(&answer_list, spooling_context, &Master_Queue_List, SGE_TYPE_QUEUE);
+   answer_list_output(&answer_list);
    queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
 
 
    DPRINTF(("pe_list---------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Pe_List, SGE_TYPE_PE);
+   spool_read_list(&answer_list, spooling_context, &Master_Pe_List, SGE_TYPE_PE);
+   answer_list_output(&answer_list);
 
    DPRINTF(("ckpt_list---------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Ckpt_List, SGE_TYPE_CKPT);
+   spool_read_list(&answer_list, spooling_context, &Master_Ckpt_List, SGE_TYPE_CKPT);
+   answer_list_output(&answer_list);
 
    DPRINTF(("job_list-----------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Job_List, SGE_TYPE_JOB);
+   spool_read_list(&answer_list, spooling_context, &Master_Job_List, SGE_TYPE_JOB);
+   answer_list_output(&answer_list);
 
    for_each(jep, Master_Job_List) {
       DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
@@ -408,7 +427,8 @@ int sge_setup_qmaster()
 
    /* scheduler configuration stuff */
    DPRINTF(("scheduler config -----------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   spool_read_list(&answer_list, spooling_context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   answer_list_output(&answer_list);
    if (lGetNumberOfElem(Master_Sched_Config_List) == 0) {
       lListElem *ep = schedd_conf_create_default();
 
@@ -417,25 +437,29 @@ int sge_setup_qmaster()
       }
       
       lAppendElem(Master_Sched_Config_List, ep);
-      spool_write_object(spool_get_default_context(), ep, NULL, SGE_TYPE_SCHEDD_CONF);
+      spool_write_object(&answer_list, spool_get_default_context(), ep, NULL, SGE_TYPE_SCHEDD_CONF);
+      answer_list_output(&answer_list);
    }
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
 
       /* SGEEE: read user list */
-      spool_read_list(spooling_context, &Master_User_List, SGE_TYPE_USER);
+      spool_read_list(&answer_list, spooling_context, &Master_User_List, SGE_TYPE_USER);
+      answer_list_output(&answer_list);
 
       remove_invalid_job_references(1);
 
       /* SGE: read project list */
-      spool_read_list(spooling_context, &Master_Project_List, SGE_TYPE_PROJECT);
+      spool_read_list(&answer_list, spooling_context, &Master_Project_List, SGE_TYPE_PROJECT);
+      answer_list_output(&answer_list);
 
       remove_invalid_job_references(0);
    }
    
    if (feature_is_enabled(FEATURE_SGEEE)) {
       /* SGEEE: read share tree */
-      spool_read_list(spooling_context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
+      spool_read_list(&answer_list, spooling_context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
+      answer_list_output(&answer_list);
       ep = lFirst(Master_Sharetree_List);
       if (ep) {
          lList *alp = NULL;
@@ -500,9 +524,11 @@ int user
       }
 
       if (spool_me) {
-         spool_write_object(spool_get_default_context(), up, 
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), up, 
                             lGetString(up, UP_name), user ? SGE_TYPE_USER : 
                                                             SGE_TYPE_PROJECT);
+         answer_list_output(&answer_list);
       }
    }
 

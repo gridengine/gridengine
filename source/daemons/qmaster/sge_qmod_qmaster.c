@@ -296,7 +296,7 @@ lList **answer
          break;
    }
 
-   spool_write_object(spool_get_default_context(), qep, 
+   spool_write_object(answer, spool_get_default_context(), qep, 
                       lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
    DEXIT;
    return result;
@@ -351,7 +351,7 @@ lList **answer
          if (VALID(JERROR, lGetUlong(jatep, JAT_state))) {
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            spool_write_object(spool_get_default_context(), jep,
+            spool_write_object(answer, spool_get_default_context(), jep,
                                job_get_key(job_id, task_id, NULL), 
                                SGE_TYPE_JOB);
             if (job_is_array(jep)) {
@@ -414,7 +414,7 @@ int isowner
    lSetUlong(qep, QU_state, state);
 
    sge_change_queue_version(qep, 0, 0);
-   if (!spool_write_object(spool_get_default_context(), qep, 
+   if (!spool_write_object(answer, spool_get_default_context(), qep, 
                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname))); 
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -467,7 +467,7 @@ int isowner
    lSetUlong(qep, QU_state, state);
 
    sge_change_queue_version(qep, 0, 0);
-   if (!spool_write_object(spool_get_default_context(), qep, 
+   if (!spool_write_object(answer, spool_get_default_context(), qep, 
                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -521,7 +521,7 @@ int isowner
    lSetUlong(qep, QU_state, state);
 
    sge_change_queue_version(qep, 0, 0);
-   if (!spool_write_object(spool_get_default_context(), qep, 
+   if (!spool_write_object(answer, spool_get_default_context(), qep, 
                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -640,7 +640,7 @@ int isowner
          }
       }
    }
-   if (!spool_write_object(spool_get_default_context(), qep, 
+   if (!spool_write_object(answer, spool_get_default_context(), qep, 
                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       lListElem *tmp_elem;
 
@@ -757,7 +757,7 @@ int isowner
          }
       }
    }
-   if (!spool_write_object(spool_get_default_context(), qep, 
+   if (!spool_write_object(answer, spool_get_default_context(), qep, 
                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       lListElem *tmp_elem;
 
@@ -915,7 +915,7 @@ char *host
       lSetUlong(jatep, JAT_state, state);
 
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      spool_write_object(spool_get_default_context(), jep,
+      spool_write_object(answer, spool_get_default_context(), jep,
                          job_get_key(jobid, jataskid, NULL), 
                          SGE_TYPE_JOB);
    }
@@ -949,7 +949,7 @@ char *host
          SETBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         spool_write_object(spool_get_default_context(), jep,
+         spool_write_object(answer, spool_get_default_context(), jep,
                             job_get_key(jobid, jataskid, NULL), 
                             SGE_TYPE_JOB);
       }
@@ -967,7 +967,7 @@ char *host
             SETBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            spool_write_object(spool_get_default_context(), jep,
+            spool_write_object(answer, spool_get_default_context(), jep,
                                job_get_key(jobid, jataskid, NULL), 
                                SGE_TYPE_JOB);
          }
@@ -1011,7 +1011,7 @@ char *host
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         spool_write_object(spool_get_default_context(), jep,
+         spool_write_object(answer, spool_get_default_context(), jep,
                             job_get_key(jobid, jataskid, NULL), 
                             SGE_TYPE_JOB);
          DEXIT;
@@ -1097,7 +1097,7 @@ char *host
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         spool_write_object(spool_get_default_context(), jep,
+         spool_write_object(answer, spool_get_default_context(), jep,
                             job_get_key(jobid, jataskid, NULL), 
                             SGE_TYPE_JOB);
       }
@@ -1116,7 +1116,7 @@ char *host
             CLEARBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            spool_write_object(spool_get_default_context(), jep,
+            spool_write_object(answer, spool_get_default_context(), jep,
                                job_get_key(jobid, jataskid, NULL), 
                                SGE_TYPE_JOB);
          }

@@ -639,7 +639,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    job_suc_pre(jep);
 
-   if (!spool_write_object(spool_get_default_context(), jep, 
+   if (!spool_write_object(alpp, spool_get_default_context(), jep, 
                            job_get_key(job_number, 0, NULL), SGE_TYPE_JOB)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
@@ -959,9 +959,11 @@ int sub_command
             }
             if (existing_tasks > deleted_tasks) {
                /* write only the common part - pass only the jobid, no jatask or petask id */
-               spool_write_object(spool_get_default_context(), job, 
-                                  job_get_job_key(job_number), 
+               lList *answer_list = NULL;
+               spool_write_object(&answer_list, spool_get_default_context(), 
+                                  job, job_get_job_key(job_number), 
                                   SGE_TYPE_JOB);
+               answer_list_output(&answer_list);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
             }
@@ -1460,14 +1462,16 @@ void job_mark_job_as_deleted(lListElem *j,
 {
    DENTER(TOP_LAYER, "job_mark_job_as_deleted");
    if (j && t) {
+      lList *answer_list = NULL;
       u_long32 state = lGetUlong(t, JAT_state);
 
       SETBIT(JDELETED, state);
       lSetUlong(t, JAT_state, state);
-      spool_write_object(spool_get_default_context(), j,
+      spool_write_object(&answer_list, spool_get_default_context(), j,
                          job_get_key(lGetUlong(j, JB_job_number),
                                      lGetUlong(t, JAT_task_number), NULL),
                          SGE_TYPE_JOB);
+      answer_list_output(&answer_list);
    }
    DEXIT;
 }
@@ -1607,7 +1611,7 @@ int sub_command
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
-         if (!spool_write_object(spool_get_default_context(), new_job, 
+         if (!spool_write_object(alpp, spool_get_default_context(), new_job, 
                                 job_get_key(jobid, 0, NULL), SGE_TYPE_JOB)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);

@@ -99,7 +99,8 @@ if (flatfile_debugging) {\
    debug_flatfile(msg, spool_line, *token, spool_text, end_token); \
 }
 
-void debug_flatfile(const char *msg, int line, int token, const char *buffer, const char *end_token)
+static void debug_flatfile(const char *msg, int line, int token, 
+                           const char *buffer, const char *end_token)
 {
    const char *text;
    const char *et;
@@ -168,6 +169,11 @@ const spool_flatfile_instr spool_flatfile_instr_ru_type =
    NULL
 };
 
+spooling_field US_fields[] = {
+   { US_name, 0, NULL, NULL, NULL },
+   { NoName,  0, NULL, NULL, NULL }
+};
+
 spooling_field UA_fields[] = {
    { UA_name,  0, NULL, NULL, NULL },
    { UA_value, 0, NULL, NULL, NULL },
@@ -200,9 +206,9 @@ spooling_field PROJECT_fields[] = {
    { UP_usage,            0, "usage",             UA_fields, NULL},
    { UP_usage_time_stamp, 0, "usage_time_stamp",  NULL, NULL},
    { UP_long_term_usage,  0, "long_term_usage",   UA_fields, NULL},
-   { UP_project,          0, "project",           NULL, NULL},
-   { UP_acl,              0, "acl",               NULL, NULL},
-   { UP_xacl,             0, "xacl",              NULL, NULL},
+   { UP_project,          0, "project",           UPP_fields, &spool_flatfile_instr_userprj_upp},
+   { UP_acl,              0, "acl",               US_fields, &spool_flatfile_instr_config_sublist},
+   { UP_xacl,             0, "xacl",              US_fields, &spool_flatfile_instr_config_sublist},
    { NoName,   0, NULL, NULL, NULL }
 };
 
@@ -314,7 +320,7 @@ static bool is_delimiter(int token)
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_flatfile_create_context(int argc, char *argv[])
+*     spool_flatfile_create_context(lList **answer_list, const char *args)
 *
 *  FUNCTION
 *     Create a spooling context for the flatfile spooling.
@@ -335,6 +341,7 @@ static bool is_delimiter(int token)
 *     The format of the input string is "<common_dir>;<spool_dir>"
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const char *args - arguments to classic spooling
 *
 *  RESULT
@@ -345,159 +352,163 @@ static bool is_delimiter(int token)
 *     spool/flatfile/--Flatfile-Spooling
 *******************************************************************************/
 lListElem *
-spool_flatfile_create_context(const char *args)
+spool_flatfile_create_context(lList **answer_list, const char *args)
 {
-   lListElem *context, *rule, *type;
-   char *common_dir, *spool_dir;
-   flatfile_info *field_info;
-   sge_object_type i;
-   lList *answer_list = NULL;
+   lListElem *context = NULL;
 
    DENTER(TOP_LAYER, "spool_flatfile_create_context");
 
    /* check parameters - both must be set and be absolute paths */
    if (args == NULL) {
-      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
-      return NULL;
-   }
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
+   } else {
+      char *common_dir, *spool_dir;
 
-   common_dir = sge_strtok(args, ";");
-   spool_dir  = sge_strtok(NULL, ";");
-   
-   if (common_dir == NULL || spool_dir == NULL ||
-      *common_dir != '/' || *spool_dir != '/') {
-      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
-      return NULL;
-   }   
+      common_dir = sge_strtok(args, ";");
+      spool_dir  = sge_strtok(NULL, ";");
+      
+      if (common_dir == NULL || spool_dir == NULL ||
+         *common_dir != '/' || *spool_dir != '/') {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
+      } else {   
+         sge_object_type i;
+         flatfile_info *field_info;
+         lListElem *rule, *type;
 
-   /* create info which fields to spool once */
-   field_info = malloc(sizeof(flatfile_info) * SGE_TYPE_ALL);
-   for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-      switch (i) {
-         /* pseudo types without spooling action */
-         case SGE_TYPE_GLOBAL_CONFIG:
-         case SGE_TYPE_JOB_SCHEDD_INFO:
-         case SGE_TYPE_SCHEDD_MONITOR:
-         case SGE_TYPE_SHUTDOWN:
-         case SGE_TYPE_QMASTER_GOES_DOWN:
-            field_info[i].fields = NULL;
-            field_info[i].instr  = NULL;
-            break;
-         /* standard case of spooling */
-         case SGE_TYPE_ADMINHOST:
-         case SGE_TYPE_CALENDAR:
-         case SGE_TYPE_CKPT:
-         case SGE_TYPE_MANAGER:
-         case SGE_TYPE_OPERATOR:
-         case SGE_TYPE_QUEUE:
-         case SGE_TYPE_SUBMITHOST:
-         case SGE_TYPE_USERSET:
-         case SGE_TYPE_HGROUP:
-#ifndef __SGE_NO_USERMAPPING__ 
-         case SGE_TYPE_CUSER:
-#endif
-         case SGE_TYPE_SCHEDD_CONF:
-            field_info[i].fields = spool_get_fields_to_spool(&answer_list, 
-                                        object_type_get_descr(i), 
-                                        &spool_config_instr);
-            field_info[i].instr  = &spool_flatfile_instr_config;
-            break;
-         case SGE_TYPE_EXECHOST:
-            field_info[i].fields = spool_get_fields_to_spool(&answer_list, 
-                                        object_type_get_descr(i), 
-                                        &spool_config_instr);
-            field_info[i].instr  = &spool_flatfile_instr_config;
-            {
-               int j;
-               spooling_field *fields = field_info[i].fields;
+         /* create info which fields to spool once */
+         field_info = malloc(sizeof(flatfile_info) * SGE_TYPE_ALL);
+         for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
+            switch (i) {
+               /* pseudo types without spooling action */
+               case SGE_TYPE_GLOBAL_CONFIG:
+               case SGE_TYPE_JOB_SCHEDD_INFO:
+               case SGE_TYPE_SCHEDD_MONITOR:
+               case SGE_TYPE_SHUTDOWN:
+               case SGE_TYPE_QMASTER_GOES_DOWN:
+                  field_info[i].fields = NULL;
+                  field_info[i].instr  = NULL;
+                  break;
+               /* standard case of spooling */
+               case SGE_TYPE_ADMINHOST:
+               case SGE_TYPE_CALENDAR:
+               case SGE_TYPE_CKPT:
+               case SGE_TYPE_MANAGER:
+               case SGE_TYPE_OPERATOR:
+               case SGE_TYPE_QUEUE:
+               case SGE_TYPE_SUBMITHOST:
+               case SGE_TYPE_USERSET:
+               case SGE_TYPE_HGROUP:
+      #ifndef __SGE_NO_USERMAPPING__ 
+               case SGE_TYPE_CUSER:
+      #endif
+               case SGE_TYPE_SCHEDD_CONF:
+                  field_info[i].fields = spool_get_fields_to_spool(answer_list, 
+                                              object_type_get_descr(i), 
+                                              &spool_config_instr);
+                  field_info[i].instr  = &spool_flatfile_instr_config;
+                  break;
+               case SGE_TYPE_EXECHOST:
+                  field_info[i].fields = spool_get_fields_to_spool(answer_list, 
+                                              object_type_get_descr(i), 
+                                              &spool_config_instr);
+                  field_info[i].instr  = &spool_flatfile_instr_config;
+                  {
+                     int j;
+                     spooling_field *fields = field_info[i].fields;
 
-               for (j = 0; fields[j].nm != NoName; j++) {
-                  if (fields[j].nm == EH_reschedule_unknown_list) {
-                     fields[j].clientdata = &spool_flatfile_instr_ru_type;
-                     break;
+                     for (j = 0; fields[j].nm != NoName; j++) {
+                        if (fields[j].nm == EH_reschedule_unknown_list) {
+                           fields[j].clientdata = &spool_flatfile_instr_ru_type;
+                           break;
+                        }
+                     }
                   }
-               }
+                  break;
+               case SGE_TYPE_PE:
+                  field_info[i].fields = spool_get_fields_to_spool(answer_list, 
+                                              object_type_get_descr(i), 
+                                              &spool_config_instr);
+                  field_info[i].instr  = &spool_flatfile_instr_config;
+                  /* inst_sge writes a pe with name field called pe_name - we 
+                   * have to use this name as field name for PE_name 
+                   */
+                  field_info[i].fields[0].name = "pe_name"; 
+                  break;
+               case SGE_TYPE_CONFIG:
+               /* special case config spooling */
+                  field_info[i].fields = spool_get_fields_to_spool(answer_list, 
+                                              object_type_get_descr(i), 
+                                              &spool_conf_instr);
+                  field_info[i].instr  = &spool_flatfile_instr_conf;
+                  break;
+               case SGE_TYPE_COMPLEX:
+                  field_info[i].fields = spool_get_fields_to_spool(answer_list, 
+                                              object_type_get_descr(i), 
+                                              &spool_complex_instr);
+                  field_info[i].instr  = &spool_flatfile_instr_complex;
+                  break;
+               case SGE_TYPE_PROJECT:
+                  field_info[i].fields = PROJECT_fields;
+                  field_info[i].instr  = &spool_flatfile_instr_config;
+                  break;
+               case SGE_TYPE_USER:
+                  field_info[i].fields = USER_fields;
+                  field_info[i].instr  = &spool_flatfile_instr_config;
+                  break;
+               case SGE_TYPE_SHARETREE:
+                  field_info[i].fields = STN_fields;
+                  field_info[i].instr  = &spool_flatfile_instr_config;
+                  break;
+               case SGE_TYPE_JOB:
+               case SGE_TYPE_JATASK:
+               case SGE_TYPE_PETASK:
+               default:
+                  break;
             }
-            break;
-         case SGE_TYPE_PE:
-            field_info[i].fields = spool_get_fields_to_spool(&answer_list, 
-                                        object_type_get_descr(i), 
-                                        &spool_config_instr);
-            field_info[i].instr  = &spool_flatfile_instr_config;
-            /* inst_sge writes a pe with name field called pe_name - we have to 
-             * use this name as field name for PE_name 
-             */
-            field_info[i].fields[0].name = "pe_name"; 
-            break;
-         case SGE_TYPE_CONFIG:
-         /* special case config spooling */
-            field_info[i].fields = spool_get_fields_to_spool(&answer_list, 
-                                        object_type_get_descr(i), 
-                                        &spool_conf_instr);
-            field_info[i].instr  = &spool_flatfile_instr_conf;
-            break;
-         case SGE_TYPE_COMPLEX:
-            field_info[i].fields = spool_get_fields_to_spool(&answer_list, 
-                                        object_type_get_descr(i), 
-                                        &spool_complex_instr);
-            field_info[i].instr  = &spool_flatfile_instr_complex;
-            break;
-         case SGE_TYPE_PROJECT:
-            field_info[i].fields = PROJECT_fields;
-            field_info[i].instr  = &spool_flatfile_instr_config;
-            break;
-         case SGE_TYPE_USER:
-            field_info[i].fields = USER_fields;
-            field_info[i].instr  = &spool_flatfile_instr_config;
-            break;
-         case SGE_TYPE_SHARETREE:
-            field_info[i].fields = STN_fields;
-            field_info[i].instr  = &spool_flatfile_instr_config;
-            break;
-         case SGE_TYPE_JOB:
-         case SGE_TYPE_JATASK:
-         case SGE_TYPE_PETASK:
-         default:
-            break;
+         }
+
+         /* create spooling context */
+         context = spool_create_context(answer_list, "flatfile spooling");
+         
+         /* create rule and type for all objects spooled in the spool dir */
+         rule = spool_context_create_rule(answer_list, context, 
+                                          "default rule (spool dir)", 
+                                          spool_dir,
+                                          spool_flatfile_default_startup_func,
+                                          NULL,
+                                          spool_flatfile_default_list_func,
+                                          spool_flatfile_default_read_func,
+                                          spool_flatfile_default_write_func,
+                                          spool_flatfile_default_delete_func,
+                                          spool_flatfile_default_verify_func);
+         lSetRef(rule, SPR_clientdata, field_info);
+         type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
+         spool_type_add_rule(answer_list, type, rule, true);
+
+         /* create rule and type for all objects spooled in the common dir */
+         rule = spool_context_create_rule(answer_list, context, 
+                                          "default rule (common dir)", 
+                                          common_dir,
+                                          spool_flatfile_common_startup_func,
+                                          NULL,
+                                          spool_flatfile_default_list_func,
+                                          spool_flatfile_default_read_func,
+                                          spool_flatfile_default_write_func,
+                                          spool_flatfile_default_delete_func,
+                                          spool_flatfile_default_verify_func);
+         lSetRef(rule, SPR_clientdata, field_info);
+         type = spool_context_create_type(answer_list, context, 
+                                          SGE_TYPE_CONFIG);
+         spool_type_add_rule(answer_list, type, rule, true);
+         type = spool_context_create_type(answer_list, context, 
+                                          SGE_TYPE_SCHEDD_CONF);
+         spool_type_add_rule(answer_list, type, rule, true);
       }
-
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
-
-   /* create spooling context */
-   context = spool_create_context("flatfile spooling");
-   
-   /* create rule and type for all objects spooled in the spool dir */
-   rule = spool_context_create_rule(context, 
-                                    "default rule (spool dir)", 
-                                    spool_dir,
-                                    spool_flatfile_default_startup_func,
-                                    NULL,
-                                    spool_flatfile_default_list_func,
-                                    spool_flatfile_default_read_func,
-                                    spool_flatfile_default_write_func,
-                                    spool_flatfile_default_delete_func,
-                                    spool_flatfile_default_verify_func);
-   lSetRef(rule, SPR_clientdata, field_info);
-   type = spool_context_create_type(context, SGE_TYPE_ALL);
-   spool_type_add_rule(type, rule, true);
-
-   /* create rule and type for all objects spooled in the common dir */
-   rule = spool_context_create_rule(context, 
-                                    "default rule (common dir)", 
-                                    common_dir,
-                                    spool_flatfile_common_startup_func,
-                                    NULL,
-                                    spool_flatfile_default_list_func,
-                                    spool_flatfile_default_read_func,
-                                    spool_flatfile_default_write_func,
-                                    spool_flatfile_default_delete_func,
-                                    spool_flatfile_default_verify_func);
-   lSetRef(rule, SPR_clientdata, field_info);
-   type = spool_context_create_type(context, SGE_TYPE_CONFIG);
-   spool_type_add_rule(type, rule, true);
-   type = spool_context_create_type(context, SGE_TYPE_SCHEDD_CONF);
-   spool_type_add_rule(type, rule, true);
 
    DEXIT;
    return context;
@@ -509,7 +520,8 @@ spool_flatfile_create_context(const char *args)
 *
 *  SYNOPSIS
 *     bool
-*     spool_flatfile_default_startup_func(const lListElem *rule) 
+*     spool_flatfile_default_startup_func(lList **answer_list, 
+*                                         const lListElem *rule) 
 *
 *  FUNCTION
 *     Checks the existence of the spool directory.
@@ -519,6 +531,7 @@ spool_flatfile_create_context(const char *args)
 *     exist, they are created.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
 *
@@ -534,8 +547,10 @@ spool_flatfile_create_context(const char *args)
 *     spool/spool_startup_context()
 *******************************************************************************/
 bool
-spool_flatfile_default_startup_func(const lListElem *rule)
+spool_flatfile_default_startup_func(lList **answer_list, 
+                                    const lListElem *rule)
 {
+   bool ret = true;
    const char *url;
 
    DENTER(TOP_LAYER, "spool_flatfile_default_startup_func");
@@ -543,32 +558,34 @@ spool_flatfile_default_startup_func(const lListElem *rule)
    /* check spool directory */
    url = lGetString(rule, SPR_url);
    if (!sge_is_directory(url)) {
-      CRITICAL((SGE_EVENT, MSG_SPOOL_SPOOLDIRDOESNOTEXIST_S, url));
-      SGE_EXIT(EXIT_FAILURE);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_SPOOLDIRDOESNOTEXIST_S, url);
+      ret = false;
+   } else {
+      /* create spool sub directories */
+      sge_mkdir2(url, JOB_DIR,  0755, true);
+      sge_mkdir2(url, ZOMBIE_DIR, 0755, true);
+      sge_mkdir2(url, QUEUE_DIR,  0755, true);
+      sge_mkdir2(url, EXECHOST_DIR, 0755, true);
+      sge_mkdir2(url, SUBMITHOST_DIR, 0755, true);
+      sge_mkdir2(url, ADMINHOST_DIR, 0755, true);
+      sge_mkdir2(url, COMPLEX_DIR, 0755, true);
+      sge_mkdir2(url, EXEC_DIR, 0755, true);
+      sge_mkdir2(url, PE_DIR, 0755, true);
+      sge_mkdir2(url, CKPTOBJ_DIR, 0755, true);
+      sge_mkdir2(url, USERSET_DIR, 0755, true);
+      sge_mkdir2(url, CAL_DIR, 0755, true);
+      sge_mkdir2(url, HGROUP_DIR, 0755, true);
+      sge_mkdir2(url, UME_DIR, 0755, true);
+      sge_mkdir2(url, USER_DIR, 0755, true);
+      sge_mkdir2(url, PROJECT_DIR, 0755, true);
+      sge_mkdir2(url, MAN_DIR, 0755, true);
+      sge_mkdir2(url, OP_DIR, 0755, true);
    }
 
-   /* create spool sub directories */
-   sge_mkdir2(url, JOB_DIR,  0755, true);
-   sge_mkdir2(url, ZOMBIE_DIR, 0755, true);
-   sge_mkdir2(url, QUEUE_DIR,  0755, true);
-   sge_mkdir2(url, EXECHOST_DIR, 0755, true);
-   sge_mkdir2(url, SUBMITHOST_DIR, 0755, true);
-   sge_mkdir2(url, ADMINHOST_DIR, 0755, true);
-   sge_mkdir2(url, COMPLEX_DIR, 0755, true);
-   sge_mkdir2(url, EXEC_DIR, 0755, true);
-   sge_mkdir2(url, PE_DIR, 0755, true);
-   sge_mkdir2(url, CKPTOBJ_DIR, 0755, true);
-   sge_mkdir2(url, USERSET_DIR, 0755, true);
-   sge_mkdir2(url, CAL_DIR, 0755, true);
-   sge_mkdir2(url, HGROUP_DIR, 0755, true);
-   sge_mkdir2(url, UME_DIR, 0755, true);
-   sge_mkdir2(url, USER_DIR, 0755, true);
-   sge_mkdir2(url, PROJECT_DIR, 0755, true);
-   sge_mkdir2(url, MAN_DIR, 0755, true);
-   sge_mkdir2(url, OP_DIR, 0755, true);
-
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/flatfile/spool_flatfile_common_startup_func() ***************
@@ -577,7 +594,8 @@ spool_flatfile_default_startup_func(const lListElem *rule)
 *
 *  SYNOPSIS
 *     bool
-*     spool_flatfile_common_startup_func(const lListElem *rule) 
+*     spool_flatfile_common_startup_func(lList **answer_list, 
+*                                        const lListElem *rule) 
 *
 *  FUNCTION
 *     Checks the existence of the common directory.
@@ -585,6 +603,7 @@ spool_flatfile_default_startup_func(const lListElem *rule)
 *     it is created.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *rule - rule containing data like the path to the common 
 *                             directory
 *
@@ -600,8 +619,10 @@ spool_flatfile_default_startup_func(const lListElem *rule)
 *     spool/spool_startup_context()
 *******************************************************************************/
 bool
-spool_flatfile_common_startup_func(const lListElem *rule)
+spool_flatfile_common_startup_func(lList **answer_list, 
+                                   const lListElem *rule)
 {
+   bool ret = true;
    const char *url;
 
    DENTER(TOP_LAYER, "spool_flatfile_common_startup_func");
@@ -609,15 +630,60 @@ spool_flatfile_common_startup_func(const lListElem *rule)
    /* check common directory */
    url = lGetString(rule, SPR_url);
    if (!sge_is_directory(url)) {
-      CRITICAL((SGE_EVENT, MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url));
-      SGE_EXIT(EXIT_FAILURE);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url);
+      ret = false;
+   } else {
+      /* create directory for local configurations */
+      sge_mkdir2(url, LOCAL_CONF_DIR, 0755, true);
    }
 
-   /* create directory for local configurations */
-   sge_mkdir2(url, LOCAL_CONF_DIR, 0755, true);
-
    DEXIT;
-   return true;
+   return ret;
+}
+
+static bool
+read_verify_object(lList **answer_list, 
+                   const lListElem *type, const lListElem *rule, 
+                   const char *key, int key_nm, 
+                   sge_object_type event_type, lList **master_list)
+{
+   bool ret = true;
+   lListElem *ep;
+
+   DPRINTF(("reading "SFN" "SFQ"\n", object_type_get_name(event_type), key));
+
+   ep = spool_flatfile_default_read_func(answer_list, type, rule, key, 
+                                         event_type);
+   if (ep == NULL) {
+      ret = false;
+   } else {
+      spooling_verify_func verify_func;
+
+      /* set key from filename */
+      if (key_nm != NoName) {
+         object_parse_field_from_string(ep, NULL, key_nm, key);
+      }
+
+      /* verify object */
+      verify_func = (spooling_verify_func)
+                    lGetRef(rule, SPR_verify_func);
+      if (verify_func != NULL) {
+         if (!verify_func(answer_list, type, rule, ep, event_type)) {
+            lFreeElem(ep);
+            ep = NULL;
+            ret = false;
+         }
+      }
+   }
+
+   /* object read correctly and verify succeeded */
+   if (ep != NULL) {
+      lAppendElem(*master_list, ep);
+   }
+
+   return ret;
 }
 
 /****** spool/flatfile/spool_flatfile_default_list_func() *****************
@@ -626,7 +692,8 @@ spool_flatfile_common_startup_func(const lListElem *rule)
 *
 *  SYNOPSIS
 *     bool
-*     spool_flatfile_default_list_func(const lListElem *type, 
+*     spool_flatfile_default_list_func(lList **answer_list, 
+*                                      const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      lList **list, 
 *                                      const sge_object_type event_type) 
@@ -637,6 +704,7 @@ spool_flatfile_common_startup_func(const lListElem *rule)
 *     functions.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
@@ -654,12 +722,14 @@ spool_flatfile_common_startup_func(const lListElem *rule)
 *     spool/spool_read_list()
 *******************************************************************************/
 bool
-spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
-                                 lList **list, const sge_object_type event_type)
+spool_flatfile_default_list_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule,
+                                 lList **list, 
+                                 const sge_object_type event_type)
 {
    lList **master_list;
    const lDescr *descr;
-   lListElem *ep;
 
    const char *filename  = NULL;
    const char *directory = NULL;
@@ -746,9 +816,13 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
                                  SPOOL_DEFAULT, NULL);
          job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
                                  SPOOL_HANDLE_AS_ZOMBIE, NULL);
+         break;
       default:
-         WARNING((SGE_EVENT, "reading list of "SFQ" not yet implemented\n", 
-                  object_type_get_name(event_type)));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
          break;
    }
 
@@ -758,10 +832,13 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
       if (directory != NULL) { 
          lList *direntries;
          lListElem *direntry;
-         dstring abs_dir_buffer = DSTRING_INIT;
+         char abs_dir_buf[SGE_PATH_MAX];
+         dstring abs_dir_dstring;
          const char *abs_dir;
 
-         abs_dir = sge_dstring_sprintf(&abs_dir_buffer, "%s/%s", url, directory);
+         sge_dstring_init(&abs_dir_dstring, abs_dir_buf, SGE_PATH_MAX);
+         abs_dir = sge_dstring_sprintf(&abs_dir_dstring, "%s/%s", url, 
+                                       directory);
 
          direntries = sge_get_dirents(abs_dir);
 
@@ -769,62 +846,16 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
             const char *key = lGetString(direntry, STR);
 
             if (key[0] != '.') {
-               DPRINTF(("reading "SFN" "SFQ"\n", object_type_get_name(event_type), key));
-
-               ep = spool_flatfile_default_read_func(type, rule, key, event_type);
-               if (ep != NULL) {
-                  spooling_verify_func verify_func;
-                  /* set key from filename */
-                  if (key_nm != NoName) {
-                     object_parse_field_from_string(ep, NULL, key_nm, key);
-                  }
-
-                  /* verify object */
-                  verify_func = (spooling_verify_func)
-                                lGetRef(rule, SPR_verify_func);
-                  if (verify_func != NULL) {
-                     if (!verify_func(type, rule, ep, event_type)) {
-                        lFreeElem(ep);
-                        ep = NULL;
-                     }
-                  }
-               }
-
-               /* object read correctly and verify succeeded */
-               if (ep != NULL) {
-                  lAppendElem(*master_list, ep);
-               }
+               ret = read_verify_object(answer_list, type, rule, key, key_nm, 
+                                        event_type, master_list);
             }
          }
       } 
       
       /* single file to parse (SHARETREE, global config, schedd config */
       if (filename != NULL) {
-         ep = spool_flatfile_default_read_func(type, rule, filename, event_type);
-         
-         if (ep != NULL) {
-            spooling_verify_func verify_func;
-
-            /* set key from filename */
-            if (key_nm != NoName) {
-               object_parse_field_from_string(ep, NULL, key_nm, filename);
-            }
-
-            /* verify object */
-            verify_func = (spooling_verify_func)
-                          lGetRef(rule, SPR_verify_func);
-            if (verify_func != NULL) {
-               if (!verify_func(type, rule, ep, event_type)) {
-                  lFreeElem(ep);
-                  ep = NULL;
-               }
-            }
-         }
-
-         /* object read correctly and verify succeeded */
-         if (ep != NULL) {
-            lAppendElem(*master_list, ep);
-         }
+         ret = read_verify_object(answer_list, type, rule, filename, key_nm, 
+                                  event_type, master_list);
       }
    }
 
@@ -840,11 +871,12 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
 
 /****** spool/flatfile/spool_flatfile_default_read_func() *****************
 *  NAME
-*     spool_flatfile_default_read_func() -- read objects through flatfile spooling
+*     spool_flatfile_default_read_func() -- read objects using flatfile spooling
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_flatfile_default_read_func(const lListElem *type, 
+*     spool_flatfile_default_read_func(lList **answer_list, 
+*                                      const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      const char *key, 
 *                                      const sge_object_type event_type) 
@@ -854,6 +886,7 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
 *     function.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
@@ -871,11 +904,12 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_read_object()
 *******************************************************************************/
 lListElem *
-spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
+spool_flatfile_default_read_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule,
                                  const char *key, 
                                  const sge_object_type event_type)
 {
-   lList *answer_list = NULL;
    const char *url = NULL;
    const char *directory = NULL;
    const char *filename = NULL;
@@ -974,78 +1008,43 @@ spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
          break;
       case SGE_TYPE_JOB:
       default:
-         WARNING((SGE_EVENT, "reading of "SFQ" not yet implemented\n", 
-                  object_type_get_name(event_type)));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
          break;
    }
 
    /* spool, if possible */
    if (url != NULL && directory != NULL && filename != NULL && descr != NULL) {
-      dstring filepath_buffer = DSTRING_INIT;
+      char filepath_buf[SGE_PATH_MAX];
+      dstring filepath_dstring;
       const char *filepath;
 
-      filepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/%s", url, directory, filename);
+      sge_dstring_init(&filepath_dstring, filepath_buf, SGE_PATH_MAX);
+
+      filepath = sge_dstring_sprintf(&filepath_dstring, "%s/%s/%s", 
+                                     url, directory, filename);
      
       /* spool */
-      ep = spool_flatfile_read_object(&answer_list, descr, 
+      ep = spool_flatfile_read_object(answer_list, descr, 
                                       field_info->fields, NULL, 
                                       field_info->instr, SP_FORM_ASCII, 
                                       NULL, filepath);
-
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
-      sge_dstring_free(&filepath_buffer);
    }
 
    DEXIT;
    return ep;
 }
-#if 0
-bool spool_flatfile_write_job(&answer_list, object, key)
-{
-   bool ret = true;
 
-   u_long32 job_id, ja_task_id;
-   char *pe_task_id;
-   bool only_job;
-  
-   /* get info about data to spool */
-   job_parse_key(key, &job_id, &ja_task_id, &pe_task_id, &only_job);
-
-   /* get path with special job directory hierarchy */
-   tmpfilepath = sge_get_file_path(tmpfilebuf, JOB_SPOOL_DIR, 
-                                   FORMAT_DOT_FILENAME, 0, 
-                                   job_id, 0, NULL);
-   filepath    = sge_get_file_path(filebuf,    JOB_SPOOL_DIR, 
-                                   FORMAT_DEFAULT,      0, 
-                                   job_id, 0, NULL);
-   /* spool */
-   tmpfilepath = spool_flatfile_write_object(&answer_list, object, 
-                        field_info->fields, field_info->instr, 
-                        SP_DEST_SPOOL, SP_FORM_ASCII, tmpfilepath);
-
-   if (tmpfilepath == NULL) {
-      /* spooling failed */
-      /* JG: TODO: better call a function calling ERROR and WARNING */
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
-      ret = false;
-   } else {
-      /* spooling was ok: rename temporary to target file */
-      if (rename(tmpfilepath, filepath) == -1) {
-         ret = false;
-      }
-      FREE(tmpfilepath);
-   }
-
-   return ret;
-}
-#endif
 /****** spool/flatfile/spool_flatfile_default_write_func() ****************
 *  NAME
-*     spool_flatfile_default_write_func() -- write objects through flatfile spooling
+*     spool_flatfile_default_write_func() -- write object with flatfile spooling
 *
 *  SYNOPSIS
 *     bool
-*     spool_flatfile_default_write_func(const lListElem *type, 
+*     spool_flatfile_default_write_func(lList **answer_list, 
+*                                       const lListElem *type, 
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
@@ -1055,6 +1054,7 @@ bool spool_flatfile_write_job(&answer_list, object, key)
 *     Writes an object through the appropriate flatfile spooling functions.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
@@ -1073,15 +1073,17 @@ bool spool_flatfile_write_job(&answer_list, object, key)
 *     spool/spool_delete_object()
 *******************************************************************************/
 bool
-spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule, 
-                                  const lListElem *object, const char *key, 
+spool_flatfile_default_write_func(lList **answer_list, 
+                                  const lListElem *type, 
+                                  const lListElem *rule, 
+                                  const lListElem *object, 
+                                  const char *key, 
                                   const sge_object_type event_type)
 {
-   lList *answer_list = NULL;
    const char *url = NULL;
    const char *directory = NULL;
    const char *filename = NULL;
-   char tmpfilebuf[SGE_PATH_MAX]/*, filebuf[SGE_PATH_MAX]*/;
+   char tmpfilebuf[SGE_PATH_MAX];
    const char *tmpfilepath = NULL, *filepath = NULL;
    flatfile_info *rule_clientdata;
    flatfile_info *field_info;
@@ -1175,9 +1177,6 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
          filename  = SCHED_CONF_FILE;
          break;
       case SGE_TYPE_JOB:
-#if 0
-         ret = spool_flatfile_write_job(&answer_list, object, key);
-#endif
          {
             u_long32 job_id, ja_task_id;
             char *pe_task_id;
@@ -1191,15 +1190,19 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
             if (only_job) {
                job_write_common_part((lListElem *)object, 0, SPOOL_DEFAULT);
             } else {
-               job_write_spool_file((lListElem *)object, ja_task_id, pe_task_id, SPOOL_DEFAULT);
+               job_write_spool_file((lListElem *)object, ja_task_id, pe_task_id,
+                                    SPOOL_DEFAULT);
             }
 
             free(dup);
          }
          break;
       default:
-         WARNING((SGE_EVENT, "writing of "SFQ" not yet implemented\n", 
-                  object_type_get_name(event_type)));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
          break;
    }
 
@@ -1212,29 +1215,33 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
       sge_dstring_init(&filepath_buffer, tmpfilebuf, SGE_PATH_MAX);
 
       /* first write to a temporary file; for jobs it is already initialized */
-      tmpfilepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/.%s", url, directory, filename);
+      tmpfilepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/.%s", 
+                                        url, directory, filename);
 
       /* spool */
-      tmpfilepath = spool_flatfile_write_object(&answer_list, object, 
+      tmpfilepath = spool_flatfile_write_object(answer_list, object, 
                                                 field_info->fields, 
-      field_info->instr, SP_DEST_SPOOL, SP_FORM_ASCII, tmpfilepath);
+                                                field_info->instr, 
+                                                SP_DEST_SPOOL, SP_FORM_ASCII,
+                                                tmpfilepath);
 
       if(tmpfilepath == NULL) {
-         /* spooling failed */
-         /* JG: TODO: better call a function calling ERROR and WARNING */
-         answer_list_print_err_warn(&answer_list, NULL, NULL);
          ret = false;
       } else {
          /* spooling was ok: rename temporary to target file */
-         filepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/%s", url, directory, filename);
+         filepath = sge_dstring_sprintf(&filepath_buffer, "%s/%s/%s", 
+                                        url, directory, filename);
 
          if (rename(tmpfilepath, filepath) == -1) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_ERRORRENAMING_SSS, 
+                                    tmpfilepath, filepath, strerror(errno));
             ret = false;
          }
       }
 
       FREE(tmpfilepath);
-      sge_dstring_free(&filepath_buffer);
    }
    
    DEXIT;
@@ -1247,7 +1254,8 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     bool
-*     spool_flatfile_default_delete_func(const lListElem *type, 
+*     spool_flatfile_default_delete_func(lList **answer_list, 
+*                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
 *                                        const sge_object_type event_type) 
@@ -1258,6 +1266,7 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
 *     (e.g. jobs), a special remove function is called.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
@@ -1275,40 +1284,49 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_delete_object()
 *******************************************************************************/
 bool
-spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
+spool_flatfile_default_delete_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
                                    const char *key, 
                                    const sge_object_type event_type)
 {
-   static dstring dir_name = DSTRING_INIT;
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_flatfile_default_delete_func");
 
    switch(event_type) {
       case SGE_TYPE_ADMINHOST:
-         sge_unlink(ADMINHOST_DIR, key);
+         ret = sge_unlink(ADMINHOST_DIR, key) == 0;
          break;
       case SGE_TYPE_CALENDAR:
-         sge_unlink(CAL_DIR, key);
+         ret = sge_unlink(CAL_DIR, key) == 0;
          break;
       case SGE_TYPE_CKPT:
-         sge_unlink(CKPTOBJ_DIR, key);
+         ret = sge_unlink(CKPTOBJ_DIR, key) == 0;
          break;
       case SGE_TYPE_COMPLEX:
-         sge_unlink(COMPLEX_DIR, key);
+         ret = sge_unlink(COMPLEX_DIR, key) == 0;
          break;
       case SGE_TYPE_CONFIG:
          if(sge_hostcmp(key, "global") == 0) {
-            ERROR((SGE_EVENT, MSG_SPOOL_GLOBALCONFIGNOTDELETED));
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_SPOOL_GLOBALCONFIGNOTDELETED);
             ret = false;
          } else {
-            sge_dstring_sprintf(&dir_name, "%s/%s",
-                                lGetString(rule, SPR_url), LOCAL_CONF_DIR);
-            sge_unlink(sge_dstring_get_string(&dir_name), key);
+            char dir_name_buf[SGE_PATH_MAX];
+            dstring dir_name_dstring;
+            const char *dir_name;
+
+            sge_dstring_init(&dir_name_dstring, dir_name_buf, SGE_PATH_MAX);
+            dir_name = sge_dstring_sprintf(&dir_name_dstring, "%s/%s",
+                                           lGetString(rule, SPR_url), 
+                                           LOCAL_CONF_DIR);
+            ret = sge_unlink(dir_name, key) == 0;
          }
          break;
       case SGE_TYPE_EXECHOST:
-         sge_unlink(EXECHOST_DIR, key);
+         ret = sge_unlink(EXECHOST_DIR, key) == 0;
          break;
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:   
@@ -1323,48 +1341,53 @@ spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
    
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
-            job_remove_spool_file(job_id, ja_task_id, pe_task_id, SPOOL_DEFAULT);
+            if (job_remove_spool_file(job_id, ja_task_id, pe_task_id, 
+                                      SPOOL_DEFAULT) != 0) {
+               ret = false;
+            }
             free(dup);
          }
          break;
       case SGE_TYPE_MANAGER:
-         sge_unlink(MAN_DIR, key);
+         ret = sge_unlink(MAN_DIR, key) == 0;
          break;
       case SGE_TYPE_OPERATOR:
-         sge_unlink(OP_DIR, key);
+         ret = sge_unlink(OP_DIR, key) == 0;
          break;
       case SGE_TYPE_SHARETREE:
-         sge_unlink(NULL, key);
+         ret = sge_unlink(NULL, key) == 0;
          break;
       case SGE_TYPE_PE:
-         sge_unlink(PE_DIR, key);
+         ret = sge_unlink(PE_DIR, key) == 0;
          break;
       case SGE_TYPE_PROJECT:
-         sge_unlink(PROJECT_DIR, key);
+         ret = sge_unlink(PROJECT_DIR, key) == 0;
          break;
       case SGE_TYPE_QUEUE:
-         sge_unlink(QUEUE_DIR, key);
+         ret = sge_unlink(QUEUE_DIR, key) == 0;
          break;
       case SGE_TYPE_SCHEDD_CONF:
-         ERROR((SGE_EVENT, MSG_SPOOL_SCHEDDCONFIGNOTDELETED));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_SPOOL_SCHEDDCONFIGNOTDELETED);
          ret = false;
          break;
       case SGE_TYPE_SUBMITHOST:
-         sge_unlink(SUBMITHOST_DIR, key);
+         ret = sge_unlink(SUBMITHOST_DIR, key) == 0;
          break;
       case SGE_TYPE_USER:
-         sge_unlink(USER_DIR, key);
+         ret = sge_unlink(USER_DIR, key) == 0;
          break;
       case SGE_TYPE_USERSET:
-         sge_unlink(USERSET_DIR, key);
+         ret = sge_unlink(USERSET_DIR, key) == 0;
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
-         sge_unlink(UME_DIR, key);
+         ret = sge_unlink(UME_DIR, key) == 0;
          break;
 #endif
       case SGE_TYPE_HGROUP:
-         sge_unlink(HGROUP_DIR, key);
+         ret = sge_unlink(HGROUP_DIR, key) == 0;
          break;
       default:
          break;
@@ -1380,16 +1403,18 @@ spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     bool
-*     spool_flatfile_default_verify_func(const lListElem *type, 
-*                                       const lListElem *rule, 
-*                                       const lListElem *object, 
-*                                       const char *key, 
-*                                       const sge_object_type event_type) 
+*     spool_flatfile_default_verify_func(lList **answer_list, 
+*                                        const lListElem *type, 
+*                                        const lListElem *rule, 
+*                                        const lListElem *object, 
+*                                        const char *key, 
+*                                        const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Verifies an object.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to verify
@@ -1408,7 +1433,9 @@ spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
 *     spool/flatfile/--Flatfile-Spooling
 *******************************************************************************/
 bool
-spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
+spool_flatfile_default_verify_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
                                    lListElem *object,
                                    const sge_object_type event_type)
 {
@@ -1417,57 +1444,70 @@ spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
    DENTER(TOP_LAYER, "spool_flatfile_default_verify_func");
 
    switch(event_type) {
+      case SGE_TYPE_ADMINHOST:
       case SGE_TYPE_EXECHOST:
+      case SGE_TYPE_SUBMITHOST:
          {
             int cl_ret;
-            char *old_name = strdup(lGetHost(object, EH_name));
+            int key_nm = object_type_get_key_nm(event_type);
+            char *old_name = strdup(lGetHost(object, key_nm));
 
             /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, EH_name);
+            cl_ret = sge_resolve_host(object, key_nm);
 
             /* if hostname resolving failed: create error */
             if (cl_ret != CL_OK) {
                if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
                    cl_ret != COMMD_NACK_TIMEOUT) {
-                  ERROR((SGE_EVENT, MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, old_name, cl_errstr(ret))); 
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
+                                          old_name, cl_errstr(ret)); 
                   ret = false;
                } else {
-                  WARNING((SGE_EVENT, MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, old_name, cl_errstr(ret)));
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_WARNING, 
+                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
+                                          old_name, cl_errstr(ret));
                }
             } else {
                /* if hostname resolving changed hostname: spool */
-               const char *new_name = lGetHost(object, EH_name);
+               const char *new_name;
+               new_name = lGetHost(object, key_nm);
                if (strcmp(old_name, new_name) != 0) {
                   spooling_write_func write_func = 
                           (spooling_write_func)lGetRef(rule, SPR_write_func);
                   spooling_delete_func delete_func = 
                           (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                  write_func(type, rule, object, new_name, event_type);
-                  delete_func(type, rule, old_name, event_type);
+                  write_func(answer_list, type, rule, object, new_name, 
+                             event_type);
+                  delete_func(answer_list, type, rule, old_name, event_type);
                }
             }
             free(old_name);
          }
 
-         if (ret) {
-            /* necessary to setup actual list of exechost */
-            debit_host_consumable(NULL, object, Master_Complex_List, 0);
+         if (event_type == SGE_TYPE_EXECHOST) {
+            if (ret) {
+               /* necessary to setup actual list of exechost */
+               debit_host_consumable(NULL, object, Master_Complex_List, 0);
 
-            /* necessary to init double values of consumable configuration */
-            sge_fill_requests(lGetList(object, EH_consumable_config_list), 
-                  Master_Complex_List, 1, 0, 1);
+               /* necessary to init double values of consumable configuration */
+               sge_fill_requests(lGetList(object, EH_consumable_config_list), 
+                     Master_Complex_List, 1, 0, 1);
 
-            if (complex_list_verify(lGetList(object, EH_complex_list), NULL, 
-                                    "host", lGetHost(object, EH_name))
-                                 !=STATUS_OK) {
-               ret = false;
+               if (complex_list_verify(lGetList(object, EH_complex_list), NULL, 
+                                       "host", lGetHost(object, EH_name))
+                                    !=STATUS_OK) {
+                  ret = false;
+               }
             }
-         }
 
-         if (ret) {
-            if (ensure_attrib_available(NULL, object, 
-                                        EH_consumable_config_list)) {
-               ret = false;
+            if (ret) {
+               if (ensure_attrib_available(NULL, object, 
+                                           EH_consumable_config_list)) {
+                  ret = false;
+               }
             }
          }
          break;
@@ -1489,9 +1529,12 @@ spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
                  ret = false;
             }
             if (ret) {
-               if (ensure_attrib_available(NULL, object, QU_load_thresholds) ||
-                   ensure_attrib_available(NULL, object, QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, object, QU_consumable_config_list)) {
+               if (ensure_attrib_available(NULL, object, 
+                                           QU_load_thresholds) ||
+                   ensure_attrib_available(NULL, object, 
+                                           QU_suspend_thresholds) ||
+                   ensure_attrib_available(NULL, object, 
+                                           QU_consumable_config_list)) {
                   ret = false;
                }
             }
@@ -1506,9 +1549,11 @@ spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
                
                if (host_list_locate(Master_Exechost_List, 
                                     lGetHost(object, QU_qhostname)) == NULL) {
-                  ERROR((SGE_EVENT, MSG_FLATFILE_HOSTFORQUEUEDOESNOTEXIST_SS,
-                  lGetString(object, QU_qname), 
-                  lGetHost(object, QU_qhostname)));
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_FLATFILE_HOSTFORQUEUEDOESNOTEXIST_SS,
+                                          lGetString(object, QU_qname), 
+                                          lGetHost(object, QU_qhostname));
                   ret = false;
                }
             }
@@ -1526,10 +1571,16 @@ spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
             if (cl_ret != CL_OK) {
                if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
                    cl_ret != COMMD_NACK_TIMEOUT) {
-                  ERROR((SGE_EVENT, MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, old_name, cl_errstr(ret))); 
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
+                                          old_name, cl_errstr(ret)); 
                   ret = false;
                } else {
-                  WARNING((SGE_EVENT, MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, old_name, cl_errstr(ret)));
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_WARNING, 
+                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
+                                          old_name, cl_errstr(ret));
                }
             } else {
                /* if hostname resolving changed hostname: spool */
@@ -1539,33 +1590,47 @@ spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
                           (spooling_write_func)lGetRef(rule, SPR_write_func);
                   spooling_delete_func delete_func = 
                           (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                  write_func(type, rule, object, new_name, event_type);
-                  delete_func(type, rule, old_name, event_type);
+                  write_func(answer_list, type, rule, object, new_name, 
+                             event_type);
+                  delete_func(answer_list, type, rule, old_name, event_type);
                }
             }
             free(old_name);
          }
          break;
       case SGE_TYPE_USERSET:
-         if (userset_validate_entries(object, NULL, 1) != STATUS_OK) {
+         if (userset_validate_entries(object, answer_list, 1) != STATUS_OK) {
             ret = false;
          }
          break;
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_CALENDAR:
       case SGE_TYPE_CKPT:
+         if (ckpt_validate(object, answer_list) != STATUS_OK) {
+            ret = false;
+         }
+         break;
+      case SGE_TYPE_PE:
+         if (pe_validate(object, answer_list, 1) != STATUS_OK) {
+            ret = false;
+         }
+         break;
       case SGE_TYPE_COMPLEX:
+         /* JG: TODO: complex attributes of type host should be resolved 
+          * we need a function verify_complex
+          */
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:
-      case SGE_TYPE_PE:
-      case SGE_TYPE_SUBMITHOST:
       case SGE_TYPE_HGROUP:
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
 #endif
+      case SGE_TYPE_CALENDAR:
       case SGE_TYPE_PROJECT:
       case SGE_TYPE_USER:
       case SGE_TYPE_SHARETREE:
+         /* JG: TODO: we need a function verify_sharetree.
+          * there is a function search_unspecified_node(), what is 
+          * qmaster doing?
+          */
       case SGE_TYPE_SCHEDD_CONF:
       case SGE_TYPE_JOB:
       default:

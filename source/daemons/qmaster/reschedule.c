@@ -616,8 +616,12 @@ lListElem* add_to_reschedule_unknown_list(lListElem *host, u_long32 job_number,
  
       lSetUlong(ruep, RU_task_number, task_number);
       lSetUlong(ruep, RU_state, state);
-      spool_write_object(spool_get_default_context(), host, 
-                         lGetHost(host, EH_name), SGE_TYPE_EXECHOST);
+      {
+         lList *answer_list = NULL;
+         spool_write_object(&answer_list, spool_get_default_context(), host, 
+                            lGetHost(host, EH_name), SGE_TYPE_EXECHOST);
+         answer_list_output(&answer_list);
+      }
       sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
    }
    DEXIT;
@@ -701,8 +705,13 @@ void delete_from_reschedule_unknown_list(lListElem *host)
                lGetUlong(this, RU_job_number),
                lGetUlong(this, RU_task_number)));
             lRemoveElem(rulp, this);
-            spool_write_object(spool_get_default_context(), host, 
-                               lGetHost(host, EH_name), SGE_TYPE_EXECHOST);
+            {
+               lList *answer_list = NULL;
+               spool_write_object(&answer_list, spool_get_default_context(), 
+                                  host, lGetHost(host, EH_name), 
+                                  SGE_TYPE_EXECHOST);
+               answer_list_output(&answer_list);
+            }
             sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host); 
          }
       }
@@ -748,8 +757,13 @@ void update_reschedule_unknown_list(lListElem *host)
             if (state != new_state) {
                lSetUlong(ruep, RU_state, new_state);
             }
-            spool_write_object(spool_get_default_context(), host, 
-                               lGetHost(host, EH_name), SGE_TYPE_EXECHOST);
+            {
+               lList *answer_list = NULL;
+               spool_write_object(&answer_list, spool_get_default_context(), 
+                                  host, lGetHost(host, EH_name), 
+                                  SGE_TYPE_EXECHOST);
+               answer_list_output(&answer_list);
+            }
             sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
          }
       }

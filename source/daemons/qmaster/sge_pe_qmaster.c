@@ -185,7 +185,7 @@ gdi_object_t *object
 ) {
    DENTER(TOP_LAYER, "pe_spool");
 
-   if (!spool_write_object(spool_get_default_context(), pep, 
+   if (!spool_write_object(alpp, spool_get_default_context(), pep, 
                            lGetString(pep, PE_name), SGE_TYPE_PE)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(pep, PE_name)));
@@ -275,7 +275,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove host file */
-   if (!spool_delete_object(spool_get_default_context(), SGE_TYPE_PE, pe)) {
+   if (!spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_PE, pe)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;

@@ -43,6 +43,8 @@
 #include "setup_path.h"
 #include "sge_prog.h"
 
+#include "sge_answer.h"
+
 #include "sge_all_listsL.h"
 #include "sge_manop.h"
 
@@ -95,6 +97,8 @@ static int init_framework(void)
    const char *shlib;
    const char *args;
 
+   lList *answer_list = NULL;
+
    DENTER(TOP_LAYER, "init_framework");
 
    /* read arguments for spooling framework */
@@ -102,18 +106,20 @@ static int init_framework(void)
       /* create spooling context */
       lListElem *spooling_context = NULL;
 
-      spooling_context = spool_create_dynamic_context(shlib, args);
+      spooling_context = spool_create_dynamic_context(&answer_list, shlib, args);
+      answer_list_output(&answer_list);
       if (spooling_context == NULL) {
          CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
       } else {
          spool_set_default_context(spooling_context);
 
          /* initialize spooling context */
-         if (!spool_startup_context(spooling_context)) {
+         if (!spool_startup_context(&answer_list, spooling_context)) {
             CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
          } else {
             ret = EXIT_SUCCESS;
          }
+         answer_list_output(&answer_list);
       }
    }
 
@@ -126,6 +132,7 @@ static int spool_manop(const char *name, sge_object_type type)
    int ret = EXIT_SUCCESS;
    lList **lpp;
    lListElem *ep;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "spool_manager");
 
@@ -143,10 +150,11 @@ static int spool_manop(const char *name, sge_object_type type)
    lSetString(ep, MO_name, name);
    lAppendElem(*lpp, ep);
 
-   if (!spool_write_object(spool_get_default_context(), ep, name, type)) {
+   if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, type)) {
       /* error output has been done in spooling function */
       ret = EXIT_FAILURE;
    }
+   answer_list_output(&answer_list);
 
    DEXIT;
    return ret;
@@ -188,6 +196,7 @@ static int spool_pe(const char *name)
 {
    int ret = EXIT_SUCCESS;
    lListElem *ep;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "spool_pe");
 
@@ -199,10 +208,11 @@ static int spool_pe(const char *name)
    lSetBool(ep, PE_control_slaves, true);
    lSetBool(ep, PE_job_is_first_task, false);
 
-   if (!spool_write_object(spool_get_default_context(), ep, name, SGE_TYPE_PE)) {
+   if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, SGE_TYPE_PE)) {
       /* error output has been done in spooling function */
       ret = EXIT_FAILURE;
    }
+   answer_list_output(&answer_list);
 
    DEXIT;
    return ret;

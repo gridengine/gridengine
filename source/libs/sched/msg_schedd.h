@@ -296,9 +296,7 @@
 #define MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED        _MESSAGE(47215, _("queues dropped because they are suspended: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED         _MESSAGE(47216, _("queues dropped because they are disabled: "))
 #define MSG_SCHEDD_RETRLAYERDOMINFMASKXOFATTRYFAILED_US     _MESSAGE(47217, _("failed retrieving layer dominance information from mask "U32CFormat" of attribute "SFN"\n" ))
-#define MSG_SCHEDD_NOHOSTFORQUEUE                           _MESSAGE(47218, _("\terror: no host defined for queue\n"))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN"\n"))
-#define MSG_SCHEDD_NOLOADVALUEFORTHRESHOLD_S                _MESSAGE(47220, _("\terror: no load value for threshold "SFN"\n"))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 

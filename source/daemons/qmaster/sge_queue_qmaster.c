@@ -858,7 +858,7 @@ int sub_command
 
    /* write on file */
    if (sge_change_queue_version(new_queue, add, 1) ||
-      !spool_write_object(spool_get_default_context(), new_queue, 
+      !spool_write_object(alpp, spool_get_default_context(), new_queue, 
                          lGetString(new_queue, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -986,7 +986,7 @@ int sub_command
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(ja_task, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, job, ja_task);
-            spool_write_object(spool_get_default_context(), job,
+            spool_write_object(alpp, spool_get_default_context(), job,
                                job_get_key(lGetUlong(job, JB_job_number),
                                            lGetUlong(ja_task, JAT_task_number),
                                            NULL), 
@@ -1168,7 +1168,7 @@ char *rhost
    /* generate a sgeE_QUEUE_DEL event and queue it into the event list */
    sge_add_event(NULL, 0, sgeE_QUEUE_DEL, 0, 0, qname, NULL);
   
-   spool_delete_object(spool_get_default_context(), SGE_TYPE_QUEUE, qname);
+   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_QUEUE, qname);
 
    unsuspend_all(sos_list_before, 0);
    lFreeList(sos_list_before); 

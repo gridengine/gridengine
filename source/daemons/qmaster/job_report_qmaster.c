@@ -34,6 +34,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge.h"
+#include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
@@ -288,11 +289,16 @@ sge_pack_buffer *pb
                         lSetList(petask, PET_granted_destin_identifier_list, NULL);
                         if ((ep=lAddSubHost(petask, JG_qhostname, rhost, PET_granted_destin_identifier_list, JG_Type))) {
                            lSetString(ep, JG_qname, queue_name);
-                        }   
-                        spool_write_object(spool_get_default_context(), jep,
-                                           job_get_key(jobid, jataskid, 
-                                                       pe_task_id_str), 
-                                           SGE_TYPE_JOB);
+                        }
+                        {
+                           lList *answer_list = NULL;
+                           spool_write_object(&answer_list, 
+                                              spool_get_default_context(), jep,
+                                              job_get_key(jobid, jataskid, 
+                                                          pe_task_id_str), 
+                                              SGE_TYPE_JOB);
+                           answer_list_output(&answer_list);
+                        }
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -527,10 +533,15 @@ sge_pack_buffer *pb
                         }
 
                         /* remove pe task from job/jatask */
-                        spool_delete_object(spool_get_default_context(), 
-                                            SGE_TYPE_JOB, 
-                                            job_get_key(jobid, jataskid, 
-                                                        pe_task_id_str));
+                        {
+                           lList *answer_list = NULL;
+                           spool_delete_object(&answer_list, 
+                                               spool_get_default_context(), 
+                                               SGE_TYPE_JOB, 
+                                               job_get_key(jobid, jataskid, 
+                                                           pe_task_id_str));
+                           answer_list_output(&answer_list);
+                        }
                         lRemoveElem(lGetList(jatep, JAT_task_list), petask);
                         sge_add_event(NULL, 0, sgeE_PETASK_DEL, jobid, jataskid, 
                                       pe_task_id_str, NULL);

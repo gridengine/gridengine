@@ -739,3 +739,61 @@ void answer_list_replace(lList **answer_list, lList **new_list)
    DEXIT;
 }
 
+/****** sgeobj/answer/answer_list_output() ****************************
+*  NAME
+*     answer_list_print_err_warn() -- output and free answer_list
+*
+*  SYNOPSIS
+*     bool
+*     answer_list_print_err_warn(lList **answer_list)
+*
+*  FUNCTION
+*     Prints all messages contained in "answer_list". 
+*     The ERROR, WARNING and INFO macros will be used for output.
+*
+*     If the "answer_list" contains at least one error then this
+*     function will return true.
+*
+*     If there is no error contained in 'answer_list' then this function 
+*     will return with a value of false. 
+*
+*     "*answer_list" will be freed and set to NULL.
+*
+*  INPUTS
+*     lList **answer_list     - AN_Type list 
+*
+*  NOTES
+*     MT-NOTE: answer_list_print_err_warn() is MT safe
+******************************************************************************/
+bool answer_list_output(lList **answer_list)
+{
+   bool ret = false;
+   lListElem *answer;   /* AN_Type */
+
+   DENTER(ANSWER_LAYER, "answer_list_output");
+
+   if (answer_list != NULL && *answer_list != NULL) {
+      for_each(answer, *answer_list) {
+         switch (lGetUlong(answer, AN_quality)) {
+            case ANSWER_QUALITY_ERROR:
+               ERROR((SGE_EVENT, lGetString(answer, AN_text)));
+               ret = true;
+               break;
+            case ANSWER_QUALITY_WARNING:
+               WARNING((SGE_EVENT, lGetString(answer, AN_text)));
+               break;
+            case ANSWER_QUALITY_INFO:
+               INFO((SGE_EVENT, lGetString(answer, AN_text)));
+               break;
+            default:
+               break;
+         }
+      }
+
+      *answer_list = lFreeList(*answer_list);
+   }
+
+   DEXIT;
+   return ret;
+}
+

@@ -116,7 +116,7 @@ gdi_object_t *object
 ) {
    DENTER(TOP_LAYER, "calendar_spool");
 
-   if (!spool_write_object(spool_get_default_context(), cep,
+   if (!spool_write_object(alpp, spool_get_default_context(), cep,
                           lGetString(cep, CAL_name), SGE_TYPE_CALENDAR)) {
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -178,7 +178,7 @@ char *rhost
    /* remove timer for this calendar */
    te_delete(TYPE_CALENDAR_EVENT, cal_name, 0, 0);
 
-   spool_delete_object(spool_get_default_context(), SGE_TYPE_CALENDAR, cal_name);
+   spool_delete_object(alpp, spool_get_default_context(), SGE_TYPE_CALENDAR, cal_name);
    lDelElemStr(&Master_Calendar_List, CAL_name, cal_name);
 
 #ifdef QIDL

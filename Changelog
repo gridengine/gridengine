@@ -1,3 +1,9 @@
+JG-2003-04-11-1  Enhancem.: Pass answer list to functions defined in the 
+                            spooling framework. 
+                            Validate / output contents of this answer list after
+                            every call to a spooling function.
+                            Removed unused I18N messages in various modules.
+
 JG-2003-04-11-0  Testsuite: procedure unsuspend_job failed with tcl error
                  Review:    CR
 

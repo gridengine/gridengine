@@ -112,6 +112,8 @@ int answer_list_print_err_warn(lList **answer_list,
                                const char *err_prefix,
                                const char *warn_prefix);
 
+bool answer_list_output(lList **answer_list);
+
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream);
 
 bool answer_list_add(lList **answer_list, const char *text,

@@ -35,6 +35,7 @@
 #include "sge_job_qmaster.h"
 #include "sge_any_request.h"
 #include "sge_ack.h"
+#include "sge_answer.h"
 #include "sge_ja_task.h"
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
@@ -122,6 +123,7 @@ u_long32 ack_ulong,
 u_long32 ack_ulong2 
 ) {
    lListElem *qep, *jep = NULL, *jatep = NULL;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
@@ -181,16 +183,18 @@ u_long32 ack_ulong2
       DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qep, QU_qname)));
       lSetUlong(qep, QU_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, lGetString(qep, QU_qname), 0, 0);
-      spool_write_object(spool_get_default_context(), qep, 
+      spool_write_object(&answer_list, spool_get_default_context(), qep, 
                          lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
+      answer_list_output(&answer_list);
       break;
    case TAG_SIGJOB:
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
-      spool_write_object(spool_get_default_context(), jep, 
+      spool_write_object(&answer_list, spool_get_default_context(), jep, 
                          job_get_key(lGetUlong(jep, JB_job_number), ack_ulong2, 
                                      NULL), SGE_TYPE_JOB);
+      answer_list_output(&answer_list);
       break;
    }
 

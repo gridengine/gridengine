@@ -42,11 +42,7 @@
 #define MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS  _MESSAGE(59001, _("no default rule for object type "SFQ" in spooling context "SFQ"\n"))
 #define MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS        _MESSAGE(59002, _("no rules for object type "SFQ" in spooling context "SFQ"\n"))
 #define MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS          _MESSAGE(59003, _("corrupt rule "SFQ" in spooling context "SFQ": "SFQ" is missing\n"))
-#define MSG_SPOOL_CANNOTSPOOLFREEOBJECT             _MESSAGE(59004, _("cannot spool free object\n"))
 #define MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS     _MESSAGE(59005, _("rule "SFQ" in spooling context "SFQ" failed writing an object\n"))
-/* #define MSG_SPOOL_INVALIDSPOOLEDOBJECTTYPE_D        _message(59006, _("invalid spooled object type %d\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SPOOL_NODESCRIPTORFOROBJECTTYPEALL      _message(59007, _("no descriptor available for object type ALL\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SPOOL_NOKEYFOROBJECTTYPEALL             _message(59008, _("no key field available for object type ALL\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SPOOL_NOVALIDCONTEXT_S                  _MESSAGE(59009, _("no valid spooling context passed to "SFQ"\n"))
 #define MSG_SPOOL_CONTEXTNEEDSNAME                  _MESSAGE(59010, _("spooling context has to have a name\n"))
 #define MSG_SPOOL_NOVALIDSPOOLTYPE_S                _MESSAGE(59011, _("no valid spool type passed to "SFQ"\n"))
@@ -58,12 +54,12 @@
 #define MSG_SPOOL_TYPEHASMORETHANONEDEFAULTRULE_SS  _MESSAGE(59017, _("type definition "SFQ" in spooling context "SFQ" has more than one default rule\n"))
 #define MSG_SPOOL_RULEALREADYEXISTS_SS              _MESSAGE(59018, _("a rule named "SFQ" already exists in spooling context "SFQ"\n"))
 #define MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S       _MESSAGE(59019, _("spooling type "SFQ" already has a default rule, cannot add a second one\n"))
-
+#define MSG_SPOOL_STARTUPOFRULEFAILED_SS  _MESSAGE(59020, _("startup of rule "SFQ" in context "SFQ" failed\n"))
+#define MSG_SPOOL_SHUTDOWNOFRULEFAILED_SS  _MESSAGE(59021,_("shutdown of rule "SFQ" in context "SFQ" failed\n"))
 /* 
  * libs/spool/sge_spooling_utilities.c
  */
 #define MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS _MESSAGE(59100, _("don't know how to spool list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_UNKNOWNOBJECTTYPEFOR_SS _MESSAGE(59101, _("unknown object type for list attribute "SFQ" in function "SFQ"\n"))
-#define MSG_FIELDDESCRIPTIONDOESNOTCONTAINNAME_S   _MESSAGE(59102, _("spooling field description for field "SFQ" does not contain name\n"))
 #define MSG_NONAMEFORATTRIBUTE_D _MESSAGE(59103, _("no or invalid name for attribute %d\n"))
 #endif /* __MSG_SPOOLLIB_H */

@@ -34,6 +34,7 @@
 
 /* create spooling context dynamically or from compiled in default */
 lListElem *
-spool_create_dynamic_context(const char *shlib_name, const char *args);
+spool_create_dynamic_context(lList **answer_list, 
+                             const char *shlib_name, const char *args);
 
 #endif /* __SGE_SPOOLING_LOADER_H */    

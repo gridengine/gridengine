@@ -121,7 +121,7 @@ DTRACE;
    added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
 
    /* update on file */
-   if(!spool_write_object(spool_get_default_context(), added, manop_name,
+   if(!spool_write_object(alpp, spool_get_default_context(), added, manop_name,
                           target == SGE_MANAGER_LIST ? SGE_TYPE_MANAGER : 
                                                        SGE_TYPE_OPERATOR)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
@@ -221,7 +221,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lDechainElem(*lpp, found);
 
    /* update on file */
-      if (!spool_delete_object(spool_get_default_context(), 
+      if (!spool_delete_object(alpp, spool_get_default_context(), 
                                target == SGE_MANAGER_LIST ? SGE_TYPE_MANAGER :
                                                             SGE_TYPE_OPERATOR,
                                manop_name)) {

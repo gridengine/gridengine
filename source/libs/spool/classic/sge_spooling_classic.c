@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "sgermon.h"
 #include "sge_log.h"
@@ -44,6 +45,7 @@
 
 #include "sge.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
 #include "setup_path.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
@@ -80,6 +82,7 @@
 
 #include "sge_spooling_classic.h"
 
+#include <msg_common.h>
 #include "msg_spoollib_classic.h"
 /****** spool/classic/--Classic-Spooling ***************************************
 *
@@ -123,7 +126,7 @@ const char *get_spooling_method(void)
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_classic_create_context(const char *args)
+*     spool_classic_create_context(lList **answer_list, const char *args)
 *
 *  FUNCTION
 *     Create a spooling context for the classic spooling.
@@ -144,6 +147,7 @@ const char *get_spooling_method(void)
 *     The format of the input string is "<common_dir>;<spool_dir>"
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const char *args - arguments to classic spooling
 *
 *  RESULT
@@ -154,60 +158,67 @@ const char *get_spooling_method(void)
 *     spool/classic/--Classic-Spooling
 *******************************************************************************/
 lListElem *
-spool_classic_create_context(const char *args)
+spool_classic_create_context(lList **answer_list, const char *args)
 {
-   lListElem *context, *rule, *type;
-   char *common_dir, *spool_dir;
+   lListElem *context = NULL;
 
    DENTER(TOP_LAYER, "spool_classic_create_context");
 
    /* check parameters - both must be set and be absolute paths */
    if (args == NULL) {
-      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
-      return NULL;
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
+   } else {
+      char *common_dir, *spool_dir;
+
+      common_dir = sge_strtok(args, ";");
+      spool_dir  = sge_strtok(NULL, ";");
+      
+      if (common_dir == NULL || spool_dir == NULL ||
+         *common_dir != '/' || *spool_dir != '/') {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
+      } else {   
+         lListElem *rule, *type;
+
+         /* create spooling context */
+         context = spool_create_context(answer_list, "classic spooling");
+         
+         /* create rule and type for all objects spooled in the spool dir */
+         rule = spool_context_create_rule(answer_list, context, 
+                                          "default rule (spool dir)", 
+                                          spool_dir,
+                                          spool_classic_default_startup_func,
+                                          NULL,
+                                          spool_classic_default_list_func,
+                                          spool_classic_default_read_func,
+                                          spool_classic_default_write_func,
+                                          spool_classic_default_delete_func,
+                                          NULL);
+         type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
+         spool_type_add_rule(answer_list, type, rule, true);
+
+         /* create rule and type for all objects spooled in the common dir */
+         rule = spool_context_create_rule(answer_list, context, 
+                                          "default rule (common dir)", 
+                                          common_dir,
+                                          spool_classic_common_startup_func,
+                                          NULL,
+                                          spool_classic_default_list_func,
+                                          spool_classic_default_read_func,
+                                          spool_classic_default_write_func,
+                                          spool_classic_default_delete_func,
+                                          NULL);
+         type = spool_context_create_type(answer_list, context, 
+                                          SGE_TYPE_CONFIG);
+         spool_type_add_rule(answer_list, type, rule, true);
+         type = spool_context_create_type(answer_list, context, 
+                                          SGE_TYPE_SCHEDD_CONF);
+         spool_type_add_rule(answer_list, type, rule, true);
+      }
    }
-
-   common_dir = sge_strtok(args, ";");
-   spool_dir  = sge_strtok(NULL, ";");
-   
-   if (common_dir == NULL || spool_dir == NULL ||
-      *common_dir != '/' || *spool_dir != '/') {
-      ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
-      return NULL;
-   }   
-
-   /* create spooling context */
-   context = spool_create_context("classic spooling");
-   
-   /* create rule and type for all objects spooled in the spool dir */
-   rule = spool_context_create_rule(context, 
-                                    "default rule (spool dir)", 
-                                    spool_dir,
-                                    spool_classic_default_startup_func,
-                                    NULL,
-                                    spool_classic_default_list_func,
-                                    spool_classic_default_read_func,
-                                    spool_classic_default_write_func,
-                                    spool_classic_default_delete_func,
-                                    NULL);
-   type = spool_context_create_type(context, SGE_TYPE_ALL);
-   spool_type_add_rule(type, rule, true);
-
-   /* create rule and type for all objects spooled in the common dir */
-   rule = spool_context_create_rule(context, 
-                                    "default rule (common dir)", 
-                                    common_dir,
-                                    spool_classic_common_startup_func,
-                                    NULL,
-                                    spool_classic_default_list_func,
-                                    spool_classic_default_read_func,
-                                    spool_classic_default_write_func,
-                                    spool_classic_default_delete_func,
-                                    NULL);
-   type = spool_context_create_type(context, SGE_TYPE_CONFIG);
-   spool_type_add_rule(type, rule, true);
-   type = spool_context_create_type(context, SGE_TYPE_SCHEDD_CONF);
-   spool_type_add_rule(type, rule, true);
 
    DEXIT;
    return context;
@@ -219,7 +230,8 @@ spool_classic_create_context(const char *args)
 *
 *  SYNOPSIS
 *     bool
-*     spool_classic_default_startup_func(const lListElem *rule) 
+*     spool_classic_default_startup_func(lList **answer_list, 
+*                                        const lListElem *rule) 
 *
 *  FUNCTION
 *     Checks the existence of the spool directory.
@@ -229,6 +241,7 @@ spool_classic_create_context(const char *args)
 *     exist, they are created.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
 *
@@ -244,42 +257,64 @@ spool_classic_create_context(const char *args)
 *     spool/spool_startup_context()
 *******************************************************************************/
 bool
-spool_classic_default_startup_func(const lListElem *rule)
+spool_classic_default_startup_func(lList **answer_list, 
+                                   const lListElem *rule)
 {
+   bool ret = true;
+
+   char cwd_buf[SGE_PATH_MAX];
    char *cwd;
-   const char *url;
 
    DENTER(TOP_LAYER, "spool_classic_default_startup_func");
 
    /* check, if we are in the spool directory */
-   cwd = getcwd(NULL, SGE_PATH_MAX);
-   url = lGetString(rule, SPR_url);
-   if (strcmp(cwd, url) != 0) {
-      WARNING((SGE_EVENT, MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS, url, cwd));
-      sge_chdir_exit(url, TRUE);
-   }
-   free(cwd);
+   cwd = getcwd(cwd_buf, SGE_PATH_MAX);
+   if (cwd == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_ERRORREADINGCWD_S, 
+                              strerror(errno));
+      ret = false;
+   } else {
+      const char *url;
 
-   /* create spool sub directories */
-   sge_mkdir(JOB_DIR,  0755, true);
-   sge_mkdir(ZOMBIE_DIR, 0755, true);
-   sge_mkdir(QUEUE_DIR,  0755, true);
-   sge_mkdir(EXECHOST_DIR, 0755, true);
-   sge_mkdir(SUBMITHOST_DIR, 0755, true);
-   sge_mkdir(ADMINHOST_DIR, 0755, true);
-   sge_mkdir(COMPLEX_DIR, 0755, true);
-   sge_mkdir(EXEC_DIR, 0755, true);
-   sge_mkdir(PE_DIR, 0755, true);
-   sge_mkdir(CKPTOBJ_DIR, 0755, true);
-   sge_mkdir(USERSET_DIR, 0755, true);
-   sge_mkdir(CAL_DIR, 0755, true);
-   sge_mkdir(HGROUP_DIR, 0755, true);
-   sge_mkdir(UME_DIR, 0755, true);
-   sge_mkdir(USER_DIR, 0755, true);
-   sge_mkdir(PROJECT_DIR, 0755, true);
+      url = lGetString(rule, SPR_url);
+      if (strcmp(cwd, url) != 0) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS, 
+                                 url, cwd);
+         if(sge_chdir(url) != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_ERRORCHANGINGCWD_SS, url, 
+                                    strerror(errno));
+            ret = false;
+         }
+      }
+
+      if (ret) {
+         /* create spool sub directories */
+         sge_mkdir(JOB_DIR,  0755, true);
+         sge_mkdir(ZOMBIE_DIR, 0755, true);
+         sge_mkdir(QUEUE_DIR,  0755, true);
+         sge_mkdir(EXECHOST_DIR, 0755, true);
+         sge_mkdir(SUBMITHOST_DIR, 0755, true);
+         sge_mkdir(ADMINHOST_DIR, 0755, true);
+         sge_mkdir(COMPLEX_DIR, 0755, true);
+         sge_mkdir(EXEC_DIR, 0755, true);
+         sge_mkdir(PE_DIR, 0755, true);
+         sge_mkdir(CKPTOBJ_DIR, 0755, true);
+         sge_mkdir(USERSET_DIR, 0755, true);
+         sge_mkdir(CAL_DIR, 0755, true);
+         sge_mkdir(HGROUP_DIR, 0755, true);
+         sge_mkdir(UME_DIR, 0755, true);
+         sge_mkdir(USER_DIR, 0755, true);
+         sge_mkdir(PROJECT_DIR, 0755, true);
+      }
+   }
 
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/classic/spool_classic_common_startup_func() ***************
@@ -288,7 +323,8 @@ spool_classic_default_startup_func(const lListElem *rule)
 *
 *  SYNOPSIS
 *     bool
-*     spool_classic_common_startup_func(const lListElem *rule) 
+*     spool_classic_common_startup_func(lList **answer_list, 
+                                        const lListElem *rule) 
 *
 *  FUNCTION
 *     Checks the existence of the common directory.
@@ -296,6 +332,7 @@ spool_classic_default_startup_func(const lListElem *rule)
 *     it is created.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *rule - rule containing data like the path to the common 
 *                             directory
 *
@@ -311,27 +348,33 @@ spool_classic_default_startup_func(const lListElem *rule)
 *     spool/spool_startup_context()
 *******************************************************************************/
 bool
-spool_classic_common_startup_func(const lListElem *rule)
+spool_classic_common_startup_func(lList **answer_list, 
+                                  const lListElem *rule)
 {
+   bool ret = true;
    const char *url;
-   dstring local_dir = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_classic_common_startup_func");
 
    /* check common directories */
    url = lGetString(rule, SPR_url);
    if (!sge_is_directory(url)) {
-      CRITICAL((SGE_EVENT, MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url));
-      SGE_EXIT(EXIT_FAILURE);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url);
+   } else {
+      char local_dir_buf[SGE_PATH_MAX];
+      dstring local_dir;
+
+      sge_dstring_init(&local_dir, local_dir_buf, SGE_PATH_MAX);
+
+      /* create directory for local configurations */
+      sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
+      sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true);
    }
 
-   /* create directory for local configurations */
-   sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
-   sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true);
-   sge_dstring_free(&local_dir);
-
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/classic/spool_classic_default_list_func() *****************
@@ -340,9 +383,9 @@ spool_classic_common_startup_func(const lListElem *rule)
 *
 *  SYNOPSIS
 *     bool
-*     spool_classic_default_list_func(const lListElem *type, 
-*                                     const lListElem *rule, 
-*                                     lList **list, 
+*     spool_classic_default_list_func(lList **answer_list, 
+*                                     const lListElem *type, 
+*                                     const lListElem *rule, lList **list, 
 *                                     const sge_object_type event_type) 
 *
 *  FUNCTION
@@ -351,6 +394,7 @@ spool_classic_common_startup_func(const lListElem *rule)
 *     functions.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
@@ -368,53 +412,87 @@ spool_classic_common_startup_func(const lListElem *rule)
 *     spool/spool_read_list()
 *******************************************************************************/
 bool 
-spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
-                                lList **list, const sge_object_type event_type)
+spool_classic_default_list_func(lList **answer_list, 
+                                const lListElem *type, 
+                                const lListElem *rule, lList **list, 
+                                const sge_object_type event_type)
 {
-   static dstring file_name = DSTRING_INIT;
-   static dstring dir_name  = DSTRING_INIT;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_list_func");
 
    switch (event_type) {
       case SGE_TYPE_ADMINHOST:
-         sge_read_adminhost_list_from_disk();
+         if (sge_read_adminhost_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_EXECHOST:
-         sge_read_exechost_list_from_disk();
+         if (sge_read_exechost_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_SUBMITHOST:
-         sge_read_submithost_list_from_disk();
+         if (sge_read_submithost_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_CALENDAR:
-         sge_read_cal_list_from_disk();
+         if (sge_read_cal_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_CKPT:
-         sge_read_ckpt_list_from_disk();
+         if (sge_read_ckpt_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_COMPLEX:
-         read_all_complexes();
+         if (read_all_complexes() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_CONFIG:
-         sge_dstring_sprintf(&file_name, "%s/%s",
-                             lGetString(rule, SPR_url), CONF_FILE);
-         sge_dstring_sprintf(&dir_name, "%s/%s",
-                             lGetString(rule, SPR_url), LOCAL_CONF_DIR);
-         read_all_configurations(&Master_Config_List, 
-                                 sge_dstring_get_string(&file_name), 
-                                 sge_dstring_get_string(&dir_name));
+         {
+            char filename_buf[SGE_PATH_MAX];
+            char dirname_buf[SGE_PATH_MAX];
+            dstring file_name;
+            dstring dir_name;
+
+            sge_dstring_init(&file_name, filename_buf, SGE_PATH_MAX);
+            sge_dstring_init(&dir_name, dirname_buf, SGE_PATH_MAX);
+
+            sge_dstring_sprintf(&file_name, "%s/%s",
+                                lGetString(rule, SPR_url), CONF_FILE);
+            sge_dstring_sprintf(&dir_name, "%s/%s",
+                                lGetString(rule, SPR_url), LOCAL_CONF_DIR);
+            if (read_all_configurations(&Master_Config_List, 
+                                        sge_dstring_get_string(&file_name), 
+                                        sge_dstring_get_string(&dir_name)) 
+                != 0) {
+               ret = false;
+            }
+         }
          break;
       case SGE_TYPE_JOB:
-         job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
-                                 SPOOL_DEFAULT, NULL);
-         job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
-                                 SPOOL_HANDLE_AS_ZOMBIE, NULL);
+         if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
+                                     SPOOL_DEFAULT, NULL) != 0) {
+            ret = false;
+         }
+         if (job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List",
+                                     0, SPOOL_HANDLE_AS_ZOMBIE, NULL) != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_MANAGER:
-         read_manop(SGE_MANAGER_LIST);
+         if (read_manop(SGE_MANAGER_LIST) != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_OPERATOR:
-         read_manop(SGE_OPERATOR_LIST);
+         if (read_manop(SGE_OPERATOR_LIST) != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_SHARETREE:
          {
@@ -435,42 +513,65 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
          }
          break;
       case SGE_TYPE_PE:
-         sge_read_pe_list_from_disk();
+         if (sge_read_pe_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_PROJECT:
-         sge_read_project_list_from_disk();
+         if (sge_read_project_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_QUEUE:
-         sge_read_queue_list_from_disk();
+         if (sge_read_queue_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_SCHEDD_CONF:
-         if (*list != NULL) {
-            *list = lFreeList(*list);
+         {
+            char filename_buf[SGE_PATH_MAX];
+            dstring file_name;
+
+            sge_dstring_init(&file_name, filename_buf, SGE_PATH_MAX);
+
+            if (*list != NULL) {
+               *list = lFreeList(*list);
+            }
+            sge_dstring_sprintf(&file_name, "%s/%s", 
+                                lGetString(rule, SPR_url), SCHED_CONF_FILE);
+            *list = read_sched_configuration(lGetString(rule, SPR_url), 
+                                             sge_dstring_get_string(&file_name),
+                                             1, answer_list);
          }
-         sge_dstring_sprintf(&file_name, "%s/%s", 
-                             lGetString(rule, SPR_url), SCHED_CONF_FILE);
-         *list = read_sched_configuration(lGetString(rule, SPR_url), sge_dstring_get_string(&file_name), 1, NULL);
          break;
       case SGE_TYPE_USER:
-         sge_read_user_list_from_disk();
+         if (sge_read_user_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_USERSET:
-         sge_read_userset_list_from_disk();
+         if (sge_read_userset_list_from_disk() != 0) {
+            ret = false;
+         }
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
-         sge_read_user_mapping_entries_from_disk();
+         if (sge_read_user_mapping_entries_from_disk() != 0) {
+            ret = false;
+         }
          break;
 #endif
       case SGE_TYPE_HGROUP:
-         sge_read_host_group_entries_from_disk();
+         if (sge_read_host_group_entries_from_disk() != 0) {
+            ret = false;
+         }
          break;
       default:
          break;
    }
 
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/classic/spool_classic_default_read_func() *****************
@@ -479,9 +580,9 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_classic_default_read_func(const lListElem *type, 
-*                                     const lListElem *rule, 
-*                                     const char *key, 
+*     spool_classic_default_read_func(lList **answer_list, 
+*                                     const lListElem *type, 
+*                                     const lListElem *rule, const char *key, 
 *                                     const sge_object_type event_type) 
 *
 *  FUNCTION
@@ -489,6 +590,7 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
 *     function.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
@@ -506,25 +608,27 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_read_object()
 *******************************************************************************/
 lListElem *
-spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
-                                const char *key, 
+spool_classic_default_read_func(lList **answer_list, 
+                                const lListElem *type, 
+                                const lListElem *rule, const char *key, 
                                 const sge_object_type event_type)
 {
    lListElem *ep = NULL;
-
-   static dstring file_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_classic_default_read_func");
 
    switch (event_type) {
       case SGE_TYPE_ADMINHOST:
-         ep = cull_read_in_host(ADMINHOST_DIR, key, CULL_READ_SPOOL, AH_name, NULL, NULL);
+         ep = cull_read_in_host(ADMINHOST_DIR, key, CULL_READ_SPOOL, AH_name, 
+                                NULL, NULL);
          break;
       case SGE_TYPE_EXECHOST:
-         ep = cull_read_in_host(EXECHOST_DIR, key, CULL_READ_SPOOL, EH_name, NULL, NULL);
+         ep = cull_read_in_host(EXECHOST_DIR, key, CULL_READ_SPOOL, EH_name, 
+                                NULL, NULL);
          break;
       case SGE_TYPE_SUBMITHOST:
-         ep = cull_read_in_host(SUBMITHOST_DIR, key, CULL_READ_SPOOL, SH_name, NULL, NULL);
+         ep = cull_read_in_host(SUBMITHOST_DIR, key, CULL_READ_SPOOL, SH_name, 
+                                NULL, NULL);
          break;
       case SGE_TYPE_CALENDAR:
          ep = cull_read_in_cal(CAL_DIR, key, 1, 0, NULL, NULL);
@@ -533,23 +637,41 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
          ep = cull_read_in_ckpt(CKPTOBJ_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_COMPLEX:
-         sge_dstring_sprintf(&file_name, "%s/%s", COMPLEX_DIR, key);
-         ep = read_cmplx(sge_dstring_get_string(&file_name), key, NULL);
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_sprintf(&file_name, "%s/%s", COMPLEX_DIR, key);
+            ep = read_cmplx(sge_dstring_get_string(&file_name), key, NULL);
+         }
          break;
       case SGE_TYPE_CONFIG:
-         sge_dstring_sprintf(&file_name, "%s/%s/%s",
-                             lGetString(rule, SPR_url), LOCAL_CONF_DIR, key);
-         ep = read_configuration(sge_dstring_get_string(&file_name), 
-                                 key, FLG_CONF_SPOOL);
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_sprintf(&file_name, "%s/%s/%s",
+                                lGetString(rule, SPR_url), LOCAL_CONF_DIR, key);
+            ep = read_configuration(sge_dstring_get_string(&file_name), 
+                                    key, FLG_CONF_SPOOL);
+         }
          break;
       case SGE_TYPE_JOB:
-         WARNING((SGE_EVENT, MSG_SPOOL_NOTSUPPORTEDREADINGJOB));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_NOTSUPPORTEDREADINGJOB);
          break;
       case SGE_TYPE_MANAGER:
-         WARNING((SGE_EVENT, MSG_SPOOL_NOTSUPPORTEDREADINGMANAGER));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_NOTSUPPORTEDREADINGMANAGER);
          break;
       case SGE_TYPE_OPERATOR:
-         WARNING((SGE_EVENT, MSG_SPOOL_NOTSUPPORTEDREADINGOPERATOR));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_NOTSUPPORTEDREADINGOPERATOR);
          break;
       case SGE_TYPE_SHARETREE:
          {
@@ -568,10 +690,17 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
          ep = cull_read_in_qconf(QUEUE_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_SCHEDD_CONF:
-         sge_dstring_sprintf(&file_name, "%s/%s",
-                             lGetString(rule, SPR_url), SCHED_CONF_FILE);
-         ep = cull_read_in_schedd_conf(NULL, sge_dstring_get_string(&file_name),
-                                       1, NULL);
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_sprintf(&file_name, "%s/%s",
+                                lGetString(rule, SPR_url), SCHED_CONF_FILE);
+            ep = cull_read_in_schedd_conf(NULL, 
+                                          sge_dstring_get_string(&file_name),
+                                          1, NULL);
+         }
          break;
       case SGE_TYPE_USER:
          ep = cull_read_in_userprj(USER_DIR, key, 1, 1, NULL);
@@ -597,20 +726,21 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
 
 /****** spool/classic/spool_classic_default_write_func() ****************
 *  NAME
-*     spool_classic_default_write_func() -- write objects through classic spooling
+*     spool_classic_default_write_func() -- write objects using classic spooling
 *
 *  SYNOPSIS
 *     bool
-*     spool_classic_default_write_func(const lListElem *type, 
+*     spool_classic_default_write_func(lList **answer_list, 
+*                                      const lListElem *type, 
 *                                      const lListElem *rule, 
-*                                      const lListElem *object, 
-*                                      const char *key, 
+*                                      const lListElem *object, const char *key,
 *                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate classic spooling functions.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
@@ -629,12 +759,13 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_delete_object()
 *******************************************************************************/
 bool
-spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
+spool_classic_default_write_func(lList **answer_list, 
+                                 const lListElem *type, 
+                                 const lListElem *rule, 
                                  const lListElem *object, const char *key, 
                                  const sge_object_type event_type)
 {
-   static dstring file_name = DSTRING_INIT;
-   static dstring real_name = DSTRING_INIT;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_write_func");
    switch (event_type) {
@@ -648,30 +779,58 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_ckpt(1, 2, object);
          break;
       case SGE_TYPE_COMPLEX:
-         sge_dstring_sprintf(&file_name, "%s/.%s", COMPLEX_DIR, key);
-         sge_dstring_sprintf(&real_name, "%s/%s", COMPLEX_DIR, key);
-         if(write_cmplx(1, sge_dstring_get_string(&file_name), lGetList(object, CX_entries), NULL, NULL) == 0) {
-            rename(sge_dstring_get_string(&file_name), 
-                   sge_dstring_get_string(&real_name));
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            char real_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+            dstring real_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
+
+            sge_dstring_sprintf(&file_name, "%s/.%s", COMPLEX_DIR, key);
+            sge_dstring_sprintf(&real_name, "%s/%s", COMPLEX_DIR, key);
+            if(write_cmplx(1, sge_dstring_get_string(&file_name), 
+                           lGetList(object, CX_entries), NULL, answer_list) 
+               == 0) {
+               rename(sge_dstring_get_string(&file_name), 
+                      sge_dstring_get_string(&real_name));
+            } else {
+               ret = false;
+            }
          }
          break;
       case SGE_TYPE_CONFIG:
-         if (sge_hostcmp(lGetHost(object, CONF_hname), "global") == 0) {
-            sge_dstring_sprintf(&file_name, "%s/.%s",
-                                lGetString(rule, SPR_url), CONF_FILE);
-            sge_dstring_sprintf(&real_name, "%s/%s",
-                                lGetString(rule, SPR_url), CONF_FILE);
-         } else {
-            sge_dstring_sprintf(&file_name, "%s/%s/.%s", 
-                                lGetString(rule, SPR_url), LOCAL_CONF_DIR,
-                                key);
-            sge_dstring_sprintf(&real_name, "%s/%s/%s", 
-                                lGetString(rule, SPR_url), LOCAL_CONF_DIR,
-                                key);
-         }
-         if (write_configuration(1, NULL, sge_dstring_get_string(&file_name), object, NULL, FLG_CONF_SPOOL) == 0) {
-            rename(sge_dstring_get_string(&file_name), 
-                   sge_dstring_get_string(&real_name));
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            char real_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+            dstring real_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
+
+            if (sge_hostcmp(lGetHost(object, CONF_hname), "global") == 0) {
+               sge_dstring_sprintf(&file_name, "%s/.%s",
+                                   lGetString(rule, SPR_url), CONF_FILE);
+               sge_dstring_sprintf(&real_name, "%s/%s",
+                                   lGetString(rule, SPR_url), CONF_FILE);
+            } else {
+               sge_dstring_sprintf(&file_name, "%s/%s/.%s", 
+                                   lGetString(rule, SPR_url), LOCAL_CONF_DIR,
+                                   key);
+               sge_dstring_sprintf(&real_name, "%s/%s/%s", 
+                                   lGetString(rule, SPR_url), LOCAL_CONF_DIR,
+                                   key);
+            }
+            if (write_configuration(1, answer_list, 
+                                    sge_dstring_get_string(&file_name), object, 
+                                    NULL, FLG_CONF_SPOOL) == 0) {
+               rename(sge_dstring_get_string(&file_name), 
+                      sge_dstring_get_string(&real_name));
+            } else {
+               ret = false;
+            }
          }
          break;
       case SGE_TYPE_EXECHOST:
@@ -689,40 +848,76 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
             if (only_job) {
-               job_write_common_part((lListElem *)object, 0, SPOOL_DEFAULT);
+               if (job_write_common_part((lListElem *)object, 0, SPOOL_DEFAULT)
+                   != 0) {
+                  ret = false;
+               }
             } else {
-               job_write_spool_file((lListElem *)object, ja_task_id, pe_task_id, SPOOL_DEFAULT);
+               if (job_write_spool_file((lListElem *)object, ja_task_id, 
+                                        pe_task_id, SPOOL_DEFAULT) != 0) {
+                  ret = false;
+               }
             }
 
             free(dup);
          }
          break;
       case SGE_TYPE_MANAGER:
-         write_manop(1, SGE_MANAGER_LIST);
+         if (write_manop(1, SGE_MANAGER_LIST) != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_OPERATOR:
-         write_manop(1, SGE_OPERATOR_LIST);
+         if (write_manop(1, SGE_OPERATOR_LIST) != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_SHARETREE:
-         sge_dstring_sprintf(&file_name, ".%s", SHARETREE_FILE);
-         if(write_sharetree(NULL, object, (char *)sge_dstring_get_string(&file_name), NULL, 1, 1, 1) == 0) {
-            rename(sge_dstring_get_string(&file_name), SHARETREE_FILE);
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+
+            sge_dstring_sprintf(&file_name, ".%s", SHARETREE_FILE);
+            if(write_sharetree(answer_list, object, 
+                               (char *)sge_dstring_get_string(&file_name), NULL,
+                               1, 1, 1) == 0) {
+               rename(sge_dstring_get_string(&file_name), SHARETREE_FILE);
+            } else {
+               ret = false;
+            }
          }
          break;
       case SGE_TYPE_PE:
          write_pe(1, 2, object);
          break;
       case SGE_TYPE_PROJECT:
-         sge_dstring_sprintf(&file_name, "%s/.%s", PROJECT_DIR, key);
-         sge_dstring_sprintf(&real_name, "%s/%s", PROJECT_DIR, key);
-         if(write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 0) == 0) {
-            rename(sge_dstring_get_string(&file_name), 
-                   sge_dstring_get_string(&real_name));
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            char real_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+            dstring real_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
+
+            sge_dstring_sprintf(&file_name, "%s/.%s", PROJECT_DIR, key);
+            sge_dstring_sprintf(&real_name, "%s/%s", PROJECT_DIR, key);
+            if(write_userprj(answer_list, object, 
+                             sge_dstring_get_string(&file_name), NULL, 1, 0) 
+               == 0) {
+               rename(sge_dstring_get_string(&file_name), 
+                      sge_dstring_get_string(&real_name));
+            } else {
+               ret = false;
+            }
          }
          break;
       case SGE_TYPE_QUEUE:
-         sge_dstring_sprintf(&file_name, "%s", key);
-         cull_write_qconf(1, 0, QUEUE_DIR, sge_dstring_get_string(&file_name), NULL, object);
+         if (cull_write_qconf(1, 0, QUEUE_DIR, key, NULL, object) != 0) {
+            ret = false;
+         }
          break;
       case SGE_TYPE_SCHEDD_CONF:
          write_sched_configuration(1, 2, lGetString(rule, SPR_url), object);
@@ -731,19 +926,47 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_host(1, 2, object, SH_name, NULL);
          break;
       case SGE_TYPE_USER:
-         sge_dstring_sprintf(&file_name, "%s/.%s", USER_DIR, key);
-         sge_dstring_sprintf(&real_name, "%s/%s", USER_DIR, key);
-         if(write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 1) == 0) {
-            rename(sge_dstring_get_string(&file_name), 
-                   sge_dstring_get_string(&real_name));
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            char real_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+            dstring real_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
+
+            sge_dstring_sprintf(&file_name, "%s/.%s", USER_DIR, key);
+            sge_dstring_sprintf(&real_name, "%s/%s", USER_DIR, key);
+            if(write_userprj(answer_list, object, 
+                             sge_dstring_get_string(&file_name), NULL, 1, 1) 
+               == 0) {
+               rename(sge_dstring_get_string(&file_name), 
+                      sge_dstring_get_string(&real_name));
+            } else {
+               ret = false;
+            }
          }
          break;
       case SGE_TYPE_USERSET:
-         sge_dstring_sprintf(&file_name, "%s/.%s", USERSET_DIR, key);
-         sge_dstring_sprintf(&real_name, "%s/%s", USERSET_DIR, key);
-         if(write_userset(NULL, object, sge_dstring_get_string(&file_name), NULL, 1) == 0) {
-            rename(sge_dstring_get_string(&file_name), 
-                   sge_dstring_get_string(&real_name));
+         {
+            char file_name_buf[SGE_PATH_MAX];
+            char real_name_buf[SGE_PATH_MAX];
+            dstring file_name;
+            dstring real_name;
+
+            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
+            sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
+
+            sge_dstring_sprintf(&file_name, "%s/.%s", USERSET_DIR, key);
+            sge_dstring_sprintf(&real_name, "%s/%s", USERSET_DIR, key);
+            if(write_userset(answer_list, object, 
+                             sge_dstring_get_string(&file_name), NULL, 1) 
+               == 0) {
+               rename(sge_dstring_get_string(&file_name), 
+                      sge_dstring_get_string(&real_name));
+            } else {
+               ret = false;
+            }
          }
          break;
 #ifndef __SGE_NO_USERMAPPING__
@@ -759,7 +982,7 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
    }
 
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/classic/spool_classic_default_delete_func() ***************
@@ -768,7 +991,8 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
 *
 *  SYNOPSIS
 *     bool
-*     spool_classic_default_delete_func(const lListElem *type, 
+*     spool_classic_default_delete_func(lList **answer_list, 
+*                                       const lListElem *type, 
 *                                       const lListElem *rule, 
 *                                       const char *key, 
 *                                       const sge_object_type event_type) 
@@ -779,6 +1003,7 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
 *     (e.g. jobs), a special remove function is called.
 *
 *  INPUTS
+*     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
@@ -796,38 +1021,46 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
 *     spool/spool_delete_object()
 *******************************************************************************/
 bool 
-spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
+spool_classic_default_delete_func(lList **answer_list, 
+                                  const lListElem *type, 
+                                  const lListElem *rule, 
                                   const char *key, 
                                   const sge_object_type event_type)
 {
-   static dstring dir_name = DSTRING_INIT;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_delete_func");
 
    switch (event_type) {
       case SGE_TYPE_ADMINHOST:
-         sge_unlink(ADMINHOST_DIR, key);
+         ret = sge_unlink(ADMINHOST_DIR, key) == 0;
          break;
       case SGE_TYPE_CALENDAR:
-         sge_unlink(CAL_DIR, key);
+         ret = sge_unlink(CAL_DIR, key) == 0;
          break;
       case SGE_TYPE_CKPT:
-         sge_unlink(CKPTOBJ_DIR, key);
+         ret = sge_unlink(CKPTOBJ_DIR, key) == 0;
          break;
       case SGE_TYPE_COMPLEX:
-         sge_unlink(COMPLEX_DIR, key);
+         ret = sge_unlink(COMPLEX_DIR, key) == 0;
          break;
       case SGE_TYPE_CONFIG:
          if (sge_hostcmp(key, "global") == 0) {
-            ERROR((SGE_EVENT, MSG_SPOOL_GLOBALCONFIGNOTDELETED));
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_SPOOL_GLOBALCONFIGNOTDELETED);
+            ret = false;
          } else {
+            char dir_name_buf[SGE_PATH_MAX];
+            dstring dir_name;
+            sge_dstring_init(&dir_name, dir_name_buf, SGE_PATH_MAX);
             sge_dstring_sprintf(&dir_name, "%s/%s",
                                 lGetString(rule, SPR_url), LOCAL_CONF_DIR);
-            sge_unlink(sge_dstring_get_string(&dir_name), key);
+            ret = sge_unlink(sge_dstring_get_string(&dir_name), key) == 0;
          }
          break;
       case SGE_TYPE_EXECHOST:
-         sge_unlink(EXECHOST_DIR, key);
+         ret = sge_unlink(EXECHOST_DIR, key) == 0;
          break;
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:   
@@ -842,7 +1075,8 @@ spool_classic_default_delete_func(const lListElem *type, const lListElem *rule,
    
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
-            job_remove_spool_file(job_id, ja_task_id, pe_task_id, SPOOL_DEFAULT);
+            ret = job_remove_spool_file(job_id, ja_task_id, pe_task_id, 
+                                        SPOOL_DEFAULT) == 0;
             free(dup);
          }
          break;
@@ -853,43 +1087,46 @@ spool_classic_default_delete_func(const lListElem *type, const lListElem *rule,
          write_manop(1, SGE_OPERATOR_LIST);
          break;
       case SGE_TYPE_SHARETREE:
-         sge_unlink(NULL, SHARETREE_FILE);
+         ret = sge_unlink(NULL, SHARETREE_FILE) == 0;
          break;
       case SGE_TYPE_PE:
-         sge_unlink(PE_DIR, key);
+         ret = sge_unlink(PE_DIR, key) == 0;
          break;
       case SGE_TYPE_PROJECT:
-         sge_unlink(PROJECT_DIR, key);
+         ret = sge_unlink(PROJECT_DIR, key) == 0;
          break;
       case SGE_TYPE_QUEUE:
-         sge_unlink(QUEUE_DIR, key);
+         ret = sge_unlink(QUEUE_DIR, key) == 0;
          break;
       case SGE_TYPE_SCHEDD_CONF:
-         ERROR((SGE_EVENT, MSG_SPOOL_SCHEDDCONFIGNOTDELETED));
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_SPOOL_SCHEDDCONFIGNOTDELETED);
+         ret = false;
          break;
       case SGE_TYPE_SUBMITHOST:
-         sge_unlink(SUBMITHOST_DIR, key);
+         ret = sge_unlink(SUBMITHOST_DIR, key) == 0;
          break;
       case SGE_TYPE_USER:
-         sge_unlink(USER_DIR, key);
+         ret = sge_unlink(USER_DIR, key) == 0;
          break;
       case SGE_TYPE_USERSET:
-         sge_unlink(USERSET_DIR, key);
+         ret = sge_unlink(USERSET_DIR, key) == 0;
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
-         sge_unlink(UME_DIR, key);
+         ret = sge_unlink(UME_DIR, key) == 0;
          break;
 #endif
       case SGE_TYPE_HGROUP:
-         sge_unlink(HGROUP_DIR, key);
+         ret = sge_unlink(HGROUP_DIR, key) == 0;
          break;
       default:
          break;
    }
 
    DEXIT;
-   return true;
+   return ret;
 }
 
 

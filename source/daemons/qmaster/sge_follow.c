@@ -979,9 +979,14 @@ lList **topp  /* ticket orders ptr ptr */
             }
 
             /* spool */
-            spool_write_object(spool_get_default_context(), up, up_name, 
-                               or_type == ORT_update_user_usage ? 
-                               SGE_TYPE_USER : SGE_TYPE_PROJECT);
+            {
+               lList *answer_list = NULL;
+               spool_write_object(&answer_list, 
+                                  spool_get_default_context(), up, up_name, 
+                                  or_type == ORT_update_user_usage ? 
+                                  SGE_TYPE_USER : SGE_TYPE_PROJECT);
+               answer_list_output(&answer_list);
+            }
             sge_add_event(NULL, 0,
                or_type==ORT_update_user_usage?sgeE_USER_MOD:sgeE_PROJECT_MOD,
                0, 0, up_name, up);
@@ -1071,10 +1076,14 @@ lList **topp  /* ticket orders ptr ptr */
             lSetUlong(jatp, JAT_state, state);
 
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            spool_write_object(spool_get_default_context(), jep, 
-                               job_get_key(jobid, task_number, NULL),
-                               SGE_TYPE_JOB);
-          
+            {
+               lList *answer_list = NULL;
+               spool_write_object(&answer_list, 
+                                  spool_get_default_context(), jep, 
+                                  job_get_key(jobid, task_number, NULL),
+                                  SGE_TYPE_JOB);
+               answer_list_output(&answer_list);
+            }
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
@@ -1121,9 +1130,14 @@ lList **topp  /* ticket orders ptr ptr */
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            spool_write_object(spool_get_default_context(), jep, 
-                               job_get_key(jobid, task_number, NULL),
-                               SGE_TYPE_JOB);
+            {
+               lList *answer_list = NULL;
+               spool_write_object(&answer_list, 
+                                  spool_get_default_context(), jep, 
+                                  job_get_key(jobid, task_number, NULL),
+                                  SGE_TYPE_JOB);
+               answer_list_output(&answer_list);
+            }
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
             sge_add_queue_event(sgeE_QUEUE_MOD, queueep);

@@ -1,10 +1,14 @@
+AS-2002-03-28-0: CVS:       Created V53_TAG
+-------------------------------------------
+
 JG-2002-03-28-1  Testsuite: Create HTML output after each run level.
 
 JG-2002-03-28-0  Testsuite: large_cluster test: submit jobs in parallel from
                             multiple hosts.
 
-AH-2002-03-27-0  Enhancm.:  Increased GRM_GDI_VERSION to ensure 5.3 components 
-                            cleanly refuse interoperating with 5.3 beta2 components
+AH-2002-03-27-0  Enhancm.:  Increased GRM_GDI_VERSION to ensure 5.3
+                            components cleanly refuse interoperating with
+                            5.3 beta2 components
 
 AS-2002-03-27-0  Install:   cleanup install details in for "distinst"
 
@@ -1351,9 +1355,8 @@ JG-2001-11-08-1: Feature:   New qconf options:
 JG-2001-11-08-0: Bugfix:    Updated recent GDI versions for version check
                             and error handling in qmaster.
 
------------------------------------------------------------
-AS-2001-11-07-0: Created V53_beta1_TAG and V53_beta1_BRANCH
-                 Released SGE 5.3beta1
+AS-2001-11-07-0: Created V53_beta1_TAG and V53_beta1_BRANCH Rel. SGE 5.3beta1
+-----------------------------------------------------------------------------
 
 JG-2001-11-07-2: aimk: recognize the necessity to set -DHAS_IN_PORT_T for 
                  the LINUX6 platform dependent on the libc version.

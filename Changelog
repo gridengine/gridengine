@@ -1,3 +1,6 @@
+JG-2001-07-27-0: (Issue# 22): qdel to non existent job output inaccurate
+                 error message
+
 JG-2001-07-26-1: Maintrunc version:
                  - set Version string to "5.3 maintrunc"
                  - increased GDI version

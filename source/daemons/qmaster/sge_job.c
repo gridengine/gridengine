@@ -714,7 +714,7 @@ int sub_command
    u_long32 end = 0;
    u_long32 step = 0;
    u_long32 job_number = 0;
-   int alltasks = 0;
+   int alltasks = 1;
    int showmessage = 0;
    int all_jobs_flag;
    int all_users_flag;

@@ -423,7 +423,7 @@ int *intval_array
    COMMD_HOST    if  present host of communication daemon to contact
                  if !present the local host is used
 
-   COMMD_SERVICE if present used to get commd port; default: "commd"
+   COMMD_PORT if present used to get commd port; default: "commd"
 
    globals used
 
@@ -2284,12 +2284,19 @@ static int get_environments()
          return 0;
       }
 
+#if 0
+     /* not supported by rest of current infrastructure  */
       if (!((cp = getenv("COMMD_SERVICE")))) {
          cp = get_commlib_state_commdservice();
          if (cp[0] == '\0')
             cp = "unknown_service";
       }
+#endif
 
+     cp = get_commlib_state_commdservice();
+     if (cp[0] == '\0')
+        cp = "unknown_service";
+        
       nisretry = MAXNISRETRY;   /* NIS sometimes neede several attempts */
       while (nisretry-- && !((se = getservbyname(cp, "tcp"))));
       if (!se)

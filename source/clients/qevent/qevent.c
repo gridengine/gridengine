@@ -42,9 +42,11 @@
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prognames.h"
+#include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_clients_common.h"
+#include "msg_common.h"
 #include "sge_c_event.h"
 #include "event.h"
 
@@ -96,7 +98,8 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QEVENT);
 
-   if (reresolve_me_qualified_hostname() != CL_OK) {
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, me.qualified_hostname, cl_errstr(ret)));
       SGE_EXIT(1);
    }   
 

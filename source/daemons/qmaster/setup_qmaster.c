@@ -103,6 +103,7 @@
 #include "reschedule.h"
 #include "sge_stat.h" 
 #include "msg_daemons_common.h"
+#include "msg_common.h"
 #include "msg_qmaster.h"
 #include "reschedule.h"
 #include "sge_washing_machine.h"
@@ -205,8 +206,9 @@ int sge_setup_qmaster()
    set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
 
    /* get aliased hostname from commd */
-   reresolve_me_qualified_hostname();
-
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK)
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, me.qualified_hostname, cl_errstr(ret)));
+         
    /*
    ** build and change to master spool dir
    */

@@ -72,6 +72,7 @@
 #include "qm_name.h"
 #include "msg_schedd.h"
 #include "msg_daemons_common.h"
+#include "msg_common.h"
 #include "sge_language.h"
 #include "sge_string.h"
 #include "setup_path.h" 
@@ -513,8 +514,9 @@ static int sge_setup_sge_schedd()
    }
 
    /* get aliased hostname from commd */
-   reresolve_me_qualified_hostname();
-
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK)
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, me.qualified_hostname, cl_errstr(ret)));
+         
    sge_chdir(conf.qmaster_spool_dir, 1);
    sge_mkdir(SCHED_SPOOL_DIR, 0755, 1);
    sge_chdir(SCHED_SPOOL_DIR, 1);

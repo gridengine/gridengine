@@ -154,8 +154,6 @@ int reresolve_me_qualified_hostname()
    ** get aliased hostname from commd
    */
    if ((ret=getuniquehostname(me.qualified_hostname, unique_hostname, 0))!=CL_OK) {
-      WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, 
-               me.qualified_hostname, cl_errstr(ret)));
       DEXIT;
       return ret;
    }

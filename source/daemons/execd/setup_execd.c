@@ -80,7 +80,8 @@ char execd_messages_file[SGE_PATH_MAX];
 void sge_setup_sge_execd()
 {
    char err_str[1024];
-
+   int ret;
+   
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
    if (get_conf_and_daemonize(daemonize_execd, &execd_config_list)) {
@@ -102,7 +103,8 @@ void sge_setup_sge_execd()
    }
 
    /* get aliased hostname from commd */
-   reresolve_me_qualified_hostname();
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK)
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, me.qualified_hostname, cl_errstr(ret)));
 
    DPRINTF(("chdir(\"/\")----------------------------\n"));
    sge_chdir("/",1);

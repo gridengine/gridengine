@@ -619,7 +619,7 @@ DTRACE;
  * if these are filtered, one gets a mixture of full
  * and reduced elements in the same list.
  */
-#if 1 
+
    /* ---------------------------------------- */
 
    if (what_jat == NULL) {
@@ -627,8 +627,9 @@ DTRACE;
 #define NM10 "%I%I%I%I%I%I%I%I%I%I"
 #define NM5  "%I%I%I%I%I"
 #define NM2  "%I%I"
+#define NM1  "%I"
 
-      what_jat = lWhat("%T(" NM10 NM5 NM2 NM2")", JAT_Type,
+      what_jat = lWhat("%T(" NM10 NM5 NM2 NM1")", JAT_Type,
          JAT_task_number, 
          JAT_status,     
          JAT_start_time,
@@ -668,8 +669,8 @@ DTRACE;
          JAT_prio,
          JAT_ntix
       );
+
    }
-#endif
 
    DEXIT;
    return;

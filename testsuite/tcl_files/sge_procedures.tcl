@@ -5811,7 +5811,7 @@ proc startup_qmaster {} {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
-   global schedd_debug master_debug CHECK_DISPLAY_OUTPUT
+   global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
       if { [have_root_passwd] != 0  } {
@@ -5828,13 +5828,13 @@ proc startup_qmaster {} {
 
    if { $master_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster" ""
    }
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
    }
@@ -5880,7 +5880,7 @@ proc startup_scheduler {} {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
-   global schedd_debug CHECK_DISPLAY_OUTPUT
+   global schedd_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
       if { [have_root_passwd] != 0  } {
@@ -5897,7 +5897,7 @@ proc startup_scheduler {} {
 
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
    }

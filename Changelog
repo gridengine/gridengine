@@ -1,3 +1,19 @@
+CR-2002-09-13-1: Testsuite: - "-secure" now default aimk compile option
+                 Enhancem.: - try to get DISPLAY from user environment at 
+                              startup
+                            - removed all "gets stdin" statements in expect/tcl
+                              scripts due expect "interact" problem. Using now
+                              a shell script for user input. This is a workaround
+                              for a "hanging" vi unter expect control. "gets stdin"
+                              seems to "block" the stdin for expect "interact" command
+                            - new menu entry: "(26) enter testsuite setup"
+                            - new menu entry: "(27) set command line options"
+                              (change testsuite options without exit testsuite;this
+                               enables the user to change setup without terminate
+                               testsuite -> existing rlogins stay open)
+                              (master and scheduler debug and setting SGE_DEBUG_LEVEL
+                               can now also changed "online")
+
 CR-2002-09-13-0: Bugfix:    Typo in message
                  Bugtraq:   #4746705
 

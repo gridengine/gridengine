@@ -642,8 +642,6 @@ proc qmod_forceaction {} {
       set_error -1 "not 5 processes in processgroup \"$grppid\""
    }
  
-#   puts $CHECK_OUTPUT "press enter for next test ..."
-#   gets stdin myinput
 
    # set job in suspend mode
    puts $CHECK_OUTPUT "setting job in suspend mode ..."
@@ -662,8 +660,6 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is not in suspend state"
    }
 
-#   puts $CHECK_OUTPUT "press enter for next test ..."
-#   gets stdin myinput
 
    puts $CHECK_OUTPUT "unsuspend job with kill command ..."
    # unsunspend job per kill command
@@ -692,8 +688,6 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state"
    }   
    
-#   puts $CHECK_OUTPUT "press enter for next test ..."
-#   gets stdin myinput
    puts $CHECK_OUTPUT "set job in suspend mode (queueing system things it is still suspended) ..."
 
    # set job in suspend mode (is allready in suspend (in SGE system))
@@ -710,8 +704,6 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state without force flag"
    }    
 
-#   puts $CHECK_OUTPUT "press enter for next test ..."
-#   gets stdin myinput
    puts $CHECK_OUTPUT "set job in suspend mode with force flag ..." 
    
  
@@ -729,8 +721,6 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is still not in suspend state with using force flag"
    }    
 
-#   puts $CHECK_OUTPUT "press enter for next test ..."
-#   gets stdin myinput
    puts $CHECK_OUTPUT "set job in unsuspend mode ..."
    
 
@@ -743,8 +733,6 @@ proc qmod_forceaction {} {
    puts $CHECK_OUTPUT $output
 
 
-#   puts $CHECK_OUTPUT "press enter for next test ..."
-#   gets stdin myinput
    puts $CHECK_OUTPUT "release job and wait for jobend ..."
 
    

@@ -85,7 +85,7 @@ global CHECK_AIMK_COMPILE_OPTIONS     ;# optional: aimk options
 global CHECK_DIST_INSTALL_OPTIONS     ;# optional: mydistinst options
 global CHECK_QMASTER_INSTALL_OPTIONS  ;# optional: qmaster install parameter
 global CHECK_EXECD_INSTALL_OPTIONS    ;# optional: execd install parameter 
-set CHECK_AIMK_COMPILE_OPTIONS ""
+set CHECK_AIMK_COMPILE_OPTIONS "-secure"
 set CHECK_DIST_INSTALL_OPTIONS "-allall"
 set CHECK_QMASTER_INSTALL_OPTIONS ""
 set CHECK_EXECD_INSTALL_OPTIONS   ""
@@ -96,7 +96,11 @@ set CHECK_DNS_DOMAINNAME ""
 global CHECK_REMOTE_ENVIRONMENT
 set CHECK_REMOTE_ENVIRONMENT ""
 global CHECK_DISPLAY_OUTPUT 
-set CHECK_DISPLAY_OUTPUT "undefined"
+if { [info exists env(DISPLAY)] } {
+set CHECK_DISPLAY_OUTPUT [set env(DISPLAY)]
+} else {
+set CHECK_DISPLAY_OUTPUT "undefined"  
+}
 global CHECK_SETTINGS_VERSION    ;# settings file version number
 set CHECK_SETTINGS_VERSION "undefined"
 global CHECK_PRODUCT_VERSION_NUMBER ;# version string of qstat -help of tested system
@@ -215,6 +219,8 @@ global set_error_proc_called       ;# flag
 global open_spawn_buffer           ;# buffer for open_spawn_process arguments
 global have_ssh_access_state       ;# global variable for have_ssh_access procedure (remember state)
 global check_timestamp             ;# for use in is_job_running
+global CHECK_SGE_DEBUG_LEVEL       ;# SGE_DEBUG_LEVEL for starting qmaster and scheduler in debug mode
+set CHECK_SGE_DEBUG_LEVEL "2 0 0 0 0 0 0 0"
 global CHECK_MAILS_SENT            ;# counter for send mails
 set CHECK_MAILS_SENT 0
 global CHECK_ENABLE_MAIL           ;# is mail sending enabled
@@ -789,7 +795,8 @@ proc set_root_passwd {} {
   puts "root access needed, please enter root password: "
   if { [have_ssh_access] == 0 } {
      stty -echo
-     gets stdin CHECK_ROOT_PASSWORD
+     set  CHECK_ROOT_PASSWORD [wait_for_enter 1]
+#     gets stdin CHECK_ROOT_PASSWORD
      stty echo
      if { [ string compare "" $CHECK_ROOT_PASSWORD ] == 0 } {
         set CHECK_ROOT_PASSWORD "none"
@@ -804,7 +811,7 @@ proc set_root_passwd {} {
      puts $CHECK_OUTPUT "--> id as root output:\n$result"
      puts $CHECK_OUTPUT "--> no root access"
      puts $CHECK_OUTPUT "enter \"noroot\" to start testsuite without root access\nOR\npress >ENTER< to type in the root password again"
-     gets stdin user_input
+     set user_input [wait_for_enter 1]
      if { [ string compare "noroot" $user_input ] != 0 } {
          set_root_passwd
          return
@@ -1257,6 +1264,7 @@ proc source_procedures {} {
 #*******************************
 proc edit_defaults {} {
   global CHECK_OUTPUT CHECK_DEFAULTS_FILE CHECK_HOST CHECK_CONFIG_DIR
+  global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
   global env
 
   load_defaults
@@ -1299,8 +1307,9 @@ proc edit_defaults {} {
      }
      set env(EDITOR) $vim_binary
      set id [ open_spawn_process $vim_binary "$def_edit_file" ]
-     interact
+     interact -o -i [lindex $id 1]
      set exit_state [ close_spawn_process $id ]
+
      if { $exit_state == 0 } {
         set read_return [ read_edit_defaults_file "$def_edit_file" ] 
         if { $read_return >= 0 } { 
@@ -1315,9 +1324,8 @@ proc edit_defaults {} {
            }
         } else {
            puts $CHECK_OUTPUT "error reading file \"$def_edit_file\""
-           puts $CHECK_OUTPUT ">> restarting vi in 10 seconds!"
            puts $CHECK_OUTPUT "\n>> press CTRL-C to abort setup configuration!"
-           sleep 10
+           wait_for_enter
         }
      }
   }
@@ -1377,6 +1385,7 @@ proc read_edit_defaults_file { filename } {
    global CHECK_MAX_ERROR_MAILS CHECK_HOST CHECK_USER
 
    set return_value -1
+   set product_mode_change 0
 
    set catch_return [ catch {
       set input [open "$filename" "r"]
@@ -1395,6 +1404,10 @@ proc read_edit_defaults_file { filename } {
                puts $CHECK_OUTPUT "$elem new value: \"$new_value\""
                set $var_name $new_value
                incr nr_of_changes 1
+               if { [ string compare $elem "product_type" ] == 0 } {
+                  puts $CHECK_OUTPUT "product mode change!!!"
+                  set product_mode_change 1
+               }
             }
          } else {
             puts $CHECK_OUTPUT "\"$elem\" doesn't exist in file \"$filename\" - config error"
@@ -1458,12 +1471,6 @@ proc read_edit_defaults_file { filename } {
       } 
    }
 
-    
-
-   
-
-
-
    if { [ string compare $CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION ] != 0 } {
         puts $CHECK_OUTPUT "you should not edit the settings_version - config error"
         puts $CHECK_OUTPUT "version should be \"$CHECK_CURRENT_SETTINGS_VERSION\""
@@ -1476,6 +1483,17 @@ proc read_edit_defaults_file { filename } {
         puts $CHECK_OUTPUT "product_type can only be \"sge\" or \"sgeee\""
         return -1
    }
+
+   set product_mode_file "$CHECK_PRODUCT_ROOT/default/common/product_mode" 
+
+   if { $product_mode_change == 1 && 
+        [file isfile $product_mode_file] } {
+   # delete product mode file
+      puts $CHECK_OUTPUT "deleting old product mode file!"
+      file delete $product_mode_file
+      puts $CHECK_OUTPUT "please run compile source and preinstall binaries after setup"
+   }
+ 
 
    if { ([string compare "none"   $CHECK_PRODUCT_FEATURE ] != 0) &&
         ([string compare "csp" $CHECK_PRODUCT_FEATURE ] != 0) } {
@@ -1775,7 +1793,7 @@ proc load_defaults {} {
   cd $old_dir
 
   set CHECK_SOURCE_COMPILE_HOSTS "unknown"
-  set CHECK_AIMK_COMPILE_OPTIONS ""
+  set CHECK_AIMK_COMPILE_OPTIONS "-secure"
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
   set CHECK_QMASTER_INSTALL_OPTIONS ""
   set CHECK_EXECD_INSTALL_OPTIONS ""
@@ -2198,7 +2216,7 @@ proc check_executable_files {  } {
    if { $file_error != 0 } {
       while { 1 } {
          puts $CHECK_OUTPUT "should I set the file permissions to 00755? (yes/no)"
-         gets stdin answer
+         set answer [wait_for_enter 1]
          if { [ string compare $answer "yes" ] == 0 } {
             foreach elem $change_files {
                 catch { file attributes $elem -permissions 00755 }
@@ -2585,10 +2603,12 @@ proc setup { {do_only_hostname_resolving 0} } {
 
   if {$have_defaults == 0 && $do_only_hostname_resolving == 0 && $do_nomain == 0} {
      puts "is this correct (y/n)"
-     gets stdin enter
-
-     if {$enter != "y" } { exit -1 }
-     save_defaults
+     set enter [wait_for_enter 1]
+     if {$enter != "y" } {
+        return [setup]
+     } else {
+        save_defaults
+     }
   }
 
 
@@ -3320,7 +3340,7 @@ proc print_results {ckpath where} {
          set numb_of_check_functions [ expr ($numb_of_check_functions + [llength $check_functions]) ]
          if {[string compare $where "stdout" ] == 0 } {
             puts $where "please press RETURN"
-            gets stdin pressed
+            set pressed [wait_for_enter 1]
          }
       }
    } my_error ]
@@ -4698,7 +4718,7 @@ proc select_runlevel {} {
            incr numbs 1
         }
 
-        gets stdin data
+        set data [wait_for_enter 1]
         if { $data <= 5 && $data > 0 } {
            incr data -1
            set in 0
@@ -4739,6 +4759,129 @@ proc select_runlevel {} {
            } else {
               lappend CHECK_GUILTY_CATEGORIES $new_cat
            }
+        }
+     } 
+}
+proc check_display {} {
+     global CHECK_DISPLAY_OUTPUT CHECK_CORE_MASTER CHECK_USER 
+
+     if { [ string compare $CHECK_DISPLAY_OUTPUT "undefined" ] == 0 } {
+        puts "no debug x display set"
+        return -1
+     } 
+     start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
+     if { $prg_exit_state != 0 } {
+         puts "can't open display $CHECK_DISPLAY_OUTPUT as user $CHECK_USER from host $CHECK_CORE_MASTER"    
+         return -1
+     }
+
+     if { [ have_root_passwd ] != 0 } {
+         set_root_passwd
+     }
+     start_remote_prog "$CHECK_CORE_MASTER" "root" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
+     if { $prg_exit_state != 0 } {
+         puts "can't open display $CHECK_DISPLAY_OUTPUT as user root from host $CHECK_CORE_MASTER"    
+         return -1
+     }
+     return 0
+}
+
+
+proc set_command_line_options {} {
+     global CHECK_GUILTY_RUNLEVELS CHECK_GUILTY_CATEGORIES CHECK_CHECKTREE_ROOT 
+     global CHECK_SGE_DEBUG_LEVEL
+     global master_debug schedd_debug do_not_update CHECK_DISPLAY_OUTPUT daemon_debug
+     set data ""
+     while { $data != 0 } {
+        clear_screen
+        print_menu_header
+        puts "\nplease select/unselect command line options: \n"
+        puts "(0) return to previous menu\n"
+
+        puts "options:\n"
+
+
+        if { $master_debug == 0 } {
+           set md_flag "off"
+        } else {
+           set md_flag "on"
+        }
+        if { $schedd_debug == 0 } {
+           set sd_flag "off"
+        } else {
+           set sd_flag "on"
+        }
+        if { $do_not_update == 0 } {
+           set nu_flag "off"
+        } else {
+           set nu_flag "on"
+        }
+
+
+        puts "(1) master_debug    : $md_flag"
+        puts "(2) schedd_debug    : $sd_flag"
+        puts "(3) SGE_DEBUG_LEVEL : $CHECK_SGE_DEBUG_LEVEL"
+        puts "(4) no_update       : $nu_flag"
+
+        set data [wait_for_enter 1]
+        if { $data <= 2 && $data > 0 } {
+        }
+        switch $data {
+           "1" { 
+              puts "master_debug" 
+              if { $master_debug == 0 } {
+                 set result [check_display]
+                 if { $result != 0 } {
+                    puts "current display \"$CHECK_DISPLAY_OUTPUT\" does not work,\nplease enter correct display: "
+                    set CHECK_DISPLAY_OUTPUT [wait_for_enter 1]
+                    set result [check_display]
+                    if { $result != 0 } { 
+                       puts "still errors"
+                       wait_for_enter
+                       continue
+                    }
+                 }
+                 set master_debug 1
+              } else {
+                 set master_debug 0
+              }
+           }
+           "2" {
+              puts "schedd_debug" 
+              if { $schedd_debug == 0 } {
+                 set result [check_display]
+                 if { $result != 0 } {
+                    puts "current display \"$CHECK_DISPLAY_OUTPUT\" does not work,\nplease enter correct display: "
+                    set CHECK_DISPLAY_OUTPUT [wait_for_enter 1]
+                    set result [check_display]
+                    if { $result != 0 } { 
+                       puts "still errors"
+                       wait_for_enter
+                       continue
+                    }
+                 }
+                 set schedd_debug 1
+              } else {
+                 set schedd_debug 0
+              }
+           }
+           "3" {
+               puts "enter new SGE_DEBUG_LEVEL: "
+               set CHECK_SGE_DEBUG_LEVEL [wait_for_enter 1]
+           }
+           "4" {
+               if { $do_not_update == 0 } {
+                  set do_not_update 1
+               } else { 
+                  set do_not_update 0
+               }
+           }
+        }
+
+        if { $schedd_debug == 0 && $master_debug == 0 } {
+           set daemon_debug 1
+        } else {
+           set daemon_debug 0
         }
      } 
 }
@@ -4932,7 +5075,7 @@ proc change_dir { } {
      incr count 1
   }
 
-  gets stdin input 
+  set input [wait_for_enter 1] 
   
   if { ($input == 1) && ([string compare $CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT] != 0)}  {
      puts "go to upper dir ..."
@@ -5244,12 +5387,17 @@ proc print_menu_header {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc wait_for_enter {} {
-   global CHECK_OUTPUT
+proc wait_for_enter { {no_text 0} } {
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    flush $CHECK_OUTPUT
 
-   puts "\npress enter..."
-   gets stdin enter 
+   if { $no_text == 0 } {
+      puts "\npress enter..."
+   }
+   set en_result [ catch {
+      set output [eval exec "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/wait_for_enter.sh"]
+   } ]
+   return $output
 }
 
 #                                                             max. column:     |
@@ -5327,7 +5475,7 @@ proc wait_for_start_time { substring } {
 #     ???/???
 #*******************************
 #
-proc compile_source {} {
+proc compile_source { { do_only_install 0 } } {
 
    global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
@@ -5420,6 +5568,8 @@ proc compile_source {} {
    shutdown_core_system
 
 
+   if { $do_only_install != 1 } {
+
    # update source 
    if { $do_not_update == 0 } {
       puts $CHECK_OUTPUT "------------------------------------------"
@@ -5475,7 +5625,12 @@ proc compile_source {} {
          puts $CHECK_OUTPUT "------------------------------------------"
       }
    }
+   }
    
+
+   if { $do_only_install != 1 } {
+
+
    set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
 
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5528,7 +5683,10 @@ proc compile_source {} {
       return -1
    }
 
+   }
+
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
+   if { $do_only_install != 1 } {
    
    set num 0
    set spawn_list {} 
@@ -5585,7 +5743,9 @@ proc compile_source {} {
    append mail_body "\n"
 
    
+   }
 
+   if { $do_only_install != 1 } {
 
    puts $CHECK_OUTPUT "now waiting for end of compile ..." 
    set timeout 300
@@ -5772,6 +5932,8 @@ proc compile_source {} {
       return -1
    } 
 
+   } 
+
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"
    if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
@@ -5870,7 +6032,9 @@ proc compile_source {} {
          set was_error 1
       }
    }
-   append html_body [ create_html_table html_table ]
+   if { $do_only_install != 1 } {
+      append html_body [ create_html_table html_table ]
+   }
  
    catch { file mkdir "$CHECK_PRODUCT_ROOT/man" } 
    catch { file mkdir "$CHECK_PRODUCT_ROOT/catman" } 
@@ -6085,7 +6249,7 @@ proc do_wait { time } {
 proc get_user_input { what } {
    puts -nonewline $what
    flush stdout 
-   gets stdin myinput
+   set myinput [wait_for_enter 1]
    return $myinput
 }
 
@@ -6125,7 +6289,7 @@ proc restart_debug_daemons { { shutdown 0 } } {
 proc got_command {  } {
 
   fconfigure stdin -blocking FALSE
-  gets stdin data
+  set data [wait_for_enter 1]
   if { [string length $data] > 0 } {
      return $data
   }  
@@ -6168,7 +6332,7 @@ proc ask_user_yes_or_no { question } {
   
    puts -nonewline $question
    flush stdout 
-   gets stdin myinput
+   set myinput [wait_for_enter 1]
 
    if { [ string compare -nocase $myinput "yes" ] == 0 } {
        return 1
@@ -6214,7 +6378,7 @@ proc menu {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
-  global daemon_debug CHECK_DEBUG_LEVEL
+  global daemon_debug CHECK_DEBUG_LEVEL CHECK_DEFAULTS_FILE CHECK_DO_SETUP
 
   set files [  print_menu_header ]
  
@@ -6247,9 +6411,10 @@ proc menu {} {
     puts " (23) compile source code and pre install binaries"
     puts " (24) do (23), then (2)"
     puts " (25) set testsuite debug level (current value: $CHECK_DEBUG_LEVEL)"
+    puts " (26) enter testsuite setup" 
+    puts " (27) set command line options"
 
-  
-  gets stdin input; 
+  set input [wait_for_enter 1]; 
 
   clear_screen
 
@@ -6293,6 +6458,37 @@ proc menu {} {
                 set CHECK_DEBUG_LEVEL 0
             } 
          }
+    "26" {  
+            set new_file_extension [timestamp]
+            set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.$new_file_extension" } ]
+            if { $catch_return == 0 } { 
+               clear_screen
+               puts "Current defaults file \n\"$CHECK_DEFAULTS_FILE\"\nsaved as\n\"${CHECK_DEFAULTS_FILE}.$new_file_extension\""
+               puts "Entering Setup at this point only works when system was compiled with testsuite!!!"
+               puts "Entering setup will shutdown current system!"
+               puts "continue (y/n)?"
+               set input [wait_for_enter 1]
+               if { $input == "y" } {
+                  if { [have_root_passwd] == -1 } {
+                     puts $CHECK_OUTPUT "need root access ..."
+                     set_root_passwd
+                  }
+                  shutdown_core_system
+                  set CHECK_DO_SETUP 1 
+                  setup
+                  compile_source 1  ;# only install binaries
+               } else {
+                  puts "stop"
+                  file delete ${CHECK_DEFAULTS_FILE}.$new_file_extension
+               }
+            } else {
+               puts "could not copy defaults file"
+            }
+            wait_for_enter
+         }
+    "27" {
+         set_command_line_options
+    }
     "0" { select_runlevel }
     "1" { change_dir; }
     "2" { run_tests $CHECK_ACT_PATH 0
@@ -6778,28 +6974,12 @@ if { $do_only_reset_config == 1 } {
  
 if {$do_nomain == 0} {
   if { $daemon_debug != 0 } {
-     if { [ string compare $CHECK_DISPLAY_OUTPUT "undefined" ] == 0 } {
-        puts "no debug x display set"
-        exit -1
-     } 
-     start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
-     if { $prg_exit_state != 0 } {
-         puts "can't open display $CHECK_DISPLAY_OUTPUT as user $CHECK_USER from host $CHECK_CORE_MASTER"    
-         exit -1
-     }
-
-
-     if { [ have_root_passwd ] != 0 } {
-         set_root_passwd
-     }
-     start_remote_prog "$CHECK_CORE_MASTER" "root" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
-     if { $prg_exit_state != 0 } {
-         puts "can't open display $CHECK_DISPLAY_OUTPUT as user root from host $CHECK_CORE_MASTER"    
-         exit -1
+     if { [check_display] != 0 } {
+        exit 1
      }
   }
   puts "please press <RETURN>"
-  gets stdin test
+  wait_for_enter 1
   menu 
 }
 

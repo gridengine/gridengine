@@ -684,7 +684,12 @@ void qevent_testsuite_mode(void)
 #endif
    
    while(!shut_me_down) {
-      sge_mirror_process_events();
+      sge_mirror_error error = sge_mirror_process_events();
+      if (error == SGE_EM_TIMEOUT) {
+         sleep(10);
+         continue;
+      }
+
       timestamp = sge_get_gmt();
 #ifndef QEVENT_SHOW_ALL
       fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",

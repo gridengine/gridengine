@@ -943,7 +943,7 @@ sge_mirror_error sge_mirror_process_events(void)
 
    
    DEXIT;
-   return SGE_EM_OK;
+   return ret;
 }
 
 /****** Eventmirror/sge_mirror_strerror() ***************************************

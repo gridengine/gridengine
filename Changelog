@@ -1,3 +1,9 @@
+JG-2004-02-17-0: Bugfix:    Mirror interface didn't propagate event client 
+                            errors.
+                            Make qevent analyze return code from mirror 
+                            interface.
+                 Review:    CR
+
 AA-2004-02-17-0: Bugfix:    Shell attribute was missing in Qconfig
                             Segv when attribute could not be applied
                  Changed:   qmon

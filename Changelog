@@ -1,3 +1,5 @@
+JG-2004-12-16-0: Testsuite: Bugfix in performance/throughput check.
+
 MD-2004-12-16-0: Bugfix:    - permission problem at rc-script gen.
                  Changed:   inst_common.sh
 

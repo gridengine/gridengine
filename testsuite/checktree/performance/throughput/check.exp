@@ -1147,7 +1147,7 @@ proc run_throughput_test {} {
             set resend_list [lrange $resend_list 1 end]
             # resend command has form <send_id> <command>, parse it
             set send_id [lindex $next_submit_command 0]
-            set next_submit_command [lindex $next_submit_command 1 end]
+            set next_submit_command [lrange $next_submit_command 1 end]
          } else {
             if { $job_options(count) > 0 } {
                set option_idx [expr $sent_jobs  % $job_options(count)]

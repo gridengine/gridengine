@@ -61,6 +61,7 @@
 #include "sge_job_reportL.h"
 #include "sge_usageL.h"
 #include "mail.h"
+#include "admin_mail.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM

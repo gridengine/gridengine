@@ -114,7 +114,7 @@ _FontLists_.*.browser_font: -adobe-courier-medium-r-*--12-*-*-*-m-*-*-*
 _FontLists_.*.fixed_font:  -adobe-courier-medium-r-*--14-*-*-*-m-*-*-*
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- japanese fonts
+!! japanese fonts
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 _FontLists_*.ja.*.interface: \
     -*-*gothic*-medium-r-*-14-*:R,\
@@ -128,7 +128,7 @@ _FontLists_*.ja.*.interface: \
     -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
     -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
     -*-*gothic*-bold-r-*-10-*:QUEUEICON
- 
+
 _FontLists_*.ja.*.dialog_font: \
     -*-*gothic*-medium-r-*-14-*:R,\
     -*-*gothic*-bold-r-*-14-*:B,\
@@ -141,7 +141,7 @@ _FontLists_*.ja.*.dialog_font: \
     -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
     -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
     -*-*gothic*-bold-r-*-10-*:QUEUEICON
- 
+
 _FontLists_*.ja.*.matrix_font: \
     -*-*gothic*-medium-r-*-14-*:R,\
     -*-*gothic*-bold-r-*-14-*:B,\
@@ -180,6 +180,7 @@ _FontLists_*.ja.*.fixed_font:\
     -*-*gothic*-bold-r-*-14-*:LISTBOLD,\
     -*-*gothic*-medium-r-*-14-*:LISTSMALL,\
     -*-*gothic*-bold-r-*-10-*:QUEUEICON
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! chinese fonts
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -1,3 +1,17 @@
+SG-2004-10-27-0: Bugfix:    qmod can modify queues starting with digits
+                            now.
+                 Issue:     1308
+                 Bugtraq:   6184460
+                 Changed:   qmod
+                 Review:    EB
+
+SG-2004-10-27-0: Bugfix:    - 3/3 part of of the look ahead scheduler
+                            extention.
+                 Issue:     978
+                 Bugtraq:   6184466
+                 Changed:   scheduler
+                 Review:    EB
+
 JG-2004-10-26-0: Testsuite: Additional charts for throughput test: Event 
                             delivery interval and number of events delivered.
                             Improved writing of testsuite data, e.g. dump files

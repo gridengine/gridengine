@@ -77,6 +77,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_subordinate.h"
 #include "sge_qref.h"
+#include "sge_calendarL.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
@@ -129,7 +130,7 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
                    lListElem *hep, bool allow_non_requestable);
 
 static dispatch_t
-parallel_queue_slots(const sge_assignment_t *a,lListElem *qep, int *slots, int *slots_qend, 
+parallel_queue_slots(sge_assignment_t *a,lListElem *qep, int *slots, int *slots_qend, 
                     int *violations, bool allow_non_requestable);
 
 static int 
@@ -187,6 +188,9 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
 static dispatch_t
 match_static_resource(int slots, lListElem *req_cplx, lListElem *src_cplx, dstring *reason, 
              int is_threshold, int force_existence, bool allow_non_requestable);
+
+static dispatch_t
+queue_match_cal_time(lListElem *queue, const sge_assignment_t *job_info, u_long32 *cal_time);
 
 static int 
 resource_cmp(u_long32 relop, double req, double src_dl); 
@@ -386,7 +390,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
 
          matched_pe_count++;
 
-         if (!best->gdil) {
+         if (!best->gdil) { /* first pe run */
             best->pe = pe;
 
             /* determine earliest start time with that PE */
@@ -397,7 +401,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                best_result = find_best_result(best_result, result);
                continue;
             }
-         } else {
+         } else { /* test with all other pes */
             sge_assignment_t tmp;
             assignment_copy(&tmp, best, false);
             tmp.pe = pe;
@@ -562,7 +566,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
 
    qeti = sge_qeti_allocate(best->job, best->pe, best->ckpt, 
          best->host_list, best->queue_list, best->centry_list, best->acl_list); 
-   
+  
    if (!qeti) {
       ERROR((SGE_EVENT, "could not allocate qeti object needed reservation "
             "scheduling of parallel job "U32CFormat"\n", u32c(best->job_id)));
@@ -572,6 +576,9 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
 
    if (best->start == DISPATCH_TIME_QUEUE_END) {
       first_time = sge_qeti_first(qeti);
+      if (first_time == 0) { /* we need at least one reservation run */
+         first_time = sconf_get_now();
+      }
    }   
    else {
       /* the first iteration will be done using best->start 
@@ -579,7 +586,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
       first_time = best->start;
       sge_qeti_next_before(qeti, best->start);
    }
-   
+
    old_logging = schedd_mes_get_logging(); /* store logging mode */  
    for (pe_time = first_time ; pe_time; pe_time = sge_qeti_next(qeti)) {
       DPRINTF(("SELECT PE TIME(%s, "u32") tries at "u32"\n", 
@@ -3845,10 +3852,12 @@ static int parallel_sort_suitable_queues(lList *queue_list)
       return 0;
    }
 
-   if (qsm == QSM_LOAD)
+   if (qsm == QSM_LOAD) {
       lPSortList(queue_list, "%I+ %I+ %I+ %I-", QU_soft_violation, QU_host_seq_no, QU_seq_no, QU_tag);
-   else
+   }   
+   else {
       lPSortList(queue_list, "%I+ %I+ %I+ %I-", QU_soft_violation, QU_seq_no, QU_host_seq_no, QU_tag);
+   }   
 
    DEXIT;
    return 0;
@@ -3865,7 +3874,7 @@ static int parallel_sort_suitable_queues(lList *queue_list)
 *          -1 assignment will never be possible for all jobs of that category
 ******************************************************************************/
 static dispatch_t
-parallel_queue_slots(const sge_assignment_t *a,lListElem *qep, int *slots, int *slots_qend, 
+parallel_queue_slots(sge_assignment_t *a,lListElem *qep, int *slots, int *slots_qend, 
                     int *violations, bool allow_non_requestable) 
 {
    lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
@@ -3874,21 +3883,48 @@ parallel_queue_slots(const sge_assignment_t *a,lListElem *qep, int *slots, int *
    const char *qname = lGetString(qep, QU_full_name);
    int qslots = 0, qslots_qend = 0;
    dispatch_t result = DISPATCH_NEVER_CAT;
+   u_long32 cal_time = a->start;
+   bool is_reset = false; /* This function computes future slots and current slots
+                             in one run. If the calendar returns later, we have to
+                             compute the slots, and reset the current slots to 0, even
+                             so the resurces are available, when the queue would not 
+                             have been cal disabled*/
 
    DENTER(TOP_LAYER, "parallel_queue_slots");
 
    if (sge_queue_match_static(qep, a->job, a->pe, a->ckpt, a->centry_list, a->acl_list) == DISPATCH_OK) {
+
+      result = queue_match_cal_time(qep, a, &cal_time);
+
+      if (result != DISPATCH_OK && result != DISPATCH_NOT_AT_TIME) {
+         DEXIT;
+         return result;
+      }
+
+      if (a->is_reservation) {
+         a->start = cal_time;
+      }
+      else if (result == DISPATCH_NOT_AT_TIME) {
+         is_reset = true;
+      }
+
       result = rc_slots_by_time(a, hard_requests, &qslots, &qslots_qend, 
             config_attr, actual_attr, NULL, true, qep, 
             DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG, false, lGetString(qep, QU_full_name));
+
+      if (is_reset) {
+         qslots = 0;
+      }
+
+      if (violations != NULL) {
+         *violations = compute_soft_violations(a, qep, *violations, NULL, config_attr, 
+                                           actual_attr, DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG);
+      }
    }
 
    *slots = qslots;
    *slots_qend = qslots_qend;
-   if (violations != NULL) {
-      *violations = compute_soft_violations(a, qep, *violations, NULL, config_attr, 
-                                        actual_attr, DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG);
-   }      
+   
 
    if (result == DISPATCH_OK) {
       DPRINTF(("\tparallel_queue_slots(%s) returns %d/%d\n", qname, qslots, qslots_qend));
@@ -3918,6 +3954,7 @@ sequential_queue_time( u_long32 *start, const sge_assignment_t *a,
    dstring reason; char reason_buf[1024];
    dispatch_t result;
    u_long32 tmp_time = *start;
+   u_long32 cal_time = *start;
    lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
    lList *config_attr = lGetList(qep, QU_consumable_config_list);
    lList *actual_attr = lGetList(qep, QU_resource_utilization);
@@ -3933,10 +3970,35 @@ sequential_queue_time( u_long32 *start, const sge_assignment_t *a,
       return DISPATCH_NEVER_CAT;
    }
 
+   result = queue_match_cal_time(qep, a, &cal_time);
+
+   if ((!a->is_reservation && result != DISPATCH_OK) ||
+       (a->is_reservation && result != DISPATCH_OK && result != DISPATCH_NOT_AT_TIME)) {
+      DEXIT;
+      return result;
+   }
+
    /* match the resources */
    result = rc_time_by_slots(a, hard_requests, NULL, config_attr, actual_attr, 
                             qep, 0, &reason, 1, DOMINANT_LAYER_QUEUE, 
                             0, QUEUE_TAG, &tmp_time, qname);
+
+   if (tmp_time > cal_time) { /* we have to check again, if the job can still run */
+      cal_time = tmp_time;
+      result = queue_match_cal_time(qep, a, &cal_time);
+      
+      if (result != DISPATCH_OK && result != DISPATCH_NOT_AT_TIME) {
+         return result;
+      }
+      tmp_time = cal_time;
+   }
+   else {
+      tmp_time = cal_time;
+   }
+
+   tmp_time = MAX(tmp_time, cal_time);
+
+   /* SG: need to check the calender again */
 
    if (result == DISPATCH_OK) {
       if (violations != NULL) {
@@ -5296,6 +5358,88 @@ void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list)
    return;
 }
 
+/****** sge_select_queue/queue_match_cal_time() ********************************
+*  NAME
+*     queue_match_cal_time() -- checks if a queue has enough compute time left 
+*                               for the given job.
+*
+*  SYNOPSIS
+*     static dispatch_t queue_match_cal_time(lListElem *queue, const 
+*     sge_assignment_t *job_info, u_long32 *cal_time) 
+*
+*  FUNCTION
+*     Checks weather the queue has enough compute time left for the given job
+*     or not.
+*
+*     The method has to evaluate, if the job can be started later...
+*
+*  INPUTS
+*     lListElem *queue                 - queue do evaluate
+*     const sge_assignment_t *job_info - job to match
+*     u_long32 *cal_time               - current start time / new start time
+*
+*  RESULT
+*     static dispatch_t -  DISPATCH_OK or DISPATCH_NEVER_CAT
+*
+*  NOTES
+*     MT-NOTE: queue_match_cal_time() is MT safe 
+*
+*  BUGS
+*     The method has to evaluate, if the job can be started later...
+*
+*******************************************************************************/
+static dispatch_t
+queue_match_cal_time(lListElem *queue, const sge_assignment_t *job_info, u_long32 *cal_time) 
+{
+
+   dispatch_t set_result = DISPATCH_OK;
+   lList *queue_states = lGetList(queue, QU_state_changes);
+   dispatch_t result = (queue_states != NULL)?DISPATCH_NEVER_CAT:DISPATCH_OK;
+   lListElem *queue_state = NULL;
+
+   DENTER(TOP_LAYER, "queue_match_cal_time");
+  
+   if (*cal_time == DISPATCH_TIME_QUEUE_END) {
+      *cal_time = 0;
+   }
+  
+   for_each(queue_state, queue_states) {
+      
+      if (lGetUlong(queue_state, CQU_state) == 0) {
+         if (lGetUlong(queue_state, CQU_till) == 0) { /* the queue state will never change */
+            result = set_result;
+            break;
+         }
+         else if (*cal_time == 0) {
+            if (lGetUlong(queue_state, CQU_till) > (sconf_get_now() + job_info->duration )) {
+               result = set_result;
+               break;
+            }
+         }
+         else {
+            if (lGetUlong(queue_state, CQU_till) > (*cal_time + job_info->duration )) {
+               result = set_result;
+               break;
+            }
+         }
+      }
+      
+      if (!job_info->is_reservation) {
+         set_result =  DISPATCH_NOT_AT_TIME;
+         
+      }
+      else {
+         if (*cal_time < lGetUlong(queue_state, CQU_till)) {
+            *cal_time = lGetUlong(queue_state, CQU_till);
+         }
+      }
+   }
+
+   DPRINTF(("CAL evaluation: start time: %d, duration, %d, result %d\n",cal_time, job_info->duration, result));
+   
+   DEXIT; 
+   return result;
+}
 /****** sge_select_queue/sge_free_load_list() **********************************
 *  NAME
 *     sge_free_load_list() -- frees the load list and sets it to NULL

@@ -528,21 +528,15 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    /* trash disabled queues - needed them for implementing suspend thresholds */
    if (sge_split_disabled(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning disabled state\n"));
+      none_avail_queues = lFreeList(none_avail_queues);
       DEXIT;
       return -1;
    }
-   if (lists->dis_queue_list != NULL) {
-      lAddList(lists->dis_queue_list, none_avail_queues);
-      none_avail_queues = NULL;
-   }
-   else {
-      lists->dis_queue_list = none_avail_queues;
-      none_avail_queues = NULL;
-   }
 
-   /* tag queue instances with less than one free slot */
+   none_avail_queues = lFreeList(none_avail_queues);
    if (sge_split_queue_slots_free(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning free slots\n"));
+      none_avail_queues = lFreeList(none_avail_queues);
       DEXIT;
       return -1;
    }
@@ -961,6 +955,14 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
+         if (is_reserve) {
+            if (*queue_list == NULL) { 
+               *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
+               a.queue_list       = *queue_list;
+            }
+            is_computed_reservation = true;
+            lAppendList(*queue_list, *dis_queue_list);
+         }
          result = sge_select_parallel_environment(&a, pe_list);
       }
 
@@ -973,7 +975,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
 
-            lAppendList(*queue_list, *dis_queue_list);
             result = sge_select_parallel_environment(&a, pe_list);
             if (result == DISPATCH_OK) {
                result = DISPATCH_NOT_AT_TIME; /* this job got a reservation */
@@ -1000,6 +1001,14 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
+         if (is_reserve) {
+            is_computed_reservation = true;
+            if (*queue_list == NULL) { 
+               *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
+               a.queue_list       = *queue_list;
+            }
+            lAppendList(*queue_list, *dis_queue_list);
+         }
          result = sge_sequential_assignment(&a);
          
          DPRINTF(("sge_sequential_assignment(immediate) returned %d\n", result));
@@ -1013,9 +1022,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                   a.job_id, a.ja_task_id, a.duration)); 
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
-            is_computed_reservation = true;
-
-            lAppendList(*queue_list, *dis_queue_list);
+            
             result = sge_sequential_assignment(&a);
             if (result == DISPATCH_OK) {
                result = DISPATCH_NOT_AT_TIME; /* this job got a reservation */

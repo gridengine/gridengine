@@ -122,6 +122,7 @@ char **argv
       lFreeList(ref_list);
       SGE_EXIT(1);
    }
+   
    {
       lListElem *idep = NULL;
       for_each(idep, ref_list) {
@@ -357,11 +358,11 @@ int usageshowed = 0;
          QI_DO_CLEARERROR,
          QI_DO_CLEARERROR | JOB_DO_ACTION,
          QI_DO_CLEARERROR | QUEUE_DO_ACTION,
-         QI_DO_DISABLE,
+         QI_DO_DISABLE | QUEUE_DO_ACTION,
          QI_DO_RESCHEDULE,
          QI_DO_RESCHEDULE | JOB_DO_ACTION,
          QI_DO_RESCHEDULE | QUEUE_DO_ACTION,
-         QI_DO_ENABLE,
+         QI_DO_ENABLE | QUEUE_DO_ACTION,
          QI_DO_SUSPEND,
          QI_DO_SUSPEND | JOB_DO_ACTION,
          QI_DO_SUSPEND | QUEUE_DO_ACTION,
@@ -392,9 +393,9 @@ int usageshowed = 0;
 
       i = 0;
       while (options[i] != NULL) {
-         if ((transitions[i] & JOB_DO_ACTION) > 0)
+         if ((transitions[i] & JOB_DO_ACTION) > 0) {
             parse_multi_jobtaskslist(ppcmdline, options[i], &alp, ppreflist, true, transitions[i]);
-         else{
+         } else {
             lList *queueList = NULL;
             if (parse_multi_stringlist( ppcmdline, options[i], &alp, &queueList, ST_Type, ST_name)){
                id_list_build_from_str_list(ppreflist, &alp, queueList, transitions[i], *pforce); 

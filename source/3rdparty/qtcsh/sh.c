@@ -42,7 +42,7 @@ char    copyright[] =
  All rights reserved.\n";
 #endif /* not lint */
 
-RCSID("$Id: sh.c,v 1.1.1.1.22.1 2005/01/18 19:22:47 ernst Exp $")
+RCSID("$Id: sh.c,v 1.1.1.1.22.2 2005/02/02 09:26:03 ernst Exp $")
 
 #include "tc.h"
 #include "ed.h"
@@ -722,7 +722,7 @@ main(argc, argv)
 #else /* !WINNT */
 #ifdef INTERIX
     shtemp = str2short(tmpnam(NULL));  /* For << */
-#else /* __INTERIX */
+#else 
     shtemp = Strspl(STRtmpsh, doldol);	/* For << */
 #endif
 #endif /* WINNT */

@@ -517,7 +517,7 @@ static void show_shepherd_version(void) {
 
 int main(int argc, char **argv) 
 {
-   char err_str[2*SGE_PATH_MAX+128];
+   char err_str[2*SGE_PATH_MAX+128] = "";
    char *admin_user;
    char *script_file;
    char *pe, *cp;
@@ -600,7 +600,7 @@ int main(int argc, char **argv)
    }
 
    if (sge_switch2admin_user()) {
-      shepherd_error(err_str);
+      shepherd_error("can't switch to admin user: sge_switch2admin_user() failed");
    }
 
 	/* finalize initialization of shepherd_trace - give the trace file

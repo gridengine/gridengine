@@ -1,3 +1,7 @@
+SG-2004-03-11-0: Enhancem.: minor cleanup in lCopyElem in cull
+                 Changed:   everything
+                 Review:    JG
+
 MD-2004-03-11-0: Bugfix:    - check for local filesystem on lx24-amd64
                               was broken
                             - infotext argument parsing (irix65)

@@ -34,6 +34,8 @@
 
 #include <stdio.h>
 
+#include "basis_types.h"
+
 /****** uti/bitfield/BIT_MANIPULATION_MAKROS() ********************************
 *  NAME
 *     ISSET(),VALID(),SETBIT(),CLEARBIT() - Bit manipulation makros 
@@ -71,6 +73,7 @@ typedef _bitfield *bitfield;
 
 bitfield sge_bitfield_new(int size);
 bitfield sge_bitfield_free(bitfield bf);
+bool sge_bitfield_copy(bitfield source, bitfield target);
 
 int sge_bitfield_set(bitfield bf, int bit);
 int sge_bitfield_get(bitfield bf, int bit);

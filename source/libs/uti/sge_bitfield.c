@@ -30,10 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_bitfield.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sge_bitfield.h"
 
 /****** uti/bitfield/--Bitfield ****************************************
 *  NAME
@@ -124,6 +125,40 @@ bitfield sge_bitfield_new(int size)
    }
 
    return bf;
+}
+
+/****** sge_bitfield/sge_bitfield_copy() ***************************************
+*  NAME
+*     sge_bitfield_copy() -- copies a bitfield into another one. 
+*
+*  SYNOPSIS
+*     bool sge_bitfield_copy(bitfield *source, bitfield *target) 
+*
+*  FUNCTION
+*     The memory has to be allocated before, and source and target has to have
+*     the same size. Otherwise it will return false and does not copy anything.
+*
+*  INPUTS
+*     bitfield *source - ??? 
+*     bitfield *target - ??? 
+*
+*  RESULT
+*     bool - false, if the bitfield sizes are different
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_copy() is MT safe 
+*
+*******************************************************************************/
+bool sge_bitfield_copy(bitfield source, bitfield target){
+   
+   if (source->size == target->size) {
+      int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+      memcpy(target->bf, source->bf, char_size);
+
+      return true;    
+   }
+   
+   return false;
 }
 
 /****** uti/bitfield/sge_bitfield_free() ***************************************

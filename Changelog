@@ -1,3 +1,12 @@
+DT-2004-03-05-4: Bugfix:    o Moved internal details from DPRINTF back into
+                              comm lib error message.  Now there are two
+                              different messages.  One is for the usual case of
+                              just not being able to connect, and the other is
+                              for all other cases.
+                 Changed:   qmon, GDI
+                 Issue:     783
+                 Review:    pending
+
 DT-2004-03-05-3: Bugfix:    o Moved internal details from comm lib error message
                               into DPRINTF in sge_send_any_request().
                  Changed:   qmon, GDI

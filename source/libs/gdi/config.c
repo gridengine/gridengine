@@ -280,6 +280,10 @@ const char *key,
 lListElem *ep,
 int name_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
    int pos;
    int dataType;
@@ -311,6 +315,9 @@ int name_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -336,6 +343,10 @@ const char *key,
 lListElem *ep,
 int name_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
 
    DENTER(CULL_LAYER, "set_conf_boolean");
@@ -354,6 +365,9 @@ int name_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 
@@ -378,6 +392,10 @@ const char *key,
 lListElem *ep,
 int name_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
    u_long32 uval;
 
@@ -400,6 +418,9 @@ int name_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -426,6 +447,10 @@ lListElem *ep,
 int name_nm,
 int operation_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
    double dval;
 
@@ -473,6 +498,9 @@ int operation_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -501,6 +529,10 @@ lDescr *descr,
 intprt_type *interpretation_rule 
 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    lList *tmplp = NULL;
    char *str;
 
@@ -528,6 +560,9 @@ intprt_type *interpretation_rule
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -551,6 +586,10 @@ const char *key,
 lListElem *ep,
 int name_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
 
    DENTER(CULL_LAYER, "set_conf_timestring");
@@ -577,6 +616,9 @@ int name_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -600,6 +642,10 @@ const char *key,
 lListElem *ep,
 int name_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
 
    DENTER(CULL_LAYER, "set_conf_memstr");
@@ -621,6 +667,9 @@ int name_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -639,6 +688,10 @@ int name_nm
 int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
                   lListElem *ep, int name_nm, char **enum_strings) 
 {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
    u_long32 uval = 0;
 
@@ -667,6 +720,9 @@ int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -687,6 +743,10 @@ int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
 int set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, 
                   lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm) 
 {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    lList *tmplp = NULL;
    const char *str;
    char delims[] = "\t \v\r,"; 
@@ -711,6 +771,9 @@ int set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key,
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****
@@ -744,6 +807,10 @@ lDescr *descr,
 int subname_nm,
 int subval_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    lList *tmplp = NULL;
    lListElem *tmpep;
    const char *str;
@@ -780,6 +847,9 @@ int subval_nm
 
    DEXIT;
    return TRUE;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 
@@ -793,6 +863,10 @@ int add_nm_to_set(
 int fields[],
 int name_nm 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    int i = 0;
 
    DENTER(CULL_LAYER, "add_nm_to_set");
@@ -817,6 +891,9 @@ int name_nm
 
    DEXIT;
    return 0;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /* ------------------------------------------ 

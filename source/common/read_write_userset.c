@@ -99,6 +99,10 @@ int flag,
 int *tag,
 int parsing_type 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    DENTER(TOP_LAYER, "read_userset_work");
 
    /* --------- US_name */
@@ -136,6 +140,9 @@ int parsing_type
 
    DEXIT;
    return 0;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /************************************************************/

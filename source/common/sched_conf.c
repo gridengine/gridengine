@@ -120,6 +120,13 @@ static lListElem *create_default_sched_conf(void);
 *******************************************************************************/
 char *write_sched_configuration(int spool, int how, lListElem *ep) 
 {
+/* JG: suppress READ_DANGLING. sge_root comes from a getenv() call.
+ *     this should be handled properly in underlying function, e.g. by
+ *     strdupping the value returned by getenv().
+ */
+#ifdef __INSIGHT__
+_Insight_set_option("suppress", "READ_DANGLING");
+#endif
    FILE *fp; 
    char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
    int fret;
@@ -217,6 +224,9 @@ char *write_sched_configuration(int spool, int how, lListElem *ep)
 FPRINTF_ERROR:
    DEXIT;
    return NULL;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "READ_DANGLING");
+#endif
 }
 
 /* mapping func for SC_queue_sort_method uval -> str */

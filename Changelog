@@ -1,8 +1,12 @@
+JG-2002-01-07-0: Bugfix:    Fixed a memory leak in execd.
+                            Added code to suppress warnings from the Insure++
+                            debugger for some correct code sections.
+
 AA-2001-12-21-0: Feature    added sge_ca script
                             RAND_load_file
                             sec_setup_path path changes
 
-JG-2001-12-21-0: Enhancem.  Eliminate insure compile warnings
+JG-2001-12-21-0: Enhancem.  Eliminate warnings from the Insure++ compiler
 
 AA-2001-12-20-1: Feature:   Security: 
                             - commdcntl skips sge_security_init()

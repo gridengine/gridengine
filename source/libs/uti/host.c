@@ -575,6 +575,10 @@ char **cpp
 int read_aliasfile(
 char *fname 
 ) {
+#ifdef __INSIGHT__   
+/* JG: really not a memory leak! */
+_Insight_set_option("suppress", "LEAK_SCOPE");
+#endif
    FILE *fp;
    char *mainname, *name, buf[10000];
    host *h1, *h2;
@@ -637,6 +641,9 @@ char *fname
    fclose(fp);
    DEXIT;
    return 0;
+#ifdef __INSIGHT__   
+_Insight_set_option("suppress", "LEAK_SCOPE");
+#endif
 }
 
 /*******************************************************

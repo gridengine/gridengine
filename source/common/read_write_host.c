@@ -77,6 +77,10 @@ int nm,
 int *tag,
 int parsing_type 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    DENTER(TOP_LAYER, "read_host_work");
 
    /* --------- EH_name, AH_name, SH_name */
@@ -205,6 +209,9 @@ int parsing_type
 
    DEXIT;
    return 0;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 
@@ -219,6 +226,10 @@ int type,
 int *tag,
 int fields[] 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    lListElem *ep;
    struct read_object_args args[] = {
       {EH_Type, "exechost", read_host_work},
@@ -251,6 +262,9 @@ int fields[]
 
    DEXIT;
    return ep;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 

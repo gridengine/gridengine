@@ -93,6 +93,10 @@ int flag,
 int *tag,
 int parsing_type 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    const char *str;
    const char *qname;
    int ret, generic_queue = 0;
@@ -539,6 +543,9 @@ int parsing_type
    /* uff */
    DEXIT;
    return 0;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 
@@ -553,6 +560,10 @@ int type,
 int *tag,
 int fields[] 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    lListElem *ep;
    struct read_object_args args = { QU_Type, "queue", read_queue_work};
    static lListElem *template = NULL;
@@ -573,6 +584,9 @@ int fields[]
 
    DEXIT;
    return ep;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 /****

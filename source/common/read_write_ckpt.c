@@ -63,6 +63,10 @@ int flag,
 int *tag,
 int fields[] 
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    lListElem *ep;
    struct read_object_args args = { CK_Type, "ckpt", read_ckpt_work };
    int intern_tag = 0;
@@ -73,6 +77,9 @@ int fields[]
   
    DEXIT;
    return ep;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 
@@ -95,6 +102,10 @@ int flag,
 int *tag,
 int parsing_type  
 ) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
    DENTER(TOP_LAYER, "read_ckpt_work");
 
    /* --------- CK_name */
@@ -160,6 +171,9 @@ int parsing_type
 
    DEXIT;
    return 0;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
 }
 
 

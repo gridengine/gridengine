@@ -1690,7 +1690,7 @@ int ptf_process_job_ticket_list(lList *job_ticket_list)
        * set JB_script_file because we don't know if this is
        * an interactive job 
        */
-      lSetString(jte, JB_script_file, strdup("dummy"));
+      lSetString(jte, JB_script_file, "dummy");
 
       job = ptf_process_job(0, NULL, jte,
                             lGetUlong(lFirst(lGetList(jte, JB_ja_tasks)),

@@ -85,6 +85,10 @@ exit_func_type new
 void sge_close_all_fds(
 fd_set *keep_open 
 ) {
+/* JG: trying to close insights (insure) internal fd will be rejected */
+#ifdef __INSIGHT__
+_Insight_set_option("suppress", "USER_ERROR");
+#endif
    int fd;
    int maxfd;
 
@@ -103,5 +107,9 @@ fd_set *keep_open
 	     closesocket(fd);
 #endif /* WIN32NATIVE */
    return;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "USER_ERROR");
+#endif
 }
+
 

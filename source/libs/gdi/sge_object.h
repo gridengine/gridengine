@@ -91,5 +91,8 @@ bool
 object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
                           const char *value);
 
+void
+object_delete_range_id(lListElem *object, lList **answer_list, 
+                       const int rnm, const u_long32 id);
 
 #endif /* __SGE_OBJECT_H */

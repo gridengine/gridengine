@@ -41,6 +41,7 @@
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_range.h"
 
 #include "gdi_utility.h"
 
@@ -635,5 +636,36 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
 
    DEXIT;
    return ret;
+}
+
+/****** gdi/object/object_delete_range_id() ************************************
+*  NAME
+*     object_delete_range_id() -- deletes a certain id from an objects range_list
+*
+*  SYNOPSIS
+*     void 
+*     object_delete_range_id(lListElem *object, lList **answer_list, 
+*                            const int rnm, const u_long32 id) 
+*
+*  FUNCTION
+*     Deletes a certain id from an objects sublist that is a range list.
+*
+*  INPUTS
+*     lListElem *object   - the object to handle
+*     lList **answer_list - error messages will be put here
+*     const int rnm       - attribute containing the range list
+*     const u_long32 id   - id to delete
+*
+*******************************************************************************/
+void 
+object_delete_range_id(lListElem *object, lList **answer_list, 
+                       const int rnm, const u_long32 id)
+{
+   lList *range_list = NULL;
+
+   lXchgList(object, rnm, &range_list);
+   range_list_remove_id(&range_list, answer_list, id);
+   range_list_compress(range_list);
+   lXchgList(object, rnm, &range_list);
 }
 

@@ -1,3 +1,9 @@
+JG-2002-12-12-0  Cleanup:   More general handling for code deleting from 
+                            ranges in job handling.
+                            Removed unneccessary and expensive range handling 
+                            in job_enroll().
+                            Improved (example scheduler) simple_scheduler.
+
 EB-2002-12-11-1  Bugfix:    Eleminated compilation warnings for architecture
                             glinux in combination with gcc 3.2
 
@@ -7,7 +13,7 @@ EB-2002-12-11-0  Bugfix:    job logging file exists but is empty in certain
                  Bugtraq:   #4791908
                  Review:    AS
 
-JG-2002-12-10-0  Enhancem.  Create separate libraries for different spooling
+JG-2002-12-10-0  Enhancem.: Create separate libraries for different spooling
                             methods.
                  Bugfix:    Fixed broken build for creation of shared SGE libs.
 

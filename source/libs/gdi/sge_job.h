@@ -114,8 +114,8 @@ u_long32 job_get_enrolled_ja_tasks(const lListElem *job);
 
 u_long32 job_get_submit_ja_tasks(const lListElem *job);
  
-void job_enroll(lListElem *job, lList **answer_list, 
-                u_long32 task_number);  
+lListElem *job_enroll(lListElem *job, lList **answer_list, 
+                      u_long32 task_number);  
 
 void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
                                      u_long32 ja_task_number);

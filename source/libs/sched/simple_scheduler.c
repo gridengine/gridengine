@@ -345,8 +345,8 @@ static int find_pending_ja_task(lListElem **job, lListElem **ja_task) {
          for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
             if(lGetElemUlong(lGetList(sjob, JB_ja_tasks), JAT_task_number, ja_task_id) == NULL) {
                *job = sjob;
-               *ja_task = lCreateElem(JAT_Type);
-               lSetUlong(*ja_task, JAT_task_number, ja_task_id);
+               *ja_task = job_get_ja_task_template_pending(sjob, ja_task_id); 
+               object_delete_range_id(sjob, NULL, JB_ja_n_h_ids, ja_task_id);
                return TRUE;
             }
          }
@@ -585,7 +585,7 @@ int main(int argc, char *argv[])
          simple_scheduler();
          
          /* test sge_ssi_job_cancel() */
-         delete_some_jobs();
+/*          delete_some_jobs(); */
       }
    }
    

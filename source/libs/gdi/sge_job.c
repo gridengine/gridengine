@@ -50,6 +50,7 @@
 #include "sge_path_alias.h"
 #include "sge_var.h"
 #include "sge_answer.h"
+#include "sge_object.h"
 #include "sge_prog.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
@@ -582,8 +583,8 @@ u_long32 job_get_submit_ja_tasks(const lListElem *job)
 *     job_enroll() -- enrolls a array task into the JB_ja_tasks lists 
 *
 *  SYNOPSIS
-*     void job_enroll(lListElem *job, lList **answer_list, 
-*                     u_long32 ja_task_number) 
+*     lListElem *job_enroll(lListElem *job, lList **answer_list, 
+*                           u_long32 ja_task_number) 
 *
 *  FUNCTION
 *     The task with 'ja_task_number' will be enrolled into the 
@@ -593,35 +594,19 @@ u_long32 job_get_submit_ja_tasks(const lListElem *job)
 *     lListElem *job          - JB_Type 
 *     lList **answer_list     - AN_Type 
 *     u_long32 ja_task_number - task number 
+*
+*  RESULT
+*     lListElem * - the ja_task
+*
 *******************************************************************************/
-void job_enroll(lListElem *job, lList **answer_list, u_long32 ja_task_number)
+lListElem *job_enroll(lListElem *job, lList **answer_list, 
+                      u_long32 ja_task_number)
 {
-   lList *range_list = NULL;
    lListElem *ja_task = NULL;
 
    DENTER(TOP_LAYER, "job_enroll");
-   lXchgList(job, JB_ja_n_h_ids, &range_list);
-   range_list_remove_id(&range_list, answer_list, ja_task_number);
-   lXchgList(job, JB_ja_n_h_ids, &range_list);
-   range_list_compress(lGetList(job, JB_ja_n_h_ids));
 
-   /* JG: TODO: Do we need to process the hold lists?
-    *           can a task be enrolled from the hold state?
-    */
-   lXchgList(job, JB_ja_u_h_ids, &range_list);
-   range_list_remove_id(&range_list, answer_list, ja_task_number);
-   lXchgList(job, JB_ja_u_h_ids, &range_list);
-   range_list_compress(lGetList(job, JB_ja_u_h_ids));
-
-   lXchgList(job, JB_ja_o_h_ids, &range_list);
-   range_list_remove_id(&range_list, answer_list, ja_task_number);
-   lXchgList(job, JB_ja_o_h_ids, &range_list);
-   range_list_compress(lGetList(job, JB_ja_o_h_ids));
-
-   lXchgList(job, JB_ja_s_h_ids, &range_list);
-   range_list_remove_id(&range_list, answer_list, ja_task_number);
-   lXchgList(job, JB_ja_s_h_ids, &range_list);
-   range_list_compress(lGetList(job, JB_ja_s_h_ids));
+   object_delete_range_id(job, answer_list, JB_ja_n_h_ids, ja_task_number);
 
    /* EB: should we add a new CULL function? */
    ja_task = lGetSubUlong(job, JAT_task_number, ja_task_number, JB_ja_tasks);
@@ -638,6 +623,8 @@ void job_enroll(lListElem *job, lList **answer_list, u_long32 ja_task_number)
       lAppendElem(ja_task_list, ja_task); 
    }
    DEXIT;
+
+   return ja_task;
 }  
 
 /****** gdi/job/job_has_tasks() ***********************************************
@@ -704,12 +691,7 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
 
    DENTER(TOP_LAYER, "job_delete_not_enrolled_ja_task");
    for (i = 0; i < attributes; i++) { 
-      lList *range_list = NULL;
-
-      lXchgList(job, attribute[i], &range_list);
-      range_list_remove_id(&range_list, answer_list, ja_task_number);
-      range_list_compress(range_list);
-      lXchgList(job, attribute[i], &range_list);
+      object_delete_range_id(job, answer_list, attribute[i], ja_task_number);
    }
    DEXIT;
 } 
@@ -966,8 +948,7 @@ lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task
 
    if(job != NULL) {
       if(job_is_ja_task_defined(job, ja_task_id)) {
-         job_enroll(job, answer_list, ja_task_id);
-         ja_task = lGetSubUlong(job, JAT_task_number, ja_task_id, JB_ja_tasks);
+         ja_task = job_enroll(job, answer_list, ja_task_id);
       }
    }
 

@@ -67,7 +67,7 @@ static void         log_state_destroy(void* theState);
 static log_state_t* log_state_getspecific(pthread_key_t aKey);
 static void         log_state_init(log_state_t *theState);
 
-static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline); 
+static void sge_do_log(int, const char*, const char*); 
 
 
 /****** uti/log/log_state_get_log_buffer() ******************************************
@@ -557,38 +557,42 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    } 
    if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||
        uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
-      sge_do_log(log_level, levelchar, mesg, newline);
+      sge_do_log(levelchar, mesg, newline);
    }
 
    DEXIT;
    return 0;
 } /* sge_log() */
 
-/****** sge_log/sge_do_log() ***************************************************
+/****** uti/sge_log/sge_do_log() ***********************************************
 *  NAME
-*     sge_do_log() -- SGE logging function
+*     sge_do_log() -- Write message to log file 
 *
 *  SYNOPSIS
-*     static void sge_do_log(int log_level, int levelchar, const char *err_str, 
-*     const char *newline) 
+*     static void sge_do_log(int aLevel, const char *aMessage, const char 
+*     *aNewLine) 
+*
+*  FUNCTION
+*     ??? 
 *
 *  INPUTS
-*     int log_level       - ??? 
-*     int levelchar       - ??? 
-*     const char *err_str - ??? 
-*     const char *newline - ??? 
+*     int aLevel           - log level
+*     const char *aMessage - log message
+*     const char *aNewLine - either newline or '\0' 
+*
+*  RESULT
+*     void - none
 *
 *  NOTES
 *     MT-NOTE: sge_do_log() is not MT safe due to sge_switch2admin_user()
 *     MT-NOTE: sge_do_log() can be used however in MT applications if no 
 *     MT-NOTE: admin user switching takes place
+*
 *******************************************************************************/
-static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline) 
+static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine) 
 {
    int fd;
    int switch_back = 0;
-
-   /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
 
    if (log_state_get_log_as_admin_user() && geteuid() == 0) {
       sge_switch2admin_user();
@@ -608,9 +612,9 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str, const 
               date,
               uti_state_get_sge_formal_prog_name(),
               uti_state_get_unqualified_hostname(),
-              levelchar,
-              err_str,
-              newline);
+              aLevel,
+              aMessage,
+              aNewLine);
       write(fd, msg2log, strlen(msg2log));
       close(fd);
    }

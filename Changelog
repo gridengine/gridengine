@@ -1,3 +1,7 @@
+AD-2004-01-24-0: Bugfix:    Did remove unused parameter from 'sge_do_log()'
+                            signature.
+                 Changed:   uti
+
 MD-2004-01-24-0: Enhancem.: - Add auto uninstall function for execd
                             - Some documentation
                  Changed:   sge_config, sge.conf, sge_config_execd_uninst.sh

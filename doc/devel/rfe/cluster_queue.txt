@@ -1,3 +1,7 @@
+HOMOGENEOUS HOST CHARACTERISTIC CATEGORIES
+==========================================
+- reduce the overall amount of queues in homogenious environments
+
 Cluster Queue (CQ)
 ==================
  
@@ -54,7 +58,8 @@ Properties of CQs:
 GDI:
 - One CULL-Queue-Object represents a CQ
 - The hostname-field will be converted into a list of hostnames
-  (hostname groups?)
+  (hostname groups?). 
+- The keyword "all" should be allowed.
 - A sublist will be added to the Queue-Object which holds QIs
   information.
 - Each QI object containes the hostname and a set of attributes necessary to
@@ -183,5 +188,33 @@ Additional Questions
  
 Which documentation changes are necessary?
 Which changes are necessary for the installation procedures?
-Are CQs without hostname specification allowed in the System?   
 
+--------------------------------------------------------------------------------------------------------------------------
+
+HETEROGENEOUS HOST CHARACTERISTIC CATEGORIES
+============================================
+- reduce the overall amount of queues in heterogenious environments
+
+Changes in the current behaviour
+================================
+GDI:
+- For client applications it has to be possible to address CIs:
+  It should be possible to address at least following attributes
+  in an CI: 
+      seq_no
+      priority
+      owner_list
+      user_lists
+      xuser_lists
+
+Client modifications
+====================
+
+qconf
+-----
+NEW-Option (-mqi QIN)
+- Modify a QI
+      
+Additional Questions
+====================
+Which other attributes should be modifiable within QIs?

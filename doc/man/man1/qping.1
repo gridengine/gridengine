@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/11/12 15:40:02 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/11/16 10:44:56 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,12 +30,12 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2004/11/12 15:40:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2004/11/16 10:44:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
 .SH SYNTAX
-.B qping [-help] [-i <interval>] [-info] [-f] [-noalias] 
+.B "qping [-help] [-noalias] [ [ [-i <interval>] [-info] [-f] ] | [-dump] ]"
 .B <host> <port> <name> <id>
 .\"
 .\"
@@ -48,6 +48,10 @@ running xxQS_NAME_Sxx_EXECD daemon. The qping command is used to send a SIM (Sta
 Information Message) to the destination daemon. The communication layer of the 
 specified daemon will respond with a SIRM (Status Information Response Message) which
 contains status information about the consulted daemon.
+
+The qping -dump option allows an administrator to observe the communication protocol
+data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
+with root account and on the same host where the observed daemon is running.
 .PP
 .\"
 .\"
@@ -249,6 +253,27 @@ Ignore host_aliases file, which is located at
 \fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
 If this option is used it is not necessary to set any xxQS_NAMExx environment
 variable. 
+
+.SS "\fB\-dump\fP"
+This option allows an administrator to observe the communication protocol
+data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
+as root and on the same host where the observed daemon is running.
+
+The output is written to stdout. The enviroment variable "SGE_QPING_OUTPUT_FORMAT"
+can be set to hide columns, set a default column width or to set a hostname output
+format. The value of the environment variable can be set to any combination of
+the following specifiers separated by a space character:
+.in+3
+.RS
+.nf
+"h:X"   -> hide column X
+"w:X:Y" -> set width of column X to Y
+"hn:X"  -> set hostname output parameter X. 
+           X values are "long" or "short"
+.fi
+.RE
+
+.in-3
 
 .SS "\fBhost\fP"
 Host where daemon is running.

@@ -1,3 +1,7 @@
+CR-2004-11-16-2: Enhancm.:  - updated qping man page for -dump option
+                            - fixed usage output of qping
+                 Changed:   qping, qping man page
+
 CR-2004-11-16-1: Cleanup:   removed unused message macros
 
 JG-2004-11-16-0: Bugfix:    Fixed spooling of subordinate queues.

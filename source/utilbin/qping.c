@@ -324,7 +324,7 @@ static void usage(void)
   int max_name_length = 0;
   int i=0;
   fprintf(stderr, "%s %s\n", GE_SHORTNAME, GDI_VERSION);
-  fprintf(stderr, "%s qping [-help] [ [-i <interval>] [-info] [-f] [-noalias] ] | [-dump] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "%s qping [-help] [-noalias] ] [ [ [-i <interval>] [-info] [-f] ] | [-dump] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
   fprintf(stderr, "   -i       : set ping interval time\n");
   fprintf(stderr, "   -info    : show full status information and exit\n");
   fprintf(stderr, "   -f       : show full status information on each ping interval\n");

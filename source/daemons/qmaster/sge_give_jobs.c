@@ -1013,32 +1013,36 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
        * JAT_scaled_usage_list.  In the JAPI, however, it would be ugly to have
        * to go picking through the Master_Job_List to find the accounting data.
        * So instead we pick through it here and stick it back in JR_usage. */
-      lListElem *job = job_list_locate(Master_Job_List, lGetUlong (jr, JR_job_number));
-      lListElem *jatp = lGetElemUlong(lGetList(job, JB_ja_tasks), JAT_task_number, lGetUlong(jr, JR_ja_task_number));
-      lList *usage = lCopyList ("Scaled Usage List", lGetList (jatp, JAT_scaled_usage_list));
-      lXchgList (jr, JR_usage, &usage);
-      
-      if (commit_flags & COMMIT_NEVER_RAN)
+
+      lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_scaled_usage_list));
+
+      if (commit_flags & COMMIT_NEVER_RAN) {
          lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
+      }   
    } 
 
-   if (diagnosis)
+   if (diagnosis != NULL) {
       lSetString(jr, JR_err_str, diagnosis);
-   else {
-      if (!lGetString(jr, JR_err_str)) {
-         if (SGE_GET_NEVERRAN(lGetUlong(jr, JR_wait_status)))
-            lSetString(jr, JR_err_str, "Job never ran");
-         else
-            lSetString(jr, JR_err_str, "Unknown job finish condition");
-      }
+   }   
+   else if (!lGetString(jr, JR_err_str)) {
+      if (SGE_GET_NEVERRAN(lGetUlong(jr, JR_wait_status))) {
+         lSetString(jr, JR_err_str, "Job never ran");
+      }   
+      else {
+         lSetString(jr, JR_err_str, "Unknown job finish condition");
+      }   
    }
 
    sge_add_event( 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
                  lGetUlong(jatep, JAT_task_number), NULL, NULL,
                  lGetString(jep, JB_session), jr);
 
-   if (release_jr)
+   if (release_jr) {
       lFreeElem(jr);
+   }   
+   else {
+      lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_scaled_usage_list));
+   }
 
    DEXIT;
    return;

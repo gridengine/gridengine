@@ -426,6 +426,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
    bool ret = true;
 
    DENTER(TOP_LAYER, "qinstance_reinit_consumable_actual_list");
+
    if (this_elem != NULL) {
       lList *job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
       lList *centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));

@@ -327,21 +327,24 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
             {
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
-               lList *new_list = NULL;
                lListElem *tmp_elem = lCopyElem(this_elem);
 
                celist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
-               new_list = new_value;
-               new_value = NULL;
-               centry_list_fill_request(new_list, Master_CEntry_List, 
+
+               centry_list_fill_request(new_value, Master_CEntry_List, 
                                         true, true, false);
-               lSetList(tmp_elem, attribute_name, new_list);
+               lSetList(tmp_elem, attribute_name, new_value);
+               new_value = NULL;
+               
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
+               
                lXchgList(tmp_elem, attribute_name, &new_value);
+               
                tmp_elem = lFreeElem(tmp_elem);
+               
                if (object_list_has_differences(old_value, answer_list,
                                                new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG

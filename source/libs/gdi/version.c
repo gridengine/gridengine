@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-const char GDI_VERSION[] = "5.3.1beta7";
+const char GDI_VERSION[] = "5.3.1beta8";
 
 #ifdef ADD_COPYRIGHT
 #  include "copyright.h"

@@ -1,3 +1,5 @@
+AD-2003-11-17-0: Bugfix:    Revoke AD-2003-11-14-0. 
+
 JG-2003-11-17-0: Testsuite: Some minor fixes to make testsuite installation run 
                             through without errors.
                  Cleanup:   Fixed some build dependencies.

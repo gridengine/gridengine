@@ -1,3 +1,5 @@
+AD-2003-11-24-0: Bugfix:    Fixed the build
+
 AH-2003-11-21-1: Bugfix:    Fix complex(5) urgency verification problem
 
 AH-2003-11-21-0: Bugfix:    Fix schedd/qstat/... crash

@@ -49,6 +49,7 @@
 #include "commlib.h"
 #include "sge_log.h"
 #include "sge_answer.h"
+#include "sge_cqueue.h"
 #include "sge_hostname.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
@@ -489,10 +490,12 @@ hgroup_find_all_referencees(const lListElem *this_elem,
 *     not successfull 
 *
 *  INPUTS
-*     const lListElem *this_elem - HGRP_Type 
-*     lList **answer_list        - AN_Type 
-*     const lList *master_list   - HGRP_Type master list 
-*     lList **occupants_groups   - HR_Type 
+*     const lListElem *this_elem        - HGRP_Type 
+*     lList **answer_list               - AN_Type 
+*     const lList *master_hgroup_list   - HGRP_Type master list 
+*     const lList *master_cqueue_list   - CQ_Type
+*     lList **occupants_groups          - HR_Type 
+*     lList **occupants_queues          - ST_Type
 *
 *  RESULT
 *     bool - Error state
@@ -500,24 +503,35 @@ hgroup_find_all_referencees(const lListElem *this_elem,
 *        false - Error
 *******************************************************************************/
 bool 
-hgroup_find_referencees(const lListElem *this_elem, lList **answer_list,
-                        const lList *master_list, lList **occupants_groups)
+hgroup_find_referencees(const lListElem *this_elem, 
+                        lList **answer_list,
+                        const lList *master_hgroup_list, 
+                        const lList *master_cqueue_list,
+                        lList **occupants_groups,
+                        lList **occupants_queues)
 {
    bool ret = true;
 
    DENTER(HGROUP_LAYER, "hgroup_find_all_referencees");
-   if (this_elem != NULL && occupants_groups != NULL) {
-      lList *href_list = NULL;
-      const char *name;
+   if (this_elem != NULL) {
+      if (occupants_groups != NULL) {
+         const char *name = lGetHost(this_elem, HGRP_name);
+         lList *href_list = NULL;
 
-      name = lGetHost(this_elem, HGRP_name);
-      ret &= href_list_add(&href_list, answer_list, name);
-
-      if (ret) {
-         ret &= href_list_find_referencees(href_list, answer_list,
-                                         master_list, occupants_groups);
+         ret &= href_list_add(&href_list, answer_list, name);
+         if (ret) {
+            ret &= href_list_find_referencees(href_list, answer_list,
+                                              master_hgroup_list, 
+                                              occupants_groups);
+         }
+         href_list = lFreeList(href_list);
       }
-      href_list = lFreeList(href_list);
+      if (ret && occupants_queues != NULL) {
+         ret &= cqueue_list_find_hgroup_references(master_cqueue_list, 
+                                                   answer_list,
+                                                   this_elem, 
+                                                   occupants_queues);
+      }
    }
    DEXIT;
    return ret;

@@ -179,7 +179,7 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
    lListElem *load_el=NULL;
    lListElem *cplx_el=NULL;
 
-   DENTER(TOP_LAYER, "get_attribute");
+   DENTER(BASIS_LAYER, "get_attribute");
 
    /* resource_attr is a complex_entry (CE_Type) */
    if (config_attr){
@@ -397,7 +397,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
    int type;
    int pos = 0;
 
-      DENTER(TOP_LAYER, "get_queue_resource");
+      DENTER(BASIS_LAYER, "get_queue_resource");
 
       if(!queue_elem){
          /* error */
@@ -512,7 +512,7 @@ bool is_attr_prior(lListElem *upper_el, lListElem *lower_el){
    u_long32 unused_dom_str;
    u_long32 unused_dom;
 
-   DENTER(TOP_LAYER, "is_attr_prior");
+   DENTER(BASIS_LAYER, "is_attr_prior");
 
    /* the order is important must not be changed */   
    if(!upper_el){
@@ -609,7 +609,7 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
    bool ret;
    double upper_value;
 
-   DENTER(TOP_LAYER, "is_attr_prior2");
+   DENTER(BASIS_LAYER, "is_attr_prior2");
 
    if ((dom = lGetUlong(upper_el, t_dominant)) == 0 || (dom & DOMINANT_TYPE_VALUE) ){
       DEXIT; 
@@ -688,7 +688,7 @@ lListElem *queue,
 const lList *exechost_list,
 const lList *centry_list 
 ) {
-   DENTER(TOP_LAYER, "queue_complexes2scheduler");
+   DENTER(BASIS_LAYER, "queue_complexes2scheduler");
 
    if (*new_centry_list) 
       *new_centry_list = lFreeList(*new_centry_list);
@@ -776,7 +776,7 @@ static lList *get_attribute_list(const lListElem *global, const lListElem *host,
 
    int size = lGetNumberOfElem(centry_list) + max_queue_resources ; 
    
-   DENTER(TOP_LAYER, "get_attribute_list");
+   DENTER(BASIS_LAYER, "get_attribute_list");
    
    if (global)
       size += lGetNumberOfElem(lGetList(global, EH_load_list));
@@ -1257,7 +1257,7 @@ get_attribute_by_name(const lListElem* global, const lListElem *host, const lLis
    lList *config_attr = NULL;
    lList *actual_attr = NULL; 
 
-   DENTER(TOP_LAYER, "get_attribute_by_name");
+   DENTER(BASIS_LAYER, "get_attribute_by_name");
 
 
    if(global){

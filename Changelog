@@ -1,3 +1,10 @@
+EB-2004-02-03-0: Bugfix.    - It was possible to delete host groups which were
+                              referenced in cluster queue objects.
+                            - Due to fix AD-2004-02-03-0 tight integration for
+                              parallel jobs works correcly now.
+                 Changed:   qmaster
+                 Review:    SG
+
 JG-2004-02-03-0: Testsuite: Fixed test functional/access_lists.
                             Enhancements and bugfixes in the handling of cluster
                             queues.
@@ -42,7 +49,8 @@ MD-2004-02-02-0: Bugfix:    - DB installation
                  Changed:   - sge_config
 
 CR-2004-02-02-0: Bugfix:    Fixed problem "can't get communication handle" when
-                            application calls check_isalive() before a communication
+                            application calls check_isalive() before a 
+                            communication
                             handle is created. Now all communication handle are
                             created in prepare_enroll()
                  Review:    pending

@@ -177,6 +177,7 @@ lListElem *hep
       lListElem *slave_hep;
 
       if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
+
          if (!(slave_hep = host_list_locate(Master_Exechost_List, lGetHost(gdil_ep, JG_qhostname)))) {
             ret = -1;   
             break;
@@ -184,7 +185,7 @@ lListElem *hep
 
          /* start with 1 as first consecutive taskid at each node */
          lSetUlong(jatep, JAT_next_pe_task_id, 1);
-
+   
          if (send_job(lGetHost(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
             ret = -1;   
             break;
@@ -1240,7 +1241,7 @@ char *rlimit_name
    lListElem *res;
    int found = 0;
 
-   DENTER(TOP_LAYER, "reduce_queue_limit");
+   DENTER(BASIS_LAYER, "reduce_queue_limit");
 
    for_each (res, lGetList(jep, JB_hard_resource_list)) {
       if (!strcmp(lGetString(res, CE_name), rlimit_name)) {

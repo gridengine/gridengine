@@ -382,7 +382,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (hep) {
             lListElem *ruep;
             lList *rulp;
- 
+
             rulp = lGetList(hep, EH_reschedule_unknown_list);
             if (rulp) {
                for_each(ruep, rulp) {
@@ -418,14 +418,13 @@ lList **topp  /* ticket orders ptr ptr */
           *  and gets untagged when ack has arrived 
           */
          if (pe && lGetBool(pe, PE_control_slaves)) {
-
+      
             if (feature_is_enabled(FEATURE_SGEEE)) {
                lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
                lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
                lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
                lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
             }
-     
 
             if (sge_hostcmp(lGetHost(master_host, EH_name), lGetHost(hep, EH_name))) {
                lListElem *first_at_host;
@@ -447,10 +446,13 @@ lList **topp  /* ticket orders ptr ptr */
          if (pe) 
             pe_slots += q_slots;
       }
-
+         
       /* fill in master_queue */
       lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
+
+lWriteElemTo(jatp, stderr);
+lWriteElemTo(master_qep, stderr);
 
       if (sge_give_job(jep, jatp, master_qep, pe, master_host)) {
 

@@ -459,6 +459,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
        */
       if (name != NULL) {
          lList *master_hgroup_list = *(hgroup_list_get_master_list());
+         lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
 #ifndef __SGE_NO_USERMAPPING__
          lList *master_cuser_list = *(cuser_list_get_master_list());
 #endif
@@ -470,22 +471,36 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
          hgroup = hgroup_list_locate(master_hgroup_list, name);
          if (hgroup != NULL) {
             lList *href_list = NULL;
+            lList *qref_list = NULL;
 #ifndef __SGE_NO_USERMAPPING__
             lList *string_list = NULL;
 #endif
 
             /*
-             * Is it still referenced in another hostgroup?
+             * Is it still referenced in another hostgroup or cqueue?
              */
             ret &= hgroup_find_referencees(hgroup, answer_list, 
                                            master_hgroup_list, 
-                                           &href_list);
+                                           master_cqueue_list,
+                                           &href_list,
+                                           &qref_list);
             if (ret) {
                if (href_list != NULL) {
                   dstring string = DSTRING_INIT;
 
                   href_list_append_to_dstring(href_list, &string);
                   ERROR((SGE_EVENT, MSG_HGROUP_REFINHGOUP_SS, name,
+                         sge_dstring_get_string(&string)));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                  ANSWER_QUALITY_ERROR);
+                  sge_dstring_free(&string);
+                  ret = false;
+               }
+               if (qref_list != NULL) {
+                  dstring string = DSTRING_INIT;
+
+                  str_list_append_to_dstring(qref_list, &string, ' ');
+                  ERROR((SGE_EVENT, MSG_CQUEUE_REFINHGOUP_SS, name,
                          sge_dstring_get_string(&string)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);

@@ -63,14 +63,18 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
                            lList **used_groups);
 
 bool 
-hgroup_find_referencees(const lListElem *this_elem,
-                        lList **answer_list,
-                        const lList *master_list, lList **occupants_groups);
-
-bool 
 hgroup_find_all_referencees(const lListElem *this_elem, 
                             lList **answer_list,
                             const lList *master_list, lList **used_groups);
+
+bool
+hgroup_find_referencees(const lListElem *this_elem,
+                        lList **answer_list,
+                        const lList *master_hgroup_list,
+                        const lList *master_cqueue_list,
+                        lList **occupants_groups,
+                        lList **occupants_queues);
+
 
 /* --- */
 

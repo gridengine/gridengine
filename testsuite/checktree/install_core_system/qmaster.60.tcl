@@ -687,19 +687,16 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $ENTER_HOSTS {
-          incr hostcount 1 
-          if {$hostcount == 1} {
-             foreach exechost $CHECK_CORE_EXECD {
-               send -i $sp_id " $exechost"
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
-             } 
+         if {$hostcount >= [llength $CHECK_CORE_EXECD]} {
              puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
              send -i $sp_id "\n"
-          } else {
-             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-             send -i $sp_id "\n"
-          }
-          continue;
+         } else {
+            set exechost [lindex $CHECK_CORE_EXECD $hostcount]
+            incr hostcount
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
+            send -i $sp_id "$exechost\n"
+         }
+         continue;
        }
 
        -i $sp_id $ENTER_ADMIN_MAIL { 

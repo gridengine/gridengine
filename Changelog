@@ -1,3 +1,13 @@
+DT-2004-10-04-0: Bugfix:    o Fixed testsuite test for 1269
+                            o Execd now also looks in $SGE_ROOT/bin for qidle
+                              and qloadsensor
+                            o qconf is now able to handle unbreakable lines
+                              longer than MAX_STRING_SIZE
+                 Changed:   testsuite, execd, flatfile spooling
+                 Review:    SG
+                 Issue:     1176, 1251
+                 Bugtraq:   5108635, 5108639
+
 CR-2004-10-01-0: Bugfix:    Thread enabled commlib coredumps on exit on a 
                             32bit Solaris x86 box
                  Issue:     1283

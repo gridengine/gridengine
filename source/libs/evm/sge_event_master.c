@@ -2188,7 +2188,7 @@ static void* send_thread(void *anArg)
             ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
             pthread_cond_timedwait(&Master_Control.cond_var,
                                    &Master_Control.cond_mutex, &ts);
-        } while (!Master_Control.delivery_signaled && !should_exit() &&
+         } while (!Master_Control.delivery_signaled && !should_exit() &&
                   ((sge_get_gmt() - current_time) < EVENT_DELIVERY_INTERVAL_S));
 
          Master_Control.delivery_signaled = false;

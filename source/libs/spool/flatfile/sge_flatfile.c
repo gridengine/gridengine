@@ -2022,13 +2022,13 @@ void create_spooling_field (
    int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp)
 )
 {
-   (*field).nm = nm;
-   (*field).width = width;
-   (*field).name = name;
-   (*field).sub_fields = sub_fields;
-   (*field).clientdata = clientdata;
-   (*field).read_func = read_func;
-   (*field).write_func = write_func;
+   field->nm = nm;
+   field->width = width;
+   field->name = name;
+   field->sub_fields = sub_fields;
+   field->clientdata = clientdata;
+   field->read_func = read_func;
+   field->write_func = write_func;
 }
 
 int spool_get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
@@ -2072,6 +2072,29 @@ int spool_get_number_of_fields(const spooling_field fields[])
    return count;
 }
 
+/****** spool/flatfile/spool_flatfile_add_line_breaks() ************************
+*  NAME
+*     spool_flatfile_add_line_breaks() -- breaks up long lines by splitting on
+*                                         commas and whitespace and inserting
+*                                         backslashes at the ends of broken
+*                                         lines
+*
+*  SYNOPSIS
+*     static void spool_flatfile_add_line_breaks (dstring *buffer)
+*
+*  FUNCTION
+*     Splits lines greater than MAX_LINE_LENGTH on commas and whitespace.  It
+*     tries to choose the most convenient place to insert the break.  The break
+*     consists of a space followed by a backslash followed by a new line
+*     followed by enough spaces to indent the next line to the beginning of the
+*     second word in the first line.  Lines are considered to be demarkated by
+*     newlines.
+*
+*  INPUTS
+*     dstring *buffer - The output to be split.  The dstring will be cleared,
+*                       and the new output will be stored in it.
+*
+*******************************************************************************/
 static void spool_flatfile_add_line_breaks (dstring *buffer)
 {
    int index = 0;
@@ -2081,7 +2104,6 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
    char *strp = NULL;
    char str_buf[MAX_STRING_SIZE];
    char *indent_str = NULL;
-   bool changed = false;
    bool first_line = true;
 
    tmp_orig = sge_dstring_get_string (buffer);
@@ -2091,15 +2113,11 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       return;
    }
    
-   /* This strdup is here because sge_dstring_get_string() returns a const char
-    * pointer.  I don't actually modify strp, but I do use it to step through
-    * the string, so it can't be a const.  Technically, I could jsut do the cast
-    * to char pointer, but some time in the future, that might lead someone else
-    * to accidentally double something bad.  So, I dup the str even though it's
-    * not technically necessary. */
    orig = strdup (tmp_orig);
    strp = orig;
    
+   sge_dstring_clear (buffer);
+
    str_buf[0] = '\0';
    
    while (strlen (strp) > MAX_LINE_LENGTH - word) {
@@ -2108,10 +2126,13 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       index = (newlp - strp) / sizeof (char);
       
       if ((newlp != NULL) && (index <= MAX_LINE_LENGTH - word)) {
-         strncat (str_buf, strp, index + 1);
+         strncpy (str_buf, strp, index + 1);
+         str_buf[index + 1] = '\0';
+         sge_dstring_append (buffer, str_buf);
+
          strp = newlp + 1;
 
-         /* Reset the to the first line */
+         /* Reset to the first line */
          first_line = true;
          
          if (indent_str != NULL) {
@@ -2119,7 +2140,6 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
             word = 0;
          }
          
-         /* No need to signal changed until something has actually changed. */
          continue;
       }
       
@@ -2130,7 +2150,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
           * it again, just to be sure. */
          word = 0;
          
-         /* Find the first whitespace */
+         /* Find the first whitespace or equals */
          while (!isspace (strp[word]) && (strp[word] != '=')) {
             word++;
          }
@@ -2163,7 +2183,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       
       /* Break on the last available whitespace or comma */
       /* We have to account for the fact that on all lines after the first, the
-       * line length in decreased by the indentation. */
+       * line length is decreased by the indentation. */
       /* On the first line, we have to start looking at the end of the line and
        * stop looking before we reach the delimiter before the second word. */
       if (first_line) {
@@ -2186,22 +2206,24 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       }
       
       if (isspace (strp[index])) {
-         strncat (str_buf, strp, index);
-         strcat (str_buf, indent_str);
-         
+         strncpy (str_buf, strp, index);
+         str_buf[index] = '\0';
+         sge_dstring_append (buffer, str_buf);
+         sge_dstring_append (buffer, indent_str);
+
          strp += index + 1;
          
-         changed = true;
          first_line = false;
          continue;
       }
       else if (strp[index] == ',') {
-         strncat (str_buf, strp, index + 1);
-         strcat (str_buf, indent_str);
-         
+         strncpy (str_buf, strp, index + 1);
+         str_buf[index + 1] = '\0';
+         sge_dstring_append (buffer, str_buf);
+         sge_dstring_append (buffer, indent_str);
+
          strp += index + 1;
          
-         changed = true;
          first_line = false;
          continue;
       }
@@ -2209,29 +2231,39 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
          /* Break on the first whitespace past the end of the line */
          /* Break on the last available whitespace or comma */
          /* We have to account for the fact that on all lines after the first, the
-          * line length in decreased by the indentation. */
+          * line length is decreased by the indentation. */
          /* On the first line, we start looking at the end of the line. */
          if (first_line) {
-            for (index = MAX_LINE_LENGTH; strp[index] != '\0'; index++) {
+            index = MAX_LINE_LENGTH;
+
+            while ((index < MAX_STRING_SIZE - 1) && (strp[index] != '\0')) {
                if (isspace (strp[index]) || (strp[index] == ',') ||
                    (strp[index] == '\n')) {
                   break;
                }
+
+               index++;
             }
          }
          /* On later lines, we start looking at the end of the line, adjusted for
           * the amount of space we will indent it. */
          else {
-            for (index = MAX_LINE_LENGTH - word; strp[index] != '\0'; index++) {
+            index = MAX_LINE_LENGTH - word;
+
+            while ((index < MAX_STRING_SIZE - 1) && (strp[index] != '\0')) {
                if (isspace (strp[index]) || (strp[index] == ',') ||
                    (strp[index] == '\n')) {
                   break;
                }
+
+               index++;
             }
          }
 
          if (strp[index] == '\n') {
-            strncat (str_buf, strp, index + 1);
+            strncpy (str_buf, strp, index + 1);
+            str_buf[index + 1] = '\0';
+            sge_dstring_append (buffer, str_buf);
 
             strp += index + 1;
             
@@ -2246,37 +2278,44 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
             continue;
          }
          else if (isspace (strp[index])) {
-            strncat (str_buf, strp, index);
-            strcat (str_buf, indent_str);
+            strncpy (str_buf, strp, index);
+            str_buf[index] = '\0';
+            sge_dstring_append (buffer, str_buf);
+            sge_dstring_append (buffer, indent_str);
 
             strp += index + 1;
             
-            changed = true;
             first_line = false;
             continue;
          }
          else if (strp[index] == ',') {
-            strncat (str_buf, strp, index + 1);
-            strcat (str_buf, indent_str);
+            strncpy (str_buf, strp, index + 1);
+            str_buf[index + 1] = '\0';
+            sge_dstring_append (buffer, str_buf);
+            sge_dstring_append (buffer, indent_str);
 
             strp += index + 1;
-            
-            changed = true;
+
             first_line = false;
+            continue;
+         }
+         else if (index == MAX_STRING_SIZE - 1) {
+            strncpy (str_buf, strp, MAX_STRING_SIZE - 1);
+            str_buf[MAX_STRING_SIZE - 1] = '\0';
+            sge_dstring_append (buffer, str_buf);
+            
+            strp += MAX_STRING_SIZE - 1;
+            
             continue;
          }
          else {
             /* There's no spaces or commas, and hence nothing we can do. */
-            break;
+            break; /* while */
          }
-      }
-   }
+      } /* else */
+   } /* while */
 
-   if (changed) {
-      strcat (str_buf, (strp));
-      sge_dstring_clear (buffer);
-      sge_dstring_append (buffer, str_buf);
-   }
+   sge_dstring_append (buffer, strp);
    
    if (indent_str != NULL) {
       FREE (indent_str);

@@ -863,43 +863,40 @@ proc qconf_de_check {} {
 
    # Setup
    set execd [lindex $ts_config(execd_hosts) 0]
+   set arch [resolve_arch $ts_config(master_host)]
+
+   # - Disable line breaks in qconf so that the grep can work
+   set env(SGE_SINGLE_LINE) 1
 
    set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > /tmp/$execd" } result ]
    
    if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not store execd config"
+      add_proc_error "qconf_de_check" "-1" "could not store execd config: $result"
    }
 
    set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -dattr hostgroup hostlist $execd @allhosts" } result ]
    
    if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not remove host from hostgroup @allhosts"
+      add_proc_error "qconf_de_check" "-1" "could not remove host from hostgroup @allhosts: $result"
    }
-
-   # - Disable line breaks in qconf so that the grep can work
-   set env(SGE_SINGLE_LINE) 1
 
    # Test
    set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
    
-   if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not delete live execd"
+   set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $ts_config(master_host) $execd "execution host"]
+
+   if { [ string compare $result "$EXEC_HOST_REMOVED\n" ] != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not delete live execd: $result"
+      set_error -1 "Bug 1269: qconf -de still crashes qmaster"
+      return
    }
 
    # Cleanup
    unset env(SGE_SINGLE_LINE)
 
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae /tmp/$execd" } result ]
-   
-   if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not create exec host"
-   }
-
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result ]
-   
-   if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not add host to hostgroup @allhosts"
-   }
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae /tmp/$execd" } result 
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result
+   catch { eval exec "/usr/bin/rm /tmp/$execd" } result
 
    set_error 0 "ok"
 }

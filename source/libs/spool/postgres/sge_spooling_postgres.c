@@ -1965,7 +1965,6 @@ spool_postgres_default_delete_func(lList **answer_list,
                                    const sge_object_type event_type)
 {
    bool ret = true;
-   spooling_field *fields;
 
    DENTER(TOP_LAYER, "spool_postgres_default_delete_func");
 

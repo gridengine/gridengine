@@ -65,6 +65,7 @@ RH-2004-06-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmast
                             a sprintf "@%s" instead of "%s@%s" is executed if the 
                             queuename part is empty.
                  Issue:     1131
+                 Bugtraq:   5071918
                  Review:    JG
 
 AA-2004-07-13-0: Bugfix:    removed stat_log_time from qmon

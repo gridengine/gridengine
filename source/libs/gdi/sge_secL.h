@@ -1,4 +1,3 @@
-#ifdef SECURE
 #ifndef __SGE_SECL_H
 #define __SGE_SECL_H
 
@@ -110,4 +109,3 @@ NAMEEND
 }
 #endif
 #endif                          /* SECL_H */
-#endif

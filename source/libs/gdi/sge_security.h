@@ -35,10 +35,7 @@
 #include "cull.h"
 #include "sge_gdi_intern.h"
 #include "dispatcher.h"
-
-#ifdef SECURE
-#   include "sec_lib.h"
-#endif
+#include "sec_lib.h"
 
 #ifdef KERBEROS
 #   include "krb_lib.h"

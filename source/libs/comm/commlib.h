@@ -84,12 +84,9 @@ extern "C" {
 #define CL_WRITE_TIMEOUT    15
 #define CL_CHKSUM           16
 #define CL_RRESVPORT        17 
-
-#if defined(SECURE) || defined(KERBEROS)
-   #define SEC_SEND_FAILED     18
-   #define SEC_RECEIVE_FAILED  19
-   #define SEC_ANNOUNCE_FAILED 20 
-#endif
+#define SEC_SEND_FAILED     18
+#define SEC_RECEIVE_FAILED  19
+#define SEC_ANNOUNCE_FAILED 20 
 
 
 #define CL_FIRST_FREE_EC    32

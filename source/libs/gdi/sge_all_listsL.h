@@ -83,10 +83,7 @@
 #include "sge_loadsensorL.h"
 #include "sge_featureL.h"
 #include "sge_suserL.h"
-
-#ifdef SECURE
-#   include "sge_secL.h"
-#endif
+#include "sge_secL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -208,22 +205,9 @@ extern "C" {
       {FES_LOWERBOUND, FESS, FESN},     /* feature list */
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
-#ifdef SECURE      
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
-#endif      
       {0, 0, NULL}
    };
-
-
-#if 0
-   lNameSpace ptf_nmv[] = {
-      {JB_LOWERBOUND, JBS, JBN},        /* job */
-      {UA_LOWERBOUND, UAS, UAN},        /* usage list */
-      {JL_LOWERBOUND, JLS, JLN},        /* ptf job list */
-      {JO_LOWERBOUND, JOS, JON},        /* ptf O.S. job list */
-      {0, 0, NULL}
-   };
-#endif
 
 #ifdef  __cplusplus
 }

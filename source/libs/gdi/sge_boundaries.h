@@ -418,14 +418,10 @@ enum NameSpaceBoundaries {
 
    /* CHANGE LAST_UPPERBOUND below !!!!!!!!!!!!! */
       
-#ifdef SECURE
    /* security connection list  */
   ,SEC_LOWERBOUND = FE_UPPERBOUND + 1,
    SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1
 #  define LAST_UPPERBOUND SEC_UPPERBOUND
-#else
-#  define LAST_UPPERBOUND SU_UPPERBOUND
-#endif
 
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */

@@ -194,7 +194,7 @@ usage:
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
    echo "-qmake            -> use qmake instead of make"
-   echo "-secure           -> enable ssl security, experimental"
+   echo "-secure           -> enable ssl security"
    echo "-shared           -> link shared (default)"
    echo "-shared-libs      -> create libraries as shared libs"
    echo "-static           -> link static"
@@ -222,7 +222,7 @@ endif
 
 set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
-set   CORE_INCLUDE = "-I../common -I../libs/uti -I../libs/gdi -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
@@ -662,8 +662,8 @@ while ($#argv >= 1 && $?found)
       set SECLIBS = "libsec.a"
       set SECLIB = "-lsec"
       set SECLIB_OBJS = "sec_lib.o"
-      set CFLAGS  = "-DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CFLAGS"
-      set CXXFLAGS  = "-DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CXXFLAGS"
+      set CFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CFLAGS"
+      set CXXFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CXXFLAGS"
       set KLFLAGS  = "-L$OPENSSL_HOME/lib"
       set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
       breaksw

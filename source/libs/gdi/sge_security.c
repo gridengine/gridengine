@@ -106,17 +106,19 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 
 int sge_security_initialize(const char *name)
 {
-   static const char* dummy_string = NULL;
    DENTER(TOP_LAYER, "sge_security_initialize");
 
 #ifdef SECURE
-   dummy_string = sge_dummy_sec_string;
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      if (sec_init(name)) {
-         DEXIT;
-         return -1;
+   {
+      static const char* dummy_string = NULL;
+      dummy_string = sge_dummy_sec_string;
+      if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+         if (sec_init(name)) {
+            DEXIT;
+            return -1;
+         }
       }
-   }     
+   }
 #endif
 
 #ifdef KERBEROS

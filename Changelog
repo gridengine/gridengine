@@ -1,3 +1,12 @@
+EB-2002-01-25-1: Bugfix:    - shadowd did not remove the lock file
+                              if it encountered that there may be another
+                              master.
+                 Enhancem.: - A shadowd which tries to start a new master
+                              has to check whether the old one is still
+                              enrolled at the old master commd.
+                              If this is the case the shadowd has to wait
+                              for another cycle.
+
 AH-2002-01-25-0: Enhancem.: - fixed man page doc issues #31, #84, #85
                               * changes on -hold_jid accepting both jobid and jobname
                               * default location for Grid Engine host aliases file not descr

@@ -104,6 +104,72 @@ static int check_if_valid_shadow(char *shadow_master_file);
 static int compare_qmaster_names(char *);
 static int host_in_file(char *, char *);
 static void parse_cmdline_shadowd(int argc, char **argv);
+static int shadowd_is_old_master_enrolled(char *oldqmaster);
+
+static int shadowd_is_old_master_enrolled(char *oldqmaster)
+{
+   unsigned int alive = 0;
+   int enroll_ret;
+   int ret = 0;
+
+   DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
+
+   DPRINTF(("Try to enroll to previous master commd on host "SFQ"\n",
+            oldqmaster));
+   set_commlib_param(CL_P_COMMDHOST, 0, oldqmaster, NULL);
+   set_commlib_param(CL_P_NAME, 0, prognames[SHADOWD], NULL);
+   set_commlib_param(CL_P_ID, 1, NULL, NULL);
+
+   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
+      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
+   }
+ 
+   enroll_ret = enroll();   
+
+   switch (enroll_ret) {
+   case 0:
+      DPRINTF(("Ask commd on host "SFQ" for qmaster comproc\n", oldqmaster));
+      alive = ask_commproc(oldqmaster, prognames[QMASTER], 0);
+      leave_commd();
+      if (alive == 0) {
+         DPRINTF(("-> found comproc entry\n"));
+         ret = 1; 
+      }
+      break;   
+   case COMMD_NACK_CONFLICT:
+      /* already registered on commd host, assume he is running */
+      ret = 1;
+      break;
+
+
+
+   case CL_CONNECT:
+      /* No commd on that host - let's hope there is also no qmaster */
+   case CL_ALREADYDONE:
+      /* We are already enrolled */
+   case CL_RESOLVE:
+      /* commlib couldn't resolve name if commd host */
+   case CL_SERVICE:
+      /* getservbyname() failed */
+   case COMMD_NACK_PERM:
+      /* we didn't use reserved port, but commd expects it */
+   case COMMD_NACK_UNKNOWN_HOST:
+      /* commd couldn't resolve our name */
+   default:
+      /* Something else went wrong, usually a reason to try again */
+      ret = 0;
+      break;
+   }
+
+   if (ret) {
+      DPRINTF(("Assume that old master is still running\n"));
+   } else {
+      DPRINTF(("No Master found\n"));
+   }
+
+   DEXIT;
+   return ret;
+}
 
 /*----------------------------------------------------------------------------*/
 int main(
@@ -252,8 +318,7 @@ char **argv
             if (!(ret = check_if_valid_shadow(path.shadow_masters_file))) {
                if (qmaster_lock(QMASTER_LOCK_FILE)) {
                   ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
-               }   
-               else {
+               } else {
                   int out, err;
 
                   /* still the old qmaster name in act_qmaster file and 
@@ -262,7 +327,8 @@ char **argv
                      QMASTER_HEARTBEAT_FILE);
                   DPRINTF(("old qmaster name in act_qmaster and "
                      "old heartbeat\n"));
-                  if (!compare_qmaster_names(oldqmaster) && 
+                  if (!compare_qmaster_names(oldqmaster) &&
+                      !shadowd_is_old_master_enrolled(oldqmaster) && 
                       (latest_heartbeat - heartbeat == 0)) {
                      char qmaster_name[256];
                      char schedd_name[256];
@@ -304,12 +370,14 @@ char **argv
                            ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
                      }
                      close(out);
+                  } else {
+                     qmaster_unlock(QMASTER_LOCK_FILE);
                   }
                }      
-            }
-            else if (ret == -1)
+            } else if (ret == -1) {
                /* just log the more important failures */    
                WARNING((SGE_EVENT, MSG_SHADOWD_DELAYINGSHADOWFUNCTIONFOR10MINUTES));
+            }
          }
          /* Begin a new interval, set timers and hearbeat to current values */
          last = now;

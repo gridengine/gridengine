@@ -1,3 +1,7 @@
+AA-2003-07-30-0: Bugfix:    qmon_cplx: selectAttributes callback was missing,
+                            CQ_Type list added
+                            libs/sgeobj/Makefile delete generated sge_sub_obj.c
+
 SG-2003-07-30-1: Bugfix:    QMON ödisplayed all queues in alarm state and displayed
                             an error message, when the load threshold were modified.
                  Review:    AA   

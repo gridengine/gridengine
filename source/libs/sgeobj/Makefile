@@ -93,7 +93,7 @@ SGEOBJLIB_OBJS = $(SGEOBJLIB_SRC:.c=.o)
 sgeobjlib: $(SGEOBJLIB) $(SGEOBJDLIB)
 
 sgeobjlib_clean:
-		$(RM) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) libsgeobj.a libsgeobj$(SHAREDEXT) libsgeobjd.a libsgeobjd$(SHAREDEXT) 
+		$(RM) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) libsgeobj.a libsgeobj$(SHAREDEXT) libsgeobjd.a libsgeobjd$(SHAREDEXT) sge_sub_object.c
 
 sgeobjlib_depend:
 		$(DEPEND) -f$(SGEOBJLIB_DIR)/sgeobj_dependencies $(SGEOBJLIB_DIR)/*.c

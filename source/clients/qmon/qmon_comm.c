@@ -74,6 +74,7 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_SUBMITHOST_LIST, SUBMITHOST_T, NULL, 0, NULL, NULL },
    { 0, SGE_EXECHOST_LIST, EXECHOST_T, NULL, 0, NULL, NULL },
    { 0, SGE_QUEUE_LIST, QUEUE_T, NULL, 0, NULL, NULL },
+   { 0, SGE_CQUEUE_LIST, CQUEUE_T, NULL, 0, NULL, NULL },
    { 0, SGE_JOB_LIST, JOB_T, NULL, 0, NULL, NULL },
    { 0, SGE_EVENT_LIST, EVENT_T, NULL, 0, NULL, NULL },
    { 0, SGE_CENTRY_LIST, CENTRY_T, NULL, 0, NULL, NULL },
@@ -102,6 +103,7 @@ static char *sge_gdi_list_types[] = {
    "SUBMITHOST",
    "EXECHOST",
    "QUEUE",
+   "CQUEUE",
    "JOB",
    "EVENT",
    "CENTRY",
@@ -136,6 +138,7 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_SUBMITHOST_LIST].what = lWhat("%T(ALL)", SH_Type);
    QmonMirrorList[SGE_EXECHOST_LIST].what = lWhat("%T(ALL)", EH_Type);
    QmonMirrorList[SGE_QUEUE_LIST].what = lWhat("%T(ALL)", QU_Type);
+   QmonMirrorList[SGE_CQUEUE_LIST].what = lWhat("%T(ALL)", CQ_Type);
    QmonMirrorList[SGE_JOB_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_EVENT_LIST].what = lWhat("%T(ALL)", EV_Type);
    QmonMirrorList[SGE_CENTRY_LIST].what = lWhat("%T(ALL)", CE_Type);

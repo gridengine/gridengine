@@ -99,6 +99,8 @@ static void qmonCplxLoadAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxSaveAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxAddAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxDelAttr(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxNoEdit(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCplxSelectAttr(Widget w, XtPointer cld, XtPointer cad);
 
 #if AUTOMATIC_UPDATE
 static void qmonCplxStartUpdate(Widget w, XtPointer cld, XtPointer cad);
@@ -118,6 +120,17 @@ XtPointer cld, cad;
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
+   qmonMirrorMultiAnswer(CENTRY_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set default cursor */
+      XmtDisplayDefaultCursor(w);
+      DEXIT;
+      return;
+   }
+   entries = qmonMirrorList(SGE_CENTRY_LIST);
+
    if (!qmon_cplx) {
       shell = XmtGetTopLevelShell(w);
       qmon_cplx = qmonCreateCplxConfig(shell);
@@ -130,16 +143,6 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_cplx), 0);
    XmUpdateDisplay(qmon_cplx);
 
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      /* set default cursor */
-      XmtDisplayDefaultCursor(w);
-      DEXIT;
-      return;
-   }
-   entries = qmonMirrorList(SGE_CENTRY_LIST);
 
    /*
    ** fill the values into the matrix
@@ -193,7 +196,10 @@ Widget parent
                      qmonCplxOk, NULL);
    XtAddCallback(cplx_reset, XmNactivateCallback, 
                      qmonPopdownCplxConfig, NULL);
-
+   XtAddCallback(attr_mx, XmNenterCellCallback, 
+                     qmonCplxNoEdit, NULL);
+   XtAddCallback(attr_mx, XmNselectCellCallback, 
+                     qmonCplxSelectAttr, NULL);
    /*
    ** register callback procedures
    */
@@ -504,7 +510,7 @@ XtPointer cld, cad;
       XmtChooserSetState(attr_atype, type, False); 
 
       /* relop */
-      str = XbaeMatrixGetCell(w, cbs->row, 4);
+      str = XbaeMatrixGetCell(w, cbs->row, 3);
       relop = 0;
       for (i=CMPLXEQ_OP; !relop && i<=CMPLXNE_OP; i++) {
          if (!strcasecmp(str, map_op2str(i)))
@@ -512,7 +518,7 @@ XtPointer cld, cad;
       }
       XmtChooserSetState(attr_arel, relop, False); 
 
-      str = XbaeMatrixGetCell(w, cbs->row, 5);
+      str = XbaeMatrixGetCell(w, cbs->row, 4);
       if (str && !strcmp(str, "YES")) 
          XmtChooserSetState(attr_areq, 1, False);
       else if (str && !strcmp(str, "FORCED"))
@@ -520,16 +526,32 @@ XtPointer cld, cad;
       else
          XmtChooserSetState(attr_areq, 0, False);
 
-      str = XbaeMatrixGetCell(w, cbs->row, 6);
+      str = XbaeMatrixGetCell(w, cbs->row, 5);
       if (str && !strcmp(str, "YES")) 
          XmtChooserSetState(attr_aconsumable, 1, False);
       else
          XmtChooserSetState(attr_aconsumable, 0, False);
 
       /* default */
-      str = XbaeMatrixGetCell(w, cbs->row, 7);
+      str = XbaeMatrixGetCell(w, cbs->row, 6);
       XmtInputFieldSetString(attr_adefault, str ? str : ""); 
    }
    
    DEXIT;
 }
+
+/*-------------------------------------------------------------------------*/
+static void qmonCplxNoEdit(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XbaeMatrixEnterCellCallbackStruct *cbs = 
+            (XbaeMatrixEnterCellCallbackStruct*) cad;
+
+   DENTER(GUI_LAYER, "qmonCplxNoEdit");
+
+   cbs->doit = False;
+   
+   DEXIT;
+}
+

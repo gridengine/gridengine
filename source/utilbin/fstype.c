@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
      printf("Usage: fstype <directory>\n");
      return 1;
   }
-
+   else {  
 #if defined(LINUX) || defined(DARWIN)
    struct statfs buf;
    statfs(argv[1], &buf);
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
    struct statvfs buf;
    statvfs(argv[1], &buf);
 #endif
-   
+  
 #if defined (DARWIN)
    printf("%s\n", buf.f_fstypename);
 #elif defined(LINUX)
@@ -67,6 +67,6 @@ int main(int argc, char *argv[]) {
 #else
    printf("%s\n", buf.f_basetype);
 #endif
-
-return 0;
+   }
+   return 0;
 }

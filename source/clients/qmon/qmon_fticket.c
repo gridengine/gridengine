@@ -124,6 +124,7 @@ static void set_functional_share_percentage(Widget mw);
 static void qmonFOTicketPopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonFTShowMore(Widget w, XtPointer cld, XtPointer cad);
 static void qmonFTLeaveCell(Widget w, XtPointer cld, XtPointer cad);
+static void qmonFOTLeaveCell(Widget w, XtPointer cld, XtPointer cad);
 static void qmonFOTEnterCell(Widget w, XtPointer cld, XtPointer cad);
 static void qmonFTTraverseCell(Widget w, XtPointer cld, XtPointer cad);
 static void qmonFOTOpenLink(Widget w, XtPointer cld, XtPointer cad);
@@ -585,6 +586,32 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
+static void qmonFOTLeaveCell(
+Widget w,
+XtPointer cld,
+XtPointer cad 
+) {
+   XbaeMatrixLeaveCellCallbackStruct *cbs = 
+         (XbaeMatrixLeaveCellCallbackStruct *)cad;
+
+   char *str;
+
+   DENTER(GUI_LAYER, "qmonFOTLeaveCell");
+  
+   /*
+   ** check if this is a valid line
+   */
+   str = XbaeMatrixGetCell(w, cbs->row, 0); 
+
+   if (!str || *str == '\0') {
+      DEXIT;
+      return;
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
 static void qmonFTLeaveCell(
 Widget w,
 XtPointer cld,
@@ -607,17 +634,7 @@ XtPointer cad
       return;
    }
 
-   /*
-   ** check if its a valid number
-   */
-   strtol(cbs->value, &str, 10);
-
-   if (!str || *str != '\0') {
-      cbs->doit = False;
-   }
-   else {
-      set_functional_share_percentage(w);
-   }   
+   set_functional_share_percentage(w);
 
    DEXIT;
 }
@@ -988,7 +1005,8 @@ Widget parent
                      qmonOTUpdate, NULL);
    XtAddCallback(oticket_matrix, XmNenterCellCallback, 
                      qmonFOTEnterCell, NULL);
-
+   XtAddCallback(oticket_matrix, XmNleaveCellCallback, 
+                     qmonFOTLeaveCell, NULL);
 
 
    XtAddEventHandler(XtParent(oticket_layout), StructureNotifyMask, False, 
@@ -1059,7 +1077,7 @@ int nm1
 ) {
    lListElem *ep;
    StringConst name;
-   int tickets;
+   u_long32 tickets;
    char buf[128];
    char buf2[128];
    int row;
@@ -1085,8 +1103,8 @@ int nm1
       }
       else
          name = lGetString(ep, nm0);
-      tickets = (int)lGetUlong(ep, nm1);
-      sprintf(buf, "%d", tickets);
+      tickets = lGetUlong(ep, nm1);
+      sprintf(buf, u32, tickets);
       if (row == max_rows-1) {
          XbaeMatrixAddRows(matrix,
                            max_rows-1,
@@ -1129,11 +1147,18 @@ int nm1
       col1 = XbaeMatrixGetCell(matrix, row, 0);
       col2 = XbaeMatrixGetCell(matrix, row, 1);
       if (col1 && col1[0] != '\0') {
+         long col2ul = 0;
          if (nm0 == JB_job_number)
             ep = lGetElemUlong(lp, nm0, (u_long32) atoi(col1));
          else
             ep = lGetElemStr(lp, nm0, col1);
-         lSetUlong(ep, nm1, col2 ? atoi(col2) : 0);
+         col2ul = col2 ? atol(col2) : 0;
+         if (col2ul < 0) {
+            qmonMessageShow(matrix, True, "@{Only unsigned integers are allowed !}");
+            DEXIT;
+            return False;
+         }   
+         lSetUlong(ep, nm1, col2ul);
       }
       else
          continue;

@@ -44,7 +44,7 @@
 #include "msg_schedd.h"
 
 static int sge_contained_in_access_list_(const char *user, const char *group, 
-                                         lList *acl, lList *acl_list);
+                                         lList *acl, const lList *acl_list);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
@@ -56,7 +56,7 @@ static int sge_contained_in_access_list_(const char *user, const char *group,
 
 */
 int sge_has_access(const char *user, const char *group, lListElem *q,
-                   lList *acl_list) 
+                   const lList *acl_list) 
 {
    return sge_has_access_(user, group, 
          lGetList(q, QU_acl), lGetList(q, QU_xacl), acl_list);
@@ -66,7 +66,7 @@ int sge_has_access(const char *user, const char *group, lListElem *q,
 ** whole queue
 */
 int sge_has_access_(const char *user, const char *group, lList *q_acl,
-                    lList *q_xacl, lList *acl_list) 
+                    lList *q_xacl, const lList *acl_list) 
 {
    int ret;
 
@@ -108,7 +108,7 @@ int sge_has_access_(const char *user, const char *group, lList *q_acl,
    user, group: may be NULL
 */
 static int sge_contained_in_access_list_(const char *user, const char *group,
-                                         lList *acl, lList *acl_list) 
+                                         lList *acl, const lList *acl_list) 
 {
    lListElem *acl_search, *acl_found;
 

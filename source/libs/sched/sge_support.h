@@ -60,7 +60,7 @@ lListElem *search_userprj_node (lListElem *ep, const char *username, const char 
 
 void set_share_tree_project_flags( const lList *project_list, lListElem *node );
 
-void sge_add_default_user_nodes( lListElem *root, const lList *user_list, const lList *project_list );
+void sge_add_default_user_nodes( lListElem *root, const lList *user_list, const lList *project_list, const lList *userset_list );
 
 void sgeee_sort_jobs( lList **job_list );
 

@@ -7,14 +7,15 @@ EB-2004-10-05-0: Enhancem.: added new module test which especially tests
                             the modifications done with EB-2004-09-15-0
                  Changed:   none
 
-CR-2004-10-05-0: Bugfix:    o removed unnecessary logging information in
+CR-2004-10-05-0: Bugfix:    segmentation fault when vmemsize limit is reached
+                            o removed unnecessary logging information in
                               commlib
                             o prepare_enroll() will now terminate application
                               on cl_com_setup_commlib() errors
-                 Review:    pending
+                 Review:    AA
                  Changed:   commlib, gdi
-                 Issue:     not available
-                 Bugtraq:   not available
+                 Issue:     1286
+                 Bugtraq:   6174821
 
 DT-2004-10-04-0: Bugfix:    o Fixed testsuite test for 1269
                             o Execd now also looks in $SGE_ROOT/bin for qidle

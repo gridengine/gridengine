@@ -594,7 +594,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_ULONG(JB_job_number, CULL_PRIMARY_KEY | CULL_HASH | CULL_SPOOL) 
    SGE_STRING(JB_job_name, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_version, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(JB_jid_request_list, JRE_TYPE, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(JB_jid_request_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT) /* JG: TODO: typo: successor */
    SGE_STRING(JB_session, CULL_DEFAULT | CULL_SPOOL) 

@@ -224,10 +224,6 @@ char *argv[]
       }
 
       sched_funcs[current_scheduler].event_func();
-
-
-      /* JG: TODO: depends on busy handling. If used, do it in send_orders2qmaster */
-      ec_set_busy(0);
    }
 }
 
@@ -354,10 +350,11 @@ static int sge_ck_qmaster()
    lp = lFreeList(lp);
 
 /*---------------------------------------------------------------*/
-   DPRINTF(("Requesting scheduler configuration from qmaster\n"));
+#if 0
    /* JG: TODO: this is not necessary: SCHED_CONF is sent at 
     * event client registration 
     */
+   DPRINTF(("Requesting scheduler configuration from qmaster\n"));
    what = lWhat("%T(ALL)", SC_Type);
    alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
    what = lFreeWhat(what);
@@ -386,6 +383,7 @@ static int sge_ck_qmaster()
    use_alg(scheddconf.algorithm);
 
    lp = lFreeList(lp);
+#endif
 
    DEXIT;
    return 0;

@@ -37,6 +37,8 @@
 #include "sge_unistd.h"
 #include "sge_log.h"
 
+#include "msg_gdilib.h"
+
 #include "sge_answer.h"
 
 /****** gdi/answer/-AnswerList ************************************************
@@ -399,4 +401,51 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
       answer_exit_if_not_recoverable(answer);
       answer_print_text(answer, stream);
    }
+}
+
+/****** gdi/answer/answer_list_handle_request_answer_list() ********************
+*  NAME
+*     answer_list_handle_request_answer_list() -- handle result of a gdi request
+*
+*  SYNOPSIS
+*     int answer_list_handle_request_answer_list(lList **answer_list, 
+*                                                FILE *stream) 
+*
+*  FUNCTION
+*     Processes the answer list that results from a gdi request
+*     (sge_gdi or sge_gdi_multi).
+*     Outputs and errors and warnings and returns the first error
+*     or warning status code.
+*     The answer list is freed.
+*
+*  INPUTS
+*     lList **answer_list - answer list to process
+*     FILE *stream        - output stream
+*
+*  RESULT
+*     int - first error or warning status code or STATUS_OK
+*
+*******************************************************************************/
+int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
+   lListElem *answer;
+   int first_error = STATUS_OK;
+
+   if(answer_list == NULL || *answer_list == NULL) {
+      fprintf(stream, MSG_ANSWER_NOANSWERLIST);
+      return STATUS_EUNKNOWN;
+   }
+
+   for_each(answer, *answer_list) {
+      if(answer_has_quality(answer, ANSWER_QUALITY_ERROR) ||
+         answer_has_quality(answer, ANSWER_QUALITY_WARNING)) {
+         answer_print_text(answer, stream);
+         if(first_error == STATUS_OK) {
+            first_error = lGetUlong(answer, AN_status);
+         }
+      }
+   }
+
+   *answer_list = lFreeList(*answer_list);
+
+   return first_error;
 }

@@ -104,4 +104,6 @@ int answer_list_has_error(lList **answer_list);
 
 void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream);
 
+int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream);
+
 #endif /* __SGE_ANSWER_H */

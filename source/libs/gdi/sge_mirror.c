@@ -178,8 +178,11 @@ sge_mirror_error sge_mirror_initialize(ev_registration_id id, const char *name)
 sge_mirror_error sge_mirror_shutdown(void)
 {
    DENTER(TOP_LAYER, "sge_mirror_shutdown");
-   sge_mirror_unsubscribe(SGE_EMT_ALL);
-   ec_deregister();
+
+   if(ec_is_initialized()) {
+      sge_mirror_unsubscribe(SGE_EMT_ALL);
+      ec_deregister();
+   }
 
    DEXIT;
    return SGE_EM_OK;

@@ -42,6 +42,7 @@
 #include "sge_log.h"
 #include "schedd_message.h"
 #include "sge_answer.h"
+#include "sge_c_event.h"
 #include "msg_schedd.h"
 #include "msg_common.h"
 
@@ -225,54 +226,53 @@ lList *granted
 int sge_send_orders2master(
 lList *orders 
 ) {
-   int success = 0;
-   lList *alp;
-   lListElem* aep;
+   int ret = STATUS_OK;
+   lList *alp = NULL;
+   lList *malp = NULL;
+
+   int set_busy, order_id = 0;
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
-   if (!orders) {       /* nothing to do */
-      DEXIT;
-      return STATUS_OK;
-   }
+   /* do we have to set event client to "not busy"? */
+   set_busy = (ec_get_busy_handling() == EV_BUSY_UNTIL_RELEASED);
 
-   DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(orders)));
+   if (orders != NULL) {
+      DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(orders)));
 
-#if 0
-   { 
-      char *s;
-      if ((s = getenv("_DOD"))) {
-         SGE_STRUCT_STAT sb;
-         while (!SGE_STAT(s, &sb)) {
-            DPRINTF(("DELAYED ORDER TRANSMISSION\n"));
-            sleep(5);
-         } 
+      if(set_busy) {
+         order_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                  orders, NULL, NULL, NULL);
+      } else {
+         order_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                  orders, NULL, NULL, &malp);
       }
-   }
-#endif
 
-   alp=sge_gdi(SGE_ORDER_LIST, SGE_GDI_ADD, &orders, NULL, NULL);
-   if (!alp) {
-      ERROR((SGE_EVENT, MSG_LIST_NOANSWERLISTSENDORDERFAILED));
-   }
-   aep = lFirst(alp);
-   if (!aep) {
-      ERROR((SGE_EVENT, MSG_LIST_NOELEMENTINANSWERLISTSENDORDERFAILED ));
-   } else {
-      success = (lGetUlong(aep, AN_status)==STATUS_OK);
-      if (!success) {
-         const char *s;
-
-         if (aep) {
-            s = lGetString(aep, AN_text);
-            ERROR((SGE_EVENT, MSG_LIST_SENDORDERXFAILED_S , s?s:MSG_NULL));
-         }
+      if (alp != NULL) {
+         ret = answer_list_handle_request_answer_list(&alp, stderr);
+         DEXIT;
+         return ret;
       }
-      lFreeList(alp);
+   }   
+
+   /* if necessary, set busy state to "not busy" */
+   if(set_busy) {
+      DPRINTF(("RESETTING BUSY STATE OF EVENT CLIENT\n"));
+      ec_set_busy(0);
+      ec_commit_multi(&malp);
    }
+
+   /* check result of orders */
+   if(order_id > 0) {
+      alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, order_id, malp, NULL);
+
+      ret = answer_list_handle_request_answer_list(&alp, stderr);
+   }
+
+   malp = lFreeList(malp);
 
    DEXIT;
-   return success;
+   return ret;
 }
 
 

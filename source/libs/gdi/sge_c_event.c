@@ -245,6 +245,33 @@ int ec_prepare_registration(ev_registration_id id, const char *name)
    return 1;
 }
 
+/****** Eventclient/Client/ec_is_initialized() ********************************
+*  NAME
+*     ec_is_initialized() -- has the client been initialized
+*
+*  SYNOPSIS
+*     int ec_is_initialized(void) 
+*
+*  FUNCTION
+*     Checks if the event client mechanism has been initialized
+*     (if ec_prepare_registration has been called).
+*
+*  RESULT
+*     int - TRUE, if the event client interface has been initialized,
+*           else FALSE.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_prepare_registration()
+*******************************************************************************/
+int ec_is_initialized(void) 
+{
+   if(ec == NULL) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
+}
+
 /****** Eventclient/Client/ec_mark4registration() *****************************
 *  NAME
 *     ec_mark4registration() -- new registration is required
@@ -673,7 +700,7 @@ int ec_register(void)
 *     After the timeout, it will be deleted.
 *
 *  RESULT
-*     int - 1, if the deregistration succeeded, else 0
+*     int - TRUE, if the deregistration succeeded, else FALSE
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_register()
@@ -685,16 +712,16 @@ int ec_deregister(void)
 
    DENTER(TOP_LAYER, "ec_deregister");
 
+   /* not yet initialized? Nothing to shutdown */
    if(ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
-      return 0;
+      return TRUE;
    }
 
    if(init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
       /* error message is output from init_packbuffer */
       DEXIT;
-      return 0;
+      return FALSE;
    }
 
    packint(&pb, lGetUlong(ec, EV_id));
@@ -707,11 +734,11 @@ int ec_deregister(void)
    if(ret != CL_OK) {
       /* error message is output from sge_send_any_request */
       DEXIT;
-      return 0;
+      return FALSE;
    }
 
    DEXIT;
-   return 1;
+   return TRUE;
 }
 
 /****** Eventclient/Client/ec_subscribe() *************************************
@@ -1338,6 +1365,7 @@ static void ec_config_changed(void)
 *     int - 1 on success, else 0
 *
 *  SEE ALSO
+*     Eventclient/Client/ec_commit_multi()
 *     Eventclient/Client/ec_config_changed()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
@@ -1383,14 +1411,99 @@ int ec_commit(void)
    
    if (success) {
       config_changed = 0;
-      DPRINTF(("CHANGE CONFIGURATION SUCCEEDED\n"));
       DEXIT;
       return 1;
    }
 
-   DPRINTF(("CHANGE CONFIGURATION FAILED\n"));
+   DPRINTF(("CHANGE EVENT CLIENT CONFIGURATION FAILED\n"));
    DEXIT;
    return 0;
+}
+
+/****** Eventclient/Client/ec_commit_multi() ****************************
+*  NAME
+*     ec_commit() -- commit configuration changes via gdi multi request
+*
+*  SYNOPSIS
+*     #include "sge_c_event.h"
+*
+*     int ec_commit_multi(lList **malpp) 
+*
+*  FUNCTION
+*     Similar to ec_commit configuration changes will be sent to qmaster.
+*     But unless ec_commit which uses sge_gdi to send the change request, 
+*     ec_commit_multi uses a sge_gdi_multi call to send the configuration
+*     change along with other gdi requests.
+*     The ec_commit_multi call has to be the last request of the multi 
+*     request and will trigger the communication of the requests.
+*
+*  INPUTS
+*     malpp - answer list for the whole gdi multi request
+*
+*  RESULT
+*     int - TRUE on success, else FALSE
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_commit()
+*     Eventclient/Client/ec_config_changed()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
+int ec_commit_multi(lList **malpp) 
+{
+   int commit_id, ret;
+   lList *lp, *alp = NULL;
+
+   DENTER(TOP_LAYER, "ec_commit_multi");
+
+   /* not yet initialized? Cannot send modification to qmaster! */
+   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
+      DPRINTF((MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* not (yet) registered? Cannot send modification to qmaster! */
+   if(ec_need_new_registration()) {
+      DPRINTF((MSG_EVENT_NOTREGISTERED));
+      DEXIT;
+      return FALSE;
+   }
+
+   /* do not check, if anything has changed.
+    * we have to send the request in any case to finish the 
+    * gdi multi request
+    */
+
+   lp = lCreateList("change configuration", EV_Type);
+   lAppendElem(lp, lCopyElem(ec));
+
+   /*
+    *  to add may also means to modify
+    *  - if this event client is already enrolled at qmaster
+    */
+   commit_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_EVENT_LIST, SGE_GDI_MOD, 
+                             lp, NULL, NULL, malpp);
+   lp = lFreeList(lp); 
+
+   if (alp != NULL) {
+      answer_list_handle_request_answer_list(&alp, stderr);
+      DEXIT;
+      return FALSE;
+   }
+
+   alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, commit_id, *malpp, NULL);
+
+   ret = answer_list_handle_request_answer_list(&alp, stderr);
+
+   if (ret == STATUS_OK) {
+      config_changed = 0;
+      DEXIT;
+      return TRUE;
+   }
+
+   DPRINTF(("CHANGE EVENT CLIENT CONFIGURATION FAILED\n"));
+   DEXIT;
+   return FALSE;
 }
 
 /****** Eventclient/Client/ec_get() ******************************************

@@ -196,13 +196,6 @@
 
 
 /* 
-** schedd/sge_orders.c
-*/ 
-#define MSG_LIST_NOANSWERLISTSENDORDERFAILED          _MESSAGE(47134, _("no answer-list - failed sending order"))
-#define MSG_LIST_NOELEMENTINANSWERLISTSENDORDERFAILED _MESSAGE(47135, _("no element in answer-list - failed sending order"))
-#define MSG_LIST_SENDORDERXFAILED_S                   _MESSAGE(47136, _("failed sending order: "SFN""))
-
-/* 
 ** schedd/sge_pe_schedd.c
 */ 
 #define MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS       _MESSAGE(47137, _("pe >"SFN"<: failed parsing allocation rule "SFQ"\n"))

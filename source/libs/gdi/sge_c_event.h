@@ -39,6 +39,7 @@
 int ec_prepare_registration(ev_registration_id id, const char *name);
 int ec_register(void);
 int ec_deregister(void);
+int ec_is_initialized(void);
 
 int ec_subscribe(ev_event event);
 int ec_subscribe_all(void);
@@ -65,6 +66,7 @@ void ec_set_clientdata(u_long32 data);
 u_long32 ec_get_clientdata(void);
 
 int ec_commit(void);
+int ec_commit_multi(lList **malp);
 
 int ec_get(lList **);
 

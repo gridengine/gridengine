@@ -432,5 +432,10 @@
 #define MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS       _MESSAGE(43274, _("can't find parallel task "SFN" for update in function "SFN"\n"))
 #define MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS      _MESSAGE(43275, _("can't find queue "SFN" for update in function "SFN"\n"))
 
+/*
+ * libs/gdi/sge_answer.c
+ */
+#define MSG_ANSWER_NOANSWERLIST           _MESSAGE(43276, _("no answer list - gdi request failed\n")) 
+
 #endif /* __MSG_GDILIB_H */
 

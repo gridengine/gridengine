@@ -2474,6 +2474,37 @@ calc_pending_job_functional_tickets(sge_ref_t *ref,
                                      share_functional_shares,
                                      0);
 
+   /*
+    * If the functional shares of a given object are shared between jobs
+    * (schedd_param SHARE_FUNCTIONAL_SHARES=true), then we need to reduce
+    * the total number of shares for each category to include the object
+    * shares only one time. If the object reference count is greater than
+    * one, the object's shares were already included in the total before
+    * calc_job_functional_tickets_pass1 was called, so we subtract them
+    * out here.
+    */
+
+   if (share_functional_shares) {
+      if (ref->user && lGetUlong(ref->user, UP_job_cnt)>1)
+         *sum_of_user_functional_shares -= ref->user_fshare;
+      if (ref->project && lGetUlong(ref->project, UP_job_cnt)>1)
+         *sum_of_project_functional_shares -= ref->project_fshare;
+      if (ref->dept && lGetUlong(ref->dept, US_job_cnt)>1)
+         *sum_of_department_functional_shares -= ref->dept_fshare;
+      if (ref->task_jobclass) {
+         int i, job_cnt;
+         for(i=0; i<ref->num_task_jobclasses; i++) {
+            if (ref->task_jobclass[i] &&
+                (( job_cnt = lGetUlong(ref->task_jobclass[i], QU_job_cnt)))>1) {
+               *sum_of_jobclass_functional_shares -=
+                     (double)lGetUlong(ref->task_jobclass[i], QU_fshare) / job_cnt;
+            }
+         }
+      } else if (ref->jobclass && lGetUlong(ref->jobclass, QU_job_cnt)>1) {
+         *sum_of_jobclass_functional_shares -= ref->jobclass_fshare;
+      }
+   }
+
    get_functional_weighting_parameters(1, 1, 1, 1, 1, w);
 
    calc_job_functional_tickets_pass2(ref,

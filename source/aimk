@@ -1031,6 +1031,11 @@ case HP11:
 
 case LINUX5:
 case LINUX6:
+   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.2 >& /dev/null
+   if ( $status == 0 ) then
+      set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+   endif
+
    set COMPILE_DC = 1
    if ( $USE_QMAKE == 0 ) then
       set MAKE = make
@@ -1087,10 +1092,6 @@ case LINUX6:
    set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
-   if ( $?KERNEL24 ) then
-      set CFLAGS = "$CFLAGS -DHAS_IN_PORT_T"
-   endif
 
    breaksw
 

@@ -2625,7 +2625,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             }               
 
          } else {
-            DPRINTF(("queue %s reported %d", qname, result));
+            DPRINTF(("queue %s reported %d\n", qname, result));
             if (skip_queue_list) {
                lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
             }
@@ -4001,6 +4001,18 @@ sequential_queue_time( u_long32 *start, const sge_assignment_t *a,
                             qep, 0, &reason, 1, DOMINANT_LAYER_QUEUE, 
                             0, QUEUE_TAG, &tmp_time, qname);
 
+#if 0
+   /* AH: issue #1484 in case of result == DISPATCH_NOT_AT_TIME due to -l h_rt mismatch
+      queue_match_cal_time() later-on overwrites that result with DISPATCH_OK */
+   if (a->is_reservation && result == DISPATCH_OK) {
+      *start = tmp_time;
+      DPRINTF(("queue_time_by_slots(%s) returns earliest start time "u32"\n", qname, *start));
+   } else if (result == DISPATCH_OK) {
+      DPRINTF(("queue_time_by_slots(%s) returns <at specified time>\n", qname));
+   } else {
+      DPRINTF(("queue_time_by_slots(%s) returns <later>\n", qname));
+   }
+#endif
    if (tmp_time > cal_time) { /* we have to check again, if the job can still run */
       cal_time = tmp_time;
       result = queue_match_cal_time(qep, a, &cal_time);

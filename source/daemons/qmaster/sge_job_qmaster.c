@@ -2161,7 +2161,6 @@ int *trigger
                u_long32 id;
  
                for_each(range, range_list) {
-                  lWriteElemTo(range, stderr);
                   for(id = lGetUlong(range, RN_min); 
                       id <= lGetUlong(range, RN_max); 
                       id += lGetUlong(range, RN_step)) {

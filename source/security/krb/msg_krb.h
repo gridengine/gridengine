@@ -57,7 +57,7 @@
 #define MSG_KRB_COULDNOTGETCLIENTCREDENTIALS             _MESSAGE(53018, _("Could not get client credentials\n"))
 #define MSG_KRB_KRB5CCGETPRINCIPALFAILEDX_S              _MESSAGE(53019, _("krb5_cc_get_principal failed - "SFN"\n"))
 #define MSG_KRB_COULDNOTGETCLIENTPRINCIPAL               _MESSAGE(53020, _("Could not get client principal\n"))
-#define MSG_KRB_INITPACKBUFFERFAILED                     _MESSAGE(53021, _("init_packbuffer failed\n"))
+#define MSG_KRB_INITPACKBUFFERFAILED_S                   _MESSAGE(53021, _("init_packbuffer failed: "SFN"\n"))
 #define MSG_KRB_CALLERDIDNOTCALLKRBINIT                  _MESSAGE(53022, _("caller did not call krb_init\n"))
 #define MSG_KRB_KRB5TIMEOFDAYFAILEDX_S                   _MESSAGE(53023, _("krb5_timeofday failed - "SFN))
 #define MSG_KRB_NOCLIENTENTRYFOR_SSI                     _MESSAGE(53024, _("No client entry for <"SFN","SFN",%d>\n"))

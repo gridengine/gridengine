@@ -976,8 +976,8 @@ const char *tohost
    /* 
    ** prepare packing buffer
    */
-   if ((i=init_packbuffer(&pb, 0, 0))) {
-      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
+   if ((i=init_packbuffer(&pb, 0, 0)) != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
       goto error;
    }
 
@@ -1218,18 +1218,17 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** prepare packbuffer pb for unpacking message
    */
-   if ((i=init_packbuffer_from_buffer(&pb, buffer, buflen, 0))) {
-      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
+   if ((i=init_packbuffer_from_buffer(&pb, buffer, buflen, 0)) != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
       goto error;
    }
 
    /* 
    ** prepare packbuffer for sending message
    */
-   if ((i=init_packbuffer(&pb_respond, 0, 0))) {
-      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
-      sec_send_err(commproc, id, host, &pb_respond, 
-                   MSG_SEC_INITPACKBUFFERFAILED);
+   if ((i=init_packbuffer(&pb_respond, 0, 0)) != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
+      sec_send_err(commproc, id, host, &pb_respond, SGE_EVENT);
       goto error;
    }
 
@@ -1548,8 +1547,8 @@ int inbuflen
    /*
    ** initialize packbuffer
    */
-   if ((i=init_packbuffer(pb, md_len + outlen, 0))) {
-      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
+   if ((i=init_packbuffer(pb, md_len + outlen, 0)) != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
       goto error;
    }
 

@@ -807,17 +807,17 @@ static int sge_get_gdi_request(int *commlib_error,
 
    case PACK_ENOMEM:
       ret = -2;
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_NOTENOUGHMEMORYFORUNPACKINGGDIREQUEST ));
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
       break;
 
    case PACK_FORMAT:
       ret = -3;
-      ERROR((SGE_EVENT, MSG_GDI_REQUESTFORMATERRORWHILEUNPACKING ));
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
       break;
 
    default:
       ret = -1;
-      ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST ));
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
       break;
    }
 

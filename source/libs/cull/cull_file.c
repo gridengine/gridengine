@@ -289,7 +289,9 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
    }
 
    /* unpack lListElem, never compressed */
-   init_packbuffer_from_buffer(&pb, buf, statbuf.st_size, 0);
+   if((ret = init_packbuffer_from_buffer(&pb, buf, statbuf.st_size, 0)) != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_CULL_ERRORININITPACKBUFFER_S, cull_pack_strerror(ret)));
+   }
    ret = cull_unpack_elem(&pb, &ep, type);
    close(fd);
    clear_packbuffer(&pb);     /* this one frees buf */

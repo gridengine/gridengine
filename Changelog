@@ -1,3 +1,7 @@
+JG-2002-07-17-0: Enhancem.  Include version information in the cull packbuffer 
+                            and do version check before unpacking messages.
+                 Issue:     #322           
+
 CR-2002-07-15-0: Testsuite: solved dependence on user environment variable HOST. 
                  Bugfix:     
 

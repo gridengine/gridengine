@@ -323,7 +323,12 @@ int tag
       return 1;
    }
 
-   init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
+   ret = init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
+   if(ret != PACK_SUCCESS) {
+      sprintf(lasterror,  MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret));
+      DEXIT;
+      return -1;
+   }
 
    switch (tag) {
    case TAG_TASK_EXIT:

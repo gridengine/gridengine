@@ -48,7 +48,7 @@
 #define MSG_SEC_CANTOPENCERTFILE_SS      _MESSAGE(55009, _("Cannot open Cert_file "SFQ": "SFN"!!\n"))
 #define MSG_SEC_FAILEDVERIFYOWNCERT      _MESSAGE(55010, _("failed verify own certificate\n"))
 #define MSG_SEC_CANTOPENKEYFILE_SS       _MESSAGE(55011, _("Cannot open key file "SFQ": "SFN"!\n"))
-#define MSG_SEC_INITPACKBUFFERFAILED     _MESSAGE(55012, _("init_packbuffer failed\n"))
+#define MSG_SEC_INITPACKBUFFERFAILED_S   _MESSAGE(55012, _("init_packbuffer failed: "SFN"\n"))
 #define MSG_SEC_PACKANNOUNCEFAILED       _MESSAGE(55013, _("sec_pack_announce failed\n"))
 #define MSG_SEC_UNPACKANNOUNCEFAILED     _MESSAGE(55014, _("sec_unpack_announce failed\n"))
 #define MSG_SEC_RESPONSEFAILED_SISIS      _MESSAGE(55015, _("failed get sec_response from ("SFN":%d:"SFN":%d):"SFN"\n"))

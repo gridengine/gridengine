@@ -302,14 +302,19 @@ int synchron
       *id = usid;
 
    /* fill it in the packing buffer */
-   init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
+   i = init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
+   if(i != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(i)));
+      DEXIT;
+      return CL_READ;
+   }
 
    if (rhost[0] == '\0') {    /* If we receive from anybody return the sender */
       strcpy(rhost, host);
    }
 
    DEXIT;
-   return 0;
+   return CL_OK;
 }
 
 

@@ -357,13 +357,19 @@ void (*errfunc)(const char *);
 
       receive_blocking = 0;     /* second receive is always non blocking */
       if (i == CL_OK) {
+         int pack_ret;
+
          new = (pbcache *)malloc(sizeof(pbcache));        
          new->pb = (sge_pack_buffer *)malloc(sizeof(sge_pack_buffer));
          new->de = (dispatch_entry *)malloc(sizeof(dispatch_entry));
          alloc_de(new->de);
          copy_de(new->de, &deact);
          new->next = 0;
-         init_packbuffer_from_buffer(new->pb, buffer, buflen, compressed);        
+         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen, compressed);
+         if(pack_ret != PACK_SUCCESS) {
+            ERROR((SGE_EVENT, MSG_EXECD_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
+            continue;
+         }
 
          if (cache)
             cacheend->next = new;

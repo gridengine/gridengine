@@ -51,7 +51,7 @@
 #define MSG_CULL_XFILEYHASZEROSIYE_SS                    _MESSAGE(41012, _(""SFN" file "SFQ" has zero size"))
 #define MSG_CULL_ERRORREADINGXINFILEY_SS                 _MESSAGE(41013, _("error reading "SFN" in file "SFN""))
 #define MSG_CULL_BADARGUMENTWHILEUNPACKINGXY_SS          _MESSAGE(41014, _("bad argument error while unpacking "SFN" "SFQ"\n"))
-#define MSG_CULL_FORMATERRORININITPACKBUFFER             _MESSAGE(41015, _("format error in init_packbuffer"))
+#define MSG_CULL_ERRORININITPACKBUFFER_S                 _MESSAGE(41015, _("error in init_packbuffer: "SFN"\n"))
 #define MSG_CULL_NOTENOUGHMEMORY_D                       _MESSAGE(41016, _("not enough memory to allocate %d bytes in init_packbuffer"))
 
 
@@ -214,7 +214,19 @@
 */
 #define MSG_CULL_HASHTABLEALREADYEXISTS_S    _MESSAGE(41151, _("hash table already exists for field "SFQ"\n"))
 
+/*
+** cull_pack.c
+*/
+#define MSG_CULL_PACK_WRONG_VERSION_XX    _MESSAGE(41152, _("wrong cull version, read 0x%08x, but expected actual version 0x%08x\n"))
 
+/*
+** cull_pack.c, macros for cull_pack_strerror()
+*/
+#define MSG_CULL_PACK_SUCCESS             _MESSAGE(41153, _("packing successfull"))
+#define MSG_CULL_PACK_ENOMEM              _MESSAGE(41154, _("can't allocate memory"))
+#define MSG_CULL_PACK_FORMAT              _MESSAGE(41155, _("invalid input parameter"))
+#define MSG_CULL_PACK_BADARG              _MESSAGE(41156, _("bad argument"))
+#define MSG_CULL_PACK_VERSION             _MESSAGE(41157, _("wrong cull version"))
 
 
 #endif /* __MSG_CULL_H */ 

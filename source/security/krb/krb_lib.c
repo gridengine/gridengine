@@ -618,7 +618,7 @@ int compressed
 
    /* prepare packing buffer */
    if ((ret = init_packbuffer(&pb, 4096, 0))) {
-	  ERROR((SGE_EVENT, MSG_KRB_INITPACKBUFFERFAILED));
+	  ERROR((SGE_EVENT, MSG_KRB_INITPACKBUFFERFAILED_S, cull_pack_strerror(ret)));
 	  goto error;
    }
 
@@ -1040,7 +1040,14 @@ u_short *compressed      /* this one is for the original message */
 
    /* unpack AP_REQ and encrypted message */
 
-   init_packbuffer_from_buffer(&pb, *buffer, tmplen, krb_compressed);
+   {
+      int pack_ret = init_packbuffer_from_buffer(&pb, *buffer, tmplen, krb_compressed);
+      if(pack_ret != PACK_SUCCESS) {
+         ERROR((SGE_EVENT, MSG_KRB_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
+         ret = SEC_RECEIVE_FAILED;
+         goto error;
+      }
+   }   
 
    if (krb_unpackmsg(&pb, &ap_req, &inbuf, &tgtbuf, &tgt_id, compressed)) {
 

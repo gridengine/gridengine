@@ -48,6 +48,8 @@ extern "C" {
 
 #define CHUNK  (1024*1024)
 
+#define CULL_VERSION 0x10000000
+
 typedef struct {
 #ifdef COMMCOMPRESS
       z_stream cpr;
@@ -58,6 +60,7 @@ typedef struct {
       size_t bytes_used;
       int just_count;
       int  mode;  /* 0 for compression, 1 for decompression, -1 for neither */
+      int  version;
 } sge_pack_buffer;   
 
 int init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count);     
@@ -93,8 +96,11 @@ enum {
    PACK_SUCCESS = 0,
    PACK_ENOMEM = -1,
    PACK_FORMAT = -2,
-   PACK_BADARG = -3 
+   PACK_BADARG = -3, 
+   PACK_VERSION = -4
 };
+
+const char *cull_pack_strerror(int errnum);
 
 #ifdef  __cplusplus
 }

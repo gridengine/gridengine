@@ -298,5 +298,7 @@
 #define MSG_PARSE_TOOMANYARGS         _MESSAGE(29179, _("too many command line options\n"))
 #define MSG_GDI_ENROLLTOCOMMDFAILED_S _MESSAGE(29180, _("can't enroll to commd: "SFN"\n") )  
 
+#define MSG_EXECD_INITPACKBUFFERFAILED_S _MESSAGE(29181, _("init_packbuffer failed: "SFN"\n"))
+
 #endif /* __MSG_EXECD_H */
 

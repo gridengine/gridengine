@@ -842,7 +842,8 @@ proc qrsh_suspend {} {
    foreach host $qrsh_hostlist {
       switch -exact [resolve_arch $host] {
          aix42 -
-         aix43 {
+         aix43 -
+         aix51 {
             set running_state AWI
             set suspended_state T
          }

@@ -525,7 +525,7 @@ lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const
    non_unique_hash *nuh = (non_unique_hash *)*iterator;
    lDescr *descr = &lp->descr[pos];
    
-   if(descr->hash == NULL || descr->hash->table == NULL || descr->hash->unique == 0 || nuh == NULL) {
+   if(descr->hash == NULL || descr->hash->table == NULL || descr->hash->unique == 1 || nuh == NULL) {
       return NULL;
    }
 

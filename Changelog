@@ -1,3 +1,5 @@
+AS-2002-07-11-0: Install:   minor distinst related changes
+
 AH-2002-07-10-0: Enhancem.: Further improved load alarm/suspend alarm 
                             diagnosis messages
                  Changed:   sge_schedd

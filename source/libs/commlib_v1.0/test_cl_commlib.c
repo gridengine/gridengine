@@ -109,20 +109,6 @@ extern int main(int argc, char** argv)
          handle->local->comp_id);
 
   cl_com_add_allowed_host(handle, handle->local->comp_host);
-#if 0
-  cl_com_add_allowed_host(handle, "waschbaer"); 
-#endif
-#if 1
-  cl_com_add_allowed_host(handle,"sr-ergb01-01");
-  cl_com_add_allowed_host(handle,"balin");
-  cl_com_add_allowed_host(handle,"eomer"); 
-  cl_com_add_allowed_host(handle,"durin");
-  cl_com_add_allowed_host(handle,"orgulas");
-  cl_com_add_allowed_host(handle,"ori"); 
-  cl_com_add_allowed_host(handle,"es-ergb01-01"); 
-
-#endif
-  
 
   cl_com_set_max_connections(handle,4);
   cl_com_get_max_connections(handle,&i);

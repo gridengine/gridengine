@@ -125,7 +125,7 @@ lList **lpp
       lList *lpDefaults = NULL;
       char config_str[1024], real_config_str[1024];
 
-      WARNING((SGE_EVENT, MSG_GLOBALCONFDOESNOTEXISTCREATING));
+      WARNING((SGE_EVENT, MSG_CREATINGGLOBALCONF));
       lpDefaults = sge_set_defined_defaults(lpDefaults);
    
       el = lCreateElem(CONF_Type);

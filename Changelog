@@ -1,3 +1,7 @@
+CR-2001-12-20-0: Testsuite: moved job start procedures from job_state_handling test
+                            to the global sge_procedurs.tcl file.
+                            (submit_waitjob_job(), submit_time_job(), submit_error_job())
+
 EB-2001-12-19-0: Enhancem.: qmaster writes heartbeat-file during job deletion
 
 CR-2001-12-19-1: Testsuite: new test: job_state_handling

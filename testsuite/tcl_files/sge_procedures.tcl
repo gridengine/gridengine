@@ -318,6 +318,122 @@ proc get_exechost {change_array host} {
 }
 
 
+#****** sge_procedures/submit_error_job() **************************************
+#  NAME
+#     submit_error_job() -- submit job which will get error state
+#
+#  SYNOPSIS
+#     submit_error_job { jobargs } 
+#
+#  FUNCTION
+#     This procedure is submitting a job with a wrong shell option (-S). This
+#     will set the job in error state. (E)
+#
+#  INPUTS
+#     jobargs - job arguments (e.g. -o ... -e ... jobscript path)
+#
+#  RESULT
+#     job id 
+#
+#  SEE ALSO
+#     sge_procedures/submit_error_job()
+#     sge_procedures/submit_waitjob_job()
+#     sge_procedures/submit_time_job()
+#*******************************************************************************
+proc submit_error_job { jobargs } {
+    return [submit_job "-S __no_shell $jobargs"]
+}
+
+#****** sge_procedures/submit_time_job() ***************************************
+#  NAME
+#     submit_time_job() -- Submit a job with execution time
+#
+#  SYNOPSIS
+#     submit_time_job { jobargs } 
+#
+#  FUNCTION
+#     This procedure will submit a job with the -a option. The start time
+#     is set to function call time + 2 min.
+#
+#  INPUTS
+#     jobargs - job arguments (e.g. -o ... -e ... job start script path)
+#
+#  RESULT
+#     job id
+#
+#  SEE ALSO
+#     sge_procedures/submit_error_job()
+#     sge_procedures/submit_waitjob_job()
+#     sge_procedures/submit_time_job()
+#*******************************************************************************
+proc submit_time_job { jobargs } {
+
+   set hour   [exec date "+%H"]
+   set minute [exec date "+%M"]
+
+   if { [string first "0" $hour] == 0 } {
+      set hour [string index $hour 1 ]
+   }  
+   if { [string first "0" $minute] == 0 } {
+      set minute [string index $minute 1 ]
+   }  
+  
+   if {$minute < 58 } {
+     set minute [expr ($minute + 2) ]
+   } else {
+     set minute [expr ($minute + 2 - 60) ]
+      if {$hour < 23 } {
+         set hour [expr ($hour + 1) ]
+      } else {
+         set hour "00"
+      }
+   }
+
+   set rhour $hour
+   set rminute $minute
+
+   if {$hour < 10} {
+     set rhour "0$hour"
+   }
+   if {$minute < 10} {
+     set rminute "0$minute"
+   }
+
+   set start "[exec date +\%Y\%m\%d]$rhour$rminute"
+   set result [submit_job "-a $start $jobargs"] 
+   return $result
+}
+
+
+#****** sge_procedures/submit_waitjob_job() ************************************
+#  NAME
+#     submit_waitjob_job() -- submit job with hold_jid (wait for other job)
+#
+#  SYNOPSIS
+#     submit_waitjob_job { jobargs wait_job_id } 
+#
+#  FUNCTION
+#     This procedure will submit a job with hold_jid option set. This means that
+#     the job is not started while an other job is running
+#
+#  INPUTS
+#     jobargs     - additional job arguments ( jobscript, -e -o option ...)
+#     wait_job_id - job id to wait for
+#
+#  RESULT
+#     job id of hold_jid job
+#
+#  SEE ALSO
+#     sge_procedures/submit_error_job()
+#     sge_procedures/submit_waitjob_job()
+#     sge_procedures/submit_time_job()
+#*******************************************************************************
+proc submit_waitjob_job { jobargs wait_job_id} {
+   return [submit_job "-hold_jid $wait_job_id $jobargs"]
+}
+
+
+
 #                                                             max. column:     |
 #****** sge_procedures/set_exechost() ******
 # 

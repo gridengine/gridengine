@@ -187,51 +187,7 @@ proc job_state_handling_hold_pending_running_finished {} {
    set_error 0 "ok"
 }
 
-proc submit_error_job { jobargs } {
-    return [submit_job "-S __no_shell $jobargs"]
-}
 
-proc submit_time_job { jobargs } {
-
-   set hour   [exec date "+%H"]
-   set minute [exec date "+%M"]
-
-   if { [string first "0" $hour] == 0 } {
-      set hour [string index $hour 1 ]
-   }  
-   if { [string first "0" $minute] == 0 } {
-      set minute [string index $minute 1 ]
-   }  
-  
-   if {$minute < 58 } {
-     set minute [expr ($minute + 2) ]
-   } else {
-     set minute [expr ($minute + 2 - 60) ]
-      if {$hour < 23 } {
-         set hour [expr ($hour + 1) ]
-      } else {
-         set hour "00"
-      }
-   }
-
-   set rhour $hour
-   set rminute $minute
-
-   if {$hour < 10} {
-     set rhour "0$hour"
-   }
-   if {$minute < 10} {
-     set rminute "0$minute"
-   }
-
-   set start "[exec date +\%Y\%m\%d]$rhour$rminute"
-   set result [submit_job "-a $start $jobargs"] 
-   return $result
-}
-
-proc submit_waitjob_job { jobargs wait_job_id} {
-   return [submit_job "-hold_jid $wait_job_id $jobargs"]
-}
 
 proc job_state_handling_error_timehold_jobhold {} {
    global CHECK_PRODUCT_ROOT

@@ -73,6 +73,7 @@ proc install_bdb_rpc {} {
    set_error "0" "inst_sge -db - no errors"
 
    if { $ts_config(bdb_server) == "none" } {
+      puts $CHECK_OUTPUT "there is no rpc server configured - returning"
       return
    }
 

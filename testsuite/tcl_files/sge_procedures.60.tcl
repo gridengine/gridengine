@@ -258,13 +258,6 @@ proc startup_execd { hostname } {
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
    set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/sgeexecd" "start"]
 
-   set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
-
-   if { [string match "*$ALREADY_RUNNING" $output ] } {
-      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
-      return -1
-   }
-
    return 0
 }
 

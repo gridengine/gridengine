@@ -1,3 +1,5 @@
+JG-2004-05-13-1: Testsuite: testsuite install re_init failed.
+
 SG-2004-05-13-0: Bugfix:    scheduler died due to the use of a none reduced
                             job descriptor.
                  Changed:   scheduler

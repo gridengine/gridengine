@@ -204,7 +204,6 @@ enum {
 *
 *     SGE_ULONG(JB_deadline)      
 *        SGEEE. Deadline initiation time. (qsub -dl date_time)
-*        Not spooled.
 *
 *     User related information
 *     ========================

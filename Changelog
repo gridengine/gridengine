@@ -1,3 +1,7 @@
+AA-2005-03-21-0: Bugfix:    - make qtcsh compile
+                 Changed:   qtcsh
+                 Review:    CR
+
 CR-2005-03-21-2: Enhancem.: - (gridengine CSP mode) added error message for 
                               invalid certificates
 

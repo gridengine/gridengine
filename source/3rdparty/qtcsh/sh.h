@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.8 2005/03/20 18:16:17 ron Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.9 2005/03/21 17:28:31 andre Exp $ */
 /*
  * sh.h: Catch it all globals and includes file!
  */
@@ -1243,7 +1243,7 @@ EXTERN nl_catd catd;
  */
 #define SIGN_EXTEND_CHAR(a)	(((a) & 0x80) ? ((a) | ~0x7f) : (a))
 
-#if defined(LINUX)
+#if defined(LINUX86) || defined(ALINUX) || defined(SLINUX) || defined(LINUXIA64) || defined(LINUXAMD64)
 #include <time.h>
 #endif
 

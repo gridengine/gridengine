@@ -1080,6 +1080,12 @@ int nm1
 
    DENTER(GUI_LAYER, "qmonFOTCullToMatrix");
 
+   if (!lp) {
+      DEXIT;
+      return;
+   }   
+     
+
    /*
    ** delete old matrix entries
    */

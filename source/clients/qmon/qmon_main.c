@@ -61,6 +61,7 @@
 #include "qmon_appres.h"
 #include "qmon_preferences.h"
 #include "sge_feature.h"
+#include "sge_me.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -185,6 +186,7 @@ char **argv
    Cardinal ac = 0;
    char *lang;
    static char progname[256];
+/*    static char app_name[1024]; */
 
    int i;
    XrmDatabase qmon_database;
@@ -200,7 +202,6 @@ char **argv
    qmonInitSge(progname);
 
    SGE_ROOT = getenv("SGE_ROOT");
-
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args
    */
@@ -279,6 +280,17 @@ char **argv
          lang = "C";
       XmtLoadResourceFile(AppShell, "qmon_messages", False, True);
    }   
+#if 0   
+   strcpy(app_name, "QMON +++ Main Control");
+   if (strcmp(me.default_cell, "default")) {
+      strcat(app_name, " @ ");
+      strncat(app_name, me.default_cell, 1000);
+   }
+
+   XtVaSetValues(AppShell, 
+              XtNtitle, XmtLocalize(AppShell, app_name,
+                                    "QMON +++ Main Control"), NULL);
+#endif   
    XtVaSetValues(AppShell, 
               XtNtitle, XmtLocalize(AppShell, "QMON +++ Main Control",
                                     "QMON +++ Main Control"), NULL);

@@ -83,6 +83,7 @@ void qmonMirrorListInit(void);
 lList* qmonMirrorList(int type);
 lList** qmonMirrorListRef(int type);
 int qmonMirrorMulti(u_long32 selector);
+int qmonMirrorMultiAnswer(u_long32 selector, lList**answerp);
 void qmonShowMirrorList(Widget w, XtPointer cld, XtPointer cad);
 
 lList* qmonDelList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 

@@ -248,6 +248,7 @@ typedef struct cl_com_handle {
    int open_connection_timeout; 
    int acknowledge_timeout;
    int synchron_receive_timeout;
+   int last_heard_from_timeout;      /* do not use, just for compatibility */
    
    /* service specific */
    int do_shutdown;                        /* set when this handle wants to shutdown */

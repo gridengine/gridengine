@@ -343,7 +343,7 @@ int cl_com_cleanup_commlib(void) {
 int cl_commlib_set_connection_param(cl_com_handle_t* handle, int parameter, int value) {
    switch(parameter) {
       case HEARD_FROM_TIMEOUT:
-         handle->connection_timeout = value;
+         handle->last_heard_from_timeout = value;
          break;
    }
    return CL_RETVAL_OK;
@@ -356,7 +356,7 @@ int cl_commlib_set_connection_param(cl_com_handle_t* handle, int parameter, int 
 int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int* value) {
    switch(parameter) {
       case HEARD_FROM_TIMEOUT:
-         *value = handle->connection_timeout;
+         *value = handle->last_heard_from_timeout;
          break;
    }
    return CL_RETVAL_OK;
@@ -442,6 +442,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    new_handle->connect_port = connect_port;
    new_handle->service_port = service_port;
    new_handle->connection_timeout = CL_DEFINE_CLIENT_CONNECTION_LIFETIME;
+   new_handle->last_heard_from_timeout = CL_DEFINE_CLIENT_CONNECTION_LIFETIME; /* don't use should be removed */
    new_handle->read_timeout = 15;
    new_handle->write_timeout = 15;
    new_handle->open_connection_timeout = CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT;
@@ -3772,30 +3773,73 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
 
 
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_commlib_remove_messages()"
-int cl_commlib_remove_messages(cl_com_handle_t* handle) {
-   /* resets all communication data */
-   CL_LOG(CL_LOG_ERROR,"cl_commlib_remove_messages() not implemented !");
-   return CL_RETVAL_PARAMS;
-}
 
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_get_last_message_time()"
-int cl_commlib_get_last_message_time(cl_com_handle_t* handle, char* un_resolved_hostname, char* component_name, unsigned long component_id, unsigned long* time) {
-   /* resets all communication data */
+int cl_commlib_get_last_message_time(cl_com_handle_t* handle, 
+                                    char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                                    unsigned long* time) {
+
+   char* unique_hostname = NULL;
+   int return_value;
+   cl_com_endpoint_t receiver;
+   cl_com_connection_t* connection = NULL;
+   cl_connection_list_elem_t* elem = NULL;
+
+   /* set time to 0 if endpoint not found, otherwise return last communication time */
+   /* otherwise return error */
    if (time) {
-      struct timeval now;
-      gettimeofday(&now,NULL);
-      *time = now.tv_sec;
+      *time = 0;
    }
-   CL_LOG(CL_LOG_ERROR,"cl_commlib_get_last_message_time() not implemented");
-   return CL_RETVAL_PARAMS;
+
+   if (handle == NULL || un_resolved_hostname == NULL || component_name == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   
+   if (component_id <= 0) {
+      CL_LOG(CL_LOG_ERROR,"component id 0 is not allowed");
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* resolve hostname */
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL);
+   if (return_value != CL_RETVAL_OK) {
+      return return_value;
+   }
+
+   /* setup endpoint */
+   receiver.comp_host = unique_hostname;
+   receiver.comp_name = component_name;
+   receiver.comp_id   = component_id;
+
+   /* lock handle connection list */
+   cl_raw_list_lock(handle->connection_list);
+
+   elem = cl_connection_list_get_first_elem(handle->connection_list);
+   while(elem) {
+      connection = elem->connection;
+      if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
+         /* found endpoint */
+         if (time) {
+            *time = (connection->last_transfer_time).tv_sec;
+         }
+         CL_LOG(CL_LOG_INFO,"found connection");
+         cl_raw_list_unlock(handle->connection_list);
+         free(unique_hostname); /* don't touch receiver object after this */
+         return CL_RETVAL_OK;
+      }
+      elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
+   }
+
+   /* unlock handle connection list */
+   cl_raw_list_unlock(handle->connection_list);
+
+   CL_LOG(CL_LOG_WARNING,"can't find connection");
+   free(unique_hostname); /* don't touch receiver object after this */
+   return CL_RETVAL_CONNECTION_NOT_FOUND;
 }
 
 

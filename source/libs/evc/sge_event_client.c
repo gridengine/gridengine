@@ -1187,9 +1187,23 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
 
 
 #ifdef ENABLE_NGC
+      /* closing actual connection to qmaster and reopen new connection. This will delete all
+         buffered messages  - CR */
       com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
       if (com_handle != NULL) {
-         cl_commlib_remove_messages(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0));
+         int ngc_error;
+         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
+         if (ngc_error == CL_RETVAL_OK) {
+            DPRINTF(("closed old connection to qmaster\n"));
+         } else {
+            WARNING((SGE_EVENT, "error closing old connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
+         }
+         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1 );
+         if (ngc_error == CL_RETVAL_OK) {
+            DPRINTF(("opened new connection to qmaster\n"));
+         } else {
+            ERROR((SGE_EVENT, "error opening new connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
+         }
       }
 #else
       /* remove possibly pending messages */
@@ -2643,7 +2657,7 @@ get_event_list(int sync, lList **report_list)
    
 #ifdef ENABLE_NGC
    id = 1;
-   DPRINTF(("try to get request form %s, id %d\n",(char*)prognames[QMASTER], id ));
+   DPRINTF(("try to get request from %s, id %d\n",(char*)prognames[QMASTER], id ));
    if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,0)) != CL_RETVAL_OK) {
       if (help == CL_RETVAL_NO_MESSAGE) {
          DEBUG((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help)));

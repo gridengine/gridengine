@@ -143,10 +143,6 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                                    cl_com_SIRM_t** status);
                                    
 
-/* not implemented */
-int cl_commlib_remove_messages    (cl_com_handle_t* handle);  /* resets all communication data */
-
-
 
 /* defines from old commlib */
 
@@ -157,7 +153,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle, char* un_resolved_
 
 
 /* dummy defines for old lib compatibility */
-#define SGE_QMASTER_SERVICE "sge_qmaster"
+
 #define COMMD_NACK_UNKNOWN_HOST CL_RETVAL_UNKOWN_HOST_ERROR  /* TODO: check this define */
 #define COMMD_NACK_CONFLICT CL_RETVAL_ENDPOINT_NOT_UNIQUE
 #define CL_FIRST_FREE_EC    32

@@ -1,7 +1,15 @@
-DT-2004-02-01-0: Bugfix:		Increased MAX_STRING_SIZE from 2048 to 8192 to allow
-														for longer PATHs.
-								 Issue:			538
-								 Changed:		sge_basis.h
+CR-2004-02-01-0: Enhancm.:  Added missing functions:
+                               cl_commlib_get_last_message_time() (former 
+                               last_heart_from() ) and check_isalive()
+                            Event client: recreate connection object after
+                               qmaster shutdown in ec_register()
+                            increased default timeout for connection lifetime
+                 Changed:   all binaries
+
+DT-2004-02-01-0: Bugfix:    Increased MAX_STRING_SIZE from 2048 to 8192 to 
+                            allow for longer PATHs.
+                 Issue:	    538
+                 Changed:   sge_basis.h 
 
 SG-2004-02-01-0: Bugfix:    in case a job start failed, the queue is set
                             into error state when it is a job script but not

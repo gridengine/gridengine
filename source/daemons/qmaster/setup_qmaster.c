@@ -470,10 +470,14 @@ static void communication_setup(char **anArgv)
 
    com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
 
-   if (com_handle != NULL) {
-      cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[QMASTER],1));
-   } else {
-      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_qmaster_port(), sge_get_execd_port() ,(char*)prognames[QMASTER], 1, 1 , 0 );
+   if (com_handle == NULL) {
+      com_handle = cl_com_create_handle(
+          CL_CT_TCP, CL_CM_CT_MESSAGE,                     /* message based tcp communication                */
+          1, sge_get_qmaster_port(), sge_get_execd_port(), /* create service on qmaster port,                */
+                                                           /* use execd port to connect to endpoints         */
+          (char*)prognames[QMASTER], 1,                    /* this endpoint is called "qmaster" and has id 1 */
+          1 , 0 );                                         /* select timeout is set to 1 second 0 usec       */
+
       if (com_handle == NULL) {
          ERROR((SGE_EVENT, "could not create qmaster communication handle\n"));
          ERROR((SGE_EVENT, "check if port %d is used by another process\n", sge_get_qmaster_port()));

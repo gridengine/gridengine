@@ -860,8 +860,10 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
 
       timeout = MAX(load_report_interval(hep)*3, conf.max_unheard); 
 #ifdef ENABLE_NGC
-      cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
+      if ( hep != global_host_elem) {
+         cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)host, (char*)comproc,id, &last_heard_from);
+      }
       if ( (hep != global_host_elem )  && (now > last_heard_from + timeout))
 #else
       if ( (hep != global_host_elem )  && (now > last_heard_from(comproc, &id, host) + timeout)) 

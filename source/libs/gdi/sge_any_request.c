@@ -730,18 +730,38 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
 int check_isalive(const char *masterhost) 
 {
    int alive = CL_RETVAL_OK;
+   cl_com_handle_t* handle = NULL;
+   cl_com_SIRM_t* status = NULL;
+   int ret;
+
  
    DENTER(TOP_LAYER, "check_isalive");
-
-   /* TODO: check this alive check!! */
-   INFO((SGE_EVENT,"TODO: MAKE alive test is this alive check ok?\n"));
 
    if (!masterhost) {
       DPRINTF(("can't get masterhost\n"));
       DEXIT;
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
-   
+   handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   if (handle == NULL) {
+      CRITICAL((SGE_EVENT,"could not get communication handle\n"));
+      return CL_RETVAL_UNKNOWN;
+   }
+   ret = cl_commlib_get_endpoint_status(handle,(char*)masterhost,(char*)prognames[QMASTER] , 1, &status);
+   if (ret != CL_RETVAL_OK) {
+      DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
+      alive = CL_RETVAL_UNKNOWN;
+      WARNING((SGE_EVENT, "qmaster not responding - No master found\n"));   
+   } else {
+      DEBUG((SGE_EVENT,"qmaster is still running\n"));   
+      alive = CL_RETVAL_OK;
+   }
+
+   if (status != NULL) {
+      INFO((SGE_EVENT,"endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status));
+      cl_com_free_sirm_message(&status);
+   }
+ 
    DEXIT;
    return alive;
 }

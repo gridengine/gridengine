@@ -549,6 +549,7 @@ sge_pack_buffer *pb
                   /* store unscaled usage directly in sub-task */
                   /* lXchgList(jr, JR_usage, lGetListRef(task, JB_usage_list)); */
                   /* copy list because we need to keep usage in jr for sge_log_dusage() */
+
          		  lSetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_usage_list, 
                      lCopyList(NULL, lGetList(jr, JR_usage)));
 
@@ -556,10 +557,13 @@ sge_pack_buffer *pb
                   lSetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_scaled_usage_list,
                            lCopyList("scaled", lGetList(lFirst(lGetList(task, JB_ja_tasks)), 
                            JAT_usage_list)));
+#if 0 /* EB: #4883714: review has to be done by AS */
                   scale_usage(lFirst(lGetList(task, JB_ja_tasks)), task_task, 
+#else
+                  scale_usage(lFirst(lGetList(task, JB_ja_tasks)), lFirst(lGetList(task, JB_ja_tasks)),
+#endif
                            lGetList(hep, EH_usage_scaling_list), 
                            lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_previous_usage_list));
-
 
                   if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JRUNNING ||
                      lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JTRANSITING) {

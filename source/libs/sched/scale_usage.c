@@ -39,7 +39,9 @@
 #include "sge_sched.h"
 #include "sgermon.h"
 
-/* #define TRACE_INCOMING_USAGE */
+#if 0 /* EB: debug */
+#define TRACE_INCOMING_USAGE 
+#endif
 
 int scale_usage(
 lListElem *jep,
@@ -62,13 +64,13 @@ lList *previous  /* HS_Type */
 
    for_each (ep, lGetList(jatep, JAT_scaled_usage_list)) {
 #ifdef TRACE_INCOMING_USAGE
-      DPRINTF(("%s = %f\n", 
+      DPRINTF(("%s: %f\n", 
          lGetString(ep, UA_name), 
          lGetDouble(ep, UA_value))); 
 #endif
-      if ((sep=lGetElemStr(scaling, HS_name, lGetString(ep, UA_name)))) 
-         lSetDouble(ep, UA_value, 
-            lGetDouble(ep, UA_value) * lGetDouble(sep, HS_value));
+      if ((sep=lGetElemStr(scaling, HS_name, lGetString(ep, UA_name)))) {
+         lSetDouble(ep, UA_value, lGetDouble(ep, UA_value) * lGetDouble(sep, HS_value));
+      } 
    }
 
    /* summarize sge usage */

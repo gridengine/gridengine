@@ -39,3 +39,8 @@
 #include "sge_calendar.h"
 
 lList *Master_Calendar_List = NULL;
+
+lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name) 
+{
+   return lGetElemStr(calendar_list, CAL_name, cal_name);
+}

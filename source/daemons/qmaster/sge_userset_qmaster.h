@@ -41,8 +41,6 @@ int sge_del_userset(lListElem *ep, lList **alpp, lList **userset_list,
 int sge_mod_userset(lListElem *ep, lList **alpp, lList **userset_list, 
                     char *ruser, char *rhost);
 
-lListElem *sge_locate_userset(const char *name, lList *lp);
-
 int sge_verify_userset_entries(lList *u, lList **alpp, int start_up);
 
 int sge_verify_department_entries(lList *userset_list, lListElem *new_userset, 

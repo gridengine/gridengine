@@ -160,7 +160,7 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
 *             consumable resources with a negative value
 *
 *  RESULT
-*     int - error
+
 *        0 on success
 *       -1 on error
 *        an error message will be written into SGE_EVENT
@@ -250,7 +250,20 @@ int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
    return 0;
 }
 
-void init_complex_double_values(lList *cl) 
+/****** gdi/complex/complex_list_init_double_attr() ****************************
+*  NAME
+*     complex_list_init_double_attr() -- initialize double from string 
+*
+*  SYNOPSIS
+*     void complex_list_init_double_attr(lList *cl) 
+*
+*  FUNCTION
+*     Initialize all double values contained in "cl". 
+*
+*  INPUTS
+*     lList *cl - complex list 
+*******************************************************************************/
+void complex_list_init_double_attr(lList *cl) 
 {
    lListElem *cle, *cattr;
 
@@ -266,4 +279,44 @@ void init_complex_double_values(lList *cl)
       }
    }
 }
+
+/****** gdi/complex/complex_list_locate_attr() *********************************
+*  NAME
+*     complex_list_locate_attr() -- find a attribute in the complex list 
+*
+*  SYNOPSIS
+*     lListElem* complex_list_locate_attr(lList *complex_list, 
+*                                         const char *name) 
+*
+*  FUNCTION
+*     Find the complex attribute identified by "name" in the 
+*     "complex_list". 
+*
+*  INPUTS
+*     lList *complex_list - complex list 
+*     const char* name    - attribute name 
+*
+*  RESULT
+*     lListElem* - found element or NULL
+*******************************************************************************/
+lListElem* complex_list_locate_attr(lList *complex_list, const char* name)
+{
+   lListElem *cep = NULL;
+   lListElem *ret = NULL;
+
+   DENTER(CULL_LAYER, "complex_list_locate_attr");
+
+   for_each (cep, complex_list) {
+      lListElem *first_attr = lFirst(lGetList(cep, CX_entries));
+      
+      ret = find_attribute_in_complex_list(name, first_attr);
+      if (ret != NULL) {
+         break;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
 

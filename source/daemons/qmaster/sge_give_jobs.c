@@ -1066,7 +1066,7 @@ char *rlimit_name
       really used to manage resources of this queue, host or globally */
    if (!found) {
       lListElem *dcep;
-      if ((dcep=sge_locate_complex_attr(rlimit_name, Master_Complex_List))
+      if ((dcep=complex_list_locate_attr(Master_Complex_List, rlimit_name))
                && lGetUlong(dcep, CE_consumable))
          if ( lGetSubStr(qep, CE_name, rlimit_name, QU_consumable_config_list) ||
               lGetSubStr(host_list_locate(Master_Exechost_List, lGetHost(qep, QU_qhostname)),

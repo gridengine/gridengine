@@ -41,6 +41,8 @@ int sge_fill_requests(lList *reql, lList *complex_list, int allow_non_requestabl
 
 int fill_and_check_attribute(lListElem *alp, int allow_empty_boolean, int allow_neg_consumable);
 
-void init_complex_double_values(lList *cl);
+void complex_list_init_double_attr(lList *cl);
+
+lListElem* complex_list_locate_attr(lList *complex_list, const char *name);
 
 #endif /* __SGE_COMPLEX_H */

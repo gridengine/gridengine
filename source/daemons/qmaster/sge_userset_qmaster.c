@@ -111,7 +111,7 @@ char *rhost
    }
 
    /* search for userset with this name */
-   found = sge_locate_userset(userset_name, *userset_list);
+   found = userset_list_locate(*userset_list, userset_name);
 
    /* no double entries */
    if (found) {
@@ -226,7 +226,7 @@ char *rhost
    }
 
    /* search for userset with this name and remove it from the list */
-   if (!(found = sge_locate_userset(userset_name, *userset_list))) {
+   if (!(found = userset_list_locate(*userset_list, userset_name))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_USERSET, userset_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -300,7 +300,7 @@ char *rhost
    }
 
    /* no double entries */
-   found = sge_locate_userset(userset_name, *userset_list);
+   found = userset_list_locate(*userset_list, userset_name);
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_USERSET, userset_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -387,28 +387,6 @@ const char *acl_name
 
    DEXIT;
    return;
-}
-
-
-/***********************************************************
-   sge_locate_userset() - searches an userset
- ***********************************************************/
-lListElem *sge_locate_userset(
-const char *name,
-lList *lp 
-) {
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "sge_locate_userset");
-
-   for_each(ep, lp)
-      if (!strcasecmp(name, lGetString(ep, US_name))) {
-         DEXIT;
-         return ep;
-      }
-
-   DEXIT;
-   return NULL;
 }
 
 /******************************************************

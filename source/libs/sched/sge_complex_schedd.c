@@ -1127,7 +1127,7 @@ int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
       dval = 0;
 
       /* search default request */  
-      if (!(dcep = sge_locate_complex_attr(name, complex_list))) {
+      if (!(dcep = complex_list_locate_attr(complex_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          DEXIT; 
          return -1;

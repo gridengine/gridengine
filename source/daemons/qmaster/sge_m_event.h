@@ -68,7 +68,7 @@ u_long32 sge_get_next_event_number(u_long32 client_id);
 
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
-lListElem* sge_locate_event_client(ev_registration_id id);
+lListElem* eventclient_list_locate(ev_registration_id id);
 
 void set_event_client_busy(lListElem *event_client, int busy);
 

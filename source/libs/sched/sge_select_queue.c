@@ -1170,7 +1170,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
       name = lGetString(tep, CE_name);
 
       /* complex attriute definition */
-      if (!(cep = sge_locate_complex_attr(name, complex_list))) {
+      if (!(cep = complex_list_locate_attr(complex_list, name))) {
          if (reason)
             sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
          /* no complex attribute for threshold -> ERROR */
@@ -1255,7 +1255,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       name = lGetString(tep, CE_name);
 
       /* complex attriute definition */
-      if (!(cep = sge_locate_complex_attr(name, complex_list))) {
+      if (!(cep = complex_list_locate_attr(complex_list, name))) {
          /* no complex attribute for threshold -> ERROR */
          sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
          strncat(reason, buffer, reason_size);

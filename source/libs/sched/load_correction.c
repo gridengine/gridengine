@@ -41,7 +41,7 @@
 #include "schedd_conf.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
-#include "sge_schedd_conf.h"
+#include "sge_complex.h"
 #include "sge_queue.h"
 #include "sge_host.h"
 
@@ -180,7 +180,7 @@ lList *complex_list
          const char *attr_name = lGetString(ep, HL_name);
  
          /* seach for appropriate complex attribute */
-         if (!(cep=sge_locate_complex_attr(attr_name, complex_list)))
+         if (!(cep=complex_list_locate_attr(complex_list, attr_name)))
             continue;
 
          type = lGetUlong(cep, CE_valtype);

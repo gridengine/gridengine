@@ -53,7 +53,6 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
 
    if (hostname != NULL) {
       if (host_list != NULL) {
-         const lDescr *descr = lGetListDescr(host_list);
          const lListElem *element = lFirst(host_list);
          int nm = NoName;
 
@@ -66,7 +65,6 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
                nm = object_get_primary_key(SH_Type);
             }
 
-            DPRINTF(("%p %d\n", descr, nm));
             ret = lGetElemHost(host_list, nm, hostname);
          }
       }

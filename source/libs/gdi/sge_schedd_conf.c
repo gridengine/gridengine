@@ -46,7 +46,7 @@ lList *Master_Sched_Config_List = NULL;
 
 int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                       lList **answer_list,
-                                      const lList *cmplx_list)
+                                      lList *cmplx_list)
 {
    const char *load_formula = NULL;
    int ret = 1;
@@ -84,7 +84,7 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
 
          next_attr = sge_strtok(NULL, delimitor);
 
-         cmplx_attr = sge_locate_complex_attr(attr, cmplx_list);
+         cmplx_attr = complex_list_locate_attr(cmplx_list, attr);
          if (cmplx_attr != NULL) {
             int type = lGetUlong(cmplx_attr, CE_valtype);
 
@@ -104,23 +104,6 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
    }
    DEXIT;
    return ret;
-}
-
-lListElem* sge_locate_complex_attr(const char *name, const lList *complex_list)
-{
-   lListElem *cep, *ep;
-
-   DENTER(CULL_LAYER, "sge_locate_complex_attr");
-
-   for_each (cep, complex_list) {
-      if ((ep=find_attribute_in_complex_list(name, lFirst(lGetList(cep, CX_entries))))) {
-         DEXIT;
-         return ep;
-      }
-   }
-
-   DEXIT;
-   return NULL;
 }
 
 /***************************************************************

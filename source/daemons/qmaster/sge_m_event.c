@@ -101,7 +101,7 @@
 *     Eventclient/Server/sge_add_event()
 *     Eventclient/Server/sge_get_next_event_number()
 *     Eventclient/Server/sge_gdi_tsm()
-*     Eventclient/Server/sge_locate_event_client()
+*     Eventclient/Server/eventclient_list_locate()
 *     Eventclient/Server/set_event_client_busy()
 *******************************************************************************/
 static void total_update(lListElem *event_client);
@@ -280,7 +280,7 @@ int reinit_event_client(ev_registration_id id)
 
    DENTER(TOP_LAYER, "reinit_event_client");
 
-   if ((event_client=sge_locate_event_client(id)) != NULL) {
+   if ((event_client=eventclient_list_locate(id)) != NULL) {
       ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S, lGetString(event_client, EV_name)));
       total_update(event_client);
       DEXIT;
@@ -432,7 +432,7 @@ char *rhost
    /* if it already exists, delete the old one and register */
    /* the new one */
    if(id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
-      if ((ep=sge_locate_event_client(id))) {
+      if ((ep=eventclient_list_locate(id))) {
          /* we already have this special client */
          ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_S, name));         
 
@@ -1492,14 +1492,14 @@ static void sge_total_update_event(lListElem *event_client, ev_event type)
 }
 
 
-/****** Eventclient/Server/sge_locate_event_client() *************************************
+/****** Eventclient/Server/eventclient_list_locate() **************************
 *  NAME
-*     sge_locate_event_client() -- search for the scheduler
+*     eventclient_list_locate() -- search for the scheduler
 *
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     lListElem* sge_locate_event_client(ev_registration_id id) 
+*     lListElem* eventclient_list_locate(ev_registration_id id) 
 *
 *  FUNCTION
 *     Searches the event client list for an event client with the
@@ -1516,11 +1516,11 @@ static void sge_total_update_event(lListElem *event_client, ev_event type)
 *  NOTES
 *
 *******************************************************************************/
-lListElem* sge_locate_event_client(ev_registration_id id)
+lListElem* eventclient_list_locate(ev_registration_id id)
 {
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "sge_locate_event_client");
+   DENTER(TOP_LAYER, "eventclient_list_locate");
 
    ep = lGetElemUlong(EV_Clients, EV_id, id);
 
@@ -1528,7 +1528,7 @@ lListElem* sge_locate_event_client(ev_registration_id id)
    return ep;
 }
 
-/****** Eventclient/Server/sge_gdi_kill_eventclient() *********************************
+/****** Eventclient/Server/sge_gdi_kill_eventclient() *************************
 *  NAME
 *     sge_gdi_kill_eventclient() -- kill an event client
 *
@@ -1688,7 +1688,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       return;
    }
      
-   scheduler = sge_locate_event_client(EV_ID_SCHEDD);
+   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
      
    if (scheduler == NULL) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));

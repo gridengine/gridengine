@@ -651,7 +651,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    ** immediate jobs trigger scheduling immediately
    */
    {
-      lListElem *schedd = sge_locate_event_client(EV_ID_SCHEDD);
+      lListElem *schedd = eventclient_list_locate(EV_ID_SCHEDD);
       if(schedd != NULL) {
          if (JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
             sge_flush_events(schedd, 0);
@@ -1936,7 +1936,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
       for_each(old_entry, lGetList(old_reqep, RE_entries)) { 
          name = lGetString(old_entry, CE_name);
 
-         if (!(dcep = sge_locate_complex_attr(name, Master_Complex_List))) {
+         if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
             /* complex attribute definition has been removed though
                job still requests resource */ 
             ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
@@ -1974,7 +1974,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
       for_each(new_entry, lGetList(new_reqep, RE_entries)) { 
          name = lGetString(new_entry, CE_name);
 
-         if (!(dcep = sge_locate_complex_attr(name, Master_Complex_List))) {
+         if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
             /* refers to a not existing complex attribute definition */ 
             ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
@@ -2052,7 +2052,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl)
       for_each(entry, lGetList(reqep, RE_entries)) {
          name = lGetString(entry, CE_name);
 
-         if (!(dcep = sge_locate_complex_attr(name, Master_Complex_List))) {
+         if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
             ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;

@@ -64,3 +64,19 @@ lList *lp               /* userset list to scan for deadline users */
    return 0;
 }
 
+lListElem *userset_list_locate(lList *lp, const char *name) 
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "userset_list_locate");
+
+   for_each(ep, lp)
+      if (!strcasecmp(name, lGetString(ep, US_name))) {
+         DEXIT;
+         return ep;
+      }
+
+   DEXIT;
+   return NULL;
+}
+

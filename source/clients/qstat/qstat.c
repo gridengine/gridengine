@@ -222,7 +222,7 @@ char **argv
       user_list,
       full_listing);
 
-   init_complex_double_values(complex_list);
+   complex_list_init_double_attr(complex_list);
 
    sge_stopwatch_log(0, "Time for getting all lists");
    

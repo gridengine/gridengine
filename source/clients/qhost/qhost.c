@@ -180,7 +180,7 @@ char **argv
       show);
 
 
-   init_complex_double_values(cl);
+   complex_list_init_double_attr(cl);
 
    /*
    ** handle -l request for host

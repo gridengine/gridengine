@@ -36,4 +36,6 @@
 
 extern lList *Master_Calendar_List;
 
+lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name);
+
 #endif /* __SGE_CALENDAR_H */

@@ -129,7 +129,7 @@ lList **topp  /* ticket orders ptr ptr */
    force=lGetUlong(ep, OR_force);
    or_pe=lGetString(ep, OR_pe);
 
-   scheduler = sge_locate_event_client(EV_ID_SCHEDD);
+   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
    if(scheduler == NULL) {
       ERROR((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       DEXIT;

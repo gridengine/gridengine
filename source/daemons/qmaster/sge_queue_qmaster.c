@@ -77,6 +77,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_complex.h"
+#include "sge_calendar.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -499,7 +500,7 @@ int sub_command
       lListElem *new_cal = NULL;
 
       nc = lGetString(qep, QU_calendar);
-      if (nc && !(new_cal = sge_locate_calendar(nc))) {
+      if (nc && !(new_cal = calendar_list_locate(Master_Calendar_List, nc))) {
          
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                  MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS,

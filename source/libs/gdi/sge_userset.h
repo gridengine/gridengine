@@ -38,6 +38,8 @@ extern lList *Master_Userset_List;
 
 int is_deadline_user(char *username, lList *lp);
 
+lListElem *userset_list_locate(lList *lp, const char *name);
+
 #endif /* _SGE_USERSET_H */
 
 

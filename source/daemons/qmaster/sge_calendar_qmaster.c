@@ -50,6 +50,7 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_calendar.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -1867,7 +1868,7 @@ char *rhost
    }
    cal_name = lGetString(cep, CAL_name);
 
-   if (!sge_locate_calendar(cal_name)) {
+   if (!calendar_list_locate(Master_Calendar_List, cal_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CALENDAR, cal_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -1916,7 +1917,7 @@ const char *cal_name
 
    DENTER(TOP_LAYER, "calendar_event");
 
-   if (!(cep=sge_locate_calendar(cal_name))) {
+   if (!(cep=calendar_list_locate(Master_Calendar_List, cal_name))) {
       ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));
       DEXIT;
       return;
@@ -1960,12 +1961,6 @@ gdi_object_t *object
 
    DEXIT;
    return 0;
-}
-
-lListElem *sge_locate_calendar(
-const char *cal_name 
-) {
-   return lGetElemStr(Master_Calendar_List, CAL_name, cal_name);
 }
 
 u_long32 act_cal_state(

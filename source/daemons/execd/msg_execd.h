@@ -304,7 +304,6 @@
 #define MSG_COM_REGISTERDENIED_S      _MESSAGE(29177, _("registration at \"qmaster\" was denied: "SFN))
 #define MSG_PARSE_INVALIDARG_S        _MESSAGE(29178, _("invalid command line argument "SFQ"\n"))
 #define MSG_PARSE_TOOMANYARGS         _MESSAGE(29179, _("too many command line options\n"))
-#define MSG_GDI_ENROLLTOCOMMDFAILED_S _MESSAGE(29180, _("can't enroll to commd: "SFN"\n") )  
 
 #define MSG_EXECD_INITPACKBUFFERFAILED_S _MESSAGE(29181, _("init_packbuffer failed: "SFN"\n"))
 

@@ -69,6 +69,7 @@
 
 #include "msg_common.h"
 #include "msg_execd.h"
+#include "msg_gdilib.h"
 
 extern volatile int jobs_to_start;
 

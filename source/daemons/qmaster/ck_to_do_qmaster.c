@@ -56,6 +56,9 @@
 #include "sge_security.h"
 #include "sge_queue.h"
 
+extern lList *Master_Job_List;
+
+
 static void log_consumables(FILE *fp, lList *actual, lList *total); 
 static void log_stat_file(u_long32 now);
 
@@ -102,6 +105,10 @@ int had_free_epoch
    ** security hook
    */
    sge_security_ck_to_do();
+
+#ifdef KERBEROS
+   krb_renew_tgts(Master_Job_List);
+#endif      
 
    DEXIT;
    return;

@@ -51,6 +51,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
+#include "sge_uidgid.h"
 
 #include "sge_prog.h"
 #include "msg_krb.h"

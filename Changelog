@@ -1,3 +1,8 @@
+CR-2004-11-23-2: Bugfix:    fixed bug in sge_ca script (GE CSP feature):
+                            Generating certificate for users failed
+                 Changed:   sge_ca script
+                 Review:    AA
+
 JG-2004-11-23-0: Testsuite: Verified tests system_tests/geee/sharetree/check.exp
                             and system_tests/utilbin/loadcheck/check.exp.
 

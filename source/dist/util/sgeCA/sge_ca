@@ -642,6 +642,7 @@ SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 SetAdminUser
 
 CATOP=$SGE_ROOT/$SGE_CELL/common/sgeCA
+export CATOP
 
 euid=`$V5UTILBIN/uidgid -euid`
 if [ $euid = 0 ]; then

@@ -1628,7 +1628,7 @@ case SOLARISAMD64:
 
    set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBS     = "-lsocket -lnsl $LIBS"
-   set LOADAVGLIBS = "-lkvm -lkstat"
+   set LOADAVGLIBS = "-lkstat"
 
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
 

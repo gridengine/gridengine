@@ -1,3 +1,7 @@
+RD-2005-02-03-0: Enhance.:  - code cleanup
+                            kvm dependency and code removed
+                 Review:    MD
+
 EB-2005-02-03-0  Enhancem.: set rsh_daemon=/usr/sbin/in.rshd for Interix
 
 CR-2005-02-02-0: Enhancm.:  reimplemenation and integration of former 

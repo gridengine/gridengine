@@ -391,7 +391,8 @@ u_long32 qinstance_state_from_string(const char* sstate, lList **answer_list){
          }
       }
       if (!found){
-         answer_list_add(answer_list, MSG_QSTATE_UNKNOWNCHAR, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer_list, MSG_QSTATE_UNKNOWNCHAR, STATUS_ESEMANTIC, 
+         ANSWER_QUALITY_ERROR);
          DEXIT;
          return U_LONG32_MAX;
       }

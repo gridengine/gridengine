@@ -1185,10 +1185,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       remove_pending_messages(NULL, 0, 0, TAG_REPORT_REQUEST);
       /* commlib call to mark all commprocs as unknown */
       reset_last_heard();
-/*printf("...\n");
-lWriteListTo(lp, stdout);
-printf("...\n");
-*/
+      
       /*
        *  to add may also means to modify
        *  - if this event client is already enrolled at qmaster

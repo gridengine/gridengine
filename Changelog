@@ -19,7 +19,7 @@ SG-2004-01-09-1: Bugfix:    The scheduler did not renew its event subscriptions
 
 SG-2004-01-09-0: Enhancem.: qconf -cq is working again with the cqueues
                  Changed:   qmaster
-                 Review:    pending
+                 Review:    EB 
 
 DT-2004-01-09-0: Enhancem.: OpenSSL is now loaded dynamically on Solaris and
                             Linux via dlopen.  For more information please see
@@ -47,7 +47,7 @@ SG-2004-01-08-1: Bugfix:    qsub -N error message reports the rules for
 
 SG-2004-01-08-0: Enhancem.: second part of SG-2003-01-07-1
                  Changed:   qstat, qselect
-                 Review:    pending
+                 Review:    EB 
 
 JG-2004-01-08-0: Enhancem.: Use Berkeley DB RPC server in case spooling to a 
                             local filesystem is not possible (e.g. if the 

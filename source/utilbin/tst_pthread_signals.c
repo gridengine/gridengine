@@ -338,7 +338,11 @@ static void ignore_signals(void)
    sigaction(SIGTTIN, &act, NULL);
    sigaction(SIGTTOU, &act, NULL);
    sigaction(SIGURG, &act, NULL);
+
+#if !(defined(NECSX4) || defined(NECSX5))
    sigaction(SIGVTALRM, &act, NULL);
+#endif
+
 #if !defined(DARWIN)
    sigaction(SIGPOLL, &act, NULL);
 #endif

@@ -1,3 +1,6 @@
+EB-2001-12-11-0: Bugfix:    Printing of zombie jobs in qmon and qstat
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)
+
 CR-2001-12-11-1: Testsuite: Start sgecommdcntl as root if root access is available
 
 CR-2001-12-11-0: Testsuite: Using catch{} construct to suppress tcl errors when

@@ -91,4 +91,6 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]);
 void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
                               u_long32 hold_state[8]);
 
+int job_is_zombie_job(const lListElem *job); 
+
 #endif /* __SGE_JOB_JATASK_H */    

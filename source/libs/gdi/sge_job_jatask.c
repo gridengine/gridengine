@@ -88,6 +88,11 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
    DEXIT;
    return template_task;                                                        }
 
+int job_is_zombie_job(const lListElem *job)
+{
+   return (lGetList(job, JB_ja_z_ids) != NULL);
+}
+
 lListElem *job_get_ja_task_template(const lListElem *job,
                                     u_long32 ja_task_id)
 {

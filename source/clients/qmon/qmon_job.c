@@ -809,36 +809,40 @@ void updateJobList(void)
 
 /* lWriteListTo(zl, stdout); */
 
-   XtVaSetValues( job_zombie_jobs,
-                  XmNcells, NULL,
-                  NULL);
+   XtVaSetValues(job_zombie_jobs, XmNcells, NULL, NULL);
 
    for_each (jep, zl) {
-      lListElem *jap;
-      lList *ztasks = lCopyList("", lGetList(jep, JB_ja_tasks));
-      if (lGetNumberOfElem(ztasks) > 0) {
-         if (ztasks && qmonJobFilterArraysCompressed()) {
-            lList *task_group;
-            while (( task_group = split_task_group(&ztasks))) {
-               qmonJobToMatrix(job_zombie_jobs, jep, NULL, task_group,
-                              JOB_DISPLAY_MODE_PENDING, zow);
-               task_group = lFreeList(task_group);
-               zow++;
+      lList *task_ids = lGetList(jep, JB_ja_z_ids);
+      int tow = 0;
+
+      if (task_ids != NULL) {
+         tow = 0;
+         if (qmonJobFilterArraysCompressed()) {
+            qmonJobToMatrix(job_zombie_jobs, jep, NULL, task_ids,
+                              JOB_DISPLAY_MODE_PENDING, zow + tow);
+            tow++;
+         } else {
+            lListElem *range = NULL;   /* RN_Type */
+            u_long32 task_id;
+
+            for_each(range, task_ids) {
+               for(task_id = lGetUlong(range, RN_min);
+                   task_id <= lGetUlong(range, RN_max);
+                   task_id += lGetUlong(range, RN_step)) {     
+                  lListElem *jap;
+
+                  jap = job_get_ja_task_template(jep, task_id);
+                  qmonJobToMatrix(job_zombie_jobs, jep, jap, 
+                                  NULL, JOB_DISPLAY_MODE_RUNNING,
+                                  zow + tow);
+                  tow++;
+               }
             }
          }
-         else {
-            int tow = 0;
-            for_each(jap, ztasks) {
-               qmonJobToMatrix(job_zombie_jobs, jep, jap, NULL,
-                                 JOB_DISPLAY_MODE_PENDING, zow + tow);
-               tow++;
-            }
-            zow++;
-         }
-         ztasks = lFreeList(ztasks);
+         zow += tow;
       }
    }
- 
+
    XbaeMatrixEnableRedisplay(job_running_jobs, True);
    XbaeMatrixEnableRedisplay(job_pending_jobs, True);
    XbaeMatrixEnableRedisplay(job_zombie_jobs, True);

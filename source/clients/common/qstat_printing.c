@@ -875,8 +875,11 @@ char *indent
    const char *queue_name;
    int tsk_ext;
    u_long tickets,otickets,dtickets,stickets,ftickets;
+   int is_zombie_job;
 
    DENTER(TOP_LAYER, "sge_print_job");
+
+   is_zombie_job = job_is_zombie_job(job);
 
    queue_name = qep ? lGetString(qep, QU_qname) : NULL;
 
@@ -1088,22 +1091,32 @@ char *indent
       /* report jobs dynamic scheduling attributes */
       /* only scheduled have these attribute */
       /* Pending jobs can also have tickets */
-      if (sge_ext || lGetList(jatep, JAT_granted_destin_identifier_list)) {
-         printf("%5d ", (int)tickets),
-         printf("%5d ", (int)lGetUlong(job, JB_override_tickets)); 
-         printf("%5d ", (int)otickets);
-         printf("%5d ", (int)dtickets);
-         printf("%5d ", (int)ftickets);
-         printf("%5d ", (int)stickets);
-         printf("%-5.2f ", lGetDouble(jatep, JAT_share)); 
+      if (is_zombie_job) {
+         printf("   NA ");
+         printf("   NA ");
+         printf("   NA ");
+         printf("   NA ");
+         printf("   NA ");
+         printf("   NA ");
+         printf("   NA ");
       } else {
-         printf("      "); 
-         printf("      "); 
-         printf("      "); 
-         printf("      "); 
-         printf("      "); 
-         printf("      "); 
-         printf("      "); 
+         if (sge_ext || lGetList(jatep, JAT_granted_destin_identifier_list)) {
+            printf("%5d ", (int)tickets),
+            printf("%5d ", (int)lGetUlong(job, JB_override_tickets)); 
+            printf("%5d ", (int)otickets);
+            printf("%5d ", (int)dtickets);
+            printf("%5d ", (int)ftickets);
+            printf("%5d ", (int)stickets);
+            printf("%-5.2f ", lGetDouble(jatep, JAT_share)); 
+         } else {
+            printf("      "); 
+            printf("      "); 
+            printf("      "); 
+            printf("      "); 
+            printf("      "); 
+            printf("      "); 
+            printf("      "); 
+         }
       }
    }
    /* if not full listing we need the queue's name in each line */

@@ -169,6 +169,10 @@ while [ $ARGC != 0 ]; do
      UPDATE=true
      OLD_SGE_ROOT=$2
      OLD_SGE_CELL=$3
+     if [ "$OLD_SGE_ROOT" = "" -o "$OLD_SGE_CELL" = "" ]; then
+        ErrUsage
+        exit 1    
+     fi
      shift
      ARGC=`expr $ARGC - 1`
      shift
@@ -213,7 +217,7 @@ if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "i
 fi
 
 
-if [ $UPDATE = "true" -a $QMASTER = "install" ]; then
+if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" ]; then
    WelcomeTheUser
    CheckForLocalHostResolving
    CheckWhoInstallsSGE
@@ -244,10 +248,6 @@ if [ $UPDATE = "true" -a $QMASTER = "install" ]; then
    UpdateHints
 fi
 
-
-if [ $UPDATE = "true" -a $EXECD = "install" ]; then
-   echo
-fi
 
  
 if [ $QMASTER = "install" -a $UPDATE != "true" ]; then

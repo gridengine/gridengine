@@ -326,8 +326,9 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux|-sm|-usm|-db [-auto filename ] [-csp]\n" \
-             "              [-resport] [-afs] [-host] [-rsh] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux|-sm|-usm|-db|-upd <SGE_ROOT> <SGE_CELL>\n" \
+             "              [-auto filename ] [-csp] [-resport] [-afs]\n" \
+             "              [-host] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -335,6 +336,7 @@ ErrUsage()
              "   -sm        install shadow host\n" \
              "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated Spooling Server\n" \
+             "   -upd       upgrade your cluster from 5.x to 6.0\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
@@ -349,12 +351,15 @@ ErrUsage()
              "   inst_sge -m -x -auto /path/to/config-file\n" \
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \
-             "                     (A templete can be found in:\n" \
+             "                     (A template can be found in:\n" \
              "                     util/install_modules/inst_template.conf)\n" \
              "   inst_sge -ux -host hostname\n" \
              "                     Uninstalls execd on given executionhost\n" \
              "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
-             "   inst_sge -sm      Install a Shadow Master Host on local host" $myname 
+             "   inst_sge -sm      Install a Shadow Master Host on local host\n" \
+             "   inst_sge -upd <SGE_ROOT> <SGE_CELL>                         \n" \
+             "   <SGE_ROOT> = SGE_ROOT directory of old 5.x installation.\n" \
+             "   <SGE_CELL> = SGE_CELL name of old 5.x installation." $myname 
    $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
    exit 1
 }

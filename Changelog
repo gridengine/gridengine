@@ -1,3 +1,7 @@
+MD-2004-05-18-1: Bugfix:    -Help output
+                            -changed recommended switches
+                 Changed:   inst_update.sh
+
 MD-2004-05-18-0: Bugfix:    log file in wrong directory, autoinst failed under
                             AIX
                             -docu

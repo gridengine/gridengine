@@ -353,9 +353,7 @@ sge_pack_buffer *pb
                         lSetList(task_task, JAT_granted_destin_identifier_list, NULL);
                         if ((ep=lAddSubHost(task_task, JG_qhostname, rhost, JAT_granted_destin_identifier_list, JG_Type)))
                            lSetString(ep, JG_qname, queue_name);
-#if 0 /* EB: #4883714: review has to be done by AS */
                         job_write_spool_file(jep, 0, SPOOL_DEFAULT);
-#endif
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -368,11 +366,9 @@ sge_pack_buffer *pb
                            lGetList(hep, EH_usage_scaling_list), 
                            lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_previous_usage_list));
 
-#if 1 /* EB: #4883714: review has to be done by AS */
                      if (new_task) {
                         job_write_spool_file(jep, 0, SPOOL_DEFAULT); 
                      }
-#endif
 
                     /* notify scheduler of task usage event */
                     if (feature_is_enabled(FEATURE_SGEEE)) {
@@ -565,11 +561,7 @@ sge_pack_buffer *pb
                   lSetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_scaled_usage_list,
                            lCopyList("scaled", lGetList(lFirst(lGetList(task, JB_ja_tasks)), 
                            JAT_usage_list)));
-#if 1 /* EB: #4883714: review has to be done by AS */
-                  scale_usage(lFirst(lGetList(task, JB_ja_tasks)), task_task, 
-#else
                   scale_usage(lFirst(lGetList(task, JB_ja_tasks)), lFirst(lGetList(task, JB_ja_tasks)),
-#endif
                            lGetList(hep, EH_usage_scaling_list), 
                            lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_previous_usage_list));
 

@@ -33,6 +33,10 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_time.h"
 #include "sge_profiling.h"
 

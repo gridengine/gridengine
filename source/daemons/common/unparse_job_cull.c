@@ -909,14 +909,16 @@ lList **alpp
    lList *lp = NULL;
    int ret = 0;
    char str[BUFSIZ];
-   lListElem *ap;
-   lListElem *ep_opt;
+   lListElem *ap = NULL;
+   lListElem *ep_opt = NULL;
 
    DENTER(TOP_LAYER, "sge_unparse_acl");
 
-   for_each (ap, acl) 
-      if (sge_contained_in_access_list(owner, group, ap, alpp)) 
+   for_each (ap, acl) {
+      if (sge_contained_in_access_list(owner, group, ap, alpp)) {
          lAddElemStr(&lp, ST_name, lGetString(ap, US_name), ST_Type);
+      }
+   }
 
    /* We know that if lp was created, it was through lAddElemStr, so the only
     * way the number of elements can be 0 is if it's NULL. */

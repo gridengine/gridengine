@@ -38,6 +38,10 @@
 #include <pwd.h>
 #include <errno.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_gdi.h"
 #include "sge_answer.h"
 #include "sge_any_request.h"

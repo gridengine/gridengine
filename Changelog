@@ -1,3 +1,8 @@
+AH-2004-03-12-0: Bugfix:    fix access to free'd memory that caused
+                            schedd fp-exception under tru64
+                            attributes
+                 Review:    AS
+
 SG-2004-03-12-1: Bugfix:    wrong qstat -F output with no requestable 
                             attributes
                  Issue:     837

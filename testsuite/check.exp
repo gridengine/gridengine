@@ -6284,6 +6284,7 @@ proc compile_source { { do_only_install 0 } } {
       return -1
    }
   
+   sleep 70
 
    catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
    puts $result

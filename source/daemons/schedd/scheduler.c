@@ -87,7 +87,6 @@
 #include "sge_schedd_conf.h"
 #include "sge_resource_utilization.h"
 #include "sge_serf.h"
-#include "sge_qeti.h"
 #include "sge_qinstance_state.h"
 
 /* profiling info */

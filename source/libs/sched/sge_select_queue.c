@@ -65,17 +65,13 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_userprj.h"
-#include "sge_host.h"
-#include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_object.h"
 #include "sge_resource_utilization.h"
-#include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_schedd_conf.h"
 #include "sge_subordinate.h"
-#include "sge_userprj.h"
 #include "sge_qref.h"
 
 int scheduled_fast_jobs;

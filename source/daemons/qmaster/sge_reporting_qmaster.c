@@ -70,9 +70,6 @@
 #include "sge_sharetree.h"
 #include "sge_userprj.h"
 #include "sge_resource_utilization.h"
-
-/* lck */
-#include "sge_lock.h"
 #include "sge_userset.h"
 
 /* sched */

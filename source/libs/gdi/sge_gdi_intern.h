@@ -51,8 +51,8 @@ extern "C" {
 /* v5.2.3:     0x10000003 */
 /* v5.3 alpha1 0x100000F0 */
 /* before hash 0x100000F1 */
-#define GRM_GDI_VERSION 0x100000F2
-
+/* v5.3beta1   0x100000F2 */
+#define GRM_GDI_VERSION 0x100000F3
 
 /* sge_gdi_request.c */
 typedef struct _sge_gdi_request sge_gdi_request;

@@ -158,6 +158,10 @@ char *commproc,
 int id 
 ) {
    char *client_version = NULL;
+   
+   /* actual GDI version is defined in
+    *   libs/gdi/sge_gdi_intern.h
+    */   
    struct vdict_t {
       u_long32 version;
       char *release;
@@ -169,6 +173,7 @@ int id
       { 0x100000F0, "5.3alpha1" },
       { 0x100000F1, "5.3beta1 without hashing" },
       { 0x100000F2, "5.3beta1" },
+      { 0x100000F3, "5.3beta2" },
       { 0,          NULL   }
    };
 

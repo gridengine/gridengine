@@ -81,9 +81,9 @@ enum {
 };
 
 
-int answer_has_quality(const lListElem *answer, answer_quality_t quality);
+bool answer_has_quality(const lListElem *answer, answer_quality_t quality);
 
-int answer_is_recoverable(const lListElem *answer);
+bool answer_is_recoverable(const lListElem *answer);
 
 void answer_exit_if_not_recoverable(const lListElem *answer);
 
@@ -99,10 +99,10 @@ void answer_print_text(const lListElem *answer,
 bool answer_list_add_sprintf(lList **answer_list, u_long32 status, 
                              answer_quality_t quality, const char *fmt, ...);
 
-int answer_list_has_quality(lList **answer_list, 
-                            answer_quality_t quality);
+bool answer_list_has_quality(lList **answer_list, 
+                             answer_quality_t quality);
 
-int answer_list_has_error(lList **answer_list);
+bool answer_list_has_error(lList **answer_list);
 
 void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream);
 

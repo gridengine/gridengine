@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern int profiling_started;
+#include "basis_types.h"
+
+extern bool profiling_started;
 
 void profiling_start(void);
 void profiling_stop(void);

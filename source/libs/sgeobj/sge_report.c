@@ -90,9 +90,9 @@ void job_report_print_usage(const lListElem *job_report, FILE *fp)
 *
 *  SYNOPSIS
 *     void job_report_init_from_job(lListElem *job_report, 
-*                                  const lListElem *job, 
-*                                  const lListElem *ja_task, 
-*                                  const lListElem *pe_task) 
+*                                   const lListElem *job, 
+*                                   const lListElem *ja_task, 
+*                                   const lListElem *pe_task) 
 *
 *  FUNCTION
 *     Initialize "job_report" from the attributes obtained from

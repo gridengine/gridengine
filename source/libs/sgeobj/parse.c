@@ -373,8 +373,8 @@ lListElem *ep = NULL; /* SPA_Type */
  **** parse_flag
  ****
  **** look in the ppcmdline-list for a flag given
- **** by 'opt'. If it is found, TRUE is returned and
- **** flag is set to 1. If it is not found, FALSE
+ **** by 'opt'. If it is found, true is returned and
+ **** flag is set to 1. If it is not found, false
  **** is returned and flag will be untouched.
  ****
  **** If the switch occures more than one time, every
@@ -382,7 +382,7 @@ lListElem *ep = NULL; /* SPA_Type */
  ****
  **** The answerlist ppal is not used yet.
  ****/
-int parse_flag(
+bool parse_flag(
 lList **ppcmdline,
 const char *opt,
 lList **ppal,
@@ -403,10 +403,10 @@ char* actual_opt;
       free(actual_opt);
       *pflag = 1;
       DEXIT;
-      return TRUE;
+      return true;
    } else {
       DEXIT;
-      return FALSE;
+      return false;
    }
 }
 
@@ -414,15 +414,15 @@ char* actual_opt;
  **** parse_multi_stringlist
  ****
  **** looks in the ppcmdline-list for a option given
- **** by 'opt'. If it is found, TRUE is returned,
- **** otherwise FALSE.
+ **** by 'opt'. If it is found, true is returned,
+ **** otherwise false.
  **** Arguments after the option switch are parsed
  **** into the ppdestlist-list (given field and type).
  **** There can be multiple occurences of this switch.
  **** The arguments are collected. 
  **** The arguments can be eiter comma-separated. 
  ****/ 
-int parse_multi_stringlist(
+bool parse_multi_stringlist(
 lList **ppcmdline,
 const char *opt,
 lList **ppal,
@@ -444,14 +444,14 @@ int field
          ep = lGetElemStr(*ppcmdline, SPA_switch, opt);
       }
       DEXIT;
-      return TRUE;
+      return true;
    } else {
       DEXIT;
-      return FALSE;
+      return false;
    }
 }
 
-int parse_multi_jobtaskslist(
+bool parse_multi_jobtaskslist(
 lList **ppcmdline,
 const char *opt,
 lList **alpp,
@@ -459,11 +459,11 @@ lList **ppdestlist
 ) {
    lListElem *ep, *sep, *idp;
    char str[256];
-   int ret = FALSE;
+   int ret = false;
 
    DENTER(TOP_LAYER, "parse_multi_jobtaskslist");
    while ((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
-      ret = TRUE;
+      ret = true;
       for_each(sep, lGetList(ep, SPA_argval_lListT)) {
          lList *tmp_alp = NULL;
       
@@ -475,7 +475,7 @@ lList **ppdestlist
 
             lRemoveElem(*ppcmdline, ep);
             DEXIT;
-            return FALSE;
+            return false;
          }
       }
       lRemoveElem(*ppcmdline, ep);
@@ -503,10 +503,10 @@ char **str
       lRemoveElem(*ppcmdline, ep);
 
       DEXIT;
-      return TRUE;
+      return true;
    } else {
       DEXIT;
-      return FALSE;
+      return false;
    }
 }
 
@@ -538,7 +538,7 @@ lList *string_list
    -1 error
 
 */
-int sge_parse_bitfield_str(const char *str, const char *set_specifier[], 
+bool sge_parse_bitfield_str(const char *str, const char *set_specifier[], 
                            u_long32 *value, const char *name, lList **alpp) 
 {
    const char *s;
@@ -561,7 +561,7 @@ int sge_parse_bitfield_str(const char *str, const char *set_specifier[],
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS, *cpp, name)); 
                answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
-               return FALSE;
+               return false;
             }
 
             *value |= bitmask;
@@ -576,7 +576,7 @@ int sge_parse_bitfield_str(const char *str, const char *set_specifier[],
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS, s, name)); 
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
-         return FALSE;
+         return false;
       }
 
    }
@@ -585,9 +585,9 @@ int sge_parse_bitfield_str(const char *str, const char *set_specifier[],
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S , name));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return FALSE;
+      return false;
 
    }
    DEXIT;
-   return TRUE;
+   return true;
 }

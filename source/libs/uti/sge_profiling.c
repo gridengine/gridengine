@@ -104,7 +104,7 @@
 *     profiling_start() -- global variables for profiling
 *
 *  SYNOPSIS
-*     int profiling_started = FALSE;
+*     int profiling_started = false;
 *
 *     static clock_t clock_first;
 *     static clock_t clock_start;
@@ -115,10 +115,10 @@
 *     static struct tms tms_end;
 *
 *  FUNCTION
-*     profiling_started is set to TRUE, if profiling is enabled.
+*     profiling_started is set to true, if profiling is enabled.
 *     The other global variables are only for internal use.
 *******************************************************************************/
-int profiling_started = FALSE;
+bool profiling_started = false;
 
 static clock_t clock_first;
 static clock_t clock_start;
@@ -148,7 +148,7 @@ static struct tms tms_end;
 *******************************************************************************/
 void profiling_start(void)
 {
-   profiling_started = TRUE;
+   profiling_started = true;
    profiling_reset();
 }
 
@@ -174,7 +174,7 @@ void profiling_start(void)
 *******************************************************************************/
 void profiling_stop(void)
 {
-   profiling_started = FALSE;
+   profiling_started = false;
 }
 
 /****** uti/profiling/profiling_start_measurement() ****************************

@@ -90,16 +90,16 @@ static sge_mirror_error sge_mirror_process_event(sge_event_type type,
                                                  sge_event_action action, 
                                                  lListElem *event);
 
-static int sge_mirror_process_shutdown(sge_event_type type, 
+static bool sge_mirror_process_shutdown(sge_event_type type, 
                                              sge_event_action action, 
                                              lListElem *event,
                                              void *clientdata);
-static int sge_mirror_process_qmaster_goes_down(sge_event_type type, 
+static bool sge_mirror_process_qmaster_goes_down(sge_event_type type, 
                                                 sge_event_action action, 
                                                 lListElem *event, 
                                                 void *clientdata);
 
-static int 
+static bool 
 generic_update_master_list(sge_event_type type, sge_event_action action,
                            lListElem *event, void *clientdata);
 
@@ -165,15 +165,6 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list);
 static sge_mirror_error sge_mirror_process_event(sge_event_type type, 
                                                  sge_event_action action, 
                                                  lListElem *event);
-
-static int sge_mirror_process_shutdown(sge_event_type type, 
-                                             sge_event_action action, 
-                                             lListElem *event,
-                                             void *clientdata);
-static int sge_mirror_process_qmaster_goes_down(sge_event_type type, 
-                                                sge_event_action action, 
-                                                lListElem *event, 
-                                                void *clientdata);
 
 /****** Eventmirror/sge_mirror_initialize() *************************************
 *  NAME
@@ -1213,7 +1204,7 @@ static sge_mirror_error sge_mirror_process_event(sge_event_type type, sge_event_
    return SGE_EM_OK;
 }
 
-static int sge_mirror_process_shutdown(sge_event_type type, 
+static bool sge_mirror_process_shutdown(sge_event_type type, 
                                              sge_event_action action, 
                                              lListElem *event, 
                                              void *clientdata)
@@ -1224,13 +1215,13 @@ static int sge_mirror_process_shutdown(sge_event_type type,
    sge_mirror_shutdown();
    SGE_EXIT(0);
    DEXIT;
-   return TRUE;
+   return true;
 }
 
-static int sge_mirror_process_qmaster_goes_down(sge_event_type type, 
-                                                sge_event_action action, 
-                                                lListElem *event, 
-                                                void *clientdata)
+static bool sge_mirror_process_qmaster_goes_down(sge_event_type type, 
+                                                 sge_event_action action, 
+                                                 lListElem *event, 
+                                                 void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_mirror_process_qmaster_goes_down");
 
@@ -1239,10 +1230,10 @@ static int sge_mirror_process_qmaster_goes_down(sge_event_type type,
    ec_mark4registration();
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
-static int 
+static bool 
 generic_update_master_list(sge_event_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
@@ -1262,11 +1253,11 @@ generic_update_master_list(sge_event_type type, sge_event_action action,
 
    if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 

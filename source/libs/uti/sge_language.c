@@ -82,7 +82,7 @@ static int sge_enable_msg_id_to_every_message = 0;
 static htable sge_message_hash_table = NULL; 
 
 /* this is to find out if the sge_init_language_func() was called */
-static int sge_are_language_functions_installed = FALSE;
+static bool sge_are_language_functions_installed = false;
 
 
 /****** uti/language/sge_init_language() **************************************
@@ -113,7 +113,7 @@ static int sge_are_language_functions_installed = FALSE;
 *                          "GRIDLOCALEDIR"). 
 *
 *  RESULT
-*     int state         -  TRUE for seccess, FALSE on error.
+*     int state         -  true for seccess, false on error.
 *
 *  SEE ALSO
 *     uti/language/sge_init_language()
@@ -132,7 +132,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   char* language_var = NULL;
   char* pathName = NULL;
   char* sge_enable_msg_id_string = NULL;
-  int   success  = FALSE;  
+  int   success  = false;  
   int   back;
   int   stop = 0;
 
@@ -272,12 +272,12 @@ int sge_init_languagefunc(char *package, char *localeDir)
      back = open (pathName, O_RDONLY);
      if (back >= 0) {
         DPRINTF(("found message file - ok\n"));
-        success = TRUE;
+        success = true;
         close(back);
         stop = 2;
      } else {
         DPRINTF(("could not open message file - error\n"));
-        success = FALSE;
+        success = false;
      }
      if(stop==0) {
         stop = 2;   /* only when stop = 1: Try to repeat without LOCALEDIR environment variable */
@@ -292,7 +292,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   if ( (sge_language_functions.setlocale_func != NULL     ) &&
        (sge_language_functions.bindtextdomain_func != NULL) &&
        (sge_language_functions.textdomain_func != NULL    ) &&
-       (sge_are_language_functions_installed == TRUE      )    ) {
+       (sge_are_language_functions_installed == true      )    ) {
      char* help1 = NULL;
      help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
      if (help1 != NULL) {
@@ -314,7 +314,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
      }
   } else {
      DPRINTF(("sge_init_language() called without valid sge_language_functions pointer!\n"));
-     success = FALSE;
+     success = false;
   }
 
 
@@ -331,7 +331,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   language_var = NULL;
   pathName = NULL;
 
-  if (success == TRUE) {
+  if (success == true) {
      sge_enable_msg_id=1;
   } 
 
@@ -357,7 +357,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
      DPRINTF(("error id output     : enabled\n"));
   }
 
-  if (success == TRUE) {
+  if (success == true) {
     DPRINTF(("****** starting localization procedure ... success **\n"));
   } else {
     DPRINTF(("****** starting localization procedure ... failed  **\n"));
@@ -410,7 +410,7 @@ void sge_init_language_func(gettext_func_type new_gettext,
    sge_language_functions.textdomain_func = NULL;
 
    /* ok, the functions have now NULL pointer */
-   sge_are_language_functions_installed = TRUE; 
+   sge_are_language_functions_installed = true; 
 
    /* set the new functions */
    if (new_gettext != NULL) {
@@ -664,7 +664,7 @@ const char *sge_gettext__(char *x)
    DENTER(BASIS_LAYER, "sge_gettext__");
 
    if ( (sge_language_functions.gettext_func != NULL) && 
-        (sge_are_language_functions_installed == TRUE)   ) {
+        (sge_are_language_functions_installed == true)   ) {
       z = sge_language_functions.gettext_func(x);
    } else {
       z = x;

@@ -60,9 +60,9 @@ int queue_reference_list_validate(lList **alpp, lList *qr_list,
                                   const char *attr_name, const char *obj_descr, 
                                   const char *obj_name);  
 
-int queue_list_add_queue(lListElem *queue);
+bool queue_list_add_queue(lListElem *queue);
 
-int queue_check_owner(const lListElem *queue, const char *user_name);
+bool queue_check_owner(const lListElem *queue, const char *user_name);
 
 const char *
 queue_get_type_string(const lListElem *queue, lList **answer_list,

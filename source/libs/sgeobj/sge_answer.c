@@ -95,7 +95,7 @@
 *     answer_has_quality() -- Check for certain answer quality 
 *
 *  SYNOPSIS
-*     int answer_has_quality(const lListElem *answer, 
+*     bool answer_has_quality(const lListElem *answer, 
 *                            answer_quality_t quality) 
 *
 *  FUNCTION
@@ -106,11 +106,11 @@
 *     answer_quality_t quality - Quality id 
 *
 *  RESULT
-*     int - true or false 
+*     bool - true or false 
 *******************************************************************************/
-int answer_has_quality(const lListElem *answer, answer_quality_t quality) 
+bool answer_has_quality(const lListElem *answer, answer_quality_t quality) 
 {
-   return (lGetUlong(answer, AN_quality) ==  quality) ? 1 : 0;
+   return (lGetUlong(answer, AN_quality) ==  quality) ? true : false;
 }
 
 /****** sgeobj/answer/answer_is_recoverable() *********************************
@@ -135,9 +135,9 @@ int answer_has_quality(const lListElem *answer, answer_quality_t quality)
 *  RESULT
 *     int - true or false
 ******************************************************************************/
-int answer_is_recoverable(const lListElem *answer)
+bool answer_is_recoverable(const lListElem *answer)
 {
-   int ret = 1;
+   bool ret = true;
 
    if (answer != NULL) {
       const int max_non_recoverable = 3;
@@ -151,7 +151,7 @@ int answer_is_recoverable(const lListElem *answer)
 
       for (i = 0; i < max_non_recoverable; i++) {
          if (status == non_recoverable[i]) {
-            ret = 0;
+            ret = false;
             break;
          }
       }
@@ -358,18 +358,18 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 *     answer_quality_t quality - quality value 
 *
 *  RESULT
-*     int - true or false
+*     bool - true or false
 ******************************************************************************/
-int answer_list_has_quality(lList **answer_list, answer_quality_t quality)
+bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 {
-   int ret = 0;
+   bool ret = false;
 
    if (answer_list != NULL) {
       lListElem *answer;   /* AN_Type */
 
       for_each(answer, *answer_list) {
          if (answer_has_quality(answer, quality)) {
-            ret = 1;
+            ret = true;
             break;
          }
       }
@@ -382,7 +382,7 @@ int answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 *     answer_list_has_error() -- Is an "error " in the list 
 *
 *  SYNOPSIS
-*     int answer_list_has_error(lList **answer_list) 
+*     bool answer_list_has_error(lList **answer_list) 
 *
 *  FUNCTION
 *     The function returns true (1) if the "answer_list" containes
@@ -392,11 +392,11 @@ int answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 *     lList **answer_list - AN_Type list 
 *
 *  RESULT
-*     int - true or false
+*     bool - true or false
 ******************************************************************************/
-int answer_list_has_error(lList **answer_list)
+bool answer_list_has_error(lList **answer_list)
 {
-   int ret;
+   bool ret;
 
    DENTER(TOP_LAYER, "answer_list_has_error");
    ret = answer_list_has_quality(answer_list, ANSWER_QUALITY_ERROR);

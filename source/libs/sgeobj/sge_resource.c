@@ -70,13 +70,13 @@ resources
    |- ....
    |
    ...
+
+   hard_soft         - for name of resources list 
  ***********************************************************************/
-lList *sge_parse_resources(
-lList *resources,
-const char *range_str,
-const char *str,
-const char *hard_soft         /* for name of resources list */
-) {
+lList *
+sge_parse_resources(lList *resources, const char *range_str,
+                    const char *str, const char *hard_soft) 
+{
    lListElem *request_el;
    lList *complex_attributes=NULL;
    lListElem *complex_attribute;
@@ -177,12 +177,8 @@ const char *hard_soft         /* for name of resources list */
 ** DESCRIPTION
 **   
 */
-int unparse_resources(
-FILE *fp,
-char *buff,
-u_long32 max_len,
-lList *rlp 
-) {
+int unparse_resources(FILE *fp, char *buff, u_long32 max_len, lList *rlp) 
+{
    intprt_type attr_fields[] = { CE_name, CE_stringval, 0 };
    const char *attr_delis[] = {"=", ",", "\n"};
    lListElem *rep;
@@ -255,9 +251,9 @@ lList *rlp
 }
 
 /*************************************************************/
-void sge_show_resource_list(
-lList *reqlist  /* RQ_Type List */
-) {
+/* reqlist RQ_Type List */
+void sge_show_resource_list(lList *reqlist) 
+{
    lListElem *req;
 
    DENTER(TOP_LAYER, "sge_show_resource_list");
@@ -271,10 +267,9 @@ lList *reqlist  /* RQ_Type List */
 }
 
 /*************************************************************/
-
-void sge_show_re_type_list(
-lList *rel  /* RE_Type List */
-) {
+/* rel RE_Type List */
+void sge_show_re_type_list(lList *rel) 
+{
    lListElem* res;
    lList* range;
 
@@ -297,13 +292,11 @@ lList *rel  /* RE_Type List */
 }
 
 /*************************************************************/
-
-static void sge_show_ce_type_list(
-lList *cel, /* CE_Type List */
-const char *indent,
-const char *separator 
-) {
-   int first = 1;
+/* cel CE_Type List */
+static void sge_show_ce_type_list(lList *cel, const char *indent, 
+                                  const char *separator) 
+{
+   bool first = true;
    lListElem *ce;
    const char *s;
    
@@ -312,7 +305,7 @@ const char *separator
    /* walk through complex entries */
    for_each (ce, cel) { 
       if (first) {
-         first = 0;
+         first = false;
       } else {
          printf("%s", separator);
          printf("%s", indent);
@@ -331,11 +324,11 @@ const char *separator
 }
 
 /*************************************************************/
-void sge_show_re_type_list_line_by_line(
-const char *label,
-const char *indent,
-lList *rel  /* RE_Type List */
-) {
+/* rel RE_Type List */
+void sge_show_re_type_list_line_by_line(const char *label, 
+                                        const char *indent, 
+                                        lList *rel) 
+{
    lListElem* res;
    lList* range;
    int first = 1;
@@ -364,10 +357,9 @@ lList *rel  /* RE_Type List */
    return;
 }
 
-
-void sge_compress_resources(
-lList *rlp  /* RE_Type */
-) {
+/* rlp RE_Type */
+void sge_compress_resources(lList *rlp) 
+{
    lListElem *rep, *rep_first_no_ranges = NULL;
    lList *lp_ranges;
    lList *lp;
@@ -377,32 +369,30 @@ lList *rlp  /* RE_Type */
    for_each(rep, rlp) {
       lp_ranges = lGetList(rep, RE_ranges);
       if (!lp_ranges) {
-	 if (!rep_first_no_ranges) {
-	    rep_first_no_ranges = rep;
-	    cull_compress_definition_list(lGetList(rep, RE_entries), 
-	       CE_name, CE_stringval, 0);
-	 }
-	 else {
-	    lp = lCopyList("resource list compressed", 
-	       lGetList(rep_first_no_ranges, RE_entries));
-	    cull_merge_definition_list(&lp, lGetList(rep, RE_entries), 
-	       CE_name, CE_stringval);
-	    lSetList(rep_first_no_ranges, RE_entries, lp);
-	    /*
-	    ** the loop is not executed correctly if you just remove an element
-	    ** this works because rep is never the first element here
-	    */
-	    rep = lPrev(rep);
-	    lRemoveElem(rlp, lNext(rep));
-	    
-	 }
+         if (!rep_first_no_ranges) {
+            rep_first_no_ranges = rep;
+            cull_compress_definition_list(lGetList(rep, RE_entries), 
+                                          CE_name, CE_stringval, 0);
+         } else {
+            lp = lCopyList("resource list compressed", 
+               lGetList(rep_first_no_ranges, RE_entries));
+            cull_merge_definition_list(&lp, lGetList(rep, RE_entries), 
+                                       CE_name, CE_stringval);
+            lSetList(rep_first_no_ranges, RE_entries, lp);
+            /*
+             * the loop is not executed correctly if you just remove an element
+             * this works because rep is never the first element here
+             */
+            rep = lPrev(rep);
+            lRemoveElem(rlp, lNext(rep));
+         }
       }      
    }
 
    /*
-   ** the element with no ranges should be the first element
-   ** and there should be only one
-   */
+    * the element with no ranges should be the first element
+    * and there should be only one
+    */
    if (rep_first_no_ranges) {
       lInsertElem(rlp, NULL, lDechainElem(rlp, rep_first_no_ranges));
    }

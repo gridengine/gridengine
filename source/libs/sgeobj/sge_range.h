@@ -78,11 +78,11 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 
 typedef void (*range_remove_insert_t)(lList**, lList**, u_long32);
  
-int range_is_id_within(const lListElem *range, u_long32 id);   
+bool range_is_id_within(const lListElem *range, u_long32 id);   
 
-int range_list_is_id_within(const lList *range_list, u_long32 id);   
+bool range_list_is_id_within(const lList *range_list, u_long32 id);   
 
-int range_list_is_empty(const lList *range_list);
+bool range_list_is_empty(const lList *range_list);
 
 void range_list_compress(lList *range_list);    
 
@@ -111,8 +111,8 @@ void range_list_parse_from_string(lList **rl,
                                   int step_allowed,
                                   int inf_allowed);
 
-int range_list_containes_id_less_than(const lList *range_list, u_long32 id);
+bool range_list_containes_id_less_than(const lList *range_list, u_long32 id);
 
-int range_containes_id_less_than(const lListElem *range, u_long32 id);
+bool range_containes_id_less_than(const lListElem *range, u_long32 id);
 
 #endif /* __SGE_RANGE_H */

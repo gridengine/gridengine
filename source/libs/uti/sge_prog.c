@@ -241,14 +241,14 @@ void sge_getme(u_long32 program_number)
    struct hostent *hent, *hent2;
  
 #ifndef WIN32NATIVE
-   static int first = TRUE;
+   static bool first = true;
 #endif /* WIN32NATIVE */
  
    DENTER(TOP_LAYER, "sge_getme");
  
    if (first) {
       memset(&me, 0, sizeof(me));
-      first = FALSE;
+      first = false;
    }
    else {
       DEXIT;
@@ -331,7 +331,7 @@ void sge_deleteme()
    FREE(me.user_name);
    FREE(me.default_cell);
  
-   first = TRUE;
+   first = true;
 }
  
 #endif          

@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int pe_task_update_master_list(sge_event_type type, sge_event_action action,
+bool pe_task_update_master_list(sge_event_type type, sge_event_action action,
                                lListElem *event, void *clientdata);
 
-int pe_task_update_master_list_usage(lListElem *event);
+bool pe_task_update_master_list_usage(lListElem *event);
 
 #endif /* __SGE_PE_TASK_MIRROR_H */

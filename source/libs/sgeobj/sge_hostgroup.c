@@ -53,17 +53,21 @@
 
 lList *Master_Host_Group_List = NULL;
 
-static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, const char* extraSubgroupCheck , int ignoreSupergroupLinks);
+static bool 
+sge_verify_group_entry(lList** alpp, lList* hostGroupList, 
+                       lListElem* hostGroupElem, 
+                       const char* extraSubgroupCheck, 
+                       int ignoreSupergroupLinks);
 
 /****** sgeobj/hostgroup/sge_verify_host_group_entry() ***************************
 *  NAME
 *     sge_verify_host_group_entry() -- check hostgroup elements 
 *
 *  SYNOPSIS
-*     int sge_verify_host_group_entry(lList** alpp, 
-*                                     lList* hostGroupList, 
-*                                     lListElem* hostGroupElem, 
-*                                     char* filename);
+*     bool sge_verify_host_group_entry(lList** alpp, 
+*                                      lList* hostGroupList, 
+*                                      lListElem* hostGroupElem, 
+*                                      char* filename);
 *       
 *
 *  FUNCTION
@@ -85,14 +89,12 @@ static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem*
 *                                 exactly the same like this parameter
 *
 *  RESULT
-*     int - TRUE on success or FALSE on failure
+*     bool - true on success or false on failure
 ******************************************************************************/
-int sge_verify_host_group_entry(
-lList **alpp,          
-lList *hostGroupList,
-lListElem *hostGroupElem,
-const char *filename 
-) {
+bool 
+sge_verify_host_group_entry(lList **alpp, lList *hostGroupList,
+                            lListElem *hostGroupElem, const char *filename) 
+{
    const char* groupName = NULL;
    lList* memberList = NULL;
    lList* subGroupList = NULL;
@@ -117,7 +119,7 @@ const char *filename
             INFO((SGE_EVENT, MSG_ANSWER_HOSTGROUPNAMEXDIFFFROMY_SS, groupName, filename));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
-            return FALSE;
+            return false;
          }
       }
 
@@ -136,33 +138,33 @@ const char *filename
                     INFO((SGE_EVENT, MSG_ANSWER_UNKNOWNHOSTNAME_S, hostName));
                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                     DEXIT;
-                    return FALSE;
+                    return false;
                 }
              } 
          }
       }
       
-      sge_verify_group_entry(alpp, hostGroupList, hostGroupElem, NULL ,FALSE); 
+      sge_verify_group_entry(alpp, hostGroupList, hostGroupElem, NULL, false); 
 
       /* all checks done */
       DEXIT;
-      return TRUE; 
+      return true; 
    } 
    INFO((SGE_EVENT, MSG_NULLPOINTER ));
    answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
    DEXIT;
-   return FALSE;
+   return false;
 }
 
-/****** sgeobj/hostgroup/sge_add_group_elem() *************************************
+/****** sgeobj/hostgroup/sge_add_group_elem() *********************************
 *  NAME
 *     sge_add_group_elem() -- create and add new group element 
 *
 *  SYNOPSIS
-*     int sge_add_group_elem(lList* groupList,
-*                            char* groupName
-*                            char* subGroupName
-*                            char* superGroupName);
+*     bool sge_add_group_elem(lList* groupList,
+*                             char* groupName
+*                             char* subGroupName
+*                             char* superGroupName);
 *       
 *  FUNCTION
 *     This function is generating a new lListElem* of type GRP_Type 
@@ -180,10 +182,11 @@ const char *filename
 *     char* superGroupName - name of super group (can be NULL)
 *
 *  RESULT
-*     int - TRUE on success, FALSE on error
+*     bool - true on success, false on error
 *******************************************************************************/
-int sge_add_group_elem(lList *groupList, const char *groupName,
-                       const char *subGroupName, const char *superGroupName) 
+bool 
+sge_add_group_elem(lList *groupList, const char *groupName,
+                   const char *subGroupName, const char *superGroupName) 
 {
   lListElem* newGroupElem = NULL;
   int error = 0;
@@ -191,19 +194,19 @@ int sge_add_group_elem(lList *groupList, const char *groupName,
   DENTER(TOP_LAYER,"sge_add_group_elem");
 
   if ((groupList != NULL) && (groupName != NULL)) {
-     if (sge_is_group(groupList, groupName) == FALSE) {
+     if (sge_is_group(groupList, groupName) == false) {
 
         newGroupElem = lCreateElem(GRP_Type);
         lSetString(newGroupElem, GRP_group_name, groupName);
      
         if (subGroupName != NULL) { 
-           if (sge_add_subgroup2group(NULL, groupList, newGroupElem, subGroupName,TRUE ) == FALSE) { 
+           if (sge_add_subgroup2group(NULL, groupList, newGroupElem, subGroupName, true ) == false) { 
               error++;
            }
         }
 
         if (superGroupName != NULL) {
-           if (sge_add_supergroup2group( groupList, newGroupElem, superGroupName ) == FALSE) { 
+           if (sge_add_supergroup2group( groupList, newGroupElem, superGroupName ) == false) { 
               error++;
            }
         }
@@ -212,19 +215,19 @@ int sge_add_group_elem(lList *groupList, const char *groupName,
            lFreeElem(newGroupElem);
            newGroupElem = NULL;
            DEXIT;
-           return FALSE;
+           return false;
         }
         lAppendElem(groupList, newGroupElem);
         DEXIT;
-        return TRUE;
+        return true;
      }
   }
 
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-static int sge_verify_group_entry(
+static bool sge_verify_group_entry(
 lList **alpp,                 /* answer list pointer reference */
 lList *hostGroupList,         /* master GRP_Type list  */
 lListElem *hostGroupElem,     /* pointer to GRP_Type element */
@@ -260,27 +263,27 @@ int ignoreSupergroupLinks
       if (subGroupList != NULL) {
          for_each( ep , subGroupList ) {
             subGroupName = lGetString ( ep , STR );
-            if (sge_is_group(hostGroupList, subGroupName) == TRUE) {
+            if (sge_is_group(hostGroupList, subGroupName) == true) {
                /* sub group is guilty */
                DPRINTF(("sub group %s found.\n", subGroupName ));
                /* check if sub group has supergroup entry for this group */
                tmp_ep = sge_get_group_elem(hostGroupList, subGroupName);
-               if (ignoreSupergroupLinks != TRUE) {
-                  if (sge_is_group_supergroup(tmp_ep, groupName) == FALSE) {
-                      if (sge_add_supergroup2group(hostGroupList,tmp_ep, groupName) == FALSE) { 
+               if (ignoreSupergroupLinks != true) {
+                  if (sge_is_group_supergroup(tmp_ep, groupName) == false) {
+                      if (sge_add_supergroup2group(hostGroupList,tmp_ep, groupName) == false) { 
                          /* sub group has no supergroup entry for this group */
                          INFO((SGE_EVENT, MSG_ANSWER_SUBGROUPHASNOSUPERGROUP_SS, subGroupName, groupName));
                          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                          lFreeList(subGroupList);
                          subGroupList = NULL;
                          DEXIT;
-                         return FALSE;
+                         return false;
                       }
                   }
                }
                DPRINTF(("-->Checking if group %s has %s as subgroup\n", subGroupName, groupName));
                /* check for deadlock */
-               if (sge_is_group_subgroup(hostGroupList,sge_get_group_elem(hostGroupList,subGroupName) ,groupName,NULL) == TRUE) {
+               if (sge_is_group_subgroup(hostGroupList,sge_get_group_elem(hostGroupList,subGroupName) ,groupName,NULL) == true) {
                   /* subtree deadlock */
                   
                   INFO((SGE_EVENT, MSG_ANSWER_SUBGROUPXHASLINKTOGROUPY_SS,  subGroupName, groupName));
@@ -288,7 +291,7 @@ int ignoreSupergroupLinks
                   lFreeList(subGroupList);
                   subGroupList = NULL;
                   DEXIT;
-                  return FALSE; 
+                  return false; 
                }                
             } else {
                /* sub group is not guilty */
@@ -297,29 +300,29 @@ int ignoreSupergroupLinks
                lFreeList(subGroupList);
                subGroupList = NULL;
                DEXIT;
-               return FALSE;
+               return false;
             }
          }
       }
       
       /* check super group names */
       if (superGroupName != NULL) {
-         if (sge_is_group(hostGroupList, superGroupName) == TRUE) {
+         if (sge_is_group(hostGroupList, superGroupName) == true) {
             /* super group is guilty */
             DPRINTF(("super group %s found.\n", superGroupName ));
 
             /* check if super group has subgroup entry for this group */
             tmp_ep = sge_get_group_elem(hostGroupList, superGroupName);
-            if (ignoreSupergroupLinks != TRUE) {
-               if (sge_is_group_subgroup(hostGroupList,tmp_ep, groupName,NULL) == FALSE) {
-                   if (sge_add_subgroup2group(alpp,hostGroupList,tmp_ep, groupName, TRUE) == FALSE) { 
+            if (ignoreSupergroupLinks != true) {
+               if (sge_is_group_subgroup(hostGroupList,tmp_ep, groupName,NULL) == false) {
+                   if (sge_add_subgroup2group(alpp,hostGroupList,tmp_ep, groupName, true) == false) { 
                       /* super group has no subgroup entry for this group */
                       INFO((SGE_EVENT, MSG_ANSWER_SUPERGROUPHASNOSUBGROUP_SS, superGroupName, groupName));
                       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                       lFreeList(subGroupList);
                       subGroupList = NULL;
                       DEXIT;
-                      return FALSE;
+                      return false;
                    }
                }
             }                
@@ -330,30 +333,30 @@ int ignoreSupergroupLinks
             lFreeList(subGroupList);
             subGroupList = NULL;            
             DEXIT;
-            return FALSE;
+            return false;
          }
       }
       lFreeList(subGroupList);
       subGroupList = NULL; 
       DEXIT;
-      return TRUE;
+      return true;
    } 
 
    lFreeList(subGroupList);
    subGroupList = NULL;
    DEXIT;
-   return FALSE;
+   return false;
 }
 
-/****** sgeobj/hostgroup/sge_add_subgroup2group() *********************************
+/****** sgeobj/hostgroup/sge_add_subgroup2group() *****************************
 *  NAME
 *     sge_add_subgroup2group() -- add sub group name to GRP_subgroup_list 
 *
 *  SYNOPSIS
-*     int sge_add_subgroup2group(lList* groupList,
-*                                lListElem* groupElem
-*                                char* subGroupName,
-*                                int makeChanges);
+*     bool sge_add_subgroup2group(lList* groupList,
+*                                 lListElem* groupElem
+*                                 char* subGroupName,
+*                                 bool makeChanges);
 *
 *  FUNCTION
 *     This function adds subGroupName to the GRP_subgroup_list in the
@@ -369,16 +372,17 @@ int ignoreSupergroupLinks
 *     lList* groupList     - global group list (can be NULL)
 *     lListElem* groupElem - pointer to lListElem* (can be NULL)
 *     char* subGroupName   - new subgroup entry
-*     int makeChanges      - TRUE means that groupList can be changed, 
-*                            FALSE make no changes in groupList 
+*     bool makeChanges     - true means that groupList can be changed, 
+*                            false make no changes in groupList 
 *                            (supergroup references)
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     int true on success, false on error
 *******************************************************************************/
-int sge_add_subgroup2group(lList **alpp, lList *groupList, 
-                           lListElem *groupElem, const char *subGroupName,
-                           int makeChanges) 
+bool 
+sge_add_subgroup2group(lList **alpp, lList *groupList, 
+                       lListElem *groupElem, const char *subGroupName,
+                       bool makeChanges) 
 {
   lList* subGroupList = NULL;
   lListElem* subGroupElem = NULL;
@@ -389,11 +393,11 @@ int sge_add_subgroup2group(lList **alpp, lList *groupList,
 
      /* do check only if groupList is not NULL */
      if (groupList != NULL) { 
-        if (sge_is_group(groupList, subGroupName) == FALSE) {
+        if (sge_is_group(groupList, subGroupName) == false) {
            INFO((SGE_EVENT, MSG_ANSWER_NOGUILTYSUBGROUPNAME_S, subGroupName));
            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
            DEXIT;
-           return FALSE;
+           return false;
         }
      }
 
@@ -402,20 +406,20 @@ int sge_add_subgroup2group(lList **alpp, lList *groupList,
         INFO((SGE_EVENT, MSG_ANSWER_NOGROUPNAMESPECIFIED));
         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
         DEXIT;
-        return FALSE;
+        return false;
      }
           
      if (strcasecmp(groupName, subGroupName) == 0) {
         INFO((SGE_EVENT, MSG_ANSWER_XCANTBESUBGROUPOFITSELF_S, groupName));
         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
         DEXIT;
-        return FALSE;
+        return false;
      }
 
      if (groupList != NULL) {
-        if (sge_verify_group_entry(alpp, groupList, groupElem, subGroupName , TRUE) == FALSE) {
+        if (sge_verify_group_entry(alpp, groupList, groupElem, subGroupName , true) == false) {
            DEXIT;
-           return FALSE;
+           return false;
         }
      }
     
@@ -427,12 +431,12 @@ int sge_add_subgroup2group(lList **alpp, lList *groupList,
            INFO((SGE_EVENT, MSG_ANSWER_CANTGETSUBGROUPELEMX_S, subGroupName));
            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
            DEXIT;
-           return FALSE;
+           return false;
         }
-        if (makeChanges == TRUE) {
+        if (makeChanges == true) {
           lSetString(subGroupElem, GRP_supergroup, groupName);
         } else {
-          DPRINTF(("no supergroup entry is made in subgroup list because makeChanges is FALSE\n"));
+          DPRINTF(("no supergroup entry is made in subgroup list because makeChanges is false\n"));
         }
      } else {
         DPRINTF(("no supergroup entry is made in subgroup list because groupList is NULL\n"));
@@ -453,21 +457,21 @@ int sge_add_subgroup2group(lList **alpp, lList *groupList,
     
  
      DEXIT;
-     return TRUE;
+     return true;
   }
   DPRINTF(("error in sge_add_subgroup2group()\n"));  
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-/****** sgeobj/hostgroup/sge_del_subgroup_from_group() ****************************
+/****** sgeobj/hostgroup/sge_del_subgroup_from_group() ************************
 *  NAME
 *     sge_del_subgroup_from_group() -- delete sub group name  
 *
 *  SYNOPSIS
-*     int sge_del_subgroup_from_group(lList* groupList,
-*                                     lListElem* groupElem
-*                                     char* subGroupName);
+*     bool sge_del_subgroup_from_group(lList* groupList,
+*                                      lListElem* groupElem
+*                                      char* subGroupName);
 *
 *  FUNCTION
 *     This function dels subGroupName from the GRP_subgroup_list in the
@@ -481,10 +485,11 @@ int sge_add_subgroup2group(lList **alpp, lList *groupList,
 *     char* subGroupName   - subgroup entry to remove
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     int true on success, false on error
 *******************************************************************************/
-int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
-                                const char *subGroupName) 
+bool 
+sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
+                             const char *subGroupName) 
 {
   lList*  subgroupList = NULL;
   lListElem* ep = NULL; 
@@ -496,7 +501,7 @@ int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
      if (subgroupList == NULL) {
         DPRINTF(("cant get subgroup list\n"));
         DEXIT;
-        return FALSE;
+        return false;
      } 
 
      for_each(ep,subgroupList) {
@@ -518,7 +523,7 @@ int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
               lDechainElem(subgroupList,ep);
               lFreeElem(ep);
               DEXIT;
-              return TRUE;
+              return true;
            }
         }
      }
@@ -526,7 +531,7 @@ int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
   }
   DPRINTF(("error in sge_del_subgroup_from_group()\n"));   
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 /****** sgeobj/hostgroup/sge_add_supergroup2group() ******************************
@@ -534,9 +539,9 @@ int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
 *     sge_add_supergroup2group() -- set super group name in GRP_supergroup 
 *
 *  SYNOPSIS
-*     int sge_add_supergroup2group(lList* groupList,
-*                                  lListElem* groupElem
-*                                  char* superGroupName);
+*     bool sge_add_supergroup2group(lList* groupList,
+*                                   lListElem* groupElem
+*                                   char* superGroupName);
 *
 *  FUNCTION
 *     This function set superGroupName in GRP_supergroup in the
@@ -553,10 +558,11 @@ int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
 *     char* superGroupName   - new supergroup entry
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     int true on success, false on error
 *******************************************************************************/
-int sge_add_supergroup2group(lList *groupList, lListElem *groupElem, 
-                             const char *superGroupName) 
+bool 
+sge_add_supergroup2group(lList *groupList, lListElem *groupElem, 
+                         const char *superGroupName) 
 {
   lList* subGroupList = NULL;
   lListElem* superGroupElem = NULL;
@@ -568,23 +574,23 @@ int sge_add_supergroup2group(lList *groupList, lListElem *groupElem,
 
      /* do check only if groupList is not NULL */
      if (groupList != NULL) { 
-        if (sge_is_group(groupList, superGroupName) == FALSE) {
+        if (sge_is_group(groupList, superGroupName) == false) {
            DPRINTF(("no guilty subgroup name\n"));
            DEXIT;
-           return FALSE;
+           return false;
         }
      }
      groupName = lGetString(groupElem, GRP_group_name);
      if (groupName == NULL) {
         DPRINTF(("no group name\n"));
         DEXIT;
-        return FALSE;
+        return false;
      }
           
      if (strcasecmp(groupName, superGroupName) == 0) {
         DPRINTF(("can't be supergroup of me\n"));
         DEXIT;
-        return FALSE;
+        return false;
      }
      /*  add subgroup entry in supergroup (if groupList is not NULL) */ 
      if (groupList != NULL) {
@@ -592,7 +598,7 @@ int sge_add_supergroup2group(lList *groupList, lListElem *groupElem,
         if (superGroupElem == NULL) {
            DPRINTF(("can't get supergroup elem\n"));
            DEXIT;
-           return FALSE;
+           return false;
         }
        
         subGroupList = lGetList(superGroupElem,GRP_subgroup_list);   
@@ -614,30 +620,29 @@ int sge_add_supergroup2group(lList *groupList, lListElem *groupElem,
      lSetString(groupElem, GRP_supergroup, superGroupName);
      
      DEXIT;
-     return TRUE;
+     return true;
   }
   DPRINTF(("error in sge_add_supergroup2group()\n"));  
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-/****** sgeobj/hostgroup/sge_is_group_supergroup() *******************************
-*
+/****** sgeobj/hostgroup/sge_is_group_supergroup() ****************************
 *  NAME
 *     sge_is_group_supergroup() -- check if group is supergroup  
 *
 *  SYNOPSIS
-*     int sge_is_group_supergroup(lListElem* groupElem, char* groupName);
+*     bool sge_is_group_supergroup(lListElem* groupElem, char* groupName);
 *
 *  FUNCTION
 *     If the super group name of the given groupElem is groupName the 
-*     function returns TRUE.
+*     function returns true.
 *
 *  INPUTS
 *     lListElem* groupElem - pointer to lListElem* of type GRP_Type
 *     char* groupName      - name of group to compare
 *******************************************************************************/
-int sge_is_group_supergroup(lListElem *groupElem, const char *groupName) 
+bool sge_is_group_supergroup(lListElem *groupElem, const char *groupName) 
 {
   const char*  superGroupName = NULL;
   DENTER(TOP_LAYER,"sge_is_group_in_supergroup");
@@ -647,24 +652,24 @@ int sge_is_group_supergroup(lListElem *groupElem, const char *groupName)
      if (superGroupName != NULL) {
         if(strcmp(groupName, superGroupName) == 0 ) {
            DEXIT;
-           return TRUE;
+           return true;
         }
      }
   }
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-/****** sgeobj/hostgroup/sge_is_group_subgroup() *********************************
+/****** sgeobj/hostgroup/sge_is_group_subgroup() ******************************
 *
 *  NAME
 *     sge_is_group_subgroup() -- check if group is subgroup  
 *
 *  SYNOPSIS
-*     int sge_is_group_subgroup(lList *groupList, 
-*                               lListElem *groupElem, 
-*                               char *groupName, 
-*                               lList *rec_list);
+*     bool sge_is_group_subgroup(lList *groupList, 
+*                                lListElem *groupElem, 
+*                                char *groupName, 
+*                                lList *rec_list);
 *
 *  FUNCTION
 *     This function checks if groupName is sub group from groupElem. 
@@ -687,17 +692,18 @@ int sge_is_group_supergroup(lListElem *groupElem, const char *groupName)
 *                             in recursive subcalls.)
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     bool - true on success, false on error
 *******************************************************************************/
-int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
-                          const char *groupName, lList *rec_list) 
+bool 
+sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
+                      const char *groupName, lList *rec_list) 
 {
   lListElem* ep = NULL;
   lList* subGroupList = NULL;
   const char* tmpSubGroupName = NULL;
-  int answer = FALSE;
+  int answer = false;
   lList* rec_groupList = NULL;
-  int listCreated = FALSE;
+  bool listCreated = false;
   DENTER(TOP_LAYER,"sge_is_group_in_subgroup");
 
 
@@ -706,7 +712,7 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
   if (rec_list == NULL) {
     rec_groupList = lCreateList("recursive list", ST_Type );
     DPRINTF(("creating allready searched list\n"));
-    listCreated = TRUE;  /* just remember to delete the list */
+    listCreated = true;  /* just remember to delete the list */
   } else {
     rec_groupList = rec_list; 
   }
@@ -718,10 +724,10 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
      
 
      /* this is for recursive termination:
-        if groupname was already searched return FALSE */
+        if groupname was already searched return false */
      if (lGetElemStr( rec_groupList, STR, lGetString(groupElem, GRP_group_name )) != NULL) {
         /* this group is allready searched */
-        if(listCreated == TRUE) { 
+        if(listCreated == true) { 
            DPRINTF(("delete allready searched list\n"));
            lFreeList(rec_groupList);
            rec_groupList = NULL;
@@ -729,13 +735,13 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
            rec_list = NULL;
         }
         DEXIT;
-        return FALSE;
+        return false;
      }
 
 
      /* check if groupname is in subgroup list */
      if (lGetElemStr( subGroupList, STR, groupName) != NULL) {
-        if(listCreated == TRUE) { 
+        if(listCreated == true) { 
            DPRINTF(("delete allready searched list\n"));
            lFreeList(rec_groupList);
            rec_groupList = NULL;
@@ -743,7 +749,7 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
            rec_list = NULL;
         }
         DEXIT;
-        return TRUE;
+        return true;
      } 
     
      /* mark group as allready searched for recursive call*/
@@ -759,10 +765,10 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
                                              sge_get_group_elem(hostGroupList,tmpSubGroupName), 
                                              groupName,
                                              rec_groupList);  /* list with groups allready searched for */
-              if (answer == TRUE) {
+              if (answer == true) {
                   DPRINTF(("recursive search[%s]: found '%s' in sub group '%s'\n",lGetString(groupElem,GRP_group_name),
                            groupName,tmpSubGroupName));
-                  if(listCreated == TRUE) { 
+                  if(listCreated == true) { 
                      DPRINTF(("delete allready searched list\n"));
                      lFreeList(rec_groupList);
                      rec_groupList = NULL;
@@ -770,14 +776,14 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
                      rec_list = NULL;
                   }
                   DEXIT;
-                  return TRUE;
+                  return true;
               } 
            }
         }
      }
   }
   
-  if(listCreated == TRUE) { 
+  if(listCreated == true) { 
      DPRINTF(("delete allready searched list\n"));
      lFreeList(rec_groupList);
      rec_groupList = NULL;
@@ -785,15 +791,15 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
      rec_list = NULL;
   }
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-/****** sgeobj/hostgroup/sge_add_member2group() ***********************************
+/****** sgeobj/hostgroup/sge_add_member2group() ********************************
 *  NAME
 *     sge_add_member2group() -- add new member entry to group element 
 *
 *  SYNOPSIS
-*     int sge_add_member2group(lListElem* groupElem, char* memberName);
+*     bool sge_add_member2group(lListElem* groupElem, char* memberName);
 *       
 *
 *  FUNCTION
@@ -805,9 +811,9 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
 *     char* memberName     - new member name
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     bool -  true on success, false on error
 *******************************************************************************/
-int sge_add_member2group(lListElem *groupElem, const char *memberName) 
+bool sge_add_member2group(lListElem *groupElem, const char *memberName) 
 {
   lList* memberList = NULL;
   DENTER(TOP_LAYER,"sge_add_member2group");
@@ -826,11 +832,11 @@ int sge_add_member2group(lListElem *groupElem, const char *memberName)
         DPRINTF(("member entry allready exits\n")); 
      }
      DEXIT;
-     return TRUE;
+     return true;
   }
   DPRINTF(("error in sge_add_member2group()\n"));  
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 /****** sgeobj/hostgroup/sge_is_group() ******************************************
@@ -838,7 +844,7 @@ int sge_add_member2group(lListElem *groupElem, const char *memberName)
 *     sge_is_group() -- check any element 
 *
 *  SYNOPSIS
-*     int sge_is_group(lList* groupList, char* groupName);
+*     bool sge_is_group(lList* groupList, char* groupName);
 *
 *  FUNCTION
 *     check if any element in grouplist has the given group name
@@ -848,9 +854,9 @@ int sge_add_member2group(lListElem *groupElem, const char *memberName)
 *     char*  groupName - group name to look for
 *      
 *  RESULT
-*     TRUE on success, FALSE on error (group not existing)   
+*     true on success, false on error (group not existing)   
 *******************************************************************************/
-int sge_is_group(lList *groupList, const char *groupName) 
+bool sge_is_group(lList *groupList, const char *groupName) 
 {
   lListElem* ep = NULL;
   const char* tmpName = NULL;
@@ -870,7 +876,7 @@ int sge_is_group(lList *groupList, const char *groupName)
 
   if (matches == 1) {
      DEXIT;
-     return TRUE;
+     return true;
   } 
 
   if (matches > 1) {
@@ -878,10 +884,10 @@ int sge_is_group(lList *groupList, const char *groupName)
   }
 
   DEXIT;
-  return FALSE;
+  return false;
 }
 
-/****** sgeobj/hostgroup/sge_get_group_elem() *************************************
+/****** sgeobj/hostgroup/sge_get_group_elem() *********************************
 *  NAME
 *     sge_get_group_elem() -- get lListElem pointer for given groupname 
 *
@@ -933,19 +939,15 @@ lListElem* sge_get_group_elem(lList *groupList, const char *groupName)
   return NULL;
 }
 
-/****** sgeobj/hostgroup/sge_is_member_in_group() ********************************
+/****** sgeobj/hostgroup/sge_is_member_in_group() ******************************
 *  NAME
 *     sge_is_member_in_group() -- check if member is in list of group 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
-*     int sge_is_member_in_group(lList* groupList,
-*                                char*  groupName, 
-*                                char*  memberName, 
-*                                lList* rec_list);
+*     bool sge_is_member_in_group(lList* groupList,
+*                                 char*  groupName, 
+*                                 char*  memberName, 
+*                                 lList* rec_list);
 *
 *  FUNCTION
 *     Look if member is in group. This function will also look 
@@ -966,8 +968,9 @@ lListElem* sge_get_group_elem(lList *groupList, const char *groupName)
 *                             to rec_list. So no deadlock will happen
 *                             in recursive subcalls.)
 *******************************************************************************/
-int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
-                           const char *memberName, lList *rec_list) 
+bool 
+sge_is_member_in_group(lList *hostGroupList, const char *groupName,
+                       const char *memberName, lList *rec_list) 
 {
    lListElem* ep = NULL;
    lListElem* group_ep = NULL;
@@ -977,8 +980,8 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
    lList*     rec_groupList = NULL;
    const char* tmpName = NULL;
    const char* tmpSubGroupName = NULL;
-   int        answer = FALSE;
-   int        listCreated = FALSE;
+   bool       answer = false;
+   bool       listCreated = false;
 
    DENTER(TOP_LAYER,"sge_is_member_in_group");
 
@@ -986,7 +989,7 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
      for all groupnames in the list there was already a search */
    if (rec_list == NULL) {
      rec_groupList = lCreateList("recursive list", ST_Type );
-     listCreated = TRUE;  /* just remember to delete the list */
+     listCreated = true;  /* just remember to delete the list */
      DPRINTF(("creating allready searched list\n"));
    } else {
      rec_groupList = rec_list; 
@@ -996,10 +999,10 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
    if ((hostGroupList != NULL) && ( groupName != NULL) && (memberName != NULL) ) {
 
      /* this is for recursive termination:
-        if groupname was already searched return FALSE */
+        if groupname was already searched return false */
      if (lGetElemStr( rec_groupList, STR, groupName) != NULL) {
         /* this group is allready searched */
-        if(listCreated == TRUE) { 
+        if(listCreated == true) { 
            DPRINTF(("delete allrady searched list\n"));
            lFreeList(rec_groupList);
            rec_groupList = NULL;
@@ -1007,13 +1010,13 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
            rec_list = NULL;
         }
         DEXIT;
-        return FALSE;
+        return false;
      }
    
      /* get element pointer to given groupName */
      group_ep = sge_get_group_elem(hostGroupList, groupName);
      if (group_ep == NULL) {
-        if(listCreated == TRUE) { 
+        if(listCreated == true) { 
            DPRINTF(("delete allrady searched list\n"));
            lFreeList(rec_groupList);
            rec_groupList = NULL;
@@ -1021,7 +1024,7 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
            rec_list = NULL;
         }
         DEXIT;
-        return FALSE;
+        return false;
      }      
      
      /* search for member in memberlist */
@@ -1031,7 +1034,7 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
            tmpName = lGetString(ep, STR);
            if (tmpName != NULL) { 
               if (strcasecmp(tmpName, memberName) == 0) {
-                 if(listCreated == TRUE) { 
+                 if(listCreated == true) { 
                     DPRINTF(("delete allrady searched list\n"));
                     lFreeList(rec_groupList);
                     rec_groupList = NULL;
@@ -1039,7 +1042,7 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
                     rec_list = NULL;
                  }
                  DEXIT;
-                 return TRUE;
+                 return true;
               } 
            }    
         }
@@ -1060,10 +1063,10 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
                                              tmpSubGroupName, 
                                              memberName, 
                                              rec_groupList );/* list with groups allready searched for */
-             if (answer == TRUE) {
+             if (answer == true) {
                 DPRINTF(("recursive search[%s]: found '%s' in sub group '%s'\n", groupName,
                          memberName,tmpSubGroupName));
-                if(listCreated == TRUE) { 
+                if(listCreated == true) { 
                    DPRINTF(("delete allrady searched list\n"));
                    lFreeList(rec_groupList);
                    rec_groupList = NULL;
@@ -1071,13 +1074,13 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
                    rec_list = NULL;
                 }
                 DEXIT;
-                return TRUE;
+                return true;
              } 
            }
         }
      }
    }
-   if(listCreated == TRUE) { 
+   if(listCreated == true) { 
       DPRINTF(("delete allrady searched list\n"));
       lFreeList(rec_groupList);
       rec_groupList = NULL;
@@ -1085,5 +1088,5 @@ int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
       rec_list = NULL;
    }
    DEXIT;
-   return FALSE;
+   return false;
 }

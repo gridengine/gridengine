@@ -46,7 +46,7 @@
 *     queue_update_master_list() -- update the master list of queues
 *
 *  SYNOPSIS
-*     int 
+*     bool 
 *     queue_update_master_list(sge_event_type type, sge_event_action action,
 *                              lListElem *event, void *clientdata)
 *
@@ -62,7 +62,7 @@
 *     void *clientdata        - client data
 *
 *  RESULT
-*     int - TRUE, if update is successfull, else FALSE
+*     int - true, if update is successfull, else false
 *
 *  NOTES
 *     The function should only be called from the event mirror interface.
@@ -72,7 +72,7 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_str_key()
 *******************************************************************************/
-int 
+bool 
 queue_update_master_list(sge_event_type type, sge_event_action action,
                          lListElem *event, void *clientdata)
 {
@@ -105,7 +105,7 @@ queue_update_master_list(sge_event_type type, sge_event_action action,
             ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS, key, 
                    SGE_FUNC));
             DEXIT;
-            return FALSE;
+            return false;
          }
 
          state = lGetUlong(queue, QU_state);
@@ -118,17 +118,17 @@ queue_update_master_list(sge_event_type type, sge_event_action action,
          lSetUlong(queue, QU_state, state);
 
          DEXIT;
-         return TRUE;
+         return true;
       }
    }
 
    if (sge_mirror_update_master_list(list, list_descr, queue, key, action, 
                                      event) != SGE_EM_OK) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 

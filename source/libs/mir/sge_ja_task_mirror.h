@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int ja_task_update_master_list(sge_event_type type, sge_event_action action,
+bool ja_task_update_master_list(sge_event_type type, sge_event_action action,
                                lListElem *event, void *clientdata);
 
-int ja_task_update_master_list_usage(lListElem *event);
+bool ja_task_update_master_list_usage(lListElem *event);
 
 #endif /* __SGE_JA_TASK_MIRROR_H */

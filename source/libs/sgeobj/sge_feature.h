@@ -103,7 +103,7 @@ int feature_initialize_from_string(const char *mode);
  
 void feature_activate(featureset_id_t id);
 
-int feature_is_active(featureset_id_t id);
+bool feature_is_active(featureset_id_t id);
  
 const char *feature_get_featureset_name(featureset_id_t id);
  
@@ -111,7 +111,7 @@ featureset_id_t feature_get_featureset_id(const char *name);
  
 featureset_id_t feature_get_active_featureset_id(void);
  
-int feature_is_enabled(feature_id_t id);
+bool feature_is_enabled(feature_id_t id);
  
 const char *feature_get_name(feature_id_t id);
  

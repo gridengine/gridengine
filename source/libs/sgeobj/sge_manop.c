@@ -43,7 +43,7 @@ lList *Master_Operator_List = NULL;
 *     manop_is_manager() -- is a certain user manager?
 *
 *  SYNOPSIS
-*     int manop_is_manager(const char *user_name) 
+*     bool manop_is_manager(const char *user_name) 
 *
 *  FUNCTION
 *     Checks if the user given by user name is a manager.
@@ -52,7 +52,7 @@ lList *Master_Operator_List = NULL;
 *     const char *user_name - user name
 *
 *  RESULT
-*     int - TRUE, if the user is manager, else FALSE
+*     bool - true or false
 *
 *  NOTES
 *     Operator/Manager should be a property of a user.
@@ -61,22 +61,18 @@ lList *Master_Operator_List = NULL;
 *  SEE ALSO
 *     gdi/manop/manop_is_operator()
 ******************************************************************************/
-int manop_is_manager(const char *user_name) 
+bool manop_is_manager(const char *user_name) 
 {
+   bool ret = false;
+
    DENTER(TOP_LAYER, "manop_is_manager");
-
    if (user_name == NULL) {
-      DEXIT;
-      return FALSE;
+      ret = false;
+   } else if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
+      ret = true;
    }
-
-   if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
-      DEXIT;
-      return TRUE;
-   }
-
    DEXIT;
-   return FALSE;
+   return ret;
 
 }
 
@@ -85,7 +81,7 @@ int manop_is_manager(const char *user_name)
 *     manop_is_operator() -- is a certain user operator?
 *
 *  SYNOPSIS
-*     int manop_is_operator(const char *user_name) 
+*     bool manop_is_operator(const char *user_name) 
 *
 *  FUNCTION
 *     Checks if the user given by user name is a operator.
@@ -95,7 +91,7 @@ int manop_is_manager(const char *user_name)
 *     const char *user_name - user name
 *
 *  RESULT
-*     int - TRUE, if the user is operator, else FALSE
+*     bool - true or false
 *
 *  NOTES
 *     Operator/Manager should be a property of a user.
@@ -104,26 +100,19 @@ int manop_is_manager(const char *user_name)
 *  SEE ALSO
 *     gdi/manop/manop_is_manager()
 ******************************************************************************/
-int manop_is_operator(const char *user_name) {
+bool manop_is_operator(const char *user_name) 
+{
+   int ret = false;
 
    DENTER(TOP_LAYER, "manop_is_operator");
-
    if (user_name == NULL) {
-      DEXIT;
-      return FALSE;
+      ret = false;
+   } else if(lGetElemStr(Master_Operator_List, MO_name, user_name) != NULL) {
+      ret = true;
+   } else if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
+      ret = true;
    }
-
-   if (lGetElemStr(Master_Operator_List, MO_name, user_name) != NULL) {
-      DEXIT;
-      return TRUE;
-   }
-
-   if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
-      DEXIT;
-      return TRUE;
-   }
-
    DEXIT;
-   return FALSE;
+   return ret;
 }
 

@@ -54,7 +54,7 @@
 #include "sge_ssi.h"
 
 
-static int parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
+static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
 {
    char *copy;
 
@@ -67,13 +67,13 @@ static int parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_t
 
    if(*job_id > 0 && *ja_task_id > 0) {
       DEXIT;
-      return TRUE;
+      return true;
    }
 
    WARNING((SGE_EVENT, MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S, id));
 
    DEXIT;
-   return FALSE;
+   return false;
 }
 
 /****** schedlib/ssi/sge_ssi_job_cancel() *******************************************
@@ -81,20 +81,20 @@ static int parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_t
 *     sge_ssi_job_cancel() -- delete or restart a job
 *
 *  SYNOPSIS
-*     int sge_ssi_job_cancel(const char *job_identifier, int reschedule) 
+*     bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule) 
 *
 *  FUNCTION
 *     Delete the given job.
-*     If reschedule is set to TRUE, reschedule the job.
+*     If reschedule is set to true, reschedule the job.
 *
 *  INPUTS
 *     const char *job_identifier - job identifier in the form 
 *                                  <jobid>.<ja_task_id>, e.g. 123.1
-*     int reschedule             - if TRUE, reschedule job
+*     bool reschedule            - if true, reschedule job
 *
 *  RESULT
-*     int - TRUE, if the job could be successfully deleted (rescheduled),
-*           else FALSE.
+*     bool - true, if the job could be successfully deleted (rescheduled),
+*           else false.
 *
 *  NOTES
 *     The reschedule parameter is igored in the current implementation.
@@ -102,7 +102,7 @@ static int parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_t
 *  SEE ALSO
 *     schedlib/ssi/sge_ssi/job_start()
 *******************************************************************************/
-int sge_ssi_job_cancel(const char *job_identifier, int reschedule) 
+bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule) 
 {
    u_long32 job_id, ja_task_id;
    lList *ref_list = NULL, *alp;
@@ -114,12 +114,12 @@ int sge_ssi_job_cancel(const char *job_identifier, int reschedule)
    /* reschedule not yet implemented */
    if(reschedule) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    if(!parse_job_identifier(job_identifier, &job_id, &ja_task_id)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* create id structure */
@@ -137,7 +137,7 @@ int sge_ssi_job_cancel(const char *job_identifier, int reschedule)
    answer_list_on_error_print_or_exit(&alp, stderr);
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 
@@ -146,7 +146,7 @@ int sge_ssi_job_cancel(const char *job_identifier, int reschedule)
 *     sge_ssi_job_start() -- start a job
 *
 *  SYNOPSIS
-*     int sge_ssi_job_start(const char *job_identifier, const char *pe, 
+*     bool sge_ssi_job_start(const char *job_identifier, const char *pe, 
 *                           task_map tasks[]) 
 *
 *  FUNCTION
@@ -166,13 +166,13 @@ int sge_ssi_job_cancel(const char *job_identifier, int reschedule)
 *     task_map tasks[]           - mapping host->number of tasks
 *
 *  RESULT
-*     int - TRUE on success, else FALSE
+*     bool - true on success, else false
 *
 *  SEE ALSO
 *     libsched/ssi/--Simple-Scheduler-Interface
 *     libsched/ssi/-Simple-Scheduler-Interface-Typedefs
 *******************************************************************************/
-int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks[])
+bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks[])
 {
    u_long32 job_id, ja_task_id;
    lListElem *job, *ja_task;
@@ -186,7 +186,7 @@ int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks
 
    if(!parse_job_identifier(job_identifier, &job_id, &ja_task_id)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* create job element */
@@ -209,7 +209,7 @@ int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks
       if(tasks[i].host_name == NULL) {
          ERROR((SGE_EVENT, MSG_SSI_MISSINGHOSTNAMEINTASKLIST));
          DEXIT;
-         return FALSE;
+         return false;
       }
 
       DPRINTF(("job requests %d slots on host %s\n", tasks[i].procs, tasks[i].host_name));
@@ -218,7 +218,7 @@ int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks
       if(queue == NULL) {
          ERROR((SGE_EVENT, MSG_SSI_COULDNOTFINDQUEUEFORHOST_S, tasks[i].host_name));
          DEXIT;
-         return FALSE;
+         return false;
       }
 
       granted_queue = lAddElemStr(&granted, JG_qname, lGetString(queue, QU_qname), JG_Type);
@@ -234,6 +234,6 @@ int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks
    order_list = lFreeList(order_list);
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 

@@ -83,12 +83,12 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
 *     host_is_referenced() -- Is a given host referenced in other objects? 
 *
 *  SYNOPSIS
-*     int host_is_referenced(const lListElem *host, 
-*                            lList **answer_list, 
-*                            const lList *queue_list) 
+*     bool host_is_referenced(const lListElem *host, 
+*                             lList **answer_list, 
+*                             const lList *queue_list) 
 *
 *  FUNCTION
-*     This function returns true (1) if the given "host" is referenced
+*     This function returns true if the given "host" is referenced
 *     in a queue contained in "queue_list". If this is the case than
 *     a corresponding message will be added to the "answer_list". 
 *
@@ -100,11 +100,11 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
 *  RESULT
 *     int - true (1) or false (0) 
 ******************************************************************************/
-int host_is_referenced(const lListElem *host, 
-                       lList **answer_list,
-                       const lList *queue_list)
+bool host_is_referenced(const lListElem *host, 
+                        lList **answer_list,
+                        const lList *queue_list)
 {
-   int ret = 0;
+   bool ret = false;
 
    if (host != NULL) {
       lListElem *queue = NULL;
@@ -129,7 +129,7 @@ int host_is_referenced(const lListElem *host,
          sprintf(SGE_EVENT, MSG_HOSTREFINQUEUE_SS, hostname, queuename);
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_INFO);
-         ret = 1;
+         ret = true;
       }
    }
    return ret;

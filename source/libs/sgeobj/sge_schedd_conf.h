@@ -36,9 +36,9 @@
 
 extern lList *Master_Sched_Config_List;
 
-int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
-                                      lList **answer_list,
-                                      lList *cmplx_list);
+bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
+                                       lList **answer_list,
+                                       lList *cmplx_list);
 
 lListElem *find_attribute_in_complex_list(const char *attrname,
                                           const lListElem *first);

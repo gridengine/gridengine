@@ -179,18 +179,22 @@ lListElem *spool_type_search_default_rule(const lListElem *spool_type);
 lListElem *spool_type_add_rule(lListElem *spool_type, const lListElem *rule, lBool is_default);
 
 /* startup and shutdown */
-int spool_startup_context(lListElem *context);
-int spool_shutdown_context(lListElem *context);
+bool spool_startup_context(lListElem *context);
+bool spool_shutdown_context(lListElem *context);
 
 /* reading */
 int spool_read_list(const lListElem *context, lList **list, const sge_event_type event_type);
 lListElem *spool_read_object(const lListElem *context, const sge_event_type event_type, const char *key);
 
 /* writing */
-int spool_write_object(const lListElem *context, const lListElem *object, const char *key, const sge_event_type event_type);
+bool 
+spool_write_object(const lListElem *context, const lListElem *object, 
+                   const char *key, const sge_event_type event_type);
 
 /* deleting */
-int spool_delete_object(const lListElem *context, const sge_event_type event_type, const char *key);
+bool 
+spool_delete_object(const lListElem *context, const sge_event_type event_type, 
+                    const char *key);
 
 /* compare spooled attributes of 2 objects */
 int spool_compare_objects(const lListElem *context, const sge_event_type event_type, const lListElem *ep1, const lListElem *ep2);

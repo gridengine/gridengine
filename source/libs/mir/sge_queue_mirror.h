@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int queue_update_master_list(sge_event_type type, sge_event_action action,
-                             lListElem *event, void *clientdata);
+bool queue_update_master_list(sge_event_type type, sge_event_action action,
+                              lListElem *event, void *clientdata);
 
 #endif /* __SGE_QUEUE_MIRROR_H */

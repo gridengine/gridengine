@@ -67,9 +67,9 @@
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
-static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
-static int sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
-static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
+static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
+static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
+static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
 
 /****** gdi/security/sge_security_initialize() ********************************
 *  NAME
@@ -939,7 +939,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
 /*
 ** dummy encrypt/decrypt functions
 */
-static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
+static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {
    int len;
 
@@ -950,16 +950,16 @@ static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
    len = strlen(intext);
    if (!change_encoding(outbuf, &outsize, (unsigned char*) intext, &len, ENCODE_TO_STRING)) {
       DEXIT;
-      return FALSE;
+      return false;
    }   
 
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
-static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
+static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 {
    unsigned char decbuf[2*SGE_SEC_BUFSIZE];
    int declen = sizeof(decbuf);
@@ -967,7 +967,7 @@ static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
    DENTER(TOP_LAYER, "sge_decrypt");
 
    if (!change_encoding(intext, &inlen, decbuf, &declen, DECODE_FROM_STRING)) {
-      return FALSE;
+      return false;
    }   
    decbuf[declen] = '\0';
 
@@ -976,12 +976,12 @@ static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 #else
 
-static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
+static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {
 
    int enclen, tmplen;
@@ -998,33 +998,33 @@ static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
    if (!EVP_EncryptInit(&ctx, /*EVP_enc_null() EVP_bf_cbc()*/EVP_cast5_ofb(), key, iv)) {
       printf("EVP_EncryptInit failure !!!!!!!\n");
       DEXIT;
-      return FALSE;
+      return false;
    }   
 
    if (!EVP_EncryptUpdate(&ctx, encbuf, &enclen, (unsigned char*) intext, inlen)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    if (!EVP_EncryptFinal(&ctx, encbuf + enclen, &tmplen)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
    enclen += tmplen;
    EVP_CIPHER_CTX_cleanup(&ctx);
 
    if (!change_encoding(outbuf, &outsize, encbuf, &enclen, ENCODE_TO_STRING)) {
       DEXIT;
-      return FALSE;
+      return false;
    }   
 
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
-static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
+static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 {
 
    int outlen, tmplen;
@@ -1039,22 +1039,22 @@ static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 
    if (!change_encoding(intext, &inlen, decbuf, &declen, DECODE_FROM_STRING)) {
       DEXIT;
-      return FALSE;
+      return false;
    }   
 
    if (!EVP_DecryptInit(&ctx, /* EVP_enc_null() EVP_bf_cbc()*/EVP_cast5_ofb(), key, iv)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
    
    if (!EVP_DecryptUpdate(&ctx, (unsigned char*)outbuf, &outlen, decbuf, declen)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    if (!EVP_DecryptFinal(&ctx, (unsigned char*)outbuf + outlen, &tmplen)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
    EVP_CIPHER_CTX_cleanup(&ctx);
 
@@ -1063,7 +1063,7 @@ static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 /*    DPRINTF(("======== outbuf:\n"SFN"\n=========\n", outbuf)); */
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 #endif
@@ -1073,7 +1073,7 @@ static int sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 #define HIQUAD(i) (((i)&0xF0)>>4)
 #define SETBYTE(hi, lo)  ((((hi)<<4)&0xF0) | (0x0F & (lo)))
 
-static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode)
+static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode)
 {
    static char alphabet[16] = {"*b~de,gh&j§lrn=p"};
 
@@ -1087,7 +1087,7 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
       int enclen = *usize;
       if ((*csize) < (2*enclen+1)) {
          DEXIT;
-         return FALSE;
+         return false;
       }
 
       for (i=0,j=0; i<enclen; i++) {
@@ -1105,7 +1105,7 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
       int declen;
       if ((*usize) < (*csize)) {
          DEXIT;
-         return FALSE;
+         return false;
       }
       for (p=cbuf, declen=0; *p; p++, declen++) {
          int hi, lo, j;
@@ -1126,7 +1126,7 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
    }
       
    DEXIT;   
-   return TRUE;
+   return true;
 }   
 
 int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user) 

@@ -44,12 +44,12 @@
 
 lList *Master_Sched_Config_List = NULL;
 
-int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
-                                      lList **answer_list,
-                                      lList *cmplx_list)
+bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
+                                       lList **answer_list,
+                                       lList *cmplx_list)
 {
    const char *load_formula = NULL;
-   int ret = 1;
+   bool ret = true;
    DENTER(TOP_LAYER, "schedd_conf_is_valid_load_formula");
 
    /* Modify input */
@@ -65,16 +65,16 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
    load_formula = lGetString(schedd_conf, SC_load_formula);
 
    /* Check for keyword 'none' */
-   if (ret == 1) {
+   if (ret == true) {
       if (!strcasecmp(load_formula, "none")) {
          answer_list_add(answer_list, MSG_NONE_NOT_ALLOWED, STATUS_ESYNTAX, 
                          ANSWER_QUALITY_ERROR);
-         ret = 0;
+         ret = false;
       }
    }
 
    /* Check complex attributes and type */
-   if (ret == 1) {
+   if (ret == true) {
       const char *delimitor = "+-*";
       const char *attr, *next_attr;
 
@@ -92,13 +92,13 @@ int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
                                ANSWER_QUALITY_ERROR);
-               ret = 0;
+               ret = false;
             }
          } else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
                             ANSWER_QUALITY_ERROR);
-            ret = 0;
+            ret = false;
          }
       }
    }

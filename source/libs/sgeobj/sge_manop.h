@@ -37,8 +37,8 @@
 extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;
 
-int manop_is_manager(const char *user_name);
-int manop_is_operator(const char *cp);
+bool manop_is_manager(const char *user_name);
+bool manop_is_operator(const char *cp);
 
 #endif /* _SGE_MANOP_H */
 

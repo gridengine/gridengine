@@ -269,9 +269,9 @@ char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm,
  **** If the config-string is not found, an error message
  **** is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_string(
+bool set_conf_string(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -291,7 +291,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
 
    pos = lGetPosViaElem(ep, name_nm);
@@ -313,7 +313,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -327,14 +327,14 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** as name.
  **** If the value is found, it is stored in the lListElem
  **** 'ep' in the field specified by 'name_nm'.
- **** the strings true and false are stored as the constants TRUE/FALSE
+ **** the strings true and false are stored as the constants true/false
  **** in a u_long32 field
  **** If the config-string is not found, an error message
  **** is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_bool(
+bool set_conf_bool(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -352,18 +352,18 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    if (!strcasecmp(str, "true"))
-      lSetBool(ep, name_nm, TRUE);
+      lSetBool(ep, name_nm, true);
    else
-      lSetBool(ep, name_nm, FALSE);
+      lSetBool(ep, name_nm, false);
       
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -381,9 +381,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** If the config-value is not found, or it is not an
  **** integer, an error message is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_ulong(
+bool set_conf_ulong(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -402,21 +402,21 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    if (sscanf(str, u32, &uval)!=1) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS ,
                key, str)); 
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
       DEXIT;
-      return FALSE;
+      return false;
    }
    lSetUlong(ep, name_nm, uval);
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -435,9 +435,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** If the config-value is not found, or it is not a
  **** double, an error message is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_double(
+bool set_conf_double(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -457,7 +457,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    /*
    ** only treated if operation_nm != 0
@@ -488,7 +488,7 @@ _Insight_set_option("suppress", "PARM_NULL");
                key, str));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    lSetDouble(ep, name_nm, dval);
@@ -496,7 +496,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -515,9 +515,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** The sub-list is created of type 'descr' and 
  **** interpreted by 'interpretation_rule'.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_deflist(
+bool set_conf_deflist(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -540,7 +540,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
 
    {
@@ -549,7 +549,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       if ((ret = cull_parse_definition_list(str, &tmplp, key, descr, 
             interpretation_rule))) {
          DEXIT;
-         return FALSE;
+         return false;
       }
    }
 
@@ -558,7 +558,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -575,9 +575,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** If the config-string is not found, or it is not a
  **** valid time-string, an error message is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_timestr(
+bool set_conf_timestr(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -595,18 +595,18 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if (key == NULL) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    if(!parse_ulong_val(NULL, NULL, TYPE_TIM, str, NULL, 0)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTTIME_SS , key, str));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    lSetString(ep, name_nm, str);
@@ -614,7 +614,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -631,9 +631,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** If the config-string is not found, or it is not a
  **** valid mem-string, an error message is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_memstr(
+bool set_conf_memstr(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -651,13 +651,13 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    if(!parse_ulong_val(NULL, NULL, TYPE_MEM, str, NULL, 0)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOMEMORY_SS , key, str));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    lSetString(ep, name_nm, str);
@@ -665,7 +665,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -682,9 +682,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** If the config-string is not found, or it is not a
  **** valid enum-string, an error message is created.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
+bool set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
                   lListElem *ep, int name_nm, const char **enum_strings) 
 {
 #ifdef __INSIGHT__
@@ -698,11 +698,11 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    if(!sge_parse_bitfield_str(str, enum_strings, &uval, key, alpp)) {
       DEXIT;
-      return FALSE;
+      return false;
    }
    
    if(!uval) {
@@ -718,7 +718,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -737,9 +737,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** The sub-list is created of type 'descr' and 
  **** the strings are stored in the field 'sub_name_nm'.
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, 
+bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, 
                   lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm) 
 {
 #ifdef __INSIGHT__
@@ -754,7 +754,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    lString2List(str, &tmplp, descr, sub_name_nm, delims); 
 
@@ -764,12 +764,12 @@ _Insight_set_option("suppress", "PARM_NULL");
    if (tmplp && strcasecmp("NONE", lGetString(lFirst(tmplp), sub_name_nm))) {
       lSetList(ep, name_nm, tmplp);
       DEXIT;
-      return TRUE;
+      return true;
    }
    lFreeList(tmplp);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
@@ -793,9 +793,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** If the subordinate list is 'NONE', no list will
  **** be created (null-pointer!).
  ****
- **** The function returns FALSE on error, otherwise TRUE.
+ **** The function returns false on error, otherwise true.
  ****/
-int set_conf_subordlist(
+bool set_conf_subordlist(
 lList **alpp,
 lList **clpp,
 int fields[],
@@ -820,7 +820,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
-      return fields?TRUE:FALSE;
+      return fields?true:false;
    }
    lString2List(str, &tmplp, descr, subname_nm, ", \t");
    for_each (tmpep, tmplp) {
@@ -833,7 +833,7 @@ _Insight_set_option("suppress", "PARM_NULL");
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGREADFILEERRORNEAR_SS , key, endptr));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
-         return FALSE;
+         return false;
       }
    }
    
@@ -845,7 +845,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    add_nm_to_set(fields, name_nm);
 
    DEXIT;
-   return TRUE;
+   return true;
 #ifdef __INSIGHT__
 _Insight_set_option("unsuppress", "PARM_NULL");
 #endif

@@ -123,8 +123,8 @@ lList **alpp,
 lListElem *modp, /* empty element to fill up (UME_Type) (wenn add is 1)*/ 
 lListElem *ep,   /* element to add (UME_Type) */
 int add,         /* is 1 on ADD mode, 0 on MOD mode */
-char *ruser,     /* user name who starts request */
-char *rhost,     /* host from where the request was started */
+const char *ruser,     /* user name who starts request */
+const char *rhost,     /* host from where the request was started */
 gdi_object_t *object,
 int sub_command
 ) {

@@ -241,7 +241,8 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
 #define CPBUF 1024
 
    char buf[CPBUF];
-   int fdsrc, fddst, error, modus, rs, ws;
+   int fdsrc, fddst, modus, rs, ws;
+   bool error;
 
    DENTER(TOP_LAYER, "sge_copy_append");
   
@@ -271,21 +272,21 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
       return -1;
    }    
     
-   error = FALSE;
-   while (TRUE) {
+   error = false;
+   while (true) {
       rs = read(fdsrc, buf, 512);
       if (rs == -1 && errno == EINTR)
          continue;
       else if (rs == -1)
-         error = TRUE;
+         error = true;
     
       if (!error && rs > 0) {      
-         while (TRUE) {   
+         while (true) {   
             ws = write(fddst, buf, rs);
             if (ws == -1 && errno == EINTR)   
                continue;
             else if (ws == -1) {
-               error = TRUE;
+               error = true;
                break;
             } 
             else
@@ -355,7 +356,7 @@ char *sge_bin2string(FILE *fp, int size)
    dstbuflen = size;
    lastpos = 0;
 
-   error = FALSE;
+   error = false;
 
    while (1) {
       i = read(fd, inbuf, BUFFER);
@@ -381,7 +382,7 @@ char *sge_bin2string(FILE *fp, int size)
 
          if (lastpos + len > dstbuflen) {
             if ((dstbuf = realloc(dstbuf, lastpos + len + chunksize)) == NULL) {
-               error = TRUE;
+               error = true;
                break;
             }   
             dstbuflen = lastpos + len + chunksize;
@@ -397,7 +398,7 @@ char *sge_bin2string(FILE *fp, int size)
       }
       else {
          if (errno != EINTR) {
-            error=TRUE;
+            error=true;
             break;
          }
       }

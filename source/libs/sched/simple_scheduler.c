@@ -81,7 +81,7 @@ static void simple_scheduler(void);
 static void delete_some_jobs(void);
 
 
-static int remove_finished_job(sge_event_type type, sge_event_action action, 
+static bool remove_finished_job(sge_event_type type, sge_event_action action, 
                                lListElem *event, void *clientdata)
 {
    /* if we get a final usage event for a ja_task,
@@ -107,7 +107,7 @@ static int remove_finished_job(sge_event_type type, sge_event_action action,
       }
    }
    
-   return TRUE;
+   return true;
 }
 
 static void print_load_value(lListElem *host, const char *name, const char *format)
@@ -330,7 +330,7 @@ static void get_policy_info()
    }
 }
 
-static int find_pending_ja_task(lListElem **job, lListElem **ja_task) {
+static bool find_pending_ja_task(lListElem **job, lListElem **ja_task) {
    lListElem *sjob;
 
    /* find a pending job */
@@ -348,14 +348,14 @@ static int find_pending_ja_task(lListElem **job, lListElem **ja_task) {
                *job = sjob;
                *ja_task = job_get_ja_task_template_pending(sjob, ja_task_id); 
                object_delete_range_id(sjob, NULL, JB_ja_n_h_ids, ja_task_id);
-               return TRUE;
+               return true;
             }
          }
       }   
    }
 
    /* no pending job found */
-   return FALSE;
+   return false;
 }
 
 static int queue_get_free_slots(lListElem *queue)
@@ -522,13 +522,13 @@ static void delete_some_jobs()
             char id[100];
             sprintf(id, U32CFormat"."U32CFormat, 
                     u32c(lGetUlong(job, JB_job_number)), u32c(lGetUlong(ja_task, JAT_task_number)));
-            sge_ssi_job_cancel(id, FALSE);
+            sge_ssi_job_cancel(id, false);
          }
       }
    }
 }
 
-static int register_scheduler()
+static bool register_scheduler()
 {
    int cl_err = 0;
 
@@ -539,7 +539,7 @@ static int register_scheduler()
    if ((cl_err = sge_gdi_setup(prognames[QSCHED]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* setup signal handlers */
@@ -548,7 +548,7 @@ static int register_scheduler()
    /* hostname resolving check */
    if (reresolve_me_qualified_hostname() != CL_OK) {
       DEXIT;
-      return FALSE;
+      return false;
    }   
 
    /* initialize mirroring interface */
@@ -560,7 +560,7 @@ static int register_scheduler()
     */
    sge_mirror_subscribe(SGE_EMT_JOB, remove_finished_job, NULL, NULL);
 
-   return TRUE;
+   return true;
 }
 
 int main(int argc, char *argv[])

@@ -52,7 +52,7 @@
 lList *Master_Usermapping_Entry_List = NULL;
 
 
-static int    sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hostList);
+static bool sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hostList);
 
 /****** src/sge_verifyMappingEntry() **********************************
 *
@@ -82,8 +82,7 @@ static int    sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hos
 *                                    check incoming mappings (can be NULL))
 *
 *  RESULT
-*     TRUE  - on success
-*     FALSE - on error 
+*     bool - true on success else false
 *
 *  EXAMPLE
 *
@@ -99,7 +98,7 @@ static int    sge_resolveHostList(lList **alpp, lList *hostGroupList, lList *hos
 *     
 ****************************************************************************
 */
-int sge_verifyMappingEntry(alpp, hostGroupList,mapEntry, filename, userMappingEntryList)
+bool sge_verifyMappingEntry(alpp, hostGroupList,mapEntry, filename, userMappingEntryList)
 lList **alpp;        /* answer list pointer reference */
 lList* hostGroupList;
 lListElem* mapEntry; /* pointer to UME_Type element */
@@ -125,13 +124,13 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
             INFO((SGE_EVENT, MSG_ANSWER_CLUSTERUNAMEXDIFFFROMY_SS, clusterName, filename));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
-            return FALSE;
+            return false;
         }
         /* now resolve the hostnames */ 
         list = lGetList(mapEntry, UME_mapping_list);
-        if (sge_resolveMappingList(alpp, hostGroupList ,list) == FALSE) {
+        if (sge_resolveMappingList(alpp, hostGroupList ,list) == false) {
             DEXIT;
-            return FALSE; 
+            return false; 
         }
           
         /* check for unique mapping 
@@ -161,7 +160,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                        tmpMapName = lGetString(leep, UM_mapped_user);
                        if (tmpMapName != NULL) {
                           
-                          if (sge_isHostInMappingListForUser(hostGroupList,list, tmpMapName, hostName) == TRUE) {
+                          if (sge_isHostInMappingListForUser(hostGroupList,list, tmpMapName, hostName) == true) {
                              matches++;
                              lastMapName = sge_strdup(NULL, tmpMapName);  /* ATTENTION: Please don't forget to free() */
                           } 
@@ -176,7 +175,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                          free(lastMapName);
                          lastMapName = NULL;
                          DEXIT;
-                         return FALSE;
+                         return false;
                     }
                     free(lastMapName);
                     lastMapName = NULL;
@@ -209,7 +208,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                        const char*  newMappingName = NULL; 
                        newMappingName = lGetString(new_ep, UM_mapped_user);
                        
-                       if (sge_isNameInMappingList(mapList, newMappingName) == TRUE) {
+                       if (sge_isNameInMappingList(mapList, newMappingName) == true) {
                           
                           lListElem* host_ep = NULL;
                           lList* newHostList = NULL;
@@ -222,12 +221,12 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
                                 if (hostName != NULL) {
                                    if (sge_isHostInHostList(hostGroupList ,
                                                             sge_getHostListForMappedUser(mapList, newMappingName), 
-                                                            hostName) == TRUE) { 
+                                                            hostName) == true) { 
                                       /* mapping for cluster user not ambiguous (incoming mapping) */
                                       INFO((SGE_EVENT, MSG_ANSWER_DUPLICATEDMAPPINGENTRY_SSS, newMappingName, hostName, clusterUser ));
                                       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                                       DEXIT;
-                                      return FALSE;
+                                      return false;
                                    }
                                 }
                              }
@@ -240,14 +239,14 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
         }
 #endif 
         DEXIT;
-        return TRUE; 
+        return true; 
      }
   }
 
   INFO((SGE_EVENT, MSG_NULLPOINTER ));
   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 /****** src/sge_resolveMappingList() **********************************
@@ -260,7 +259,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
 *     #include "sge_user_mapping.h"
 *     #include <src/sge_user_mapping.h>
 * 
-*     int   sge_resolveMappingList(lList **alpp, 
+*     bool   sge_resolveMappingList(lList **alpp, 
 *                                       lList* hostGroupList, 
 *                                       lList* mapList);
 *       
@@ -276,8 +275,7 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
 *     lList* mapList - UM_Type list with user mapping entries
 *
 *  RESULT
-*     TRUE  - on success
-*     FALSE - on error
+*     bool  - true on success else false
 *
 *  EXAMPLE
 *
@@ -294,27 +292,27 @@ lList* userMappingEntryList;  /* UME_Type list (can be NULL) */
 *     
 ****************************************************************************
 */
-int sge_resolveMappingList(
+bool sge_resolveMappingList(
 lList **alpp,        /* answer list pointer reference */
 lList *hostGroupList,
 lList *mapList 
 ) {
-  int back = TRUE;
+  int back = true;
   lListElem *ep = NULL;
   DENTER(TOP_LAYER,"sge_resolveMappingList" );
   if ((mapList != NULL)) {
     for_each( ep , mapList ) {
        lList* hostList = NULL;
        hostList = lGetList(ep, UM_host_list);
-       if (sge_resolveHostList(alpp, hostGroupList,hostList) == FALSE) {
-          back = FALSE;
+       if (sge_resolveHostList(alpp, hostGroupList,hostList) == false) {
+          back = false;
        }     
     }
     DEXIT;
     return back;
   }
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 /****** src/sge_isHostInMappingListForUser() **********************************
@@ -327,7 +325,7 @@ lList *mapList
 *     #include "sge_user_mapping.h"
 *     #include <src/sge_user_mapping.h>
 * 
-*     static int   sge_isHostInMappingListForUser(lList* hostGroupList,
+*     static bool   sge_isHostInMappingListForUser(lList* hostGroupList,
 *                                                 lList* mapList, 
 *                                                 char* mappedName, 
 *                                                 char* host); 
@@ -346,7 +344,7 @@ lList *mapList
 *     char* host           - name of the host to look for in the hostlist
 *
 *  RESULT
-*     int TRUE if host was found, FALSE on error or host not found
+*     int true if host was found, false on error or host not found
 *
 *  EXAMPLE
 *
@@ -363,7 +361,7 @@ lList *mapList
 *     
 ****************************************************************************
 */
-int sge_isHostInMappingListForUser(
+bool sge_isHostInMappingListForUser(
 lList *hostGroupList,
 lList *mapList,
 const char *mappedName,
@@ -385,7 +383,7 @@ const char *host
 
    }
    DEXIT;
-   return FALSE;
+   return false;
 }
 
 /****** src/sge_isHostInHostList() **********************************
@@ -398,7 +396,7 @@ const char *host
 *     #include "sge_user_mapping.h"
 *     #include <src/sge_user_mapping.h>
 * 
-*     static int sge_isHostInHostList(lList* hostGroupList, lList* hostList,
+*     static bool sge_isHostInHostList(lList* hostGroupList, lList* hostList,
 *                                     char* hostName);
 *       
 *
@@ -413,8 +411,8 @@ const char *host
 *     lList* hostList      - list of host or group names (ST_Type)
 *
 *  RESULT
-*     TRUE  - if hostName was found in hostList or group
-*     FALSE - if hostName is not in hostList or group
+*     true  - if hostName was found in hostList or group
+*     false - if hostName is not in hostList or group
 *
 *  EXAMPLE
 *
@@ -432,18 +430,16 @@ const char *host
 *     
 ****************************************************************************
 */
-int sge_isHostInHostList(
-lList *hostGroupList,
-lList *hostList,
-const char *hostName 
-) { 
+bool sge_isHostInHostList(lList *hostGroupList, lList *hostList, 
+                          const char *hostName) 
+{ 
   lListElem* ep = NULL;
   DENTER(TOP_LAYER,"sge_isHostInHostList" );
   if ( (hostList != NULL) && (hostName != NULL)) {
     /* DPRINTF(("searching for '%s' in list\n", hostName)); */
    
     /* check if hostName is group name */
-    if (sge_is_group(hostGroupList,hostName) != TRUE) {
+    if (sge_is_group(hostGroupList,hostName) != true) {
        /* hostName is host name */ 
        for_each ( ep, hostList ) {
           const char* tmpHost = NULL;
@@ -451,17 +447,17 @@ const char *hostName
           tmpHost = lGetString ( ep , STR ); 
           if (tmpHost != NULL) {
              /* check if tmpHost is group name */
-             if (sge_is_group(hostGroupList, tmpHost) == TRUE) {
+             if (sge_is_group(hostGroupList, tmpHost) == true) {
                 /* tmpHost is group name */
-                if (sge_is_member_in_group( hostGroupList, tmpHost, hostName, NULL) == TRUE) {
+                if (sge_is_member_in_group( hostGroupList, tmpHost, hostName, NULL) == true) {
                    DEXIT;
-                   return TRUE;
+                   return true;
                 } 
              } else {
                 /* tmpHost is host name */ 
                 if (sge_hostcmp(tmpHost,hostName) == 0 ) {
                    DEXIT;
-                   return TRUE;
+                   return true;
                 } 
              }
           }
@@ -476,12 +472,12 @@ const char *hostName
           tmpHost = lGetString ( ep , STR ); 
           if (tmpHost != NULL) {
              /* check if tmpHost is group name */
-             if (sge_is_group(hostGroupList, tmpHost) == TRUE) {
+             if (sge_is_group(hostGroupList, tmpHost) == true) {
                 /* tmpHost is group name */
                 if (sge_hostcmp(tmpHost, hostName) == 0 ) {
                    DPRINTF(("found group '%s' in hostlist\n", hostName));
                    DEXIT;
-                   return TRUE;
+                   return true;
                 } 
              }
           }
@@ -489,7 +485,7 @@ const char *hostName
     }
   }  
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 
@@ -503,19 +499,19 @@ const char *hostName
 *     #include "sge_user_mapping.h"
 *     #include <src/sge_user_mapping.h>
 * 
-*     static int   sge_isNameInMappingList(lList* mapList, char* mappedName);
+*     static bool sge_isNameInMappingList(lList* mapList, char* mappedName);
 *       
 *
 *  FUNCTION
 *     This function is looking in the given UM_Type list for the UM_mapped_user
-*     entry. If the entry matches the mappedName the function returns TRUE.
+*     entry. If the entry matches the mappedName the function returns true.
 *
 *  INPUTS
 *     lList* mapList   - pointer to UM_Type list
 *     char* mappedName - name for mapped user to search in mapList
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
+*     int true on success, false on error
 *
 *  EXAMPLE
 *
@@ -532,7 +528,7 @@ const char *hostName
 *     
 ****************************************************************************
 */
-int sge_isNameInMappingList(
+bool sge_isNameInMappingList(
 lList *mapList,
 const char *mappedName 
 ) { 
@@ -547,13 +543,13 @@ const char *mappedName
        if (tmpName != NULL) {
           if (strcmp(tmpName, mappedName) == 0) {
              DEXIT;
-             return TRUE;
+             return true;
           }
        }     
     }
   }
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 
@@ -568,7 +564,7 @@ const char *mappedName
 *     #include "sge_user_mapping.h"
 *     #include <src/sge_user_mapping.h>
 * 
-*     static int    sge_resolveHostList(lList** alpp,
+*     static bool sge_resolveHostList(lList** alpp,
 *                                       lList* hostGroupList,
 *                                       lList* hostList);
 *       
@@ -583,8 +579,8 @@ const char *mappedName
 *     lList* hostList - list of hostnames in a ST_Type list
 *
 *  RESULT
-*     TRUE  - on success
-*     FALSE - on error
+*     true  - on success
+*     false - on error
 *
 *  EXAMPLE
 *
@@ -602,13 +598,13 @@ const char *mappedName
 *     
 ****************************************************************************
 */
-static int sge_resolveHostList(
+static bool sge_resolveHostList(
 lList **alpp,
 lList *hostGroupList,
 lList *hostList 
 ) {
   lListElem *ep = NULL;
-  int answer = TRUE;
+  int answer = true;
   DENTER(TOP_LAYER,"sge_resolveHostList" );
   if ((hostList != NULL)) {
     for_each( ep , hostList ) {
@@ -619,7 +615,7 @@ lList *hostList
        tmpHost = lGetString ( ep , STR ); 
 
        /* check if tmpHost is group */
-       if (sge_is_group(hostGroupList,tmpHost) == TRUE) {
+       if (sge_is_group(hostGroupList,tmpHost) == true) {
           /* tmpHost is group name */
           DPRINTF(("name %s is group name, not resolved.\n", tmpHost));
        } else {
@@ -631,7 +627,7 @@ lList *hostList
              lSetString(ep , STR , resolveHost);
           } else {
              /* no guilty group or hostname */
-             answer =  FALSE;
+             answer =  false;
              INFO((SGE_EVENT, MSG_ANSWER_UNKNOWNHOSTORGROUPNAME_S, tmpHost));
              answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
           }
@@ -641,7 +637,7 @@ lList *hostList
     return answer;
   }
   DEXIT;
-  return FALSE;
+  return false;
 }
 
 

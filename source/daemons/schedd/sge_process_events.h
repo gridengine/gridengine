@@ -40,22 +40,37 @@
 int subscribe_default_scheduler(void);
 
 /* callback functions for event processing */
-int sge_process_schedd_conf_event(sge_event_type type, sge_event_action action, 
-                                  lListElem *event, void *clientdata);
-int sge_process_job_event_before(sge_event_type type, sge_event_action action, 
+bool 
+sge_process_schedd_conf_event(sge_event_type type, sge_event_action action, 
+                              lListElem *event, void *clientdata);
+
+bool 
+sge_process_job_event_before(sge_event_type type, sge_event_action action, 
+                             lListElem *event, void *clientdata);
+
+bool 
+sge_process_job_event_after(sge_event_type type, sge_event_action action, 
+                            lListElem *event, void *clientdata);
+
+bool 
+sge_process_ja_task_event_before(sge_event_type type, sge_event_action action, 
                                  lListElem *event, void *clientdata);
-int sge_process_job_event_after(sge_event_type type, sge_event_action action, 
+
+bool 
+sge_process_ja_task_event_after(sge_event_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata);
-int sge_process_ja_task_event_before(sge_event_type type, sge_event_action action, 
-                                     lListElem *event, void *clientdata);
-int sge_process_ja_task_event_after(sge_event_type type, sge_event_action action, 
-                                    lListElem *event, void *clientdata);
-int sge_process_userset_event_after(sge_event_type type, sge_event_action action, 
-                                    lListElem *event, void *clientdata);
-int sge_process_schedd_monitor_event(sge_event_type type, sge_event_action action, 
-                                     lListElem *event, void *clientdata);
-int sge_process_global_config_event(sge_event_type type, sge_event_action action, 
-                                    lListElem *event, void *clientdata);
+
+bool 
+sge_process_userset_event_after(sge_event_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata);
+
+bool 
+sge_process_schedd_monitor_event(sge_event_type type, sge_event_action action, 
+                                 lListElem *event, void *clientdata);
+
+bool
+sge_process_global_config_event(sge_event_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata);
 
 /* event post processing */
 int event_handler_default_scheduler(void);

@@ -176,7 +176,7 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
 *     job_is_zombie_job() -- Is 'job' a zombie job 
 *
 *  SYNOPSIS
-*     int job_is_zombie_job(const lListElem *job) 
+*     bool job_is_zombie_job(const lListElem *job) 
 *
 *  FUNCTION
 *     True will be returned if 'job' is a zombie job. 
@@ -185,11 +185,11 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
 *     const lListElem *job - JB_Type 
 *
 *  RESULT
-*     int - 0 or 1
+*     bool - true or false 
 *******************************************************************************/
-int job_is_zombie_job(const lListElem *job)
+bool job_is_zombie_job(const lListElem *job)
 {
-   return (lGetList(job, JB_ja_z_ids) != NULL);
+   return (lGetList(job, JB_ja_z_ids) != NULL ? true : false);
 }
 
 /****** sgeobj/job/job_get_ja_task_template() *********************************
@@ -391,7 +391,7 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 *     job_is_enrolled() -- Is a certain array task enrolled 
 *
 *  SYNOPSIS
-*     int job_is_enrolled(const lListElem *job, u_long32 task_number) 
+*     bool job_is_enrolled(const lListElem *job, u_long32 task_number) 
 *
 *  FUNCTION
 *     This function will return true (1) if the array task with 
@@ -403,18 +403,18 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 *     u_long32 task_number - task_number 
 *
 *  RESULT
-*     int - 0 or 1
+*     bool - true or false 
 ******************************************************************************/
-int job_is_enrolled(const lListElem *job, u_long32 task_number)
+bool job_is_enrolled(const lListElem *job, u_long32 task_number)
 {
-   int ret = 1;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "job_is_enrolled");
    if (range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), task_number)) {
-      ret = 0;
+      ret = false;
    }
    DEXIT;
    return ret;
@@ -425,8 +425,8 @@ int job_is_enrolled(const lListElem *job, u_long32 task_number)
 *     job_is_ja_task_defined() -- was this task submitted 
 *
 *  SYNOPSIS
-*     int job_is_ja_task_defined(const lListElem *job, 
-*                                u_long32 ja_task_number) 
+*     bool job_is_ja_task_defined(const lListElem *job, 
+*                                 u_long32 ja_task_number) 
 *
 *  FUNCTION
 *     This function will return true (1) if the task with 
@@ -439,9 +439,9 @@ int job_is_enrolled(const lListElem *job, u_long32 task_number)
 *     u_long32 ja_task_number - task number 
 *
 *  RESULT
-*     int - 0 or 1
+*     bool - true or false 
 ******************************************************************************/
-int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
+bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
 {
    lList *range_list = lGetList(job, JB_ja_structure);
 
@@ -633,7 +633,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 *     job_has_tasks() -- Returns true if there exist unenrolled tasks 
 *
 *  SYNOPSIS
-*     int job_has_tasks(lListElem *job) 
+*     bool job_has_tasks(lListElem *job) 
 *
 *  FUNCTION
 *     This function returns true (1) if there exists an unenrolled 
@@ -643,11 +643,11 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 *     lListElem *job - JB_Type 
 *
 *  RESULT
-*     int - 0 or 1
+*     bool - true or false 
 ******************************************************************************/
-int job_has_tasks(lListElem *job) 
+bool job_has_tasks(lListElem *job) 
 {
-   int ret = 0;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "job_has_tasks");
    if (job != NULL) {
@@ -655,7 +655,7 @@ int job_has_tasks(lListElem *job)
           lGetList(job, JB_ja_u_h_ids) != NULL ||
           lGetList(job, JB_ja_o_h_ids) != NULL ||
           lGetList(job, JB_ja_s_h_ids) != NULL) {
-         ret = 1;
+         ret = true;
       }
    }
    DEXIT;
@@ -734,7 +734,7 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
 *     job_has_job_pending_tasks() -- Has the job unenrolled tasks? 
 *
 *  SYNOPSIS
-*     int job_has_job_pending_tasks(lListElem *job) 
+*     bool job_has_job_pending_tasks(lListElem *job) 
 *
 *  FUNCTION
 *     True (1) will be returned if the job has unenrolled pending tasks.
@@ -743,16 +743,16 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
 *     lListElem *job - JB_Type 
 *
 *  RESULT
-*     int - True (1) or false (0)
+*     bool - true or false 
 *******************************************************************************/
-int job_has_job_pending_tasks(lListElem *job) 
+bool job_has_job_pending_tasks(lListElem *job) 
 {
-   int ret = 0;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "job_has_job_pending_tasks");
    if (lGetList(job, JB_ja_n_h_ids) || lGetList(job, JB_ja_u_h_ids) ||
        lGetList(job, JB_ja_o_h_ids) || lGetList(job, JB_ja_s_h_ids)) {
-      ret = 1;
+      ret = true;
    }
    DEXIT;
    return ret;
@@ -1067,7 +1067,7 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *     job_is_array() -- Is "job" an array job or not? 
 *
 *  SYNOPSIS
-*     int job_is_array(const lListElem *job) 
+*     bool job_is_array(const lListElem *job) 
 *
 *  FUNCTION
 *     The function returns true (1) if "job" is an array job with more 
@@ -1077,18 +1077,17 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *     const lListElem *job - JB_Type element 
 *
 *  RESULT
-*     int - 1 -> array job
-*           0 -> non array job
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_parallel()
 *     sgeobj/job/job_is_tight_parallel()
 ******************************************************************************/
-int job_is_array(const lListElem *job)
+bool job_is_array(const lListElem *job)
 {
    u_long32 job_type = lGetUlong(job, JB_type);
 
-   return JOB_TYPE_IS_ARRAY(job_type);
+   return JOB_TYPE_IS_ARRAY(job_type) ? true : false;
 }  
 
 /****** sgeobj/job/job_is_parallel() ******************************************
@@ -1096,26 +1095,25 @@ int job_is_array(const lListElem *job)
 *     job_is_parallel() -- Is "job" a parallel job? 
 *
 *  SYNOPSIS
-*     int job_is_parallel(const lListELem *job) 
+*     bool job_is_parallel(const lListElem *job) 
 *
 *  FUNCTION
-*     This function returns true (1) if "job" is a parallel job
+*     This function returns true if "job" is a parallel job
 *     (requesting a parallel environment). 
 *
 *  INPUTS
 *     const lListELem *job - JB_Type element 
 *
 *  RESULT
-*     int - 1 -> parallel job
-*           0 -> non-parallel job
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_array() 
 *     sgeobj/job/job_is_tight_parallel()
 ******************************************************************************/
-int job_is_parallel(const lListElem *job)
+bool job_is_parallel(const lListElem *job)
 {
-   return (lGetString(job, JB_pe) != NULL);
+   return (lGetString(job, JB_pe) != NULL ? true : false);
 } 
 
 /****** sgeobj/job/job_is_tight_parallel() ************************************
@@ -1123,11 +1121,11 @@ int job_is_parallel(const lListElem *job)
 *     job_is_tight_parallel() -- Is "job" a tightly integrated par. job?
 *
 *  SYNOPSIS
-*     int job_is_tight_parallel(const lListElem *job, 
-*                               const lList *pe_list) 
+*     bool job_is_tight_parallel(const lListElem *job, 
+*                                const lList *pe_list) 
 *
 *  FUNCTION
-*     This function returns true (1) if "job" is really a tightly 
+*     This function returns true if "job" is really a tightly 
 *     integrated parallel job. 
 *
 *  INPUTS
@@ -1135,17 +1133,16 @@ int job_is_parallel(const lListElem *job)
 *     const lList *pe_list - PE_Type list with all existing PEs 
 *
 *  RESULT
-*     int - 1 -> tightly integrated parallel job
-*           0 -> other type
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_array()
 *     sgeobj/job/job_is_parallel()
 *     sgeobj/job/job_might_be_tight_parallel()
 ******************************************************************************/
-int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
+bool job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 {
-   int ret = 0;
+   bool ret = false;
    const char *pe_name = NULL;
 
    DENTER(TOP_LAYER, "job_is_tight_parallel");
@@ -1163,7 +1160,7 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
       }
    
       if (found_pe && all_are_tight) {
-         ret = 1;
+         ret = true;
       }
    }
    DEXIT;
@@ -1175,11 +1172,11 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *     job_might_be_tight_parallel() -- Possibly a tightly integrated job? 
 *
 *  SYNOPSIS
-*     int job_might_be_tight_parallel(const lListElem *job, 
-*                                     const lList *pe_list) 
+*     bool job_might_be_tight_parallel(const lListElem *job, 
+*                                      const lList *pe_list) 
 *
 *  FUNCTION
-*     This functions returns true (1) if "job" might be a tightly 
+*     This functions returns true  if "job" might be a tightly 
 *     integrated job. True will be returned if (at least one) pe 
 *     matching the requested (wildcard) pe of a job has 
 *     "contol_slaves=true" in its configuration.
@@ -1189,8 +1186,7 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *     const lList *pe_list - PE_Type list with all existing PEs 
 *
 *  RESULT
-*     int - 1 -> possibly a tightly integrated job
-*           0 -> non-parallel or not tightly integrated
+*     bool - treu or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_array()
@@ -1198,9 +1194,9 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *     sgeobj/job/job_is_tight_parallel()
 *     sgeobj/job/job_might_be_tight_parallel()
 ******************************************************************************/
-int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
+bool job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
 {
-   int ret = 0;
+   bool ret = false;
    const char *pe_name = NULL;
 
    DENTER(TOP_LAYER, "job_is_tight_parallel");
@@ -1222,7 +1218,7 @@ int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
    
       if (found_pe && one_is_tight) {
          DTRACE;
-         ret = 1;
+         ret = true;
       }
    }
    DEXIT;
@@ -1896,11 +1892,11 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
 *     job_is_pe_referenced() -- Does job reference the given PE? 
 *
 *  SYNOPSIS
-*     int job_is_pe_referenced(const lListElem *job, 
+*     bool job_is_pe_referenced(const lListElem *job, 
 *                              const lListElem *pe) 
 *
 *  FUNCTION
-*     The function returns true (1) if "job" references the "pe". 
+*     The function returns true if "job" references the "pe". 
 *     This is also the case if job requests a wildcard PE and 
 *     the wildcard name matches the given pe name. 
 *
@@ -1909,16 +1905,16 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
 *     const lListElem *pe  - PE_Type object 
 *
 *  RESULT
-*     int - true (1) or false (0) 
+*     int - true or false 
 ******************************************************************************/
-int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
+bool job_is_pe_referenced(const lListElem *job, const lListElem *pe)
 {
    const char *ref_pe_name = lGetString(job, JB_pe);
-   int ret = 0;
+   bool ret = false;
 
    if(ref_pe_name != NULL) {
       if (pe_is_matching(pe, ref_pe_name)) {
-         ret = 1;
+         ret = true;
       }
    }
    return ret;
@@ -1929,11 +1925,11 @@ int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
 *     job_is_ckpt_referenced() -- Does job reference the given CKPT? 
 *
 *  SYNOPSIS
-*     int job_is_ckpt_referenced(const lListElem *job, 
-*                                const lListELem *ckpt) 
+*     bool job_is_ckpt_referenced(const lListElem *job, 
+*                                 const lListELem *ckpt) 
 *
 *  FUNCTION
-*     The function returns true (1) if "job" references the 
+*     The function returns true if "job" references the 
 *     checkpointing object "ckpt". 
 *
 *  INPUTS
@@ -1941,17 +1937,17 @@ int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
 *     const lListElem *ckpt - CK_Type object 
 *
 *  RESULT
-*     int - true (1) or false (0) 
+*     bool - true or false 
 ******************************************************************************/
-int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
+bool job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 {
    const char *ckpt_name = lGetString(ckpt, CK_name);
    const char *ref_ckpt_name = lGetString(job, JB_checkpoint_name);
-   int ret = 0;
+   bool ret = false;
 
    if(ckpt_name != NULL && ref_ckpt_name != NULL) {
       if (!strcmp(ref_ckpt_name, ckpt_name)) {
-         ret = 1;
+         ret = true;
       }
    }
    return ret;
@@ -2054,7 +2050,7 @@ void job_add_parent_id_to_context(lListElem *job)
 *     - local variable
 *
 *     In each error cases, an appropriate error message is generated.
-*     If output_warning is set to TRUE, an error message is output.
+*     If output_warning is set to true, an error message is output.
 *     In each case, an error message is written into answer_list.
 *
 *  INPUTS
@@ -2217,7 +2213,7 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
 *     job_parse_key() -- parse a key generated by job_get_key()
 *
 *  SYNOPSIS
-*     int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id, 
+*     bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id, 
 *                       char **pe_task_id) 
 *
 *  FUNCTION
@@ -2230,7 +2226,7 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
 *     char **pe_task_id    - pointer to variable to contain the pe_task_id
 *
 *  RESULT
-*     int - TRUE, if the key could be parsed, else FALSE
+*     bool - true, if the key could be parsed, else false
 *
 *  NOTES
 *     The pe_task_id is only valid until the passed key is deleted!
@@ -2238,8 +2234,8 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
 *  SEE ALSO
 *     sgeobj/job/job_get_key()
 ******************************************************************************/
-int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
-                  char **pe_task_id)
+bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
+                   char **pe_task_id)
 {
    *job_id = atoi(strtok(key, "."));
    *ja_task_id = atoi(strtok(NULL, " "));
@@ -2249,7 +2245,7 @@ int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
       *pe_task_id = NULL;
    }
 
-   return TRUE;
+   return true;
 }
 
 /****** sgeobj/job/job_has_valid_account_string() *****************************

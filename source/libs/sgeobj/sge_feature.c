@@ -323,7 +323,7 @@ void feature_activate(featureset_id_t id)
 *     feature_is_active() -- is featureset active? 
 *
 *  SYNOPSIS
-*     int feature_is_active(featureset_id_t id) 
+*     bool feature_is_active(featureset_id_t id) 
 *
 *  FUNCTION
 *     returns true or false whether the given featureset whithin the 
@@ -333,18 +333,17 @@ void feature_activate(featureset_id_t id)
 *     id - feature set constant 
 *
 *  RESULT
-*     0 (false)
-*     1 (true) 
+*     true or false
 ******************************************************************************/
-int feature_is_active(featureset_id_t id) 
+bool feature_is_active(featureset_id_t id) 
 {
    lListElem *feature;
-   int ret = 0;
+   int ret = false;
 
    DENTER(TOP_LAYER, "featureset_is_active");
    feature = lGetElemUlong(Master_FeatureSet_List, FES_id, id);
    if (feature) {
-      ret = lGetUlong(feature, FES_active);
+      ret = lGetUlong(feature, FES_active) ? true : false;
    }
    DEXIT;
    return ret;
@@ -454,7 +453,7 @@ featureset_id_t feature_get_featureset_id(const char *name)
 *     feature_is_enabled() -- 0/1 whether the feature is enabled 
 *
 *  SYNOPSIS
-*     int feature_is_enabled(feature_id_t id) 
+*     bool feature_is_enabled(feature_id_t id) 
 *
 *  FUNCTION
 *     return true or false whether the given feature is enabled or 
@@ -464,14 +463,13 @@ featureset_id_t feature_get_featureset_id(const char *name)
 *     feature_id_t id 
 *
 *  RESULT
-*     0 (false)
-*     1 (true)
+*     true or false
 ******************************************************************************/
-int feature_is_enabled(feature_id_t id) 
+bool feature_is_enabled(feature_id_t id) 
 {
    lListElem *active_set;
    lListElem *feature = NULL;
-   int ret = 0;
+   bool ret = false;
 
    DENTER(BASIS_LAYER, "feature_is_enabled");
    active_set = lGetElemUlong(Master_FeatureSet_List, FES_active, 1);
@@ -479,7 +477,7 @@ int feature_is_enabled(feature_id_t id)
       feature = lGetSubUlong(active_set, FE_id, id, FES_features);
    }
    if (feature) {
-      ret = lGetUlong(feature, FE_enabled);
+      ret = lGetUlong(feature, FE_enabled) ? true : false;
    }
    DEXIT;
    return ret;

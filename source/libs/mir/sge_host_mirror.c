@@ -44,7 +44,7 @@
 *     host_update_master_list() -- update the master hostlists
 *
 *  SYNOPSIS
-*     int 
+*     bool 
 *     host_update_master_list(sge_event_type type, sge_event_action action,
 *                             lListElem *event, void *clientdata)
 *
@@ -62,7 +62,7 @@
 *     void *clientdata        - client data
 *
 *  RESULT
-*     int - TRUE, if update is successfull, else FALSE
+*     bool - true, if update is successfull, else false
 *
 *  NOTES
 *     The function should only be called from the event mirror interface.
@@ -72,7 +72,7 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-int 
+bool 
 host_update_master_list(sge_event_type type, sge_event_action action,
                         lListElem *event, void *clientdata)
 {
@@ -102,7 +102,7 @@ host_update_master_list(sge_event_type type, sge_event_action action,
          key_nm = SH_name;
          break;
       default:
-         return FALSE;
+         return false;
    }
  
    key = lGetString(event, ET_strkey);
@@ -110,10 +110,10 @@ host_update_master_list(sge_event_type type, sge_event_action action,
    if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
                                               action, event) != SGE_EM_OK) {
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 

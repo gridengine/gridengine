@@ -66,17 +66,15 @@
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
                               dstring *dyn_taskrange_str, int ignore_step);
 
-static int range_is_overlapping(const lListElem *range1, 
+static bool range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2);
 
 static void expand_range_list(lListElem *r, lList **rl);
 
 /* we keep a descending sorted list of non overlapping ranges */
 /* why descending? don't ask me! ask the initiator of this function */
-static void expand_range_list(
-lListElem *r,
-lList **rl
-) {
+static void expand_range_list(lListElem *r, lList **rl) 
+{
    u_long32 rmin, rmax, rstep;
    lListElem *ep, *rr;
 
@@ -244,11 +242,11 @@ void range_correct_end(lListElem *range)
 *     range_is_overlapping() -- Do two ranges interleave? 
 *
 *  SYNOPSIS
-*     static int range_is_overlapping(const lListElem *range1, 
-*                                     const lListElem *range2) 
+*     static bool range_is_overlapping(const lListElem *range1, 
+*                                      const lListElem *range2) 
 *
 *  FUNCTION
-*     True (1) will be returned when the given ranges interleave. This
+*     True will be returned when the given ranges interleave. This
 *     does not necessaryly mean that certain ids exist in both ranges. 
 *
 *  INPUTS
@@ -256,20 +254,20 @@ void range_correct_end(lListElem *range)
 *     const lListElem *range2 - RN_Type 
 *
 *  RESULT
-*     static int - 0 or 1 
+*     static bool - false or true 
 *
 *  EXAMPLE
-*     1-5:3    4-10:7      => 1
-*     1-5:3    5-10:6      => 1
-*     1-5:3    6-10:4      => 0
+*     1-5:3    4-10:7      => true 
+*     1-5:3    5-10:6      => true 
+*     1-5:3    6-10:4      => false 
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
 *******************************************************************************/
-static int range_is_overlapping(const lListElem *range1, 
+static bool range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2)
 {
-   int ret = 0;
+   bool ret = false;
 
    if (range1 != NULL && range2 != NULL) {
       u_long32 start1, end1, step1;
@@ -278,7 +276,7 @@ static int range_is_overlapping(const lListElem *range1,
       range_get_all_ids(range1, &start1, &end1, &step1);
       range_get_all_ids(range2, &start2, &end2, &step2);
       if (end1 >= start2) {
-         ret = 1;
+         ret = true;
       } 
    }
    return ret;
@@ -701,10 +699,10 @@ void range_list_compress(lList *range_list)
 *     range_list_is_id_within() -- Is id contained in range list? 
 *
 *  SYNOPSIS
-*     int range_list_is_id_within(const lList *range_list, u_long32 id) 
+*     bool range_list_is_id_within(const lList *range_list, u_long32 id) 
 *
 *  FUNCTION
-*     True (1) is returned by this function if 'id' is part of at least
+*     True is returned by this function if 'id' is part of at least
 *     one range element of 'range_list' 
 *
 *  INPUTS
@@ -712,19 +710,19 @@ void range_list_compress(lList *range_list)
 *     u_long32 id             - id 
 *
 *  RESULT
-*     int - 0 or 1 
+*     bool - true or false 
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
 *******************************************************************************/
-int range_list_is_id_within(const lList *range_list, u_long32 id) 
+bool range_list_is_id_within(const lList *range_list, u_long32 id) 
 {
    lListElem *range = NULL;
-   int ret = 0;
+   bool ret = false;
 
    for_each(range, range_list) {
       if (range_is_id_within(range, id)) {
-         ret = 1;
+         ret = true;
          break;
       }
    } 
@@ -736,8 +734,8 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
 *     range_list_containes_id_less_than() -- is one id less than the given id
 *
 *  SYNOPSIS
-*     int range_list_containes_id_less_than(const lList *range_list, 
-*                                           u_long32 id) 
+*     bool range_list_containes_id_less_than(const lList *range_list, 
+*                                            u_long32 id) 
 *
 *  FUNCTION
 *     Is at least one id in the "range_list" less than "id" 
@@ -747,16 +745,16 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
 *     u_long32 id             - number 
 *
 *  RESULT
-*     int - 0 or 1
+*     bool - true or false
 *******************************************************************************/
-int range_list_containes_id_less_than(const lList *range_list, u_long32 id)
+bool range_list_containes_id_less_than(const lList *range_list, u_long32 id)
 {
    lListElem *range = NULL;
-   int ret = 0;
+   bool ret = false;
 
    for_each(range, range_list) {
       if (range_containes_id_less_than(range, id)) {
-         ret = 1;
+         ret = true;
          break;
       }
    }
@@ -768,23 +766,23 @@ int range_list_containes_id_less_than(const lList *range_list, u_long32 id)
 *     range_list_is_empty() -- check if id lists containes ids 
 *
 *  SYNOPSIS
-*     int range_list_is_empty(const lList *range_list) 
+*     bool range_list_is_empty(const lList *range_list) 
 *
 *  FUNCTION
-*     Returns true (1) if "range_list" containes no ids. 
+*     Returns true if "range_list" containes no ids. 
 *
 *  INPUTS
 *     const lList *range_list - RN_Type list 
 *
 *  RESULT
-*     int - 0 or 1 
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type
 ******************************************************************************/
-int range_list_is_empty(const lList *range_list)
+bool range_list_is_empty(const lList *range_list)
 {
-   return (range_list_get_number_of_ids(range_list) == 0);
+   return (range_list_get_number_of_ids(range_list) == 0 ? true : false);
 }
 
 /****** sgeobj/range/range_containes_id_less_than() ***************************
@@ -792,7 +790,7 @@ int range_list_is_empty(const lList *range_list)
 *     range_containes_id_less_than() -- at least one id less than given id 
 *
 *  SYNOPSIS
-*     int range_containes_id_less_than(const lListElem *range, u_long32 id) 
+*     bool range_containes_id_less_than(const lListElem *range, u_long32 id) 
 *
 *  FUNCTION
 *     This function tests if at least one id in "range" is less than "id" 
@@ -802,18 +800,18 @@ int range_list_is_empty(const lList *range_list)
 *     u_long32 id            - number 
 *
 *  RESULT
-*     int - 0 or 1 
+*     bool - true or false
 ******************************************************************************/
-int range_containes_id_less_than(const lListElem *range, u_long32 id)
+bool range_containes_id_less_than(const lListElem *range, u_long32 id)
 {
-   int ret = 0;
+   bool ret = false;
 
    if (range) {
       u_long32 start, end, step;
 
       range_get_all_ids(range, &start, &end, &step);
       if (start < id) {
-         ret = 1;
+         ret = true;
       }
    }
    return ret;
@@ -824,31 +822,31 @@ int range_containes_id_less_than(const lListElem *range, u_long32 id)
 *     range_is_id_within() -- Is id contained in range? 
 *
 *  SYNOPSIS
-*     int range_is_id_within(const lListElem *range, u_long32 id) 
+*     bool range_is_id_within(const lListElem *range, u_long32 id) 
 *
 *  FUNCTION
-*     True (1) is returned by this function if 'id' is part of 'range' 
+*     True is returned by this function if 'id' is part of 'range' 
 *
 *  INPUTS
 *     const lListElem *range - RN_Type element 
 *     u_long32 id            - id 
 *
 *  RESULT
-*     int - 0 or 1 
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
 ******************************************************************************/
-int range_is_id_within(const lListElem *range, u_long32 id) 
+bool range_is_id_within(const lListElem *range, u_long32 id) 
 {
-   int ret = 0;
+   bool ret = false;
 
    if (range) {
       u_long32 start, end, step; 
 
       range_get_all_ids(range, &start, &end, &step); 
       if (id >= start && id <= end && ((id - start) % step) == 0) {
-         ret = 1;
+         ret = true;
       } 
    }
    return ret;

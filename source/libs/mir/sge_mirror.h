@@ -205,7 +205,7 @@ typedef enum {
    SGE_EMA_TRIGGER
 } sge_event_action;
 
-typedef int (*sge_mirror_callback)(sge_event_type type, sge_event_action action, lListElem *event, void *clientdata);
+typedef bool (*sge_mirror_callback)(sge_event_type type, sge_event_action action, lListElem *event, void *clientdata);
 
 typedef enum {
    SGE_EM_OK = 0,

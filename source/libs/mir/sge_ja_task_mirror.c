@@ -49,7 +49,7 @@
 *     ja_task_update_master_list_usage() -- update an array tasks usage
 *
 *  SYNOPSIS
-*     int 
+*     bool 
 *     ja_task_update_master_list_usage(lListElem *event)
 *
 *  FUNCTION
@@ -60,13 +60,13 @@
 *     lListElem *event - event object containing the new usage list
 *
 *  RESULT
-*     int - TRUE, if the operation succeeds, else FALSE
+*     bool - true, if the operation succeeds, else false
 *
 *  SEE ALSO
 *     Eventmirror/job/job_update_master_list_usage()
 *     Eventmirror/ja_task/pe_task_update_master_list_usage()
 *******************************************************************************/
-int 
+bool 
 ja_task_update_master_list_usage(lListElem *event)
 {
    lList *tmp = NULL;
@@ -83,7 +83,7 @@ ja_task_update_master_list_usage(lListElem *event)
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
              job_get_id_string(job_id, 0, NULL), SGE_FUNC));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    ja_task = job_search_task(job, NULL, ja_task_id);
@@ -91,7 +91,7 @@ ja_task_update_master_list_usage(lListElem *event)
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS,
              job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    lXchgList(event, ET_new_version, &tmp);
@@ -99,7 +99,7 @@ ja_task_update_master_list_usage(lListElem *event)
    lXchgList(event, ET_new_version, &tmp);
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 /****** Eventmirror/ja_task/ja_task_update_master_list() ***********************
@@ -107,7 +107,7 @@ ja_task_update_master_list_usage(lListElem *event)
 *     ja_task_update_master_list() -- update array tasks of a job
 *
 *  SYNOPSIS
-*     int 
+*     bool 
 *     ja_task_update_master_list(sge_event_type type, sge_event_action action,
 *                                lListElem *event, void *clientdata)
 *
@@ -127,7 +127,7 @@ ja_task_update_master_list_usage(lListElem *event)
 *     void *clientdata        - client data
 *
 *  RESULT
-*     int - TRUE, if update is successfull, else FALSE
+*     bool - true, if update is successfull, else false
 *
 *  NOTES
 *     The function should only be called from the event mirror interface.
@@ -136,7 +136,7 @@ ja_task_update_master_list_usage(lListElem *event)
 *     Eventmirror/--Eventmirror
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
-int 
+bool 
 ja_task_update_master_list(sge_event_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
@@ -159,7 +159,7 @@ ja_task_update_master_list(sge_event_type type, sge_event_action action,
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
              job_get_id_string(job_id, 0, NULL), SGE_FUNC));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    ja_task = job_search_task(job, NULL, ja_task_id);
@@ -177,7 +177,7 @@ ja_task_update_master_list(sge_event_type type, sge_event_action action,
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS,
                 job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
          DEXIT;
-         return FALSE;
+         return false;
       }
 
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
@@ -197,7 +197,7 @@ ja_task_update_master_list(sge_event_type type, sge_event_action action,
          ) {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          DEXIT;
-         return TRUE;
+         return true;
       }
    }
 
@@ -208,7 +208,7 @@ ja_task_update_master_list(sge_event_type type, sge_event_action action,
       lFreeList(pe_tasks);
       lFreeList(usage);
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* restore pe_task list after modify event */
@@ -221,7 +221,7 @@ ja_task_update_master_list(sge_event_type type, sge_event_action action,
          lFreeList(pe_tasks);
          lFreeList(usage);
          DEXIT;
-         return FALSE;
+         return false;
       }
 
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
@@ -240,5 +240,5 @@ ja_task_update_master_list(sge_event_type type, sge_event_action action,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }

@@ -99,7 +99,7 @@
  *           a function sge_mirror_is_subscribed function to check if we have
  *           to unspool a certain list or not.
  */
-static int read_spooled_data(void)
+static bool read_spooled_data(void)
 {  
    lListElem *context;
 
@@ -175,10 +175,10 @@ static int read_spooled_data(void)
    spool_read_list(context, &Master_Sharetree_List, SGE_EMT_SHARETREE);
    DPRINTF(("read %d entries to Master_Sharetree_List\n", lGetNumberOfElem(Master_Sharetree_List)));
 
-   return TRUE;
+   return true;
 }
 
-int spool_event_before(sge_event_type type, sge_event_action action, 
+bool spool_event_before(sge_event_type type, sge_event_action action, 
                        lListElem *event, void *clientdata)
 {
    lListElem *context, *ep;
@@ -302,10 +302,10 @@ int spool_event_before(sge_event_type type, sge_event_action action,
       }
    }
    DEXIT;
-   return TRUE;
+   return true;
 }
 
-int spool_event_after(sge_event_type type, sge_event_action action, 
+bool spool_event_after(sge_event_type type, sge_event_action action, 
                       lListElem *event, void *clientdata)
 {
    lListElem *context, *ep;
@@ -392,7 +392,7 @@ int spool_event_after(sge_event_type type, sge_event_action action,
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
                          sge_mirror_get_type_name(type), key));
                   DEXIT;
-                  return FALSE;
+                  return false;
                }
 
                spool_write_object(context, ep, key, type);
@@ -418,7 +418,7 @@ int spool_event_after(sge_event_type type, sge_event_action action,
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
                          sge_mirror_get_type_name(type), key));
                   DEXIT;
-                  return FALSE;
+                  return false;
                }
 
                spool_write_object(context, ep, key, type);
@@ -430,7 +430,7 @@ int spool_event_after(sge_event_type type, sge_event_action action,
                   ERROR((SGE_EVENT, "%s element not found\n",
                          sge_mirror_get_type_name(type)));
                   DEXIT;
-                  return FALSE;
+                  return false;
                }
                spool_write_object(context, ep, NULL, type);
                break;
@@ -462,7 +462,7 @@ int spool_event_after(sge_event_type type, sge_event_action action,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 static bool init_spooling(int argc, char *argv[])
@@ -520,8 +520,8 @@ static bool init_spooling(int argc, char *argv[])
    return true;
 #if 0
    /* for classic spooling we need directories spool and common */
-   sge_mkdir(COMMON_DIR, 0755, TRUE);
-   sge_mkdir(SPOOL_DIR, 0755, TRUE);
+   sge_mkdir(COMMON_DIR, 0755, true);
+   sge_mkdir(SPOOL_DIR, 0755, true);
 #endif
 }
 

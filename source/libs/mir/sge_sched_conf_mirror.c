@@ -46,7 +46,7 @@
 *     schedd_conf_update_master_list() -- update the scheduler configuration
 *
 *  SYNOPSIS
-*     int 
+*     bool 
 *     schedd_conf_update_master_list(sge_event_type type, 
 *                                    sge_event_action action,
 *                                    lListElem *event, void *clientdata)
@@ -65,7 +65,7 @@
 *     void *clientdata        - client data
 *
 *  RESULT
-*     int - TRUE, if update is successfull, else FALSE
+*     bool - true, if update is successfull, else false
 *
 *  NOTES
 *     The function should only be called from the event mirror interface.
@@ -73,7 +73,7 @@
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
-int 
+bool 
 schedd_conf_update_master_list(sge_event_type type, 
                                sge_event_action action,
                                lListElem *event, void *clientdata)
@@ -107,5 +107,5 @@ schedd_conf_update_master_list(sge_event_type type,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }

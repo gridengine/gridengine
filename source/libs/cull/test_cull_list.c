@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
    lSetChar(ep, TEST_char, 'A');
    lSetLong(ep, TEST_long, 2);
    lSetUlong(ep, TEST_ulong, 3);
-   lSetBool(ep, TEST_bool, TRUE);
+   lSetBool(ep, TEST_bool, true);
    lSetList(ep, TEST_list, NULL);
 
    lSetInt(ep, TEST_int, 100);

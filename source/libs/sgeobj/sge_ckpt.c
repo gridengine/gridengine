@@ -56,11 +56,11 @@ lList *Master_Ckpt_List = NULL;
 *     ckpt_is_referenced() -- Is a given CKPT referenced in other objects? 
 *
 *  SYNOPSIS
-*     int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list, 
-*                            const lList *job_list) 
+*     bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list, 
+*                             const lList *job_list) 
 *
 *  FUNCTION
-*     This function returns true (1) if the given "ckpt" is referenced
+*     This function returns true if the given "ckpt" is referenced
 *     in a job contained in "job_list". If this is the case than
 *     a corresponding message will be added to the "answer_list". 
 *
@@ -70,13 +70,13 @@ lList *Master_Ckpt_List = NULL;
 *     const lList *job_list - JB_Type list 
 *
 *  RESULT
-*     int - true (1) or false (0) 
+*     bool - true or false  
 ******************************************************************************/
-int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
-                       const lList *job_list)
+bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
+                        const lList *job_list)
 {
    lListElem *job = NULL;
-   int ret = 0;
+   bool ret = false;
 
    for_each(job, job_list) {
       if (job_is_ckpt_referenced(job, ckpt)) {
@@ -86,7 +86,7 @@ int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
          sprintf(SGE_EVENT, MSG_CKPTREFINJOB_SU, ckpt_name, u32c(job_id));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_INFO);
-         ret = 1;
+         ret = true;
       }
    } 
    return ret;

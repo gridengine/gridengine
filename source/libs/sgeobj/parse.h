@@ -50,13 +50,13 @@ lListElem *sge_add_arg(lList **popt_list, u_long32 opt_number,
 
 lListElem *sge_add_noarg(lList **popt_list, u_long32 opt_number, const char *opt_switch, const char *opt_switch_arg);
 
-int parse_multi_stringlist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist, lDescr *type, int field);
+bool parse_multi_stringlist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist, lDescr *type, int field);
 
-int parse_flag(lList **ppcmdline, const char *opt, lList **ppal, u_long32 *pflag);
+bool parse_flag(lList **ppcmdline, const char *opt, lList **ppal, u_long32 *pflag);
 
 int parse_string(lList **ppcmdline, const char *opt, lList **ppal, char **str);
 
-int parse_multi_jobtaskslist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist);
+bool parse_multi_jobtaskslist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist);
 
 void sge_parse_string_list(lList **lp, const char *str, int field, 
                            lDescr *descr);
@@ -67,7 +67,7 @@ int sge_parse_jobtasks(lList **lp, lListElem **idp, const char *str, lList **alp
 
 u_long32 parse_group_options(lList *string_list);
 
-int sge_parse_bitfield_str(const char *str, const char *set_specifier[],
+bool sge_parse_bitfield_str(const char *str, const char *set_specifier[],
                            u_long32 *value, const char *name, lList **alpp);
 
 #endif /* __PARSE_H */

@@ -71,7 +71,7 @@ int print_event(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
-int print_jatask_event(sge_event_type type, sge_event_action action, 
+bool print_jatask_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
    int pos;
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
    sge_mirror_subscribe(SGE_EMT_JOB, print_jatask_event, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_JATASK ,print_jatask_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_JATASK, print_jatask_event, NULL, NULL);
    
    ec_set_flush(sgeE_JATASK_MOD,0);
    ec_set_flush(sgeE_JOB_FINAL_USAGE,0);

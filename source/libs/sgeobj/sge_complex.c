@@ -70,7 +70,7 @@ lList *Master_Complex_List = NULL;
 *                                 dialog 
 *     int allow_empty_boolean   - boolean 
 *        1 => NULL values of boolean attributes will 
-*             be replaced with "TRUE" 
+*             be replaced with "true" 
 *        0 => NULL values will be handled as error 
 *     int allow_neg_consumable  - boolean
 *        1 => negative values for consumable 
@@ -152,7 +152,7 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
 *     lListElem *cep           - CE_Type, this object will be checked 
 *     int allow_empty_boolean  - boolean
 *        1 => NULL values of boolean attributes will 
-*             be replaced with "TRUE" 
+*             be replaced with "true" 
 *        0 => NULL values will be handled as error 
 *     int allow_neg_consumable - boolean
 *        1 => negative values for consumable 

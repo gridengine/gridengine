@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 #define sge_init_language(x, y) sge_init_languagefunc((x), (y))

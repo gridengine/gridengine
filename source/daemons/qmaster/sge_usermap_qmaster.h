@@ -38,7 +38,7 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 int usermap_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
-int usermap_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, char *ruser, char *rhost, gdi_object_t *object,int sub_command);
+int usermap_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object,int sub_command);
 int usermap_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
 
 int sge_del_usermap(lListElem *cep, lList **alpp, char *ruser, char *rhost);

@@ -46,7 +46,7 @@
 *     sharetree_update_master_list() -- update the master sharetree list
 *
 *  SYNOPSIS
-*     int 
+*     bool 
 *     sharetree_update_master_list(sge_event_type type, sge_event_action action,
 *                                  lListElem *event, void *clientdata)
 *
@@ -64,7 +64,7 @@
 *     void *clientdata        - client data
 *
 *  RESULT
-*     int - TRUE, if update is successfull, else FALSE
+*     bool - true, if update is successfull, else false
 *
 *  NOTES
 *     The function should only be called from the event mirror interface.
@@ -72,7 +72,7 @@
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
-int 
+bool 
 sharetree_update_master_list(sge_event_type type, sge_event_action action,
                              lListElem *event, void *clientdata)
 {
@@ -91,6 +91,6 @@ sharetree_update_master_list(sge_event_type type, sge_event_action action,
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 

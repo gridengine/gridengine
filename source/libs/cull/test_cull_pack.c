@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
    lSetString(ep, TEST_string, "test_string");
    lSetDouble(ep, TEST_double, 3.1);
    lSetUlong(ep, TEST_ulong, 3);
-   lSetBool(ep, TEST_bool, TRUE);
+   lSetBool(ep, TEST_bool, true);
    lSetList(ep, TEST_list, NULL);
 
    lSetHost(obj, TEST_host, "test sub host");

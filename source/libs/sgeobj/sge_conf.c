@@ -80,7 +80,7 @@ int do_authentication = 1;
 int use_qidle = 0;
 int disable_reschedule = 0;
 
-int do_profiling = FALSE;
+int do_profiling = false;
 int flush_submit_sec = -1;
 int flush_finish_sec = -1;
  
@@ -279,7 +279,7 @@ static tConfEntry conf_entries[] = {
  *-------------------------------------------------------*/
 lList *sge_set_defined_defaults(lList *lpCfg)
 {
-   static int first = TRUE;
+   static bool first = true;
    int i; 
    lListElem *ep;
 
@@ -288,7 +288,7 @@ lList *sge_set_defined_defaults(lList *lpCfg)
    if (first) {
       tConfEntry *pConf;
 
-      first = FALSE;
+      first = false;
 
       pConf = getConfEntry("qmaster_spool_dir", conf_entries);
       pConf->value = malloc(strlen(path.cell_root) + strlen(SPOOL_DIR) + 
@@ -730,7 +730,7 @@ int merge_configuration(lListElem *global, lListElem *local,
          else if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1))
             execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
 
-      do_profiling = FALSE;
+      do_profiling = false;
       flush_submit_sec = -1;
       flush_finish_sec = -1;
       classic_sgeee_scheduling = 0;
@@ -812,7 +812,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             if (sv1)
                free(sv1);
          } else if (!strncasecmp(s, "PROFILE=1", sizeof("PROFILE=1")-1)) {
-            do_profiling = TRUE;
+            do_profiling = true;
          } else if (!strncasecmp(s, "POLICY_HIERARCHY=", 
                                  sizeof("POLICY_HIERARCHY=")-1)) {
             const char *value_string;

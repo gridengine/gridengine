@@ -102,8 +102,8 @@ extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
 extern lList *Master_Job_Schedd_Info_List;
 
-int job_is_enrolled(const lListElem *job, 
-                    u_long32 ja_task_number);
+bool job_is_enrolled(const lListElem *job, 
+                     u_long32 ja_task_number);
 
 u_long32 job_get_ja_tasks(const lListElem *job);
 
@@ -119,9 +119,9 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
                                      u_long32 ja_task_number);
 
-int job_has_job_pending_tasks(lListElem *job);
+bool job_has_job_pending_tasks(lListElem *job);
 
-int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number);
+bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number);
 
 void job_set_hold_state(lListElem *job, 
                         lList **answer_list, u_long32 ja_task_id,
@@ -152,7 +152,7 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
 int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
                      int check); 
 
-int job_has_tasks(lListElem *job);
+bool job_has_tasks(lListElem *job);
 
 u_long32 job_get_ja_task_hold_state(const lListElem *job, u_long32 ja_task_id);
 
@@ -161,19 +161,19 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]);
 void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
                               u_long32 hold_state[8]);
 
-int job_is_zombie_job(const lListElem *job); 
+bool job_is_zombie_job(const lListElem *job); 
 
 const char *job_get_shell_start_mode(const lListElem *job,
                                      const lListElem *queue,
                                      const char *conf_shell_start_mode);
 
-int job_is_array(const lListElem *job); 
+bool job_is_array(const lListElem *job); 
 
-int job_is_parallel(const lListElem *job);
+bool job_is_parallel(const lListElem *job);
 
-int job_is_tight_parallel(const lListElem *job, const lList *pe_list);
+bool job_is_tight_parallel(const lListElem *job, const lList *pe_list);
 
-int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list);
+bool job_might_be_tight_parallel(const lListElem *job, const lList *pe_list);
 
 void job_get_submit_task_ids(const lListElem *job, u_long32 *start, 
                              u_long32 *end, u_long32 *step); 
@@ -213,12 +213,12 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
 
 const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
                         const char *pe_task_id);
-int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
+bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
                   char **pe_task_id);
 
-int job_is_pe_referenced(const lListElem *job, const lListElem *pe);
+bool job_is_pe_referenced(const lListElem *job, const lListElem *pe);
 
-int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt);
+bool job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt);
 
 void job_get_state_string(char *str, u_long32 op);
 

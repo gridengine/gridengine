@@ -265,19 +265,19 @@ ec_prepare_registration(ev_registration_id id, const char *name)
 *     (if ec_prepare_registration has been called).
 *
 *  RESULT
-*     int - TRUE, if the event client interface has been initialized,
-*           else FALSE.
+*     int - true, if the event client interface has been initialized,
+*           else false.
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_prepare_registration()
 *******************************************************************************/
-int 
+bool 
 ec_is_initialized(void) 
 {
    if (ec == NULL) {
-      return FALSE;
+      return false;
    } else {
-      return TRUE;
+      return true;
    }
 }
 
@@ -732,12 +732,12 @@ ec_register(void)
 *     After the timeout, it will be deleted.
 *
 *  RESULT
-*     int - TRUE, if the deregistration succeeded, else FALSE
+*     int - true, if the deregistration succeeded, else false
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_register()
 *******************************************************************************/
-int 
+bool 
 ec_deregister(void)
 {
    int ret;
@@ -748,13 +748,13 @@ ec_deregister(void)
    /* not yet initialized? Nothing to shutdown */
    if (ec == NULL) {
       DEXIT;
-      return TRUE;
+      return true;
    }
 
    if (init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
       /* error message is output from init_packbuffer */
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    packint(&pb, lGetUlong(ec, EV_id));
@@ -767,11 +767,11 @@ ec_deregister(void)
    if (ret != CL_OK) {
       /* error message is output from sge_send_any_request */
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 /****** Eventclient/Client/ec_subscribe() *************************************
@@ -1499,14 +1499,14 @@ ec_commit(void)
 *     malpp - answer list for the whole gdi multi request
 *
 *  RESULT
-*     int - TRUE on success, else FALSE
+*     int - true on success, else false
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_config_changed()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int 
+bool 
 ec_commit_multi(lList **malpp, state_gdi_multi *state) 
 {
    int commit_id, ret;
@@ -1518,14 +1518,14 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
    if (ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
       DPRINTF((MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* not (yet) registered? Cannot send modification to qmaster! */
    if (ec_need_new_registration()) {
       DPRINTF((MSG_EVENT_NOTREGISTERED));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* do not check, if anything has changed.
@@ -1547,7 +1547,7 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
    if (alp != NULL) {
       answer_list_handle_request_answer_list(&alp, stderr);
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, commit_id, 
@@ -1558,12 +1558,12 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
    if (ret == STATUS_OK) {
       config_changed = 0;
       DEXIT;
-      return TRUE;
+      return true;
    }
 
    DPRINTF(("CHANGE EVENT CLIENT CONFIGURATION FAILED\n"));
    DEXIT;
-   return FALSE;
+   return false;
 }
 
 /****** Eventclient/Client/ec_get() ******************************************

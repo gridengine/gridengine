@@ -315,7 +315,7 @@ queue_reference_list_validate(lList **alpp, lList *qr_list,
 *     queue_list_add_queue() -- add a new queue to the queue masterlist
 *
 *  SYNOPSIS
-*     int queue_list_add_queue(lListElem *qep) 
+*     bool queue_list_add_queue(lListElem *qep) 
 *
 *  FUNCTION
 *     Adds the queue to the queue masterlist.
@@ -325,14 +325,14 @@ queue_reference_list_validate(lList **alpp, lList *qr_list,
 *     lListElem *qep - the queue to insert
 *
 *  RESULT
-*     int - TRUE, if the queue could be inserted, else FALSE
+*     bool - true, if the queue could be inserted, else false
 *
 *  NOTES
 *     Appending the queue and quick sorting the queue list would probably
 *     be much faster in systems with many queues.
 *
 ******************************************************************************/
-int queue_list_add_queue(lListElem *queue) 
+bool queue_list_add_queue(lListElem *queue) 
 {
    static lSortOrder *so = NULL;
 
@@ -341,7 +341,7 @@ int queue_list_add_queue(lListElem *queue)
    if (queue == NULL) {
       ERROR((SGE_EVENT, MSG_QUEUE_NULLPTR));
       DEXIT;
-      return FALSE;
+      return false;
    }
 
    /* create SortOrder: */
@@ -357,7 +357,7 @@ int queue_list_add_queue(lListElem *queue)
    lInsertSorted(so, queue, Master_Queue_List);
 
    DEXIT;
-   return TRUE;
+   return true;
 }
 
 /****** sgeobj/queue/queue_check_owner() **************************************
@@ -365,7 +365,7 @@ int queue_list_add_queue(lListElem *queue)
 *     queue_check_owner() -- check if a user is queue owner
 *
 *  SYNOPSIS
-*     int queue_check_owner(const lListElem *queue, const char *user_name) 
+*     bool queue_check_owner(const lListElem *queue, const char *user_name) 
 *
 *  FUNCTION
 *     Checks if the given user is an owner of the given queue.
@@ -376,41 +376,33 @@ int queue_list_add_queue(lListElem *queue)
 *     const char *user_name  - the user name to check
 *
 *  RESULT
-*     int - TRUE, if the user is owner, else FALSE
+*     bool - true, if the user is owner, else false
 *
 ******************************************************************************/
-int queue_check_owner(const lListElem *queue, const char *user_name)
+bool queue_check_owner(const lListElem *queue, const char *user_name)
 {
+   bool ret = false;
    lListElem *ep;
 
    DENTER(TOP_LAYER, "queue_check_owner");
-
    if (queue == NULL) {
-      DEXIT;
-      return FALSE;
-   }
-
-   if (user_name == NULL) {
-      DEXIT;
-      return FALSE;
-   }
-
-   if (manop_is_operator(user_name)) {
-      DEXIT;
-      return TRUE;
-   }
-
-   for_each(ep, lGetList(queue, QU_owner_list)) {
-      DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n", 
-               user_name, lGetString(ep, US_name)));
-      if (!strcmp(user_name, lGetString(ep, US_name))) {
-         DEXIT;
-         return TRUE;
+      ret = false;
+   } else if (user_name == NULL) {
+      ret = false;
+   } else if (manop_is_operator(user_name)) {
+      ret = true;
+   } else {
+      for_each(ep, lGetList(queue, QU_owner_list)) {
+         DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n", 
+                  user_name, lGetString(ep, US_name)));
+         if (!strcmp(user_name, lGetString(ep, US_name))) {
+            ret = true;
+            break;
+         }
       }
    }
-
    DEXIT;
-   return FALSE;
+   return ret;
 }
 
 /****** sgeobj/queue/queue_get_type_string() **********************************

@@ -40,10 +40,10 @@ lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard);
 
 lListElem *pe_list_locate(lList *pe_list, const char *pe_name);
 
-int pe_is_referenced(const lListElem *pe, lList **answer_list,
-                     const lList *master_job_list);
+bool pe_is_referenced(const lListElem *pe, lList **answer_list,
+                      const lList *master_job_list);
 
-int pe_is_matching(const lListElem *pe, const char *wildcard);
+bool pe_is_matching(const lListElem *pe, const char *wildcard);
 
 int pe_validate(int startup, lListElem *pep, lList **alpp);
 #endif /* __SGE_PE_H */

@@ -55,7 +55,7 @@ lList *Master_Pe_List = NULL;
 *     pe_is_matching() -- Does Pe name match the wildcard? 
 *
 *  SYNOPSIS
-*     int pe_is_matching(const lListElem *pe, const char *wildcard) 
+*     bool pe_is_matching(const lListElem *pe, const char *wildcard) 
 *
 *  FUNCTION
 *     The function returns true (1) if the name of the given
@@ -66,9 +66,9 @@ lList *Master_Pe_List = NULL;
 *     const char *wildcard - wildcard 
 *
 *  RESULT
-*     int - true (1) or false (0)
+*     bool - true or false 
 ******************************************************************************/
-int pe_is_matching(const lListElem *pe, const char *wildcard) 
+bool pe_is_matching(const lListElem *pe, const char *wildcard) 
 {
    return !fnmatch(wildcard, lGetString(pe, PE_name), 0);
 }
@@ -130,8 +130,8 @@ lListElem *pe_list_locate(lList *pe_list, const char *pe_name)
 *     pe_is_referenced() -- Is a given PE referenced in other objects? 
 *
 *  SYNOPSIS
-*     int pe_is_referenced(const lListElem *pe, lList **answer_list, 
-*                          const lList *master_job_list) 
+*     bool pe_is_referenced(const lListElem *pe, lList **answer_list, 
+*                           const lList *master_job_list) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given "pe" is referenced
@@ -144,13 +144,13 @@ lListElem *pe_list_locate(lList *pe_list, const char *pe_name)
 *     const lList *master_job_list - JB_Type list 
 *
 *  RESULT
-*     int - true (1) or false (0) 
+*     bool - true or false  
 ******************************************************************************/
-int pe_is_referenced(const lListElem *pe, lList **answer_list,
-                     const lList *master_job_list)
+bool pe_is_referenced(const lListElem *pe, lList **answer_list,
+                      const lList *master_job_list)
 {
    lListElem *job = NULL;
-   int ret = 0;
+   bool ret = false;
 
    for_each(job, master_job_list) {
       if (job_is_pe_referenced(job, pe)) {
@@ -160,7 +160,7 @@ int pe_is_referenced(const lListElem *pe, lList **answer_list,
          sprintf(SGE_EVENT, MSG_PEREFINJOB_SU, pe_name, u32c(job_id));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_INFO);
-         ret = 1;
+         ret = true;
       }
    } 
    return ret;

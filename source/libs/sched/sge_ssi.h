@@ -87,7 +87,7 @@ typedef struct {
    const char *host_name;
 } task_map;
 
-int sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks[]);
+bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map tasks[]);
 
-int sge_ssi_job_cancel(const char *job_identifier, int reschedule); 
+bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule); 
 

@@ -1,0 +1,28 @@
+Bugs fixed in SGE 5.3p1 since release 5.3
+-----------------------------------------
+
+Issue	Sun BugId  Description
+---------------------------------------------------------------------------------------------------
+215     4673738    disallow "none" load formula and do additional tests for the correctness
+223 	4700286    complex default value not considered for load/suspend thresholds
+226	4665780    qmaster error message during startup: global configuration doesn't exist - creat
+229	4668148    solaris psets won't be used by SGE
+231 	4697491    signal notification can prevent delivery of actual suspend/termination signal
+232 	4708239    Allow specification of arguments to [rsh|rlogin|qlogin]_[daemon|command]
+236	4670664    parallel jobs (e.g. qmake) fail
+237	4670669    error message "can't set additional group id for job" for interactive jobs
+239	4675410    queue suspend threshold alarm nsuspend>1 does not susp. multiple jobs
+240	4675416    use of suspend thresholds can break user sort policy and cause logging
+243	4676340    memory leak in sge_schedd
+247     4696768    SGE(EE) allows to submit binary job scripts
+250     4682966    qsh(1) ignores -S <shell> in sge_request(5) files
+251     4683852    qalter on running jobs can confuse consumable mgmt
+259     4686157    qhost -j is broken
+271     4692957    non-privileged users can submit jobs with priority higher than 0
+272 	4708235    SGE should allow to start qrsh jobs when /etc/nologin exits
+275 	4706929    qmon does not display job predecessors in job control
+284 	4699665    qstat resource based job selection broken
+287 	4701640    problems launching jobs from qtcsh with "&"
+299     4677087    execd could crash when executing tightly integrated parallel jobs
+311 	4712023    global load values can prevent dispatching of jobs
+314 	4713013    qacct may display incorrect accounting information

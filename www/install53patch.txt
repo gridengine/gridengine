@@ -1,0 +1,109 @@
+                 Installing SGE 5.3p1 as a patch for SGE 5.3
+                 -------------------------------------------
+
+Content
+-------
+
+1) Prerequisites   
+2) Stopping the Grid Engine cluster to schedule jobs
+3) Renaming the 'sge_commd' binary
+4) Shutting down Grid Engine qmaster and scheduler
+5) Installing the patch release and restarting Sun Grid Engine
+
+1) Prerequisites
+-------------
+
+   These directions apply for the installation of the SGE 5.3p1 patch
+   release. If you make a new installation of SGE 5.3p1 you do not need to
+   read this file.
+
+   These installation instructions assume that you are running a Grid Engine
+   cluster where all hosts share the same directory for the binaries.  If
+   you installed the binaries on a local file system you only need to stop
+   the SGE daemons for that host on which you are installing the patch.
+
+   By default there may by no running jobs when the patch is installed.
+   There may pending batch jobs, but no pending interactive jobs (qrsh,
+   qmake, qsh, qtcsh).
+
+   It is possible to install the patch with running batch jobs. To avoid a
+   failure of the active "sge_shepherd" binary it is necessary to move the
+   old shepherd binary.
+
+   In no case it is supported to install the patch with running interactive
+   jobs.
+
+
+2) Stopping the Grid Engine cluster to schedule jobs
+----------------------------------------------------
+
+   Disable all queues that no new jobs are started:
+
+      # qmod -d '*'
+
+   Optional (only needed of there are running jobs which should continue to
+   run when the patch release is installed):
+
+      # cd $SGE_ROOT/bin
+      # mv <arch>/sge_shepherd <arch>/sge_shepherd.sge53
+
+   
+3) Renaming the 'sge_commd' binary
+----------------------------------
+
+   Since the patch packages contain the 'sge_commd' binary you need to
+   move away the commd binary to avoid a crash of your running commd's when
+   unpacking the new patch packages.
+
+      # cd $SGE_ROOT/bin
+      # mv <arch>/sge_commd <arch>/sge_commd.sge53
+
+
+   NOTE: SGE 5.3p1 does not change 'sge_commd'. Therefore it is not
+         necessary to shutdown the communication daemons in your Grid Engine
+         cluster.
+
+
+4) Shutting down Grid Engine qmaster and scheduler
+--------------------------------------------------
+
+   You need to shutdown the qmaster and scheduler daemon and all execution
+   daemons on all SGE hosts. It is not necessary to shutdown the
+   communication daemons ('sge_commd').
+
+   Shutdown your execution hosts and qmaster/scheduler:
+   
+      # qconf -ke all
+      (wait 30 seconds)
+      # qconf -ks
+      # qconf -km
+
+   Now verify with the 'ps' command that the qmaster and scheduler daemon
+   (sge_qmaster, sge_schedd) and the execution daemon (sge_execd) on all
+   your hosts are stopped.
+
+
+5) Installing the patch release and restarting Sun Grid Engine
+--------------------------------------------------------------
+
+   Now please install the packages for all your binaries as user root in a
+   machine where user root has read/write permission in the $SGE_ROOT
+   directory:
+
+      # cd $SGE_ROOT
+      # gzip -dc sge-<rel>-bin-<arch>.tar.gz> | tar xvpf -
+   
+
+   After installing the patch you need to restart your SGE cluster. Please
+   login to your qmaster machine and enter:
+
+      # /etc/init.d/rcsge
+
+   Now you should repeat this step on all your execution hosts.
+
+   After restarting SGE you may again enable your queues:
+
+      # qmod -e '*'
+
+   If you renamed the shepherd binary you may safely delete the old binary
+   when all jobs finished which where running prior the patch installation.

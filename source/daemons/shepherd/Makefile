@@ -41,7 +41,8 @@ SHEPHERD_SRC = shepherd.c \
            am_chdir.c \
            setrlimits.c \
            signal_queue.c \
-           setjoblimit.c
+           setjoblimit.c \
+           sge_pset.c
 
 SHEPHERD_ADD_SRC = \
            config_file.c \
@@ -53,7 +54,7 @@ SHEPHERD_ADD_SRC = \
            sge_parse_num_par.c \
            pdc.c \
            procfs.c \
-           sge_processes_irix.c \
+           sge_processes_irix.c
 
 SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 
@@ -114,3 +115,6 @@ setrlimits.o:	$(SHEPHERD_DIR)/setrlimits.c
 
 setjoblimit.o: $(SHEPHERD_DIR)/setjoblimit.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/setjoblimit.c
+
+sge_pset.o: $(SHEPHERD_DIR)/sge_pset.c
+		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/sge_pset.c

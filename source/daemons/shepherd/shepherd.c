@@ -43,10 +43,6 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#if defined(SOLARIS64)
-#  include <sys/pset.h>
-#endif
-
 #if defined(AIX41)
 #  include <sys/select.h>
 #endif
@@ -80,28 +76,6 @@ struct rusage {
 #   include <sys/times.h>
 #endif
 
-/* for IRIX processor set stuff */
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
-#if defined(__sgi)
-/* declaration of sbv_t from sys/runq_private.h
- * including sys/runq_private.h lead to compile errors.
- */
-typedef unsigned long long sbv_t;
-#   include <sys/sysmp.h>
-#   include <sys/prctl.h>
-#   include <sys/schedctl.h>
-#   define SGE_MPSET_MULTIPLIER   100
-#endif
-#if defined(ALPHA)
-#   include <sys/processor.h>
-   typedef long sbv_t;
-#endif
-#   define PROC_SET_OK            0
-#   define PROC_SET_WARNING       1
-#   define PROC_SET_ERROR        -1
-#   define PROC_SET_BUSY         -2
-#endif
-
 #include "basis_types.h"
 #include "config_file.h"
 #include "err_trace.h"
@@ -125,20 +99,12 @@ typedef unsigned long long sbv_t;
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_os.h"
+#include "sge_pset.h"
 
 #if defined(IRIX6)
 #include "sge_processes_irix.h"
 #endif
 
-#if defined(ALPHA)
-#if defined(ALPHA4)
-   int assign_pid_to_pset(pid_t *pid_list, long num_pids, int pset_id, long flags);
-   int assign_cpu_to_pset(long cpu, int pset_id, long option);
-#endif
-   int destroy_pset(int pset_id, int number);
-   int create_pset(void);
-   void print_pset_error(int ret);
-#endif
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
@@ -174,6 +140,7 @@ static void set_ckpt_restart_command(char *, int, char *, int);
 static void handle_job_pid(int, int, int *);
 static int start_async_command(char *descr, char *cmd);
 static void start_clean_command(char *);
+static void create_checkpointed_file(int ckpt_is_in_arena);
 static pid_t start_token_cmd(int, char *, char *, char *, char *);
 static int do_wait(pid_t);
 static void set_sig_handler(int);
@@ -183,16 +150,6 @@ static void shepherd_signal_handler(int);
 /* overridable control methods */
 static void verify_method(char *method_name);
 static int shepherd_sys_str2signal(char *override_signal);
-
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
-static int set_processor_range(char *, int, char *);
-static int free_processor_set(char *);
-#endif
-
-#if defined(__sgi) || defined(ALPHA)
-static int range2proc_vec(char *, sbv_t *, char *);
-#endif
-
 static void shepherd_signal_job(pid_t pid, int sig);
 
 char shepherd_job_dir[2048];
@@ -600,28 +557,10 @@ char **argv
    script_timeout = atoi(get_conf_val("script_timeout"));
    notify = atoi(get_conf_val("notify"));
 
-#if defined(__sgi) || defined(ALPHA) 
-   /* SGI IRIX processor set stuff */
-   if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
-      int ret;
-
-      sge_switch2start_user();
-      if ((ret=set_processor_range(get_conf_val("processors"),
-                 (int) strtol(get_conf_val("job_id"), NULL, 10),
-                 err_str)) != PROC_SET_OK) {
-         sge_switch2admin_user();
-         if (ret == PROC_SET_WARNING) /* not critical - e.g. not root */
-            shepherd_trace("warning: processor set not set in set_processor_range");
-         else { /* critical --> use err_str to indicate error */
-            shepherd_trace("critical error in set_processor_range - bailing out");
-            shepherd_state = SSTATE_PROCSET_NOTSET;
-            shepherd_error(err_str);
-         }
-      } else {
-         sge_switch2admin_user();
-      }
-   }
-#endif
+   /*
+    * Create processor set
+    */
+   sge_pset_create_processor_set();
 
    /*
     * this blocks sge_shepherd until the first time the token is
@@ -677,8 +616,7 @@ char **argv
       /* got a signal during prolog causing job to migrate? */ 
       shepherd_trace("got SIGMIGR before job start");
       exit_status = 0; /* no error */
-      if ((fp = fopen("checkpointed", "w")))
-         fclose(fp);
+      create_checkpointed_file(0);
    } 
    else if (pending_sig(SIGKILL)) {
       /* got a signal during prolog causing job exit ? */ 
@@ -700,9 +638,8 @@ char **argv
                shepherd_trace("got SIGKILL before job start");
                exit_status = 0; /* no error */
             } else if (pending_sig(SIGTTOU)) { 
-               if ((fp = fopen("checkpointed", "w")))
-                  fclose(fp);
                shepherd_trace("got SIGMIGR before job start");
+               create_checkpointed_file(0);
                exit_status = 0; /* no error */
             } else {
                exit_status = start_child("job", script_file, NULL, 0, ckpt_type);
@@ -740,41 +677,10 @@ char **argv
    if (run_epilog)
       do_epilog(script_timeout, ckpt_type);
 
-#if defined(__sgi) || defined(ALPHA) 
-   /* SGI IRIX processor set stuff */
-   if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
-      int ret;
-
-      sge_switch2start_user();
-      if ((ret=free_processor_set(err_str)) != PROC_SET_OK) {
-         sge_switch2admin_user();
-         switch (ret) {
-         case PROC_SET_WARNING: /* not critical - e.g. not root */
-            shepherd_trace("warning: processor set not freed in free_processor_set - "
-                   "did no exist, probably");
-            break;
-         case PROC_SET_ERROR: /* critical - err_str indicates error */
-            shepherd_trace("critical error in free_processor_set - bailing out");
-            shepherd_state = SSTATE_PROCSET_NOTFREED;
-            shepherd_error(err_str);
-            break;
-         case PROC_SET_BUSY: /* still processes running in processor set */
-            shepherd_trace("error in releasing processor set");
-            shepherd_state = SSTATE_PROCSET_NOTFREED;
-            shepherd_error(err_str);
-            break;
-         default: /* should not occur */
-            sprintf(err_str,
-               "internal error after free_processor_set - ret=%d", ret);
-            shepherd_state = SSTATE_PROCSET_NOTFREED;
-            shepherd_error(err_str);
-            break;
-         }
-      } else {
-         sge_switch2admin_user(); 
-      }
-   }
-#endif
+   /*
+    * Free previously created processor set
+    */
+   sge_pset_free_processor_set();
 
    if (coshepherd_pid > 0) {
       shepherd_trace("sending SIGTERM to sge_coshepherd");
@@ -962,60 +868,39 @@ int ckpt_type
 
    /* make us the owner of the error/trace/exit_status file again */
    err_trace_chown_files(geteuid());
-   if (ckpt_type) {
-      /* empty file is a hint to reschedule that job. If we already have a
-       * checkpoint in the arena there is a dummy string in the file
-       */
-      if (SGE_STAT("checkpointed", &buf)) {
-         if ((fp = fopen("checkpointed", "w")))
-            fclose(fp);
+
+   if (!strcmp("job", childname) && ckpt_type) {
+      if (signalled_ckpt_job) {
+         create_checkpointed_file(0);
+      } else {
+         if (ckpt_type & CKPT_KERNEL) { 
+            start_clean_command(clean_command); 
+         }
       }
-   }
+   } 
 
    if (WIFSIGNALED(status)) {
-      sprintf(err_str, "job exited due to uncaught signal");
+      sprintf(err_str, "exited due to uncaught signal");
       shepherd_trace(err_str);
 
-      if (ckpt_type && !signalled_ckpt_job) {
-         unlink("checkpointed");
-         shepherd_trace("job exited due to signal but not due to checkpoint");
-         if (ckpt_type & CKPT_KERNEL) {
-            shepherd_trace("starting ckpt clean command");
-            start_clean_command(clean_command);
-         }   
-      }   
-         
       child_signal = WTERMSIG(status);
 #ifdef WCOREDUMP
       core_dumped = WCOREDUMP(status);
 #else
       core_dumped = status & 80;
 #endif
-      if (timeout && child_signal==SIGALRM) 
+      if (timeout && child_signal == SIGALRM) {
          sprintf(err_str, "%s expired timeout of %d seconds and was killed%s", 
-               childname, timeout, core_dumped ? " (core dumped)": "");
-      else
+                 childname, timeout, core_dumped ? " (core dumped)": "");
+      } else {
          sprintf(err_str, "%s signaled: %d%s", childname, child_signal,
                  core_dumped ? " (core dumped)": "");
-
-      exit_status = 128+child_signal;
-   } else {
-      sprintf(err_str, "job exited NOT due to uncaught signal");
-      shepherd_trace(err_str);
-
-      if (!strcmp("job", childname)) {
-         /* remove indication of checkpoints */
-         if (WEXITSTATUS(status) < 128) {
-            if (!signalled_ckpt_job && ckpt_type) {
-               shepherd_trace("checkpointing job exited normally");
-               unlink("checkpointed");
-               if (ckpt_type & CKPT_KERNEL) {
-                  shepherd_trace("starting ckpt clean command");
-                  start_clean_command(clean_command);
-               }
-            }
-         }
       }
+
+      exit_status = 128 + child_signal;
+   } else {
+      sprintf(err_str, "exited NOT due to uncaught signal");
+      shepherd_trace(err_str);
 
       if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);
@@ -1501,441 +1386,6 @@ pid_t ctrl_pid[3];
    }
 }
 
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
-/*------------------------------------------------------------------------
- * 
- * set_processor_range: sets processor range according to
- *                      string specification on SGIs
- *
- * format of range: n|[n][-[m]],...  , n,m  being int >= 0.
- *                  no blanks are allowed in between (this is supposed to
- *                  be handled by the queue configuration parsing routine)
- *                 
- * parameter list:
- *    crange (input):       string specifier of the range.
- *                          will be modified via strtok internally.
- *    proc_set_num (input): the base for a unique processor set number.
- *                          this number is already supposed to be unique
- *                          for the job (currently the job_id).
- *                          set_processor_range() manipulates it to make
- *                          sure that it is a unique processor set number.
- *    err_str (output):     the error message string to be used by the
- *                          calling routine if return value < 0.
- *                          Also used for trace messages internally.
- *                          Passed to invoked subroutines.
- *
- * return values:
- *       PROC_SET_ERROR  : a critical error occurred; either during execution
- *                         of sysmp calls or as returned from range2proc_vec().
- *                         ==> print err_str in calling routine.
- *       PROC_SET_OK     : ok.
- *       PROC_SET_WARNING: a non-critical error occurred (e.g. the procedure
- *                   is executed as unpriveliged user)
- *
- * subroutines:   range2proc_vec()
- *
- * files:         processor_set_number   -  unique processor set number
- *                                          is stored for later use.
- *
- *----------------------------------------------------------------------*/
-static int set_processor_range(
-char *crange,
-int proc_set_num,
-char *err_str 
-) {
-   int ret;
-   FILE *fp;
-#if defined(__sgi)
-   int initial_proc_set_num;
-#endif
-#if defined(__sgi) || defined(ALPHA)
-   sbv_t proc_vec;
-#endif
-
-#if defined(__sgi) || defined(ALPHA)
-   if ((ret=range2proc_vec(crange, &proc_vec, err_str)))
-      return ret;
-#endif
-
-#if defined(__sgi) && !defined(IRIX_NOPSET)
-   /* create a unique processor set for the job
-    * 1st select a possible name space of 100 processor sets for the job
-    * Then iterate in the name space until processor set gets created
-    * or other error occurs.
-    */
-   proc_set_num *= SGE_MPSET_MULTIPLIER;
-   initial_proc_set_num = proc_set_num;
-   while(sysmp(MP_PSET, MPPS_CREATE, proc_set_num, &proc_vec) &&
-         proc_set_num < initial_proc_set_num+SGE_MPSET_MULTIPLIER) {
-      switch (errno) {
-      case EEXIST:
-         sprintf(err_str,
-            "MPPS_CREATE: processor set %d already exisits",proc_set_num);
-         shepherd_trace(err_str);
-         proc_set_num++;
-         break;
-      case EPERM:
-         shepherd_trace("MPPS_CREATE: must run as root to create processor sets");
-         return PROC_SET_WARNING;
-         break;
-      case EINVAL:
-         strcpy(err_str,
-            "MPPS_CREATE: processor set conflicts with reserved value");
-         shepherd_trace(err_str);
-         return PROC_SET_ERROR;
-         break;
-      default:
-         sprintf(err_str,"MPPS_CREATE: unexpected error - errno=%d", errno);
-         shepherd_trace(err_str);
-         return PROC_SET_ERROR;
-         break;
-      }
-   }
-   if (proc_set_num >= initial_proc_set_num+SGE_MPSET_MULTIPLIER) {
-      sprintf(err_str,"all feasible %d processor set numbers occupied",
-         SGE_MPSET_MULTIPLIER);
-      shepherd_trace(err_str);
-      return PROC_SET_ERROR;
-   }
-#elif defined(ALPHA)
-   /* It is not possible to bind processor #0 to other psets than pset #0
-    * So if we get a pset with #0 contained in the range we do nothing. 
-    * The process gets not bound to a processor but it is guaranteed
-    * that no other job will get processor #0 exclusively. It is upon 
-    * the administrator to prevent overlapping of the psets in different
-    * queues 
-    */
-   if (!(proc_vec & 1)) { /* processor #0 not contained */
-      if ((proc_set_num = create_pset())<0) {
-         print_pset_error(proc_set_num); /* prints error to stdout */
-         shepherd_trace("MPPS_CREATE: failed to setup a new processor set");
-         return PROC_SET_ERROR;
-      }
-
-      if (assign_cpu_to_pset(proc_vec, proc_set_num, 0)<0) {
-         print_pset_error(proc_set_num); /* prints error to stdout */
-         shepherd_trace("MPPS_CREATE: failed assigning processors to processor set");
-         return PROC_SET_ERROR;
-      }
-   } else {
-      /* use default pset (id #0) */
-      proc_set_num = 0;
-   }
-#elif defined(SOLARIS64)
-   /*
-    * We do not create a processor set here
-    * The system administrator is responsible to do this
-    * We read one id from crange. This is the processor-set id we should use.
-    */
-   if (crange) {
-      char *tok, *next;
-
-      if ((tok=strtok(crange, " \t\n"))) {
-         proc_set_num = (int) strtol(tok, &next, 10);
-         if (next == tok) {
-            sprintf(err_str, "wrong processor set id format: %20.20s", crange);
-            shepherd_trace(err_str);
-            return PROC_SET_ERROR;
-         }
-      } 
-   }
-#endif
-
-   /* dump to file for later use */
-   if ((fp = fopen("processor_set_number","w"))) {
-      fprintf(fp,"%d\n",proc_set_num);
-      fclose(fp);
-   } else {
-      shepherd_trace("MPPS_CREATE: failed creating file processor_set_number");
-      return PROC_SET_ERROR;
-   }
-
-#if defined(__sgi) && !defined(IRIX_NOPSET)
-   /* free myself from any inherited processor set assignments
-    * No errors are supposed to occur.
-    */
-   if (sysmp(MP_SCHED, UNSETPSET, getpid())) {
-      sprintf(err_str,"UNSETPSET: unexpected error - errno=%d", errno);
-      shepherd_trace(err_str);
-      return PROC_SET_ERROR;
-   }
-
-   /* Now let's assign ourselves to the previously created processor set */
-   if (sysmp(MP_SCHED, SETPSET, 0, proc_set_num)) {
-      switch (errno) {
-      case EBUSY:
-         shepherd_trace("MP_SCHED: restricted processors in processor set");
-         return PROC_SET_ERROR;
-         break;
-      case EDEADLK:
-         shepherd_trace("MP_SCHED: invalid processor set");
-         return PROC_SET_ERROR;
-         break;
-      default:
-         sprintf(err_str,"MP_SCHED: unexpected error - errno=%d", errno);
-         shepherd_trace(err_str);
-         return PROC_SET_ERROR;
-         break;
-      }
-   }
-#elif defined(ALPHA)
-   /* Now let's assign ourselves to the previously created processor set */
-   if (proc_set_num) {
-      pid_t pid_list[1];
-      pid_list[0] = getpid();
-      if (assign_pid_to_pset(pid_list, 1, proc_set_num, PSET_EXCLUSIVE)<0) {
-         print_pset_error(proc_set_num); /* prints error to stdout */
-         shepherd_trace("MPPS_CREATE: failed assigning processors to processor set");
-         return PROC_SET_ERROR;
-      }
-   }
-#elif defined(SOLARIS64)
-   if (proc_set_num) {
-      int local_ret;
-
-      sprintf(err_str,"pset_bind: try to use processorset %d", proc_set_num);
-      shepherd_trace(err_str);
-      if (pset_bind(proc_set_num, P_PID, P_MYID, NULL)) {
-         switch (errno) {
-         case EFAULT:
-            shepherd_trace("pset_bind: The location pointed to by opset was not"
-               " NULL and not writable by the user");
-            local_ret = PROC_SET_ERROR;
-            break;
-         case EINVAL:
-            shepherd_trace("pset_bind: invalid processor set was specified");
-            local_ret = PROC_SET_ERROR;
-            break;
-         case EPERM:
-            shepherd_trace("pset_bind: The effective user of the calling "
-               "process is not super-user");
-            local_ret = PROC_SET_ERROR;
-            break;
-         default:
-            sprintf(err_str,"pset_bind: unexpected error - errno=%d", errno);
-            shepherd_trace(err_str);
-            local_ret = PROC_SET_ERROR;
-            break;
-         }
-         return local_ret;
-      }
-   }
-#endif
-
-   return PROC_SET_OK;
-}
-
-
-/*------------------------------------------------------------------------
- * 
- * free_processor_set: release the previously occupied processor set.
- *
- * parameter list:
- *    err_str (output):     the error message string to be used by the
- *                          calling routine if return value < PROC_SET_OK.
- *                          Also used for trace messages internally.
- *
- * return values:
- *       PROC_SET_BUSY   : the processor set is still in use, i.e. processes
- *                         originating from the job have not finished
- *                         ==> print err_str in calling routine.
- *       PROC_SET_ERROR  : a critical error occurred; during execution
- *                         of sysmp calls.
- *                         ==> print err_str in calling routine.
- *       PROC_SET_OK     : ok.
- *       PROC_SET_WARNING: a non-critical error occurred (e.g. the procedure
- *                         is executed as unpriviliged user)
- *
- * files:         processor_set_number   -  unique processor set number
- *                                          read from this file
- *
- *----------------------------------------------------------------------*/
-int free_processor_set(
-char *err_str 
-) {
-   FILE *fp;
-   int proc_set_num;
-
-   /* read unique processor set number from file */
-   if ((fp = fopen("processor_set_number","r"))) {
-      fscanf(fp, "%d", &proc_set_num);
-      fclose(fp);
-   } else {
-      shepherd_trace("MPPS_CREATE: failed reading from file processor_set_number");
-      return PROC_SET_ERROR;
-   }
-
-#if defined(__sgi) && !defined(IRIX_NOPSET)
-   /* release shepherd from processor set. this should be the only
-    * process left associated with the job
-    * no errors are expected to occur.
-    */
-   if (sysmp(MP_SCHED, UNSETPSET, getpid())) {
-      sprintf(err_str,"UNSETPSET: unexpected error - errno=%d", errno);
-      shepherd_trace(err_str);
-      return PROC_SET_ERROR;
-   }
-
-   /* remove the processor set */
-   if (sysmp(MP_PSET, MPPS_DELETE, proc_set_num)) {
-      switch (errno) {
-      case EPERM:
-         shepherd_trace("MPPS_DELETE: must run as root to delete processor sets");
-         return PROC_SET_WARNING;
-         break;
-      case EBUSY:
-         /* we were unlucky - at least one process from the job's
-          * process hierarchy has not finished
-          */
-         strcpy(err_str,"MPPS_DELETE: processor set still in use");
-         shepherd_trace(err_str);
-         return PROC_SET_BUSY;
-         break;
-      default:
-         sprintf(err_str,"MPPS_DELETE: unexpected error - errno=%d", errno);
-         shepherd_trace(err_str);
-         return PROC_SET_ERROR;
-         break;
-      }
-   }
-#elif defined(ALPHA)
-   if (proc_set_num) {
-      int ret;
-      pid_t pid_list[1];
-      pid_list[0] = getpid();
-
-      /* assign shepherd back to default processor set */
-      if ((ret=assign_pid_to_pset(pid_list, 1, 0, 0))<0) {
-         print_pset_error(ret); /* prints error to stdout */
-         shepherd_trace("MPPS_CREATE: failed assigning processors to processor set");
-         return PROC_SET_ERROR;
-      }
-
-      if ((ret = destroy_pset(proc_set_num, 1))==PROCESSOR_SET_ACTIVE) {
-         print_pset_error(ret);
-         shepherd_trace("MPPS_CREATE: failed assigning processors to processor set");
-         return PROC_SET_ERROR;
-      }
-   }
-#elif defined(SOLARIS64)
-   /*
-    * We do not release a processor set here
-    * The system administrator is responsible to do this
-    */
-#endif
-   return PROC_SET_OK;
-}
-#endif
-
-#if defined(__sgi) || defined(ALPHA) 
-/*------------------------------------------------------------------------
- * 
- * range2proc_vec: computes bit vector with bits set corresponding to
- *                 string specification of processor range.
- *
- * format of range: n|[n][-[m]],...  , n,m  being int >= 0.
- *                  no blanks are allowed in between (this is supposed to
- *                  be handled by the queue configuration parsing routine)
- *                 
- * parameter list:
- *       crange (input):    string specifier of the range.
- *                          will be modified via strtok internally.
- *       proc_vec (output): a bit vector of type sbv_t with all bits set
- *                          contained in the range description and all
- *                          other bits zero.
- *       err_str (output):  the error message string to be used by the
- *                          calling routine if return value < PROC_SET_OK.
- *                          Also used for trace messages internally.
- *
- * return values:
- *       PROC_SET_ERROR: invalid range value in range description.
- *                       ==> print err_str in calling routine.
- *       PROC_SET_OK   : ok.
- *
- * subroutines:   none
- *
- *----------------------------------------------------------------------*/
-static int range2proc_vec(
-char *crange,
-sbv_t *proc_vec,
-char *err_str 
-) {
-   char *tok, *next, *p=crange;
-   int min, max, i;
-   int dash_used;
-   int sbvlen;
-
-   *proc_vec = (sbv_t) 0;
-
-   /* compute max number of processors and thus significant length of
-    * proc_vec
-    */
-   sbvlen = sge_nprocs() - 1; /* LSB corresponds to proc. 0 */
-
-   /* loop trough range string with "," as token delimiter
-    * Set processor vector for each token = range definition element.
-    */
-   while ((tok=strtok(p,","))) {
-      if (p) p=NULL;
-      
-      /* for each token parse range, i.e. find
-       * whether min or max value is set and whether a "-" sign
-       * was used
-       */
-      min = -1;
-      max = -1;
-      dash_used = 0;
-      while (*tok) {
-         next = NULL;
-         if (*tok == '-') {
-            dash_used = 1;
-            if (min == -1)
-               min = 0;
-         } else { /* should be a number */
-            if (min == -1 && !dash_used ) {
-               min = (int) strtol(tok, &next, 10);
-               if (next == tok || min < 0 || min > sbvlen) {
-                  sprintf(err_str, "range2proc_vec: wrong processor range format: %20.20s", crange);
-                  shepherd_trace(err_str);
-                  return PROC_SET_ERROR;
-               }
-            } else if (max == -1 && dash_used ) {
-               max = (int) strtol(tok, &next, 10);
-               if (next == tok || max < 0 || max > sbvlen) {
-                  sprintf(err_str, "range2proc_vec: wrong processor range format: %20.20s", crange);
-                  shepherd_trace(err_str);
-                  return PROC_SET_ERROR;
-               }
-            }
-         }
-
-         /* proceed either by one char in case of a "-" or by the
-          * width of the number field
-          */
-         if (next)
-            tok = next;
-         else
-            tok++;
-      }
-
-      /* fill out full range specification "n-m" according to findings */
-      if (!dash_used )
-         max = min;
-      else {
-         if (min == -1) min = 0;
-         if (max == -1) max = sbvlen;
-      }
-
-      /* set processor vector as defined by range specification */
-      for(i=min; i<=max; i++)
-         *proc_vec |= (sbv_t) 1<<i;
-   }
-
-   return PROC_SET_OK;
-}
-
-#endif
-
 /*--------------------------------------------------------------------
  * set_shepherd_signal_mask
  * set signal mask that shpher can handle signals from execd
@@ -2098,7 +1548,6 @@ char *childname            /* "job", "pe_start", ...     */
    char err_str[256];
    int ckpt_cmd_pid, migr_cmd_pid;
    int rest_ckpt_interval;
-   FILE *fp;
    int inArena, inCkpt, kill_job_after_checkpoint, job_pid;
    int postponed_signal = 0;
    pid_t ctrl_pid[3];
@@ -2125,15 +1574,10 @@ char *childname            /* "job", "pe_start", ...     */
    /* Write info that we already have a checkpoint in the arena */
    if (ckpt_type & CKPT_REST_KERNEL) {
       inArena = 1;
-      if ((fp = fopen("checkpointed", "w"))) {
-         fprintf(fp, "1\n");
-         fclose(fp);
-      }
-      else
-         shepherd_error("can't write to file \"checkpointed\"");
-   } 
-   else
+      create_checkpointed_file(1);
+   } else {
       inArena = 0;
+   }
 
 #if defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    times(&t1);
@@ -2249,11 +1693,8 @@ char *childname            /* "job", "pe_start", ...     */
             shepherd_trace("checkpoint command exited normally");
             if (WEXITSTATUS(status)==0 && !inArena) {
                shepherd_trace("checkpoint is in the arena after regular checkpoint");
-               if ((fp = fopen("checkpointed", "w"))) {
-                  fprintf(fp, "1\n");
-                  fclose(fp);
-                  inArena = 1;
-               }
+               create_checkpointed_file(1);
+               inArena = 1;
             }                     
          }
          /* A migration request occured and we just did a regular checkpoint */
@@ -2283,10 +1724,8 @@ char *childname            /* "job", "pe_start", ...     */
             shepherd_trace("checkpoint command exited normally");
             if (WEXITSTATUS(status) == 0 && !inArena) {
                shepherd_trace("checkpoint is in the arena after migration request");
-               if ((fp = fopen("checkpointed", "w"))) {
-                  fprintf(fp, "1\n");
-                  fclose(fp);
-               }
+               create_checkpointed_file(1);
+               inArena = 1;
             }
          }
       }
@@ -2514,9 +1953,9 @@ static int start_async_command(char *descr, char *cmd)
       /* we have to provide the async command with valid io file handles
        * else it might fail 
        */
-      if(   (open("/dev/null", O_RDONLY, 0) != 0)
-         || (open("/dev/null", O_WRONLY, 0) != 1)
-         || (open("/dev/null", O_WRONLY, 0) != 2)) {
+      if((open("/dev/null", O_RDONLY, 0) != 0) || 
+         (open("/dev/null", O_WRONLY, 0) != 1) || 
+         (open("/dev/null", O_WRONLY, 0) != 2)) {
          sprintf(err_str, "error opening std* file descriptors\n");
          shepherd_trace(err_str);
          exit(1);
@@ -2538,13 +1977,28 @@ static int start_async_command(char *descr, char *cmd)
    return pid;
 }
 
+static void create_checkpointed_file(int ckpt_is_in_arena)
+{
+   FILE *fp = NULL;
+
+   fp = fopen("checkpointed", "w");
+   if (fp != NULL) {
+      if (ckpt_is_in_arena) {
+         fprintf(fp, "1\n");
+      }
+      fclose(fp);
+   } else {
+      shepherd_error("can't write to file \"checkpointed\"");
+   }
+}
+
 /*-------------------------------------------------------------------------*/
-static void start_clean_command(
-char *cmd 
-) {
+static void start_clean_command(char *cmd) 
+{
    int pid, npid, status;
 
-   /* Many reasons why there is no restart command */
+   shepherd_trace("starting ckpt clean command");
+
    if (!cmd || *cmd == '\0' || !strcasecmp(cmd, "none")) {
       shepherd_trace("no checkpointing clean command to start");
       return;

@@ -289,11 +289,9 @@ int trace_rlimit
 }
 
 #ifndef CRAY
-static int get_resource_info(
-u_long32 resource,
-char **name,
-int *resource_type 
-) {
+static int get_resource_info(u_long32 resource, char **name, 
+                             int *resource_type) 
+{
    int is_job_resource_column;
    int row;
 
@@ -368,11 +366,9 @@ int *resource_type
 
 
 #if !defined(CRAY) && !defined(HPUX)
-static void pushlimit(
-int resource,
-struct RLIMIT_STRUCT_TAG *rlp,
-int trace_rlimit 
-) {
+static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp, 
+                      int trace_rlimit) 
+{
    char *limit_str;
    char trace_str[1024];
    struct RLIMIT_STRUCT_TAG dlp;

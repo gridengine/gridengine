@@ -84,7 +84,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
     */
    sge_dstring_init(&shlib_dstring, shlib_buffer, sizeof(shlib_buffer));
    shlib_fullname = sge_dstring_sprintf(&shlib_dstring, "%s.%s", shlib_name, 
-#if defined(HP11)
+#if defined(HP11) || defined(HP1164)
                                         "sl"
 #elif defined(DARWIN)
                                         "dylib"

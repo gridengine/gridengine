@@ -783,7 +783,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: pre6.0"
+      $ECHO "# Version: 6.0u2"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"

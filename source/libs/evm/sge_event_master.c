@@ -423,7 +423,7 @@ static void       send_events(lListElem *report, lList *report_list);
 static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*);
 static void       build_subscription(lListElem*);
-static void       remove_event_client(lListElem *client, int aClientID);
+static void       remove_event_client(lListElem *client, int aClientID, bool lock_event_master);
 static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
 static int        eventclient_subscribed(const lListElem *, ev_event, const char*);
 static int        purge_event_list(lList* aList, ev_event anEvent); 
@@ -562,8 +562,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
          DPRINTF (("Reusing old id: %d\n", id));
       
          /* delete old event client entry */
-         set_event_client (id, NULL);         
-         lRemoveElem(Master_Control.clients, ep);
+         remove_event_client(ep, id, false);
+         ep = NULL;
       }
       /* Otherwise, pick the first free id from the clients array. */
       else {
@@ -604,9 +604,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
                 commproc, u32c(commproc_id)));         
 
          /* delete old event client entry */
-         set_event_client (id, NULL);
-         sge_free(lGetRef(ep, EV_sub_array));
-         lRemoveElem(Master_Control.clients, ep);
+         remove_event_client(ep, id, false);
+         ep = NULL;
       } else {
          INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));
          Master_Control.indices_dirty = true;
@@ -2333,14 +2332,16 @@ static bool should_exit(void)
 *     remove_event_client() -- removes an event client
 *
 *  SYNOPSIS
-*     static void remove_event_client(lListElem *client, int aClientID) 
+*     static void 
+*     remove_event_client(lListElem *client, int aClientID, bool lock_event_master) 
 *
 *  FUNCTION
-*     removes a event client, marks the index as dirty and frees the memory
+*     removes an event client, marks the index as dirty and frees the memory
 *
 *  INPUTS
-*     lListElem *client - event client to remove
-*     int aClientID     - event client id to remove
+*     lListElem *client      - event client to remove
+*     int aClientID          - event client id to remove
+*     bool lock_event_master - shall the function aquire the event_master mutex
 *
 *  NOTES
 *     MT-NOTE: remove_event_client() is not MT safe
@@ -2348,7 +2349,7 @@ static bool should_exit(void)
 *     - it assums that the event client is locked before this method is called
 *
 *******************************************************************************/
-static void remove_event_client(lListElem *client, int aClientID) {
+static void remove_event_client(lListElem *client, int aClientID, bool lock_event_master) {
    subscription_t *old_sub = NULL;
    int i;
 
@@ -2388,10 +2389,18 @@ static void remove_event_client(lListElem *client, int aClientID) {
    }
 
    set_event_client (aClientID, NULL);
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if (lock_event_master) {
+      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   }
+
    lRemoveElem(Master_Control.clients, client);
+   client = NULL;
    Master_Control.indices_dirty = true;
-   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if (lock_event_master) {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   }
 
    DEXIT;
    return;
@@ -2499,7 +2508,7 @@ static void send_events(lListElem *report, lList *report_list) {
      
       /* is the event client in state terminated? remove it*/
       if (lGetUlong(event_client, EV_state) == EV_terminated) {
-         remove_event_client(event_client, ec_id);
+         remove_event_client(event_client, ec_id, true);
          unlock_client(ec_id);
          /* we removed a client, continue with the next one */
          continue;
@@ -2541,7 +2550,7 @@ static void send_events(lListElem *report, lList *report_list) {
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, 
                (int) timeout, commproc, (int) id, host));
-         remove_event_client(event_client, ec_id);      
+         remove_event_client(event_client, ec_id, true);      
          unlock_client(ec_id);
          continue; /* while */
       }
@@ -3917,7 +3926,7 @@ DPRINTF (("set_event_client(%ld, %x)\n", id, client));
 #endif
 
 /* DEBUG */
-#if 1
+#if 0
 if (id < 1) {
    abort();
 }

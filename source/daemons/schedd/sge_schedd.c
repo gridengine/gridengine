@@ -187,11 +187,15 @@ char *argv[]
    set_commlib_param(CL_P_TIMEOUT_SRCV, 4*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
 
+   ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
+
    while (1) {
       lList* event_list = NULL;
 
-      if (shut_me_down)
+      if (shut_me_down) {
+         ec_deregister();
          sge_shutdown();
+      }   
 
       if (sigpipe_received) {
          sigpipe_received = 0;
@@ -657,7 +661,7 @@ int handle_administrative_events(u_long32 type, lListElem *event)
        * administrative events  
        */
 
-   case sgeE_SCHEDDDOWN:
+   case sgeE_SHUTDOWN:
       INFO((SGE_EVENT, MSG_EVENT_GOTSHUTDOWNFROMQMASTER ));
       shut_me_down = 1;
       ret = 2;

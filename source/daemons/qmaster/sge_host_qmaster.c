@@ -280,7 +280,7 @@ u_long32 target
    /* remove host file */
    sge_unlink_object(ep, nm);
    if (target==SGE_EXECHOST_LIST) 
-      sge_add_event(sgeE_EXECHOST_DEL, 0, 0, host, NULL);
+      sge_add_event(NULL, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
 
    /* delete found host element */
    lRemoveElem(*host_list, ep);
@@ -484,7 +484,7 @@ gdi_object_t *object
       }
 
       sge_change_queue_version_exechost(host);
-      sge_add_event(old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
+      sge_add_event(NULL, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
       if (!is_nohist())
          write_host_history(ep);
 
@@ -672,12 +672,12 @@ lList *lp
    }
 
    if (global_ep) {
-      sge_add_event(sgeE_EXECHOST_MOD, 0, 0,
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0,
             SGE_GLOBAL_NAME, global_ep);
    }
 
    if (host_ep) {
-      sge_add_event(sgeE_EXECHOST_MOD, 0, 0, lGetString(host_ep, EH_name), 
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(host_ep, EH_name), 
         host_ep);
    }
 
@@ -1346,7 +1346,7 @@ int qstd_mode
    */
    if (!qstd_mode) {
       lSetUlong(hep, EH_startup, 1);
-      sge_add_event(sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
    }
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, qstd_mode ? "qstd" : "execd", rhost));

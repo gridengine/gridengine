@@ -36,6 +36,7 @@
 #include "sge_job.h"
 #include "sge_jataskL.h"
 #include "sge_queueL.h"
+#include "sge_eventL.h"
 #include "job.h"
 #include "sge_give_jobs.h"
 #include "sge_m_event.h"
@@ -53,7 +54,7 @@ extern lList *Master_Job_List;
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
-static void sge_c_event_ack(char *, char *, u_long32, u_long32);
+static void sge_c_event_ack(char *, char *, u_long32, u_long32, u_long32);
 
 /****************************************************
  Master code.
@@ -101,7 +102,12 @@ sge_pack_buffer *pb
          break;
 
       case ACK_EVENT_DELIVERY:
-         sge_c_event_ack(host, commproc, ack_tag, ack_ulong);
+         sge_c_event_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
+         break;
+
+      default:
+         WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, u32c(ack_tag)));
+         break;
       }
    }
   
@@ -196,28 +202,22 @@ static void sge_c_event_ack(
 char *host, 
 char *commproc, 
 u_long32 ack_tag, 
-u_long32 event_number 
+u_long32 event_number,
+u_long32 ev_id
 ) {
-   lListElem *er;
+   lListElem *event_client;
 
    DENTER(TOP_LAYER, "sge_c_event_ack");
 
    /* search commproc in event client list */
-   er = sge_locate_scheduler();
-   if (!er) {
-      ERROR((SGE_EVENT, MSG_COM_NO_SCHEDD));
+   event_client = lGetElemUlong(EV_Clients, EV_id, ev_id);
+   if (event_client == NULL) {
+      ERROR((SGE_EVENT, MSG_COM_NO_EVCLIENTWITHID_U, u32c(ev_id)));
       DEXIT;
       return;
    }
 
-   if (strcmp(prognames[SCHEDD], commproc)) {
-      ERROR((SGE_EVENT, MSG_COM_ACK_S, commproc));
-      DEXIT;
-      return;
-   }
-   
-   if (sge_ack_event(er, event_number))
-      EV_Clients = lFreeList(EV_Clients);
+   sge_ack_event(event_client, event_number);
 
    DEXIT;   
    return;

@@ -451,8 +451,8 @@ char **argv
 
       if (shut_me_down) {
          /* slowly! we have to deliver events before shutting down */
-         sge_add_event(sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL);
-         sge_flush_events(FLUSH_EVENTS_SET);
+         sge_add_event(NULL, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL);
+         sge_flush_events(NULL, FLUSH_EVENTS_SET);
          scheduler_busy = 0;
          ck_4_deliver_events(now);
 #ifdef QIDL
@@ -586,6 +586,16 @@ char **argv
          break;
 
       /* ======================================== */
+      case TAG_EVENT_CLIENT_EXIT:
+
+         DPRINTF(("SGE_EVENT_CLIENT_EXIT(%s/%s/%d)\n", host, commproc, id));
+
+         sge_event_client_exit(host, commproc, &pb);
+         clear_packbuffer(&pb);
+         log_time(TIMELEVEL, "request handling EVENT_CLIENT_EXIT");
+         break;
+
+      /* ======================================== */
       case TAG_REPORT_REQUEST: 
 
          DPRINTF(("SGE_REPORT(%s/%s/%d)\n", host, commproc, id));
@@ -651,7 +661,7 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 
    /* do it */
    shut_me_down = 1;
-   sge_flush_events(FLUSH_EVENTS_SET);
+   sge_flush_events(NULL, FLUSH_EVENTS_SET);
       
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
    sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);

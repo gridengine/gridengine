@@ -39,7 +39,7 @@
 #endif
 
 #define MAX_SEQNUM        9999999
-#define MAX_ULONG32     999999999
+#define MAX_ULONG32     2147483647
 
 /* template/global/default/queue names */
 #define SGE_TEMPLATE_NAME        "template"

@@ -180,13 +180,14 @@
 #define MSG_COM_ACK_S                _("ack event from %s\n")     
 #define MSG_COM_ACKEVENTFORUNKOWNJOB_U _("ack event for unknown job "U32CFormat"\n")
 #define MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU _("ack event for unknown task " U32CFormat  " of job " U32CFormat " \n")
+#define MSG_COM_UNKNOWN_TAG          _("received unknown ack tag "U32CFormat"\n")
 
 #define MSG_COM_ACK_U                _("signalling acknowledged for unknown job " U32CFormat  "\n")
 #define MSG_COM_ACK_UU               _("signalling acknowledged for unknown task " U32CFormat  " of job " U32CFormat " \n")
 #define MSG_COM_ACK_US               _("ack event for job " U32CFormat  " can't find queue %s\n")
 #define MSG_COM_ACK_QUEUE_U          _("ack event for unknown queue " U32CFormat "\n")
 #define MSG_COM_ACK_UNKNOWN          _("unknown ack event\n")
-#define MSG_COM_NO_SCHEDD            _("no schedd registered as an event client\n")
+#define MSG_COM_NO_EVCLIENTWITHID_U  _("no event client with id "U32CFormat" registered\n")
 
 /*
 ** sge_c_gdi.c
@@ -442,11 +443,14 @@
 */
 #define MSG_EVE_UNKNOWNDUMMYREQUEST   _("unknown dummy request\n")
 #define MSG_EVE_REINITSCHEDD_I        _("%d. reinitialization of \"schedd\"")
-#define MSG_EVE_UNKNOWNEVCLIENTTYPE_I _("unknown EV_clienttype: %d\n")
+#define MSG_EVE_UNKNOWNEVCLIENT_U     _("no event client known with id "U32CFormat"\n")
 #define MSG_EVE_TOTALUPDATE           _("scheduler needs total update")
-#define MSG_EVE_SCHEDDREG             _("scheduler registers as event client")
+#define MSG_EVE_REG_SU                _(SFQ" registers as event client with id "U32CFormat"\n")
+#define MSG_EVE_UNREG_SU              _("event client "SFQ" with id "U32CFormat" deregistered")
 #define MSG_EVE_EVENTCLIENT           _("event client")
-#define MSG_COM_ACK4SHUTDOWN          _("got ACK for shutdown event\n")
+
+#define MSG_EVE_ILLEGALIDREGISTERED_U _("illegal event client id "U32CFormat" for registration\n")
+
 #define MSG_COM_ACKTIMEOUT4EV_ISIS    _("acknowledge timeout after %d seconds for event client (%s:%d) on host \"%s\"")
 #define MSG_COM_NOSHUTDOWNPERMS       _("shutdown of \"schedd\" requires manager privileges\n")
 #define MSG_COM_NOSCHEDDREGMASTER     _("no scheduler registered at qmaster\n")

@@ -140,8 +140,14 @@ char *rhost
    }
 
    lSetUlong(ep, STN_version, prev_version+1);
-   sge_add_event(sgeE_NEW_SHARETREE, 0, 0, NULL, ep);
-   sge_flush_events(FLUSH_EVENTS_SET);
+   sge_add_event(NULL, sgeE_NEW_SHARETREE, 0, 0, NULL, ep);
+
+   {
+      lListElem *schedd = sge_locate_scheduler();
+      if(schedd != NULL) {
+         sge_flush_events(schedd, FLUSH_EVENTS_SET);
+      }
+   }
 
    /* now insert new element */
    lAppendElem(*lpp, lCopyElem(ep));
@@ -188,8 +194,13 @@ char *rhost
 
    lFreeList(*lpp);
    *lpp = NULL;
-   sge_add_event(sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
-   sge_flush_events(FLUSH_EVENTS_SET);
+   sge_add_event(NULL, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
+   {
+      lListElem *schedd = sge_locate_scheduler();
+      if(schedd != NULL) {
+         sge_flush_events(schedd, FLUSH_EVENTS_SET);
+      }
+   }
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);

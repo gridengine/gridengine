@@ -63,6 +63,7 @@
 #define MSG_EVENT_SMALLESTEVENTXISGRTHYWAITFOR_UU     _("smallest event number "U32CFormat" is greater than number "U32CFormat" i'm waiting for\n")
 #define MSG_EVENT_EVENTSWITHNOINCREASINGNUMBERS       _("got events with not increasing numbers\n")
 #define MSG_LIST_FAILEDINCULLUNPACKREPORT             _("Failed in cull_unpack report\n")
+#define MSG_EVENT_ILLEGAL_ID_OR_NAME_US               _("Illegal id "U32CFormat" or name "SFQ" in event client registration\n")
 
 /* 
 ** schedd/sge_category.c

@@ -45,34 +45,33 @@ extern int last_seq_no;
 void reinit_schedd(void);
 
 int sge_add_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost);
+void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb);
 
 int sge_ack_event(lListElem *er, u_long32 event_number);
 void ck_4_deliver_events(u_long32 now);
 
 enum { 
-   FLUSH_EVENTS_DELAYED=0,
-   FLUSH_EVENTS_SET,
+   FLUSH_EVENTS_SET = 0,
    FLUSH_EVENTS_ASK,
    FLUSH_EVENTS_JOB_FINISHED,
-   FLUSH_EVENTS_JOB_SUBMITTED,
-   FLUSH_ASK_NEXT
+   FLUSH_EVENTS_JOB_SUBMITTED
 };
 
-int sge_flush_events(int);
+void sge_flush_events(lListElem *event_client, int);
 int sge_next_flush(int);
 
-void sge_add_list_event(u_long32 type, u_long32 intkey, u_long32 intkey2, 
+void sge_add_list_event(lListElem *event_client,
+                        u_long32 type, u_long32 intkey, u_long32 intkey2, 
                         const char *strkey, lList *list); 
 
-void sge_add_event(u_long32 type, u_long32 intkey, u_long32 intkey2, 
+void sge_add_event(lListElem *event_client, 
+                   u_long32 type, u_long32 intkey, u_long32 intkey2, 
                    const char *strkey, lListElem *element);
 
-u_long32 sge_get_next_event_number(u_long32 client_type);
+u_long32 sge_get_next_event_number(u_long32 client_id);
 
 void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-void sge_gdi_dummy_request(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-
 
 lListElem* sge_locate_scheduler(void);
 

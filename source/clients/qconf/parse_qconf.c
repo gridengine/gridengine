@@ -4408,6 +4408,10 @@ char *name
       where = lWhere("%T(!(%I c= %s))",
          type, keynm, SGE_GLOBAL_NAME );
       break;   
+   case EV_host:
+      where = lWhere("%T(%I==%u))", 
+         type, EV_id, EV_ID_SCHEDD);
+      break;
    default:
       where = NULL; /* all elements */
       break;

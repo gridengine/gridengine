@@ -111,7 +111,8 @@ enum {
    TAG_JOB_REPORT,              /* cull based job reports */
    TAG_QSTD_QSTAT,
    TAG_TASK_EXIT,
-   TAG_TASK_TID
+   TAG_TASK_TID,
+   TAG_EVENT_CLIENT_EXIT
 
 #ifdef SECURE
   ,TAG_SEC_ANNOUNCE,
@@ -151,7 +152,7 @@ void sge_setup(u_long32 sge_formal_prog_name, lList **alpp);
 int reresolve_me_qualified_hostname(void);
 
 /* sge_ack.c */
-int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val);
+int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, u_long32 ulong_val_2);
 
 u_long32 sge_get_recoverable(lListElem *aep);  
 

@@ -679,8 +679,11 @@ int spool_job
    lUlong jid, tid;
    int no_unlink = 0;
    time_t now = 0;
+   lListElem *schedd;
 
    DENTER(TOP_LAYER, "sge_commit_job");
+
+   schedd = sge_locate_scheduler();
 
    jid = lGetUlong(jep, JB_job_number);
    tid = jatep?lGetUlong(jatep, JAT_task_number):0;
@@ -700,11 +703,11 @@ int spool_job
             /* debit in all layers */
             if (debit_host_consumable(jep, hep=sge_locate_host("global", SGE_EXECHOST_LIST), 
                      Master_Complex_List, slots)>0)
-               sge_add_event(sgeE_EXECHOST_MOD, 0, 0, "global", hep);
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", hep);
 
             if (debit_host_consumable(jep, hep=sge_locate_host(lGetString(qep, QU_qhostname), 
                      SGE_EXECHOST_LIST), Master_Complex_List, slots)>0)
-               sge_add_event(sgeE_EXECHOST_MOD, 0, 0, lGetString(qep, QU_qhostname), hep);
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(qep, QU_qhostname), hep);
 
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
@@ -824,7 +827,9 @@ int spool_job
       job_enroll(jep, tid);
       job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
+      if(schedd != NULL) {
+         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
+      }
       break;
 
    case 3:
@@ -833,7 +838,9 @@ int spool_job
          sge_to_zombies(jep, jatep, spool_job);
       sge_clear_granted_resources(jep, jatep, 1);
       sge_bury_job(jep, jid, jatep, spool_job);
-      sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
+      if(schedd != NULL) {
+         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
+      }
       break;
 
 
@@ -851,16 +858,19 @@ int spool_job
          lListElem* task_ja_task;
 
          for_each (task_ja_task, lGetList(task, JB_ja_tasks)) {   
-            sge_add_list_event(sgeE_FINAL_USAGE, lGetUlong(jep, JB_job_number),
+            sge_add_list_event(NULL, sgeE_FINAL_USAGE, lGetUlong(jep, JB_job_number),
                lGetUlong(task_ja_task, JAT_task_number), 
                lGetString(task, JB_pe_task_id_str), 
                lGetList(task_ja_task, JAT_scaled_usage_list));
          }
       }
-      sge_add_list_event(sgeE_FINAL_USAGE, jid = lGetUlong(jep, JB_job_number), 
+      sge_add_list_event(NULL, sgeE_FINAL_USAGE, jid = lGetUlong(jep, JB_job_number), 
          lGetUlong(jatep, JAT_task_number),
          NULL, lGetList(jatep, JAT_scaled_usage_list));
-      sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
+
+      if(schedd != NULL) {   
+         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
+      }
          
       /* finished all ja-tasks => remove job script */
       for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
@@ -892,7 +902,10 @@ int spool_job
       job_enroll(jep, tid);
       job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
+
+      if(schedd != NULL) {
+         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
+      }
       break;
    }
 
@@ -970,11 +983,11 @@ int incslots
             /* undebit consumable resources */ 
             if (debit_host_consumable(jep, (hep=sge_locate_host("global", SGE_EXECHOST_LIST)), 
                   Master_Complex_List, -tmp_slot))
-               sge_add_event(sgeE_EXECHOST_MOD, 0, 0, "global", hep);
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", hep);
 
             if (debit_host_consumable(jep, (hep=sge_locate_host(lGetString(qep, QU_qhostname), 
                   SGE_EXECHOST_LIST)), Master_Complex_List, -tmp_slot))
-               sge_add_event(sgeE_EXECHOST_MOD, 0, 0, lGetString(qep, QU_qhostname), hep);
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(qep, QU_qhostname), hep);
 
             debit_queue_consumable(jep, qep, Master_Complex_List, -tmp_slot);
          }
@@ -998,7 +1011,7 @@ int incslots
          }
          else {
             reverse_job_from_pe(pe, pe_slots, lGetUlong(jep, JB_job_number));
-            sge_add_event(sgeE_PE_MOD, 0, 0, lGetString(jatep, JAT_granted_pe), pe);
+            sge_add_event(NULL, sgeE_PE_MOD, 0, 0, lGetString(jatep, JAT_granted_pe), pe);
          }
       }
       lSetString(jatep, JAT_granted_pe, NULL);
@@ -1102,7 +1115,7 @@ int spool_job
    if (!RemoveJob) {
       /* Remove one ja task or move it into the Master_Zombie_List*/
       job_log(jid, tid, MSG_LOG_JATASKEXIT);
-      sge_add_event(sgeE_JATASK_DEL, jid, lGetUlong(jatep, JAT_task_number), 
+      sge_add_event(NULL, sgeE_JATASK_DEL, jid, lGetUlong(jatep, JAT_task_number), 
                      NULL, NULL);
 
       /*
@@ -1124,7 +1137,7 @@ int spool_job
       if (lGetString(jep, JB_script_file)) {
          unlink(lGetString(jep, JB_exec_file));
       }
-      sge_add_event(sgeE_JOB_DEL, jid, lGetUlong(jatep, JAT_task_number), NULL, NULL);
+      sge_add_event(NULL, sgeE_JOB_DEL, jid, lGetUlong(jatep, JAT_task_number), NULL, NULL);
       job_remove_spool_file(jid, 0, 0);
 
       /*

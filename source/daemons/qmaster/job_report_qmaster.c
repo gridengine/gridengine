@@ -256,7 +256,7 @@ sge_pack_buffer *pb
                      sge_commit_job(jep, jatep, 1, 1); /* implicitly sending usage to schedd in sge_mode */
                      cancel_job_resend(jobid, jataskid);
                   } else if (feature_is_enabled(FEATURE_SGEEE)) /* need to generate a job event for new usage */
-                        sge_add_list_event(sgeE_JOB_USAGE, jobid, jataskid, NULL, lGetList(jatep, JAT_scaled_usage_list));
+                        sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, NULL, lGetList(jatep, JAT_scaled_usage_list));
                } else {
                   /* register running task qmaster will log accounting for all registered tasks */
                   lListElem *pe;
@@ -302,7 +302,7 @@ sge_pack_buffer *pb
                          if (new_task)
                              sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
                          else
-                             sge_add_list_event(sgeE_JOB_USAGE, jobid, jataskid, pe_task_id_str,
+                             sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, pe_task_id_str,
                                                 lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_scaled_usage_list));
                     }
 

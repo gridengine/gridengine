@@ -368,7 +368,7 @@ gdi_object_t *object
 
    DENTER(TOP_LAYER, "complex_success");
 
-   sge_add_event(old_ep?sgeE_COMPLEX_MOD:sgeE_COMPLEX_ADD, 0, 0, lGetString(ep, CX_name), ep);
+   sge_add_event(NULL, old_ep?sgeE_COMPLEX_MOD:sgeE_COMPLEX_ADD, 0, 0, lGetString(ep, CX_name), ep);
   
    /* throw away all old actual values lists and rebuild them from scratch */
    for_each (qep, Master_Queue_List) {
@@ -565,7 +565,7 @@ char *rhost
       DEXIT;
       return STATUS_EDISK;
    }
-   sge_add_event(sgeE_COMPLEX_DEL, 0, 0, cmplxname, NULL);
+   sge_add_event(NULL, sgeE_COMPLEX_DEL, 0, 0, cmplxname, NULL);
 
    /* change versions of corresponding queues */ 
    sge_change_queue_version_complex(cmplxname);
@@ -599,10 +599,10 @@ const char *cmplx_name
    for_each(ep, Master_Queue_List) {
       sge_change_queue_version(ep, 0, 0);
       cull_write_qconf(1, 0, QUEUE_DIR, lGetString(ep, QU_qname), NULL, ep);
-      sge_add_event(sgeE_QUEUE_MOD, 0, 0, lGetString(ep, QU_qname), ep);
+      sge_add_event(NULL, sgeE_QUEUE_MOD, 0, 0, lGetString(ep, QU_qname), ep);
    }
    for_each(ep, Master_Exechost_List)
-      sge_add_event(sgeE_EXECHOST_MOD, 0, 0, lGetString(ep, EH_name), ep);
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetString(ep, EH_name), ep);
 
    DEXIT;
    return;

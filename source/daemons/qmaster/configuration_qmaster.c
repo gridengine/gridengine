@@ -386,7 +386,7 @@ char *rhost
       strcat(fname, "/.");
       strcat(fname, "configuration");
       strcpy(real_fname, path.conf_file);
-      sge_add_event(sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
+      sge_add_event(NULL, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
    } else {
       sprintf(fname, "%s/.%s", path.local_conf_dir, config_name);
       sprintf(real_fname, "%s/%s", path.local_conf_dir, config_name);

@@ -1037,7 +1037,7 @@ u_long32 quality
 
    /* build new answer element */
    aep = lCreateElem(AN_Type);
-   lSetString(aep, AN_text, (char*) report);
+   lSetString(aep, AN_text, report);
    lSetUlong(aep, AN_status, status);
    lSetUlong(aep, AN_quality, quality);
    

@@ -44,6 +44,7 @@ files=" \
        clients/qrsh/qrsh_dependencies  \
        clients/qstat/qstat_dependencies  \
        clients/qsub/qsub_dependencies  \
+       clients/qevent/qevent_dependencies  \
        common/common_dependencies  \
        daemons/commd/commd_dependencies  \
        daemons/common/common_dependencies  \

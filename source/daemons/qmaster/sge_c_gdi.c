@@ -563,7 +563,7 @@ int sub_command
          /* into event client that must be added */
          lSetString(ep, EV_host, request->host);
          lSetString(ep, EV_commproc, request->commproc);
-         lSetUlong(ep, EV_id, request->id);
+         lSetUlong(ep, EV_commid, request->id);
 
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, uid);
@@ -588,7 +588,7 @@ int sub_command
                last_order_arrived = now;
             } 
 
-            event_number = sge_get_next_event_number(TYPE_SCHED); 
+            event_number = sge_get_next_event_number(EV_ID_SCHEDD); 
             if ((ret=sge_follow_order(ep, &(answer->alp), user, 
                   host, &ticket_orders))!=STATUS_OK) {
                DPRINTF(("Failed to follow order #%d. Remaining %d orders unprocessed.\n", 
@@ -601,8 +601,12 @@ int sub_command
             /* trigger sending of generated events directly to schedd 
              * but only if events available
              */
-            if (event_number != sge_get_next_event_number(TYPE_SCHED)) 
-               sge_flush_events(FLUSH_EVENTS_SET);
+            if (event_number != sge_get_next_event_number(EV_ID_SCHEDD)) {
+               lListElem *schedd = sge_locate_scheduler();
+               if(schedd != NULL) {
+                  sge_flush_events(schedd, FLUSH_EVENTS_SET);
+               }
+            }   
          }
          break;
       case SGE_JOB_LIST:

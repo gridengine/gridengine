@@ -40,19 +40,20 @@
 int sge_send_ack_to_qmaster(
 int sync,
 u_long32 type,
-u_long32 ulong_val 
+u_long32 ulong_val,
+u_long32 ulong_val_2
 ) {
    int ret;
    sge_pack_buffer pb;
 
    /* send an ack to the qmaster for the events */
-   if(init_packbuffer(&pb, 2*sizeof(u_long32), 0) != PACK_SUCCESS) {
+   if(init_packbuffer(&pb, 3*sizeof(u_long32), 0) != PACK_SUCCESS) {
       return CL_MALLOC;
    }
 
    packint(&pb, type);
    packint(&pb, ulong_val);
-   packint(&pb, 0);
+   packint(&pb, ulong_val_2);
    ret = sge_send_any_request(sync, NULL, sge_get_master(0), 
          prognames[QMASTER], 1, &pb, TAG_ACK_REQUEST);
    clear_packbuffer(&pb);

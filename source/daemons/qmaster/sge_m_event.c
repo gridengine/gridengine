@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "sge.h"
 #include "cull.h"
 #include "sge_eventL.h"
 #include "sge_feature.h"
@@ -66,11 +67,20 @@ extern lList *Master_Exechost_List;
 extern lList *Master_Ckpt_List;
 extern lList *Master_Pe_List;
 
-static void total_update_schedd(lListElem *schedd);
-static void sge_total_update_event(lListElem *er, u_long32 type, lList *lp);
-static int sge_add_list_event_(u_long32 type, u_long32 intkey, 
+static void total_update(lListElem *event_client);
+
+static void sge_total_update_event(lListElem *event_client, u_long32 type, lList *lp);
+
+static void sge_add_event_( lListElem *event_client, u_long32 type, 
+                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
+                     lListElem *element );
+
+static int sge_add_list_event_(lListElem *event_client,
+                               u_long32 type, u_long32 intkey, 
                                u_long32 intkey2, const char *strkey, 
                                lList *list, int need_copy_elem);
+
+static void sge_flush_events_(lListElem *event_client, int cmd, int now);
 
 #define FLUSH_INTERVAL 15
 
@@ -79,9 +89,6 @@ static int sge_add_list_event_(u_long32 type, u_long32 intkey,
 #define EVENT_ACK_MAX_TIMEOUT 1200
 
 static int schedule_interval = FLUSH_INTERVAL;
-static int flush_events = 0;
-static u_long32 last_flush = 0;
-static u_long32 next_flush = 0;
 
 int last_seq_no = -1; 
 int scheduler_busy = 0; 
@@ -108,11 +115,6 @@ u_long32 qidl_event_count = 0;
  *                        a submission events should be flushed
  *    flush_finish_sec  = global variable which says how long after
  *                        a job finish events should be flushed
- *
- * FLUSH_EVENTS_DELAYED
- *    sets "next_flush" to MIN() of next_flush or next scheduling interval
- *    returns 1 if "now" is time to flush events or 
- *             "flush_events" is already set to 1
  *     
  * FLUSH_EVENTS_JOB_FINISHED  
  * FLUSH_EVENTS_JOB_SUBMITTED
@@ -121,65 +123,55 @@ u_long32 qidl_event_count = 0;
  *    "flush_finish_sec" or "flush_submit_sec" (if >=0) or 0 (SET)
  *    instead of scheduling interval
  *
- * FLUSH_ASK_NEXT
- *    return next time when events should be flushed
  *----------------------------------------------------------------*/
-int sge_flush_events(
-int cmd 
-) {
-   int interval;
-   int now;
-   int ret;
-   
-   switch(cmd) {
-   case FLUSH_EVENTS_DELAYED:
-   case FLUSH_EVENTS_JOB_FINISHED:
-   case FLUSH_EVENTS_JOB_SUBMITTED:
-   case FLUSH_EVENTS_SET:
-   case FLUSH_ASK_NEXT:
 
-      interval = schedule_interval;
-      now = sge_get_gmt();
-      
-      /* someone has turned the wclock back */
-      if (last_flush > now)
-         last_flush = now;
-      
-      if (cmd == FLUSH_EVENTS_JOB_FINISHED && flush_finish_sec > -1)
-         interval = flush_finish_sec;
-      else if (cmd == FLUSH_EVENTS_JOB_SUBMITTED && flush_submit_sec > -1)
-         interval = flush_submit_sec;
-      else if (cmd == FLUSH_EVENTS_SET)
-         interval = 0;   
-         
-      if (cmd != FLUSH_ASK_NEXT) {   
-         if (next_flush)
-            next_flush = MIN(next_flush, last_flush + interval);
-         else
-            next_flush = last_flush + interval;
+
+void sge_flush_events(lListElem *event_client, int cmd) {
+   int now = sge_get_gmt();
+
+   if(event_client == NULL) {
+      for_each(event_client, EV_Clients) {
+         sge_flush_events_(event_client, cmd, now);
       }
-            
-      if ((cmd == FLUSH_EVENTS_SET) || (now >= next_flush))
-         flush_events = 1;         
-               
-      DPRINTF(("FLUSH_FINISH: %d FLUSH_SUBMIT: %d  DO_FLUSH: %d\n",
-             flush_finish_sec, flush_submit_sec, flush_events)); 
-             
-      if (cmd == FLUSH_ASK_NEXT) {
-         if (flush_events) {
-            ret = now;
-         } else {
-            ret = next_flush;   
-         }
-      } else {
-         ret = flush_events;
-      }
-      break;
-   default:
-      ret = -1;
-      break;
+   } else {
+      sge_flush_events_(event_client, cmd, now);
    }
-   return ret;
+}
+ 
+void sge_flush_events_(lListElem *event_client, int cmd, int now)
+{
+   int interval = 0;
+   u_long32 next_send;
+
+   next_send = lGetUlong(event_client, EV_next_send_time);
+   interval  = lGetUlong(event_client, EV_d_time);
+
+   switch(cmd) {
+      case FLUSH_EVENTS_JOB_FINISHED:
+         if(flush_finish_sec >= 0) {
+            interval = flush_finish_sec;
+         }
+         break;
+         
+      case FLUSH_EVENTS_JOB_SUBMITTED:
+         if(flush_submit_sec >= 0) {
+            interval = flush_submit_sec;
+         }
+         break;
+         
+      case FLUSH_EVENTS_SET:
+         interval = 0;
+         break;
+      
+      default:
+         return;
+   }
+
+   next_send = MIN(next_send, now + interval);
+   lSetUlong(event_client, EV_next_send_time, next_send);
+
+   DPRINTF(("ev_client: %s\tFLUSH_FINISH: %d FLUSH_SUBMIT: %d NOW: %d NEXT FLUSH: %d\n",
+            lGetString(event_client, EV_name), flush_finish_sec, flush_submit_sec, now, next_send)); 
 }
 
 /*----------------------------------------------------------------*
@@ -197,13 +189,23 @@ int cmd
 int sge_next_flush(
 int now 
 ) {
-   lListElem *er;
+   int any_client_up = 0;
+   int min_next_send = MAX_ULONG32;
+
+   lListElem *event_client;
    
-   if (!(er =lFirst(EV_Clients)) ||
-       (now > (lGetUlong(er, EV_lt_heard_from) + lGetUlong(er, EV_d_time)*5)))
-      return 0;
-   else
-      return sge_flush_events(FLUSH_ASK_NEXT);
+   for_each(event_client, EV_Clients) {
+      if(now < (lGetUlong(event_client, EV_last_heard_from) + lGetUlong(event_client, EV_d_time) * 5)) {
+         any_client_up = 1;
+         min_next_send = MIN(min_next_send, lGetUlong(event_client, EV_next_send_time));
+      }
+   }
+ 
+   if(any_client_up) {
+      return min_next_send;
+   }
+
+   return 0;
 }   
 
 /*----------------------------------------------------------------*/
@@ -216,33 +218,35 @@ void reinit_schedd()
 
    if ((schedd=sge_locate_scheduler())) {
       ERROR((SGE_EVENT, MSG_EVE_REINITSCHEDD_I, ++reinits));
-      total_update_schedd(schedd);
+      total_update(schedd);
    }
 
    DEXIT;
 }
 
 /* build events for total update of schedd */
-static void total_update_schedd(
-lListElem *schedd 
+static void total_update(
+lListElem *event_client 
 ) {
-   DENTER(TOP_LAYER, "total_update_schedd");
+   DENTER(TOP_LAYER, "total_update");
 
-   sge_add_event(sgeE_SCHED_CONF, 0, 0, NULL, lFirst(Master_Sched_Config_List));
-   sge_total_update_event(schedd, sgeE_QUEUE_LIST, Master_Queue_List);
-   sge_total_update_event(schedd, sgeE_USERSET_LIST, Master_Userset_List);
-   sge_total_update_event(schedd, sgeE_EXECHOST_LIST, Master_Exechost_List);
-   sge_total_update_event(schedd, sgeE_COMPLEX_LIST, Master_Complex_List);
-   sge_total_update_event(schedd, sgeE_PE_LIST, Master_Pe_List);
-   sge_total_update_event(schedd, sgeE_JOB_LIST, Master_Job_List);
+   sge_add_event(event_client, sgeE_SCHED_CONF, 0, 0, NULL, lFirst(Master_Sched_Config_List));
+   sge_total_update_event(event_client, sgeE_QUEUE_LIST, Master_Queue_List);
+   sge_total_update_event(event_client, sgeE_USERSET_LIST, Master_Userset_List);
+   sge_total_update_event(event_client, sgeE_EXECHOST_LIST, Master_Exechost_List);
+   sge_total_update_event(event_client, sgeE_COMPLEX_LIST, Master_Complex_List);
+   sge_total_update_event(event_client, sgeE_PE_LIST, Master_Pe_List);
+   sge_total_update_event(event_client, sgeE_JOB_LIST, Master_Job_List);
+
+   /* send additional lists for ANY_CLIENT: calendar, admin host, submit host, manager, operators */
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      sge_add_event(sgeE_NEW_SHARETREE, 0, 0, NULL, lFirst(Master_Sharetree_List));
-      sge_total_update_event(schedd, sgeE_USER_LIST, Master_User_List);
-      sge_total_update_event(schedd, sgeE_PROJECT_LIST, Master_Project_List);
+      sge_add_event(event_client, sgeE_NEW_SHARETREE, 0, 0, NULL, lFirst(Master_Sharetree_List));
+      sge_total_update_event(event_client, sgeE_USER_LIST, Master_User_List);
+      sge_total_update_event(event_client, sgeE_PROJECT_LIST, Master_Project_List);
    }
 
-   sge_total_update_event(schedd, sgeE_CKPT_LIST, Master_Ckpt_List);
+   sge_total_update_event(event_client, sgeE_CKPT_LIST, Master_Ckpt_List);
 
    DEXIT;
    return;
@@ -270,33 +274,49 @@ char *ruser,
 char *rhost 
 ) {
    lListElem *ep=NULL;
-   u_long32 i, now;
+   u_long32 now;
+   u_long32 id;
+   const char *name;
+   static u_long32 first_dynamic_id = EV_ID_FIRST_DYNAMIC;
 
    DENTER(TOP_LAYER,"sge_add_event_client");
 
-   if ( (i=lGetUlong(clio, EV_clienttype))!= TYPE_SCHED) {
-         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENTTYPE_I, (int)i));         
-         sge_add_answer(alpp,SGE_EVENT,STATUS_EEXIST, 0);
-         DEXIT;
-         return STATUS_EEXIST;
+   id = lGetUlong(clio, EV_id);
+   name = lGetString(clio, EV_name);
+   if(name == NULL) {
+      name = "unnamed";
+      lSetString(clio, EV_name, name);
+   }
+   
+   if(id < EV_ID_ANY || id >= EV_ID_FIRST_DYNAMIC) { /* invalid request */
+      ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, u32c(id)));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+      DEXIT;
+      return STATUS_ESEMANTIC;
    }
 
-   if ((ep=sge_locate_scheduler())) {
-
-      /* we already have a scheduler */
-      ERROR((SGE_EVENT, MSG_EVE_TOTALUPDATE));         
-
-      /* delete old event client entry */
-      lRemoveElem(EV_Clients, ep);
+   if(id == EV_ID_ANY) {   /* qmaster shall give id dynamically */
+      id = first_dynamic_id++;
+      lSetUlong(clio, EV_id, id);
+      INFO((SGE_EVENT, MSG_EVE_REG_SU, name, u32c(id)));         
    }
-   else
-      INFO((SGE_EVENT, MSG_EVE_SCHEDDREG));         
 
-   schedule_interval = lGetUlong(clio, EV_d_time);
-   scheduler_busy = 0;
-   last_seq_no = -1;
+   if(id == EV_ID_SCHEDD) {
+      if ((ep=sge_locate_scheduler())) {
+         /* we already have a scheduler */
+         ERROR((SGE_EVENT, MSG_EVE_TOTALUPDATE));         
 
-   DPRINTF(("EVENT DELIVERY TIME: %d seconds\n", schedule_interval));
+         /* delete old event client entry */
+         lRemoveElem(EV_Clients, ep);
+      } else {
+         INFO((SGE_EVENT, MSG_EVE_REG_SU, name, u32c(id)));         
+      }   
+
+      schedule_interval = lGetUlong(clio, EV_d_time);
+      scheduler_busy = 0;
+      last_seq_no = -1; /* !!!! can this be moved somewhere else? */
+      DPRINTF(("EVENT DELIVERY TIME: %d seconds\n", schedule_interval));
+   }
 
    ep=lCopyElem(clio);
    if(!EV_Clients) 
@@ -305,23 +325,55 @@ char *rhost
    lSetUlong(ep, EV_next_number, 1);
 
    /* build events for total update */
-   total_update_schedd(ep);
+   total_update(ep);
 
-   /* send it directly */
-   sge_flush_events(FLUSH_EVENTS_SET);
-   
    /* register this contact */
    now = sge_get_gmt();
-   lSetUlong(ep, EV_next_send_time, now + schedule_interval);
-   lSetUlong(ep, EV_lt_heard_from, now);
+   lSetUlong(ep, EV_last_send_time, 0);
+   lSetUlong(ep, EV_next_send_time, now + lGetUlong(ep, EV_d_time));
+   lSetUlong(ep, EV_last_heard_from, now);
 
-   INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
-         ruser, rhost, rhost, MSG_EVE_EVENTCLIENT));
+   /* send it directly */
+   sge_flush_events(ep, FLUSH_EVENTS_SET);
    
-   sge_add_answer(alpp,SGE_EVENT,STATUS_OK, NUM_AN_INFO);
+   INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
+         ruser, rhost, name, MSG_EVE_EVENTCLIENT));
+  
+   {
+      char buffer[100];
+      sprintf(buffer, "registration ok, your id is:"U32CFormat, u32c(id)); /* dont change or I18N: it is parsed in the client! */
+      sge_add_answer(alpp, buffer, STATUS_OK, NUM_AN_INFO);
+   }
 
    DEXIT; 
    return STATUS_OK;
+}
+
+void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb)
+{
+   u_long32 ec_id;
+   lListElem *ec;
+
+   DENTER(TOP_LAYER, "sge_event_client_exit");
+   if(unpackint(pb, &ec_id)) {
+      ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 1));
+      DEXIT;
+      return;
+   }
+
+   ec = lGetElemUlong(EV_Clients, EV_id, ec_id);
+
+   if(ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_U, u32c(ec_id)));
+      DEXIT;
+      return;
+   }
+
+   INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(ec, EV_name), u32c(lGetUlong(ec, EV_id))));
+
+   lRemoveElem(EV_Clients, ec);
+
+   DEXIT;
 }
 
 /* 
@@ -333,7 +385,7 @@ char *rhost
  
 */
 int sge_ack_event(
-lListElem *er,
+lListElem *event_client,
 u_long32 event_number 
 ) {
    int pos;
@@ -344,7 +396,7 @@ u_long32 event_number
 
    /* little optimazation */
    pos = lGetPosInDescr(ET_Type, ET_number);
-   lp = lGetList(er, EV_events);
+   lp = lGetList(event_client, EV_events);
 
    /*  
       we delete all messages with lower or 
@@ -370,15 +422,8 @@ u_long32 event_number
 
 
    /* register time of ack */
-   lSetUlong(er, EV_lt_heard_from, sge_get_gmt());
-
+   lSetUlong(event_client, EV_last_heard_from, sge_get_gmt());
    
-   if (lGetUlong(er, EV_shutdown_event) != 0 && 
-      lGetUlong(er, EV_shutdown_event)<=event_number) {
-      INFO((SGE_EVENT, MSG_COM_ACK4SHUTDOWN));
-      DEXIT;
-      return 1;
-   }
    DEXIT;
    return 0;
 }
@@ -401,34 +446,36 @@ u_long32 now
    lListElem *report;
    lList *report_list;
    u_long32 timeout;
-   lListElem *er, *tmp;
+   lListElem *event_client, *tmp;
    const char *host;
    const char *commproc;
    int ret, id; 
+   int deliver_interval;
 
    DENTER(TOP_LAYER, "ck_4_deliver_events");
 
-   er=lFirst(EV_Clients);
-   while (er) {
+   event_client=lFirst(EV_Clients);
+   while (event_client) {
 
       /* extract address of event client */
-      host = lGetString(er, EV_host);
-      commproc = lGetString(er, EV_commproc);
-      id = lGetUlong(er, EV_id);
+      host = lGetString(event_client, EV_host);
+      commproc = lGetString(event_client, EV_commproc);
+      id = lGetUlong(event_client, EV_commid);
 
-      /* update global variable schedule_interval */
-      schedule_interval = lGetUlong(er, EV_d_time);
+      deliver_interval = lGetUlong(event_client, EV_d_time);
 
       /* somone turned the clock back */
-      if (lGetUlong(er, EV_lt_heard_from) > now) {
-         lSetUlong(er, EV_lt_heard_from, now);
-         lSetUlong(er, EV_next_send_time, now + schedule_interval);
-      }   
-      if (last_flush > now)
-         last_flush = now;
+      if (lGetUlong(event_client, EV_last_heard_from) > now) {
+         lSetUlong(event_client, EV_last_heard_from, now);
+         lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
+      }
+
+      if(lGetUlong(event_client, EV_last_send_time)  > now) {
+         lSetUlong(event_client, EV_last_send_time, now);
+      }
       
       /* is the ack timeout expired ? */
-      timeout = 10*schedule_interval;
+      timeout = 10*deliver_interval;
       
       if(timeout < EVENT_ACK_MIN_TIMEOUT) {
          timeout = EVENT_ACK_MIN_TIMEOUT;
@@ -438,69 +485,59 @@ u_long32 now
          timeout = EVENT_ACK_MAX_TIMEOUT;
       }
 
-      if (now > (lGetUlong(er, EV_lt_heard_from) + timeout)) {
+      if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, 
                (int) timeout, commproc, (int) id, host));
-         tmp = er;
-         er = lNext(er);
+         tmp = event_client;
+         event_client = lNext(event_client);
          lRemoveElem(EV_Clients, tmp); 
          continue;
       }
 
 #if 0
-      if (last_flush > lGetUlong(er, EV_lt_heard_from)) {
-         DPRINTF(("no flush because no ack to last flush yet: now-last_flush: %d -- last_flush-lt_heard_from: %d\n",
-                 sge_get_gmt() - last_flush, last_flush - lGetUlong(er, EV_lt_heard_from)));
-         er = lNext(er);
+      if (last_flush > lGetUlong(event_client, EV_last_heard_from)) {
+         DPRINTF(("no flush because no ack to last flush yet: now-last_flush: %d -- last_flush-last_heard_from: %d\n",
+                 sge_get_gmt() - last_flush, last_flush - lGetUlong(event_client, EV_last_heard_from)));
+         event_client = lNext(event_client);
          continue;
       }            
 #endif
       
       /* do we have to deliver events ? */
-      if ((flush_events ||
-         (next_flush && (now >= next_flush)) ||
-         (now >= lGetUlong(er, EV_next_send_time)))
-         && !scheduler_busy) {
+      if ((now >= lGetUlong(event_client, EV_next_send_time))
+         && !((lGetUlong(event_client, EV_id) == EV_ID_SCHEDD) && scheduler_busy)) {
       
          /* put only pointer in report - dont copy */
          report_list = lCreateList("report list", REP_Type);
          report = lCreateElem(REP_Type);
          lSetUlong(report, REP_type, NUM_REP_REPORT_EVENTS);
          lSetString(report, REP_host, me.qualified_hostname);
-         lSetList(report, REP_list, lGetList(er, EV_events));
+         lSetList(report, REP_list, lGetList(event_client, EV_events));
          lAppendElem(report_list, report);
 
-         switch ( lGetUlong(er, EV_clienttype)) {
-
-         case TYPE_SCHED:
             {
                lList *lp;
                int numevents;
 
-               lp = lGetList(er, EV_events);
+               lp = lGetList(event_client, EV_events);
                numevents = lGetNumberOfElem(lp);
-               DPRINTF(("Sending %d events (" u32"-"u32 ") to (%s,%s,%d)%s\n", 
+               DPRINTF(("Sending %d events (" u32"-"u32 ") to (%s,%s,%d)\n", 
                   numevents, 
                   numevents?lGetUlong(lFirst(lp), ET_number):0,
                   numevents?lGetUlong(lLast(lp), ET_number):0,
-                  host, commproc, id,
-                  flush_events?" flush":""));
+                  host, commproc, id));
             }
             ret = sge_send_reports(host, commproc, id, report_list, 0, NULL);
 
             if (ret == 0) { /* otherwise retry is triggered */
-               scheduler_busy = 1;
-               flush_events = 0;
+               if(lGetUlong(event_client, EV_id) == EV_ID_SCHEDD) {
+                  scheduler_busy = 1;
+               }   
+               now = sge_get_gmt();
+               lSetUlong(event_client, EV_last_send_time, now);
+               lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
             }
-            break;
 
-         default:
-            DPRINTF(("EV_Clients contains other types than TYPE_SCHED in ck_4_deliver_events()\n"));
-            break;
-         }
-  
-         scheduler_busy = 1; 
-         flush_events = 0;
 
          /* don't delete sent events - deletion is triggerd by ack's */
          {
@@ -510,12 +547,8 @@ u_long32 now
          }
          lFreeList(report_list);
 
-         last_flush = sge_get_gmt();
-         lSetUlong(er, EV_next_send_time, last_flush + schedule_interval);
-         next_flush = last_flush + schedule_interval;
-         
       }
-      er = lNext(er);
+      event_client = lNext(event_client);
    }
 
    DEXIT;
@@ -523,24 +556,31 @@ u_long32 now
 }
 
 void sge_add_list_event(
+lListElem *event_client,
 u_long32 type,
 u_long32 intkey,
 u_long32 intkey2,
 const char *strkey,
 lList *list 
 ) {
-   sge_add_list_event_(type, intkey, intkey2, strkey, list, 1);
+   if(event_client != NULL) {
+      sge_add_list_event_(event_client, type, intkey, intkey2, strkey, list, 1);
+   } else {
+      lListElem *ec;
+      for_each (ec, EV_Clients) {
+         sge_add_list_event_(ec, type, intkey, intkey2, strkey, list, 1);
+      }
+   }
 }
 
 void sge_add_event(
+lListElem *event_client,
 u_long32 type,
 u_long32 intkey,
 u_long32 intkey2,
 const char *strkey,
 lListElem *element 
 ) {
-   const lDescr *dp;
-   lList *lp = NULL;
 
    DENTER(TOP_LAYER, "sge_add_event"); 
    
@@ -551,6 +591,28 @@ lListElem *element
    }
 #endif
 
+   if(event_client != NULL) {
+      sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+   } else {
+      for_each(event_client, EV_Clients) {
+         sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+      }
+   }
+
+   DEXIT;
+}
+
+static void sge_add_event_(
+lListElem *event_client,
+u_long32 type,
+u_long32 intkey,
+u_long32 intkey2,
+const char *strkey,
+lListElem *element 
+) {
+   const lDescr *dp;
+   lList *lp = NULL;
+
    /* build a list from the element */
    if (element) {
       dp = lGetElemDescr(element);
@@ -558,30 +620,30 @@ lListElem *element
       lAppendElem(lp, lCopyElem(element));
    }
 
-   if (!sge_add_list_event_(type, intkey, intkey2, strkey, lp, 0)) {
-      lp = lFreeList(lp);
+   if (!sge_add_list_event_(event_client, type, intkey, intkey2, strkey, lp, 0)) {
+      lp = lFreeList(lp); 
    }
 
-   DEXIT;
    return;
 }
 
-u_long32 sge_get_next_event_number(u_long32 client_type) {
-   lListElem *er; /* event recipient */
+u_long32 sge_get_next_event_number(u_long32 client_id) {
+   lListElem *event_client;
    u_long32 ret = 0;
 
    DENTER(TOP_LAYER, "sge_get_next_event_number");
-   for_each (er, EV_Clients) {
-      if (lGetUlong(er, EV_clienttype) == client_type) {
-         ret = lGetUlong(er, EV_next_number);
-         break;
-      }
+
+   event_client = lGetElemUlong(EV_Clients, EV_id, client_id);
+   if(event_client != NULL) {
+      ret = lGetUlong(event_client, EV_next_number);
    }
+
    DEXIT;
    return ret;
 }
 
 static int sge_add_list_event_(
+lListElem *event_client,
 u_long32 type,
 u_long32 intkey,
 u_long32 intkey2,
@@ -590,70 +652,44 @@ lList *list,
 int need_copy_list  /* to reduce overhead */ 
 ) {
    lListElem *event;
-   lListElem *er; /* event recipient */
    u_long32 i;
    lList *lp;
    int consumed = 0;
 
    DENTER(TOP_LAYER, "sge_add_list_event_"); 
 
+   event = lCreateElem(ET_Type); 
+
    /* 
-      Here we have to loop over all event clients 
-      that have to get this event
-      actually only the schedd event client gets 
-      events.
+      fill in event number and increment 
+      EV_next_number of event recipient 
    */
-   for_each (er,EV_Clients) {
+   i = lGetUlong(event_client, EV_next_number);
 
-      switch ( lGetUlong(er, EV_clienttype)) {
-      case TYPE_SCHED:
-         event = lCreateElem(ET_Type); 
+   lSetUlong(event, ET_number, i++);
+   lSetUlong(event_client, EV_next_number, i);
 
-         /* 
-            fill in event number and increment 
-            EV_next_number of event recipient 
-         */
-         i = lGetUlong(er, EV_next_number);
+   lSetUlong(event, ET_type, type); 
+   lSetUlong(event, ET_intkey, intkey); 
+   lSetUlong(event, ET_intkey2, intkey2); 
+   lSetString(event, ET_strkey, strkey);
+  
+   lSetList(event, ET_new_version, 
+            need_copy_list?lCopyList(lGetListName(list), list):list);
+   need_copy_list = 1;
+   consumed = 1;
 
-         /* register when to delete event client 
-            has to be checked when event ack arrives */
-         if (type == sgeE_SCHEDDDOWN) 
-            lSetUlong(er, EV_shutdown_event, i); 
-
-         lSetUlong(event, ET_number, i++);
-         lSetUlong(er, EV_next_number, i);
-
-         lSetUlong(event, ET_type, type); 
-         lSetUlong(event, ET_intkey, intkey); 
-         lSetUlong(event, ET_intkey2, intkey2); 
-         lSetString(event, ET_strkey, strkey);
-        
-         lSetList(event, ET_new_version, 
-                  need_copy_list?lCopyList(lGetListName(list), list):list);
-         need_copy_list = 1;
-         consumed = 1;
-
-         /* build a new event list if not exists */
-         lp = lGetList(er, EV_events); 
-         if (!lp) {
-            lp=lCreateList("", ET_Type);
-            lSetList(er, EV_events, lp);
-         }
-
-         /* chain in new event */
-         lAppendElem(lp, event);
-
-         DPRINTF((event_text(event)));
-
-
-         break; 
-
-      default:
-         DPRINTF(("Oops! EV_Clients contains other types "
-               "than TYPE_SCHED in sge_add_event()\n"));
-         break;
-      }
+   /* build a new event list if not exists */
+   lp = lGetList(event_client, EV_events); 
+   if (!lp) {
+      lp=lCreateList("", ET_Type);
+      lSetList(event_client, EV_events, lp);
    }
+
+   /* chain in new event */
+   lAppendElem(lp, event);
+
+   DPRINTF((event_text(event)));
 
 #ifdef QIDL
    /* send CORBA event */
@@ -800,7 +836,7 @@ int need_copy_list  /* to reduce overhead */
       break;
 
    /* -------------------- */
-   case sgeE_SCHEDDDOWN:
+   case sgeE_SHUTDOWN:
       break;
    case sgeE_QMASTER_GOES_DOWN:
       break;
@@ -847,7 +883,7 @@ int need_copy_list  /* to reduce overhead */
 
 
 static void sge_total_update_event(
-lListElem *er,
+lListElem *event_client,
 u_long32 type,
 lList *lp 
 ) {
@@ -859,19 +895,19 @@ lList *lp
    event = lCreateElem(ET_Type); 
 
    /* fill in event number and increment EV_next_number of event recipient */
-   i = lGetUlong(er, EV_next_number);
+   i = lGetUlong(event_client, EV_next_number);
    lSetUlong(event, ET_number, i++);
-   lSetUlong(er, EV_next_number, i);
+   lSetUlong(event_client, EV_next_number, i);
    
    lSetUlong(event, ET_type, type); 
 
    lSetList(event, ET_new_version, lCopyList("updating list", lp));
 
    /* build a new event list if not exists */
-   lp = lGetList(er, EV_events); 
+   lp = lGetList(event_client, EV_events); 
    if (!lp) {
       lp=lCreateList("", ET_Type);
-      lSetList(er, EV_events, lp);
+      lSetList(event_client, EV_events, lp);
    }
 
    DPRINTF((event_text(event)));
@@ -889,15 +925,10 @@ lListElem* sge_locate_scheduler()
 
    DENTER(TOP_LAYER, "sge_locate_scheduler");
 
-   /* seek for scheduler in list of EV_Clients */
-   for_each(ep, EV_Clients) {
-      if (lGetUlong(ep,EV_clienttype)==TYPE_SCHED) {
-         DEXIT;
-         return ep;
-      }
-   }
+   ep = lGetElemUlong(EV_Clients, EV_id, EV_ID_SCHEDD);
+
    DEXIT;
-   return NULL;
+   return ep;
 }
 
 void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
@@ -906,6 +937,7 @@ void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *a
    gid_t gid;
    char user[128];
    char group[128];
+   lListElem *scheduler;
 
    DENTER(GDI_LAYER, "sge_gdi_kill_sched");
 
@@ -923,35 +955,22 @@ void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *a
       return;
    }
 
-   if (!sge_locate_scheduler()) {
+   scheduler = sge_locate_scheduler();
+
+   if (scheduler == NULL) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_WARNING);
       DEXIT;
       return;
    }
 
-   /* add a sgeE_SCHEDDDOWN event */
-   sge_add_event(sgeE_SCHEDDDOWN, 0, 0, NULL, NULL);
-   sge_flush_events(FLUSH_EVENTS_SET);
+   /* add a sgeE_SHUTDOWN event */
+   sge_add_event(scheduler, sgeE_SHUTDOWN, 0, 0, NULL, NULL);
+   sge_flush_events(scheduler, FLUSH_EVENTS_SET);
 
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, prognames[SCHEDD]));
    sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
 }
-
-void sge_gdi_dummy_request(
-char *host,
-sge_gdi_request *request,
-sge_gdi_request *answer 
-) {
-   DENTER(GDI_LAYER, "sge_gdi_dummy_request");
-  
-   WARNING((SGE_EVENT, MSG_EVE_UNKNOWNDUMMYREQUEST));         
-   sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, NUM_AN_WARNING);
-   DEXIT;
-   return;
-}
-
-
 
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
 {
@@ -959,6 +978,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
    gid_t gid;
    char user[128];
    char group[128];
+   lListElem *scheduler;
 
    DENTER(GDI_LAYER, "sge_gdi_tsm");
 
@@ -975,17 +995,19 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       DEXIT;
       return;
    }
-      
-   if (!sge_locate_scheduler()) {
+     
+   scheduler = sge_locate_scheduler();
+     
+   if (scheduler == NULL) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_WARNING);
       DEXIT;
       return;
    }
 
-   /* add a sgeE_SCHEDDDOWN event */
-   sge_add_event(sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL);
-   sge_flush_events(FLUSH_EVENTS_SET);
+   /* add a sgeE_SCHEDDMONITOR event */
+   sge_add_event(scheduler, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL);
+   sge_flush_events(scheduler, FLUSH_EVENTS_SET);
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
    sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);

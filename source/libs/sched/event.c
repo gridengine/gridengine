@@ -192,7 +192,7 @@ lListElem *event
       break;
 
    /* -------------------- */
-   case sgeE_SCHEDDDOWN:
+   case sgeE_SHUTDOWN:
       sprintf(buffer, MSG_EVENT_SHUTDOWN_I, (int)number);
       break;
    case sgeE_QMASTER_GOES_DOWN:

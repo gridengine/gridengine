@@ -114,8 +114,8 @@ char *rhost
       lSetUlong(schedd, EV_d_time, si);
    }
 
-   sge_add_event(sgeE_SCHED_CONF, 0, 0, NULL, confp);
-   sge_flush_events(FLUSH_EVENTS_SET);
+   sge_add_event(NULL, sgeE_SCHED_CONF, 0, 0, NULL, confp);
+   sge_flush_events(schedd, FLUSH_EVENTS_SET);
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));

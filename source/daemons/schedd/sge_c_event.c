@@ -31,6 +31,8 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 #ifndef WIN32NATIVE
 #	include <unistd.h>
@@ -52,7 +54,6 @@
 
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (4)
 
-static int ec_register(void);
 static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number);
 static int get_event_list(int sync, lList **lp);
 
@@ -65,6 +66,25 @@ static int need_register = 1;
 
 static int ec_ed_time = DEFAULT_EVENT_DELIVERY_INTERVAL; 
 
+static u_long32 ec_id = 0;
+static u_long32 ec_reg_id = 0;
+static const char *ec_name = NULL;
+
+
+void ec_prepare_registration(u_long32 id, const char *name)
+{
+   DENTER(TOP_LAYER, "ec_prepare_registration");
+
+   if(id >= EV_ID_FIRST_DYNAMIC || name == NULL || *name == 0) {
+      WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, u32c(id), name != NULL ? name : "NULL" ));
+      DEXIT;
+      return;
+   }
+
+   ec_reg_id = id;
+   ec_name = name;
+   DEXIT;
+}
 
 /*-------------------------------------------------------------*/
 void ec_mark4registration(void)
@@ -102,7 +122,7 @@ int ec_get_edtime(void) {
  *  return 0 if success  
  *         -1 in case of failure
  *---------------------------------------------------------*/
-static int ec_register(void)
+int ec_register(void)
 {
    int success;
    lListElem *event_client;
@@ -110,18 +130,26 @@ static int ec_register(void)
 
    DENTER(TOP_LAYER, "ec_register");
 
+   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec_name == NULL || *ec_name == 0) {
+      WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, u32c(ec_reg_id), ec_name != NULL ? ec_name : "NULL" ));
+      return -1;
+   }
+
    event_client = lCreateElem(EV_Type);
 
    /*
-    *   EV_host, EV_commproc and EV_id get filled
+    *   EV_host, EV_commproc and EV_commid get filled
     *  at qmaster side with more secure commd    
     *  informations 
     *
     *  EV_uid gets filled with gdi_request
     *  informations
     */
+
+   lSetUlong(event_client, EV_id, ec_reg_id);
+   lSetString(event_client, EV_name, ec_name);
+
    lSetUlong(event_client, EV_d_time, ec_ed_time);
-   lSetUlong(event_client, EV_clienttype, TYPE_SCHED);
 
    lp = lCreateList("registration", EV_Type);
    lAppendElem(lp, event_client);
@@ -137,21 +165,51 @@ static int ec_register(void)
     *  - if this event client is already enrolled at qmaster
     */
    alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-   success = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
-   lFreeList(alp);
    lFreeList(lp); 
+   
+   success = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
    if (success) { 
-      DPRINTF(("REGISTERED with "u32" seconds\n",ec_ed_time));
-      DEXIT;
-      return 0;
+      u_long32 new_id = 0;
+      const char *s;
+      const char *alp_message = lGetString(lFirst(alp), AN_text);
+      s = strchr(alp_message, ':');
+      if(s != NULL) {
+         s++;
+         new_id = atoi(s);
+      }
+      if(new_id != 0) {
+         ec_id = new_id;
+         DPRINTF(("REGISTERED with id "U32CFormat" in "u32" seconds\n", new_id, ec_ed_time));
+         lFreeList(alp);
+         DEXIT;
+         return 0;
+      }
    }
-   else {
-      DPRINTF(("REGISTRATION FAILED\n"));
-      DEXIT;
-      return -1;
-   }   
+
+   lFreeList(alp);
+   DPRINTF(("REGISTRATION FAILED\n"));
+   DEXIT;
+   return -1;
 }      
 
+int ec_deregister(void)
+{
+   int ret;
+   sge_pack_buffer pb;
+
+   if(init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
+      return CL_MALLOC;
+   }
+
+   packint(&pb, ec_id);
+
+   ret = sge_send_any_request(0, NULL, sge_get_master(0), 
+         prognames[QMASTER], 1, &pb, TAG_EVENT_CLIENT_EXIT);
+   
+   clear_packbuffer(&pb);
+
+   return ret;
+}
 
 /*-------------------------------------------------------------------*
  * ec_get
@@ -161,7 +219,7 @@ static int ec_register(void)
  *   <0 commlib error
  *-------------------------------------------------------------------*/
 int ec_get(
-lList **event_list 
+lList **event_list
 ) {  
    int ret;
    lList *report_list = NULL;
@@ -217,7 +275,7 @@ lList **event_list
       
    /* send an ack to the qmaster for all received events */
    if (!sync) {
-      if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1)) {
+      if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1, ec_id)) {
          WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
       }
       else

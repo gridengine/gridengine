@@ -1,3 +1,12 @@
+JG-2001-11-20-0: Generalized event client interface.
+                 The former event client interface was very scheduler specific.
+                 Only one event client - the scheduler - could register.
+                 Now any number of event client can register at qmaster and
+                 receive events.
+                 A sample event client can be found in clients/qevent.
+                 Further cleanup steps and documentation still has to be done.
+                 A subscribe/unsubscribe mechanism does not yet exist.
+
 AH-2001-11-20-0: Bugfix: Bugtraq #4528905, IssueZilla #78
                  Use kstat interface instead of kvm interface for retrieval
                  of cpu percentage load value to fix problems with

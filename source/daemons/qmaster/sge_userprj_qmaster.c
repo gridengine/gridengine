@@ -198,7 +198,7 @@ gdi_object_t *object
    
    DENTER(TOP_LAYER, "userprj_success");
 
-   sge_add_event( old_ep?
+   sge_add_event( NULL, old_ep?
          (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
          (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
          0, 0, lGetString(ep, UP_name), ep);
@@ -351,7 +351,7 @@ int user        /* =1 user, =0 project */
       return STATUS_EDISK;
    }
 
-   sge_add_event( user?sgeE_USER_DEL:sgeE_PROJECT_DEL, 0, 0, name, NULL);
+   sge_add_event( NULL, user?sgeE_USER_DEL:sgeE_PROJECT_DEL, 0, 0, name, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, name, user?MSG_OBJ_USER:MSG_OBJ_PRJ));

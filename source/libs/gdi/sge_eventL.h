@@ -42,64 +42,64 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
-/* valid values for EV_client */
+/* valid values for EV_id */
 enum {
-   TYPE_SCHED = 1,
-   TYPE_QMON = 2,
-   TYPE_TEST = 3
+   EV_ID_ANY = 0,            /* qmaster will give the ev a unique id */
+   EV_ID_SCHEDD = 1,         /* schedd registers at qmaster */
+   EV_ID_FIRST_DYNAMIC = 11  /* first id given by qmaster for EV_ID_ANY registration */ 
 };
 
 enum {
+   /* identification */
+   EV_id = EV_LOWERBOUND,    /* unique id requested by client or given by qmaster */
+   EV_name,                  /* name of event client (non unique) */
+
    /* addressing informations */
-   EV_host = EV_LOWERBOUND,  /* host to deliver the events */
+   EV_host,                  /* host to deliver the events */
    EV_commproc,              /* used to deliver events */
-   EV_id,                    /* unique id delivered by the sge_commd */
+   EV_commid,                /* unique id delivered by the sge_commd */
 
    /* authentication informations */
    EV_uid,
 
    /* event request description */
    EV_d_time,                /* delivery interval for events */
-   EV_clienttype,            /* useful to differ between qmon */
-   /* and sge_schedd; may be they */
-   /* wait for different events */
-
-   EV_lt_heard_from,         /* used to trash unheard event clients */
+   EV_last_heard_from,         /* used to trash unheard event clients */
+   EV_last_send_time,        /* time when last event list has been sent */
    EV_next_send_time,        /* time when next list has to be sent */
    EV_next_number,           /* the number the next event will get */
-   EV_events,                /* used to hold the events that */
-   /* are not acknowledged */
-
-   EV_shutdown_event         /* event number that was used for shut down
-                              * event */
+   EV_events                 /* used to hold the events that */
+                             /* are not acknowledged */
 };
 
 LISTDEF(EV_Type)
+   SGE_ULONG(EV_id)
+   SGE_STRING(EV_name)
    SGE_STRING(EV_host)
    SGE_STRING(EV_commproc)
-   SGE_ULONG(EV_id)
+   SGE_ULONG(EV_commid)
    SGE_ULONG(EV_uid)
    SGE_ULONG(EV_d_time)
-   SGE_ULONG(EV_clienttype)
-   SGE_ULONG(EV_lt_heard_from)
+   SGE_ULONG(EV_last_heard_from)
+   SGE_ULONG(EV_last_send_time)
    SGE_ULONG(EV_next_send_time)
    SGE_ULONG(EV_next_number)
    SGE_LIST(EV_events)
-   SGE_ULONG(EV_shutdown_event)
 LISTEND 
 
 NAMEDEF(EVN)
+   NAME("EV_id")
+   NAME("EV_name")
    NAME("EV_host")
    NAME("EV_commproc")
-   NAME("EV_id")
+   NAME("EV_commid")
    NAME("EV_uid")
    NAME("EV_d_time")
-   NAME("EV_clienttype")
-   NAME("EV_lt_heard_from")
+   NAME("EV_last_heard_from")
+   NAME("EV_last_send_time")
    NAME("EV_next_send_time")
    NAME("EV_next_number")
    NAME("EV_events")
-   NAME("EV_shutdown_event")
 NAMEEND
 
 #define EVS sizeof(EVN)/sizeof(char*)
@@ -151,7 +151,7 @@ enum {
    sgeE_PE_MOD,
    sgeE_PE_LIST,
 
-   sgeE_SCHEDDDOWN,
+   sgeE_SHUTDOWN,
    sgeE_QMASTER_GOES_DOWN,
    sgeE_SCHEDDMONITOR,
    sgeE_GLOBAL_CONFIG,

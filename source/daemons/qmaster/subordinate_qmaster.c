@@ -139,7 +139,7 @@ int rebuild_cache
       if ((lGetUlong(qep, QU_state) & (QSUSPENDED|QCAL_SUSPENDED))==0 && !rebuild_cache) {
          ret |= sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL);
       }
-      sge_add_event(sgeE_QUEUE_SUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL); 
+      sge_add_event(NULL, sgeE_QUEUE_SUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL); 
       state = lGetUlong(qep, QU_state);
       SETBIT(QSUSPENDED_ON_SUBORDINATE, state); 
       lSetUlong(qep, QU_state, state);
@@ -243,7 +243,7 @@ int rebuild_cache
       if ((lGetUlong(qep, QU_state) & (QSUSPENDED|QCAL_SUSPENDED))==0 && !rebuild_cache) {
          ret |= sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL);
       }
-      sge_add_event(sgeE_QUEUE_UNSUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL); 
+      sge_add_event(NULL, sgeE_QUEUE_UNSUSPEND_ON_SUB, 0, 0, lGetString(qep, QU_qname), NULL); 
       state = lGetUlong(qep, QU_state);
       CLEARBIT(QSUSPENDED_ON_SUBORDINATE, state); 
       lSetUlong(qep, QU_state, state);

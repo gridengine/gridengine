@@ -186,7 +186,7 @@ char *rhost
    /* it's better to send the event only when the internal lists have
     * been updated. The CORBA part relies on this fact...
     */
-   sge_add_event(sgeE_USERSET_ADD, 0, 0, userset_name, ep);
+   sge_add_event(NULL, sgeE_USERSET_ADD, 0, 0, userset_name, ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
@@ -256,7 +256,7 @@ char *rhost
    lFreeElem(lDechainElem(*userset_list, found));
    /* remove userset file */
    sge_unlink(USERSET_DIR, userset_name);
-   sge_add_event(sgeE_USERSET_DEL, 0, 0, userset_name, NULL);
+   sge_add_event(NULL, sgeE_USERSET_DEL, 0, 0, userset_name, NULL);
 
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);
@@ -359,7 +359,7 @@ char *rhost
          strcpy(fname, real_fname);
       }    
    }
-   sge_add_event(sgeE_USERSET_MOD, 0, 0, userset_name, ep);
+   sge_add_event(NULL, sgeE_USERSET_MOD, 0, 0, userset_name, ep);
 
    /* change queue versions */
    sge_change_queue_version_acl(userset_name);

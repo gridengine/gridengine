@@ -634,10 +634,15 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    /*
    ** immediate jobs trigger scheduling immediately
    */
-   if (JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
-      sge_flush_events(FLUSH_EVENTS_SET);
-   } else {
-      sge_flush_events(FLUSH_EVENTS_JOB_SUBMITTED);
+   {
+      lListElem *schedd = sge_locate_scheduler();
+      if(schedd != NULL) {
+         if (JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
+            sge_flush_events(schedd, FLUSH_EVENTS_SET);
+         } else {
+            sge_flush_events(schedd, FLUSH_EVENTS_JOB_SUBMITTED);
+         }
+      }
    }
 
    *str = 0;
@@ -1411,7 +1416,7 @@ int sub_command
             }
          }
          if (trigger & PRIO_EVENT)
-            sge_add_event(sgeE_JOB_MOD_SCHED_PRIORITY, jobid, 0, NULL, jep);
+            sge_add_event(NULL, sgeE_JOB_MOD_SCHED_PRIORITY, jobid, 0, NULL, jep);
 
          /* remove all existing trigger links - 
             this has to be done using the old 
@@ -1467,7 +1472,7 @@ lListElem *jep,
 lListElem *jatask 
 ) {
    DENTER(TOP_LAYER, "sge_add_job_event");
-   sge_add_event(type, lGetUlong(jep, JB_job_number), jatask?lGetUlong(jatask, JAT_task_number):0, 
+   sge_add_event(NULL, type, lGetUlong(jep, JB_job_number), jatask?lGetUlong(jatask, JAT_task_number):0, 
       NULL, jep);
    DEXIT;
    return;
@@ -1479,7 +1484,7 @@ lListElem *jep,
 lListElem *jatask 
 ) {           
    DENTER(TOP_LAYER, "sge_add_jatask_event");
-   sge_add_event(type, lGetUlong(jep, JB_job_number), 
+   sge_add_event(NULL, type, lGetUlong(jep, JB_job_number), 
                   lGetUlong(jatask, JAT_task_number),
                   NULL, jatask);
    DEXIT;

@@ -55,14 +55,14 @@ echo "Removing old manpages in $MANBUILDDIR"
 \rm -rf $MANBUILDDIR
 mkdir -p $MANBUILDDIR
 
-# Take CVSROOT from current CVS direcotry
+# Take CVSROOT from current CVS directory
 #
 setenv CVSROOT `cat CVS/Root`
 
 setenv CVSBRANCH ""
 if ( $KVMAN == 1 ) then
    if ( -f CVS/Tag ) then
-      setenv CVSBRANCH `sed 's/^T//' CVS/Tag`
+      setenv CVSBRANCH `sed 's/^[TN]//' CVS/Tag`
       echo "==> Using CVS branch: ${CVSBRANCH}"
       setenv CVSBRANCH "-r $CVSBRANCH"
    else

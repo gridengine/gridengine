@@ -49,7 +49,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define HOSTATTR_LAYER TOP_LAYER
+#define HOSTATTR_LAYER BASIS_LAYER
 
 #define TEMPLATE_ATTR_IMPL(PREFIX, TYPE, DESCRIPTOR, HREF_NM, VALUE_NM)       \
                                                                               \
@@ -326,7 +326,8 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
 {
    bool ret = false;
 
-   DENTER(HOSTATTR_LAYER, "attr_list_find_value");
+   DENTER(TOP_LAYER, "attr_list_find_value");
+
    if (this_list != NULL && hostname != NULL) {
       lListElem *href = NULL;
    
@@ -336,6 +337,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
       href = attr_list_locate(this_list, hostname, href_nm);
       if (href != NULL) {  
          object_get_any_type(href, value_nm, value_buffer);
+         DTRACE;
          ret = true;
       } else {
          bool is_ambiguous = false;
@@ -359,6 +361,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                lListElem *tmp_href = NULL;
                lList *host_list = NULL;
 
+               DTRACE;
                href_list_add(&tmp_href_list, NULL, href_name);
                lret &= href_list_find_all_references(tmp_href_list, NULL,
                                                      master_list, &host_list,
@@ -368,8 +371,12 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                   if (already_found == false) {
                      already_found = true;
                      object_get_any_type(href, value_nm, value_buffer);
+                     DTRACE;
+                     ret = true;
                   } else {
                      is_ambiguous = true;
+                     DTRACE;
+                     ret = false;
                      break;
                   }
                }
@@ -377,9 +384,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                tmp_href_list = lFreeList(tmp_href_list);
             }
          }
-         if (!is_ambiguous) {
-            ret = true;
-         } else {
+         if (ret == false) {
             lListElem *tmp_href = NULL;
 
             /*
@@ -388,6 +393,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
             tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
             if (tmp_href != NULL) {
                object_get_any_type(tmp_href, value_nm, value_buffer);
+               DTRACE;
                ret = true;
             } else {
                /*
@@ -808,6 +814,7 @@ TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, AULNG_Type, AULNG_href, AULNG_value)
 TEMPLATE_ATTR_IMPL(bool_attr, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
 
 TEMPLATE_ATTR_IMPL(time_attr, const char *, ATIME_Type, ATIME_href, ATIME_value) 
+
 TEMPLATE_ATTR_IMPL(mem_attr, const char *, AMEM_Type, AMEM_href, AMEM_value) 
 
 TEMPLATE_ATTR_IMPL(inter_attr, const char *, AINTER_Type, AINTER_href, AINTER_value) 
@@ -822,5 +829,5 @@ TEMPLATE_ATTR_IMPL(celist_attr, const char *, ACELIST_Type, ACELIST_href, ACELIS
 
 TEMPLATE_ATTR_IMPL(solist_attr, const char *, ASOLIST_Type, ASOLIST_href, ASOLIST_value) 
 
-TEMPLATE_ATTR_IMPL(qtlist_attr, const char *, AQTLIST_Type, AQTLIST_href, AQTLIST_value) 
+TEMPLATE_ATTR_IMPL(qtlist_attr, u_long32, AQTLIST_Type, AQTLIST_href, AQTLIST_value) 
 

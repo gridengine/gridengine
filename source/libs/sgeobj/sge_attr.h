@@ -98,7 +98,7 @@ TEMPLATE_ATTR_PROTO(celist_attr, const char *)
 
 TEMPLATE_ATTR_PROTO(solist_attr, const char *)                    
 
-TEMPLATE_ATTR_PROTO(qtlist_attr, const char *)                    
+TEMPLATE_ATTR_PROTO(qtlist_attr, u_long32)                    
 
 #undef ATTR_TYPE_PROTOTYPES 
 

@@ -1461,6 +1461,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    }
    ret = inter_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
                                            HOSTATTR_ALLOW_AMBIGUITY);
+
    if (!ret) {
       const char *text = lGetString(lFirst(lanswer_list), AN_text);
 

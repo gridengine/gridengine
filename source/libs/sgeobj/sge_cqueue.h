@@ -37,8 +37,8 @@
 
 extern lList *Master_CQueue_List;
 
-bool
-cqueue_attr_is_sublist_type(int cqueue_attr);
+int
+cqueue_attr_get_qinstance_attr(int cqueue_attr);
 
 int
 cqueue_attr_get_href_attr(int cqueue_attr);

@@ -269,14 +269,14 @@ int parsing_type
    /* --------- CQ_min_cpu_interval */
    if (ret == 0) {
       ret = (!set_conf_inter_attr_list(alpp, clpp, fields, "min_cpu_interval", 
-                                       ep, CQ_suspend_interval, AINTER_Type,
+                                       ep, CQ_min_cpu_interval, AINTER_Type,
                                        AINTER_href)) ? -1 : 0;
    }
 
    /* --------- CQ_notify */
    if (ret == 0) {
       ret = (!set_conf_inter_attr_list(alpp, clpp, fields, "notify", ep, 
-                                       CQ_suspend_interval, AINTER_Type,
+                                       CQ_notify, AINTER_Type,
                                        AINTER_href)) ? -1 : 0;
    }
 
@@ -455,44 +455,6 @@ int parsing_type
                                         AQTLIST_Type, AQTLIST_href)) ? -1 : 0;
    }
 
-#if 0 /* EB: TODO: APIBASE */
-   /* --------- CU_ruser_list */
-   if (ret == 0) {
-      ret = (!set_conf_str_attr_list(alpp, clpp, fields, "remote_user", ep, 
-                                     CU_ruser_list, ASTR_Type, 
-                                     ASTR_href)) ? -1 : 0;
-   }
-
-   /* --------- CU_ulong32 */
-   if (ret == 0) {
-      ret = (!set_conf_ulng_attr_list(alpp, clpp, fields, "ulong32", ep, 
-                                      CU_ulong32, AULNG_Type, 
-                                      AULNG_href)) ? -1 : 0;
-   }
-   
-   /* --------- CU_bool */
-   if (ret == 0) {
-      ret = (!set_conf_bool_attr_list(alpp, clpp, fields, "bool", ep, 
-                                      CU_bool, ABOOL_Type, 
-                                      ABOOL_href)) ? -1 : 0;
-   }
-
-   /* --------- CU_time */
-   if (ret == 0) {
-      ret = (!set_conf_time_attr_list(alpp, clpp, fields, "time", ep, 
-                                      CU_time, ATIME_Type,
-                                      ATIME_href)) ? -1 : 0;
-   }
-   
-   /* --------- CU_mem */
-   if (ret == 0) {
-      ret = (!set_conf_mem_attr_list(alpp, clpp, fields, "mem", ep, 
-                                     CU_mem, AMEM_Type,
-                                     AMEM_href)) ? -1 : 0;
-   }
-   
-#endif
-
    DEXIT;
    return ret;
 }
@@ -619,7 +581,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
          sge_dstring_free(&string);
       } else {
-         FPRINTF((fp, "00:05:00\n"));
+         FPRINTF((fp, "00:00:60\n"));
       }
  
    }
@@ -1284,98 +1246,6 @@ write_cqueue(int spool, int how, const lListElem *ep)
       }
  
    }
-#if 0 /* EB: TODO: APIBASE */ 
-   {
-      const lList *str_attr_list = lGetList(ep, CU_ruser_list);
-
-      FPRINTF((fp, "remote_user      "));
-      if (str_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         str_attr_list_append_to_dstring(str_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
- 
-   }
-   {
-      const lList *ulng_attr_list = lGetList(ep, CU_ulong32);
-
-      FPRINTF((fp, "ulong32          "));
-      if (ulng_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         ulng_attr_list_append_to_dstring(ulng_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
- 
-   }
-   {
-      const lList *bool_attr_list = lGetList(ep, CU_bool);
-
-      FPRINTF((fp, "bool             "));
-      if (bool_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         bool_attr_list_append_to_dstring(bool_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "NONE\n"));
-      }
- 
-   }
-   {
-      const lList *time_attr_list = lGetList(ep, CU_time);
-
-      FPRINTF((fp, "time             "));
-      if (time_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         time_attr_list_append_to_dstring(time_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *mem_attr_list = lGetList(ep, CU_mem);
-
-      FPRINTF((fp, "mem              "));
-      if (mem_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         mem_attr_list_append_to_dstring(mem_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "INFINITY\n"));
-      }
- 
-   }
-   {
-      const lList *inter_attr_list = lGetList(ep, CU_inter);
-
-      FPRINTF((fp, "inter            "));
-      if (inter_attr_list != NULL) {
-         dstring string = DSTRING_INIT;
-
-         inter_attr_list_append_to_dstring(inter_attr_list, &string);
-         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-         sge_dstring_free(&string);
-      } else {
-         FPRINTF((fp, "00:05:00\n"));
-      }
- 
-   }
-#endif
 
    if (how != 0) {
       fclose(fp);

@@ -49,6 +49,7 @@
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cqueue.h"
+#include "sge_qinstance.h"
 #include "sge_queue.h"
 #include "sge_userset.h"
 #include "sge_href.h"
@@ -146,31 +147,11 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
             }
          }
          if (ret) {
-#if 1 /* EB: debug */
-            {
-               dstring message = DSTRING_INIT;
-
-               sge_dstring_append(&message, "add_hosts: ");
-               href_list_append_to_dstring(add_hosts, &message);
-               sge_dstring_append(&message, " ");
-               sge_dstring_append(&message, "rem_hosts: ");
-               href_list_append_to_dstring(rem_hosts, &message);
-               sge_dstring_append(&message, " ");
-               sge_dstring_append(&message, "add_groups: ");
-               href_list_append_to_dstring(add_groups, &message);
-               sge_dstring_append(&message, " ");
-               sge_dstring_append(&message, "rem_groups: ");
-               href_list_append_to_dstring(rem_groups, &message);
-               sge_dstring_append(&message, "\n");
-               DPRINTF(("%s", sge_dstring_get_string(&message)));
-            }
-#endif
             lSetList(cqueue, CQ_hostlist, lCopyList("", list));
          }
       }
    }
 
-#if 0   
    if (ret) {
       int index;
       int array[] = {
@@ -196,25 +177,24 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          index++;
       }
    }
-#endif
    
    if (ret) {
       int index;
       int array[] = { 
-         CQ_suspend_interval, NoName
-      };
-#if 0
-      int array[] = { 
-         CQ_seq_no,  CQ_nsuspend, CQ_job_slots,        CQ_fshare,
-         CQ_oticket, CQ_rerun,    CQ_suspend_interval, CQ_min_cpu_interval,
-         CQ_notify,  CQ_tmpdir,   CQ_shell,            CQ_s_fsize,
-         CQ_h_fsize, CQ_s_data,   CQ_h_data,           CQ_s_stack,
-         CQ_h_stack, CQ_s_core,   CQ_h_core,           CQ_s_rss,
-         CQ_h_rss,   CQ_s_vmem,   CQ_h_vmem,           CQ_s_rt,
-         CQ_h_rt,    CQ_s_cpu,    CQ_h_cpu,
+         CQ_seq_no,           CQ_nsuspend,         CQ_job_slots,        
+         CQ_fshare,           CQ_oticket,          CQ_rerun,    
+         CQ_suspend_interval, CQ_min_cpu_interval, CQ_notify,  
+         CQ_tmpdir,           CQ_shell,            CQ_s_fsize,
+         CQ_h_fsize,          CQ_s_data,           CQ_h_data,           
+         CQ_s_stack,          CQ_h_stack,          CQ_s_core,   
+         CQ_h_core,           CQ_s_rss,            CQ_h_rss,   
+         CQ_s_vmem,           CQ_h_vmem,           CQ_s_rt,
+         CQ_h_rt,             CQ_s_cpu,            CQ_h_cpu,            
+         CQ_priority,         CQ_prolog,           CQ_epilog,   
+         CQ_shell_start_mode, CQ_terminate_method, CQ_starter_method,       
+         CQ_suspend_method,   CQ_resume_method,    CQ_initial_state,
          NoName
       };
-#endif
 
       index = 0;
       while (array[index] != NoName && ret) {
@@ -223,7 +203,6 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          if (pos >= 0) {
             lList *list = lGetPosList(reduced_elem, pos);
 
-lWriteListTo(list, stderr);
             lSetList(cqueue, array[index], lCopyList("", list));
          }
          index++;
@@ -238,6 +217,19 @@ lWriteListTo(list, stderr);
          lList *list = lGetPosList(reduced_elem, pos);
    
          lSetList(cqueue, CQ_qtype, lCopyList("", list));
+      }
+   }
+
+   if (ret) {
+      lListElem *href = NULL;
+
+      for_each(href, add_hosts) {
+         const char *hostname = lGetHost(href, HR_name);
+         lListElem* new_qinstance;
+
+         new_qinstance = qinstance_create(cqueue, answer_list, hostname);
+
+         lWriteElemTo(new_qinstance, stderr); 
       }
    }
 

@@ -36,4 +36,17 @@
 #include "sge_dstring.h"
 #include "sge_qinstanceL.h"
 
+lListElem *
+qinstance_create(const lListElem *cqueue, lList **answer_list,
+                 const char *hostname);
+
+bool
+qinstance_modify(lListElem *this_elem, lList **answer_list,
+                 const lListElem *cqueue,
+                 int attribute_name,
+                 int cqueue_attibute_name,
+                 int sub_host_name, 
+                 int sub_value_name,
+                 int subsub_key);
+
 #endif /* __SGE_QINSTANCE_H */

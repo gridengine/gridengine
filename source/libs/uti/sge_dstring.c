@@ -38,6 +38,8 @@
 #define REALLOC_CHUNK   1024
 #define BUFFER_SIZE 20000
 
+#define DSTRING_LAYER BASIS_LAYER
+
 /* JG: TODO: Introduction uti/dstring/--Dynamic_String is missing */
 
 /****** uti/dstring/sge_dstring_append() **************************************
@@ -64,7 +66,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
 {
    int n, m;
 
-   DENTER(TOP_LAYER, "sge_dstring_append");
+   DENTER(DSTRING_LAYER, "sge_dstring_append");
 
    if (!sb) {
       DEXIT;
@@ -121,7 +123,7 @@ const char* sge_dstring_append_char(dstring *sb, const char a)
 {
    int n, m;
 
-   DENTER(TOP_LAYER, "sge_dstring_append_char");
+   DENTER(DSTRING_LAYER, "sge_dstring_append_char");
 
    if (!sb) {
       DEXIT;
@@ -353,7 +355,7 @@ const char *sge_dstring_copy_string(dstring *sb, const char *str)
 {
    const char *ret = NULL;
 
-   DENTER(TOP_LAYER, "sge_dstring_copy_string");
+   DENTER(DSTRING_LAYER, "sge_dstring_copy_string");
 
    if (sb == NULL) {
       DEXIT;
@@ -400,7 +402,7 @@ const char *sge_dstring_copy_string(dstring *sb, const char *str)
 const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2) 
 {
    const char *ret = NULL;
-   DENTER(TOP_LAYER, "sge_dstring_copy_dstring");
+   DENTER(DSTRING_LAYER, "sge_dstring_copy_dstring");
 
    if (sb1->is_static) {
       sb1->s[0] = 0;
@@ -523,7 +525,7 @@ size_t sge_dstring_strlen(const dstring *string)
 {
    size_t len = 0;
 
-   DENTER(TOP_LAYER,"sge_dstring_strlen");
+   DENTER(DSTRING_LAYER,"sge_dstring_strlen");
    if (string != NULL && string->s != NULL) {
       len = strlen(string->s);
    }
@@ -552,7 +554,7 @@ size_t sge_dstring_strlen(const dstring *string)
 *******************************************************************************/
 size_t sge_dstring_remaining(const dstring *string)
 {
-   DENTER(TOP_LAYER,"sge_dstring_remaining");
+   DENTER(DSTRING_LAYER,"sge_dstring_remaining");
 
    if (string && string->is_static) {
       int n = string->size - strlen(string->s);

@@ -69,7 +69,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define OBJECT_LAYER TOP_LAYER
+#define OBJECT_LAYER BASIS_LAYER
 
 /* Datastructure for internal storage of object/message related information */
 typedef struct {

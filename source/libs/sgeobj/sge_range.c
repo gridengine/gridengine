@@ -1306,17 +1306,20 @@ void range_list_calculate_union_set(lList **range_list,
    DENTER(RANGE_LAYER, "range_list_calculate_union_set");
    if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
       *range_list = lFreeList(*range_list);
+
       if (range_list1 != NULL) {
          *range_list = lCopyList("", range_list1);
       } else {
          *range_list = lCopyList("", range_list2);
       }
-      if (*range_list) {
+      if (*range_list == NULL) {
+         DTRACE;
          goto error;
       }
 
       range_list_sort_uniq_compress(*range_list, answer_list);
       if (answer_list_has_error(answer_list)) {
+         DTRACE;
          goto error;
       }
 

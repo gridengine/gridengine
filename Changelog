@@ -1,15 +1,21 @@
-CR-2004-09-21-0: Testsuite: added a cleanup function for test
-                               bugs/issuezilla/1270
+EB-2004-09-21-0: Bugfix:    qmaster might fail if jobs are deleted which have 
+                            multiple hold states applied 
+                 Issue:     1280
+                 Bugtraq:   
+                 Review:    SG 
 
-JG-2004-09-20-0: Testsuite: Improved test performance/throughput, added a number
+CR-2004-09-21-0: Testsuite: added a cleanup function for test
+                            bugs/issuezilla/1270
+
+JG-2004-09-20-0: Testuite:  Improved test performance/throughput, added a number
                             of charts to comparison of two clusters.
                  Review:    CR
 
 SG-2004-09-20-0: Enhance.:  First part of extending the scheduler to use the
                             calendars. The qi-data structure has been extended
                             to include the next 2 state changes, and how long
-                            the current and the next last. The calendar implementation
-                            had to be changed to allow that.
+                            the current and the next last. The calendar 
+                            implementation had to be changed to allow that.
                  Changed:   qmaster, test_calendar
                  Issue:     1235
                  Bugtraq:   5104270

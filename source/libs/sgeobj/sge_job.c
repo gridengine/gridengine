@@ -482,10 +482,15 @@ bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number)
 u_long32 job_get_ja_tasks(const lListElem *job) 
 {  
    u_long32 ret = 0;
+   u_long32 n = 0;
 
    DENTER(TOP_LAYER, "job_get_ja_tasks");
-   ret += job_get_not_enrolled_ja_tasks(job);
-   ret += job_get_enrolled_ja_tasks(job);
+   n = job_get_not_enrolled_ja_tasks(job);
+   ret += n;
+   DPRINTF(("Not enrolled ja_tasks: "u32"\n", n));
+   n = job_get_enrolled_ja_tasks(job);
+   ret += n;
+   DPRINTF(("Enrolled ja_tasks: "u32"\n", n));
    DEXIT;
    return ret;
 }
@@ -515,16 +520,25 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 ******************************************************************************/
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
 {
-   const int attributes = 4;
-   const int attribute[] = {JB_ja_n_h_ids, JB_ja_u_h_ids, JB_ja_o_h_ids,
-                            JB_ja_s_h_ids};
+   lList *answer_list = NULL;
+   lList *uos_ids = NULL;
+   lList *uo_ids = NULL;
    u_long32 ret = 0;
-   int i;
 
    DENTER(TOP_LAYER, "job_get_not_enrolled_ja_tasks");     
-   for (i = 0; i < attributes; i++) {
-      ret += range_list_get_number_of_ids(lGetList(job, attribute[i]));
-   } 
+
+   range_list_calculate_union_set(&uo_ids, &answer_list,
+                                  lGetList(job, JB_ja_u_h_ids),
+                                  lGetList(job, JB_ja_o_h_ids));
+   range_list_calculate_union_set(&uos_ids, &answer_list, uo_ids, 
+                                  lGetList(job, JB_ja_s_h_ids));
+
+   ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
+   ret += range_list_get_number_of_ids(uos_ids);
+
+   uos_ids = lFreeList(uos_ids);
+   uo_ids = lFreeList(uo_ids);
+
    DEXIT;
    return ret;
 }

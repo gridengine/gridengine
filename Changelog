@@ -1,3 +1,9 @@
+CR-2003-01-31-2: Bugfix:    qconf -Muser and qconf -Auser report no success
+                            messages
+                 Bugtraq:   #4811230
+                 Review:    AH
+                 Changed:   qconf
+
 CR-2003-01-31-0  Testsuite: Throughput performance test:
                                - implemented resending of jobs in case of
                                  submit error

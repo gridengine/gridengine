@@ -1,3 +1,6 @@
+CR-2003-04-08-0  Bugfix:    using -xO3 instead of -xO4 for SOLARIS86
+                 Changed:   aimk for compiling SOLARIS86 binaries
+
 EB-2003-04-08-1  Bugfix:    qdel -u <user> does not delete all jobs of the user
                  Issue:     524
                  Bugtraq:   4842878

@@ -1486,7 +1486,13 @@ case SOLARIS86:
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-xO4"
+      if ( $BUILDARCH == SOLARIS86 ) then
+         echo "Do not compile Grid Engine with -xO4 on SOLARIS86 platform"
+         set OFLAG = "-xO3"
+      else
+         set OFLAG = "-xO4"
+      endif
+      
    endif
 
    if ( $OPTIMIZATION == 1 ) then

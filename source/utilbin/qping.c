@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_MESSAGE , 0, comp_port, "qping", 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, comp_port, "qping", 0, 1,0 );
    if (handle == NULL) {
       fprintf(stderr, "could not create communication handle: %s\n", cl_get_error_text(commlib_error));
       cl_com_cleanup_commlib();
@@ -281,7 +281,7 @@ int main(int argc, char *argv[]) {
       }
       sleep(interval);
    }
-   retval = cl_commlib_shutdown_handle(handle,0);
+   retval = cl_commlib_shutdown_handle(handle,CL_FALSE);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
       free(resolved_comp_host);

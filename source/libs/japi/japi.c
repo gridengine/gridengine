@@ -555,7 +555,7 @@ int japi_init(const char *contact, const char *session_key_in,
       handle = cl_com_get_handle ((char*)uti_state_get_sge_formal_prog_name(), 0);
 
       if (handle == NULL) {
-         handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0,
+         handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE,
                                        sge_get_qmaster_port(),
                                        (char*)prognames[uti_state_get_mewho()],
                                        0, 1, 0);      
@@ -1132,7 +1132,7 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    /* 
     * disconnect from commd
     */
-   cl_errno = cl_commlib_shutdown_handle (cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), 0);
+   cl_errno = cl_commlib_shutdown_handle (cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), CL_FALSE);
    
    if (cl_errno != CL_RETVAL_OK) {
       sge_dstring_sprintf(diag, "cl_commlib_shutdown_handle() failed: %s\n", cl_get_error_text(cl_errno));

@@ -53,29 +53,24 @@
 #define CL_LOG_INT(log_type, log_text, log_str) /* cl_log_list_log_int(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
 #endif
 
-/* log_types */
-#define CL_LOG_OFF     0
-#define CL_LOG_ERROR   1
-#define CL_LOG_WARNING 2
-#define CL_LOG_INFO    3
-#define CL_LOG_DEBUG   4
+
 
 
 /* basic functions */
-const char* cl_log_list_convert_type_id(int id);   /* CR check */
+const char* cl_log_list_convert_type_id(cl_log_t id);   /* CR check */
 int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int creator_id, cl_log_list_flush_method_t flush_type,cl_log_func_t flush_func  );   /* CR check */
 #if 0
 cl_thread_settings_t* cl_log_list_get_creator_thread(cl_thread_settings_t* thread_config); /* CR check */
 #endif
 int cl_log_list_cleanup(cl_raw_list_t** list_p);   /* CR check */
-int cl_log_list_set_log_level(cl_raw_list_t* list_p, int log_level); /* CR check */
+int cl_log_list_set_log_level(cl_raw_list_t* list_p, cl_log_t log_level); /* CR check */
 
 
 /* thread list function that will lock the list */
 int cl_log_list_flush(void);   /* CR check */
 int cl_log_list_flush_list(cl_raw_list_t* list_p); /* CR check */
-int cl_log_list_log(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param); /* CR check */
-int cl_log_list_log_int(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param); /* CR check */
+int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param); /* CR check */
+int cl_log_list_log_int(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param); /* CR check */
 int cl_log_list_del_log(cl_raw_list_t* list_p);   /* CR check */
 cl_log_list_elem_t* cl_log_list_get_first_elem(cl_raw_list_t* list_p);  /* CR check */
 

@@ -39,6 +39,7 @@
 #include <sys/time.h>
 
 #include "cl_commlib.h"
+#include "cl_log_list.h"
 #include "cl_endpoint_list.h"
 #define CL_DO_SLOW 0
 
@@ -88,6 +89,7 @@ extern int main(int argc, char** argv)
   cl_com_message_t* message = NULL;
   cl_com_endpoint_t* sender = NULL;
   int i;
+  cl_log_t log_level;
   
   if (argc != 2) {
       printf("please enter debug level\n");
@@ -113,7 +115,27 @@ extern int main(int argc, char** argv)
      printf("hup\n");
   };
 
-  cl_com_setup_commlib(CL_ONE_THREAD, atoi(argv[1]),   NULL );
+  switch(atoi(argv[1])) {
+     case 0:
+        log_level=CL_LOG_OFF;
+        break;
+     case 1:
+        log_level=CL_LOG_ERROR;
+        break;
+     case 2:
+        log_level=CL_LOG_WARNING;
+        break;
+     case 3:
+        log_level=CL_LOG_INFO;
+        break;
+     case 4:
+        log_level=CL_LOG_DEBUG;
+        break;
+     default:
+        log_level=CL_LOG_OFF;
+        break;
+  }
+  cl_com_setup_commlib(CL_ONE_THREAD, log_level, NULL );
 
   cl_com_set_alias_file("./alias_file");
 
@@ -198,7 +220,7 @@ extern int main(int argc, char** argv)
      cl_commlib_send_message(handle, "down_host", "nocomp", 1, CL_MIH_MAT_ACK, (cl_byte_t*)"blub", 5, NULL, 1, 1 ); /* check wait for ack / ack_types  TODO*/
 #endif
  
-     ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
+     ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
      CL_LOG_STR(CL_LOG_INFO,"cl_commlib_receive_message() returned",cl_get_error_text(ret_val));
 
      if (message != NULL) {
@@ -221,7 +243,7 @@ extern int main(int argc, char** argv)
                                 message->message, 
                                 message->message_length, 
                                 &mid, message->message_id,0, 
-                                0,0);
+                                CL_FALSE,CL_FALSE);
            if (ret_val != CL_RETVAL_OK) {
               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
            }
@@ -248,7 +270,7 @@ extern int main(int argc, char** argv)
 
   while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      message = NULL;
-     cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
+     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
 
      if (message != NULL) {
         printf("ignoring message from \"%s\"\n", sender->comp_host); 

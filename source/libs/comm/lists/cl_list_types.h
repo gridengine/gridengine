@@ -75,6 +75,15 @@ struct cl_thread_list_elem_type {
 
 /***********************************************************************/
 
+typedef enum cl_log_type {
+   CL_LOG_OFF = 0,
+   CL_LOG_ERROR,
+   CL_LOG_WARNING,
+   CL_LOG_INFO,
+   CL_LOG_DEBUG
+} cl_log_t;
+
+
 /***********************************************************************/
 /* LOG_LIST */
 /***********************************************************************/
@@ -85,7 +94,7 @@ struct cl_log_list_elem_type {                      /* list element specific dat
    char*                 log_thread_name;                /* name of thread  */
    int                   log_thread_id;                  /* thread id   */
    int                   log_thread_state;               /* state of thread */
-   int                   log_type;                       /* log level type */
+   cl_log_t              log_type;                       /* log level type */
    char*                 log_module_name;                /* name of c - module */
    cl_raw_list_elem_t*   raw_elem;
 };
@@ -102,8 +111,9 @@ typedef int               (*cl_log_func_t)              (cl_raw_list_t* log_list
 typedef unsigned long     (*cl_app_status_func_t)       (char** info_message);
 typedef void              (*cl_error_func_t)            (int cl_error, const char* error_message);
 
+
 typedef struct cl_log_list_data_type {                      /* list specific data */
-   int                         current_log_level;           /* current log level */
+   cl_log_t                    current_log_level;           /* current log level */
    cl_log_list_flush_method_t  flush_type;                  /* flushing type */
    cl_log_func_t               flush_function;              /* function called for flushing */
    cl_thread_settings_t*       list_creator_settings;       /* log list creator thread settings */

@@ -1,3 +1,7 @@
+CR-2004-10-21-0: Cleanup:   - code cleanup of commlib
+                 Review:    AA
+                 Changed:   commlib
+
 JG-2004-10-20-0: Bugfix:    fixed qsh and test_drmaa (sge_prof_setup) 
                  Changed:   qsh test_drmaa
                  Review:    SG

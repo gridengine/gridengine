@@ -51,7 +51,7 @@ cl_raw_list_t* cl_com_get_endpoint_list(void);
 /* application log functions */
 int cl_commlib_push_application_error(int cl_error, const char* cl_info);
 
-int cl_com_setup_commlib(cl_thread_mode_t t_mode, int debug_level , cl_log_func_t flush_func);
+int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log_func_t flush_func);
 int cl_com_cleanup_commlib(void);
 
 
@@ -138,7 +138,7 @@ int cl_commlib_open_connection   (cl_com_handle_t* handle,
 
 int cl_commlib_receive_message   (cl_com_handle_t* handle, 
                                   char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                                  int synchron, 
+                                  cl_bool_t synchron, 
                                   unsigned long response_mid, 
                                   cl_com_message_t** message, 
                                   cl_com_endpoint_t** sender );
@@ -150,13 +150,13 @@ int cl_commlib_send_message       (cl_com_handle_t* handle,
                                   unsigned long* mid , 
                                   unsigned long response_mid, 
                                   unsigned long tag, 
-                                  int copy_data, 
-                                  int wait_for_ack );
+                                  cl_bool_t copy_data, 
+                                  cl_bool_t wait_for_ack );
 
 int cl_commlib_check_for_ack      (cl_com_handle_t* handle, 
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                                    unsigned long mid , 
-                                   int do_block);
+                                   cl_bool_t do_block);
 
 int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id,

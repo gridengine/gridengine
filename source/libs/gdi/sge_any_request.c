@@ -194,6 +194,8 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
+         case CL_LOG_OFF:
+            break;
       }
       cl_log_list_del_log(list_p);
    }
@@ -419,9 +421,9 @@ void prepare_enroll(const char *name)
                                                    1 ,
                                                    sge_get_qmaster_port(),
                                                    CL_CM_AC_DISABLED ,
-                                                   1);
+                                                   CL_TRUE);
             execd_port = sge_get_execd_port(); 
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 1,execd_port ,
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE,execd_port ,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
@@ -438,8 +440,8 @@ void prepare_enroll(const char *name)
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE,                              /* message based tcp communication                */
-                                          1, sge_get_qmaster_port(),                                /* create service on qmaster port,                */
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
+                                          CL_TRUE, sge_get_qmaster_port(),                          /* create service on qmaster port,                */
                                                                                                     /* use execd port to connect to endpoints         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
                                           1 , 0 );                                                  /* select timeout is set to 1 second 0 usec       */
@@ -457,7 +459,7 @@ void prepare_enroll(const char *name)
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
@@ -476,7 +478,7 @@ void prepare_enroll(const char *name)
          default:
             /* this is for "normal" gdi clients of qmaster */
             DPRINTF(("creating GDI handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
                switch (commlib_error) {
@@ -559,7 +561,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    }
 
    if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
-      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,1);
+      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,CL_TRUE);
    }
    
    if (synchron) {

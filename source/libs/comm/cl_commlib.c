@@ -316,7 +316,7 @@ static int cl_commlib_check_callback_functions(void) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_setup_commlib()"
-int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func_t flush_func ) {
+int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log_func_t flush_func ) {
    int ret_val = CL_RETVAL_OK;
    cl_thread_settings_t* thread_p = NULL;
    
@@ -1140,7 +1140,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                       * because cl_commlib_shutdown_handle() is called from application context.
                       *
                       */
-                     cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
+                     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
                      if (message != NULL) {
                         CL_LOG(CL_LOG_WARNING,"deleting message");
                         cl_com_free_message(&message);
@@ -1176,7 +1176,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                      /* delete messages */
                      cl_com_message_t* message = NULL;
                      cl_com_endpoint_t* sender = NULL;
-                     cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
+                     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
                      if (message != NULL) {
                         CL_LOG(CL_LOG_WARNING,"deleting message");
                         cl_com_free_message(&message);
@@ -2275,7 +2275,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
                                                 connection->remote, 
                                                 connect_port, 
-                                                connection->auto_close_type, 0 );
+                                                connection->auto_close_type, CL_FALSE );
             }
             break;
          }
@@ -2459,7 +2459,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                      return_value = cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
                                                                      connection->remote, 
                                                                      connect_port, 
-                                                                     connection->auto_close_type, 0 );
+                                                                     connection->auto_close_type, CL_FALSE );
                   }
                   break;
                }
@@ -3156,7 +3156,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
                    cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
                                                     connection->remote,
                                                     connect_port,
-                                                    connection->auto_close_type, 0 );
+                                                    connection->auto_close_type, CL_FALSE );
                 }
                 break;
              }
@@ -3320,7 +3320,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
                       cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
                                                        connection->remote,
                                                        connect_port,
-                                                       connection->auto_close_type, 0 );
+                                                       connection->auto_close_type, CL_FALSE );
                    }
                    break;
                 }
@@ -3432,7 +3432,14 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_receive_message()"
-int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender ) {
+int cl_commlib_receive_message(cl_com_handle_t*      handle,
+                               char*                 un_resolved_hostname,
+                               char*                 component_name,
+                               unsigned long         component_id,
+                               cl_bool_t             synchron,
+                               unsigned long         response_mid,
+                               cl_com_message_t**    message,
+                               cl_com_endpoint_t**   sender ) {
    cl_com_connection_t* connection = NULL;
    cl_message_list_elem_t* message_elem = NULL;
    cl_connection_list_elem_t* elem = NULL;
@@ -3456,7 +3463,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
       return CL_RETVAL_PARAMS;
    }
 
-   if (synchron != 0) {
+   if (synchron == CL_TRUE) {
       gettimeofday(&now,NULL);
       my_timeout = now.tv_sec + handle->synchron_receive_timeout;
    }
@@ -3627,7 +3634,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
          cl_raw_list_unlock(handle->connection_list);
       }
        
-      if (synchron != 0) {
+      if (synchron == CL_TRUE) {
          int return_value;
 
          switch(cl_com_create_threads) {
@@ -3658,7 +3665,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
             return CL_RETVAL_SYNC_RECEIVE_TIMEOUT;
          }
       } 
-   } while (synchron != 0 && cl_com_get_ignore_timeouts_flag() == CL_FALSE);
+   } while (synchron == CL_TRUE && cl_com_get_ignore_timeouts_flag() == CL_FALSE);
 
    /* 
     * when leave_reason is CL_RETVAL_CONNECTION_NOT_FOUND the connection list
@@ -3729,19 +3736,19 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
       if ( connection->remote != NULL ) {
          if ( component_id > 0 ) {
             if ( connection->remote->comp_id == component_id ) {
-               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, 0 );
+               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, CL_FALSE );
                continue;
             } 
          }
          if ( component_name != NULL && connection->remote->comp_name != NULL  ) {
             if ( strcmp(connection->remote->comp_name, component_name) == 0 ) {
-               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, 0 );
+               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, CL_FALSE );
                continue;
             }
          }
          if ( resolved_hostname != NULL) {
             if ( cl_com_compare_hosts( resolved_hostname, connection->remote->comp_host ) == CL_RETVAL_OK ) {
-               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, 0 );
+               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, CL_FALSE );
                continue;
             }
          }     
@@ -4018,7 +4025,7 @@ static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_check_for_ack()"
-int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname, char* component_name, unsigned long component_id, unsigned long mid , int do_block) {
+int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname, char* component_name, unsigned long component_id, unsigned long mid , cl_bool_t do_block) {
    int found_message = 0;
    int message_added = 0;
    cl_connection_list_elem_t* elem = NULL;
@@ -4148,7 +4155,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
       }
 
-      if (do_block != 0) {
+      if (do_block == CL_TRUE) {
          switch(cl_com_create_threads) {
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -4935,8 +4942,8 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
                             cl_xml_ack_type_t ack_type, 
                             cl_byte_t* data, unsigned long size , 
                             unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack) {
+                            cl_bool_t copy_data,
+                            cl_bool_t wait_for_ack) {
 
 
    cl_com_connection_t* connection = NULL;
@@ -5028,7 +5035,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
             }    
 
             CL_LOG_STR(CL_LOG_DEBUG,"sending to:", connection->receiver->comp_host); 
-            if (copy_data == 1) {
+            if (copy_data == CL_TRUE) {
                help_data = (cl_byte_t*) malloc((sizeof(cl_byte_t)*size));
                if (help_data == NULL) {
                   cl_raw_list_unlock(handle->connection_list);
@@ -5107,13 +5114,13 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
       return CL_RETVAL_OK;
    }
 
-   if (wait_for_ack == 0) {
+   if (wait_for_ack == CL_FALSE) {
       free(unique_hostname);
       return CL_RETVAL_OK;
    }
 
    CL_LOG_INT(CL_LOG_INFO,"message acknowledge expected, waiting for ack", (int)my_mid);
-   return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid,1);
+   return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
    free(unique_hostname);
    return return_value;
 }

@@ -45,7 +45,7 @@ static cl_raw_list_t* global_cl_log_list = NULL;
 
 
 /* this functions must lock / unlock the raw list manually */
-static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state,int log_type ,const char* message, const char* parameter ); /* CR check */
+static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state,cl_log_t log_type ,const char* message, const char* parameter ); /* CR check */
 
 #if 0
 /* this functions are not needed */
@@ -58,7 +58,7 @@ static cl_log_list_elem_t* cl_log_list_get_last_elem(cl_raw_list_t* list_p, cl_l
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_add_log()"
-static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state, int log_type, const char* message , const char* parameter) { /* CR check */
+static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, int line, const char* function_name, const char* module_name, int thread_id, int thread_state, cl_log_t log_type, const char* message , const char* parameter) { /* CR check */
    cl_log_list_elem_t* new_elem = NULL;
    int module_length = 0;
    char* mod_name_start1 = NULL;  
@@ -145,7 +145,7 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_convert_type_id()"
-const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
+const char* cl_log_list_convert_type_id(cl_log_t id)  {  /* CR check */
 
    switch (id) {
       case CL_LOG_OFF:
@@ -167,19 +167,19 @@ const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_set_log_level()"
-int cl_log_list_set_log_level(cl_raw_list_t* list_p, int new_log_level) {  /* CR check */
+int cl_log_list_set_log_level(cl_raw_list_t* list_p, cl_log_t new_log_level) {  /* CR check */
    cl_log_list_data_t* ldata = NULL;
-   int log_level = 0;
+   cl_log_t log_level = CL_LOG_OFF;
    char* env_sge_commlib_debug = NULL;
    if (list_p == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
-   /* check for environment variable SGE_NGC_DEBUG */
+   /* check for environment variable SGE_COMMLIB_DEBUG */
    log_level = new_log_level;
    env_sge_commlib_debug = getenv("SGE_COMMLIB_DEBUG");
    if (env_sge_commlib_debug != NULL) {
-      log_level = (int) cl_util_get_ulong_value(env_sge_commlib_debug);
+      log_level = (cl_log_t) cl_util_get_ulong_value(env_sge_commlib_debug);
    }
 
    if (log_level < CL_LOG_OFF || log_level > CL_LOG_DEBUG) {
@@ -357,7 +357,7 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
    /* check for environment variable SGE_COMMLIB_DEBUG */
    env_sge_commlib_debug=getenv("SGE_COMMLIB_DEBUG");
    if ( env_sge_commlib_debug != NULL) {
-      ldata->current_log_level = (int) cl_util_get_ulong_value(env_sge_commlib_debug);
+      ldata->current_log_level = (cl_log_t) cl_util_get_ulong_value(env_sge_commlib_debug);
    }
 
    CL_LOG(CL_LOG_INFO,"cl_log_list_setup() complete");
@@ -457,7 +457,7 @@ cl_thread_settings_t* cl_log_list_get_creator_thread(cl_thread_settings_t* threa
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_log()"
-int cl_log_list_log(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param) { /* CR check */
+int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, const char* log_param) { /* CR check */
    int ret_val, ret_val2;
    cl_thread_settings_t* thread_config = NULL;
    cl_log_list_data_t* ldata = NULL;
@@ -575,7 +575,7 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_log_int()"
-int cl_log_list_log_int(int log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {  /* CR check */
+int cl_log_list_log_int(cl_log_t log_type,int line, const char* function_name,const char* module_name, const char* log_text, int param) {  /* CR check */
    int ret_val;
    char my_int_buffer[512];
 

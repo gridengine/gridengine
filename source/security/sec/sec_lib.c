@@ -2046,7 +2046,7 @@ const cl_com_endpoint_t *sender
  
    ngc_error = cl_commlib_send_message(cl_handle, (char*)sender->comp_host, (char*)sender->comp_name, sender->comp_id, 
                                        CL_MIH_MAT_ACK, (unsigned char*)pb.head_ptr, pb.bytes_used, 
-                                       &dummymid, 0 ,TAG_SEC_ANNOUNCE,1,1);
+                                       &dummymid, 0 ,TAG_SEC_ANNOUNCE,CL_TRUE,CL_TRUE);
    if (ngc_error != CL_RETVAL_OK) {
       i = -1;
       
@@ -2064,7 +2064,7 @@ const cl_com_endpoint_t *sender
    ** receive sec_response
    */
    ngc_error = cl_commlib_receive_message(cl_handle, (char*)sender->comp_host, (char*)sender->comp_name, sender->comp_id, 
-                                          1, dummymid, &message, &local_sender);
+                                          CL_TRUE, dummymid, &message, &local_sender);
    if (ngc_error != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SUSUS,(char*)sender->comp_name, sender->comp_id,(char*)sender->comp_host ,(long int) 0, cl_get_error_text(ngc_error)));
       i = -1;
@@ -2502,7 +2502,7 @@ u_long32 response_id)
                                         CL_MIH_MAT_NAK,
                                         (unsigned char*)pb_respond.head_ptr, pb_respond.bytes_used,
                                         &dummymid,response_id,TAG_SEC_RESPOND,
-                                        1,0 );
+                                        CL_TRUE,CL_FALSE );
 
 
    if (ngc_error != CL_RETVAL_OK) {
@@ -2742,7 +2742,7 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
                                              CL_MIH_MAT_NAK,
                                              dummy_buffer, dummy_buffer_len + 1,
                                              &mid, response_id, TAG_SEC_ANNOUNCE,
-                                             1, 0);
+                                             CL_TRUE, CL_FALSE);
 
          if (ngc_error != CL_RETVAL_OK) {
             i = -1;

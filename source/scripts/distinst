@@ -39,7 +39,6 @@ umask 022
 BASEDIR=undef
 VERSIONDIR=SGE53
 SGE_PRODUCT_MODE=ge
-instmanual=false
 
 if [ -f scripts/distinst.site ]; then
    . scripts/distinst.site
@@ -50,7 +49,7 @@ if [ -f scripts/distinst.private ]; then
 fi
 
 
-HASDIR="ckpt doc examples/jobs locale mpi pvm qmon/PIXMAPS/big qmon/locale"
+HASDIR="ckpt doc examples/jobs locale mpi pvm qmon/PIXMAPS/big"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
@@ -108,14 +107,14 @@ ErrUsage()
 {
    echo
    echo "Usage: $0 [-opts] [other archs] [-- other progs]"
-   echo "       -all        = all binaries + common"
-   echo "       -allall     = all binaries + common + doc"
-   echo "       -basedir    = define base directory for distribution (distinst)"
-   echo "       -bin        = all binaries"
-   echo "       -noinst     = no install, show target arch"
-   echo "       -sgeee      = install distribution as Enhanced Grid Engine distribution"
-   echo "       -v          = more verbose"
-   echo "       -versiondir = define version directory for distribution (distinst)"
+   echo "       -all     = all binaries + common"
+   echo "       -allall  = all binaries + common + doc"
+   echo "       -basedir = define base directory for distribution (distinst)"
+   echo "       -bin     = all binaries"
+   echo "       -noinst  = no install, show target arch"
+   echo "       -sgeee   = install distribution as Enhanced Grid Engine distribution"
+   echo "       -v       = more verbose"
+   echo "       -vdir    = define version directory for distribution (distinst)"
    echo ""
    echo "       \"distcommon\"  = arch. independent stuff + man + doc/"
    echo "       \"common\"      = arch. independent, no man/ and no doc/"
@@ -124,7 +123,6 @@ ErrUsage()
    echo "       \"examples\"    = examples/ directory tree without binaries"
    echo "       \"inst_sge\"    = install script"
    echo "       \"jobs\"        = examples/jobsbin/ example binaries"
-   echo "       \"locale\"      = locale support files"
    echo "       \"man\"         = manual pages"
    echo "       \"mpi\"         = MPI scripts"
    echo "       \"pvm\"         = PVM source files and scripts"
@@ -320,7 +318,6 @@ verbose=false
 instjobs=false
 instsharedlibs=true
 instckpt=false
-instlocale=false
 instdirectory=false
 instinst_sge=false
 instutiltree=false
@@ -434,7 +431,7 @@ while [ $# -ge 1 ]; do
    -v)
       verbose=true
       ;;
-   -versiondir)
+   -vdir)
       shift
       if [ $localinst = false ]; then
          if [ "$1" != "" ]; then
@@ -546,7 +543,6 @@ for prog in $PROG; do
          instckpt=true
          instexamples=true
          instinst_sge=true
-#        instlocale=true
          instmpi=true
          instpvm=true
          instqmon=true
@@ -578,10 +574,6 @@ for prog in $PROG; do
          ;;
       jobs)   
          instjobs=true
-         ;;
-      locale)     
-         instlocale=true
-         instcommon=true
          ;;
       man)
          instman=true
@@ -766,19 +758,10 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instdoc = true ]; then
+      # currently no docs in CVS repository
       echo Installing \"doc/\"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      if [ $instmanual != false ]; then
-         if [ $sgeee = false ]; then
-            docfiles="$SGEDOCS"
-         else
-            docfiles="$SGEEEDOCS"
-         fi
-         for fd in $docfiles; do
-            Execute cp $fd $DEST_SGE_ROOT/doc
-         done
-      fi 
    fi
 
    # this rule must come *after* the "instdoc" rule
@@ -796,13 +779,6 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/ckpt/*
       cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
       chmod 755 $DEST_SGE_ROOT/ckpt/*_command
-   fi
-
-   if [ $instlocale = true ]; then
-      echo "Installing \"locale/\" and \"qmon/locale/\""
-      Execute cp -r locale/* $DEST_SGE_ROOT/locale
-      Execute rm -rf $DEST_SGE_ROOT/qmon/locale/*
-      Execute cp -r dist/qmon/locale/* $DEST_SGE_ROOT/qmon/locale
    fi
 
    if [ $instsec = true ]; then
@@ -857,7 +833,7 @@ for i in $ARCH; do
 
    for prog in $PROG; do
       case $prog in
-         jobs|ckpt|locale|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin)
+         jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin)
             : 
             ;;
          qmake)
@@ -883,13 +859,13 @@ for i in $ARCH; do
                  echo ln -s qstat qselect ; \
                  ln -s qstat qselect \
                )
-             elif [ $prog = qalter ]; then
+            elif [ $prog = qalter ]; then
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  echo ln -s qalter qresub ; \
                  ln -s qalter qresub \
                )
-             elif [ $prog = qsh ]; then
+            elif [ $prog = qsh ]; then
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
                  echo ln -s qsh qlogin ; \
@@ -897,8 +873,8 @@ for i in $ARCH; do
                  echo ln -s qsh qrsh ; \
                  ln -s qsh qrsh ; \
                )
-             fi
-             ;;
+            fi
+            ;;
       esac
    done
 
@@ -951,7 +927,6 @@ for i in $ARCH; do
          InstallProg $prog
       done
    fi 
-
       
    if [ $instsharedlibs = true ]; then
       # Install libraries - we need to evaluate shlib extension

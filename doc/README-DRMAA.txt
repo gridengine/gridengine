@@ -29,28 +29,44 @@ website:
 
    http://www.gridforum.org/
 
+The Perl language binding module for the Grid Engine 6.0 release can be found
+at:
+
+   http://search.cpan.org/src/THARSCH/Schedule-DRMAAc-0.81/
+
+For information on the C language binding included with the Condor 6.7 release,
+see:
+
+   http://www.cs.wisc.edu/condor/manual/v6.7/4_4Application_Program.html#SECTION00542000000000000000
+
 Getting Started
 ===============
 The Grid Engine 6.0 release includes a DRMAA C binding.  To develop
 applications that utilize the C binding, you will need two files.  The first is
-the DRMAA header file, drmaa.h.  You will find this file under the <???>
-directory in the distribution.  You will need to include this file from any
-source files that are to use the DRMAA library.  You will also need the DRMAA
-shared library.  You will find this file under the <???> directory in the
-distribution.  This file must be linked with your source files during
-compilation (make ... -ldrmaa ...) and must be accessible from the
-LD_LIBRARY_PATH in order for your application to link or run.
+the DRMAA header file, drmaa.h.  You will find this file under the
+$SGE_ROOT/include directory in the distribution.  You will need to include this
+file from any source files that are to use the DRMAA library.  You will also
+need the DRMAA shared library.  You will find this file under the
+$SGE_ROOT/lib/$ARCH directory in the distribution.  This file must be linked
+with your source files during compilation (make ... -ldrmaa ...) and must be
+accessible from the LD_LIBRARY_PATH in order for your application to link or
+run.
 
 The first thing to do is to look through the header file.  This file lists the
 functions available to you as a DRMAA developer.  For more information on any
 function you can read the man page for that function.  For example:
 
-% man -M /opt/sge/<???> drmaa_set_attribute
+% man -M $SGE_ROOT/man drmaa_set_attribute
 
-The next step is to look at the example program included in the <???> directory
-of the distribution.  The example program demonstrates a simple usage of the
-DRMAA library to submit several bulk jobs and several single jobs, wait for the
-jobs to finish, and then output the results.
+The next step is to look at the example program included in the
+$SGE_ROOT/examples/drmaa directory of the distribution.  The example program
+demonstrates a simple usage of the DRMAA library to submit several bulk jobs and
+several single jobs, wait for the jobs to finish, and then output the results.
+
+Also in the $SGE_ROOT/examples/drmaa directory you will find the example
+programs from the online tutorial at:
+
+   http://gridengine.sunsource.net/project/gridengine/howto/drmaa.html
 
 Once you're familiar with the DRMAA API, you're ready to begin development of
 your Java application.  Every source file which will call functions from the
@@ -60,11 +76,12 @@ DRMAA library will need to include the line:
 
 in order for the compiler to find the function definitions.  You may need to
 tell the compiler where to find the DRMAA header file, e.g. by passing the
--I/opt/sge/<???> to the compiler.
-When compiling your file, you will need to have the path to the DRMAA shared
-library included in your LD_LIBRARY_PATH, and you will need to indicate to the
-compiler/linker that you want to link in this library, e.g. by passing the
--ldrmaa option to the compiler/linker.
+-I$SGE_ROOT/include to the compiler.
+
+When compiling your file, you will need to have $SGE_ROOT/lib/$ARCH included in
+your LD_LIBRARY_PATH, and you will need to indicate to the compiler/linker that
+you want to link in this library, e.g. by passing the -ldrmaa option to the
+compiler/linker.
 
 Getting Support
 ===============

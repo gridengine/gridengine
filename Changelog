@@ -1,3 +1,8 @@
+DT-2004-05-27-0: Bugfix:    o Added DRMAA example programs to distinst
+                            o Updated DRMAA README
+                 Changed:   distinst, docs
+                 Issue:     952
+
 JG-2004-05-27-1: Bugfix:    Fixed memory leaks in scheduler.
 
 AH-2004-05-27-0: Bugfix:    Deadline scheduling broken

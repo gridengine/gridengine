@@ -1,8 +1,8 @@
-AA-2002-08-22-1  I18N:      version string and copyright strings for infotext
+AA-2002-08-28-1  I18N:      version string and copyright strings for infotext
                  Review:    AS
                  Changed:   infotext
 
-AA-2002-08-22-0  Bugfix:    OK without hostname in host_configuration kill sge_qmaster
+AA-2002-08-28-0  Bugfix:    OK without hostname in host_configuration kill sge_qmaster
                  Issues:    #370
                  Bugtraq:   #4732031
                  Review:    CR

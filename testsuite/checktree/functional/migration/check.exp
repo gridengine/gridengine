@@ -301,17 +301,11 @@ proc start_checkpoint_job {} {
 
    global CHECK_ACTUAL_TEST_PATH checkpoint_job_id CHECK_OUTPUT
 
-   set current_directory [get_current_working_dir]
-   cd $CHECK_ACTUAL_TEST_PATH
-   puts $CHECK_OUTPUT "Current directory is \"$current_directory\""
    set jobargs "-pe ckpt_mig_pe 2 -cwd -ckpt ckpt_mig_ckptobj checkpt_job.sh"
-   
-   set result [ submit_job $jobargs ]
-
-   cd $current_directory
+   set result [ submit_job $jobargs 1 30 "" "" $CHECK_ACTUAL_TEST_PATH ]
 
    if { $result < 0 } {
-       set_error -1 "start_checkpoint_job - error starting checkpoint job" 
+       set_error -1 "start_checkpoint_job - error starting checkpoint job: result $result" 
        return
    } 
    set checkpoint_job_id $result 
@@ -321,8 +315,6 @@ proc start_checkpoint_job {} {
        set_error -1 "start_checkpoint_job - job $result doesn't start" 
        return
    }   
- 
-   sleep 5  
  
    set_error 0 "start_checkpoint_job - no errors"  
     
@@ -410,8 +402,6 @@ proc check_slave_migration {} {
        set_error -1 "check_slave_migration - job $checkpoint_job_id doesn't restart" 
        return
    }   
-
-   sleep 5
 
    set_error 0 "check_slave_migration  - no errors"  
 }
@@ -506,7 +496,6 @@ proc check_calendardisable_migration_on_slavequeue_suspend {} {
         return
     }   
  
-    sleep 5
  
    set_error 0 "check_slave_migration  - no errors"  
 }
@@ -600,7 +589,6 @@ proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
         return
     }   
  
-    sleep 5
  
    set_error 0 "check_slave_migration  - no errors"  
 }
@@ -691,7 +679,6 @@ proc check_master_migration {} {
        return
    }   
 
-   sleep 5
 
    set_error 0 "check_master_migration  - no errors"  
 }
@@ -779,7 +766,6 @@ proc check_calendarsuspend_master_migration {} {
        set_error -1 "check_calendarsuspend_master_migration - job $checkpoint_job_id doesn't restart" 
        return
    }   
-   sleep 5
 
    set_error 0 "check_calendarsuspend_master_migration  - no errors"  
 }
@@ -868,7 +854,6 @@ proc check_calendarsuspend_slave_migration {} {
        set_error -1 "check_calendarsuspend_slave_migration - job $checkpoint_job_id doesn't restart" 
        return
    }   
-   sleep 5
 
    set_error 0 "check_calendarsuspend_slave_migration  - no errors"  
 }

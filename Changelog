@@ -1,3 +1,8 @@
+CR-2002-01-16-1: Testsuite: - fixed broken migration test
+                 Bugfix:    - fixed broken job_state_handling test
+                            - new optional parameter for submit_job(): 
+                                cd_dir: set working directory
+
 EB-2002-01-15-0: Enhancem.: per user namespace for job dep. names
 
 CR-2002-01-16-0: Testsuite: - faster lockfile check

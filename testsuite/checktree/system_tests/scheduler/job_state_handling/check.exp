@@ -137,7 +137,7 @@ proc job_state_handling_hold_pending_running_finished {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   if { [ string compare [ get_scheduling_info $result ] "job dropped because of hold" ] != 0 } {
+   if { [ string first  "job dropped because of hold" [ get_scheduling_info $result ] ] <  0 } {
        add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job dropped because of hold\"" 
    }
    release_job $result   
@@ -219,7 +219,7 @@ proc job_state_handling_error_timehold_jobhold {} {
 
    sleep 2
 
-   if { [ string compare [get_scheduling_info $error_job ] "job is in error state" ] != 0 } {
+   if { [ string first "job is in error state" [get_scheduling_info $error_job ] ] < 0 } {
        add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job is in error state\"" 
    }
    if { [get_qstat_j_info $time_job ] } {
@@ -227,11 +227,11 @@ proc job_state_handling_error_timehold_jobhold {} {
       puts $CHECK_OUTPUT "job $time_job execution time: $qstat_j_info(execution_time)"
       set time_job_execution_time $qstat_j_info(execution_time)
 
-      if { [ string compare [get_scheduling_info $time_job] "execution time not reached" ] != 0 } {
+      if { [ string first "execution time not reached" [get_scheduling_info $time_job] ] < 0 } {
           add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"execution time not reached\"" 
       }
    }
-   if { [ string compare [ get_scheduling_info $waitjob_job] "job dropped because of job dependencies" ] != 0 } {
+   if { [ string first "job dropped because of job dependencies" [ get_scheduling_info $waitjob_job] ] < 0 } {
       add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job dropped because of job dependencies\"" 
    }
 
@@ -319,7 +319,7 @@ proc job_state_handling_max_aj_instances {} {
              }
           }
           if { [llength $tasks_done] < 5 } {
-             if { [ string compare [get_scheduling_info $result 0 ] "not all array task may be started due to 'max_aj_instances'" ] != 0 } {
+             if { [ string first "not all array task may be started due to 'max_aj_instances'" [get_scheduling_info $result 0 ] ] < 0 } {
                 add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"not all array task may be started due to 'max_aj_instances'\"" 
                 break;
              }

@@ -3723,6 +3723,7 @@ proc delete_job { jobid } {
 #     {submit_timeout 30} - timeout (default is 30 sec.)
 #     {host ""}           - host on which to execute qsub (default $CHECK_HOST)
 #     {user ""}           - user who shall submit job (default $CHECK_USER)
+#     {cd_dir ""}         - optional: do cd to given directory first
 #
 #  RESULT
 #     This procedure returns:
@@ -3753,7 +3754,7 @@ proc delete_job { jobid } {
 #     sge_procedures/delete_job()
 #     check/add_proc_error()
 #*******************************
-proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""}} {
+proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""} { cd_dir ""} } {
   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
   global open_spawn_buffer
 
@@ -3771,7 +3772,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
 
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
-  set id [ open_remote_spawn_process "$host" "$user" "$program" "$args" ]
+  if { $cd_dir != "" } {
+     set id [ open_remote_spawn_process "$host" "$user" "cd" "$cd_dir;$program $args" ]
+     puts $CHECK_OUTPUT "cd to $cd_dir"
+  } else {
+     set id [ open_remote_spawn_process "$host" "$user" "$program" "$args" ]
+  }
   set sp_id [ lindex $id 1 ]
 
   set timeout $submit_timeout

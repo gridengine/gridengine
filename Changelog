@@ -1,3 +1,5 @@
+CR-2003-02-14-0  Bugfix:    changed not unique message id
+
 JG-2003-02-13-1  Bugfix:    Fixed broken build for aimk -shared-libs for all
                             architectures except aix
 

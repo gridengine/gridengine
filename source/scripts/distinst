@@ -754,7 +754,9 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/SEDMAN/man $DEST_SGE_ROOT
-      Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
+      if [ -d MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman ]; then
+         Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
+      fi
    fi
 
    if [ $instdoc = true ]; then

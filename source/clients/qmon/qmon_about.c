@@ -49,7 +49,7 @@ static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell 
 extern char SFLN_ELN[];
 
 #ifdef ADD_SUN_COPYRIGHT
-static char mailto[] = "For further information and feedback use: @fBsgebeta53-support@@sun.com@fR\n\n";
+static char mailto[] = "\nFor further information and feedback use: @fBge-feedback@@eng.sun.com@fR\n\n";
 #else
 static char mailto[] = "\n";
 #endif

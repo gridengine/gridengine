@@ -1,3 +1,7 @@
+AS-2004-03-25-1: Bugfix:    openSSL vulnerabilites
+                            upgrade to openSSL 0.9.7d
+                 Bugtraq:   5018884
+
 AS-2004-03-25-0: Enhancem.: add SGE_BINARY_PATH variable to job environment
                  Changed:   sge_execd, submit.1
                  Issue:     919

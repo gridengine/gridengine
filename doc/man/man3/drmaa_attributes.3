@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/05/24 16:28:12 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/07/19 09:31:08 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/05/24 16:28:12 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/07/19 09:31:08 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -382,8 +382,10 @@ options which will be interpreted as part of the DRMAA job template.  All
 options available to
 .M qsub 1 
 command may be used in the \fInative_specification\fP, except for -help, -t,
--verify, and -w. Options set in the \fnative specification\fP will be 
-overridden by the corresponding DRMAA attributes.  See
+-verify, and -w w|v.  The -cwd option may only be used if the
+SGE_DRMAA_ALLOW_CWD environment variable is set.  This is because the current
+parsing algorithm for -cwd is not thread-safe.  Options set in the \fInative
+specification\fP will be overridden by the corresponding DRMAA attributes.  See
 .M qsub 1
 for more information on qsub options.
 .PP
@@ -475,12 +477,17 @@ The file transfer mechanism itself must be configured by the administrator (see
 .\"
 .SH "ENVIRONMENTAL VARIABLES"
 .\"
+.IP "\fBSGE_DRMAA_ALLOW_CWD\fP" 1.5i
+Enables the parsing of the -cwd option from the sge_request file(s), job
+category, and/or the native specification attribute.  This option is disabled
+by default because the algorithm for parsing it is not thread-safe.
+.\"
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration files.
 .\"
 .IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
-If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
-cell xxQS_NAMExx uses (in the order of precedence):
+If set, specifies the default xxQS_NAMExx cell to be used. To address a
+xxQS_NAMExx cell xxQS_NAMExx uses (in the order of precedence):
 .sp 1
 .RS
 .RS

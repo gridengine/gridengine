@@ -8,6 +8,26 @@ DT-2004-07-19-0: Enhancem.: o Added code examples for DRMAA Java language
                               binding howto.  (Done over the weekend)
                  Changed:   DRMAA
 
+DT-2004-07-16-0: Bugfix:    o Removed chdir() from DRMAA job processing
+                            o Made -cwd an (optionally) forbiddon DRMAA switch
+                            o Fixed minor DRMAA Java binding bugs
+                            o Fixed double-counting of used, unavailable queue
+                              slots
+                            o Changed qstat -g c and qmon to show np_load_avg
+                              instead of load_avg
+                            o Fixed error reporting for invalid characters in
+                              queue names in qconf
+                            o Allowed -w e and -w n as valid DRMAA switches
+                            o Fixed abort in qdel, et al with invalid -t swtich
+                            o Removed "NONE" from qconf -aconf
+                            o Updated test suite for 1146 and 1109
+                            o Fixed typo: WARINING_VERIFY => WARNING_VERIFY
+                 Changed:   DRMAA, qstat, qmon, qconf, qdel, qmod, qalter, qsub,
+                            qmaster
+                 Issue:     1150, 1125, 1127, 1146, 1151, 1109, 1137
+                 Bugtraq:   5072005, -, -, 5073218, -, 5071525, -
+                 Review:    pending
+
 AH-2004-07-13-0: Bugfix:    Deleted pending job appears in qstat
                             Problem was that finished jobs generally were 
                             displayed by qstat. Removed broken code that was 
@@ -34,7 +54,7 @@ AH-2004-07-13-0: Bugfix:    Revert change AH-2004-07-09-0. Bug #1117 is not fixe
                  Bugtraq:   5072481
                  Review:    CR
 
-RH-2004-06-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
+RH-2004-07-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
                             in the method qref_resolve_hostname (libs/sgeobj/sge_qref.c)
                             a sprintf "@%s" instead of "%s@%s" is executed if the 
                             queuename part is empty.

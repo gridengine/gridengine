@@ -159,19 +159,19 @@ int sge_setup_qmaster()
    */
    read_all_configurations(&Master_Config_List, 
                            path.conf_file, path.local_conf_dir);
-   ret = select_configuration(me.qualified_hostname, Master_Config_List, &lep);
+   ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
    if (ret) {
       if (ret == -3)
          WARNING((SGE_EVENT, MSG_CONFIG_FOUNDNOLOCALCONFIGFORQMASTERHOST_S,
-                 me.qualified_hostname));
+                 uti_state_get_qualified_hostname()));
       else {           
-         ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_IS, ret, me.qualified_hostname));
+         ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_IS, ret, uti_state_get_qualified_hostname()));
          return -1;
       }   
    }
    ret = merge_configuration( lGetElemHost(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), lep, &conf, NULL);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, me.qualified_hostname));
+      ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, uti_state_get_qualified_hostname()));
       return -1;
    }
    sge_show_conf();         
@@ -220,7 +220,7 @@ int sge_setup_qmaster()
    /* 
    ** write our host name to the act_qmaster file 
    */
-   if (write_qm_name(me.qualified_hostname, path.act_qmaster_file, err_str)) {
+   if (write_qm_name(uti_state_get_qualified_hostname(), path.act_qmaster_file, err_str)) {
       ERROR((SGE_EVENT, "%s\n", err_str));
       SGE_EXIT(1);
    }
@@ -277,8 +277,8 @@ int sge_setup_qmaster()
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
-   if (!host_list_locate(Master_Adminhost_List, me.qualified_hostname)) {
-      if (sge_add_host_of_type(me.qualified_hostname, SGE_ADMINHOST_LIST)) {
+   if (!host_list_locate(Master_Adminhost_List, uti_state_get_qualified_hostname())) {
+      if (sge_add_host_of_type(uti_state_get_qualified_hostname(), SGE_ADMINHOST_LIST)) {
          DEXIT;
          return -1;
       }

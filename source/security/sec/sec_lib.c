@@ -499,7 +499,7 @@ int compressed
    /*
    ** every component has to negotiate its connection with qmaster
    */
-   if (me.who != QMASTER) {
+   if (uti_state_get_mewho() != QMASTER) {
       if (sec_announce_connection(&gsd, tocomproc,tohost)) {
          ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED));
          DEXIT;
@@ -508,7 +508,7 @@ int compressed
    }   
       
    if (sec_set_encrypt(tag)) {
-      if (me.who == QMASTER && conn_list) {
+      if (uti_state_get_mewho() == QMASTER && conn_list) {
          /*
          ** set the corresponding key and connection information
          ** in the connection list for commd triple 
@@ -526,7 +526,7 @@ int compressed
          return SEC_SEND_FAILED;
       }
    }
-   else if (me.who != QMASTER) {
+   else if (uti_state_get_mewho() != QMASTER) {
       if (sec_set_connid(&buffer, &buflen)) {
          ERROR((SGE_EVENT, MSG_SEC_CONNIDSETFAILED));
          DEXIT;
@@ -606,7 +606,7 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
          return SEC_RECEIVE_FAILED;
       }
    }
-   else if (me.who == QMASTER) {
+   else if (uti_state_get_mewho() == QMASTER) {
       if (sec_get_connid(buffer,buflen) ||
                sec_update_connlist(fromhost,fromcommproc,*fromid)) {
          ERROR((SGE_EVENT, MSG_SEC_CONNIDGETFAILED));
@@ -821,7 +821,7 @@ static int sec_dump_connlist()
 {
    FILE    *fp;
 
-   if (me.who == QMASTER) {
+   if (uti_state_get_mewho() == QMASTER) {
       fp = fopen("sec_connlist.dat", "w");
       if (fp) {
          lDumpList(fp, conn_list, 0);
@@ -861,7 +861,7 @@ static int sec_undump_connlist()
 {
    FILE    *fp;
 
-   if (me.who == QMASTER) {
+   if (uti_state_get_mewho() == QMASTER) {
       fp = fopen("sec_connlist.dat","r");
       if (fp){
          conn_list = lUndumpList(fp,NULL,NULL);
@@ -1626,7 +1626,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
 
    DENTER(GDI_LAYER, "sec_handle_announce");
 
-   if (me.who == QMASTER) {
+   if (uti_state_get_mewho() == QMASTER) {
       if (buffer && buflen) {   
          /* 
          ** someone wants to announce to master
@@ -2595,9 +2595,9 @@ int is_daemon
       user_local_dir = ca_local_root;
    } else {
       struct passwd *pw;
-      pw = sge_getpwnam(me.user_name);
+      pw = sge_getpwnam(uti_state_get_user_name());
       if (!pw) {   
-         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, me.user_name));
+         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, uti_state_get_user_name()));
          SGE_EXIT(1);
       }
       userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
@@ -2622,8 +2622,8 @@ int is_daemon
    if (SGE_STAT(key_file, &sbuf)) { 
       free(key_file);
       key_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
-                              strlen(me.user_name) + strlen(UserKey) + 4);
-      sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserKey);
+                              strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", uti_state_get_user_name(), UserKey);
    }   
 
    if (!RAND_status()) {
@@ -2633,8 +2633,8 @@ int is_daemon
       if (SGE_STAT(rand_file, &sbuf)) { 
          free(rand_file);
          rand_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
-                                 strlen(me.user_name) + strlen(RandFile) + 4);
-         sprintf(rand_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, RandFile);
+                                 strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
+         sprintf(rand_file, "%s/%s/%s/%s", ca_local_root, "userkeys", uti_state_get_user_name(), RandFile);
       }   
    }   
    if (SGE_STAT(key_file, &sbuf)) { 
@@ -2662,8 +2662,8 @@ int is_daemon
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);
       cert_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
-                              strlen(me.user_name) + strlen(UserCert) + 4);
-      sprintf(cert_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserCert);
+                              strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/%s/%s/%s", ca_local_root, "userkeys", uti_state_get_user_name(), UserCert);
    }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 

@@ -104,11 +104,10 @@ void sge_setup_sge_execd()
    sge_mkdir(conf.execd_spool_dir, 0755, 1);
    DPRINTF(("chdir(\"%s\")----------------------------\n", conf.execd_spool_dir));
    sge_chdir_exit(conf.execd_spool_dir,1);
-   sge_mkdir(me.unqualified_hostname, 0755, 1);
+   sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
-            me.unqualified_hostname));
-
-   sge_chdir_exit(me.unqualified_hostname, 1); 
+            uti_state_get_unqualified_hostname()));
+   sge_chdir_exit(uti_state_get_unqualified_hostname(), 1); 
    /* having passed the  previous statement we may 
       log messages into the ERR_FILE  */
    sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_MODE_APPEND);
@@ -117,11 +116,11 @@ void sge_setup_sge_execd()
    sge_switch2admin_user();
    sge_log_set_auser(1);
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
-           me.unqualified_hostname, ERR_FILE);
+           uti_state_get_unqualified_hostname(), ERR_FILE);
    error_file = execd_messages_file;
 
    sprintf(execd_spool_dir, "%s/%s", conf.execd_spool_dir, 
-           me.unqualified_hostname);
+           uti_state_get_unqualified_hostname());
    
    DPRINTF(("Making directories----------------------------\n"));
    sge_mkdir(EXEC_DIR, 0775, 1);
@@ -151,8 +150,8 @@ int daemonize_execd()
       FD_SET(fd, &keep_open);
    } 
 
-   if(!get_commlib_state_closefd()) {
-      int fd = get_commlib_state_sfd();
+   if(!commlib_state_get_closefd()) {
+      int fd = commlib_state_get_sfd();
       if (fd>=0) {
          FD_SET(fd, &keep_open);
       }

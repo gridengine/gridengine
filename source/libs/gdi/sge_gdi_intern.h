@@ -57,7 +57,6 @@ extern "C" {
 #define GRM_GDI_VERSION 0x10000FFF
 
 /* sge_gdi_request.c */
-typedef struct _sge_gdi_request sge_gdi_request;
 struct _sge_gdi_request {
    u_long32         op;
    u_long32         target;
@@ -76,6 +75,24 @@ struct _sge_gdi_request {
    u_long32         request_id;
    sge_gdi_request  *next;   
 };
+
+u_long32 gdi_state_get_request_id(void);
+int gdi_state_get_daemon_first(void);
+int gdi_state_get_first_time(void);
+int gdi_state_get_commd_state(void);
+int gdi_state_get_ec_config_changed(void);
+int gdi_state_get_ec_need_register(void);
+lListElem *gdi_state_get_ec(void);
+u_long32 gdi_state_get_ec_reg_id(void);
+
+void gdi_state_set_request_id(u_long32 id);
+void gdi_state_set_daemon_first(int i);
+void gdi_state_set_first_time(int i);
+void gdi_state_set_commd_state(int i);
+void gdi_state_set_ec_config_changed(int i);
+void gdi_state_set_ec_need_register(int i);
+void gdi_state_set_ec(lListElem *ec);
+void gdi_state_set_ec_reg_id(u_long32 id);
 
 
 int sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, sge_gdi_request *head);
@@ -130,6 +147,9 @@ enum {
                          /* running - that was not supposed to be there       */
    ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
 };
+
+enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
+
 
 /* sending/receiving any request */
 

@@ -108,14 +108,14 @@ print_func_t ostream
    }
 
    /* user settings */
-   if (!(pwd = sge_getpwnam(me.user_name))) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , me.user_name));
+   if (!(pwd = sge_getpwnam(uti_state_get_user_name()))) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , uti_state_get_user_name()));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    if (!pwd->pw_dir) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , me.user_name));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , uti_state_get_user_name()));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;

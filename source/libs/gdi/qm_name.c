@@ -161,7 +161,7 @@ char *err_str
             0   means OK
  *********************************************************************/
 int write_qm_name(
-char *master_host,
+const char *master_host,
 const char *master_file,
 char *err_str 
 ) {

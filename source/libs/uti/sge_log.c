@@ -89,8 +89,8 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
 
       sprintf(msg2log, "%s|%s|%s|%c|%s%s",
               date,
-              prognames[me.who],
-              me.unqualified_hostname,
+              uti_state_get_sge_formal_prog_name(),
+              uti_state_get_unqualified_hostname(),
               levelchar,
               err_str,
               newline);
@@ -248,7 +248,7 @@ int sge_log(int log_level, const char *mesg, const char *file__,
     * commd remote monitoring is in effect independently 
     * of the current logginglevel 
     */
-   if (me.who == COMMD && trace_func && log_level >= LOG_DEBUG) {
+   if (uti_state_get_mewho() == COMMD && trace_func && log_level >= LOG_DEBUG) {
       trace_func(mesg);
    }
 
@@ -263,7 +263,7 @@ int sge_log(int log_level, const char *mesg, const char *file__,
    }
 #endif /* WIN32NATIVE */
 
-   if (me.who == QMON && !qmon_log) {
+   if (uti_state_get_mewho() == QMON && !qmon_log) {
       return 0;
    }
 
@@ -300,12 +300,12 @@ int sge_log(int log_level, const char *mesg, const char *file__,
 
 #ifndef WIN32NATIVE
    /* avoid double output in debug mode */
-   if (!me.daemonized && !rmon_condition(LAYER, INFOPRINT) && 
+   if (!uti_state_get_daemonized() && !rmon_condition(LAYER, INFOPRINT) && 
        (verbose || log_level == LOG_ERR || log_level == LOG_CRIT)) {
       fprintf(stderr, "%s%s%s", levelstring, mesg, newline);
    } 
-   if (me.who == QMASTER || me.who == EXECD   || me.who == QSTD ||
-       me.who == SCHEDD ||  me.who == SHADOWD || me.who == COMMD) {
+   if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||
+       uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
       sge_do_log(log_level, levelchar, mesg, newline);
    }
 #endif /* WIN32NATIVE */

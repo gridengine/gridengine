@@ -254,7 +254,6 @@ sge_gdi_request *answer
    if (!ao || !target_name) {
       target_name = MSG_UNKNOWN_OBJECT;
    }
-   
    /*
    ** we take request->op % SGE_GDI_RETURN_NEW_VERSION to get the
    ** real operation and request->op / SGE_GDI_RETURN_NEW_VERSION 
@@ -1073,12 +1072,10 @@ int sub_command
 
       if (sge_chck_mod_perm_user(&(answer->alp), request->target, 
             user)) {
-         DTRACE;
          continue;
       }
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, 
             request->host, request->commproc, 1, ep)) {
-         DTRACE;
          continue;
       }
 
@@ -1466,8 +1463,8 @@ lList **alpp,
 lListElem *instructions, /* our instructions - a reduced object */
 int add,                 /* true in case of add */
 gdi_object_t *object, 
-char *ruser,
-char *rhost,
+const char *ruser,
+const char *rhost,
 int sub_command 
 ) {
    int pos;

@@ -870,6 +870,8 @@ u_long32 now
 
    DENTER(TOP_LAYER, "ck_4_deliver_events");
 
+   DPRINTF(("There are %d event clients\n", lGetNumberOfElem(EV_Clients)));
+
    event_client=lFirst(EV_Clients);
    while (event_client) {
 
@@ -922,7 +924,7 @@ u_long32 now
          report_list = lCreateList("report list", REP_Type);
          report = lCreateElem(REP_Type);
          lSetUlong(report, REP_type, NUM_REP_REPORT_EVENTS);
-         lSetHost(report, REP_host, me.qualified_hostname);
+         lSetHost(report, REP_host, uti_state_get_qualified_hostname());
          lSetList(report, REP_list, lGetList(event_client, EV_events));
          lAppendElem(report_list, report);
 
@@ -1034,8 +1036,12 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    u_long32 i;
    lList *lp;
    int consumed = 0;
+   char buffer[1024];
+   dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "sge_add_list_event_"); 
+
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    event = lCreateElem(ET_Type); 
 
@@ -1070,7 +1076,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    /* chain in new event */
    lAppendElem(lp, event);
 
-   DPRINTF(("%s\n", event_text(event)));
+   DPRINTF(("%d %s\n", lGetUlong(event_client, EV_id), event_text(event, &buffer_wrapper)));
 
    /* check if event clients wants flushing */
    {
@@ -1424,8 +1430,12 @@ static void sge_total_update_event(lListElem *event_client, ev_event type)
    u_long32 i;
    lListElem *event;
    lList *lp = NULL;
+   char buffer[1024];
+   dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "sge_total_update_event");
+
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    if(sge_eventclient_subscribed(event_client, type)) {
       switch(type) {
@@ -1516,7 +1526,7 @@ static void sge_total_update_event(lListElem *event_client, ev_event type)
          lSetList(event_client, EV_events, lp);
       }
 
-      DPRINTF(("%s\n", event_text(event)));
+      DPRINTF(("%d %s\n", lGetUlong(event_client, EV_id), event_text(event, &buffer_wrapper)));
       /* chain in new event */
       lAppendElem(lp, event);
    }

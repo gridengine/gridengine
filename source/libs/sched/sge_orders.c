@@ -230,6 +230,7 @@ lList *orders
    lList *malp = NULL;
 
    int set_busy, order_id = 0;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
@@ -241,10 +242,10 @@ lList *orders
 
       if(set_busy) {
          order_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders, NULL, NULL, NULL);
+                                  orders, NULL, NULL, NULL, &state);
       } else {
          order_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders, NULL, NULL, &malp);
+                                  orders, NULL, NULL, &malp, &state);
       }
 
       if (alp != NULL) {
@@ -258,7 +259,7 @@ lList *orders
    if(set_busy) {
       DPRINTF(("RESETTING BUSY STATE OF EVENT CLIENT\n"));
       ec_set_busy(0);
-      ec_commit_multi(&malp);
+      ec_commit_multi(&malp, &state);
    }
 
    /* check result of orders */

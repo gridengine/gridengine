@@ -60,12 +60,11 @@ extern void trace(char *);
 
 static host *hostlist = NULL;
 
-host *localhost = NULL;
+static host *localhost = NULL;
 
 /* compare hosts with FQDN or not */
-int fqdn_cmp = 0;
- 
-char *default_domain = NULL;   
+static int fqdn_cmp = 0;
+static char *default_domain = NULL;   
 
 static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom);
 static int matches_addr(struct hostent *he, char *addr);
@@ -83,6 +82,43 @@ static int sge_host_alias(host *h1, host *h2);
 #if defined(SOLARIS)
 int gethostname(char *name, int namelen);
 #endif
+
+
+
+/****** libs/uti/uti_state_get_????() ************************************
+*  NAME
+*     uti_state_get_????() - read access to uti lib global variables
+*
+*  FUNCTION
+*     Provides access to either global variable or per thread global variable.
+*
+******************************************************************************/
+host *uti_state_get_localhost(void)
+{
+   return localhost;
+}
+
+const char *uti_state_get_default_domain(void)
+{
+   return default_domain;
+}
+
+int uti_state_get_fqdn_cmp(void)
+{
+   return fqdn_cmp;
+}
+
+
+void uti_state_set_default_domain(const char *s)
+{
+   default_domain = sge_strdup(default_domain, s);
+}
+
+void uti_state_set_fqdn_cmp(int value)
+{
+   fqdn_cmp = value;
+}
+
 
 #define MAX_RESOLVER_BLOCKING 15
 
@@ -732,6 +768,7 @@ const char *sge_host_resolve_name_local(const char *unresolved)
    }
    return s;
 }
+
 
 /****** uti/hostname/sge_hostcpy() ********************************************
 *  NAME

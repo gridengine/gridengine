@@ -287,7 +287,7 @@ int slave
        * attach queues to the master queue gdil element and all gdil elements
        * which refer to queues which are located on this host.
        */
-      if (!sge_hostcmp(me.unqualified_hostname, lGetHost(gdil_ep, JG_qhostname)) ||
+      if (!sge_hostcmp(uti_state_get_unqualified_hostname(), lGetHost(gdil_ep, JG_qhostname)) ||
           lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)) == gdil_ep) {
 
          qnm=lGetString(gdil_ep, JG_qname);
@@ -444,7 +444,7 @@ static lList *job_set_queue_info_in_task(const char *qname, lListElem *petep)
 
    jge = lAddSubStr(petep, JG_qname, qname, 
                     PET_granted_destin_identifier_list, JG_Type);
-   lSetHost(jge, JG_qhostname, me.qualified_hostname);
+   lSetHost(jge, JG_qhostname, uti_state_get_qualified_hostname());
    lSetUlong(jge, JG_slots, 1);
    DPRINTF(("selected queue %s for task\n", qname));
 
@@ -575,7 +575,7 @@ static lList *job_get_queue_for_task(lListElem *jatep, lListElem *petep, const c
 
       /* Queue must exist and be on this host */
       if(this_q != NULL && 
-         sge_hostcmp(lGetHost(gdil_ep, JG_qhostname), me.qualified_hostname) == 0) {
+         sge_hostcmp(lGetHost(gdil_ep, JG_qhostname), uti_state_get_qualified_hostname()) == 0) {
          /* Queue must have free slots */
          if(qslots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
             return job_set_queue_info_in_task(lGetString(gdil_ep, JG_qname), petep);
@@ -660,7 +660,7 @@ int *synchron
 
    /* generate unique task id by combining consecutive number 1-max(u_long32) */
    tid = MAX(1, lGetUlong(jatep, JAT_next_pe_task_id));
-   sprintf(new_task_id, "%d.%s", tid, me.unqualified_hostname);
+   sprintf(new_task_id, "%d.%s", tid, uti_state_get_unqualified_hostname());
    DPRINTF(("using pe_task_id_str %s for job "u32"."u32"\n", new_task_id, jobid, jataskid));
    lSetString(petep, PET_id, new_task_id);
 
@@ -690,7 +690,7 @@ int *synchron
          
    if(!gdil) {  /* also no already exited task found -> no way to start new task */
       ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, u32c(jobid), 
-             lGetString(petrep, PETR_owner), de->host, me.qualified_hostname));
+             lGetString(petrep, PETR_owner), de->host, uti_state_get_qualified_hostname()));
       goto Error;
    }
 

@@ -202,7 +202,7 @@ const char *buf
    fprintf(fp, "%s\n", buf);
    fclose(fp);
 
-   sge_setup_sig_handlers(me.who);
+   sge_setup_sig_handlers(uti_state_get_mewho());
 
    while (1) {
       alarm(60);                /* max time to allow for mail */

@@ -116,7 +116,6 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "qhost");
   
    sge_gdi_param(SET_MEWHO, QHOST, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QHOST]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
@@ -277,7 +276,7 @@ lListElem *hep
 
    /* cut away domain in case of fqdn_cmp */
    strncpy(host_print, host, MAXHOSTLEN);
-   if (!fqdn_cmp && (s = strchr(host_print, '.')))
+   if (!uti_state_get_fqdn_cmp() && (s = strchr(host_print, '.')))
       *s = '\0';
 
    /*
@@ -813,6 +812,7 @@ u_long32 show
    lList *mal = NULL;
    lList *conf_l = NULL;
    int q_id, j_id = 0, cx_id, eh_id, pe_id, gc_id;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_all_lists");
    
@@ -849,7 +849,7 @@ lWriteListTo(ehl, stdout);
       where = nw;
    eh_all = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
-                        NULL, where, eh_all, NULL);
+                        NULL, where, eh_all, NULL, &state);
    eh_all = lFreeWhat(eh_all);
    where = lFreeWhere(where);
 
@@ -876,7 +876,7 @@ lWriteListTo(ehl, stdout);
       qw = nw; 
    q_all = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_QUEUE_LIST, SGE_GDI_GET, 
-                        NULL, qw, q_all, NULL);
+                        NULL, qw, q_all, NULL, &state);
    q_all = lFreeWhat(q_all);
    qw = lFreeWhere(qw);
 
@@ -944,7 +944,7 @@ lWriteListTo(ehl, stdout);
 /* lWriteWhereTo(jw, stdout); */
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
-                           NULL, jw, j_all, NULL);
+                           NULL, jw, j_all, NULL, &state);
       j_all = lFreeWhat(j_all);
       jw = lFreeWhere(jw);
 
@@ -959,7 +959,7 @@ lWriteListTo(ehl, stdout);
    */
    cx_all = lWhat("%T(ALL)", CX_Type);
    cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET, 
-                        NULL, NULL, cx_all, NULL);
+                        NULL, NULL, cx_all, NULL, &state);
    cx_all = lFreeWhat(cx_all);
 
    if (alp) {
@@ -972,7 +972,7 @@ lWriteListTo(ehl, stdout);
    */
    pe_all = lWhat("%T(ALL)", PE_Type);
    pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
-                           NULL, NULL, pe_all, NULL);
+                           NULL, NULL, pe_all, NULL, &state);
    pe_all = lFreeWhat(pe_all);
 
    if (alp) {
@@ -986,7 +986,7 @@ lWriteListTo(ehl, stdout);
    gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                        NULL, gc_where, gc_what, &mal);
+                        NULL, gc_where, gc_what, &mal, &state);
    gc_what = lFreeWhat(gc_what);
    gc_where = lFreeWhere(gc_where);
 

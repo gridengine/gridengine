@@ -591,7 +591,7 @@ int sge_parse_bitfield_str(const char *str, const char *set_specifier[],
    const char **cpp;
    u_long32 bitmask;
    /* isspace() character plus "," */
-   static char delim[] = ", \t\v\n\f\r";
+   static const char delim[] = ", \t\v\n\f\r";
    DENTER(TOP_LAYER, "sge_parse_bitfield_str");
    
    *value = 0;

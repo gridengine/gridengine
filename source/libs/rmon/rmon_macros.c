@@ -70,7 +70,7 @@
 #include "rmon_piped_message.h"
 #endif
 
-#ifdef QIDL
+#ifdef SGE_MT
 #include <pthread.h>
 pthread_mutex_t rmon_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
@@ -599,12 +599,12 @@ void rmon_mclose()
 void rmon_menter(
 const char *func 
 ) {
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_lock(&rmon_mutex);
 #endif
    sprintf(msgbuf, "--> %s() {\n", func);
    mwrite(msgbuf);
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_unlock(&rmon_mutex);
 #endif
    return;
@@ -615,12 +615,12 @@ const char *func,
 const char *file,
 int line 
 ) {
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_lock(&rmon_mutex);
 #endif
    sprintf(msgbuf, "<-- %s() %s %d }\n", func, file, line);
    mwrite(msgbuf);
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_unlock(&rmon_mutex);
 #endif
 
@@ -632,12 +632,12 @@ const char *func,
 const char *file,
 int line 
 ) {
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_lock(&rmon_mutex);
 #endif
    sprintf(msgbuf, "<-- %s() ERROR %s %d\n", func, file, line);
    mwrite(msgbuf);
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_unlock(&rmon_mutex);
 #endif
 }
@@ -647,13 +647,13 @@ const char *func,
 const char *file,
 int line 
 ) {
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_lock(&rmon_mutex);
 #endif
    strcpy(msgbuf, empty);
    sprintf(&msgbuf[4], "%s:%s:%d\n", func, file, line);
    mwrite(msgbuf);
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_unlock(&rmon_mutex);
 #endif
 
@@ -664,7 +664,7 @@ int line
 void rmon_mjobtrace(u_long job_id, const char *fmt,...)
 {
    va_list args;
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_lock(&rmon_mutex);
 #endif
 
@@ -678,7 +678,7 @@ void rmon_mjobtrace(u_long job_id, const char *fmt,...)
    mwrite(msgbuf);
 
    va_end(args);
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_unlock(&rmon_mutex);
 #endif
 }
@@ -687,7 +687,7 @@ void rmon_mjobtrace(u_long job_id, const char *fmt,...)
 void rmon_mprintf(const char *fmt,...)
 {
    va_list args;
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_lock(&rmon_mutex);
 #endif
 
@@ -711,7 +711,7 @@ void rmon_mprintf(const char *fmt,...)
    mwrite(msgbuf);
 
    va_end(args);
-#ifdef QIDL
+#ifdef SGE_MT
    pthread_mutex_unlock(&rmon_mutex);
 #endif
 }
@@ -758,7 +758,11 @@ char *message
 /*          printf("    "); */
 /*       printf("layer: %d ", LAYER); */
 
+#if defined(SGE_MT)
+      fprintf(rmon_fp, "%6ld %6d %d ", DEBUG_TRACEID++, (int)getpid(), pthread_self());
+#else
       fprintf(rmon_fp, "%6ld %6d", DEBUG_TRACEID++, (int)getpid());
+#endif
       fprintf(rmon_fp, "%s", message);
       fflush(rmon_fp);
       break;

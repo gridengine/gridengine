@@ -73,7 +73,6 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "qmod");
 
    sge_gdi_param(SET_MEWHO, QMOD, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QMOD]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);

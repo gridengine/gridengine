@@ -151,7 +151,7 @@ XtPointer cld, cad;
    /*
    ** get the path to the messages file
    */
-   sprintf(filename, "%s/%s/spool/", SGE_ROOT, me.default_cell);
+   sprintf(filename, "%s/%s/spool/", SGE_ROOT, uti_state_get_default_cell());
 
    if (!host || !strcmp(host , "global"))
       strcat(filename, "qmaster");

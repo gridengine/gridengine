@@ -54,7 +54,7 @@ static int silent_flag = 0;
 
 static washing_machine_t wtype;
 
-static char *spoolmsg_message[] = {
+static const char *spoolmsg_message[] = {
    "",
    "DO NOT MODIFY THIS FILE MANUALLY!",
    "",
@@ -595,8 +595,8 @@ void sge_status_set_type(washing_machine_t type)
 void sge_status_next_turn(void)
 {
    static int cnt = 0;
-   static char s[] = "-\\/";
-   static char *sp = NULL;
+   static const char s[] = "-\\/";
+   static const char *sp = NULL;
  
    cnt++;
    if ((cnt % 100) != 1) {

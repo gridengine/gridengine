@@ -151,7 +151,6 @@ char **argv
    int departmentflag=0;
    int hostflag=0;
    int jobflag=0;
-   int cellflag=0;
    int complexflag=0;
    int historyflag=0;
    int nohistflag=0;
@@ -182,7 +181,6 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "qacct");
 
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QACCT]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
@@ -536,11 +534,6 @@ char **argv
    ** mounted directory.
    */
    if (!acctfile[0]) {
-      sge_getme(QACCT);
-      if (cellflag) {
-         strcpy(me.default_cell, cell);
-      }
-     sge_setup_paths(me.default_cell, &path, NULL);
      DPRINTF(("path.acct_file: %s\n", \
         (path.acct_file ? path.acct_file : "(NULL)")));
      strcpy(acctfile, path.acct_file);
@@ -623,11 +616,6 @@ char **argv
             path.history_dir = history_path;
          }
          else {
-            sge_getme(QACCT);
-            if (cellflag) {
-               strcpy(me.default_cell, cell);
-            }
-            sge_setup_paths(me.default_cell, &path, NULL);
             if (nohistflag) {
                prepare_enroll(prognames[QACCT], 0, NULL);
                if (!sge_get_master(1)) {
@@ -1659,6 +1647,7 @@ lList **ppexechosts
    lListElem *aep = NULL;
    lList *mal = NULL;
    int cx_id = 0, eh_id = 0, q_id = 0;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_qacct_lists");
 
@@ -1667,7 +1656,7 @@ lList **ppexechosts
    */
    what = lWhat("%T(ALL)", CX_Type);
    cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET,
-                           NULL, NULL, what, NULL);
+                           NULL, NULL, what, NULL, &state);
    what = lFreeWhat(what);
 
    if (alp) {
@@ -1681,7 +1670,7 @@ lList **ppexechosts
    where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    what = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                           NULL, where, what, NULL);
+                           NULL, where, what, NULL, &state);
    what = lFreeWhat(what);
    where = lFreeWhere(where);
 
@@ -1695,7 +1684,7 @@ lList **ppexechosts
    */
    what = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_QUEUE_LIST, SGE_GDI_GET,
-                           NULL, NULL, what, &mal);
+                           NULL, NULL, what, &mal, &state);
    what = lFreeWhat(what);
 
    if (alp) {

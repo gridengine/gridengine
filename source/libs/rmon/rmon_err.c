@@ -75,7 +75,6 @@ int rmon_errf(int type, const char *fmt,...)
 
    gethostname(hostname, 80);
 
-   /* sprintf(complete_err_str,"%s:%s:%s:%s:%s\n",date,me.prog_name, me.unqualified_hostname,tmp,err_str); */
    sprintf(complete_err_str, "%s:%d:%s:%s:%s\n", hostname, getpid(), date, tmp, err_str);
 
    DPRINTF(("%s", complete_err_str));

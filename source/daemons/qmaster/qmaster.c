@@ -202,10 +202,10 @@ char **argv
 
    sge_setup(QMASTER, NULL);
 
-   /* to ensure SGE host_aliasing is considered resolve me.qualified_hostname 
+   /* to ensure SGE host_aliasing is considered when resolving me.qualified_hostname 
       before commd might be available */
-   if ((s=sge_host_resolve_name_local(me.qualified_hostname)))
-      me.qualified_hostname = sge_strdup(me.qualified_hostname, s);
+   if ((s=sge_host_resolve_name_local(uti_state_get_qualified_hostname())))
+      uti_state_set_qualified_hostname(s);
 
    memset(priority_tags, 0, sizeof(priority_tags));
 
@@ -343,8 +343,8 @@ New behaviour:
 
    /* --- Here we think we are the only qmaster in the system --- */
    
-   set_commlib_param(CL_P_COMMDHOST, 0, me.qualified_hostname, NULL);
-   set_commlib_state_logging_function(sge_log);     
+   set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_qualified_hostname(), NULL);
+   commlib_state_set_logging_function(sge_log);     
    
    /* If we are enrolled there is no need to start a commd */
    if (!enrolled) {
@@ -367,7 +367,7 @@ New behaviour:
             sleep(5);
          }
          else if (ret == COMMD_NACK_CONFLICT) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, prognames[me.who]));
+            ERROR((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, uti_state_get_sge_formal_prog_name()));
             SGE_EXIT(1);
          }
          else {
@@ -408,11 +408,11 @@ New behaviour:
       fd_set fds;
       int fd;
       FD_ZERO(&fds);
-      fd = get_commlib_state_sfd();
+      fd = commlib_state_get_sfd();
       if (fd>=0) {
          FD_SET(fd, &fds);
       }
-      sge_daemonize(get_commlib_state_closefd()?NULL:&fds);
+      sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
    }
 
 #ifdef QIDL
@@ -505,7 +505,7 @@ New behaviour:
       now = sge_get_gmt();
       next_flush = sge_next_flush(now);
       
-      old_timeout = get_commlib_state_timeout_srcv();
+      old_timeout = commlib_state_get_timeout_srcv();
 
       if (next_flush && ((next_flush - now) >= 0))
          rcv_timeout = MIN(MAX(next_flush - now, 2), 20);

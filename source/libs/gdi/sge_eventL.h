@@ -421,7 +421,7 @@ NAMEEND
 *        sgeE_JOB_MOD_SCHED_PRIORITY      event job modify priority
 *        sgeE_JOB_USAGE                   event job online usage
 *        sgeE_JOB_FINAL_USAGE             event job final usage report after job end
-*     
+*        sgeE_JOB_FINISH                  job finally finished or aborted (user view) 
 *        sgeE_JOB_SCHEDD_INFO_LIST        send job schedd info list at registration
 *        sgeE_JOB_SCHEDD_INFO_ADD         event jobs schedd info added
 *        sgeE_JOB_SCHEDD_INFO_DEL         event jobs schedd info deleted
@@ -553,6 +553,7 @@ typedef enum {
    sgeE_JOB_MOD_SCHED_PRIORITY,     /* + event job modify priority */
    sgeE_JOB_USAGE,                  /* + event job online usage */
    sgeE_JOB_FINAL_USAGE,            /* + event job final usage report after job end */
+   sgeE_JOB_FINISH,                 /* + job finally finished or aborted (user view) */
 
    sgeE_JOB_SCHEDD_INFO_LIST,       /* + send job schedd info list at registration */
    sgeE_JOB_SCHEDD_INFO_ADD,        /* - event jobs schedd info added */

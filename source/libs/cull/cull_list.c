@@ -97,77 +97,77 @@ static void cull_state_init(struct cull_state_t* state) {
 
 
 
-/****** cull/list/get_cull_state_????() ************************************
+/****** cull/list/cull_state_get_????() ************************************
 *  NAME
-*     get_cull_state_????() - read access to cull global variables
+*     cull_state_get_????() - read access to cull global variables
 *
 *  FUNCTION
 *     Provides access to either global variable or per thread global variable.
 *
 ******************************************************************************/
-int get_cull_state_lerrno(void) {
+int cull_state_get_lerrno(void) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    return cull_state->lerrno;
 }
 
-const char *get_cull_state_noinit(void) {
+const char *cull_state_get_noinit(void) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    return cull_state->noinit;
 }
 
-const lSortOrder *get_cull_state_global_sort_order(void) {
+const lSortOrder *cull_state_get_global_sort_order(void) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    return cull_state->global_sort_order;
 }
 
-int get_cull_state_chunk_size(void) {
+int cull_state_get_chunk_size(void) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    return cull_state->chunk_size;
 }
 
-const lNameSpace *get_cull_state_name_space(void) {
+const lNameSpace *cull_state_get_name_space(void) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    return cull_state->name_space;
 }
 
-/****** cull/list/set_cull_state_????() ************************************
+/****** cull/list/cull_state_set_????() ************************************
 *  NAME
-*     set_cull_state_????() - write access to cull global variables
+*     cull_state_set_????() - write access to cull global variables
 *
 *  FUNCTION
 *     Provides access to either global variable or per thread global variable.
 *
 ******************************************************************************/
 
-void set_cull_state_lerrno(
+void cull_state_set_lerrno(
 int errno
 ) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    cull_state->lerrno = errno;
 }
 
-void set_cull_state_noinit(
+void cull_state_set_noinit(
 char *s
 ) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    strcpy(cull_state->noinit, s);
 }
 
-void set_cull_state_global_sort_order(
+void cull_state_set_global_sort_order(
 const lSortOrder *so
 ) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    cull_state->global_sort_order = so;
 }
 
-void set_cull_state_chunk_size(
+void cull_state_set_chunk_size(
 int chunk_size
 ) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
    cull_state->chunk_size = chunk_size;
 }
 
-void set_cull_state_name_space(
+void cull_state_set_name_space(
 const lNameSpace  *ns
 ) {
    GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
@@ -2206,7 +2206,7 @@ int lSortList(lList *lp, const lSortOrder *sp)
    /* 
     * step 2: sort the pointer array using parsed sort order 
     */
-   set_cull_state_global_sort_order(sp);
+   cull_state_set_global_sort_order(sp);
    /* this is done to pass the sort order */
    /* to the lSortCompare function called */
    /* by lSortCompareUsingGlobal          */

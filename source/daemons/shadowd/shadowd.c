@@ -104,7 +104,7 @@ int main(int argc, char **argv);
 static void shadowd_exit_func(int i);
 static int check_if_valid_shadow(char *shadow_master_file);
 static int compare_qmaster_names(char *);
-static int host_in_file(char *, char *);
+static int host_in_file(const char *, const char *);
 static void parse_cmdline_shadowd(int argc, char **argv);
 static int shadowd_is_old_master_enrolled(char *oldqmaster);
 
@@ -229,7 +229,7 @@ char **argv
 
       if ((conf_string = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE,
-            conf_string, me.unqualified_hostname);
+            conf_string, uti_state_get_unqualified_hostname());
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
          if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
             char *shadowd_name;
@@ -283,18 +283,18 @@ char **argv
       SGE_EXIT(1);
    }
 
-   sprintf(shadow_err_file, "messages_shadowd.%s", me.unqualified_hostname);
-   sprintf(qmaster_out_file, "messages_qmaster.%s", me.unqualified_hostname);
+   sprintf(shadow_err_file, "messages_shadowd.%s", uti_state_get_unqualified_hostname());
+   sprintf(qmaster_out_file, "messages_qmaster.%s", uti_state_get_unqualified_hostname());
    sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_MODE_APPEND);
    unlink(TMP_ERR_FILE_SHADOWD);
    sge_log_set_auser(1);
    error_file = shadow_err_file;
 
    FD_ZERO(&fds);
-   if ((fd=get_commlib_state_sfd())>=0) {
+   if ((fd=commlib_state_get_sfd())>=0) {
       FD_SET(fd, &fds);
    }
-   sge_daemonize(get_commlib_state_closefd()?NULL:&fds);
+   sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
    sge_write_pid(shadowd_pidfile);
 
    starting_up();
@@ -480,14 +480,14 @@ char *shadow_master_file
    }
 
    /* we are on the same machine as old qmaster */
-   if (!strcmp(hp->h_name, me.qualified_hostname)) {
+   if (!strcmp(hp->h_name, uti_state_get_qualified_hostname())) {
       DPRINTF(("qmaster was running on same machine\n"));
       DEXIT;
       return -2;
    }
 
    /* we are not in the shadow master file */
-   if (host_in_file(me.qualified_hostname, shadow_master_file)) {
+   if (host_in_file(uti_state_get_qualified_hostname(), shadow_master_file)) {
       WARNING((SGE_EVENT, MSG_SHADOWD_NOTASHADOWMASTERFILE_S, shadow_master_file));
       DEXIT;
       return -1;
@@ -500,7 +500,7 @@ char *shadow_master_file
       return -1;
    } else {
       sprintf(binpath, cp); /* copy global configuration path */
-      sprintf(localconffile, "%s/%s", path.local_conf_dir, me.qualified_hostname);
+      sprintf(localconffile, "%s/%s", path.local_conf_dir, uti_state_get_qualified_hostname());
       cp2 = sge_get_confval("binary_path", localconffile);
       if (cp2) {
          strcpy(binpath, cp2); /* overwrite global configuration path */
@@ -526,8 +526,8 @@ char *shadow_master_file
  *        -1 error occured
  *----------------------------------------------------------------------*/
 static int host_in_file(
-char *host,
-char *file 
+const char *host,
+const char *file 
 ) {
    FILE *fp;
    char buf[512], *cp;

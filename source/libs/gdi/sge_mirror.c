@@ -383,6 +383,7 @@ static sge_mirror_error _sge_mirror_subscribe(sge_event_type type,
          ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
          ec_subscribe(sgeE_JOB_USAGE);
          ec_subscribe(sgeE_JOB_FINAL_USAGE);
+/*          ec_subscribe(sgeE_JOB_FINISH); */
          break;
       case SGE_EMT_JOB_SCHEDD_INFO:
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_LIST);
@@ -601,6 +602,7 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_event_type type)
          ec_unsubscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
          ec_unsubscribe(sgeE_JOB_USAGE);
          ec_unsubscribe(sgeE_JOB_FINAL_USAGE);
+/*          ec_unsubscribe(sgeE_JOB_FINISH); */
          break;
       case SGE_EMT_JOB_SCHEDD_INFO:
          ec_unsubscribe(sgeE_JOB_SCHEDD_INFO_LIST);
@@ -950,6 +952,11 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
          case sgeE_JOB_FINAL_USAGE:
             ret = sge_mirror_process_event(SGE_EMT_JOB, SGE_EMA_MOD, event);
             break;
+#if 0
+         case sgeE_JOB_FINISH:
+            ret = sge_mirror_process_event(SGE_EMT_JOB, SGE_EMA_MOD, event);
+            break;
+#endif
 
          case sgeE_JOB_SCHEDD_INFO_LIST:
             ret = sge_mirror_process_event(SGE_EMT_JOB_SCHEDD_INFO, SGE_EMA_LIST, event);
@@ -1151,15 +1158,19 @@ static sge_mirror_error sge_mirror_process_event(sge_event_type type, sge_event_
                                                  lListElem *event) 
 {
    int ret;
+   char buffer[1024];
+   dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "sge_mirror_process_event");
 
-   DPRINTF(("%s\n", event_text(event)));
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+
+   DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
 
    if(mirror_base[type].callback_before != NULL) {
       ret = mirror_base[type].callback_before(type, action, event, mirror_base[type].clientdata);
       if(!ret) {
-         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event)));
+         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
          DEXIT;
          return SGE_EM_CALLBACK_FAILED;
       }
@@ -1168,7 +1179,7 @@ static sge_mirror_error sge_mirror_process_event(sge_event_type type, sge_event_
    if(mirror_base[type].callback_default != NULL) {
       ret = mirror_base[type].callback_default(type, action, event, NULL);
       if(!ret) {
-         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event)));
+         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
          DEXIT;
          return SGE_EM_CALLBACK_FAILED;
       }
@@ -1177,7 +1188,7 @@ static sge_mirror_error sge_mirror_process_event(sge_event_type type, sge_event_
    if(mirror_base[type].callback_after != NULL) {
       ret = mirror_base[type].callback_after(type, action, event, mirror_base[type].clientdata);
       if(!ret) {
-         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event)));
+         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
          DEXIT;
          return SGE_EM_CALLBACK_FAILED;
       }

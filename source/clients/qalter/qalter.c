@@ -52,6 +52,7 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "read_defaults.h"
+#include "sge_prog.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -80,6 +81,7 @@ char **argv
    u_long32 gdi_cmd; 
    int cl_err = 0;
    int tmp_ret;
+   int me_who;
 
    DENTER_MAIN(TOP_LAYER, "qalter");
 
@@ -88,20 +90,19 @@ char **argv
    */
    if (!strcmp(sge_basename(argv[0], '/'), "qresub")) {
       DPRINTF(("QRESUB\n"));
-      me.who = QRESUB;
+      me_who = QRESUB;
    } else {
       DPRINTF(("QALTER\n"));
-      me.who = QALTER;
+      me_who = QALTER;
    } 
 
-   sge_gdi_param(SET_MEWHO, me.who, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
-   if ((cl_err = sge_gdi_setup(prognames[me.who]))) {
+   sge_gdi_param(SET_MEWHO, me_who, NULL);
+   if ((cl_err = sge_gdi_setup(prognames[uti_state_get_mewho()]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
-   sge_setup_sig_handlers(me.who);
+   sge_setup_sig_handlers(uti_state_get_mewho());
 
    /*
    ** begin to work
@@ -141,7 +142,7 @@ char **argv
       SGE_EXIT(tmp_ret);
    }
 
-   if (me.who == QALTER) {
+   if (me_who == QALTER) {
       DPRINTF(("QALTER\n"));
       gdi_cmd = SGE_GDI_MOD;
    } else {
@@ -169,7 +170,7 @@ char **argv
    if (ret == STATUS_OK) {
       ret = 0;
    } else {
-      if (me.who == QALTER) {
+      if (me_who == QALTER) {
          if (ret != STATUS_NOTOK_DOAGAIN) {
             ret = 1;
          }
@@ -221,8 +222,11 @@ int *all_users
    int users_flag = 0;
 
    int job_field[100];
+   int me_who;
 
    DENTER(TOP_LAYER, "qalter_parse_job_parameter"); 
+
+   me_who = uti_state_get_mewho();
 
    if (!prequestlist) {
       answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 
@@ -300,7 +304,7 @@ int *all_users
 
    /* ---------------------------------------------------------- */
 
-   if (me.who != QRESUB) {
+   if (me_who != QRESUB) {
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-a"))) {
          lSetUlong(job, JB_execution_time, lGetUlong(ep, SPA_argval_lUlongT));
          lRemoveElem(cmdline, ep);
@@ -388,7 +392,7 @@ int *all_users
       lSetList(job, JB_job_identifier_list, jid_list);
    } 
 
-   if (me.who != QRESUB) {
+   if (me_who != QRESUB) {
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-u"))) {
          lList *lp = NULL;
          lList *jid_list = NULL;
@@ -438,7 +442,7 @@ int *all_users
       nm_set(job_field, JB_ja_structure);
    }
 
-   if (me.who != QRESUB) {
+   if (me_who != QRESUB) {
       /* -hold_jid */
       if (lGetElemStr(cmdline, SPA_switch, "-hold_jid")) {
          lListElem *sep, *ep;

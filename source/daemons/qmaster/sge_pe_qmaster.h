@@ -37,7 +37,7 @@
 #include "sge_c_gdi.h"
 
 /* funtions called from within gdi framework in qmaster */
-int pe_mod(lList **alpp, lListElem *new_pe, lListElem *pe, int add, char *ruser, char *rhost, gdi_object_t *object, int sub_command);
+int pe_mod(lList **alpp, lListElem *new_pe, lListElem *pe, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
 int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object);
 

@@ -66,7 +66,7 @@ void ec_set_clientdata(u_long32 data);
 u_long32 ec_get_clientdata(void);
 
 int ec_commit(void);
-int ec_commit_multi(lList **malp);
+int ec_commit_multi(lList **malp, state_gdi_multi *state);
 
 int ec_get(lList **);
 

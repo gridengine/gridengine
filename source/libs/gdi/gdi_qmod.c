@@ -65,7 +65,7 @@ u_long32 action_flag
    const char *name;
    lList *alp = NULL;
    lList *id_list = NULL;
-   static lEnumeration *what_all = NULL;
+   lEnumeration *what_all;
 
    DENTER(TOP_LAYER, "gdi_qmod");
 
@@ -117,13 +117,13 @@ u_long32 action_flag
    }
       
    if (id_list) {
-      if (!what_all)
-         what_all = lWhat("%T(ALL)", ID_Type);
+      what_all = lWhat("%T(ALL)", ID_Type);
       /*
       ** no type needed here it's a special call not addressed to a 
       ** certain object
       */
       alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, what_all);
+      lFreeWhat(what_all);
       id_list = lFreeList(id_list);
    }
 

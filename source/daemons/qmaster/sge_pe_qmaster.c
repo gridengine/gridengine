@@ -68,8 +68,8 @@ lList **alpp,
 lListElem *new_pe,
 lListElem *pe, /* reduced */
 int add,
-char *ruser,
-char *rhost,
+const char *ruser,
+const char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {

@@ -98,23 +98,25 @@ enum {
  COMMDCNTL               /* 38 */ 
 };
 
-typedef struct {
-   char        *sge_formal_prog_name;      /* taken from prognames[] */
-   char        *qualified_hostname;
-   char        *unqualified_hostname;
-   u_long32    who;                        /* Qxxx defines           */
-   u_long32    uid;
-   u_long32    gid;
-   u_long32    daemonized;
-   char        *user_name;
-   char        *default_cell;
-} sge_me_type;
- 
-extern sge_me_type me;        
 
 extern const char *prognames[];
 
 void sge_getme(u_long32 sge_formal_prog_name);
+
+const char *uti_state_get_sge_formal_prog_name(void);
+const char *uti_state_get_qualified_hostname(void);
+const char *uti_state_get_unqualified_hostname(void);
+u_long32 uti_state_get_mewho(void);
+u_long32 uti_state_get_uid(void);
+u_long32 uti_state_get_gid(void);
+u_long32 uti_state_get_daemonized(void);
+const char *uti_state_get_user_name(void);
+const char *uti_state_get_default_cell(void);
+
+void uti_state_set_qualified_hostname(const char *s);
+void uti_state_set_daemonized(u_long32 daemonized);
+
+
  
 #ifdef WIN32NATIVE
 void sge_deleteme ();

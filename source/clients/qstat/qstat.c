@@ -140,7 +140,6 @@ char **argv
 #endif
    
    sge_gdi_param(SET_MEWHO, QSTAT, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QSTAT]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
@@ -598,6 +597,7 @@ u_long32 show
    lList *mal = NULL;
    int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0, cx_id, eh_id, sc_id, gc_id;
    int show_zombies = 0;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_all_lists");
   
@@ -605,7 +605,7 @@ u_long32 show
 
    q_all = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_QUEUE_LIST, SGE_GDI_GET, 
-                        NULL, qw, q_all, NULL);
+                        NULL, qw, q_all, NULL, &state);
    q_all = lFreeWhat(q_all);
    qw = lFreeWhere(qw);
    
@@ -693,7 +693,7 @@ u_long32 show
                      JB_execution_time );
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
-                           NULL, jw, j_all, NULL);
+                           NULL, jw, j_all, NULL, &state);
       j_all = lFreeWhat(j_all);
       jw = lFreeWhere(jw);
 
@@ -746,7 +746,7 @@ u_long32 show
                      JB_execution_time );
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
-                           NULL, zw, z_all, NULL);
+                           NULL, zw, z_all, NULL, &state);
       z_all = lFreeWhat(z_all);
       zw = lFreeWhere(zw);
 
@@ -761,7 +761,7 @@ u_long32 show
    */
    cx_all = lWhat("%T(ALL)", CX_Type);
    cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET, 
-                        NULL, NULL, cx_all, NULL);
+                        NULL, NULL, cx_all, NULL, &state);
    cx_all = lFreeWhat(cx_all);
 
    if (alp) {
@@ -775,7 +775,7 @@ u_long32 show
    where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    eh_all = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
-                        NULL, where, eh_all, NULL);
+                        NULL, where, eh_all, NULL, &state);
    eh_all = lFreeWhat(eh_all);
    where = lFreeWhere(where);
 
@@ -790,7 +790,7 @@ u_long32 show
    if (pe_l) {   
       pe_all = lWhat("%T(%I%I%I%I)", PE_Type, PE_name, PE_queue_list, PE_job_is_first_task, PE_control_slaves);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
-                           NULL, pw, pe_all, NULL);
+                           NULL, pw, pe_all, NULL, &state);
       pe_all = lFreeWhat(pe_all);
       pw = lFreeWhere(pw);
 
@@ -806,7 +806,7 @@ u_long32 show
    if (ckpt_l) {
       ckpt_all = lWhat("%T(%I%I)", CK_Type, CK_name, CK_queue_list);
       ckpt_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET, 
-                           NULL, NULL, ckpt_all, NULL);
+                           NULL, NULL, ckpt_all, NULL, &state);
       ckpt_all = lFreeWhat(ckpt_all);
 
       if (alp) {
@@ -821,7 +821,7 @@ u_long32 show
    if (acl_l) {
       acl_all = lWhat("%T(ALL)", US_Type);
       acl_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
-                           NULL, NULL, acl_all, NULL);
+                           NULL, NULL, acl_all, NULL, &state);
       acl_all = lFreeWhat(acl_all);
 
       if (alp) {
@@ -834,7 +834,7 @@ u_long32 show
    */
    sc_what = lWhat("%T(%I)", SC_Type, SC_user_sort);
    sc_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
-                        NULL, NULL, sc_what, NULL);
+                        NULL, NULL, sc_what, NULL, &state);
    sc_what = lFreeWhat(sc_what);
 
    if (alp) {
@@ -848,7 +848,7 @@ u_long32 show
    gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                        NULL, gc_where, gc_what, &mal);
+                        NULL, gc_where, gc_what, &mal, &state);
    gc_what = lFreeWhat(gc_what);
    gc_where = lFreeWhere(gc_where);
 

@@ -155,9 +155,6 @@ char **argv
    error_file = logfile;
    trace_func = trace;
    
-   /* initialize me-struct */
-   sge_getme(COMMD);
-    
    /* determine service from our program name */
    
    service = SGE_COMMD_SERVICE;
@@ -258,11 +255,11 @@ char **argv
    }   
    if (actmasterfile == NULL) {
       /* expect act_master file at default location */
-      actmasterfile = get_act_master_path(me.default_cell);
+      actmasterfile = get_act_master_path(uti_state_get_default_cell());
    }
    if (product_mode_file == NULL) {
       /* expect product_mode_file file at default location */
-      product_mode_file = get_product_mode_file_path(me.default_cell);
+      product_mode_file = get_product_mode_file_path(uti_state_get_default_cell());
    }
  
 
@@ -495,7 +492,7 @@ char **argv
                          strerror(EBADF), 
                          bad_fd));
 
-                  if (!me.daemonized)
+                  if (!uti_state_get_daemonized())
                      print_message(mp, stderr);
 
                   delete_message(mp, "bad read fd");
@@ -505,7 +502,7 @@ char **argv
                          strerror(EBADF), 
                          bad_fd));
 
-                  if (!me.daemonized) {
+                  if (!uti_state_get_daemonized()) {
                      print_commproc(commp, stderr);       
                   }
 
@@ -514,7 +511,7 @@ char **argv
                   ERROR((SGE_EVENT, MSG_NET_SELECTREADFAILEDNOTCOMPLETE_SI, 
                      strerror(EBADF), bad_fd));
 
-                  if (!me.daemonized) {
+                  if (!uti_state_get_daemonized()) {
                      print_commproc(commp, stderr);
                   }
 
@@ -535,7 +532,7 @@ char **argv
                          strerror(EBADF), 
                          bad_fd));
                   
-                  if (!me.daemonized)       
+                  if (!uti_state_get_daemonized())       
                      print_message(mp, stderr);
 
                   delete_message(mp, "bad write fd");

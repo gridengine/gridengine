@@ -315,12 +315,13 @@ int commdport
          if (master_host && !strcasecmp(sge_host_get_mainname(master_host), sge_host_get_mainname(h))) 
             sender_ok = 1;
 
-         if (!strcasecmp(sge_host_get_mainname(localhost), sge_host_get_mainname(h)))
+         if (!strcasecmp(sge_host_get_mainname(uti_state_get_localhost()), sge_host_get_mainname(h)))
             sender_ok = 1;
         
          if (sender_ok != 1) {
             DEBUG((SGE_EVENT, "message denied, sender host %s is neither qmaster host %s nor local host %s", 
-               sge_host_get_mainname(h), master_host?sge_host_get_mainname(master_host):"<unresolvable>", sge_host_get_mainname(localhost)));
+               sge_host_get_mainname(h), master_host?sge_host_get_mainname(master_host):"<unresolvable>",
+               sge_host_get_mainname(uti_state_get_localhost())));
             mp->ackchar = COMMD_NACK_PERM;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             DEXIT;

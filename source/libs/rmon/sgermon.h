@@ -43,48 +43,21 @@ extern "C" {
 #endif
 
 #ifndef WIN32NATIVE
-#ifdef REENTRANCY_CHECK
 #define DENTER_MAIN( layer, program ) \
-   static char SGE_FUNC[] = "main";  \
-   int LAYER = 0; \
-   static int entered = 0; \
-   entered = 1; \
-   \
-   rmon_mopen(&argc,argv,program); \
-   LAYER = layer; \
-   if ( __CONDITION(TRACE) ) \
-      rmon_menter (SGE_FUNC)
-#else
-#define DENTER_MAIN( layer, program ) \
-   static char SGE_FUNC[] = "main";  \
+   static const char SGE_FUNC[] = "main";  \
    int LAYER = 0; \
    \
    rmon_mopen(&argc,argv,program); \
    LAYER = layer; \
    if ( __CONDITION(TRACE) ) \
       rmon_menter (SGE_FUNC)
-#endif  /* REENTRANCY_CHECK */
 
-#ifdef REENTRANCY_CHECK
 #define DENTER( layer, function) \
    int LAYER = layer; \
-   static char SGE_FUNC[] = function; \
-   static int entered = 0; \
-   \
-   if ( __CONDITION(TRACE) ) \
-      rmon_menter (SGE_FUNC); \
-   if ( entered && __CONDITION(INFOPRINT) ) \
-      rmon_mprintf("Reentering function %s!!!!!!\n", SGE_FUNC); \
-   else \
-      entered = 1
-#else
-#define DENTER( layer, function) \
-   int LAYER = layer; \
-   static char SGE_FUNC[] = function; \
+   static const char SGE_FUNC[] = function; \
    \
    if ( __CONDITION(TRACE) ) \
       rmon_menter (SGE_FUNC)
-#endif  /* REENTRANCY_CHECK*/
 
 #define DENTERBLOCK( layer, save ) \
    save = LAYER; \
@@ -93,13 +66,8 @@ extern "C" {
 #define DEXITBLOCK(save) \
    LAYER = save
 
-#ifdef REENTRANCY_CHECK
-#define DEXIT  entered = 0; __CONDITION(TRACE)  ? \
-    rmon_mexit(SGE_FUNC,__FILE__,__LINE__),1   : 0
-#else
 #define DEXIT  __CONDITION(TRACE)  ? \
     rmon_mexit(SGE_FUNC,__FILE__,__LINE__),1   : 0
-#endif  /* REENTRANCY_CHECK */
 
 #define DTRACE          __CONDITION(TRACE)      ?  \
         rmon_mtrace(SGE_FUNC,__FILE__,__LINE__),1 : 0
@@ -129,7 +97,7 @@ extern "C" {
 
 #define DENTER( layer, function ) \
 	int LAYER = layer; \
-	static char SGE_FUNC[] = function; \
+	static const char SGE_FUNC[] = function; \
 	DebugObj_Enter((LAYER), (SGE_FUNC))
 
 #define DEXIT \

@@ -177,9 +177,9 @@ int set_last_heard_from(const char *commproc, u_short id, const char *host,
 static int set_last_heard_from_(const char *commproc, u_short id, const char *host, u_long time)
 {
    /* throw away old stuff every 5 minutes (if we are called) */
-   if (time && (time - get_commlib_state_lastgc() > 5 * 60)) {
+   if (time && (time - commlib_state_get_lastgc() > 5 * 60)) {
       find_entry("never_use_this_one", 99, "never_use_this_one", time);
-      set_commlib_state_lastgc(time);
+      commlib_state_set_lastgc(time);
    }
 
    if (!commproc || commproc[0] == '\0' ||
@@ -213,7 +213,7 @@ static entry *find_entry(const char *commproc, u_short id, const char *host,
                          u_long now)
 {
    entry *ptr = NULL, *last = NULL;
-   ptr = get_commlib_state_list();
+   ptr = commlib_state_get_list();
 
    if (!now)
       now = sge_get_gmt();
@@ -221,9 +221,9 @@ static entry *find_entry(const char *commproc, u_short id, const char *host,
    while (ptr) {
 
 #ifdef WIN32                    /* int cast */
-      if ((int) (now - ptr->time) > get_commlib_state_lt_heard_from_timeout()) {
+      if ((int) (now - ptr->time) > commlib_state_get_lt_heard_from_timeout()) {
 #else
-      if (now - ptr->time > get_commlib_state_lt_heard_from_timeout()) {
+      if (now - ptr->time > commlib_state_get_lt_heard_from_timeout()) {
 #endif
 
          if (commlib_debug) {
@@ -241,9 +241,9 @@ static entry *find_entry(const char *commproc, u_short id, const char *host,
             continue;
          }
          else {
-            set_commlib_state_list(ptr->next);
+            commlib_state_set_list(ptr->next);
             free(ptr);
-            ptr = get_commlib_state_list();
+            ptr = commlib_state_get_list();
             continue;
          }
       }
@@ -312,8 +312,8 @@ static void new_entry(const char *commproc, u_short id, const char *host,
    }
    new->id = id;
    new->time = time;
-   new->next = get_commlib_state_list();
-   set_commlib_state_list(new);
+   new->next = commlib_state_get_list();
+   commlib_state_set_list(new);
 }
 
 /*************************************************************
@@ -326,7 +326,7 @@ int reset_last_heard()
    int n = 0;
 
    /* eat all */
-   while ((ptr = get_commlib_state_list())) {
+   while ((ptr = commlib_state_get_list())) {
       if (commlib_debug)
          printf(MSG_COMMLIB_RESET_LAST_HEARD_SISU 
             , ptr->commproc, (int) ptr->id, ptr->host, u32c(ptr->time));
@@ -335,7 +335,7 @@ int reset_last_heard()
       free(ptr->commproc);
       free(ptr->host);
 
-      set_commlib_state_list(ptr->next);
+      commlib_state_set_list(ptr->next);
       free(ptr);
       n++;
    }

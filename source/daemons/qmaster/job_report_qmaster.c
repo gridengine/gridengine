@@ -558,8 +558,8 @@ sge_pack_buffer *pb
                      if (failed == SSTATE_FAILURE_AFTER_JOB && 
                            !lGetString(jep, JB_checkpoint_name)) {
                         job_ja_task_send_abort_mail(jep, jatep,
-                                                    me.user_name,
-                                                    me.qualified_hostname,
+                                                    uti_state_get_user_name(),
+                                                    uti_state_get_qualified_hostname(),
                                                     lGetString(jr, JR_err_str)); 
                         get_rid_of_job_due_to_report(jep, jatep, NULL,
                                                      pb, rhost, commproc);

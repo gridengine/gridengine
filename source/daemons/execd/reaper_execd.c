@@ -1757,7 +1757,7 @@ lListElem *jr
       q = MSG_MAIL_UNKNOWN_NAME;
 
    if (!(h=lGetHost(jr, JR_host_name)))
-      h = me.qualified_hostname;
+      h = uti_state_get_qualified_hostname();
 
    if (!(u=lGetString(jep, JB_owner)))
       u = MSG_MAIL_UNKNOWN_NAME;

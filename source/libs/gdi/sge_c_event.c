@@ -638,6 +638,7 @@ int ec_register(void)
     *  to add may also means to modify
     *  - if this event client is already enrolled at qmaster
     */
+
    alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp, NULL, NULL);
  
    aep = lFirst(alp);
@@ -680,7 +681,7 @@ int ec_register(void)
    DPRINTF(("REGISTRATION FAILED\n"));
    DEXIT;
    return 0;
-}      
+}
 
 /****** Eventclient/Client/ec_deregister() ************************************
 *  NAME
@@ -1448,7 +1449,7 @@ int ec_commit(void)
 *     Eventclient/Client/ec_config_changed()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_commit_multi(lList **malpp) 
+int ec_commit_multi(lList **malpp, state_gdi_multi *state) 
 {
    int commit_id, ret;
    lList *lp, *alp = NULL;
@@ -1482,7 +1483,7 @@ int ec_commit_multi(lList **malpp)
     *  - if this event client is already enrolled at qmaster
     */
    commit_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_EVENT_LIST, SGE_GDI_MOD, 
-                             lp, NULL, NULL, malpp);
+                             lp, NULL, NULL, malpp, state);
    lp = lFreeList(lp); 
 
    if (alp != NULL) {

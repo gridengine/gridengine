@@ -119,8 +119,6 @@ static int is_hard_soft(void)
 **                       as a warning
 **   STATUS_ESEMANTIC  - option that should have an argument had none
 **   STATUS_ESYNTAX    - error parsing option argument
-** EXTERNAL
-**   me.default_cell
 ** DESCRIPTION
 */
 lList *cull_parse_cmdline(
@@ -534,8 +532,8 @@ u_long32 flags
 /* We do not have the userset_list here for the moment.
    So rely on the master deny if we are not a deadline user.
 
-         if (!is_deadline_user(me.user_name, userset_list)) {
-            sprintf(str, "%s you are not a deadline user\n", me.user_name);
+         if (!is_deadline_user(uti_state_get_user_name(), userset_list)) {
+            sprintf(str, "%s you are not a deadline user\n", uti_state_get_user_name());
             answer_list_add(&answer, str, STATUS_DENIED, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;

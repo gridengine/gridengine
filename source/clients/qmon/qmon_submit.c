@@ -902,7 +902,7 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
-         sprintf(buf, "DISPLAY=%s%s", me.qualified_hostname, 
+         sprintf(buf, "DISPLAY=%s%s", uti_state_get_qualified_hostname(), 
                         dsp); 
       else
          sprintf(buf, "DISPLAY=%s", dsp); 
@@ -1004,7 +1004,7 @@ int submode
       /*
       ** set sensitivity of deadline field
       */
-      if (is_deadline_user(me.user_name, 
+      if (is_deadline_user(uti_state_get_user_name(), 
                qmonMirrorList(SGE_USERSET_LIST))) {
          if (sensitive) {      
             XtSetSensitive(submit_deadline, sensitive2);
@@ -1444,7 +1444,7 @@ XtPointer cld, cad;
             return;
          }
 
-         if (is_deadline_user(me.user_name, 
+         if (is_deadline_user(uti_state_get_user_name(), 
                qmonMirrorList(SGE_USERSET_LIST))) 
             nm_set((int*)qalter_fields, JB_deadline);
       }
@@ -1861,9 +1861,9 @@ char *prefix
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
    if (!data->mail_list) {
       lListElem* entry = lAddElemStr(&(data->mail_list), MR_user, 
-                                    me.user_name, MR_Type);
+                                    uti_state_get_user_name(), MR_Type);
       if (entry)
-         lSetHost(entry, MR_host, me.qualified_hostname);
+         lSetHost(entry, MR_host, uti_state_get_qualified_hostname());
    }
 
    {
@@ -2084,8 +2084,8 @@ int save
       /*
       ** path aliasing
       */
-      if (path_alias_list_initialize(&path_alias, &alp, me.user_name, 
-                                     me.qualified_hostname) == -1) {
+      if (path_alias_list_initialize(&path_alias, &alp, uti_state_get_user_name(), 
+                                     uti_state_get_qualified_hostname()) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
             alp = lFreeList(alp);
@@ -2139,8 +2139,8 @@ int save
    if (!data->mail_list && !save) {
       data->mail_list = lCreateElemList("ML", MR_Type, 1);
       if (data->mail_list) {
-         lSetString(lFirst(data->mail_list), MR_user, me.user_name);
-         lSetHost(lFirst(data->mail_list), MR_host, me.qualified_hostname);
+         lSetString(lFirst(data->mail_list), MR_user, uti_state_get_user_name());
+         lSetHost(lFirst(data->mail_list), MR_host, uti_state_get_qualified_hostname());
       }
    }
    lSetList(jep, JB_mail_list, lCopyList("ML", data->mail_list));
@@ -3008,7 +3008,7 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
-         sprintf(buf, "DISPLAY=%s%s", me.qualified_hostname, 
+         sprintf(buf, "DISPLAY=%s%s", uti_state_get_qualified_hostname(), 
                         dsp); 
       else
          sprintf(buf, "DISPLAY=%s", dsp); 

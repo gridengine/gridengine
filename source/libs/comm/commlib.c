@@ -90,7 +90,7 @@ int gethostname(char *name, int namelen);
 #include "sge_log.h"
 #endif
 
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
 #include <pthread.h>
 static pthread_key_t  commlib_state_key; 
 #else
@@ -294,6 +294,7 @@ const char *cl_errstr(int i) {
    int n = i;
 
    DENTER(COMMD_LAYER, "cl_errstr");
+
    DPRINTF(("%d <= %d\n", n, lasterr1));
    if (n <= lasterr1) {
       DEXIT;
@@ -318,26 +319,26 @@ const char *strval,
 int *intval_array 
 ) {
    DENTER(COMMD_LAYER, "set_commlib_param");
-
+  
    switch (param) {
    case CL_P_NAME:
       if (!strval) {
          return CL_RANGE;
       }
-      set_commlib_state_componentname(strval);
+      commlib_state_set_componentname(strval);
       break;
    case CL_P_ID:
-      set_commlib_state_componentid(intval); 
+      commlib_state_set_componentid(intval); 
       break;
    case CL_P_PRIO_LIST:
       if (!intval_array) {
          return CL_RANGE;
       }  
-      set_commlib_state_stored_tag_priority_list(intval_array);
+      commlib_state_set_stored_tag_priority_list(intval_array);
       break;
    case CL_P_RESERVED_PORT:
       DPRINTF(("CL_P_RESERVED_PORT = %d\n", intval));
-      set_commlib_state_reserved_port(intval);   /* 0=disable else enable */
+      commlib_state_set_reserved_port(intval);   /* 0=disable else enable */
       break;
 
    case CL_P_COMMDHOST:
@@ -345,51 +346,51 @@ int *intval_array
          return CL_RANGE;
       }
       DPRINTF(("CL_P_COMMDHOST = %s\n", strval));
-      set_commlib_state_commdhost(strval);
+      commlib_state_set_commdhost(strval);
       break;
 
    case CL_P_TIMEOUT:
       DPRINTF(("CL_P_TIMEOUT = %d\n", intval));
-      set_commlib_state_timeout(intval);
+      commlib_state_set_timeout(intval);
       break;
 
    case CL_P_TIMEOUT_SRCV:
       DPRINTF(("CL_P_TIMEOUT_SRCV = %d\n", intval));
-      set_commlib_state_timeout_srcv(intval);
+      commlib_state_set_timeout_srcv(intval);
       break;
 
    case CL_P_TIMEOUT_SSND:
       DPRINTF(("CL_P_TIMEOUT_SSND = %d\n", intval));
-      set_commlib_state_timeout_ssnd(intval);
+      commlib_state_set_timeout_ssnd(intval);
       break;
 
    case CL_P_COMMDPORT:
       DPRINTF(("CL_P_COMMDPORT = %d\n", intval));
 #ifndef WIN32NATIVE
-      set_commlib_state_commdport(htons(intval));
+      commlib_state_set_commdport(htons(intval));
 #else 
-      set_commlib_state_commdport((u_short)intval);
+      commlib_state_set_commdport((u_short)intval);
 #endif 
       break;
 
    case CL_P_OFFLINE_RECEIVE:
       DPRINTF(("CL_P_OFFLINE_RECEIVE = %d\n", intval));
-      set_commlib_state_offline_receive(1);
+      commlib_state_set_offline_receive(1);
       break;
 
    case CL_P_LT_HEARD_FROM_TIMEOUT:
       DPRINTF(("CL_P_LT_HEARD_FROM_TIMEOUT = %d\n", intval));
-      set_commlib_state_lt_heard_from_timeout(intval);
+      commlib_state_set_lt_heard_from_timeout(intval);
       break;
 
    case CL_P_CLOSE_FD:
       DPRINTF(("CL_P_CLOSE_FD = %d\n", intval));
-      set_commlib_state_closefd((u_long32)intval);
+      commlib_state_set_closefd((u_long32)intval);
       break;
    
    case CL_P_COMMDSERVICE:
       DPRINTF(("CL_P_COMMDSERVICE = %s\n", strval));
-      set_commlib_state_commdservice(strval);   
+      commlib_state_set_commdservice(strval);   
       break;
       
    default:
@@ -569,8 +570,8 @@ u_short compressed
 #else /* WIN32NATIVE */
    cp = pack_ushort((u_short)toid, cp);
 #endif /* WIN32NATIVE */
-   cp = pack_string(get_commlib_state_componentname(), cp);
-   cp = pack_ushort(get_commlib_state_componentid(), cp);
+   cp = pack_string(commlib_state_get_componentname(), cp);
+   cp = pack_ushort(commlib_state_get_componentid(), cp);
 #ifndef WIN32NATIVE
    cp = pack_ushort(tag, cp);
 #else /* WIN32NATIVE */
@@ -650,9 +651,9 @@ u_short compressed
       /* wait for an acknowledge */
       DPRINTF(("send_message: waiting for acknowledge\n"));
 
-      old_param_timeout = get_commlib_state_timeout();
+      old_param_timeout = commlib_state_get_timeout();
       if (synchron && buflen)   /* buflen = 0 gets passed by ask_commproc() */
-         set_commlib_state_timeout(get_commlib_state_timeout_ssnd());
+         commlib_state_set_timeout(commlib_state_get_timeout_ssnd());
 
       i = recvfromcommd((unsigned char **) &ackcharptr, NULL, 1, 
                         NULL, NULL, NULL
@@ -660,7 +661,7 @@ u_short compressed
                         , "send_message_(#1)"
 #endif
                         );
-      set_commlib_state_timeout(old_param_timeout);
+      commlib_state_set_timeout(old_param_timeout);
 
       DPRINTF(("send_message: acknowledge recvfromcommd returned %d\n", i));
       if ((unsigned int) ackchar == COMMD_NACK_ENROLL) {
@@ -835,8 +836,8 @@ u_short *compressed
       flags |= COMMD_SYNCHRON;
 
    /* known from enroll */
-   cp = pack_string(get_commlib_state_componentname(), cp);
-   cp = pack_ushort(get_commlib_state_componentid(), cp);
+   cp = pack_string(commlib_state_get_componentname(), cp);
+   cp = pack_ushort(commlib_state_get_componentid(), cp);
 
    if (fromhost)
       cp = pack_string(fromhost, cp);
@@ -887,9 +888,9 @@ u_short *compressed
          If this is a synchron rcv we may hang in read for a long time. So we
          need a long timeout */
 
-      old_param_timeout = get_commlib_state_timeout();
+      old_param_timeout = commlib_state_get_timeout();
       if (synchron)
-         set_commlib_state_timeout(get_commlib_state_timeout_srcv());
+         commlib_state_set_timeout(commlib_state_get_timeout_srcv());
 
       i = recvfromcommd(&ackcharptr, NULL, 1, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
@@ -901,12 +902,12 @@ u_short *compressed
 #ifndef WIN32NATIVE
          sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
-         set_commlib_state_timeout(old_param_timeout);
+         commlib_state_set_timeout(old_param_timeout);
          DEXIT;
          return i;
       }
 
-      set_commlib_state_timeout(old_param_timeout);
+      commlib_state_set_timeout(old_param_timeout);
 
       if ((unsigned int) ackchar == CL_UNKNOWN_RECEIVER ||
           (unsigned int) ackchar == COMMD_NACK_ENROLL) {
@@ -1026,9 +1027,9 @@ int enroll()
 
    DENTER(COMMD_LAYER, "enroll");
 
-   name = get_commlib_state_componentname();
-   id = get_commlib_state_componentid();
-   tag_priority_list = get_commlib_state_addr_stored_tag_priority_list();
+   name = commlib_state_get_componentname();
+   id = commlib_state_get_componentid();
+   tag_priority_list = commlib_state_get_addr_stored_tag_priority_list();
 
    i = enroll_(name, &id, tag_priority_list);
 
@@ -1066,7 +1067,7 @@ int *tag_priority_list
 
    /* test parameters */
 
-   if (get_commlib_state_enrolled()) {
+   if (commlib_state_get_enrolled()) {
       DEXIT;
       return CL_ALREADYDONE;
    }
@@ -1076,9 +1077,9 @@ int *tag_priority_list
       return CL_RANGE;
    }
 
-   set_commlib_state_componentname(name);
+   commlib_state_set_componentname(name);
    if (tag_priority_list)
-      set_commlib_state_stored_tag_priority_list(tag_priority_list);
+      commlib_state_set_stored_tag_priority_list(tag_priority_list);
    else
       clear_commlib_state_stored_tag_priority_list();
 
@@ -1101,12 +1102,12 @@ int *tag_priority_list
    /* header */
    cp = pack_string(name, cp);
    cp = pack_ushort(*id, cp);
-   cp = pack_ushort((u_short)get_commlib_state_closefd(), cp);
+   cp = pack_ushort((u_short)commlib_state_get_closefd(), cp);
    for (i = 0; i < 10; i++)
 #ifndef WIN32NATIVE
-      cp = pack_ushort(get_commlib_state_stored_tag_priority_list_i(i), cp);
+      cp = pack_ushort(commlib_state_get_stored_tag_priority_list_i(i), cp);
 #else /* WIN32NATIVE */
-      cp = pack_ushort((u_short)get_commlib_state_stored_tag_priority_list_i(i), cp);
+      cp = pack_ushort((u_short)commlib_state_get_stored_tag_priority_list_i(i), cp);
 #endif /* WIN32NATIVE */
 
 #ifndef WIN32NATIVE
@@ -1161,10 +1162,10 @@ int *tag_priority_list
    sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
    unpack_ushort(id, buffer);
-   set_commlib_state_componentid(*id);
+   commlib_state_set_componentid(*id);
 
-   set_commlib_state_enrolled(1);
-   set_commlib_state_ever_enrolled(1);
+   commlib_state_set_enrolled(1);
+   commlib_state_set_ever_enrolled(1);
 
    DEXIT;
    return 0;
@@ -1230,8 +1231,8 @@ static int reenroll_if_necessary()
 
    DENTER(COMMD_LAYER, "reenroll_if_necessary");
 
-   if (get_commlib_state_changed_flag() || 
-       !get_commlib_state_enrolled()) {
+   if (commlib_state_get_changed_flag() || 
+       !commlib_state_get_enrolled()) {
       ret = force_reenroll();
    } 
       
@@ -1244,20 +1245,20 @@ static int force_reenroll() {
 
    DENTER(COMMD_LAYER, "force_reenroll"); 
 
-   if (get_commlib_state_enrolled()) {
+   if (commlib_state_get_enrolled()) {
       int i;
 
       i = leave_commd(); 
       if (i) {
          COMMLIB_ERROR((COMMLIB_BUFFER, MSG_ENROLLEDBUTLEAVECOMMDERR_S , cl_errstr(i)));
-         set_commlib_state_enrolled(0);
+         commlib_state_set_enrolled(0);
       } 
    }    
    ret = enroll();
    if (ret) {
       COMMLIB_ERROR((COMMLIB_BUFFER, MSG_ENROLLFAILEDWITHSTATUS_S, cl_errstr(ret)));
    } 
-   set_commlib_state_changed_flag(0);
+   commlib_state_set_changed_flag(0);
 
    DEXIT;
    return ret;   
@@ -1303,14 +1304,14 @@ static int leave_()
 
    /* test parameters */
 
-   if (!get_commlib_state_enrolled()) {
+   if (!commlib_state_get_enrolled()) {
       DEXIT;
       return CL_NOTENROLLED;
    }
 
    /* header */
-   cp = pack_string(get_commlib_state_componentname(), header);
-   cp = pack_ushort(get_commlib_state_componentid(), cp);
+   cp = pack_string(commlib_state_get_componentname(), header);
+   cp = pack_ushort(commlib_state_get_componentid(), cp);
    headerlen = cp - header;
 
    /* prolog */
@@ -1360,8 +1361,8 @@ static int leave_()
 #endif
 
    if (!ackchar) {
-      set_commlib_state_enrolled(0);
-      set_commlib_state_ever_enrolled(0);
+      commlib_state_set_enrolled(0);
+      commlib_state_set_ever_enrolled(0);
    }   
 
    DEXIT;
@@ -1440,6 +1441,7 @@ int cntl(u_short cntl_operation, u_long32 *arg, char *carg)
 
    DENTER(COMMD_LAYER, "cntl");
 
+
    i = cntl_(cntl_operation, arg, carg);
 
    DPRINTF(("%d = cntl(cntl_operation=%d, arg=%ld, carg=%s)\n",
@@ -1504,7 +1506,7 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
    }
 
    if (cntl_operation == O_TRACE) {
-      while ((i = readnbytes_nb(get_commlib_state_sfd(), 
+      while ((i = readnbytes_nb(commlib_state_get_sfd(), 
             (char *) buffer, -1, 99999)) > 0) {
 
          /* put output to stdout as long as pipe exists */
@@ -1560,10 +1562,10 @@ static u_long mid_new()
    /*static u_long lastmid = 0;*/
 
    inc_commlib_state_lastmid();
-   if (!get_commlib_state_lastmid())
+   if (!commlib_state_get_lastmid())
       inc_commlib_state_lastmid();
 
-   return get_commlib_state_lastmid();
+   return commlib_state_get_lastmid();
 }
 
 /**********************************************************************
@@ -1599,14 +1601,14 @@ int send2commd(unsigned char *buffer, int buflen
 
    DENTER(COMMD_LAYER, "send2commd");
 
-   if (get_commlib_state_sfd() == -1) {
+   if (commlib_state_get_sfd() == -1) {
       /* no connection done -> open one */
 
       connect_time   = 60;
       connected_flag = 0;
       while (connect_time > 0) {
          uid_t euid;
-         if (get_commlib_state_reserved_port()) {
+         if (commlib_state_get_reserved_port()) {
 #ifndef WIN32 
             DPRINTF(("before seteuid: uid/gid (%ld/%ld), euid/egid (%ld/%ld)\n", 
                      getuid(), getgid(), geteuid(), getegid()));
@@ -1615,24 +1617,24 @@ int send2commd(unsigned char *buffer, int buflen
                seteuid(0);
             DPRINTF(("before rresvport: uid/gid (%ld/%ld), euid/egid (%ld/%ld)\n", 
                      getuid(), getgid(), geteuid(), getegid()));
-            set_commlib_state_sfd(rresvport(&port));
-            if (get_commlib_state_sfd() == -1)
+            commlib_state_set_sfd(rresvport(&port));
+            if (commlib_state_get_sfd() == -1)
                rpflag = 1;
             if (euid)
                seteuid(euid);
             DPRINTF(("after reset of euid: uid/gid (%ld/%ld), euid/egid (%ld/%ld)\n", 
                      getuid(), getgid(), geteuid(), getegid()));
 
-            DPRINTF(("sfd=%d\n", get_commlib_state_sfd()));
+            DPRINTF(("sfd=%d\n", commlib_state_get_sfd()));
 #endif
          }
          else
-            set_commlib_state_sfd(socket(AF_INET, SOCK_STREAM, 0));
+            commlib_state_set_sfd(socket(AF_INET, SOCK_STREAM, 0));
 
 #ifndef WIN32NATIVE 
-         if (get_commlib_state_sfd() == -1)
+         if (commlib_state_get_sfd() == -1)
 #else
-         if (get_commlib_state_sfd() == INVALID_SOCKET)
+         if (commlib_state_get_sfd() == INVALID_SOCKET)
 #endif
          {
             DEXIT;
@@ -1641,16 +1643,16 @@ int send2commd(unsigned char *buffer, int buflen
        
 
 #ifndef WIN32NATIVE
-         fcntl(get_commlib_state_sfd(), F_SETFL, O_NONBLOCK);
+         fcntl(commlib_state_get_sfd(), F_SETFL, O_NONBLOCK);
 #else 
-         ioctlsocket(get_commlib_state_sfd(), FIONBIO, &zero);
+         ioctlsocket(commlib_state_get_sfd(), FIONBIO, &zero);
 #endif 
 
          addr.sin_family = AF_INET;
-         memcpy((char *) &addr.sin_addr, (char *) get_commlib_state_addr_commdaddr(), get_commlib_state_commdaddr_length());
-         addr.sin_port = get_commlib_state_commdport();
+         memcpy((char *) &addr.sin_addr, (char *) commlib_state_get_addr_commdaddr(), commlib_state_get_commdaddr_length());
+         addr.sin_port = commlib_state_get_commdport();
 
-         i = connect(get_commlib_state_sfd(), (struct sockaddr *) &addr, sizeof(addr));
+         i = connect(commlib_state_get_sfd(), (struct sockaddr *) &addr, sizeof(addr));
          DPRINTF(("connect returns %d\n", i)); 
 
          if (i == -1 ) {
@@ -1668,14 +1670,14 @@ int send2commd(unsigned char *buffer, int buflen
                FD_ZERO(&writefds);
 
 #ifndef WIN32NATIVE
-               FD_SET(get_commlib_state_sfd(), &writefds);
+               FD_SET(commlib_state_get_sfd(), &writefds);
 #else
-               FD_SET((u_int)get_commlib_state_sfd(), &writefds);
+               FD_SET((u_int)commlib_state_get_sfd(), &writefds);
 #endif
 #if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-               si = select(get_commlib_state_sfd() + 1 ,NULL ,(int *) &writefds, NULL, &timeout);
+               si = select(commlib_state_get_sfd() + 1 ,NULL ,(int *) &writefds, NULL, &timeout);
 #else
-               si = select(get_commlib_state_sfd() + 1 ,NULL ,(fd_set *) &writefds, NULL, &timeout);
+               si = select(commlib_state_get_sfd() + 1 ,NULL ,(fd_set *) &writefds, NULL, &timeout);
 #endif
       
                DPRINTF(("select returns %d\n", si));
@@ -1705,10 +1707,10 @@ int send2commd(unsigned char *buffer, int buflen
                    */
 
 #ifndef WIN32NATIVE
-	               i = read(get_commlib_state_sfd(), &dummy, 1);
+	               i = read(commlib_state_get_sfd(), &dummy, 1);
                   if (i == -1 && errno != EAGAIN && errno != EWOULDBLOCK )
 #else 
-                  i = recv(get_commlib_state_sfd(), &dummy, 1, 0);
+                  i = recv(commlib_state_get_sfd(), &dummy, 1, 0);
                   if (i == -1 &&  WSAGetLastError() != WSAEWOULDBLOCK)
 #endif 
                   {
@@ -1751,18 +1753,18 @@ int send2commd(unsigned char *buffer, int buflen
       
       sso = 1;
 #if defined(SOLARIS) && !defined(SOLARIS64)
-      if (setsockopt(get_commlib_state_sfd(), IPPROTO_TCP, TCP_NODELAY, 
+      if (setsockopt(commlib_state_get_sfd(), IPPROTO_TCP, TCP_NODELAY, 
           (const char *) &sso, sizeof(int)) == -1)
 #else
-      if (setsockopt(get_commlib_state_sfd(), IPPROTO_TCP, TCP_NODELAY, 
+      if (setsockopt(commlib_state_get_sfd(), IPPROTO_TCP, TCP_NODELAY, 
           &sso, sizeof(int))== -1)
 #endif
          DPRINTF(("cannot setsockopt() to TCP_NODELAY.\n"));
    }
-   DPRINTF(("writenbytes_nb(%d, %p, %d)\n", get_commlib_state_sfd(), 
+   DPRINTF(("writenbytes_nb(%d, %p, %d)\n", commlib_state_get_sfd(), 
       buffer, buflen));
 
-   i = writenbytes_nb(get_commlib_state_sfd(), (char *) buffer, buflen, 60);
+   i = writenbytes_nb(commlib_state_get_sfd(), (char *) buffer, buflen, 60);
 
    if (i) {
       if(i == -1 || i == -4) {
@@ -1813,8 +1815,8 @@ int recvfromcommd(unsigned char **buffer, unsigned char *header, int n,
    DENTER(COMMD_LAYER, "recvfromcommd");
 
    if (n) {
-      i = readnbytes_nb(get_commlib_state_sfd(), (char *) *buffer, n, 
-                        get_commlib_state_timeout());
+      i = readnbytes_nb(commlib_state_get_sfd(), (char *) *buffer, n, 
+                        commlib_state_get_timeout());
       if (i) {
          if (i > 0) {
             DPRINTF(("readnbytes leaves %d bytes unread\n", i));
@@ -1845,7 +1847,7 @@ int recvfromcommd(unsigned char **buffer, unsigned char *header, int n,
       return 0;
    }
 
-   if (readnbytes_nb(get_commlib_state_sfd(), (char *) prolog, PROLOGLEN, 60)) {
+   if (readnbytes_nb(commlib_state_get_sfd(), (char *) prolog, PROLOGLEN, 60)) {
       closeconnection(1);
 #ifdef COMMLIB_ENABLE_DEBUG
          INFO((SGE_EVENT, "recvfromcommd returns CL_READ #2 (%s): %s\n",
@@ -1873,8 +1875,8 @@ int recvfromcommd(unsigned char **buffer, unsigned char *header, int n,
          return CL_MALLOC;
       }
    }
-   if ((i = readnbytes_nb(get_commlib_state_sfd(), (char *) header, *headerlen, 60)) ||
-       (i = readnbytes_nb(get_commlib_state_sfd(), bptr, *buflen, 60))) {
+   if ((i = readnbytes_nb(commlib_state_get_sfd(), (char *) header, *headerlen, 60)) ||
+       (i = readnbytes_nb(commlib_state_get_sfd(), bptr, *buflen, 60))) {
       free(bptr);
       if (i == -2) {
          closeconnection(0);
@@ -1901,24 +1903,24 @@ int force
 ) {
    DENTER(COMMD_LAYER, "closeconnection");
 
-   if(!force && !get_commlib_state_closefd()) {
+   if(!force && !commlib_state_get_closefd()) {
       DEXIT;
       return;
    }
 
 #ifndef WIN32NATIVE
-	if (get_commlib_state_sfd() != -1) {
-     	shutdown(get_commlib_state_sfd(), 1);
-		close(get_commlib_state_sfd());
-		DPRINTF(("closed sfd %d\n", get_commlib_state_sfd()));
-	   set_commlib_state_sfd(-1);
+	if (commlib_state_get_sfd() != -1) {
+     	shutdown(commlib_state_get_sfd(), 1);
+		close(commlib_state_get_sfd());
+		DPRINTF(("closed sfd %d\n", commlib_state_get_sfd()));
+	   commlib_state_set_sfd(-1);
 	}
 #else 
-	if (get_commlib_state_sfd() != INVALID_SOCKET) {
-		shutdown(get_commlib_state_sfd(), 1);
-		closesocket(get_commlib_state_sfd());
-		DPRINTF(("closed sfd %d\n", get_commlib_state_sfd()));
-	   set_commlib_state_sfd(INVALID_SOCKET);
+	if (commlib_state_get_sfd() != INVALID_SOCKET) {
+		shutdown(commlib_state_get_sfd(), 1);
+		closesocket(commlib_state_get_sfd());
+		DPRINTF(("closed sfd %d\n", commlib_state_get_sfd()));
+	   commlib_state_set_sfd(INVALID_SOCKET);
 	}
 #endif 
 
@@ -1971,6 +1973,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 
    DENTER(COMMD_LAYER, "getuniquehostname");
 
+
    if ((i = reenroll_if_necessary())) {
       DEXIT;
       return i;
@@ -2006,8 +2009,8 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 #endif /* WIN32NATIVE */
 
    /* known from enroll - needed for reconnet in commd */
-   cp = pack_string(get_commlib_state_componentname(), cp);
-   cp = pack_ushort(get_commlib_state_componentid(), cp);
+   cp = pack_string(commlib_state_get_componentname(), cp);
+   cp = pack_ushort(commlib_state_get_componentid(), cp);
 
    headerlen = cp - header;
 
@@ -2145,11 +2148,12 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
 
    DENTER(TOP_LAYER, "generate_commd_port_and_service_status_message");
 
+
    DPRINTF(("commlib_error =  %d\n",commlib_error));
 
-   port           = ntohs(get_commlib_state_commdport());
-   service        = get_commlib_state_commdservice();
-   commdhost      = get_commlib_state_commdhost();
+   port           = ntohs(commlib_state_get_commdport());
+   service        = commlib_state_get_commdservice();
+   commdhost      = commlib_state_get_commdhost();
    commd_port_env = getenv("COMMD_PORT");   
 
    if (service == NULL) {
@@ -2210,8 +2214,8 @@ static int get_environments()
    char *cp;
 
    /* get host of commd */
-   if (get_commlib_state_commdhost()[0]) {
-      commdhost = get_commlib_state_commdhost();
+   if (commlib_state_get_commdhost()[0]) {
+      commdhost = commlib_state_get_commdhost();
    }
    else {
       commdhost = getenv("COMMD_HOST");
@@ -2227,17 +2231,17 @@ static int get_environments()
    }
    /* store ip address of commd */
 
-   set_commlib_state_commdaddr_length(he->h_length);
-   memcpy((char *) get_commlib_state_addr_commdaddr(), (char *) he->h_addr, get_commlib_state_commdaddr_length());
+   commlib_state_set_commdaddr_length(he->h_length);
+   memcpy((char *) commlib_state_get_addr_commdaddr(), (char *) he->h_addr, commlib_state_get_commdaddr_length());
 
    /* if not allready done get port of commd */
-   if (get_commlib_state_commdport() == -1) {
+   if (commlib_state_get_commdport() == -1) {
       if ((cp = getenv("COMMD_PORT"))) {
 
 #ifndef WIN32NATIVE
-         set_commlib_state_commdport(htons(atoi(cp)));
+         commlib_state_set_commdport(htons(atoi(cp)));
 #else /* WIN32NATIVE */
-         set_commlib_state_commdport(htons((u_short)atoi(cp)));
+         commlib_state_set_commdport(htons((u_short)atoi(cp)));
 #endif /* WIN32NATIVE */
          return 0;
       }
@@ -2245,13 +2249,13 @@ static int get_environments()
 #if 0
      /* not supported by rest of current infrastructure  */
       if (!((cp = getenv("COMMD_SERVICE")))) {
-         cp = get_commlib_state_commdservice();
+         cp = commlib_state_get_commdservice();
          if (cp[0] == '\0')
             cp = "unknown_service";
       }
 #endif
 
-     cp = get_commlib_state_commdservice();
+     cp = commlib_state_get_commdservice();
      if (cp[0] == '\0')
         cp = "unknown_service";
         
@@ -2261,7 +2265,7 @@ static int get_environments()
          return CL_SERVICE;
       }
 
-      set_commlib_state_commdport(se->s_port);
+      commlib_state_set_commdport(se->s_port);
    }
    return 0;
 }
@@ -2316,7 +2320,7 @@ int val
 
 
 /* state access functions */
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
 static void commlib_state_destroy(void* state) {
    free(state);
 }
@@ -2354,8 +2358,11 @@ static void commlib_state_init(struct commlib_state_t* state) {
 }
 #endif
 
-int get_commlib_state_enrolled() {
-#ifdef QIDL
+
+
+
+int commlib_state_get_enrolled() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2368,8 +2375,8 @@ int get_commlib_state_enrolled() {
    return commlib_state->enrolled;
 }
 
-int get_commlib_state_ever_enrolled() {
-#ifdef QIDL
+int commlib_state_get_ever_enrolled() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2382,8 +2389,8 @@ int get_commlib_state_ever_enrolled() {
    return commlib_state->ever_enrolled;
 }
 
-int* get_commlib_state_addr_stored_tag_priority_list() {
-#ifdef QIDL
+int* commlib_state_get_addr_stored_tag_priority_list() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2396,10 +2403,10 @@ int* get_commlib_state_addr_stored_tag_priority_list() {
    return commlib_state->stored_tag_priority_list;
 }
 
-int get_commlib_state_stored_tag_priority_list_i(
+int commlib_state_get_stored_tag_priority_list_i(
 int i 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2412,8 +2419,8 @@ int i
    return commlib_state->stored_tag_priority_list[i];
 }
 
-char* get_commlib_state_componentname() {
-#ifdef QIDL
+char* commlib_state_get_componentname() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2426,8 +2433,8 @@ char* get_commlib_state_componentname() {
    return commlib_state->componentname;
 }
 
-u_short get_commlib_state_componentid() {
-#ifdef QIDL
+u_short commlib_state_get_componentid() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2440,8 +2447,8 @@ u_short get_commlib_state_componentid() {
    return commlib_state->componentid;
 }
 
-u_short* get_commlib_state_addr_componentid() { 
-#ifdef QIDL
+u_short* commlib_state_get_addr_componentid() { 
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2454,12 +2461,12 @@ u_short* get_commlib_state_addr_componentid() {
    return &(commlib_state->componentid);
 }
 
-/****** commd/commlib/get_commlib_state_commdport() **********************************
+/****** commd/commlib/commlib_state_get_commdport() **********************************
 *  NAME
-*     get_commlib_state_commdport() -- ??? 
+*     commlib_state_get_commdport() -- ??? 
 *
 *  SYNOPSIS
-*     int get_commlib_state_commdport() 
+*     int commlib_state_get_commdport() 
 *
 *  FUNCTION
 *     returns used commd port in network byte order. Use ntohs() to re-convert 
@@ -2482,8 +2489,8 @@ u_short* get_commlib_state_addr_componentid() {
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-int get_commlib_state_commdport() {
-#ifdef QIDL
+int commlib_state_get_commdport() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2496,8 +2503,8 @@ int get_commlib_state_commdport() {
    return commlib_state->commdport;
 }
 
-char* get_commlib_state_commdservice() {
-#ifdef QIDL
+char* commlib_state_get_commdservice() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2510,8 +2517,8 @@ char* get_commlib_state_commdservice() {
    return commlib_state->commdservice ;
 }
       
-int get_commlib_state_commdaddr_length() {
-#ifdef QIDL
+int commlib_state_get_commdaddr_length() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2524,8 +2531,8 @@ int get_commlib_state_commdaddr_length() {
    return commlib_state->commdaddr_length;
 }
 
-struct in_addr* get_commlib_state_addr_commdaddr() {
-#ifdef QIDL
+struct in_addr* commlib_state_get_addr_commdaddr() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2538,8 +2545,8 @@ struct in_addr* get_commlib_state_addr_commdaddr() {
    return &(commlib_state->commdaddr);
 }
 
-int get_commlib_state_sfd() { 
-#ifdef QIDL
+int commlib_state_get_sfd() { 
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2552,8 +2559,8 @@ int get_commlib_state_sfd() {
    return commlib_state->sfd;
 }
 
-u_long get_commlib_state_lastmid() {
-#ifdef QIDL
+u_long commlib_state_get_lastmid() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2566,8 +2573,8 @@ u_long get_commlib_state_lastmid() {
    return commlib_state->lastmid;
 }
 
-u_long get_commlib_state_lastgc() {
-#ifdef QIDL
+u_long commlib_state_get_lastgc() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2580,8 +2587,8 @@ u_long get_commlib_state_lastgc() {
    return commlib_state->lastgc;
 }
 
-int get_commlib_state_reserved_port() {
-#ifdef QIDL
+int commlib_state_get_reserved_port() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2594,8 +2601,8 @@ int get_commlib_state_reserved_port() {
    return commlib_state->reserved_port;
 }
 
-char* get_commlib_state_commdhost() {
-#ifdef QIDL
+char* commlib_state_get_commdhost() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2608,8 +2615,8 @@ char* get_commlib_state_commdhost() {
    return commlib_state->commdhost;
 }
 
-int get_commlib_state_timeout() {
-#ifdef QIDL
+int commlib_state_get_timeout() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2622,8 +2629,8 @@ int get_commlib_state_timeout() {
    return commlib_state->timeout;
 }
 
-int get_commlib_state_timeout_srcv() {
-#ifdef QIDL
+int commlib_state_get_timeout_srcv() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2636,8 +2643,8 @@ int get_commlib_state_timeout_srcv() {
    return commlib_state->timeout_srcv;
 }
 
-int get_commlib_state_timeout_ssnd() {
-#ifdef QIDL
+int commlib_state_get_timeout_ssnd() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2650,8 +2657,8 @@ int get_commlib_state_timeout_ssnd() {
    return commlib_state->timeout_ssnd;
 }
 
-int get_commlib_state_offline_receive() {
-#ifdef QIDL
+int commlib_state_get_offline_receive() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2664,8 +2671,8 @@ int get_commlib_state_offline_receive() {
    return commlib_state->offline_receive;
 }
 
-int get_commlib_state_lt_heard_from_timeout() {
-#ifdef QIDL
+int commlib_state_get_lt_heard_from_timeout() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2678,8 +2685,8 @@ int get_commlib_state_lt_heard_from_timeout() {
    return commlib_state->lt_heard_from_timeout;
 }
 
-int get_commlib_state_closefd() {
-#ifdef QIDL
+int commlib_state_get_closefd() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2692,8 +2699,8 @@ int get_commlib_state_closefd() {
    return commlib_state->closefd;
 }
 
-entry* get_commlib_state_list() {
-#ifdef QIDL
+entry* commlib_state_get_list() {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2706,8 +2713,8 @@ entry* get_commlib_state_list() {
    return commlib_state->list;
 }
 
-sge_log_ftype get_commlib_state_logging_function () {
-#ifdef QIDL
+sge_log_ftype commlib_state_get_logging_function () {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2720,8 +2727,8 @@ sge_log_ftype get_commlib_state_logging_function () {
    return commlib_state->sge_log;      
 }
 
-int get_commlib_state_changed_flag(void) {
-#ifdef QIDL
+int commlib_state_get_changed_flag(void) {
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2734,10 +2741,10 @@ int get_commlib_state_changed_flag(void) {
    return commlib_state->changed_flag;
 } 
 
-void set_commlib_state_enrolled(
+void commlib_state_set_enrolled(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2750,10 +2757,10 @@ int state
    commlib_state->enrolled = state;
 }
 
-void set_commlib_state_ever_enrolled(
+void commlib_state_set_ever_enrolled(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2766,10 +2773,10 @@ int state
    commlib_state->ever_enrolled = state;
 }
 
-void set_commlib_state_stored_tag_priority_list(
+void commlib_state_set_stored_tag_priority_list(
 int *state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2783,10 +2790,10 @@ int *state
    commlib_state->changed_flag = 1;
 }
 
-void set_commlib_state_componentname(
+void commlib_state_set_componentname(
 const char *state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2800,9 +2807,9 @@ const char *state
    commlib_state->changed_flag = 1; 
 }
 
-void set_commlib_state_componentid(u_short state)
+void commlib_state_set_componentid(u_short state)
 {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2816,10 +2823,10 @@ void set_commlib_state_componentid(u_short state)
    commlib_state->changed_flag = 1; 
 }
 
-void set_commlib_state_commdport(
+void commlib_state_set_commdport(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2833,10 +2840,10 @@ int state
    commlib_state->changed_flag = 1; 
 }
 
-void set_commlib_state_commdservice(
+void commlib_state_set_commdservice(
 const char *state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2849,10 +2856,10 @@ const char *state
    strcpy(commlib_state->commdservice, state);
 }
 
-void set_commlib_state_commdaddr_length(
+void commlib_state_set_commdaddr_length(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2865,10 +2872,10 @@ int state
    commlib_state->commdaddr_length = state;
 }
 
-void set_commlib_state_sfd(
+void commlib_state_set_sfd(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2881,10 +2888,10 @@ int state
    commlib_state->sfd= state;
 }
 
-void set_commlib_state_lastmid(
+void commlib_state_set_lastmid(
 u_long state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2897,10 +2904,10 @@ u_long state
    commlib_state->lastmid= state;
 }
 
-void set_commlib_state_lastgc(
+void commlib_state_set_lastgc(
 u_long state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2913,10 +2920,10 @@ u_long state
    commlib_state->lastgc= state;
 }
 
-void set_commlib_state_reserved_port(
+void commlib_state_set_reserved_port(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2929,10 +2936,10 @@ int state
    commlib_state->reserved_port= state;
 }
 
-void set_commlib_state_commdhost(
+void commlib_state_set_commdhost(
 const char *state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2946,10 +2953,10 @@ const char *state
    commlib_state->changed_flag = 1; 
 }
 
-void set_commlib_state_timeout(
+void commlib_state_set_timeout(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2962,10 +2969,10 @@ int state
    commlib_state->timeout= state;
 }
 
-void set_commlib_state_timeout_srcv(
+void commlib_state_set_timeout_srcv(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2978,10 +2985,10 @@ int state
    commlib_state->timeout_srcv= state;
 }
 
-void set_commlib_state_timeout_ssnd(
+void commlib_state_set_timeout_ssnd(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -2994,10 +3001,10 @@ int state
    commlib_state->timeout_ssnd= state;
 }
 
-void set_commlib_state_offline_receive(
+void commlib_state_set_offline_receive(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3010,10 +3017,10 @@ int state
    commlib_state->offline_receive= state;
 }
 
-void set_commlib_state_lt_heard_from_timeout(
+void commlib_state_set_lt_heard_from_timeout(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3026,10 +3033,10 @@ int state
    commlib_state->lt_heard_from_timeout= state;
 }
 
-void set_commlib_state_closefd(
+void commlib_state_set_closefd(
 int state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3039,14 +3046,14 @@ int state
    else
       commlib_state = pthread_getspecific(commlib_state_key);
 #endif
-   if(!get_commlib_state_enrolled())
+   if(!commlib_state_get_enrolled())
       commlib_state->closefd= state;
 }
 
-void set_commlib_state_list(
+void commlib_state_set_list(
 entry *state 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3059,10 +3066,10 @@ entry *state
    commlib_state->list= state;
 }
 
-void set_commlib_state_logging_function(
+void commlib_state_set_logging_function(
 sge_log_ftype sge_log_function 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3075,10 +3082,10 @@ sge_log_ftype sge_log_function
    commlib_state->sge_log = sge_log_function;
 }
 
-void set_commlib_state_changed_flag(
+void commlib_state_set_changed_flag(
 int flag 
 ) {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3093,7 +3100,7 @@ int flag
 
 void inc_commlib_state_lastmid()
 {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3108,7 +3115,7 @@ void inc_commlib_state_lastmid()
 
 void clear_commlib_state_stored_tag_priority_list()
 {
-#ifdef QIDL
+#if defined(QIDL) || defined(SGE_MT)
    struct commlib_state_t* commlib_state;
    if(!pthread_getspecific(commlib_state_key)) {
       commlib_state = (struct commlib_state_t*)malloc (sizeof(struct commlib_state_t));
@@ -3123,5 +3130,5 @@ void clear_commlib_state_stored_tag_priority_list()
 
 int is_commd_alive () {
    reenroll_if_necessary();
-   return get_commlib_state_enrolled();
+   return commlib_state_get_enrolled();
 }  

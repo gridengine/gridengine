@@ -350,7 +350,7 @@ int krb_init(const char *progname)
 
    /* do qmaster initialization */
    if (gsd.daemon && (!strcmp(prognames[QMASTER], progname) &&
-       me.who == QMASTER)) {
+       uti_state_get_mewho() == QMASTER)) {
 
       /* NOTE: make sure we are REALLY the qmaster */
       gsd.qmaster = 1;
@@ -765,8 +765,8 @@ int compressed
    }
 
    if ((rc = krb5_gen_replay_name(gsd.context, portlocal_addr,
-				      me.sge_formal_prog_name ?
-				      me.sge_formal_prog_name :
+				      uti_state_get_sge_formal_prog_name() ?
+				      uti_state_get_sge_formal_prog_name() :
 				      "sge_client", &cp))) {
       ERROR((SGE_EVENT, MSG_KRB_KRB5GENREPLAYNAMEFAILEDFORWXYZ_SSIS ,
 	     tohost, tocomproc, toid, error_message(rc)));

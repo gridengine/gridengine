@@ -86,7 +86,7 @@ char ** argv;
    host = getenv("HOST");
    dpy_name = (char*)malloc(strlen(host)+3);
    strcpy(dpy_name, host);
-   me.qualified_hostname = strdup(host);
+   uti_state_set_qualified_hostname(host);
    strcat(dpy_name, ":0");
 
    for (i=1; i<argc; i++) {

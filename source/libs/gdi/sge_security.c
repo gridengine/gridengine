@@ -782,7 +782,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
                    u32c(lGetUlong(jelem, JB_job_number))));         
             sprintf(err_str, MSG_SEC_KRBAUTHFAILUREONHOST,
                     u32c(lGetUlong(jelem, JB_job_number)),
-                    me.unqualified_hostname);                 
+                    uti_state_get_unqualified_hostname());                 
             *general = GFSTATE_JOB;                            
          }                                                    
       } 

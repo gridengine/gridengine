@@ -36,7 +36,7 @@
 
 #include "sge_c_gdi.h"
 
-int calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add, char *ruser, char *rhost, gdi_object_t *object, int sub_command);
+int calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
 int calendar_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
 

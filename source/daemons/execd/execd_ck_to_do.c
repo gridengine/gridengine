@@ -212,7 +212,7 @@ void force_job_rlimit()
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             double lim;
 
-            if (sge_hostcmp(me.qualified_hostname, 
+            if (sge_hostcmp(uti_state_get_qualified_hostname(), 
                  lGetHost(gdil_ep, JG_qhostname)) 
                 || !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
@@ -610,7 +610,7 @@ lListElem *petep
    /* JG: TODO: make a function simulate_start_job_or_task() */
    if(simulate_hosts == 1) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(sge_hostcmp(host, me.qualified_hostname) != 0) {
+      if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 
@@ -697,7 +697,7 @@ lListElem *petep
 
    DPRINTF(("***EXECING "u32"."u32" on %s (tid = %s) (pid = %d)\n",
             lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 
-            me.unqualified_hostname, petep != NULL ? lGetString(petep, PET_id) : "0", pid));
+            uti_state_get_unqualified_hostname(), petep != NULL ? lGetString(petep, PET_id) : "0", pid));
 
    DEXIT;
    return 1;

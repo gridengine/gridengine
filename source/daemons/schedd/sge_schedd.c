@@ -158,7 +158,7 @@ char *argv[]
    sge_schedd_mirror_register();
 
    master_host = sge_get_master(0);
-   if (sge_hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
+   if (sge_hostcmp(master_host, uti_state_get_qualified_hostname()) && start_on_master_host) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
       SGE_EXIT(1);
    }
@@ -168,10 +168,10 @@ char *argv[]
       int fd;
       fd_set fds;
       FD_ZERO(&fds);
-      if ((fd=get_commlib_state_sfd())>=0) {
+      if ((fd=commlib_state_get_sfd())>=0) {
          FD_SET(fd, &fds);
       }
-      sge_daemonize(get_commlib_state_closefd()?NULL:&fds);
+      sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
    }
 
    starting_up();
@@ -292,14 +292,14 @@ static int sge_ck_qmaster(const char *former_master_host)
    }
 
 /*---------------------------------------------------------------*/
-   DPRINTF(("Checking if user \"%s\" is manager\n", me.user_name));
+   DPRINTF(("Checking if user \"%s\" is manager\n", uti_state_get_user_name()));
 
    what = lWhat("%T(ALL)", MO_Type);
    where = lWhere("%T(%I == %s)",
                   MO_Type,
-                  MO_name, me.user_name);
+                  MO_name, uti_state_get_user_name());
                   
-   old_timeout = get_commlib_state_timeout_ssnd();
+   old_timeout = commlib_state_get_timeout_ssnd();
    set_commlib_param(CL_P_TIMEOUT_SRCV, 20, NULL, NULL);
                         
    alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
@@ -321,7 +321,7 @@ static int sge_ck_qmaster(const char *former_master_host)
 
    if (success && !lp) {
       ERROR((SGE_EVENT, MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S ,
-             me.user_name));
+             uti_state_get_user_name()));
       lp = lFreeList(lp);
       DEXIT;
       return -1;
@@ -331,12 +331,12 @@ static int sge_ck_qmaster(const char *former_master_host)
    /*-------------------------------------------------------------------
     * ensure admin host privileges for host
     */
-   DPRINTF(("Checking if host \"%s\" is admin host\n", me.qualified_hostname));
+   DPRINTF(("Checking if host \"%s\" is admin host\n", uti_state_get_qualified_hostname()));
 
    what = lWhat("%T(ALL)", AH_Type);
    where = lWhere("%T(%I h= %s)",
                   AH_Type,
-                  AH_name, me.qualified_hostname);
+                  AH_name, uti_state_get_qualified_hostname());
    alp = sge_gdi(SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
    where = lFreeWhere(where);
    what = lFreeWhat(what);
@@ -354,7 +354,7 @@ static int sge_ck_qmaster(const char *former_master_host)
 
    if (success && !lp) {
       ERROR((SGE_EVENT, MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S ,
-             me.qualified_hostname));
+             uti_state_get_qualified_hostname()));
       DEXIT;
       return -1;
    }
@@ -521,10 +521,10 @@ int daemonize_schedd()
    DENTER(TOP_LAYER, "daemonize_schedd");
 
    FD_ZERO(&keep_open);
-   if ((fd = get_commlib_state_sfd()) >= 0) {
+   if ((fd = commlib_state_get_sfd()) >= 0) {
       FD_SET(fd, &keep_open);
    }
-   sge_daemonize(get_commlib_state_closefd()?NULL:&keep_open);
+   sge_daemonize(commlib_state_get_closefd()?NULL:&keep_open);
    ret = sge_daemonize(&keep_open);
 
    DEXIT;

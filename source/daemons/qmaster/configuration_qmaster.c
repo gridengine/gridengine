@@ -330,20 +330,20 @@ char *rhost
    ** if so, initialise conf struct anew
    */
    if (!strcmp(SGE_GLOBAL_NAME, config_name) || 
-       !sge_hostcmp(config_name, me.qualified_hostname)) {
+       !sge_hostcmp(config_name, uti_state_get_qualified_hostname())) {
       lListElem *lep = NULL;
 
-      ret = select_configuration(me.qualified_hostname, Master_Config_List, &lep);
+      ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
       if (ret) {
          ERROR((SGE_EVENT, MSG_CONF_CANTSELECTCONFIGURATIONFORHOST_SI,
-               me.qualified_hostname, ret));
+               uti_state_get_qualified_hostname(), ret));
       }
       ret = merge_configuration(
          lGetElemHost(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), 
                lep, &conf, NULL);
       if (ret) {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_SI,
-                me.qualified_hostname, ret));
+                uti_state_get_qualified_hostname(), ret));
       }
       sge_show_conf();
 

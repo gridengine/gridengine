@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
+#include "sge_gdi.h"
 
 #include "sge_eventL.h"
 

@@ -82,6 +82,8 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out,
                                         sge_gdi_request **in);
 #endif
 
+
+
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
 *     sge_gdi() -- request, change or delete data in the master daemon
@@ -172,6 +174,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
    lList *mal = NULL;
    u_long32 id;
    int operation;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(GDI_LAYER, "sge_gdi");
 
@@ -183,7 +186,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 #endif
 
    if ((id = sge_gdi_multi(&alp, SGE_GDI_SEND, target, cmd, lpp ? *lpp : NULL, 
-                              cp, enp, &mal)) == -1) {
+                              cp, enp, &mal, &state)) == -1) {
       DEXIT;
       return alp;
    }
@@ -278,6 +281,11 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           sge_gdi_extract_answer() can be used to get the answer 
 *           list for one of these GDI requests.
 *
+*     state_gdi_multi *state - pointer to buffer for storing state
+*           in between multiple calls to this function. The state
+*           variable must be initialized with STATE_GDI_MULTI_INIT 
+*           before a series of calls to sge_gdi_multi()
+*
 *  RESULT
 *     -1  - if an error occured
 *     (positive integer) - id which identifies the current gdi request.
@@ -292,16 +300,12 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *
 ******************************************************************************/
 int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
-                  lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp) 
+                  lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state) 
 {
    lListElem *map = NULL;
    sge_gdi_request *request = NULL;
    sge_gdi_request *answer = NULL;
    sge_gdi_request *an;
-   static sge_gdi_request *first = NULL;
-   static sge_gdi_request *last = NULL;
-   static u_long32 sequence_id = 0;
-   static u_long32 request_id = 0;
    int ret;
    int operation;
    static int reread_qmaster_file = 0;
@@ -379,14 +383,14 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    /*
    ** append the new gdi request to the request list
    */
-   ret = request->sequence_id = ++sequence_id;
+   ret = request->sequence_id = ++state->sequence_id;
    
-   if (first) {
-      last->next = request;
-      last = request;
+   if (state->first) {
+      state->last->next = request;
+      state->last = request;
    }
    else {
-      first = last = request;
+      state->first = state->last = request;
    }
    
    if (mode == SGE_GDI_SEND) {
@@ -394,28 +398,30 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       /*
       ** the first request in the request list identifies the request uniquely
       */
-      first->request_id = ++request_id;
+      u_long32 id = gdi_state_get_request_id();
+      state->first->request_id = ++id;
+      gdi_state_set_request_id(id);
 
 #ifdef KERBEROS
       /* request that the Kerberos library forward the TGT */
       if (target == SGE_JOB_LIST && operation == SGE_GDI_ADD) {
          krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
-         krb_set_tgt_id(first->request_id);
+         krb_set_tgt_id(state->first->request_id);
       }
 #endif
 
 #ifdef QIDL      
-      if (me.who != QMASTER)
+      if (uti_state_get_mewho() != QMASTER)
 #endif
          /* FIX_CONST */
          status = sge_send_receive_gdi_request(
             &commlib_error, 
             (char*)sge_get_master(reread_qmaster_file), 
             (char*)prognames[QMASTER], 
-            0, first, &answer);
+            0, state->first, &answer);
 #ifdef QIDL
       else
-            status = sge_handle_local_gdi_request(first, &answer);
+            status = sge_handle_local_gdi_request(state->first, &answer);
 #endif
 
 #ifdef KERBEROS
@@ -472,9 +478,9 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       }
 
       answer = free_gdi_request(answer);
-      first = free_gdi_request(first);
-      last = NULL;
-      sequence_id = 0;
+      state->first = free_gdi_request(state->first);
+      state->last = NULL;
+      state->sequence_id = 0;
    }
 
    DEXIT;
@@ -484,9 +490,9 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       if (alpp)
          answer_list_add(alpp, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
       answer = free_gdi_request(answer);
-      first = free_gdi_request(first);
-      last = NULL;
-      sequence_id = 0;
+      state->first = free_gdi_request(state->first);
+      state->last = NULL;
+      state->sequence_id = 0;
       DEXIT;
       return -1;
 }
@@ -1109,7 +1115,7 @@ sge_gdi_request **in
          an->next = new_gdi_request();
          an = an->next;
       }
-      sge_c_gdi(me.qualified_hostname, ar, an);
+      sge_c_gdi(uti_state_get_qualified_hostname(), ar, an);
    }
 
    return 0;

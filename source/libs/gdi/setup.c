@@ -78,7 +78,7 @@ lList **alpp
    sge_getme(sge_formal_prog_name);
    memset(&path, 0, sizeof(path));
    /* gdi lib call */ 
-   sge_setup_paths(me.default_cell, &path, alpp);
+   sge_setup_paths(uti_state_get_default_cell(), &path, alpp);
 
    if (alpp && *alpp){
       DEXIT;
@@ -98,7 +98,7 @@ lList **alpp
       
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    /* gdi lib call */
-   if (!(me.who == QMASTER || me.who == SHADOWD) && !sge_get_master(1)) {
+   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == SHADOWD) && !sge_get_master(1)) {
       if (alpp) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
                      path.act_qmaster_file));
@@ -152,15 +152,15 @@ int reresolve_me_qualified_hostname()
    /*
    ** get aliased hostname from commd
    */
-   if ((ret=getuniquehostname(me.qualified_hostname, unique_hostname, 0))!=CL_OK) {
+   if ((ret=getuniquehostname(uti_state_get_qualified_hostname(), unique_hostname, 0))!=CL_OK) {
       WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, 
-               me.qualified_hostname, cl_errstr(ret)));
+               uti_state_get_qualified_hostname(), cl_errstr(ret)));
       DEXIT;
       return ret;
    }
 
-   me.qualified_hostname = sge_strdup(me.qualified_hostname, unique_hostname);
-   DPRINTF(("me.qualified_hostname: %s\n", me.qualified_hostname));
+   uti_state_set_qualified_hostname(unique_hostname);
+   DPRINTF(("me.qualified_hostname: %s\n", uti_state_get_qualified_hostname()));
    DEXIT;
    return CL_OK;
 }
@@ -184,8 +184,8 @@ static int init_hostcpy_policy(void)
 
    DPRINTF(("ignore_fqdn: %s default_domain: %s\n", value[0], value[1]));
    parse_ulong_val(NULL, &uval, TYPE_BOO, value[0], NULL, 0);
-   fqdn_cmp = !uval;
-   default_domain = sge_strdup(default_domain, value[1]);
+   uti_state_set_fqdn_cmp(!uval);
+   uti_state_set_default_domain(value[1]);
 
    DEXIT;
    return 0;

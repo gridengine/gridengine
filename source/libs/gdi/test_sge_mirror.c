@@ -51,7 +51,13 @@
 int print_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   DPRINTF(("%s\n", event_text(event)));
+   char buffer[1024];
+   dstring buffer_wrapper;
+
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+
+   DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
+
 
    /* create a callback error to test error handling */
    if(type == SGE_EMT_GLOBAL_CONFIG) {

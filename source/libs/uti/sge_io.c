@@ -153,7 +153,7 @@ int sge_writenbytes(register int sfd, register const char *ptr,
 
    DEXIT;
    return (n);
-} 
+}
 
 /****** uti/io/sge_filecmp() **************************************************
 *  NAME

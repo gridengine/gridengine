@@ -122,7 +122,7 @@ const lSortOrder *sp
  */
 int lSortCompareUsingGlobal(const void *ep0, const void *ep1)
 {
-   return lSortCompare(*(lListElem **) ep0, *(lListElem **) ep1, get_cull_state_global_sort_order());
+   return lSortCompare(*(lListElem **) ep0, *(lListElem **) ep1, cull_state_get_global_sort_order());
 }
 
 /* ------------------------------------------------------------ 

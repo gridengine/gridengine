@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-const char *event_text(const lListElem *event);
+const char *event_text(const lListElem *event, dstring *buffer);
 
 #endif /* __SGE_EVENT_H */

@@ -285,8 +285,8 @@ static lListElem *edit_sharetree(lListElem *ep);
 static char **sge_parser_get_next(char **head);
 
 /************************************************************************/
-static int sge_gdi_is_manager(char *user);
-static int sge_gdi_is_adminhost(char *host);
+static int sge_gdi_is_manager(const char *user);
+static int sge_gdi_is_adminhost(const char *host);
 /************************************************************************/
 
 /***************************************************************************/
@@ -336,8 +336,8 @@ char *argv[]
       /* "-ac complex" */
 
       if (!strcmp("-ac", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
          add_chg_cmplx(*spp, 1, NULL);
@@ -351,8 +351,8 @@ char *argv[]
       if (!strcmp("-acal", *spp) ||
           !strcmp("-Acal", *spp)) {
          if (!strcmp("-acal", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
 
             spp = sge_parser_get_next(spp);
            
@@ -432,8 +432,8 @@ DPRINTF(("ep: %s %s\n",
           !strcmp("-Ackpt", *spp)) {
 
          if (!strcmp("-ackpt", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
 
             spp = sge_parser_get_next(spp);
 
@@ -496,8 +496,8 @@ DPRINTF(("ep: %s %s\n",
          lListElem *hep;
 
          cp = NULL;
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             host = sge_strdup(host, *spp);
@@ -708,8 +708,8 @@ DPRINTF(("ep: %s %s\n",
           !strcmp("-Ap", *spp)) {
 
          if (!strcmp("-ap", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
            
             spp = sge_parser_get_next(spp);
 
@@ -770,8 +770,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-auser" */
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-auser", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp++;
         
@@ -801,8 +801,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-aprj" */
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-aprj", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
         
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
@@ -920,8 +920,8 @@ DPRINTF(("ep: %s %s\n",
       /*  "-aq [q_template]" */
 
       if (!strcmp("-aq", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          /* get template queue from qmaster */
          if (!sge_next_is_an_opt(spp)) {
@@ -1052,8 +1052,8 @@ DPRINTF(("ep: %s %s\n",
       if (feature_is_enabled(FEATURE_SGEEE) && 
           (!strcmp("-astree", *spp) || !strcmp("-Astree", *spp))) {
          if(!strcmp("-astree", *spp)) { 
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
 
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
@@ -1325,8 +1325,8 @@ DPRINTF(("ep: %s %s\n",
           (!strcmp("-clearusage", *spp))) {
          lList *lp2=NULL;
 
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          /* get user list */
          what = lWhat("%T(ALL)", STN_Type);
@@ -1788,7 +1788,7 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-ks", *spp)) {
          /* no adminhost/manager check needed here */
 
-         alp = gdi_kill(NULL, me.default_cell, 0, SCHEDD_KILL);
+         alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, SCHEDD_KILL);
          for_each(aep, alp) {
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK)
@@ -1807,7 +1807,7 @@ DPRINTF(("ep: %s %s\n",
 
       if (!strcmp("-km", *spp)) {
          /* no adminhost/manager check needed here */
-         alp = gdi_kill(NULL, me.default_cell, 0, MASTER_KILL);
+         alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, MASTER_KILL);
          answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
 
@@ -1828,10 +1828,10 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          /* found namelist -> process */
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
-            alp = gdi_kill(NULL, me.default_cell, 0, opt);
+            alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, opt);
          } else {
             lString2List(*spp, &lp, ID_Type, ID_str, ", ");
-            alp = gdi_kill(lp, me.default_cell, 0, opt);
+            alp = gdi_kill(lp, uti_state_get_default_cell(), 0, opt);
          }      
          answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
@@ -1853,7 +1853,7 @@ DPRINTF(("ep: %s %s\n",
             case 'e':
                break;
             default:
-               ERROR((SGE_EVENT,MSG_ANSWER_XISNOTAVALIDOPTIONY_SU, *spp, u32c(me.who)));
+               ERROR((SGE_EVENT, MSG_ANSWER_XISNOTAVALIDOPTIONY_SU, *spp, u32c(uti_state_get_mewho())));
                sge_usage(stderr);
                SGE_EXIT(1);
          }
@@ -1871,11 +1871,11 @@ DPRINTF(("ep: %s %s\n",
          }
 
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
-            alp = gdi_kill(NULL, me.default_cell, 0, opt);
+            alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, opt);
          } else {   
             /* found namelist -> process */
             lString2List(*spp, &lp, EH_Type, EH_name, ", ");
-            alp = gdi_kill(lp, me.default_cell, 0, opt);
+            alp = gdi_kill(lp, uti_state_get_default_cell(), 0, opt);
          }
 
          answer_list_on_error_print_or_exit(&alp, stderr);
@@ -1890,8 +1890,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-mc complex_name" */
 
       if (!strcmp("-mc", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          cp = NULL;
 
@@ -1916,8 +1916,8 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-mcal", *spp) || 
           !strcmp("-Mcal", *spp)) {
          if (!strcmp("-mcal", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
 
             spp = sge_parser_get_next(spp);
            
@@ -2011,8 +2011,8 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-mckpt", *spp) || 
           !strcmp("-Mckpt", *spp)) {
          if (!strcmp("-mckpt", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
 
             spp = sge_parser_get_next(spp);
 
@@ -2141,8 +2141,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-me [server_name,...]" */
 
       if (!strcmp("-me", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
          
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("hosts to change", &arglp, EH_Type, EH_name, 
@@ -2216,8 +2216,8 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-mp", *spp) || 
           !strcmp("-Mp", *spp)) {
          if (!strcmp("-mp", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
          
             spp = sge_parser_get_next(spp);
 
@@ -2296,8 +2296,8 @@ DPRINTF(("ep: %s %s\n",
 /*-----------------------------------------------------------------------------*/
       /*  "-mq queue" */
       if (!strcmp("-mq", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
 
@@ -2631,8 +2631,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-msconf"  modify scheduler configuration */
 
       if (!strcmp("-msconf", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
@@ -2673,8 +2673,8 @@ DPRINTF(("ep: %s %s\n",
       if (feature_is_enabled(FEATURE_SGEEE) && 
           (!strcmp("-mstree", *spp) || !strcmp("-Mstree", *spp))) {
          if(!strcmp("-mstree", *spp)) {
-            sge_gdi_is_adminhost(me.qualified_hostname);
-            sge_gdi_is_manager(me.user_name);
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(uti_state_get_user_name());
 
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
@@ -2730,8 +2730,8 @@ DPRINTF(("ep: %s %s\n",
 
       if (!strcmp("-mu", *spp)) {
          /* check for adminhost and manager privileges */
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
 
@@ -2868,8 +2868,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-muser username" */
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-muser", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
         
@@ -2933,8 +2933,8 @@ DPRINTF(("ep: %s %s\n",
       /* "-mprj projectname" */
 
       if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-mprj", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
         
@@ -3232,13 +3232,13 @@ DPRINTF(("ep: %s %s\n",
          const char *host;
 
          if (!strcmp("-aconf", *spp)) {
-            sge_gdi_is_manager(me.user_name);
-            sge_gdi_is_adminhost(me.qualified_hostname);
+            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
             action = 1;
          }
          else if (!strcmp("-mconf", *spp)) {
-            sge_gdi_is_manager(me.user_name);
-            if (sge_gdi_is_adminhost(me.qualified_hostname) != 0) {
+            sge_gdi_is_manager(uti_state_get_user_name());
+            if (sge_gdi_is_adminhost(uti_state_get_qualified_hostname()) != 0) {
                SGE_EXIT(1);
             }
             action = 2;
@@ -3969,12 +3969,12 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-mumap", *spp)) {
          char* user = NULL;
 
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
          user = *spp;
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_manager(uti_state_get_user_name());
          mod_user_map_entry( user );
          spp++;
          continue;
@@ -3986,12 +3986,12 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-mhgrp", *spp)) {
          char* group = NULL;
 
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
          group = *spp;
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_manager(uti_state_get_user_name());
          mod_host_group_entry( group );
          spp++;
          continue;
@@ -4009,7 +4009,7 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          user = *spp; 
          
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_manager(uti_state_get_user_name());
          del_user_map_entry( user );
          spp++;
          continue;
@@ -4026,7 +4026,7 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          group = *spp; 
          
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_manager(uti_state_get_user_name());
          del_host_group_entry( group );
          spp++;
          continue;
@@ -4058,12 +4058,12 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-aumap", *spp)) {
          char* user = NULL;
 
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
          user = *spp;
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_manager(uti_state_get_user_name());
          add_user_map_entry( user, NULL, NULL );
          spp++;
          continue;
@@ -4076,12 +4076,12 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-ahgrp", *spp)) {
          char* group = NULL;
 
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
          group = *spp;
-         sge_gdi_is_manager(me.user_name);
+         sge_gdi_is_manager(uti_state_get_user_name());
          add_host_group_entry( group );
          spp++;
          continue;
@@ -4355,7 +4355,7 @@ char *fname
       return (-1);
    }
 
-   chown(fname, me.uid, me.gid);
+   chown(fname, uti_state_get_uid(), uti_state_get_gid());
 
    pid = fork();
    if (pid) {
@@ -6420,7 +6420,7 @@ u_long32 flags
 **   given user is manager
 */
 static int sge_gdi_is_manager(
-char *user 
+const char *user 
 ) {
    int perm_return;
    lList *alp = NULL; 
@@ -6483,7 +6483,7 @@ char *user
 **   given host is contained 
 */
 static int sge_gdi_is_adminhost(
-char *host 
+const char *host 
 ) {
    lCondition *where;
    lEnumeration *what;

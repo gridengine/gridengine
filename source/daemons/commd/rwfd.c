@@ -856,7 +856,7 @@ int commdport
    DEBUG((SGE_EVENT, "target %s on this host", commp ? "enrolled" : "not enrolled"));
 
    /* If we are on the host reponsible for the commproc who is asked for
-      (target commproc is enrolled, or target host == localhost) and this
+      (target commproc is enrolled, or target host == uti_state_get_localhost()) and this
       is an ask_commproc request we generate an answer */
    if (mp->flags & COMMD_ASK_COMMPROC) {
       DEBUG((SGE_EVENT, "rwfd ask commproc"));
@@ -867,7 +867,7 @@ int commdport
          mp->ackchar = COMMD_CACK;
       }
       else {
-         if (!strcasecmp(sge_host_get_mainname(localhost), sge_host_get_mainname(mp->to.host))) {
+         if (!strcasecmp(sge_host_get_mainname(uti_state_get_localhost()), sge_host_get_mainname(mp->to.host))) {
             /* The commproc isnot enrolled on this host, but this is the
                target host -> reply negative */
             answer = 1;
@@ -886,7 +886,7 @@ int commdport
 
    /* look whether receiver is a local registered commproc or receiver is
       expected to be on the local host */
-   if (commp || !strcasecmp(sge_host_get_mainname(localhost), sge_host_get_mainname(mp->to.host))) {
+   if (commp || !strcasecmp(sge_host_get_mainname(uti_state_get_localhost()), sge_host_get_mainname(mp->to.host))) {
       /* deliver direct */
       if (commp && commp->w_fd != -1) {
          DEBUG((SGE_EVENT, "receiver commproc is waiting for message (mid=%d, w_fd=%d, w_name=%s, w_id=%d, w_host=%s, w_tag=%d)",

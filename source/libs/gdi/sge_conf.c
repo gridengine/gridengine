@@ -346,15 +346,14 @@ int type
    if ((ep = lGetElemStr(lp_cfg, CF_name, name))) {
       s = lGetString(ep, CF_value);
       if (s) {
-         u_long32 old_me_daemonized;
+         int old_verbose = sge_log_is_verbose();
   
          /* prevent logging function from writing to stderr
           * but log into log file 
           */
-         old_me_daemonized = me.daemonized;
-         me.daemonized = 1;
+         sge_log_set_verbose(0);
          INFO((SGE_EVENT, MSG_GDI_USING_SS, s, name));
-         me.daemonized = old_me_daemonized;
+         sge_log_set_verbose(old_verbose);
       }
       if (cpp)
          *cpp = sge_strdup(*cpp, s);
@@ -371,6 +370,7 @@ lList *lpCfg
 ) {
    lListElem *ep;
    u_long32 uval_tmp;
+   char *t = NULL;
 
    DENTER(TOP_LAYER, "setConfFromCull");
    
@@ -446,10 +446,17 @@ lList *lpCfg
    chg_conf_val(lpCfg, "rsh_command", &mconf->rsh_command, NULL, 0);
    chg_conf_val(lpCfg, "rlogin_daemon", &mconf->rlogin_daemon, NULL, 0);
    chg_conf_val(lpCfg, "rlogin_command", &mconf->rlogin_command, NULL, 0);
-   chg_conf_val(lpCfg, "default_domain", &default_domain, NULL, 0);
+
+   chg_conf_val(lpCfg, "default_domain", &t, NULL, 0);
+   if (t) {
+      uti_state_set_default_domain(t);
+      free(t);
+   }
    chg_conf_val(lpCfg, "reschedule_unknown", NULL, &mconf->reschedule_unknown, TYPE_TIM);
+
    chg_conf_val(lpCfg, "ignore_fqdn", NULL, &uval_tmp, TYPE_TIM);  
-         fqdn_cmp = !uval_tmp;  /* logic of ignore_fqdn and fqdn_cmp are contrary */
+   uti_state_set_fqdn_cmp(!uval_tmp);/* logic of ignore_fqdn and fqdn_cmp are contrary */
+
    chg_conf_val(lpCfg, "max_aj_instances", NULL, &mconf->max_aj_instances, TYPE_INT);
    chg_conf_val(lpCfg, "max_aj_tasks", NULL, &mconf->max_aj_tasks, TYPE_INT);
    chg_conf_val(lpCfg, "max_u_jobs", NULL, &mconf->max_u_jobs, TYPE_INT);
@@ -629,7 +636,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             DPRINTF(("USE_QIDLE\n"));
             use_qidle = 1;
          } else if (!strcasecmp(s, "NO_SECURITY")) { 
-            if (me.who == EXECD) {
+            if (uti_state_get_mewho() == EXECD) {
                DPRINTF(("NO_SECURITY\n"));
                do_credentials = 0;
             }
@@ -637,12 +644,12 @@ int merge_configuration(lListElem *global, lListElem *local,
                     !strcasecmp(s, "KEEP_ACTIVE=1"))
             keep_active = 1;
          else if (!strcasecmp(s, "NO_AUTHENTICATION")) {
-            if (me.who == EXECD) {
+            if (uti_state_get_mewho() == EXECD) {
                DPRINTF(("NO_AUTHENTICATION\n"));
                do_authentication = 0;
             }
          } else if (!strcasecmp(s, "DO_AUTHENTICATION")) {
-            if (me.who == EXECD) {
+            if (uti_state_get_mewho() == EXECD) {
                DPRINTF(("DO_AUTHENTICATION\n"));
                do_authentication = 1;
             }
@@ -860,6 +867,7 @@ int merge_configuration(lListElem *global, lListElem *local,
 void sge_show_conf()
 {
    lListElem *ep;
+   const char *s;
 
    DENTER(TOP_LAYER, "sge_show_conf");
 
@@ -898,9 +906,9 @@ void sge_show_conf()
    DPRINTF(("conf.rsh_command            >%s<\n", conf.rsh_command?conf.rsh_command:"none"));
    DPRINTF(("conf.rlogin_daemon          >%s<\n", conf.rlogin_daemon?conf.rlogin_daemon:"none"));
    DPRINTF(("conf.rlogin_command         >%s<\n", conf.rlogin_command?conf.rlogin_command:"none"));
-   DPRINTF(("default_domain              >%s<\n", default_domain?default_domain:"none"));
+   DPRINTF(("default_domain              >%s<\n", (s=uti_state_get_default_domain())?s:"none"));
    DPRINTF(("conf.reschedule_unknown     >%u<\n", (unsigned) conf.reschedule_unknown));
-   DPRINTF(("ignore_fqdn                 >%d<\n", !fqdn_cmp));
+   DPRINTF(("ignore_fqdn                 >%d<\n", !uti_state_get_fqdn_cmp()));
    DPRINTF(("conf.max_aj_instances       >%u<\n", (unsigned) conf.max_aj_instances));
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) conf.max_u_jobs));
@@ -968,7 +976,6 @@ sge_conf_type *conf
    FREE(conf->rsh_command);
    FREE(conf->rlogin_daemon);
    FREE(conf->rlogin_command);
-   FREE(default_domain);
    
    memset(conf, 0, sizeof(sge_conf_type));
 
@@ -1008,7 +1015,7 @@ sge_conf_type *conf
  *   of being able to mount the local_conf directory.
  *-------------------------------------------------------------------------*/
 int get_configuration(
-char *config_name,
+const char *config_name,
 lListElem **gepp,
 lListElem **lepp 
 ) {
@@ -1153,16 +1160,16 @@ lList **conf_list
     * for better performance retrieve 2 configurations
     * in one gdi call
     */
-   DPRINTF(("qualified hostname: %s\n",  me.qualified_hostname));
+   DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
    
    now = last = (time_t) sge_get_gmt();
-   while ((ret = get_configuration(me.qualified_hostname, &global, &local))) {
+   while ((ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local))) {
       if (ret==-6 || ret==-7) {
          /* confict: COMMPROC ALREADY REGISTERED */
          DEXIT;
          return -1;
       }
-      if (!me.daemonized) {
+      if (!uti_state_get_daemonized()) {
          ERROR((SGE_EVENT, MSG_CONF_NOCONFBG)); 
          if (!getenv("SGE_ND"))
             dfunc();
@@ -1186,7 +1193,7 @@ lList **conf_list
    ret = merge_configuration(global, local, &conf, NULL);
    if (ret) {
       DPRINTF((
-         "Error %d merging configuration \"%s\"\n", ret, me.qualified_hostname));
+         "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
    }
    /*
     * we don't keep all information, just the name and the version
@@ -1222,10 +1229,10 @@ lList **conf_list
 
    DENTER(TOP_LAYER, "get_merged_configuration");
 
-   DPRINTF(("qualified hostname: %s\n",  me.qualified_hostname));
-   ret = get_configuration(me.qualified_hostname, &global, &local);
+   DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
+   ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, me.qualified_hostname));
+      ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, uti_state_get_qualified_hostname()));
       lFreeElem(global);
       lFreeElem(local);
       return -1;
@@ -1233,7 +1240,7 @@ lList **conf_list
 
    ret = merge_configuration(global, local, &conf, NULL);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, me.qualified_hostname));
+      ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
       lFreeElem(global);
       lFreeElem(local);
       return -2;

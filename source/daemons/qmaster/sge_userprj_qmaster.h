@@ -38,7 +38,7 @@
 
 int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
-int userprj_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, char *ruser, char *rhost, gdi_object_t *object, int sub_command);
+int userprj_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
 int userprj_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
 

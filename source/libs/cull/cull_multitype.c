@@ -183,7 +183,7 @@ const char *lNm2Str(int nm)
 
    DENTER(CULL_BASIS_LAYER, "lNm2Str");
 
-   if (!(ns = get_cull_state_name_space())) {
+   if (!(ns = cull_state_get_name_space())) {
       DPRINTF(("name vector uninitialized !!\n"));
       goto Error;
    }
@@ -197,10 +197,10 @@ const char *lNm2Str(int nm)
 
 Error:
    sprintf(stack_noinit, "Nameindex = %d", nm);
-   set_cull_state_noinit(stack_noinit);
+   cull_state_set_noinit(stack_noinit);
    LERROR(LENAMENOT);
    DEXIT;
-   return get_cull_state_noinit();
+   return cull_state_get_noinit();
 }
 
 static char *_lNm2Str(const lNameSpace *nsp, int nm) 
@@ -250,7 +250,7 @@ int lStr2Nm(const char *str)
 
    DENTER(CULL_BASIS_LAYER, "lStr2Nm");
 
-   if (!(ns = get_cull_state_name_space())) {
+   if (!(ns = cull_state_get_name_space())) {
       DPRINTF(("name vector uninitialized !!\n"));
       DEXIT;
       return NoName;
@@ -313,7 +313,7 @@ void lInit(const lNameSpace *namev)
 {
    DENTER(CULL_LAYER, "lInit");
 
-   set_cull_state_name_space(namev);
+   cull_state_set_name_space(namev);
 
    DEXIT;
 }

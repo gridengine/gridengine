@@ -46,8 +46,8 @@ typedef int (*modifier_func_t)(
    lListElem *new_cal,   /* destination */
    lListElem *cep,       /* reduced element */
    int add,              /* 1 for add/0 for mod */
-   char *ruser,
-   char *rhost,
+   const char *ruser,
+   const char *rhost,
    gdi_object_t *object, /* some kind of "this" */
    int sub_command
 );
@@ -77,7 +77,7 @@ struct _gdi_object_t {
 
 gdi_object_t *get_gdi_object(u_long32);
 
-int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, char *ruser, char *rhost, int sub_command);
+int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command);
 
 void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 

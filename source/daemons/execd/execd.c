@@ -195,7 +195,7 @@ char **argv
 
    /* check for running execd - ignore $COMMD_HOST */
    if (start_commd) {
-      set_commlib_param(CL_P_COMMDHOST, 0, me.unqualified_hostname, NULL);
+      set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_unqualified_hostname(), NULL);
    }
    
    /* start commd if necessary */ 
@@ -226,7 +226,8 @@ char **argv
             /* usually daemons end here if they get enrolled twice */
             /* or if they get started after a daemon that made no leave() before exit() */
             CRITICAL((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, 
-               prognames[me.who]));
+               uti_state_get_sge_formal_prog_name()
+               ));
             SGE_EXIT(1);
             break;
          case CL_ALREADYDONE:
@@ -238,7 +239,7 @@ char **argv
       }
       else if (ret == COMMD_NACK_CONFLICT) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, 
-            prognames[me.who]));
+            uti_state_get_sge_formal_prog_name()));
          SGE_EXIT(1);
       }
       else {

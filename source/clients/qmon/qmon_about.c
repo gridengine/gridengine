@@ -67,9 +67,9 @@ XtPointer cld, cad;
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
-                     me.user_name, me.qualified_hostname, 
+                     uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
                      feature_get_product_name(FS_LONG_VERSION), 
-                     me.default_cell, 
+                     uti_state_get_default_cell(), 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
 /*                      XmtLocalize(w, "copyright_msg", SFLN_ELN, NULL)); */
    DEXIT;

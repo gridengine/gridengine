@@ -129,9 +129,9 @@ long compression_threshold = 10 * 1024;
 int pack_set_chunk(
 int sz 
 ) {
-   int oldsz = get_cull_state_chunk_size();
+   int oldsz = cull_state_get_chunk_size();
    
-   set_cull_state_chunk_size(sz);
+   cull_state_set_chunk_size(sz);
 
    return oldsz;
 }
@@ -143,7 +143,7 @@ int sz
  */
 int pack_get_chunk(void)
 {
-   return get_cull_state_chunk_size();
+   return cull_state_get_chunk_size();
 }
 
 #ifdef COMMCOMPRESS
@@ -271,7 +271,7 @@ int just_count
 
    if (!just_count) {
       if (initial_size == 0) {
-         initial_size = get_cull_state_chunk_size();
+         initial_size = cull_state_get_chunk_size();
       } else {
          initial_size += 2 * INTSIZE;  /* space for version information */
       }
@@ -558,8 +558,8 @@ register u_long32 i
 #endif
       {
          if (pb->bytes_used + INTSIZE > pb->mem_size) {
-            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, get_cull_state_chunk_size()));
-            pb->mem_size += get_cull_state_chunk_size();
+            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
+            pb->mem_size += cull_state_get_chunk_size();
             pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
             if (!pb->head_ptr) {
                DEXIT;
@@ -611,8 +611,8 @@ double d
 
    if (!pb->just_count) {
       if (pb->mode == -1 && pb->bytes_used + DOUBLESIZE > pb->mem_size) {
-         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, get_cull_state_chunk_size()));
-         pb->mem_size += get_cull_state_chunk_size();
+         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
+         pb->mem_size += cull_state_get_chunk_size();
          pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
          if (!pb->head_ptr) {
             DEXIT;
@@ -700,8 +700,8 @@ register const char *str
             if ((pb->bytes_used + 1) > pb->mem_size) {
 
                /* realloc */
-               DPRINTF(("realloc(%d + %d)\n", pb->mem_size, get_cull_state_chunk_size()));
-               pb->mem_size += get_cull_state_chunk_size();
+               DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
+               pb->mem_size += cull_state_get_chunk_size();
                pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
                if (!pb->head_ptr) {
                   DEXIT;
@@ -733,9 +733,9 @@ register const char *str
          {
             if ((pb->bytes_used + n) > pb->mem_size) {
                /* realloc */
-               DPRINTF(("realloc(%d + %d)\n", pb->mem_size, get_cull_state_chunk_size()));
+               DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
                while ((pb->bytes_used + n) > pb->mem_size)
-                  pb->mem_size += get_cull_state_chunk_size();
+                  pb->mem_size += cull_state_get_chunk_size();
                pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
                if (!pb->head_ptr) {
                   DEXIT;
@@ -846,8 +846,8 @@ u_long32 buf_size
 #endif /* WIN32 */
 
             /* realloc */
-            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, get_cull_state_chunk_size()));
-            pb->mem_size += get_cull_state_chunk_size();
+            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
+            pb->mem_size += cull_state_get_chunk_size();
             pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
             if (!(pb->head_ptr)) {
                DEXIT;

@@ -442,7 +442,7 @@ char *err_str
      
       /* path aliasing only for cwd flag set */
       path_alias_list_get_path(path_aliases, NULL,
-                               cwd, me.qualified_hostname, cwd_out, 
+                               cwd, uti_state_get_qualified_hostname(), cwd_out, 
                                SGE_PATH_MAX);
       cwd = cwd_out;
       var_list_set_string(&environmentList, "PWD", cwd);
@@ -458,7 +458,7 @@ char *err_str
       }
    }
 
-   var_list_set_string(&environmentList, VAR_PREFIX "CELL", me.default_cell);
+   var_list_set_string(&environmentList, VAR_PREFIX "CELL", uti_state_get_default_cell());
 
    var_list_set_string(&environmentList, "HOME", pw->pw_dir);
    var_list_set_string(&environmentList, "SHELL", pw->pw_shell);
@@ -503,7 +503,7 @@ char *err_str
          sfile = lGetString(jep, JB_script_file);
          if (sfile != NULL) {
             path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL, 
-                                     sfile, me.qualified_hostname, 
+                                     sfile, uti_state_get_qualified_hostname(), 
                                      script_file_out, SGE_PATH_MAX);
             strcpy(script_file, script_file_out);
          }
@@ -573,7 +573,7 @@ char *err_str
             char script_file_out[SGE_PATH_MAX];
 
             path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
-                                     sfile, me.qualified_hostname,
+                                     sfile, uti_state_get_qualified_hostname(),
                                      script_file_out, SGE_PATH_MAX);
             var_list_set_string(&environmentList, var_name, script_file_out);
          }
@@ -1143,7 +1143,7 @@ lWriteListTo(environmentList, stderr);
          char daemon[SGE_PATH_MAX];
 
          fprintf(fp, "master_host=%s\n", sge_get_master(0));
-         fprintf(fp, "commd_port=%d\n", ntohs(get_commlib_state_commdport()));
+         fprintf(fp, "commd_port=%d\n", ntohs(commlib_state_get_commdport()));
                
          if((elem=lGetElemStr(environmentList, VA_variable, "QRSH_PORT")) != NULL) {
             fprintf(fp, "qrsh_control_port=%s\n", lGetString(elem, VA_value));

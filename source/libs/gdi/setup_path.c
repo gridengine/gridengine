@@ -118,7 +118,7 @@ lList **alpp
    sprintf(cell_root, "%s"PATH_SEPARATOR"%s", sge_root, sge_cell);   
 
    if (SGE_STAT(cell_root, &sbuf)) {
-      if (me.who != QMASTER) {
+      if (uti_state_get_mewho() != QMASTER) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_NOSGECELL_S, cell_root));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
@@ -134,7 +134,7 @@ lList **alpp
    common_dir = malloc(strlen(cell_root) + strlen(COMMON_DIR) + 2);
    sprintf(common_dir, "%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR);
    if (SGE_STAT(common_dir, &sbuf)) {
-      if (me.who != QMASTER) {  
+      if (uti_state_get_mewho() != QMASTER) {  
          CRITICAL((SGE_EVENT, MSG_GDI_DIRECTORYNOTEXIST_S , common_dir));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);

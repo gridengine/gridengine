@@ -331,7 +331,7 @@ int sge_daemonize(fd_set *keep_open)
    }
 #endif
  
-   if (me.daemonized) {
+   if (uti_state_get_daemonized()) {
       DEXIT;
       return 1;
    }
@@ -383,7 +383,7 @@ int sge_daemonize(fd_set *keep_open)
  
    SETPGRP;
  
-   me.daemonized = 1;
+   uti_state_set_daemonized(1);
  
    DEXIT;
    return 1;

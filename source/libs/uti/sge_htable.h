@@ -38,6 +38,8 @@
 #define True   1
 #define False  0 
 
+#include "sge_dstring.h"
+
 typedef struct _htable_rec *htable;
 
 typedef void (*sge_htable_for_each_proc)(
@@ -51,7 +53,7 @@ extern int sge_htable_lookup(htable ht, const void* key, const void** data);
 extern void sge_htable_delete(htable ht, const void* key);
 extern void sge_htable_for_each(htable ht, sge_htable_for_each_proc proc);
 
-extern const char *sge_htable_statistics(htable ht);
+extern const char *sge_htable_statistics(htable ht, dstring *buffer);
 
 extern const void *dup_func_u_long32(const void *key);
 extern const void *dup_func_string(const void *key);

@@ -279,9 +279,9 @@ char **argv
    }   
 #if 0   
    strcpy(app_name, "QMON +++ Main Control");
-   if (strcmp(me.default_cell, "default")) {
+   if (strcmp(uti_state_get_default_cell(), "default")) {
       strcat(app_name, " @ ");
-      strncat(app_name, me.default_cell, 1000);
+      strncat(app_name, uti_state_get_default_cell(), 1000);
    }
 
    XtVaSetValues(AppShell, 

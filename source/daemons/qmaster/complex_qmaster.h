@@ -44,7 +44,7 @@ int complex_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
 int complex_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
 
-int complex_mod(lList **alpp, lListElem *new_complex, lListElem *ep, int add, char *ruser, char *rhost, gdi_object_t *object, int sub_command);
+int complex_mod(lList **alpp, lListElem *new_complex, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
 #endif /* __COMPLEX_QMASTER_H */
 

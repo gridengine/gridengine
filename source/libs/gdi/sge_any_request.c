@@ -46,7 +46,6 @@
 #include "msg_gdilib.h"
 
 static void sge_log_commd_state_transition(int cl_err);
-enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
 static int commd_monitor(int cl_err);
 
 /*-----------------------------------------------------------------------
@@ -60,7 +59,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    /*
    ** initialize security context (skip if COMMDCNTL)
    */
-   if (me.who != COMMDCNTL) { 
+   if (uti_state_get_mewho() != COMMDCNTL) { 
       if (sge_security_initialize(name)) {
          CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
          SGE_EXIT(1);
@@ -72,12 +71,13 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    set_commlib_param(CL_P_ID, id, NULL, NULL);
    set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
 
-   if (me.who == QCONF) {
+   if (uti_state_get_mewho() == QCONF) {
       set_commlib_param(CL_P_TIMEOUT_SRCV, 3600, NULL, NULL);
       set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
    }
 
-   if (!(me.who == QMASTER || me.who == EXECD || me.who == SCHEDD || me.who == COMMDCNTL)) {
+   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD ||
+   uti_state_get_mewho() == COMMDCNTL)) {
       const char *masterhost; 
 
       if ((masterhost = sge_get_master(0))) {
@@ -125,19 +125,25 @@ int cl_err
 static int commd_monitor(
 int cl_err 
 ) {
-   static int state = COMMD_UNKNOWN;
+   int state = gdi_state_get_commd_state();
 
    /* initial setup of state - only down commd is reported */
-   if (state==COMMD_UNKNOWN && cl_err==CL_CONNECT)
-         return state = COMMD_DOWN;
+   if (state==COMMD_UNKNOWN && cl_err==CL_CONNECT) {
+         gdi_state_set_commd_state(COMMD_DOWN);
+         return COMMD_DOWN;
+   }
 
    /* commd is now down but was up before */
-   if (cl_err==CL_CONNECT && state == COMMD_UP) 
-      return state = COMMD_DOWN;
+   if (cl_err==CL_CONNECT && state == COMMD_UP)  {
+      gdi_state_set_commd_state(COMMD_DOWN);
+      return COMMD_DOWN;
+   }
 
    /* commd is now up but was down before */
-   if (cl_err!=CL_CONNECT && state == COMMD_DOWN) 
-      return state = COMMD_UP;
+   if (cl_err!=CL_CONNECT && state == COMMD_DOWN)  {
+      gdi_state_set_commd_state(COMMD_UP);
+      return COMMD_UP;
+   }
 
    return 0;
 }
@@ -157,7 +163,6 @@ int id,
 sge_pack_buffer *pb,
 int tag 
 ) {
-   static int schedd_first = 1, execd_first = 1, first_time = 1;
    u_long32 dummymid;
    int i;
 
@@ -174,26 +179,20 @@ int tag
     *  qmaster he gets an ask_commproc() for free
     */
    i = 0;
-   if (first_time && synchron) {
+   if (gdi_state_get_first_time() && synchron) {
       if (check_isalive(rhost)) {
          i = -4;
       }
-      first_time = 0;
+      gdi_state_set_first_time(0);
    }
 
    if (i == 0) {
-      if (me.who==SCHEDD && schedd_first) {
-         remove_pending_messages(NULL, 0, 0, 0);
-         schedd_first = 0;
-         /* commlib call to mark all commprocs as unknown */
-         reset_last_heard();
-      }
-      else if (me.who == EXECD && execd_first) {
+      u_long32 me_who = uti_state_get_mewho();
+      if ((me_who == SCHEDD || me_who == EXECD) && gdi_state_get_daemon_first()) {
          remove_pending_messages(NULL, 0, 0, 0);
          /* commlib call to mark all commprocs as unknown */
          reset_last_heard();
-
-         execd_first = 0;
+         gdi_state_set_daemon_first(0);
       }
 
       i = gdi_send_message_pb(synchron, commproc, id, rhost, tag,
@@ -390,7 +389,7 @@ int check_isalive(const char *masterhost)
    }
  
    /* check if prog is alive */
-   if (me.who == QMON) {
+   if (uti_state_get_mewho() == QMON) {
       if (!is_commd_alive()) {
          DPRINTF(("can't connect to commd\n"));
          DEXIT;

@@ -51,7 +51,7 @@ lList *Master_Userset_List = NULL;
  ask whether a given user is allowed to sumbit deadline jobs.
  *****************************************************************/
 int is_deadline_user(
-char *username,         /* user we ask for */
+const char *username,   /* user we ask for */
 lList *lp               /* userset list to scan for deadline users */
 ) {
    lListElem *deadline_users;

@@ -174,8 +174,8 @@ u_long32 target
       default:
          DPRINTF(("sge_add_host_of_type: unexpected datatype\n"));
    }
-   ret = sge_gdi_add_mod_generic(NULL, ep, 1, object, me.user_name, 
-      me.qualified_hostname, 0);
+   ret = sge_gdi_add_mod_generic(NULL, ep, 1, object, uti_state_get_user_name(), 
+      uti_state_get_qualified_hostname(), 0);
    lFreeElem(ep);       
 
    DEXIT;
@@ -287,9 +287,9 @@ u_long32 target
       the qmaster host from admin host list
    */
    if (target==SGE_ADMINHOST_LIST && 
-         !sge_hostcmp(unique, me.qualified_hostname)) {
+         !sge_hostcmp(unique, uti_state_get_qualified_hostname())) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELADMINQMASTER_S, 
-          me.qualified_hostname));
+          uti_state_get_qualified_hostname()));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
@@ -343,8 +343,8 @@ lList **alpp,
 lListElem *new_host,
 lListElem *ep,
 int add,
-char *ruser,
-char *rhost,
+const char *ruser,
+const char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {

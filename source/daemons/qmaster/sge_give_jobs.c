@@ -858,14 +858,19 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, jataskid);
       job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
-         sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
-            lGetUlong(jatep, JAT_task_number), 
-            lGetString(petask, PET_id), 
+         sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
+            lGetUlong(jatep, JAT_task_number),
+            lGetString(petask, PET_id),
             lGetList(petask, PET_scaled_usage));
       }
-      sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid = lGetUlong(jep, JB_job_number), 
+      sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
          lGetUlong(jatep, JAT_task_number),
          NULL, lGetList(jatep, JAT_scaled_usage_list));
+#if 0
+      /* SGEEE job finished */
+      sge_add_event(NULL, sgeE_JOB_FINISH, jobid, lGetUlong(jatep, JAT_task_number), 
+            NULL, NULL);
+#endif
 
       /* finished all ja-tasks => remove job script */
       for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
@@ -1130,6 +1135,11 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        */
       suser_unregister_job(job);
       lRemoveElem(Master_Job_List, job);
+#if 0
+      /* SGE job finished */
+      sge_add_event(NULL, 0, sgeE_JOB_FINISH, job_id, lGetUlong(ja_task, JAT_task_number), 
+            NULL, NULL);
+#endif
       if (!no_events) {
          sge_add_event(NULL, 0, sgeE_JOB_DEL, job_id, ja_task_id, NULL, NULL);
       }
@@ -1150,6 +1160,11 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
             job_write_spool_file(job, ja_task_id, NULL, SPOOL_DEFAULT);
          }
       }
+#if 0
+      /* SGE task finished */
+      sge_add_event(NULL, 0, sgeE_JOB_FINISH, job_id, lGetUlong(ja_task, JAT_task_number), 
+            NULL, NULL);
+#endif
       if (!no_events) {
          sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_id, ja_task_id, 
                        NULL, NULL);

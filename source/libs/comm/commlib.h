@@ -114,7 +114,7 @@ extern char COMMLIB_BUFFER[2048];
 #define COMMLIB_CRITICAL(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = get_commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_logging_function())) { \
          sprintf x; \
          local_sge_log(LOG_CRIT, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
       } \
@@ -123,7 +123,7 @@ extern char COMMLIB_BUFFER[2048];
 #define COMMLIB_ERROR(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = get_commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
          local_sge_log(LOG_ERR, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
       } \
@@ -132,7 +132,7 @@ extern char COMMLIB_BUFFER[2048];
 #define COMMLIB_WARNING(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = get_commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
          local_sge_log(LOG_WARNING, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
       } \
@@ -141,7 +141,7 @@ extern char COMMLIB_BUFFER[2048];
 #define COMMLIB_NOTICE(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = get_commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
          local_sge_log(LOG_NOTICE, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
       } \
@@ -150,7 +150,7 @@ extern char COMMLIB_BUFFER[2048];
 #define COMMLIB_INFO(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = get_commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
          local_sge_log(LOG_INFO, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
       } \
@@ -159,13 +159,15 @@ extern char COMMLIB_BUFFER[2048];
 #define COMMLIB_DEBUG(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = get_commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
          local_sge_log(LOG_DEBUG, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
       } \
    }     
 
+#if defined(SGE_MT)
 void commlib_init(void);
+#endif
 
 int set_commlib_param(int param, int intval, const char *strval, int *intval_array);
 
@@ -246,56 +248,56 @@ struct commlib_state_t {
 };
 
 /* access functions for this struct */
-int get_commlib_state_enrolled(void);
-int get_commlib_state_ever_enrolled(void);
-int* get_commlib_state_addr_stored_tag_priority_list(void);
-int get_commlib_state_stored_tag_priority_list_i(int i);
-char* get_commlib_state_componentname(void);
-u_short get_commlib_state_componentid(void);
-u_short* get_commlib_state_addr_componentid(void);
-int get_commlib_state_commdport(void);
-char* get_commlib_state_commdservice(void);
-int get_commlib_state_commdaddr_length(void);
-struct in_addr* get_commlib_state_addr_commdaddr(void);
-int get_commlib_state_sfd(void);
-u_long get_commlib_state_lastmid(void);
-u_long get_commlib_state_lastgc(void);
-int get_commlib_state_reserved_port(void);
-char* get_commlib_state_commdhost(void);
-int get_commlib_state_timeout(void);
-int get_commlib_state_timeout_srcv(void);
-int get_commlib_state_timeout_ssnd(void);
-int get_commlib_state_offline_receive(void);
-int get_commlib_state_lt_heard_from_timeout(void);
-int get_commlib_state_closefd(void);
-entry* get_commlib_state_list(void);
-sge_log_ftype get_commlib_state_logging_function(void);
-int get_commlib_state_changed_flag(void);
+int commlib_state_get_enrolled(void);
+int commlib_state_get_ever_enrolled(void);
+int* commlib_state_get_addr_stored_tag_priority_list(void);
+int commlib_state_get_stored_tag_priority_list_i(int i);
+char* commlib_state_get_componentname(void);
+u_short commlib_state_get_componentid(void);
+u_short* commlib_state_get_addr_componentid(void);
+int commlib_state_get_commdport(void);
+char* commlib_state_get_commdservice(void);
+int commlib_state_get_commdaddr_length(void);
+struct in_addr* commlib_state_get_addr_commdaddr(void);
+int commlib_state_get_sfd(void);
+u_long commlib_state_get_lastmid(void);
+u_long commlib_state_get_lastgc(void);
+int commlib_state_get_reserved_port(void);
+char* commlib_state_get_commdhost(void);
+int commlib_state_get_timeout(void);
+int commlib_state_get_timeout_srcv(void);
+int commlib_state_get_timeout_ssnd(void);
+int commlib_state_get_offline_receive(void);
+int commlib_state_get_lt_heard_from_timeout(void);
+int commlib_state_get_closefd(void);
+entry* commlib_state_get_list(void);
+sge_log_ftype commlib_state_get_logging_function(void);
+int commlib_state_get_changed_flag(void);
 
-void set_commlib_state_enrolled(int state);
-void set_commlib_state_ever_enrolled(int state);
-void set_commlib_state_stored_tag_priority_list(int *state);
-void set_commlib_state_componentname(const char *state);
-void set_commlib_state_componentid(u_short state);
-void set_commlib_state_commdport(int state);
-void set_commlib_state_commdservice(const char *state);
-void set_commlib_state_commdaddr_length(int state);
-void set_commlib_state_sfd(int state);
-void set_commlib_state_lastmid(u_long state);
-void set_commlib_state_lastgc(u_long state);
-void set_commlib_state_reserved_port(int state);
-void set_commlib_state_commdhost(const char *state);
-void set_commlib_state_timeout(int state);
-void set_commlib_state_timeout_srcv(int state);
-void set_commlib_state_timeout_ssnd(int state);
-void set_commlib_state_offline_receive(int state);
-void set_commlib_state_lt_heard_from_timeout(int state);
-void set_commlib_state_closefd(int state);
-void set_commlib_state_list(entry *state);
+void commlib_state_set_enrolled(int state);
+void commlib_state_set_ever_enrolled(int state);
+void commlib_state_set_stored_tag_priority_list(int *state);
+void commlib_state_set_componentname(const char *state);
+void commlib_state_set_componentid(u_short state);
+void commlib_state_set_commdport(int state);
+void commlib_state_set_commdservice(const char *state);
+void commlib_state_set_commdaddr_length(int state);
+void commlib_state_set_sfd(int state);
+void commlib_state_set_lastmid(u_long state);
+void commlib_state_set_lastgc(u_long state);
+void commlib_state_set_reserved_port(int state);
+void commlib_state_set_commdhost(const char *state);
+void commlib_state_set_timeout(int state);
+void commlib_state_set_timeout_srcv(int state);
+void commlib_state_set_timeout_ssnd(int state);
+void commlib_state_set_offline_receive(int state);
+void commlib_state_set_lt_heard_from_timeout(int state);
+void commlib_state_set_closefd(int state);
+void commlib_state_set_list(entry *state);
 void inc_commlib_state_lastmid(void);
 void clear_commlib_state_stored_tag_priority_list(void);
-void set_commlib_state_logging_function(sge_log_ftype);
-void set_commlib_state_changed_flag(int flag);
+void commlib_state_set_logging_function(sge_log_ftype);
+void commlib_state_set_changed_flag(int flag);
 
 #ifdef  __cplusplus
 }

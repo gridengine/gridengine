@@ -149,15 +149,15 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lSetUlong(*pjob, JB_submission_time, sge_get_gmt());
    }
    if (!lGetString(*pjob, JB_owner)) {
-      lSetString(*pjob, JB_owner, me.user_name);
+      lSetString(*pjob, JB_owner, uti_state_get_user_name());
    }
-   lSetUlong(*pjob, JB_uid, me.uid);
+   lSetUlong(*pjob, JB_uid, uti_state_get_uid());
 
    /*
    ** path aliasing
    */
-   if (path_alias_list_initialize(&path_alias, &answer, me.user_name, 
-                                  me.qualified_hostname) == -1) {
+   if (path_alias_list_initialize(&path_alias, &answer, uti_state_get_user_name(), 
+                                  uti_state_get_qualified_hostname()) == -1) {
       DEXIT;
       return answer;
    }
@@ -167,12 +167,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       DEXIT;
       return answer;
    }
-
-#if 0 /* JG: removed JB_cell from job object */
-   if (lGetString(*pjob, JB_cell)) {
-      lSetString(*pjob, JB_cell, me.default_cell);
-   }
-#endif   
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
 
@@ -282,15 +276,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
       lRemoveElem(cmdline, ep);
    }
-
-#if 0 /* JG: removed JB_cell from job object */
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-cell"))) {
-      lSetString(*pjob, JB_cell, lGetString(ep, SPA_argval_lStringT));
-      me.default_cell = sge_strdup(me.default_cell, 
-         lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
-   }
-#endif
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
       lSetString(*pjob, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
@@ -436,8 +421,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
 #ifndef USE_CLIENT_QALTER
    if (!lGetList(*pjob, JB_mail_list)) {   
-      ep = lAddSubStr(*pjob, MR_user, me.user_name, JB_mail_list, MR_Type);
-      lSetHost(ep, MR_host, me.qualified_hostname);
+      ep = lAddSubStr(*pjob, MR_user, uti_state_get_user_name(), JB_mail_list, MR_Type);
+      lSetHost(ep, MR_host, uti_state_get_qualified_hostname());
    }
 #endif
 

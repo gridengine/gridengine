@@ -36,7 +36,7 @@
 
 #include "sge_c_gdi.h" 
 
-int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add, char *ruser, char *rhost, gdi_object_t *object, int sub_command);
+int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
 int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
 

@@ -1770,8 +1770,8 @@ lList **alpp,
 lListElem *new_cal,
 lListElem *cep,
 int add,
-char *ruser,
-char *rhost,
+const char *ruser,
+const char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {

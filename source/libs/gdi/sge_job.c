@@ -1646,7 +1646,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       const char* host = sge_getenv("HOST");
 
       if (host == NULL) {
-         host = me.unqualified_hostname;
+         host = uti_state_get_unqualified_hostname();
       }
       var_list_set_string(&env_list, VAR_PREFIX "O_HOST", host);
    } 
@@ -1660,7 +1660,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
          goto error;
       }
       path_alias_list_get_path(path_alias_list, NULL, 
-                               tmp_str, me.qualified_hostname,
+                               tmp_str, uti_state_get_qualified_hostname(),
                                cwd_out, SGE_PATH_MAX);
       var_list_set_string(&env_list, VAR_PREFIX "O_WORKDIR", 
                                      cwd_out);
@@ -2273,7 +2273,13 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
          return FALSE;
       }
 
-      if(event_type == sgeE_JOB_USAGE || event_type == sgeE_JOB_FINAL_USAGE) {
+#if 0
+      if (event_type == sgeE_JOB_FINISH) {
+         /* no direct impact on master list */
+         ;
+      } else 
+#endif
+      if (event_type == sgeE_JOB_USAGE || event_type == sgeE_JOB_FINAL_USAGE ) {
          /* special handling needed for JOB_USAGE and JOB_FINAL_USAGE events.
          * they are sent for jobs, ja_tasks and pe_tasks and only contain
          * the usage list.
@@ -2282,7 +2288,7 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
          */
          int ret = job_update_master_list_usage(event);
          DEXIT;
-         return ret;
+         return ret; 
       } else {
          /* this is the true modify event.
           * we may not update several fields:

@@ -117,15 +117,15 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * the defaults file in the user's home directory
     */
-   pwd = sge_getpwnam(me.user_name);
+   pwd = sge_getpwnam(uti_state_get_user_name());
    if (!pwd) {
-      sprintf(str, MSG_USER_INVALIDNAMEX_S, me.user_name);
+      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
       answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
                       ANSWER_QUALITY_ERROR);
       return;
    }
    if (!pwd->pw_dir) {
-      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, me.user_name);
+      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       return;
    }

@@ -951,7 +951,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    }
   
    /* get configuration from qmaster */
-   if(get_configuration(me.qualified_hostname, &global, &local) ||
+   if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
       merge_configuration(global, local, &conf, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       DEXIT;
@@ -1222,7 +1222,6 @@ int main(int argc, char **argv)
    }
 
    sge_gdi_param(SET_MEWHO, my_who, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[my_who]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
@@ -1325,7 +1324,6 @@ int main(int argc, char **argv)
    }
 
    if (opt_list_has_X(opts_cmdline, "-help")) {
-      /* me.who = my_who; */
       sge_usage(stdout);
       SGE_EXIT(0);
    }
@@ -1498,7 +1496,7 @@ int main(int argc, char **argv)
       lList *envlp = NULL;
 
       sock = open_qrsh_socket(&my_port);
-      sprintf(buffer, "%s:%d", me.qualified_hostname, my_port);
+      sprintf(buffer, "%s:%d", uti_state_get_qualified_hostname(), my_port);
 
       if((envlp = lGetList(job, JB_env_list)) == NULL) {
          envlp = lCreateList("environment list", VA_Type);
@@ -1707,7 +1705,7 @@ int main(int argc, char **argv)
          if (!lp_poll || !(jep = lFirst(lp_poll))) {
             WARNING((SGE_EVENT, "\n"));
             sge_log_set_verbose(1);
-            WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, me.sge_formal_prog_name));
+            WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, uti_state_get_sge_formal_prog_name()));
             do_exit = 1;
             exit_status = 1;
             continue;

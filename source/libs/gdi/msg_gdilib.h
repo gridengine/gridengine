@@ -476,7 +476,7 @@
 
 #define MSG_SGETEXT_NO_INTERFACE_S    _MESSAGE(43295, _("no valid checkpoint interface "SFN"\n") )   
 #define MSG_COLONNOTALLOWED           _MESSAGE(43296, _("Colon (\':\') not allowed in account string\n") )
-
+#define MSG_EVENT_JOBXFINISH_US       _MESSAGE(43297, _(U32CFormat". EVENT JOB "SFN" FINISH"))
 
 #endif /* __MSG_GDILIB_H */
 

@@ -246,7 +246,7 @@ static void sge_ls_start_ls(lListElem *this_ls)
 
    DENTER(TOP_LAYER, "sge_ls_start_ls");
 
-   sprintf(buffer, "%s=%s", "HOST", me.qualified_hostname);
+   sprintf(buffer, "%s=%s", "HOST", uti_state_get_qualified_hostname());
    if (has_to_use_qidle
        && !strcmp(lGetString(this_ls, LS_name), IDLE_LOADSENSOR_NAME)) {
       envp = (char **) malloc(sizeof(char *) * 3);

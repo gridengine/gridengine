@@ -194,6 +194,7 @@ lList **answerp
    int index;
    int status;
    char msg[BUFSIZ];
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(GUI_LAYER, "qmonMirrorMultiAnswer");
 
@@ -249,7 +250,7 @@ lList **answerp
                                  NULL, 
                                  QmonMirrorList[index].where, 
                                  QmonMirrorList[index].what,
-                                 (current == count) ? &mal : NULL);
+                                 (current == count) ? &mal : NULL, &state);
          if (QmonMirrorList[index].id == -1)
             goto error;
       }   

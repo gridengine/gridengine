@@ -140,13 +140,23 @@ enum {
    SGE_GDI_SHOW
 };
 
+/* preserves state between multiple calls to sge_gdi_multi() */
+typedef struct _sge_gdi_request sge_gdi_request;
+typedef struct {
+   sge_gdi_request *first;
+   sge_gdi_request *last;
+   u_long32 sequence_id;
+} state_gdi_multi;
+/* to be used for initializing state_gdi_multi */
+#define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
+
 int sge_gdi_setup(const char *programname);
 
 int sge_gdi_param(int, int, char *);
 
 lList *sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
 
-int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp);
+int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state);
 
 int sge_gdi_shutdown(void);
 

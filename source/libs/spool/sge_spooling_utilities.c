@@ -173,7 +173,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
          fields[j].sub_fields = NULL;
 
          if (instr->copy_field_names) {
-            char *name;
+            const char *name;
             name = lNm2Str(descr[i].nm);
             if(name == NULL || strlen(name) <= strip) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

@@ -1138,7 +1138,7 @@ XtPointer cld, cad;
     * deletes all hosts if list is empty
     */
    if (lp) {
-      alp = gdi_kill(lp, me.default_cell, 0, EXECD_KILL); 
+      alp = gdi_kill(lp, uti_state_get_default_cell(), 0, EXECD_KILL); 
       qmonMessageBox(w, alp, 1);
       lp = lFreeList(lp);
       alp = lFreeList(alp);

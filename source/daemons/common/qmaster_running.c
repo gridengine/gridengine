@@ -90,7 +90,7 @@ int *enrolled
       strcpy(master, s);
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
-   if (!sge_hostcmp(master, me.qualified_hostname)) {
+   if (!sge_hostcmp(master, uti_state_get_qualified_hostname())) {
       if ((cp = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
          sprintf(pidfile, "%s/%s", cp, QMASTER_PID_FILE);
 	      DPRINTF(("pidfilename: %s\n", pidfile));
@@ -120,11 +120,11 @@ int *enrolled
    case 0:
       /* We are enrolled to a commd on another host */
       /* Ask if qmaster is enrolled on that host    */
-      if (sge_hostcmp(me.qualified_hostname, master)) {
+      if (sge_hostcmp(uti_state_get_qualified_hostname(), master)) {
          alive = ask_commproc(master, prognames[QMASTER], 0);
          DPRINTF(("alive: %s %s %d: %s\n", master, prognames[QMASTER], alive, cl_errstr(alive)));
          if (alive == 0) {
-            DPRINTF(("sge_hostcmp(%s, %s) not equal\n", master, me.qualified_hostname));
+            DPRINTF(("sge_hostcmp(%s, %s) not equal\n", master, uti_state_get_qualified_hostname()));
             ret = 1;
          } else
             ret = 0;

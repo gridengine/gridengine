@@ -32,7 +32,7 @@
 
 #include "sge_crc.h"
 
-static u_long32 crctab[256] =
+static const u_long32 crctab[256] =
 {
    0x0,
    0x04C11DB7, 0x09823B6E, 0x0D4326D9, 0x130476DC, 0x17C56B6B,

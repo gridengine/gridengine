@@ -55,7 +55,12 @@ u_long Global_jobs_running = 0;
 int print_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   DPRINTF(("%s\n", event_text(event)));
+   char buffer[1024];
+   dstring buffer_wrapper;
+
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+
+   DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
    /* create a callback error to test error handling */
    if(type == SGE_EMT_GLOBAL_CONFIG) {
       return FALSE;
@@ -68,9 +73,13 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
                 lListElem *event, void *clientdata)
 {
    int pos;
+   char buffer[1024];
+   dstring buffer_wrapper;
 
-   DPRINTF(("%s\n", event_text(event)));
-/*    fprintf(stdout,"%s\n",event_text(event)); */
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+
+   DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
+/*    fprintf(stdout,"%s\n",event_text(event, &buffer_wrapper)); */
    if ((pos=lGetPosViaElem(event, ET_type))>=0) {
       u_long32 type = lGetUlong(event, ET_type);
       if (type == sgeE_JATASK_MOD) { 

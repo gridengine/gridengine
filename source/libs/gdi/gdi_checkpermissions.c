@@ -164,8 +164,6 @@ int sge_gdi_check_permission(lList **alpp, int option) {
   if (permList == NULL) {
      DPRINTF(("Permlist is NULL\n"));
      alpp = &alp;
-/*     lFreeList(alp);   do not free answer list, client must do that !
-     alp = NULL; */
      failed_checks++;
      return -10;
   } else {

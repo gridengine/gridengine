@@ -110,7 +110,7 @@
 *     STATUS_EUNKNOWN - an error occured
 ******************************************************************************/ 
 int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
-             char *ruser, char *rhost, gdi_object_t *object, int sub_command) 
+             const char *ruser, const char *rhost, gdi_object_t *object, int sub_command) 
 {
    const char *ckpt_name;
 

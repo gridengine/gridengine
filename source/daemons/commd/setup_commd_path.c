@@ -70,17 +70,17 @@ void sge_commd_setup( u_long32 sge_formal_prog_name ) {
    }   
 
    sge_getme(sge_formal_prog_name);
-   if (me.who != COMMD) {
+   if (uti_state_get_mewho() != COMMD) {
        SGE_EXIT(1);
    }
 
    if (actmasterfile == NULL) {
       /* expect act_master file at default location */
-      actmasterfile = get_act_master_path(me.default_cell);
+      actmasterfile = get_act_master_path(uti_state_get_default_cell());
    }
    if (product_mode_file == NULL) {
       /* expect product_mode_file file at default location */
-      product_mode_file = get_product_mode_file_path(me.default_cell);
+      product_mode_file = get_product_mode_file_path(uti_state_get_default_cell());
    }
 
    read_product_mode_file(product_mode_file);
@@ -147,7 +147,7 @@ const char* get_short_product_name(void) {
 /*-----------------------------------------------------------------------
  * get_act_master_path
  *-----------------------------------------------------------------------*/
-char *get_act_master_path( char *sge_cell ) {
+char *get_act_master_path( const char *sge_cell ) {
    const char *sge_root;
    char *cp;
    int len;
@@ -179,7 +179,7 @@ char *get_act_master_path( char *sge_cell ) {
 /*-----------------------------------------------------------------------
  * get_product_mode_file_path
  *-----------------------------------------------------------------------*/
-char *get_product_mode_file_path( char *sge_cell ) {
+char *get_product_mode_file_path( const char *sge_cell ) {
    const char *sge_root;
    char *cp;
    int len;

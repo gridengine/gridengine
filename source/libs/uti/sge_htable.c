@@ -142,12 +142,17 @@ static void sge_htable_resize(register htable ht, int grow)
    register Bucket *bucket, *next, **head;
    register int i;
    clock_t start = 0;
+   static char buffer[1024];
+   dstring buffer_wrapper;
 
    DENTER(BASIS_LAYER, "sge_htable_resize");
 
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+
    if(logginglevel >= LOG_DEBUG) {
       struct tms t_buf;
-      DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", sge_htable_statistics(ht)));
+      DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", 
+               sge_htable_statistics(ht, &buffer_wrapper)));
       start = times(&t_buf);
    } 
 
@@ -179,7 +184,7 @@ static void sge_htable_resize(register htable ht, int grow)
    if(logginglevel >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / CLK_TCK));
-      DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht)));
+      DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht, &buffer_wrapper)));
    }
    
    DEXIT;
@@ -438,13 +443,13 @@ void sge_htable_delete(htable table, const void* key)
 *
 *  INPUTS
 *     htable ht - Hash table for which statistics shall be generated
+*     dstring *buffer - buffer to be provided by caller
 *
 *  RESULT
 *     const char* - the string described above
 ******************************************************************************/
-const char *sge_htable_statistics(htable ht)
+const char *sge_htable_statistics(htable ht, dstring *buffer)
 {
-   static char statistic_buffer[1024];
    long size  = 0;
    long empty = 0;
    long max   = 0;
@@ -469,13 +474,13 @@ const char *sge_htable_statistics(htable ht)
       }
    }
 
-   sprintf(statistic_buffer, 
+   sge_dstring_sprintf(buffer, 
            "size: %ld, %ld entries, chains: %ld empty, %ld max, %.1f avg", 
            size, ht->numentries,
            empty, max, 
            (size - empty) > 0 ? ht->numentries * 1.0 / (size - empty) : 0);
 
-   return statistic_buffer;
+   return sge_dstring_get_string(buffer);
 }
 
 /****** uti/htable/-Dup-Functions() *******************************************

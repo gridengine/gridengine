@@ -34,7 +34,7 @@
 
 int get_qm_name(char *master_host, const char *master_file, char *err_str);
 
-int write_qm_name(char *master_host, const char *master_file, char *err_str);
+int write_qm_name(const char *master_host, const char *master_file, char *err_str);
 
 const char *sge_get_master(int read_master_file);
  

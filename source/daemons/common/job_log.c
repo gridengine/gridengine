@@ -93,13 +93,13 @@ int job_log(u_long32 job_number, u_long32 task_number, const char *str)
    time_t now;
    char dummy_str[256], date[256];
    const char *progname;
-   char *hostname;
+   const char *hostname;
 
    if (!job_log_file[0])
       return 1;
 
-   progname = prognames[me.who];
-   hostname = me.unqualified_hostname;
+   progname = uti_state_get_sge_formal_prog_name();
+   hostname = uti_state_get_unqualified_hostname();
 
    if ((fp = fopen(job_log_file, "a"))) {
 

@@ -554,7 +554,17 @@ SetProductMode()
    fi
 
    if [ $CSP = true ]; then
-      SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep "AIMK_SECURE_OPTION_ENABLED" | wc -l`
+
+      case $SGE_ARCH in
+
+      aix*)
+          SEC_COUNT=`strings -a $SGE_BIN/sge_qmaster | grep "AIMK_SECURE_OPTION_ENABLED" | wc -l`
+          ;;
+         *)
+          SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep "AIMK_SECURE_OPTION_ENABLED" | wc -l`
+          ;;
+      esac
+
       if [ $SEC_COUNT -ne 1 ]; then
          $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "

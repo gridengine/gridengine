@@ -1,3 +1,5 @@
+JG-2003-12-18-0: Bugfix:    Fixed make pe template.
+
 MD-2003-12-17-0: Enhancem.: Added option (-log) to infotext
                  Changed:   infotext.c
                  Reviewed:  CR

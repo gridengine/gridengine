@@ -259,8 +259,6 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
    nr_word = 0;
    DPRINTF(("while\n"));
 
-/*   printf("\nformat_output of:\"%s\"\n",text); */
-
    while(1) {
       char* next_word = NULL;
       int new_line_buffer;
@@ -333,7 +331,6 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
 
          nr_word = 0;
          sge_dstring_copy_dstring(&line,&dash);
-/*         sge_dstring_copy_string(&line,""); */
       } else {
          next_word = sge_infotext_get_next_word(&tmp_buf,tp);
          if (strlen(next_word) == 0) {
@@ -375,10 +372,6 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
    for(i=0;i< sge_dstring_strlen(&line);i++) {
       sge_dstring_append(&dash," ");
    }
-/*
-   line_buf = sge_infotext_string_replace(&line_buf_buffer,(char*)sge_dstring_get_string(line_arg),"\n",(char*)sge_dstring_get_string(&dash),0);
-   sge_dstring_copy_string(&line, line_buf);
-*/
    sge_dstring_copy_dstring(&line, line_arg);
 
 
@@ -841,7 +834,9 @@ char **argv
    for(i=arg_start; sge_infotext_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s") < string_arguments ; i++) {
       char* arg = argv[i];
       if (i > arg_start) {
-         sge_dstring_append(&buffer," ");
+         if (arg[0] != ' ') {
+            sge_dstring_append(&buffer," ");
+         }
       }
       sge_dstring_append(&buffer, sge_infotext_string_input_parsing(&tmp_buf,arg));
    }

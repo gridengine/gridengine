@@ -399,7 +399,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    new_handle->acknowledge_timeout = 15;
    new_handle->select_sec_timeout = sec_param;
    new_handle->select_usec_timeout = usec_rest;
-   new_handle->synchron_receive_timeout = 8;  /* default from old commlib */
+   new_handle->synchron_receive_timeout = CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT;  /* default from old commlib */
    new_handle->do_shutdown = 0;  /* no shutdown till now */
    new_handle->max_connection_count_reached = 0;
    new_handle->allowed_host_list = NULL;
@@ -884,14 +884,24 @@ int cl_com_get_max_connections(cl_com_handle_t* handle, int* value) {
 #define __CL_FUNCTION__ "cl_com_get_handle()"
 cl_com_handle_t* cl_com_get_handle(char* component_name, unsigned long component_id) {
    cl_handle_list_elem_t* elem = NULL;
+   cl_com_handle_t* ret_handle = NULL;
 
    if ( component_name == NULL || cl_com_handle_list  == NULL) {
+      CL_LOG(CL_LOG_WARNING,"cl_com_get_handle() - parameter error");
       return NULL;
    }
 
    /* lock list */
    if ( cl_raw_list_lock(cl_com_handle_list) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_WARNING,"cl_com_get_handle() - lock error");
       return NULL;
+   }
+
+   CL_LOG_STR(CL_LOG_INFO,"try to find handle for", component_name);
+   if ( component_id != 0) {
+      CL_LOG_INT(CL_LOG_INFO,"handle must have id", component_id);
+   } else {
+      CL_LOG(CL_LOG_INFO,"ignoring component_id");
    }
    elem = cl_handle_list_get_first_elem(cl_com_handle_list);
    while ( elem != NULL) { 
@@ -900,18 +910,26 @@ cl_com_handle_t* cl_com_get_handle(char* component_name, unsigned long component
       /* if component id is zero, we just search for the name */
       if (handle->local->comp_id == component_id || component_id == 0) {
          if (strcmp(handle->local->comp_name, component_name) == 0) {
-            cl_raw_list_unlock(cl_com_handle_list);
-            return handle;
+            if ( ret_handle != NULL) {
+               CL_LOG(CL_LOG_ERROR,"cl_com_get_handle() - found more than one handle");
+            } else {
+               ret_handle = handle;
+            }
          }
       }
       elem = cl_handle_list_get_next_elem(cl_com_handle_list, elem);
-   } 
-
+   }
+   
    /* unlock list */
    if ( cl_raw_list_unlock(cl_com_handle_list ) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_WARNING,"cl_com_get_handle() - unlock error");
       return NULL;
    }
-   return NULL;
+
+   if (ret_handle == NULL) {
+      CL_LOG(CL_LOG_INFO,"cl_com_get_handle() - handle not found");
+   }
+   return ret_handle;
 }
 
 
@@ -985,8 +1003,8 @@ int cl_com_remove_host_alias(char* alias_name) {
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_commlib_get_service_fd()"
-int cl_commlib_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set) {
+#define __CL_FUNCTION__ "cl_com_get_service_fd()"
+int cl_com_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set) {
    int fd;
    int ret_val = CL_RETVAL_UNKNOWN;
    cl_connection_list_elem_t* elem = NULL;
@@ -1029,8 +1047,8 @@ int cl_commlib_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_s
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_commlib_get_service_port()"
-int cl_commlib_get_service_port(cl_com_handle_t* handle, int* port) {
+#define __CL_FUNCTION__ "cl_com_get_service_port()"
+int cl_com_get_service_port(cl_com_handle_t* handle, int* port) {
    if (handle == NULL || port == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -1057,8 +1075,23 @@ int cl_commlib_get_service_port(cl_com_handle_t* handle, int* port) {
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_commlib_get_connect_port()"
-int cl_commlib_get_connect_port(cl_com_handle_t* handle, int* port) {
+#define __CL_FUNCTION__ "cl_com_set_synchron_receive_timeout()"
+int cl_com_set_synchron_receive_timeout(cl_com_handle_t* handle, int timeout) {
+   if (handle == NULL || timeout <= 0 ) {
+      CL_LOG(CL_LOG_ERROR,"error setting synchron receive timeout");
+      return CL_RETVAL_PARAMS;
+   }
+   CL_LOG_INT(CL_LOG_INFO,"setting synchron receive timeout to", timeout);
+   handle->synchron_receive_timeout = timeout;
+   return CL_RETVAL_OK;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_connect_port()"
+int cl_com_get_connect_port(cl_com_handle_t* handle, int* port) {
    if (handle == NULL || port == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -1730,7 +1763,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
 
             case CL_MIH_DF_AM:
-               CL_LOG(CL_LOG_WARNING,"received ACK message");
+               CL_LOG(CL_LOG_INFO,"received ACK message");
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {

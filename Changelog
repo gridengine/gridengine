@@ -1,3 +1,6 @@
+CR-2004-01-15-1: Enhancem.: - new function: cl_com_set_synchron_receive_timeout()
+                            - some code clean up (function names)
+
 JG-2004-01-15-1: Bugfix:    Schedd aborted when scheduling a parallel job.
                  Review:    SG
                  Testsuite: Updated access_lists and tight_integration test.

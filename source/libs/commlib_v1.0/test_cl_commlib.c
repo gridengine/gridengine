@@ -99,7 +99,7 @@ extern int main(int argc, char** argv)
      exit(-1);
   }
 
-  cl_commlib_get_service_port(handle,&i), 
+  cl_com_get_service_port(handle,&i), 
 
 
   printf("server running on host \"%s\", port %d, component name is \"%s\", id is %ld\n", 

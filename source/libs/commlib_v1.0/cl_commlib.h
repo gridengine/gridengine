@@ -67,17 +67,24 @@ cl_com_handle_t* cl_com_get_handle(char*         component_name,
                                    unsigned long component_id);  /* CR check */
 
 /* commlib parameter functions */
-int cl_commlib_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set);
-int cl_commlib_get_service_port(cl_com_handle_t* handle, int* port);
-int cl_commlib_get_connect_port(cl_com_handle_t* handle, int* port);
+int cl_com_set_synchron_receive_timeout(cl_com_handle_t* handle, int timeout);
+
+int cl_com_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set);
+int cl_com_get_service_port(cl_com_handle_t* handle, int* port);
+int cl_com_get_connect_port(cl_com_handle_t* handle, int* port);
+
 int cl_com_add_allowed_host    (cl_com_handle_t* handle, char* hostname);
 int cl_com_remove_allowed_host (cl_com_handle_t* handle, char* hostname);
+
 int cl_com_append_host_alias(char* local_resolved_name, char* alias_name);
 int cl_com_remove_host_alias(char* alias_name);
+
 int cl_com_set_max_connections (cl_com_handle_t* handle, int value);
 int cl_com_get_max_connections (cl_com_handle_t* handle, int* value);
 int cl_com_enable_max_connection_close(cl_com_handle_t* handle);
 int cl_com_disable_max_connection_close(cl_com_handle_t* handle);
+
+
 
 
 cl_thread_mode_t cl_commlib_get_thread_state(void);

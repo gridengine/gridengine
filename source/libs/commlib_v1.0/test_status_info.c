@@ -106,7 +106,7 @@ extern int main(int argc, char** argv)
   printf("local hostname is \"%s\"\n", handle->local->comp_host);
   printf("local component is \"%s\"\n", handle->local->comp_name);
   printf("local component id is \"%ld\"\n", handle->local->comp_id);
-  cl_commlib_get_connect_port(handle, &i);
+  cl_com_get_connect_port(handle, &i);
   printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[1]);
 
 

@@ -62,11 +62,13 @@ set SWIG = /vol2/tools/SW/$buildarch/bin/swig
 
 #
 # PERL path
-# Location of a copyright.h file which containes a copyright string
-# which should be included in each binary part of Grid Engine for courtesy
-# binaries
 #
 set PERL = /vol2/tools/SW/$buildarch/bin/perl
+
+#
+# TCLSH path
+#
+set TCLSH = /vol2/tools/SW/$buildarch/bin/tclsh8.3
 
 #
 # Location of a copyright.h file which containes a copyright string

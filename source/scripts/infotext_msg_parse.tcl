@@ -1,4 +1,3 @@
-#!/vol2/tools/SW/solaris64/bin/tclsh8.3
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -31,13 +30,12 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-global INFOTEXTCMD INPUTFILE INFOTEXTBINARY UPPER_ARCH OUTPUTFILE MESSAGE_OPT
+global INFOTEXTCMD INPUTFILE INFOTEXTBINARY UPPER_ARCH OUTPUTFILE MESSAGE_OPT env
 set INFOTEXTCMD "\$INFOTEXT"
 set INPUTFILE ""
 set OUTPUTFILE "stdout"
 set MESSAGE_OPT "-message"
-
-set INFOTEXTBINARY "../SOLARIS64/infotext"
+set INFOTEXTBINARY "[ set env(BUILDARCH)]/infotext"
 
 proc is_continued { line } {
    set linelength [ string length $line ]

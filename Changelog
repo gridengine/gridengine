@@ -1,3 +1,6 @@
+AH-2004-02-26-0: Doc:       Mention sched_conf(5) monitor=1 params setting.
+                            Document improved handling of wildcard PE request.
+
 CR-2004-02-26-0: Bugfix:    don't sleep when qevent can't open connection to
                             qmaster and signal TERM is sent
                  Changed:   qevent
@@ -484,6 +487,7 @@ AH-2004-02-12-0: Enhancem:  Initial revision of resource reservation. Man pages
                  Bugfix:    Fixed schedd crash with large array jobs.
                             Fixed problem with whitespaces in normalized time 
                             specifications.
+                 Review:    FF/EB
                             
 AD-2004-02-12-0: Bugfix:    Finish 'AD-2004-02-08-0'. Event Master (evm) is
                             now a self-contained modul and does use it's own

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/25 17:56:56 $     Revision: $Revision: 1.40 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/26 13:56:26 $     Revision: $Revision: 1.41 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/25 17:56:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/02/26 13:56:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1068,7 +1068,8 @@ and about how to obtain a list of currently valid PEs.
 .br
 You can specify the PE name  by using the wildcard character "*", thus
 the request "pvm*" will match any parallel environment with a name
-starting with the string "pvm".
+starting with the string "pvm". In case multiple parallel environments
+match the largest parallel environment assignment is chosen.
 .br
 The range specification is a list of range expressions of the
 form n-m (n as well as m being positive non-zero integer

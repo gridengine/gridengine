@@ -489,10 +489,18 @@ featureset_product_name_id_t style
    if (feature_get_active_featureset_id() != FEATURESET_UNINITIALIZED ) {
       if (feature_is_enabled(FEATURE_SGEEE)) {
          short_name = "SGEEE";
+#ifndef ADD_SUN_COPYRIGHT         
          long_name  = "Grid Engine Enterprise Edition";
+#else
+         long_name  = "Sun Grid Engine, Enterprise Edition";
+#endif         
       } else {
          short_name = "SGE";
+#ifndef ADD_SUN_COPYRIGHT
          long_name  = "Grid Engine";
+#else
+         long_name  = "Sun Grid Engine";
+#endif                  
       }
    }
    version = GDI_VERSION;  /* set in version.c ( in gdi libary ) */

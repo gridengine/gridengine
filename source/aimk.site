@@ -56,6 +56,14 @@ set GROFFPATH = /vol2/tools/SW/$buildarch/bin
 
 #
 # Location of a copyright.h file which containes a copyright string
-# which should be included in each binary part of Grid Engine
+# which should be included in each binary part of Grid Engine for courtesy
+# binaries
 #
-set COPYRIGHT_DIR = /off_home/codine/copyright
+set COPYRIGHT_DIR      = /off_home/codine/copyright
+
+#
+# Location of a copyright.h file which containes a copyright string
+# which is included in each binary part of Sun Grid Engine (the version
+# which Sun Microsystems is releasing
+#
+set SUN_COPYRIGHT_DIR  = /off_home/codine/sun-copyright

@@ -30,11 +30,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+const char GDI_VERSION[] = "5.3beta1";
+
 #ifdef ADD_COPYRIGHT
 #  include "copyright.h"
 #endif
 
-const char GDI_VERSION[] = "5.3 maintrunc";
+#ifndef ADD_SUN_COPYRIGHT
 
 const char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\
@@ -67,4 +69,4 @@ Copyright: 2001 by Sun Microsystems, Inc.\n\
 \n\
 All Rights Reserved.\n"; 
 
-
+#endif /* ADD_SUN_COPYRIGHT */

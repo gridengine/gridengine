@@ -140,7 +140,8 @@ usage:
    echo ""
    echo "-32               -> irix: create 32 bit binaries"
    echo "-64               -> irix: create 64 bit binaries"
-   echo "-add-copyright    -> insert a copyright string in each binary"
+   echo "-add-copyright    -> insert a special copyright string in each binary"
+   echo "-add-sun-copyright-> insert a Sun copyright string in each binary" 
    echo "-adoc             -> create source code documentation in adoc format"
    echo "-D*               -> include a macro definition in CFLAGS"
    echo "-catman           -> generate man pages in catman format"
@@ -212,31 +213,32 @@ set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
 set   CORE_INCLUDE = "-I../common -I../libs/uti -I../libs/gdi -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 
-set   ADD_COPYRIGHT = 0
-set   ADOC        = 0
-set   BUILDMAN    = 0
-set   BUILDCATMAN = 0
+set   ADD_COPYRIGHT     = 0
+set   ADD_SUN_COPYRIGHT = 0
+set   ADOC         = 0
+set   BUILDMAN     = 0
+set   BUILDCATMAN  = 0
 set   BUILDGETTEXT = 0
 set   BUILDHTMLMAN = 0 
-set   DEBUG_FLAG  = ""
+set   DEBUG_FLAG   = ""
 set   INSURE_FLAG  = ""
-set   STRIP       = strip
-set   TARGET      = ""
-set   SHAREDLIBS  = 0
-set   SHAREDEXT   = ".so"
-set   SHAREDLD    = ""
+set   STRIP        = strip
+set   TARGET       = ""
+set   SHAREDLIBS   = 0
+set   SHAREDEXT    = ".so"
+set   SHAREDLD     = ""
 set   SHARED_CFLAGS = ""
 set   SHARED_LFLAGS = ""
-set   STATIC      = 0
-set   IRIX_ABI    = ""
-set   IRIX_ARCHDEF = IRIX6
-set   OSREL       = ""
-set   CC_FORCED   = 0
-set   CC          = cc
-set   CXX         = CC
-set   FC          = f77
-set   LFLAGS      = "-L."
-set   LIBS        = "-lm"
+set   STATIC        = 0
+set   IRIX_ABI      = ""
+set   IRIX_ARCHDEF  = IRIX6
+set   OSREL         = ""
+set   CC_FORCED     = 0
+set   CC           = cc
+set   CXX          = CC
+set   FC           = f77
+set   LFLAGS       = "-L."
+set   LIBS         = "-lm"
 set   OPTIMIZATION = 0
 set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.35"
 set   MAKEZLIB    = 0
@@ -250,7 +252,7 @@ set   AR          = ar #suns: /usr/bin/ar (no s option)&/usr/5bin/ar (s option)
 set   ARFLAGS     = rscv
 set   MAKE        = make
 set   PARALLEL    = ""
-set   USE_QMAKE       = 0
+set   USE_QMAKE   = 0
 set   MESSAGES    = "../dist/locale/gridengine.pot"
 set   MESSAGES_BIN = "gridengine.mo"
 set   SGE_DEPEND  = 0
@@ -353,6 +355,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-add-copyright"
       set ADD_COPYRIGHT = 1
+      breaksw
+   case "-add-sun-copyright"
+      set ADD_SUN_COPYRIGHT = 1
       breaksw
    case "-adoc":
       set CORE   = 0
@@ -1509,6 +1514,8 @@ endif
 
 if ( "$ADD_COPYRIGHT" == 1 ) then
    set CFLAGS = "-DADD_COPYRIGHT -I$COPYRIGHT_DIR $CFLAGS"
+else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
+   set CFLAGS = "-DADD_COPYRIGHT -DADD_SUN_COPYRIGHT -I$SUN_COPYRIGHT_DIR $CFLAGS"
 endif
 
 if ( "$CORE" == 1 ) then

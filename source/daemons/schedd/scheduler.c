@@ -148,7 +148,8 @@ int scheduler(sge_Sdescr_t *lists) {
    start = times(&tms_buffer);
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
-   schedd_initialize_messages();
+
+   schedd_mes_initialize();
    schedd_log_schedd_info(1); 
 
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
@@ -274,7 +275,7 @@ int scheduler(sge_Sdescr_t *lists) {
       orderlist = lFreeList(orderlist);
    }
 
-   schedd_release_messages();
+    schedd_mes_release();
     schedd_log_schedd_info(0); 
 
    DEXIT;
@@ -326,8 +327,6 @@ lList **splitted_job_lists[]
                                 /* e.g. if load correction was computed */
 
    DENTER(TOP_LAYER, "dispatch_jobs");
-
-   schedd_initialize_messages_joblist(NULL);
 
    /*---------------------------------------------------------------------
     * LOAD ADJUSTMENT
@@ -650,8 +649,6 @@ lList **splitted_job_lists[]
          host_order_changed = 0;
       }   
 
-      schedd_initialize_messages_joblist(*splitted_job_lists[SPLIT_PENDING]);
-
       dispatched_a_job = 0;
       job_id = lGetUlong(job, JB_job_number);
       DPRINTF(("-----------------------------------------\n"));
@@ -770,6 +767,8 @@ lList **splitted_job_lists[]
 
 SKIP_THIS_JOB:
       if (dispatched_a_job) {
+         schedd_mes_rollback();
+
          job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
          /* 
@@ -789,11 +788,14 @@ SKIP_THIS_JOB:
                                            &user_list, scheddconf.maxujobs);
          trash_splitted_jobs(splitted_job_lists);
       } else {
+         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]));
+
          /* before deleting the element mark the category as rejected */
          cat = lGetRef(job, JB_category);
          if (cat) {
-            DPRINTF(("SKIP JOB " u32 " of category '%s' (rc: "u32 ")\n", job_id, 
-                        lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
+            DPRINTF(("SKIP JOB " u32 " of category '%s' (rc: "u32 ")\n", 
+                     job_id, lGetString(cat, CT_str), 
+                     lGetUlong(cat, CT_refcount))); 
             sge_reject_category(cat);
          }
          /* prevent that we get the same job next time again */

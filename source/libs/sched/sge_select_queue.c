@@ -2411,7 +2411,6 @@ lListElem *hep;
             if (*buff && (buff[strlen(buff) - 1] == '\n'))
                buff[strlen(buff) - 1] = 0;
             schedd_add_message(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
-            
          } 
          continue;
       }

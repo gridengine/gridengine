@@ -648,12 +648,14 @@ int range_containes_id_less_than(const lListElem *range, u_long32 id)
 *                               u_long32 id) 
 *
 *  FUNCTION
-*     'id' will be removed from 'range_list'. 
+*     'id' will be removed from 'range_list'. If 'id' is the last
+*     number in the range list than the whole '*range_list' will
+*     be deleted.
 *
 *  INPUTS
 *     lList **range_list  - pointer to a RN_Type list 
 *     lList **answer_list - pointer to a AN_Type list 
-*     u_long32 id         - new id 
+*     u_long32 id         - id 
 *
 *  RESULT
 *     range_list and answer_list may be modified 

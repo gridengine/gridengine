@@ -653,49 +653,66 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
    while (split_id_a[++i] != SPLIT_LAST) { 
       lList **job_list = splitted_job_lists[split_id_a[i]];
       lListElem *job = NULL;
+      int is_first_of_category = 1;
 
       for_each (job, *job_list) {
          u_long32 job_id = lGetUlong(job, JB_job_number);
 
          switch (split_id_a[i]) {
          case SPLIT_ERROR:
-            schedd_add_message(job_id, SCHEDD_INFO_JOBINERROR_);
+            if (is_first_of_category) {
+               schedd_add_message(job_id, SCHEDD_INFO_JOBINERROR_);
+            }
             if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_HOLD:
-            schedd_add_message(job_id, SCHEDD_INFO_JOBHOLD_);
+            if (is_first_of_category) {
+               schedd_add_message(job_id, SCHEDD_INFO_JOBHOLD_);
+            }
             if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_WAITING_DUE_TO_TIME:
-            schedd_add_message(job_id, SCHEDD_INFO_EXECTIME_);
+            if (is_first_of_category) {
+               schedd_add_message(job_id, SCHEDD_INFO_EXECTIME_);
+            }
             if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_WAITING_DUE_TO_PREDECESSOR:
-            schedd_add_message(job_id, SCHEDD_INFO_JOBDEPEND_);
+            if (is_first_of_category) {
+               schedd_add_message(job_id, SCHEDD_INFO_JOBDEPEND_);
+            }
             if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_PENDING_EXCLUDED_INSTANCES:
-            schedd_add_message(job_id, SCHEDD_INFO_MAX_AJ_INSTANCES_);
+            if (is_first_of_category) {
+               schedd_add_message(job_id, SCHEDD_INFO_MAX_AJ_INSTANCES_);
+            }
             break;
          case SPLIT_PENDING_EXCLUDED:
-            schedd_add_message(job_id, SCHEDD_INFO_USRGRPLIMIT_);
+            if (is_first_of_category) {
+               schedd_add_message(job_id, SCHEDD_INFO_USRGRPLIMIT_);
+            }
             break;
          default:
             ;
          }
-      } 
+         if (is_first_of_category) {
+            is_first_of_category = 0;
+            schedd_mes_commit(*job_list);
+         }
+      }
       *job_list = lFreeList(*job_list);
    }
 } 

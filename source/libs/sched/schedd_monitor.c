@@ -95,10 +95,11 @@ int schedd_log(const char *logstr) {
 
    if (monitor_alpp) {
       char logloglog[2048];
-/*       DPRINTF(("schedd_log: %s\n", logstr)); */
+
       sprintf(logloglog, "%s\n", logstr);
       sge_add_answer(monitor_alpp, logloglog, STATUS_ESEMANTIC, 0);
    } else {
+
       if (!*schedd_log_file) {
          sprintf(schedd_log_file, "%s/%s/%s", path.cell_root, "common", SCHED_LOG_NAME);
          DPRINTF(("schedd log file >>%s<<\n", schedd_log_file));

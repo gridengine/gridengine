@@ -495,11 +495,6 @@
 */ 
 #define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47369, _("can not create schedd_job_info for message "U32CFormat"\n"))
 
-
-
-
-
-
 /* 
 ** schedd/slots_used.c
 */ 

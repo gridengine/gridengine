@@ -36,25 +36,25 @@
 extern "C" {
 #endif
 
-
-
 #include "cull.h"
 
 #define MAXMSGLEN 256
 
-void schedd_initialize_messages(void);
+void schedd_mes_initialize(void);
 
-void schedd_release_messages(void);
+void schedd_mes_release(void);
 
-void schedd_initialize_messages_joblist(lList *job_list);
-
-lListElem *schedd_get_messages(void);
+lListElem *schedd_mes_get(void);
 
 void schedd_add_message(u_long32 job_number, u_long32 message_number, ...);
 
 void schedd_add_global_message(u_long32 message_number, ...);
 
 void schedd_log_schedd_info(int bval);
+
+void schedd_mes_commit(lList *job_list);
+
+void schedd_mes_rollback(void);
 
 #ifdef  __cplusplus
 }

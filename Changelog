@@ -1,3 +1,9 @@
+JG-2004-04-01-0: Bugfix:    Changes to reporting_params, sharelog, only took 
+                            effect after a qmaster restart.
+                 Changed:   sge_qmaster
+                 Issue:     940
+                 Review:    CR
+
 SG-2004-04-01-0: Enhancem.: The profiling it turned of, when the schedd params
                             are set to none.
                  Changed:   scheduler

@@ -81,6 +81,7 @@
 
 /* messages */
 #include "msg_common.h"
+#include "msg_qmaster.h"
 
 /* do not change, the ":" is hard coded into the qacct file
    parsing routines. */
@@ -129,6 +130,9 @@ reporting_get_job_log_name(const job_log_t type);
 
 static const char *
 lGetStringNotNull(const lListElem *ep, int nm);
+
+static void 
+config_sharelog(void);
 
 /****** qmaster/reporting/--Introduction ***************************
 *  NAME
@@ -192,21 +196,17 @@ reporting_initialize(lList **answer_list)
    DENTER(TOP_LAYER, "reporting_initialize");
 
    te_register_event_handler(reporting_trigger_handler, TYPE_REPORTING_TRIGGER);
+   te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
+
+   /* we always have the reporting trigger for flushing reporting files and
+    * checking for new reporting configuration
+    */
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
    te_free_event(ev);
 
-/* JG: TODO: has also be registered, when global config changed.
- * or do it in reporting_trigger_handler: 
- * - check, if sharelog is registered,
- * - if sharelog_time > 0 && not registered: register
- */
-   if (sharelog_time > 0) {
-      te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
-      ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 1, 0, NULL);
-      te_add_event(ev);
-      te_free_event(ev);
-   }
+   /* the sharelog timed events can be switched on or off */
+   config_sharelog();
 
    DEXIT;
    return ret;
@@ -294,6 +294,8 @@ reporting_trigger_handler(te_event_t anEvent)
    
 
    DENTER(TOP_LAYER, "reporting_trigger_handler");
+
+   config_sharelog();
 
    switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
@@ -1228,31 +1230,74 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: reporting_get_job_log_name() is MT-safe
+*/
 static const char *
 reporting_get_job_log_name(const job_log_t type)
 {
-   /* JG: TODO: using a switch() would be safer! */
-   static const char *names[JL_ALL] = {
-      "unknown",
-      "pending",
-      "sent",
-      "resent",
-      "delivered",
-      "running",
-      "suspended",
-      "unsuspended",
-      "held",
-      "released",
-      "restart",
-      "migrate",
-      "deleted",
-      "finished",
-      "error"
-   };
+   const char *ret;
 
-   return names[type];
+   switch (type) {
+      case JL_UNKNOWN:
+         ret = MSG_JOBLOG_ACTION_UNKNOWN;
+         break;
+      case JL_PENDING:
+         ret = MSG_JOBLOG_ACTION_PENDING;
+         break;
+      case JL_SENT:
+         ret = MSG_JOBLOG_ACTION_SENT;
+         break;
+      case JL_RESENT:
+         ret = MSG_JOBLOG_ACTION_RESENT;
+         break;
+      case JL_DELIVERED:
+         ret = MSG_JOBLOG_ACTION_DELIVERED;
+         break;
+      case JL_RUNNING:
+         ret = MSG_JOBLOG_ACTION_RUNNING;
+         break;
+      case JL_SUSPENDED:
+         ret = MSG_JOBLOG_ACTION_SUSPENDED;
+         break;
+      case JL_UNSUSPENDED:
+         ret = MSG_JOBLOG_ACTION_UNSUSPENDED;
+         break;
+      case JL_HELD:
+         ret = MSG_JOBLOG_ACTION_HELD;
+         break;
+      case JL_RELEASED:
+         ret = MSG_JOBLOG_ACTION_RELEASED;
+         break;
+      case JL_RESTART:
+         ret = MSG_JOBLOG_ACTION_RESTART;
+         break;
+      case JL_MIGRATE:
+         ret = MSG_JOBLOG_ACTION_MIGRATE;
+         break;
+      case JL_DELETED:
+         ret = MSG_JOBLOG_ACTION_DELETED;
+         break;
+      case JL_FINISHED:
+         ret = MSG_JOBLOG_ACTION_FINISHED;
+         break;
+      case JL_ERROR:
+         ret = MSG_JOBLOG_ACTION_ERROR;
+         break;
+      default:
+         ret = "!!!! unknown job state !!!!";
+         break;
+   }   
+
+   return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: MT-safety depends on lGetString (which has no MT-NOTE)
+*              lGetStringNotNull() itself is MT-safe
+*/
 static const char *
 lGetStringNotNull(const lListElem *ep, int nm)
 {
@@ -1263,3 +1308,32 @@ lGetStringNotNull(const lListElem *ep, int nm)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: config_sharelog() is MT-safe
+*              Accessing the static boolean variable sharelog_running
+*              is not breaking MT-safety.
+*/
+static void 
+config_sharelog(void) {
+   static bool sharelog_running = false;
+
+   /* sharelog shall be written according to global config */
+   if (sharelog_time > 0) {
+      /* if sharelog is not running: switch it on */
+      if (!sharelog_running) {
+         te_event_t ev = NULL;
+         ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 
+                           1, 0, NULL);
+         te_add_event(ev);
+         te_free_event(ev);
+         sharelog_running = true;
+      }
+   } else {
+      /* switch if off */
+      if (sharelog_running) {
+         te_delete_one_time_event(TYPE_SHARELOG_TRIGGER, 1, 0, NULL);
+         sharelog_running = false;
+      }
+   }
+}

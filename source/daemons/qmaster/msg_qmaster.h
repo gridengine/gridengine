@@ -715,6 +715,24 @@
 #define MSG_PERSISTENCE_OPENTRANSACTION_FAILED _MESSAGE(33822, _("error starting a transaction in the spooling database\n"))
 #define MSG_PERSISTENCE_CLOSINGTRANSACTION_FAILED _MESSAGE(33823, _("error closing a transaction in the spooling database\n"))
 
+/* 
+ * sge_reporting_qmaster.c
+ */
+#define MSG_JOBLOG_ACTION_UNKNOWN      _MESSAGE(33850, _("unknown"))
+#define MSG_JOBLOG_ACTION_PENDING      _MESSAGE(33851, _("pending"))
+#define MSG_JOBLOG_ACTION_SENT         _MESSAGE(33852, _("sent"))
+#define MSG_JOBLOG_ACTION_RESENT       _MESSAGE(33853, _("resent"))
+#define MSG_JOBLOG_ACTION_DELIVERED    _MESSAGE(33854, _("delivered"))
+#define MSG_JOBLOG_ACTION_RUNNING      _MESSAGE(33855, _("running"))
+#define MSG_JOBLOG_ACTION_SUSPENDED    _MESSAGE(33856, _("suspended"))
+#define MSG_JOBLOG_ACTION_UNSUSPENDED  _MESSAGE(33857, _("unsuspended"))
+#define MSG_JOBLOG_ACTION_HELD         _MESSAGE(33858, _("held"))
+#define MSG_JOBLOG_ACTION_RELEASED     _MESSAGE(33859, _("released"))
+#define MSG_JOBLOG_ACTION_RESTART      _MESSAGE(33860, _("restart"))
+#define MSG_JOBLOG_ACTION_MIGRATE      _MESSAGE(33861, _("migrate"))
+#define MSG_JOBLOG_ACTION_DELETED      _MESSAGE(33862, _("deleted"))
+#define MSG_JOBLOG_ACTION_FINISHED     _MESSAGE(33863, _("finished"))
+#define MSG_JOBLOG_ACTION_ERROR        _MESSAGE(33864, _("error"))
 
 /*
  * other

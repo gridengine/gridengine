@@ -258,8 +258,10 @@ if [ "$utilbin_dir" = "none" ]; then
    exit 1
 fi
 
+# HOST is the aliased name (SGE name)
+# UQHOST is the local host name (unqualified name)
 HOST=`$utilbin_dir/gethostname -aname`
-UQHOST=`$utilbin_dir/gethostname -aname | cut -f1 -d.`
+UQHOST=`$utilbin_dir/gethostname -name | cut -f1 -d.`
 
 if [ "$startup" = true ]; then
 

@@ -1,3 +1,5 @@
+JG-2001-10-22-0: Fixed a memory access error in the cull hash implementation
+
 EB-2001-10-20-0: Added 'const' in libraries
 
 JG-2001-10-18-0: Execd:

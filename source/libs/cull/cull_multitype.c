@@ -1169,6 +1169,11 @@ const char *value
       return -1;
    }
 
+   /* remove old hash entry */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_remove(ep, pos);
+   }
+   
    /* free old string value */
    if (ep->cont[pos].str)
       free(ep->cont[pos].str);
@@ -1184,11 +1189,6 @@ const char *value
    else
       str = NULL;               /* value is NULL */
 
-   /* remove old hash entry */
-   if(ep->descr[pos].hash != NULL) {
-      cull_hash_remove(ep, pos);
-   }
-   
    ep->cont[pos].str = str;
 
    /* create entry in hash table */

@@ -130,7 +130,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    if (first_time) {
       first_time = 0;
-      printf("%-20.20s %-5.5s %-9.9s %-8.8s %-9.9s %s\n", 
+      printf("%-30.30s %-5.5s %-9.9s %-8.8s %-13.13s %s\n", 
             MSG_QSTAT_PRT_QUEUENAME,
             MSG_QSTAT_PRT_QTYPE, 
             MSG_QSTAT_PRT_USEDTOT,
@@ -143,7 +143,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    printf("----------------------------------------------------------------------------%s\n", 
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
-   printf("%-20.20s ", queue_name);
+   printf("%-30.30s ", queue_name);
 
    {
       dstring type_string = DSTRING_INIT;
@@ -178,7 +178,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       sprintf(to_print, "%s ", arch_string);
    else
       sprintf(to_print, "-NA- ");
-   printf("%-9.9s ", to_print);   
+   printf("%-13.13s ", to_print);   
 
    {
       dstring state_string = DSTRING_INIT;

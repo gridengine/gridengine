@@ -231,7 +231,7 @@ char **argv
    ** format and print the info
    */
 
-#define HEAD_FORMAT "%-20s %-10.10s %5.5s %5.5s %8.8s %8.8s %8.8s %8.8s\n"
+#define HEAD_FORMAT "%-23s %-13.13s%4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
 
    for_each(ep, ehl) {
       if (print_header) {

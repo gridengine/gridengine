@@ -1660,7 +1660,7 @@ DTRACE;
          }
          else if (!strcmp("w", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, WARINING_VERIFY);
+            lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
          }
          else if (!strcmp("n", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
@@ -2405,6 +2405,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
 {
    char *variable;
    char *value;
+   char *val_str;
+   int var_len;
    stringT str;
    char **str_str;
    char **pstr;
@@ -2451,8 +2453,14 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
       SGE_ASSERT((variable));
       memset(str, 0, sizeof(str));
       sprintf(str, "%s=", variable);
+      var_len=strlen(variable);
       lSetString(ep, VA_variable, variable);
-      value = sge_strtok((char *) NULL, "=");
+      val_str=*pstr;
+      if (val_str[var_len] == '\0')
+         value="";
+      else
+         value=&val_str[var_len+1];
+
       if (value)
          lSetString(ep, VA_value, value);
       else if(check_environment)

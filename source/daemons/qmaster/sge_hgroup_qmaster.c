@@ -232,7 +232,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
           */
          old_href_list = lCopyList("", lGetList(hgroup, HGRP_host_list));
          attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
-                           reduced_elem, sub_command, SGE_ATTR_HOSTNAME,
+                           reduced_elem, sub_command, SGE_ATTR_HOSTLIST,
                            SGE_OBJ_HGROUP, 0); 
          href_list = lGetList(hgroup, HGRP_host_list);
 

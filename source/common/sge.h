@@ -101,6 +101,7 @@
 #define SGE_ATTR_SUBORDINATE_LIST      "subordinate_list"
 #define SGE_ATTR_QUEUE_LIST            "queue_list"
 #define SGE_ATTR_HOSTNAME              "hostname"
+#define SGE_ATTR_HOSTLIST              "hostlist"
 #define SGE_ATTR_PE_NAME               "pe_name"
 #define SGE_ATTR_CKPT_NAME             "ckpt_name"
 #define SGE_ATTR_HGRP_NAME             "group_name"

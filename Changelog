@@ -1,3 +1,17 @@
+EB-2003-01-23-1  Bugfix:    execd does process tracking even if no job has to
+                            be controlled.
+                 IZ:        #416
+                 Bugtraq:   #4776016
+                 Review:    has to be done
+                 Changed:   sge_execd
+
+EB-2003-01-23-0  Bugfix:    qacct -l selection broken and
+                            qacct -nohist -l selection broken
+                 IZ:        #455
+                 Bugtraq:   #4802171
+                 Review:    has to be done
+                 Changed:   qacct
+
 AH-2003-01-23-0: Bugfix:    qtcsh can't be used as normal tcsh
                  Bugtraq:   #4776821
                  IZ:        #417
@@ -7,7 +21,7 @@ AH-2003-01-23-0: Bugfix:    qtcsh can't be used as normal tcsh
 JG-2003-01-23-0  Bugfix:    Set commlib timeouts in qsh analogous to qsub.
                  Bugtraq:   #4654993
 
-SD-2003-01-22-2  Enhancem.  Added code to source/libs/cull/cull_list.c to
+SD-2003-01-22-0  Enhancem.  Added code to source/libs/cull/cull_list.c to
                             randomize the elements before calling qsort. This
                             code is currently turned off until tests can
                             be run to find out if it improves performance.

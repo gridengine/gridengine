@@ -146,7 +146,9 @@ _Insight_set_option("suppress", "PARM_NULL");
             DEXIT;
             return -1;
          }
+      }
 
+      if (type == CULL_READ_SPOOL) {
          /* --------- EH_reschedule_unknown_list */
          if (!set_conf_deflist(alpp, clpp, fields, "reschedule_unknown_list", 
              ep, EH_reschedule_unknown_list, RU_Type, intprt_as_reschedule)) {

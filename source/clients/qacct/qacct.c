@@ -1696,7 +1696,6 @@ lList **ppexechosts
    ** GET SGE_QUEUE_LIST 
    */
    what = lWhat("%T(ALL)", QU_Type);
-   alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_GET, ppqueues, NULL, what);
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_QUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal);
    what = lFreeWhat(what);

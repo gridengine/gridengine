@@ -40,7 +40,7 @@ set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7c-static/$buildarch
 # KRB_HOME the directory where the include and lib directory of kerberos is
 # installed
 #
-set KRB_HOME = /usr/krb5
+set KRB_HOME = /vol2/tools/SW/krb5/$buildarch
 
 # 
 # INSURE4_LIBDIR the directory where the insure library is installed
@@ -63,7 +63,7 @@ set SWIG = /vol2/tools/SW/$buildarch/bin/swig
 #
 # PERL path
 #
-set PERL = perl
+set PERL = /vol2/tools/SW/$buildarch/bin/perl
 
 #
 # TCLSH path

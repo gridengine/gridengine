@@ -81,7 +81,7 @@ proc init_level {} {
 
 
 proc issue_1096_shutdown_master {} {
-   global ts_config CHECK_HOST
+   global ts_config
 
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
    after 5000
@@ -93,8 +93,8 @@ proc issue_1096_run  {} {
 
    puts $CHECK_OUTPUT "try to start qmaster on port $ts_config(reserved_port) ..."
 
-   for { set i 0 } { $i < [llength $ts_config(execd_hosts) ]  } { incr i 1 } {
-      set act_host [lindex  $ts_config(execd_hosts) $i]
+   for { set i 0 } { $i < [llength $ts_config(unique_arch_nodes) ]  } { incr i 1 } {
+      set act_host [lindex  $ts_config(unique_arch_nodes) $i]
       set arch [resolve_arch $act_host]
 
       if { $arch == "win32-x86" } {

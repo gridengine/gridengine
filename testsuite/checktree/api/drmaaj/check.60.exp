@@ -86,7 +86,7 @@ proc drmaaj_init_level {} {
 # here the actual test is done
 proc drmaaj_check {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_CORE_EXECD
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
@@ -99,7 +99,7 @@ proc drmaaj_check {} {
    set new_config(qmaster_params) "FORBID_RESCHEDULE FORBID_APPERROR"
    set_config new_config
 
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(unique_arch_nodes) {
       set binary_arch "[resolve_arch $host]"
       set JAVA "[get_binary_path $host java]"
 

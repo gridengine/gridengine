@@ -161,12 +161,13 @@ proc init_level {} {
 #     ???/???
 #*******************************
 proc qdel_setup {} {
-   global queue CHECK_HOST 
+   global ts_config
+   global queue
 
    set q_param(load_thresholds)       "np_load_avg=7.00"
    set q_param(slots)                 "50"
 
-   add_queue $queue $CHECK_HOST q_param
+   add_queue $queue [lindex $ts_config(execd_nodes) 0] q_param
    set_error 0 "ok"
 }
 
@@ -200,17 +201,18 @@ proc qdel_setup {} {
 #     ???/???
 #*******************************
 proc qdel_cleanup {} {
-   global queue CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
-   global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
+   global ts_config
+   global queue CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
    global CHECK_SECOND_FOREIGN_SYSTEM_USER
 
    delete_all_jobs
    wait_for_end_of_all_jobs 120
 
-   del_queue $queue $CHECK_HOST 0 1
+   del_queue $queue [lindex $ts_config(execd_nodes) 0] 0 1
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
-   foreach hostname $CHECK_CORE_EXECD {
+   foreach hostname $ts_config(execd_nodes) {
       set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
       puts $CHECK_OUTPUT $output
    }
@@ -218,11 +220,12 @@ proc qdel_cleanup {} {
    set_error 0 "ok"
 }
 
-proc qdel_submit_delete_when_transfered { } {
+proc qdel_submit_delete_when_transfered {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
-   global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_ACT_LEVEL ts_config
+   global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
+   global CHECK_ACT_LEVEL
  
    if { $CHECK_ACT_LEVEL == 0 } {
       if { $ts_config(gridengine_version) == 60 } {
@@ -249,9 +252,8 @@ proc qdel_submit_delete_when_transfered { } {
       wait_for_end_of_all_jobs 100
       set runs 25
       while { $runs > 0 } { 
-         foreach elem $CHECK_CORE_EXECD {
+         foreach elem $ts_config(unique_arch_nodes) {
             set arguments "-o /dev/null -e /dev/null -q [get_queue_instance all.q $elem]"
-      #      start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"
             set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
             puts $CHECK_OUTPUT $result
             set id_pos [string first $job_id_prefix $result]
@@ -276,7 +278,7 @@ proc qdel_submit_delete_when_transfered { } {
    }
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
-   foreach hostname $CHECK_CORE_EXECD {
+   foreach hostname $ts_config(execd_nodes) {
       set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q ${hostname}]" } output ]
       puts $CHECK_OUTPUT $output
    }
@@ -380,8 +382,9 @@ proc are_jobs_deleted { job_list } {
 #     ???/???
 #*******************************
 proc submit_testjobs { { user "" } { additional_job_args "" }} {
+   global ts_config
   global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT 
-  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_HOST ts_config
+  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST ts_config
 
   set joblist ""
   set year [exec date "+%Y"] 
@@ -397,7 +400,7 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      }
   }
  
-  set jobargs "$additional_job_args $jobargs -q [get_queue_instance $queue $CHECK_HOST] $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
+  set jobargs "$additional_job_args $jobargs -q [get_queue_instance $queue [lindex $ts_config(execd_nodes) 0]] $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
 
   if { [string compare "" $user] == 0 } {
      # no user specified (using local user name (starter of testsuite))
@@ -498,7 +501,7 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
 #     ???/???
 #*******************************
 proc qdel_delete_job_0 {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "0" } output ]
    
@@ -550,7 +553,7 @@ proc qdel_delete_job_0 {} {
 #     ???/???
 #*******************************
 proc qdel_help {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_PRODUCT_VERSION_NUMBER CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_PRODUCT_VERSION_NUMBER
    global qdel_help_lines
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-help" } output ]
@@ -609,7 +612,7 @@ proc qdel_help {} {
 #*******************************
 proc qdel_job_task_list {} {
 
-    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env CHECK_HOST
+    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
 
     # submit jobs to delete
     set job_list [submit_testjobs]
@@ -716,7 +719,7 @@ proc qdel_delete_unknown_jobid {} {
 }
 
 proc qdel_delete_unknown_jobid_proc {job_list default_output} {
-  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env CHECK_HOST
+  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
 
   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_list" } qdel_output ] 
 
@@ -803,7 +806,7 @@ proc qdel_delete_unknown_jobid_proc {job_list default_output} {
 #     ???/???
 #*******************************
 proc qdel_delete_negative_jobid {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-1" } output ]
    
@@ -1269,9 +1272,10 @@ proc qdel_user_list {} {
 #     ???/???
 #*******************************
 proc qdel_force {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
    global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH 
-   global CHECK_HOST pending_state CHECK_PRODUCT_TYPE CHECK_HOST CHECK_COMMD_PORT
+   global CHECK_HOST pending_state CHECK_PRODUCT_TYPE CHECK_COMMD_PORT
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
@@ -1295,8 +1299,10 @@ proc qdel_force {} {
    set job_list_user2 [submit_testjobs $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "user 2 has jobs $job_list_user2"
 
+   set test_host [lindex $ts_config(execd_nodes) 0]
+
    # shutdown execd
-   catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $CHECK_HOST} output
+   catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $test_host} output
    sleep 2
    puts $output
 
@@ -1338,7 +1344,7 @@ proc qdel_force {} {
       }
      
       # now restart execd
-      startup_execd $CHECK_HOST
+      startup_execd $test_host
    } 
 
    # wait for deletion of the jobs
@@ -1349,7 +1355,7 @@ proc qdel_force {} {
    if {$pending_state != 0} { 
 
       # now restart execd
-      startup_execd $CHECK_HOST
+      startup_execd $test_host
    }
   # ok - qdel without execd is ok, now check the -f option 
 
@@ -1361,7 +1367,7 @@ proc qdel_force {} {
    puts $CHECK_OUTPUT "user 2 has jobs $job_list_user2"
 
    # shutdown execd
-   catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $CHECK_HOST} output
+   catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $test_host} output
    sleep 2
    puts $output
 
@@ -1431,7 +1437,7 @@ proc qdel_force {} {
    puts $CHECK_OUTPUT "qmaster_params set to $change_array(qmaster_params)"
 
    # now restart execd
-   startup_execd $CHECK_HOST
+   startup_execd $test_host
    wait_for_load_from_all_queues 300
 
    set_error 0 "no errors"

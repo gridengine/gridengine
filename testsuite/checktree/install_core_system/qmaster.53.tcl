@@ -63,7 +63,7 @@
 proc install_qmaster {} {
    global ts_config
  global CHECK_USER check_errstr 
- global CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
+ global CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
  global open_spawn_buffer CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set
  global check_use_installed_system CHECK_ADMIN_USER_SYSTEM CHECK_DEFAULT_DOMAIN
  global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_COMMD_PORT
@@ -96,7 +96,7 @@ proc install_qmaster {} {
  #dump hostlist to file
  set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
  set f [open $host_file_name w]
- foreach exechost $CHECK_CORE_EXECD {
+ foreach exechost $ts_config(all_nodes) {
     puts $f "${exechost}"
  }
  close $f
@@ -560,7 +560,7 @@ proc install_qmaster {} {
        -i $sp_id $ENTER_HOSTS {
           incr hostcount 1 
           if {$hostcount == 1} {
-             foreach exechost $CHECK_CORE_EXECD {
+             foreach exechost $ts_config(all_nodes) {
                send -i $sp_id " $exechost"
                puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
              } 

@@ -88,11 +88,13 @@ proc job_environment_init_level {} {
 
 
 proc job_environment_setup  {} {
-   global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_HOST
-   global queue
+   global ts_config
+   global CHECK_OUTPUT
+   global queue test_host
 
    puts $CHECK_OUTPUT "setup ..."
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
+   set test_host [lindex $ts_config(execd_nodes) 0]
+   set queue [get_queue_instance "all.q" $test_host]
 
    set_error 0 "ok"
 }
@@ -127,7 +129,7 @@ proc job_environment_parse_env_test_output { file array } {
 }
 
 proc job_environment_qsub_job { jobname array arguments } {
-   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_HOST CHECK_SCRIPT_FILE_DIR
+   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_SCRIPT_FILE_DIR
    global queue
    upvar $array job_env_array
 
@@ -156,7 +158,7 @@ proc job_environment_qsub_job { jobname array arguments } {
 }
 
 proc job_environment_qresub_job { jobname array arguments } {
-   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_SCRIPT_FILE_DIR
+   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_SCRIPT_FILE_DIR
    global CHECK_OUTPUT
    global queue
 
@@ -173,7 +175,7 @@ proc job_environment_qresub_job { jobname array arguments } {
 }
 
 proc job_environment_qalter_job { jobname array qsub_args qalter_args } {
-   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_SCRIPT_FILE_DIR
+   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_SCRIPT_FILE_DIR
    global CHECK_OUTPUT
    global queue
 
@@ -189,7 +191,7 @@ proc job_environment_qalter_job { jobname array qsub_args qalter_args } {
 }
 
 proc job_environment_qrsh_job { array arguments } {
-   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
+   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH 
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
    global queue
 
@@ -203,12 +205,12 @@ proc job_environment_qrsh_job { array arguments } {
 proc job_environment_qsh_job { array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
-   global queue
+   global queue test_host
 
    upvar $array job_env_array
 
    set script_name "$CHECK_PROTOCOL_DIR/temp_script.sh"
-   create_shell_script $script_name $CHECK_HOST "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
+   create_shell_script $script_name $test_host "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $queue -S $script_name"]
    puts $CHECK_OUTPUT $output
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
@@ -318,7 +320,7 @@ proc job_environment_check_env_value { env_name should_be is_name } {
 }
 
 proc job_environment_JOB_NAME {} {
-   global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR
   
    puts $CHECK_OUTPUT "\nqsub ..."
    if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
@@ -363,7 +365,6 @@ proc job_environment_JOB_NAME {} {
    job_environment_check_env_value "REQUEST" "jobenv.sh" job_env(REQUEST)
 
    set_error 0 "ok"
-
 }
 
 proc job_environment_cleanup  {} {

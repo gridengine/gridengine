@@ -32,7 +32,7 @@
 #___INFO__MARK_END__
 
 proc check_qhold_jobname {} {
- global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_host
+ global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
  global CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # first clean up output directory:  
@@ -220,7 +220,7 @@ proc check_qhold_jobname {} {
 #     ???/???
 #*******************************
 proc check_option_v {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST CHECK_ARCH 
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH 
    global job_output_dir actual_host
 
    # first clean up output directory:  

@@ -43,7 +43,7 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
    global CHECK_OUTPUT
 
    if { $hostlist == "" } {
-      set hostlist $ts_config(execd_hosts)
+      set hostlist $ts_config(execd_nodes)
    }
 
    # set queue_list in checkpoint object
@@ -66,7 +66,7 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    global CHECK_OUTPUT
 
    if { $hostlist == "" } {
-      set hostlist $ts_config(execd_hosts)
+      set hostlist $ts_config(execd_nodes)
    }
 
    # set queue_list in checkpoint object
@@ -132,7 +132,7 @@ proc validate_checkpointobj { change_array } {
 proc startup_shadowd { hostname } {
   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
@@ -197,8 +197,7 @@ proc startup_shadowd { hostname } {
 proc startup_execd { hostname } {
   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_CORE_MASTER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
  

@@ -64,7 +64,7 @@ proc init_level {} {
 }
 
 proc issue_1359_run  {} {
-   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER
    global CHECK_PRODUCT_ROOT
 
    # prepare operation with file

@@ -1658,9 +1658,11 @@ proc get_file_content { host user file { file_a "file_array" } } {
 #  SEE ALSO
 #     file_procedures/get_dir_names
 #*******************************
-proc get_binary_path { hostname binary } {
+proc get_binary_path { nodename binary } {
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
    global ts_host_config
+
+   set hostname [node_get_host $nodename]
 
    if { [ info exists ts_host_config($hostname,$binary) ] } {
       return $ts_host_config($hostname,$binary)

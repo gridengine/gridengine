@@ -67,7 +67,7 @@ proc init_level {} {
 }
 
 proc commlib_issues_setup {} {
-   global ts_config CHECK_HOST
+   global ts_config
 
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
    after 5000
@@ -75,10 +75,10 @@ proc commlib_issues_setup {} {
 }
 
 proc commlib_issues_run  {} {
-   global ts_config  CHECK_OUTPUT CHECK_USER
+   global ts_config CHECK_OUTPUT CHECK_USER
    
-   set server_host [lindex $ts_config(execd_hosts) 0]
-   set client_host [lindex $ts_config(execd_hosts) 1]
+   set server_host [lindex $ts_config(execd_nodes) 0]
+   set client_host [lindex $ts_config(execd_nodes) 1]
    
    puts $CHECK_OUTPUT "using server host $server_host"
    puts $CHECK_OUTPUT "using client host $client_host"

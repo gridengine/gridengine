@@ -83,7 +83,7 @@ proc issue_545_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc issue_545_check {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
    # SETUP 
    get_schedd_config stored_schedd_conf

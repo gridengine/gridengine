@@ -1494,7 +1494,6 @@ proc config_execd_hosts { only_check name config_array } {
    global CHECK_OUTPUT do_nomain
    global CHECK_HOST
    global CHECK_CORE_EXECD
-   global CHECK_CORE_PROCESSORS
    global CHECK_SOURCE_COMPILE_HOSTS
    global ts_host_config
 
@@ -1605,19 +1604,35 @@ proc config_execd_hosts { only_check name config_array } {
          return -1
       }
    }
-   set CHECK_CORE_EXECD $value
+
+   # set host lists
+   # set CHECK_CORE_EXECD $value
+   # we need a mapping from node to physical hosts
+   foreach host $config(execd_hosts) {
+      node_set_host $host $host
+      set nodes [host_conf_get_nodes $host]
+      foreach node $nodes {
+         node_set_host $node $host
+      }
+   }
+
+   # create list of all (execd) nodes
+   set config(all_nodes) [host_conf_get_all_nodes $value]
+   set config(execd_nodes) [host_conf_get_nodes $value]
+
+   # create a list of unique nodes (one node per physical host)
+   set config(unique_execd_nodes) [host_conf_get_unique_nodes $value]
+
+   # create a list of nodes unique per architecture
+   set config(unique_arch_nodes) [host_conf_get_unique_arch_nodes $config(unique_execd_nodes)]
+
+   # for compatibility, we set CHECK_CORE_EXECD to the node list
+   # TODO: should be eliminated, use $ts_config(execd_nodes) instead
+   set CHECK_CORE_EXECD $config(execd_nodes)
 
    if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
       return -1
    }
-
-   set CHECK_CORE_PROCESSORS ""
-   foreach host $CHECK_CORE_EXECD {
-      debug_puts "setting processors of host $host to $ts_host_config($host,processors)"
-      lappend CHECK_CORE_PROCESSORS $ts_host_config($host,processors)
-   }
-
-
 
    return $value
 }
@@ -1645,7 +1660,6 @@ proc config_execd_hosts { only_check name config_array } {
 #*******************************************************************************
 proc config_submit_only_hosts { only_check name config_array } {
    global CHECK_OUTPUT 
-   global CHECK_HOST
    global CHECK_CORE_EXECD
    global CHECK_SUBMIT_ONLY_HOSTS
    global ts_host_config
@@ -1692,7 +1706,7 @@ proc config_submit_only_hosts { only_check name config_array } {
           if { [ string compare $host "all" ] == 0 } {
              set selected ""
              foreach host $ts_host_config(hostlist) {
-                if { [ lsearch -exact $CHECK_CORE_EXECD $host ] < 0 } {
+                if { [ lsearch -exact $config(execd_hosts) $host ] < 0 } {
                    append selected " $host"
                 }
              }
@@ -2905,7 +2919,6 @@ proc config_report_mail_cc { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_USER 
    global CHECK_MAILX_HOST
-   global CHECK_HOST
    global CHECK_REPORT_EMAIL_CC
 
    upvar $config_array config
@@ -2968,7 +2981,6 @@ proc config_enable_error_mails { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_USER 
    global CHECK_MAILX_HOST
-   global CHECK_HOST
    global CHECK_REPORT_EMAIL_TO
    global CHECK_REPORT_EMAIL_CC
    global CHECK_SEND_ERROR_MAILS
@@ -3055,7 +3067,7 @@ proc config_enable_error_mails { only_check name config_array } {
 proc config_l10n_test_locale { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_L10N ts_host_config ts_config
-   global CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_SUBMIT_ONLY_HOSTS 
+   global CHECK_CORE_MASTER CHECK_SUBMIT_ONLY_HOSTS 
 
    upvar $config_array config
    set actual_value  $config($name)
@@ -3101,7 +3113,7 @@ proc config_l10n_test_locale { only_check name config_array } {
               puts $CHECK_OUTPUT "locale not defined for master host $CHECK_CORE_MASTER"
               incr was_error 1
            }
-           foreach host $CHECK_CORE_EXECD {
+           foreach host $config(execd_hosts) {
               if { $ts_host_config($host,${value}_locale) == "" } {
                  puts $CHECK_OUTPUT "locale not defined for execd host $host"
                  incr was_error 1
@@ -3476,7 +3488,7 @@ proc config_testsuite_cell { only_check name config_array } {
 #*******************************************************************************
 proc config_add_compile_archs { only_check name config_array } {
    global CHECK_OUTPUT 
-   global CHECK_HOST CHECK_ADDITIONAL_COMPILE_HOSTS
+   global CHECK_ADDITIONAL_COMPILE_HOSTS
    global ts_host_config
 
    upvar $config_array config

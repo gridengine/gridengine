@@ -180,7 +180,7 @@ proc validate_checkpointobj { change_array } {
 proc startup_shadowd { hostname } {
   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
@@ -243,10 +243,9 @@ proc startup_shadowd { hostname } {
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc startup_execd { hostname } {
-  global ts_config
+   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_CORE_MASTER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
  

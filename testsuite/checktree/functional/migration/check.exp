@@ -60,11 +60,11 @@ lappend check_functions "clean_up_checkpoint_job"
 
 
 # global test variables
-global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name migration_ckpt_name CHECK_CORE_EXECD
+global ts_config checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name migration_ckpt_name
 global checkpoint_job_id 
 
-set checkpoint_host1 [lindex $CHECK_CORE_EXECD 0] 
-set checkpoint_host2 [lindex $CHECK_CORE_EXECD 1]
+set checkpoint_host1 [lindex $ts_config(execd_nodes) 0] 
+set checkpoint_host2 [lindex $ts_config(execd_nodes) 1]
 set q1 "ckpt_mig-1"
 set q2 "ckpt_mig-2"
 set q3 "ckpt_mig-3"
@@ -716,9 +716,9 @@ proc clean_up_checkpointing {} {
 #     check if test can run
 #*******************************************************************************
 proc check_test_dependencies { } {
-   global CHECK_CORE_EXECD
+   global ts_config
 
-   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+   if { [ llength $ts_config(execd_nodes) ] < 2 } {
      set_error -3 "setup_queues - need 2 execution daemons"
      return 1
    }
@@ -755,7 +755,7 @@ proc check_test_dependencies { } {
 #     ???/???
 #*******************************
 proc setup_pe {} {
-  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name CHECK_CORE_EXECD
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name
   
   if { [check_test_dependencies] != 0 } {
      return
@@ -871,7 +871,7 @@ proc clean_up_pe {} {
 proc setup_queues {} {
 # we need SOLARIS64 and AIX4.3 machines !
 
-  global CHECK_CORE_EXECD checkpoint_host1 checkpoint_host2 q1 q2 q3 q4
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4
 
   if { [check_test_dependencies] != 0 } {
      return

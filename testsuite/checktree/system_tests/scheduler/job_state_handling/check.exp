@@ -97,7 +97,6 @@ proc job_state_handling_init_level {} {
 proc job_state_handling_setup  {} {
    global CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE
-   global CHECK_CORE_EXECD
    global CHECK_ARCH
    global CHECK_PRODUCT_ROOT
 
@@ -106,11 +105,12 @@ proc job_state_handling_setup  {} {
 }
 
 proc job_state_handling_hold_pending_running_finished {} {
-   global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD CHECK_ARCH
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_OUTPUT CHECK_HOST
    global test_array_jobs
 
-   set master_queue [lindex $CHECK_CORE_EXECD 0]
+   set master_queue [lindex $ts_config(execd_nodes) 0]
 # -q ${master_queue}.q
    if { $test_array_jobs == 0 } { 
       set jobargs "-o /dev/null -e /dev/null -h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
@@ -145,7 +145,7 @@ proc job_state_handling_hold_pending_running_finished {} {
    }
    
    set queue_list ""
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(execd_nodes) {
       append queue_list "$host.q "
    }  
    set queue_list [string trim $queue_list]
@@ -512,14 +512,12 @@ proc job_state_handling_max_aj_tasks {} {
 proc job_state_handling_cleanup  {} {
    global CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE 
-   global CHECK_CORE_EXECD 
-   global CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_ARCH CHECK_USER
    global CHECK_PRODUCT_ROOT
 
    puts $CHECK_OUTPUT "do qdel -uall"
    set catch_result [delete_all_jobs]
    puts $CHECK_OUTPUT $catch_result
-
 
    set_error 0 "ok"
 }

@@ -88,14 +88,15 @@ proc issue_440_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc issue_440_check_qsub {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR 
    global CHECK_CORE_MASTER issue_440_MAX_KBYTE
-   global CHECK_HOST
 
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_queue [get_queue_instance "all.q" $CHECK_HOST]
+   set submit_host  [lindex $ts_config(execd_nodes) 0]
+   set submit_queue [get_queue_instance "all.q" $submit_host]
 
    # submit different command line length jobs
    while { $start_length <= $end_length } {
@@ -183,9 +184,9 @@ proc issue_440_check_qsub {} {
 }
 
 proc issue_440_check_qrsh {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_HOST 
    global CHECK_CORE_MASTER CHECK_USER issue_440_MAX_KBYTE
-   global CHECK_HOST
 
    # test script
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
@@ -193,7 +194,9 @@ proc issue_440_check_qrsh {} {
    # set start and end command line size
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_queue [get_queue_instance "all.q" $CHECK_HOST]
+
+   set submit_host  [lindex $ts_config(execd_nodes) 0]
+   set submit_queue [get_queue_instance "all.q" $submit_host]
 
    # submit qrsh jobs with different command line length
    while { $start_length <= $end_length } {

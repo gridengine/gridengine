@@ -67,7 +67,7 @@ set qdel_help_lines 14
 #     ???/???
 #*******************************
 proc qdel_verify {} {
-  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env CHECK_HOST
+  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
 
 
   # submit jobs to delete

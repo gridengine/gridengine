@@ -64,7 +64,7 @@ lappend check_functions "qalter_qs_args"
 #*******************************
 proc qalter_qs_args {} {
    global ts_config
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 

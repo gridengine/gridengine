@@ -35,7 +35,7 @@
 global check_name check_description check_needs check_functions check_errno check_errstr 
 global check_category
 global check_highest_level check_init_level_procedure
-global CHECK_CORE_EXECD
+global ts_config
 global check_root_access_needs
 
 # some parameters to huge_script test
@@ -52,12 +52,12 @@ set HUGE_SCRIPT_PATTERN  "generated huge script file for testsuite, 100 characte
 
 # setup check's highest level
 
-set check_highest_level [llength $CHECK_CORE_EXECD]
+set check_highest_level [llength $ts_config(unique_arch_nodes)]
 incr check_highest_level -1
 
 # set description for each level
 for {set i 0} { $i <= $check_highest_level } { incr i} {
-   set check_description($i)  "check every option for execution on host [lindex $CHECK_CORE_EXECD $i]" 
+   set check_description($i)  "check every option for execution on host [lindex $ts_config(unique_arch_nodes) $i]" 
 }
 
 set check_init_level_procedure "qsub_init_level"
@@ -153,11 +153,12 @@ set job_output_dir "."
 #     ???/???
 #*******************************
 proc qsub_init_level {} {
-   global actual_host CHECK_ACT_LEVEL CHECK_CORE_EXECD
+   global ts_config
+   global actual_host CHECK_ACT_LEVEL
    global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
    global HUGE_SCRIPT_MAX_SIZE 
 
-   set num_queues [llength $CHECK_CORE_EXECD] 
+   set num_queues [llength $ts_config(unique_arch_nodes)] 
 
    # setup huge_script test
    set steps_per_queue [expr $HUGE_SCRIPT_STEPS / $num_queues]
@@ -168,7 +169,7 @@ proc qsub_init_level {} {
    set size_interval [expr $HUGE_SCRIPT_MAX_SIZE / $steps_total]
    
    if { $CHECK_ACT_LEVEL < $num_queues } {
-      set actual_host [lindex $CHECK_CORE_EXECD $CHECK_ACT_LEVEL] 
+      set actual_host [lindex $ts_config(unique_arch_nodes) $CHECK_ACT_LEVEL] 
       return 0
    } 
 
@@ -205,7 +206,8 @@ proc qsub_init_level {} {
 #     ???/???
 #*******************************
 proc check_submit {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
    global check_errno job_output_dir actual_host
    global check_errstr CHECK_OUTPUT
 
@@ -214,7 +216,7 @@ proc check_submit {} {
    setup_output_directory
   
 
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(unique_arch_nodes) {
      set jobargs "-q [get_queue_instance all.q ${actual_host}] -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
      set result [submit_job $jobargs 1 30 $host] 
 
@@ -242,7 +244,7 @@ proc check_submit {} {
 
 
 proc qsub_starter_method {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
    global actual_host
@@ -409,7 +411,7 @@ proc setup_output_directory {} {
 #     ???/???
 #*******************************
 proc check_hold {} {
-   global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_host
+   global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
  
    # first clean up output directory:  
    setup_output_directory
@@ -485,7 +487,7 @@ proc check_hold {} {
 #     ???/???
 #*******************************
 proc check_start_time {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT actual_host
 
@@ -607,7 +609,7 @@ proc check_start_time {} {
 #     ???/???
 #*******************************
 proc check_deadline {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD CHECK_PRODUCT_TYPE
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
    global check_errno CHECK_JOB_OUTPUT_DIR actual_host
    global check_errstr CHECK_OUTPUT job_output_dir
 
@@ -822,7 +824,7 @@ proc check_deadline {} {
 #*******************************
 proc check_option_ac {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -890,7 +892,7 @@ proc check_option_ac {} {
 #*******************************
 proc check_option_A {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -958,7 +960,7 @@ proc check_option_A {} {
 #*******************************
 proc check_option_clear {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1027,7 +1029,7 @@ proc check_option_clear {} {
 #*******************************
 proc check_option_c {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1094,7 +1096,7 @@ proc check_option_c {} {
 #*******************************
 proc check_option_ckpt {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1161,7 +1163,7 @@ proc check_option_ckpt {} {
 #*******************************
 proc check_option_cwd {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1228,7 +1230,7 @@ proc check_option_cwd {} {
 #*******************************
 proc check_option_C {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1295,7 +1297,7 @@ proc check_option_C {} {
 #*******************************
 proc check_option_dc {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1362,7 +1364,7 @@ proc check_option_dc {} {
 #*******************************
 proc check_option_e {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1429,7 +1431,7 @@ proc check_option_e {} {
 #*******************************
 proc check_option_hard {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1496,7 +1498,7 @@ proc check_option_hard {} {
 #*******************************
 proc check_option_help {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1545,7 +1547,7 @@ proc check_option_help {} {
 #*******************************
 proc check_option_hold_jid {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1612,7 +1614,7 @@ proc check_option_hold_jid {} {
 #*******************************
 proc check_option_j_y {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1679,7 +1681,7 @@ proc check_option_j_y {} {
 #*******************************
 proc check_option_j_n {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1746,7 +1748,7 @@ proc check_option_j_n {} {
 #*******************************
 proc check_option_l {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1813,7 +1815,7 @@ proc check_option_l {} {
 #*******************************
 proc check_option_m {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1880,7 +1882,7 @@ proc check_option_m {} {
 #*******************************
 proc check_option_notify {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -1947,7 +1949,7 @@ proc check_option_notify {} {
 #*******************************
 proc check_option_now_yes {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2014,7 +2016,7 @@ proc check_option_now_yes {} {
 #*******************************
 proc check_option_now_no {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2081,7 +2083,7 @@ proc check_option_now_no {} {
 #*******************************
 proc check_option_M {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host CHECK_USER CHECK_REPORT_EMAIL_TO
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_USER CHECK_REPORT_EMAIL_TO
 
    if { [ string compare $CHECK_REPORT_EMAIL_TO "none" ] == 0 } {
       add_proc_error "check_option_M" -1 "no email address specified"  
@@ -2153,7 +2155,7 @@ proc check_option_M {} {
 #*******************************
 proc check_option_N {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2221,7 +2223,7 @@ proc check_option_N {} {
 #*******************************
 proc check_option_o {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2288,7 +2290,7 @@ proc check_option_o {} {
 #*******************************
 proc check_option_P {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2355,7 +2357,7 @@ proc check_option_P {} {
 #*******************************
 proc check_option_p {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2422,7 +2424,7 @@ proc check_option_p {} {
 #*******************************
 proc check_option_pe {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2489,7 +2491,7 @@ proc check_option_pe {} {
 #*******************************
 proc check_option_q {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2556,7 +2558,7 @@ proc check_option_q {} {
 #*******************************
 proc check_option_r_y {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2623,7 +2625,7 @@ proc check_option_r_y {} {
 #*******************************
 proc check_option_r_n {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2690,7 +2692,7 @@ proc check_option_r_n {} {
 #*******************************
 proc check_option_sc {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2757,7 +2759,7 @@ proc check_option_sc {} {
 #*******************************
 proc check_option_soft {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2824,7 +2826,7 @@ proc check_option_soft {} {
 #*******************************
 proc check_option_S {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -2890,7 +2892,7 @@ proc check_option_S {} {
 #     ???/???
 #*******************************
 proc check_option_t {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global job_output_dir actual_host
 
    # first clean up output directory:  
@@ -2976,7 +2978,7 @@ proc check_option_t {} {
 #*******************************
 proc check_option_verify {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -3026,7 +3028,7 @@ proc check_option_verify {} {
 #*******************************
 proc check_option_V {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -3093,7 +3095,7 @@ proc check_option_V {} {
 #*******************************
 proc check_option_w {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -3160,7 +3162,7 @@ proc check_option_w {} {
 #*******************************
 proc check_option_@ {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host CHECK_ACTUAL_TEST_PATH
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ACTUAL_TEST_PATH
 
    # first clean up output directory:  
    setup_output_directory
@@ -3209,7 +3211,7 @@ proc check_option_@ {} {
 #*******************************
 proc check_huge_script {} {
    global job_output_dir CHECK_PROTOCOL_DIR CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST CHECK_ACTUAL_TEST_PATH actual_host
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH actual_host
    global HUGE_SCRIPT_SIZE HUGE_SCRIPT_PATTERN HUGE_SCRIPT_TIMEOUT steps_per_queue size_interval
 
    # first clean up output directory:  

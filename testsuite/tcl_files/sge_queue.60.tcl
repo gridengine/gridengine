@@ -362,7 +362,7 @@ proc set_queue { qname hostlist change_array } {
 
 proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
    if {!$ignore_hostlist} {
       # delete individual queue instances or queue domaines

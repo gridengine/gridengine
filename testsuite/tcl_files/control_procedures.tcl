@@ -1226,9 +1226,11 @@ proc gethostname {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc resolve_arch { { host "none" } } {
+proc resolve_arch { { node "none" } } {
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
   global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
+
+   set host [node_get_host $node]
 
   if { [ info exists arch_cache($host) ] } {
      return $arch_cache($host)

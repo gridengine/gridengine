@@ -1,3 +1,6 @@
+JG-2005-03-22-0: Testsuite: Added support for solaris zones.
+                 Issue:     1503
+
 RH-2005-03-22-0: Bugfix:    starter_method is ignored with binary jobs that are 
                             started without a shell
                  Issue:     1334

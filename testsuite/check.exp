@@ -126,7 +126,6 @@ global CHECK_SUBMIT_ONLY_HOSTS     ;# list of submithosts (no execd/commd runnin
 set CHECK_SUBMIT_ONLY_HOSTS ""
 global CHECK_CORE_MASTER           ;# qmaster hostname
 set CHECK_CORE_MASTER ""
-global CHECK_CORE_PROCESSORS       ;# real number of processors (in order of CHECK_CORE_EXECD)
 global CHECK_ACT_LEVEL             ;# actual check level ( value from 0 up to xxx )
 global CHECK_ROOT_PASSWORD         ;# stored root password ( only stored in a variable )
 global CHECK_SPOOL_DIR_CONFIG_FILE ;# file for local spooldirs in $CHECK_CONFIG_DIR path
@@ -829,7 +828,7 @@ proc set_root_passwd {} {
 proc get_setup_change_state {} {
    global CHECK_OUTPUT CHECK_SETUP_CHANGES CHECK_SETUP_NAMES
    global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION
-   global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS
+   global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD
    global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
    global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
    global CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
@@ -1494,11 +1493,13 @@ proc check_executable_files {  } {
 #  SEE ALSO
 #     file_procedures/create_shell_script()
 #*******************************************************************************
-proc set_users_environment { host {variable_name env} { show_variables 0 } } {
+proc set_users_environment { node {variable_name env} { show_variables 0 } } {
    global CHECK_REMOTE_ENVIRONMENT CHECK_OUTPUT env 
    global CHECK_L10N ts_host_config ts_config
 
    upvar $variable_name environment
+
+   set host [node_get_host $node]
 
    set remote_environment $CHECK_REMOTE_ENVIRONMENT
 
@@ -2214,7 +2215,6 @@ proc setup2 { } {
    global CHECK_PROTOCOL_DIR
    global CHECK_CORE_MASTER
    global CHECK_CORE_EXECD
-   global CHECK_CORE_PROCESSORS
    global CHECK_SUBMIT_ONLY_HOSTS
    global CHECK_USER
    global CHECK_GROUP

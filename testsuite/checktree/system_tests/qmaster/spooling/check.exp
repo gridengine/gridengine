@@ -88,8 +88,8 @@ proc qmaster_spooling_setup  {} {
 
 # JG: TODO: move to sge_procedures
 proc shutdown_and_restart_qmaster {} {
-   global CHECK_HOST
-   shutdown_qmaster $CHECK_HOST [get_qmaster_spool_dir]
+   global ts_config
+   shutdown_qmaster $ts_config(master_host) [get_qmaster_spool_dir]
    startup_qmaster 0
 }
 
@@ -118,7 +118,7 @@ proc cmp_config { conf_a conf_b fields check} {
 
 # check if spooled projects are still available after qmaster restart
 proc qmaster_spooling_prj_restart {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
    set check_fields "name oticket fshare acl xacl"
 

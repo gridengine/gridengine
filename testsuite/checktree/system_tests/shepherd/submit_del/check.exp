@@ -87,8 +87,8 @@ global submit_del_check_queue
 proc submit_del_setup  {} {
    global ts_config
    global CHECK_OUTPUT CHECK_SECOND_FOREIGN_SYSTEM_USER
-   global CHECK_CORE_EXECD CHECK_MAIN_RESULTS_DIR CHECK_USER
-   global submit_del_qconfig CHECK_PRODUCT_ROOT CHECK_HOST
+   global CHECK_MAIN_RESULTS_DIR CHECK_USER
+   global submit_del_qconfig CHECK_PRODUCT_ROOT
    global submit_del_check_queue
 
    if { $ts_config(gridengine_version) == 53 } {
@@ -104,10 +104,11 @@ proc submit_del_setup  {} {
 }
 
 proc submit_del_test { } {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
-   global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_L10N CHECK_HOST ts_config
+   global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
+   global CHECK_L10N ts_config
 
    set arch [resolve_arch $CHECK_HOST]
    set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
@@ -115,7 +116,7 @@ proc submit_del_test { } {
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
    set job_list ""
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(execd_nodes) {
       set arguments "-o /dev/null -e /dev/null -l h=$host $job_script"
       lappend job_list [submit_job $arguments ]
    }
@@ -149,9 +150,9 @@ proc submit_del_test { } {
 
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
-   set runs [ expr ( [llength $$CHECK_CORE_EXECD ] * 5 ) ]
+   set runs [ expr ( [llength $ts_config(execd_nodes) ] * 5 ) ]
    while { $runs > 0 } { 
-      foreach host $CHECK_CORE_EXECD {
+      foreach host $ts_config(execd_nodes) {
          set arguments "-o /dev/null -e /dev/null -l h=$host"
          set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
          puts $CHECK_OUTPUT $result
@@ -173,16 +174,15 @@ proc submit_del_test { } {
          incr runs -1
       }
    }
-   set runs [ expr ( [llength $$CHECK_CORE_EXECD ] * 5 ) ]
+   set runs [ expr ( [llength $ts_config(execd_nodes) ] * 5 ) ]
 
    wait_for_end_of_all_jobs 120
    puts $CHECK_OUTPUT "pass 1 completed"
    
    incr job_id 1  ;# prepare job_id for next job !!!
    while { $runs > 0 } { 
-      foreach host $CHECK_CORE_EXECD {
+      foreach host $ts_config(execd_nodes) {
          set arguments "-o /dev/null -e /dev/null -l h=$host"
-#         set result [start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"]
 
          set result [start_remote_prog $CHECK_HOST $CHECK_USER "qsub" "$arguments $job_script \nqdel $job_id"]
          puts $CHECK_OUTPUT $result 
@@ -200,8 +200,8 @@ proc submit_del_test { } {
 
 proc submit_del_cleanup  {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
-   global submit_del_qconfig submit_del_check_queue CHECK_HOST
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global submit_del_qconfig submit_del_check_queue
 
 
    if {$ts_config(gridengine_version) == 53} {
@@ -214,7 +214,7 @@ proc submit_del_cleanup  {} {
    wait_for_end_of_all_jobs 100
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
-   foreach hostname $CHECK_CORE_EXECD {
+   foreach hostname $ts_config(execd_nodes) {
       set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
       puts $CHECK_OUTPUT $output
    }

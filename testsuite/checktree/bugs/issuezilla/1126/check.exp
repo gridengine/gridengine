@@ -79,7 +79,7 @@ proc init_level {} {
 
 
 proc issue_1126_shutdown_master {} {
-   global ts_config CHECK_HOST
+   global ts_config
 
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
 

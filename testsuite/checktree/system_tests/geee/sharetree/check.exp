@@ -74,7 +74,7 @@ lappend check_functions "share_tree_test"
 
 global share_tree_job_counter 
 global share_tree_percentage_variation
-global shartree_stored_configuration
+global sharetree_stored_configuration
 
 proc share_tree_init_level {} {
    global CHECK_ACT_LEVEL
@@ -253,7 +253,7 @@ proc get_normalized_ticket_order { job_list_prj1 job_list_prj2 job_list_prj3 mos
 
 
 proc set_share_tree {} {
-   global CHECK_HOST CHECK_OUTPUT
+   global CHECK_OUTPUT
 
    set s_tree ""  
    lappend s_tree "id=0"
@@ -291,34 +291,33 @@ proc set_share_tree {} {
 
 
 proc share_tree_setup  {} {
+   global ts_config
    global CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE
-   global CHECK_CORE_EXECD
    global CHECK_ARCH
    global CHECK_PRODUCT_ROOT
    global CHECK_HOST 
-   global shartree_stored_configuration test_queue test_host
-
+   global sharetree_stored_configuration test_queue test_host
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
       return 
    }
     
-   get_config shartree_stored_configuration
+   get_config sharetree_stored_configuration
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
-   if { [string compare "none" $shartree_stored_configuration(execd_params)] != 0 } {
-      append my_execd_params ",$shartree_stored_configuration(execd_params)"
+   if { [string compare "none" $sharetree_stored_configuration(execd_params)] != 0 } {
+      append my_execd_params ",$sharetree_stored_configuration(execd_params)"
    }
    set myconfig(execd_params) "$my_execd_params"
    set_config myconfig
 
 
-   foreach elem $CHECK_CORE_EXECD {
+   foreach elem $ts_config(execd_nodes) {
       disable_queue [get_queue_instance "all.q" "$elem"] 
    }  
   
-   set test_host [lindex $CHECK_CORE_EXECD 0]
+   set test_host [lindex $ts_config(execd_nodes) 0]
    set test_queue [get_queue_instance "test" "$test_host"]
    set change_array(slots) "1"
    set change_array(load_thresholds) "none"
@@ -589,13 +588,13 @@ proc share_tree_test {} {
 
 
 proc share_tree_cleanup  {} {
+   global ts_config
    global CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE 
-   global CHECK_CORE_EXECD 
    global CHECK_ARCH 
    global CHECK_PRODUCT_ROOT
    global prj1_id_list prj2_id_list prj3_id_list
-   global shartree_stored_configuration test_host
+   global sharetree_stored_configuration test_host
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
@@ -618,7 +617,7 @@ proc share_tree_cleanup  {} {
       puts $CHECK_OUTPUT " done"
    }
 
-   foreach elem $CHECK_CORE_EXECD {
+   foreach elem $ts_config(execd_nodes) {
       enable_queue [get_queue_instance "all.q" "$elem"]
    }  
 
@@ -635,7 +634,7 @@ proc share_tree_cleanup  {} {
   del_prj "project2"
   del_prj "project3"
 
-  set_config shartree_stored_configuration
+  set_config sharetree_stored_configuration
 
   set_error 0 "ok"
 }

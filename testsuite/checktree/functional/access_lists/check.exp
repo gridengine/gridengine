@@ -96,7 +96,7 @@ proc access_lists_setup  {} {
 
    global access_lists_schedd_conf
 
-   global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_CORE_MASTER
+   global CHECK_OUTPUT CHECK_CORE_MASTER
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_PRODUCT_ROOT
@@ -107,12 +107,12 @@ proc access_lists_setup  {} {
    set queue_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
    add_queue $access_lists_queue "@allhosts" queue_values 1
    # ... and disable all.q
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(execd_nodes) {
       disable_queue [get_queue_instance "all.q" $host]
    }
 
    # we'll use this execd as test host
-   set access_lists_host  [lindex $CHECK_CORE_EXECD 0]
+   set access_lists_host  [lindex $ts_config(execd_nodes) 0]
 
    puts $CHECK_OUTPUT "using queue $access_lists_queue"
    puts $CHECK_OUTPUT "using host $access_lists_host"
@@ -223,8 +223,7 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
 }
 
 proc check_user_job_info { job_id } {
-  
-  global CHECK_OUTPUT  CHECK_HOST CHECK_L10N
+   global CHECK_OUTPUT CHECK_HOST CHECK_L10N
 
    set had_error 0
 
@@ -960,8 +959,9 @@ proc access_lists_pe {} {
 
 
 proc access_lists_cleanup  {} {
+   global ts_config
    global access_lists_schedd_conf access_lists_queue
-   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global CHECK_OUTPUT
 
    delete_all_jobs
 
@@ -976,7 +976,7 @@ proc access_lists_cleanup  {} {
    del_queue $access_lists_queue "" 0 1
    
    # enable all.q
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(execd_nodes) {
       enable_queue [get_queue_instance "all.q" $host]
    }
 

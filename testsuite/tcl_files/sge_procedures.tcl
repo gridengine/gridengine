@@ -258,12 +258,12 @@ proc get_execd_spool_dir {host} {
 #*******************************************************************************
 proc check_messages_files { } {
    global ts_config
-   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER
+   global CHECK_OUTPUT CHECK_CORE_MASTER
 
 
    set full_info ""
 
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(execd_nodes) {
       set status [ check_execd_messages $host 1] 
       append full_info "\n=========================================\n"
       append full_info "execd: $host\n"
@@ -335,7 +335,7 @@ proc get_qmaster_messages_file { } {
 #*******************************************************************************
 proc check_qmaster_messages { { show_mode 0 } } {
    global ts_config
-   global CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_ARCH CHECK_USER
    global CHECK_OUTPUT CHECK_CORE_MASTER
 
    set spool_dir [get_qmaster_spool_dir]
@@ -406,7 +406,7 @@ proc get_schedd_messages_file { } {
 #*******************************************************************************
 proc check_schedd_messages { { show_mode 0 } } {
    global ts_config
-   global CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_ARCH CHECK_USER
    global CHECK_OUTPUT CHECK_CORE_MASTER
 
    set spool_dir [get_qmaster_spool_dir]
@@ -786,7 +786,7 @@ proc set_exechost { change_array host } {
 # 0    if ok
 
   global env CHECK_ARCH open_spawn_buffer
-  global CHECK_CORE_MASTER CHECK_HOST
+  global CHECK_CORE_MASTER
 
   upvar $change_array chgar
 
@@ -864,22 +864,30 @@ proc set_exechost { change_array host } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc get_loadsensor_path { host } {
+proc get_loadsensor_path { node } {
    global ts_config
    global CHECK_OUTPUT
    global ts_host_config
+   
+   set host [node_get_host $node]
 
    set loadsensor ""
 
    set arch [resolve_arch $host]
-   if {$arch == "aix43" || $arch == "aix51"} {
-      set loadsensor "$ts_config(product_root)/util/resources/loadsensors/ibm-loadsensor"
+
+   # if we have a custom loadsensor defined in hostconfig, use this one
+   if {[info exists ts_host_config($host,loadsensor)]} {
+      set loadsensor $ts_host_config($host,loadsensor)
    } else {
-      if {[info exists ts_host_config($host,loadsensor)]} {
-         set loadsensor $ts_host_config($host,loadsensor)
-      } else {
-         add_proc_error "get_loadsensor_path" -1 "no host configuration found for host \"$host\""
-      }
+      add_proc_error "get_loadsensor_path" -1 "no host configuration found for host \"$host\""
+   }
+
+   # if we have no custom loadsensor
+   # but we are on aix, we need the ibm-loadsensor to get the default load values
+   if { $loadsensor == "" } {
+      if {$arch == "aix43" || $arch == "aix51"} {
+         set loadsensor "$ts_config(product_root)/util/resources/loadsensors/ibm-loadsensor"
+      }   
    }
 
    return $loadsensor
@@ -1734,7 +1742,7 @@ proc add_access_list { user_array list_name } {
 proc del_access_list { list_name } {
   global ts_config
   global CHECK_ARCH CHECK_OUTPUT
-  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_CORE_MASTER CHECK_USER
 
   set result ""
   set catch_return [ catch {  
@@ -1802,7 +1810,7 @@ proc del_access_list { list_name } {
 proc add_checkpointobj { change_array } {
    global ts_config
    global CHECK_ARCH open_spawn_buffer
-   global CHECK_USER CHECK_HOST CHECK_OUTPUT
+   global CHECK_USER CHECK_OUTPUT
 
    upvar $change_array chgar
 
@@ -1861,7 +1869,7 @@ proc add_checkpointobj { change_array } {
 proc set_checkpointobj { ckpt_obj change_array } {
    global ts_config
    global CHECK_ARCH open_spawn_buffer
-   global CHECK_USER CHECK_HOST CHECK_OUTPUT
+   global CHECK_USER CHECK_OUTPUT
 
    upvar $change_array chgar
 
@@ -2828,7 +2836,7 @@ proc master_queue_of { job_id } {
 #*******************************
 proc wait_for_load_from_all_queues { seconds } {
   global ts_config
-   global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+   global check_errno check_errstr CHECK_ARCH CHECK_OUTPUT
 
    set time [timestamp]
 
@@ -3051,7 +3059,7 @@ proc soft_execd_shutdown { host } {
 #*******************************************************************************
 proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
   global ts_config
-   global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+   global check_errno check_errstr CHECK_ARCH CHECK_OUTPUT
 
    set time [timestamp]
 
@@ -3157,7 +3165,7 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
 #
 proc wait_for_end_of_all_jobs { seconds } {
   global ts_config
-   global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+   global check_errno check_errstr CHECK_ARCH CHECK_OUTPUT
 
    set time [timestamp]
 
@@ -5404,7 +5412,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 proc startup_qmaster { {and_scheduler 1} } {
   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
@@ -5480,7 +5488,7 @@ proc startup_qmaster { {and_scheduler 1} } {
 proc startup_scheduler {} {
   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
@@ -5529,7 +5537,7 @@ proc startup_scheduler {} {
 proc startup_execd_raw { hostname } {
   global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_CORE_MASTER
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
@@ -6082,9 +6090,9 @@ proc is_pid_with_name_existing { host pid proc_name } {
 #
 proc shutdown_system_daemon { host typelist } {
    global ts_config
-global CHECK_HOST CHECK_ARCH CHECK_CORE_EXECD 
-global CHECK_CORE_MASTER CHECK_CORE_INSTALLED CHECK_OUTPUT CHECK_USER 
-global CHECK_ADMIN_USER_SYSTEM
+   global CHECK_ARCH 
+   global CHECK_CORE_MASTER CHECK_CORE_INSTALLED CHECK_OUTPUT CHECK_USER 
+   global CHECK_ADMIN_USER_SYSTEM
 
 
    puts $CHECK_OUTPUT "shutdown_system_daemon ... ($host/$typelist)" 
@@ -6198,12 +6206,11 @@ global CHECK_ADMIN_USER_SYSTEM
 #*******************************
 proc shutdown_core_system {} {
    global ts_config
-global CHECK_ARCH 
-global CHECK_CORE_EXECD 
-global CHECK_CORE_MASTER 
-global CHECK_OUTPUT
-global CHECK_USER
-global CHECK_ADMIN_USER_SYSTEM do_compile
+   global CHECK_ARCH 
+   global CHECK_CORE_MASTER 
+   global CHECK_OUTPUT
+   global CHECK_USER
+   global CHECK_ADMIN_USER_SYSTEM do_compile
 
 
    foreach sh_host $ts_config(shadowd_hosts) {
@@ -6247,7 +6254,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
      
       set do_it_as_root 0
-      foreach elem $CHECK_CORE_EXECD { 
+      foreach elem $ts_config(execd_nodes) { 
           puts $CHECK_OUTPUT "killing commd on host $elem"
           if { $do_it_as_root == 0 } { 
              set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
@@ -6286,7 +6293,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "perhaps master is not running, trying to shutdown cluster with ps information"
 
       set hosts_to_check $CHECK_CORE_MASTER
-      foreach elem $CHECK_CORE_EXECD {
+      foreach elem $ts_config(execd_nodes) {
          if { [ string first $elem $hosts_to_check ] < 0 } {
             lappend hosts_to_check $elem
          }
@@ -6326,7 +6333,6 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
 proc startup_core_system {} {
    global ts_config
    global CHECK_ARCH 
-   global CHECK_CORE_EXECD 
    global CHECK_CORE_MASTER 
    global CHECK_OUTPUT
    global CHECK_USER
@@ -6348,7 +6354,7 @@ proc startup_core_system {} {
    }
 
    # startup of all execd
-   foreach ex_host $ts_config(execd_hosts) {
+   foreach ex_host $ts_config(execd_nodes) {
       startup_execd $ex_host
    }
 

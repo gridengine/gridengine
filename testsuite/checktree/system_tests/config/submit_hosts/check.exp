@@ -141,12 +141,13 @@ proc submit_hosts_cleanup {} {
 
 
 proc submit_hosts_test {} {
+   global ts_config
    global CHECK_OUTPUT
    global CHECK_SUBMIT_ONLY_HOSTS 
    global CHECK_USER
    global CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_hosts_use_local_conf
-   global CHECK_CORE_MASTER CHECK_CORE_EXECD
+   global CHECK_CORE_MASTER
    global CHECK_HOST
    
 
@@ -233,7 +234,7 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "qstat -f on host $submit_host doesn't work"
       } 
 
-      foreach host $CHECK_CORE_EXECD {
+      foreach host $ts_config(unique_arch_nodes) {
          set command_args "qrsh -l h=${host} uname -n"
          set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "-l h=${host} uname -n" ]
          puts $CHECK_OUTPUT $output

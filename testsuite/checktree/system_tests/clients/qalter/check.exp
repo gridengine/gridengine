@@ -8,7 +8,6 @@ global CHECK_PRODUCT_TYPE       ;# "sgeee" or "sge"
 global CHECK_COMMD_PORT        ;# commd port
 global CHECK_USER              ;# user who start test
 global CHECK_ARCH              ;# architecture of this system (e.g. irix6)
-global CHECK_HOST              ;# hostname of this system (e.g. DWAIN)
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -153,12 +152,13 @@ proc qalter_cleanup {} {
 #     ???/???
 #*******************************
 proc run_dummy_jobs {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global CHECK_OUTPUT check_errno hold_job_D hold_job_U
    global check_errstr old_job_id hold_job_A hold_job_B hold_job_C hold_job_T
    global ts_user_config nonadmin_user nonadmin_hold_job
-   
-   set queue [get_queue_instance all.q $CHECK_HOST]
+
+   set queue [get_queue_instance all.q [lindex $ts_config(execd_nodes) 0]]
 
    set submitresult [ submit_job "-o /dev/null -e /dev/null -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10" ]
    if {$submitresult < 0 } {
@@ -320,12 +320,13 @@ proc run_dummy_jobs {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc start_testjob {} {   
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+proc start_testjob {} {
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno job_output_dir CHECK_JOB_OUTPUT_DIR
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
+   set queue [get_queue_instance "all.q" [lindex $ts_config(execd_nodes) 0]]
 
    set job_output_dir "$CHECK_JOB_OUTPUT_DIR" 
    set submitresult [ submit_job "-h -q $queue -e $job_output_dir -o $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
@@ -372,7 +373,7 @@ proc start_testjob {} {
 #     ???/???
 #*******************************
 proc qalter_ac {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-ac myvar=test -ac myvar2=test2"
@@ -415,7 +416,7 @@ proc qalter_ac {} {
 #     ???/???
 #*******************************
 proc qalter_A {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-A blahblah"
@@ -458,7 +459,7 @@ proc qalter_A {} {
 #     ???/???
 #*******************************
 proc qalter_c {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-c n -ckpt testcheckpointobject"
@@ -501,7 +502,7 @@ proc qalter_c {} {
 #     ???/???
 #*******************************
 proc qalter_ckpt {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-ckpt testcheckpointobject"
@@ -544,7 +545,7 @@ proc qalter_ckpt {} {
 #     ???/???
 #*******************************
 proc qalter_clear {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-clear"
@@ -587,7 +588,7 @@ proc qalter_clear {} {
 #     ???/???
 #*******************************
 proc qalter_cwd {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-cwd"
@@ -630,7 +631,7 @@ proc qalter_cwd {} {
 #     ???/???
 #*******************************
 proc qalter_dc {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-dc myvar,myvar2"
@@ -673,7 +674,7 @@ proc qalter_dc {} {
 #     ???/???
 #*******************************
 proc qalter_e {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno job_output_dir
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-e $job_output_dir"
@@ -716,11 +717,12 @@ proc qalter_e {} {
 #     ???/???
 #*******************************
 proc qalter_hard {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno CHECK_OUTPUT
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
+   set queue [get_queue_instance "all.q" [lindex $ts_config(execd_nodes) 0]]
   set option "-hard -q $queue"
   puts $CHECK_OUTPUT "calling: qalter $option $submitresult"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
@@ -762,7 +764,7 @@ proc qalter_hard {} {
 #     ???/???
 #*******************************
 proc qalter_hold {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD CHECK_OUTPUT
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
   global submitresult old_job_id hold_job_A hold_job_B hold_job_C 
  
   
@@ -840,7 +842,7 @@ proc qalter_hold {} {
 #     ???/???
 #*******************************
 proc qalter_j {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-j y"
@@ -883,10 +885,11 @@ proc qalter_j {} {
 #     ???/???
 #*******************************
 proc qalter_l {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-  set option "-l h=$CHECK_HOST"
+  set option "-l h=[lindex $ts_config(execd_nodes) 0]"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"
@@ -926,7 +929,7 @@ proc qalter_l {} {
 #     ???/???
 #*******************************
 proc qalter_m {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-m beas"
@@ -969,7 +972,7 @@ proc qalter_m {} {
 #     ???/???
 #*******************************
 proc qalter_notify {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-notify"
@@ -1012,7 +1015,7 @@ proc qalter_notify {} {
 #     ???/???
 #*******************************
 proc qalter_M {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno CHECK_REPORT_EMAIL_TO
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
@@ -1061,7 +1064,7 @@ proc qalter_M {} {
 #     ???/???
 #*******************************
 proc qalter_N {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-N leeper_job"
@@ -1104,7 +1107,7 @@ proc qalter_N {} {
 #     ???/???
 #*******************************
 proc qalter_o {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno job_output_dir
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-o $job_output_dir"
@@ -1147,7 +1150,7 @@ proc qalter_o {} {
 #     ???/???
 #*******************************
 proc qalter_P {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
   global check_errno CHECK_PRODUCT_TYPE
   global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-P mytestproject"
@@ -1196,7 +1199,7 @@ proc qalter_P {} {
 #     ???/???
 #*******************************
 proc qalter_p {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-p 1024"
@@ -1239,7 +1242,7 @@ proc qalter_p {} {
 #     ???/???
 #*******************************
 proc qalter_pe {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-pe mytestpe 1-3"
@@ -1283,10 +1286,12 @@ proc qalter_pe {} {
 #     ???/???
 #*******************************
 proc qalter_q {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-  set option "-q [get_queue_instance all.q $CHECK_HOST]"
+
+  set option "-q [get_queue_instance all.q [lindex $ts_config(execd_nodes) 0]]"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
     set_error -1 "qalter $option - $qalteroutput"
@@ -1326,7 +1331,7 @@ proc qalter_q {} {
 #     ???/???
 #*******************************
 proc qalter_ry {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-r y"
@@ -1369,7 +1374,7 @@ proc qalter_ry {} {
 #     ???/???
 #*******************************
 proc qalter_rn {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-r n"
@@ -1412,7 +1417,7 @@ proc qalter_rn {} {
 #     ???/???
 #*******************************
 proc qalter_sc {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-sc myvar=test3"
@@ -1455,10 +1460,12 @@ proc qalter_sc {} {
 #     ???/???
 #*******************************
 proc qalter_soft {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
+
+   set queue [get_queue_instance "all.q" [lindex $ts_config(execd_nodes) 0]]
   set option "-soft -q $queue"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
@@ -1499,7 +1506,7 @@ proc qalter_soft {} {
 #     ???/???
 #*******************************
 proc qalter_S {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-S /bin/sh"
@@ -1542,7 +1549,7 @@ proc qalter_S {} {
 #     ???/???
 #*******************************
 proc qalter_v {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-v DISPLAY"
@@ -1585,7 +1592,7 @@ proc qalter_v {} {
 #     ???/???
 #*******************************
 proc qalter_verify {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-verify"
@@ -1628,7 +1635,7 @@ proc qalter_verify {} {
 #     ???/???
 #*******************************
 proc qalter_V {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+  global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
   set option "-V"
@@ -1671,11 +1678,12 @@ proc qalter_V {} {
 #     ???/???
 #*******************************
 proc qalter_w {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno 
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
-   set queue [get_queue_instance "all.q" $CHECK_HOST]
+   set queue [get_queue_instance "all.q" [lindex $ts_config(execd_nodes) 0]]
   set option "-w e -q $queue"
   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
   if {$qalterresult == 1} {
@@ -1716,7 +1724,7 @@ proc qalter_w {} {
 #     ???/???
 #*******************************
 proc qalter_a {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno job_output_dir CHECK_OUTPUT
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER old_job_id
 
@@ -1848,7 +1856,7 @@ proc qalter_a {} {
 #*******************************
 proc qalter_t {} {
    global ts_config
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno hold_job_T
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
@@ -1910,11 +1918,11 @@ proc qalter_t {} {
 #     ???/???
 #*******************************
 proc qalter_h {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
    global check_errno hold_job_D hold_job_U
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
    global nonadmin_user nonadmin_hold_job
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_HOST
    
    set option "-h n"
    set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_D $hold_job_U.1-4" } qalteroutput ]
@@ -1969,7 +1977,7 @@ proc qalter_h {} {
                      "$option $nonadmin_hold_job" ]
                      
    if { $prg_exit_state == 0 } {
-      set_error -1 "illegal set of operator hold as non admin user successed (qhold $option)"
+      set_error -1 "illegal set of operator hold as non admin user succeeded (qhold $option)"
       return
    }
    
@@ -1986,7 +1994,7 @@ proc qalter_h {} {
                      "$option $nonadmin_hold_job" ]
                      
    if { $prg_exit_state == 0 } {
-      set_error -1 "illegal set of system hold as non admin user successed (qhold $option)"
+      set_error -1 "illegal set of system hold as non admin user succeeded (qhold $option)"
       return
    }
    
@@ -2016,7 +2024,7 @@ proc qalter_h {} {
                      "$option $nonadmin_hold_job" ]
                      
    if { $prg_exit_state == 0 } {
-      set_error -1 "illegal remove of system hold as non admin user successed (qhold $option)"
+      set_error -1 "illegal remove of system hold as non admin user succeeded (qhold $option)"
       return
    }
 
@@ -2047,7 +2055,7 @@ proc qalter_h {} {
                      "$option $nonadmin_hold_job" ]
                      
    if { $prg_exit_state == 0 } {
-      set_error -1 "illegal remove of operator hold as non admin user successed (qhold $option)"
+      set_error -1 "illegal remove of operator hold as non admin user succeeded (qhold $option)"
       return
    }
    

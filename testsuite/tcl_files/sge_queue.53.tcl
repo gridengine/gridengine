@@ -115,7 +115,7 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
 
    # non cluster queue: set queue and hostnames
    if { $hostlist == "@allhosts" || $hostlist == "" } {
-      set hostlist $ts_config(execd_hosts)
+      set hostlist $ts_config(execd_nodes)
    }
 
    # localize messages
@@ -220,7 +220,7 @@ proc set_queue { qname hostlist change_array } {
 
    # non cluster queue: set queue and hostnames
    if { $hostlist == "@allhosts" || $hostlist == "" } {
-      set hostlist $ts_config(execd_hosts)
+      set hostlist $ts_config(execd_nodes)
    }
 
    foreach host $hostlist {
@@ -233,7 +233,7 @@ proc set_queue { qname hostlist change_array } {
 
 proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_USER CHECK_OUTPUT CHECK_HOST
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
    # we just get one queue name (queue instance)
    set queue_list {}
@@ -242,7 +242,7 @@ proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
    } else {
       # we get a cluster queue name and a hostlist
       if { $hostlist == "" || $hostlist == "@allhosts" } {
-         set hostlist $CHECK_CORE_EXECD
+         set hostlist $ts_config(execd_nodes)
       }
       foreach host $hostlist {
          lappend queue_list [get_queue_instance $q_name $host]

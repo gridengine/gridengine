@@ -507,7 +507,7 @@ proc get_internal_message_number_from_id { id } {
 
 
 proc translate_all_macros {} {
-  global  CHECK_OUTPUT macro_messages_list CHECK_HOST
+  global  CHECK_OUTPUT macro_messages_list
   global CHECK_SOURCE_DIR CHECK_HOST CHECK_USER
   if { [info exists macro_messages_list] == 0 } {
      update_macro_messages_list
@@ -807,7 +807,7 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
 proc perform_simple_l10n_test { } {
 
    global CHECK_CORE_MASTER CHECK_USER CHECK_L10N ts_host_config ts_config
-   global CHECK_OUTPUT CHECK_HOST CHECK_ARCH l10n_raw_cache
+   global CHECK_OUTPUT CHECK_ARCH l10n_raw_cache
    puts $CHECK_OUTPUT ""
    flush $CHECK_OUTPUT
 

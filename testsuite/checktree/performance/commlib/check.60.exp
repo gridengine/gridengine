@@ -76,7 +76,7 @@ proc init_level {} {
 
 
 proc cl_throughput_shutdown_sge {} {
-   global ts_config CHECK_HOST cl_throughput_ge_version
+   global ts_config cl_throughput_ge_version
 
    set cl_throughput_ge_version [get_version_info] 
    shutdown_core_system
@@ -643,7 +643,7 @@ proc cl_throughput_run  {} {
    set vevc_binary       $ts_config(source_dir)/$up_arch/test_virtual_event_client
    set vgdi_binary       $ts_config(source_dir)/$up_arch/test_virtual_gdi_client
 
-   set host_list          [lrange $ts_config(execd_hosts) 1 end]
+   set host_list          [lrange $ts_config(execd_nodes) 1 end]
    set nr_of_remote_hosts [llength $host_list]
 
    switch -- $CHECK_ACT_LEVEL {

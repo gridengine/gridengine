@@ -72,7 +72,7 @@ proc init_level {} {
 
 
 proc issue_1104_run {} {
-   global ts_config CHECK_HOST orig_config CHECK_OUTPUT
+   global ts_config orig_config CHECK_OUTPUT
 
    get_config orig1104_config $ts_config(master_host)
 

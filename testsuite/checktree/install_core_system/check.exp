@@ -60,7 +60,7 @@ lappend check_functions "kill_running_system"
 lappend check_functions "install_qmaster"
 lappend check_functions "reread_bootstrap"
 lappend check_functions "make_user_cert"
-lappend check_functions "install_shadowd"
+#lappend check_functions "install_shadowd"
 lappend check_functions "install_execd"
 lappend check_functions "cleanup_system"
 lappend check_functions "setup_queues"
@@ -315,7 +315,6 @@ proc make_user_cert {} {
 #     ???/???
 #*******************************************************************************
 proc get_spool_dir {host subdir {do_cleanup 1} } {
-
    global ts_host_config CHECK_OUTPUT CHECK_USER CHECK_COMMD_PORT
    global check_do_not_use_spool_config_entries
    set spooldir ""
@@ -325,8 +324,10 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
       return $spooldir
    }
 
-   if { [info exist ts_host_config($host,spooldir)] } {
-      set spooldir $ts_host_config($host,spooldir)
+   set physical_host [node_get_host $host]
+
+   if { [info exist ts_host_config($physical_host,spooldir)] } {
+      set spooldir $ts_host_config($physical_host,spooldir)
    }
 
    if { [ string compare "" $spooldir] != 0 } {
@@ -349,8 +350,7 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
 
 proc cleanup_system { } {
    global ts_config
-   global CHECK_ARCH env check_errno CHECK_HOST
-   global CHECK_CORE_PROCESSORS
+   global CHECK_ARCH env check_errno
    global check_use_installed_system CHECK_OUTPUT CHECK_USER
 
 #puts "press RETURN"
@@ -524,8 +524,7 @@ proc cleanup_system { } {
 #*******************************
 proc setup_queues {} {
    global ts_config
-   global CHECK_ARCH env check_errno CHECK_HOST
-   global CHECK_CORE_PROCESSORS
+   global CHECK_ARCH env check_errno
    global check_use_installed_system CHECK_OUTPUT CHECK_USER
 
    # check if qmaster can be accessed
@@ -555,10 +554,10 @@ proc setup_queues {} {
 
    if { $check_errno == 0} {
       # for each individual queue set the slots attribute
-      foreach hostname $ts_config(execd_hosts) {
+      foreach hostname $ts_config(execd_nodes) {
          unset new_values
-         set index [lsearch $ts_config(execd_hosts) $hostname] 
-         set slots_tmp [lindex $CHECK_CORE_PROCESSORS $index]
+         set index [lsearch $ts_config(execd_nodes) $hostname] 
+         set slots_tmp [node_get_processors $hostname]
 
          if { $slots_tmp <= 0 } {
             set_error -2 "no slots for execd $hostname"
@@ -731,7 +730,7 @@ proc setup_conf {} {
   # PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20
   if { $ts_config(product_type) == "sgeee" } {
   set ptf_param(execd_params) "PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20"
-    foreach i $ts_config(execd_hosts) {
+    foreach i $ts_config(execd_nodes) {
       switch -exact [resolve_arch $i] {
         irix6 {
           set_config ptf_param $i
@@ -823,7 +822,7 @@ proc setup_execd_conf {} {
   global CHECK_DEFAULT_DOMAIN
   global CHECK_OUTPUT
 
-  foreach host $ts_config(execd_hosts) {
+  foreach host $ts_config(execd_nodes) {
      puts $CHECK_OUTPUT "get configuration for host $host ..."
      if [info exists tmp_config] {
         unset tmp_config
@@ -1227,7 +1226,7 @@ proc setup_check_user_permissions {} {
   foreach user $user_list {
      puts $CHECK_OUTPUT "\n----mask-check----\nuser: $user"
      set my_command ""
-     foreach host $ts_config(execd_hosts) {
+     foreach host $ts_config(execd_nodes) {
         set execd_spooldir [get_execd_spool_dir $host]
         puts $CHECK_OUTPUT "checking execd spool directory on $host: \"$execd_spooldir\""
         set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir ; cd $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR" ]
@@ -1284,7 +1283,7 @@ proc setup_check_messages_files {} {
       puts $CHECK_OUTPUT $file_array($i)
    }
 
-   foreach execd $ts_config(execd_hosts) {
+   foreach execd $ts_config(execd_nodes) {
       puts $CHECK_OUTPUT "execd $execd ..."
       set messages [ get_execd_messages_file $execd ]
       get_file_content $execd $CHECK_USER $messages 

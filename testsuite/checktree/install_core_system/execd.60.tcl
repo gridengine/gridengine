@@ -61,7 +61,7 @@
 #*******************************
 proc install_execd {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_CORE_EXECD CORE_INSTALLED
+   global CHECK_OUTPUT CORE_INSTALLED
    global check_use_installed_system CHECK_ARCH
    global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
@@ -82,7 +82,7 @@ proc install_execd {} {
       set feature_install_options ""
       if { $ts_config(product_feature) == "csp" } {
             set feature_install_options "-csp"
-            set my_csp_host_list $CHECK_CORE_EXECD
+            set my_csp_host_list $ts_config(execd_nodes)
             foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
               lappend my_csp_host_list $elem
             }
@@ -182,17 +182,17 @@ proc install_execd {} {
       }
    }
  
-   foreach exec_host $CHECK_CORE_EXECD {
+   foreach exec_host $ts_config(execd_nodes) {
 
       puts $CHECK_OUTPUT "installing execd on host $exec_host ($ts_config(product_type) system) ..."
-      if {[lsearch $CHECK_CORE_EXECD $exec_host] == -1 } {
+      if {[lsearch $ts_config(execd_nodes) $exec_host] == -1 } {
          set_error "-1" "install_execd - host $exec_host is not in execd list"
          return 
       }
 #      wait_for_remote_file $exec_host $CHECK_USER "$ts_config(product_root)/$ts_config(cell)/common/configuration"
       if { $check_use_installed_system != 0 } {
-         set_error "0" "install_execd - no need to install execd on hosts \"$CHECK_CORE_EXECD\" - noinst parameter is set"
-         puts "no need to install execd on hosts \"$CHECK_CORE_EXECD\", noinst parameter is set"
+         set_error "0" "install_execd - no need to install execd on hosts \"$ts_config(execd_nodes)\" - noinst parameter is set"
+         puts "no need to install execd on hosts \"$ts_config(execd_nodes)\", noinst parameter is set"
          if {[startup_execd $exec_host] == 0 } {
             lappend CORE_INSTALLED $exec_host
             write_install_list

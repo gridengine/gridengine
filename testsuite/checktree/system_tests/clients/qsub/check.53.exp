@@ -64,7 +64,7 @@ lappend check_functions "check_option_qs_args"
 #*******************************
 proc check_option_qs_args {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -101,7 +101,7 @@ proc check_option_qs_args {} {
 }
 
 proc check_qhold_jobname {} {
- global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_host
+ global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
  global CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # first clean up output directory:  
@@ -275,7 +275,7 @@ proc check_qhold_jobname {} {
 }
 
 proc check_option_v {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global job_output_dir actual_host
 
    # first clean up output directory:  

@@ -65,7 +65,9 @@ proc init_level {} {
 }
 
 proc issue_1198_run  {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST
+   global ts_config CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+
+   set test_host [lindex $ts_config(execd_nodes) 0]
 
    # Setup
    catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
@@ -85,12 +87,12 @@ proc issue_1198_run  {} {
    }
 
    # Test
-   puts $CHECK_OUTPUT "Looking for slots in ${queue}@${CHECK_HOST} complex values list"
+   puts $CHECK_OUTPUT "Looking for slots in ${queue}@${test_host} complex values list"
 
-   set catch_result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq ${queue}@${CHECK_HOST} | grep complex_values | grep -v slots" } result ]
+   set catch_result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq ${queue}@${test_host} | grep complex_values | grep -v slots" } result ]
 
    if {$catch_result != 0} {
-      add_proc_error "issue_1198_run" "-1" "qconf failed to hide slots for queue ${queue}@${CHECK_HOST}: $result"
+      add_proc_error "issue_1198_run" "-1" "qconf failed to hide slots for queue ${queue}@${test_host}: $result"
       set_error -1 "Issue 1198: qconf displays slots in complex values list"
       return
    } else {

@@ -56,7 +56,7 @@ set check_name            "issue_126"
 set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   499
 
-set check_126_num_hosts [llength $ts_config(execd_hosts)]
+set check_126_num_hosts [llength $ts_config(unique_arch_nodes)]
 for {set i 0} {$i < $check_126_num_hosts} {incr i} {
    set check_description($i) "check iz 126 on exec host $i, 10 test loop"
    set check_description([expr 100 + $i]) "check iz 126 on exec host $i, 100 test loops"
@@ -87,9 +87,14 @@ proc issue_126_init_level {} {
 
 # JG: TODO: functions retrieving pid of job do not support remote hosts
 # in level 0, we should only use 1 host (functional test)
+
 #   if {$minorlevel < $check_126_num_hosts} {
    if {$minorlevel == 0} {
-      set check_126_host [lindex $ts_config(execd_hosts) $minorlevel]
+      set check_126_host [lindex $ts_config(unique_arch_nodes) $minorlevel]
+      # currently, we can only run on CHECK_HOST, see TODO above.
+      if {$check_126_host != $CHECK_HOST} {
+         return -1
+      }
       switch -exact $majorlevel {
          0 {
             set check_126_loops 10
@@ -155,7 +160,6 @@ proc issue_126_setup  {} {
 proc issue_126_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global check_126_host check_126_loops ts_config CHECK_USER CHECK_HOST CHECK_ARCH
-
 
    setup_qping_dump dump_handle
 

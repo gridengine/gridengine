@@ -92,7 +92,7 @@ proc issue_360_setup  {} {
 
 
 proc issue_360_check {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
    set_error 0 "ok"
 }

@@ -252,13 +252,8 @@ proc qmaster_size_setup {} {
    global CHECK_HOST CHECK_OUTPUT
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ACTUAL_TEST_PATH CHECK_USER
    global time_start MONITOR_SIZE_FILENAME CHECK_CORE_MASTER
-   global CHECK_ACT_LEVEL CHECK_HOST CHECK_PROTOCOL_DIR
+   global CHECK_ACT_LEVEL CHECK_PROTOCOL_DIR
    global qmaster_spool_dir
-
-   if { [string compare $CHECK_HOST $CHECK_CORE_MASTER] != 0 } {
-     set_error "-3" "no need to run qmaster size test on execd host $CHECK_HOST"
-     return
-   }
 
    # create an additional interactive only queue
    # This verifies IZ 1087
@@ -896,9 +891,9 @@ proc check_qstat {} {
 #     ???/???
 #*******************************
 proc check_miniworm {} {
+   global ts_config
    global CHECK_OUTPUT
    global CHECK_ACTUAL_TEST_PATH CHECK_USER
-   global CHECK_CORE_EXECD
    global size_unit
 
    upvar check_idle_after when
@@ -913,7 +908,7 @@ proc check_miniworm {} {
    
    puts $CHECK_OUTPUT "submitting miniworms with delays $types \[s\]"
 
-   foreach host $CHECK_CORE_EXECD {
+   foreach host $ts_config(execd_nodes) {
       foreach i $types {
          catch {
             exec $CHECK_ACTUAL_TEST_PATH/redir_stderr.sh $CHECK_ACTUAL_TEST_PATH/pminiworm.sh "$CHECK_ACTUAL_TEST_PATH" "$i" "0" "$i"
@@ -925,7 +920,7 @@ proc check_miniworm {} {
    monitor "doing qstat's while miniworms working" $duration $interval {{set jobs [get_job_count]} {qstat_test}}
 
    set queue_list {}
-   foreach i $CHECK_CORE_EXECD {
+   foreach i $ts_config(execd_nodes) {
       lappend queue_list [get_queue_instance all.q $i]
    }
    puts $CHECK_OUTPUT "disabling queues $queue_list"
@@ -1075,7 +1070,7 @@ proc get_job_count {} {
 #*******************************
 proc check_flood {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_COMMD_PORT CHECK_USER
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_COMMD_PORT CHECK_USER
 
    upvar check_idle_after when
    upvar CHECK_FLOOD_AMOUNTS amounts
@@ -1086,7 +1081,7 @@ proc check_flood {} {
    upvar CHECK_FLOOD_STABILIZE_DELAY flood_stab_delay
    upvar CHECK_FLOOD_STABILIZE_INTERVAL flood_stab_interval
 
-   set num_hosts [llength $CHECK_CORE_EXECD]
+   set num_hosts [llength $ts_config(execd_nodes)]
 
    # limit the number of hosts, otherwise we could get out of filehandles
    if {$num_hosts > 10} {
@@ -1094,7 +1089,7 @@ proc check_flood {} {
    }
 
    set queue_list {}
-   foreach i $CHECK_CORE_EXECD {
+   foreach i $ts_config(execd_nodes) {
       lappend queue_list [get_queue_instance all.q $i]
    }
 
@@ -1118,7 +1113,7 @@ proc check_flood {} {
          unset flood_ids
       }
 
-      foreach host $CHECK_CORE_EXECD {
+      foreach host $ts_config(execd_nodes) {
          puts $CHECK_OUTPUT "start flooding qsubs on host $host"
          set flood_id [open_remote_spawn_process $host $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT $ts_config(cell) $jobs_per_host '$types' $num"]
          set spawn_id [lindex $flood_id 1]

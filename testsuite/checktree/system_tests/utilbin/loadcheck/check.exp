@@ -147,24 +147,21 @@ proc get_numb_proc { hostname } {
 #     ???/???
 #*******************************
 proc check_numb_proc {} {
-  global CHECK_CORE_PROCESSORS CHECK_CORE_EXECD
-  global CHECK_OUTPUT 
+   global ts_config
+   global CHECK_OUTPUT 
 
+   foreach host $ts_config(execd_nodes) {
+      set num_expected [node_get_processors $host]
+      set num_proc [get_numb_proc $host]
 
-  foreach host $CHECK_CORE_EXECD {
- 
-     set ind [lsearch $CHECK_CORE_EXECD $host]
-     set num_expected [lindex $CHECK_CORE_PROCESSORS $ind]
-     set num_proc [get_numb_proc $host]
-
-     puts $CHECK_OUTPUT "$host: Expected processors: $num_expected"
-     puts $CHECK_OUTPUT "$host: read processors:     $num_proc"
+      puts $CHECK_OUTPUT "$host: Expected processors: $num_expected"
+      puts $CHECK_OUTPUT "$host: read processors:     $num_proc"
   
-     if { $num_proc != $num_expected } {
-        add_proc_error "check_numb_proc" -1 "num_proc=$num_proc doesn't match $num_expected expected processors on host $host"
-     }
-  }
+      if { $num_proc != $num_expected } {
+         add_proc_error "check_numb_proc" -1 "num_proc=$num_proc doesn't match $num_expected expected processors on host $host"
+      }
+   }
 
-  # ok - no errors, very very nice ;-) 
-  set_error 0 "check_numb_proc - no errors"
+   # ok - no errors, very very nice ;-) 
+   set_error 0 "check_numb_proc - no errors"
 }

@@ -1377,135 +1377,6 @@ proc open_remote_spawn_process { hostname
 }
 
 #                                                             max. column:     |
-#****** remote_procedures/open_root_spawn_process() ******
-# 
-#  NAME
-#     open_root_spawn_process -- starrrt process as root with spawn command
-#
-#  SYNOPSIS
-#     open_root_spawn_process { args } 
-#
-#  FUNCTION
-#     Starts process given in "args" as user "root" and returns its spawn id
-#     and pid in a list. The root password is sent when the su command is 
-#     asking for the root password.
-#     The first list element is the pid and the second is the spawn id. The 
-#     return value is used in close_spawn_process to close the connection to
-#     this process.
-#
-#  INPUTS
-#     args - full argument list of the process to start
-#
-#  RESULT
-#     tcl list with id and pid of the process
-#
-#     - first element is the pid
-#     - second element is the spawn id
-#
-#  EXAMPLE
-#     set id [ 
-#       open_spawn_process "id"
-#     ]
-#     set timeout 60
-#     expect {
-#       timeout { puts "timeout" }  
-#       "root" { puts "we have root access" }
-#     }
-#     puts "pid: [ lindex $id 0]"
-#     puts "spawn id: [ lindex $id 1]"
-#     close_spawn_process $id
-#     
-#  SEE ALSO
-#     remote_procedures/open_spawn_process
-#     remote_procedures/open_root_spawn_process
-#     remote_procedures/close_spawn_process
-#     remote_procedures/run_command_as_user
-#     remote_procedures/start_remote_tcl_prog
-#     remote_procedures/start_remote_prog
-#*******************************
-# proc open_root_spawn_process {args} {
-# 
-#    global CHECK_OUTPUT open_spawn_buffer CHECK_HOST env CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
-#    global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
-#    uplevel 1 { global CHECK_EXPECT_MATCH_MAX_BUFFER  } 
-#    uplevel 1 { global CHECK_OUTPUT }
-#    uplevel 1 { global CHECK_DEBUG_LEVEL }
-# 
-#    set arguments ""
-#    set arg_nr 0 
-#    foreach elem $args {
-# 
-#       incr arg_nr 1
-# 
-#       if { $arg_nr == 1 } {
-#         set programm "$elem" 
-#       }  
-#       if { $arg_nr == 2 } {
-#         set arguments "$elem"
-#       }
-#       if { $arg_nr > 2  } {
-#         set arguments "$arguments $elem"
-#       }
-#    }
-#    debug_puts "open_root_spawn_process"
-#    debug_puts "programm:  \"$programm\""
-#    debug_puts "arguments: \"$arguments\""
-# 
-#    if { [have_root_passwd] == -1 } {
-#       set_error -2 "root access required"
-#       return "" 
-#    }
-#    if { $arg_nr == 1 } {
-#       set open_spawn_buffer "$programm"
-#    } else {
-#       set open_spawn_buffer "$programm $arguments"
-#    }
-#    debug_puts "open_spawn_buffer: $open_spawn_buffer"
-# 
-#    uplevel 1 { set open_root_spawn_arguments "$open_spawn_buffer" }
-#    if { [have_ssh_access] == 0 } {
-#      set pid [ uplevel 1 { spawn "su" "root" "-c" "$open_root_spawn_arguments" } ]
-#    } else {
-#      set pid [ uplevel 1 { spawn "ssh" "-l" "root" "$CHECK_HOST" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/ssh_progstarter.csh \"[get_current_working_dir]\" \"$CHECK_PRODUCT_ROOT\" \"$CHECK_COMMD_PORT\" $open_root_spawn_arguments" } ]
-#    }
-#    set sp_id [uplevel 1 { set spawn_id }]
-# 
-#    set back $pid
-#    lappend back $sp_id
-#    uplevel 1 {
-#       match_max -i $spawn_id $CHECK_EXPECT_MATCH_MAX_BUFFER
-#       debug_puts "open_root_spawn_process -> buffer size is: [match_max]"
-#    }
-#    debug_puts "open_root_spawn_process:  arguments: $args"
-# 
-#    flush $CHECK_OUTPUT
-# 
-#    if {$pid == 0 } {
-#      add_proc_error "open_root_spawn_process" -1 "could not spawn! (ret_pid = $pid)" 
-#    }
-# 
-#    if { [have_ssh_access] == 0 } {
-#       uplevel 1 { set timeout 60 }
-#       uplevel 1 { expect -i $spawn_id "assword:" }
-# 
-#       sleep 5  ;# for some architectures it is neccessary to 
-#                ;# login in "human keystrock" speed
-#       uplevel 1 { 
-#         log_user 0
-#         sleep 2
-#         send "[get_root_passwd]\r" }
-#         debug_puts "root password sent" 
-#         if { $CHECK_DEBUG_LEVEL != 0 } {
-#            log_user 1
-#         }
-# 
-#    }
-# 
-#    return $back
-# }
-
-
-#                                                             max. column:     |
 #****** remote_procedures/open_spawn_process() ******
 # 
 #  NAME
@@ -2271,7 +2142,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
 proc run_command_as_user { hostname user command args counter } {
    global ts_config
    global CHECK_TESTSUITE_ROOT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer 
-   global CHECK_HOST CHECK_COMMD_PORT CHECK_SCRIPT_FILE_DIR
+   global CHECK_COMMD_PORT CHECK_SCRIPT_FILE_DIR
  
    # perform su to user and submit jobs as user $user
    set program  "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remote_submit.sh"           ;# script to call in su root -c option

@@ -96,7 +96,7 @@ proc drmaa_init_level {} {
 proc drmaa_check {} {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
-   global CHECK_HOST CHECK_CORE_EXECD CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
+   global CHECK_HOST CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
    global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
 
    puts $CHECK_OUTPUT "product root is $CHECK_PRODUCT_ROOT"
@@ -109,8 +109,7 @@ proc drmaa_check {} {
    set new_config(qmaster_params) "FORBID_RESCHEDULE FORBID_APPERROR"
    set_config new_config
 
-   foreach host $CHECK_CORE_EXECD {
-
+   foreach host $ts_config(unique_arch_nodes) {
       set binary_arch "[resolve_arch $host]"
 
       switch -- $binary_arch {

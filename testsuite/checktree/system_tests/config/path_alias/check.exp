@@ -99,7 +99,6 @@ proc path_alias_setup {} {
    global CHECK_PRODUCT_ROOT
    global path_alias_test
    global env CHECK_PROTOCOL_DIR
-   global CHECK_CORE_EXECD
   
    
    set PATH_ALIAS_OUTPUT1 [ file dirname "$CHECK_JOB_OUTPUT_DIR/adir" ]
@@ -136,7 +135,7 @@ proc path_alias_setup {} {
            ([ file isfile ${file_name}] == 1) } {
          puts $CHECK_OUTPUT "moving original alias file to ${file_name}.sav"
          file rename ${file_name} ${file_name}.sav
-         foreach elem $CHECK_CORE_EXECD {
+         foreach elem $ts_config(unique_arch_nodes) {
             set counter 60
             while { $counter > 0 } {
                set result [start_remote_prog $elem $CHECK_USER "cat" "${file_name}"]
@@ -169,7 +168,7 @@ proc path_alias_setup {} {
    set old_cat_output ""
    set cat_hostname ""
    set last_host ""
-   foreach elem $CHECK_CORE_EXECD {
+   foreach elem $ts_config(unique_arch_nodes) {
       set counter 60
       while { $counter > 0 } {
          set result [start_remote_prog $elem $CHECK_USER "cat" "${file_name}"]
@@ -209,12 +208,12 @@ proc path_alias_setup {} {
 }
 
 proc path_alias_main {} {
+   global ts_config
    global path_alias_test
    global PATH_ALIAS_OUTPUT1
    global PATH_ALIAS_OUTPUT2
    global CHECK_OUTPUT
    global CHECK_PRODUCT_ROOT
-   global CHECK_CORE_EXECD 
    global CHECK_USER   
 
 
@@ -223,7 +222,7 @@ proc path_alias_main {} {
 
 
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10"
-   foreach elem $CHECK_CORE_EXECD {
+   foreach elem $ts_config(unique_arch_nodes) {
       puts $CHECK_OUTPUT "submitting job(s) for host $elem"
 
       puts $CHECK_OUTPUT "qsub ..."
@@ -275,7 +274,7 @@ proc path_alias_main {} {
    puts $CHECK_OUTPUT "files1: $nr_new_files1"
    puts $CHECK_OUTPUT "files2: $nr_new_files2"
 
-   set nr_hosts [ llength $CHECK_CORE_EXECD]
+   set nr_hosts [ llength $ts_config(unique_arch_nodes)]
    set nr_hosts_x2 [ expr ( $nr_hosts * 4 ) ]
 
    if { $nr_new_files1 != $nr_hosts_x2 } {

@@ -246,9 +246,14 @@ proc init_level {} {
 
    set job_options(count)       0   ;# default: no special job options
 
-   # host_list for all levels
+   # we can only run with more than one host
+   if {[llength $ts_config(execd_nodes)] < 2} {
+      return -1
+   }
+
+   # host_list for all levels (exclude master host)
    set host_list {}
-   foreach host $ts_config(execd_hosts) {
+   foreach host $ts_config(execd_nodes) {
       if { [string compare $host $ts_config(master_host)] != 0 } { 
          lappend host_list $host
       }
@@ -421,7 +426,7 @@ proc init_level {} {
 
 proc throughput_set_share_tree {} {
    global ts_config
-   global CHECK_HOST CHECK_OUTPUT
+   global CHECK_OUTPUT
 
    set s_tree ""  
    lappend s_tree "id=0"
@@ -588,17 +593,12 @@ proc throughput_cleanup_functional_policy {} {
 proc throughput_setup {} {
    global ts_config
    global CHECK_OUTPUT
-   global CHECK_HOST CHECK_SOURCE_DIR
+   global CHECK_SOURCE_DIR
    global nr_queues queue_list host_list nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    global global_job_run_time
    global throughput_sharetree functional_policy parallel_jobs
    global reservation
-
-   if { [llength $ts_config(execd_hosts)] <= 1 } {
-      set_error -3 "need more than one host for this test"
-      return -3
-   }
 
    # setup global configuration
    if { [info exists stored_configuration] } {
@@ -650,9 +650,9 @@ proc throughput_setup {} {
 
    set_config myconfig
  
-   # disable all default queues and create host_list:
+   # disable all default queues and create queue_list:
    set queue_list {}
-   foreach host $ts_config(execd_hosts) {
+   foreach host $ts_config(execd_nodes) {
       lappend queue_list [get_queue_instance "all.q" $host]
    }
    disable_queue $queue_list
@@ -719,11 +719,6 @@ proc throughput_cleanup {} {
    global host_list queue_list CHECK_ARCH  CHECK_PRODUCT_ROOT
    global stored_configuration throughput_sharetree functional_policy nr_queues parallel_jobs reservation
 
-   if { [llength $ts_config(execd_hosts)] <= 1 } {
-      set_error -3 "need more than one host for this test"
-      return -3
-   }
-
    # delete all jobs
    set catch_result [delete_all_jobs]
 
@@ -758,7 +753,7 @@ proc throughput_cleanup {} {
 
    puts $CHECK_OUTPUT "enabling default queues"
    set queue_list {}
-   foreach host $ts_config(execd_hosts) {
+   foreach host $ts_config(execd_nodes) {
       lappend queue_list [get_queue_instance "all.q" $host]
    }
    enable_queue $queue_list
@@ -788,7 +783,7 @@ proc get_event_client_time { string  } {
 
 proc run_throughput_test {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR 
    global end_job_count host_list 
@@ -797,11 +792,6 @@ proc run_throughput_test {} {
    global global_job_run_time
    global ps_interval qstat_interval array_size do_requests
    global job_options
-
-   if { [llength $ts_config(execd_hosts)] <= 1 } {
-      set_error -3 "need more than one host for this test"
-      return -3
-   }
 
    # prepare results array
    clean_current_system_status results_list result job_data schedd_data monitoring qstat_data qping_data event_data
@@ -812,7 +802,7 @@ proc run_throughput_test {} {
    wait_for_load_from_all_queues 300
 
    # evaluate path to qevent binary
-   set up_arch [resolve_build_arch $CHECK_HOST]
+   set up_arch [resolve_build_arch $ts_config(master_host)]
    set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
@@ -821,7 +811,7 @@ proc run_throughput_test {} {
    puts $CHECK_OUTPUT "using event client: $event_client_bin"
 
    # start event client (if compiled) 
-   set event_client_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con2" $event_client_bin ""]
+   set event_client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin ""]
    set event_client_id [lindex $event_client_sid 1]
 
    set timeout 30
@@ -858,14 +848,14 @@ proc run_throughput_test {} {
       close_spawn_process $event_client_sid
       puts $CHECK_OUTPUT "starting event client with -ts option ..."
       # start event client with -ts option
-      set event_client_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con2" $event_client_bin "-ts"]
+      set event_client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin "-ts"]
       set event_client_id [lindex $event_client_sid 1]
    }
 
    # open scheduler messages file
    puts $CHECK_OUTPUT "opening scheduler messages file (tail)"
    set schedd_messages_file [check_schedd_messages 2]
-   set schedd_messages_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con" "tail" "-f $schedd_messages_file"]
+   set schedd_messages_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con" "tail" "-f $schedd_messages_file"]
    set schedd_messages_id [lindex $schedd_messages_sid 1]
 
    # disable queues if enable_queues_job_count is set
@@ -885,24 +875,24 @@ proc run_throughput_test {} {
    }
 
    # start qmaster/scheduler process monitor
-   set expect_bin [get_binary_path $CHECK_HOST "expect"]
+   set expect_bin [get_binary_path $ts_config(master_host) "expect"]
    set qmaster_pid [get_qmaster_pid]
    set schedd_pid  [get_schedd_pid]
    puts $CHECK_OUTPUT "starting process monitor"
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/process_info.tcl $ts_config(product_root)" ]
+   set id [ open_remote_spawn_process $ts_config(master_host) $CHECK_FIRST_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/process_info.tcl $ts_config(product_root)" ]
    set spawn_id [lindex $id 1]
    lappend spawn_list $spawn_id
    lappend remote_spawn_list $id
-   set spawn_host_map($spawn_id) $CHECK_HOST
+   set spawn_host_map($spawn_id) $ts_config(master_host)
 
    if { $qstat_interval > 0 } {
       # start qstat monitor
       puts $CHECK_OUTPUT "starting qstat monitor"
-      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
+      set id [ open_remote_spawn_process $ts_config(master_host) $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
       set spawn_id [lindex $id 1]
       lappend spawn_list $spawn_id
       lappend remote_spawn_list $id
-      set spawn_host_map($spawn_id) $CHECK_HOST
+      set spawn_host_map($spawn_id) $ts_config(master_host)
    }
 
    # start qping
@@ -923,7 +913,7 @@ proc run_throughput_test {} {
    set my_job "$ts_config(product_root)/examples/jobs/sleeper.sh"
 
    # start submitter (expect script)
-   foreach host $host_list {
+   foreach host $ts_config(execd_hosts) {
       set expect_bin [get_binary_path $host "expect"]
       puts $CHECK_OUTPUT "starting submitter process on host $host"
       set id [ open_remote_spawn_process $host $CHECK_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/submitter.tcl $ts_config(product_root) $host" ]
@@ -959,7 +949,7 @@ proc run_throughput_test {} {
    # then set script file
    # if everything succeeded, accept this submitter
    log_user 0
-   while { $num_submitters < [llength $host_list] || $monitor_ok == 0 || \
+   while { $num_submitters < [llength $ts_config(execd_hosts)] || $monitor_ok == 0 || \
            ($qstat_interval > 0 && $qstat_ok == 0) } {
       expect_user {
          -i $spawn_list full_buffer {
@@ -1113,7 +1103,7 @@ proc run_throughput_test {} {
 
    set current_output_line 0
 
-   foreach host $host_list {
+   foreach host $ts_config(execd_hosts) {
       set host_submit_count($host) 0
    }
 
@@ -1564,7 +1554,7 @@ proc run_throughput_test {} {
    # output submission distribution
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "submitted jobs per host"
-   foreach host $host_list {
+   foreach host $ts_config(execd_hosts) {
       puts $CHECK_OUTPUT [format "%-15s\t%6d" $host $host_submit_count($host)]
    }
 
@@ -3441,7 +3431,7 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    global ts_config
    global ts_host_config
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
-   global CHECK_HOST CHECK_USER
+   global CHECK_USER
    global end_job_count                 ;# number of jobs
    global enable_queues_job_count         ;# after with job, enable queues
    global nr_queues                       ;# nr of queues on each host
@@ -3460,14 +3450,15 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    upvar $qping_name qping_data
    upvar $event_name event_data
 
-   set nr_of_execd_hosts [llength $ts_config(execd_hosts)]
+   set nr_of_execd_hosts [llength $ts_config(execd_nodes)]
    incr nr_of_execd_hosts -1
 
    set have_local_spool_dir 0
-   foreach elem $ts_config(execd_hosts) {
+   foreach elem $ts_config(execd_nodes) {
       set spool_dir ""
-      if { [info exists ts_host_config($elem,spooldir)] } {
-         set spool_dir $ts_host_config($elem,spooldir)
+      set physical_host [node_get_host $elem]
+      if { [info exists ts_host_config($physical_host,spooldir)] } {
+         set spool_dir $ts_host_config($physical_host,spooldir)
       }
       puts $CHECK_OUTPUT "spooldir on host $elem: $spool_dir"
       if { $spool_dir != "" } {
@@ -3509,7 +3500,7 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    
 
    # execd configuration for each host
-   set host_list $ts_config(execd_hosts)
+   set host_list $ts_config(execd_nodes)
    lappend host_list "global"
    set h_list_array(host_list) $host_list
    spool_array_add_data $prot_output_file "execd list" h_list_array

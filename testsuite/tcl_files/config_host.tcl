@@ -598,7 +598,6 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
 
          if { [llength $value] != 0 } {
             set host_error 0
-
             foreach zone $value {
                set result [ start_remote_prog $zone $CHECK_USER "id" "" prg_exit_state 12 0 "" 1 0 ]
                if { $prg_exit_state != 0 } {
@@ -1037,4 +1036,144 @@ proc setup_host_config { file { force 0 }} {
    }
 }
 
+#****** config/host/host_conf_get_nodes() **************************************
+#  NAME
+#     host_conf_get_nodes() -- return a list of exechosts and zones
+#
+#  SYNOPSIS
+#     host_conf_get_nodes { host_list } 
+#
+#  FUNCTION
+#     Iterates through host_list and builds a new node list, that contains
+#     both hosts and zones.
+#     If zones are available on a host, only the zones are contained in the new
+#     node list,
+#     if no zones are available on a host, the hostname will be contained in the
+#     new node list.
+#
+#  INPUTS
+#     host_list - list of physical hosts
+#
+#  RESULT
+#     node list
+#
+#  SEE ALSO
+#     config/host/host_conf_get_unique_nodes()
+#*******************************************************************************
+proc host_conf_get_nodes {host_list} {
+   global ts_host_config
 
+   set node_list {}
+
+   foreach host $host_list {
+      set zones $ts_host_config($host,zones)
+      if {[llength $zones] == 0} {
+         lappend node_list $host
+      } else {
+         set node_list [concat $node_list $zones]
+      }
+   }
+
+   return [lsort -dictionary $node_list]
+}
+
+#****** config/host/host_conf_get_unique_nodes() *******************************
+#  NAME
+#     host_conf_get_unique_nodes() -- return a unique list of exechosts and zones
+#
+#  SYNOPSIS
+#     host_conf_get_unique_nodes { host_list } 
+#
+#  FUNCTION
+#     Iterates through host_list and builds a new node list, that contains
+#     both hosts and zones, but only one entry per physical host.
+#     If zones are available on a host, only the first zone is contained in the new
+#     node list,
+#     if no zones are available on a host, the hostname will be contained in the
+#     new node list.
+#
+#  INPUTS
+#     host_list - list of physical hosts
+#
+#  RESULT
+#     node list
+#
+#  SEE ALSO
+#     config/host/host_conf_get_nodes()
+#*******************************************************************************
+proc host_conf_get_unique_nodes {host_list} {
+   global ts_host_config
+
+   set node_list {}
+
+   foreach host $host_list {
+      set zones $ts_host_config($host,zones)
+      if {[llength $zones] == 0} {
+         lappend node_list $host
+      } else {
+         set node_list [concat $node_list [lindex $zones 0]]
+      }
+   }
+
+   return [lsort -dictionary $node_list]
+}
+
+proc host_conf_get_unique_arch_nodes {host_list} {
+   global ts_host_config
+
+   set node_list {}
+   set covered_archs {}
+
+   foreach node $host_list {
+      set arch [resolve_arch $node]
+      if {[lsearch -exact $covered_archs $arch] == -1} {
+         lappend covered_archs $arch
+         lappend node_list $node
+      }
+   }
+
+   return $node_list
+}
+
+proc host_conf_get_all_nodes {host_list} {
+   global ts_host_config
+
+   set node_list {}
+
+   foreach host $host_list {
+      lappend node_list $host
+
+      set zones $ts_host_config($host,zones)
+      if {[llength $zones] > 0} {
+         set node_list [concat $node_list $zones]
+      }
+   }
+
+   return [lsort -dictionary $node_list]
+}
+
+proc node_get_host {nodename} {
+   global physical_host
+
+   if {[info exists physical_host($nodename)]} {
+      set ret $physical_host($nodename)
+   } else {
+      set ret $nodename
+   }
+
+   return $ret
+}
+
+proc node_set_host {nodename hostname} {
+   global physical_host
+
+   set physical_host($nodename) $hostname
+}
+
+proc node_get_processors {nodename} {
+   global ts_host_config
+
+   set host [node_get_host $nodename]
+
+   return $ts_host_config($host,processors)
+}

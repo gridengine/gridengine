@@ -64,14 +64,16 @@ proc init_level {} {
 }
 
 proc issue_1146_run  {} {
-   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER
 
    set qname "thisis@atest"
+   
+   set test_host [lindex $ts_config(execd_nodes) 0]
 
-   puts $CHECK_OUTPUT "creating queue \"$qname\" for hostlist \"$CHECK_HOST\""
+   puts $CHECK_OUTPUT "creating queue \"$qname\" for hostlist \"$test_host\""
 
    set qparam(qname)     "$qname"
-   set qparam(hostlist)  "$CHECK_HOST"
+   set qparam(hostlist)  "$test_host"
 
    # localize messages
    set INVALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_CQUEUE_NAMENOTGUILTY_S] $qname ]

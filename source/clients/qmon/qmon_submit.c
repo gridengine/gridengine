@@ -1875,7 +1875,7 @@ int save
       }
 
 #if 1 /* EB: TODO*/
-      {
+      if (!reduced_job) {
          lList *n_h_list, *u_h_list, *o_h_list, *s_h_list; 
 
          n_h_list = lCopyList("range list", range_list);
@@ -1928,7 +1928,7 @@ int save
       }  
  
 #if 1 /* EB: TODO*/
-      {
+      if (!reduced_job) {
          lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
          lListElem *tap = NULL;
          lList *range_list = NULL;
@@ -2100,10 +2100,12 @@ int save
             }
          }
       }
-#if 1 /* EB: */
-      lSetList(jep, JB_ja_u_h_ids, lCopyList("user hold ids",
+#if 1 /* EB: TODO*/
+      if (!reduced_job) {
+         lSetList(jep, JB_ja_u_h_ids, lCopyList("user hold ids",
             lGetList(jep, JB_ja_n_h_ids))); 
-      lSetList(jep, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+         lSetList(jep, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+      }
 #endif
    }
    else {

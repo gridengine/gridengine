@@ -74,10 +74,8 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
 
    DENTER(TOP_LAYER, "hgroup_mod");
 
-   /*
-    * Did we get a hostgroupname? 
-    */
    if (ret) {
+      /* Did we get a hostgroupname?  */
       pos = lGetPosViaElem(reduced_elem, HGRP_name);
       if (pos >= 0) {
          const char *name = lGetPosHost(reduced_elem, pos);

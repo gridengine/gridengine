@@ -526,8 +526,6 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
             next_elem = lNext(elem); 
             mod_elem = lGetElemHost(mod_list, sublist_host_name, name);
             if (mod_elem == NULL) {
-               const char *name = lGetHost(elem, sublist_host_name);
-
                DPRINTF(("Removing attribute list for "SFQ"\n", name));
                lRemoveElem(org_list, elem);
             }
@@ -535,7 +533,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
       }
 
       /*
-       * Do modifications for all given domain/host-configuration list
+       * Do modifications for all given elements of domain/host-configuration list
        */
       for_each(mod_elem, mod_list) {
          const char *name = lGetHost(mod_elem, sublist_host_name);
@@ -551,6 +549,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
             } 
             org_elem = lCreateElem(lGetElemDescr(mod_elem));
             lSetHost(org_elem, sublist_host_name, name);
+   /* EB: TODO: error message and error handling */
             lAppendElem(org_list, org_elem);
          }
 
@@ -772,7 +771,8 @@ cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
    bool ret = true;
 
    DENTER(CQUEUE_LAYER, "cqueue_handle_qinstances");
-   if (ret) {
+
+   if (ret) { 
       ret &= cqueue_mark_qinstances(cqueue, answer_list, rem_hosts);
    }
    if (ret) {
@@ -783,12 +783,14 @@ cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
       ret &= cqueue_mod_qinstances(cqueue, answer_list, reduced_elem,
                                    refresh_all_values,
                                    &has_changed, &is_ambiguous);
+      /* EB: TODO: evaluate is_ambiguous -> error? set queue instance state?*/
    }
    if (ret) {
       bool is_ambiguous;
 
       ret &= cqueue_add_qinstances(cqueue, answer_list, add_hosts,
                                    &is_ambiguous);
+      /* EB: TODO: evaluate is_ambiguous -> error? set queue instance state? */
    }
    DEXIT;
    return ret;
@@ -971,7 +973,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
       int index = 0;
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
-         if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+         if (!cqueue_attribute_array[index].is_sgeee_attribute ||
              feature_is_enabled(FEATURE_SGEEE)) {
             int pos = lGetPosViaElem(reduced_elem,
                                      cqueue_attribute_array[index].cqueue_attr);

@@ -1986,7 +1986,8 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                }
                break;
             case lHostT:
-               {                                                                                  const char *new_str = lGetPosHost(this_elem, pos);
+               {                                                                                  
+                  const char *new_str = lGetPosHost(this_elem, pos);
                   const char *old_str = lGetPosHost(old_elem, pos);
 
                   if ((new_str == NULL && old_str != NULL) || 

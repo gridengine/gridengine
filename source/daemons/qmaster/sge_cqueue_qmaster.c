@@ -178,6 +178,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    return 0;
 }
 
+/* EB: TODO: is not needed anymore */
 void cqueue_rollback(lListElem *cqueue) 
 {
    lList *qinstances = lGetList(cqueue, CQ_qinstances);
@@ -215,6 +216,7 @@ void cqueue_rollback(lListElem *cqueue)
    }
    DEXIT;
 }
+
 void cqueue_commit(lListElem *cqueue) 
 {
    lList *qinstances = lGetList(cqueue, CQ_qinstances);

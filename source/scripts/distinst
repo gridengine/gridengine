@@ -50,7 +50,7 @@ if [ -f scripts/distinst.private ]; then
 fi
 
 
-HASDIR="ckpt doc examples/jobs locale mpi pvm qmon/PIXMAPS/big qmon/locale"
+HASDIR="ckpt doc examples/jobs locale mpi mpi/myrinet pvm qmon/PIXMAPS/big qmon/locale"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
@@ -81,7 +81,10 @@ PVMSRCSCRIPTS="install.sh aimk"
 PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 
 MPIFILES="README README.atm hostname mpi.template mpich.template mpi.sh \
-          mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
+          mpi_cpi.sh rsh startmpi.sh stopmpi.sh \
+	  myrinet/README myrinet/gmps myrinet/mpi.template \
+	  myrinet/mpich.template myrinet/mpich_multi.template \
+	  myrinet/sge_mpirun myrinet/startmpi.sh myrinet/stopmpi.sh"
 
 SUNHPC_FILES="README batch.sunmpi.template sunmpi.pe.template"
 SUNHPC_SCRIPTS="HPC_GE_Integration.sh MPRUN PRISM resume_sunmpi.sh \
@@ -711,10 +714,11 @@ if [ $instcommon = true ]; then
    if [ $instmpi = true ]; then
       echo Installing \"mpi/\"
       rm -rf $DEST_SGE_ROOT/mpi/*
+      Execute mkdir -p $DEST_SGE_ROOT/mpi/myrinet
       for f in $MPIFILES; do
-         Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
+         Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi/$f
       done
-      chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname $DEST_SGE_ROOT/mpi/rsh
+      chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname $DEST_SGE_ROOT/mpi/rsh $DEST_SGE_ROOT/mpi/myrinet/*.sh $DEST_SGE_ROOT/mpi/myrinet/gmps $DEST_SGE_ROOT/mpi/myrinet/sge_mpirun
 
       HPCBASE=mpi/sunhpc/loose-integration
       Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE/accounting

@@ -1,6 +1,9 @@
+SD-2002-04-18-3: Feature:   Updated distinst to install mpi/myrinet PE
+                            integration
+
 SD-2002-04-18-2: Feature:   MPI MPICH/Myrinet parallel integration
                  Bugfix:    Fixed dist/mpi/rsh to handle hostname before
-			    or after options.
+			    or after options
 
 CR-2002-04-18-1: Testsuite: 
                  Bugfix:    testsuite did no aimk -only-depend

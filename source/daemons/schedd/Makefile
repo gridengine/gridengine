@@ -48,7 +48,6 @@ SCHEDD_ADD_SRC = job_log.c \
              sge_complex.c \
              parse_job_cull.c \
              parse_qsub.c \
-             sge_conf.c \
              sge_options.c \
              sge_orders.c \
              sge_pe_schedd.c \

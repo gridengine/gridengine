@@ -234,7 +234,7 @@ u_long32 flags
                   DEXIT;
                   return NULL;
                } else {
-                  /* gids < 1000 are not allowed */
+                  /* gids < 100 are not allowed */
                   lListElem *rep;
 
                   for_each (rep, rlp) {

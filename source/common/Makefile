@@ -50,7 +50,7 @@ common_messages:
 ###############################################################################
 COMMON_DIR = $(SDIR)/common
 
-COMMON_SRC = sge_conf.c \
+COMMON_SRC = \
             sge_groups.c \
             sge_options.c \
             sge_sharetree.c \
@@ -84,9 +84,6 @@ include $(COMMON_DIR)/common_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-sge_conf.o:  	$(COMMON_DIR)/sge_conf.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_conf.c
-
 sge_groups.o   : $(COMMON_DIR)/sge_groups.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_groups.c
 

@@ -75,7 +75,7 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_user_mapping.c \
               opt_history.c 
              
-QMASTER_ADD_SRC = usage.c sge_options.c sge_conf.c job_log.c \
+QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               startprog.c utility_daemon.c shutdown.c \
               admin_mail.c \
               category.c \

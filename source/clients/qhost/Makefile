@@ -42,7 +42,6 @@ QHOST_ADD_SRC = \
                qstat_printing.c \
                sge_complex.c \
                show_job.c \
-               sge_conf.c \
                sig_handlers.c \
                usage.c sge_options.c
 

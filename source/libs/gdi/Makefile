@@ -61,6 +61,7 @@ GDILIB_SRC = sge_all_listsL.c \
          parse.c \
          parse_mail.c \
          sge_c_event.c \
+         sge_conf.c \
          sge_event.c \
          sge_resource.c \
          sge_feature.c \
@@ -122,6 +123,9 @@ gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
 
 sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ack.c
+
+sge_conf.o:  	$(GDILIB_DIR)/sge_conf.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_conf.c
 
 sge_qexec.o:	$(GDILIB_DIR)/sge_qexec.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_qexec.c

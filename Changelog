@@ -1,3 +1,5 @@
+JG-2002-06-06-0: Bugfix:    Building Grid Engine with shared libs was broken.
+
 AH-2002-06-05-1: Bugfix:    Fix problem with notify mechanism causing actual
                             termination/suspension signal being delayed endlessly
                  Issue:     #231

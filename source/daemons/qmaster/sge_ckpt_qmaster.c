@@ -278,7 +278,8 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    ckpt_name = lGetString(ep, CK_name);
 
-   sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, NULL, ep);
+   sge_add_event(NULL, 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
+                 ckpt_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    DEXIT;
@@ -371,9 +372,8 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove ckpt file 1st */
-   if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL,
-                            0, 0, ckpt_name, NULL,
-                            NULL, NULL, NULL, true, true)) {
+   if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL, NULL,
+                        NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -422,8 +422,8 @@ int is_checkpoint_when_valid(int bitmask)
 {
    int ret = 0;
    int mask = 0;
-   DENTER(TOP_LAYER, "is_checkpoint_when_valid");
 
+   DENTER(TOP_LAYER, "is_checkpoint_when_valid");
    mask = CHECKPOINT_SUSPEND | CHECKPOINT_AT_SHUTDOWN
       | CHECKPOINT_AT_MINIMUM_INTERVAL | CHECKPOINT_AT_AUTO_RES;
 
@@ -431,7 +431,6 @@ int is_checkpoint_when_valid(int bitmask)
        || ((bitmask & mask) == bitmask)) {
       ret = 1;
    }
-
    DEXIT;
    return ret;
 }

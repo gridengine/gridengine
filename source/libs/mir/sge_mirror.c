@@ -137,6 +137,7 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, queue_update_master_list,               NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, schedd_conf_update_master_list,         NULL, NULL },
    { NULL, NULL,                                   NULL, NULL },
    { NULL, sge_mirror_process_shutdown,            NULL, NULL },
@@ -438,6 +439,11 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_CQUEUE_DEL);
          ec_subscribe(sgeE_CQUEUE_MOD);
          break;
+      case SGE_TYPE_QINSTANCE:
+         ec_subscribe(sgeE_QINSTANCE_ADD);
+         ec_subscribe(sgeE_QINSTANCE_DEL);
+         ec_subscribe(sgeE_QINSTANCE_MOD);
+         break;
       case SGE_TYPE_SCHEDD_CONF:
          ec_subscribe(sgeE_SCHED_CONF);
          break;
@@ -662,6 +668,11 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_CQUEUE_ADD);
          ec_unsubscribe(sgeE_CQUEUE_DEL);
          ec_unsubscribe(sgeE_CQUEUE_MOD);
+         break;
+      case SGE_TYPE_QINSTANCE:
+         ec_unsubscribe(sgeE_QINSTANCE_ADD);
+         ec_unsubscribe(sgeE_QINSTANCE_DEL);
+         ec_unsubscribe(sgeE_QINSTANCE_MOD);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          ec_unsubscribe(sgeE_SCHED_CONF);
@@ -1087,6 +1098,16 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
          case sgeE_CQUEUE_MOD:
             ret = sge_mirror_process_event(SGE_TYPE_CQUEUE, SGE_EMA_MOD, event);
             break;
+         
+         case sgeE_QINSTANCE_ADD:
+            ret = sge_mirror_process_event(SGE_TYPE_QINSTANCE, SGE_EMA_ADD, event);
+            break;
+         case sgeE_QINSTANCE_DEL:
+            ret = sge_mirror_process_event(SGE_TYPE_QINSTANCE, SGE_EMA_DEL, event);
+            break;
+         case sgeE_QINSTANCE_MOD:
+            ret = sge_mirror_process_event(SGE_TYPE_QINSTANCE, SGE_EMA_MOD, event);
+            break;
 
          case sgeE_SCHED_CONF:
             ret = sge_mirror_process_event(SGE_TYPE_SCHEDD_CONF, SGE_EMA_MOD, event);
@@ -1262,8 +1283,7 @@ generic_update_master_list(sge_object_type type, sge_event_action action,
 {
    lList **list;
    const lDescr *list_descr;
-   int     key_nm;
-
+   int key_nm;
    const char *key;
 
    DENTER(TOP_LAYER, "generic_update_master_list");
@@ -1314,9 +1334,10 @@ generic_update_master_list(sge_object_type type, sge_event_action action,
 *  SEE ALSO
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
-sge_mirror_error sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr, 
-                                                       int key_nm, const char *key, 
-                                                       sge_event_action action, lListElem *event)
+sge_mirror_error 
+sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr, 
+                                      int key_nm, const char *key, 
+                                      sge_event_action action, lListElem *event)
 {
    lListElem *ep;
    sge_mirror_error ret;

@@ -148,7 +148,7 @@ char *rhost
    }
 
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
-                        0, 0, userset_name, NULL,
+                        0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -232,7 +232,7 @@ char *rhost
    lFreeElem(lDechainElem(*userset_list, found));
 
    sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
-                   0, 0, userset_name, NULL,
+                   0, 0, userset_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
    /* change queue versions */
@@ -330,7 +330,7 @@ char *rhost
 
    /* update on file */
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
-                        0, 0, userset_name, NULL,
+                        0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EDISK;
@@ -369,7 +369,7 @@ const char *acl_name
       
          /* event has already been sent in sge_change_queue_version */
          sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                         0, 0, lGetString(qep, QU_qname), NULL,
+                         0, 0, lGetString(qep, QU_qname), NULL, NULL,
                          qep, NULL, NULL, false, true);
          answer_list_output(&answer_list);
          DPRINTF(("increasing version of queue "SFQ" because acl "

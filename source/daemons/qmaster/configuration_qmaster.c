@@ -142,7 +142,7 @@ char *rhost
 #endif   
 
    sge_event_spool(alpp, 0, sgeE_CONFIG_DEL,
-                   0, 0, config_name,
+                   0, 0, config_name, NULL,
                    NULL, NULL, NULL, NULL, true, true);
     
    /* now remove it from our internal list*/
@@ -293,11 +293,11 @@ char *rhost
    }
 
    sge_event_spool(alpp, 0, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 
-                   0, 0, config_name, NULL,
+                   0, 0, config_name, NULL, NULL,
                    ep, NULL, NULL, true, true);
 
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
-      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL);
+      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
    }
 
    /*

@@ -252,7 +252,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(hep, EH_name), NULL,
+                      0, 0, lGetHost(hep, EH_name), NULL, NULL,
                       hep, NULL, NULL, true, true);
       answer_list_output(&answer_list);
    }

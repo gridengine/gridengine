@@ -138,7 +138,7 @@ char *rhost
   
    /* write sharetree to file */
    if (!sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE,
-                        0, 0, NULL, NULL,
+                        0, 0, NULL, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
 
       /* answer list gets filled in sge_event_spool() */
@@ -180,7 +180,7 @@ char *rhost
    }
 
    sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE, 
-                   0, 0, NULL, NULL, 
+                   0, 0, NULL, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
    lFreeList(*lpp);

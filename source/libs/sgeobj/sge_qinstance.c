@@ -302,8 +302,9 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
                   if (old_value != new_value) {
 #ifdef QINSTANCE_MODIFY_DEBUG
                      DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
-                              old_value ? "true" : "false",
-                              new_value ? "true" : "false"));
+                              lNm2Str(attribute_name),
+                              (old_value ? "true" : "false"),
+                              (new_value ? "true" : "false")));
 #endif
                      lSetBool(this_elem, attribute_name, new_value);
                      *has_changed = true;

@@ -174,8 +174,8 @@ int cuser_success(lListElem *cuser, lListElem *old_cuser,
                     gdi_object_t *object) 
 {
    DENTER(TOP_LAYER, "usermap_success");
-   sge_add_event(NULL, 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 
-                 0, lGetString(cuser, CU_name), NULL, cuser);
+   sge_add_event(NULL, 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 0, 
+                 lGetString(cuser, CU_name), NULL, NULL, cuser);
    lListElem_clear_changed_info(cuser);
    DEXIT;
    return 0;
@@ -213,7 +213,7 @@ int cuser_del(lListElem *this_elem, lList **answer_list,
    
          if (cuser != NULL) {
             if (sge_event_spool(answer_list, 0, sgeE_CUSER_DEL,
-                                0, 0, name, NULL,
+                                0, 0, name, NULL, NULL,
                                 NULL, NULL, NULL, true, true)) {
                lRemoveElem(master_cuser_list, cuser);
 

@@ -862,7 +862,7 @@ int sub_command
    if (sge_change_queue_version(new_queue, add, 1) ||
       /* event has already been sent in sge_change_queue_version */
       !sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
-                       0, 0, lGetString(new_queue, QU_qname), NULL,
+                       0, 0, lGetString(new_queue, QU_qname), NULL, NULL,
                        new_queue, NULL, NULL, false, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -990,8 +990,8 @@ int sub_command
             lSetUlong(ja_task, JAT_state, state);
             sge_event_spool(alpp, 0, sgeE_JATASK_MOD,
                             lGetUlong(job, JB_job_number), 
-                            lGetUlong(ja_task, JAT_task_number), NULL, NULL,
-                            job, ja_task, NULL, true, true);
+                            lGetUlong(ja_task, JAT_task_number), NULL, NULL, 
+                            NULL, job, ja_task, NULL, true, true);
          }
       }
    }         
@@ -1003,7 +1003,7 @@ int sub_command
     *           Perhaps simply spool later?
     */
    sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
-                   0, 0, lGetString(new_queue, QU_qname), NULL,
+                   0, 0, lGetString(new_queue, QU_qname), NULL, NULL,
                    new_queue, NULL, NULL, true, false);
 
    INFO((SGE_EVENT, add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
@@ -1109,7 +1109,7 @@ char *rhost
    }
 
    sge_event_spool(alpp, 0, sgeE_QUEUE_DEL, 
-                   0, 0, qname, NULL,
+                   0, 0, qname, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
    unsuspend_all(sos_list_before, 0);

@@ -45,6 +45,7 @@ extern "C" {
 enum {
    QI_hostname = QI_LOWERBOUND,
    QI_name,
+   QI_tag,
 
    QI_seq_no,
    QI_nsuspend,
@@ -110,6 +111,7 @@ enum {
 SLISTDEF(QI_Type, QInstance)
    SGE_HOST(QI_hostname, CULL_DEFAULT) 
    SGE_STRING(QI_name, CULL_DEFAULT)
+   SGE_ULONG(QI_tag, CULL_DEFAULT)
 
    SGE_ULONG(QI_seq_no, CULL_SPOOL | CULL_CONFIGURE)
    SGE_ULONG(QI_nsuspend, CULL_SPOOL | CULL_CONFIGURE)
@@ -176,6 +178,7 @@ LISTEND
 NAMEDEF(QIN)
    NAME("QI_hostname")
    NAME("QI_name")
+   NAME("QI_tag")
 
    NAME("QI_seq_no")
    NAME("QI_nsuspend")

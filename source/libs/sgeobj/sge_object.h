@@ -97,6 +97,8 @@
 *        SGE_TYPE_PE
 *        SGE_TYPE_PROJECT
 *        SGE_TYPE_QUEUE
+*        SGE_TYPE_CQUEUE
+*        SGE_TYPE_QINSTANCE
 *        SGE_TYPE_SCHEDD_CONF
 *        SGE_TYPE_SCHEDD_MONITOR
 *        SGE_TYPE_SHUTDOWN
@@ -111,8 +113,7 @@
 *        SGE_TYPE_HGROUP
 *  
 *     The last value defined as obect type is SGE_TYPE_ALL. 
-****************************************************************************
-*/
+*****************************************************************************/
 typedef enum {
    SGE_TYPE_ADMINHOST = 0,
    SGE_TYPE_CALENDAR,
@@ -131,6 +132,7 @@ typedef enum {
    SGE_TYPE_PROJECT,
    SGE_TYPE_QUEUE,
    SGE_TYPE_CQUEUE,
+   SGE_TYPE_QINSTANCE,
    SGE_TYPE_SCHEDD_CONF,
    SGE_TYPE_SCHEDD_MONITOR,
    SGE_TYPE_SHUTDOWN,
@@ -140,6 +142,16 @@ typedef enum {
    SGE_TYPE_USERSET,
    SGE_TYPE_HGROUP,
    SGE_TYPE_CENTRY,
+
+   /*
+    * Don't forget to edit
+    *
+    *    'mirror_base' in libs/mir/sge_mirror.c
+    *    'object_base' in libs/sgeobj/sge_object.c
+    *    'table_base' in libs/spool/sge_spooling_database.c
+    *
+    * if something is changed here!
+    */
 #ifndef __SGE_NO_USERMAPPING__
    SGE_TYPE_CUSER,
 #endif

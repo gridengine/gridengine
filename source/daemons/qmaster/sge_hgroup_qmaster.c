@@ -381,7 +381,7 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
              */
             if (ret) {
                if (sge_event_spool(answer_list, 0, sgeE_HGROUP_DEL, 
-                                   0, 0, name, NULL,
+                                   0, 0, name, NULL, NULL,
                                    NULL, NULL, NULL, true, true)) {
                   /*
                    * Let's remove the object => Success!
@@ -436,8 +436,8 @@ hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object)
    const char *name = lGetHost(hgroup, HGRP_name);
 
    DENTER(TOP_LAYER, "hgroup_success");
-   sge_add_event(NULL, 0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 
-                 0, name, NULL, hgroup);
+   sge_add_event(NULL, 0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 0, 
+                 name, NULL, NULL, hgroup);
    lListElem_clear_changed_info(hgroup);
    DEXIT;
    return 0;

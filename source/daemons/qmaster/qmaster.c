@@ -138,8 +138,10 @@ int main(int argc, char **argv)
 
       if (shut_me_down) {
          /* we have to deliver events before shutting down */
-         sge_add_event(NULL, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL);
-         set_event_client_busy(NULL, 0); /* send event, even if event clients are busy */
+         sge_add_event(NULL, now, sgeE_QMASTER_GOES_DOWN, 0, 0, 
+                       NULL, NULL, NULL, NULL);
+         /* send event, even if event clients are busy */
+         set_event_client_busy(NULL, 0); 
          ck_4_deliver_events(now);
          sge_shutdown();
       }

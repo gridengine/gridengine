@@ -247,7 +247,8 @@ sge_pack_buffer *pb
                       */
                      /* jatask usage is not spooled (?) */
                      sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                        jobid, jataskid, NULL, lGetString(jep, JB_session),
+                                        jobid, jataskid, NULL, NULL,
+                                        lGetString(jep, JB_session),
                                         lGetList(jatep, JAT_scaled_usage_list));
                      lList_clear_changed_info(lGetList(jatep, JAT_scaled_usage_list));
                   }
@@ -312,13 +313,14 @@ sge_pack_buffer *pb
 
                        if (new_task) {
                           sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
-                                          jobid, jataskid, pe_task_id_str, 
+                                          jobid, jataskid, pe_task_id_str, NULL,
                                           lGetString(jep, JB_session),
                                           jep, jatep, petask, true, true);
                        } else {
                           /* do not spool usage of pe task (?) */
                           sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                             jobid, jataskid, pe_task_id_str, lGetString(jep, JB_session),
+                                             jobid, jataskid, pe_task_id_str, 
+                                             NULL, lGetString(jep, JB_session),
                                              lGetList(petask, PET_scaled_usage));
                            lList_clear_changed_info(lGetList(petask, PET_scaled_usage));
                        }                            
@@ -507,7 +509,8 @@ sge_pack_buffer *pb
 
                         /* finished pe task will not be spooled (?) */
                         sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
-                                        jobid, jataskid, pe_task_id_str, lGetString(jep, JB_session), 
+                                        jobid, jataskid, pe_task_id_str, NULL,
+                                        lGetString(jep, JB_session), 
                                         jep, jatep, petask, true, false);
                         answer_list_output(&answer_list);
                      }
@@ -545,14 +548,16 @@ sge_pack_buffer *pb
                               container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
                               /* usage container will not be spooled (?) */
                               sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
-                                            jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, lGetString(jep, JB_session),  
+                                            jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, NULL, lGetString(jep, JB_session),  
                                             jep, jatep, container, true, false);
                               answer_list_output(&answer_list);
                            } else {
                               pe_task_sum_past_usage(container, petask);
                               /* usage container will not be spooled (?) */
                               sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                                 jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                                 jobid, jataskid, 
+                                                 PE_TASK_PAST_USAGE_CONTAINER, 
+                                                 NULL,
                                                  lGetString(jep, JB_session),
                                                  lGetList(container, PET_scaled_usage));
                               lList_clear_changed_info(lGetList(container, PET_scaled_usage));
@@ -563,8 +568,9 @@ sge_pack_buffer *pb
                         {
                            lList *answer_list = NULL;
                            sge_event_spool(&answer_list, 0, sgeE_PETASK_DEL, 
-                                          jobid, jataskid, pe_task_id_str, NULL,
-                                          NULL, NULL, NULL, true, true);
+                                          jobid, jataskid, pe_task_id_str, 
+                                          NULL, NULL, NULL, NULL, NULL, 
+                                          true, true);
                            answer_list_output(&answer_list);
                         }
                         lRemoveElem(lGetList(jatep, JAT_task_list), petask);

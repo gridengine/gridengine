@@ -239,8 +239,8 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    centry_list_sort(Master_CEntry_List);
 
-   sge_add_event(NULL, 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 
-                 0, 0, lGetString(ep, CE_name), NULL, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 0, 0, 
+                 lGetString(ep, CE_name), NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    /* throw away all old actual values lists and rebuild them from scratch */
@@ -307,7 +307,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                                      Master_Queue_List, Master_Exechost_List, 
                                      Master_Sched_Config_List)) {
                if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
-                                   0, 0, name, NULL,
+                                   0, 0, name, NULL, NULL,
                                    NULL, NULL, NULL, true, true)) {
 
                   sge_change_queue_version_centry(name);
@@ -375,13 +375,13 @@ sge_change_queue_version_centry(const char *centry_name)
       
       /* event has already been sent in sge_change_queue_version */
       sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
-                      0, 0, lGetString(ep, QU_qname), NULL,
+                      0, 0, lGetString(ep, QU_qname), NULL, NULL,
                       ep, NULL, NULL, false, true);
    }
 
    for_each(ep, Master_Exechost_List) {
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(ep, EH_name), NULL,
+                      0, 0, lGetHost(ep, EH_name), NULL, NULL,
                       ep, NULL, NULL, true, false);
    }
    answer_list_output(&answer_list);

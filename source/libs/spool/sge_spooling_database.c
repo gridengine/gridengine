@@ -204,6 +204,7 @@ static table_description table_base[SGE_TYPE_ALL] = {
    { "sge_project", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_queue", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_cqueue", NULL , NULL, NULL, NULL, NULL, NoName},
+   { "sge_qinstance", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_sched_config", NULL, NULL , NULL, NULL, NULL, NoName},
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},

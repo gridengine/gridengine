@@ -255,6 +255,10 @@ typedef enum {
    sgeE_CQUEUE_DEL,                 /* + event cluster queue delete */
    sgeE_CQUEUE_MOD,                 /* + event cluster queue modify */
 
+   sgeE_QINSTANCE_ADD,              /* + event queue instance add */
+   sgeE_QINSTANCE_DEL,              /* + event queue instance delete */
+   sgeE_QINSTANCE_MOD,              /* + event queue instance mod */
+
    sgeE_SCHED_CONF,                 /* + replace existing (sge) scheduler configuration */
 
    sgeE_SCHEDDMONITOR,              /* + trigger scheduling run */
@@ -318,6 +322,7 @@ enum {
    ET_intkey,                /* a int key for use by a specific event type */
    ET_intkey2,               /* a int key for use by a specific event type */
    ET_strkey,                /* a str key for use by a specific event type */
+   ET_strkey2,               /* a str key for use by a specific event type */
    ET_new_version            /* new version of the changed object */
                              /* JG: TODO: we should have different fields for 
                               *           objects (SGE_OBJECT) and
@@ -333,6 +338,7 @@ LISTDEF(ET_Type)
    SGE_ULONG(ET_intkey, CULL_DEFAULT)
    SGE_ULONG(ET_intkey2, CULL_DEFAULT)
    SGE_STRING(ET_strkey, CULL_DEFAULT)
+   SGE_STRING(ET_strkey2, CULL_DEFAULT)
    SGE_LIST(ET_new_version, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND 
 
@@ -343,6 +349,7 @@ NAMEDEF(ETN)
    NAME("ET_intkey")
    NAME("ET_intkey2")
    NAME("ET_strkey")
+   NAME("ET_strkey2")
    NAME("ET_new_version")
 NAMEEND
 

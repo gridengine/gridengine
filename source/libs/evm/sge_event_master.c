@@ -65,10 +65,6 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 
-#ifdef QIDL
-#include "qidl_c_gdi.h"
-#endif
-
 #include "msg_common.h"
 #include "msg_evmlib.h"
 
@@ -117,12 +113,12 @@ sge_total_update_event(lListElem *event_client, ev_event type);
 static void 
 sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
                u_long32 intkey, u_long32 intkey2, const char *strkey, 
-               lListElem *element);
+               const char *strkey2, lListElem *element);
 
 static int 
 sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                    lList *list, int need_copy_elem);
+                    const char *strkey2, lList *list, int need_copy_elem); 
 
 static void 
 sge_flush_events_(lListElem *event_client, int interval, int now);
@@ -165,10 +161,6 @@ eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long
 #define EVENT_ACK_MAX_TIMEOUT 1200
 
 lList *EV_Clients = NULL;
-
-#ifdef QIDL
-u_long32 qidl_event_count = 0;
-#endif
 
 /****** Eventclient/Server/sge_flush_events() **********************************
 *  NAME
@@ -1179,7 +1171,7 @@ ck_4_deliver_events(u_long32 now)
 void 
 sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
                    u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                   const char *session, lList *list) 
+                   const char *strkey2, const char *session, lList *list) 
 {
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
@@ -1188,13 +1180,13 @@ sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    if (event_client != NULL) {
       if (sge_eventclient_subscribed(event_client, type, session)) {
          sge_add_list_event_(event_client, timestamp, type, 
-                             intkey, intkey2, strkey, list, 1);
+                             intkey, intkey2, strkey, strkey2, list, 1);
       }
    } else {
       for_each (event_client, EV_Clients) {
          if (sge_eventclient_subscribed(event_client, type, session)) {
             sge_add_list_event_(event_client, timestamp, type, 
-                                intkey, intkey2, strkey, list, 1);
+                                intkey, intkey2, strkey, strkey2, list, 1);
          }
       }
    }
@@ -1203,7 +1195,7 @@ sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
 static int 
 sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                    lList *list, int need_copy_list  /* to reduce overhead */) 
+                    const char *strkey2, lList *list, int need_copy_list) 
 {
    lListElem *event;
    u_long32 i;
@@ -1233,6 +1225,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    lSetUlong(event, ET_intkey, intkey); 
    lSetUlong(event, ET_intkey2, intkey2); 
    lSetString(event, ET_strkey, strkey);
+   lSetString(event, ET_strkey2, strkey2);
   
    lSetList(event, ET_new_version, 
             need_copy_list?lCopyList(lGetListName(list), list):list);
@@ -1262,208 +1255,6 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       }
    }
 
-#ifdef QIDL
-   /* send CORBA event */
-   /* the supplied list usually contains exactly one element
-   ** except for sgeE_JOB_USAGE, and sgeE_JOB_FINAL_USAGE, where there
-   ** may be more. So I increase the event counter by 1 and send
-   ** only lFirst(list).
-   ** if the usage lists should be sent via CORBA events, too, it is
-   ** probably necessary to add a sub-counter for these cases
-   */
-   
-   qidl_event_count++;
-   
-   switch (type) {
-   /* -------------------- */
-   case sgeE_JOB_DEL:
-      deleteObjectByID(SGE_JOB_LIST, intkey);
-      break;
-   case sgeE_JOB_ADD:
-      addObjectByID(SGE_JOB_LIST, intkey);
-      break;
-   case sgeE_JOB_MOD:
-      job_changed(lFirst(list));
-      break;
-   case sgeE_JOB_LIST:
-      break;
-   case sgeE_JOB_MOD_SCHED_PRIORITY:
-      break;
-   case sgeE_JOB_USAGE:
-      break;
-   case sgeE_JOB_FINAL_USAGE:
-      deleteObjectByID(SGE_JOB_LIST, intkey);
-      break;
-
-   /* -------------------- */
-   case sgeE_QUEUE_DEL:
-      deleteObjectByName(SGE_QUEUE_LIST, strkey);
-      break;
-   case sgeE_QUEUE_ADD:
-      /* cannot be handled here since the cull list */
-      /* does not exist at this point */
-      /* handled in sge_queue_qmaster.c */
-      break;
-   case sgeE_QUEUE_MOD:
-      queue_changed(lFirst(list));
-      break;
-   case sgeE_QUEUE_LIST:
-      break;
-   case sgeE_QUEUE_UNSUSPEND_ON_SUB:
-      break;
-   case sgeE_QUEUE_SUSPEND_ON_SUB:
-      break;
-   
-/* -------------------- */
-   case sgeE_CQUEUE_DEL:
-      deleteObjectByName(SGE_CQUEUE_LIST, strkey);
-      break;
-   case sgeE_CQUEUE_ADD:
-      /* cannot be handled here since the cull list */
-      /* does not exist at this point */
-      /* handled in sge_queue_qmaster.c */
-      break;
-   case sgeE_CQUEUE_MOD:
-      queue_changed(lFirst(list));
-      break;
-   case sgeE_CQUEUE_LIST:
-      break;
-
-   /* -------------------- */
-   case sgeE_EXECHOST_DEL:
-      deleteObjectByName(SGE_EXECHOST_LIST, 
-                         lFirst(list) ? lGetHost(lFirst(list),EH_name) : 
-                                        strkey);
-   case sgeE_EXECHOST_ADD:
-      /* done by handle generic gdi object */
-      break;
-   case sgeE_EXECHOST_MOD:
-      /* exechost_changed(lFirst(list)); */
-      break;
-   case sgeE_EXECHOST_LIST:
-      break;
-
-   /* -------------------- */
-   case sgeE_USERSET_DEL:
-      deleteObjectByName(SGE_USERSET_LIST, 
-                         lFirst(list) ? lGetString(lFirst(list),US_name) : 
-                                        strkey);
-      break;
-   case sgeE_USERSET_ADD:
-      addObjectByName(SGE_USERSET_LIST, 
-                      lFirst(list) ? lGetString(lFirst(list),US_name) : 
-                                     strkey);
-      break;
-   case sgeE_USERSET_MOD:
-      if (lFirst(list))
-         userset_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-   case sgeE_USERSET_LIST:
-      break;
-
-   /* -------------------- */
-   case sgeE_USER_DEL:
-      deleteObjectByName(SGE_USER_LIST, 
-                         lFirst(list) ? lGetString(lFirst(list),UP_name) : 
-                                        strkey);
-      break;
-   case sgeE_USER_ADD:
-      /* done by handle generic gdi object */
-      break;
-   case sgeE_USER_MOD:
-      if (lFirst(list))
-         user_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-   case sgeE_USER_LIST:
-      break;
-
-   /* -------------------- */
-   case sgeE_PROJECT_DEL:
-      deleteObjectByName(SGE_PROJECT_LIST, 
-                         lFirst(list) ? lGetString(lFirst(list),UP_name) : 
-                                        strkey);
-      break;
-   case sgeE_PROJECT_ADD:
-      /* done by handle generic gdi object */
-      break;
-   case sgeE_PROJECT_MOD:
-      if (lFirst(list))
-         project_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-   case sgeE_PROJECT_LIST:
-      break;
-
-   /* -------------------- */
-   case sgeE_PE_DEL:
-      deleteObjectByName(SGE_PE_LIST, 
-                         lFirst(list) ? lGetString(lFirst(list),PE_name) : 
-                                        strkey);
-      break;
-   case sgeE_PE_ADD:
-      addObjectByName(SGE_PE_LIST, 
-                      lFirst(list) ? lGetString(lFirst(list),PE_name) : 
-                                     strkey);
-      break;
-   case sgeE_PE_MOD:
-      if (lFirst(list))
-         parallelenvironment_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-   case sgeE_PE_LIST:
-      break;
-
-   /* -------------------- */
-   case sgeE_SHUTDOWN:
-      break;
-   case sgeE_QMASTER_GOES_DOWN:
-      break;
-   case sgeE_SCHEDDMONITOR:
-      break;
-
-   /* -------------------- */
-   case sgeE_NEW_SHARETREE:
-      if (lFirst(list))
-         sharetree_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-
-   /* -------------------- */
-   case sgeE_SCHED_CONF:
-      break;
-
-   /* -------------------- */
-   case sgeE_CKPT_DEL:
-      deleteObjectByName(SGE_CKPT_LIST, 
-                         lFirst(list) ? lGetString(lFirst(list),CK_name) : 
-                                        strkey);
-      break;
-   case sgeE_CKPT_ADD:
-      addObjectByName(SGE_CKPT_LIST, 
-                      lFirst(list) ? lGetString(lFirst(list),CK_name) : 
-                                     strkey);
-      break;
-   case sgeE_CKPT_MOD:
-      if (lFirst(list))
-      checkpoint_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-   case sgeE_CKPT_LIST:
-      break;
-
-   default:
-      break;
-   }
-#endif
-
    DEXIT;
    return EV_Clients?consumed:1;
 }
@@ -1478,7 +1269,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 *     void 
 *     sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
 *                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
-*                   lListElem *element) 
+*                   const char *strkey2, lListElem *element) 
 *
 *  FUNCTION
 *     Adds an object to the list of events to deliver. Called, if an event 
@@ -1497,6 +1288,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 *     u_long32 intkey         - additional data
 *     u_long32 intkey2        - additional data
 *     const char *strkey      - additional data
+*     const char *strkey2     - additional data
 *     const char *session     - events session key
 *     lListElem *element      - the object to deliver as event
 *
@@ -1511,18 +1303,11 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 void 
 sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
               u_long32 intkey, u_long32 intkey2, const char *strkey, 
-              const char* session, lListElem *element) 
+              const char *strkey2, const char *session, lListElem *element) 
 {
 
    DENTER(TOP_LAYER, "sge_add_event"); 
    
-#ifndef QIDL
-   if (!EV_Clients) {
-      DEXIT;
-      return;
-   }
-#endif
-
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
@@ -1530,13 +1315,13 @@ sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    if (event_client != NULL) {
       if (sge_eventclient_subscribed(event_client, type, session)) {
          sge_add_event_(event_client, timestamp, type, 
-                        intkey, intkey2, strkey, element);
+                        intkey, intkey2, strkey, strkey2, element);
       }   
    } else {
       for_each (event_client, EV_Clients) {
          if (sge_eventclient_subscribed(event_client, type, session)) {
             sge_add_event_(event_client, timestamp, type, 
-                           intkey, intkey2, strkey, element);
+                           intkey, intkey2, strkey, strkey2, element);
          }
       }
    }
@@ -1547,7 +1332,7 @@ sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
 static void 
 sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
                u_long32 intkey, u_long32 intkey2, const char *strkey, 
-               lListElem *element) 
+               const char *strkey2, lListElem *element) 
 {
    const lDescr *dp;
    lList *lp = NULL;
@@ -1560,7 +1345,7 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    }
 
    if (!sge_add_list_event_(event_client, timestamp, type, 
-                            intkey, intkey2, strkey, lp, 0)) {
+                            intkey, intkey2, strkey, strkey2, lp, 0)) {
       lp = lFreeList(lp); 
    }
 
@@ -1949,9 +1734,9 @@ sge_gdi_kill_eventclient_(lListElem *event_client, const char *host,
       return;
    }
 
-   /* add a sgeE_SHUTDOWN event */
-   sge_add_event(event_client, 0, sgeE_SHUTDOWN, 0, 0, NULL, 
-         lGetString(event_client, EV_session), NULL);
+   sge_add_event(event_client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
+                 lGetString(event_client, EV_session), NULL);
+
    sge_flush_events(event_client, 0);
 
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, 
@@ -2022,8 +1807,8 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       return;
    }
 
-   /* add a sgeE_SCHEDDMONITOR event */
-   sge_add_event(scheduler, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL);
+   sge_add_event(scheduler, 0, sgeE_SCHEDDMONITOR, 0, 0, 
+                 NULL, NULL, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
    answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

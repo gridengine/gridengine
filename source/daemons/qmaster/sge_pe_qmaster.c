@@ -188,18 +188,16 @@ gdi_object_t *object
    return 0;
 }
 
-int pe_success(
-lListElem *ep,
-lListElem *old_ep,
-gdi_object_t *object 
-) {
+int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+{
    const char *pe_name;
 
    DENTER(TOP_LAYER, "pe_success");
 
    pe_name = lGetString(ep, PE_name);
 
-   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, NULL, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
+                 pe_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    DEXIT;
@@ -265,8 +263,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
 
    /* remove host file */
    if (!sge_event_spool(alpp, 0, sgeE_PE_DEL,
-                        0, 0, pe, 
-                        NULL, NULL, NULL, NULL, true, true)) {
+                        0, 0, pe, NULL, NULL, NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;

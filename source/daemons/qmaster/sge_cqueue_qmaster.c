@@ -67,6 +67,13 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+enum {
+   SGE_QI_TAG_DEFAULT = 0,
+   SGE_QI_TAG_DEL     = 1,
+   SGE_QI_TAG_ADD     = 2,
+   SGE_QI_TAG_MOD     = 4
+};
+
 int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
                int add, const char *remote_user, const char *remote_host,
                gdi_object_t *object, int sub_command) 
@@ -246,10 +253,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 
          if (qinstance != NULL) {
             DPRINTF(("Deleting qinstance for host "SFQ"\n", hostname));
-            lRemoveElem(list, qinstance);
-         } else {
-            DPRINTF(("Cannot delete qinstance for host "SFQ"\n", hostname));
-         }
+            lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEL);
+         } 
       }
    }
 
@@ -290,9 +295,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                      break;
                   } 
                   if (has_changed) {
-                     DPRINTF(("qinstance %s has been changed\n",
-                              hostname));
-                     /* EB: TODO: Spool it */
+                     DPRINTF(("qinstance %s has been changed\n", hostname));
+                     lSetUlong(qinstance, QI_tag, SGE_QI_TAG_MOD);
                   }
                   if (is_ambiguous) {
                      DPRINTF(("qinstance %s has ambiguous configuaration\n", 
@@ -330,8 +334,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                      hostname));
             /* EB: TODO: Set ambiguous state */
          }
+         lSetUlong(new_qinstance, QI_tag, SGE_QI_TAG_ADD);
          lAppendElem(list, new_qinstance);
-
       }
    }
 
@@ -349,9 +353,46 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 int cqueue_success(lListElem *cqueue, lListElem *old_cqueue, 
                    gdi_object_t *object) 
 {
+   lListElem *qinstance = NULL;
+   lList *qinstances = NULL;
+
    DENTER(TOP_LAYER, "cqueue_success");
-   sge_add_event(NULL, 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0,
-                 0, lGetString(cqueue, CQ_name), NULL, cqueue);
+   
+   qinstances = lGetList(cqueue, CQ_qinstances);
+
+   /*
+    * CQ modify or add event
+    */
+   sge_add_event(NULL, 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
+                 lGetString(cqueue, CQ_name), NULL, NULL, cqueue);
+
+   /*
+    * QI modify, add or delete event
+    */
+   for_each(qinstance, qinstances) {
+      u_long32 tag = lGetUlong(qinstance, QI_tag);
+
+      if (tag == SGE_QI_TAG_ADD) {
+         DPRINTF(("ADD QI event\n"));
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_ADD, 0, 0, 
+                       lGetString(qinstance, QI_name), 
+                       lGetHost(qinstance, QI_hostname),
+                       NULL, cqueue);
+      } else if (tag == SGE_QI_TAG_MOD) {
+         DPRINTF(("MOD QI event\n"));
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_MOD, 0, 0, 
+                       lGetString(qinstance, QI_name), 
+                       lGetHost(qinstance, QI_hostname),
+                       NULL, cqueue);
+      } else if (tag == SGE_QI_TAG_DEL) {
+         DPRINTF(("DEL QI event\n"));
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_DEL, 0, 0, 
+                       lGetString(qinstance, QI_name), 
+                       lGetHost(qinstance, QI_hostname),
+                       NULL, NULL);
+      } 
+      lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEFAULT);
+   }
    DEXIT;
    return 0;
 }
@@ -389,7 +430,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
 
          if (cqueue != NULL) {
             if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
-                                0, 0, name, NULL,
+                                0, 0, name, NULL, NULL,
                                 NULL, NULL, NULL, true, true)) {
                lRemoveElem(Master_CQueue_List, cqueue);
 

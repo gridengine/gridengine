@@ -665,7 +665,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    job_suc_pre(jep);
 
    if (!sge_event_spool(alpp, 0, sgeE_JOB_ADD, 
-                        job_number, 0, NULL, NULL,
+                        job_number, 0, NULL, NULL, NULL,
                         jep, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
@@ -972,10 +972,12 @@ int sub_command
                    */
                   if (lGetString(job, JB_session))
                      dupped_session = strdup(lGetString(job, JB_session));
-                  sge_add_event(NULL, start_time, sgeE_JATASK_DEL, job_number, task_number,
-                                NULL, dupped_session, NULL);
-                  sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_NO_SPOOLING |
-                     COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
+                  sge_add_event(NULL, start_time, sgeE_JATASK_DEL, 
+                                job_number, task_number,
+                                NULL, NULL, dupped_session, NULL);
+                  sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
+                                 COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
+                                 COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
                   if (!alltasks) {
@@ -1005,8 +1007,8 @@ int sub_command
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(job);
             } else {
-               sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, 
-                     dupped_session, NULL);
+               sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, 
+                             NULL, NULL, dupped_session, NULL);
             }
          }
          FREE(dupped_session);
@@ -1705,28 +1707,22 @@ int sub_command
    return STATUS_OK;
 }
 
-void sge_add_job_event(
-ev_event type,
-lListElem *jep,
-lListElem *jatask 
-) {
+void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatask) 
+{
    DENTER(TOP_LAYER, "sge_add_job_event");
    sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
-                jatask?lGetUlong(jatask, JAT_task_number):0, 
-                NULL, lGetString(jep, JB_session), jep);
+                 jatask ? lGetUlong(jatask, JAT_task_number) : 0, 
+                 NULL, NULL, lGetString(jep, JB_session), jep);
    DEXIT;
    return;
 }
 
-void sge_add_jatask_event(
-ev_event type,
-lListElem *jep,
-lListElem *jatask 
-) {           
+void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask) 
+{           
    DENTER(TOP_LAYER, "sge_add_jatask_event");
    sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
-                  lGetUlong(jatask, JAT_task_number),
-                  NULL, lGetString(jep, JB_session), jatask);
+                 lGetUlong(jatask, JAT_task_number),
+                 NULL, NULL, lGetString(jep, JB_session), jatask);
    DEXIT;
    return;  
 }        

@@ -162,21 +162,28 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
                                       sge_mirror_callback callback_before, 
                                       sge_mirror_callback callback_after, 
                                       void *clientdata);
+
 sge_mirror_error sge_mirror_unsubscribe(sge_object_type type);
 
 /* Event Processing */
 sge_mirror_error sge_mirror_process_events(void);
 
-sge_mirror_error sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
-                                               lListElem *ep, const char *key, 
-                                               sge_event_action action, lListElem *event);
-sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDescr *list_descr, 
-                                                        int key_nm, const char *key, 
-                                                        sge_event_action action, lListElem *event);
-sge_mirror_error sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr, 
-                                                       int key_nm, const char *key, 
-                                                       sge_event_action action, lListElem *event);
+sge_mirror_error 
+sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
+                              lListElem *ep, const char *key, 
+                              sge_event_action action, lListElem *event);
 
+sge_mirror_error 
+sge_mirror_update_master_list_host_key(lList **list, const lDescr *list_descr, 
+                                       int key_nm, const char *key, 
+                                       sge_event_action action, 
+                                       lListElem *event);
+
+sge_mirror_error 
+sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr, 
+                                      int key_nm, const char *key, 
+                                      sge_event_action action, 
+                                      lListElem *event);
 
 /* Error Handling */
 const char *sge_mirror_strerror(sge_mirror_error num);

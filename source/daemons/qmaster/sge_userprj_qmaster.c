@@ -201,19 +201,15 @@ Error:
    return STATUS_EUNKNOWN;
 }
 
-int userprj_success(
-lListElem *ep,
-lListElem *old_ep,
-gdi_object_t *object 
-) {
+int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+{
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    
    DENTER(TOP_LAYER, "userprj_success");
-
-   sge_add_event( NULL, 0, old_ep?
-         (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
-         (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
-         0, 0, lGetString(ep, UP_name), NULL, ep);
+   sge_add_event(NULL, 0, old_ep?
+                 (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
+                 (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
+                 0, 0, lGetString(ep, UP_name), NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    DEXIT;
@@ -353,7 +349,7 @@ int user        /* =1 user, =0 project */
 
    /* delete user or project file */
    if (!sge_event_spool(alpp, 0, user ? sgeE_USER_DEL : sgeE_PROJECT_DEL,
-                        0, 0, name, NULL,
+                        0, 0, name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EDISK;

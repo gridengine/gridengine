@@ -104,6 +104,7 @@ typedef unsigned long long sbv_t;
 #endif
 
 #include "basis_types.h"
+#include "def.h"
 #include "config_file.h"
 #include "err_trace.h"
 #include "setrlimits.h"
@@ -1158,8 +1159,20 @@ int ckpt_type
 
          /* normal exit */
          if (WIFEXITED(qrsh_exit_code)) {
+            const char *qrsh_error;
+
             exit_status = WEXITSTATUS(qrsh_exit_code);
-            sprintf(err_str, "job exited normally, exit code is %d\n", exit_status);
+
+            qrsh_error = get_error_of_qrsh_starter();
+            if (qrsh_error != NULL) {
+               sprintf(err_str, "startup of qrsh job failed: "SFN"\n",
+                       qrsh_error);
+               shepherd_error_impl(err_str, 0);
+               FREE(qrsh_error);
+            } else {
+               sprintf(err_str, "job exited normally, exit code is %d\n", 
+                       exit_status);
+            }
             shepherd_trace(err_str);
          }
 

@@ -413,7 +413,7 @@ static int wait_for_qrsh_socket(int sock, int timeout)
    return msgsock;
 }               
 
-/****** Interactive/qsh/read_from_qrsh_socket() ***************************************
+/****** Interactive/qsh/read_from_qrsh_socket() ********************************
 *
 *  NAME
 *     read_from_qrsh_socket -- read a message from socket
@@ -513,8 +513,8 @@ static int get_remote_exit_code(int sock)
       char *s_ret = read_from_qrsh_socket(msgsock);
       if(s_ret && *s_ret) {
          char *message = strchr(s_ret, ':');
-         if(message) {
-            fprintf(stderr, message);
+         if(message != NULL && strlen(message) > 1) {
+            fprintf(stderr, message + 1);
             *message = 0;
          }
          VERBOSE_LOG((stderr, "%s\n", s_ret));
@@ -1307,6 +1307,7 @@ static lList *merge_and_order_options(lList **opts_defaults,
 */
 void set_command_to_env(lList *envlp, lList *opts_qrsh)
 {
+   /* JG: TODO: use dstring instead of buffer */
    char buffer[4096];
    *buffer = 0;
 

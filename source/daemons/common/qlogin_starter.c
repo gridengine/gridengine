@@ -292,7 +292,7 @@ int get_exit_code_of_qrsh_starter(void)
 
    /* we only have an error file in TMPDIR in case of rsh, 
     * otherwise pass exit_code */
-   if(search_conf_val("rsh_daemon") != NULL) {
+   if (search_conf_val("rsh_daemon") != NULL) {
       char *tmpdir;
       char *taskid;
       FILE *errorfile;
@@ -303,16 +303,16 @@ int get_exit_code_of_qrsh_starter(void)
       taskid = search_conf_val("qrsh_task_id");
       SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter - TMPDIR = %s,"
          " qrsh_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
-      if(tmpdir) {
-         if(taskid) {
+      if (tmpdir != NULL) {
+         if (taskid != NULL) {
             sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
          } else {
             sprintf(buffer, "%s/qrsh_exit_code", tmpdir);
          }
 
          errorfile = fopen(buffer, "r");
-         if(errorfile) {
-            if(fscanf(errorfile, "%d", &exit_code) == 1) {
+         if (errorfile != NULL) {
+            if (fscanf(errorfile, "%d", &exit_code) == 1) {
                SHEPHERD_TRACE((err_str, "error code from remote command "
                   "is %d", exit_code));
             }
@@ -321,6 +321,53 @@ int get_exit_code_of_qrsh_starter(void)
       }
    }
    return exit_code;        
+}
+
+const char *get_error_of_qrsh_starter(void)
+{
+   char buffer[SGE_PATH_MAX];
+   char *ret = NULL;
+   
+   *buffer = 0;
+
+   /* rshd exited with OK: try to get returncode from qrsh_starter file */
+   SHEPHERD_TRACE((err_str, "get_error_of_qrsh_starter()")); 
+
+   /* we only have an error file in TMPDIR in case of rsh, 
+    * otherwise pass exit_code */
+   if (search_conf_val("rsh_daemon") != NULL) {
+      char *tmpdir;
+      char *taskid;
+      FILE *errorfile;
+
+      /* ### */
+
+      tmpdir = search_conf_val("qrsh_tmpdir");
+      taskid = search_conf_val("qrsh_task_id");
+      SHEPHERD_TRACE((err_str, "get_error_of_qrsh_starter - TMPDIR = %s,"
+         " qrsh_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
+      if (tmpdir != NULL) {
+         if (taskid != NULL) {
+            sprintf(buffer, "%s/qrsh_error.%s", tmpdir, taskid);
+         } else {
+            sprintf(buffer, "%s/qrsh_error", tmpdir);
+         }
+
+         errorfile = fopen(buffer, "r");
+         if (errorfile != NULL) {
+            char buffer[MAX_STRING_SIZE];
+
+            if (fgets(buffer, MAX_STRING_SIZE, errorfile) != NULL) {
+               SHEPHERD_TRACE((err_str, "error string from qrsh_starter "
+                  "is %s", buffer));
+               ret = strdup(buffer);
+            }
+            fclose(errorfile);
+         }
+      }
+   }
+
+   return ret;        
 }
 
 /****** shepherd/qlogin_starter() ***************************************

@@ -1,3 +1,8 @@
+JG-2003-01-28-0  Bugfix:    startup failure of qrsh was reported as regular job
+                            exit.
+                 IZ:        #380
+                 Changed:   qrsh_starter, sge_shepherd, qsh
+
 AA-2003-01-24-0  Bugfix:    qsub -C option analogue was missing in qmon
                             remove #$ in submit dialogue's Prefix field
                             to achieve same functionality as qsub -C before

@@ -1539,6 +1539,9 @@ proc create_shell_script { scriptfile
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
+
+      puts $script "SGE_SINGLE_LINE=1"
+      puts $script "export SGE_SINGLE_LINE"
    
       foreach u_env [ array names users_env ] {
          set u_val [set users_env($u_env)] 

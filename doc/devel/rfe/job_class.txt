@@ -32,7 +32,6 @@ JOB CLASS (JC)
 - Attributes of JCs the relation between JC and J defines
   the minimum requirements a job has, to be executed successfully.
 
-
 Client Interface 
 ================
 
@@ -42,10 +41,8 @@ Visible Attributes
 - Fields below are new JC attributes:
 
    jcname               <usual naming convention for objects>
-   user_list
-   xuser_list
-   project_list
-   xproject_list
+   user_list            access list
+   xuser_list           access list
    command_line         'none' or a commandline similar to
                         qsub/qalter-commandlines which will be 
                         used to modify submitted jobs:
@@ -66,8 +63,8 @@ Visible Attributes
                         Options not used in the JC commandline might
                         be used by the user (similar to -).
 
-                        Multiple use of '?l' provides the possibilty
-                        to force certain resource requests whereas others
+                     Multiple use of '?l' provides the possibilty
+                     to force certain resource requests whereas others
                         have to or might be provided by the user.
                         
 - Following Attributes will be moved from the Q object definition into the JC.
@@ -158,8 +155,19 @@ format. This whould give an administartor the possibility to
 force a certain pe whereas the slot specification might be overwritten by
 the user ("!pe pe_name +pe_slots 4)
 -------------------------------------------------------------------------------
-Replacement for "qtask"
+Questions (and answers)
 =======================
+
+1) Which possibility do we have to be able to specify wether or not individual
+   resources can be overwritten rather then an entire resource specification?
+
+Multiple '-l' parameters might be used to express that. 
+
+e.g. "!l a=solaris -l x=1 +l y=1"
+
+---
+
+2) Is there a way to replace the qtask file using JCs?
 
 - Jobs without JC specification implicitely request a JC which has the
   same name like the job script.
@@ -175,12 +183,12 @@ a)
    might either be executed locally if no netscape-JC exists
    or
    it might result in a call to "qrsh -jc netscape netscape".
- 
-b)  
+
+b)
    qsub/qrsh netscape
 
-   implicitely requests the netscape-JC but if this JC does not exist than 
-   the "default JC" will be used. 
+   implicitely requests the netscape-JC but if this JC does not exist than
+   the "default JC" will be used.
    (something like "qsub -soft -jc netscape netscape")
 
 c)
@@ -188,5 +196,59 @@ c)
 
    ns-JC has to exist otherwise the user will get an error message.
 
+---
 
- 
+3) Which syntax might be used to define
+      - a minimum/maximum 
+      - default 
+   value for numeric expressions (3600 <= j_cpu <= 9600; default = 3600) ?
+
+???
+
+---
+
+4) There is some overlapping between
+      - sge_request
+      - JC command line
+      - complex default
+   with regards to default resource requests of jobs.
+
+   Do we know in which cases we will recommend complex based defaults and 
+   in which case we will recommend JC default requests? Are both needed?
+   How do they interoperate in case both are used? Is it possible to get rid 
+   of complex defaults?
+
+???
+
+---
+
+5) Hierarchical view / Inheritance of JC attributes?
+
+???
+
+---
+
+6) Should it be possible to support a job script in the command_line of
+   a JC definition?
+
+???
+
+---
+
+7) What will happen if a JC changes after submittion of a job?
+
+???
+
+---
+
+8) Do we need the system wide sge_request files ith JC's
+
+???
+
+---
+
+9) Should JC replace the job classes scheme (queue based) used in SGEEE?
+   Which customer scenarions could not be expressed by a replacement? 
+
+??? 
+

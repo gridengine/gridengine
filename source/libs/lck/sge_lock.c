@@ -60,38 +60,15 @@
 *     uses the lock/unlock API functions. Otherwise the lock/unlock operations do
 *     have no effect at all.
 *
-*     Locktype denotes the entity which will be locked/unlocked (e.g. Event Client
-*     List). Lockmode denotes in which mode the locktype will be locked/unlocked.
+*     Locktype denotes the entity which will be locked/unlocked (e.g. Global
+*     Lock. Lockmode denotes in which mode the locktype will be locked/unlocked.
 *     Locker ID unambiguously identifies a lock client.
-*
-*     To avoid deadlocks, EVERY lock client must strictly adhere to an acquire/relase
-*     protocol. This protocol defines the order in which multiple locks must be
-*     acquired.
-*
-*     The order in which locks must be acquired/released is determined by the
-*     integer constant which is assigned to each enumerator of 'sge_locktype_t'.
-*     Locks must be acquired in ascending order and released in descending order.
-*
-*     Assume a lock client needs to lock 'LOCK_EVENT_CLIENT_LST' and
-*     'LOCK_MASTER_ZOMBIE_LST'. These locks must be acquired in the following
-*     sequence:
-*
-*             1. LOCK_EVENT_CLIENT_LST  -> integer constant = 2
-*             2. LOCK_MASTER_ZOMBIE_LST -> integer constant = 5
-*
-*     If lock client no longer needs the locks, they must be released in the
-*     following sequence:
-*
-*             1. LOCK_MASTER_ZOMBIE_LST -> integer constant = 5
-*             2. LOCK_EVENT_CLIENT_LST  -> integer constant = 2
-*
-*     If this procedure is not strictly followed without exception, a so called
-*     'deadly embrace' may occur, which immediately leads to a deadlock. 
 *
 *     Adding a new locktype does recquire two steps:
 *
 *     1. Add an enumerator to 'sge_locktype_t'. Do not forget to update
 *        'NUM_OF_TYPES'.
+*
 *     2. Add a description to 'locktype_names'.
 *
 *  SEE ALSO
@@ -101,33 +78,7 @@
 
 /* 'locktype_names' has to be in sync with the definition of 'sge_locktype_t' */
 static const char* locktype_names[NUM_OF_TYPES] = {
-   "global",                     /* LOCK_GLOBAL */
-   "event_client_list",          /* LOCK_EVENT_CLIENT_LST */
-   "job_report_list",            /* LOCK_JOB_REPORT_LST */
-   "execd_config_lst",           /* LOCK_EXECD_CONFIG_LST */
-   "schedd_config_lst",          /* LOCK_SCHEDD_CONFIG_LST */
-   "master_config_lst",          /* LOCK_MASTER_CONFIG_LST */
-   "master_job_list",            /* LOCK_MASTER_JOB_LST */
-   "master_zombie_lst",          /* LOCK_MASTER_ZOMBIE_LST */
-   "master_calendar_lst",        /* LOCK_MASTER_CALENDAR_LST */
-   "master_complex_entry_lst",   /* LOCK_MASTER_COMPLEX_LST */
-   "master_ckpt_obj_lst",        /* LOCK_MASTER_CKPT_OBJ_LST */
-   "master_cluster_queue_lst",   /* LOCK_MASTER_CLUSTER_QUEUE_LST */
-   "master_queue_lst",           /* LOCK_MASTER_QUEUE_LST */
-   "master_user_mapping_lst",    /* LOCK_MASTER_USER_MAPPING_LST */
-   "master_host_group_lst",      /* LOCK_MASTER_HOST_GROUP_LST */
-   "master_exec_host_lst",       /* LOCK_MASTER_EXEC_HOST_LST */
-   "master_admin_host_lst",      /* LOCK_MASTER_ADMIN_HOST_LST */
-   "master_submit_host_lst",     /* LOCK_MASTER_SUBMIT_HOST_LST */
-   "master_job_schedd_info_lst", /* LOCK_MASTER_JOB_SCHEDD_INFO_LST */
-   "master_manager_lst",         /* LOCK_MASTER_MANAGER_LST */
-   "master_operator_lst",        /* LOCK_MASTER_OPERATOR_LST */
-   "master_parallel_env_lst",    /* LOCK_MASTER_PARALLEL_ENV_LST */
-   "master_sharetree_lst",       /* LOCK_MASTER_SHARETREE_LST */
-   "master_user_list",           /* LOCK_MASTER_USER_LST */
-   "master_submit_user_lst",     /* LOCK_MASTER_SUBMIT_USER_LST */
-   "master_user_set_lst",        /* LOCK_MASTER_USER_SET_LST */
-   "master_project_lst"          /* LOCK_MASTER_PROJECT_LST */
+   "global"  /* LOCK_GLOBAL */
 };
 
 static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, sge_locker_t);

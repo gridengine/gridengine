@@ -38,34 +38,8 @@
 
 
 typedef enum {
-   LOCK_GLOBAL = 0,                      /* global lock */
-   LOCK_EVENT_CLIENT_LST = 1,            /* event client list lock */
-   LOCK_JOB_REPORT_LST = 2,              /* job report list lock */
-   LOCK_EXECD_CONFIG_LST = 3,            /* execd configuration list lock */
-   LOCK_SCHEDD_CONFIG_LST = 4,           /* schedd configuration list lock */
-   LOCK_MASTER_CONFIG_LST = 5,           /* master configuration list lock */
-   LOCK_MASTER_JOB_LST = 6,              /* master job list lock */
-   LOCK_MASTER_ZOMBIE_LST = 7,           /* master zombie list lock */
-   LOCK_MASTER_CALENDAR_LST = 8,         /* master calendar list lock */
-   LOCK_MASTER_COMPLEX_ENTRY_LST = 9,    /* master complex entry list lock */
-   LOCK_MASTER_CKPT_OBJ_LST = 10,        /* master checkpoint object list lock */
-   LOCK_MASTER_CLUSTER_QUEUE_LST = 11   ,/* master cluster queue list lock */
-   LOCK_MASTER_QUEUE_LST = 12,           /* master queue list lock */
-   LOCK_MASTER_USER_MAPPING_LST = 13,    /* master user mapping list lock */
-   LOCK_MASTER_HOST_GROUP_LST = 14,      /* master host group list lock */
-   LOCK_MASTER_EXEC_HOST_LST = 15,       /* master exec host list lock */
-   LOCK_MASTER_ADMIN_HOST_LST = 16,      /* master admin host list lock */
-   LOCK_MASTER_SUBMIT_HOST_LST = 17,     /* master submit host list lock */
-   LOCK_MASTER_JOB_SCHEDD_INFO_LST = 18, /* master job schedd info list lock */
-   LOCK_MASTER_MANAGER_LST = 19,         /* master manager list lock */
-   LOCK_MASTER_OPERATOR_LST = 20,        /* master operator list lock */
-   LOCK_MASTER_PARALLEL_ENV_LST = 21,    /* master parallel environment list lock */
-   LOCK_MASTER_SHARETREE_LST = 22,       /* master sharetree list lock */
-   LOCK_MASTER_USER_LST = 23,            /* master user list lock */
-   LOCK_MASTER_SUBMIT_USER_LST = 24,     /* master submit user list lock */
-   LOCK_MASTER_USER_SET_LST = 25,        /* master user set list lock */
-   LOCK_MASTER_PROJECT_LST = 26,         /* master project list lock */
-   NUM_OF_TYPES = 27
+   LOCK_GLOBAL  = 0,  /* global lock */
+   NUM_OF_TYPES = 1
 } sge_locktype_t;
 
 #if defined(LINUX)

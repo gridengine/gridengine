@@ -5740,6 +5740,7 @@ proc compile_source {} {
                set html_table($html_c,FNCOLOR) "#FFFFFF"
                set html_table($html_c,3) "error installing binaries"
                set found 1
+               break
             }
          }
          if {$found != 1} {
@@ -6573,7 +6574,6 @@ set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n---
 
 
 if { $no_action == 1 } {
-
   puts "No action flag is set -> exit 1"
   exit 1
 }

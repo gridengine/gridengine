@@ -388,7 +388,7 @@ proc create_html_text { content { center 0 } } {
    if { $center != 0 } {
       append back "</center>\n"
    }
-
+   return $back
 }
 
 #                                                             max. column:     |

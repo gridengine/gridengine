@@ -2143,9 +2143,9 @@ SetPermissions()
       Translate 0 "mapped to user >nobody<."
       $ECHO
       Translate 0 "Please login now at your file server and set the file permissions and"
-      Translate 0 "ownership of the entire distribution with the script:"
+      Translate 0 "ownership of the entire distribution with the command:"
       $ECHO
-      Translate 0 "   \$$QSYST_ROOT/util/setfileperm.sh <adminuser> <admingroup>"
+      Translate 0 "   % \$$QSYST_ROOT/util/setfileperm.sh <adminuser> <admingroup> %s" "\$SGE_ROOT"
       $ECHO
       Translate 0 "where <adminuser> and <admingroup> are the Unix user/group names under which"
       Translate 0 "the files should be installed and created."

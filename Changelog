@@ -1,3 +1,9 @@
+EB-2003-02-05-0: Bugfix:    qstat -r shows wrong dependencies
+                 IZ:        #478
+                 Bugtraq:   #4813188
+                 Review:    Has to be done
+                 Changed:   qstat
+
 CR-2003-02-05-1  Testsuite: Throughput performance test:
                               Event client works now for 5.3 Version
 

@@ -1967,8 +1967,7 @@ psRetrieveOSJobData(void)
               
                /* remove process entry from list */
 #ifdef MONITOR_PDC
-               INFO((SGE_EVENT, "lost process "pid_t_fmt" for job "pid_t_fmt" (utime
-= %f stime = %f)\n", 
+               INFO((SGE_EVENT, "lost process "pid_t_fmt" for job "pid_t_fmt" (utime = %f stime = %f)\n", 
                      proc->pd_pid, job->jd_jid, proc->pd_utime, proc->pd_stime));
 #endif
                LNK_DELETE(currp);

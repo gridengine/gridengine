@@ -810,12 +810,14 @@ Widget parent
                      qmonSubmitBinary, NULL);
    XtAddCallback(submit_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
-   XtAddCallback(submit_script, XmNactivateCallback, 
+/*    XtAddCallback(submit_script, XmNactivateCallback,  */
+/*                      qmonSubmitReload, NULL); */
+   XtAddCallback(submit_script, XmtNinputCallback,                  
                      qmonSubmitReload, NULL);
    XtAddCallback(submit_script, XmtNverifyCallback, 
                      qmonSubmitCheckInput, NULL);
-   XtAddCallback(submit_script, XmtNinputCallback, 
-                     qmonSubmitCommitInput, NULL);
+/*    XtAddCallback(submit_script, XmtNinputCallback,  */
+/*                      qmonSubmitCommitInput, NULL); */
    XtAddCallback(submit_scriptPB, XmNactivateCallback, 
                      qmonSubmitGetScript, NULL);
    XtAddCallback(submit_name, XmtNverifyCallback, 
@@ -987,18 +989,15 @@ int submode
    /*
    ** main submit dialogue section
    */
-   XtSetSensitive(submit_prefix, sensitive);
-   XtSetSensitive(submit_script, sensitive);
-   XtSetSensitive(submit_scriptPB, sensitive);
+   XtSetSensitive(submit_prefix, sensitive2 & sensitive);
+   XtSetSensitive(submit_script, sensitive2 & sensitive);
+   XtSetSensitive(submit_scriptPB, sensitive2 & sensitive);
    XtSetSensitive(submit_hold, sensitive);
    XtSetSensitive(submit_task_hold, sensitive);
 
-   if (sensitive)
-      XtSetSensitive(submit_tasks, sensitive2);
-   else   
-      XtSetSensitive(submit_tasks, sensitive);
+   XtSetSensitive(submit_tasks, sensitive2 & sensitive);
+   XtSetSensitive(submit_job_args, sensitive);
 
-   XtSetSensitive(submit_job_args, sensitive2);
    XtSetSensitive(submit_execution_time, sensitive2);
    XtSetSensitive(submit_exec_timePB, sensitive2);
    XtSetSensitive(submit_stdoutput, sensitive2);
@@ -2029,11 +2028,12 @@ int save
    reduced_job = !(submit_mode_data.mode != SUBMIT_QALTER_PENDING && submit_mode_data.mode != SUBMIT_QALTER_RUNNING ); 
 
    if (!reduced_job) {
-      if (data->directive_prefix && data->directive_prefix[0] != '\0')
+      if (data->directive_prefix && data->directive_prefix[0] != '\0' && 
+         !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH))
          lSetString(jep, JB_directive_prefix, data->directive_prefix);
       else   
          lSetString(jep, JB_directive_prefix, NULL);
-   
+
       if (!save && !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
          /* Job Script/Name */
          lSetString(jep, JB_script_file, data->job_script);
@@ -2049,6 +2049,11 @@ int save
          JOB_TYPE_SET_BINARY(type);
          lSetUlong(jep, JB_type, type); 
       }
+      if (ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
+         u_long32 type = lGetUlong(jep, JB_type);
+         JOB_TYPE_SET_QSH(type);
+         lSetUlong(jep, JB_type, type); 
+      }      
    }
 
    if (data->job_tasks && data->job_tasks[0] != '\0') {
@@ -3101,6 +3106,8 @@ XtPointer cld, cad;
 
    if (filename && filename[0] != '\0')
       qmonSubmitReadScript(w, filename, NULL, 1);
+   else   
+      qmonSubmitClear(w, NULL, NULL);
    
    DEXIT;
 }

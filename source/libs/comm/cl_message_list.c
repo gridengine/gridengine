@@ -94,7 +94,8 @@ int cl_message_list_append_message(cl_raw_list_t* list_p,cl_com_message_t* messa
 
 
 int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* message, int lock_list ) {  /*CR check */
-   int ret_val = CL_RETVAL_CONNECTION_NOT_FOUND;
+   int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
+   int ret_val = CL_RETVAL_OK;
    cl_message_list_elem_t* elem = NULL;
    
    if (list_p == NULL || message == NULL) {
@@ -112,7 +113,7 @@ int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* mess
    while ( elem != NULL) { 
       if (elem->message == message) {
          /* found matching element */
-         ret_val = CL_RETVAL_OK;
+         function_return = CL_RETVAL_OK;
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          free(elem);
          elem = NULL;
@@ -127,7 +128,7 @@ int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* mess
          return ret_val;
       }
    }
-   return ret_val;
+   return function_return;
 }
 
 

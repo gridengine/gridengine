@@ -61,7 +61,6 @@
 static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
 static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
 
-
 /****** cull/list/-Field_Attributes *************************************************
 *  NAME
 *     Field_Attributes -- Attributes of cull type fields
@@ -127,7 +126,8 @@ static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
 lListElem *lCopyElem(const lListElem *ep) 
 {
    lListElem *new;
-   lDescr *p;
+   int index;
+   int max;
 
    DENTER(CULL_LAYER, "lCopyElem");
 
@@ -137,28 +137,30 @@ lListElem *lCopyElem(const lListElem *ep)
       return NULL;
    }
 
+   max = lCountDescr(ep->descr); 
+
    if (!(new = lCreateElem(ep->descr))) {
       LERROR(LECREATEELEM);
       DEXIT;
       return NULL;
    }
 
-   /* for (i = 0; ep->descr[i].nm != NoName; i++)  */
-   /*    if (lCopySwitch(ep, new, i, i) != 0)  */
-      
-   for (p = &(ep->descr[0]); p->nm != NoName; p++) {
-      int index =  p - &(ep->descr[0]); 
+   for (index = 0; index<max ; index++) { 
 
       if (lCopySwitch(ep, new, index, index) != 0) {
          lFreeElem(new);
+
          LERROR(LECOPYSWITCH);
          DEXIT;
          return NULL;
       }
-      /* copy changed field information */
-      if(sge_bitfield_get(ep->changed, index)) {
-         sge_bitfield_set(new->changed, index);
-      }
+   }
+   if (!sge_bitfield_copy(ep->changed, new->changed)) {
+      lFreeElem(new);
+
+      LERROR(LECOPYSWITCH);
+      DEXIT;
+      return NULL;
    }
 
    new->status = FREE_ELEM;
@@ -1295,10 +1297,47 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 ******************************************************************************/
 int lAddList(lList *lp0, lList *lp1) 
 {
+   /* No need to do any safety checks.  lAppendList will do them for us. */
+   int res = 0;
+   
+   DENTER(CULL_LAYER, "lAddList");
+   
+   lAppendList (lp0, lp1);
+
+   lFreeList(lp1);
+
+   DEXIT;
+   return res;
+}
+
+/****** cull/list/lAppendList() ************************************************
+*  NAME
+*     lAppendList() -- Concatenate two lists 
+*
+*  SYNOPSIS
+*     int lAppendList(lList *lp0, lList *lp1) 
+*
+*  FUNCTION
+*     Concatenate two lists of equal type without throwing away the second list 
+*
+*  INPUTS
+*     lList *lp0 - first list 
+*     lList *lp1 - second list 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lAppendList() is MT safe
+******************************************************************************/
+int lAppendList(lList *lp0, lList *lp1) 
+{
    lListElem *ep;
    const lDescr *dp0, *dp1;
 
-   DENTER(CULL_LAYER, "lAddList");
+   DENTER(CULL_LAYER, "lAppendList");
 
    if (!lp1 || !lp0) {
       LERROR(LELISTNULL);
@@ -1327,8 +1366,6 @@ int lAddList(lList *lp0, lList *lp1)
          return -1;
       }
    }
-
-   lFreeList(lp1);
 
    DEXIT;
    return 0;
@@ -2337,11 +2374,6 @@ int lUniqHost(lList *lp, int keyfield)
 *  NOTES
 *     MT-NOTE: mt_get_type() is MT safe
 *******************************************************************************/
-int mt_get_type(int mt)
-{
-   return mt & 0x000000FF;
-}
-
 /****** cull/list/mt_do_hashing() ************************************************
 *  NAME
 *     mt_do_hashing() -- is there hash access for a field
@@ -2362,11 +2394,6 @@ int mt_get_type(int mt)
 *  SEE ALSO
 *     
 *******************************************************************************/
-int mt_do_hashing(int mt)
-{
-   return mt & CULL_HASH;
-}
-
 /****** cull/list/mt_is_unique() ************************************************
 *  NAME
 *     mt_is_unique() -- is the cull object field unique 
@@ -2396,11 +2423,6 @@ int mt_do_hashing(int mt)
 *  SEE ALSO
 *     
 *******************************************************************************/
-int mt_is_unique(int mt)
-{
-   return mt & CULL_UNIQUE;
-}
-
 bool 
 lListElem_is_pos_changed(const lListElem *ep, int pos)
 {
@@ -2491,7 +2513,8 @@ lListElem_clear_changed_info(lListElem *ep)
 
       for (i = 0; ep->descr[i].nm != NoName; i++) {
          int type = mt_get_type(descr[i].mt);
-
+         
+         /* JG: TODO: clear whole bitfield in one call */
          sge_bitfield_clear(ep->changed, i);
 
          if (type == lListT) {

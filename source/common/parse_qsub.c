@@ -65,7 +65,8 @@ static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
 static int sge_parse_checkpoint_interval(char *time_str); 
 static int parse_hard_soft(int hs);
 static int is_hard_soft(void);
-
+static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
+                          lList **alp);
 
 
 static int hard_soft_flag = 0;
@@ -273,7 +274,7 @@ u_long32 flags
                             ANSWER_QUALITY_WARNING);
          }
 
-         /* next filed is "y|n" */
+         /* next field is "y|n" */
          sp++;
          if (!*sp) {
              sprintf(str,
@@ -286,18 +287,8 @@ u_long32 flags
 
          DPRINTF(("\"-b %s\"\n", *sp));
 
-         if (!strcmp("y", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, b_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, 1);
-         } else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, b_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, 2);
-         } else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTBX_S, *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, 
-                             ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (set_yn_option (pcmdline, b_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
          }
 
          sp++;
@@ -792,19 +783,8 @@ u_long32 flags
 
          DPRINTF(("\"-j %s\"\n", *sp));
 
-         if (!strcmp("y", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, j_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
-         }
-         else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, j_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-         }
-         else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, "-j", *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (set_yn_option (pcmdline, j_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
          }
 
          sp++;
@@ -1085,19 +1065,8 @@ u_long32 flags
          
          DPRINTF(("\"-now %s\"\n", *sp));
          
-         if(!strcmp(*sp, "y") || !strcmp(*sp, "yes")){
-            ep_opt = sge_add_arg(pcmdline, now_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
-         }
-         else if (!strcmp(*sp, "n") || !strcmp(*sp, "no")) {
-            ep_opt = sge_add_arg(pcmdline, now_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-         }
-         else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTNOW_S , *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (set_yn_option (pcmdline, now_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
          }
 
          sp++;
@@ -1315,7 +1284,7 @@ DTRACE;
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
-         /* next filed is "y|n" */
+         /* next field is "y|n" */
          sp++;
          if (!*sp) {
              sprintf(str,
@@ -1327,20 +1296,8 @@ DTRACE;
 
          DPRINTF(("\"-r %s\"\n", *sp));
 
-         if (!strcmp("y", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, 1);
-         }
-         else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, 2);
-         }
-         else {
-             sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTRX_S,
-             *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (set_yn_option (pcmdline, r_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
          }
 
          sp++;
@@ -1373,19 +1330,8 @@ DTRACE;
 
          DPRINTF(("\"-R %s\"\n", *sp));
 
-         if (!strcmp("y", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
-         }
-         else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-         }
-         else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, "-R", *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (set_yn_option (pcmdline, R_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
          }
 
          sp++;
@@ -1441,6 +1387,38 @@ DTRACE;
       }
 
 /*----------------------------------------------------------------------------*/
+      /* "-shell y|n" */
+
+      if (!is_qalter && !strcmp("-shell", *sp)) {
+         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
+            sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+            answer_list_add(&answer, str, STATUS_EEXIST, 
+                            ANSWER_QUALITY_WARNING);
+         }
+
+         /* next field is "y|n" */
+         sp++;
+         if (!*sp) {
+             sprintf(str,
+             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-shell");
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, 
+                             ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         DPRINTF(("\"-shell %s\"\n", *sp));
+
+         if (set_yn_option (pcmdline, shell_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
+         }
+
+         sp++;
+         continue;
+      }
+
+
+/*----------------------------------------------------------------------------*/
      /*  -sync y[es]|n[o] */
 
       if(!strcmp("-sync", *sp)) {
@@ -1461,19 +1439,8 @@ DTRACE;
          
          DPRINTF(("\"-sync %s\"\n", *sp));
          
-         if(!strcmp(*sp, "y") || !strcmp(*sp, "yes")){
-            ep_opt = sge_add_arg(pcmdline, sync_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
-         }
-         else if (!strcmp(*sp, "n") || !strcmp(*sp, "no")) {
-            ep_opt = sge_add_arg(pcmdline, sync_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-         }
-         else {
-             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTNOW_S , *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (set_yn_option (pcmdline, sync_OPT, *(sp - 1), *sp, &answer) == 0) {
+            return answer;
          }
 
          sp++;
@@ -1666,7 +1633,7 @@ DTRACE;
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
-         /* next filed is "y|n" */
+         /* next field is "e|w|n|v" */
          sp++;
          if (!*sp) {
              sprintf(str,
@@ -1825,22 +1792,13 @@ DTRACE;
       if (!strcmp("--", *sp)) {
          DPRINTF(("\"%s\"\n", *sp));
 
-         if (is_qalter) {
-            sprintf(str,MSG_PARSE_NOJOBIDGIVENBEFORESEPARATOR);
-            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-         else if ((flags & FLG_USE_PSEUDOS)) {
+         if ((flags & FLG_USE_PSEUDOS)) {
             sp++;
             if (!*sp) {
                sprintf(str,MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS);
                answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                DEXIT;
                return answer;
-            }
-            if  (!*sp) {
-               continue;
             }
             for (; *sp; sp++) {
                ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_JOBARG, NULL);
@@ -2500,3 +2458,47 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    return 0;
 }
 
+/****** set_yn_option() ********************************************************
+*  NAME
+*     set_yn_option() -- Sets the value of a y|n option
+*
+*  SYNOPSIS
+*     static int set_yn_option (lList **opts, u_long32 opt, char *arg,
+*                               char *value, lList **alpp)
+*
+*  FUNCTION
+*     Sets the value of the option element to TRUE or FALSE depending on whether
+*     the option value is y[es] or n[o].
+*
+*  INPUT
+*     lList **opts - The list of options to which to append the option element
+*     u_long32 opt - The option code of the option
+*     char *arg    - The option text
+*     char *value  - The option value
+*     lList **alpp - The answer list
+*
+*  NOTES
+*     MT-NOTES: set_yn_option() is MT safe
+*******************************************************************************/
+static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
+                          lList **alpp)
+{
+   lListElem *ep_opt = NULL;
+   
+   if ((strcasecmp("y", value) == 0) || (strcasecmp("yes", value) == 0)) {
+      ep_opt = sge_add_arg(opts, opt, lIntT, arg, value);
+      lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
+   }
+   else if ((strcasecmp ("n", value) == 0) || (strcasecmp ("no", value) == 0)) {
+      ep_opt = sge_add_arg(opts, opt, lIntT, arg, value);
+      lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
+   }
+   else {
+       sprintf(SGE_EVENT, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, arg, value);
+       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+       
+       return 0;
+   }
+   
+   return 1;
+}

@@ -449,11 +449,10 @@ int qlogin_starter(const char *cwd, char *daemon)
    serv_addr.sin_port = 0; 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
-
    ret = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)); 
-   
    if (ret != 0) {
       SHEPHERD_TRACE((err_str, "cannot bind socket: %s", strerror(errno)));
+      shutdown(sockfd, 2);
       close(sockfd);
       return 6;
    }
@@ -462,33 +461,45 @@ int qlogin_starter(const char *cwd, char *daemon)
    length = sizeof(serv_addr);
    if (getsockname(sockfd,(struct sockaddr *) &serv_addr, &length) == -1) {
       SHEPHERD_TRACE((err_str, "getting socket name failed: %s", strerror(errno)));
+      shutdown(sockfd, 2);
       close(sockfd);
       return 7;
    }
    
+   /* listen on socked - make connections be accepted */
+   if (listen(sockfd, 1) != 0) {
+      SHEPHERD_TRACE((err_str, "listen failed: %s", strerror(errno)));
+      shutdown(sockfd, 2);
+      close(sockfd);
+      return 8;
+   }
+
+   /* send necessary info to qrsh: port + utilbin directory + active job 
+    * directory 
+    */
    port = ntohs(serv_addr.sin_port);
    SHEPHERD_TRACE((err_str, "bound to port %d\n", port));
  
-   /* send necessary info to qrsh: port + utilbin directory + active job directory */
    sge_root = sge_get_root_dir(0, NULL, 0, 1);
    arch = getenv("ARC");
    
    if (sge_root == NULL || arch == NULL) {
       SHEPHERD_TRACE((err_str, "reading environment SGE_ROOT and ARC failed"));
+      shutdown(sockfd, 2);
       close(sockfd);
-      return 8;
+      return 9;
    }
-   
+  
    sprintf(buffer, "0:%d:%s/utilbin/%s:%s:%s", port, sge_root, arch, cwd, get_conf_val("host"));
    if (write_to_qrsh(buffer) != 0) {
       SHEPHERD_TRACE((err_str, "communication with qrsh failed"));
+      shutdown(sockfd, 2);
       close(sockfd);
-      return 9;
+      return 10;
    }
    
    /* wait for connection */
    SHEPHERD_TRACE((err_str, "waiting for connection."));
-   listen(sockfd, 1);
    /* use a reasonable timeout (60 seconds) to prevent hanging here forever */
    FD_ZERO(&fds);
    FD_SET(sockfd, &fds);
@@ -498,19 +509,24 @@ int qlogin_starter(const char *cwd, char *daemon)
       SHEPHERD_TRACE((err_str, "nobody connected to the socket"));
       shutdown(sockfd, 2);
       close(sockfd);
-      return 10;
+      return 11;
    }
+
+   /* accept connection */
    newsfd = accept(sockfd, (struct sockaddr *)(&serv_addr), &len);
    if (newsfd == -1) {
       SHEPHERD_TRACE((err_str, "error when accepting socket conection"));
       shutdown(sockfd, 2);
       close(sockfd);
-      return 11;
+      return 12;
    }
+   SHEPHERD_TRACE((err_str, "accepted connection on fd %d", newsfd));
+
+   /* now we have a connection and do no longer need the "well known" port 
+    * free this resource.
+    */
    shutdown(sockfd, 2);
    close(sockfd);
-
-   SHEPHERD_TRACE((err_str, "accepted connection on fd %d", newsfd));
 
    /* don't close on exec */
    fcntl( newsfd, F_SETFD, 0 );
@@ -535,20 +551,24 @@ int qlogin_starter(const char *cwd, char *daemon)
     */
    args[argc++] = strtok(daemon, " ");
    while ((args[argc++] = strtok(NULL, " ")) != NULL);
-
-{
-   int i = 0;
-   SHEPHERD_TRACE((err_str, "daemon commandline split to %d arguments", argc));
-   while (args[i] != NULL) {
-      SHEPHERD_TRACE((err_str, "daemon argv[%d] = |%s|", i, args[i]));
-      i++;
+#if 0
+   {
+      int i = 0;
+      SHEPHERD_TRACE((err_str, "daemon commandline split to %d arguments", argc));
+      while (args[i] != NULL) {
+         SHEPHERD_TRACE((err_str, "daemon argv[%d] = |%s|", i, args[i]));
+         i++;
+      }
    }
-}
+#endif
+
    /* that it. */
    execv(args[0], args);
 
    /* oh oh, exec failed */
    /* no way to tell anyone, becuase all FDs are closed */
    /* last chance -> tell parent process */
-   return 12;
+   shutdown(newsfd, 2);
+   close(newsfd);
+   return 13;
 }

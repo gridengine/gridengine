@@ -1333,7 +1333,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
    
      if {[info exists old_values($elem)]} {
         if { $newVal == "" } {
-          lappend vi_commands ":%s/^$elem .*$//\n"
+          lappend vi_commands ":%s/^$elem .*$/#/\n"
         } else {
           set newVal1 [split $newVal {/}]
           set newVal [join $newVal1 {\/}]
@@ -2027,6 +2027,28 @@ proc add_pe { change_array { version_check 1 } } {
   if {$result != 0  } { add_proc_error "add_pe" -1 "could not add parallel environment \"[set chgar(pe_name)]\"" }
 
   return $result
+}
+
+proc get_pe {pe_name change_array} {
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sp" "$pe_name"} result ]
+  if { $catch_result != 0 } {
+     add_proc_error "get_config" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
+     return
+  } 
+
+  # split each line as listelement
+  set help [split $result "\n"]
+  foreach elem $help {
+     set id [lindex $elem 0]
+     set value [lrange $elem 1 end]
+     if { [string compare $value ""] != 0 } {
+       set chgar($id) $value
+     }
+  }
 }
 
 
@@ -3307,7 +3329,7 @@ proc mqattr { attribute entry queue_list } {
 
   set help "$attribute \"$entry\""   ;# create e.g. slots "5" as string
   set catch_return [ catch {  
-    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mattr queue $help $queue_list" 
+    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -rattr queue $help $queue_list" 
   } result ]
   if { $catch_return != 0 } {
      add_proc_error "mqattr" "-1" "qconf error or binary not found"
@@ -3762,9 +3784,11 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
   set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
+  set GDI_NEGATIVSTEP [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_NEGATIVSTEP]] 
+  set GDI_INITIALPORTIONSTRINGNODECIMAL_S [translate $CHECK_HOST 0 0 0 [sge_macro MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S] "*" ] 
 
   if { $ts_config(gridengine_version) == 60 } {
-     set COLON_NOT_ALLOWED "aöslfjaöskljf aöskljfaösdf"
+     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
@@ -4084,6 +4108,14 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- "two files are specified for the same host" { 
              set return_value -19
           }
+         
+          -i $sp_id -- $GDI_NEGATIVSTEP { 
+             set return_value -20
+          }
+
+          -i $sp_id -- $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
+             set return_value -21
+          }
         }
      }
  
@@ -4116,6 +4148,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-17" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-18" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-19" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-20" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -4171,6 +4206,9 @@ proc get_submit_error { error_id } {
       "-17" { return "colon not allowed in account string - error" }
       "-18" { return "-t option only allows one range specification" } 
       "-19" { return "two files are specified for the same host" }
+      "-20" { return "negative step in range is not allowed" }
+      "-21" { return "-t step of range must be a decimal number" }
+
 
       default { return "unknown error" }
    }
@@ -4467,7 +4505,7 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
          }
       }
       if { $get_all != 0 } {
-            lappend back $line
+         lappend back $line
       }
    }
    return $back
@@ -4982,7 +5020,7 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
        }
        return -1
     }
-    sleep 1
+    after 500
   }
   return 0
 }
@@ -6237,8 +6275,10 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
              }
           }
       }
+   } else {
+      shutdown_system_daemon $CHECK_CORE_MASTER "sched execd qmaster"
    }
-   
+
    if { $do_ps_kill == 1 && $do_compile == 0} {
       puts $CHECK_OUTPUT "perhaps master is not running, trying to shutdown cluster with ps information"
 

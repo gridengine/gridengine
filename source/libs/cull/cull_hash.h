@@ -32,23 +32,30 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_htable.h"
-#include "cull_list.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_htable.h"
+
+#include "cull/cull_list.h"
+#include "cull/cull_hashP.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
-htable cull_hash_create(const lDescr *descr);
-int cull_hash_new(lList *lp, int name, int unique);
-int cull_hash_new_check(lList *lp, int nm, int unique);
-void cull_hash_insert(const lListElem *ep, const int pos);
+cull_htable cull_hash_create(const lDescr *descr);
+int cull_hash_new(lList *lp, int name, bool unique);
+int cull_hash_new_check(lList *lp, int nm, bool unique);
+void cull_hash_insert(const lListElem *ep, void *key, cull_htable ht, bool unique);
 void cull_hash_remove(const lListElem *ep, const int pos);
 void cull_hash_elem(const lListElem *ep);
-lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, const void **iterator);
-lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const void **iterator);
+lListElem *cull_hash_first(cull_htable ht, const void *key, bool unique, 
+                           const void **iterator);
+lListElem *cull_hash_next(cull_htable ht, const void **iterator);
 void cull_hash_free_descr(lDescr *descr);
 void cull_hash_create_hashtables(lList *lp);
+void *cull_hash_key(const lListElem *ep, int pos, char *host_key);
+
+const char *cull_hash_statistics(cull_htable ht, dstring *buffer);
 #ifdef  __cplusplus
 }
 #endif

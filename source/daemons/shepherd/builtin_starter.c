@@ -1,4 +1,4 @@
-
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -80,6 +80,7 @@ struct rusage {
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
 static char *build_path(int type);
+static char *parse_script_params(char **script_file);
 extern int  shepherd_state;
 extern char shepherd_job_dir[];
 
@@ -93,43 +94,47 @@ char *childname,
 char *script_file,
 int truncate_stderr_out 
 ) {
-   int in, out, err;          /* hold fds */
-   char *stdin_path = NULL;
-   char *stdout_path = NULL;
-   char *stderr_path = NULL; 
-   char fs_stdin_path[SGE_PATH_MAX] = "\"\"";
-   char fs_stdout_path[SGE_PATH_MAX] = "\"\"";
-   char fs_stderr_path[SGE_PATH_MAX] = "\"\"";
-   char *stdin_path_for_fs = NULL;
-   char *shell_path = NULL;
-   char *cwd;
-   struct passwd *pw=NULL;
-   char err_str[MAX_STRING_SIZE];
-   int merge_stderr;
-   int fs_stdin, fs_stdout, fs_stderr;
+   int   in, out, err;          /* hold fds */
+   int   i;
+   int   merge_stderr;
+   int   fs_stdin, fs_stdout, fs_stderr;
+   int   min_gid, min_uid;
+   int   use_login_shell;
+   int   use_qsub_gid;
+   int   ret;
+   int   is_interactive  = 0;
+   int   is_qlogin  = 0;
+   int   is_rsh = 0;
+   int   is_rlogin = 0;
+   int   qlogin_starter = 0;
+   char  *shell_path = NULL;
+   char  *stdin_path = NULL;
+   char  *stdout_path = NULL;
+   char  *stderr_path = NULL; 
+   char  *stdin_path_for_fs = NULL;
+   char  *target_user = NULL;
+   char  *intermediate_user = NULL;
+   char  fs_stdin_tmp_path[SGE_PATH_MAX] = "\"\"";
+   char  fs_stdout_tmp_path[SGE_PATH_MAX] = "\"\"";
+   char  fs_stderr_tmp_path[SGE_PATH_MAX] = "\"\"";
+   char  fs_stdin_path[SGE_PATH_MAX] = "\"\"";
+   char  fs_stdout_path[SGE_PATH_MAX] = "\"\"";
+   char  fs_stderr_path[SGE_PATH_MAX] = "\"\"";
+   char  err_str[MAX_STRING_SIZE];
+   char  *shell_start_mode, *cp, *shell_basename, argv0[256];
+   char  str_title[512]="";
+   char  *tmp_str;
+   char  *starter_method;
+   char  *tmpdir;
+   char  *cwd;
+   const char *fs_stdin_file="";
+   const char *fs_stdout_file="";
+   const char *fs_stderr_file="";
    pid_t pid, ppid, pgrp, newpgrp;
-   int i;
-   int min_gid, min_uid;
    gid_t add_grp_id = 0;
-   char *target_user = NULL, *intermediate_user = NULL;
-   char *shell_start_mode, *cp, *shell_basename, argv0[256];
-   int use_login_shell;
-   int ret;
-   int is_interactive  = 0;
-   int is_qlogin  = 0;
-   int is_rsh = 0;
-   int is_rlogin = 0;
-   int qlogin_starter = 0;
-   char str_title[512]="";
-   int use_qsub_gid;
    gid_t gid;
-   char *tmp_str;
-   char *starter_method;
-   char* tmpdir;
-   const char *fs_stdin_file="", *fs_stdout_file="", *fs_stderr_file="";
-   char fs_stdin_tmp_path[SGE_PATH_MAX] = "\"\"",
-        fs_stdout_tmp_path[SGE_PATH_MAX] = "\"\"",
-        fs_stderr_tmp_path[SGE_PATH_MAX] = "\"\"";
+   struct passwd *pw=NULL;
+
 
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
 
@@ -155,7 +160,9 @@ int truncate_stderr_out
    ** login or rsh or rlogin jobs have the qlogin_starter as their job script
    */
    
-   if(!strcasecmp(script_file, "QLOGIN") || !strcasecmp(script_file, "QRSH") || !strcasecmp(script_file, "QRLOGIN")) {
+   if( !strcasecmp(script_file, "QLOGIN") 
+    || !strcasecmp(script_file, "QRSH")
+    || !strcasecmp(script_file, "QRLOGIN")) {
       is_qlogin = 1;
 
       if(!strcasecmp(script_file, "QRSH")) {
@@ -197,13 +204,7 @@ int truncate_stderr_out
        !strcmp(childname, "prolog") ||
        !strcmp(childname, "epilog")) {
       /* syntax is [<user>@]<path> <arguments> */
-      char *s;
-      s = strpbrk(script_file, "@ ");
-      if (s && *s == '@') {
-         *s = '\0';
-         target_user = script_file; 
-         script_file = &s[1];
-      }
+      target_user = parse_script_params(&script_file);
    }
 
    if (!target_user)
@@ -264,14 +265,18 @@ int truncate_stderr_out
 
    set_environment();
 
-   /* make job owner the owner of error/trace file. So we can write
-    *  diagnostics after changing to this user
-    *
-    * also makes job owner own the exit_status file
-    * the "exit_status" is created here and indicates that son is started
-    */
-   err_trace_chown_files(pw->pw_uid);
+	/* Create the "error" and the "exit" status file here.
+	 * The "exit_status" file indicates that the son is started.
+	 *
+	 * We are here (normally) uid=root, euid=admin_user, but we give the
+	 * file ownership to the job owner immediately after opening the file, 
+	 * so the job owner can reopen the file if the exec() fails.
+	 */
+	shepherd_error_init( );
 
+   shepherd_trace_chown( target_user );
+   shepherd_error_chown( target_user );
+	
    min_gid = atoi(get_conf_val("min_gid"));
    min_uid = atoi(get_conf_val("min_uid"));
 
@@ -315,11 +320,20 @@ int truncate_stderr_out
    fflush(stdin);
    fflush(stdout);
    fflush(stderr);
-   
    {
+		/* Close all file descriptors except the ones used by tracing
+		 * (for the files "trace", "error" and "exit_status").
+		 * These files will be closed automatically in the exec() call
+		 * due to the FD_CLOEXEC flag.
+		 */
+
       int fdmax = sysconf(_SC_OPEN_MAX);
-      for (i = 0; i < fdmax; i++)
-         close(i);
+
+      for (i = 0; i < fdmax; i++) {
+         if( !is_shepherd_trace_fd( i )) {
+         	close(i);
+         }
+      }
    }
    foreground = 0;
 
@@ -496,53 +510,33 @@ int truncate_stderr_out
    /* </DEBUGGING> */
 #endif
 
-   /* Now we have to generate the command line for prolog, pe_start, epilog or pe_stop
-      from the config values */
+   /* Now we have to generate the command line for prolog, pe_start, epilog
+    * or pe_stop from the config values
+    */
    if(!strcmp(childname, "prolog")) {
       replace_params( get_conf_val("prolog"),
          script_file, sizeof(script_file)-1, prolog_epilog_variables );
+      target_user = parse_script_params(&script_file);
    } else if(!strcmp(childname, "epilog")) {
       replace_params( get_conf_val("epilog"),
          script_file, sizeof(script_file)-1, prolog_epilog_variables );
+      target_user = parse_script_params(&script_file);
    } else if(!strcmp(childname, "pe_start")) {
       replace_params( get_conf_val("pe_start"),
          script_file, sizeof(script_file)-1, pe_variables );
+      target_user = parse_script_params(&script_file);
    } else if(!strcmp(childname, "pe_stop")) {
       replace_params( get_conf_val("pe_stop"),
          script_file, sizeof(script_file)-1, pe_variables );
+      target_user = parse_script_params(&script_file);
    }
 
    cwd = get_conf_val("cwd");
 
-   {
-      char *tmp_str;
-      int tmp_value;
-
-      if ((tmp_str = get_conf_val("set_sge_env")) 
-          && (tmp_value = atoi(tmp_str)) 
-          && tmp_value) {
-         sge_setenv("SGE_STDIN_PATH", stdin_path);
-         sge_setenv("SGE_STDOUT_PATH", stdout_path);
-         sge_setenv("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-         sge_setenv("SGE_CWD_PATH", cwd);
-      }
-      if ((tmp_str = get_conf_val("set_cod_env")) 
-          && (tmp_value = atoi(tmp_str)) 
-          && tmp_value) {
-         sge_setenv("COD_STDIN_PATH", stdin_path);
-         sge_setenv("COD_STDOUT_PATH", stdout_path);
-         sge_setenv("COD_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-         sge_setenv("COD_CWD_PATH", cwd);
-      }
-      if ((tmp_str = get_conf_val("set_grd_env")) 
-          && (tmp_value = atoi(tmp_str)) 
-          && tmp_value) {
-         sge_setenv("GRD_STDIN_PATH", stdin_path);
-         sge_setenv("GRD_STDOUT_PATH", stdout_path);
-         sge_setenv("GRD_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-         sge_setenv("GRD_CWD_PATH", cwd);
-      }
-   }
+   sge_setenv("SGE_STDIN_PATH", stdin_path);
+   sge_setenv("SGE_STDOUT_PATH", stdout_path);
+   sge_setenv("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
+   sge_setenv("SGE_CWD_PATH", cwd);
 
    /*
    ** for interactive jobs, we disregard the current shell_start_mode
@@ -962,7 +956,9 @@ char *str_title
    /*
    ** prepare job arguments
    */
-   if (atoi(get_conf_val("handle_as_binary")) && !is_rsh && !is_qlogin) {
+   if ((atoi(get_conf_val("handle_as_binary")) == 1) &&
+       (atoi(get_conf_val("no_shell")) == 0) &&
+       !is_rsh && !is_qlogin) {
       int arg_id = 0;
       dstring arguments = DSTRING_INIT;
       int n_job_args;
@@ -988,9 +984,12 @@ char *str_title
             sge_dstring_append(&arguments, "\"\"");
          }
       }
+      
+      /* DT: TODO: Why are we passing the argument list twice? */
       pre_args_ptr[arg_id++] = strdup(sge_dstring_get_string(&arguments));
       pre_args_ptr[arg_id++] = NULL;
       args = read_job_args(pre_args, 0);
+   /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {
       /*
       ** -s makes it possible to make the shell read from stdin
@@ -1002,11 +1001,14 @@ char *str_title
       pre_args_ptr[1] = "-s";
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
-   } else if (!strcasecmp("posix_compliant", shell_start_mode)) {
+   /* Binary, noshell jobs have to make it to the else */
+   } else if (!strcasecmp("posix_compliant", shell_start_mode) &&
+              (atoi(get_conf_val("handle_as_binary")) == 0)) {
       pre_args_ptr[0] = argv0;
       pre_args_ptr[1] = script_file;
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
+   /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("start_as_command", shell_start_mode)) {
       pre_args_ptr[0] = argv0;
       sprintf(err_str, "start_as_command: pre_args_ptr[0] = argv0; \"%s\" shell_path = \"%s\"", argv0, shell_path); 
@@ -1015,6 +1017,7 @@ char *str_title
       pre_args_ptr[2] = script_file;
       pre_args_ptr[3] = NULL;
       args = pre_args;
+   /* No need to test for binary since this option excludes binary */
    } else if (is_interactive) {
       int njob_args;
       pre_args_ptr[0] = script_file;
@@ -1028,6 +1031,7 @@ char *str_title
       args[njob_args + 5] = "-e";
       args[njob_args + 6] = get_conf_val("shell_path");
       args[njob_args + 7] = NULL;
+   /* No need to test for binary since qlogin handles that itself */
    } else if (is_qlogin) {
       pre_args_ptr[0] = script_file;
       if(is_rsh) {
@@ -1042,6 +1046,7 @@ char *str_title
       pre_args_ptr[2] = "-d"; 
       pre_args_ptr[3] = NULL;
       args = read_job_args(pre_args, 0);
+   /* Here we finally deal with binary, noshell jobs */
    } else {
       /*
       ** unix_behaviour/raw_exec
@@ -1190,5 +1195,46 @@ int type
    }
 
    return path;
+}
+
+/****** parse_script_params() **************************************************
+*  NAME
+*     parse_script_params() -- Parse prolog/epilog/pe_start/pe_stop line from
+*                              config
+*
+*  SYNOPSIS
+*     static char *parse_script_params(char **script_file)
+*
+*  FUNCTION
+*     Parses the config value for prolog/epilog/pe_start or pe_stop.
+*     Retrieves the target user (as whom the script should be run) and
+*     eats the target user from the config value string, so that the path of
+*     the script file remains.
+*
+*  INPUTS
+*     char **script_file - Pointer to the string containing the conf value.
+*                          syntax: [<user>@]<path>, e.g. joe@/home/joe/script
+*
+*  OUTPUT
+*     char **script_file - Pointer to the string containing the script path.
+* 
+*  RESULT
+*     char* - If one is given, the name of the user.
+*             Else NULL.
+*******************************************************************************/
+static char*
+parse_script_params(char **script_file) 
+{
+   char* target_user = NULL;
+   char* s;
+
+   /* syntax is [<user>@]<path> <arguments> */
+   s = strpbrk(*script_file, "@ ");
+   if (s && *s == '@') {
+      *s = '\0';
+      target_user = *script_file; 
+      *script_file = &s[1];
+   }
+   return target_user;
 }
 

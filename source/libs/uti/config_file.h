@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 extern char err_msg[]; /* JG: TODO: thats potentially very dangerous! */
-void set_error(char *err_str);
+void set_error(const char *err_str);
 
 int read_config(const char *fname);
 
@@ -50,7 +50,7 @@ bool parse_bool_param(const char *string, const char *variable, bool *value);
 bool parse_int_param(const char *input, const char *variable, 
                      int *value, int type);
 
-extern void (*config_errfunc)(char *);
+extern void (*config_errfunc)(const char *);
 
 extern char *pe_variables[];
 extern char *prolog_epilog_variables[];

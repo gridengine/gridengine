@@ -290,7 +290,7 @@ char **argv
    in_main_loop = 1;
 
    /***** MAIN LOOP *****/
-   while (true) {
+   while (shut_me_down != 1) {
       /* use auto acknowlege feature of dispatcher for the following
          inbound messages */
       static int tagarray[] = { TAG_SIGJOB, TAG_SIGQUEUE, TAG_NONE };
@@ -305,39 +305,23 @@ char **argv
       }
 
       if (i) {             
-#ifdef ENABLE_NGC
+
          if ( strcmp(cl_get_error_text(i), CL_RETVAL_UNDEFINED_STR) != 0 ) {
             if (i != CL_RETVAL_OK) {
                WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
+               if (i == CL_RETVAL_CONNECTION_NOT_FOUND ||
+                   i == CL_RETVAL_UNKNOWN) {
+                  execd_register(); /* reregister at qmaster */
+                }
             }
          } else {
             WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
          }
-         if (i == CL_RETVAL_CONNECTION_NOT_FOUND) {
-            WARNING((SGE_EVENT, "reregister at qmaster\n"));
-            execd_register();
-         }
-#else
-         WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
-#endif
-
-         if (shut_me_down == 1) {
-            sge_shutdown();
-            DEXIT;
-            return 0;
-         }
       }
-      else {
-         sge_shutdown();
-         DEXIT;
-         return 0;
-      }
-#ifdef ENABLE_NGC
-      cl_commlib_trigger(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0));
-#else
-      sleep(1);	/* If there is an error dont kill the system */
-#endif
    }
+   sge_shutdown();
+   DEXIT;
+   return 0;
 }
 
 
@@ -397,8 +381,18 @@ static void execd_register()
       lListElem *aep;
       DPRINTF(("*****Checking In With qmaster*****\n"));
 
-      if (had_problems)
-         sleep(10);
+      if (had_problems != 0) {
+         int i;
+         /*  trigger communication
+          *  =====================
+          *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
+          */
+         for (i = 0; i< 10 ; i++) {
+            if ( cl_commlib_trigger(cl_com_get_handle( "execd" ,1)) != CL_RETVAL_OK) {
+               sleep(1);
+            }
+         }
+      }
 
       alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
       aep = lFirst(alp);
@@ -407,11 +401,6 @@ static void execd_register()
          had_problems = 1;
          alp = lFreeList(alp);
          continue;
-      }
- 
-      if(lGetUlong(lFirst(alp), AN_status) == STATUS_DENIED) {
-         CRITICAL((SGE_EVENT, MSG_COM_REGISTERDENIED_S, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
       }
       break;
    }

@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2004/02/20 21:09:46 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2004/04/19 10:52:09 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2004/02/20 21:09:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2004/04/19 10:52:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -191,11 +191,9 @@ fields may be 0.  The following entries are provided:
 .PP
 
 .IP "\fBproject\fP"
-The project which was assigned to the job. Projects are only
-supported in case of a xxQS_NAME_EExx system.
+The project which was assigned to the job.
 .IP "\fBdepartment\fP"
-The department which was assigned to the job. Departments are only
-supported in case of a xxQS_NAME_EExx system.
+The department which was assigned to the job.
 .IP "\fBgranted_pe\fP"
 The parallel environment which was selected for that job.
 .IP "\fBslots\fP"
@@ -214,7 +212,7 @@ A string specifying the job category.
 The io wait time in seconds.
 .IP "\fBpe_taskid\fP"
 If this identifier is set the task was part of a parallel job and was 
-passed to xxQS_NAME_EExx via the qrsh -inherit interface.
+passed to xxQS_NAMExx via the qrsh -inherit interface.
 .IP "\fBmaxvmem\fP"
 The maximum vmem size in bytes.
 .SH queue
@@ -250,7 +248,7 @@ The name of the host.
 The time (GMT unix timestamp) when the reported information was generated.
 .IP "\fBstate\fP"
 The new host state.
-Currently, xxQS_NAME_EExx doesn't track a host state, the field is reserved for 
+Currently, xxQS_NAMExx doesn't track a host state, the field is reserved for 
 future use. Always contains the value X.
 .IP "\fBload values\fP"
 Description of load values. Information about multiple load values is separated by space.
@@ -265,7 +263,7 @@ The name of the host.
 The time (GMT unix timestamp) when the reported information was generated.
 .IP "\fBstate\fP"
 The new host state.
-Currently, xxQS_NAME_EExx doesn't track a host state, the field is reserved for 
+Currently, xxQS_NAMExx doesn't track a host state, the field is reserved for 
 future use. Always contains the value X.
 .IP "\fBconsumables\fP"
 Description of consumable values. Information about multiple consumables is separated by space.

@@ -1554,6 +1554,7 @@ int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_i
    ptf_job = ptf_get_job(job_id);
 
    if (ptf_job == NULL) {
+      DEXIT;
       return PTF_ERROR_JOB_NOT_FOUND;
    }
 
@@ -1563,7 +1564,9 @@ int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_i
     * if job is not complete, go get latest job usage info
     */
    if (!(lGetUlong(ptf_job, JL_state) & JL_JOB_COMPLETE)) {
+      sge_switch2start_user();
       ptf_get_usage_from_data_collector();
+      sge_switch2admin_user();
    }
 
    /*
@@ -1573,22 +1576,26 @@ int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_i
    *usage = _ptf_get_job_usage(ptf_job, ja_task_id, pe_task_id); 
 
    /* Search ja/pe ptf task */
+
    for_each(osjob, osjobs) {
-      if(lGetUlong(osjob, JO_ja_task_ID) == ja_task_id) {
+      if (lGetUlong(osjob, JO_ja_task_ID) == ja_task_id) {
          const char *osjob_pe_task_id = lGetString(osjob, JO_task_id_str);
-         if(pe_task_id != NULL && 
-            osjob_pe_task_id != NULL &&
-            strcmp(pe_task_id, osjob_pe_task_id) == 0) {
-            break;
+
+         if (pe_task_id != NULL) {
+            if (osjob_pe_task_id != NULL &&
+                strcmp(pe_task_id, osjob_pe_task_id) == 0) {
+               break;
+            } 
          } else {
             break;
-         }   
+         }
       }
    }
 
-   if(osjob == NULL) {
+   if (osjob == NULL) {
+      DEXIT;
       return PTF_ERROR_JOB_NOT_FOUND;
-   }
+   } 
    
    /*
     * Mark osjob as complete and see if all tracked osjobs are done
@@ -2030,12 +2037,15 @@ void ptf_show_registered_jobs(void)
          lList *process_list;
          lListElem *process;
          const char *pe_task_id_str;
+         u_long32 ja_task_id;
 
          pe_task_id_str = lGetString(os_job, JO_task_id_str);
-         pe_task_id_str = pe_task_id_str ? pe_task_id_str : "<<NONE>>";
+         pe_task_id_str = pe_task_id_str ? pe_task_id_str : "<null>";
+         ja_task_id = lGetUlong(os_job, JO_ja_task_ID);
 
-         DPRINTF(("\t\tosjobid: " u32 " petaskid: %s\n",
-                  lGetUlong(os_job, JO_OS_job_ID), pe_task_id_str));
+         DPRINTF(("\t\tosjobid: "u32" ja_task_id: "u32" petaskid: %s\n",
+                  lGetUlong(os_job, JO_OS_job_ID), ja_task_id,
+                  pe_task_id_str));
          process_list = lGetList(os_job, JO_pid_list);
          for_each(process, process_list) {
             u_long32 pid;

@@ -62,6 +62,7 @@ int sge_count_uniq_hosts(lList *ahl, lList *shl);
 int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
 u_long32 load_report_interval(lListElem *hep); 
+u_long32 sge_get_max_unheard_value(void); 
 
 void sge_change_queue_version_exechost(const char *exechost_name);
 

@@ -18,6 +18,8 @@
 #include "sge_serf.h"
 
 #ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
+
+#include "sge_qeti.h"
 /*
 cc -o sge_resource_utilization -Isecurity/sec -Icommon -Ilibs -Ilibs/uti -Ilibs/gdi -Ilibs/japi -Ilibs/sgeobj -Ilibs/cull
 -Ilibs/rmon -Ilibs/comm -Ilibs/comm/lists -Ilibs/sched -DMODULE_TEST_SGE_RESOURCE_UTILIZATION
@@ -27,22 +29,26 @@ libs/sched/sge_resource_utilization.c -xarch=v9 -xildoff -L/vol2/SW/db-4.2.52/so
 int main(int argc, char *argv[]) 
 {
    lListElem *cr;
+   sge_qeti_t *iter;
+   u_long32 pe_time;
+   extern sge_qeti_t *sge_qeti_allocate2(lListElem *cr);
+
 
    DENTER_MAIN(TOP_LAYER, "sge_resource_utilization");
 
    cr = lCreateElem(RUE_Type);
    lSetString(cr, RUE_name, "slots");
 
-   printf("adding a 200s now assignment of 4 starting at 800\n");
+   printf("adding a 200s now assignment of 8 starting at 800\n");
    utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING");   
    utilization_print(cr, "pe_slots");
 
    printf("adding a 100s now assignment of 4 starting at 1000\n");
-   utilization_add(cr, 1000, 100, 4, 100, 1, PE_TAG, "pe_slots", "STARTING");   
+   utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING");   
    utilization_print(cr, "pe_slots");
 
    printf("adding a 100s reservation of 8 starting at 1100\n");
-   utilization_add(cr, 1100, 100, 8, 101, 1, PE_TAG, "pe_slots", "RESERVING");   
+   utilization_add(cr, 1100, 100, 8, 102, 1, PE_TAG, "pe_slots", "RESERVING");   
    utilization_print(cr, "pe_slots");
 
    printf("max utilization starting at 1000 for a 100s job: %f\n",
@@ -50,6 +56,20 @@ int main(int argc, char *argv[])
 
    printf("max utilization starting at 1200 for a 1000s job: %f\n",
       utilization_max(cr, 1200, 1000));
+
+   printf("max utilization starting at 700 for a 150s job: %f\n",
+      utilization_max(cr, 700, 150));
+
+   /* use a QETI to iterate through times */
+
+   /* sge_qeti_allocate() */
+   iter = sge_qeti_allocate2(cr);
+
+   /* sge_qeti_first() */
+   for (pe_time = sge_qeti_first(iter); pe_time; pe_time = sge_qeti_next(iter)) {
+      printf("QETI returns "u32"\n", pe_time);
+   }
+
    return 0;
 }
 
@@ -151,7 +171,9 @@ void utilization_print(const lListElem *cr, const char *object_name)
    lListElem *rde;
    DENTER(TOP_LAYER, "utilization_print");
 
-   DPRINTF(("resource utilization: %s \"%s\"\n", object_name?object_name:"<unknown_object>", lGetString(cr, RUE_name)));
+   DPRINTF(("resource utilization: %s \"%s\" %f utilized now\n", 
+         object_name?object_name:"<unknown_object>", lGetString(cr, RUE_name),
+            lGetDouble(cr, RUE_utilized_now)));
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
 #ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
@@ -173,6 +195,35 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
    return end_time;
 }
 
+/****** sge_resource_utilization/utilization_add() *****************************
+*  NAME
+*     utilization_add() -- ??? 
+*
+*  SYNOPSIS
+*     int utilization_add(lListElem *cr, u_long32 start_time, u_long32 
+*     duration, double utilization, u_long32 job_id, u_long32 ja_taskid, 
+*     u_long32 level, const char *object_name, const char *type) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lListElem *cr           - Resource utilization entry (RUE_Type)
+*     u_long32 start_time     - Start time of utilization
+*     u_long32 duration       - Duration
+*     double utilization      - Amount
+*     u_long32 job_id         - Job id 
+*     u_long32 ja_taskid      - Task id
+*     u_long32 level          - *_TAG
+*     const char *object_name - The objects name
+*     const char *type        - String denoting type of utilization entry.
+*
+*  RESULT
+*     int - 0 on success
+*
+*  NOTES
+*     MT-NOTE: utilization_add() is not MT safe 
+*******************************************************************************/
 int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, double utilization, 
    u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name, const char *type) 
 {
@@ -228,7 +279,6 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    /* find existing end element or the element before */
    while (this) {
       if (end_time == lGetUlong(this, RDE_time)) {
-         DPRINTF(("found existing end\n"));
          end = this;
          break;
       }
@@ -310,7 +360,8 @@ static void utilization_normalize(lList *diagram)
       next = lNext(this);
       if (util_prev == lGetDouble(this, RDE_amount))
          lRemoveElem(diagram, this);
-      util_prev = lGetDouble(this, RDE_amount);
+      else
+         util_prev = lGetDouble(this, RDE_amount);
    }
 
    return;
@@ -338,7 +389,12 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
 
    DENTER(TOP_LAYER, "utilization_max");
 
-
+   /* someone is asking for the current utilization */
+   if (start_time == DISPATCH_TIME_NOW) {
+      DEXIT;
+      return lGetDouble(cr, RUE_utilized_now);
+   }
+   
 #if 0
    utilization_print(cr, "the object");
 #endif
@@ -350,12 +406,12 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
       max = lGetDouble(start, RDE_amount);
       rde = lNext(start);
    } else {
-      if (!prev) {
-         DEXIT;
-         return 0; 
+      if (prev) {
+         max = lGetDouble(prev, RDE_amount);
+         rde = lNext(prev);
+      } else {
+         rde = lFirst(lGetList(cr, RUE_utilized));
       }
-      max = lGetDouble(prev, RDE_amount);
-      rde = lNext(prev);
    }
 
    /* now watch out for the maximum before end time */ 
@@ -386,8 +442,11 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
    for_each_rev (rde, lGetList(cr, RUE_utilized)) {
       util = lGetDouble(rde, RDE_amount);
       if (util <= max_util) {
-         when = lGetUlong(rde, RDE_time);
-         break;
+         lListElem *p = lPrev(rde);
+         if (p && lGetDouble(p, RDE_amount) > max_util) {
+            when = lGetUlong(rde, RDE_time);
+            break;
+         }
       }
    }
 
@@ -411,9 +470,10 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
    DENTER(TOP_LAYER, "add_job_utilization");
 
    /* parallel environment  */
-   if (a->pe)
+   if (a->pe) {
       utilization_add(lFirst(lGetList(a->pe, PE_resource_utilization)), a->start, a->duration, a->slots,
             a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type);
+   }
 
    /* global */
    hep = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
@@ -449,7 +509,24 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
    for_each(gel, a->gdil) {  
       int slots = lGetUlong(gel, JG_slots); 
       const char *qname = lGetString(gel, JG_qname);
-      qep = qinstance_list_locate2(a->queue_list, qname); 
+      qep = qinstance_list_locate2(a->queue_list, qname);
+
+      if (!qep && (!strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_RUNNING) ||
+         !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_SUSPENDED) ||
+         !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_PREEMPTING))) { 
+         /* 
+          * This happens in case of queues that were sorted out b/c they 
+          * are unknown, in some suspend state or in calendar disable state. As long 
+          * as we do not intend to schedule future resource utilization for those 
+          * queues it's valid to simply ignore resource utilizations decided in former 
+          * schedule runs: running/suspneded/migrating jobs.
+          * 
+          * Entering rc_add_job_utilization() would result in an error logging which
+          * is intended with SCHEDULING_RECORD_ENTRY_TYPE_STARTING and 
+          * SCHEDULING_RECORD_ENTRY_TYPE_RESERVING.
+          */
+         continue;
+      }
       rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
                QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
                a->duration, QUEUE_TAG);
@@ -471,8 +548,16 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 
    DENTER(TOP_LAYER, "rc_add_job_utilization");
 
-   if (!ep || !slots) {
-      ERROR((SGE_EVENT, "rc_add_job_utilization NULL object or 0 slot amount "
+   if (!ep) {
+      ERROR((SGE_EVENT, "rc_add_job_utilization NULL object "
+            "(job "u32" obj %s type %s) slots %d ep %p\n", 
+            lGetUlong(jep, JB_job_number), obj_name, type, slots, ep));
+      DEXIT;
+      return 0;
+   }
+
+   if (!slots) {
+      ERROR((SGE_EVENT, "rc_add_job_utilization 0 slot amount "
             "(job "u32" obj %s type %s) slots %d ep %p\n", 
             lGetUlong(jep, JB_job_number), obj_name, type, slots, ep));
       DEXIT;

@@ -1,7 +1,50 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
+/* #define HASH_STATISTICS */
+#define MALLINFO
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <time.h>
 #include <sys/times.h>
+
+#ifdef MALLINFO
+#include <malloc.h>
+#endif
+
+#include "basis_types.h"
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull.h"
@@ -13,7 +56,7 @@ int NM_ULONG  = JB_job_number;
 int NM_STRING = JB_owner;
 lDescr *DESCR = JB_Type;
 
-lNameSpace nmv[] = {
+lNameSpace my_nmv[] = {
    {1, JBS, JBN },
    {0, 0, NULL}
 };
@@ -40,89 +83,266 @@ int NM_ULONG  = TEST_ulong;
 int NM_STRING = TEST_string;
 lDescr *DESCR = TEST_Type;
 
-lNameSpace nmv[] = {
+lNameSpace my_nmv[] = {
    {1, TEST_Size, TEST_Name },
    {0, 0, NULL}
 };
 #endif
 
-#define FIRST_NAME 3
-
-int main(int argc, char *argv[])
+static void usage(const char *argv0) 
 {
-   int hash;
-   int entries;
-   int num_names;
-   int entries_per_name;
-   int i, j, k;
-   lList *lp = NULL, *trash = NULL;
-   lListElem *ep;
+   fprintf(stderr, "usage: %s <num_objects> <num_names> <uh> <nuh>\n", argv0);
+   fprintf(stderr, "<num_objects> = number of objects to be created\n");
+   fprintf(stderr, "<num_names>   = number of entries in non unique hash\n");
+   fprintf(stderr, "<uh>          = create unique hash\n");
+   fprintf(stderr, "<nuh>         = create non unique hash\n");
+   exit(EXIT_FAILURE);
+}
 
+static const char *random_string(int length)
+{
+   static char buf[1000];
+   int i;
+
+   for (i = 0; i < length; i++) {
+      buf[i] = rand() % 26 + 64;
+   }
+   buf[i] = 0;
+
+   return strdup(buf);
+}
+
+long clk_tck = 0;
+const char **names = NULL;
+
+const char *HEADER_FORMAT = "%s %s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n";
+const char *DATA_FORMAT   = "%s %s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf (%6d) %8.3lf (%6d) %8ld\n";
+
+static void do_test(bool unique_hash, bool non_unique_hash, 
+                    int num_objects, int num_names)
+{
+   lList *lp = NULL;
+   lListElem *ep;
    clock_t now, start;
    struct tms tms_buffer;
+#ifdef MALLINFO
+   struct mallinfo meminfo;
+#endif
+   int i;
+#ifdef HASH_STATISTICS
+   cull_htable cht;
+   dstring stat_dstring = DSTRING_INIT;
+#endif
 
-   lInit(nmv);
+   /* measurement data */
+   double  prof_create,  /* create objects */
+           prof_rau,     /* random access by unique attrib */
+           prof_inu,     /* iterate by non unique attrib */
+           prof_curo,    /* change unique attrib of random object */
+           prof_cnuro,   /* change non unique attrib of random object */
+           prof_dru,     /* delete random object by unique attribute */
+           prof_dinu;    /* delete by iterating over non unique attrib */
+   int     objs_dru,     /* objects deleted by random unique */
+           objs_dinu;    /* objects deleted by iterate non unique */
 
-   if (argc < 4) {
-      fprintf(stderr, "usage: test_cull_hash <size> <hash [0|1]> <name_1> [<name_2> ... <name_n>]\n");
-      return EXIT_FAILURE;
+   /* create list and hash tables */
+   lp = lCreateList("test list ", DESCR);
+   if (unique_hash) {
+      cull_hash_new(lp, NM_ULONG, true);
    }
-
-   entries = atoi(argv[1]);
-   hash = atoi(argv[2]);
-   num_names = argc - FIRST_NAME;
-   entries_per_name = entries / num_names;
-
-   printf("creating %d entries using %d names, that is %d entries per name\n", entries, num_names, entries_per_name);
-
+   if (non_unique_hash) {
+      cull_hash_new(lp, NM_STRING, false);
+   }
+#ifdef HASH_STATISTICS
+   cht = lp->descr[1].ht;
+   printf("%s\n", cull_hash_statistics(cht, &stat_dstring));
+#endif
    start = times(&tms_buffer);
 
-   for (k = 0, i = 0; i < entries_per_name; i++) {
-      for (j = FIRST_NAME; j < argc; j++, k++) {
-         ep = lAddElemUlong(&lp, NM_ULONG, k, DESCR);
-         lSetString(ep, NM_STRING, argv[j]);
-      }
+   /* TEST: build objects */
+   for (i = 0; i < num_objects; i++) {
+      ep = lAddElemUlong(&lp, NM_ULONG, i, DESCR);
+      lSetString(ep, NM_STRING, names[rand() % num_names]);
    }
-
+   /* measure time */
    now = times(&tms_buffer);
-   printf("filled list with %d entries in %.3f s\n", lGetNumberOfElem(lp),
-          (now - start) * 1.0 / CLK_TCK);
+   prof_create = (now - start) * 1.0 / clk_tck;
+
+#ifdef HASH_STATISTICS
+   printf("%s\n", cull_hash_statistics(cht, &stat_dstring));
+#endif
+
+
+   /* measure memory usage */
+#ifdef MALLINFO
+   meminfo = mallinfo();
+#endif
+   
    start = times(&tms_buffer);
 
-   if (hash) {
-      cull_hash_new(lp, NM_STRING, FALSE);
-      now = times(&tms_buffer);
-      printf("created hash table in %.3f s\n", (now - start) * 1.0 / CLK_TCK);
+   /* TEST: random access by unique attrib */
+   for (i = 0; i < num_objects; i++) {
+      ep = lGetElemUlong(lp, NM_ULONG, rand() % num_objects);
    }
 
-   trash = lCreateList("trash", DESCR);
+   /* measure time */
+   now = times(&tms_buffer);
+   prof_rau = (now - start) * 1.0 / clk_tck;
+   start = now;
 
-   start = times(&tms_buffer);
-   for (j = FIRST_NAME; j < argc; j++) {
+   /* TEST: iterate by non unique attrib */
+   for (i = 0; i < num_names; i++) {
       const void *iterator = NULL;
       lListElem *next_ep;
 
-      printf("list has %d entries, deleting all with name %s\n", lGetNumberOfElem(lp), argv[j]);
-
-      start = times(&tms_buffer);
-      next_ep = lGetElemStrFirst(lp, NM_STRING, argv[j], &iterator);
-/*       next_ep = lGetElemStrNext(lp, NM_STRING, argv[j], &iterator); */
+      next_ep = lGetElemStrFirst(lp, NM_STRING, names[i], &iterator);
       while ((ep = next_ep) != NULL) {
-         next_ep = lGetElemStrNext(lp, NM_STRING, argv[j], &iterator);
-         lDechainElem(lp, ep);
-         lAppendElem(trash, ep);
+         next_ep = lGetElemStrNext(lp, NM_STRING, names[i], &iterator);
       }
-
-      now = times(&tms_buffer);
-      printf("deleted entries of name %s in %.3f s\n", argv[j],
-             (now - start) * 1.0 / CLK_TCK);
    }
 
-   printf("trash list contains %d elements\n", lGetNumberOfElem(trash));
+   /* measure time */
+   now = times(&tms_buffer);
+   prof_inu = (now - start) * 1.0 / clk_tck;
+   start = now;
 
+   /* TEST: change unique attribute of random object */
+   /* measure time */
+   for (i = 0; i < num_objects; i++) {
+      /* object to access */
+      int unique = rand() % num_objects;
+      /* new value to set, make sure we stay unique */
+      int newval = unique + num_objects;
+
+      /* search object */
+      ep = lGetElemUlong(lp, NM_ULONG, unique);
+
+      /* set a new value */
+      lSetUlong(ep, NM_ULONG, newval);
+
+      /* restore old value */
+      lSetUlong(ep, NM_ULONG, unique);
+   }
+
+   now = times(&tms_buffer);
+   prof_curo = (now - start) * 1.0 / clk_tck;
+   start = now;
+
+   /* TEST: change non unique attribute of random object */
+   for (i = 0; i < num_objects; i++) {
+      /* search object */
+      ep = lGetElemUlong(lp, NM_ULONG, rand() % num_objects);
+
+      /* set a new value */
+      lSetString(ep, NM_STRING, names[rand() % num_names]);
+   }
+   /* measure time */
+   now = times(&tms_buffer);
+   prof_cnuro = (now - start) * 1.0 / clk_tck;
+   start = now;
+
+   /* TEST: delete random object */
+   objs_dru = 0;
+   for (i = 0; i < num_objects / 2; i++) {
+      /* search object */
+      ep = lGetElemUlong(lp, NM_ULONG, rand() % num_objects);
+      /* if same rand showed up earlier, object does no longer exist! */
+      if (ep != NULL) {
+         lRemoveElem(lp, ep);
+         objs_dru++;
+      }
+   }   
+   /* measure time */
+   now = times(&tms_buffer);
+   prof_dru = (now - start) * 1.0 / clk_tck;
+   start = now;
+
+   /* TEST: delete all objects having the same non unique attribute */
+   objs_dinu = 0;
+   for (i = 0; i < num_names; i++) {
+      const void *iterator = NULL;
+      lListElem *next_ep;
+
+      next_ep = lGetElemStrFirst(lp, NM_STRING, names[i], &iterator);
+      while ((ep = next_ep) != NULL) {
+         next_ep = lGetElemStrNext(lp, NM_STRING, names[i], &iterator);
+         lRemoveElem(lp, ep);
+         objs_dinu++;
+      }
+   }
+
+   /* measure time */
+   now = times(&tms_buffer);
+   prof_dinu = (now - start) * 1.0 / clk_tck;
+   start = now;
+
+   printf(DATA_FORMAT, 
+          unique_hash ? " * " : "   ",
+          non_unique_hash ? " * " : "   ",
+          prof_create, 
+          prof_rau, prof_inu, 
+          prof_curo, prof_cnuro,
+          prof_dru, objs_dru, prof_dinu, objs_dinu,
+#ifdef MALLINFO
+          (meminfo.usmblks + meminfo.uordblks) / 1024
+#else
+          0
+#endif
+          );
+
+#ifdef HASH_STATISTICS
+printf("%s\n", cull_hash_statistics(cht, &stat_dstring));
+   sge_dstring_free(&stat_dstring);
+#endif
    lFreeList(lp);
-   lFreeList(trash);
-   lp = trash = NULL;
+}
+
+int main(int argc, char *argv[])
+{
+   int num_objects;
+   int num_names;
+   int i;
+   bool uh, nuh;
+
+   if (argc < 5) {
+      usage(argv[0]);
+   }
+
+   /* initialize globals */
+   lInit(my_nmv);
+   clk_tck = sysconf(_SC_CLK_TCK); /* JG: TODO: sge_sysconf? */
+
+   /* we need random numbers */
+   srand(time(0));
+
+   /* parse commandline options */
+   num_objects = atoi(argv[1]);
+   num_names   = atoi(argv[2]);
+   uh          = atoi(argv[3]) == 0 ? false : true;
+   nuh         = atoi(argv[4]) == 0 ? false : true;
+
+   /* create name array */
+   names = (const char **) malloc (num_names * sizeof(const char *));
+
+   /* build random names */
+   for (i = 0; i < num_names; i++) {
+      const char *name = random_string(10);
+      names[i] = name;
+   }
+
+   /* output header */
+   printf(HEADER_FORMAT, "uh ", "nuh", 
+          "create", "rau", "inu", "curo", "cnuro", 
+          "dru", "(objs)", "dinu", "(objs)", "mem(kB)");
+
+   /* do tests */
+   do_test(uh, nuh, num_objects, num_names);
+   
+   /* free names */
+   for (i = 0; i < num_names; i++) {
+      free((char *)names[i]);
+      names[i] = NULL;
+   }
 
    return EXIT_SUCCESS;
 }

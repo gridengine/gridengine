@@ -58,87 +58,8 @@ proc sge_macro { macro_name } {
  
    set value ""
    switch -exact $macro_name {
-      "MSG_OBJ_QUEUE" -
-      "MSG_SGETEXT_ALREADYEXISTS_SS" -
-      "MSG_QCONF_NOXDEFINED_S" -
-      "MSG_QUEUE_XISNOTAQUEUENAME_S" -
-      "MSG_SGETEXT_MODIFIEDINLIST_SSSS" -
-      "MSG_SGETEXT_ADDEDTOLIST_SSSS" -
-      "MSG_SGETEXT_REMOVEDFROMLIST_SSSS" -
-      "MSG_SGETEXT_UNKNOWNQUEUE_SSSS"  -
-      "MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S" -
-      "MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS" -
-      "MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS" -
-      "MSG_PARSE_EDITFAILED"       -
-      "MSG_MULTIPLY_MODIFIEDIN"   -
-      "MSG_MULTIPLY_ADDEDTO"   -
-      "MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION"  -
-      "MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S"  -
-      "MSG_SGETEXT_UNKNOWNUSERSET_SSSS" -
-      "MSG_SCHEDD_INFO_NOMESSAGE" -
-      "MSG_GDI_ADDTOACL_SS" -
-      "MSG_QINSTANCE_DISABLED" -
-      "MSG_QINSTANCE_NDISABLED"  -
-      "MSG_PROJECT"      -
-      "MSG_SGETEXT_DOESNOTEXIST_S" -
-      "MSG_OBJ_SHARETREE" -
-      "MSG_SGETEXT_REMOVEDLIST_SSS" -
-      "MSG_JOB_SUBMITJOB_USS" -
-      "MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS" -
-      "MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER" -
-      "MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S" -
-      "MSG_SGETEXT_MOD_JOBS_SU" -
-      "MSG_GDI_USAGE_USAGESTRING" -
-      "MSG_JOB_SUBMITJOBARRAY_UUUUSS" -
-      "MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU" -
-      "MSG_ANSWER_UNKOWNOPTIONX_S"  -
-      "MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS" -
-      "MSG_STREE_USERTNOACCESS2PRJ_SS"  -
-      "MSG_JOB_NOPERMS_SS" -
-      "MSG_JOB_PRJNOSUBMITPERMS_S" -
-      "MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S" -
-      "MSG_SGETEXT_CANTRESOLVEHOST_S" -
-      "MSG_SGETEXT_UNKNOWN_RESOURCE_S" -
-      "MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S" -
-      "MSG_JOB_MORETASKSTHAN_U" -
-      "MSG_JOB_REGDELTASK_SUU" -
-      "MSG_JOB_REGDELJOB_SU" -
-      "MSG_JOB_DELETETASK_SUU" -
-      "MSG_JOB_DELETEJOB_SU" -
-      "MSG_QINSTANCE_SUSPENDED" -
-      "MSG_QINSTANCE_NSUSPENDED" -
-      "MSG_JOB_SUSPENDTASK_SUU" -
-      "MSG_JOB_SUSPENDJOB_SU" -
-      "MSG_JOB_UNSUSPENDTASK_SUU" -
-      "MSG_JOB_UNSUSPENDJOB_SU" -
-      "MSG_SGETEXT_DOESNOTEXIST_SU" -
-      "MSG_SGETEXT_DOESNOTEXISTTASK_UU" -
-      "MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU" -
-      "MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D" -
-      "MSG_CONF_USING_SS" -
-      "MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S" -
-      "MSG_SGETEXT_NOSUBMITORADMINHOST_S" -
-      "MSG_SCHEDD_SCHEDULINGINFO" -
-      "MSG_SCHEDD_INFO_JOBHOLD_" -
-      "MSG_SGETEXT_MOD_JATASK_SUU" -
-      "MSG_SCHEDD_INFO_JOBINERROR_" -
-      "MSG_SCHEDD_INFO_EXECTIME_" -
-      "MSG_SCHEDD_INFO_JOBDEPEND_" -
-      "MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_" -
-      "MSG_OBJ_USER"  -
-      "MSG_OBJ_USERSET" -
-      "MSG_SCHEDD_INFO_HASNOPERMISSION_SS" -
-      "MSG_SCHEDD_INFO_NOACCESSTOPE" -
-      "MSG_SCHEDD_INFO_NOACCESSTOPE_S" -
-      "MSG_JOB_NOTINANYQ_S" -
-      "MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S" -
-      "MSG_TREE_CHANGEDSHARETREE" -
-      "MSG_QCONF_CANTREADSHARETREEX_S" -
-      "MSG_JOB_PRIOSET_SSUU" -
-      "MSG_PARSE_DUPLICATEHOSTINFILESPEC" -
-      "MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S" { set value "" }
-
       "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 
+      "DISTINST_HOSTNAME_KNOWN_AT_MASTER" { set value "\nThis hostname is known at qmaster as an administrative host.\n\nHit <RETURN> to continue >>" }
       "DISTINST_NOT_COMPILED_IN_SECURE_MODE" { set value "\n>sge_qmaster< binary is not compiled with >-secure< option!\n" }
       "DISTINST_ENTER_HOSTS" { set value "Host(s): " }
       "DISTINST_VERIFY_FILE_PERMISSIONS" { set value "\nWe may now verify and set the file permissions of your Grid Engine\ndistribution.\n\nThis may be useful since due to unpacking and copying of your distribution\nyour files may be unaccessible to other users.\n\nWe will set the permissions of directories and binaries to\n\n   755 - that means executable are accessible for the world\n\nand for ordinary files to\n\n   644 - that means readable for the world\n\nDo you want to verify and set your file permissions (y/n) \[y\] >> " }
@@ -149,7 +70,7 @@ proc sge_macro { macro_name } {
       "DISTINST_FINISHED_ADDING_HOSTS" { set value "Finished adding hosts. Hit <RETURN> to continue >> " }
       "DISTINST_FILENAME_FOR_HOSTLIST" { set value "\nPlease enter the file name which contains the host list: " }
       "DISTINST_CREATE_NEW_CONFIGURATION" { set value "Do you want to create a new configuration (y/n) \[y\] >> " }
-      "DISTINST_INSTALL_SCRIPT" { set value "\nWe can install the startup script that\nGrid Engine is started at machine boot (y/n) \[y\] >> " }
+      "DISTINST_INSTALL_SCRIPT" { set value "\nWe can install the startup script that will\nstart %s at machine boot (y/n) \[y\] >> " }
       "DISTINST_ANSWER_YES" { set value "y" }
       "DISTINST_ANSWER_NO" { set value "n" }
       "DISTINST_ENTER_DEFAULT_DOMAIN" { set value "\nPlease enter your default domain >> " }
@@ -164,14 +85,15 @@ proc sge_macro { macro_name } {
       "DISTINST_INSTALL_GE_NOT_AS_ROOT" { set value "Do you want to install Grid Engine\nunder an user id other than >root< (y/n) \[y\] >> " }
       "DISTINST_IF_NOT_OK_STOP_INSTALLATION" { set value "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> " }
       "DISTINST_DNS_DOMAIN_QUESTION" { set value "Are all hosts of your cluster in a single DNS domain (y/n) \[y\] >> " }
+      "DISTINST_CHOOSE_SPOOLING_METHOD" { set value "Your SGE binaries are compiled to link the spooling libraries\nduring runtime (dynamically). So you can choose between Berkeley DB \nspooling and Classic spooling method.\nPlease choose a spooling method (berkeleydb|classic) \[berkeleydb\] >> " }
       "DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET" { set value "If you will install shadow master hosts or if you want to be able to start\n the qmaster daemon on other hosts (see the corresponding sectionin the\n Grid Engine Installation and Administration Manual for details) the account\n on the shadow master hosts also needs read/write access to this directory.\n\n Enter spool directory or hit <RETURN> to use default\n \[%s\] >> " }
       "DISTINST_USING_GID_RANGE_HIT_RETURN" { set value "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " }
       "DISTINST_EXECD_INSTALL_COMPLETE" { set value "Your execution daemon installation is now completed." }
       "DISTINST_LOCAL_CONFIG_FOR_HOST" { set value "Local configuration for host >%s< created." }
-      "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nGrid Engine supports multiple cells.\n\nIf you are not planning to run multiple Grid Engine clusters or if you don't\nknow yet what is a Grid Engine cell it is safe to keep the default cell name\n\n   default\n\nIf you want to install multiple cells you can enter a cell name now.\n\nThe environment variable\n\n   \\\$SGE_CELL=<your_cell_name>\n\nwill be set for all further Grid Engine commands.\n\nEnter cell name or hit <RETURN> to use default cell >default< >> " }
+      "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nGrid Engine supports multiple cells.\n\nIf you are not planning to run multiple Grid Engine clusters or if you don't\nknow yet what is a Grid Engine cell it is safe to keep the default cell name\n\n   default\n\nIf you want to install multiple cells you can enter a cell name now.\n\nThe environment variable\n\n   \\\$SGE_CELL=<your_cell_name>\n\nwill be set for all further Grid Engine commands.\n\nEnter cell name \[default\] >> " }
       "DISTINST_CELL_NAME_FOR_EXECD" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >default< >> " }
       "DISTINST_CELL_NAME_EXISTS" { set value "Do you want to select another cell name? (y/n) \[y\] >> " }
-      "DISTINST_CELL_NAME_OVERWRITE" { set value "Do you want to overwrite the directory? (y/n) \[y\] >> " }
+      "DISTINST_CELL_NAME_OVERWRITE" { set value "Do you want to overwrite \[y\] or delete \[n\] the directory? (y/n) \[y\] >> " }
       "DISTINST_ADD_DEFAULT_QUEUE" { set value "Do you want to add a default queue for this host (y/n) \[y\] >> " }
       "DISTINST_ALL_QUEUE_HOSTGROUP" { set value "Creating the default <all.q> queue and <allhosts> hostgroup" }
       "DISTINST_ADD_DEFAULT_QUEUE_INSTANCE" { set value "Do you want to add a default queue instance for this host (y/n) \[y\] >> " }
@@ -179,12 +101,13 @@ proc sge_macro { macro_name } {
       "DISTINST_ENTER_DATABASE_SERVER" { set value "Enter database server (none for local spooling)\nor hit <RETURN> to use default \[%s\] >> " }
       "DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING" { set value "Please enter the name of your Berkeley DB Spooling Server!\nFor local spooling without Server, hit <RETURN> else enter the Servername! >>" }
       "DISTINST_ENTER_DATABASE_DIRECTORY" { set value "Enter the database directory\nor hit <RETURN> to use default \[%s\] >> " }
-      "DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING" { set value "Please enter the Database Directory now, even if you want to spool locally\nit is necessary to enter this Database Directory. \nDefault: \[%s\] >> " }
+      "DISTINST_ENTER_DATABASE_DIRECTORY" { set value "Please enter the Database Directory now, even if you want to spool locally\nit is necessary to enter this Database Directory. \n\nDefault: \[] >> " }
+      "DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING" { set value "\nPlease enter the Database Directory now, even if you want to spool locally\n it is necessary to enter this Database Directory. \n\nDefault: \[%s\] >> " }
       "DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS" { set value "The database directory >%s<\nis not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" }
       "DISTINST_STARTUP_RPC_SERVER" { set value "Please startup the rc script >%s< on the RPC server machine" }
       "DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS" { set value "Don't know how to test for local filesystem. Exit." }
-      "DISTINST_CURRENT_GRID_ROOT_DIRECTORY" { set value "The Grid Engine root directory (your current directory) is:\n\n   \\\$SGE_ROOT = %s\n\nIf this directory is not correct (e.g. it may contain an automounter\nprefix) enter the correct path to this directory or hit <RETURN>\nto use default \[%s\] >> " }
-      "DISTINST_DATABASE_LOCAL_SPOOLING" { set value "Do you want to use a Berkely DB Spooling Server? (y/n) \[n\] >> " }
+      "DISTINST_CURRENT_GRID_ROOT_DIRECTORY" { set value "The Grid Engine root directory is:\n\n   \\\$SGE_ROOT = %s\n\nIf this directory is not correct (e.g. it may contain an automounter\nprefix) enter the correct path to this directory or hit <RETURN>\nto use default \[%s\] >> " }
+      "DISTINST_DATABASE_LOCAL_SPOOLING" { set value "Do you want to use a Berkeley DB Spooling Server? (y/n) \[n\] >> " }
       "DISTINST_EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER" { set value "\nPlease give the basic configuration parameters of your Grid Engine\ninstallation:\n\n   <execd_spool_dir>\n\nThe pathname of the spool directory of the execution hosts. You\nmust have the right to create this directory and to write into it.\n" }
       "DISTINST_EXECD_SPOOLING_DIR_NOROOT" { set value "\nPlease give the basic configuration parameters of your Grid Engine\ninstallation:\n\n   <execd_spool_dir>\n\nThe pathname of the spool directory of the execution hosts. User >%s<\nmust have the right to create this directory and to write into it.\n" }
       "DISTINST_EXECD_SPOOLING_DIR_DEFAULT" { set value "Default: \[%s\] >> " }

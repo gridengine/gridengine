@@ -37,6 +37,7 @@ set TAG = HEAD
 set CODIR = "/tmp/CODIR"
 set OUTFILE = "/tmp/sge-HEAD-src.tar.gz"
 set EXCLUDEFILES = "SGE5_3alpha.pdf"
+set TAR = tar
 
 #
 # commandline parsing
@@ -62,6 +63,9 @@ while ($#argv >= 1)
          exit 1
       endif
       breaksw
+   case "-gtar":
+      set TAR = gtar
+      breaksw
    case "-w":
       set argv   = ($argv[2-])
       if ($#argv >= 1) then
@@ -80,36 +84,41 @@ while ($#argv >= 1)
       continue
       breaksw
    endsw
-
    set argv     = ($argv[2-])
 end
-
 
 #
 # main
 #
 
-#
-# checkout 
-#
-echo If the $CVSROOT is the wrong CVSROOT, press Ctl-C
-
 if ( ! -d $CODIR ) then
-   mkdir -p $CODIR
+   mkdir -p $CODIR || exit 1
 endif
 
-cd $CODIR
+if ( -f CVS/Root ) then
+   echo hier
+   setenv CVSROOT `cat CVS/Root`
+endif
 
-rm -rf $CODIR/gridengine
+echo If the $CVSROOT is the wrong CVSROOT, press Ctrl-C
+
+cd $CODIR || exit 1
+rm -rf $CODIR/gridengine || exit 1
+
 cvs -z9 -q co -r $TAG gridengine/source gridengine/testsuite gridengine/INSTALL gridengine/Changelog gridengine/doc
 find gridengine -name Root -exec rm {} \;
 foreach i ( $EXCLUDEFILES ) 
    find gridengine -name $i -exec rm {} \;
 end   
-tar cvzf $OUTFILE gridengine
-rm -rf $CODIR/gridengine
-exit 0
 
+$TAR cvzf $OUTFILE gridengine
+if ( $status == 0 ) then
+   rm -rf $CODIR/gridengine
+else
+   echo tar failed. Leaving $CODIR/gridengine unchanged
+endif
+
+exit 0
 
 #
 # 
@@ -121,4 +130,5 @@ usage:
    echo "-tag <tagname>   -> checkout tag instead of HEAD revision"
    echo "-o <file>        -> write to file <file> [default: $OUTFILE]"
    echo "-w <dir>         -> set checkout directory to <dir> [default: $CODIR]"
-  exit
+   echo "-gtar            -> use gtar as tar command"
+   exit

@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2004/02/05 13:26:54 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2004/04/19 10:52:00 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QDEL 1 "$Date: 2004/02/05 13:26:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QDEL 1 "$Date: 2004/04/19 10:52:00 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qdel \- delete xxQS_NAMExx jobs from queues
 .SH SYNTAX
@@ -121,12 +121,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
 .\"
 .\"
 .SH FILES

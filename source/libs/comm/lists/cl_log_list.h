@@ -39,9 +39,19 @@
 
 #define CL_LOG_FUNCTION(x) __CL_FUNCTION__ "x"
 
+
+/* Disable this to speed up the code, because no logging function is called anymore */
+/* TODO: build macro where the log decision is made to support a better log performance - CR */
+
+#if 1
 #define CL_LOG(log_type, log_text)              cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, NULL)
 #define CL_LOG_STR(log_type, log_text, log_str) cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )
 #define CL_LOG_INT(log_type, log_text, log_str) cl_log_list_log_int(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )
+#else
+#define CL_LOG(log_type, log_text)              /* cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, NULL) */
+#define CL_LOG_STR(log_type, log_text, log_str) /* cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
+#define CL_LOG_INT(log_type, log_text, log_str) /* cl_log_list_log_int(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
+#endif
 
 /* log_types */
 #define CL_LOG_OFF     0

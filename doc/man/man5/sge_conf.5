@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/02/20 21:09:47 $     Revision: $Revision: 1.26 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/20 15:47:00 $     Revision: $Revision: 1.32 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/02/20 21:09:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/20 15:47:00 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -424,11 +424,9 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBprojects\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
 .PP
 The \fBprojects\fP list contains all projects which are granted access
-to xxQS_NAME_EExx. User belonging to none of these projects cannot use xxQS_NAME_EExx. If
+to xxQS_NAMExx. User belonging to none of these projects cannot use xxQS_NAMExx. If
 users belong to projects in the \fBprojects\fP list and the
 \fBxprojects\fP list (see below), they also cannot use the system.
 .PP
@@ -440,11 +438,8 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBxprojects\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
-.PP
 The \fBxprojects\fP list contains all projects which are granted access
-to xxQS_NAME_EExx. User belonging to one of these projects cannot use xxQS_NAME_EExx. If
+to xxQS_NAMExx. User belonging to one of these projects cannot use xxQS_NAMExx. If
 users belong to projects in the \fBprojects\fP list (see above) and the
 \fBxprojects\fP list, they also cannot use the system.
 .PP
@@ -647,9 +642,6 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBenforce_project\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
-.PP
 If set to \fItrue\fB, users are required to request a project whenever
 submitting a job. See the \fB\-P\fP option to
 .M qsub 1
@@ -664,15 +656,12 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBenforce_user\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
-.PP
-If set to \fItrue\fB, a xxQS_NAME_EExx
+If set to \fItrue\fB, a
 .M user 5
 must exist to allow for job submission. Jobs are rejected if no corresponding user 
 exists. 
 .PP
-If set to \fIauto\fB, a xxQS_NAME_EExx
+If set to \fIauto\fB, a
 .M user 5
 object for the submitting user will automatically be created during
 job submission, if one does not already exist. The \fBauto_user_oticket\fP,
@@ -746,15 +735,15 @@ The number of seconds of inactivity after which automatically created
 .M user 5
 objects will be deleted. User objects are created automatically if the
 .B enforce_user
-attribute is set to \fIauto\fP. If no jobs have been submitted by the
-automatically created user for the specified amount of time, the
+attribute is set to \fIauto\fP. If the user has no active or pending
+jobs for the specified amount of time, the
 object will automatically be deleted.  A value of 0 can be used to
-indicate that the user object should not
-be automatically deleted.
+indicate that the automatically created user object is permanent and
+should not be automatically deleted.
 .PP
 Changing
 .B auto_user_delete_time
-will affect the deletion time for all users of newly submitted jobs.
+will affect the deletion time for all users with active jobs.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
@@ -861,7 +850,7 @@ is started.
 .PP
 Changing \fBgid_range\fP will take immediate effect.
 There is no default for \fBgid_range\fP. The administrator will have to
-assign a value for \fBgid_range\fP during installation of xxQS_NAME_EExx.
+assign a value for \fBgid_range\fP during installation of xxQS_NAMExx.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -884,12 +873,6 @@ xxQS_NAMExx immediately. For regular users, the equivalent of a normal
 .M qdel 1
 is executed first, and deletion is forced only if the normal cancellation
 was unsuccessful.
-.sp 1
-Changing \fBqmaster_params\fP will take immediate effect.
-The default for \fBqmaster_params\fP is none.
-.sp 1
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
 .\"
 .IP "\fIFORBID_RESCHEDULE\fP"
 If this parameter is set, re-queuing of jobs cannot
@@ -902,6 +885,14 @@ are not enough resources on the current one.
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
 If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
+.PP
+.IP "\fIMAX_DYN_EC\fP"
+Sets the max number of dynamic event clients (as used by qsub -sync y 
+and by xxQS_NAMExx DRMAA API library sessions). The default is set to 99. 
+The number of dynamic event clients should not be bigger than half of 
+the number of file descriptors the system has. The number of file 
+descriptors are shared among the connections to all exec hosts, all 
+event clients, and file handles that the qmaster needs.
 .PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
@@ -934,9 +925,7 @@ performed by the PTF module inside
 .M sge_execd 8 .
 .PP
 .IP "\fIPTF_MIN_PRIORITY\fP, \fIPTF_MAX_PRIORITY\fP"
-The parameters are only available in a xxQS_NAME_EExx system.
-.br
-The maximum/minumum priority which xxQS_NAME_EExx will assign to a job.
+The maximum/minumum priority which xxQS_NAMExx will assign to a job.
 Typically this is a negative/postive value in the range of -20
 (maximum) to 19 (minimum) for systems which allow setting of priorties
 with the
@@ -972,28 +961,8 @@ no notification signal will be sent. If it is set to \fITSTP\fP, for
 instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
-.IP "\fISET_SGE_ENV, SET_COD_ENV, SET_GRD_ENV\fP"
-In qsub(1) you can find a list of environment variables which are
-exported into the execution environment of each xxQS_NAME_EExx job. Some of 
-these variables names begin with the prefix "SGE_". In the predecessor products 
-of xxQS_NAME_EExx (Codine, GRD) the prefixes "COD_" and "GRD_" were used for 
-those variables. This makes it necessary to update all job scripts relying one 
-of those environment variables. The parameters SET_SGE_ENV, SET_COD_ENV and 
-SET_GRD_ENV can be used to accomplish a smoother transition from Codine/GRD 
-to xxQS_NAME_EExx.
-
-Each of those parameters makes sure that a set of environment variables
-mentioned in qsub(1) and beginning with the corresponding prefix will be
-exported into the job environmnet. Every parameter can be set to
-"true", "1" or "false", "0". Defaults are "SET_SGE_ENV=1, SET_COD_ENV=0 and
-SET_GRD_ENV=0".
-
-If all three parameters are set to "false" or "0" jobs might fail as none of 
-the corresponding environment variables would be set. Therefore in this case
-the environment variables beginning with the prefix "SGE_" are set.
-.PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
-If this parameter is set to true, reserved usage is taken for the xxQS_NAME_EExx share
+If this parameter is set to true, reserved usage is taken for the xxQS_NAMExx share
 tree consumption instead of measured usage.
 .PP
 Changing \fBexecd_params\fP will take immediate effect.
@@ -1076,7 +1045,7 @@ for further information about sharelog.
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
 number of finshed jobs being stored. If this maximum number is reached, the
-eldest finshed job will be discarded for every now job being added to the
+eldest finshed job will be discarded for every new job being added to the
 finshed job list.
 .PP
 Changing \fBfinished_jobs\fP will take immediate effect.

@@ -382,9 +382,12 @@ enum {
 
    ST_RESERVATION_FINISH_ORDER,
       /* ensure three jobs finish in the order foreseen for reservation */
-   ST_BACKFILL_FINISH_ORDER
+
+   ST_BACKFILL_FINISH_ORDER,
       /* ensure three jobs finish in the order foreseen for backfilling */
             
+   ST_WILD_PARALLEL
+      /* ensure 7 jobs finish in the order foreseen for wildcard parallel jobs */
 };
 
 const struct test_name2number_map {
@@ -459,6 +462,7 @@ const struct test_name2number_map {
 
    { "ST_RESERVATION_FINISH_ORDER",              ST_RESERVATION_FINISH_ORDER,                4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_BACKFILL_FINISH_ORDER",                 ST_BACKFILL_FINISH_ORDER,                   4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
+   { "ST_WILD_PARALLEL",                         ST_WILD_PARALLEL,                           4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
 
    { NULL,                                       0 }
 };
@@ -485,7 +489,14 @@ static const char *drmaa_ctrl2str(int control);
 static const char *drmaa_errno2str(int ctrl);
 
 static void report_wrong_job_finish(const char *comment, const char *jobid, int stat);
-static int test_dispatch_order_3jobs(const char *native[3], int reserve);
+
+typedef struct {
+   char *native;
+   int time;
+} test_job_t;
+static int test_dispatch_order_njobs(int n, test_job_t jobs[], char *jsr_str);
+static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[]);
+static int **job_run_sequence_parse(char *jrs_str);
 
 static int test_case;
 static int is_sun_grid_engine;
@@ -3893,10 +3904,13 @@ static int test(int *argc, char **argv[], int parse_args)
    case ST_TRANSFER_FILES_SINGLE_JOB:
       {
          int aborted, stat, remote_ps;
+         bool bFound=false;
          char jobid[100];
+         char *szPath;
+         char *szTemp;
+         char attr_name[DRMAA_ATTR_BUFFER];
+         drmaa_attr_names_t *vector;
          const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
-         char* szPath;
-         char* szTemp;
 
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
@@ -3909,33 +3923,41 @@ static int test(int *argc, char **argv[], int parse_args)
        
          /* submit a working job from a local directory to the execution host */
          drmaa_allocate_job_template(&jt, NULL, 0);
+
+         drmaa_errno = drmaa_get_attribute_names(&vector, diagnosis, sizeof(diagnosis)-1);
+         while((drmaa_errno=drmaa_get_next_attr_name(vector, attr_name,
+                sizeof(attr_name)-1)) == DRMAA_ERRNO_SUCCESS) {
+            if( strcmp( attr_name, "drmaa_transfer_files" )==0 ) {
+               bFound=true;
+               break;
+            }
+         }
+         if( !bFound ) {
+            fprintf( stderr, "DRMAA_TRANSFER_FILES is not supported!\n" );
+            return 1;
+         }
          drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, sleeper_job, NULL, 0);
 
          szTemp = NEXT_ARGV(argc,argv);
-         /*fprintf( stderr, "arg=%s\n", szTemp );*/
          drmaa_set_attribute(jt, DRMAA_TRANSFER_FILES, szTemp, NULL, 0);
         
          szTemp = NEXT_ARGV(argc,argv);
-         /*fprintf( stderr, "arg=%s\n", szTemp );*/
          drmaa_set_attribute(jt, DRMAA_JOIN_FILES, szTemp, NULL, 0);
 
          if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
             szPath="";
          }
          drmaa_set_attribute(jt, DRMAA_INPUT_PATH, szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
 
          if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
             szPath="";
          }
          drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH,szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
 
          if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
             szPath="";
          }
          drmaa_set_attribute(jt, DRMAA_ERROR_PATH, szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
 
          if( bBulkJob ) {
             drmaa_job_ids_t *jobids;
@@ -3975,7 +3997,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          /* get job state */
          drmaa_errno = drmaa_job_ps(jobid, &remote_ps, diagnosis, sizeof(diagnosis)-1);
-         if (remote_ps != DRMAA_PS_FAILED) {
+         if (remote_ps == DRMAA_PS_FAILED) {
             fprintf(stderr, "job \"%s\" is not in failed state: %s\n", 
                      jobid, drmaa_state2str(remote_ps));
             return 1;
@@ -3990,9 +4012,9 @@ static int test(int *argc, char **argv[], int parse_args)
 
          /* job finish information */
          drmaa_wifaborted(&aborted, stat, diagnosis, sizeof(diagnosis)-1);
-         if (!aborted) {
-            fprintf(stderr, "job \"%s\" failed but drmaa_wifaborted() returns false\n", 
-                  jobid);
+         if(!aborted) {
+            fprintf(stderr,
+               "job \"%s\" failed but drmaa_wifaborted() returns false\n", jobid);
             return 1;
          }
          printf("waited job \"%s\" that never ran\n", jobid);
@@ -4007,13 +4029,16 @@ static int test(int *argc, char **argv[], int parse_args)
    case ST_RESERVATION_FINISH_ORDER:
    case ST_BACKFILL_FINISH_ORDER:
       {
-         const char *native_spec[3];
+         test_job_t job_spec[3];
 
          if (parse_args) {
-            sleeper_job    = NEXT_ARGV(argc, argv);
-            native_spec[0] = NEXT_ARGV(argc, argv);
-            native_spec[1] = NEXT_ARGV(argc, argv);
-            native_spec[2] = NEXT_ARGV(argc, argv);
+            sleeper_job            = NEXT_ARGV(argc, argv);
+            job_spec[0].native     = NEXT_ARGV(argc, argv);
+            job_spec[0].time       = 20;
+            job_spec[1].native     = NEXT_ARGV(argc, argv);
+            job_spec[1].time       = 20;
+            job_spec[2].native     = NEXT_ARGV(argc, argv);
+            job_spec[2].time       = 20;
          }
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -4022,7 +4047,7 @@ static int test(int *argc, char **argv[], int parse_args)
          }
          report_session_key();
 
-         if (test_dispatch_order_3jobs(native_spec, test_case==ST_RESERVATION_FINISH_ORDER?1:0)) {
+         if (test_dispatch_order_njobs(3, job_spec, test_case==ST_RESERVATION_FINISH_ORDER?"0-1-2":"0,2-1")) {
             return 1;
          }
 
@@ -4032,7 +4057,49 @@ static int test(int *argc, char **argv[], int parse_args)
          }
       }
       break;
-      
+
+   case ST_WILD_PARALLEL:
+      {
+         test_job_t job_spec[7];
+
+         if (parse_args) {
+            sleeper_job            = NEXT_ARGV(argc, argv);
+
+            job_spec[0].native     = NEXT_ARGV(argc, argv);
+            job_spec[0].time       = 20;
+            job_spec[1].native     = job_spec[0].native;
+            job_spec[1].time       = 20;
+            job_spec[2].native     = job_spec[0].native;
+            job_spec[2].time       = 20;
+            job_spec[3].native     = job_spec[0].native;
+            job_spec[3].time       = 20;
+
+            job_spec[4].native     = NEXT_ARGV(argc, argv);
+            job_spec[4].time       = 20;
+            job_spec[5].native     = job_spec[4].native;
+            job_spec[5].time       = 20;
+
+            job_spec[6].native     = NEXT_ARGV(argc, argv);
+            job_spec[6].time       = 20;
+         }
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+
+         if (test_dispatch_order_njobs(7, job_spec, "6-4,5-0,1,2,3")) {
+            return 1;
+         }
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
    default:
       break;
    }
@@ -4523,38 +4590,31 @@ static void report_wrong_job_finish(const char *comment, const char *jobid, int 
    }
 }
 
-
-   /* during wait for job finish ends we examine job order 
-    * and report an error if it's wrong:
-    *
-    * 0   --> 1 --> 2 (reservation) 
-    * 
-    *         An error is returned if reservation job 1 does not finish before job 2 
-    *                           and if high prior job 0 does not finish before job 1
-    *         
-    * 0,2 --> 1       (backfilling)
-    * 
-    *         An error is returned if backfilling job 2 does not finish before job 1
-    *                           and if high prior job 0 does not finish before job 1
-    * 
-    */
-static int test_dispatch_order_3jobs(const char *native[3], int reserve)
+static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 {
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
-   char *all_jobids[3];
+   char *all_jobids[10];
    char jobid[100];
    drmaa_job_template_t *jt;
-   int drmaa_errno, i, n = 3, pos = 0;
+   int drmaa_errno, i, pos = 0;
    int stat;
+   int **order = job_run_sequence_parse(jsr_str);
+   int nwait = njobs;
 
+   if (!order) {
+      fprintf(stderr, "failed parsing job run sequence string\n");
+      return -1;
+   }
+   
    /* submit jobs in hold */
-   for (i=0; i<3; i++) {
-      jt = create_sleeper_job_template(20, 0, 1);
-      drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, native[i], NULL, 0);
+   for (i=0; i<njobs; i++) {
+      jt = create_sleeper_job_template(job[i].time, 0, 1);
+      drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, job[i].native, NULL, 0);
       if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
          fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
          return -1;
       }
+      printf("submitted job \"%s\"\n", jobid);
       all_jobids[pos++] = strdup(jobid);
       drmaa_delete_job_template(jt, NULL, 0);
    }
@@ -4575,12 +4635,19 @@ static int test_dispatch_order_3jobs(const char *native[3], int reserve)
 
          /* map jobid to job index */
          pos = -1;
-         for (i=0; i<3; i++) {
-            if (all_jobids[i] && !strcmp(jobid, all_jobids[i]))
+         for (i=0; i<njobs; i++) {
+            if (all_jobids[i] && !strcmp(jobid, all_jobids[i])) {
                pos = i;
+               break;
+            }
          }
          if (pos == -1) {
             fprintf(stderr, "drmaa_wait() returned unexpected job: %s\n", jobid);
+            return -1;
+         }
+
+
+         if (job_run_sequence_verify(pos, all_jobids, order)) {
             return -1;
          }
 
@@ -4588,27 +4655,7 @@ static int test_dispatch_order_3jobs(const char *native[3], int reserve)
          free(all_jobids[pos]);
          all_jobids[pos] = NULL;
 
-         /* examine order */
-         if (reserve) {
-            if ( pos == 2 && all_jobids[1] != NULL) {
-               fprintf(stderr, "reservation broken: large job (1) did not finish before small job (2)\n");
-               return -1;
-            }
-            if ( pos == 1 && all_jobids[0] != NULL) {
-               fprintf(stderr, "reservation broken: high prior job (0) did not finish before large job (1)\n");
-               return -1;
-            }
-         } else {
-            if ( pos == 1 && all_jobids[2] != NULL) {
-               fprintf(stderr, "backfilling broken: backfilling job (2) did not finish before large job (1)\n");
-               return -1;
-            }
-            if ( pos == 1 && all_jobids[0] != NULL) {
-               fprintf(stderr, "backfilling broken: high prior job (0) did not finish before large job (1)\n");
-               return -1;
-            }
-         }
-         if (--n == 0) {
+         if (--nwait == 0) {
             printf("waited for last job\n");
             break;
          }
@@ -4618,4 +4665,144 @@ static int test_dispatch_order_3jobs(const char *native[3], int reserve)
    } while (drmaa_errno == DRMAA_ERRNO_SUCCESS);
 
    return 0;
+}
+
+static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
+{
+   int test_index, i, j;
+   int found_group = 0;
+   int *group;
+
+   /* search the group this job belongs to */
+   for (i=0; order[i]; i++) {
+      group = order[i];
+      for (j=0; group[j] != -1; j++) {
+         if (group[j] == pos) {
+            found_group = 1;
+            break;
+         }
+      }
+      if (found_group)
+         break;
+   }
+   if (!found_group) {
+      fprintf(stderr, "test broken: could not find job index %d in finish order scheme\n", pos);
+      return -1;
+   }
+
+   /* complain about previous group job that did not finish earlier */
+   while (i>0) {
+      i--;
+      for (j=0; order[i][j] != -1; j++) {
+         test_index = order[i][j];
+         if (all_jobids[test_index] != NULL) {
+            fprintf(stderr, "order broken: job \"%s\" [%d] did not finish before job \"%s\" [%d]\n",
+                  all_jobids[test_index], test_index, all_jobids[pos], pos);
+            return -1;
+         }
+      }
+   }
+
+   return 0;
+}
+
+
+   
+   
+
+
+
+/****** test_drmaa/job_run_sequence_parse() ************************************
+*  NAME
+*     job_run_sequence_parse() -- ??? 
+*
+*  SYNOPSIS
+*     static int** job_run_sequence_parse(char *jrs_str) 
+*
+*  FUNCTION
+*     Parse job run sequence strings into order data structures. 
+*
+*  INPUTS
+*     char *jrs_str - ??? 
+*
+*  RESULT
+*     static int** - 
+*
+*  EXAMPLE
+*     For exmples the strings "0-1-2", "0,2-1" and "0,1-2-3" are parsed 
+*     into data structures like the following ones:
+*   
+*        int rr0[] = { 0, -1 };
+*        int rr1[] = { 1, -1 };
+*        int rr2[] = { 2, -1 };
+*        int *rr_order[] = { rr0, rr1, rr2, NULL };
+*
+*        int bf0[] = { 0, 2, -1 };
+*        int bf1[] = { 1, -1 };
+*        int *bf_order[] = { bf0, bf1, NULL };
+*
+*        int st0[] = { 0, 1, -1 };
+*        int st1[] = { 2, -1 };
+*        int st2[] = { 3, -1 };
+*        int *st_order[] = { st0, st1, st2, NULL };
+*******************************************************************************/
+#define GROUP_CHUNK 5
+#define NUMBER_CHUNK 5
+static int **job_run_sequence_parse(char *jrs_str)
+{
+   char *s, *group_str;
+
+   /* control outer loop */
+   char *iter_dash = NULL;
+   int **sequence = NULL;
+   int groups_total = GROUP_CHUNK;
+   int groups_used = 0;
+   int i = 0;
+
+   /* control inner loop */
+   char *iter_comma;
+   int *group;
+   int numbers_total;
+   int numbers_used;
+   int j;
+
+
+   printf("parsing sequence: \"%s\"\n", jrs_str);
+
+   sequence = malloc(sizeof(int *)*(GROUP_CHUNK+1));
+
+   /* groups are delimited by dashes '-' */
+   for (group_str=strtok_r(jrs_str, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
+
+      if (++groups_used > groups_total) {
+         groups_total += GROUP_CHUNK;
+         sequence = realloc(sequence, groups_total+1);
+      }
+
+      numbers_total = NUMBER_CHUNK;
+      numbers_used = 0;
+
+      group = malloc(sizeof(int *)*(NUMBER_CHUNK+1));
+      iter_comma = NULL;
+      j = 0;
+
+      /* sequence numbers within a group are delimited by comma ',' */
+      for (s=strtok_r(group_str, ",", &iter_comma); s; s=strtok_r(NULL, ",", &iter_comma)) {
+         if (++numbers_used > numbers_total) {
+            numbers_total += NUMBER_CHUNK;
+            group = realloc(sequence, numbers_total+1);
+         }
+         printf("%s ", s);
+         group[j] = atoi(s);
+         j++;
+      }
+      printf("\n");
+      group[j] = -1;
+
+      sequence[i] = group;
+      i++;
+   }
+   sequence[i] = NULL;
+
+   return sequence;
 }

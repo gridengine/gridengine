@@ -2044,8 +2044,6 @@ lList *request_list,
 lList *centry_list,
 lList *exechost_list 
 ) {
-   lListElem *qep;
-   lListElem *dep;
    lList *filtered_queue_list = NULL;
    static lCondition *tagged_queues = NULL;
    static lEnumeration *all_fields = NULL;
@@ -2170,7 +2168,6 @@ lList *queue_list,
 lList *exechost_list,
 lList *centry_list 
 ) {
-   lListElem *qep;   
    lList *hard_resource_list=NULL;   
    u_long32 empty_qs = 0; 
 

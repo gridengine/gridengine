@@ -767,6 +767,30 @@ bool job_has_job_pending_tasks(lListElem *job)
    return ret;
 }
 
+/****** sgeobj/job/job_has_soft_requests() ********************************
+*  NAME
+*     job_has_soft_requests() -- Has the job soft requests?
+*
+*  SYNOPSIS
+*     bool job_has_soft_requests(lListElem *job) 
+*
+*  FUNCTION
+*     True (1) will be returned if the job has soft requests.
+*
+*  INPUTS
+*     lListElem *job - JB_Type 
+*
+*  RESULT
+*     bool - true or false 
+*
+*  NOTES
+*     MT-NOTES: job_has_soft_requests() is MT safe
+*******************************************************************************/
+bool job_has_soft_requests(lListElem *job) 
+{
+   return lGetList(job, JB_soft_resource_list) || lGetList(job, JB_soft_queue_list);
+}
+
 /****** sgeobj/job/job_set_hold_state() ***************************************
 *  NAME
 *     job_set_hold_state() -- Changes the hold state of a task.
@@ -1608,7 +1632,7 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
 *
 *     This function will be used in SGE/EE client applications.
 *     Clients do not know which prefix should be used for job
-*     environment variables ("SGE_", "GRD_" or "COD_"). Therefore 
+*     environment variables ("SGE_" or other). Therefore 
 *     we use the define <VAR_PREFIX> which will be replaced shortly 
 *     before the job is started.
 *
@@ -2249,7 +2273,9 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
    const char *ret = NULL;
 
    if (buffer != NULL) {
-      if (pe_task_id != NULL) {
+      if (ja_task_id == 0) {
+         ret = sge_dstring_sprintf(buffer, "%d", job_id);
+      } else if (pe_task_id != NULL) {
          ret = sge_dstring_sprintf(buffer, "%d.%d %s", 
                                    job_id, ja_task_id, pe_task_id);
       } else {

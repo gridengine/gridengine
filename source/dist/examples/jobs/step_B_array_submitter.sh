@@ -36,4 +36,4 @@
 # request "/bin/sh" as shell for job
 #$ -S /bin/sh
 
-echo $JOB_ID.$COD_TASK_ID
+echo $JOB_ID.$SGE_TASK_ID

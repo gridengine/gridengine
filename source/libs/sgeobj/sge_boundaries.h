@@ -498,15 +498,19 @@ enum NameSpaceBoundaries {
    PACK_LOWERBOUND = PARA_UPPERBOUND + 1,
    PACK_UPPERBOUND = PACK_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
+   /* XML control structures */
    XMLA_LOWERBOUND= PACK_UPPERBOUND + 1,
    XMLA_UPPERBOUND = XMLA_LOWERBOUND + 1 * BASIC_UNIT - 1, 
 
+   /* XML control structures */
    XMLH_LOWERBOUND= XMLA_UPPERBOUND + 1,
    XMLH_UPPERBOUND = XMLH_LOWERBOUND + 1 * BASIC_UNIT - 1, 
 
+   /* XML control structures */
    XMLS_LOWERBOUND= XMLH_UPPERBOUND + 1,
    XMLS_UPPERBOUND = XMLS_LOWERBOUND + 1 * BASIC_UNIT - 1, 
 
+   /* XML control structures */
    XMLE_LOWERBOUND= XMLS_UPPERBOUND + 1,
    XMLE_UPPERBOUND = XMLE_LOWERBOUND + 1 * BASIC_UNIT - 1,
              
@@ -520,9 +524,17 @@ enum NameSpaceBoundaries {
 
    /* queue end time iterator (scheduler only) */
    QETI_LOWERBOUND = RUE_UPPERBOUND + 1,
-   QETI_UPPERBOUND = QETI_LOWERBOUND + 1 * BASIC_UNIT -1
+   QETI_UPPERBOUND = QETI_LOWERBOUND + 1 * BASIC_UNIT -1,
 
-#  define LAST_UPPERBOUND QETI_UPPERBOUND
+   /* structure to compute consumable load alarms */
+   LDR_LOWERBOUND = QETI_LOWERBOUND +1,
+   LDR_UPPERBOUND = LDR_LOWERBOUND  + 1 * BASIC_UNIT -1,
+
+   /* structure to compute consumable load alarms */
+   QRL_LOWERBOUND = LDR_UPPERBOUND +1,
+   QRL_UPPERBOUND = QRL_LOWERBOUND  + 1 * BASIC_UNIT -1
+      
+#  define LAST_UPPERBOUND QRL_LOWERBOUND
 
 };
 

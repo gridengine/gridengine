@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/02/24 17:07:40 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/04/19 10:52:10 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2004/02/24 17:07:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2004/04/19 10:52:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
@@ -39,7 +39,7 @@ sge_priority \- xxQS_NAMExx job priorities
 The SGE_PRIORITY man page describes means in xxQS_NAMExx for controlling 
 job priorities. 
 .PP
-Both xxQS_NAME_Cxx and xxQS_NAME_EExx provide means for controlling 
+xxQS_NAMExx provide means for controlling 
 job dispatch and run-time priorities. The dispatch priority is about
 the importance of pending jobs compared with each other and 
 determines the order in which xxQS_NAMExx dispatches jobs to 
@@ -51,12 +51,7 @@ operating system assigns to jobs.
 .SS "\fBJOBS DISPATCH PRIORITY\fP"
 .\"
 .\"
-In xxQS_NAME_Cxx a job's dispatch priority is affected by the job's 
-.M qsub 1 
--p priority, the job's submit time and the \fBuser_sort\fP setting in
-.M sched_conf 5 .
-.PP
-In xxQS_NAME_EExx a job's dispatch priority is affected by the job's 
+A job's dispatch priority is affected by the job's 
 .M submit 1 
 -p priority, the job's submit time and on the policy set-up. The overall 
 dispatch priority set-up specifies how priority values ("prio") 
@@ -81,7 +76,7 @@ assignment.
 .\"
 .PP
 .\" urgency policy
-The xxQS_NAME_EExx urgency policy defines an urgency value for each job. The 
+The urgency policy defines an urgency value for each job. The 
 urgency value 
 
    urg     =  rrcontr + wtcontr + dlcontr
@@ -144,7 +139,7 @@ or is set to 0 for non-deadline jobs.
 .\"
 .PP
 .\" ticket policy
-The xxQS_NAME_EExx ticket policy unites functional, override and share tree 
+The ticket policy unites functional, override and share tree 
 policies in the ticket value ("tckts") being defined as the sum of the
 specific ticket values ("ftckt"/"otckt"/"stckt") for each sub-policy 
 
@@ -152,20 +147,12 @@ specific ticket values ("ftckt"/"otckt"/"stckt") for each sub-policy
 
 The ticket policies provide a broad range of means for influencing
 both job dispatch and runtime priorities on a per job, per user, per
-project, and per department basis. See the xxQS_NAME_EExx
+project, and per department basis. See the xxQS_NAMExx
 Installation and Administration Guide for details.
 .\"
 .\"
 .SS "\fBJOB RUN-TIME PRIORITY\fP"
-.\"
-.\"
-In a xxQS_NAME_Cxx system the run-time priority of jobs is determined by the 
-.M queue_conf 5
-\fBpriority\fP specification in effect for the queue instance 
-at the time when a job gets started.
-.PP
-.\"
-In a xxQS_NAME_EExx system the run-time priority can be dynamically adjusted 
+The run-time priority can be dynamically adjusted 
 in order to meet the goals set with the ticket policy. Dynamic run-time
 priority adjustment can be turned off globally using
 \fBreprioritize_interval\fP in

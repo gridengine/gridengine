@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/26 13:56:26 $     Revision: $Revision: 1.41 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/04/19 10:52:02 $     Revision: $Revision: 1.45 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/26 13:56:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/04/19 10:52:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -395,7 +395,7 @@ of the job.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
-.IP "\fB\-b y|n\fP"
+.IP "\fB\-b y[es]|n[o]\fP"
 Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow
 changing this option. This option is only interpreted if it occures in the
 commandline. It is not possible to embed this flag in \fBcommand\fP itself.
@@ -534,9 +534,7 @@ and from \fB\-v\fP commandline options.
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-This option is only supported in case of a 
-xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
+.sp1
 Specifies the deadline initiation time in [[CC]YY]MMDDhhmm[.SS] format (see
 \fB\-a\fP option above). The deadline initiation time is the time at
 which a deadline job has to reach top priority to be able to complete
@@ -758,8 +756,8 @@ Usually a task should have the same environment (including the current
 working directory) as the corresponding job, so specifying the option
 \fB\-V\fP should be suitable for most applications.
 .sp 1
-\fINote:\fP If in your system the commd port is not configured as service, but via environment
-variable COMMD_PORT, make sure that this variable is set in the enviroment when
+\fINote:\fP If in your system the qmaster tcp port is not configured as service, but via environment
+variable xxQS_NAME_Sxx_QMASTER_PORT, make sure that this variable is set in the enviroment when
 calling
 .I qrsh
 or
@@ -769,10 +767,10 @@ with option \fB\-inherit\fP. If you call
 or
 .I qmake
 with
-option \fB\-inherit\fP from within a job script, export COMMD_PORT with the 
-submit option or special comment "-v COMMD_PORT".
+option \fB\-inherit\fP from within a job script, export xxQS_NAME_Sxx_QMASTER_PORT with the 
+submit option or special comment "-v xxQS_NAME_Sxx_QMASTER_PORT".
 .\"
-.IP "\fB\-j y|n\fP"
+.IP "\fB\-j y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Specifies whether or not the standard error stream of the job
@@ -789,21 +787,18 @@ however.
 .IP "\fB\-js job_share\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-This option is only
-supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
 .sp 1
 Defines or redefines the job share of the job relative to other jobs.
 Job share is an unsigned integer value.
 The default job share value for jobs is 0.
 .sp 1
-In xxQS_NAME_EExx, the job share influences the Share Tree Policy and the Functional
+The job share influences the Share Tree Policy and the Functional
 Policy. It has no effect on the Urgency and Override Policies (see
 .M share_tree 5 ,
 .M sched_conf 5
 and the
-.I xxQS_NAME_EExx Installation and Administration Guide
-for further information on the resource management policies supported by xxQS_NAME_EExx).
+.I xxQS_NAMExx Installation and Administration Guide
+for further information on the resource management policies supported by xxQS_NAMExx).
 .sp 1
 In case of the Share Tree Policy, users can distribute the tickets to
 which they are currently entitled, among their jobs using different
@@ -1022,18 +1017,14 @@ however.
 .\"
 .IP "\fB\-ot override_tickets\fP"
 Available for \fIqalter\fP only.
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available  
-for xxQS_NAME_Cxx systems.
-.br
+.sp1
 Changes the number of override tickets for the specified job.
 Requires manager/operator privileges.
 .\"
 .IP "\fB\-P project_name\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-This option is only
-supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
+.sp1
 Specifies the project to which this job is assigned. The administrator
 needs to give permission to individual users to submit jobs to a
 specific project. (see \fB\-aprj\fP option to
@@ -1048,10 +1039,9 @@ Priority is an integer in the range -1023 to 1024.
 The default priority value for jobs is 0.
 .sp 1
 Users may only decrease the priority of their jobs.
-xxQS_NAME_Cxx managers and administrators may also increase the priority
+xxQS_NAMExx managers and administrators may also increase the priority
 associated with jobs. If a pending job has higher priority, it is
-earlier eligible for being dispatched by the xxQS_NAME_Cxx scheduler. The job
-priority has no effect on running jobs in xxQS_NAME_Cxx.
+earlier eligible for being dispatched by the xxQS_NAMExx scheduler.
 .sp 1
 .\"
 .IP "\fB\-pe parallel_environment \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"
@@ -1105,7 +1095,7 @@ allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
-.IP "\fB\-R y|n\fP"
+.IP "\fB\-R y[es]|n[o]\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
 Indicates whether a reservation for this job should be done. Reservation 
@@ -1117,7 +1107,7 @@ and might be limited only to a certain number of high prior jobs.
 .sp 1
 By default jobs are submitted with \fB\-R n\fP option.
 .\"
-.IP "\fB\-r y|n\fP"
+.IP "\fB\-r y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Identifies the ability of a job to be rerun or not.
@@ -1155,6 +1145,39 @@ execution context in its environment.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
+.\"
+.IP "\fB\-shell y[es]|n[o]\fP"
+Available only for \fIqsub\fP.
+.sp 1
+\fB\-shell n\fP
+causes qsub not to start the commandline given to \fIqsub\fP in a users login
+shell but execute it without the wrapping shell.  This option only applies when
+\fB\-b y\fP
+is also used.  Without
+\fB\-b y\fP
+,
+\fB\-shell n\fP
+has no effect.
+.sp 1
+The option can be used to speed up execution as some overhead like the  
+shell startup and sourcing the shell resource files is avoided.
+.sp 1
+The option can only be used, if no shell specific commandline parsing is
+required. If the commandline contains shell syntax like environment
+variable substitution or (back) quoting, a shell must be started.
+In this case either do not use the \fB\-shell\fP option or include
+the shell call in the commandline.
+.sp 1
+\fB\-shell y\fP
+cancels the effect of a previous
+\fB\-shell n\fP.
+Otherwise, it has no effect.
+.sp 1
+See
+\fB\-b\fP
+and
+\fB\-noshell\fP
+for more information.
 .\"
 .IP "\fB\-soft\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -1450,12 +1473,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
 .\"
 .IP "DISPLAY" 1.5i
 For
@@ -1494,7 +1517,8 @@ submitting client.
 .PP
 Furthermore, xxQS_NAMExx sets additional variables into the
 job's environment, as listed below.
-.IP "ARC" 1.5i
+.IP "ARC"
+.IP "SGE_ARCH" 1.5i
 The xxQS_NAMExx architecture name of the node on which the job is
 running. The name is compiled-in into the
 .M xxqs_name_sxx_execd 8
@@ -1584,6 +1608,13 @@ A default shell search path of:
 .br
 .ta 5i
 /usr/local/bin:/usr/ucb:/bin:/usr/bin
+.IP "SGE_BINARY_PATH" 1.5i
+The path where the xxQS_NAMExx binaries are installed. The value is the
+concatenation of the cluster configuration value
+.B binary_path 
+and the architecture name
+.B $SGE_ARCH
+environment variable.
 .IP "PE" 1.5i
 The parallel environment under which the job executes (for parallel
 jobs only).

@@ -220,11 +220,6 @@ Content
 
       % aimk -catman
 
-   The qmon help file is created with the command
-
-      % aimk -only-qmon qmon_help
-
-
 8) Staging for Installation
 ---------------------------
 

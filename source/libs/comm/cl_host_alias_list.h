@@ -36,13 +36,6 @@
 #include "cl_lists.h"
 #include "cl_data_types.h"
 
-#define CL_HOST_LIST_DEFAULT_RERESOLVE_TIME  1  * 60       /*  1 min */
-#define CL_HOST_LIST_DEFAULT_UPDATE_TIME     2  * 60       /*  2 min */
-#define CL_HOST_LIST_DEFAULT_LIFE_TIME      10  * 60       /* 10 min */ 
-
-#define CL_HOST_LIST_MAX_RERESOLVE_TIME  2 * 60       /*  2 min */
-#define CL_HOST_LIST_MAX_UPDATE_TIME    10 * 60       /* 10 min */
-#define CL_HOST_LIST_MAX_LIFE_TIME      24 * 60 * 60  /*  1 day */
 
 typedef struct cl_host_alias_list_elem_t {
    cl_raw_list_elem_t*   raw_elem;

@@ -472,9 +472,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* check sge attributes */
 
-   /* if enforce_user flag is "auto" and user doesn't exist, add the user */
-   if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto") && 
-       !userprj_list_locate(Master_User_List, ruser)) {
+   /* if enforce_user flag is "auto", add or update the user */
+   if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto")) {
       int status = sge_add_auto_user(ruser, rhost, request, alpp);
       if (status != STATUS_OK) {
          DEXIT;
@@ -821,7 +820,7 @@ int sub_command
    int all_jobs_flag;
    int all_users_flag;
    int jid_flag;
-   int user_list_flag;
+   int user_list_flag = false;
    const char *jid_str;
    lCondition *job_where = NULL; 
    lCondition *user_where = NULL;
@@ -830,6 +829,7 @@ int sub_command
    u_long32 time;
    u_long32 start_time;
    lList *range_list = NULL;        /* RN_Type */
+   lList *user_list = lGetList(idep, ID_user_list);
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -841,15 +841,22 @@ int sub_command
    }
 
    /* sub-commands */
-   all_jobs_flag = ((sub_command & SGE_GDI_ALL_JOBS) > 0);
-   all_users_flag = ((sub_command & SGE_GDI_ALL_USERS) > 0);
+   all_jobs_flag = ((sub_command & SGE_GDI_ALL_JOBS) != 0);
+
+   all_users_flag = ((sub_command & SGE_GDI_ALL_USERS) != 0);
 
    /* Did we get a user list? */
-   if (lGetList(idep, ID_user_list) 
-       && lGetNumberOfElem(lGetList(idep, ID_user_list)) > 0)
-      user_list_flag = 1;
-   else
-      user_list_flag = 0;
+   if (user_list && lGetNumberOfElem(user_list) > 0) {
+       lListElem *user = NULL;
+       for_each(user, user_list) {
+          if (strcmp(lGetString(user, ST_name), "*") == 0) {
+             all_users_flag = true;
+          }
+      }
+      if (!all_users_flag) { 
+         user_list_flag = true;
+      }
+   }   
 
    jid_str = lGetString(idep, ID_str);
 
@@ -1000,6 +1007,7 @@ int sub_command
                   sge_add_event( start_time, sgeE_JATASK_DEL, 
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
+                  /* TODO: change to _EE ????*/                                
                   sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
                                  COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
                                  COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
@@ -1086,7 +1094,7 @@ int sub_command
                                                 alpp, ruser,
                                                 lGetUlong(idep, ID_force));
                   } else {
-                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED, spool_job | COMMIT_NEVER_RAN);
+                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN);
                      showmessage = 1;
                      if (!alltasks) {
                         range_list_insert_id(&range_list, NULL, task_number);
@@ -1502,7 +1510,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                    ruser, u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
          answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
@@ -1523,7 +1531,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                    ruser, u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
       } else {

@@ -117,12 +117,14 @@
 #define CL_RETVAL_ACCESS_DENIED            (CL_RETVAL_START_ID + 81)
 #define CL_RETVAL_MAX_CON_COUNT_REACHED    (CL_RETVAL_START_ID + 82)
 #define CL_RETVAL_GETHOSTADDR_ERROR        (CL_RETVAL_START_ID + 83)
+#define CL_RETVAL_NO_PORT_ERROR            (CL_RETVAL_START_ID + 84)
+#define CL_RETVAL_PROTOCOL_ERROR           (CL_RETVAL_START_ID + 85)
 
 
 
 
 
-#define CL_RETVAL_LAST_ID                  (CL_RETVAL_START_ID + 84)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                  (CL_RETVAL_START_ID + 86)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
 
 const char* cl_get_error_text(int error_id);   /* CR check */

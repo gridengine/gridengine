@@ -311,12 +311,10 @@ lListElem *jr
 
    DENTER(TOP_LAYER, "unregister_from_ptf");
 
-   sge_switch2start_user();
-   ptf_error=ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage);
-   sge_switch2admin_user();
+   ptf_error = ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage);
    if (ptf_error) {
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
-         u32c(job_id), ptf_errstr(ptf_error)));
+               u32c(job_id), ptf_errstr(ptf_error)));
    } else {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
@@ -331,10 +329,10 @@ lListElem *jr
 
 /************************************************************************
    This is the job clean up and report function. We design this function
-   to be as independent from the execd as possible. May be we want to 
+   to be as independent from the execd as possible. Maybe we want to 
    make an extra executable later. We have another function cleaning up jobs
    (execd_job_start_failure). This function is called if the job starting 
-   failed. At his time there is no config-file present.
+   failed. At this time there is no config-file present.
 
    jobid = id of job to reap
    failed = indicates a failure of job execution, see shepherd_states.h
@@ -545,6 +543,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
+      /* DT: TODO: What does this check mean? */
       if (!*error) {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id));
@@ -681,30 +680,27 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             master_queue = responsible_queue(job, ja_task, NULL);
          }
 
-         if (failed == SSTATE_NO_SHELL) {
-            if (job && lGetList(job, JB_shell_list)) {
-               job_caused_failure = 1;
-            } else if (master_queue) {
-               const char *mode = job_get_shell_start_mode(job, master_queue, 
-                                                         conf.shell_start_mode);
-               if (!strcmp(mode, "unix_behavior")) {
-                  job_caused_failure = 1;
-               }
-            }
+         if ((failed == SSTATE_NO_SHELL) && (job != NULL) && 
+             ((lGetList(job, JB_shell_list) != NULL) ||
+              ((master_queue != NULL) &&
+               JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
+               JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type))))) {
+            job_caused_failure = 1;
          }
-/* bugfix 476: But is this enough? Do we have to handle some states some
-   where else? Now a queue is allways setin error state. When a job start
-   failed. 
- */
-#if 1            
-         else if (failed == SSTATE_BEFORE_JOB) {
-            
-            if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
-                !sge_is_file(lGetString(job, JB_script_file))) {
+         else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
+            const char *mode = job_get_shell_start_mode(job, master_queue, 
+                                                   conf.shell_start_mode);
+
+            if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
             }
          }
-#endif         
+         else if ((failed == SSTATE_BEFORE_JOB) && (job != NULL) &&
+                  JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
+                  !sge_is_file(lGetString(job, JB_script_file))) {
+            job_caused_failure = 1;
+         }
+
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
          job_related_adminmail(jr, is_array);
@@ -799,7 +795,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          u_short id;
          sge_pack_buffer pb;
          u_long32 exit_status = 1;
-         u_long32 dummymid;
+         u_long32 dummymid = 0;
          int ret;
 
          /* extract address from JB_job_source */
@@ -1962,63 +1958,46 @@ lListElem *jr
 
       DPRINTF(("MAIL VALID at ABORT\n"));
       sprintf(exitstr, "%d", exit_status);
-      if (job_is_array(jep)) {
-         if (pe_task_id_str) {
-            sprintf(sge_mail_subj,
-                    MSG_MAIL_SUBJECT_S_JA_TASK_STATE_SUUSS,
-                    pe_task_id_str,
-                    u32c(jobid),
-                    u32c(taskid),
-                    lGetString(jep, JB_job_name),
-                    action);
-         } else {
+      if (pe_task_id_str == NULL) {
+         if (job_is_array(jep)) {
             sprintf(sge_mail_subj,
                     MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS,
                     u32c(jobid),
                     u32c(taskid),
                     lGetString(jep, JB_job_name),
                     action);
-         }
-         sprintf(sge_mail_body,
-                 MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
-                 sge_mail_subj, 
-                 exitstr, 
-                 sge_sig2str(signo),
-                 u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
-                 get_sstate_description(failed), 
-                 err_str, 
-                 comment);
-      } else {
-         if (pe_task_id_str) {
-            sprintf(sge_mail_subj,
-                    MSG_MAIL_SUBJECT_S_JOB_STATE_SUSS,
-                    pe_task_id_str,
-                    u32c(jobid),
-                    lGetString(jep, JB_job_name),
-                    action);
+            sprintf(sge_mail_body,
+                    MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
+                    sge_mail_subj, 
+                    exitstr, 
+                    sge_sig2str(signo),
+                    u, q, h, sge_mail_start, sge_mail_end,
+                    (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                    (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                    get_sstate_description(failed), 
+                    err_str, 
+                    comment);
          } else {
             sprintf(sge_mail_subj,
                     MSG_MAIL_SUBJECT_JOB_STATE_USS,
                     u32c(jobid),
                     lGetString(jep, JB_job_name),
                     action);
+            sprintf(sge_mail_body, 
+                    MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
+                    sge_mail_subj,
+                    exitstr, 
+                    sge_sig2str(signo),
+                    u, q, h, sge_mail_start, sge_mail_end,
+                    (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                    (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
+                    get_sstate_description(failed), 
+                    err_str, 
+                    comment);
          }
-         sprintf(sge_mail_body, 
-                 MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
-                 sge_mail_subj,
-                 exitstr, 
-                 sge_sig2str(signo),
-                 u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
-                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
-                 get_sstate_description(failed), 
-                 err_str, 
-                 comment);
+         cull_mail(mail_users, sge_mail_subj, 
+                   sge_mail_body, MSG_MAIL_TYPE_STATE);
       }
-
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_STATE);
    }
 
    sge_dstring_free(&cpu_string);

@@ -601,7 +601,7 @@
 #define MSG_GDI_USAGE_hold_jid_OPT                       "[-hold_jid job_identifier_list]"
 #define MSG_GDI_UTEXT_hold_jid_OPT                       _MESSAGE(23359, _("define jobnet interdependencies"))
 
-#define MSG_GDI_USAGE_j_OPT_YN                           "[-j y|n]"
+#define MSG_GDI_USAGE_j_OPT_YN                           "[-j y[es]|n[o]]"
 #define MSG_GDI_UTEXT_j_OPT_YN                           _MESSAGE(23360, _("merge stdout and stderr stream of job"))
 
 #define MSG_GDI_USAGE_jid_OPT_JOB_ID_LIST                "[-jid job_id_list]"
@@ -732,15 +732,10 @@
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_BIND          _MESSAGE(23402, _("bind job to queue(s)"))
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO          _MESSAGE(23403, _("print information on given queue"))
 
-
-                        
-
-#define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"
-
-#define MSG_GDI_USAGE_R_OPT_YN                           "[-R y|n]"
+#define MSG_GDI_USAGE_R_OPT_YN                           "[-R y[es]|n[o]]"
 #define MSG_GDI_UTEXT_R_OPT_YN                           _MESSAGE(23404, _("reservation desired"))
 
-#define MSG_GDI_USAGE_r_OPT_YN                           "[-r y|n]"
+#define MSG_GDI_USAGE_r_OPT_YN                           "[-r y[es]|n[o]]"
 #define MSG_GDI_UTEXT_r_OPT_YN                           _MESSAGE(23405, _("define job as (not) restartable" ))
 
 #define MSG_GDI_USAGE_res_OPT                            "[-r]"
@@ -949,7 +944,7 @@
 #define MSG_GDI_UTEXT_nostdin_OPT                        _MESSAGE(23474, _("suppress stdin for rsh"))
 
 #define MSG_GDI_USAGE_noshell_OPT                        "[-noshell]"
-#define MSG_GDI_UTEXT_noshell_OPT                        _MESSAGE(23475, _("do start command without wrapping <loginshell> -c"))
+#define MSG_GDI_UTEXT_noshell_OPT                        _MESSAGE(23475, _("start command without wrapping <loginshell> -c"))
 
 #define MSG_GDI_USAGE_mattr_OPT                          "[-mattr obj_nm attr_nm val obj_id_lst]"
 #define MSG_GDI_UTEXT_mattr_OPT                          _MESSAGE(23476, _("modify an attribute (or element in a sublist) of an object"))
@@ -980,6 +975,7 @@
 
 #define MSG_GDI_USAGE_sync_OPT_YN                        "[-sync y[es]|n[o]]"
 #define MSG_GDI_UTEXT_sync_OPT_YN                        _MESSAGE(23484, _("wait for job to end and return exit code"))
+
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
@@ -1015,7 +1011,7 @@
  */
 #define MSG_GDI_USAGE_i_OPT_PATH_LIST                    "[-i file_list]"
 #define MSG_GDI_UTEXT_i_OPT_PATH_LIST                    _MESSAGE(23499, _("specify standard input stream file(s)"))
-#define MSG_GDI_USAGE_b_OPT_YN                           "[-b y|n]"
+#define MSG_GDI_USAGE_b_OPT_YN                           "[-b y[es]|n[o]]"
 #define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23501, _("invalid option argument \"-b "SFN"\"\n")) 
 
@@ -1024,6 +1020,8 @@
 
 #define MSG_GDI_USAGE_js_OPT_YN                          "[-js job_share]"
 #define MSG_GDI_UTEXT_js_OPT_YN                          _MESSAGE(23503, _("share tree or functional job share"))
+#define MSG_GDI_USAGE_shell_OPT_YN                       "[-shell y[es]|n[o]]"
+#define MSG_GDI_UTEXT_shell_OPT_YN                       _MESSAGE(23504, _("start command with or without wrapping <loginshell> -c"))
 
 /* =================================================
  * global error messages 

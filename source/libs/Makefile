@@ -33,10 +33,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/gdi/Makefile
@@ -71,8 +71,8 @@ libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_message
 # rules to build library libsge.a
 ###############################################################################
 libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
-	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
+	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
 	$(RANLIB) $(SGELIB)
 
-libsge$(SHAREDEXT): $(SCHEDLIB_OBJS) $(MIRLIB) $(EVCLIB) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsge$(SHAREDEXT) $(SCHEDLIB_OBJS) $(MIRLIB) $(EVCLIB) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) $(LOADAVGLIBS) $(LIBS) -lc
+libsge$(SHAREDEXT): $(SCHEDLIB_OBJS) $(MIRLIB_OBJS) $(EVCLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) sig_handlers.o
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsge$(SHAREDEXT) $(SCHEDLIB_OBJS) $(MIRLIB_OBJS) $(EVCLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) sig_handlers.o $(LOADAVGLIBS) $(LIBS) -lc

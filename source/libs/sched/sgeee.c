@@ -124,8 +124,6 @@ typedef struct sge_ref_list_t{
    struct sge_ref_list_t *next;        /* next list item */
    struct sge_ref_list_t *prev;        /* previous list itme */
 } sge_ref_list_t;
-/* profiling info*/
-extern int do_profiling;
 
 static sge_Sdescr_t *all_lists;
 static u_long32 sge_scheduling_run;
@@ -1448,7 +1446,7 @@ decay_and_sum_usage( sge_ref_t *ref,
       decay_userprj_usage(project, decay_list, seqno, curr_time);
 
    /*-------------------------------------------------------------
-    * Note: Since CODINE will update job.usage directly, we 
+    * Note: Since SGE will update job.usage directly, we 
     * maintain the job usage the last time we collected it from
     * the job.  The difference between the new usage and the old
     * usage is what needs to be added to the user or project node.
@@ -2875,7 +2873,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     * PASS 0
     *-----------------------------------------------------------------*/
 
-   DPRINTF(("=====================[SGEEE Pass 0]======================\n"));
+   DPRINTF(("=====================[Pass 0]======================\n"));
 
    for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
 
@@ -2903,7 +2901,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     * PASS 1
     *-----------------------------------------------------------------*/
 
-   DPRINTF(("=====================[SGEEE Pass 1]======================\n"));
+   DPRINTF(("=====================[Pass 1]======================\n"));
 
    for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
       u_long job_deadline_time;
@@ -2937,7 +2935,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     * PASS 2
     *-----------------------------------------------------------------*/
 
-   DPRINTF(("=====================[SGEEE Pass 2]======================\n"));
+   DPRINTF(("=====================[Pass 2]======================\n"));
    { 
       double weight[k_last];
       bool share_override_tickets = sconf_get_share_override_tickets();
@@ -3377,7 +3375,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    if(prof_is_active()){
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
-      INFO((SGE_EVENT, "PROF: SGEEE job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
+      INFO((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
                prof_init, prof_pass0, prof_pass1, prof_pass2, prof_calc));
       log_state_set_log_level(saved_logginglevel);
    }
@@ -4040,7 +4038,7 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
-      INFO((SGE_EVENT, "PROF: SGEEE update orders: job orders: %.3f s, update orders: %.3f s\n",
+      INFO((SGE_EVENT, "PROF: update orders: job orders: %.3f s, update orders: %.3f s\n",
                prof_job_orders, prof_update_orders));
 
       log_state_set_log_level(saved_logginglevel);
@@ -4143,12 +4141,38 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       sge_clear_job(job);
 
    /* calculate per job static urgency values */
-   if (do_nurg)
+   if (do_nurg) {
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
       sge_do_urgency(now, pending_jobs, running_jobs, lists);
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
+
+      if (prof_is_active()) {
+         u_long32 saved_logginglevel = log_state_get_log_level();
+
+         log_state_set_log_level(LOG_INFO);
+         INFO((SGE_EVENT, "PROF: static urgency took %.3f s\n",
+               prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
+         log_state_set_log_level(saved_logginglevel);
+      }
+
+   }   
 
    /* calculate per job normalized priority values */
-   if (do_nprio)
+   if (do_nprio) {
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
       sge_do_priority(pending_jobs, running_jobs);
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
+
+      if (prof_is_active()) {
+         u_long32 saved_logginglevel = log_state_get_log_level();
+
+         log_state_set_log_level(LOG_INFO);
+         INFO((SGE_EVENT, "PROF: job priority took %.3f s\n",
+               prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
+         log_state_set_log_level(saved_logginglevel);
+      }
+      
+   }   
 
    /* calculate tickets for pending jobs */
    seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
@@ -4156,6 +4180,8 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
          
    /* calculate tickets for running jobs */
    seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
 
    /* determine min/max tix */
    get_max_ptix(&min_tix, &max_tix, running_jobs);
@@ -4191,6 +4217,18 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    sge_do_sgeee_priority(running_jobs, min_tix, max_tix, do_nprio, do_nurg); 
    sge_do_sgeee_priority(pending_jobs, min_tix, max_tix, do_nprio, do_nurg); 
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
+
+   if (prof_is_active()) {
+      u_long32 saved_logginglevel = log_state_get_log_level();
+
+      log_state_set_log_level(LOG_INFO);
+      INFO((SGE_EVENT, "PROF: normalizing job tickets took %.3f s\n",
+            prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
+      log_state_set_log_level(saved_logginglevel);
+   }
+
+
    /* 
     * Order Jobs in descending order according to tickets and 
     * then job number 
@@ -4201,11 +4239,11 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
-   if (do_profiling) {
+   if (prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: SGEEE job sorting took %.3f s\n",
+      INFO((SGE_EVENT, "PROF: job sorting took %.3f s\n",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
       log_state_set_log_level(saved_logginglevel);
    }
@@ -4246,7 +4284,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
        u_long32 saved_logginglevel = log_state_get_log_level();
 
        log_state_set_log_level(LOG_INFO);
-       INFO((SGE_EVENT, "PROF: SGEEE active host job ticket calculation took %.3f s\n",
+       INFO((SGE_EVENT, "PROF: active host job ticket calculation took %.3f s\n",
              prof_get_measurement_wallclock(SGE_PROF_CUSTOM2, false, NULL)));
        log_state_set_log_level(saved_logginglevel);
     }

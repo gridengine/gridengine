@@ -49,15 +49,15 @@ SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoollib: $(SPOOLLIB) $(SPOOLING_DEPS)
+spoollib: $(SPOOLLIB)
 
-spoollib_clean: spooldlib_clean spoolblib_clean spoolclib_clean spoolflib_clean spoolplib_clean
+spoollib_clean: spoolloaderlib_clean spooldlib_clean spoolblib_clean spoolclib_clean spoolflib_clean spoolplib_clean
 		$(RM) $(SPOOLLIB_OBJS) libspool.a libspool$(SHAREDEXT)
 
-spoollib_depend: spoolblib_depend spoolclib_depend spoolflib_depend spoolplib_depend
+spoollib_depend: spoolloaderlib_depend spoolblib_depend spoolclib_depend spoolflib_depend spoolplib_depend
 		$(DEPEND) -f$(SPOOLLIB_DIR)/spool_dependencies $(SPOOLLIB_DIR)/*.c
 
-spoollib_messages: spoolblib_messages spoolclib_messages spoolflib_messages spoolplib_messages
+spoollib_messages: spoolloaderlib_messages spoolblib_messages spoolclib_messages spoolflib_messages spoolplib_messages
 	@echo Creating $@
 	@for i in `ls $(SPOOLLIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -124,6 +124,9 @@ test_spooling_mt.o: $(SPOOLLIB_DIR)/test_spooling_mt.c
 
 #---------------------------------------------------------------------
 # include Makefiles for sublibs
+include $(SDIR)/libs/spool/loader/Makefile
+
+# spooling methods
 include $(SDIR)/libs/spool/berkeleydb/Makefile
 include $(SDIR)/libs/spool/classic/Makefile
 include $(SDIR)/libs/spool/dynamic/Makefile

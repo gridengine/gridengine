@@ -77,11 +77,10 @@ bool do_authentication = true;
 bool use_qidle = false;
 bool disable_reschedule = false;
 
-bool do_profiling = false;
- 
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
 int execd_priority = 0;
+int max_dynamic_event_clients = 99;
 bool keep_active = false;
 
 /* reporting params */
@@ -120,18 +119,6 @@ bool sharetree_reserved_usage = false;
  * Use primary group of qsub-host also for the job execution
  */
 bool use_qsub_gid = false;
-
-/*
- * Set job environment variables with following prefixes if the
- * corresponding variables are true:
- *
- *   set_sge_environment => SGE_
- *   set_cod_environment => COD_
- *   set_grd_environment => GRD_
- */
-bool set_sge_environment = true;
-bool set_cod_environment = false;
-bool set_grd_environment = false;
 
 /*
  * notify_kill_default and notify_susp_default
@@ -228,7 +215,8 @@ static tConfEntry conf_entries[] = {
  { "auto_user_oticket", 0, "0",                 1, NULL },
  { "auto_user_fshare",  0, "0",                 1, NULL },
  { "auto_user_default_project", 0, "none",      1, NULL },
- { "auto_user_delete_time", 0, "0",             1, NULL },
+ { "auto_user_delete_time",     0, "0",         1, NULL },
+ { "delegated_file_staging",    0, "false",     1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -401,6 +389,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "auto_user_fshare", NULL, &mconf->auto_user_fshare, TYPE_INT);
    chg_conf_val(lpCfg, "auto_user_default_project", &mconf->auto_user_default_project, NULL, 0);
    chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &mconf->auto_user_delete_time, TYPE_TIM);
+   chg_conf_val(lpCfg, "delegated_file_staging", &mconf->delegated_file_staging, NULL, 0);
    DEXIT;
 }
 
@@ -506,6 +495,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       disable_reschedule = false;   
       simulate_hosts = false;
       scheduler_timeout = 0;
+      max_dynamic_event_clients = 99;
 
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -517,6 +507,23 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
+         if (!strncasecmp(s, "MAX_DYN_EC", sizeof("MAX_DYN_EC")-1)) {
+            int temp = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
+            int max_file_handles = 0;
+            cl_com_handle_t* handle = NULL;
+
+            handle = cl_com_get_handle("qmaster",1);
+            if (handle != NULL) {
+               cl_com_get_max_connections(handle,&max_file_handles);
+               max_file_handles -= 19;
+               if (temp > max_file_handles) {
+                  temp = MAX(max_file_handles, 0);
+                  WARNING((SGE_EVENT, MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U, u32c(temp) ));
+               }
+            }   
+            max_dynamic_event_clients = temp;
+            continue;
+         }
          if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) {
             /* reversed logic */
             do_credentials = !do_credentials;
@@ -579,9 +586,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       execd_priority = -999;
       keep_active = false;
       use_qsub_gid = false;
-      set_sge_environment = true;
-      set_cod_environment = false;
-      set_grd_environment = false; 
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
@@ -642,15 +646,6 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "USE_QSUB_GID", &use_qsub_gid)) {
             continue;
          }
-         if (parse_bool_param(s, "SET_SGE_ENV", &set_sge_environment)) {
-            continue;
-         }
-         if (parse_bool_param(s, "SET_COD_ENV", &set_cod_environment)) {
-            continue;
-         }
-         if (parse_bool_param(s, "SET_GRD_ENV", &set_grd_environment)) {
-            continue;
-         }
          if (!strncasecmp(s, "PTF_MAX_PRIORITY", sizeof("PTF_MAX_PRIORITY")-1)) {
             ptf_max_priority=atoi(&s[sizeof("PTF_MAX_PRIORITY=")-1]);
             continue;
@@ -699,13 +694,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       return -2;
    }
 
-   if (set_sge_environment == 0 && 
-       set_cod_environment == 0 && 
-       set_grd_environment == 0) {
-      WARNING((SGE_EVENT, MSG_CONF_NEITHERSGECODGRDSETTINGSGE));
-      set_sge_environment = 1;
-   }
-   
    DEXIT;
    return 0;
 }
@@ -757,6 +745,7 @@ void sge_show_conf()
    DPRINTF(("conf.auto_user_fshare       >%u<\n", conf.auto_user_fshare));
    DPRINTF(("conf.auto_user_default_project >%s<\n", conf.auto_user_default_project));
    DPRINTF(("conf.auto_user_delete_time  >%u<\n", conf.auto_user_delete_time));
+   DPRINTF(("conf.delegated_file_staging >%s<\n", conf.delegated_file_staging));
 
    for_each (ep, conf.user_lists) {
       DPRINTF(("%s             >%s<\n", 
@@ -815,6 +804,7 @@ sge_conf_type *conf
    FREE(conf->rsh_command);
    FREE(conf->rlogin_daemon);
    FREE(conf->rlogin_command);
+   FREE(conf->delegated_file_staging);
    
    memset(conf, 0, sizeof(sge_conf_type));
 

@@ -39,7 +39,7 @@
 
 #Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd
+PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd:/usr/ucb
 
 # Easy way to prevent clearing of screen
 #
@@ -63,8 +63,8 @@ PWD=`pwd`
 UPGRADE=false
 DOWNGRADE=false
 BACKUP=false
+RESTORE=false
 AUTO=false
-SGEEE=true
 RESCHEDULE=true
 RESPORT=false
 CSP=false
@@ -72,6 +72,7 @@ AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
 ADD_TO_RC=false
+SET_FILE_PERMS=false
 
 QMASTER="undef"
 EXECD="undef"
@@ -90,7 +91,6 @@ SGE_NOMSG="undef"
 
 BasicSettings
 SetUpInfoText
-CheckPath
 CheckBinaries
 
 
@@ -138,6 +138,10 @@ while [ $ARGC != 0 ]; do
      SHADOW="install"
      #echo Install Shadowhost
      ;;
+   -usm)
+     SHADOW="uninstall"
+     #echo uninstall Shadowhost
+     ;;
    -db)
      BERKELEY="install"
      SPOOLING_SERVER=`hostname`
@@ -150,13 +154,23 @@ while [ $ARGC != 0 ]; do
      else
         HOST=$2
      fi
-     #echo Un/install exechost $2
      shift
      ARGC=`expr $ARGC - 1`
      ;;
+   -bup)
+     BACKUP=true
+     #do configuration database backup
+     ;;
+   -rst)
+     RESTORE=true
+     #restore a backuped database
+     ;; 
    -noremote)
      NOREMOTE=true
      #Disable remote installation
+     ;;
+   -rsh)
+     SHELL_NAME=rsh
      ;;
    -nr)
      RESCHEDULE=false
@@ -198,17 +212,15 @@ if [ $QMASTER = "install" ]; then
  fi
 
  WelcomeTheUser
+ CheckForLocalHostResolving
  CheckWhoInstallsSGE
  ProcessSGERoot 
- #CheckCommPorts qmaster
  GetQmasterPort
  GetExecdPort
- #GetCellRoot
  GetCell
  GetQmasterSpoolDir $euid
  SetCellDependentVariables
  SetPermissions
- #SetSpoolingOptions
  SelectHostNameResolving
  SetProductMode
  MakeDirsMaster
@@ -222,9 +234,11 @@ if [ $QMASTER = "install" ]; then
  AddPEFiles
  AddDefaultDepartement
  AddCommonFiles
+ CreateSGEStartUpScripts $euid true master
+ CreateSGEStartUpScripts $euid true execd 
  CreateSettingsFile
  InitCA
- AddSGEStartUpScript $euid true master
+ AddSGEStartUpScript $euid master
  StartQmaster
  AddHosts
  SetScheddConfig
@@ -247,17 +261,15 @@ if [ $EXECD = "install" ]; then
       if [ $h = `hostname` ]; then
   
          WelcomeTheUserExecHost
-         CheckWhoInstallsSGE 
+         CheckForLocalHostResolving
          ProcessSGERoot
          CheckQmasterInstallation
-         #CheckCommPorts execd
-         #GetExecdPort
          CheckCellDirectory
          CheckCSP
          CheckHostNameResolving
          GetLocalExecdSpoolDir
          AddLocalConfiguration_With_Qconf
-         AddSGEStartUpScript $euid true execd
+         AddSGEStartUpScript $euid execd 
          StartExecd
          AddQueue
          GiveHints
@@ -269,7 +281,7 @@ if [ $EXECD = "install" ]; then
       else
          if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
             $INFOTEXT -log "remote installation on host %s" $h
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | rsh $h /bin/sh &
+            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $h /bin/sh &
          fi
 
       fi
@@ -278,18 +290,16 @@ if [ $EXECD = "install" ]; then
  
  else
       WelcomeTheUserExecHost
-      CheckWhoInstallsSGE 
+      CheckForLocalHostResolving
       ProcessSGERoot
       CheckQmasterInstallation
-      #CheckCommPorts execd
-      #GetExecdPort
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       CheckCSP
       CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
-      AddSGEStartUpScript $euid true execd 
+      AddSGEStartUpScript $euid execd
       StartExecd
       AddQueue
       GiveHints
@@ -309,12 +319,12 @@ if [ $EXECD = "install" ]; then
                   CONFIG_FILE=`Enter`
                   export CONFIG_FILE
                else               
-                  $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
-                            CONFIG_FILE=`Enter $CONFIG_FILE`
+                  $INFOTEXT -n "Please enter the path to your autoinstall configuration file or\n hit <RETURN> to use [%s] >> " $CONFIG_FILE
+                 CONFIG_FILE=`Enter $CONFIG_FILE`
                fi
 
                $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
-                         SHELL_NAME=`Enter $SHELL_NAME` 
+               SHELL_NAME=`Enter $SHELL_NAME` 
                $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
                echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
            fi
@@ -331,11 +341,11 @@ if [ $EXECD = "install" ]; then
                      CONFIG_FILE=`Enter`
                      export CONFIG_FILE
                   else               
-                     $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
-                               CONFIG_FILE=`Enter $CONFIG_FILE`
+                     $INFOTEXT -n "Please enter the path to your autoinstall configuration file or\n hit <RETURN> to use [%s] >> " $CONFIG_FILE
+                     CONFIG_FILE=`Enter $CONFIG_FILE`
                   fi
-                     $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
-                            SHELL_NAME=`Enter $SHELL_NAME`
+                  $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
+                  SHELL_NAME=`Enter $SHELL_NAME`
                   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
                   echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
               fi
@@ -413,17 +423,60 @@ if [ $SHADOW = "install" ]; then
  
       if [ $SHADOW_HOST = `hostname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
-         ARCH=`$SGE_ROOT/util/arch`
-         $SGE_ROOT/bin/$ARCH/sge_shadowd &
+         SGE_ARCH=`$SGE_ROOT/util/arch`
+         $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
       else
-        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW_HOST /bin/sh &
       fi
    else
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin $mod_file > $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW_HOST /bin/sh &
    fi
 fi
 
+if [ $SHADOW = "uninstall" ]; then
+
+   s_host=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`
+   s_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/shadowd_$s_host.pid`
+
+   if [ $AUTO = "true" ]; then
+      ret=$SGE_UTILBIN/checkprog $s_pid shadowd
+      if [ $ret = 0 ]; then
+         $INFOTEXT -log "Stopping shadowd!" 
+         $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop
+         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         exit 0
+      else
+         $INFOTEXT -log "Shadow daemon is not running on this host!" 
+         exit 1
+      fi
+   else
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop &; ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters" | $SHELL_NAME $s_host /bin/sh &   
+
+   fi
+
+   if [ $s_host = `hostname` ]; then
+      ret=$SGE_UTILBIN/checkprog $s_pid shadowd
+      if [ $ret = 0 ]; then
+         $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop
+         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      else
+         $INFOTEXT "Shadow daemon is not running on this host!" 
+      fi
+   else
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/$SGE_CELL/common/sgemaster -shadowd stop &; ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters" | $SHELL_NAME $s_host /bin/sh &
+   fi
+      
+
+fi
+
+if [ $BACKUP = "true" ]; then
+   BackupConfig
+fi
+
+if [ $RESTORE = "true" ]; then
+   RestoreConfig
+fi
 exit 0

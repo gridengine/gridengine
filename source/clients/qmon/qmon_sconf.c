@@ -95,6 +95,7 @@ typedef struct _tSCEntry {
    char *load_formula;
    lList *job_load_adjustments;
    char *reprioritize_interval;
+   char *default_duration;
 } tSCEntry;
 
 static XtResource sc_resources[] = {
@@ -144,11 +145,15 @@ static XtResource sc_resources[] = {
 
    { "reprioritize_interval", "reprioritize_interval", XtRString, 
       sizeof(String), XtOffsetOf(tSCEntry, reprioritize_interval), 
+      XtRImmediate, NULL },
+
+   { "default_duration", "default_duration", XtRString, 
+      sizeof(String), XtOffsetOf(tSCEntry, default_duration), 
       XtRImmediate, NULL }
 };
 
 
-static tSCEntry data = {NULL, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
+static tSCEntry data = {NULL, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL};
 
 
 static Widget qmon_sconf = 0;
@@ -163,6 +168,7 @@ static Widget sconf_lad_time = 0;
 static Widget sconf_load_formula = 0;
 static Widget sconf_load_adjustments = 0;
 static Widget sconf_reprioritize_interval = 0;
+static Widget sconf_default_duration = 0;
 static Widget sconf_queue_sort_method = 0;
 static Widget sconf_job_info = 0;
 static Widget sconf_job_range = 0;
@@ -225,7 +231,7 @@ Widget parent
           sconf_main_link, sconf_lad_timePB,
           sconf_schedule_intervalPB, sconf_reprioritize_intervalPB,
           sconf_load_name, sconf_load_value, sconf_load_namePB,
-          sconf_load_add, sconf_load_delete;
+          sconf_load_add, sconf_load_delete, sconf_default_durationPB;
 
    DENTER(TOP_LAYER, "qmonCreateSchedConfig");
    
@@ -251,12 +257,16 @@ Widget parent
                            "sconf_load_delete", &sconf_load_delete,
                            "sconf_reprioritize_interval", 
                                  &sconf_reprioritize_interval,
+                           "sconf_default_duration", 
+                                 &sconf_default_duration,
                            "sconf_queue_sort_method", &sconf_queue_sort_method,
                            "sconf_lad_timePB", &sconf_lad_timePB,
                            "sconf_schedule_intervalPB", 
                                  &sconf_schedule_intervalPB,
                            "sconf_reprioritize_intervalPB",
                                  &sconf_reprioritize_intervalPB,
+                           "sconf_default_durationPB",
+                                 &sconf_default_durationPB,
                            "sconf_job_info", &sconf_job_info,
                            "sconf_job_range", &sconf_job_range,
                            NULL);
@@ -275,6 +285,9 @@ Widget parent
                  qmonSchedTime, (XtPointer)sconf_schedule_interval); 
    XtAddCallback(sconf_reprioritize_intervalPB, XmNactivateCallback,
                  qmonSchedTime, (XtPointer)sconf_reprioritize_interval); 
+   XtAddCallback(sconf_default_durationPB, XmNactivateCallback,
+                 qmonSchedTime, (XtPointer)sconf_default_duration); 
+
 
    
    XtAddCallback(sconf_load_adjustments, XmNlabelActivateCallback,
@@ -444,6 +457,8 @@ lListElem *sep
 
    data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
                               (StringConst)lGetString(sep, SC_reprioritize_interval));
+   data.default_duration = sge_strdup(data.default_duration, 
+                              (StringConst)lGetString(sep, SC_default_duration));
 
 /**
 printf("->data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
@@ -584,11 +599,19 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
   
    if (!data.reprioritize_interval|| 
          data.reprioritize_interval[0] == '\0') {
-      qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
+      qmonMessageShow(qmon_sconf, True, "@{Reprioritize Interval required!}");
       DEXIT;
       return False;
    }
    lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
+
+   if (!data.default_duration|| 
+         data.default_duration[0] == '\0') {
+      qmonMessageShow(qmon_sconf, True, "@{Default duration required!}");
+      DEXIT;
+      return False;
+   }
+   lSetString(sep, SC_default_duration, data.default_duration);
    /*
    ** schedd_job_info needs some extras
    ** see comment for schedd_job_info in qmonScheddSet

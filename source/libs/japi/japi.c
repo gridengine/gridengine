@@ -77,6 +77,8 @@
 #include "sge_event_master.h"
 
 /* GDI */
+#include "sge_conf.h"
+#include "gdi_conf.h"
 #include "sge_gdi.h"
 #include "gdi_tsm.h"
 #include "sge_gdi_request.h"
@@ -137,6 +139,7 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 *     static lList *Master_japi_job_list = NULL;
 *     static int japi_threads_in_session = 0;
 *     static char *japi_session_key = NULL;
+*     static bool japi_delegated_file_staging_is_enabled = false;
 *     
 *  FUNCTION
 *     japi_event_client_thread - the event client thread. Used by japi_init() and
@@ -187,6 +190,12 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 *                    session. Code using japi_session_key must be made reentant
 *                    with mutex japi_session_mutex. It is assumed the session key 
 *                    is not changed during an active session.
+*     japi_delegated_file_staging_is_enabled - A bool indicating if delegated file
+*                    staging is enabled in the cluster configuration.
+*                    No need for a mutex as long as the only function which sets 
+*                    this variable (japi_read_dynamic_attributes()) is called from
+*                    japi_init() before different threads are created.
+*
 *                    
 *  NOTES
 *
@@ -286,7 +295,8 @@ char *japi_session_key = NULL;
 static const char *JAPI_SINGLE_SESSION_KEY = "JAPI_SSK";
 static int prog_number = JAPI;
 static bool multi_threaded = false;
-
+static error_handler_t error_handler = NULL;
+static bool japi_delegated_file_staging_is_enabled = false;
 
 /****** JAPI/-JAPI_Implementation *******************************************
 *  NAME
@@ -325,6 +335,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                            int *wevent, lList **rusagep);
 static int japi_gdi_control_error2japi_error(lListElem *aep, dstring *diag, int drmaa_control_action);
 static int japi_clean_up_jobs (int flag, dstring *diag);
+static int japi_read_dynamic_attributes(dstring *diag);
 
 
 static void japi_use_library_signals(void)
@@ -402,9 +413,6 @@ int japi_init_mt(dstring *diag)
    } 
 
    /* current major assumptions are
-      - if code was compiled with -SECURE then
-        either a MT safe OpenSSL libraries is used or
-        CSP security is not used
       - code is not compiled with -DCRYPTO
       - code is not compiled with -DKERBEROS
       - neither AFS nor DCE/KERBEROS security may be used */
@@ -465,6 +473,11 @@ int japi_init_mt(dstring *diag)
 *                                  If enable_wait is set to false, job waiting
 *                                  can be explicitly enabled later by calling
 *                                  the japi_enable_job_wait() function.
+*     error_handler_t handler    - A callback to be used for error messages from
+*                                  the event client thread.  When enable_wait is
+*                                  false, handler should be set to NULL.  The
+*                                  callback should not free the error message
+*                                  after processing it.
 *
 *  OUTPUT
 *     dstring *session_key_out   - Returns session key of new session - on success.
@@ -481,7 +494,7 @@ int japi_init_mt(dstring *diag)
 *******************************************************************************/
 int japi_init(const char *contact, const char *session_key_in, 
               dstring *session_key_out, int my_prog_num, bool enable_wait,
-              dstring *diag)
+              error_handler_t handler, dstring *diag)
 {
    int ret;
 
@@ -503,7 +516,7 @@ int japi_init(const char *contact, const char *session_key_in,
    if (my_prog_num > 0) {
       prog_number = my_prog_num;
    }
-   
+
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
       JAPI_LOCK_SESSION();
@@ -513,9 +526,17 @@ int japi_init(const char *contact, const char *session_key_in,
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
+   ret = japi_read_dynamic_attributes(diag);
+   if(ret != DRMAA_ERRNO_SUCCESS) {
+      /* diag was set in drmaa_read_dynamic_attributes() */
+      DEXIT;
+      return ret;
+   }
+
    if (enable_wait) {
       /* spawn implementation thread japi_implementation_thread() */
-      ret = japi_enable_job_wait (session_key_in, session_key_out, diag);
+      ret = japi_enable_job_wait (session_key_in, session_key_out, handler,
+                                  diag);
    }
    else {
       japi_session_key = (char *)JAPI_SINGLE_SESSION_KEY;
@@ -523,7 +544,7 @@ int japi_init(const char *contact, const char *session_key_in,
    }
 
    multi_threaded = enable_wait;
-   
+
    JAPI_LOCK_SESSION();
    if (ret == DRMAA_ERRNO_SUCCESS) {
       japi_session = JAPI_SESSION_ACTIVE;
@@ -532,7 +553,7 @@ int japi_init(const char *contact, const char *session_key_in,
       japi_session = JAPI_SESSION_INACTIVE;
    }
    JAPI_UNLOCK_SESSION();
-   
+  
    DEXIT;
    return ret;
 }
@@ -559,6 +580,11 @@ int japi_init(const char *contact, const char *session_key_in,
 *  INPUT
 *     const char *session_key_in - if non NULL japi_enable_job_wait() tries to restart
 *                                  a former session using this session key.
+*     error_handler_t handler    - A callback to be used for error messages from
+*                                  the event client thread.  When NULL, no error
+*                                  messages will be generated by the event
+*                                  client thread.  The callback should not free
+*                                  the error message after processing it.
 *
 *  OUTPUT
 *     dstring *session_key_out   - Returns session key of new session - on success.
@@ -573,8 +599,8 @@ int japi_init(const char *contact, const char *session_key_in,
 *  NOTES
 *      MT-NOTE: japi_enable_job_wait() is MT safe
 *******************************************************************************/
-int japi_enable_job_wait(const char *session_key_in,
-                         dstring *session_key_out, dstring *diag)
+int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
+                         error_handler_t handler, dstring *diag)
 {
    int i;
    int ret;
@@ -622,6 +648,9 @@ int japi_enable_job_wait(const char *session_key_in,
    }
    JAPI_UNLOCK_SESSION();
 
+   /* Set handler for dealing with error messages from event client thread. */
+   error_handler = handler;
+   
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
    
@@ -1555,7 +1584,6 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
 
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
-      japi_dec_threads(SGE_FUNC);
       /* diag written by japi_init_mt() */
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
@@ -3306,8 +3334,8 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       lList **retrieved_job_list, dstring *diag)
 {
    lList *mal = NULL;
-   lList *alp;
-   lListElem *aep;
+   lList *alp = NULL;
+   lListElem *aep = NULL;
    int qu_id, jb_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
@@ -3890,7 +3918,7 @@ const char *japi_strerror(int drmaa_errno)
 
 /****** japi/japi_get_contact() ************************************************
 *  NAME
-*     japi_get_contact() -- Returnn current contact information 
+*     japi_get_contact() -- Return current contact information 
 *
 *  SYNOPSIS
 *     void japi_get_contact(dstring *contact) 
@@ -3976,7 +4004,7 @@ int japi_get_drm_system(dstring *drm, dstring *diag)
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** JAPI/japi_implementation_thread() ****************************************************
+/****** JAPI/japi_implementation_thread() **************************************
 *  NAME
 *     japi_implementation_thread() -- Control flow implementation thread
 *
@@ -4014,10 +4042,14 @@ static void *japi_implementation_thread(void *p)
    lListElem *event;
    char buffer[1024];
    dstring buffer_wrapper;
-   int stop_ec = 0;
+   bool stop_ec = false;
    int parameter, ed_time = 30, flush_delay_rate = 6;
    const char *s;
    bool up_and_running = false;
+   bool qmaster_bound = false; /* Whether we ever successfully connected to the
+                                  qmaster. */
+   bool disconnected = false; /* Whether we are currently connected to the
+                                 qmaster. */
 
    DENTER(TOP_LAYER, "japi_implementation_thread");
 
@@ -4133,22 +4165,43 @@ static void *japi_implementation_thread(void *p)
    cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),ed_time*2);
 
    while (!stop_ec) {
-      int ec_get_ret;
+      int ec_get_ret = 0;
 
       /* read events and add relevant information into library session data */
-      if (!(ec_get_ret = ec_get(&event_list, false))) {
+      if ((ec_get_ret = ec_get(&event_list, false)) == 0) {
          ec_mark4registration();
-         sleep(1);
+         
+         DPRINTF (("Sleeping 10 seconds before trying to register again.\n"));
+         sleep(10);
       } else {
          /* We need to check that we japi_exit() didn't wake us up to die. */
          JAPI_LOCK_EC_STATE();
          if (japi_ec_state == JAPI_EC_FINISHING) {
             JAPI_UNLOCK_EC_STATE();
             DPRINTF (("Received stop request while waiting for events.\n"));
-            stop_ec = 1;
-            continue;
+            break;
          }
          JAPI_UNLOCK_EC_STATE();
+         
+         /* Bug Fix: Issuezilla #826
+          * The first part of this bug fix is to keep the event client thread
+          * from dying when the qmaster goes down.  In distinguish between
+          * failures that represent the qmaster going down and failures that
+          * represent other errors, such as the qmaster never having been up,
+          * we note here that we were able to communication with the qmaster
+          * at least once before we started having problems. */
+         qmaster_bound = true;
+
+         /* If we think we're disconnected, print a message saying we've
+          * reconnected, and note that we're not disconnected. */
+         if (disconnected) {
+            if (error_handler != NULL) {
+               error_handler (MSG_JAPI_RECONNECTED);
+            }
+            
+            DPRINTF ((MSG_JAPI_RECONNECTED));
+            disconnected = false;
+         }
          
          for_each (event, event_list) {
             u_long32 number, type, intkey, intkey2;
@@ -4371,26 +4424,68 @@ static void *japi_implementation_thread(void *p)
 
                break;
 
-            default:
-               /* no explicit action required on sgeE_SHUTDOWN */
+            /* Bug Fix: Issuezilla #826
+             * Since we only want to stop when explicitly told to, we have to
+             * draw a distinction between SHUTDOWN and QMASTER_GOES_DOWN. On
+             * SHUTDOWN we exit the event client thread.  On QMASTER_GOES_DOWN
+             * we may eventually want to issue a warning message. */
+            case sgeE_SHUTDOWN:
+               DPRINTF (("Received shutdown message\n"));
+               stop_ec = true;
+               qmaster_bound = false;
                break;
-            }
-         }
+            case sgeE_QMASTER_GOES_DOWN:
+               /* Print a message that qmaster is down and note that we are
+                * disconnected. */
+               if (error_handler != NULL) {
+                  error_handler (MSG_JAPI_QMASTER_DOWN);
+               }
+
+               DPRINTF ((MSG_JAPI_QMASTER_DOWN));
+               disconnected = true;
+               
+               break;
+            default:
+               break;
+            } /* switch */
+         } /* for_each */
          event_list = lFreeList(event_list);
+      } /* else */
+
+      if (!stop_ec) {
+         /* has japi_exit() been called meanwhile ? */ 
+         JAPI_LOCK_EC_STATE();
+         if (japi_ec_state == JAPI_EC_FINISHING) {
+            stop_ec = true;
+         }
+         JAPI_UNLOCK_EC_STATE();
       }
 
-      /* has japi_exit() been called meanwhile ? */ 
-      JAPI_LOCK_EC_STATE();
-      if (japi_ec_state == JAPI_EC_FINISHING) {
-         stop_ec = 1;
-      }
-      JAPI_UNLOCK_EC_STATE();
+      /* Bug Fix: Issuezilla #826
+       * Here we have to make sure that we only give up if we've never actually
+       * connected to the qmaster.  At some point we should probably implement
+       * some kind of timeout to keep clients from waiting indefinitely for a
+       * qmaster that may never come back. */
+      if ((ec_get_ret == 0) && !stop_ec && !qmaster_bound) {
+         /* Print a message that there's a communication problem */
+         if (error_handler != NULL) {
+            error_handler (MSG_JAPI_EC_GET_PROBLEM);
+         }
 
-      if (!ec_get_ret && !stop_ec) {
-         fprintf(stderr, MSG_ECGETPROBLEM);
-         stop_ec = 1;
+         DPRINTF ((MSG_JAPI_EC_GET_PROBLEM));
+         stop_ec = true;
       }
-   }
+      else if ((ec_get_ret == 0) && !stop_ec && !disconnected) {
+         /* Print a message that the qmaster is unavailable and note that we're
+            disconnected. */
+         if (error_handler != NULL) {
+            error_handler (MSG_JAPI_DISCONNECTED);
+         }
+
+         DPRINTF ((MSG_JAPI_DISCONNECTED));
+         disconnected = true;
+      }
+   } /* while */
    
    /* Unregister event client */
    DPRINTF(("unregistering from qmaster ...\n"));
@@ -4885,3 +4980,157 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
    DEXIT;
    return ret;
 }
+
+
+/****** japi/japi_was_init_called() *******************************************
+*  NAME
+*     japi_was_init_called() -- Return current contact information 
+*
+*  SYNOPSIS
+*     int japi_was_init_called(dstring* diag) 
+*
+*  FUNCTION
+*     Check if japi_init was already called.
+*
+*  OUTPUT
+*     dstring *diag - returns diagnosis information - on error
+*
+*  RESULT
+*     int - DRMAA_ERRNO_SUCCESS if japi_init was already called,
+*           DRMAA_ERRNO_NO_ACTIVE_SESSION if japi_init was not called,
+*           DRMAA_ERRNO_INTERNAL_ERROR if an unexpected error occurs.
+*
+*  NOTES
+*     MT-NOTES: japi_was_init_called() is MT safe
+*******************************************************************************/
+int japi_was_init_called(dstring* diag)
+{
+   DENTER(TOP_LAYER, "japi_was_init_called");                             
+
+   /* per thread initialization */                                      
+   if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
+      /* diag written by japi_init_mt() */
+      DEXIT;                                                                        
+      return DRMAA_ERRNO_INTERNAL_ERROR;
+   }                                                 
+    
+   /* ensure japi_init() was called */
+   JAPI_LOCK_SESSION();
+   if (japi_session != JAPI_SESSION_ACTIVE) {
+      JAPI_UNLOCK_SESSION();
+      japi_standard_error(DRMAA_ERRNO_NO_ACTIVE_SESSION, diag);
+      DEXIT;
+      return DRMAA_ERRNO_NO_ACTIVE_SESSION; 
+   }
+                                           
+   JAPI_UNLOCK_SESSION();
+
+   DEXIT;
+   return DRMAA_ERRNO_SUCCESS;
+}
+
+
+/****** japi/japi_is_delegated_file_staging_enabled() *************************
+*  NAME
+*     japi_is_delegated_file_staging_enabled() -- Is file staging enabled, i.e.
+*              is the "delegated_file_staging" configuration entry set to true?
+*
+*  SYNOPSIS
+*     bool japi_is_delegated_file_staging_enabled()
+*
+*  FUNCTION
+*     Returns if delegated file staging is enabled.
+*
+*  RESULT
+*     bool - true if delegated file staging is enabled, else false.
+*
+*  NOTES
+*     MT-NOTES: japi_is_delegated_file_staging_enabled() is MT safe
+*******************************************************************************/
+bool japi_is_delegated_file_staging_enabled()
+{
+   return japi_delegated_file_staging_is_enabled;
+}
+
+/****** japi/japi_read_dynamic_attributes() ***********************************
+*  NAME
+*     japi_read_dynamic_attributes() -- Read the 'dynamic' attributes from
+*                                       the DRM configuration.
+*
+*  SYNOPSIS
+*     static int japi_read_dynamic_attributes(dstring *diag) 
+*
+*  FUNCTION
+*     Reads from the DRM configuration, which 'dynamic' attributes are enabled.
+*
+*  OUTPUT
+*     dstring *diag - returns diagnosis information - on error
+*
+*  RESULT
+*     int - DRMAA_ERRNO_SUCCES on success,
+*           DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE,
+*           DRMAA_ERRNO_INVALID_ARGUMENT 
+*           on error.
+*
+*  NOTES
+*     MT-NOTES: japi_read_dynamic_attributes() is MT safe
+*******************************************************************************/
+static int japi_read_dynamic_attributes(dstring *diag)
+{
+   int        ret=0;
+   int        drmaa_errno=DRMAA_ERRNO_SUCCESS;
+   lList      *pSubList;
+   lListElem  *config = NULL;
+   lListElem  *ep = NULL;
+   const char *pStr = NULL;
+
+   DENTER(TOP_LAYER, "japi_read_dynamic_attributes");   
+
+   JAPI_LOCK_SESSION();
+   if((ret=get_configuration("global", &config, NULL))<0) {
+      switch( ret ) {
+         case -2:
+         case -4:
+         case -6:
+         case -7:
+            drmaa_errno = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
+            break;
+         case -1:
+         case -3:
+            drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+            break;
+         case -5:
+            /* -5 there is noc global configuration
+             * This means that "delegated_file_staging" is not set.
+             * This is not an error for us, not set means default value.
+             */
+            drmaa_errno = DRMAA_ERRNO_SUCCESS;
+            break;
+         }
+      japi_standard_error(drmaa_errno, diag);
+      JAPI_UNLOCK_SESSION();
+      DEXIT;
+      return drmaa_errno;
+   }
+
+   pSubList = lGetList(config, CONF_entries);
+   if (pSubList != NULL) {
+      ep = lGetElemStr(pSubList, CF_name, "delegated_file_staging");
+      if (ep != NULL) {
+         pStr = lGetString(ep, CF_value);
+         
+         if (strcasecmp( pStr, "true") ==0) {
+            japi_delegated_file_staging_is_enabled = true;
+         }
+         else {
+            japi_delegated_file_staging_is_enabled = false;
+         }
+         
+      }
+   }
+
+   JAPI_UNLOCK_SESSION();
+   DEXIT;
+   return drmaa_errno;
+}
+

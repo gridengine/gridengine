@@ -150,12 +150,10 @@ lListElem *hgroup_get_via_gdi(lList **answer_list, const char *name)
       lEnumeration *what = NULL;
       lCondition *where = NULL;
       lList *houstgroup_list = NULL;
-      dstring string = DSTRING_INIT;
 
-      correct_hgroup_name(&string, name);
       what = lWhat("%T(ALL)", HGRP_Type);
       where = lWhere("%T(%I==%s)", HGRP_Type, HGRP_name, 
-                     sge_dstring_get_string(&string));
+                     name);
       gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, 
                                 &houstgroup_list, where, what);
       what = lFreeWhat(what);
@@ -166,7 +164,6 @@ lListElem *hgroup_get_via_gdi(lList **answer_list, const char *name)
       } else {
          answer_list_replace(answer_list, &gdi_answer_list);
       }
-      sge_dstring_free(&string);
    } 
    DEXIT;
    return ret;

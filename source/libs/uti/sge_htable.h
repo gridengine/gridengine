@@ -58,15 +58,18 @@ extern const char *sge_htable_statistics(htable ht, dstring *buffer);
 extern const void *dup_func_u_long32(const void *key);
 extern const void *dup_func_string(const void *key);
 extern const void *dup_func_long(const void *key);
+extern const void *dup_func_pointer(const void *key);
 
 extern int hash_func_u_long32(const void *key);
 extern int hash_func_string(const void *key);
 extern int hash_func_long(const void *key);
+extern int hash_func_pointer(const void *key);
 
 
 extern int hash_compare_u_long32(const void *a, const void *b);
 extern int hash_compare_string(const void *a, const void *b);
 extern int hash_compare_long(const void *a, const void *b);
+extern int hash_compare_pointer(const void *a, const void *b);
 
 
 #endif /* __SGE_HASH_H */

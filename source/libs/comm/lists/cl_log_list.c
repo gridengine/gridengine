@@ -573,6 +573,7 @@ int cl_log_list_flush(void) {        /* CR check */
 int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    int ret_val;
    cl_log_list_elem_t* elem = NULL;
+   struct timeval now;
    
    
    if (list_p == NULL) {
@@ -586,17 +587,22 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL) {
       /* TODO: rework logging output (log to file? call foreign log function, got by function pointer ?) */
 
+      gettimeofday(&now,NULL);
 
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-         printf("%15s|%4d|%10s|%8s| %s\n",
+         printf("%ld.%ld : %15s|%4d|%10s|%8s| %s\n",
+         (long)now.tv_sec,
+         (long)now.tv_usec,
          elem->log_thread_name,
          elem->log_thread_id, 
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message);
       } else {
-         printf("%15s|%4d|%10s|%8s| %s %s\n",
+         printf("%ld.%ld : %15s|%4d|%10s|%8s| %s %s\n",
+         (long)now.tv_sec,
+         (long)now.tv_usec,
          elem->log_thread_name,
          elem->log_thread_id, 
          cl_thread_convert_state_id(elem->log_thread_state),

@@ -290,7 +290,7 @@ static XtResource resources[] =
        XmNincrementLarge, XmCIncrementLarge,
        XmRLong, sizeof(long),
        XtOffsetOf(struct _XmpSpinboxRec, spinbox.increment_large),
-       XtRImmediate, int2xtp(0)
+       XtRImmediate, int2xtp(5)
     },
     {
        XmNitemCount, XmCItemCount,
@@ -1796,7 +1796,7 @@ static Boolean long_get_value (
 {
 #ifdef CRAY
    errno = 0;
-#elif !defined(LINUX) && !defined(SOLARIS) && !defined(DARWIN) && !defined(FREEBSD) && !defined(AIX51) && !defined(ALPHA)
+#elif !defined(LINUX) && !defined(SOLARIS) && !defined(DARWIN) && !defined(FREEBSD) && !defined(AIX51) && !defined(AIX43) && !defined(ALPHA)
    int errno = 0; 
 #endif
    *value = strtol ( buffer, NULL, 10 );

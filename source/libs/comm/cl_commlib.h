@@ -46,6 +46,7 @@
 /* commlib init and hostlist functions */
 cl_raw_list_t* cl_com_get_host_list(void);
 cl_raw_list_t* cl_com_get_log_list(void);
+cl_raw_list_t* cl_com_get_endpoint_list(void);
 
 int cl_com_setup_commlib(cl_thread_mode_t t_mode, int debug_level , cl_log_func_t flush_func);
 int cl_com_cleanup_commlib(void);
@@ -55,8 +56,7 @@ int cl_com_cleanup_commlib(void);
 cl_com_handle_t* cl_com_create_handle(int           framework,
                                       int           data_flow_type ,
                                       int           service_provider ,
-                                      int           service_port,
-                                      int           connect_port, 
+                                      int           port,
                                       char*         component_name, 
                                       unsigned long component_id, 
                                       int           select_sec_timeout, 
@@ -82,10 +82,24 @@ int cl_com_set_alias_file_dirty(void);
 int cl_com_append_host_alias(char* local_resolved_name, char* alias_name);
 int cl_com_remove_host_alias(char* alias_name);
 
+
+int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int service_port, cl_xml_connection_autoclose_t autoclose, int is_static );
+int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id);
+int cl_com_get_known_endpoint_port_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int* service_port );
+int cl_com_get_known_endpoint_autoclose_mode_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, cl_xml_connection_autoclose_t* auto_close_mode );
+
+int cl_com_append_known_endpoint(cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, int is_static );
+int cl_com_remove_known_endpoint(cl_com_endpoint_t* endpoint);
+int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_port );
+int cl_com_get_known_endpoint_autoclose_mode(cl_com_endpoint_t* endpoint, cl_xml_connection_autoclose_t* auto_close_mode );
+
+
 int cl_com_set_max_connections (cl_com_handle_t* handle, int value);
 int cl_com_get_max_connections (cl_com_handle_t* handle, int* value);
-int cl_com_enable_max_connection_close(cl_com_handle_t* handle);
-int cl_com_disable_max_connection_close(cl_com_handle_t* handle);
+int cl_com_set_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autoclose_t  mode );
+int cl_com_get_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autoclose_t* mode );
+int cl_com_set_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t mode);
+int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t* mode);
 
   /* application can set application status for SIRM messages */
 int cl_com_set_status_func(cl_app_status_func_t status_func);

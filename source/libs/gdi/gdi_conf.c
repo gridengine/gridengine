@@ -107,12 +107,10 @@ lListElem **lepp
    }
 
    if (*gepp) {
-      lFreeElem(*gepp);
-      *gepp = NULL;
+      *gepp = lFreeElem(*gepp);
    }
    if (lepp && *lepp) {
-      lFreeElem(*lepp);
-      *lepp = NULL;
+      *lepp = lFreeElem(*lepp);
    }
 
    if (!strcasecmp(config_name, "global")) {

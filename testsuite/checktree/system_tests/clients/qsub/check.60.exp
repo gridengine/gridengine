@@ -1,0 +1,195 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+global check_functions
+lappend check_functions "check_cleanup_config"
+
+proc check_qhold_jobname {} {
+ global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_host
+ global CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # first clean up output directory:  
+   setup_output_directory
+
+   set jobargs "-h -l h=${actual_host} -N FIRST -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 90" 
+   set hold_job1 [submit_job $jobargs] 
+
+   set jobargs "-hold_jid FIRST -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job2 [submit_job $jobargs] 
+
+
+
+   # wait for jobs to get in pending state
+   wait_for_jobpending $hold_job1 "FIRST" 200
+   wait_for_jobpending $hold_job2 "Sleeper" 200 
+
+
+
+   # job 1 should not run within the next 60 seconds  
+   if { [wait_for_jobstart $hold_job1 "Sleeper" 60 0] != -1 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should not run until yet(1)"
+   } 
+
+
+   # release job 1
+   release_job $hold_job1 
+   wait_for_jobstart $hold_job1 "FIRST" 100
+
+
+
+
+   # job 2 should not run within the next minute 
+   if { [wait_for_jobstart $hold_job2 "Sleeper" 60 0] != -1 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job2 should not run until yet(2)"
+   } 
+
+
+   
+
+   # job1 will stop in ca. 30 sec
+   wait_for_jobend $hold_job1 "FIRST" 100
+   
+   # job2 should run now
+   wait_for_jobstart $hold_job2 "Sleeper" 100
+
+   # job2 should run till end
+   wait_for_jobend $hold_job2 "Sleeper" 100 
+
+
+
+
+   set back [ del_job_files $hold_job1 $job_output_dir 2 ] 
+   if { $back != 2 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 did not produce error and output file"
+   }
+
+   set back [ del_job_files $hold_job2 $job_output_dir 2 ] 
+   if { $back != 2 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job2 did not produce error and output file"
+   }
+
+
+   
+
+   puts $CHECK_OUTPUT "Test wait for not existent job (job should immediately run)"
+   set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set job_id [submit_job $jobargs] 
+   wait_for_jobstart $job_id "Sleeper" 60
+   wait_for_jobend $job_id "Sleeper" 60
+
+
+
+   puts $CHECK_OUTPUT "additional job submit with same name test"
+   set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job1 [submit_job $jobargs] 
+
+   puts $CHECK_OUTPUT "additional job submit with same name test"
+   set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job2 [submit_job $jobargs] 
+
+
+   wait_for_jobpending $hold_job1 "FIRST" 60
+   wait_for_jobpending $hold_job2 "FIRST" 60
+
+   set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs 0]
+   if { $hold_job3 <= 0 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job3 should depend on multiple jobs, selected by name"
+   } else {
+      puts $CHECK_OUTPUT "submitted job with multiple predecessors selected by job name: $hold_job3 - correct"
+   } 
+    
+   delete_job $hold_job1
+
+   puts $CHECK_OUTPUT "submitting hold job ..."
+   set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs]
+    
+
+   puts $CHECK_OUTPUT "submitting job with same name (FIRST) ..."
+   set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   puts $CHECK_OUTPUT $jobargs
+   set hold_job1 [submit_job $jobargs 0] 
+   if { $hold_job1 <= 0 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should have been submitted - -N name is ok, even if job dependencies containing this name exist"
+   } else {
+      puts $CHECK_OUTPUT "could submit job reusing jobname that is in use in a job dependency: $hold_job1 - correct"
+   } 
+
+   delete_job $hold_job1
+   delete_job $hold_job2
+   delete_job $hold_job3
+
+   # test foreign user influence ...
+   puts $CHECK_OUTPUT "checking hold for foreign user ..."
+
+   puts $CHECK_OUTPUT "submitting job with same name (FIRST) as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
+   set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   puts $CHECK_OUTPUT $jobargs
+   set hold_job1 [submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ] 
+
+   puts $CHECK_OUTPUT "submitting hold job ..."
+   set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs]
+
+   wait_for_jobstart $hold_job3 "Sleeper" 75
+   wait_for_jobend $hold_job3 "Sleeper" 75
+
+
+
+   puts $CHECK_OUTPUT "additional job submit with same name test"
+   set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job2 [submit_job $jobargs] 
+
+
+   puts $CHECK_OUTPUT "submitting hold job ..."
+   set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs]
+
+   if { [wait_for_jobstart $hold_job3 "Sleeper" 60 0] != -1 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job3 should not run until yet(3)"
+   } 
+
+
+   delete_job $hold_job3
+   delete_job $hold_job2
+   
+   release_job $hold_job1
+   wait_for_jobstart $hold_job1 "FIRST" 60
+   wait_for_jobend $hold_job1 "FIRST" 60
+
+   puts $CHECK_OUTPUT "done."   
+
+   set_error 0 "no errors"
+}
+

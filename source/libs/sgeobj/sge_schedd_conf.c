@@ -44,7 +44,6 @@
 #include "sge_feature.h"
 #include "sge_usage.h"
 #include "sge_range.h"
-#include "sge_profiling.h"
 
 #include "sge_schedd_conf.h"
 #include "msg_schedd.h"
@@ -193,6 +192,7 @@ typedef struct{
    int default_duration;
 }config_pos_type;
 
+static bool schedd_profiling = false;
 
 static bool sconf_calc_pos(void);
 
@@ -229,8 +229,6 @@ const parameters_t params[] = {
 
 /* stores the overall configuraion */
 lList *Master_Sched_Config_List = NULL;
-
-extern int do_profiling; 
 
 const char *const policy_hierarchy_chars = "OFS";
 
@@ -475,8 +473,8 @@ const char *sconf_get_param(const char *name){
 bool sconf_is_valid_load_formula_(lList **answer_list,
                                   lList *centry_list)
 {
-   return sconf_is_valid_load_formula( lFirst(Master_Sched_Config_List),
-                                    answer_list, centry_list);
+   return sconf_is_valid_load_formula(lFirst(Master_Sched_Config_List),
+                                      answer_list, centry_list);
 }
 /****** sge_schedd_conf/sconf_is_valid_load_formula() ********************
 *  NAME
@@ -529,6 +527,68 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
 
    /* Check complex attributes and type */
    if (ret == true) {
+#if 1
+      const char *term_delim = "+-";
+      const char *term, *next_term;
+      struct saved_vars_s *term_context = NULL;
+
+      next_term = sge_strtok_r(load_formula, term_delim, &term_context);
+      while ((term = next_term) && ret == true) {
+         const char *fact_delim = "*";
+         const char *fact, *next_fact, *end;
+         lListElem *cmplx_attr = NULL;
+         struct saved_vars_s *fact_context = NULL;
+         
+         next_term = sge_strtok_r(NULL, term_delim, &term_context);
+
+         fact = sge_strtok_r(term, fact_delim, &fact_context);
+         next_fact = sge_strtok_r(NULL, fact_delim, &fact_context);
+         end = sge_strtok_r(NULL, fact_delim, &fact_context);
+
+         /* first factor has to be a complex attr */
+         if (fact != NULL) {
+            cmplx_attr = centry_list_locate(centry_list, fact);
+
+            if (cmplx_attr != NULL) {
+               int type = lGetUlong(cmplx_attr, CE_valtype);
+
+               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, 
+                                         fact));
+                  answer_list_add(answer_list, SGE_EVENT, 
+                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+            } else {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, 
+                              fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+         /* is weighting factor a number? */
+         if (next_fact != NULL) {
+            if (!sge_str_is_number(next_fact)) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WEIGHTFACTNONUMB_S, 
+                              next_fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+
+         /* multiple weighting factors? */
+         if (end != NULL) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false;
+         }
+         sge_free_saved_vars(fact_context);
+      }
+      sge_free_saved_vars(term_context);
+#else
       const char *delimitor = "+-*";
       const char *attr, *next_attr;
 
@@ -555,6 +615,7 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
             ret = false;
          }
       }
+#endif
    }
    DEXIT;
    return ret;
@@ -2104,6 +2165,7 @@ bool sconf_validate_config_(lList **answer_list){
    {
       const char *sparams = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
       char *s = NULL; 
+      schedd_profiling = false;
       if (sparams) {
          for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;
@@ -2124,7 +2186,7 @@ bool sconf_validate_config_(lList **answer_list){
          }
       } else {
          lSetString(lFirst(Master_Sched_Config_List), SC_params, "none");
-      }     
+      }
    }
 
    /* --- SC_reprioritize_interval */
@@ -2512,11 +2574,11 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
    lListElem *elem = NULL;
    DENTER(TOP_LAYER, "sconf_eval_set_profiling");
 
-   do_profiling = false;
+   schedd_profiling = false;
 
    if (!strncasecmp(param, "PROFILE=1", sizeof("PROFILE=1")-1) || 
        !strncasecmp(param, "PROFILE=TRUE", sizeof("PROFILE=FALSE")-1) ) {
-      do_profiling = true;
+      schedd_profiling = true;
       elem = lCreateElem(PARA_Type);
       lSetString(elem, PARA_name, "profile");
       lSetString(elem, PARA_value, "true");
@@ -2536,13 +2598,6 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
       lAppendElem(pos.c_params, elem);
    }
 
-   if(do_profiling && !prof_is_active()) {
-         prof_start(NULL);
-      }
-   if(!do_profiling && prof_is_active()) {
-      prof_stop(NULL);
-   }
-   
    DEXIT;
    return ret;
 }
@@ -2719,4 +2774,10 @@ void serf_set_active(bool on_off)
 bool serf_get_active(void)
 {
    return current_serf_do_monitoring;
+}
+
+bool
+sconf_get_profiling(void)
+{
+   return schedd_profiling;
 }

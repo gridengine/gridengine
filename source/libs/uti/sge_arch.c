@@ -178,22 +178,11 @@ const char *sge_get_arch(void)
 *     const char* - Root directory of the SGE/SGEEE installation
 *
 *  NOTES
-*     For compatibility reason this function accepts following
-*     env variables:
-*
-*        SGE_ROOT
-*        CODINE_ROOT
-*        GRD_ROOT 
-*
-*     Multiple environment variables will only be accepted when they 
-*     are identical. Other cases will be handled as error.
-*
 *     MT-NOTE: sge_get_arch() is MT safe
-*
 *******************************************************************************/
 const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_error_log)
 {
-   char *sge_root, *codine_root, *grd_root;
+   char *sge_root; 
    char *s;
    int error_number = 0;
 
@@ -202,46 +191,13 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
    /*
     * Read some env variables
     */
-   codine_root = getenv("CODINE_ROOT");
-   grd_root = getenv("GRD_ROOT");
    sge_root = getenv("SGE_ROOT");
 
    /*
     * Check the env variables
     */
-   if (sge_root && grd_root && codine_root) {
-      if (strcmp(sge_root, grd_root)) {
-         error_number = 1;
-         goto error;
-      } else if (strcmp(sge_root, codine_root)) {
-         error_number = 2;
-         goto error;
-      }
+   if (sge_root) {
       s = sge_root;
-   } else if (sge_root && grd_root) {
-      if (strcmp(sge_root, grd_root)) {
-         error_number = 1;
-         goto error;
-      }
-      s = sge_root;
-   } else if (sge_root && codine_root) {
-      if (strcmp(sge_root, codine_root)) {
-         error_number = 2;
-         goto error;
-      }
-      s = sge_root;
-   } else if (grd_root && codine_root) {
-      if (strcmp(grd_root, codine_root)) {
-         error_number = 3;
-         goto error;
-      }
-      s = grd_root;
-   } else if (sge_root) {
-      s = sge_root;
-   } else if (grd_root) {
-      s = grd_root;
-   } else if (codine_root) {
-      s = codine_root;
    } else {
       error_number = 4;
       goto error;
@@ -263,33 +219,6 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
 error:
    if (do_error_log) {
       switch(error_number) {
-         case 1:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGEGRDROOTNOTEQUIV, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
-            }
-            
-            break;
-         case 2:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGECODINEROOTNOTEQUIV, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
-            }
-            
-            break;
-         case 3:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_GRDCODINEROOTNOTEQUIV, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
-            }
-            
-            break;
          case 4:
             if (buffer != NULL) {
                strncpy(buffer, MSG_SGEROOTNOTSET, size);
@@ -336,64 +265,24 @@ error:
 *     const char* - Cell name of this SGE/SGEEE installation
 *
 *  NOTES
-*     For compatibility reason this function accepts following
-*     env variables:
-*
-*        SGE_CELL
-*        COD_CELL
-*        GRD_CELL
-*
-*     Multiple environment variables will only be accepted when they are
-*     identical. Other cases will be handled as error. In case of an 
-*     error the 'DEFAULT_CELL' will be returned.
-*
 *     MT-NOTE: sge_get_default_cell() is MT safe
-*
 ******************************************************************************/
 const char *sge_get_default_cell(void)
 {
-   char *cod_cell, *grd_cell, *sge_cell;
+   char *sge_cell;
    char *s;
 
    DENTER(TOP_LAYER, "sge_get_default_cell");
    /*
     * Read some env variables
     */
-   cod_cell = getenv("COD_CELL");
-   grd_cell = getenv("GRD_CELL");
    sge_cell = getenv("SGE_CELL");
 
    /*
     * Check the env variables
     */
-   if (sge_cell && grd_cell && cod_cell) {
-      if (strcmp(sge_cell, grd_cell)) {
-         s = NULL;
-      } else if (strcmp(sge_cell, cod_cell)) {
-         s = NULL;
-      }
+   if (sge_cell) {
       s = sge_cell;
-   } else if (sge_cell && grd_cell) {
-      if (strcmp(sge_cell, grd_cell)) {
-         s = NULL;
-      }
-      s = sge_cell;
-   } else if (sge_cell && cod_cell) {
-      if (strcmp(sge_cell, cod_cell)) {
-         s = NULL;
-      }
-      s = sge_cell;
-   } else if (grd_cell && cod_cell) {
-      if (strcmp(grd_cell, cod_cell)) {
-         s = NULL;
-      }
-      s = grd_cell;
-   } else if (sge_cell) {
-      s = sge_cell;
-   } else if (grd_cell) {
-      s = grd_cell;
-   } else if (cod_cell) {
-      s = cod_cell;
    } else {
       s = NULL;
    } 

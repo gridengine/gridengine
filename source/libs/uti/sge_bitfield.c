@@ -30,10 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_bitfield.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sge_bitfield.h"
 
 /****** uti/bitfield/--Bitfield ****************************************
 *  NAME
@@ -122,9 +123,156 @@ bitfield sge_bitfield_new(int size)
       memset(bf->bf, 0, char_size);
       bf->size = size;
    }
-
    return bf;
 }
+
+/****** sge_bitfield/sge_bitfield_copy() ***************************************
+*  NAME
+*     sge_bitfield_copy() -- copies a bitfield into another one. 
+*
+*  SYNOPSIS
+*     bool sge_bitfield_copy(bitfield *source, bitfield *target) 
+*
+*  FUNCTION
+*     The memory has to be allocated before, and source and target has to have
+*     the same size. Otherwise it will return false and does not copy anything.
+*
+*  INPUTS
+*     bitfield *source - 
+*     bitfield *target - 
+*
+*  RESULT
+*     bool - false, if the bitfield sizes are different
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_copy() is MT safe 
+*
+*******************************************************************************/
+bool sge_bitfield_copy(bitfield source, bitfield target)
+{
+   if (source != NULL && target != NULL) {
+      if (source->size == target->size) {
+         int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+         memcpy(target->bf, source->bf, char_size);
+
+         return true;    
+      }
+   }
+   
+   return false;
+}
+
+/****** sge_bitfield/sge_bitfield_bitwise_copy() *******************************
+*  NAME
+*     sge_bitfield_copy() -- copies a bitfield into another one. 
+*
+*  SYNOPSIS
+*     bool sge_bitfield_bitwise_copy(bitfield *source, bitfield *target) 
+*
+*  FUNCTION
+*     The memory has to be allocated before, but the bitfields can have
+*     different sizes.  If the source is longer than the target, only the bits
+*     up to target's length are copied.
+*
+*  INPUTS
+*     bitfield *source - ??? 
+*     bitfield *target - ??? 
+*
+*  RESULT
+*     bool - false, if one of the bitfields is NULL
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_bitwise_copy() is MT safe 
+*
+*******************************************************************************/
+bool sge_bitfield_bitwise_copy(bitfield source, bitfield target)
+{
+   if (source != NULL && target != NULL) {
+      int char_size = 0;
+      
+      if (source->size > target->size) {
+         /* This may result in the target getting a few more bits than it wants
+          * (if target->size isn't a multiple of 8), but that shouldn't matter
+          * because sge_bitfield_get() guards against accessing those extra
+          * bits. */
+         char_size = target->size / 8 + ((target->size % 8) > 0 ? 1 : 0);
+      }
+      else {
+         char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+      }
+      
+      memcpy(target->bf, source->bf, char_size);
+
+      return true;    
+   }
+   
+   return false;
+}
+
+/****** sge_bitfield/sge_bitfield_changed() ***************************************
+*  NAME
+*     sge_bitfield_changed() -- figures out if something was changed.
+*
+*  SYNOPSIS
+*     bool sge_bitfield_changed(bitfield *source) 
+*
+*  FUNCTION
+*
+*  INPUTS
+*     bitfield *source - 
+*
+*  RESULT
+*     bool - true, if the bitfield has a changed bit set.
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_copy() is MT safe 
+*
+*******************************************************************************/
+bool sge_bitfield_changed(bitfield source) {
+   if (source != NULL) {
+      int i;
+      int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+      for (i = 0; i<char_size; i++) {
+         if (source->bf[i] != 0) {
+            return true;
+         }
+      }
+   }
+   
+   return false;
+
+}
+
+/****** sge_bitfield/sge_bitfield_reset() ***************************************
+*  NAME
+*     sge_bitfield_reset() -- clears a bitfield
+*
+*  SYNOPSIS
+*     bool sge_bitfield_reset(bitfield *source) 
+*
+*  FUNCTION
+*
+*  INPUTS
+*     bitfield *source - bitfield to reset
+*
+*  RESULT
+*     bool - false, if source is NULL
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_copy() is MT safe 
+*
+*******************************************************************************/
+bool sge_bitfield_reset(bitfield source){
+   
+   if (source != NULL) {
+      int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+      memset(source->bf, 0, char_size);
+      return true;    
+   }
+   
+   return false;
+}
+
 
 /****** uti/bitfield/sge_bitfield_free() ***************************************
 *  NAME

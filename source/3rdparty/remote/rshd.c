@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.15 2004/02/09 14:06:46 andy Exp $	*/
+/*	$Id: rshd.c,v 1.16 2004/04/19 14:05:45 andreas Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -323,7 +323,9 @@ doit(fromp)
 	(void) alarm(0);
 	if (port != 0) {
 		int lport = IPPORT_RESERVED - 1;
-		s = rresvport(&lport);
+      int tries = 0;
+      while ((s = rresvport(&lport)) < 0 && errno == EAGAIN && tries++ < 20)
+         sleep(tries);
 		if (s < 0) {
 			syslog(LOG_ERR, "can't get stderr port: %m");
 			exit(1);

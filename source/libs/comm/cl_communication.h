@@ -78,13 +78,15 @@
 #define CL_AM_MESSAGE_VERSION "0.1"
 
 /* (4) connect message (CM) */
-#define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata></cm>"
-#define CL_CONNECT_MESSAGE_SIZE    141
-#define CL_CONNECT_MESSAGE_VERSION "0.1"
-#define CL_CONNECT_MESSAGE_DATA_FORMAT_BIN   "bin"
-#define CL_CONNECT_MESSAGE_DATA_FORMAT_XML   "xml"
-#define CL_CONNECT_MESSAGE_DATA_FLOW_STREAM  "stream"
-#define CL_CONNECT_MESSAGE_DATA_FLOW_MESSAGE "message"
+#define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><port>%ld</port><ac>%s</ac></cm>"
+#define CL_CONNECT_MESSAGE_SIZE    141 + ( 22 )
+#define CL_CONNECT_MESSAGE_VERSION "0.2"
+#define CL_CONNECT_MESSAGE_DATA_FORMAT_BIN    "bin"
+#define CL_CONNECT_MESSAGE_DATA_FORMAT_XML    "xml"
+#define CL_CONNECT_MESSAGE_DATA_FLOW_STREAM   "stream"
+#define CL_CONNECT_MESSAGE_DATA_FLOW_MESSAGE  "message"
+#define CL_CONNECT_MESSAGE_AUTOCLOSE_ENABLED  "enabled"
+#define CL_CONNECT_MESSAGE_AUTOCLOSE_DISABLED "disabled"
 
 
 
@@ -159,7 +161,7 @@ struct in_addr {
 
 
 
-
+int cl_com_endpoint_list_refresh(cl_raw_list_t* endpoint_list);
 
 
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
@@ -178,6 +180,7 @@ int cl_com_print_host_info(cl_com_hostent_t *hostent_p );                 /* CR 
 
 /* endpoint helper functions */
 cl_com_endpoint_t* cl_com_create_endpoint(const char* host, const char* name, unsigned long id);  /* CR check */
+cl_com_endpoint_t* cl_com_dup_endpoint(cl_com_endpoint_t* endpoint);
 int  cl_com_free_endpoint(cl_com_endpoint_t** endpoint);                                          /* CR check */
 int  cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* endpoint2);        /* CR check */
 
@@ -233,7 +236,7 @@ int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 /* after this line are the main functions used by lib user */
 /* ======================================================= */
 
-int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_port, int connect_port, int data_flow_type);   /* CR check */
+int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_port, int connect_port, int data_flow_type, cl_xml_connection_autoclose_t auto_close_mode );
 /* int cl_com_setup_jxta_connection(cl_com_connection_t* connection, int server_port, int connect_port); */  /* TODO: implement jxta framework */
 
 int cl_com_open_connection(cl_com_connection_t* connection, 

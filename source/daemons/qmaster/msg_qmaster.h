@@ -64,7 +64,7 @@
 
 
 #define MSG_JOB_JOBACCESSQ_US         _MESSAGE(33025, _("job "U32CFormat" has no access to queue "SFQ"\n"))
-#define MSG_JOB_FREESLOTS_US          _MESSAGE(33026, _("not enough ("U32CFormat") free slots in queue "SFQ"\n"))
+#define MSG_JOB_FREESLOTS_USUU        _MESSAGE(33026, _("not enough ("U32CFormat") free slots in queue "SFQ" for job "U32CFormat"."U32CFormat"\n"))
 #define MSG_JOB_QMARKEDERROR_S        _MESSAGE(33027, _("queue "SFQ" is marked QERROR\n") ) 
 #define MSG_JOB_QSUSPCAL_S            _MESSAGE(33028, _("while scheduling queue "SFQ" was suspended on calendar\n"))
 #define MSG_JOB_QDISABLECAL_S         _MESSAGE(33029, _("while scheduling queue "SFQ" was disabled on calendar\n"))
@@ -209,8 +209,8 @@
 /*
 ** sge_give_jobs.c
 */
-/* #define MSG_OBJ_NOREALNAMEINHOST_S    _message(33136, _("missing real name in host "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_COM_NOTENROLLEDONHOST_SSU _MESSAGE(33137, _("target "SFQ" not enrolled on host "SFQ" for delivering job \""U32CFormat"\"\n"))
+#define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't delivering job \""U32CFormat"\"\n"))
+  
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33138, _("can't find checkpointing object "SFQ"\n"))
 #define MSG_OBJ_UNABLE2CREATECKPT_SU  _MESSAGE(33139, _("can't create checkpointing object "SFQ" for job " U32CFormat "\n"))
 /* EB: remove
@@ -254,7 +254,7 @@
 ** sge_host_qmaster.c
 */
 #define MSG_OBJ_DELGLOBALHOST         _MESSAGE(33177, _("denied: pseudo host \"global\" may not be deleted\n"))
-#define MSG_OBJ_LOADREPORTIVAL_SS     _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"load_report_time\" - assuming 120 seconds\n") )    
+#define MSG_OBJ_LOADREPORTIVAL_SS     _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"load_report_time\" - assuming 120 seconds\n") )  
 #define MSG_OBJ_RESCHEDULEUNKN_SS     _MESSAGE(33179, _("host "SFQ": "SFQ" is not a valid time value for \"reschedule_unknown\" - assuming 0 => no auto rescheduling\n"))
 #define MSG_OBJ_SHUTDOWNPERMS         _MESSAGE(33180, _("shutting down execd requires manager privileges\n"))
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN"\n"))
@@ -527,7 +527,6 @@
 #define MSG_UP_NOADDDEFAULT_S          _MESSAGE(33491, _("denied: not allowed add a "SFN" with name \"default\"\n") ) 
 #define MSG_UP_ALREADYEXISTS_SS        _MESSAGE(33492, _("denied: shared namespace between project and user: there is already a "SFN" which is named "SFQ"\n"))
 #define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not valid\n"))
-#define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not valid\n"))
 #define MSG_OBJ_PRJ                    _MESSAGE(33509, _("project"))
 #define MSG_OBJ_PRJS                  _MESSAGE(33510, _("projects"))
 #define MSG_OBJ_XPRJS                 _MESSAGE(33511, _("xprojects"))
@@ -649,7 +648,7 @@
 ** sge_qmaster_timed_event.c
 */
 #define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system clock has been put back (%d seconds)\n"))
-#define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT       _MESSAGE(33664, _("received unkown event\n"))
+#define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT_I       _MESSAGE(33664, _("received unkown event: %d\n"))
 
 /*
  * misc
@@ -716,6 +715,26 @@
 #define MSG_PERSISTENCE_OPENTRANSACTION_FAILED _MESSAGE(33822, _("error starting a transaction in the spooling database\n"))
 #define MSG_PERSISTENCE_CLOSINGTRANSACTION_FAILED _MESSAGE(33823, _("error closing a transaction in the spooling database\n"))
 
+/* 
+ * sge_reporting_qmaster.c
+ */
+#define MSG_JOBLOG_ACTION_UNKNOWN      _MESSAGE(33850, _("unknown"))
+#define MSG_JOBLOG_ACTION_PENDING      _MESSAGE(33851, _("pending"))
+#define MSG_JOBLOG_ACTION_SENT         _MESSAGE(33852, _("sent"))
+#define MSG_JOBLOG_ACTION_RESENT       _MESSAGE(33853, _("resent"))
+#define MSG_JOBLOG_ACTION_DELIVERED    _MESSAGE(33854, _("delivered"))
+#define MSG_JOBLOG_ACTION_RUNNING      _MESSAGE(33855, _("running"))
+#define MSG_JOBLOG_ACTION_SUSPENDED    _MESSAGE(33856, _("suspended"))
+#define MSG_JOBLOG_ACTION_UNSUSPENDED  _MESSAGE(33857, _("unsuspended"))
+#define MSG_JOBLOG_ACTION_HELD         _MESSAGE(33858, _("held"))
+#define MSG_JOBLOG_ACTION_RELEASED     _MESSAGE(33859, _("released"))
+#define MSG_JOBLOG_ACTION_RESTART      _MESSAGE(33860, _("restart"))
+#define MSG_JOBLOG_ACTION_MIGRATE      _MESSAGE(33861, _("migrate"))
+#define MSG_JOBLOG_ACTION_DELETED      _MESSAGE(33862, _("deleted"))
+#define MSG_JOBLOG_ACTION_FINISHED     _MESSAGE(33863, _("finished"))
+#define MSG_JOBLOG_ACTION_ERROR        _MESSAGE(33864, _("error"))
+
+#define MSG_REPORTING_INTERMEDIATE_SS  _MESSAGE(33870, _("write intermediate accounting record for job "SFQ" at "SFN"\n"))
 
 /*
  * other
@@ -724,6 +743,11 @@
 #define MSG_JOB_PRIOSET_SSUU              _MESSAGE(33901, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
 
 #define MSG_JOB_PERANGE_ONLY_FOR_PARALLEL _MESSAGE(33902, _("rejected: change request for PE range supported only for parallel jobs\n"))
+
+#define MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U _MESSAGE(33903, _("qmaster will use max. "U32CFormat" file descriptors for communication\n"))
+
+#define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33904, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
+
 
 #endif
 

@@ -56,7 +56,7 @@ FILELIST="3rd_party bin ckpt examples install_execd install_qmaster mpi \
 OPTFILES="catman doc locale man inst_sge inst_sgeee" 
 
 CLIENTFILES="qacct qalter qconf qdel qhost qlogin qmod qmon qrsh qsh \
-             qstat qsub"
+             qstat qsub qping"
 
 umask 022
 

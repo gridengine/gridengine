@@ -37,8 +37,17 @@
 
 #include <db.h>
 
-/* utilib */
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
+
+/* JG: TODO: the following defines should better be parameters to
+ *           the berkeley db spooling
+ */
+
+/* how often will the transaction log be cleared */
+#define BERKELEYDB_CLEAR_INTERVAL 300
+
+/* how often will the database be checkpointed (cache written to disk) */
+#define BERKELEYDB_CHECKPOINT_INTERVAL 60
 
 
 /* Berkeley DB data structures:
@@ -49,54 +58,71 @@
  * The transaction handle is always thread specific.
  * Thread specific data is initialized in the spooling startup function.
  */
-struct bdb_info {
-   pthread_mutex_t   mtx;                 /* lock access to this object */
-   pthread_key_t     key;                 /* for thread specific data */
-  
-   const char *      server;              /* server, in case of RPC mechanism */
-   const char *      path;                /* the database path */
 
-   DB_ENV *          env;                 /* global database environment */
-   DB *              db;                  /* global database object */
+typedef enum {
+   BDB_CONFIG_DB = 0,
+   BDB_JOB_DB,
+   
+   BDB_ALL_DBS
+} bdb_database;
 
-   time_t            next_clear;          /* time of next logfile clear */
-   time_t            next_checkpoint;     /* time of next checkpoint */
-};
+typedef struct _bdb_info *bdb_info;
 
-struct bdb_info *
+bdb_info
 bdb_create(const char *server, const char *path);
 
 const char *
-bdb_get_server(struct bdb_info *info);
+bdb_get_server(bdb_info info);
 
 const char *
-bdb_get_path(struct bdb_info *info);
+bdb_get_path(bdb_info info);
 
 DB_ENV *
-bdb_get_env(struct bdb_info *info);
+bdb_get_env(bdb_info info);
 
 DB *
-bdb_get_db(struct bdb_info *info);
+bdb_get_db(bdb_info info, const bdb_database database);
 
 DB_TXN *
-bdb_get_txn(struct bdb_info *info);
+bdb_get_txn(bdb_info info);
+
+time_t
+bdb_get_next_clear(bdb_info info);
+
+time_t
+bdb_get_next_checkpoint(bdb_info info);
+
+bool 
+bdb_get_recover(bdb_info info);
 
 void
-bdb_set_env(struct bdb_info *info, DB_ENV *env);
+bdb_set_env(bdb_info info, DB_ENV *env);
 
 void
-bdb_set_db(struct bdb_info *info, DB *db);
+bdb_set_db(bdb_info info, DB *db, const bdb_database database);
 
 void
-bdb_set_txn(struct bdb_info *info, DB_TXN *txn);
+bdb_set_txn(bdb_info info, DB_TXN *txn);
+
+void
+bdb_set_next_clear(bdb_info info, const time_t next);
+
+void
+bdb_set_next_checkpoint(bdb_info info, const time_t next);
+
+void 
+bdb_set_recover(bdb_info info, bool recover);
 
 const char *
-bdb_get_dbname(struct bdb_info *info, dstring *buffer);
+bdb_get_dbname(bdb_info info, dstring *buffer);
 
 void
-bdb_lock_info(struct bdb_info *info);
+bdb_lock_info(bdb_info info);
 
 void
-bdb_unlock_info(struct bdb_info *info);
+bdb_unlock_info(bdb_info info);
+
+const char *
+bdb_get_database_name(const bdb_database database);
 
 #endif /* __SGE_BDB_TYPES_H */    

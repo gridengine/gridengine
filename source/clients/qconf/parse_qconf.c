@@ -283,23 +283,6 @@ static const spool_flatfile_instr qconf_param_sfi =
    { NoName, NoName, NoName }
 };
 
-static const spool_flatfile_instr qconf_sub_param_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   ' ',
-   '\0',
-   '\0',
-   '\n',
-   NULL,
-   { NoName, NoName, NoName }
-};
-
 static const spool_flatfile_instr qconf_comma_sfi = 
 {
    NULL,
@@ -313,23 +296,6 @@ static const spool_flatfile_instr qconf_comma_sfi =
    '\0',
    '\0',
    '\0',
-   &qconf_sub_name_value_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
-static const spool_flatfile_instr qconf_sub_name_value_comma_braced_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   '\0',
-   '=',
-   ',',
-   '[',
-   ']',
    &qconf_sub_name_value_comma_sfi,
    { NoName, NoName, NoName }
 };
@@ -3721,6 +3687,9 @@ DPRINTF(("ep: %s %s\n",
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
+            if (!sge_is_file(*spp)) {
+               sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
+            }
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
@@ -5235,6 +5204,7 @@ DPRINTF(("ep: %s %s\n",
 
          if (!lp) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
+            spp++;
             continue;
          }
          alp = lFreeList(alp);

@@ -111,10 +111,8 @@ extern "C" {
 *        groups -> A, B, C, D
 *
 *  SEE ALSO
-*     sgeobj/hgroup/correct_hgroup_name()
 *     sgeobj/hgroup/hgroup_list_get_master_list()
 *     sgeobj/hgroup/hgroup_list_locate()
-*     sgeobj/hgroup/hgroup_correct_name()
 *     sgeobj/hgroup/hgroup_create()
 *     sgeobj/hgroup/hgroup_add_references()
 *     sgeobj/hgroup/hgroup_find_all_references()

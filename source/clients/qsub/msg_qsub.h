@@ -35,7 +35,7 @@
 
 #include "basis_types.h"
 
-#define MSG_QSUB_WARNING    _MESSAGE(21000, _("qsub: warning: "))
+#define MSG_QSUB_WARNING_S    _MESSAGE(21000, _("qsub: warning: "))
 #define MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED    _MESSAGE(21001, _("Waiting for immediate job to be scheduled.\n"))
 #define MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER    _MESSAGE(21003, _("\nYour qsub request could not be scheduled, try again later.\n"))
 #define MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S    _MESSAGE(21004, _("\nYour immediate job "SFN" has been successfully scheduled.\n"))
@@ -44,10 +44,10 @@
 #define MSG_QSUB_COULDNOTWAITFORJOB_S    _MESSAGE(21007, _("\nUnable to wait for job because of error: "SFN"\nExiting.\n"))
 #define MSG_QSUB_JOBNEVERRAN_S    _MESSAGE(21008, _("Unable to run job "SFN"\n"))
 #define MSG_QSUB_JOBRECEIVEDSIGNAL_SS    _MESSAGE(21009, _("Job "SFN" exited because of signal "SFN"\n"))
-#define MSG_QSUB_JOBFINISHUNCLEAR_S    _MESSAGE(21010, _("No information available on job %s's exit status.\n"))
+#define MSG_QSUB_JOBFINISHUNCLEAR_S    _MESSAGE(21010, _("No information available on job "SFN"'s exit status.\n"))
 #define MSG_QSUB_COULDNOTFINALIZEENV_S    _MESSAGE(21011, _("\nUnable to finalize environment because of error: "SFN"\nExiting.\n"))
 #define MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS    _MESSAGE(21012, _("Your job "SFN" ("SFQ") has been submitted.\n"))
-#define MSG_QSUB_JOBEXITED_II    _MESSAGE(210013, _("Job "SFN" exited with exit code %d.\n"))
+#define MSG_QSUB_JOBEXITED_SI    _MESSAGE(210013, _("Job "SFN" exited with exit code %d.\n"))
 #define MSG_QSUB_INTERRUPTED    _MESSAGE(210015, _("\nInterrupted!\n"))
 #define MSG_QSUB_TERMINATING    _MESSAGE(210016, _("Please wait while qsub shuts down.\n"))
 #define MSG_QSUB_COULDNOTREADSCRIPT_S    _MESSAGE(210017, _("Unable to read script file because of error: "))

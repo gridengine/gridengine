@@ -102,40 +102,6 @@ static const spool_flatfile_instr cqqconf_sfi =
    { NoName, NoName, NoName }
 };
 
-static const spool_flatfile_instr cqqconf_sub_name_value_comma_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   '\0',
-   '=',
-   ',',
-   '\0',
-   '\0',
-   NULL,
-   { NoName, NoName, NoName }
-};
-
-static const spool_flatfile_instr cqqconf_sub_name_value_comma_braced_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   '\0',
-   '=',
-   ',',
-   '[',
-   ']',
-   &cqqconf_sub_name_value_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
 #endif
 
 bool

@@ -97,6 +97,14 @@ void xml_addStylesheet(lListElem *xml_head, const char* name, const char *url, c
    }   
 }
 
+void xml_addAttributeD(lListElem *xml_elem, const char *name, double value){
+   char buffer[20]="";
+   dstring string;
+
+   sge_dstring_init(&string, buffer, 20);
+   xml_addAttribute(xml_elem, name, sge_dstring_sprintf(&string, "%f", value));
+}
+
 void xml_addAttribute(lListElem *xml_elem, const char *name, const char *value){
    lListElem *attr_elem = lCreateElem(XMLA_Type);
    lList *attr_list = NULL;

@@ -32,8 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-/* cull */
-#include "cull.h"
+#include "cull/cull.h"
 
 /* common */
 #include "basis_types.h"
@@ -46,78 +45,80 @@ spool_berkeleydb_check_version(lList **answer_list);
 
 bool 
 spool_berkeleydb_create_environment(lList **answer_list, 
-                                    struct bdb_info *info);
+                                    bdb_info info);
 
 bool 
-spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_open_database(lList **answer_list, bdb_info info, 
                                bool create);
 
 bool 
 spool_berkeleydb_check_reopen_database(lList **answer_list, 
-                                       struct bdb_info *info);
+                                       bdb_info info);
 
 bool 
-spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
-                                const char *url);
-bool
-spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info);
+spool_berkeleydb_close_database(lList **answer_list, bdb_info info);
 
 bool
-spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info);
+
+bool
+spool_berkeleydb_end_transaction(lList **answer_list, bdb_info info, 
                                  bool commit);
 
-bool
-spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info, 
-                           const char *url);
-
-bool
-spool_berkeleydb_checkpoint(lList **answer_list, struct bdb_info *info);
+bool 
+spool_berkeleydb_trigger(lList **answer_list, bdb_info info, 
+                         time_t trigger, time_t *next_trigger);
 
 bool 
-spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
+                           const bdb_database database,
                            lList **list, const lDescr *descr,
                            const char *key);
 bool 
-spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
+                              const bdb_database database,
                               const lListElem *object, const char *key);
 bool
-spool_berkeleydb_write_pe_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_pe_task(lList **answer_list, bdb_info info,
                                const lListElem *object, 
                                u_long32 job_id, u_long32 ja_task_id,
                                const char *pe_task_id);
 bool
-spool_berkeleydb_write_ja_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_ja_task(lList **answer_list, bdb_info info,
                                const lListElem *object, 
                                u_long32 job_id, u_long32 ja_task_id);
 bool
-spool_berkeleydb_write_job(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_job(lList **answer_list, bdb_info info,
                            const lListElem *object, 
                            u_long32 job_id, bool only_job);
 bool
-spool_berkeleydb_write_cqueue(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_write_cqueue(lList **answer_list, bdb_info info, 
                               const lListElem *object, const char *key);
 
 bool
-spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_delete_object(lList **answer_list, bdb_info info, 
+                               const bdb_database database,
                                const char *key, bool sub_objects);
 bool
-spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_pe_task(lList **answer_list, bdb_info info,
                                 const char *key, bool sub_objects);
 bool
-spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_ja_task(lList **answer_list, bdb_info info,
                                 const char *key, bool sub_objects);
 bool
-spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_job(lList **answer_list, bdb_info info,
                             const char *key, bool sub_objects);
 bool
-spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_cqueue(lList **answer_list, bdb_info info,
                                const char *key);
 
 bool
-spool_berkeleydb_read_keys(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
+                           const bdb_database database,
                            lList **list, const char *key);
 
 lListElem *
-spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
+                             const bdb_database database,
                              const char *key);
 #endif /* __SGE_BDB_H */    

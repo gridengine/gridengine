@@ -328,6 +328,23 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
             ret = -1;
          }
       }
+
+      {
+         const double epsilon = 1.0E-12;
+         char *end_ptr = NULL;
+         double dbl_value;
+         u_long32 ulng_value;
+
+         dbl_value = strtod(job_str, &end_ptr);
+         ulng_value = dbl_value;
+         if (dbl_value < 1 || dbl_value - ulng_value > epsilon) {
+            ret = -1;
+         } else if (end_ptr != NULL && *end_ptr == '\0') {
+            
+         } else {
+            ret = -1;
+         }
+      }
    }
 
    if (arrayDefList != NULL) {

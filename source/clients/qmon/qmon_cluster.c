@@ -374,8 +374,6 @@ static Widget cluster_xusers = 0;
 static Widget cluster_usersPB = 0;
 static Widget cluster_xusersPB = 0;
 
-static Widget cluster_projects_col = 0;
-static Widget cluster_xprojects_col = 0;
 static Widget cluster_projects = 0;
 static Widget cluster_xprojects = 0;
 static Widget cluster_projectsPB = 0;
@@ -2161,7 +2159,7 @@ tCClEntry *clen
    }
    if (clen->administrator_mail) {
       XtFree((char*)clen->administrator_mail);
-      clen->mailer = NULL;
+      clen->administrator_mail = NULL;
    }
    if (clen->prolog) {
       XtFree((char*)clen->prolog);

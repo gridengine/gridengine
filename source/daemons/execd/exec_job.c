@@ -600,6 +600,9 @@ char *err_str
       }
 
       var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
+      sprintf(fname, "%s/%s", bootstrap_get_binary_path(), arch);
+      var_list_set_string(&environmentList, "SGE_BINARY_PATH", fname);
+      
       /* JG: TODO (ENV): do we need REQNAME and REQUEST? */
       var_list_set_string(&environmentList, "REQUEST", petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name));
       var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
@@ -694,27 +697,13 @@ char *err_str
 
       var_list_set_sharedlib_path(&environmentList);
 
-      if (set_sge_environment) {
-         /* set final of variables whose value shall be replaced */ 
-         var_list_copy_prefix_vars(&environmentList, environmentList,
-                                   VAR_PREFIX, "SGE_");
+      /* set final of variables whose value shall be replaced */ 
+      var_list_copy_prefix_vars(&environmentList, environmentList,
+                                VAR_PREFIX, "SGE_");
 
-         /* set final of variables whose value shall not be replaced */ 
-         var_list_copy_prefix_vars_undef(&environmentList, environmentList,
-                                         VAR_PREFIX_NR, "SGE_");
-      }
-      if (set_cod_environment) {
-         var_list_copy_prefix_vars(&environmentList, environmentList,
-                                   VAR_PREFIX, "COD_");
-         var_list_copy_prefix_vars_undef(&environmentList, environmentList,
-                                         VAR_PREFIX_NR, "COD_");
-      }
-      if (set_grd_environment) {
-         var_list_copy_prefix_vars(&environmentList, environmentList,
-                                   VAR_PREFIX, "GRD_");
-         var_list_copy_prefix_vars_undef(&environmentList, environmentList,
-                                         VAR_PREFIX_NR, "GRD_");
-      }
+      /* set final of variables whose value shall not be replaced */ 
+      var_list_copy_prefix_vars_undef(&environmentList, environmentList,
+                                      VAR_PREFIX_NR, "SGE_");
       var_list_remove_prefix_vars(&environmentList, VAR_PREFIX);
       var_list_remove_prefix_vars(&environmentList, VAR_PREFIX_NR);
 
@@ -799,7 +788,7 @@ char *err_str
 
       }
 
-   #  endif
+   #endif
 
    #endif
 
@@ -848,32 +837,32 @@ char *err_str
                 job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDIN, stdin_path);
 
-   DPRINTF(( "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "" ));
+   DPRINTF(( "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "\"\"" ));
    DPRINTF(( "fs_stdin_path=%s\n", fs_stdin_path ? fs_stdin_path : "" ));
    DPRINTF(( "fs_stdin_tmp_path=%s/%s\n", tmpdir, fs_stdin_file ? fs_stdin_file : "" ));
    DPRINTF(( "fs_stdin_file_staging=%d\n", bInputFileStaging ));
 
-   DPRINTF(( "fs_stdout_host=%s\n", fs_stdout_host ? fs_stdout_host:"" ));
+   DPRINTF(( "fs_stdout_host=%s\n", fs_stdout_host ? fs_stdout_host:"\"\"" ));
    DPRINTF(( "fs_stdout_path=%s\n", fs_stdout_path ? fs_stdout_path:"" ));
    DPRINTF(( "fs_stdout_tmp_path=%s/%s\n", tmpdir, fs_stdout_file ? fs_stdout_file : "" ));
    DPRINTF(( "fs_stdout_file_staging=%d\n", bOutputFileStaging ));
 
-   DPRINTF(( "fs_stderr_host=%s\n", fs_stderr_host ? fs_stderr_host:"" ));
+   DPRINTF(( "fs_stderr_host=%s\n", fs_stderr_host ? fs_stderr_host:"\"\"" ));
    DPRINTF(( "fs_stderr_path=%s\n", fs_stderr_path ? fs_stderr_path:"" ));
    DPRINTF(( "fs_stderr_tmp_path=%s/%s\n", tmpdir, fs_stderr_file ? fs_stderr_file : "" ));
    DPRINTF(( "fs_stderr_file_staging=%d\n", bErrorFileStaging ));
 
-   fprintf(fp, "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "" );
+   fprintf(fp, "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "\"\"" );
    fprintf(fp, "fs_stdin_path=%s\n", fs_stdin_path ? fs_stdin_path:"" );
    fprintf(fp, "fs_stdin_tmp_path=%s/%s\n", tmpdir, fs_stdin_file ? fs_stdin_file:"" );
    fprintf(fp, "fs_stdin_file_staging=%d\n", bInputFileStaging );
 
-   fprintf(fp, "fs_stdout_host=%s\n", fs_stdout_host ? fs_stdout_host:"" );
+   fprintf(fp, "fs_stdout_host=%s\n", fs_stdout_host ? fs_stdout_host:"\"\"" );
    fprintf(fp, "fs_stdout_path=%s\n", fs_stdout_path ? fs_stdout_path:"" );
    fprintf(fp, "fs_stdout_tmp_path=%s/%s\n", tmpdir, fs_stdout_file ? fs_stdout_file:"" );
    fprintf(fp, "fs_stdout_file_staging=%d\n", bOutputFileStaging );
 
-   fprintf(fp, "fs_stderr_host=%s\n", fs_stderr_host ? fs_stderr_host:"" );
+   fprintf(fp, "fs_stderr_host=%s\n", fs_stderr_host ? fs_stderr_host:"\"\"" );
    fprintf(fp, "fs_stderr_path=%s\n", fs_stderr_path ? fs_stderr_path:"" );
    fprintf(fp, "fs_stderr_tmp_path=%s/%s\n", tmpdir, fs_stderr_file ? fs_stderr_file:"" );
    fprintf(fp, "fs_stderr_file_staging=%d\n", bErrorFileStaging );
@@ -893,8 +882,10 @@ char *err_str
    {
       u_long32 jb_now = lGetUlong(jep, JB_type);
       int handle_as_binary = (JOB_TYPE_IS_BINARY(jb_now) ? 1 : 0);
+      int no_shell = (JOB_TYPE_IS_NO_SHELL(jb_now) ? 1 : 0);
 
       fprintf(fp, "handle_as_binary=%d\n", handle_as_binary);
+      fprintf(fp, "no_shell=%d\n", no_shell);
    }
 
    if (lGetUlong(jep, JB_checkpoint_attr) && 
@@ -1211,10 +1202,6 @@ char *err_str
    else
       fprintf(fp, "qsub_gid=%s\n", "no");
 
-   fprintf(fp, "set_sge_env=%d\n", set_sge_environment);
-   fprintf(fp, "set_cod_env=%d\n", set_cod_environment);
-   fprintf(fp, "set_grd_env=%d\n", set_grd_environment);
-
    /* config for interactive jobs */
    {
       u_long32 jb_now;
@@ -1527,7 +1514,6 @@ char *err_str
 
       execlp(conf.pag_cmd, conf.pag_cmd, "-c", commandline, NULL);
    }
-
 
    /*---------------------------------------------------*/
    /* exec() failed - do what shepherd does if it fails */

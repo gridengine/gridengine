@@ -230,7 +230,7 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
          return "got message acknowledge error";
       }
       case CL_RETVAL_MESSAGE_WAIT_FOR_ACK: {
-         return "got message acknowledge timeout error";
+         return "message is not acknowledged";
       }
       case CL_RETVAL_ENDPOINT_NOT_UNIQUE: {
          return "endpoint is not unique error";
@@ -295,6 +295,13 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_MAX_CON_COUNT_REACHED: {
          return "max. connection count reached";
       }
+      case CL_RETVAL_NO_PORT_ERROR: {
+         return "got no valid port number";
+      }
+      case CL_RETVAL_PROTOCOL_ERROR: {
+         return "can't send response for this message id - protocol error";
+      }
+      
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

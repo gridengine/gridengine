@@ -169,7 +169,8 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
 #define __CL_FUNCTION__ "cl_host_alias_list_remove_host()"
 int cl_host_alias_list_remove_host(cl_raw_list_t* list_p, cl_host_alias_list_elem_t* element, int lock_list) {
    cl_host_alias_list_elem_t* elem = NULL;
-   int ret_val = CL_RETVAL_UNKNOWN;
+   int ret_val = CL_RETVAL_OK;
+   int function_return = CL_RETVAL_UNKNOWN;
 
    if (  list_p == NULL || element == NULL) {
       return CL_RETVAL_PARAMS;
@@ -187,7 +188,7 @@ int cl_host_alias_list_remove_host(cl_raw_list_t* list_p, cl_host_alias_list_ele
       if (elem == element) {
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         ret_val = CL_RETVAL_OK;
+         function_return = CL_RETVAL_OK;
          free(elem->local_resolved_hostname);
          free(elem->alias_name);
          free(elem);
@@ -203,7 +204,7 @@ int cl_host_alias_list_remove_host(cl_raw_list_t* list_p, cl_host_alias_list_ele
          return ret_val;
       }
    }
-   return ret_val;
+   return function_return;
 }
 
 #ifdef __CL_FUNCTION__

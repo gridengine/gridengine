@@ -43,19 +43,32 @@ int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lL
  * is there a load alarm on this queue
  * 
  */
-int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, const lList *exechost_list, const lList *complex_list, const lList *load_adjustments);
+int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, 
+                   const lList *exechost_list, const lList *complex_list, 
+                   const lList *load_adjustments, bool is_check_consumable);
 
+void sge_create_load_list(const lList *queue_list, const lList *host_list, 
+                          const lList *centry_list, lList **load_list); 
+bool sge_load_list_alarm(lList *load_list, const lList *host_list, 
+                         const lList *centry_list);
+void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list);
+void sge_free_load_list(lList **load_list); 
 /* 
  * get reason for alarm state on queue
  * 
  */
-char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exechost_list, const lList *complex_list, char  *reason, int reason_size, const char *type); 
+char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exechost_list, 
+                            const lList *complex_list, char  *reason, int reason_size, 
+                            const char *type); 
 
 /* 
  * split queue list into unloaded and overloaded
  * 
  */
-int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, lList *complex_list, const lList *load_adjustments, lList *granted, u_long32 ttype);
+int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, 
+                         lList *complex_list, const lList *load_adjustments, 
+                         lList *granted, bool is_consumable_load_alarm, bool is_comprehensive,
+                         u_long32 ttype);
 
 int sge_split_queue_slots_free(lList **unloaded, lList **overloaded);
 
@@ -102,6 +115,7 @@ typedef struct {
    lList      *gdil;              /* the resources (JG_Type)                        */
    int        slots;              /* total number of slots                          */
    u_long32   start;              /* jobs start time                                */
+   int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task);
@@ -166,11 +180,9 @@ int host_time_by_slots(int slots, u_long32 *start, u_long32 duration,
    int *host_soft_violations, lListElem *job, lListElem *ja_task, lListElem *hep, 
    lList *centry_list, lList *acl_list);
 
-int host_slots_by_time(u_long32 start, u_long32 duration, int *slots, 
-   int *slots_qend, int *host_soft_violations, lListElem *job, lListElem *ja_task, 
-   lListElem *hep, lList *queue_list, lList *centry_list, lList *acl_list, 
-   const lList *load_adjustments, bool allow_non_requestable);
-
+int host_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
+                       lListElem *hep, lListElem *global, bool allow_non_requestable);
+  
 int queue_slots_by_time( u_long32 start, u_long32 duration, int *slots, int *slots_qend, 
    int *violations, lListElem *job, lListElem *qep, const lListElem *pe, const lListElem *ckpt,
    lList *centry_list, lList *acl_list, bool allow_non_requestable);

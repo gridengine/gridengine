@@ -1830,7 +1830,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 {
    bool ret = true;
 
-   DENTER(OBJECT_LAYER, "attr_mod_sub_list");
+   DENTER(TOP_LAYER, "attr_mod_sub_list");
    if (lGetPosViaElem(delta_elem, this_elem_name) >= 0) {
       if (sub_command == SGE_GDI_CHANGE ||
           sub_command == SGE_GDI_APPEND ||
@@ -1886,7 +1886,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                         answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
                                         ANSWER_QUALITY_INFO);
                         ret = false;
-                        break;
+                        /* break; No "break" here. It will follow below! */
                      }
 
                      lFreeElem(old_sub_elem);

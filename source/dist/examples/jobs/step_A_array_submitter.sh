@@ -44,4 +44,4 @@ QALTER=$SGE_ROOT/bin/$ARC/qalter
 successor=`$QSTAT -j $JOB_ID | grep context |cut -f2 -d=`
 
 # release appropriate succesor task
-$QALTER -h U $successor.$COD_TASK_ID
+$QALTER -h U $successor.$SGE_TASK_ID

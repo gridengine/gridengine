@@ -37,7 +37,6 @@
 #define MSG_SPOOL_ERROROPENINGSHAREDLIB_SS   _MESSAGE(68000, _("error opening shared lib "SFQ": "SFN"\n"))
 #define MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS   _MESSAGE(68001, _(SFQ" does not contain a valid Grid Engine spooling method: "SFN"\n"))
 #define MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS   _MESSAGE(68002, _("loading spooling method "SFQ" from "SFQ"\n"))
-#define MSG_SPOOL_ERRORCREATINGCONTEXT_S   _MESSAGE(68003, _("error creating a "SFQ" spooling context\n"))
 
 #endif /* __MSG_SPOOLLIB_DYNAMIC_H */
 

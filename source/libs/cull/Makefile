@@ -51,6 +51,7 @@ CULLLIB_SRC 	= cull_list.c \
                 cull_file.c \
                 cull_state.c \
                 cull_xml.c \
+                cull_packL.c\
                 pack.c
 
 CULLLIB_OBJS = $(CULLLIB_SRC:.c=.o)
@@ -127,6 +128,10 @@ cull_lerrno.o: $(CULLLIB_DIR)/cull_lerrno.c
 cull_pack.o: $(CULLLIB_DIR)/cull_pack.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_pack.c
 
+cull_packL.o: $(CULLLIB_DIR)/cull_packL.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_packL.c
+
+
 cull_tree.o:  $(CULLLIB_DIR)/cull_tree.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_tree.c
 
@@ -181,7 +186,7 @@ test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 
 #---
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti -llck $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti -llck -lmalloc $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

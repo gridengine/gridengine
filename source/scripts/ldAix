@@ -58,12 +58,11 @@
 args=$*
 ofiles=""
 for i do
-    x=`echo $i | grep '[^.].o$'`
+    x=`echo $i | grep '[^.]\.o$'`
     if test "$x" != ""; then
 	ofiles="$ofiles $i"
     fi
 done
-
 # Extract the name of the object file that we're linking.
 outputFile=`echo $args | sed -e 's/.*-o \([^ ]*\).*/\1/'`
 

@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/01/30 18:58:42 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:08 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2004/01/30 18:58:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2004/04/19 10:52:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -187,8 +187,6 @@ detected by
 .M xxqs_name_sxx_execd 8
 on the corresponding host.
 .IP "\fBusage_scaling\fP"
-This entry is only present in a xxQS_NAME_EExx system. It is not available in xxQS_NAME_Cxx.
-.sp 1
 The format is equivalent to
 .B load_scaling
 (see above), the only valid attributes to be scaled however are
@@ -225,7 +223,6 @@ access to the host. If set to NONE (the default), any project
 has access that is not specifically excluded via the \fBxprojects\fP
 parameter described below. If a project is in both the \fBprojects\fP and
 \fBxprojects\fP parameters, the project is denied access to the host.
-This parameter is only available in a xxQS_NAME_EExx system.
 .IP "\fBxprojects\fP"
 The \fBxprojects\fP parameter contains a comma separated list of projects
 that are denied access to the host. If set to NONE (the default), no
@@ -233,7 +230,6 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP parameter described above.  If a project is in both the
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the host.
-This parameter is only available in a xxQS_NAME_EExx system.
 .\"
 .IP "\fBreport_variables\fP"
 The \fBreport_variables\fP parameter contains list of variables that shall be

@@ -180,12 +180,33 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
     * -b
     */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-b"))) {
-      if (lGetInt(ep, SPA_argval_lIntT) == 1) {
-         u_long32 jb_now = lGetUlong(*pjob, JB_type);
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
 
+      if (lGetInt(ep, SPA_argval_lIntT) == 1) {
          JOB_TYPE_SET_BINARY(jb_now);
-         lSetUlong(*pjob, JB_type, jb_now);
       }
+      else {
+         JOB_TYPE_UNSET_BINARY(jb_now);
+      }
+      
+      lSetUlong(*pjob, JB_type, jb_now);
+      lRemoveElem(cmdline, ep);
+   }
+
+   /*
+    * -shell
+    */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-shell"))) {
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
+
+      if (lGetInt(ep, SPA_argval_lIntT) == 1) {
+         JOB_TYPE_UNSET_NO_SHELL(jb_now);
+      }
+      else {
+         JOB_TYPE_SET_NO_SHELL(jb_now);
+      }
+      
+      lSetUlong(*pjob, JB_type, jb_now);
       lRemoveElem(cmdline, ep);
    }
 

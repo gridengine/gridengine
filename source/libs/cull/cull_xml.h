@@ -45,6 +45,7 @@ void lWriteElemXMLTo(const lListElem *ep, FILE *fp);
 
 lListElem* xml_getHead(const char *name, lList *liste, lList *attributs); 
 
+void xml_addAttributeD(lListElem *xml_elem, const char *name, double value);
 void xml_addAttribute(lListElem *xml_elem, const char *name, const char *value);
 
 void xml_addStylesheet(lListElem *xml_head, const char* name, const char *url, const char *version);

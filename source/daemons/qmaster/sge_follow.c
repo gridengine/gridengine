@@ -202,11 +202,12 @@ lList **topp  /* ticket orders ptr ptr */
          lList *answer_list = NULL;
 
          jatp = job_create_task(jep, NULL, task_number);
-         /* JG: TODO: where is spooling done? */
+         /* spooling of the JATASK will be done in sge_commit_job */
          sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
          sge_event_spool(&answer_list, 0, sgeE_JOB_MOD,
-                         job_number, 0, NULL, NULL, lGetString(jep, JB_session),
+                         job_number, 0, NULL, NULL, 
+                         lGetString(jep, JB_session),
                          jep, NULL, NULL, true, true);
       }
       if (!jatp) {
@@ -331,7 +332,8 @@ lList **topp  /* ticket orders ptr ptr */
 
          /* ensure that this queue has enough free slots */
          if (lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep) < q_slots) {
-            ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_US, u32c(q_slots), q_name));
+            ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_USUU, u32c(q_slots), q_name, 
+                  u32c(job_number), u32c(task_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
@@ -597,6 +599,7 @@ lList **topp  /* ticket orders ptr ptr */
             lSetDouble(jep, JB_dlcontr,                   lGetDouble(joker, JB_dlcontr));
             lSetDouble(jep, JB_wtcontr,                   lGetDouble(joker, JB_wtcontr));
          }
+#if 0
          DPRINTF(("PRIORITY: "u32"."u32" %f/%f tix/ntix %f npri %f/%f urg/nurg %f prio\n",
             lGetUlong(jep, JB_job_number),
             lGetUlong(jatp, JAT_task_number),
@@ -606,7 +609,7 @@ lList **topp  /* ticket orders ptr ptr */
             lGetDouble(jep, JB_urg),
             lGetDouble(jep, JB_nurg),
             lGetDouble(jatp, JAT_prio)));
-
+#endif
 
       } /* just ignore them being not in SGEEE mode */
       break;
@@ -639,8 +642,10 @@ lList **topp  /* ticket orders ptr ptr */
             return -2;
          }
 
+#if 0
          DPRINTF(("%sORDER #%d: job("u32")->ticket = "u32"\n", 
             force?"FORCE ":"", seq_no, job_number, (u_long32)lGetDouble(ep, OR_ticket)));
+#endif
 
          jep = job_list_locate(Master_Job_List, job_number);
          if(!jep) {
@@ -844,7 +849,7 @@ lList **topp  /* ticket orders ptr ptr */
          sge_add_event( 0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
       }
-      if (!jatp) {
+      if (jatp == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
          sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), NULL);
@@ -1224,7 +1229,7 @@ lList *ticket_orders
    const char *master_host_name;
    lListElem *jep, *other_jep, *ep, *ep2, *next, *other, *jatask = NULL, *other_jatask;
    sge_pack_buffer pb;
-   u_long32 dummymid;
+   u_long32 dummymid = 0;
    int n;
    u_long32 now;
 #ifdef ENABLE_NGC

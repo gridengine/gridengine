@@ -59,9 +59,9 @@
    to jobs in jobs priority order. A good example which helps to comprehend 
    the problem solved with resource reservaiton/backfilling is the so-called 
    "large parallel job starvation problem". In this scenario there is one 
-   pending job (possibly parallel) A that requires a larger quota of a 
-   particular resource and a stream of smaller jobs B(i) requiring a smaller 
-   quota of the same resource.
+   high prior pending job (possibly parallel) A that requires a larger quota 
+   of a particular resource and a stream of smaller and lower prior jobs B(i) 
+   requiring a smaller quota of the same resource.
  
    Without resource reservation an assignment for A can not be guaranteed
    assumed the stream of B(i) jobs does not stop - even if job A actually
@@ -93,9 +93,9 @@
    Backfilling can allow utilization of resources that are blocked due to 
    a reservation by jobs of lower priority. Backfilling can take place only 
    if there is a runnable job with a prospective runtime small enough to allow 
-   the blocked resource be used without endangering the reservation. In the 
-   example above a job C of very short duration could be started prior A due 
-   to backfilling.
+   the blocked resource be used without endangering the reservation of a job
+   with high priority. In the example above a low prior job C of very short 
+   duration could be started prior A due to backfilling.
 
         A
         |                     

@@ -327,6 +327,7 @@ usage:
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-shared-libs      -> create libraries as shared libs"
+   echo "-spool-berkeleydb -> use berkeleydb spooling"
    echo "-spool-classic    -> use classic flatfile spooling"
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
    echo "-umap             -> compile with usermapping and hostgroup feature"
@@ -456,12 +457,15 @@ set KLIBS             = ""
 set PERLGUI           = ""
 set PERLGUI_CLEAN     = ""
 
-# SPOOLING
-set SPOOLING_METHOD   = "berkeleydb"
-set SPOOLING_LIBS     = "-lspoold -lspoolb -lspool -ldb"
-set SPOOLING_DEPS     = "libspool libspoold libspoolb"
+# SPOOLING - default method is dynamic spooling, 
+# spooling methods berkeleydb and classic
+set SPOOLING_METHOD = "dynamic"
+set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
+set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
+# we generate a berkeley db shared lib, so we need bdb include and lib path
 set CFLAGS            = "-I$BERKELEYDB_HOME/include $CFLAGS"
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib $LFLAGS"
+set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
@@ -539,17 +543,13 @@ while ($#argv >= 1 && $?found)
    case "-crypto":
       set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
-
       switch ($BUILDARCH)
-        case SOLARIS:
-        case SOLARIS64:
-        case SOLARIS86:
-        case LINUX86:
-           set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
-           set KLIBS = ""
-           breaksw
-        default:
-           set KLIBS = "-lcrypto"
+         case HP11:
+            set KLIBS = "-lcrypto"
+            breaksw
+         default:
+            set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+            set KLIBS = ""
       endsw
       breaksw
    case "-D*":
@@ -797,10 +797,15 @@ while ($#argv >= 1 && $?found)
    case "-shared-libs":
       set SHAREDLIBS = 1
       breaksw
+   case "-spool-berkeleydb":
+      set SPOOLING_METHOD   = "berkeleydb"
+      set SPOOLING_LIBS     = "-lspoolloader -lspoolb -lspool -ldb"
+      set SPOOLING_DEPS     = "spoolloaderlib spoolblib spoollib"
+      breaksw
    case "-spool-classic":
       set SPOOLING_METHOD = "classic"
-      set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
-      set SPOOLING_DEPS   = "libspool libspoold libspoolc"
+      set SPOOLING_LIBS   = "-lspoolloader -lspoolc -lspool"
+      set SPOOLING_DEPS   = "spoolloaderlib spoolclib spoollib"
       breaksw
    case "-sunman":
       set SGE_PRODUCT_MODE=sge
@@ -826,15 +831,12 @@ set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
 
 if ($SEC == 1) then
    switch ($BUILDARCH)
-   case SOLARIS:
-   case SOLARIS64:
-   case SOLARIS86:
-   case LINUX86:
-      set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
-      set KLIBS = ""
+    case HP11:
+      set KLIBS = "-lcrypto"
       breaksw
    default:
-      set KLIBS = "-lcrypto"
+      set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+      set KLIBS = ""
    endsw
 endif
 
@@ -865,7 +867,6 @@ case AIX51:
    set CXX      = xlC_r
    set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
    set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
@@ -873,10 +874,12 @@ case AIX51:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
 
-   set SHAREDLD = "xlc_r"
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry"
-#   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   set SHARED_LFLAGS = "$LFLAGS $KLFLAGS -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+
+   # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    breaksw
 
 case ALPHA5:
@@ -908,7 +911,7 @@ case ALPHA5:
 
    set SHAREDLD      = $CC
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-L. -shared -pthread"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -pthread"
 
    set LFLAGS   = "-pthread $DEBUG_FLAG $LFLAGS"
    set XMTDEF   = ""
@@ -931,9 +934,11 @@ case DARWIN:
 
    set CC = "gcc"
    set CXX = "g++"
+   set DLLIB = "-ldl"
 
    if ( $DEBUGGED == 1) then
       set DEBUG_FLAG = "-g"
+      set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
@@ -958,10 +963,10 @@ case DARWIN:
 
    set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
    set SHARED_CFLAGS = "-dynamic"
-   set SHARED_LFLAGS = "-L."
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L."
    set SHAREDEXT = ".dylib"
    if ( $SHAREDLIBS == 1 ) then
-      set libext = ".dylib"
+      set libext = $(SHAREDEXT)
    else
       set libext = ".a"
    endif   
@@ -1013,7 +1018,7 @@ case FREEBSD_*:
    set LIBS     = "$LIBS -lkvm"
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-L. -shared" 
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared" 
    
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
@@ -1050,14 +1055,14 @@ case IRIX65:
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-KPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    breaksw
 
 case HP11:
 case HP1164:
    set MAKE = gmake
-   set OFLAG = "+O2"
    set DLLIB = ""
+   set OFLAG = ""
    if ($BUILDARCH == HP11) then
       set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
       set MEMFLAG = +DD32
@@ -1066,10 +1071,17 @@ case HP1164:
       set MEMFLAG = +DD64
    endif
    if ($CC == gcc) then
+      if ( $DEBUGGED == 0 ) then
+         if ( $OPTIMIZATION != 0 ) then
+            set OFLAG = "-O2"
+         endif
+      endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
    else
-      if ($OPTIMIZATION == 0) then
-         set OFLAG = "-O"
+      if ( $DEBUGGED == 0 ) then
+         if ( $OPTIMIZATION != 0 ) then
+            set OFLAG = "+O2"
+         endif
       endif
       set CXX = "aCC"
       set CFLAGS = "-Ae $MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
@@ -1080,19 +1092,19 @@ case HP1164:
    set SHAREDLD = ld
    if ( $CC == gcc ) then
       set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    else
       set SHARED_CFLAGS = "+z"
-      set SHARED_LFLAGS = "-L. -b +s"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -b +s"
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
    set LIBS     = "-lnsl $LIBS"
 
    if ($BUILDARCH == HP11) then
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32"
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32 -Wl,+s"
    else
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64"
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
    endif
 
    set XMTDEF   = "-DNO_EDITRES"
@@ -1123,7 +1135,9 @@ case LINUXIA64:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set OFLAG = "-O2"
-      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
+      if ( $SEC ==  1 ) then
+         set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
+      endif
       set LIBS = "$LIBS"
    endif
 
@@ -1140,6 +1154,11 @@ case LINUXIA64:
       if ($status == 0) then
          set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
       endif
+   else if ( -f /usr/include/netinet/in.h ) then
+      grep typedef /usr/include/netinet/in.h | grep in_port_t >& /dev/null
+      if ($status == 0) then
+         set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+      endif
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -1150,7 +1169,11 @@ case LINUXIA64:
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
+
+   if ( $SHAREDLIBS == 1 || $SPOOLING_METHOD == dynamic ) then
+      set LFLAGS = "$LFLAGS -rdynamic"
+   endif
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
@@ -1158,7 +1181,7 @@ case LINUXIA64:
 
    set XMTDEF   = ""
 
-   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX) then
+   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX || $BUILDARCH == LINUXIA64) then
       set XLIBD    = "-L/usr/X11R6/lib"
    else
       set XLIBD    = "-L/usr/X11R6/lib64"
@@ -1253,7 +1276,7 @@ case SLINUX:
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
@@ -1335,13 +1358,13 @@ case SOLARIS86:
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
       set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    else
       set SHARED_CFLAGS = "-KPIC"
       if ( $BUILDARCH == SOLARIS64 ) then
-         set SHARED_LFLAGS = "-L. -G -xarch=v9"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
       else
-         set SHARED_LFLAGS = "-L. -G"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
       endif
    endif
 
@@ -1432,13 +1455,13 @@ else
    set LIBEXT = ".a"
 endif
 
-# spooling library dependencies
-#
-set TMP_SPOOLING_DEPS = "$SPOOLING_DEPS"
-set SPOOLING_DEPS     = ""
-foreach lib ( $TMP_SPOOLING_DEPS )
-   set SPOOLING_DEPS = "${SPOOLING_DEPS} ${lib}${LIBEXT}"
-end
+# settings for spooling libraries - shared vs. static
+# if we use the dynamic spooling, we need shared spooling libs
+if ( $SPOOLING_METHOD == "dynamic" ) then
+   set SPOOLLIBEXT = "$SHAREDEXT"
+else
+   set SPOOLLIBEXT = $LIBEXT
+endif
 
 # for gettext
 #
@@ -1655,6 +1678,7 @@ if ( "$CORE" == 1 ) then
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
          "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
          "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
+         "SPOOLLIBEXT=$SPOOLLIBEXT" \
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
@@ -1702,6 +1726,7 @@ if ( "$QMON" == 1 ) then
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f $SOURCE/clients/qmon/Makefile \
+         "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
          "CFLAGS=$CFLAGS $CORE_INCLUDE" \
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
@@ -1721,6 +1746,7 @@ if ( "$QMON" == 1 ) then
          "INTERACTTARGETS=$INTERACTTARGETS" \
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
          "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
+         "SPOOLLIBEXT=$SPOOLLIBEXT" \
          "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
@@ -1803,7 +1829,7 @@ if ( "$QTCSH" == 1) then
       setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}
    endif
 
-   set SGE_LIBS = "-lsge -lcomm -lcommlists -lpthread"
+   set SGE_LIBS = "-lsge -lpthread"
 
    if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"

@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/02/24 17:07:39 $     Revision: $Revision: 1.16 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:09 $     Revision: $Revision: 1.18 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2004/02/24 17:07:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2004/04/19 10:52:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -227,7 +227,8 @@ The type of queue. Currently
 or a combination in a comma separated list or
 .I NONE.
 .PP
-The formerly supported types parallel and checkpointing are deprecated. A queue
+The formerly supported types parallel and checkpointing are not allowed 
+anymore. A queue
 instance is impicitely of type parallel/checkpointing 
 if there is a parallel environment or a checkpointing interface specified
 for this queue instance in \fBpe_list\fP/\fBckpt_list\fP. 
@@ -512,7 +513,6 @@ access to the queue. If set to NONE (the default), any project
 has access that is not specifically excluded via the \fBxprojects\fP
 parameter described below. If a project is in both the \fBprojects\fP and
 \fBxprojects\fP parameters, the project is denied access to the queue.
-This parameter is only available in a xxQS_NAME_EExx system.
 .SS "\fBxprojects\fP"
 The \fBxprojects\fP parameter contains a comma separated list of projects
 that are denied access to the queue. If set to NONE (the default), no
@@ -520,7 +520,6 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP parameter described above.  If a project is in both the 
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the queue.
-This parameter is only available in a xxQS_NAME_EExx system.
 .SS "\fBsubordinate_list\fP"
 A list of xxQS_NAMExx cluster queues. Relashionship however are in effect
 only between queue instances residing at the same host. If there is a 

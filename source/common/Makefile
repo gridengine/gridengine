@@ -82,7 +82,7 @@ parse_qsub.o:	$(COMMON_DIR)/parse_qsub.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMON_DIR)/parse_qsub.c
 
 sig_handlers.o   : $(COMMON_DIR)/sig_handlers.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sig_handlers.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMON_DIR)/sig_handlers.c
 
 usage.o: 	$(COMMON_DIR)/usage.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/usage.c

@@ -537,14 +537,14 @@ centry_list_locate(const lList *this_list, const char *name)
 {
    lListElem *ret = NULL;   /* CE_Type */
 
-/*   DENTER(CENTRY_LAYER, "centry_list_locate");*/
+   DENTER(CENTRY_LAYER, "centry_list_locate");
    if (this_list != NULL && name != NULL) {
       ret = lGetElemStr(this_list, CE_name, name);
       if (ret == NULL) {
          ret = lGetElemStr(this_list, CE_shortcut, name);
       }
    }
-/*   DEXIT;*/
+   DEXIT;
    return ret;
 }
 
@@ -782,7 +782,6 @@ centry_list_append_to_string(lList *this_list, char *buff,
       return ret;
    }
 
-   DPRINTF(("buff: %s\n", buff));
    DEXIT;
    return 0;
 }

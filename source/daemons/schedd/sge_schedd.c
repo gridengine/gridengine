@@ -80,6 +80,7 @@
 #include "sge_serf.h"
 #include "sge_mt_init.h"
 
+#include <sgeobj/sge_schedd_conf.h>
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
@@ -258,6 +259,15 @@ char *argv[]
          continue;
       }
 
+      /* check profiling settings, if necessary, switch profiling on/off */
+      if(sconf_get_profiling() && !prof_is_active()) {
+         prof_start(NULL);
+      }
+
+      if(!sconf_get_profiling() && prof_is_active()) {
+         prof_stop(NULL);
+      }
+   
       sched_funcs[current_scheduler].event_func();
 
       /* output profiling information */

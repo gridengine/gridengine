@@ -218,19 +218,15 @@ int master
    int len, failed;
    u_long32 now;
    sge_pack_buffer pb;
-   u_long32 dummymid;
-   lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep;
+   u_long32 dummymid = 0;
+   lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep, *tmpgdil_ep=NULL;
    lListElem *ckpt = NULL, *tmp_ckpt;
    lList *qlp;
    const char *ckpt_name;
    lListElem *gdil_ep;
    char *str;
-#ifdef ENABLE_NGC
    unsigned long last_heard_from;
-#else
-   static u_short number_one = 1;
-   int execd_enrolled;  
-#endif
+   cl_com_handle_t* handle = NULL;
 
 
    DENTER(TOP_LAYER, "send_job");
@@ -248,30 +244,16 @@ int master
    }
 
    /* do ask_commproc() only if we are missing load reports */
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
    now = sge_get_gmt();
-#ifdef ENABLE_NGC
-   cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
-                                        (char*)rhost, (char*)target,1, &last_heard_from);
-   if (last_heard_from + load_report_interval(hep)*2 <= now) {
-      ERROR((SGE_EVENT, MSG_COM_NOTENROLLEDONHOST_SSU, target, rhost, u32c(lGetUlong(jep, JB_job_number))));
+   if (last_heard_from + sge_get_max_unheard_value() <= now) {
+
+      ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, rhost, u32c(lGetUlong(jep, JB_job_number))));
       sge_mark_unheard(hep, target);
       DEXIT;
       return -1;
    }
-#else
-   if (last_heard_from(target, &number_one, rhost)+ load_report_interval(hep)*2 <= now) {
-
-      execd_enrolled = ask_commproc(rhost, target, 0);
-      if (execd_enrolled) {
-         ERROR((SGE_EVENT, MSG_COM_NOTENROLLEDONHOST_SSU, 
-               target, rhost, u32c(lGetUlong(jep, JB_job_number))));
-         sge_mark_unheard(hep, target);
-
-         DEXIT;
-         return -1;
-      }
-   }
-#endif
 
    /* load script into job structure for sending to execd */
    /*
@@ -313,12 +295,27 @@ int master
    qlp = lCreateList("qlist", QU_Type);
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
+    * AND
+    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * (so the execd can decide on which processors (-sets) the job will be run).
     */
+   tmpjatep = lFirst( lGetList( tmpjep, JB_ja_tasks ));   
+   if( tmpjatep ) {
+      tmpgdil_ep = lFirst( lGetList( tmpjatep, JAT_granted_destin_identifier_list ));
+   }
+   
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
-      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+      /* copy all JG_processors from all queues to tmpgdil (which will be
+       * sent to the execd).
+       */
+      if( tmpgdil_ep ) {
+         lSetString(tmpgdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+         tmpgdil_ep = lNext( tmpgdil_ep );
+      }
+
       qep = lCopyElem(src_qep);
 
       /* build minimum of job request and queue resource limit */
@@ -542,7 +539,7 @@ void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
    DENTER(TOP_LAYER, "cancel_job_resend");
 
    DPRINTF(("CANCEL JOB RESEND "u32"/"u32"\n", jid, ja_task_id)); 
-   te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, NULL);
+   te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, "job-resend_event");
 
    DEXIT;
    return;
@@ -746,9 +743,9 @@ sge_commit_flags_t commit_flags
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
          lList *answer_list = NULL;
-         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+         spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
-                            SGE_TYPE_JOB);
+                            SGE_TYPE_JATASK);
          answer_list_output(&answer_list);
          lListElem_clear_changed_info(jatep);
          sge_dstring_free(&buffer);
@@ -818,6 +815,7 @@ sge_commit_flags_t commit_flags
 
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
+      lSetList(jatep, JAT_reported_usage_list, NULL);
       {
          lListElem *ep;
          const char *s;
@@ -881,6 +879,7 @@ sge_commit_flags_t commit_flags
    case COMMIT_ST_FINISHED_FAILED:
 /*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
+      remove_from_reschedule_unknown_lists(jobid, jataskid);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
@@ -894,6 +893,7 @@ sge_commit_flags_t commit_flags
       jobid = lGetUlong(jep, JB_job_number);
 /*       job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL); */
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
+      remove_from_reschedule_unknown_lists(jobid, jataskid);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
 
@@ -904,15 +904,6 @@ sge_commit_flags_t commit_flags
       }
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
-      {
-         lList *answer_list = NULL;
-         dstring buffer = DSTRING_INIT;
-         spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                            job_get_key(jobid, jataskid, NULL, &buffer), 
-                            SGE_TYPE_JOB);
-         answer_list_output(&answer_list);
-         sge_dstring_free(&buffer);
-      }
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event( 0, sgeE_JOB_FINAL_USAGE, jobid,
                             lGetUlong(jatep, JAT_task_number),

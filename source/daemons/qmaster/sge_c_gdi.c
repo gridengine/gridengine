@@ -523,6 +523,8 @@ int sub_command
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, uid);
 
+         sge_set_max_dynamic_event_clients(max_dynamic_event_clients);
+         
          sge_add_event_client(ep,&(answer->alp), 
                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL,
                               user,host);
@@ -1188,13 +1190,7 @@ void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gd
       return;
    }
      
-   if (sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL) != 0)
-   {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_WARNING);
-      DEXIT;
-      return;
-   }
+   sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, aHost));
    answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

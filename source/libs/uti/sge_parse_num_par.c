@@ -175,6 +175,8 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
                strncpy(error_str, "time value", error_len); 
             else if (type==TYPE_BOO )
                strncpy(error_str, "boolean value", error_len); 
+            else if (type==TYPE_DOUBLE )
+               strncpy(error_str, "double value", error_len); 
             else
                strncpy(error_str, "memory value", error_len); 
             error_str[error_len-1] = '\0';

@@ -153,7 +153,7 @@ extern "C" {
 /* 
  * DRMAA errno values 
  *
- * the values in detail still need to be agreed  
+ * do not touch these values are agreed !!!
  */
 enum {
    /* -------------- these are relevant to all sections ---------------- */
@@ -241,9 +241,9 @@ typedef struct drmaa_job_ids_s  drmaa_job_ids_t;
  * if no such exists 
  */
 
-int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len);
-int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int value_len);
-int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len);
+int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, size_t value_len);
+int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, size_t value_len);
+int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len);
 
 /* 
  * release opaque string vector 
@@ -513,7 +513,7 @@ int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, c
  * analogous set of macros is defined in POSIX for analyzing the wait3(2) OUT
  * parameter 'stat'.
  *
- * drmaa_synchronize() SHALL return DRMAA_ERRNO_SUCCESS on success, otherwise:
+ * drmaa_wait() SHALL return DRMAA_ERRNO_SUCCESS on success, otherwise:
  *    DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE,
  *    DRMAA_ERRNO_AUTH_FAILURE,
  *    DRMAA_ERRNO_NO_RUSAGE,
@@ -523,7 +523,7 @@ int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, c
  */
 int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, 
    signed long timeout, drmaa_attr_values_t **rusage, 
-   char *error_diagnosis, size_t error_diagnois_len);
+   char *error_diagnosis, size_t error_diag_len);
 
 /* 
  * Evaluates into 'exited' a non-zero value if stat was returned for a

@@ -68,7 +68,8 @@
 /* 
 ** schedd/sge_schedd_text.c
 */ 
-/* #define MSG_SGETEXT_INVALIDHOSTINQUEUE_S        _message(47028, _("invalid hostname "SFQ" associated with queue\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_SGETEXT_INVALIDHOSTINQUEUE_SS          _MESSAGE(47028, _("invalid hostname "SFQ" associated with queue instance "SFQ"\n"))
+#define MSG_SGETEXT_CONSUMABLE_AS_LOAD             _MESSAGE(47029, _("Consumables as load threshold is disabled\n"))
 /* #define MSG_SGETEXT_CANTRESOLVEUSER_S           _message(47030, _("unknown user name "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_CANTRESOLVEGROUP_S          _message(47031, _("unknown group name "SFQ"\n") )   __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_NOCOMMD_SS                  _message(47032, _("unable to contact commd at host "SFN" using service "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
@@ -310,6 +311,7 @@
 #define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN"\n"))
 #define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue\n"))
 #define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ"\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_SS               _MESSAGE(47319, _("no such complex attribute for threshold "SFQ" in queue "SFQ"\n"))
 
 #define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47330, _(SFN" * %f with nproc=%d"))
 #define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47331, _(SFN" * %f"))

@@ -538,7 +538,7 @@ static char* sge_infotext_string_output_parsing(dstring* string_buffer,char* str
 }
 
 
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ == 3
 static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
@@ -1044,7 +1044,7 @@ int main( int argc, char* argv[] ) {
    DPRINTF(("pass 4\n"));
    {
       if (real_args > 0) {
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ == 3
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
          sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));

@@ -62,7 +62,7 @@ for {set i 0} { $i <= $check_highest_level } { incr i} {
 
 set check_init_level_procedure "select_queue"
 set check_name         "qsub"
-set check_category     "COMPATIBILITY SYSTEM L10N"
+set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 set check_functions    ""
 lappend check_functions "check_setup_config"
@@ -97,7 +97,6 @@ lappend check_functions "check_option_P"
 lappend check_functions "check_option_p"
 lappend check_functions "check_option_pe"
 lappend check_functions "check_option_q"
-lappend check_functions "check_option_qs_args"
 lappend check_functions "check_option_r_y"
 lappend check_functions "check_option_r_n"
 lappend check_functions "check_option_sc"
@@ -111,12 +110,11 @@ lappend check_functions "check_option_w"
 lappend check_functions "check_option_@"
 lappend check_functions "check_huge_script"
 lappend check_functions "check_qhold_jobname"
-lappend check_functions "check_cleanup_config"
 
 
 # test specific globals:
 global job_output_dir
-global actual_queue
+global actual_host
 set job_output_dir "."
 
 
@@ -150,7 +148,7 @@ set job_output_dir "."
 #     ???/???
 #*******************************
 proc select_queue {} {
-   global actual_queue CHECK_ACT_LEVEL CHECK_CORE_EXECD
+   global actual_host CHECK_ACT_LEVEL CHECK_CORE_EXECD
    global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
    global HUGE_SCRIPT_MAX_SIZE 
 
@@ -165,10 +163,10 @@ proc select_queue {} {
    set size_interval [expr $HUGE_SCRIPT_MAX_SIZE / $steps_total]
    
    if { $CHECK_ACT_LEVEL < $num_queues } {
-     
-      set actual_queue "[lindex $CHECK_CORE_EXECD $CHECK_ACT_LEVEL].q" 
+      set actual_host [lindex $CHECK_CORE_EXECD $CHECK_ACT_LEVEL] 
       return 0
    } 
+
    return -1 
 }
 
@@ -203,7 +201,7 @@ proc select_queue {} {
 #*******************************
 proc check_submit {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
-   global check_errno job_output_dir actual_queue
+   global check_errno job_output_dir actual_host
    global check_errstr CHECK_OUTPUT
 
 
@@ -212,11 +210,11 @@ proc check_submit {} {
   
 
    foreach host $CHECK_CORE_EXECD {
-     set jobargs "-q ${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+     set jobargs "-q [get_queue_instance all.q ${actual_host}] -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
      set result [submit_job $jobargs 1 30 $host] 
 
      if {$result < 0} {
-        set_error -1 "could not submit job on host $host to queue $actual_queue"
+        set_error -1 "could not submit job from host $host to host $actual_host"
      }
      # Wait job to run and for end of job
      set back [ wait_for_jobstart $result "leeper" 300 ]
@@ -242,7 +240,7 @@ proc qsub_starter_method {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
-   global actual_queue
+   global actual_host
 
 
    # first clean up output directory:  
@@ -251,9 +249,9 @@ proc qsub_starter_method {} {
 
    # set starter method
    set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
-   set_queue $actual_queue change_array
+   set_queue all.q $actual_host change_array
 
-   set jobargs "-q ${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "-q [get_queue_instance all.q ${actual_host}] -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
    set result [submit_job $jobargs] 
 
    if {$result < 0} {
@@ -277,7 +275,7 @@ proc qsub_starter_method {} {
    puts $CHECK_OUTPUT "checking output file $outfilename"
 
    if { ![file exists $outfilename]} {
-    add_proc_error "qsub_starter_method" -1 "output file for job $result in queue $actual_queue does not exist"
+    add_proc_error "qsub_starter_method" -1 "output file for job $result on host $actual_host does not exist"
    } else {
       set f [open $outfilename r]
       set ok 0
@@ -291,10 +289,10 @@ proc qsub_starter_method {} {
         }
       }
       if {$num_lines == 0} {
-        add_proc_error "qsub_starter_method" -1 "error reading from job output file for job $result in queue $actual_queue"
+        add_proc_error "qsub_starter_method" -1 "error reading from job output file for job $result on host $actual_host"
       } else {
         if {$ok == 0} {
-          add_proc_error "qsub_starter_method" -1 "starter method was not started for job $result in queue $actual_queue"
+          add_proc_error "qsub_starter_method" -1 "starter method was not started for job $result on host $actual_host"
         }
       }  
       close $f
@@ -307,7 +305,7 @@ proc qsub_starter_method {} {
 
    # unset starter method
    set change_array(starter_method) "none"
-   set_queue $actual_queue change_array
+   set_queue all.q $actual_host change_array
 
    set_error 0 "no errors"
 }
@@ -373,8 +371,6 @@ proc setup_output_directory {} {
    return $files_deleted 
 }
 
-
-
 #                                                             max. column:     |
 #****** qsub/check_hold() ******
 # 
@@ -405,13 +401,12 @@ proc setup_output_directory {} {
 #     ???/???
 #*******************************
 proc check_hold {} {
-   
-   global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_queue
+   global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_host
  
    # first clean up output directory:  
    setup_output_directory
 
-   set jobargs "-h -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set jobargs "-h -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
    set result [submit_job $jobargs] 
  
    # wait for job to get in pending state 
@@ -452,181 +447,6 @@ proc check_hold {} {
 
    set_error 0 "no errors"
 }
-
-proc check_qhold_jobname {} {
- global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_queue
- global CHECK_FIRST_FOREIGN_SYSTEM_USER
-
-   # first clean up output directory:  
-   setup_output_directory
-
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 90" 
-   set hold_job1 [submit_job $jobargs] 
-
-   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job2 [submit_job $jobargs] 
-
-
-
-   # wait for jobs to get in pending state
-   wait_for_jobpending $hold_job1 "FIRST" 200
-   wait_for_jobpending $hold_job2 "Sleeper" 200 
-
-
-
-   # job 1 should not run within the next 60 seconds  
-   if { [wait_for_jobstart $hold_job1 "Sleeper" 60 0] != -1 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should not run until yet(1)"
-   } 
-
-
-   # release job 1
-   release_job $hold_job1 
-   wait_for_jobstart $hold_job1 "FIRST" 100
-
-
-
-
-   # job 2 should not run within the next minute 
-   if { [wait_for_jobstart $hold_job2 "Sleeper" 60 0] != -1 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job2 should not run until yet(2)"
-   } 
-
-
-   
-
-   # job1 will stop in ca. 30 sec
-   wait_for_jobend $hold_job1 "FIRST" 100
-   
-   # job2 should run now
-   wait_for_jobstart $hold_job2 "Sleeper" 100
-
-   # job2 should run till end
-   wait_for_jobend $hold_job2 "Sleeper" 100 
-
-
-
-
-   set back [ del_job_files $hold_job1 $job_output_dir 2 ] 
-   if { $back != 2 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 did not produce error and output file"
-   }
-
-   set back [ del_job_files $hold_job2 $job_output_dir 2 ] 
-   if { $back != 2 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job2 did not produce error and output file"
-   }
-
-
-   
-
-   puts $CHECK_OUTPUT "Test wait for not existant job (job should immediately run)"
-   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set job_id [submit_job $jobargs] 
-   wait_for_jobstart $job_id "Sleeper" 60
-   wait_for_jobend $job_id "Sleeper" 60
-
-
-
-   puts $CHECK_OUTPUT "additional job submit with same name test"
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job1 [submit_job $jobargs] 
-
-   puts $CHECK_OUTPUT "additional job submit with same name test"
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job2 [submit_job $jobargs] 
-
-
-   wait_for_jobpending $hold_job1 "FIRST" 60
-   wait_for_jobpending $hold_job2 "FIRST" 60
-
-   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job3 [submit_job $jobargs 0]
-   if { $hold_job3 != -14 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job3 should produce non-ambiguous error"
-   } else {
-      puts $CHECK_OUTPUT "got non-ambiguous error: $hold_job3 - correct"
-   } 
-    
-   delete_job $hold_job1
-
-
-
-   puts $CHECK_OUTPUT "submitting hold job ..."
-   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job3 [submit_job $jobargs]
-    
-
-   puts $CHECK_OUTPUT "submitting job with same name (FIRST) ..."
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   puts $CHECK_OUTPUT $jobargs
-   set hold_job1 [submit_job $jobargs 0] 
-   if { $hold_job1 != -15 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should produce violates reference unambiguousness error"
-   } else {
-      puts $CHECK_OUTPUT "got violates reference unambiguousness error: $hold_job1 - correct"
-   } 
-
-
-   puts $CHECK_OUTPUT "submitting job with same name (FIRST) as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   puts $CHECK_OUTPUT $jobargs
-   set hold_job1 [submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ] 
-
-   release_job $hold_job1
-   wait_for_jobstart $hold_job1 "FIRST" 75
-   wait_for_jobend $hold_job1 "FIRST" 75
-
-   delete_job $hold_job2
- 
-   wait_for_jobstart $hold_job3 "Sleeper" 75
-   wait_for_jobend $hold_job3 "Sleeper" 75
-
-
-
-   # test foreign user influence ...
-   puts $CHECK_OUTPUT "checking hold for foreign user ..."
-
-   puts $CHECK_OUTPUT "submitting job with same name (FIRST) as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   puts $CHECK_OUTPUT $jobargs
-   set hold_job1 [submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ] 
-
-   puts $CHECK_OUTPUT "submitting hold job ..."
-   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job3 [submit_job $jobargs]
-
-   wait_for_jobstart $hold_job3 "Sleeper" 75
-   wait_for_jobend $hold_job3 "Sleeper" 75
-
-
-
-   puts $CHECK_OUTPUT "additional job submit with same name test"
-   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job2 [submit_job $jobargs] 
-
-
-   puts $CHECK_OUTPUT "submitting hold job ..."
-   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
-   set hold_job3 [submit_job $jobargs]
-
-   if { [wait_for_jobstart $hold_job3 "Sleeper" 60 0] != -1 } {
-      add_proc_error "check_qhold_jobname" -1 "job $hold_job3 should not run until yet(3)"
-   } 
-
-
-   delete_job $hold_job3
-   delete_job $hold_job2
-   
-   release_job $hold_job1
-   wait_for_jobstart $hold_job1 "FIRST" 60
-   wait_for_jobend $hold_job1 "FIRST" 60
-
-   puts $CHECK_OUTPUT "done."   
-
-   set_error 0 "no errors"
-}
-
 #                                                             max. column:     |
 #****** qsub/check_start_time() ******
 # 
@@ -659,7 +479,7 @@ proc check_qhold_jobname {} {
 proc check_start_time {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
    global check_errno job_output_dir
-   global check_errstr CHECK_OUTPUT actual_queue
+   global check_errstr CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
@@ -698,7 +518,7 @@ proc check_start_time {} {
    
    set start "[exec date +\%Y\%m\%d]$rhour$rminute"
 
-   set jobargs "-a $start -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 60" 
+   set jobargs "-a $start -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 60" 
 
    set time [timestamp]
    set seconds [exec date "+%S"]
@@ -780,7 +600,7 @@ proc check_start_time {} {
 #*******************************
 proc check_deadline {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD CHECK_PRODUCT_TYPE
-   global check_errno CHECK_JOB_OUTPUT_DIR actual_queue
+   global check_errno CHECK_JOB_OUTPUT_DIR actual_host
    global check_errstr CHECK_OUTPUT job_output_dir
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
@@ -846,7 +666,7 @@ proc check_deadline {} {
    set deadline "[exec date +\%Y\%m\%d]$rhour$rminute"
 
    # deadline job (10 min) with deadline in 5 minutes
-   set jobargs "-dl $deadline -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 500" 
+   set jobargs "-dl $deadline -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 500" 
    # start job
    set result [submit_job $jobargs] 
    if {$result < 0 } {
@@ -994,13 +814,13 @@ proc check_deadline {} {
 #*******************************
 proc check_option_ac {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-ac myvar=test -ac myvar2=test2"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1062,13 +882,13 @@ proc check_option_ac {} {
 #*******************************
 proc check_option_A {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-A blahblah"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1130,13 +950,13 @@ proc check_option_A {} {
 #*******************************
 proc check_option_clear {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-clear"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1199,13 +1019,13 @@ proc check_option_clear {} {
 #*******************************
 proc check_option_c {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-c n"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1266,13 +1086,13 @@ proc check_option_c {} {
 #*******************************
 proc check_option_ckpt {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-ckpt testcheckpointobject"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1333,13 +1153,13 @@ proc check_option_ckpt {} {
 #*******************************
 proc check_option_cwd {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-cwd"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1400,13 +1220,13 @@ proc check_option_cwd {} {
 #*******************************
 proc check_option_C {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-C TESTPREFIX"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1467,13 +1287,13 @@ proc check_option_C {} {
 #*******************************
 proc check_option_dc {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-dc myvar,myvar2"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1534,13 +1354,13 @@ proc check_option_dc {} {
 #*******************************
 proc check_option_e {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option ""
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1601,13 +1421,13 @@ proc check_option_e {} {
 #*******************************
 proc check_option_hard {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-hard"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1668,13 +1488,13 @@ proc check_option_hard {} {
 #*******************************
 proc check_option_help {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-help"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0] 
 
@@ -1717,13 +1537,13 @@ proc check_option_help {} {
 #*******************************
 proc check_option_hold_jid {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-hold_jid 1,2,3"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1784,13 +1604,13 @@ proc check_option_hold_jid {} {
 #*******************************
 proc check_option_j_y {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-j y"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1851,13 +1671,13 @@ proc check_option_j_y {} {
 #*******************************
 proc check_option_j_n {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-j n"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -1918,12 +1738,12 @@ proc check_option_j_n {} {
 #*******************************
 proc check_option_l {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-l q=${actual_queue}"
+   set option "-l h=${actual_host}"
    set jobargs "$option -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
@@ -1985,13 +1805,13 @@ proc check_option_l {} {
 #*******************************
 proc check_option_m {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-m beas"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2052,13 +1872,13 @@ proc check_option_m {} {
 #*******************************
 proc check_option_notify {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-notify"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2119,13 +1939,13 @@ proc check_option_notify {} {
 #*******************************
 proc check_option_now_yes {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-now yes"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2186,13 +2006,13 @@ proc check_option_now_yes {} {
 #*******************************
 proc check_option_now_no {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-now no"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2253,7 +2073,7 @@ proc check_option_now_no {} {
 #*******************************
 proc check_option_M {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue CHECK_USER CHECK_REPORT_EMAIL_TO
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host CHECK_USER CHECK_REPORT_EMAIL_TO
 
    if { [ string compare $CHECK_REPORT_EMAIL_TO "none" ] == 0 } {
       add_proc_error "check_option_M" -1 "no email address specified"  
@@ -2264,7 +2084,7 @@ proc check_option_M {} {
    setup_output_directory
 
    set option "-M $CHECK_REPORT_EMAIL_TO"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2325,13 +2145,13 @@ proc check_option_M {} {
 #*******************************
 proc check_option_N {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-N leeper_job"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2393,13 +2213,13 @@ proc check_option_N {} {
 #*******************************
 proc check_option_o {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option ""
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2460,13 +2280,13 @@ proc check_option_o {} {
 #*******************************
 proc check_option_P {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-P mytestproject"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2527,13 +2347,13 @@ proc check_option_P {} {
 #*******************************
 proc check_option_p {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-p 1024"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2594,13 +2414,13 @@ proc check_option_p {} {
 #*******************************
 proc check_option_pe {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-pe mytestpe 1-3"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2661,80 +2481,13 @@ proc check_option_pe {} {
 #*******************************
 proc check_option_q {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-q ${actual_queue}"
+   set option "-q [get_queue_instance all.q ${actual_host}]"
    set jobargs "$option -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
-  
-   set result [submit_job $jobargs 0]  
-   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
-
-   if { $result < 0 } {
-      set_error -1 "could not submit job"
-      return
-   }
-
-   set time [ expr ( [timestamp] + 300  ) ] 
-
-   while { [timestamp] < $time }  {
-      sleep 1
-      set back [was_job_running $result 0] 
-      if {$back != -1} {
-         set back [ del_job_files $result $job_output_dir 2 ] 
-         if { $back != 2 } {
-            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
-            return
-         } else {
-            set_error 0 "no error"
-            return
-         }
-      }
-   }
- 
-   set_error -1 "timeout while waiting for job accounting"
-}
-
-#                                                             max. column:     |
-#****** qsub/check_option_qs_args() ******
-# 
-#  NAME
-#     check_option_qs_args -- ??? 
-#
-#  SYNOPSIS
-#     check_option_qs_args { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc check_option_qs_args {} {
-
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
-
-   # first clean up output directory:  
-   setup_output_directory
-
-   set option "-qs_args arg1 arg2 arg3 -qs_end"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2795,13 +2548,13 @@ proc check_option_qs_args {} {
 #*******************************
 proc check_option_r_y {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-r y"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2862,13 +2615,13 @@ proc check_option_r_y {} {
 #*******************************
 proc check_option_r_n {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-r n"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2929,13 +2682,13 @@ proc check_option_r_n {} {
 #*******************************
 proc check_option_sc {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-sc myvar=test3"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2996,13 +2749,13 @@ proc check_option_sc {} {
 #*******************************
 proc check_option_soft {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-soft"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3063,13 +2816,13 @@ proc check_option_soft {} {
 #*******************************
 proc check_option_S {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-S /bin/sh"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3130,13 +2883,30 @@ proc check_option_S {} {
 #*******************************
 proc check_option_t {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-t 2-8:2"
+   set option "-t 1-2:-1"
    set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+
+   set result [submit_job $jobargs 0]
+   if { $result != -20 } {
+      add_proc_error "check_option_t" -1 "Negative step in range should produce an error"
+   } 
+ 
+   set option "-t 1-2:xx"
+   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+
+   set result [submit_job $jobargs 0]
+
+   if { $result != -21 } {
+      add_proc_error "check_option_t" -1 "Invalid range spec should produce an error"
+   }
+
+   set option "-t 2-8:2"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3145,6 +2915,7 @@ proc check_option_t {} {
       set_error -1 "could not submit job"
       return
    }
+
 
    set time [ expr ( [timestamp] + 300  ) ] 
 
@@ -3197,13 +2968,13 @@ proc check_option_t {} {
 #*******************************
 proc check_option_v {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-v DISPLAY"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3264,13 +3035,13 @@ proc check_option_v {} {
 #*******************************
 proc check_option_verify {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-verify"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3314,13 +3085,13 @@ proc check_option_verify {} {
 #*******************************
 proc check_option_V {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-V"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3381,13 +3152,13 @@ proc check_option_V {} {
 #*******************************
 proc check_option_w {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-w e"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -3448,13 +3219,13 @@ proc check_option_w {} {
 #*******************************
 proc check_option_@ {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_queue CHECK_ACTUAL_TEST_PATH
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST actual_host CHECK_ACTUAL_TEST_PATH
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-@ $CHECK_ACTUAL_TEST_PATH/commandfile.txt"
-   set jobargs "$option -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
 
@@ -3497,7 +3268,7 @@ proc check_option_@ {} {
 #*******************************
 proc check_huge_script {} {
    global job_output_dir CHECK_PROTOCOL_DIR CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST CHECK_ACTUAL_TEST_PATH actual_queue
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST CHECK_ACTUAL_TEST_PATH actual_host
    global HUGE_SCRIPT_SIZE HUGE_SCRIPT_PATTERN HUGE_SCRIPT_TIMEOUT steps_per_queue size_interval
 
    # first clean up output directory:  
@@ -3534,7 +3305,7 @@ proc check_huge_script {} {
       set submit_size [file size $filename]
       puts $CHECK_OUTPUT "submitting job script of size $submit_size bytes allowing a timeout of $HUGE_SCRIPT_TIMEOUT s"
    
-      set jobargs "-l q=${actual_queue} -o $job_output_dir -e $job_output_dir $filename 5" 
+      set jobargs "-l h=${actual_host} -o $job_output_dir -e $job_output_dir $filename 5" 
       #puts $CHECK_OUTPUT "\njob has args: \"$jobargs\""
       
       set submit_start [clock seconds]
@@ -3596,5 +3367,8 @@ proc check_cleanup_config {} {
    } else {
       set_config stored_configuration
    }
+
+   delete_all_jobs
+   
    set_error 0 "ok"
 }

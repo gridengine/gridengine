@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/03/01 16:28:47 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/04/19 10:51:59 $     Revision: $Revision: 1.16 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2004/03/01 16:28:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2004/04/19 10:51:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -120,9 +120,6 @@ Add the parallel environment (PE) defined in \fBfname\fP to the xxQS_NAMExx
 cluster. Requires root or manager privileges.
 .\"
 .IP "\fB\-Aprj fname\fP	\fI<add new project>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Adds the project description defined in
 .B fname
 to the list of registered projects (see
@@ -471,9 +468,6 @@ from the editor, the PE is registered with
 Requires root/manager privileges.
 .\"
 .IP "\fB\-aprj\fP	\fI<add new project>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Adds a project description to the list of registered projects (see
 .M project 5 ).
 .I Qconf
@@ -505,9 +499,6 @@ submit xxQS_NAMExx jobs and control their behavior only.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-astnode node_path=shares,...\fP	\fI<add share tree node>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Adds the specified share tree node(s) to the share tree (see
 .M share_tree 5 ).
 The \fBnode_path\fP is a hierarchical path
@@ -518,9 +509,6 @@ The node is initialized to the number of specified shares.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-astree\fP	\fI<add share tree>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Adds the definition of a share tree to the system (see
 .M share_tree 5 ).
 A template share tree is retrieved and an editor (either
@@ -532,9 +520,6 @@ is registered with
 Requires root or manager privileges.
 .\"
 .IP "\fB\-Astree fname\fP	\fI<add share tree>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Adds the definition of a share tree to the system (see
 .M share_tree 5 ) 
 from the file fname.
@@ -557,19 +542,13 @@ root/manager/operator privileges.
 .\" Requires root or manager privileges.
 .\" usermapping end
 .IP "\fB\-Auser fname\fP	\fI<add user>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Add the user defined in \fBfname\fP
-to the xxQS_NAME_EExx cluster. The format of the user
+to the xxQS_NAMExx cluster. The format of the user
 specification is described in
 .M user 5 .
 Requires root or manager privileges.
 .\"
 .IP "\fB\-auser\fP	\fI<add user>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Adds a user to the list of registered users (see
 .M user 5 ).
 This command invokes an editor (either
@@ -579,9 +558,6 @@ template user. The new user is registered after changing the entry and
 exiting the editor. Requires root or manager privileges.
 .\"
 .IP "\fB\-clearusage\fP	\fI<clear sharetree usage>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Clears all user and project usage from the sharetree.  All usage will be initialized
 back to zero.
 .\"
@@ -645,9 +621,6 @@ Deletes the specified parallel environment (PE).
 Requires root/manager privileges.
 .\"
 .IP "\fB\-dprj project,...\fP	\fI<delete projects>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available
-for xxQS_NAME_Cxx systems.
-.br
 Deletes the specified project(s). Requires root/manager privileges.
 .\"
 .IP "\fB\-dq queue_name,...\fP	\fI<delete queue>\fP"
@@ -660,9 +633,6 @@ Deletes hosts from the xxQS_NAMExx submit host list.
 Requires root/manager privileges.
 .\"
 .IP "\fB\-dstnode node_path,...\fP	\fI<delete share tree node>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Deletes the specified share tree node(s).
 The \fBnode_path\fP is a hierarchical path
 (\fB[/]node_name[[/.]node_name...]\fP)
@@ -670,9 +640,6 @@ specifying the location of the node to be deleted in the share tree.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-dstree\fP	\fI<delete share tree>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Deletes the current share tree. Requires root or manager privileges.
 .\"
 .IP "\fB\-du user,... acl_name,...\fP	\fI<delete users from ACL>\fP"
@@ -690,9 +657,6 @@ Requires root/manager/operator privileges.
 .\" Requires root or manager privileges.
 .\" usermapping end
 .IP "\fB\-duser user,...\fP	\fI<delete users>\fP""
-This option is only supported in case of 
-a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
 Deletes the specified user(s) from the list of registered users.
 Requires root or manager privileges.
 .\"
@@ -835,9 +799,6 @@ for details on the PE configuration format.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mprj project\fP	\fI<modify project>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Data for the specific project is retrieved (see
 .M project 5 )
 and an editor (either
@@ -877,9 +838,6 @@ is overridden with the configuration specified in the file.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mstnode node_path=shares,...\fP	\fI<modify share tree node>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Modifies the specified share tree node(s) in the share tree (see
 .M share_tree 5 ).
 The \fBnode_path\fP is a hierarchical path
@@ -889,9 +847,6 @@ The node is set to the number of specified \fBshares\fP.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-mstree\fP	\fI<modify share tree>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Modifies the definition of the share tree (see
 .M share_tree 5 ).
 The present share tree is retrieved and an editor (either
@@ -903,9 +858,6 @@ the modified data is registered with
 Requires root or manager privileges.
 .\"
 .IP "\fB\-Mstree fname\fP	\fI<modify share tree>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Modifies the definition of the share tree (see
 .M share_tree 5 ). 
 The modified sharetree is read from file fname.
@@ -945,19 +897,13 @@ in the description of
 Requires root or manager privilege. 
 .\"
 .IP "\fB\-Muser fname\fP	\fI<modify user>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Modify the user defined in \fBfname\fP
-in the xxQS_NAME_EExx cluster. The format of the user
+in the xxQS_NAMExx cluster. The format of the user
 specification is described in
 .M user 5 .
 Requires root or manager privileges.
 .\"
 .IP "\fB\-muser user\fP	\fI<modify user>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Data for the specific user is retrieved (see
 .M user 5 )
 and an editor (either
@@ -1067,16 +1013,10 @@ Show a list of all currently defined
 \fIparallel environment\fPs (PEs).
 .\"
 .IP "\fB\-sprj project\fP	\fI<show project>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Shows the definition of the specified project (see
 .M project 5 ).
 .\"
 .IP "\fB\-sprjl\fP	\fI<show project list>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Shows the list of all currently defined projects.
 .\"
 .IP "\fB\-sq wc_queue_list\fP	<show queues>"
@@ -1095,9 +1035,6 @@ Displays the current scheduler configuration in the format explained in
 .M sched_conf 5 .
 .\"
 .IP "\fB\-sstnode node_path,...\fP	\fI<show share tree node>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available  
-for xxQS_NAME_Cxx systems.
-.br
 Shows the name and shares of the specified share tree node(s) (see
 .M share_tree 5 ).
 The \fBnode_path\fP is a hierarchical path
@@ -1105,9 +1042,6 @@ The \fBnode_path\fP is a hierarchical path
 specifying the location of a node in the share tree.
 .\"
 .IP "\fB\-sstree\fP	\fI<show share tree>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available  
-for xxQS_NAME_Cxx systems.
-.br
 Shows the definition of the share tree (see
 .M share_tree 5 ).
 .\"
@@ -1131,16 +1065,10 @@ xxQS_NAMExx user access lists (ACLs).
 .\" which have a guilty user mapping configuration.
 .\" usermapping end
 .IP "\fB\-suser user,...\fP	\fI<show user>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Shows the definition of the specified user(s) (see
 .M user 5 ).
 .\"
 .IP "\fB\-suserl\fP	\fI<show users>\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
-for xxQS_NAME_Cxx systems.
-.br
 Shows the list of all currently defined users.
 .\"
 .IP "\fB\-tsm\fP	\fI<trigger scheduler monitoring>\fP"

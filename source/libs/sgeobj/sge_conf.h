@@ -71,8 +71,8 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    zombie_jobs;          /* jobs to save after execution */
     char        *qlogin_daemon;       /* eg /usr/sbin/in.telnetd */
     char        *qlogin_command;      /* eg telnet $HOST $PORT */
-    char        *rsh_daemon;       /* eg /usr/sbin/in.rshd */
-    char        *rsh_command;      /* eg rsh -p $PORT $HOST command */
+    char        *rsh_daemon;          /* eg /usr/sbin/in.rshd */
+    char        *rsh_command;         /* eg rsh -p $PORT $HOST command */
     char        *rlogin_daemon;       /* eg /usr/sbin/in.rlogind */
     char        *rlogin_command;      /* eg rlogin -p $PORT $HOST */
     u_long32    reschedule_unknown;   /* timout value used for auto. resch. */ 
@@ -85,6 +85,7 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
     char        *auto_user_default_project; /* SGEEE automatic user default project */
     u_long32    auto_user_delete_time; /* SGEEE automatic user delete time */
+    char        *delegated_file_staging; /*drmaa attribute: "true" or "false" */
 };
 
 typedef struct confel sge_conf_type;
@@ -116,6 +117,7 @@ extern bool set_sge_environment;
 extern bool set_grd_environment;
 extern bool set_cod_environment;
 extern int scheduler_timeout;
+extern int max_dynamic_event_clients;
 
 /* reporting params */
 extern bool do_accounting;

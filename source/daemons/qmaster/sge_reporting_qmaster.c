@@ -34,46 +34,49 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include <time.h>
 
 /* rmon */
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 /* uti */
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_dstring.h"
-#include "setup_path.h"
-#include "sge_stdlib.h"
-#include "sge_unistd.h"
-#include "sge_spool.h"
-#include "sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/setup_path.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_time.h"
 
 /* lck */
-#include "sge_lock.h"
-#include "sge_mtutil.h"
+#include "lck/sge_lock.h"
+#include "lck/sge_mtutil.h"
 
 /* daemons/common */
 #include "category.h"
 
 /* sgeobj */
-#include "sge_answer.h"
-#include "sge_feature.h"
-#include "sge_object.h"
-#include "sge_centry.h"
-#include "sge_conf.h"
-#include "sge_host.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
-#include "sge_pe_task.h"
-#include "sge_qinstance.h"
-#include "sge_str.h"
-#include "sge_sharetree.h"
-#include "sge_userprj.h"
-#include "sge_resource_utilization.h"
-#include "sge_userset.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
 
 /* sched */
-#include "sge_sharetree_printing.h"
+#include "sched/sge_resource_utilization.h"
+#include "sched/sge_sharetree_printing.h"
 
 /* local */
 #include "sge_rusage.h"
@@ -81,6 +84,7 @@
 
 /* messages */
 #include "msg_common.h"
+#include "msg_qmaster.h"
 
 /* do not change, the ":" is hard coded into the qacct file
    parsing routines. */
@@ -129,6 +133,14 @@ reporting_get_job_log_name(const job_log_t type);
 
 static const char *
 lGetStringNotNull(const lListElem *ep, int nm);
+
+static void 
+config_sharelog(void);
+
+static bool 
+intermediate_usage_written(const lListElem *job_report, 
+                           const lListElem *ja_task);
+
 
 /****** qmaster/reporting/--Introduction ***************************
 *  NAME
@@ -192,21 +204,17 @@ reporting_initialize(lList **answer_list)
    DENTER(TOP_LAYER, "reporting_initialize");
 
    te_register_event_handler(reporting_trigger_handler, TYPE_REPORTING_TRIGGER);
+   te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
+
+   /* we always have the reporting trigger for flushing reporting files and
+    * checking for new reporting configuration
+    */
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
    te_free_event(ev);
 
-/* JG: TODO: has also be registered, when global config changed.
- * or do it in reporting_trigger_handler: 
- * - check, if sharelog is registered,
- * - if sharelog_time > 0 && not registered: register
- */
-   if (sharelog_time > 0) {
-      te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
-      ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 1, 0, NULL);
-      te_add_event(ev);
-      te_free_event(ev);
-   }
+   /* the sharelog timed events can be switched on or off */
+   config_sharelog();
 
    DEXIT;
    return ret;
@@ -294,6 +302,8 @@ reporting_trigger_handler(te_event_t anEvent)
    
 
    DENTER(TOP_LAYER, "reporting_trigger_handler");
+
+   config_sharelog();
 
    switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
@@ -490,13 +500,20 @@ reporting_create_job_log(lList **answer_list,
 *                                       lListElem *job, lListElem *ja_task) 
 *
 *  FUNCTION
-*     ??? 
+*     Create an accounting record.
+*     Depending on the cluster configuration, parameter reporting_params,
+*     accounting is written to the accounting file and/or the reporting file.
+*     
+*     During the runtime of jobs, intermediate accounting records can be written
+*     to the reporting file. This is usually done at midnight, to have correct
+*     daily accounting information for long running jobs.
 *
 *  INPUTS
 *     lList **answer_list   - used to report error messages
 *     lListElem *job_report - job report from execd
 *     lListElem *job        - job referenced in report
 *     lListElem *ja_task    - array task that finished
+*     bool intermediate     - is this an intermediate accounting record?
 *
 *  RESULT
 *     bool - true on success, false on error
@@ -506,10 +523,13 @@ reporting_create_job_log(lList **answer_list,
 *              MT safety of called functions sge_build_job_category and
 *              sge_write_rusage is not defined.
 *******************************************************************************/
+/* JG: TODO: we should also pass pe_task. It is known in the code pieces where
+ * reporting_create_acct_record is called and we needn't search it from ja_task
+ */
 bool
 reporting_create_acct_record(lList **answer_list, 
                        lListElem *job_report, 
-                       lListElem *job, lListElem *ja_task)
+                       lListElem *job, lListElem *ja_task, bool intermediate)
 {
    bool ret = true;
 
@@ -528,13 +548,13 @@ reporting_create_acct_record(lList **answer_list,
                                           *(userset_list_get_master_list()));
    }
 
-   if (do_accounting || do_reporting){
+   /* accounting records will only be written at job end, not for intermediate
+    * reports
+    */
+   if (do_accounting && !intermediate) {
       job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                    category_string, REPORTING_DELIMITER);
-   }
-
-   /* create record for accounting file */
-   if (do_accounting) {
+                                    category_string, REPORTING_DELIMITER, 
+                                    false);
       if (job_string == NULL) {
          ret = false;
       } else {
@@ -546,7 +566,25 @@ reporting_create_acct_record(lList **answer_list,
       }
    }
 
+   /* reporting records will be written both for intermediate and final
+    * job reports
+    */
    if (ret && do_reporting) {
+      /* job_dstring might have been filled with accounting record - this one
+       * contains total accounting values.
+       * If we have written intermediate accounting records earlier, or this
+       * call will write intermediate accounting, we have to create our own 
+       * accounting record.
+       * Otherwise (final accounting record, no intermediate acct done before),
+       * we can reuse the accounting record.
+       */
+      if (job_string == NULL ||
+         intermediate_usage_written(job_report, ja_task) || intermediate) {
+         sge_dstring_clear(&job_dstring);
+         job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                       category_string, REPORTING_DELIMITER,
+                                       intermediate);
+      }
       if (job_string == NULL) {
          ret = false;
       } else {
@@ -972,6 +1010,149 @@ reporting_create_sharelog_record(lList **answer_list)
    return ret;
 }
 
+
+/****** qmaster/reporting/reporting_is_intermediate_acct_required() ********
+*  NAME
+*     reporting_is_intermediate_acct_required() -- write intermed. acct record? 
+*
+*  SYNOPSIS
+*     bool 
+*     reporting_is_intermediate_acct_required(const lListElem *job, 
+*                                             const lListElem *ja_task, 
+*                                             const lListElem *pe_task) 
+*
+*  FUNCTION
+*     Checks if it is necessary to write an intermediate accounting record
+*     for the given ja_task or pe_task.
+*
+*     An intermediate accounting record is written
+*        - reporting is activated at all.
+*        - when the first usage record for a job is received after midnight.
+*        - the job hasn't just started some seconds before midnight.
+*          This is an optimization to limit the number of intermediate 
+*          accounting records in troughput clusters with short job runtimes.
+*          The minimum runtime required for an intermediate record to be written
+*          is defined in INTERMEDIATE_MIN_RUNTIME.
+*
+*     A further optimization has been done: To reduce the overhead caused by
+*     this function (called with every job report), the check will only be done
+*     in a time window starting at midnight. The length of the time window is 
+*     defined in INTERMEDIATE_ACCT_WINDOW.
+*
+*  INPUTS
+*     const lListElem *job     - job
+*     const lListElem *ja_task - array task
+*     const lListElem *pe_task - optionally parallel task
+*
+*  RESULT
+*     bool - true, if writing of an intermediate accounting record is required,
+*            else false.
+*
+*  NOTES
+*     MT-NOTE: reporting_is_intermediate_acct_required() is MT safe 
+*
+*  SEE ALSO
+*     qmaster/reporting/reporting_create_acct_record()
+*******************************************************************************/
+bool
+reporting_is_intermediate_acct_required(const lListElem *job, 
+                                        const lListElem *ja_task, 
+                                        const lListElem *pe_task)
+{
+   bool ret = false;
+   time_t last_intermediate, now;
+   u_long32 start_time;
+   struct tm tm_last_intermediate, tm_now;
+
+
+   DENTER(TOP_LAYER, "reporting_is_intermediate_acct_required");
+
+   /* if reporting isn't active, we needn't write intermediate usage */
+   if (!do_reporting) {
+      return false;
+   }
+
+   /* valid input data? */
+   if (job == NULL || ja_task == NULL) {
+      /* JG: TODO: i18N */
+      WARNING((SGE_EVENT, "reporting_is_intermediate_acct_required: invalid input data\n"));
+      return false;
+   }
+
+   /* 
+    * optimization: only do the following actions "shortly after midnight" 
+    */
+   now = sge_get_gmt();
+   localtime_r(&now, &tm_now);
+#if 1
+   if (tm_now.tm_hour != 0 || tm_now.tm_min > INTERMEDIATE_ACCT_WINDOW) {
+      return false;
+   }
+#endif
+
+   /* 
+    * optimization: do not write intermediate usage for jobs that just 
+    * "started a short time before"
+    */
+   if (pe_task != NULL) {
+      start_time = lGetUlong(pe_task, PET_start_time);
+   } else {
+      start_time = lGetUlong(ja_task, JAT_start_time);
+   }
+
+   if ((now - start_time) < (INTERMEDIATE_MIN_RUNTIME + tm_now.tm_min * 60 + 
+                   tm_now.tm_sec)) {
+      return false;
+   }
+
+   /* 
+    * try to read time of an earlier intermediate report
+    * if no intermediate report has been written so far, use start time 
+    */
+   if (pe_task != NULL) {
+      last_intermediate = usage_list_get_ulong_usage(
+                             lGetList(pe_task, PET_reported_usage), 
+                             LAST_INTERMEDIATE, 0);
+   } else {
+      last_intermediate = usage_list_get_ulong_usage(
+                             lGetList(ja_task, JAT_reported_usage_list), 
+                             LAST_INTERMEDIATE, 0);
+   }
+
+   if (last_intermediate == 0) {
+      last_intermediate = start_time;
+   }
+
+   /* compare day portion of last_intermediate vs. current time 
+    * if day changed, we have to write an intermediate report
+    */
+   localtime_r(&last_intermediate, &tm_last_intermediate);
+   /* new day? */
+   if (
+#if 0 /* for development and debugging: write intermediate data every hour */
+       tm_last_intermediate.tm_hour < tm_now.tm_hour ||
+#endif
+       tm_last_intermediate.tm_yday < tm_now.tm_yday ||
+       tm_last_intermediate.tm_year < tm_now.tm_year
+       ) {
+       char buffer[100];
+       char timebuffer[100];
+       dstring buffer_dstring;
+       sge_dstring_init(&buffer_dstring, buffer, sizeof(buffer));
+       INFO((SGE_EVENT, MSG_REPORTING_INTERMEDIATE_SS, 
+             job_get_key(lGetUlong(job, JB_job_number),
+                         lGetUlong(ja_task, JAT_task_number),
+                         pe_task != NULL ? lGetString(pe_task, PET_id) 
+                                         : NULL,
+                         &buffer_dstring),
+           asctime_r(&tm_now, timebuffer)));
+       ret = true;
+   }
+
+   DEXIT;
+   return ret;
+}
+
 /* ----- static functions ----- */
 
 /*
@@ -1228,31 +1409,74 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: reporting_get_job_log_name() is MT-safe
+*/
 static const char *
 reporting_get_job_log_name(const job_log_t type)
 {
-   /* JG: TODO: using a switch() would be safer! */
-   static const char *names[JL_ALL] = {
-      "unknown",
-      "pending",
-      "sent",
-      "resent",
-      "delivered",
-      "running",
-      "suspended",
-      "unsuspended",
-      "held",
-      "released",
-      "restart",
-      "migrate",
-      "deleted",
-      "finished",
-      "error"
-   };
+   const char *ret;
 
-   return names[type];
+   switch (type) {
+      case JL_UNKNOWN:
+         ret = MSG_JOBLOG_ACTION_UNKNOWN;
+         break;
+      case JL_PENDING:
+         ret = MSG_JOBLOG_ACTION_PENDING;
+         break;
+      case JL_SENT:
+         ret = MSG_JOBLOG_ACTION_SENT;
+         break;
+      case JL_RESENT:
+         ret = MSG_JOBLOG_ACTION_RESENT;
+         break;
+      case JL_DELIVERED:
+         ret = MSG_JOBLOG_ACTION_DELIVERED;
+         break;
+      case JL_RUNNING:
+         ret = MSG_JOBLOG_ACTION_RUNNING;
+         break;
+      case JL_SUSPENDED:
+         ret = MSG_JOBLOG_ACTION_SUSPENDED;
+         break;
+      case JL_UNSUSPENDED:
+         ret = MSG_JOBLOG_ACTION_UNSUSPENDED;
+         break;
+      case JL_HELD:
+         ret = MSG_JOBLOG_ACTION_HELD;
+         break;
+      case JL_RELEASED:
+         ret = MSG_JOBLOG_ACTION_RELEASED;
+         break;
+      case JL_RESTART:
+         ret = MSG_JOBLOG_ACTION_RESTART;
+         break;
+      case JL_MIGRATE:
+         ret = MSG_JOBLOG_ACTION_MIGRATE;
+         break;
+      case JL_DELETED:
+         ret = MSG_JOBLOG_ACTION_DELETED;
+         break;
+      case JL_FINISHED:
+         ret = MSG_JOBLOG_ACTION_FINISHED;
+         break;
+      case JL_ERROR:
+         ret = MSG_JOBLOG_ACTION_ERROR;
+         break;
+      default:
+         ret = "!!!! unknown job state !!!!";
+         break;
+   }   
+
+   return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: MT-safety depends on lGetString (which has no MT-NOTE)
+*              lGetStringNotNull() itself is MT-safe
+*/
 static const char *
 lGetStringNotNull(const lListElem *ep, int nm)
 {
@@ -1260,6 +1484,70 @@ lGetStringNotNull(const lListElem *ep, int nm)
    if (ret == NULL) {
       ret = "";
    }
+   return ret;
+}
+
+/*
+* NOTES
+*     MT-NOTE: config_sharelog() is MT-safe
+*              Accessing the static boolean variable sharelog_running
+*              is not breaking MT-safety.
+*/
+static void 
+config_sharelog(void) {
+   static bool sharelog_running = false;
+
+   /* sharelog shall be written according to global config */
+   if (sharelog_time > 0) {
+      /* if sharelog is not running: switch it on */
+      if (!sharelog_running) {
+         te_event_t ev = NULL;
+         ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 
+                           1, 0, NULL);
+         te_add_event(ev);
+         te_free_event(ev);
+         sharelog_running = true;
+      }
+   } else {
+      /* switch if off */
+      if (sharelog_running) {
+         te_delete_one_time_event(TYPE_SHARELOG_TRIGGER, 1, 0, NULL);
+         sharelog_running = false;
+      }
+   }
+}
+
+/*
+* NOTES
+*     MT-NOTE: intermediate_usage_written() is MT-safe
+*/
+static bool 
+intermediate_usage_written(const lListElem *job_report, 
+                           const lListElem *ja_task) 
+{
+   bool ret = false;
+   const char *pe_task_id;
+   const lList *reported_usage = NULL;
+  
+   /* do we have a tightly integrated parallel task? */
+   pe_task_id = lGetString(job_report, JR_pe_task_id_str);
+   if (pe_task_id != NULL) {
+      const lListElem *pe_task = lGetElemStr(lGetList(ja_task, JAT_task_list), 
+                                             PET_id, pe_task_id);
+      if (pe_task != NULL) {
+         reported_usage = lGetList(pe_task, PET_reported_usage);
+      }
+   } else {
+      reported_usage = lGetList(ja_task, JAT_reported_usage_list);
+   }
+
+   /* the reported usage list will be created when the first intermediate
+    * acct record is written
+    */
+   if (reported_usage != NULL) {
+      ret = true;
+   }
+
    return ret;
 }
 

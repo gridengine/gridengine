@@ -67,6 +67,8 @@
 
 /* array job (qsub -t ...) */
 #define JOB_TYPE_ARRAY      0x80L
+/* Do a raw exec (qsub -noshell) */
+#define JOB_TYPE_NO_SHELL   0x100L
 
 #define JOB_TYPE_QXXX_MASK \
    (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN | JOB_TYPE_NO_ERROR)
@@ -79,7 +81,7 @@
 #define JOB_TYPE_STR_NO_ERROR   "NO_ERROR"
 
 #define JOB_TYPE_CLEAR_IMMEDIATE(jb_now) \
-   jb_now = jb_now & 0xFEL 
+   jb_now = jb_now & ~JOB_TYPE_IMMEDIATE 
 
 #define JOB_TYPE_SET_IMMEDIATE(jb_now) \
    jb_now =  jb_now | JOB_TYPE_IMMEDIATE
@@ -108,6 +110,15 @@
 #define JOB_TYPE_SET_NO_ERROR(jb_now) \
    jb_now =  jb_now | JOB_TYPE_NO_ERROR
 
+#define JOB_TYPE_SET_NO_SHELL(jb_now) \
+   jb_now =  jb_now | JOB_TYPE_NO_SHELL
+
+#define JOB_TYPE_UNSET_BINARY(jb_now) \
+   jb_now = jb_now & ~JOB_TYPE_BINARY
+
+#define JOB_TYPE_UNSET_NO_SHELL(jb_now) \
+   jb_now =  jb_now & ~JOB_TYPE_NO_SHELL
+
 #define JOB_TYPE_IS_IMMEDIATE(jb_now)      (jb_now & JOB_TYPE_IMMEDIATE)
 #define JOB_TYPE_IS_QSH(jb_now)            (jb_now & JOB_TYPE_QSH)
 #define JOB_TYPE_IS_QLOGIN(jb_now)         (jb_now & JOB_TYPE_QLOGIN)
@@ -116,6 +127,7 @@
 #define JOB_TYPE_IS_BINARY(jb_now)         (jb_now & JOB_TYPE_BINARY)
 #define JOB_TYPE_IS_ARRAY(jb_now)          (jb_now & JOB_TYPE_ARRAY)
 #define JOB_TYPE_IS_NO_ERROR(jb_now)       (jb_now & JOB_TYPE_NO_ERROR)
+#define JOB_TYPE_IS_NO_SHELL(jb_now)       (jb_now & JOB_TYPE_NO_SHELL)
 
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
@@ -139,6 +151,8 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
                                      u_long32 ja_task_number);
 
 bool job_has_job_pending_tasks(lListElem *job);
+
+bool job_has_soft_requests(lListElem *job);
 
 bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number);
 

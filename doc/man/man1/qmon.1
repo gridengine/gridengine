@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2004/03/03 12:53:31 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2004/04/19 10:52:01 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMON 1 "$Date: 2004/03/03 12:53:31 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMON 1 "$Date: 2004/04/19 10:52:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmon \- X-Windows OSF/Motif graphical user's interface for xxQS_NAMExx
 .\"
@@ -141,7 +141,7 @@ The queue configuration parameters (see
 are subdivided in different categories (\fBGeneral Configuration\fP,
 \fBExecution Methods\fP, \fBCheckpointing\fP, \fBLoad/Suspend Thresholds\fP,
 \fBLimits\fP, \fBComplexes\fP, \fBUser Access\fP, 
-\fBProject Access (only for xxQS_NAME_EExx)\fP, \fBSubordinate Queues\fP, \fBOwners\fP)
+\fBProject Access, \fBSubordinate Queues\fP, \fBOwners\fP)
 which are selectable by the tab widget area presented in the lower region 
 of the queue configuration sub-dialogue. 
 The administrator may select previously configured settings from 
@@ -233,10 +233,9 @@ The host group list allows the manipulation of host groups. Host groups can refe
 The execution host list 
 entries in addition provide the ability to define scaling factors for the load 
 sensors, consumable complex attributes and access attributes 
-(access, xaccess and projects, xprojects for xxQS_NAME_EExx mode only) as described in
+(access, xaccess and projects, xprojects) as described in
 .M complex 5 .
-In a 
-xxQS_NAME_EExx system CPU, memory and I/O usage reported for running jobs can be 
+CPU, memory and I/O usage reported for running jobs can be 
 scaled in addition and the relative performance of a host can be define with 
 the
 .B Resource Capability Factor
@@ -304,7 +303,7 @@ in the left section of the dialogue allows for selecting between
 Configuration of \fBManager\fP accounts.
 Configuration of \fBOperator\fP accounts.
 Definition of \fBUsersets\fP.
-Definition of \fBUser\fP accounts (xxQS_NAME_EExx mode only).
+Definition of \fBUser\fP accounts.
 .RE
 .fi
 .sp 1
@@ -321,8 +320,7 @@ host, queue, project and cluster configuration parameters (see
 .M project 5
 and 
 .M xxqs_name_sxx_conf 5 )
-to control access of users to hosts, queues, projects (only available in a xxQS_NAME_EExx
-system) and the entire cluster.
+to control access of users to hosts, queues, projects and the entire cluster.
 A userset is just a
 collection of user names and UNIX group names. Group names are
 identified by prefixing them with a "@" sign. The already defined
@@ -331,9 +329,9 @@ modified and new lists can be created using the
 .B Userset
 definition dialogue.
 .sp 1
-In a xxQS_NAME_EExx system usersets can be used as
+Usersets can be used as
 .B Access List
-(equivalent to their usage in a xxQS_NAME_Cxx system) and/or as
+and/or as
 .B Department
 required for the so called 
 .B Functional Policy
@@ -343,8 +341,7 @@ and
 .B Ticket Config
 below).
 .sp 1
-A xxQS_NAME_EExx system also requires adding accounts having access to the system as 
-entries to the xxQS_NAME_EExx user database (see
+User names can be added to the system as entries to the xxQS_NAMExx user database (see
 .M user 5 ), here a default project can be attached to the user too.
 This can be done with the 
 .B User
@@ -354,7 +351,7 @@ The
 .B Tickets
 button in the button list on the right side of the dialogue opens the 
 .B Ticket Config
-dialogue (see below). This is also only available in a xxQS_NAME_EExx system.
+dialogue (see below).
 .\"
 .SS "\fBPE Config\fP"
 Parallel environment (PE) interfaces can be configured with this dialogue.
@@ -393,9 +390,7 @@ new or modified checkpointing environment is registered with
 .\"
 .SS "\fBTicket Conf\fP"
 This dialogue offers an overview and editing screen for allocating tickets
-to the share-based, functional and override scheduling policies. It is
-only supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx
-systems.
+to the share-based, functional and override scheduling policies.
 .PP
 The \fBDeadline Job\fP button opens the \fBUser Conf\fP dialogue box.
 Please change 
@@ -403,7 +398,7 @@ to the Userset sub-dialogue and select the userset named "deadlineusers".
 Only users of this userset may submit deadline jobs.
 .sp 1
 The \fBShare Tree Policy\fP button opens the dialogue for
-creating and editing the xxQS_NAME_EExx share tree (see
+creating and editing the xxQS_NAMExx share tree (see
 .M share_tree 5
 and
 .M schedd_conf 5
@@ -430,9 +425,7 @@ and
 for a description of the different types of override tickets).
 .\"
 .SS "\fBProject Conf\fP"
-This button opens a dialogue for creating projects. It is
-only supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx
-systems.
+This button opens a dialogue for creating projects.
 .br
 The dialogue offers a selection list for the existing projects and displays the 
 configuration of the one being selected. By pushing the

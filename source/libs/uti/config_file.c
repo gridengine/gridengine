@@ -52,7 +52,7 @@ char err_msg[1000] = { '0' };
    err_msg for later use
 
 */
-void set_error(char *err_str) 
+void set_error(const char *err_str) 
 {
    if (err_str) {
       strncpy(err_msg, err_str, sizeof(err_msg)-1);
@@ -165,7 +165,7 @@ char *ctrl_method_variables[] = {
 
 static config_entry *find_conf_entry(const char *name, config_entry *ptr);
 
-void (*config_errfunc)(char *) = NULL;
+void (*config_errfunc)(const char *) = NULL;
 
 /*****************************************************
  read configuration file to memory.

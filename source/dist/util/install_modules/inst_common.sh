@@ -1,7 +1,7 @@
-#! /bin/sh
+#!/bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_common.sh
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# Scriptname: inst_common.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -36,22 +36,18 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#set -x
-
-
 #-------------------------------------------------------------------------
-#Setting up common variables and paths (eg. ARCH, utilbin, util)
+#Setting up common variables and paths (eg. SGE_ARCH, utilbin, util)
 #
 BasicSettings()
 {
-
   unset SGE_ND
   unset SGE_DEBUG_LEVEL
 
   SGE_UTIL="./util"
-  ARCH=`$SGE_UTIL/arch`
-  SGE_UTILBIN="./utilbin/$ARCH"
-  SGE_BIN="./bin/$ARCH"
+  SGE_ARCH=`$SGE_UTIL/arch`
+  SGE_UTILBIN="./utilbin/$SGE_ARCH"
+  SGE_BIN="./bin/$SGE_ARCH"
 
 
   shlib_path_name=`util/arch -lib`
@@ -69,15 +65,13 @@ BasicSettings()
   DIRPERM=755
   FILEPERM=644
 
-  #SGE_ROOT=SGE_ROOT
-  #SGE_CELL=SGE_CELL
   SGE_MASTER_NAME=sge_qmaster
   SGE_EXECD_NAME=sge_execd
   SGE_SCHEDD_NAME=sge_schedd
   SGE_SHEPHERD_NAME=sge_shepherd
   SGE_SHADOWD_NAME=sge_shadowd
   SGE_SERVICE=sge_qmaster
-  SGE_MASTER_SRV=sge_qmaster
+  SGE_QMASTER_SRV=sge_qmaster
   SGE_EXECD_SRV=sge_execd
 
   unset SGE_NOMSG
@@ -102,7 +96,6 @@ BasicSettings()
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 1
   fi
-
 }
 
 
@@ -195,6 +188,7 @@ ExecuteAsAdmin()
       Translate 1 "Probably a permission problem. Please check file access permissions."
       Translate 1 "Check read/write permission. Check if SGE daemons are running."
       $ECHO >&2
+      $INFOTEXT -log "Command failed: %s" $*
       exit 1
    fi
    return 0
@@ -228,12 +222,9 @@ SetCellDependentVariables()
 #
 CheckPath()
 {
-   if [ "$SGE_ROOT" = "" ]; then
-      SGE_ROOT=`pwd`
-   fi
       MYTEMP=`echo $SGE_ROOT | sed 's/\/$//'`
       SGE_ROOT=$MYTEMP
-#   export SGE_ROOT
+      export SGE_ROOT
 }
 
 #--------------------------------------------------------------------------
@@ -246,7 +237,8 @@ BINFILES="sge_coshepherd \
           sge_execd sge_qmaster  \
           sge_schedd sge_shadowd \
           sge_shepherd qacct qalter qconf qdel qhold \
-          qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh qstat qsub qtcsh"
+          qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
+          qstat qsub qtcsh qping"
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
@@ -293,6 +285,7 @@ THIRD_PARTY_FILES=openssl
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
       "qhost           qrls            qtcsh           sge_shadowd\n\n" \
+      "qping" \
       "The binaries in >%s< are:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \
@@ -308,6 +301,7 @@ THIRD_PARTY_FILES=openssl
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
       "qhost           qrls            qtcsh           sge_shadowd\n\n" \
+      "qping" \
       "The binaries in >%s< are:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \
@@ -328,15 +322,17 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux|-sm|-db [-auto filename ] [-csp]\n" \
-             "              [-resport] [-afs] [-host] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux|-sm|-usm|-db [-auto filename ] [-csp]\n" \
+             "              [-resport] [-afs] [-host] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
              "   -ux        uninstall execution host\n" \
              "   -sm        install shadow host\n" \
+             "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated Spooling Server\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
+             "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
@@ -344,18 +340,18 @@ ErrUsage()
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sgeee -m -x\n" \
-             "                       Installs qmaster and exechost on localhost\n" \
-             "   inst_sgeee -m -x -auto /path/to/config-file\n" \
-             "                       Installs qmaster and exechost using the given\n" \
-             "                       configuration file\n" \
-             "                       (A templete can be found in:\n" \
-             "                       util/install_modules/inst_sgeee_template.conf)\n" \
-             "   inst_sgeee -ux -host hostname\n" \
-             "                       Uninstalls execd on given executionhost\n" \
-             "   inst_sgeee -db      Install a Berkeley DB Server on local host\n" \
-             "   inst_sgeee -sm      Install a Shadow Master Host on local host" $myname 
-
+             "   inst_sge -m -x\n" \
+             "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x -auto /path/to/config-file\n" \
+             "                     Installs qmaster and exechost using the given\n" \
+             "                     configuration file\n" \
+             "                     (A templete can be found in:\n" \
+             "                     util/install_modules/inst_template.conf)\n" \
+             "   inst_sge -ux -host hostname\n" \
+             "                     Uninstalls execd on given executionhost\n" \
+             "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
+             "   inst_sge -sm      Install a Shadow Master Host on local host" $myname 
+   $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
    exit 1
 }
 
@@ -417,6 +413,7 @@ CheckWhoInstallsSGE()
                   "This will allow you to run Grid Engine only under your user id for testing\n" \
                   "a limited functionality of Grid Engine.\n"
 
+      ADMINUSER=`whoami`
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
       $CLEAR
       return 0
@@ -479,23 +476,25 @@ CheckWhoInstallsSGE()
       while [ $done = false ]; do
          $CLEAR
          $INFOTEXT -u "\nChoosing a Grid Engine admin user name"
-         $INFOTEXT -n "\nPlease enter the user name (or >root<) >> "
+         $INFOTEXT -n "\nPlease enter a valid user name >> "
          INP=`Enter ""`
-         $SGE_UTILBIN/checkuser -check "$INP"
-         if [ $? != 0 ]; then
-            $INFOTEXT "User >%s< does not exist - please correct the username" $INP
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-         else
-            $INFOTEXT "\nInstalling Grid Engine as user >%s<\n" $INP
-            $INFOTEXT -log "Installing Grid Engine as user >%s<" $INP
-            ADMINUSER=$INP
-            if [ $ADMINUSER = root ]; then
-               ADMINUSER=default
+         if [ "$INP" != "" ]; then
+            $SGE_UTILBIN/checkuser -check "$INP"
+            if [ $? != 0 ]; then
+               $INFOTEXT "User >%s< does not exist - please correct the username" $INP
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $CLEAR
+            else
+               $INFOTEXT "\nInstalling Grid Engine as admin user >%s<\n" $INP
+               $INFOTEXT -log "Installing Grid Engine as user >%s<" $INP
+               ADMINUSER=$INP
+               if [ $ADMINUSER = root ]; then
+                  ADMINUSER=default
+               fi
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $CLEAR
+               done=true
             fi
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-            done=true
          fi
       done
    else
@@ -507,9 +506,54 @@ CheckWhoInstallsSGE()
    fi
 }
 
-
 #-------------------------------------------------------------------------
-# ProcessSGERoot: read SGE/SGEEE root directory and set $SGE_ROOT
+# CheckForLocalHostResolving
+#   "localhost", localhost.localdomain and 127.0.x.x are not supported
+#   
+#
+CheckForLocalHostResolving()
+{
+   output=`$SGE_UTILBIN/gethostname| cut -f2 -d:`
+
+   notok=false
+   for cmp in $output; do
+      case "$cmp" in
+      localhost*|127.0*)
+         notok=true
+         ;;
+      esac
+   done
+
+   if [ $notok = true ]; then
+      $INFOTEXT -u "\nUnsupported local hostname"
+      $INFOTEXT "\nThe current hostname is resolved as follows:\n\n"
+      $SGE_UTILBIN/gethostname
+      $INFOTEXT -wait -auto $AUTO -n \
+                "\nIt is not supported for a Grid Engine installation that the local hostname\n" \
+                "contains the hostname \"localhost\" and/or the IP address \"127.0.x.x\" of the\n" \
+                "loopback interface.\n" \
+                "The \"localhost\" hostname should be reserved for the loopback interface\n" \
+                "(\"127.0.0.1\") and the real hostname should be assigned to one of the\n" \
+                "physical or logical network interfaces of this machine.\n\n" \
+                "Installation failed.\n\n" \
+                "Press <RETURN> to exit the installation procedure >> "
+      $INFOTEXT -log "\nThe current hostname is resolved as follows:\n\n"
+      $SGE_UTILBIN/gethostname
+      $INFOTEXT -log -wait -auto $AUTO -n \
+                "\nIt is not supported for a Grid Engine installation that the local hostname\n" \
+                "contains the hostname \"localhost\" and/or the IP address \"127.0.x.x\" of the\n" \
+                "loopback interface.\n" \
+                "The \"localhost\" hostname should be reserved for the loopback interface\n" \
+                "(\"127.0.0.1\") and the real hostname should be assigned to one of the\n" \
+                "physical or logical network interfaces of this machine.\n\n" \
+                "Installation failed.\n\n" \
+                "Press <RETURN> to exit the installation procedure >> "
+      exit
+   fi
+}
+               
+#-------------------------------------------------------------------------
+# ProcessSGERoot: read SGE root directory and set $SGE_ROOT
 #                    check if $SGE_ROOT matches current directory
 #
 ProcessSGERoot()
@@ -524,22 +568,23 @@ ProcessSGERoot()
             $CLEAR
             $INFOTEXT -u "\nChecking \$SGE_ROOT directory"
             $ECHO
+            eval SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
             $INFOTEXT -n "The Grid Engine root directory is not set!\n" \
-                         "Please enter a correct path for SGE_ROOT or quit the installation\n" \
-                         "with <CTRL-C> >> " 
+                         "Please enter a correct path for SGE_ROOT.\n" 
+            $INFOTEXT -n "If this directory is not correct (e.g. it may contain an automounter\n" \
+                         "prefix) enter the correct path to this directory or hit <RETURN>\n" \
+                         "to use default [%s] >> " $SGE_ROOT
          
-            eval SGE_ROOT=`Enter`
+            eval SGE_ROOT=`Enter $SGE_ROOT`
          done
          export SGE_ROOT
       else
          $CLEAR
          $INFOTEXT -u "\nChecking \$SGE_ROOT directory"
          $ECHO
-         eval SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
-         export SGE_ROOT
          SGE_ROOT_VAL=`eval echo $SGE_ROOT`
 
-         $INFOTEXT -n "The Grid Engine root directory (your current directory) is:\n\n" \
+         $INFOTEXT -n "The Grid Engine root directory is:\n\n" \
                       "   \$SGE_ROOT = %s\n\n" \
                       "If this directory is not correct (e.g. it may contain an automounter\n" \
                       "prefix) enter the correct path to this directory or hit <RETURN>\n" \
@@ -585,6 +630,7 @@ ProcessSGERoot()
       fi
    done
 
+   CheckPath
    $INFOTEXT "Your \$SGE_ROOT directory: %s\n" $SGE_ROOT_VAL
    $INFOTEXT -log "Your \$SGE_ROOT directory: %s" $SGE_ROOT_VAL
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
@@ -616,7 +662,7 @@ GiveHints()
                 "   - \$SGE_CELL         (if you are using a cell other than >default<)\n" \
                 "   - \$SGE_QMASTER_PORT (if you haven't added the service >sge_qmaster<)\n" \
                 "   - \$SGE_EXECD_PORT   (if you haven't added the service >sge_execd<)\n" \
-                "   - \$PATH/\$path      (to find the Grid Engine binaries)\n" \
+                "   - \$PATH/\$path       (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH          (to access the manual pages)\n" \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.csh \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.sh
@@ -624,13 +670,21 @@ GiveHints()
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to see where Grid Engine logs messages >> "
       $CLEAR
 
+      tmp_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+      master_spool=`dirname $tmp_spool`
+
       $INFOTEXT -u "\nGrid Engine messages"
       $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
                 "   /tmp/qmaster_messages (during qmaster startup)\n" \
                 "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
                 "After startup the daemons log their messages in their spool directories.\n\n" \
                 "   Qmaster:     %s\n" \
-                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $QMDIR/messages
+                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/messages
+
+      $INFOTEXT -u "\nGrid Engine startup scripts"
+      $INFOTEXT "\nGrid Engine startup scripts can be found at:\n\n" \
+                "   %s (qmaster and scheduler)\n" \
+                "   %s (execd)\n" $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgeexecd
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
                 "Do you want to see previous screen about using Grid Engine again (y/n) [n] >> "
@@ -655,7 +709,7 @@ GiveHints()
                   "   # qconf -sh\n\n" \
                   "and you may add new administrative hosts with the command\n\n" \
                   "   # qconf -ah <hostname>\n\n"
-       $INFOTEXT -wait "Please, hit <RETURN>"
+       $INFOTEXT -wait -n "Please hit <RETURN> >> "
        $CLEAR
        QMASTER="undef"
       return 0
@@ -666,7 +720,7 @@ GiveHints()
 
 
 #-------------------------------------------------------------------------
-# PrintLocalConf:  print execution host local SGE/SGEEE configuration
+# PrintLocalConf:  print execution host local SGE configuration
 #
 PrintLocalConf()
 {
@@ -690,17 +744,14 @@ PrintLocalConf()
 
 
 #-------------------------------------------------------------------------
-# AddSGEStartUpScript: Add startup script to rc files if root installs
+# CreateSGEStartUpScripts: create startup scripts 
 #
-AddSGEStartUpScript()
+CreateSGEStartUpScripts()
 {
    euid=$1
    create=$2
    hosttype=$3
 
-   $CLEAR
-   $INFOTEXT -u "\nGrid Engine startup script"
-   $ECHO
    if [ $hosttype = "master" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
@@ -783,29 +834,54 @@ AddSGEStartUpScript()
          AddDefaultOperator $USER
       fi
 
-      $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
-                "   %s<\n\n" $SGE_STARTUP_FILE
-      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+      $INFOTEXT "Creating >%s< script" $STARTUP_FILE_NAME 
    fi
 
+}
+
+
+
+#-------------------------------------------------------------------------
+# AddSGEStartUpScript: Add startup script to rc files if root installs
+#
+AddSGEStartUpScript()
+{
+   euid=$1
+   hosttype=$2
+
    $CLEAR
+   if [ $hosttype = "master" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
+      STARTUP_FILE_NAME=sgemaster
+      S95NAME=S95sgemaster
+      DAEMON_NAME="qmaster/scheduler"
+   else
+      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
+      STARTUP_FILE_NAME=sgeexecd
+      S95NAME=S95sgeexecd
+      DAEMON_NAME="execd"
+   fi
+
+   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
+
 
    if [ $euid != 0 ]; then
       return 0
    fi
 
-   $INFOTEXT -u "\nGrid Engine startup script"
+   $INFOTEXT -u "\n%s startup script" $DAEMON_NAME
 
    # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
-             "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [n] >> "
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+             "\nWe can install the startup script that will\n" \
+             "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
 
+   ret=$?
    if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
       $CLEAR
       return
    else
-      if [ $? = 1 ]; then
+      if [ $ret = 1 ]; then
          $CLEAR
          return
       fi
@@ -826,14 +902,18 @@ AddSGEStartUpScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
+      SGE_ARCH=`$SGE_UTIL/arch`
+      case $SGE_ARCH in
+      lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
          fi
-      fi
+         ;;
+       esac
+
    elif [ "$RC_FILE" = "insserv-linux" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
@@ -851,14 +931,18 @@ AddSGEStartUpScript()
       grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
       status=$?
       if [ $status != 0 ]; then
+         cat $RC_FILE | sed -e "s/exit 0//g" > $RC_FILE.new.1 2>/dev/null
+         cp $RC_FILE $RC_FILE.save_sge
+         cp $RC_FILE.new.1 $RC_FILE
          $INFOTEXT "Adding application startup to %s" $RC_FILE
          # Add the procedure
          #------------------
          $ECHO "" >> $RC_FILE
-         $ECHO "" >> $RC_FILE
          $ECHO "# Grid Engine start up" >> $RC_FILE
          $ECHO "#-$LINE---------" >> $RC_FILE
          $ECHO $SGE_STARTUP_FILE >> $RC_FILE
+         $ECHO "exit 0" >> $RC_FILE
+         rm $RC_FILE.new.1
       else
          $INFOTEXT "Found a call of %s in %s. Replacing with new call.\n" \
                    "Your old file %s is saved as %s" $STARTUP_FILE_NAME $RC_FILE $RC_FILE $RC_FILE.org.1
@@ -891,6 +975,7 @@ AddSGEStartUpScript()
    $CLEAR
 }
 
+
 #-------------------------------------------------------------------------
 # AddDefaultManager
 #
@@ -914,9 +999,9 @@ AddDefaultOperator()
 MoveLog()
 {
    if [ $EXECD = "uninstall" ]; then
-      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/common/uninstall$DATE.log 2>&1
+      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/spool/uninstall_`hostname`_$DATE.log 2>&1
    else
-      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/common/install$DATE.log 2>&1
+      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/spool/install_`hostname`_$DATE.log 2>&1
    fi
 
    rm /tmp/$LOGNAME 2>&1
@@ -934,4 +1019,147 @@ else
    touch /tmp/$LOGNAME
 fi
 }
+
+
+#-------------------------------------------------------------------------
+# CheckRunningDaemon
+#
+CheckRunningDaemon()
+{
+   daemon_name=$1
+
+   case $daemon_name in
+
+      sge_qmaster )
+       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/qmaster.pid`
+       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       return $?      
+      ;;
+
+      sge_schedd )
+       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/schedd/schedd.pid`
+       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       return $?
+      ;;
+
+      sge_execd )
+       h=`hostname`
+       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/$h/execd.pid`
+       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       return $?      
+      ;;
+
+      sge_shadowd )
+
+      ;;
+   esac
+
+
+}
+
+#----------------------------------------------------------------------------
+# Backup configuration
+# BackupConfig
+#
+BackupConfig()
+{
+   DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+
+   $INFOTEXT -u "SGE Configuration Backup"
+   $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \
+                "within your cluster."
+                SGE_ROOT=`pwd`
+   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT 
+                SGE_ROOT=`Enter $SGE_ROOT`
+   $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
+                SGE_CELL=`Enter default`
+
+   db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+
+   $INFOTEXT -n "\nWhere do you want to save the backupfiles? \nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup
+                backup_dir=`Enter $SGE_ROOT/$SGE_CELL/spool/backup`
+                Makedir $backup_dir
+   $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nShall the backup function create a tar/gz package with your files? (y/n) [y]"
+
+   if [ $? = 0 ]; then
+      TAR=true
+   fi
+ 
+   $INFOTEXT -n "\n... starting with backup\n"    
+   $SGE_UTILBIN/db_dump -f $backup_dir/$DATE.dump -h $db_home sge
+
+   cp -f $SGE_ROOT/$SGE_CELL/common/bootstrap $SGE_ROOT/$SGE_CELL/common/sge_aliases $backup_dir
+
+   if [ $TAR = "true" ]; then
+      $INFOTEXT "\nPlease enter a filename for your backupfile. Default: [backup.tar]"
+      bup_file=`Enter backup.tar`
+      cd $backup_dir
+      tar -cvf $bup_file $DATE.dump bootstrap sge_aliases
+      gzip -9 $bup_file 
+
+      cd $SGE_ROOT
+      $INFOTEXT -n "\n... backup completed"
+      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz"
+
+      cd $backup_dir      
+      rm -f $DATE.dump.tar $DATE.dump bootstrap sge_aliases
+
+      exit 0
+   fi
+
+   $INFOTEXT -n "\n... backup completed"
+   $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir
+
+}
+
+
+
+#----------------------------------------------------------------------------
+# Restore configuration
+# RestoreConfig
+#
+RestoreConfig()
+{
+   $INFOTEXT -u "SGE Configuration Restore"
+   $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \
+                "previously."
+                SGE_ROOT=`pwd`
+   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT
+                SGE_ROOT=`Enter $SGE_ROOT`
+   $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
+                SGE_CELL=`Enter default`
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar/gz format? (y/n) [y] "
+
+   if [ $? = 0 ]; then
+      $INFOTEXT -n "\nPlease enter the full path and name of your backup file."
+      $INFOTEXT -n "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz
+      bup_file=`Enter $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz`
+      Makedir /tmp/bup_tmp
+      $INFOTEXT -n "\nCopiing backupfile to /tmp/bup_tmp\n"
+      cp $bup_file /tmp/bup_tmp
+      cd /tmp/bup_tmp/
+      gzip -d /tmp/bup_tmp/*.gz 
+      tar -xvf /tmp/bup_tmp/*.tar
+      cd $SGE_ROOT 
+      db_home=`cat /tmp/bup_tmp/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
+      $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
+      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path "
+      db_home=`Enter $db_home`
+      
+      $SGE_UTILBIN/db_load -f /tmp/bup_tmp/*.dump -h $db_home sge
+      $INFOTEXT -n "\nYour configuration has been restored"
+      rm -fR /tmp/bup_tmp
+   else
+      $INFOTEXT -n "\nPlease enter the full path  your backup file."
+      bup_file=`Enter $SGE_ROOT/$SGE_CELL/default/spool/backup`
+      db_home=`cat bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
+      $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
+      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >> "
+      db_home=`Enter $db_home`
+      
+      $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge
+      $INFOTEXT -n "\nYour configuration has been restored\n"
+   fi
+}
+
 

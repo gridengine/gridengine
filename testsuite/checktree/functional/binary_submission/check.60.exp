@@ -88,17 +88,13 @@ proc binary_submission_setup  {} {
    global CHECK_OUTPUT 
    global CHECK_CORE_MASTER
 
-
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "setup_queues - sge/ee version \"5.3\" doesn't support binary submission"
-      return 1
-   }
-
    #
    # Save sge_aliases file which was created during installation
    #
    set sge_aliases "$CHECK_PRODUCT_ROOT/default/common/sge_aliases"
+   if { ([ file isfile "${sge_aliases}.sav" ] == 1) } { 
+      file delete ${sge_aliases}.sav
+   }
    if { ([ file isfile "${sge_aliases}" ] == 1) } { 
       file rename ${sge_aliases} ${sge_aliases}.sav
    }
@@ -110,12 +106,6 @@ proc binary_submission_setup  {} {
 proc binary_submission_cleanup  {} {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
-
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "setup_queues - sge/ee version \"5.3\" doesn't support binary submission"
-      return 1
-   }
 
    puts $CHECK_OUTPUT "binary_submission_cleanup ..."
 
@@ -138,13 +128,6 @@ proc binary_submission_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer 
- 
-    
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "setup_queues - sge/ee version \"5.3\" doesn't support binary submission"
-      return 1
-   }
-
  
    puts $CHECK_OUTPUT "binary_submission_check ..."
 
@@ -410,8 +393,11 @@ proc binary_submission_check {} {
          # or we have nothing to do because 
          #
          if { $e_error == 0 } {
-            wait_for_jobstart $job_id $job_name 300 
-            wait_for_jobend $job_id $job_name 20 
+            # JG: Job may be done too fast in scenario 4
+            if { $scenario != 4 } {
+               wait_for_jobstart $job_id $job_name 300 
+            }
+            wait_for_jobend $job_id $job_name 30 0
          } elseif { $e_error == 1 } {
             set state_timeout [timestamp] ;# get unix timestamp
             incr state_timeout 30         ;# timeout
@@ -435,7 +421,7 @@ proc binary_submission_check {} {
          }
       } elseif { $sub_cmd == 1 } {
          if { $e_error == 0 } {
-            wait_for_jobend $job_id $job_name 20
+            wait_for_jobend $job_id $job_name 20 0
             if { $s_exist == 2 } { 
                # 
                # check if output of command is correct
@@ -455,9 +441,9 @@ proc binary_submission_check {} {
       #
       # Check whether the job was executed successfully
       #
-      # wait for accounting to be flushed
-      after 10000
       if { $account == 0 } {
+         # wait for accounting to be flushed
+         after 10000
          was_job_running $job_id
       }
 

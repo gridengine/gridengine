@@ -134,7 +134,8 @@ int cl_string_list_append_string(cl_raw_list_t* list_p,char* string, int lock_li
 
 
 int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_list ) {
-   int ret_val = CL_RETVAL_UNKOWN_HOST_ERROR;
+   int ret_val = CL_RETVAL_OK;
+   int function_return = CL_RETVAL_UNKOWN_HOST_ERROR;
    cl_string_list_elem_t* elem = NULL;
    
    if (list_p == NULL || string == NULL) {
@@ -153,7 +154,7 @@ int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_l
       if (strcmp(elem->string,string) == 0 ) {
          /* found matching element */
          free(cl_raw_list_remove_elem(list_p, elem->raw_elem));
-         ret_val = CL_RETVAL_OK;
+         function_return = CL_RETVAL_OK;
          free(elem);
          elem = NULL;
          break;
@@ -167,7 +168,7 @@ int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_l
          return ret_val;
       }
    }
-   return ret_val;
+   return function_return;
 }
 
 

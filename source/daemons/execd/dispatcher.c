@@ -134,7 +134,7 @@ int dispatch( dispatch_entry*   table,
                   *te;
    int i, j, terminate, errorcode, ntab;
    u_long rcvtimeoutt=rcvtimeout;
-   u_long32 dummyid;
+   u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
    int synchron;
 
@@ -173,17 +173,23 @@ int dispatch( dispatch_entry*   table,
       }
 
 
-      /* svd 971202 - changed min timeout to 2 instead of 5 */
-      cl_commlib_trigger(cl_com_get_handle( "execd" ,1)); /* this will block 1 second , when there are no messages to read/write */
+      /*  trigger communication
+       *  =====================
+       *  -> this will block 1 second , when there are no messages to read/write 
+       */
+      cl_commlib_trigger(cl_com_get_handle( "execd" ,1)); 
 
       i = receive_message_cach_n_ack(&de, &pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
 
-      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", cl_get_error_text(i), de.host, de.commproc, de.id)); 
+      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
+               cl_get_error_text(i), de.host, de.commproc, de.id)); 
+
       switch (i) {
+      case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
+        de.tag = -1;  
+        /* no break; */
       case CL_RETVAL_NO_MESSAGE:
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
-         /* de.tag = -1;  */
-         /* no break; */
       case CL_RETVAL_OK:
 
          /* look for dispatch entries matching the inbound message or
@@ -214,6 +220,8 @@ int dispatch( dispatch_entry*   table,
                sigprocmask(SIG_SETMASK, &old_sigset, NULL);
 
                rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
+#if 0
+               /* This is done later - CR */
                switch (j) {
                case -1:
                   terminate = 1;
@@ -224,13 +232,29 @@ int dispatch( dispatch_entry*   table,
                   errorcode = CL_RETVAL_OK;
                   break;
                }
+#endif
                
                /* if apb is filled send it back to the requestor */
                if (pb_filled(&apb)) {              
                   i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
                                    de.tag, &apb, &dummyid);
+                  if (i != CL_RETVAL_OK) {
+                     DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
+                               cl_get_error_text(i), de.host, de.commproc, de.id));
+                  }
                }
                clear_packbuffer(&apb);
+
+               switch (j) {
+               case -1:
+                  terminate = 1;
+                  errorcode = CL_RETVAL_UNKNOWN;
+                  break;
+               case 1:
+                  terminate = 1;
+                  errorcode = CL_RETVAL_OK;
+                  break;
+               }
             }
          }
          clear_packbuffer(pb);
@@ -266,7 +290,7 @@ int wait4commd;
                   *te;
    int i, j, terminate, errorcode, ntab;
    u_long rcvtimeoutt=rcvtimeout;
-   u_long32 dummyid;
+   u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
    int synchron;
    int connect_problem_sleep;
@@ -811,7 +835,6 @@ void (*errfunc)(const char *);
 /**********************************************************
  send acknowledge packet to requestor
  **********************************************************/
-#ifdef ENABLE_NGC
 static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
               void (*errfunc)(const char *err_str))
 {
@@ -831,27 +854,6 @@ static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short i
    DEXIT;
    return i;
 }
-#else
-static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
-              void (*errfunc)(const char *err_str))
-{
-   int i;
-   u_long32 dummy;
-   char err_str[256];
-
-   DENTER(TOP_LAYER, "sendAckPb");
-
-   i = gdi_send_message_pb(0, commproc, id, host, TAG_ACK_REQUEST, apb, &dummy);
-
-   if (i) {
-      sprintf(err_str, MSG_COM_NOACK_S, cl_errstr(i));
-      (*errfunc)(err_str);
-   }
-
-   DEXIT;
-   return i;
-}
-#endif
 
 /***********************************************************
  look for tag in tagarray
@@ -937,7 +939,6 @@ dispatch_entry *de;
    free(de->host);
 }
 
-#ifdef ENABLE_NGC
 static int copy_de(dedst, desrc)
 dispatch_entry *dedst, *desrc;
 {
@@ -962,30 +963,3 @@ dispatch_entry *dedst, *desrc;
    /* no need to copy function ptr here */
    return 0;
 }
-#else
-/**************************************************/
-static int copy_de(dedst, desrc)
-dispatch_entry *dedst, *desrc;
-{
-   dedst->tag = desrc->tag;
-
-   if (desrc->commproc && desrc->commproc[0]) {
-      desrc->commproc[MAXCOMPONENTLEN] = '\0';
-      strcpy(dedst->commproc, desrc->commproc);
-   } else {
-      dedst->commproc[0] = '\0';
-   }
-
-   if (desrc->host && desrc->host[0]) {
-      desrc->host[MAXHOSTLEN] = '\0';
-      strcpy(dedst->host, desrc->host);
-   } else {
-      dedst->host[0] = '\0';
-   }
-
-   dedst->id = desrc->id;
-
-   /* no need to copy function ptr here */
-   return 0;
-}
-#endif

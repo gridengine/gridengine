@@ -36,6 +36,9 @@
 LCKLIB_DIR = $(SDIR)/libs/lck
 
 LCKLIB = liblck$(LIBEXT)
+# we have a cyclic dependency liblck <--> libuti.
+# the build process can be fixed by building liblck as static lib
+# LCKLIB = liblck.a
 
 LCKLIB_SRC = \
               sge_lock.c \
@@ -84,6 +87,7 @@ liblck.a:	$(LCKLIB_OBJS)
 	$(AR) $(ARFLAGS) liblck.a $(LCKLIB_OBJS)
 	$(RANLIB) liblck.a
 
+# broken dependencies: we have to add libuti here
 liblck$(SHAREDEXT): $(LCKLIB_OBJS) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o liblck$(SHAREDEXT) $(LCKLIB_OBJS) -lrmon $(LIBS) -lc
 

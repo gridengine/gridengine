@@ -1,7 +1,7 @@
 #! /bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_berkeley.sh
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# Scriptname: inst_berkeley.sh
 # Module: berkeley db install functions
 #
 #___INFO__MARK_BEGIN__
@@ -57,7 +57,7 @@ SpoolingQueryChange()
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
 
      if [ $is_server = "true" ]; then
-        $INFOTEXT -n "Please enter the name of your Berkeley DB Spooling Server! >> "
+        $INFOTEXT -n "\nPlease enter the name of your Berkeley DB Spooling Server! >> "
                SPOOLING_SERVER=`Enter`
         $INFOTEXT -n "Please enter the Database Directory now!\n"
         $INFOTEXT -n "Default: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"
@@ -65,14 +65,13 @@ SpoolingQueryChange()
         SPOOLING_DIR=`Enter $SPOOLING_DIR`
      else
         SPOOLING_SERVER=none
-        $INFOTEXT -n "Please enter the Database Directory now, even if you want to spool locally\n" \
-                     "it is necessary to enter this Database Directory. \nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
+        $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally\n" \
+                     "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`Enter $SPOOLING_DIR`        
      fi
  
    fi
- 
 }
 
 SpoolingCheckParams()
@@ -92,8 +91,10 @@ SpoolingCheckParams()
       # TODO: we should check if the hostname can be resolved
       # create a script to start the rpc server
       Makedir $SPOOLING_DIR
-      DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
-      ExecuteAsAdmin $DB_CONFIG_COPY
+
+      # Deactivated the copy of DB_CONFIG file. The DB_CONFIG file is still distributed 
+      #DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
+      #ExecuteAsAdmin $DB_CONFIG_COPY
       CreateRPCServerScript
       $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
       $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "
@@ -105,17 +106,17 @@ SpoolingCheckParams()
          $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
          exec $SGE_ROOT/$COMMONDIR/sgebdb start &
          sleep 5
-         $INFOTEXT "The Berkely DB has been started with these parameters:\n\n"
+         $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
          $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
          $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
-         $INFOTEXT -wait "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
+         $INFOTEXT -wait -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
       else
          $INFOTEXT "Please start the rc script \n>%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
          $INFOTEXT "If your database is already running, then continue with <RETURN>\n"
-         $INFOTEXT -auto $AUTO -wait "Hit <RETURN> to continue >>"
+         $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >>"
       fi
 
-      $INFOTEXT "The Berkely DB installation is completed now!"
+      $INFOTEXT "The Berkeley DB installation is completed now!"
 
    return 1
    fi
@@ -145,31 +146,12 @@ CheckLocalFilesystem()
       fi
    done
 
-   case $ARCH in
-      sol*)
-         df -l $FS >/dev/null 2>&1
-         if [ $? -eq 0 ]; then
-            return 1
-         else
-            return 0
-         fi
-         ;;
-      lx*)
-         df -l $FS >/dev/null 2>&1
-         if [ $? -eq 0 ]; then
-            return 1
-         else
-            return 0
-         fi
-         ;;
-      *)
-         $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
-         $INFOTEXT -wait -n "\nPlease make sure that the directory $FS is on a local filesystem!\nHit <RETURN> to continue >> "
-         exit 1
-         ;;
-   esac
+   if [ `$SGE_UTILBIN/fstype $FS | grep "nfs" | wc -l` -gt 0 ]; then
+      return 0
+   else
+      return 1
+   fi
 
-   return 0
 }
 
 
@@ -220,7 +202,7 @@ InstallServerScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
+      if [ $SGE_ARCH = linux -o $SGE_ARCH = glinux -o $SGE_ARCH = alinux -o $SGE_ARCH = slinux ]; then
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"

@@ -864,9 +864,21 @@ int slots_per_line  /* number of slots to be printed in slots column
 
          ql = lGetList(job, JB_hard_resource_list);
          if (ql) {
+            int slots = sge_job_slot_request(job, pe_list);
             for_each(qrep, ql){
+               const char* name = lGetString(qrep, CE_name);
+               double uc;
+               lListElem *centry = centry_list_locate(centry_list, name);
+              
+               if (centry == NULL) {
+printf("ignore: %s\n", name);                  
+                  continue;
+               }   
+                  
+               uc = centry_urgency_contribution(slots, name, lGetDouble(qrep, CE_doubleval), centry);
                xmlElem = xml_append_Attr_S(attributeList, "hard_request", lGetString(qrep, CE_stringval)); 
-               xml_addAttribute(xmlElem, "name", lGetString(qrep, CE_name));
+               xml_addAttribute(xmlElem, "name", name);
+               xml_addAttributeD(xmlElem, "resource_contribution", uc); 
             }
          }
          
@@ -1443,6 +1455,7 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
    bool has_value_from_object; 
    lListElem *jobElem = NULL;
    lList *attributeList = NULL;
+   u_long32 interval;
    
    DENTER(TOP_LAYER, "xml_print_queue");
 
@@ -1472,13 +1485,17 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
    /* compute the load and check for alarm states */
 
    is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object);
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL, true)) {
       qinstance_state_set_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
                             centry_list, load_alarm_reason, 
                             MAX_STRING_SIZE - 1, "load");
    }
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+   parse_ulong_val(NULL, &interval, TYPE_TIM,
+                   lGetString(q, QU_suspend_interval), NULL, 0);
+   if (lGetUlong(q, QU_nsuspend) != 0 &&
+       interval != 0 &&
+       sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL, false)) {
       qinstance_state_set_suspend_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
                             exechost_list, centry_list, suspend_alarm_reason, 

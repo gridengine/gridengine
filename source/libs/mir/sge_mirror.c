@@ -932,11 +932,13 @@ sge_mirror_error sge_mirror_process_events(void)
    }
 
    if(prof_is_active()) {
+      u_long32 saved_logginglevel = log_state_get_log_level();
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
-
-      INFO((SGE_EVENT, "sge_mirror: processed %d events in %.3f s\n", 
-            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)
-          ));
+      
+      log_state_set_log_level(LOG_INFO); 
+      INFO((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
+            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)));
+      log_state_set_log_level(saved_logginglevel);          
    }
 
    
@@ -1344,7 +1346,22 @@ static sge_mirror_error sge_mirror_process_event(sge_object_type type, sge_event
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
+/* DEBUG */
+#if 1
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
+#else
+   {
+      u_long32 number, type, intkey, intkey2;
+      const char *strkey, *strkey2;
+      number = lGetUlong(event, ET_number);
+      type = lGetUlong(event, ET_type);
+      intkey = lGetUlong(event, ET_intkey);
+      intkey2 = lGetUlong(event, ET_intkey2);
+      strkey = lGetString(event, ET_strkey);
+      strkey2 = lGetString(event, ET_strkey2);
+      DPRINTF(("\tEvent: %s intkey %d intkey2 %d strkey \"%s\" strkey2 \"%s\"\n", event_text(event, &buffer_wrapper), intkey, intkey2, strkey?strkey:"NULL", strkey2?strkey2:"NULL"));
+   }
+#endif
 
    if(mirror_base[type].callback_before != NULL) {
       ret = mirror_base[type].callback_before(type, action, event, mirror_base[type].clientdata);
@@ -1572,7 +1589,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
                               lListElem *ep, const char *key, 
                               sge_event_action action, lListElem *event)
 {
-   lList *data_list;
+   lList *data_list = NULL;
 
    DENTER(TOP_LAYER, "sge_mirror_update_master_list");
    switch(action) {

@@ -637,12 +637,13 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
           continue;
    
       /* search for all requested configuration values */ 
-      for (i=0; i<n; i++)
-         if (!strcasecmp(name[i], cp) && (cp = strtok_r(NULL, " \t\n", &pos))) {
+      for (i=0; i<n; i++) {
+         if ((strcasecmp(name[i], cp) == 0) &&
+             ((cp = strtok_r(NULL, " \t\n", &pos)) != NULL)) {
              strncpy(value[i], cp, 512);
              cp = value[i];
              is_found[i] = true;
-             if (!--nmissing) {
+             if (--nmissing == 0) {
                 FREE(is_found);
                 fclose(fp);
                 DEXIT;
@@ -650,6 +651,7 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
              }
              break;
          }
+      }
    }
 
    for (i=0; i<n; i++) {

@@ -48,7 +48,7 @@
 #include "sge_answer.h"
 #include "sge_mt_init.h"
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
+#include "spool/loader/sge_spooling_loader.h"
 #include "spool/berkeleydb/sge_bdb.h"
 #include "msg_utilbin.h"
 
@@ -65,7 +65,7 @@ usage(const char *argv0)
 }
 
 static int 
-init_framework(struct bdb_info **info)
+init_framework(bdb_info *info)
 {
    int ret = EXIT_FAILURE;
 
@@ -94,7 +94,7 @@ init_framework(struct bdb_info **info)
          lListElem *type = spool_context_search_type(spooling_context, 
                                                      SGE_TYPE_JOB);
          lListElem *rule = spool_type_search_default_rule(type);
-         *info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+         *info = (bdb_info)lGetRef(rule, SPR_clientdata);
          ret = EXIT_SUCCESS;
       }
       answer_list_output(&answer_list);
@@ -105,24 +105,44 @@ init_framework(struct bdb_info **info)
    return ret;
 }
 
+static bdb_database
+get_database_from_key(const char *key)
+{
+   bdb_database database = BDB_CONFIG_DB;
+
+   if (strncmp(key, "J", 1) == 0 ||
+       strncmp(key, "PET", 3) == 0) {
+      database = BDB_JOB_DB;
+   }
+   
+   return database;
+}
+
 static int 
-list_objects(struct bdb_info *info, const char *key) 
+list_objects(bdb_info info, const char *key) 
 {
    int ret = EXIT_SUCCESS;
    bool dbret;
    lList *answer_list = NULL;
+   bdb_database database;
 
    DENTER(TOP_LAYER, "list_objects");
 
+   database = get_database_from_key(key);
+
    /* start a transaction */
+#if 0
    dbret = spool_berkeleydb_start_transaction(&answer_list, info);
    if (!dbret) {
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;
-   } else {
+   } else 
+#endif
+   {
       /* read the list */
       lList *list = NULL;
-      dbret = spool_berkeleydb_read_keys(&answer_list, info, &list, key);
+      dbret = spool_berkeleydb_read_keys(&answer_list, info, database,
+                                         &list, key);
       if (dbret) {
          const lListElem *elem;
          for_each(elem, list) {
@@ -133,7 +153,7 @@ list_objects(struct bdb_info *info, const char *key)
          ret = EXIT_FAILURE;
       }
    }
-
+#if 0
    /* close the transaction */
    dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
                                             ret == EXIT_SUCCESS);
@@ -141,19 +161,22 @@ list_objects(struct bdb_info *info, const char *key)
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;
    }
-
+#endif
    DEXIT;
    return ret;
 }
 
 static int 
-dump_object(struct bdb_info *info, const char *key) 
+dump_object(bdb_info info, const char *key) 
 {
    int ret = EXIT_SUCCESS;
    bool dbret;
    lList *answer_list = NULL;
+   bdb_database database;
 
    DENTER(TOP_LAYER, "list_objects");
+
+   database = get_database_from_key(key);
 
    /* start a transaction */
    dbret = spool_berkeleydb_start_transaction(&answer_list, info);
@@ -163,7 +186,7 @@ dump_object(struct bdb_info *info, const char *key)
    } else {
       /* read object */
       lListElem *object;
-      object = spool_berkeleydb_read_object(&answer_list, info, key);
+      object = spool_berkeleydb_read_object(&answer_list, info, database, key);
       if (object == NULL) {
          answer_list_output(&answer_list);
          ret = EXIT_FAILURE;
@@ -185,13 +208,16 @@ dump_object(struct bdb_info *info, const char *key)
 }
 
 static int 
-delete_object(struct bdb_info *info, const char *key) 
+delete_object( bdb_info info, const char *key) 
 {
    int ret = EXIT_SUCCESS;
    bool dbret;
    lList *answer_list = NULL;
+   bdb_database database;
 
    DENTER(TOP_LAYER, "list_objects");
+
+   database = get_database_from_key(key);
 
    /* start a transaction */
    dbret = spool_berkeleydb_start_transaction(&answer_list, info);
@@ -200,7 +226,8 @@ delete_object(struct bdb_info *info, const char *key)
       ret = EXIT_FAILURE;
    } else {
       /* delete object with given key */
-      dbret = spool_berkeleydb_delete_object(&answer_list, info, key, false);
+      dbret = spool_berkeleydb_delete_object(&answer_list, info, database, 
+                                             key, false);
       if (!dbret) {
          answer_list_output(&answer_list);
          ret = EXIT_FAILURE;
@@ -249,25 +276,25 @@ main(int argc, char *argv[])
          usage(argv[0]);
          ret = EXIT_FAILURE;
       } else {
-         struct bdb_info *info = NULL;
+         bdb_info info = NULL;
          ret = init_framework(&info);
 
          if (ret == EXIT_SUCCESS) {
             if (strcmp(argv[1], "list") == 0) {
-               list_objects(info, argc > 2 ? argv[2] : "");
+               ret = list_objects(info, argc > 2 ? argv[2] : "");
             } else if (strcmp(argv[1], "dump") == 0) {
                if (argc < 3) {
                   usage(argv[0]);
                   ret = EXIT_FAILURE;
                } else {
-                  dump_object(info, argv[2]);
+                  ret = dump_object(info, argv[2]);
                }
             } else if (strcmp(argv[1], "delete") == 0) {
                if (argc < 3) {
                   usage(argv[0]);
                   ret = EXIT_FAILURE;
                } else {
-                  delete_object(info, argv[2]);
+                  ret = delete_object(info, argv[2]);
                }
             } else {
                usage(argv[0]);

@@ -74,6 +74,10 @@
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
+#ifdef SECURE
+const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
+#endif 
+
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
@@ -102,16 +106,19 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 
 int sge_security_initialize(const char *name)
 {
-
    DENTER(TOP_LAYER, "sge_security_initialize");
 
 #ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      if (sec_init(name)) {
-         DEXIT;
-         return -1;
+   {
+      static const char* dummy_string = NULL;
+      dummy_string = sge_dummy_sec_string;
+      if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+         if (sec_init(name)) {
+            DEXIT;
+            return -1;
+         }
       }
-   }     
+   }
 #endif
 
 #ifdef KERBEROS
@@ -274,7 +281,7 @@ int compressed
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
       }
    }
@@ -283,7 +290,7 @@ int compressed
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
-   if (mid) {
+   if (mid != NULL) {
       dummy_mid = *mid;
    }
 
@@ -300,6 +307,10 @@ int compressed
                                      ack_type , 
                                      (cl_byte_t*)buffer ,(unsigned long)buflen,
                                      &dummy_mid , 0 ,tag,1 , synchron);
+   }
+
+   if (mid != NULL) {
+      *mid = dummy_mid;
    }
 
    DEXIT;
@@ -418,7 +429,7 @@ u_short *compressed
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
       }
    } 

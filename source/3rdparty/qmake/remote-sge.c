@@ -823,7 +823,7 @@ static void unlock_hostentry(off_t offset) {
       lock_hostfile();
    
       if(be_verbose) {
-         fprintf(stderr, "unlock_hostentry %d\n", offset);
+         fprintf(stderr, "unlock_hostentry %d\n", (int) offset);
       }
    
       if(lseek(hostfile, offset * (MAXHOSTNAMELEN + sizeof(char)) + sizeof(hostfile_info), SEEK_SET) < 0) {
@@ -1212,7 +1212,7 @@ static int inherit_job()
    return 0;
 }
 
-/****** Interactive/qmake/set_default_options() ***************************************
+/****** Interactive/qmake/set_default_options() ********************************
 *
 *  NAME
 *     set_default_options() -- initialize remote mechanism before gmake startup
@@ -1288,7 +1288,7 @@ void set_default_options()
 
 
 
-/****** Interactive/qmake/equalize_nslots() ***************************************
+/****** Interactive/qmake/equalize_nslots() ************************************
 *
 *  NAME
 *     equalize_nslots() -- equalize -j option with NSLOTS environment
@@ -1569,7 +1569,7 @@ static void submit_qmake()
 }
 
 
-/****** Interactive/qmake/remote_options() ***************************************
+/****** Interactive/qmake/remote_options() *************************************
 *
 *  NAME
 *     remote_options() -- initialize remote mechanism before gmake startup
@@ -1696,7 +1696,7 @@ void remote_setup ()
    }
 }
 
-/****** Interactive/qmake/remote_cleanup() ***************************************
+/****** Interactive/qmake/remote_cleanup() *************************************
 *
 *  NAME
 *     remote_cleanup() -- cleanup remote mechanism before exit
@@ -1739,7 +1739,7 @@ void remote_cleanup ()
 }
 /* Return nonzero if the next job should be done remotely.  */
 
-/****** Interactive/qmake/start_remote_job_p() ***************************************
+/****** Interactive/qmake/start_remote_job_p() *********************************
 *
 *  NAME
 *     start_remote_job_p() -- shall next job be started remote?
@@ -1806,7 +1806,7 @@ int start_remote_job_p (int first_p)
 }
 
 
-/****** Interactive/qmake/is_recursive_make() ***************************************
+/****** Interactive/qmake/is_recursive_make() **********************************
 *
 *  NAME
 *     is_recursive_make -- is a command to execute a recursive make?
@@ -1854,7 +1854,7 @@ static int is_recursive_make(const char *argv_0) {
    return 0;
 }
 
-/****** Interactive/qmake/might_be_recursive_make() ***************************************
+/****** Interactive/qmake/might_be_recursive_make() ****************************
 *
 *  NAME
 *     might_be_recursive_make -- might a command to exec be recursive make?
@@ -1905,6 +1905,71 @@ static int might_be_recursive_make(char *argv[]) {
    }
 
    return 0;
+}
+
+static char *get_sge_resource_request(char **args)
+{
+   char *ret = NULL;
+
+   char **arg = args;
+   while (*arg != NULL && ret == NULL) {
+      const char *s;
+      s = strstr(*arg, "SGE_RREQ=");
+      if (s != NULL) {
+         s += strlen("SGE_RREQ=");
+         if (*s != '"') {
+            fprintf(stderr, "syntax error in sge resource request\n");
+         } else {
+            char buffer[4096];
+            char *d = buffer;
+            s++;
+            while (*s != '\0' && *s != '"') {
+               *d++ = *s++;
+            }
+            *d = '\0';
+            if (*s != '"') {
+               fprintf(stderr, "syntax error in sge resource request\n");
+            } else {
+               ret = strdup(buffer);
+            }
+         }
+      }
+      
+      arg++;
+   }
+
+   return ret;
+}
+
+static int count_sge_resource_request(const char *request)
+{
+   char *copy = strdup(request);
+   int count = 0;
+
+   if (strtok(copy, " \t") != NULL) {
+      count++;
+      while (strtok(NULL, " \t") != NULL) {
+         count++;
+      }
+   }
+
+   free(copy);
+   return count;
+}
+
+static int copy_sge_resource_request(const char *request, char **args, int argc)
+{
+   char *copy = strdup(request);
+   char *token;
+
+   token = strtok(copy, " \t");
+   while (token != NULL) {
+      args[argc++] = strdup(token);
+      token = strtok(NULL, " \t");
+   }
+
+   free(copy);
+   return argc;
 }
 
 /* Start a remote job running the command in ARGV,
@@ -1958,7 +2023,6 @@ static int might_be_recursive_make(char *argv[]) {
 *
 ****************************************************************************
 */
-
 int start_remote_job (char **argv, char **envp, 
                       int stdin_fd, int *is_remote, 
                       int *id_ptr, int *used_stdin)
@@ -2065,19 +2129,34 @@ int start_remote_job (char **argv, char **envp,
       /* child */
       int argc, no_args, i;
       char **args;
+      char *resource_request = NULL;
 
+      /* set PAREND env var */
       if(getenv("JOB_ID")) {
          static char buffer[1024];
          sprintf(buffer, "PARENT=%s", getenv("JOB_ID"));
          putenv(buffer);
       }
-   
+  
       argc = 0;
       i    = 0;
       no_args = 0;
-      
+     
+      /* count arguments */
       while(argv[no_args++]);
 
+      /* do we have individual job requests? */
+      if (dynamic_mode) {
+         resource_request = get_sge_resource_request(argv);
+         if (resource_request != NULL) {
+            if (be_verbose) {
+               fprintf(stderr, "add SGE resource request for this rule: %s\n", 
+                       resource_request);
+            }
+            no_args += count_sge_resource_request(resource_request);
+         }
+      }
+  
       args = (char **)malloc((no_args + sge_v_argc + 6 + pass_cwd + be_verbose) * sizeof(char *));
 
       if(exec_remote) {
@@ -2104,6 +2183,12 @@ int start_remote_job (char **argv, char **envp,
          if (dynamic_mode) {
             args[argc++] = "-now";
             args[argc++] = "no";
+
+            if (resource_request) {
+               argc = copy_sge_resource_request(resource_request, args, argc);
+               free(resource_request);
+               resource_request = NULL;
+            }
          }
 
          for(i = 0; i < sge_v_argc; i++) {

@@ -454,7 +454,8 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
                /* gdi error */
 
                /* For the default case, just print a simple message */
-               if (commlib_error == CL_RETVAL_CONNECT_ERROR) {
+               if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
+                   commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                          prognames[QMASTER],
                                          u32c(sge_get_qmaster_port()), 
@@ -831,7 +832,6 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-#ifdef ENABLE_NGC
 static int sge_send_receive_gdi_request(int *commlib_error,
                                         const char *rhost, 
                                         const char *commproc, 
@@ -910,82 +910,6 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    DEXIT;
    return 0;
 }
-#else
-static int sge_send_receive_gdi_request(int *commlib_error,
-                                        const char *rhost, 
-                                        const char *commproc, 
-                                        u_short id, 
-                                        sge_gdi_request *out,
-                                        sge_gdi_request **in)
-{
-   int ret;
-   char rcv_rhost[MAXHOSTLEN+1];
-   char rcv_commproc[MAXCOMPONENTLEN+1];
-   
-   DENTER(GDI_LAYER, "sge_send_receive_gdi_request");
-
-   if (!out) {
-      ERROR((SGE_EVENT,
-           MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST ));
-      DEXIT;
-      return -1;
-   }
-
-   if (!rhost) {
-      ERROR((SGE_EVENT, MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST ));
-      DEXIT;
-      return -1;
-   }   
-   
-   ret = sge_send_gdi_request(1, rhost, commproc, id, out);
-   *commlib_error = ret;
-
-   if (ret) {
-      if (ret == CL_INTR) {
-         DEXIT;
-         return -5;
-      } else if (( *commlib_error = check_isalive(rhost))) {
-         DEXIT;
-         return -4;
-      } else {
-         DEXIT;
-         return -2;
-      }   
-   }
-
-   strcpy(rcv_rhost, rhost);
-   strcpy(rcv_commproc, commproc);
-
-   while (!(ret = sge_get_gdi_request(commlib_error, rcv_rhost, rcv_commproc, &id, in))) {
-      DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-            (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
-      DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-               out->request_id, out->sequence_id, out->target, out->op));
-
-      if (*in && ((*in)->request_id == out->request_id)) {
-         break;
-      }
-      else {
-         *in = free_gdi_request(*in);
-         DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
-      }
-   }
-
-   if (ret) {
-      if (check_isalive(rhost)) {
-         DEXIT;
-         return -4;
-      } 
-      else {
-         DEXIT;
-         return -3;
-      }   
-   }
-   
-   DEXIT;
-   return 0;
-}
-#endif
 
 /****** gdi/request/sge_send_gdi_request() ************************************
 *  NAME

@@ -70,6 +70,8 @@
 
 #define GID_RANGE_NOT_ALLOWED_ID 100
 
+#define allow_delete_time_modification
+
 /* read_func's and write_func's -- signature is defined in
  * sge_spooling_utilities.h:spooling_field. */
 static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lList **alp);

@@ -917,7 +917,8 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
 
             /*
              * Reject multiple settings for one domain/host
-             * and resolve all hostnames
+             * Resolve all hostnames
+             * Verify host group names
              */
             if (ret) {
                lListElem *elem = NULL;
@@ -941,7 +942,24 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                      ret = false;
                      break;
                   }
-                  if (!sge_is_hgroup_ref(hostname)) {
+                  if (sge_is_hgroup_ref(hostname)) {
+                     if (in_master && strcmp(hostname, HOSTREF_DEFAULT)) {
+                        const lList *master_list = 
+                              *(object_type_get_master_list(SGE_TYPE_HGROUP));
+                        const lListElem *hgroup = 
+                                    hgroup_list_locate(master_list, hostname);
+
+                        if (hgroup == NULL) {
+                           ERROR((SGE_EVENT, MSG_CQUEUE_INVALIDDOMSETTING_SS, 
+                                  cqueue_attribute_array[index].name,
+                                  hostname));
+                           answer_list_add(answer_list, SGE_EVENT,
+                                         STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                           ret = false;
+                           break;
+                        } 
+                     }
+                  } else {
                      char resolved_name[MAXHOSTLEN+1];
                      int back = getuniquehostname(hostname, resolved_name, 0);
 
@@ -1519,12 +1537,16 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
 
          ret = lGetElemHost(qinstance_list, QU_qhostname, hostname);
       } else {
-         ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): cqueue == NULL\n"));
+         ERROR((SGE_EVENT, "cqueue_list_locate_qinstance("SFQ"): cqueue == NULL"
+                "("SFQ", "SFQ", %d, %d)", full_name, 
+                cqueue_name != NULL ? cqueue_name : "<null>", 
+                hostname != NULL ? hostname: "<null>", 
+                (int)has_hostname, (int)has_domain));
       }
       sge_dstring_free(&cqueue_name_buffer);
       sge_dstring_free(&host_domain_buffer);
    } else {
-      ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): cqueue == NULL\n"));
+      ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): full_name == NULL\n"));
    }
    DEXIT;
    return ret;

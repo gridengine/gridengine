@@ -102,7 +102,8 @@
 #define MSG_SEC_SENDERRFAILED            _MESSAGE(55064, _("failed send error message\n"))
 #define MSG_SEC_PACKCONNIDFAILED         _MESSAGE(55065, _("failed pack ConnID\n"))
 #define MSG_SEC_UNPACKCONNIDFAILED       _MESSAGE(55066, _("failed unpack ConnID\n"))
-#define MSG_SEC_DLLOADFAILED             _MESSAGE(55067, _("Unable to open the OpenSSL library.  Please make sure libcrypto.so is accessible from your LD_LIBRARY_PATH.\n"))
+#define MSG_SEC_DLLOADFAILED             _MESSAGE(55067, _("Unable to open the OpenSSL library.  Please make sure libcrypto is accessible from your shared library path.\n"))
+#define MSG_SEC_DLLOADSYMFAILED          _MESSAGE(55068, _("Unable to load symbol from libcrypto.\n"))
 
 
 #endif /* __MSG_SEC_H */

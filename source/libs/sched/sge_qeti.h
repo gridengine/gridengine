@@ -44,9 +44,7 @@ void sge_qeti_next_before(sge_qeti_t *qeti, u_long32 start);
 u_long32 sge_qeti_next(sge_qeti_t *qeti);
 void sge_qeti_release(sge_qeti_t *qeti);
 
-double sge_qeti_resource_available_per_queue(const char *resource_name, lListElem *job, lListElem *pe, 
-      lListElem *ckpt, lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, 
-      u_long32 start, u_long32 duration);
+sge_qeti_t *sge_qeti_allocate2(lListElem *cr);
 
 #endif /* __SGE_QETI_H */
 

@@ -19,13 +19,16 @@ user object attributes.  The cluster configuration parameter
 auto_user_delete_time will control when automatically created
 user objects will automatically be deleted.  If the
 auto_user_delete_time is set to zero, the user objects are
-permanent. Otherwise, user objects will be deleted when no jobs
-have been submitted by the user for the specified number of
-seconds in auto_user_delete_time. Each job submitted by the
-user will result in the deletion time of the automatic user object
-being extended by the auto_user_delete_time. The deletion time
-for each automatic user is maintained in the the user object
-and can be examined using qconf(1) or qmon(1).
+permanent. Otherwise, user objects will be deleted after the
+user has had no active jobs for the specified time in
+auto_user_delete_time.  The deletion time for each automatic
+user is maintained in the the user object and can be examined
+using qconf(1) or qmon(1). The deletion time will be zero for
+permanent users.  If an automatically created user has active
+or pending jobs, the deletion time will be one.  If the
+automatically created user does not have active jobs, the deletion
+time will be set to the time (in number of seconds since January 1,
+1970) when the user will be deleted.
 
 In conjunction with this change, Grid Engine 6.0 also supports
 non-project based default user nodes in the share tree. When the

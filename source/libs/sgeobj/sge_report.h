@@ -35,6 +35,8 @@
 #include "cull.h"
 #include "sge_reportL.h"
 
+/* This is a duplicate definition to the one in sge_todo.h.  One of them should
+ * be removed. */
 int report_list_send(const lList *report_list, const char *rhost, 
                      const char *commproc, int id, 
                      int synchron, u_long32 *mid);

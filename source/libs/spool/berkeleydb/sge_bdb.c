@@ -33,25 +33,21 @@
 #include <errno.h>
 #include <string.h>
 
-/* rmon */
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_log.h"
 
-/* uti */
-#include "sge_profiling.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
 
-/* cull */
-#include "cull.h"
+#include "cull/cull.h"
 
-/* sgeobj */
-#include "sge_answer.h"
-#include "sge_cqueue.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
-#include "sge_object.h"
-#include "sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_str.h"
 
 /* local */
 #include "msg_common.h"
@@ -67,11 +63,17 @@ static const int pack_part = 0;
 #endif
 
 static void 
-spool_berkeleydb_error_close(struct bdb_info *info);
+spool_berkeleydb_error_close(bdb_info info);
 
 static void
-spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_handle_bdb_error(lList **answer_list, bdb_info info,
                                   int bdb_errno);
+
+static bool
+spool_berkeleydb_clear_log(lList **answer_list, bdb_info info);
+
+static bool
+spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info);
 
 /****** spool/berkeleydb/spool_berkeleydb_check_version() **********************
 *  NAME
@@ -132,14 +134,14 @@ spool_berkeleydb_check_version(lList **answer_list)
 *
 *  SYNOPSIS
 *     bool spool_berkeleydb_create_environment(lList **answer_list, struct 
-*     bdb_info *info, const char *url) 
+*     bdb_info info, const char *url) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
 *     lList **answer_list   - ??? 
-*     struct bdb_info *info - ??? 
+*     bdb_info info - ??? 
 *     const char *url       - ??? 
 *
 *  RESULT
@@ -158,7 +160,7 @@ spool_berkeleydb_check_version(lList **answer_list)
 *     ???/???
 *******************************************************************************/
 bool spool_berkeleydb_create_environment(lList **answer_list, 
-                                         struct bdb_info *info)
+                                         bdb_info info)
 { 
    bool ret = true;
    int dbret;
@@ -204,8 +206,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
       if (dbret != 0) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S,
-                                 db_strerror(dbret));
+                                 MSG_BERKELEY_COULDNTCREATEENVIRONMENT_IS,
+                                 dbret, db_strerror(dbret));
          ret = false;
       }
 
@@ -217,8 +219,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
          if (dbret != 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S,
-                                    db_strerror(dbret));
+                                    MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_IS,
+                                    dbret, db_strerror(dbret));
             ret = false;
          } 
       }
@@ -231,8 +233,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
          if (dbret != 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_COULDNTESETRPCSERVER_S,
-                                    db_strerror(dbret));
+                                    MSG_BERKELEY_COULDNTESETRPCSERVER_IS,
+                                    dbret, db_strerror(dbret));
             ret = false;
          } 
       }
@@ -244,6 +246,7 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
          /* worst case scenario: n lockers, all changing m objects in 
           * parallel 
           */
+#if 0
          int lockers = 5;
          int objects = 5000;
          int locks = lockers * 2 * objects;
@@ -256,8 +259,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
             if (dbret != 0) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_COULDNTSETLOCKERS_S,
-                                       db_strerror(dbret));
+                                       MSG_BERKELEY_COULDNTSETLOCKERS_IS,
+                                       dbret, db_strerror(dbret));
                ret = false;
             } 
          }
@@ -269,8 +272,8 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
             if (dbret != 0) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_COULDNTSETOBJECTS_S,
-                                       db_strerror(dbret));
+                                       MSG_BERKELEY_COULDNTSETOBJECTS_IS,
+                                       dbret, db_strerror(dbret));
                ret = false;
             } 
          }
@@ -282,20 +285,25 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
             if (dbret != 0) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_COULDNTSETLOCKS_S,
-                                       db_strerror(dbret));
+                                       MSG_BERKELEY_COULDNTSETLOCKS_IS,
+                                       dbret, db_strerror(dbret));
                ret = false;
             } 
          }
+#endif
       }
 
       /* open the environment */
       if (ret) {
          int flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | 
-                     DB_INIT_TXN | DB_RECOVER;
+                     DB_INIT_TXN;
 
          if (server == NULL) {
             flags |= DB_THREAD;
+         }
+
+         if (bdb_get_recover(info)) {
+            flags |= DB_RECOVER;
          }
 
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -305,17 +313,14 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
          if (dbret != 0){
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSS,
+                                    MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSIS,
                                     server == NULL ? "local spooling" : server, 
-                                    path, db_strerror(dbret));
+                                    path, dbret, db_strerror(dbret));
             ret = false;
             env = NULL;
-            /* JG: TODO: shouldn't we somehow free the env handle? */
          }
          
          bdb_set_env(info, env);
-
-   /*       dbret = env->set_flags(env, DB_DIRECT_DB | DB_DIRECT_LOG, 1); */
       }
    }
 
@@ -327,166 +332,195 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
 }
 
 bool 
-spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_open_database(lList **answer_list, bdb_info info, 
                                bool create)
 {
    bool ret = true;
-
-   DB_ENV *env;
-   DB *db;
-
-   int dbret;
+   int i;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_open_database");
 
-   /* we have to lock info, as multiple threads might try to (re)open
-    * the database connection in parallel 
-    */
-   bdb_lock_info(info);
-    
-   env = bdb_get_env(info);
+   for (i = 0; i < BDB_ALL_DBS && ret; i++) {
+      DB_ENV *env;
+      DB *db;
 
-   if (env == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-      dbname = bdb_get_dbname(info, &dbname_dstring);
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              dbname);
-      sge_dstring_free(&dbname_dstring);
-      ret = false;
-   }
+      int dbret;
 
-   /* check db - another thread could have opened it in the meantime */
-   if (ret) {
-      db = bdb_get_db(info);
-   }
+      /* we have to lock info, as multiple threads might try to (re)open
+       * the database connection in parallel 
+       */
+      bdb_lock_info(info);
+       
+      env = bdb_get_env(info);
 
-   if (ret && db == NULL) {
-      /* create a database handle */
-      if (ret) {
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = db_create(&db, env, 0);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_COULDNTCREATEDBHANDLE_S,
-                                    db_strerror(dbret));
-            ret = false;
-            db = NULL;
-         }
+      if (env == NULL) {
+         dstring dbname_dstring = DSTRING_INIT;
+         const char *dbname;
+         
+         dbname = bdb_get_dbname(info, &dbname_dstring);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                                 dbname);
+         sge_dstring_free(&dbname_dstring);
+         ret = false;
       }
 
-      /* open database handle */
+      /* check db - another thread could have opened it in the meantime */
       if (ret) {
-         int flags = 0;
-         int mode  = 0;
+         db = bdb_get_db(info, i);
+      }
 
-         if (bdb_get_server(info) == NULL) {
-            flags |= DB_THREAD;
-         }
-
-         if (create) {
-            flags |= DB_CREATE | DB_EXCL /*| DB_TRUNCATE */;
-            mode =  S_IRUSR | S_IWUSR;
-         }
-
-         ret = spool_berkeleydb_start_transaction(answer_list, info);
+      if (ret && db == NULL) {
+         /* create a database handle */
          if (ret) {
-            DB_TXN *txn = bdb_get_txn(info);
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            dbret = db->open(db, txn, "sge", NULL, 
-                             DB_BTREE, flags, mode);
+            dbret = db_create(&db, env, 0);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            ret = spool_berkeleydb_end_transaction(answer_list, info, true);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_COULDNTCREATEDBHANDLE_IS,
+                                       dbret, db_strerror(dbret));
+               ret = false;
+               db = NULL;
+            }
          }
-         if (dbret != 0) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    create ? MSG_BERKELEY_COULDNTCREATEDB_SS : 
-                                             MSG_BERKELEY_COULDNTOPENDB_SS,
-                                    "sge", db_strerror(dbret));
-            ret = false;
+
+         /* open database handle */
+         if (ret) {
+            int flags = 0;
+            int mode  = 0;
+
+            if (bdb_get_server(info) == NULL) {
+               flags |= DB_THREAD;
+            }
+
+            /* the config db will only be created, if explicitly requested
+             * (in spoolinit). DB already existing will be handled as error.
+             * Other databases will be created as needed.
+             */
+            if (i == BDB_CONFIG_DB) {
+               if (create) {
+                  flags |= DB_CREATE | DB_EXCL;
+                  mode =  S_IRUSR | S_IWUSR;
+               }
+            } else {
+                  flags |= DB_CREATE;
+                  mode =  S_IRUSR | S_IWUSR;
+            }
+
+            ret = spool_berkeleydb_start_transaction(answer_list, info);
+            if (ret) {
+               const char *db_name = bdb_get_database_name(i); 
+               DB_TXN *txn = bdb_get_txn(info);
+               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+               dbret = db->open(db, txn, db_name, NULL, 
+                                DB_BTREE, flags, mode);
+               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+               ret = spool_berkeleydb_end_transaction(answer_list, info, true);
+            }
+            if (dbret != 0) {
+               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR,
+                                       create ? MSG_BERKELEY_COULDNTCREATEDB_SIS
+                                              : MSG_BERKELEY_COULDNTOPENDB_SIS,
+                                       bdb_get_database_name(i), 
+                                       dbret, db_strerror(dbret));
+               ret = false;
+            }
+         }
+
+         /* if everything is ok - set the database handle */
+         if (ret) {
+            bdb_set_db(info, db, i);
+            DPRINTF(("opened database connection, env = %p, db = %p\n", env, db));
          }
       }
 
-      /* if everything is ok - set the database handle */
-      if (ret) {
-         bdb_set_db(info, db);
-         DPRINTF(("opened database connection, env = %p, db = %p\n", env, db));
-      }
+      bdb_unlock_info(info);
    }
-
-   bdb_unlock_info(info);
 
    DEXIT;
    return ret;
 }
 
 bool 
-spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
-                                const char *url)
+spool_berkeleydb_close_database(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
    DB_ENV *env;
-   DB *db;
+
+   /* database name for info or error output */
+   char dbname_buffer[MAX_STRING_SIZE];
+   dstring dbname_dstring = DSTRING_INIT;
+   const char *dbname;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_close_database");
 
-   env = bdb_get_env(info);
-   db = bdb_get_db(info);
+   sge_dstring_init(&dbname_dstring, dbname_buffer, sizeof(dbname_buffer));
+   dbname = bdb_get_dbname(info, &dbname_dstring);
 
-   if (env == NULL || db == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-      dbname = bdb_get_dbname(info, &dbname_dstring);
+   /* lock the database info, multiple threads might try to close it */
+   bdb_lock_info(info);
+   env = bdb_get_env(info);
+   if (env == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               dbname);
-      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
-      int dbret;
+      int i, dbret;
+      for (i = 0; i < BDB_ALL_DBS; i++) {
+         DB *db;
 
+         /* close open database */
+         db = bdb_get_db(info, i);
+         if (db != NULL) {
+            int dbret;
+
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbret = db->close(db, 0);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_COULDNTCLOSEDB_SIS,
+                                       bdb_get_database_name(i), 
+                                       dbret, db_strerror(dbret));
+               ret = false;
+            }
+
+            db = NULL;
+            bdb_set_db(info, db, i);
+         }
+      }
+
+      /* close env in any case, even if db->close failed */
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = db->close(db, 0);
+      dbret = env->close(env, 0);
       PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       if (dbret != 0) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTCLOSEDB_SS,
-                                 url, db_strerror(dbret));
+                                 MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SIS,
+                                 dbname, dbret, db_strerror(dbret));
          ret = false;
-      }  else {
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = env->close(env, 0);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS,
-                                    url, db_strerror(dbret));
-            ret = false;
-         } else {
-           answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                   ANSWER_QUALITY_INFO, 
-                                   MSG_BERKELEY_CLOSEDDB_S,
-                                   url);
-         }
+      } else {
+        answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                ANSWER_QUALITY_INFO, 
+                                MSG_BERKELEY_CLOSEDDB_S,
+                                dbname);
       }
 
-      db = NULL;
       env = NULL;
-      bdb_set_db(info, db);
       bdb_set_env(info, env);
    }
+
+   bdb_unlock_info(info);
 
    DEXIT;
    return ret;
@@ -498,7 +532,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info) 
+*     spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info) 
 *
 *  FUNCTION
 *     Starts a transaction.
@@ -507,7 +541,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *
 *  RESULT
 *     bool - true on success, else false
@@ -519,7 +553,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *     spool/berkeleydb/spool_berkeleydb_end_transaction()
 *******************************************************************************/
 bool
-spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
+spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
@@ -567,8 +601,8 @@ spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
             spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_ERRORSTARTINGTRANSACTION_S,
-                                    db_strerror(dbret));
+                                    MSG_BERKELEY_ERRORSTARTINGTRANSACTION_IS,
+                                    dbret, db_strerror(dbret));
             ret = false;
             txn = NULL;
          }
@@ -583,7 +617,7 @@ spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
 }
 
 bool
-spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_end_transaction(lList **answer_list, bdb_info info, 
                                  bool commit)
 {
    bool ret = true;
@@ -634,8 +668,8 @@ spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info,
             spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_ERRORENDINGTRANSACTION_S,
-                                    db_strerror(dbret));
+                                    MSG_BERKELEY_ERRORENDINGTRANSACTION_IS,
+                                    dbret, db_strerror(dbret));
             ret = false;
          }
 
@@ -648,9 +682,1008 @@ spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info,
    return ret;
 }
 
+bool 
+spool_berkeleydb_trigger(lList **answer_list, bdb_info info, 
+                         time_t trigger, time_t *next_trigger)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger");
+
+   if (bdb_get_next_clear(info) <= trigger) {
+      ret = spool_berkeleydb_clear_log(answer_list, info);
+      bdb_set_next_clear(info, trigger + BERKELEYDB_CLEAR_INTERVAL);
+   }
+
+   if (bdb_get_next_checkpoint(info) <= trigger) {
+      ret = spool_berkeleydb_checkpoint(answer_list, info);
+      bdb_set_next_checkpoint(info, trigger + BERKELEYDB_CHECKPOINT_INTERVAL);
+   }
+
+   /* set time of next trigger */
+   *next_trigger = MIN(bdb_get_next_clear(info), bdb_get_next_checkpoint(info));
+
+   DEXIT;
+   return ret;
+}
+
+bool 
+spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
+                           const bdb_database database,
+                           lList **list, const lDescr *descr,
+                           const char *key)
+{
+   bool ret = true;
+   int dbret;
+
+   DB *db;
+   DB_TXN *txn;
+
+   DBT key_dbt, data_dbt;
+   DBC *dbc;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_list");
+
+   db  = bdb_get_db(info, database);
+   txn = bdb_get_txn(info);
+
+   if (db == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              bdb_get_database_name(database));
+      spool_berkeleydb_error_close(info);
+      ret = false;
+   } else {
+      DEBUG((SGE_EVENT, "querying objects with keys %s*\n", key));
+
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      dbret = db->cursor(db, txn, &dbc, 0);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      if (dbret != 0) {
+         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_CANNOTCREATECURSOR_IS,
+                                 dbret, db_strerror(dbret));
+         ret = false;
+      } else {
+         /* initialize query to first record for this object type */
+         memset(&key_dbt, 0, sizeof(key_dbt));
+         memset(&data_dbt, 0, sizeof(data_dbt));
+         key_dbt.data = (void *)key;
+         key_dbt.size = strlen(key) + 1;
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         while (true) {
+            if (dbret != 0 && dbret != DB_NOTFOUND) {
+               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_QUERYERROR_SIS,
+                                       key, dbret, db_strerror(dbret));
+               ret = false;
+               break;
+            } else if (dbret == DB_NOTFOUND) {
+               DPRINTF(("last record reached\n"));
+               break;
+            } else if (key_dbt.data != NULL && 
+                       strncmp(key_dbt.data, key, strlen(key)) 
+                       != 0) {
+               DPRINTF(("current key is %s\n", key_dbt.data));
+               DPRINTF(("last record of this object type reached\n"));
+               break;
+            } else {
+               sge_pack_buffer pb;
+               lListElem *object = NULL;
+               int cull_ret;
+
+               DPRINTF(("read object with key "SFQ", size %d\n", 
+                        key_dbt.data, data_dbt.size));
+               cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
+                                                      data_dbt.size, 0);
+               if (cull_ret != PACK_SUCCESS) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_BERKELEY_UNPACKINITERROR_SS,
+                                          key_dbt.data,
+                                          cull_pack_strerror(cull_ret));
+                  ret = false;
+                  break;
+               }
+
+               cull_ret = cull_unpack_elem_partial(&pb, &object, descr, pack_part);
+               if (cull_ret != PACK_SUCCESS) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_BERKELEY_UNPACKERROR_SS,
+                                          key_dbt.data,
+                                          cull_pack_strerror(cull_ret));
+                  ret = false;
+                  break;
+               }
+               /* we may not free the packbuffer: it references the buffer
+                * delivered from the database
+                * clear_packbuffer(&pb);
+                */
+               if (object != NULL) {
+                  if (*list == NULL) {
+                     *list = lCreateList(key, descr);
+                  }
+                  lAppendElem(*list, object);
+               }
+
+               /* get next record */
+      /*          memset(&key_dbt, 0, sizeof(key_dbt)); */
+      /*          memset(&data_dbt, 0, sizeof(data_dbt)); */
+               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+               dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_NEXT);
+               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            }
+         }
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbc->c_close(dbc);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+bool 
+spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
+                              const bdb_database database,
+                              const lListElem *object, const char *key)
+{
+   bool ret = true;
+   lList *tmp_list = NULL;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_write_object");
+
+   /* do not spool free elems. If a free elem is passed, put a copy 
+    * into a temporary list and spool this copy.
+    */
+   if (object->status == FREE_ELEM) {
+      tmp_list = lCreateList("tmp", object->descr);
+      lAppendElem(tmp_list, (lListElem *)object);
+   }
+
+   {
+      sge_pack_buffer pb;
+      int cull_ret;
+      cull_ret = init_packbuffer(&pb, 8192, 0);
+      if (cull_ret != PACK_SUCCESS) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_PACKINITERROR_SS,
+                                 key,
+                                 cull_pack_strerror(cull_ret));
+         ret = false;
+      } else {
+         cull_ret = cull_pack_elem_partial(&pb, object, pack_part);
+         if (cull_ret != PACK_SUCCESS) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_PACKERROR_SS,
+                                    key,
+                                    cull_pack_strerror(cull_ret));
+            ret = false;
+         } else { 
+            int dbret;
+            DBT key_dbt, data_dbt;
+
+            DB *db = bdb_get_db(info, database);
+            DB_TXN *txn = bdb_get_txn(info);
+
+            if (db == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                                       bdb_get_database_name(database));
+               spool_berkeleydb_error_close(info);
+               ret = false;
+            }
+
+            if (ret) {
+               memset(&key_dbt, 0, sizeof(key_dbt));
+               memset(&data_dbt, 0, sizeof(data_dbt));
+               key_dbt.data = (void *)key;
+               key_dbt.size = strlen(key) + 1;
+               data_dbt.data = pb.head_ptr;
+               data_dbt.size = pb.bytes_used;
+
+               DPRINTF(("storing object with key "SFQ", size = %d "
+                        "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
+                        key, data_dbt.size, bdb_get_env(info), db, 
+                        txn, txn->id(txn)));
+
+               /* Store a key/data pair. */
+               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+               dbret = db->put(db, txn, &key_dbt, &data_dbt, 0);
+               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
+               if (dbret != 0) {
+                  spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_BERKELEY_PUTERROR_SIS,
+                                          key, dbret, db_strerror(dbret));
+                  ret = false;
+               } else {
+                  DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d\n",
+                         key, data_dbt.size));
+               }
+            }
+         }
+
+         clear_packbuffer(&pb);
+      }
+   }
+
+   if (tmp_list != NULL) {
+      lDechainElem(tmp_list, (lListElem *)object);
+      tmp_list = lFreeList(tmp_list);
+   }
+
+   DEXIT;
+   return ret;
+}
+
 bool
-spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info, 
-                           const char *url)
+spool_berkeleydb_write_pe_task(lList **answer_list, bdb_info info,
+                               const lListElem *object, 
+                               u_long32 job_id, u_long32 ja_task_id,
+                               const char *pe_task_id)
+{
+   bool ret = true;
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+
+   sge_dstring_init(&dbkey_dstring, 
+                    dbkey_buffer, sizeof(dbkey_buffer));
+
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%8d.%8d %s", 
+                               object_type_get_name(SGE_TYPE_PETASK),
+                               job_id, ja_task_id, pe_task_id);
+
+   ret = spool_berkeleydb_write_object(answer_list, info, BDB_JOB_DB,
+                                       object, dbkey);
+
+   return ret;
+}
+
+bool
+spool_berkeleydb_write_ja_task(lList **answer_list, bdb_info info,
+                               const lListElem *object, 
+                               u_long32 job_id, u_long32 ja_task_id)
+{
+   bool ret = true;
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   lList *tmp_list = NULL;
+
+   sge_dstring_init(&dbkey_dstring,
+                    dbkey_buffer, sizeof(dbkey_buffer));
+
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%8d.%8d", 
+                               object_type_get_name(SGE_TYPE_JATASK),
+                               job_id, ja_task_id);
+
+   lXchgList((lListElem *)object, JAT_task_list, &tmp_list);
+   ret = spool_berkeleydb_write_object(answer_list, info, BDB_JOB_DB,
+                                       object, dbkey);
+   lXchgList((lListElem *)object, JAT_task_list, &tmp_list);
+
+   return ret;
+}
+
+bool
+spool_berkeleydb_write_job(lList **answer_list, bdb_info info,
+                           const lListElem *object, 
+                           u_long32 job_id, bool only_job)
+{
+   bool ret = true;
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   lList *tmp_list = NULL;
+
+   sge_dstring_init(&dbkey_dstring,
+                    dbkey_buffer, sizeof(dbkey_buffer));
+
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%8d", 
+                               object_type_get_name(SGE_TYPE_JOB), 
+                               job_id);
+
+   lXchgList((lListElem *)object, JB_ja_tasks, &tmp_list);
+   
+   ret = spool_berkeleydb_write_object(answer_list, info, BDB_JOB_DB,
+                                       object, dbkey);
+
+   lXchgList((lListElem *)object, JB_ja_tasks, &tmp_list);
+
+   if (ret && !only_job) {
+      lListElem *ja_task;
+      for_each(ja_task, lGetList(object, JB_ja_tasks)) {
+         ret = spool_berkeleydb_write_ja_task(answer_list, info,
+                                              ja_task,
+                                              job_id, 
+                                              lGetUlong(ja_task, 
+                                                        JAT_task_number));
+         if (!ret) {
+            break;
+         }
+      }
+   }
+
+   return ret;
+}
+
+bool
+spool_berkeleydb_write_cqueue(lList **answer_list, bdb_info info, 
+                              const lListElem *object, const char *key)
+{
+   bool ret = true;
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   lList *tmp_list = NULL;
+
+   sge_dstring_init(&dbkey_dstring,
+                    dbkey_buffer, sizeof(dbkey_buffer));
+
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 
+                               object_type_get_name(SGE_TYPE_CQUEUE), 
+                               key);
+
+   lXchgList((lListElem *)object, CQ_qinstances, &tmp_list);
+   
+   ret = spool_berkeleydb_write_object(answer_list, info, BDB_CONFIG_DB,
+                                       object, dbkey);
+
+   lXchgList((lListElem *)object, CQ_qinstances, &tmp_list);
+
+   return ret;
+}
+
+/****** spool/berkeleydb/spool_berkeleydb_delete_object() **********************
+*  NAME
+*     spool_berkeleydb_delete_object() -- delete one or multiple objects
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
+*                                    const char *key, bool sub_objects) 
+*
+*  FUNCTION
+*     If sub_objects = false, deletes the object specified by key.
+*     If sub_objects = true, key will be used as pattern to delete multiple
+*     objects.
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     bdb_info info - database handle
+*     const char *key       - key
+*     bool sub_objects      - use key as pattern?
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_delete_object() is MT safe 
+*******************************************************************************/
+bool
+spool_berkeleydb_delete_object(lList **answer_list, bdb_info info, 
+                               const bdb_database database,
+                               const char *key, bool sub_objects)
+{
+   bool ret = true;
+
+   int dbret;
+
+   DB *db;
+   DB_TXN *txn;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_delete_object");
+
+   db = bdb_get_db(info, database);
+   txn = bdb_get_txn(info);
+
+   if (db == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              bdb_get_database_name(database));
+      spool_berkeleydb_error_close(info);
+      ret = false;
+   } else {
+      if (sub_objects) {
+         DBC *dbc;
+
+         DPRINTF(("querying objects with keys %s*\n", key));
+
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = db->cursor(db, txn, &dbc, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_CANNOTCREATECURSOR_IS,
+                                    dbret, db_strerror(dbret));
+            ret = false;
+         } else {
+            DBT cursor_dbt, data_dbt;
+            /* initialize query to first record for this object type */
+            memset(&cursor_dbt, 0, sizeof(cursor_dbt));
+            memset(&data_dbt, 0, sizeof(data_dbt));
+            cursor_dbt.data = (void *)key;
+            cursor_dbt.size = strlen(key) + 1;
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbret = dbc->c_get(dbc, &cursor_dbt, &data_dbt, DB_SET_RANGE);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            while (true) {
+               if (dbret != 0 && dbret != DB_NOTFOUND) {
+                  spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_BERKELEY_QUERYERROR_SIS,
+                                          key, dbret, db_strerror(dbret));
+                  ret = false;
+                  break;
+               } else if (dbret == DB_NOTFOUND) {
+                  DPRINTF(("last record reached\n"));
+                  break;
+               } else if (cursor_dbt.data != NULL && 
+                          strncmp(cursor_dbt.data, key, strlen(key)) 
+                          != 0) {
+                  DPRINTF(("current key is %s\n", cursor_dbt.data));
+                  DPRINTF(("last record of this object type reached\n"));
+                  break;
+               } else {
+                  int delete_ret;
+                  DBT delete_dbt;
+
+                  /* remember key of record to delete */
+                  memset(&delete_dbt, 0, sizeof(delete_dbt));
+                  delete_dbt.data = strdup(cursor_dbt.data);
+                  delete_dbt.size = cursor_dbt.size;
+
+                  /* switch cursor to next position */
+                  memset(&cursor_dbt, 0, sizeof(cursor_dbt));
+                  memset(&data_dbt, 0, sizeof(data_dbt));
+                  PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+                  dbret = dbc->c_get(dbc, &cursor_dbt, &data_dbt, DB_NEXT);
+                  PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
+                  /* delete record with stored key */
+                  PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+                  delete_ret = db->del(db, txn, &delete_dbt, 0);
+                  PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+                  if (delete_ret != 0) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_ERROR, 
+                                             MSG_BERKELEY_DELETEERROR_SIS,
+                                             delete_dbt.data,
+                                             delete_ret, db_strerror(delete_ret));
+                     ret = false;
+                     free(delete_dbt.data);
+                     break;
+                  } else {
+                     DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", (char *)delete_dbt.data));
+                  }
+                  free(delete_dbt.data);
+               }
+            }
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbc->c_close(dbc);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         }
+      } else {
+         DBT delete_dbt;
+         memset(&delete_dbt, 0, sizeof(delete_dbt));
+         delete_dbt.data = (void *)key;
+         delete_dbt.size = strlen(key) + 1;
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = db->del(db, txn, &delete_dbt, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0 /* && dbret != DB_NOTFOUND */) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_DELETEERROR_SIS,
+                                    key, dbret, db_strerror(dbret));
+            ret = false;
+         } else {
+            DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", key));
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** spool/berkeleydb/spool_berkeleydb_delete_pe_task() *********************
+*  NAME
+*     spool_berkeleydb_delete_pe_task() -- delete one or multiple pe task(s)
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_delete_pe_task(lList **answer_list, bdb_info info,
+*                                     const char *key, bool sub_objects) 
+*
+*  FUNCTION
+*     Deletes one or multiple pe_tasks specified by key.
+*  
+*     The key has the form "<job_id>.<ja_task_id> <pe_task_id>" formatted as 
+*     "%8d.%8d %s".
+*     If sub_objects = true, it can be used as pattern, typically used to 
+*     delete all pe_tasks of a certain ja_task by setting key to 
+*     "<job_id>.<ja_task_id>" or just "<job_id>" to delete all pe_tasks
+*     dependent on a certain job.
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     bdb_info info - database handle
+*     const char *key       - key
+*     bool sub_objects      - interpret key as pattern?
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_delete_pe_task() is MT safe 
+*
+*  SEE ALSO
+*     spool/berkeleydb/spool_berkeleydb_delete_object()
+*******************************************************************************/
+bool
+spool_berkeleydb_delete_pe_task(lList **answer_list, bdb_info info,
+                                const char *key, bool sub_objects)
+{
+   bool ret = true;
+
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   const char *table_name;
+
+   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
+   table_name = object_type_get_name(SGE_TYPE_PETASK);
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
+   ret = spool_berkeleydb_delete_object(answer_list, info, BDB_JOB_DB, 
+                                        dbkey, sub_objects);
+
+   return ret;
+}
+
+/****** spool/berkeleydb/spool_berkeleydb_delete_ja_task() *********************
+*  NAME
+*     spool_berkeleydb_delete_ja_task() -- delete ja_task(s)
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_delete_ja_task(lList **answer_list, bdb_info info,
+*                                     const char *key, bool sub_objects) 
+*
+*  FUNCTION
+*     Deletes one or multiple ja_tasks specified by key.
+*     The ja_task(s) and all dependent pe_tasks are deleted.
+*  
+*     The key has the form "<job_id>.<ja_task_id>" formatted as "%8d.%8d".
+*     If sub_objects = true, it can be used as pattern, typically used to 
+*     delete all ja_tasks of a certain job by setting key to "<job_id>.".
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     bdb_info info - database handle
+*     const char *key       - key
+*     bool sub_objects      - use key as pattern?
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_delete_ja_task() is MT safe 
+*
+*  SEE ALSO
+*     spool/berkeleydb/spool_berkeleydb_delete_object()
+*     spool/berkeleydb/spool_berkeleydb_delete_pe_task()
+*******************************************************************************/
+bool
+spool_berkeleydb_delete_ja_task(lList **answer_list, bdb_info info,
+                                const char *key, bool sub_objects)
+{
+   bool ret = true;
+
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   const char *table_name;
+
+   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
+   table_name = object_type_get_name(SGE_TYPE_JATASK);
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
+   ret = spool_berkeleydb_delete_object(answer_list, info, BDB_JOB_DB, 
+                                        dbkey, sub_objects);
+
+   if (ret) {
+      ret = spool_berkeleydb_delete_pe_task(answer_list, info, key, true);
+   }
+
+   return ret;
+}
+
+/****** spool/berkeleydb/spool_berkeleydb_delete_job() *************************
+*  NAME
+*     spool_berkeleydb_delete_job() -- delete a job
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_delete_job(lList **answer_list, bdb_info info, 
+*                                 const char *key, bool sub_objects) 
+*
+*  FUNCTION
+*     Deletes the given job and all its ja_tasks.
+*     Key usually will be the unique job id formatted with %8d, but the function
+*     allows for some sort of pattern matching by specifying only parts of the
+*     jobid, e.g. the key "00001" will delete all jobs from 1000 to 1999, 
+*     an empty string will mean "delete all jobs", if sub_objects = true.
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     bdb_info info - database handle
+*     const char *key       - key (job_number)
+*     bool sub_objects      - is the given key a pattern?
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_delete_job() is MT safe 
+*
+*  SEE ALSO
+*     spool/berkeleydb/spool_berkeleydb_delete_object()
+*     spool/berkeleydb/spool_berkeleydb_delete_ja_task()
+*******************************************************************************/
+bool
+spool_berkeleydb_delete_job(lList **answer_list, bdb_info info,
+                            const char *key, bool sub_objects)
+{
+   bool ret = true;
+
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   const char *table_name;
+
+   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
+   table_name = object_type_get_name(SGE_TYPE_JOB);
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
+   ret = spool_berkeleydb_delete_object(answer_list, info, BDB_JOB_DB, 
+                                        dbkey, sub_objects);
+
+   if (ret) {
+      ret = spool_berkeleydb_delete_ja_task(answer_list, info, key, true);
+   }
+
+   return ret;
+}
+
+/****** spool/berkeleydb/spool_berkeleydb_delete_cqueue() **********************
+*  NAME
+*     spool_berkeleydb_delete_cqueue() -- delete a cluster queue
+*
+*  SYNOPSIS
+*     bool 
+*     spool_berkeleydb_delete_cqueue(lList **answer_list, bdb_info info,
+*                                    const char *key) 
+*
+*  FUNCTION
+*     Deletes a cluster queue and all its queue instances.
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     bdb_info info - database handle
+*     const char *key       - key (name) of cluster queue to delete
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: spool_berkeleydb_delete_cqueue() is MT safe 
+*
+*  SEE ALSO
+*     spool/berkeleydb/spool_berkeleydb_delete_object()
+*******************************************************************************/
+bool
+spool_berkeleydb_delete_cqueue(lList **answer_list, bdb_info info,
+                               const char *key)
+{
+   bool ret = true;
+
+   dstring dbkey_dstring;
+   char dbkey_buffer[MAX_STRING_SIZE];
+   const char *dbkey;
+   const char *table_name;
+
+   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
+   table_name = object_type_get_name(SGE_TYPE_CQUEUE);
+   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
+   ret = spool_berkeleydb_delete_object(answer_list, info, BDB_CONFIG_DB,
+                                        dbkey, false);
+
+   if (ret) {
+      table_name = object_type_get_name(SGE_TYPE_QINSTANCE);
+      dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s@", table_name, key);
+      ret = spool_berkeleydb_delete_object(answer_list, info, BDB_CONFIG_DB,
+                                           dbkey, true);
+   }
+
+   return ret;
+}
+
+
+/* ---- static functions ---- */
+
+static void 
+spool_berkeleydb_error_close(bdb_info info)
+{
+   DB_ENV *env;
+   DB     *db;
+   DB_TXN *txn;
+   int i;
+
+   /* try to shutdown all open resources */
+   txn = bdb_get_txn(info);
+   if (txn != NULL) {
+      txn->abort(txn);
+      bdb_set_txn(info, NULL);
+   }
+
+   for (i = 0; i < BDB_ALL_DBS; i++) {
+      db = bdb_get_db(info, i);
+      if (db != NULL) {
+         db->close(db, 0);
+         bdb_set_db(info, NULL, i);
+      }
+   }
+
+   env = bdb_get_env(info);
+   if (env != NULL) {
+      env->close(env, 0);
+      bdb_set_env(info, NULL);
+   }
+}
+
+static void
+spool_berkeleydb_handle_bdb_error(lList **answer_list, bdb_info info, 
+                                  int bdb_errno)
+{
+   /* we lost the connection to a RPC server */
+   if (bdb_errno == DB_NOSERVER) {
+      const char *server = bdb_get_server(info);
+      const char *path   = bdb_get_path(info);
+
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_CONNECTION_LOST_SS,
+                              server != NULL ? server : "no server defined",
+                              path != NULL ? path : "no database path defined");
+
+      spool_berkeleydb_error_close(info);
+   } else if (bdb_errno == DB_RUNRECOVERY) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_RUNRECOVERY);
+
+      spool_berkeleydb_error_close(info);
+   }
+}
+
+bool 
+spool_berkeleydb_check_reopen_database(lList **answer_list, 
+                                       bdb_info info)
+{
+   bool ret = true;
+   DB_ENV *env;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_check_reopen_database");
+
+   env = bdb_get_env(info);
+
+   /*
+    * if environment is not set, it was either
+    * - closed due to an error condition
+    * - never open for this thread
+    * try to open it.
+    */
+   if (env == NULL) {
+      ret = spool_berkeleydb_create_environment(answer_list, info);
+
+      if (ret) {
+         ret = spool_berkeleydb_open_database(answer_list, info, false);
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+bool 
+spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
+                           const bdb_database database,
+                           lList **list, const char *key)
+{
+   bool ret = true;
+   int dbret;
+
+   DB *db;
+   DB_TXN *txn;
+
+   DBT key_dbt, data_dbt;
+   DBC *dbc;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_keys");
+
+   db  = bdb_get_db(info, database);
+   txn = bdb_get_txn(info);
+
+   if (db == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              bdb_get_database_name(database));
+      ret = false;
+   } else {
+      DPRINTF(("querying objects with keys %s*\n", key));
+
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      dbret = db->cursor(db, txn, &dbc, 0);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      if (dbret != 0) {
+         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_CANNOTCREATECURSOR_IS,
+                                 dbret, db_strerror(dbret));
+         ret = false;
+      } else {
+         /* initialize query to first record for this object type */
+         memset(&key_dbt, 0, sizeof(key_dbt));
+         memset(&data_dbt, 0, sizeof(data_dbt));
+         key_dbt.data = (void *)key;
+         key_dbt.size = strlen(key) + 1;
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         while (true) {
+            if (dbret != 0 && dbret != DB_NOTFOUND) {
+               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_QUERYERROR_SIS,
+                                       key, dbret, db_strerror(dbret));
+               ret = false;
+               break;
+            } else if (dbret == DB_NOTFOUND) {
+               DPRINTF(("last record reached\n"));
+               break;
+            } else if (key_dbt.data != NULL && 
+                       strncmp(key_dbt.data, key, strlen(key)) 
+                       != 0) {
+               DPRINTF(("current key is %s\n", key_dbt.data));
+               DPRINTF(("last record of this object type reached\n"));
+               break;
+            } else {
+               DPRINTF(("read object with key "SFQ", size %d\n", 
+                        key_dbt.data, data_dbt.size));
+               lAddElemStr(list, STU_name, key_dbt.data, STU_Type);
+
+               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+               dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_NEXT);
+               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            }
+         }
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbc->c_close(dbc);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+lListElem *
+spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
+                             const bdb_database database,
+                             const char *key)
+{
+   lListElem *ret = NULL;
+   int dbret;
+
+   DB *db;
+   DB_TXN *txn;
+
+   DBT key_dbt, data_dbt;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_object");
+
+   db  = bdb_get_db(info, database);
+   txn = bdb_get_txn(info);
+
+   if (db == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              bdb_get_database_name(database));
+      ret = false;
+   } else {
+      DPRINTF(("querying object with key %s\n", key));
+
+      /* initialize query to first record for this object type */
+      memset(&key_dbt, 0, sizeof(key_dbt));
+      key_dbt.data = (void *)key;
+      key_dbt.size = strlen(key) + 1;
+      memset(&data_dbt, 0, sizeof(data_dbt));
+      data_dbt.flags = DB_DBT_MALLOC;
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      dbret = db->get(db, txn, &key_dbt, &data_dbt, 0);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      if (dbret != 0) {
+         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_QUERYERROR_SIS,
+                                 key, dbret, db_strerror(dbret));
+      } else {
+         sge_pack_buffer pb;
+         int cull_ret;
+         const lDescr *descr;
+
+         DPRINTF(("read object with key "SFQ", size %d\n", 
+                  key_dbt.data, data_dbt.size));
+         cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
+                                                data_dbt.size, 0);
+         if (cull_ret != PACK_SUCCESS) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_UNPACKINITERROR_SS,
+                                    key_dbt.data,
+                                    cull_pack_strerror(cull_ret));
+            ret = false;
+         }
+         DPRINTF(("init_packbuffer succeeded\n"));
+
+         descr = object_type_get_descr(object_name_get_type(key_dbt.data));
+         cull_ret = cull_unpack_elem_partial(&pb, &ret, descr, pack_part);
+         if (cull_ret != PACK_SUCCESS) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_UNPACKERROR_SS,
+                                    key_dbt.data,
+                                    cull_pack_strerror(cull_ret));
+            ret = false;
+         }
+         /* we may not free the packbuffer: it references the buffer
+          * delivered from the database
+          * clear_packbuffer(&pb);
+          */
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
@@ -686,8 +1719,8 @@ spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info,
             spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S,
-                                    db_strerror(dbret));
+                                    MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_IS,
+                                    dbret, db_strerror(dbret));
             ret = false;
          }
 
@@ -718,8 +1751,8 @@ spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info,
    return ret;
 }
 
-bool
-spool_berkeleydb_checkpoint(lList **answer_list, struct bdb_info *info)
+static bool
+spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
@@ -753,974 +1786,10 @@ spool_berkeleydb_checkpoint(lList **answer_list, struct bdb_info *info)
             spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_CANNOTCHECKPOINT_S,
-                                    db_strerror(dbret));
+                                    MSG_BERKELEY_CANNOTCHECKPOINT_IS,
+                                    dbret, db_strerror(dbret));
             ret = false;
          } 
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-bool 
-spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
-                           lList **list, const lDescr *descr,
-                           const char *key)
-{
-   bool ret = true;
-   int dbret;
-
-   DB *db;
-   DB_TXN *txn;
-
-   DBT key_dbt, data_dbt;
-   DBC *dbc;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_read_list");
-
-   db  = bdb_get_db(info);
-   txn = bdb_get_txn(info);
-
-   if (db == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-      dbname = bdb_get_dbname(info, &dbname_dstring);
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              dbname);
-      sge_dstring_free(&dbname_dstring);
-      spool_berkeleydb_error_close(info);
-      ret = false;
-   } else {
-      DPRINTF(("querying objects with keys %s*\n", key));
-
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      db->cursor(db, txn, &dbc, 0);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
-      /* initialize query to first record for this object type */
-      memset(&key_dbt, 0, sizeof(key_dbt));
-      memset(&data_dbt, 0, sizeof(data_dbt));
-      key_dbt.data = (void *)key;
-      key_dbt.size = strlen(key) + 1;
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      while (true) {
-         if (dbret != 0 && dbret != DB_NOTFOUND) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_QUERYERROR_SS,
-                                    key,
-                                    db_strerror(dbret));
-            ret = false;
-            break;
-         } else if (dbret == DB_NOTFOUND) {
-            DPRINTF(("last record reached\n"));
-            break;
-         } else if (key_dbt.data != NULL && 
-                    strncmp(key_dbt.data, key, strlen(key)) 
-                    != 0) {
-            DPRINTF(("current key is %s\n", key_dbt.data));
-            DPRINTF(("last record of this object type reached\n"));
-            break;
-         } else {
-            sge_pack_buffer pb;
-            lListElem *object = NULL;
-            int cull_ret;
-
-            DPRINTF(("read object with key "SFQ", size %d\n", 
-                     key_dbt.data, data_dbt.size));
-            cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
-                                                   data_dbt.size, 0);
-            if (cull_ret != PACK_SUCCESS) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_UNPACKINITERROR_SS,
-                                       key_dbt.data,
-                                       cull_pack_strerror(cull_ret));
-               ret = false;
-               break;
-            }
-            DPRINTF(("init_packbuffer succeeded\n"));
-            cull_ret = cull_unpack_elem_partial(&pb, &object, descr, pack_part);
-            if (cull_ret != PACK_SUCCESS) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_UNPACKERROR_SS,
-                                       key_dbt.data,
-                                       cull_pack_strerror(cull_ret));
-               ret = false;
-               break;
-            }
-            /* we may not free the packbuffer: it references the buffer
-             * delivered from the database
-             * clear_packbuffer(&pb);
-             */
-            if (object != NULL) {
-               if (*list == NULL) {
-                  *list = lCreateList(key, descr);
-               }
-               lAppendElem(*list, object);
-            }
-
-            /* get next record */
-   /*          memset(&key_dbt, 0, sizeof(key_dbt)); */
-   /*          memset(&data_dbt, 0, sizeof(data_dbt)); */
-            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_NEXT);
-            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         }
-      }
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbc->c_close(dbc);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-   }
-
-   DEXIT;
-   return ret;
-}
-
-bool 
-spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
-                              const lListElem *object, const char *key)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_write_object");
-
-#if 0
-   /* JG: TODO: we shouldn't spool free elements */
-   if (object->status == FREE_ELEM) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_CANTSPOOLFREEELEM_S,
-                              key);
-      ret = false;
-   } else 
-#endif
-   {
-      sge_pack_buffer pb;
-      int cull_ret;
-      cull_ret = init_packbuffer(&pb, 8192, 0);
-      if (cull_ret != PACK_SUCCESS) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_PACKINITERROR_SS,
-                                 key,
-                                 cull_pack_strerror(cull_ret));
-         ret = false;
-      } else {
-         cull_ret = cull_pack_elem_partial(&pb, object, pack_part);
-         if (cull_ret != PACK_SUCCESS) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_PACKERROR_SS,
-                                    key,
-                                    cull_pack_strerror(cull_ret));
-            ret = false;
-         } else { 
-            int dbret;
-            DBT key_dbt, data_dbt;
-
-            DB *db = bdb_get_db(info);
-            DB_TXN *txn = bdb_get_txn(info);
-
-            if (db == NULL) {
-               dstring dbname_dstring = DSTRING_INIT;
-               const char *dbname;
-               
-               dbname = bdb_get_dbname(info, &dbname_dstring);
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                       dbname);
-               sge_dstring_free(&dbname_dstring);
-               spool_berkeleydb_error_close(info);
-               ret = false;
-            }
-
-            if (ret) {
-               memset(&key_dbt, 0, sizeof(key_dbt));
-               memset(&data_dbt, 0, sizeof(data_dbt));
-               key_dbt.data = (void *)key;
-               key_dbt.size = strlen(key) + 1;
-               data_dbt.data = pb.head_ptr;
-               data_dbt.size = pb.bytes_used;
-
-               DPRINTF(("storing object with key "SFQ", size = %d "
-                        "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
-                        key, data_dbt.size, bdb_get_env(info), db, 
-                        txn, txn->id(txn)));
-
-               /* Store a key/data pair. */
-               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-               dbret = db->put(db, txn, &key_dbt, &data_dbt, 0);
-               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
-               if (dbret != 0) {
-                  spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_BERKELEY_PUTERROR_SS,
-                                          key, db_strerror(dbret));
-                  ret = false;
-               }
-            }
-         }
-
-         clear_packbuffer(&pb);
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-bool
-spool_berkeleydb_write_pe_task(lList **answer_list, struct bdb_info *info,
-                               const lListElem *object, 
-                               u_long32 job_id, u_long32 ja_task_id,
-                               const char *pe_task_id)
-{
-   bool ret = true;
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-
-   sge_dstring_init(&dbkey_dstring, 
-                    dbkey_buffer, sizeof(dbkey_buffer));
-
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%8d.%8d %s", 
-                               object_type_get_name(SGE_TYPE_PETASK),
-                               job_id, ja_task_id, pe_task_id);
-
-   ret = spool_berkeleydb_write_object(answer_list, info, 
-                                       object, dbkey);
-
-   return ret;
-}
-
-bool
-spool_berkeleydb_write_ja_task(lList **answer_list, struct bdb_info *info,
-                               const lListElem *object, 
-                               u_long32 job_id, u_long32 ja_task_id)
-{
-   bool ret = true;
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   lList *tmp_list = NULL;
-
-   sge_dstring_init(&dbkey_dstring,
-                    dbkey_buffer, sizeof(dbkey_buffer));
-
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%8d.%8d", 
-                               object_type_get_name(SGE_TYPE_JATASK),
-                               job_id, ja_task_id);
-
-   lXchgList((lListElem *)object, JAT_task_list, &tmp_list);
-   ret = spool_berkeleydb_write_object(answer_list, info, 
-                                       object, dbkey);
-   lXchgList((lListElem *)object, JAT_task_list, &tmp_list);
-
-   /* JG: TODO: do we have to spool all petasks?
-    */
-
-   return ret;
-}
-
-bool
-spool_berkeleydb_write_job(lList **answer_list, struct bdb_info *info,
-                           const lListElem *object, 
-                           u_long32 job_id, bool only_job)
-{
-   bool ret = true;
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   lList *tmp_list = NULL;
-
-   sge_dstring_init(&dbkey_dstring,
-                    dbkey_buffer, sizeof(dbkey_buffer));
-
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%8d", 
-                               object_type_get_name(SGE_TYPE_JOB), 
-                               job_id);
-
-   lXchgList((lListElem *)object, JB_ja_tasks, &tmp_list);
-   
-   ret = spool_berkeleydb_write_object(answer_list, info, 
-                                       object, dbkey);
-
-   lXchgList((lListElem *)object, JB_ja_tasks, &tmp_list);
-
-   if (ret && !only_job) {
-      lListElem *ja_task;
-      for_each(ja_task, lGetList(object, JB_ja_tasks)) {
-         ret = spool_berkeleydb_write_ja_task(answer_list, info,
-                                              ja_task,
-                                              job_id, 
-                                              lGetUlong(ja_task, 
-                                                        JAT_task_number));
-         if (!ret) {
-            break;
-         }
-      }
-   }
-
-   return ret;
-}
-
-bool
-spool_berkeleydb_write_cqueue(lList **answer_list, struct bdb_info *info, 
-                              const lListElem *object, const char *key)
-{
-   bool ret = true;
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   lList *tmp_list = NULL;
-
-   sge_dstring_init(&dbkey_dstring,
-                    dbkey_buffer, sizeof(dbkey_buffer));
-
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 
-                               object_type_get_name(SGE_TYPE_CQUEUE), 
-                               key);
-
-   lXchgList((lListElem *)object, CQ_qinstances, &tmp_list);
-   
-   ret = spool_berkeleydb_write_object(answer_list, info, 
-                                       object, dbkey);
-
-   lXchgList((lListElem *)object, CQ_qinstances, &tmp_list);
-
-   return ret;
-}
-
-/****** spool/berkeleydb/spool_berkeleydb_delete_object() **********************
-*  NAME
-*     spool_berkeleydb_delete_object() -- delete one or multiple objects
-*
-*  SYNOPSIS
-*     bool 
-*     spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
-*                                    const char *key, bool sub_objects) 
-*
-*  FUNCTION
-*     If sub_objects = false, deletes the object specified by key.
-*     If sub_objects = true, key will be used as pattern to delete multiple
-*     objects.
-*
-*  INPUTS
-*     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
-*     const char *key       - key
-*     bool sub_objects      - use key as pattern?
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     MT-NOTE: spool_berkeleydb_delete_object() is MT safe 
-*******************************************************************************/
-bool
-spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info, 
-                               const char *key, bool sub_objects)
-{
-   bool ret = true;
-
-   int dbret;
-   DBT cursor_dbt, delete_dbt, data_dbt;
-
-   DB *db;
-   DB_TXN *txn;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_delete_object");
-
-   db = bdb_get_db(info);
-   txn = bdb_get_txn(info);
-
-   if (db == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-      dbname = bdb_get_dbname(info, &dbname_dstring);
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              dbname);
-      sge_dstring_free(&dbname_dstring);
-      spool_berkeleydb_error_close(info);
-      ret = false;
-   } else {
-      if (sub_objects) {
-         DBC *dbc;
-
-         DPRINTF(("querying objects with keys %s*\n", key));
-
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         db->cursor(db, txn, &dbc, 0);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         /* initialize query to first record for this object type */
-         memset(&cursor_dbt, 0, sizeof(cursor_dbt));
-         memset(&data_dbt, 0, sizeof(data_dbt));
-         cursor_dbt.data = (void *)key;
-         cursor_dbt.size = strlen(key) + 1;
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = dbc->c_get(dbc, &cursor_dbt, &data_dbt, DB_SET_RANGE);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         while (true) {
-            if (dbret != 0 && dbret != DB_NOTFOUND) {
-               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_BERKELEY_QUERYERROR_SS,
-                                       key,
-                                       db_strerror(dbret));
-               ret = false;
-               break;
-            } else if (dbret == DB_NOTFOUND) {
-               DPRINTF(("last record reached\n"));
-               break;
-            } else if (cursor_dbt.data != NULL && 
-                       strncmp(cursor_dbt.data, key, strlen(key)) 
-                       != 0) {
-               DPRINTF(("current key is %s\n", cursor_dbt.data));
-               DPRINTF(("last record of this object type reached\n"));
-               break;
-            } else {
-               int delete_ret;
-
-               /* remember key of record to delete */
-               memset(&delete_dbt, 0, sizeof(delete_dbt));
-               delete_dbt.data = strdup(cursor_dbt.data);
-               delete_dbt.size = cursor_dbt.size;
-
-               /* switch cursor to next position */
-               memset(&cursor_dbt, 0, sizeof(cursor_dbt));
-               memset(&data_dbt, 0, sizeof(data_dbt));
-               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-               dbret = dbc->c_get(dbc, &cursor_dbt, &data_dbt, DB_NEXT);
-               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
-               /* delete record with stored key */
-               PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-               /* JG: TODO: use db->c_del instead? */
-               delete_ret = db->del(db, txn, &delete_dbt, 0);
-               PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-               if (delete_ret != 0) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_BERKELEY_DELETEERROR_SS,
-                                          delete_dbt.data,
-                                          db_strerror(delete_ret));
-                  ret = false;
-                  free(delete_dbt.data);
-                  break;
-               } else {
-                  DPRINTF(("deleted record with key "SFQ"\n", delete_dbt.data));
-               }
-               free(delete_dbt.data);
-            }
-         }
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbc->c_close(dbc);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      } else {
-         memset(&cursor_dbt, 0, sizeof(cursor_dbt));
-         memset(&data_dbt, 0, sizeof(data_dbt));
-         cursor_dbt.data = (void *)key;
-         cursor_dbt.size = strlen(key) + 1;
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = db->del(db, txn, &cursor_dbt, 0);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0 /* && dbret != DB_NOTFOUND */) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_DELETEERROR_SS,
-                                    key,
-                                    db_strerror(dbret));
-            ret = false;
-         } else {
-            DPRINTF(("deleted record with key "SFQ"\n", key));
-         }
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-/****** spool/berkeleydb/spool_berkeleydb_delete_pe_task() *********************
-*  NAME
-*     spool_berkeleydb_delete_pe_task() -- delete one or multiple pe task(s)
-*
-*  SYNOPSIS
-*     bool 
-*     spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
-*                                     const char *key, bool sub_objects) 
-*
-*  FUNCTION
-*     Deletes one or multiple pe_tasks specified by key.
-*  
-*     The key has the form "<job_id>.<ja_task_id> <pe_task_id>" formatted as 
-*     "%8d.%8d %s".
-*     If sub_objects = true, it can be used as pattern, typically used to 
-*     delete all pe_tasks of a certain ja_task by setting key to 
-*     "<job_id>.<ja_task_id>" or just "<job_id>" to delete all pe_tasks
-*     dependent on a certain job.
-*
-*  INPUTS
-*     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
-*     const char *key       - key
-*     bool sub_objects      - interpret key as pattern?
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     MT-NOTE: spool_berkeleydb_delete_pe_task() is MT safe 
-*
-*  SEE ALSO
-*     spool/berkeleydb/spool_berkeleydb_delete_object()
-*******************************************************************************/
-bool
-spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
-                                const char *key, bool sub_objects)
-{
-   bool ret = true;
-
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   const char *table_name;
-
-   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
-   table_name = object_type_get_name(SGE_TYPE_PETASK);
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
-   ret = spool_berkeleydb_delete_object(answer_list, info, dbkey, sub_objects);
-
-   return ret;
-}
-
-/****** spool/berkeleydb/spool_berkeleydb_delete_ja_task() *********************
-*  NAME
-*     spool_berkeleydb_delete_ja_task() -- delete ja_task(s)
-*
-*  SYNOPSIS
-*     bool 
-*     spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
-*                                     const char *key, bool sub_objects) 
-*
-*  FUNCTION
-*     Deletes one or multiple ja_tasks specified by key.
-*     The ja_task(s) and all dependent pe_tasks are deleted.
-*  
-*     The key has the form "<job_id>.<ja_task_id>" formatted as "%8d.%8d".
-*     If sub_objects = true, it can be used as pattern, typically used to 
-*     delete all ja_tasks of a certain job by setting key to "<job_id>.".
-*
-*  INPUTS
-*     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
-*     const char *key       - key
-*     bool sub_objects      - use key as pattern?
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     MT-NOTE: spool_berkeleydb_delete_ja_task() is MT safe 
-*
-*  SEE ALSO
-*     spool/berkeleydb/spool_berkeleydb_delete_object()
-*     spool/berkeleydb/spool_berkeleydb_delete_pe_task()
-*******************************************************************************/
-bool
-spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
-                                const char *key, bool sub_objects)
-{
-   bool ret = true;
-
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   const char *table_name;
-
-   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
-   table_name = object_type_get_name(SGE_TYPE_JATASK);
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
-   ret = spool_berkeleydb_delete_object(answer_list, info, dbkey, sub_objects);
-
-   if (ret) {
-      ret = spool_berkeleydb_delete_pe_task(answer_list, info, key, true);
-   }
-
-   return ret;
-}
-
-/****** spool/berkeleydb/spool_berkeleydb_delete_job() *************************
-*  NAME
-*     spool_berkeleydb_delete_job() -- delete a job
-*
-*  SYNOPSIS
-*     bool 
-*     spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info, 
-*                                 const char *key, bool sub_objects) 
-*
-*  FUNCTION
-*     Deletes the given job and all its ja_tasks.
-*     Key usually will be the unique job id formatted with %8d, but the function
-*     allows for some sort of pattern matching by specifying only parts of the
-*     jobid, e.g. the key "00001" will delete all jobs from 1000 to 1999, 
-*     an empty string will mean "delete all jobs", if sub_objects = true.
-*
-*  INPUTS
-*     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
-*     const char *key       - key (job_number)
-*     bool sub_objects      - is the given key a pattern?
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     MT-NOTE: spool_berkeleydb_delete_job() is MT safe 
-*
-*  SEE ALSO
-*     spool/berkeleydb/spool_berkeleydb_delete_object()
-*     spool/berkeleydb/spool_berkeleydb_delete_ja_task()
-*******************************************************************************/
-bool
-spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
-                            const char *key, bool sub_objects)
-{
-   bool ret = true;
-
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   const char *table_name;
-
-   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
-   table_name = object_type_get_name(SGE_TYPE_JOB);
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
-   ret = spool_berkeleydb_delete_object(answer_list, info, dbkey, sub_objects);
-
-   if (ret) {
-      ret = spool_berkeleydb_delete_ja_task(answer_list, info, key, true);
-   }
-
-   return ret;
-}
-
-/****** spool/berkeleydb/spool_berkeleydb_delete_cqueue() **********************
-*  NAME
-*     spool_berkeleydb_delete_cqueue() -- delete a cluster queue
-*
-*  SYNOPSIS
-*     bool 
-*     spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
-*                                    const char *key) 
-*
-*  FUNCTION
-*     Deletes a cluster queue and all its queue instances.
-*
-*  INPUTS
-*     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
-*     const char *key       - key (name) of cluster queue to delete
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     MT-NOTE: spool_berkeleydb_delete_cqueue() is MT safe 
-*
-*  SEE ALSO
-*     spool/berkeleydb/spool_berkeleydb_delete_object()
-*******************************************************************************/
-bool
-spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
-                               const char *key)
-{
-   bool ret = true;
-
-   dstring dbkey_dstring;
-   char dbkey_buffer[MAX_STRING_SIZE];
-   const char *dbkey;
-   const char *table_name;
-
-   sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
-   table_name = object_type_get_name(SGE_TYPE_CQUEUE);
-   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", table_name, key);
-   ret = spool_berkeleydb_delete_object(answer_list, info, dbkey, false);
-
-   if (ret) {
-      table_name = object_type_get_name(SGE_TYPE_QINSTANCE);
-      dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s@", table_name, key);
-      ret = spool_berkeleydb_delete_object(answer_list, info, dbkey, true);
-   }
-
-   return ret;
-}
-
-
-/* ---- static functions ---- */
-
-static void 
-spool_berkeleydb_error_close(struct bdb_info *info)
-{
-   DB_ENV *env;
-   DB     *db;
-   DB_TXN *txn;
-
-   /* try to shutdown all open resources */
-   txn = bdb_get_txn(info);
-   if (txn != NULL) {
-      txn->abort(txn);
-      bdb_set_txn(info, NULL);
-   }
-
-   db = bdb_get_db(info);
-   if (db != NULL) {
-      db->close(db, 0);
-      bdb_set_db(info, NULL);
-   }
-
-   env = bdb_get_env(info);
-   if (env != NULL) {
-      env->close(env, 0);
-      bdb_set_env(info, NULL);
-   }
-}
-
-static void
-spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info, 
-                                  int bdb_errno)
-{
-   /* we lost the connection to a RPC server */
-   if (bdb_errno == DB_NOSERVER) {
-      const char *server = bdb_get_server(info);
-      const char *path   = bdb_get_path(info);
-
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_CONNECTION_LOST_SS,
-                              server != NULL ? server : "no server defined",
-                              path != NULL ? path : "no database path defined");
-
-      spool_berkeleydb_error_close(info);
-   } else if (bdb_errno == DB_RUNRECOVERY) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_RUNRECOVERY);
-
-      spool_berkeleydb_error_close(info);
-   }
-}
-
-bool 
-spool_berkeleydb_check_reopen_database(lList **answer_list, 
-                                       struct bdb_info *info)
-{
-   bool ret = true;
-   DB_ENV *env;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_check_reopen_database");
-
-   env = bdb_get_env(info);
-
-   /*
-    * if environment is not set, it was either
-    * - closed due to an error condition
-    * - never open for this thread
-    * try to open it.
-    */
-   if (env == NULL) {
-      ret = spool_berkeleydb_create_environment(answer_list, info);
-
-      if (ret) {
-         ret = spool_berkeleydb_open_database(answer_list, info, false);
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-bool 
-spool_berkeleydb_read_keys(lList **answer_list, struct bdb_info *info,
-                           lList **list, const char *key)
-{
-   bool ret = true;
-   int dbret;
-
-   DB *db;
-   DB_TXN *txn;
-
-   DBT key_dbt, data_dbt;
-   DBC *dbc;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_read_keys");
-
-   db  = bdb_get_db(info);
-   txn = bdb_get_txn(info);
-
-   if (db == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-      dbname = bdb_get_dbname(info, &dbname_dstring);
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              dbname);
-      sge_dstring_free(&dbname_dstring);
-      ret = false;
-   } else {
-      DPRINTF(("querying objects with keys %s*\n", key));
-
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      db->cursor(db, txn, &dbc, 0);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
-      /* initialize query to first record for this object type */
-      memset(&key_dbt, 0, sizeof(key_dbt));
-      memset(&data_dbt, 0, sizeof(data_dbt));
-      key_dbt.data = (void *)key;
-      key_dbt.size = strlen(key) + 1;
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      while (true) {
-         if (dbret != 0 && dbret != DB_NOTFOUND) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_QUERYERROR_SS,
-                                    key,
-                                    db_strerror(dbret));
-            ret = false;
-            break;
-         } else if (dbret == DB_NOTFOUND) {
-            DPRINTF(("last record reached\n"));
-            break;
-         } else if (key_dbt.data != NULL && 
-                    strncmp(key_dbt.data, key, strlen(key)) 
-                    != 0) {
-            DPRINTF(("current key is %s\n", key_dbt.data));
-            DPRINTF(("last record of this object type reached\n"));
-            break;
-         } else {
-            DPRINTF(("read object with key "SFQ", size %d\n", 
-                     key_dbt.data, data_dbt.size));
-            lAddElemStr(list, STU_name, key_dbt.data, STU_Type);
-
-            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_NEXT);
-            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         }
-      }
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbc->c_close(dbc);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-   }
-
-   DEXIT;
-   return ret;
-}
-
-lListElem *
-spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
-                             const char *key)
-{
-   lListElem *ret = NULL;
-   int dbret;
-
-   DB *db;
-   DB_TXN *txn;
-
-   DBT key_dbt, data_dbt;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_read_object");
-
-   db  = bdb_get_db(info);
-   txn = bdb_get_txn(info);
-
-   if (db == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-      dbname = bdb_get_dbname(info, &dbname_dstring);
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              dbname);
-      sge_dstring_free(&dbname_dstring);
-      ret = false;
-   } else {
-      DPRINTF(("querying object with key %s\n", key));
-
-      /* initialize query to first record for this object type */
-      memset(&key_dbt, 0, sizeof(key_dbt));
-      key_dbt.data = (void *)key;
-      key_dbt.size = strlen(key) + 1;
-      memset(&data_dbt, 0, sizeof(data_dbt));
-      data_dbt.flags = DB_DBT_MALLOC;
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = db->get(db, txn, &key_dbt, &data_dbt, 0);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      if (dbret != 0) {
-         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_QUERYERROR_SS,
-                                 key,
-                                 db_strerror(dbret));
-      } else {
-         sge_pack_buffer pb;
-         int cull_ret;
-         const lDescr *descr;
-
-         DPRINTF(("read object with key "SFQ", size %d\n", 
-                  key_dbt.data, data_dbt.size));
-         cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
-                                                data_dbt.size, 0);
-         if (cull_ret != PACK_SUCCESS) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_UNPACKINITERROR_SS,
-                                    key_dbt.data,
-                                    cull_pack_strerror(cull_ret));
-            ret = false;
-         }
-         DPRINTF(("init_packbuffer succeeded\n"));
-
-         descr = object_type_get_descr(object_name_get_type(key_dbt.data));
-         cull_ret = cull_unpack_elem_partial(&pb, &ret, descr, pack_part);
-         if (cull_ret != PACK_SUCCESS) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_UNPACKERROR_SS,
-                                    key_dbt.data,
-                                    cull_pack_strerror(cull_ret));
-            ret = false;
-         }
-         /* we may not free the packbuffer: it references the buffer
-          * delivered from the database
-          * clear_packbuffer(&pb);
-          */
-
       }
    }
 

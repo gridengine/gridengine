@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define GDI_VERSION "6.0Beta"
+#define GDI_VERSION "6.0Beta2"
 
 #endif /* __VERISON_H */

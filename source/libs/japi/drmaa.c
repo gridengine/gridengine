@@ -57,9 +57,6 @@
 #include "sge_options.h"
 #include "symbols.h"
 
-/* GDI */
-#include "sge_qtcsh.h"
-
 /* UTI */
 #include "setup_path.h"
 #include "sge_dstring.h"
@@ -78,6 +75,9 @@
 #include "sge_mailrecL.h"
 #include "sge_range.h"
 #include "sge_ulong.h"
+
+/* GDI */
+#include "sge_qtcsh.h"
 
 /* OBJ */
 #include "sge_varL.h"
@@ -123,7 +123,7 @@ extern char **environ;
 static const char *session_key_env_var = "SGE_SESSION_KEY"; 
 static const char *session_shutdown_mode_env_var = "SGE_KEEP_SESSION";
 
-static int drmaa_is_supported(const char *name, const char *supported_list[]);
+static int drmaa_is_attribute_supported(const char *name, bool vector);
 static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
@@ -199,7 +199,6 @@ static const char *drmaa_supported_nonvector[] = {
    DRMAA_BLOCK_EMAIL,           /* mandatory */
    DRMAA_START_TIME,            /* mandatory */
 #if 0
-   DRMAA_TRANSFER_FILES,        /* optional */
    DRMAA_DEADLINE_TIME,         /* optional */
    DRMAA_WCT_HLIMIT,            /* optional */
    DRMAA_WCT_SLIMIT,            /* optional */
@@ -253,7 +252,8 @@ static const char *drmaa_supported_vector[] = {
 *  NOTES
 *      MT-NOTE: drmaa_init() is MT safe
 *******************************************************************************/
-int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len)
+int drmaa_init(const char *contact, char *error_diagnosis,
+               size_t error_diag_len)
 {
    int ret;
    dstring diag, session_key_in = DSTRING_INIT, 
@@ -278,8 +278,9 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
     * env var SGE_SESSION_KEY is used 
     * to interface JAPI session key forth ... 
     */
-   ret = japi_init(contact, set_session?sge_dstring_get_string(&session_key_in):NULL, 
-        &session_key_out, DRMAA, 1, diagp);
+   ret = japi_init(contact,
+                   set_session?sge_dstring_get_string(&session_key_in):NULL, 
+                   &session_key_out, DRMAA, 1, NULL, diagp);
 
    if (set_session)
       sge_dstring_free(&session_key_in);
@@ -485,7 +486,7 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
 static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
 {
    drmaa_attr_names_t *vector;
-   int i;
+   int  i;
 
    DENTER(TOP_LAYER, "drmaa_fill_string_vector");
 
@@ -495,10 +496,22 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
       return NULL;
    }
 
-   /* copy all attribute names */
+   /* 1. copy static attribute names */
    for (i=0; name[i]; i++) {
       DPRINTF(("adding \"%s\"\n", name[i]));
       if (!lAddElemStr(&(vector->it.si.strings), ST_name, name[i], ST_Type)) {
+         japi_delete_string_vector((drmaa_attr_values_t *)vector);
+         DEXIT;
+         return NULL;
+      } 
+   }
+
+   /* 2. add administrator defined attributes */
+   if( japi_is_delegated_file_staging_enabled()) {
+      DPRINTF(("adding \"%s\"\n", DRMAA_TRANSFER_FILES ));
+
+      if(!lAddElemStr(&(vector->it.si.strings),
+                        ST_name, DRMAA_TRANSFER_FILES, ST_Type)) {
          japi_delete_string_vector((drmaa_attr_values_t *)vector);
          DEXIT;
          return NULL;
@@ -512,14 +525,42 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
    return vector;
 }
 
-static int drmaa_is_supported(const char *name, const char *supported_list[])
+/****** DRMAA/drmaa_is_attribute_supported() *************************************
+*  NAME
+*     drmaa_is_attribute_supported() -- Checks if given attribute is supported.
+*
+*  SYNOPSIS
+*     static int drmaa_is_attribute_supported(const char *name, bool vector)
+*
+*  FUNCTION
+*     Checks if the attribute "name" is supported by the DRM-System and DRMAA.
+*
+*  INPUTS
+*     const char *name  - name of the attribute
+*     int               - true:  attribute is a vector attribute.
+*                         false: attribute is a scalar attribute. 
+*
+*  RESULT
+*    bool - DRMAA_ERRNO_SUCCESS if attribute is supported,
+*           DRMAA_ERRNO_INVALID_ARGUMENT if attribute is not supported.
+*
+*  NOTES
+*      MT-NOTE: drmaa_is_attribute_supported() is MT safe
+*******************************************************************************/
+static int drmaa_is_attribute_supported(const char *name, bool vector)
 {
-   int i;
-   for (i=0; supported_list[i]; i++) {
-      if (!strcmp(name, supported_list[i]))
-         return 1;
+   drmaa_attr_names_t *p_attr;
+   lListElem* ep;
+      
+   if( vector ) {
+      p_attr = drmaa_fill_string_vector( drmaa_supported_vector );
+   } else {
+      p_attr = drmaa_fill_string_vector( drmaa_supported_nonvector );
    }
-   return 0;
+
+   ep = lGetElemStr( p_attr->it.si.strings, ST_name, name );
+   
+   return ep!=NULL ? DRMAA_ERRNO_SUCCESS : DRMAA_ERRNO_INVALID_ARGUMENT; 
 }
 
 /****** DRMAA/drmaa_set_attribute() *********************************************
@@ -556,8 +597,9 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       char *error_diagnosis, size_t error_diag_len)
 {
    lListElem *ep;
-
-   dstring diag, *diagp = NULL;
+   int       ret;
+   dstring   diag, *diagp = NULL;
+   
    if (error_diagnosis) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
@@ -568,7 +610,13 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
-   if (drmaa_is_supported(name, drmaa_supported_nonvector)) {
+   ret = japi_was_init_called(diagp);
+   if( ret != DRMAA_ERRNO_SUCCESS ) {
+      /* diagp written by japi_was_init_called() */
+      return ret;
+   }
+
+   if(drmaa_is_attribute_supported(name, false) == DRMAA_ERRNO_SUCCESS) {
       /* verify value */
 
       /* join files must be either 'y' or 'n' */
@@ -720,7 +768,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
-   if (!drmaa_is_supported(name, drmaa_supported_vector)) {
+   if (drmaa_is_attribute_supported(name, true)!=DRMAA_ERRNO_SUCCESS) {
       DPRINTF(("setting not supported attribute \"%s\"\n", name));
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
       DEXIT;
@@ -854,7 +902,8 @@ int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name,
 *******************************************************************************/
 int drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len)
 {
-   dstring diag, *diagp = NULL;
+   int                ret;
+   dstring            diag, *diagp = NULL;
    drmaa_attr_names_t *iter;
 
    DENTER(TOP_LAYER, "drmaa_get_attribute_names");
@@ -863,6 +912,14 @@ int drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
    }
+
+   ret = japi_was_init_called(diagp);
+   if( ret != DRMAA_ERRNO_SUCCESS ) {
+      /* diagp written by japi_was_init_called() */
+      DEXIT;
+      return ret;
+   }
+
 
    if (!(iter=drmaa_fill_string_vector(drmaa_supported_nonvector))) {
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diagp);
@@ -1566,7 +1623,7 @@ const char *drmaa_strerror(int drmaa_errno)
 *     drmaa_get_next_attr_value() -- Get next entry from attribute name vector.
 *
 *  SYNOPSIS
-*     int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int 
+*     int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, size_t 
 *     value_len) 
 *
 *  FUNCTION
@@ -1577,7 +1634,7 @@ const char *drmaa_strerror(int drmaa_errno)
 *
 *  OUTPUTS
 *     char *value                - Buffer for the entry.
-*     int value_len              - Buffer length.
+*     size_t value_len              - Buffer length.
 *
 *  RESULT
 *     int - DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no more entries
@@ -1586,7 +1643,7 @@ const char *drmaa_strerror(int drmaa_errno)
 *  NOTES
 *     MT-NOTE: drmaa_get_next_attr_value() is MT safe
 *******************************************************************************/
-int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int value_len)
+int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, size_t value_len)
 {
    dstring val;
    if (value) 
@@ -1600,7 +1657,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int valu
 *     drmaa_get_next_attr_name() -- Get next entry from attribute name vector.
 *
 *  SYNOPSIS
-*     int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int 
+*     int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, size_t 
 *     value_len) 
 *
 *  FUNCTION
@@ -1611,7 +1668,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int valu
 *
 *  OUTPUTS
 *     char *value                - Buffer for the entry.
-*     int value_len              - Buffer length.
+*     size_t value_len           - Buffer length.
 *
 *  RESULT
 *     int - DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no more entries
@@ -1620,7 +1677,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value, int valu
 *  NOTES
 *     MT-NOTE: drmaa_get_next_attr_name() is MT safe
 *******************************************************************************/
-int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len)
+int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, size_t value_len)
 {
    dstring val;
    if (value) 
@@ -1634,7 +1691,7 @@ int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_
 *     drmaa_get_next_job_id() -- Get next entry from job id vector.
 *
 *  SYNOPSIS
-*     int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int 
+*     int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t 
 *     value_len) 
 *
 *  FUNCTION
@@ -1645,7 +1702,7 @@ int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_
 *
 *  OUTPUTS
 *     char *value                - Buffer for the entry.
-*     int value_len              - Buffer length.
+*     size_t value_len           - Buffer length.
 *
 *  RESULT
 *     int - DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no more entries
@@ -1654,7 +1711,7 @@ int drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_
 *  NOTES
 *     MT-NOTE: drmaa_get_next_job_id() is MT safe
 *******************************************************************************/
-int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len)
+int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len)
 {
    dstring val;
    if (value) 
@@ -2316,17 +2373,16 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    } else {
       const char *path = NULL;
 
-/* This doesn't function until cull_parse_job_parameter() understands the
- * -noshell option. */
-#if 0
       /* BUGFIX: #658
        * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
        * If another option level disables binary mode, I have to remove this
        * option.  This means that "-b n" trumps both the default "-b y" and the
-       * default "-noshell". */
-      ep = lGetElemStr(opts_default, SPA_switch, "-noshell");
+       * default "-shell n".
+       * Technically, this is no necessary since -shell is ignored if -b y is
+       * not set, but if -b n is set, and then overridden with -b y, I don't
+       * want the -shell n to still be hanging around. */
+      ep = lGetElemStr(opts_default, SPA_switch, "-shell");
       lRemoveElem(opts_default, ep);
-#endif
 
       /* If the scriptfile is to be parsed for options, we have to set the
        * cwd.  In DRMAA, the script path is assumed to be relative to the
@@ -2880,16 +2936,12 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
-/* This doesn't function until cull_parse_job_parameter() understands the
- * -noshell option. */
-#if 0
    /* BUGFIX: #658
     * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
     * Later in drmaa_job2sge_job if binary mode is disabled, I also have to
     * remove this option. */
    DPRINTF (("disabling execution shell\n"));
-   ep_opt = sge_add_noarg(opts, noshell_OPT, "-noshell", NULL);
-#endif
+   ep_opt = sge_add_arg (opts, shell_OPT, lIntT, "-shell", "n");
 
    DEXIT;
 }
@@ -3595,3 +3647,4 @@ static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
       return 1;
    }
 }
+

@@ -133,7 +133,7 @@ public class DRMAAExample {
 	}
 	
 	private static JobTemplate createJobTemplate (String jobPath, int seconds, boolean isBulkJob) throws DRMAAException {
-		JobTemplate jt = session.getJobTemplate ();
+		JobTemplate jt = session.createJobTemplate ();
 		
 		jt.setAttribute (JobTemplate.WORKING_DIRECTORY, "$drmaa_hd_pd$");
 		jt.setAttribute (JobTemplate.REMOTE_COMMAND, jobPath);

@@ -173,9 +173,16 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       return ERROR_LOAD_VAL;
    }
 
-   /* + and - have the lowest precedence. all else are equal,
+   /* 
+    * + and - have the lowest precedence. all else are equal,
     * thus formula is delimited by + or - signs
+    * if the load formula begins with a "-" we need to multiply the
+    * first load value with -1
     */
+   if (tf[0] == '-') {
+      next_op = LOAD_OP_MINUS;
+   }
+
    for (cp=strtok(tf, "+-"); cp; cp = strtok(NULL, "+-")) {
 
       /* ---------------------------------------- */
@@ -305,14 +312,8 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
 
    /* search complex */
 
-   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list))){
-/*   if (!(cep = lGetElemStr(tcl, CE_name, name))) {*/
-      /* 
-       * admin has forgotten to configure complex for 
-       * load value in load formula 
-       */
-
-      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS , attrname, lGetHost(host, EH_name) ));
+   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){
+      /* neither load or consumable available for that host */
       DEXIT;
       return 1;
    }
@@ -330,12 +331,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    /*
     * No value available.
     */
-/*
-   if (dominant & DOMINANT_TYPE_VALUE) {
-      DEXIT;
-      return 1;
-   }
-*/
+
    DEXIT;
    return 0;
 }

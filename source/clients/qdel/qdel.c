@@ -496,12 +496,10 @@ char *what
       fprintf(fp, "  [-u user_list]                     %s",  MSG_QDEL_del_list_3_OPT_USAGE); 
       fprintf(fp, "\n");
       fprintf(fp, "  job_task_list                      %s",  MSG_QDEL_del_list_1_OPT_USAGE);
-      fprintf(fp, "  \"*\"                                %s",  MSG_QDEL_del_list_2_OPT_USAGE);
-      fprintf(fp, "  -u \"*\"                             %s\n",  MSG_QDEL_del_list_4_OPT_USAGE);
-      fprintf(fp, "job_task_list  job_tasks[' 'job_tasks[' '...]]\n");
-      fprintf(fp, "job_tasks      {job_id['.'task_id_range]|job_name|pattern}[ -t task_id_range]\n");
-      fprintf(fp, "task_id_range  task_id['-'task_id[':'step]]\n");
-      fprintf(fp, "user_list      {user|pattern}[','{user|pattern}[','...]]\n");
+      fprintf(fp, "job_task_list  job_tasks[ job_tasks[ ...]]\n");
+      fprintf(fp, "job_tasks      {job_id[.task_id_range]|job_name|pattern}[ -t task_id_range]\n");
+      fprintf(fp, "task_id_range  task_id[-task_id[:step]]\n");
+      fprintf(fp, "user_list      {user|pattern}[,{user|pattern}[,...]]\n");
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S, what);

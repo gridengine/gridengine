@@ -1178,3 +1178,15 @@ sge_strerror(int errnum, dstring *buffer)
 
    return ret;
 }
+
+
+/* EB: ADOC: add commets */
+
+bool sge_str_is_number(const char *string)
+{
+   char *end = NULL;
+   
+   strtod(string, &end);
+   return (*end == '\0') ? true : false;
+}
+

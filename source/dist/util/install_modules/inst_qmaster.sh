@@ -1,7 +1,7 @@
 #! /bin/sh 
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_qmaster.sh
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# Scriptname: inst_qmaster.sh
 # Module: qmaster installation functions
 #
 #___INFO__MARK_BEGIN__
@@ -45,20 +45,18 @@
 GetCellRoot()
 {
    if [ $AUTO = true ]; then
-    SGE_CELL_ROOT=$SGE_CELL_ROOT
-    $INFOTEXT -log "Using >%s< as SGE_CELL_ROOT." "$SGE_CELL_ROOT"
+      SGE_CELL_ROOT=$SGE_CELL_ROOT
+       $INFOTEXT -log "Using >%s< as SGE_CELL_ROOT." "$SGE_CELL_ROOT"
    else
-   $CLEAR
-   $INFOTEXT -u "\nGrid Engine cell root"
-   $INFOTEXT -n "Enter the cell root <<<"
-   INP=`Enter `
-   eval SGE_CELL_ROOT=$INP
-   $INFOTEXT -wait -auto $AUTO -n "\nUsing cell root >%s<. Hit <RETURN> to continue >> " $SGE_CELL_ROOT
-   $CLEAR
+      $CLEAR
+      $INFOTEXT -u "\nGrid Engine cell root"
+      $INFOTEXT -n "Enter the cell root <<<"
+      INP=`Enter `
+      eval SGE_CELL_ROOT=$INP
+      $INFOTEXT -wait -auto $AUTO -n "\nUsing cell root >%s<. Hit <RETURN> to continue >> " $SGE_CELL_ROOT
+      $CLEAR
    fi
 }
-
-
 
 #-------------------------------------------------------------------------
 # GetCell
@@ -83,29 +81,29 @@ GetCell()
                    "The environment variable\n\n" \
                    "   \$SGE_CELL=<your_cell_name>\n\n" \
                    "will be set for all further Grid Engine commands.\n\n" \
-                   "Enter cell name or hit <RETURN> to use default cell >default< >> "
+                   "Enter cell name [default] >> "
       INP=`Enter default`
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
       if [ $BERKELEY = "undef" ]; then
-         if [ -d $SGE_ROOT/$SGE_CELL ]; then
+         if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
             $CLEAR
-            $INFOTEXT "The cell name <%s> you have entered already exists!" $SGE_CELL_VAL
+            $INFOTEXT "\nThe \"common\" directory in cell >%s< already exists!" $SGE_CELL_VAL
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to select another cell name? (y/n) [y] >> "
             if [ $? = 0 ]; then
-               :
                is_done="false"
             else
-               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite,\nonly critical files " \
-                            "will be deleted (eg. bootstrap file).\nDelete - will delete the whole directory!\n"
-               $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite the directory? (y/n) [y] >> "
+               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite\n" \
+                            "(YES option) only the \"bootstrap\" file will be deleted).\n" \
+                            "Delete (NO option) - will delete the whole directory!\n"
+               $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite [y] or delete [n] the directory? (y/n) [y] >> "
                if [ $? = 0 ]; then
                   $INFOTEXT "Deleting bootstrap file!"
-                  `rm $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap`
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
                   is_done="true"
                else
-                  $INFOTEXT "Deleting %s directory now!" $SGE_ROOT/$SGE_CELL_VAL
-                  `rm -R $SGE_ROOT/$SGE_CELL_VAL`
+                  $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
+                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL/common
                   is_done="true"
                fi
             fi
@@ -200,13 +198,17 @@ SetPermissions()
       $CLEAR
       return 0
    else
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                "Did you install this version with >pkgadd< or did you already\n" \
-                "verify and set the file permissions of your distribution (y/n) [y] >> "
-      if [ $? = 0 ]; then
-         $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "
-         $CLEAR
-         return 0
+      if [ $AUTO = "true" -a $SET_FILE_PERMS = "true" ]; then
+         :
+      else
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                   "Did you install this version with >pkgadd< or did you already\n" \
+                   "verify and set the file permissions of your distribution (y/n) [y] >> "
+         if [ $? = 0 ]; then
+            $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "
+            $CLEAR
+            return 0
+         fi
       fi
    fi
 
@@ -275,6 +277,166 @@ SetPermissions()
    $CLEAR
 }
 
+SetSpoolingOptionsBerkeleyDB()
+{
+   SPOOLING_LIB=$1
+   SPOOLING_SERVER=none
+   SPOOLING_DIR="$QMDIR/spooldb"
+   params_ok=0
+   if [ $AUTO = "true" ]; then
+      SPOOLING_SERVER=$DB_SPOOLING_SERVER
+      SPOOLING_DIR="$DB_SPOOLING_DIR"
+      if [ -d $SPOOLING_DIR ]; then
+         $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
+         MoveLog
+         exit 0 
+      fi
+      SpoolingCheckParams
+      params_ok=1
+   fi
+   if [ $QMASTER = "install" -a $AUTO = "false" ]; then
+      $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
+                   " 1) Local spooling:\n" \
+                   " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
+                   " This setup is faster, but you can't setup a shadow master host\n\n"
+      $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
+                   " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
+                   " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
+                   " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
+                   " but results in a clear potential security hole. RPC communication\n" \
+                   " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
+                   " alternative if your site is secure or if you are not concerned about\n" \
+                   " security. Check the installation guide for further advice on how to achieve\n" \
+                   " failsafety without compromising security.\n\n"
+
+      $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
+      if [ $? = 0 ]; then
+         $INFOTEXT -u "Berkeley DB Setup\n"
+         $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
+         $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
+                                        "\"inst_sge -db\" is completed, continue with <RETURN>"
+         is_server="true"
+      else
+         is_server="false"
+         $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
+         $CLEAR
+      fi
+
+      if [ $is_server = "true" ]; then
+         SpoolingQueryChange
+      else
+         done="false"
+         is_spool="false"
+
+         while [ $is_spool = "false" ] && [ $done = "false" ]; do
+            $CLEAR
+            SpoolingQueryChange
+            if [ -d $SPOOLING_DIR ]; then
+               $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
+               if [ $? = 0 ]; then
+                     RM="rm -r"
+                     ExecuteAsAdmin $RM $SPOOLING_DIR
+                     if [ -d $SPOOLING_DIR ]; then
+                        $INFOTEXT "You are not the owner of this directory. You can't delete it!"
+                     else
+                        is_spool="true"
+                     fi
+               else
+                  $INFOTEXT "Please choose any other spooling directory!"
+               fi
+             else
+                is_spool="true"
+             fi
+
+            CheckLocalFilesystem $SPOOLING_DIR
+            ret=$?
+            if [ $ret -eq 0 ]; then
+               $INFOTEXT "\nThe database directory\n\n" \
+                            "   %s\n\n" \
+                            "is not on a local filesystem. Please choose a local filesystem or\n" \
+                            "configure the RPC Client/Server mechanism." $SPOOLING_DIR
+               $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+            else
+               done="true" 
+            fi
+            
+            if [ $is_spool = "false" ]; then
+               done="false"
+            elif [ $done = "false" ]; then
+               is_spool="false"
+            fi
+
+         done
+       fi
+   else
+      ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+      if [ $ret -gt 1 ]; then
+         $INFOTEXT "We found a running berkeley db on this host!"
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
+         if [ $? = 1 ]; then
+            $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
+            TMP_STARTUP_SCRIPT=`Enter`
+            SpoolingQueryChange
+            EditStartupScript
+         else
+            exit 1
+         fi 
+      else
+         while [ $params_ok -eq 0 ]; do
+            SpoolingQueryChange
+            SpoolingCheckParams
+            params_ok=$?
+         done
+      fi
+   fi
+
+   if [ $SPOOLING_SERVER = "none" ]; then
+      $ECHO
+      Makedir $SPOOLING_DIR
+      SPOOLING_ARGS="$SPOOLING_DIR"
+   else
+      SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
+   fi
+}
+
+SetSpoolingOptionsClassic()
+{
+   SPOOLING_LIB=$1
+   SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
+}
+
+SetSpoolingOptionsDynamic()
+{
+   if [ $AUTO = "true" ]; then
+      if [ "$SPOOLING_METHOD" != "berkeleydb" -o "$SPOOLING_METHOD" != "classic" ]; then
+         INP="berkeleydb"
+      else
+         INP=$SPOOLING_METHOD
+      fi
+   else
+      $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
+                   "during runtime (dynamically). So you can choose between Berkeley DB \n" \
+                   "spooling and Classic spooling method."
+      $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
+      INP=`Enter berkeleydb`
+   fi
+
+   $CLEAR
+
+   case $INP in 
+      classic)
+         SetSpoolingOptionsClassic libspoolc
+         ;;
+      berkeleydb)
+         SetSpoolingOptionsBerkeleyDB libspoolb
+         ;;
+      *)
+         $INFOTEXT "\nUnknown spooling method. Exit."
+         $INFOTEXT -log "\nUnknown spooling method. Exit."
+         exit 1
+         ;;
+   esac
+}
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
@@ -283,132 +445,20 @@ SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
    SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
-   $INFOTEXT "The selected spooling method is: %s" $SPOOLING_METHOD
    $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
    case $SPOOLING_METHOD in 
       classic)
-         SPOOLING_LIB=none
-         SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
+         SetSpoolingOptionsClassic none
          ;;
       berkeleydb)
-         SPOOLING_LIB=none
-         SPOOLING_SERVER=none
-         SPOOLING_DIR="$QMDIR/spooldb"
-         params_ok=0
-         if [ $AUTO = "true" ]; then
-            SPOOLING_SERVER=$DB_SPOOLING_SERVER
-            SPOOLING_DIR="$DB_SPOOLING_DIR"
-            if [ -d $SPOOLING_DIR ]; then
-               $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
-               MoveLog
-               exit 0 
-            fi
-            SpoolingCheckParams
-            params_ok=1
-            #TODO: exec rcrpc script
-         fi
-         if [ $QMASTER = "install" -a $AUTO = "false" ]; then
-            $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
-                         " 1) Local spooling:\n" \
-                         " The Berkely DB spools into a local directory on this host (qmaster host)\n" \
-                         " This setup is faster, but you can't setup a shadow master host\n\n"
-            $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
-                         " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
-                         " In this case you have to choose a host with a configured rpc service.\nThe qmaster host" \
-                         " connects via rpc to the Berkeley DB. This setup is more\nfailsafe," \
-                         " but results in a clear potential security hole. Rpc communication\n" \
-                         " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
-                         " alternative if your site is secure or if you are not concerned about\n" \
-                         " security. Check the installation guide for further advice on how to achieve\n" \
-                         " failsafety without compromising security.\n\n"
- 
-            $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
-            if [ $? = 0 ]; then
-               $INFOTEXT -u "Berkely DB Setup"
-               $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute < inst_sgeee -db >"
-               $INFOTEXT -auto $AUTO -wait "Please do not continue, before the Berkeley DB installation with \n" \
-                                           "< inst_sgeee -db > is completed, continue with <RETURN>"
-               is_server="true"
-            else
-               is_server="false"
-               $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
-               $CLEAR
-            fi
-
-            if [ $is_server = "true" ]; then
-               SpoolingQueryChange
-            else
-               done="false"
-               is_spool="false"
-
-               while [ $is_spool = "false" ] && [ $done = "false" ]; do
-                  SpoolingQueryChange
-                  if [ -d $SPOOLING_DIR ]; then
-                     $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
-                     if [ $? = 0 ]; then
-                           RM="rm -r"
-                           ExecuteAsAdmin $RM $SPOOLING_DIR
-                           if [ -d $SPOOLING_DIR ]; then
-                              $INFOTEXT "You are not the owner of this directory. You can't delete it!"
-                           else
-                              is_spool="true"
-                           fi
-                     else
-                        $INFOTEXT "Please choose any other spooling directory!"
-                     fi
-                   else
-                      is_spool="true"
-                   fi
-
-                  CheckLocalFilesystem $SPOOLING_DIR
-                  ret=$?
-                  if [ $ret -eq 0 ]; then
-                     $INFOTEXT -e "\nThe database directory >%s<\n" \
-                                  "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
-                  else
-                     done="true" 
-                  fi
-                  
-                  if [ $is_spool = "false" ]; then
-                     done="false"
-                  elif [ $done = "false" ]; then
-                     is_spool="false"
-                  fi
-
-               done
-             fi
-         else
-            ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
-            if [ $ret -gt 1 ]; then
-               $INFOTEXT "We found a running berkeley db on this host!"
-               $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
-               if [ $? = 1 ]; then
-                  $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-                  TMP_STARTUP_SCRIPT=`Enter`
-                  SpoolingQueryChange
-                  EditStartupScript
-               else
-                  exit 1
-               fi 
-            else
-               while [ $params_ok -eq 0 ]; do
-                  SpoolingQueryChange
-                  SpoolingCheckParams
-                  params_ok=$?
-               done
-            fi
-         fi
-
-         if [ $SPOOLING_SERVER = "none" ]; then
-            Makedir $SPOOLING_DIR
-            SPOOLING_ARGS="$SPOOLING_DIR"
-         else
-            SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
-         fi
-
+         SetSpoolingOptionsBerkeleyDB none
+         ;;
+      dynamic)
+         SetSpoolingOptionsDynamic
          ;;
       *)
-         $INFOTEXT -e "\nUnknown spooling method. Exit."
+         $INFOTEXT "\nUnknown spooling method. Exit."
+         $INFOTEXT -log "\nUnknown spooling method. Exit."
          exit 1
          ;;
    esac
@@ -461,18 +511,6 @@ SelectHostNameResolving()
 #
 SetProductMode()
 {
-   #if [ $SGEEE = true ]; then
-   #   PRODUCT_PREFIX=sgeee
-   #else
-   #   PRODUCT_PREFIX=sge
-   #fi
-
-#if [ $RESPORT = true ]; then
-#      RESPORT_PREFIX=-reserved_port
-#   else
-#      RESPORT_PREFIX=""
-#   fi
-
    if [ $AFS = true ]; then
       AFS_PREFIX="afs"
    else
@@ -480,8 +518,8 @@ SetProductMode()
    fi
 
    if [ $CSP = true ]; then
-      SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep "CRYPTO_" | wc -l`
-      if [ $SEC_COUNT -lt 5 ]; then
+      SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep "AIMK_SECURE_OPTION_ENABLED" | wc -l`
+      if [ $SEC_COUNT -ne 1 ]; then
          $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "
          exit 1
@@ -501,7 +539,6 @@ SetProductMode()
       else
          PRODUCT_MODE="${AFS_PREFIX}"
       fi
-
 }
 
 
@@ -511,6 +548,7 @@ SetProductMode()
 MakeDirsMaster()
 {
    $INFOTEXT -u "\nMaking directories"
+   $ECHO
    $INFOTEXT -log "Making directories"
    Makedir $SGE_CELL_VAL
    Makedir $COMMONDIR
@@ -528,17 +566,16 @@ MakeDirsMaster()
 AddBootstrap()
 {
    TOUCH=touch
-   $INFOTEXT -u "\nDumping bootstrapping information"
+   $INFOTEXT "Dumping bootstrapping information"
    $INFOTEXT -log "Dumping bootstrapping information"
    ExecuteAsAdmin $TOUCH $COMMONDIR/bootstrap
+   ExecuteAsAdmin chmod 666 $COMMONDIR/bootstrap
    PrintBootstrap >> $COMMONDIR/bootstrap
-   FILEPERM=444
-   SetPerm $COMMONDIR/bootstrap
-   FILEPERM=644
+   ExecuteAsAdmin chmod 444 $COMMONDIR/bootstrap
 }
 
 #-------------------------------------------------------------------------
-# PrintBootstrap: print SGE/SGEEE default configuration
+# PrintBootstrap: print SGE default configuration
 #
 PrintBootstrap()
 {
@@ -565,11 +602,11 @@ PrintBootstrap()
 #
 InitSpoolingDatabase()
 {
-   $INFOTEXT -u "\nInitializing spooling database"
+   $INFOTEXT "Initializing spooling database"
    $INFOTEXT -log "Initializing spooling database"
    ExecuteAsAdmin $SPOOLINIT $SPOOLING_LIB "$SPOOLING_ARGS" init
 
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
 
@@ -596,7 +633,7 @@ AddConfiguration()
 
 
 #-------------------------------------------------------------------------
-# PrintConf: print SGE/SGEEE default configuration
+# PrintConf: print SGE default configuration
 #
 PrintConf()
 {
@@ -653,6 +690,7 @@ PrintConf()
    $ECHO "auto_user_fshare       0"
    $ECHO "auto_user_default_project none"
    $ECHO "auto_user_delete_time  100"
+   $ECHO "delegated_file_staging false"
 
 }
 
@@ -671,11 +709,12 @@ AddLocalConfiguration()
 #      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
 #      PrintLocalConf 1 >> $LCONFDIR/$HOST
 #      SetPerm $LCONFDIR/$HOST
-      TMPH=/tmp/$HOST
+      mkdir /tmp/$$
+      TMPH=/tmp/$$/$HOST
       rm -f $TMPH
       PrintLocalConf 1 > $TMPH
       ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
-      rm -f $TMPH
+      rm -rf /tmp/$$
    fi
 }
 
@@ -849,18 +888,16 @@ AddPEFiles()
 #
 AddDefaultDepartement()
 {
-   if [ $SGEEE = true ]; then
-      #$INFOTEXT "Adding SGEEE >defaultdepartment< userset"
+      #$INFOTEXT "Adding SGE >defaultdepartment< userset"
       #ExecuteAsAdmin $CP util/resources/usersets/defaultdepartment $QMDIR/usersets
       #ExecuteAsAdmin $CHMOD $FILEPERM $QMDIR/usersets/defaultdepartment
 
-      #$INFOTEXT "Adding SGEEE >deadlineusers< userset"
+      #$INFOTEXT "Adding SGE >deadlineusers< userset"
       #ExecuteAsAdmin $CP util/resources/usersets/deadlineusers $QMDIR/usersets
       #ExecuteAsAdmin $CHMOD 644 $QMDIR/usersets/deadlineusers
 
-      $INFOTEXT "Adding SGEEE default usersets"
+      $INFOTEXT "Adding SGE default usersets"
       ExecuteAsAdmin $SPOOLDEFAULTS usersets $SGE_ROOT_VAL/util/resources/usersets
-   fi
 }
 
 
@@ -870,7 +907,6 @@ AddDefaultDepartement()
 CreateSettingsFile()
 {
    $INFOTEXT "Creating settings files for >.profile/.cshrc<"
-
 
    if [ -f $SGE_ROOT_VAL/$COMMONDIR/settings.sh ]; then
       ExecuteAsAdmin $RM $SGE_ROOT_VAL/$COMMONDIR/settings.sh
@@ -884,6 +920,8 @@ CreateSettingsFile()
 
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.sh
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.csh
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
 }
 
 
@@ -916,7 +954,17 @@ StartQmaster()
 {
    $INFOTEXT -u "\nGrid Engine qmaster and scheduler startup"
    $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
    $SGE_STARTUP_FILE -qmaster
+   CheckRunningDaemon
+   run=$?
+   if [ $run -ne 0 ]; then
+      $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \
+                "configuration! Installation failed!"
+      $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
+                     "autoinstall configuration file! Installation failed!"
+      exit 1
+   fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
@@ -981,6 +1029,7 @@ AddHosts()
    fi
 
    $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
+   echo
    $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
    TMPL=/tmp/hostqueue$$
    TMPL2=${TMPL}.q
@@ -1098,7 +1147,7 @@ GetQmasterPort()
                    "   \$SGE_QMASTER_PORT=%s\n\n" \
                      "as port for communication.\n\n" $SGE_QMASTER_PORT
                       export SGE_QMASTER_PORT
-                      $INFOTEXT -log "Using port >%s<." $SGE_QMASTER_PORT
+                      $INFOTEXT -log "Using SGE_QMASTER_PORT >%s<." $SGE_QMASTER_PORT
          if [ $ret = 0 ]; then
             $INFOTEXT "This overrides the preset TCP/IP service >sge_qmaster<.\n"
          fi
@@ -1267,12 +1316,10 @@ GetExecdPort()
                 "   sge_execd <port_number>/tcp\n\n" \
                 "to your services database and make sure to use an unused port number.\n"
 
-      if [ "$EXECD" = "install" ]; then
-
          $INFOTEXT "Make sure to use a different port number for the Executionhost\n" \
                    "as on the qmaster machine\n"
          $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
-      fi
+
       $INFOTEXT -wait -auto $AUTO -n "Please add the service now or press <RETURN> to go to entering a port number >> "
 
       # Check if $SGE_SERVICE service is available now
@@ -1377,7 +1424,7 @@ GetDefaultDomain()
    done=false
 
    if [ $AUTO = "true" ]; then
-      $INFOTEXT -log "Using >%< as default domain." $DEFAULT_DOMAIN
+      $INFOTEXT -log "Using >%s< as default domain." $DEFAULT_DOMAIN
       CFG_DEFAULT_DOMAIN=$DEFAULT_DOMAIN
       done=true
    fi
@@ -1418,7 +1465,7 @@ SetScheddConfig()
 {
 
    $INFOTEXT -u "Scheduler Tuning"
-   $INFOTEXT -n "The details on the different options are described in the manual. \n"
+   $INFOTEXT -n "\nThe details on the different options are described in the manual. \n"
    done="false"
  
    while [ $done = "false" ]; do

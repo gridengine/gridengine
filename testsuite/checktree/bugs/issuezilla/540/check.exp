@@ -105,10 +105,8 @@ proc issue_540_check {} {
    set user_home $env(HOME)
    puts "user_home:$user_home"
 
-   if { [file exists "$user_home/$job_output_file"] == 1 } {
-      add_proc_error "issue_540_check" "-1" "out:put.txt file allready exists in \$home dir"
-      set_error -1 "error: $user_home/$job_output_file file allready exists in \$home dir"
-      return -1
+   if {[file exists "$user_home/$job_output_file"]} {
+      file delete "$user_home/$job_output_file"
    }
 
    # first test should fail - We submit two logfiles for the default host. 
@@ -133,11 +131,12 @@ proc issue_540_check {} {
    wait_for_jobstart $job_id $job_name 300
    wait_for_jobend $job_id $job_name 20
 
-   if { [file exists "$user_home/$job_output_file"] == 0 } {
+   if {![file exists "$user_home/$job_output_file"]} {
       add_proc_error "issue_540_check" "-1" "qsub did not create the specified output file $job_output_file"
    } else {
       file delete "$user_home/$job_output_file"
-   }      
+   }    
+
    set_error 0 "ok"
 }
 

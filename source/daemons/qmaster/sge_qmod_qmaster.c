@@ -150,6 +150,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       
       if ((id_action & JOB_DO_ACTION) == 0) {
          qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
+         qref_list_resolve_hostname(qref_list);
          qref_list_resolve(qref_list, NULL, &tmp_list, 
                            &found_something, cqueue_list,
                            *(object_type_get_master_list(SGE_TYPE_HGROUP)), 
@@ -619,7 +620,7 @@ int isowner
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             if (!strcmp(qname, lGetString(gdil_ep, JG_qname))) {
                /* 3: JOB_FINISH reports aborted */
-               sge_commit_job(jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+               sge_commit_job(jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
                break;
             }
          }
@@ -1038,7 +1039,7 @@ lListElem *jatep
    int i;
    u_long32 next_delivery_time = 60;
    u_long32 now;
-   u_long32 dummy;
+   u_long32 dummy = 0;
    sge_pack_buffer pb;
    int sent = 0;
 
@@ -1114,7 +1115,7 @@ lListElem *jatep
       te_event_t ev = NULL;
 
       DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
-            lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time, 
+            lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now, 
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
          lGetUlong(jatep, JAT_task_number), NULL);
@@ -1130,7 +1131,7 @@ lListElem *jatep
       te_event_t ev = NULL;
 
       DPRINTF(("QUEUE %s: %s signal %s (retry after "u32" seconds) host %s\n", 
-            lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time,
+            lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_qname));
       lSetUlong(qep, QU_pending_signal, how);

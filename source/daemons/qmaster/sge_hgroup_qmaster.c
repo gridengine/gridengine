@@ -247,15 +247,17 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
 
          if (add) {
             /* Check groupname for new hostgroups */
-            if (name[0] == '@' &&
-                !verify_str_key(answer_list, &name[1], "hostgroup")) {
+            if (hgroup_check_name(answer_list, name)) {
                lSetHost(hgroup, HGRP_name, name); 
-            } else {
-               ERROR((SGE_EVENT, MSG_HGRP_GROUPXNOTGUILTY_S, name));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
-                               ANSWER_QUALITY_ERROR);
+            }
+            else {
+               lListElem *aep;
+               for_each(aep, *answer_list) {
+                  ERROR((SGE_EVENT, lGetString(aep, AN_text)));
+               }
                ret = false;
             }
+
          } else {
             const char *old_name = lGetHost(hgroup, HGRP_name);
 

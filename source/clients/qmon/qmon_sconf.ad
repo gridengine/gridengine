@@ -85,6 +85,7 @@ Qmon*sconf_general.xmtChildren: \
                   sconf_schedule_interval = schedule_interval, \
                   sconf_sc_params = sc_params, \
                   sconf_reprioritize_interval = reprioritize_interval, \
+                  sconf_default_duration = default_duration, \
                   sconf_maxujobs = maxujobs, \
                   sconf_job_range, \
                   sconf_load_formula = load_formula; \
@@ -93,7 +94,8 @@ Qmon*sconf_general.xmtChildren: \
    Spinbox        sconf_flush_submit_secs = flush_submit_secs, \
                   sconf_flush_finish_secs = flush_finish_secs, \
                   sconf_max_reservation = max_reservation; \
-   XmPushButton   sconf_schedule_intervalPB, sconf_reprioritize_intervalPB;
+   XmPushButton   sconf_schedule_intervalPB, sconf_reprioritize_intervalPB, \
+                  sconf_default_durationPB;
 
 
 Qmon*sconf_general.layout: \
@@ -110,6 +112,12 @@ Qmon*sconf_general.layout: \
             Fixed Centered Caption tl "@{@fBReprioritize Interval}" \
                   12 em sconf_reprioritize_interval \
             Fixed FlushBottom sconf_reprioritize_intervalPB \
+            <> \
+         } \
+         Row { \
+            Fixed Centered Caption tl "@{@fBDefault Duration}" \
+                  12 em sconf_default_duration \
+            Fixed FlushBottom sconf_default_durationPB \
             <> \
          } \
          Equal LCREven Row { \
@@ -137,10 +145,13 @@ Qmon*sconf_general.layout: \
 !Qmon*sconf_general*sconf_load_formula.columns:                25
 !Qmon*sconf_general*sconf_algorithm.columns:                   25
 
-Qmon*sconf_general*sconf_schedule_intervalPB.labelType:       PIXMAP
-Qmon*sconf_general*sconf_schedule_intervalPB.labelPixmap:     time
-Qmon*sconf_general*sconf_reprioritize_intervalPB.labelType:   PIXMAP
-Qmon*sconf_general*sconf_reprioritize_intervalPB.labelPixmap: time
+Qmon*sconf_general*sconf_schedule_intervalPB.labelType:        PIXMAP
+Qmon*sconf_general*sconf_schedule_intervalPB.labelPixmap:      time
+Qmon*sconf_general*sconf_reprioritize_intervalPB.labelType:    PIXMAP
+Qmon*sconf_general*sconf_reprioritize_intervalPB.labelPixmap:  time
+Qmon*sconf_general*sconf_default_durationPB.labelType:         PIXMAP
+Qmon*sconf_general*sconf_default_durationPB.labelPixmap:       time
+
 
 Qmon*sconf_general*sconf_flush_submit_secs.minimum: 0
 Qmon*sconf_general*sconf_flush_submit_secs.spinboxStyle: SPINBOX_STACKED_RIGHT

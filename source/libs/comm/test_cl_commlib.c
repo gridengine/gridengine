@@ -100,7 +100,7 @@ extern int main(int argc, char** argv)
 
   cl_com_set_status_func(my_application_status); 
 
-  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, 5001, "server", 1, 2, 0 );
+  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, "server", 1, 2, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);
@@ -120,8 +120,9 @@ extern int main(int argc, char** argv)
   cl_com_set_max_connections(handle,4);
   cl_com_get_max_connections(handle,&i);
   printf("max open connections is set to %d\n", i);
+  cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS );
 
-  cl_com_enable_max_connection_close(handle);
+
 
 
   while(do_shutdown != 1) {

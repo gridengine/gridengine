@@ -91,11 +91,12 @@ report_source *report_sources
 
       report_list = lCreateList("report list", REP_Type);
 
-      for (i=0; report_sources[i].type; i++)
+      for (i=0; report_sources[i].type; i++) {
          if (!which || which == report_sources[i].type) {
             DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
             report_sources[i].func(report_list);
          }
+      }
 
       /*
        *  do not test if report->lp != NULL:

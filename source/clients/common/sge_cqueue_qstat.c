@@ -52,8 +52,10 @@
 #include "valid_queue_user.h"
 #include "sge_cqueue.h"
 #include "sge_complex_schedd.h"
-#include "msg_clients_common.h"
 #include "sge_schedd_conf.h"
+#include "sge_parse_num_par.h"
+
+#include "msg_clients_common.h"
 
 
 bool cqueue_calculate_summary(const lListElem *cqueue, 
@@ -481,6 +483,7 @@ lList *centry_list
    double load_avg;
    char *load_avg_str;
    lListElem *cqueue = NULL;
+   u_long32 interval;
 
    DENTER(TOP_LAYER, "select_by_queue_state");
 
@@ -496,10 +499,14 @@ lList *centry_list
 
          /* compute the load and suspend alarm */
          sge_get_double_qattr(&load_avg, load_avg_str, qep, exechost_list, centry_list, &has_value_from_object);
-         if (sge_load_alarm(NULL, qep, lGetList(qep, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+         if (sge_load_alarm(NULL, qep, lGetList(qep, QU_load_thresholds), exechost_list, centry_list, NULL, true)) {
             qinstance_state_set_alarm(qep, true);
          }
-         if (sge_load_alarm(NULL, qep, lGetList(qep, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+         parse_ulong_val(NULL, &interval, TYPE_TIM,
+                         lGetString(qep, QU_suspend_interval), NULL, 0);
+         if (lGetUlong(qep, QU_nsuspend) != 0 &&
+             interval != 0 &&
+             sge_load_alarm(NULL, qep, lGetList(qep, QU_suspend_thresholds), exechost_list, centry_list, NULL, false)) {
             qinstance_state_set_suspend_alarm(qep, true);
          }
 

@@ -30,8 +30,9 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-global INFOTEXTCMD INPUTFILE INFOTEXTBINARY UPPER_ARCH OUTPUTFILE MESSAGE_OPT env
+global INFOTEXTIGNORE INFOTEXTCMD INPUTFILE INFOTEXTBINARY UPPER_ARCH OUTPUTFILE MESSAGE_OPT env
 set INFOTEXTCMD "\$INFOTEXT"
+set INFOTEXTIGNORE "INFOTEXT="
 set INPUTFILE ""
 set OUTPUTFILE "stdout"
 set MESSAGE_OPT "-message"
@@ -162,7 +163,7 @@ if { [info exists argc ] != 0 } {
          set line $buffer($i)
          set line [ string trim $line  ]
          set where [string first $INFOTEXTCMD $line]
-         if { $where >= 0 } {
+         if { $where >= 0 && [string first $INFOTEXTIGNORE $line] < 0 } {
             set slen [ string length $INFOTEXTCMD ]
             set hline [ string replace $line $where [expr ($where + $slen - 1)] "$INFOTEXTBINARY $MESSAGE_OPT"  ]
             append command "$hline"

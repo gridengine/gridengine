@@ -35,10 +35,10 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 
 
@@ -94,7 +94,7 @@ int sge_get_qmaster_port(void) {
       int nisretry = SGE_MAXNISRETRY;
       while (nisretry-- && !((se = getservbyname("sge_qmaster", "tcp"))));
       if (se != NULL) {
-         int_port = se->s_port;
+         int_port = ntohs(se->s_port);
       }
    }
 
@@ -123,7 +123,7 @@ int sge_get_execd_port(void) {
       int nisretry = SGE_MAXNISRETRY;
       while (nisretry-- && !((se = getservbyname("sge_execd", "tcp"))));
       if (se != NULL) {
-         int_port = se->s_port;
+         int_port = ntohs(se->s_port);
       }
    }
 
@@ -333,7 +333,8 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
    
    {
       struct hostent_data he_data;
-      
+     
+      memset(&he_data, 0, sizeof(he_data));
       he = (struct hostent *)malloc (sizeof (struct hostent));
       if (gethostbyname_r (name, he, &he_data) < 0) {
          /* If this function fails, free he so that we can test if it's NULL
@@ -599,7 +600,8 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
    
    {
       struct hostent_data he_data;
-      
+     
+      memset(&he_data, 0, sizeof(he_data));
       he = (struct hostent *)malloc (sizeof (struct hostent));
       if (gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
          /* If this function fails, free he so that we can test if it's NULL

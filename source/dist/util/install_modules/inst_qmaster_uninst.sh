@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)# Scriptname: inst_sgeee_qmaster_uninst.sh
+# SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# Scriptname: inst_qmaster_uninst.sh
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -85,8 +86,21 @@ ShutdownMaster()
 {
    $INFOTEXT "Shutting down scheduler and qmaster!"
    $INFOTEXT -log "Shutting down scheduler and qmaster!"
+
+   master_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/qmaster.pid`
+
    `qconf -ks`
    `qconf -km`
+
+   ret=0
+   while [ $ret -eq 0 ]; do 
+      sleep 5
+      $SGE_UTILBIN/checkprog $master_pid sge_qmaster
+      ret=$?
+      $INFOTEXT "sge_qmaster is going down ...., please wait!"
+   done
+
+      $INFOTEXT "sge_qmaster is down!"
 
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    

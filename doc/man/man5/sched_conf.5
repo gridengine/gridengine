@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/02/26 13:56:27 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:09 $     Revision: $Revision: 1.16 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/02/26 13:56:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/04/19 10:52:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -208,22 +208,15 @@ useful if you want to define a fixed order in which queues are to be filled
 The default for this parameter is \fBload\fP.
 .\"
 .SS "\fBsgeee_schedule_interval\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
-The time period between job priority adjustments by the xxQS_NAME_EExx global
-dynamic scheduler (GDS). Valid values are specified of type time as
-specified in
+The time period between job priority adjustments by dynamic scheduler. 
+Valid values are specified of type time as specified in
 .M queue_conf 5 .
 .PP
 When this parameter is set to 0:0:0 it disables the submition of running job tickets to
 the qmaster and the job priority adjustments on the clients.
 .\"
 .SS "\fBhalftime\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
-When executing under a share based policy, xxQS_NAME_EExx "ages" (i.e. decreases)
+When executing under a share based policy, the scheduler "ages" (i.e. decreases)
 usage to implement a sliding window for achieving the share entitlements
 as defined by the share tree. The \fBhalftime\fP defines
 the time interval in which accumulated usage will have been decayed
@@ -232,10 +225,7 @@ specified in
 .M queue_conf 5 .
 .\"
 .SS "\fBusage_weight_list\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
-xxQS_NAME_EExx accounts for the consumption of the resources CPU-time, memory and IO
+xxQS_NAMExx accounts for the consumption of the resources CPU-time, memory and IO
 to determine the usage which is imposed on a system by a job. A single
 usage value is computed from these three input parameters by multiplying
 the individual values by weights and adding them up. The weights are
@@ -251,73 +241,46 @@ where wcpu, wmem and wio are the configurable weights. The weights are real
 number. The sum of all tree weights should be 1.
 .\"
 .SS "\fBcompensation_factor\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
-Determines how fast xxQS_NAME_EExx should compensate for past usage below of above
+Determines how fast xxQS_NAMExx should compensate for past usage below of above
 the share entitlement defined in the share tree. Recommended values are
 between 2 and 10, where 10 means faster compensation.
 .\"
 .SS "\fBweight_user\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The relative importance of the user shares in the functional policy.
 Values are of type real.
 .\"
 .SS "\fBweight_project\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The relative importance of the project shares in the functional policy.
 Values are of type real.
 .\"
 .SS "\fBweight_department\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The relative importance of the department shares in the
 functional policy. Values are of type real.
 .\"
 .SS "\fBweight_job\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The relative importance of the job shares in the
 functional policy. Values are of type real.
 .\"
 .SS "\fBweight_tickets_functional\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The maximum number of functional tickets available for distribution
-by xxQS_NAME_EExx. Determines the relative importance of the functional policy. 
+by xxQS_NAMExx. Determines the relative importance of the functional policy. 
 See under 
 .M sge_priority 5 
 for an overview on job priorities.
 .\"
 .SS "\fBweight_tickets_share\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The maximum number of share based tickets available for distribution
-by xxQS_NAME_EExx. Determines the relative importance of the share tree policy. See under 
+by xxQS_NAMExx. Determines the relative importance of the share tree policy. See under 
 .M sge_priority 5 
 for an overview on job priorities.
 .\"
 .SS "\fBweight_deadline\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The weight applied on the remaining time until a jobs latest start time. Determines 
 the relative importance of the deadline. See under 
 .M sge_priority 5 
 for an overview on job priorities.
 .\"
 .SS "\fBweight_waiting_time\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The weight applied on the jobs waiting time since submission. Determines 
 the relative importance of the waiting time.
 See under 
@@ -325,9 +288,6 @@ See under
 for an overview on job priorities.
 .\"
 .SS "\fBweight_urgency\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The weight applied on jobs normalized urgency when determining priority finally used.
 Determines the relative importance of urgency.
 See under 
@@ -335,9 +295,6 @@ See under
 for an overview on job priorities.
 .\"
 .SS "\fBweight_ticket\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
 The weight applied on normalized ticket amount when determining priority finally used.
 Determines the relative importance of the ticket policies. See under 
 .M sge_priority 5 
@@ -387,8 +344,7 @@ The default for \fBparams\fP is none.
 .SS \fBreprioritize_interval\fP"
 Interval (HH:MM:SS) to reprioritize jobs on the ecec hosts based on the 
 current ticket amount for  the running jobs. If the interval is set to 
-00:00:00 the reprioritization is turned off. This parameter is only valid 
-in a xxQS_NAME_EExx system. 
+00:00:00 the reprioritization is turned off.
 .\"
 .SS "\fBreport_pjob_tickets\fP"
 This parameter allows to tune the system's scheduling run time. It is used
@@ -397,7 +353,7 @@ It does not influence the tickets calculation. The sort order of jobs in qstat
 and qmon is only based on the submit time, when the reporting is turned off.
 .br
 The reporting should be turned of in a system with very large amount of jobs by
-setting this param to "false". This parameter is only valid in a xxQS_NAME_EExx system. 
+setting this param to "false".
 .\"
 .SS "\fBhalflife_decay_list\fP"
 The halflive_decay_list allows to configure different decay rates for the 
@@ -433,32 +389,27 @@ other policies and also are not influenced by other policies. So a value of
 that there is no interference with the other policies.
 .sp 1
 The special value "NONE" switches off policy hierarchies.
-This parameter is only valid in a xxQS_NAME_EExx system. 
 .\"
 .SS "\fBshare_override_tickets\fP"
 If set to "true" or "1", override tickets of any override object instance  
 are shared equally among all jobs associated with the object. If set to    
 "false" or "0", each job gets the full value of the override tickets       
 associated with the object. The default value is "true".                   
-This parameter is only valid in a xxQS_NAME_EExx system.  
 .\"
 .SS "\fBshare_functional_shares\fP"
 If set to "true" or "1", functional shares of any functional object instance
 are shared among all the jobs associated with the object. If set to "false"
 or "0", each job associated with a functional object, gets the full        
 functional shares of that object. The default value is "true".            
-This parameter is only valid in a xxQS_NAME_EExx system.  
 .\"
 .SS "\fBmax_functional_jobs_to_schedule\fP"
 The maximum number of pending jobs to schedule in the functional policy.   
 The default value is 200.                                                  
-This parameter is only valid in a xxQS_NAME_EExx system. 
 .\"
 .SS "\fBmax_pending_tasks_per_job\fP"
 The maximum number of subtasks per pending array job to schedule. This     
 parameter exists in order to reduce scheduling overhead. The default value 
 is 50.
-This parameter is only valid in a xxQS_NAME_EExx system.    
 .\"
 .SS "\fBmax_reservation\fP"
 The maximum number of reservations scheduled within a schedule interval. 

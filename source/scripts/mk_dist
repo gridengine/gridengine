@@ -32,42 +32,30 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#set -x
-
 umask  022
 
 TAR=tar
-BASEDIR=/tmp/sge_dist
-CDCONTAINER=`/bin/pwd`/cdcontainer
+BASEDIR=/tmp/sge6_dist
 
 MKISOFS=mkisofs
 ISOFSOPTIONS="-l -J -L -N -r -v"
-
-# Store your favorite command line here
-# Could be e.g.: "set - -vdir SGE53 -version 5.3beta2 -tar gtar $*"
-if [ -f mk_dist.private ]; then
-   . ./mk_dist.private
-fi
 
 #---------------------------------------------------------------------------
 #
 ErrUsage()
 {
-   echo "Usage: mk_dist -vdir vdir -version version [-basedir dir] [-cdrom] \\"
-   echo "               [-sgeee] [-bin] [-common] [-doc] binarchs ..." 
+   echo "Usage: mk_dist -vdir vdir -version version [-basedir dir] \\"
+   echo "               [-bin] [-common] [-doc] binarchs ..." 
    echo ""
-   echo "    -vdir vdir       use subdirectory vdir to create distribution"
-   echo "    -version version string to build filename of distribution"
-   echo "    -basedir         set base directory for outputfile location"
-   echo "                     default: $BASEDIR" 
-   echo "    -cdrom           creates distribution in \"$CDCONTAINER\" and"
-   echo "                     create in ISO file image with \"mkisofs\""
-   echo "    -tar tarcmd      tar command which supports "z" option"
-   echo "    -sgeee           create Grid Engine Enterprise Edition distribution"
-   echo "    -bin             create tar.gz files from binaries in bin/,"
-   echo "                     utilbin/ and examples/jobsbin"
-   echo "    -common          create tar.gz file of \"common\" files"
-   echo "    -doc             create tar.gz file of \"doc\" files"  
+   echo "    -vdir vdir         use subdirectory vdir to create distribution"
+   echo "    -version <version> string to build filename of distribution"
+   echo "    -basedir <basedir> set base directory for outputfile location"
+   echo "                       default: $BASEDIR" 
+   echo "    -tar <tarcmd>      tar command which supports "z" option"
+   echo "    -bin               create tar.gz files from binaries in bin/,"
+   echo "                       utilbin/ and examples/jobsbin"
+   echo "    -common            create tar.gz file of \"common\" files"
+   echo "    -doc               create tar.gz file of \"doc\" files"  
    echo ""
    exit 1
 }
@@ -102,7 +90,6 @@ VDIR=""
 VERSION=""
 PRODUCT=sge
 SELECTED_ARCHS=""
-INSTALL_SCRIPT=inst_sge
 
 ARGC=$#
 while [ $ARGC -gt 0 ]; do
@@ -126,12 +113,6 @@ while [ $ARGC -gt 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -cdrom)
-      target=cdrom
-      BASEDIR=$CDCONTAINER
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
    -common)
       echo "Creating tar file with common files of distribution"
       makecommon=true
@@ -146,14 +127,6 @@ while [ $ARGC -gt 0 ]; do
       ;;
    -h|-help)
       ErrUsage
-      ;;
-   -sgeee)
-      echo "Creating Grid Engine Enterprise Edition distribution"
-      makesgee=true
-      INSTALL_SCRIPT=inst_sgeee
-      PRODUCT=sgeee
-      shift 
-      ARGC=`expr $ARGC - 1`
       ;;
    -tar)
       shift
@@ -173,13 +146,17 @@ while [ $ARGC -gt 0 ]; do
       ARGC=`expr $ARGC - 1`
       if [ $ARGC -lt 1 ]; then
          echo ""
-         echo "Error: Missing argument to -vdir switch!"
+         echo "Error: Missing argument to -dir switch!"
          echo ""
          ErrUsage
       fi
       VDIR=$1
       shift
       ARGC=`expr $ARGC - 1`
+      if [ -f localext/$VDIR/mk_dist.private ]; then
+         . ./localext/$VDIR/mk_dist.private
+      fi
+      ARGC=$#
       ;;
    -version)
       shift
@@ -208,49 +185,25 @@ done
 #--- END-OF-COMMANDLINE-PARSING------------------------------------------
 
 PVMCONTENT="pvm/README pvm/*.sh pvm/*.template pvm/src"
-DOC_PACKAGE="doc/SGE53beta2_doc.pdf"
-COMMON_DOCS="doc/INSTALL doc/*.asc"
-COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs $INSTALL_SCRIPT install_qmaster install_execd man $PVMCONTENT mpi qmon util"
+DOC_PACKAGE="doc/README-Autoinstall.txt"
+COMMON_DOCS="doc/*.asc $ADD_COMMON_DOCS"
+COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs include \
+                inst_sge install_qmaster install_execd man $PVMCONTENT mpi \
+                qmon util"
 
 if [ "$VERSION" = "" -o "$VDIR" = "" ]; then
    ErrUsage
-fi
-
-if [ $target = cdrom ]; then
-   Execute rm -f $CDCONTAINER/*
 fi
 
 Execute mkdir -p $BASEDIR
 
 SELECTED_ARCHS=$*
 
-if [ $makebin = true ]; then
-   if [ "$SELECTED_ARCHS" = "" ]; then
-      ErrUsage
-   fi
-
-   # do any necessary postprocessing of the "bin" package here
-   if [ -f mk_dist.private.bin ]; then
-      echo executing commands from mk_dist.private.bin
-      . ./mk_dist.private.bin
-   fi
-
-   cd $VDIR
-   echo creating tar.gz files for $SELECTED_ARCHS
-   for i in $SELECTED_ARCHS; do
-         ADIR="bin/$i utilbin/$i examples/jobsbin/$i"
-         filename=$BASEDIR/${PRODUCT}-${VERSION}-bin-${i}.tar.gz         
-         echo Command: $TAR cvzf $filename $ADIR
-                       $TAR cvzf $filename $ADIR
-   done
-   cd ..
-fi
-
 if [ $makecommon = true ]; then
    # do any necessary postprocessing of the "common" package here
-   if [ -f mk_dist.private.common ]; then
+   if [ -f localext/$VDIR/mk_dist.private.common ]; then
       echo executing commands from mk_dist.private.common
-      . ./mk_dist.private.common
+      . ./localext/$VDIR/mk_dist.private.common
    fi
 
    cd $VDIR
@@ -262,9 +215,9 @@ fi
 
 if [ $makedoc = true ]; then
    # do any necessary postprocessing of the "doc" package here
-   if [ -f mk_dist.private.doc ]; then
+   if [ -f localext/$VDIR/mk_dist.private.doc ]; then
       echo executing commands from mk_dist.private.doc
-      . ./mk_dist.private.doc
+      . ./localext/$VDIR/mk_dist.private.doc
    fi
 
    cd $VDIR
@@ -274,31 +227,26 @@ if [ $makedoc = true ]; then
    cd ..
 fi
 
-if [ $target = cdrom ]; then
-   
-   echo "copying files to $CDCONTAINER ..."
-   if [ $makebin = true ]; then
-      for i in $SELECTED_ARCHS; do
-         Execute cp $BASEDIR/${PRODUCT}-${VERSION}-bin-${i}.tar.gz $CDCONTAINER
-      done
+if [ $makebin = true ]; then
+   if [ "$SELECTED_ARCHS" = "" ]; then
+      ErrUsage
    fi
 
-   if [ $makecommon = true ]; then
-      Execute cp $BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz $CDCONTAINER
+   # do any necessary postprocessing of the "bin" package here
+   if [ -f localext/$VDIR/mk_dist.private.bin ]; then
+      echo executing commands from mk_dist.private.bin
+      . ./localext/$VDIR/mk_dist.private.bin
    fi
 
-   if [ $makedoc = true ]; then
-      Execute cp $BASEDIR/${PRODUCT}-${VERSION}-doc.tar.gz $CDCONTAINER
-   fi 
-
-   echo "creating CDROM-IMAGE"
-
-   IMAGEBASE=./
-
-   echo $MKISOFS $ISOFSOPTIONS -A "$PRODUCT $VERSION" \
-           -o $IMAGEBASE/cdimage.$PRODUCT $CDCONTAINER
-        $MKISOFS $ISOFSOPTIONS -A "$PRODUCT $VERSION" \
-           -o $IMAGEBASE/cdimage.$PRODUCT $CDCONTAINER
+   cd $VDIR
+   echo creating tar.gz files for $SELECTED_ARCHS
+   for i in $SELECTED_ARCHS; do
+         ADIR="bin/$i utilbin/$i examples/jobsbin/$i lib/$i"
+         filename=$BASEDIR/${PRODUCT}-${VERSION}-bin-${i}.tar.gz         
+         echo Command: $TAR cvzf $filename $ADIR
+                       $TAR cvzf $filename $ADIR
+   done
+   cd ..
 fi
 
 exit 0

@@ -202,6 +202,7 @@ lListElem **pjob
       ep = lGetElemStr(cmdline, SPA_switch, "-t");
       if (ep) {
          range_list = lGetList(ep, SPA_argval_lListT);
+
          lSetList(*pjob, JB_ja_structure, lCopyList("range list", range_list)); 
          {
             u_long32 job_type = lGetUlong(*pjob, JB_now);

@@ -411,8 +411,8 @@
 #define MSG_GDI_NOCONFIGFROMMASTER    _MESSAGE(23291, _("could not get configuration from qmaster - using defaults\n"))
 #define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _MESSAGE(23292, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_GDI_INVALIDPOLICYSTRING   _MESSAGE(23293, _("Invalid policy hierachy string. Disabling policy hierachy.\n"))
-
-#define MSG_QCONF_CANTREADPROJECT                    _MESSAGE(23294, _("cant read project\n"))
+#define MSG_QCONF_CANTREADPROJECT     _MESSAGE(23294, _("cant read project\n"))
+#define MSG_QCONF_ONLYONERANGE        _MESSAGE(23295, _("ERROR! -t option only allows one range specification\n"))
 
 #endif /* __MSG_COMMON_H */
 

@@ -54,6 +54,7 @@
 #include "sge_log.h"
 #include "cull_parse_util.h"
 #include "sge_string.h"
+#include "sge_range.h"
 #include "utility.h"
 #include "msg_common.h"
 
@@ -1350,8 +1351,15 @@ DTRACE;
          DPRINTF(("\"-t %s\"\n", *sp));
 
          task_id_range_list = parse_ranges(*sp, 0, 1, &answer, 
-                                             NULL, INF_NOT_ALLOWED);
+                                           NULL, INF_NOT_ALLOWED);
          if (!task_id_range_list) {
+            DEXIT;
+            return answer;
+         }
+
+         range_sort_uniq_compress(task_id_range_list, &answer);
+         if (lGetNumberOfElem(task_id_range_list) > 1) {
+            sge_add_answer(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
             DEXIT;
             return answer;
          }

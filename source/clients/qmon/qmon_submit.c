@@ -1929,7 +1929,15 @@ int save
          qmonMessageBox(qmon_submit, alp, 0);
          alp = lFreeList(alp);
          return False;
-      }   
+      }  
+      range_sort_uniq_compress(range_list, &alp);
+      if (lGetNumberOfElem(range_list) > 1) {
+         sge_add_answer(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+         qmonMessageBox(qmon_submit, alp, 0);
+         alp = lFreeList(alp);
+         return False; 
+      }
+ 
          
       if (!range_list) {
          lListElem *tap = NULL;

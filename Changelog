@@ -1,3 +1,10 @@
+EB-2003-04-03-0  Bugfix:    Unable to delete task array job with negative 
+                            increment
+                 Issue:     509
+                 Bugtraq:   4841414
+                 Changed:   qsub, qmon
+                 Review:    JG
+
 EB-2003-03-27-1  Bugfix:    sharetree can't be modified
                  Issue:     515
                  Bugtraq:   4838636

@@ -1,3 +1,6 @@
+CR-2004-05-03-1: Enhancem.: o modified code to speed up connection establishment
+                 Changed:   commlib
+
 CR-2004-05-03-0: Enhancem.: o cl_commlib_receive_message() is now only
                               triggered, when a new message for the application
                               is ready for read.

@@ -4672,6 +4672,8 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
                   cl_com_tcp_close_connection(new_connection);
                   retval = CL_RETVAL_MALLOC;
                }
+               /* This is a new connection from a client, assuming that there is data to read */
+               (*new_connection)->data_read_flag = CL_COM_DATA_READY;
             }
             return retval;
          default:

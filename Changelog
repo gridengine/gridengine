@@ -1,3 +1,8 @@
+JG-2004-11-16-0: Bugfix:    Fixed spooling of subordinate queues.
+                            Fixed a memory leak.
+                 Review:    SG
+                 Issue:     791
+
 CR-2004-11-16-0: Bugfix:    replaced u32 format string with U32CFormat in
                             scheduler message text
                  Review:    RH

@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
    int ret,i,gdi_setup;
 
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+   DENTER_MAIN(TOP_LAYER, "qevent");
 
    sge_prof_setup();
 
@@ -666,7 +666,7 @@ void qevent_testsuite_mode(void)
 
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
-   sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
+   sge_mirror_initialize(EV_ID_ANY, "qevent");
 
 #ifdef QEVENT_SHOW_ALL
    sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 

@@ -116,8 +116,7 @@ lListElem **lepp
 
    if (!strcasecmp(config_name, "global")) {
       is_global_requested = 1;
-   }
-   else {
+   } else {
       int commlib_error = CL_RETVAL_OK;
       hep = lCreateElem(EH_Type);
       lSetHost(hep, EH_name, config_name);
@@ -126,7 +125,7 @@ lListElem **lepp
 
       if (ret != CL_RETVAL_OK) {
          DPRINTF(("get_configuration: error %d resolving host %s: %s\n", ret, config_name, cl_get_error_text(ret)));
-         lFreeElem(hep);
+         hep = lFreeElem(hep);
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
          DEXIT;
          return -2;
@@ -148,6 +147,7 @@ lListElem **lepp
                                     handle->local->comp_name,
                                     handle->local->comp_id));
             }
+            hep = lFreeElem(hep);
             DEXIT;
             return -6;
          case CL_RETVAL_ACCESS_DENIED:
@@ -160,6 +160,7 @@ lListElem **lepp
                                     handle->local->comp_id));
             }
 
+            hep = lFreeElem(hep);
             DEXIT;
             return -6;
          default:

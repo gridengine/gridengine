@@ -44,7 +44,7 @@ COMMD_OBJS = $(COMMD_SRC:.c=.o)
 
 COMMD_ADD_OBJS = $(COMMD_ADD_SRC:.c=.o)
 
-COMMD_ADD_LIBS =  -lsgeobjd -lcull -lsec -luti -lrmon -llck
+COMMD_ADD_LIBS =  -lsgeobjd -lcull -luti -lrmon -llck
 
 COMMD_LIB_DEPENDS =  $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(ZLIB)
 
@@ -71,7 +71,7 @@ commd_messages:
 # rules to build binaries
 ###############################################################################
 sge_commd:	$(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_LIB_DEPENDS)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SECLIBS) $(SLIBS) $(LIBS)
 
 commdcntl:	commdcntl.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(RMONLIB) $(COMMD_ADD_OBJS) $(UTILIB) $(LCKLIB) $(SLIBS) $(LIBS)

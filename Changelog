@@ -1,5 +1,8 @@
+AD-2003-10-27-0: Bugfix:    Fixed 'commd' Makefile. 'libsec' was required,
+                            even if built without '-secure'.
+
 AD-2003-10-26-0: Bugfix:    fixed the build
-                            Added MFFLAGS for HP11 and AIX51
+                            Added MTFLAGS for HP11 and AIX51
                  Changed:   aimk
 
 AD-2003-10-25-0: Bugfix:    fixed the build

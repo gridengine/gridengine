@@ -1,3 +1,6 @@
+JG-2002-02-26-0: Bugfix:    qlogin did no longer work for solaris exec hosts.
+                 Issue:     #151
+
 CR-2002-02-25-0: Testsuite: new test: qsub -hold_jid JOBNAME test
                  Issue:     #124
 

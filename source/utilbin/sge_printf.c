@@ -359,8 +359,8 @@ void sge_printf_usage(void) {
    printf("  e - print to stderr\n");
    printf("  n - no new line\n");
    printf("  u - underline output\n");
-   printf("  D - dash sign, e.g. -D\"->\"\n"); 
-   printf("  S - nr of spaces, e.g. -S\"5\"\n\n");
+   printf("  D - dash sign, e.g. -D \"->\"\n"); 
+   printf("  S - nr of spaces, e.g. -S \"5\"\n\n");
    printf("used environment variables:\n");
    printf("SGE_PRINTF_MAX_COLUMN - column for word break (default 79)\n");
 }
@@ -393,7 +393,7 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "sge_printf");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
-   sge_init_language_func((gettext_func_type)        gettext,
+   install_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -564,7 +564,7 @@ char **argv
             if( h+1 < strlen(help_buf) && 
                 help_buf[h] != '\\'     && 
                 help_buf[h] != '%') {
-               printf(" ");
+               printf("_");
             }
          }
          printf("\"\n");

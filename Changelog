@@ -1,3 +1,5 @@
+CR-2002-05-13-0: Enhancem.: added sge_printf utilbin source files
+
 AH-2002-05-13-0: Change:    Do no longer flush events immediately after orders 
                             arrival to 'guarantee' scheduling is done not more 
                             often than specified with schedule_interval in 

@@ -63,6 +63,8 @@ char **argv
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);
+#else
+   printf ("\n Binary not compiled with gettext!!!\n");
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
 

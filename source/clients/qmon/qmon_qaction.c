@@ -1250,7 +1250,10 @@ DTRACE;
       data->qtype       = lGetUlong(qep, QU_qtype);
       strncpy(data->processors, lGetString(qep, QU_processors),  
                XmtSizeOf(tQCEntry, processors));
-      data->priority    = lGetUlong(qep, QU_priority);
+      if ((str = lGetString(qep, QU_priority)))
+         data->priority = atoi(str);
+      else
+         data->priority = 0;
       data->job_slots   = lGetUlong(qep, QU_job_slots);
       data->rerun       = lGetUlong(qep, QU_rerun);
       data->seq_no      = lGetUlong(qep, QU_seq_no);
@@ -1448,7 +1451,7 @@ tQCEntry *data,
 lListElem *qep 
 ) {
    lListElem *ep = NULL;
-/*    char buf[BUFSIZ]; */
+   char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonQCToCull");
 
@@ -1472,7 +1475,8 @@ lListElem *qep
 
    lSetUlong(qep, QU_qtype, data->qtype);
    lSetString(qep, QU_processors, data->processors);
-   lSetUlong(qep, QU_priority, data->priority);
+   sprintf(buf, "%d", data->priority);
+   lSetString(qep, QU_priority, buf);
    lSetUlong(qep, QU_job_slots, data->job_slots);
    /* initialize QU_job_slots_used */
    set_qslots_used(qep, 0);

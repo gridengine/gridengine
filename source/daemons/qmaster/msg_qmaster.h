@@ -566,6 +566,7 @@
 /*
 ** sge_queue_qmaster.c
 */
+#define MSG_QUEUE_PRIORITYRANGE                 _("priority not in range -20 to +20\n")
 #define MSG_QUEUE_CANTLOCATEQUEUEX_S            _("can't locate queue %s\n")
 #define MSG_QUEUE_DELQUEUETEMPLATE              _("deleting queue \"template\"")
 #define MSG_QUEUE_NULLPTRPASSEDTOSGE_DEL_QUEUE  _("NULL ptr passed to sge_del_queue()\n")

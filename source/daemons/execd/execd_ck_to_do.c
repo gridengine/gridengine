@@ -351,37 +351,38 @@ int answer_error
             lListElem *master_queue;
 
             for_each (jatask, lGetList(job, JB_ja_tasks)) {
+               int priority;
                master_queue = 
                         responsible_queue(job, jatask, NULL, NULL);
+               priority = atoi(lGetString(master_queue, QU_priority));
 
                DPRINTF(("Set priority of job "u32"."u32" running in"
-                  " queue  %s to "u32"\n", 
+                  " queue  %s to %d\n", 
                   lGetUlong(job, JB_job_number), 
                   lGetUlong(jatask, JAT_task_number),
-                  lGetString(master_queue, QU_qname),
-                  lGetUlong(master_queue, QU_priority)));
+                  lGetString(master_queue, QU_qname), priority));
                ptf_reinit_queue_priority(
                   lGetUlong(job, JB_job_number),
                   lGetUlong(jatask, JAT_task_number),
                   NULL,
-                  lGetUlong(master_queue, QU_priority));
+                  priority);
 
                for_each(slave_job, lGetList(jatask, JAT_task_list)) {
                   slave_jatask = lFirst(lGetList(slave_job, JB_ja_tasks)); 
                   master_queue = 
                         responsible_queue(slave_job, slave_jatask, job, jatask);
+                  priority = atoi(lGetString(master_queue, QU_priority));
                   DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
-                     "in queue %s to "u32"\n", 
+                     "in queue %s to %d\n", 
                      lGetUlong(slave_job, JB_job_number), 
                      lGetUlong(slave_jatask, JAT_task_number),
                      lGetString(slave_job, JB_pe_task_id_str),
-                     lGetString(master_queue, QU_qname),
-                     lGetUlong(master_queue, QU_priority)));
+                     lGetString(master_queue, QU_qname), priority));
                   ptf_reinit_queue_priority(
                      lGetUlong(slave_job, JB_job_number),
                      lGetUlong(slave_jatask, JAT_task_number),
                      lGetString(slave_job, JB_pe_task_id_str),
-                     lGetUlong(master_queue, QU_priority));
+                     priority);
                }
             }
          }

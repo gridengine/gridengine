@@ -1,3 +1,7 @@
+AH-2001-11-23-0: Enhanced queue priority range to -20 to +20
+                 changed data type of queue priority from ulong to string
+                 removed priority attribute from queue complex
+
 CR-2001-11-23-1: Implementation of the lHostT cull data type. Modified
                  each cull list where a hostname is stored. The lHostT
                  data type is implemented like the lStringT type, but

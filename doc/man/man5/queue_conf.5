@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/11/19 17:29:19 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/11/23 09:26:01 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2001/11/19 17:29:19 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2001/11/23 09:26:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -139,7 +139,9 @@ This parameter has no effect in this release.
 The \fBpriority\fP parameter specifies the
 .M nice 2
 value at which jobs in this queue will be run. The type is number and the
-default is zero (which means no nice value is set explicitly).
+default is zero (which means no nice value is set explicitly). Negative 
+values (up to -20) correspond to a higher scheduling priority, positive 
+values (up to +20) correspond to a lower scheduling priority.
 .SS "\fBmax_migr_time\fP"
 The time reserved for checkpointing jobs to be migrated and aborted.
 Checkpointing jobs due to be aborted are first sent a SIGTSTP. Everyone

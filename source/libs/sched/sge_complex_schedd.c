@@ -723,7 +723,6 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
       {"hostname",         "h",   QU_qhostname,        TYPE_HOST,CMPLXEQ_OP},
       {"slots",            "s",   QU_job_slots,        TYPE_INT, CMPLXLT_OP},
       {"tmpdir",           "tmp", QU_tmpdir,           TYPE_STR, CMPLXEQ_OP},
-      {"priority",         "p",   QU_priority,         TYPE_INT, CMPLXGT_OP},
       {"seq_no",           "seq", QU_seq_no,           TYPE_INT, CMPLXEQ_OP},
       {"rerun",            "re",  QU_rerun,            TYPE_INT, CMPLXEQ_OP},
       {"calendar",         "cal", QU_calendar,         TYPE_STR, CMPLXEQ_OP},

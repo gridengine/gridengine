@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
+#include <stdlib.h>
 
 #include "sge_conf.h"
 #include "sge.h"
@@ -305,7 +306,24 @@ int sub_command
       goto ERROR;            
 
    /* ---- QU_priority */
-   attr_mod_ulong(qep, new_queue, QU_priority, "priority");
+   if (lGetPosViaElem(qep, QU_priority)>=0) {
+      const char *s;
+      int priority;
+      
+      if (!(s = lGetString(qep, QU_priority))) {
+         ERROR((SGE_EVENT, MSG_QUEUE_PRIORITYRANGE));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         goto ERROR;
+      }
+      priority = atoi(s);
+      if (priority < -20 || priority > 20 ) {
+         /* out of range */
+         ERROR((SGE_EVENT, MSG_QUEUE_PRIORITYRANGE));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         goto ERROR;
+      }
+      lSetString(new_queue, QU_priority, s);
+   }
 
    /* ---- QU_max_migr_time */
    if (attr_mod_time_str(alpp, qep, new_queue, QU_max_migr_time, 

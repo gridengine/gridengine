@@ -939,8 +939,8 @@ lListElem *qep
    sprintf(info, WIDTH"%d\n", info, "Job Slots:", 
                      (int)lGetUlong(qep, QU_job_slots));
    sprintf(info, WIDTH"%d\n", info, "Job Slots Used:", qslots_used(qep));
-   sprintf(info, WIDTH"%d\n", info, "Priority:", 
-                     (int)lGetUlong(qep, QU_priority));
+   str = lGetString(qep, QU_priority);
+   sprintf(info, WIDTH"%s\n", info, "Priority:", str?str:"");
    sprintf(info, WIDTH"", info, "Load Thresholds:");
    for_each(ep, lGetList(qep, QU_load_thresholds)) {
       str = lGetString(ep, CE_name);

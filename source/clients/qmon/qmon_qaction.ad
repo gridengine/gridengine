@@ -212,8 +212,8 @@ Qmon*initial_state.strings: \
 Qmon*general_config.priority.orientation:     HORIZONTAL
 Qmon*general_config.priority.scaleMultiple:   1
 Qmon*general_config.priority.showValue:       True
-Qmon*general_config.priority.minimum:         0
-Qmon*general_config.priority.maximum:         19
+Qmon*general_config.priority.minimum:         -20
+Qmon*general_config.priority.maximum:         20
 
 !Qmon*general_config.job_slots.layoutShrinkability: 10
 !Qmon*general_config.job_slots.orientation:    HORIZONTAL

@@ -196,7 +196,7 @@ int parsing_type
    }
 
    /* --------- QU_priority */
-   if (!set_conf_ulong(alpp, clpp, fields, "priority", ep, QU_priority)) {
+   if (!set_conf_string(alpp, clpp, fields, "priority", ep, QU_priority)) {
       DEXIT;
       return -1;
    }
@@ -646,7 +646,7 @@ lList *lp;
    lSetString(qep, QU_max_no_migr, "00:02:00");
    lSetString(qep, QU_min_cpu_interval, "00:05:00");
    lSetString(qep, QU_processors, "UNDEFINED");
-
+   lSetString(qep, QU_priority, "0");
    lSetUlong(qep, QU_qtype, BQ|IQ);
    lSetUlong(qep, QU_job_slots, 1);
    lSetString(qep, QU_tmpdir, "/tmp");
@@ -752,8 +752,7 @@ lListElem *qep
    FPRINTF((fp, "suspend_interval     %s\n", 
       lGetString(qep, QU_suspend_interval) ? 
       lGetString(qep, QU_suspend_interval) : "00:05:00"));
-   FPRINTF((fp, "priority             %d\n", 
-      (int) lGetUlong(qep, QU_priority)));
+   FPRINTF((fp, "priority             %s\n", lGetString(qep, QU_priority)));
    FPRINTF((fp, "max_migr_time        %s\n", 
       lGetString(qep, QU_max_migr_time)));
    fprint_thresholds(fp, "migr_load_thresholds ", 

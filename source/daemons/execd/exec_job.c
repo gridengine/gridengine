@@ -1229,7 +1229,7 @@ char *err_str
    fprintf(fp, "h_vmem=%s\n", lGetString(master_q, QU_h_vmem));
 
 
-   fprintf(fp, "priority=" u32 "\n", lGetUlong(master_q, QU_priority));
+   fprintf(fp, "priority=%s\n", lGetString(master_q, QU_priority));
    fprintf(fp, "shell_path=%s\n", shell_path);
    fprintf(fp, "script_file=%s\n", script_file);
    fprintf(fp, "job_owner=%s\n", lGetString(jep, JB_owner));

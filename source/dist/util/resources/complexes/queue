@@ -4,7 +4,6 @@ qname            q          STRING NONE            ==    YES         NO         
 hostname         h          HOST   unknown         ==    YES         NO         NONE
 tmpdir           tmp        STRING NONE            ==    NO          NO         NONE
 calendar         c          STRING NONE            ==    YES         NO         NONE
-priority         pr         INT    0               >=    NO          NO         0
 seq_no           seq        INT    0               ==    NO          NO         0
 rerun            re         INT    0               ==    NO          NO         0
 s_rt             s_rt       TIME   0:0:0           <=    YES         NO         0:0:0

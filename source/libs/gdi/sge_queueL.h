@@ -211,7 +211,7 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_ULONG(QU_nsuspend)                    /* number of jobs to suspend per time 
                                               * interval */
    SGE_STRING(QU_suspend_interval)    /* suspend interval */
-   SGE_ULONG(QU_priority)     /* job priority */
+   SGE_STRING(QU_priority)     /* job priority */
    SGE_XULONG(QU_rerun)       /* restart a job */
    SGE_ULONG(QU_qtype)        /* BATCH, INTERACTIVE, BI, ...  */
    SGE_STRING(QU_processors)  /* string describing ranges of processor nodes */

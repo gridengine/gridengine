@@ -404,7 +404,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
 *     u_long32 priority    - new static priority 
 ******************************************************************************/
 void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_id,
-                               const char *pe_task_id_str, u_long32 priority)
+                               const char *pe_task_id_str, int priority)
 {
    lListElem *job_elem;
    DENTER(TOP_LAYER, "ptf_reinit_queue_priority");

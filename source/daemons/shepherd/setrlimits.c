@@ -177,7 +177,10 @@ int trace_rlimit
    h_stack = RL_MIN(h_stack, h_vmem); 
 
    priority = atoi(get_conf_val("priority"));
+   /* had problems doing this with admin user priviledges under HPUX */
+   switch2start_user(); 
    SETPRIORITY(priority);
+   switch2admin_user();  
 
    /* how many slots do we have at this host */
    if (!(s=search_nonone_conf_val("host_slots")) || !(host_slots=atoi(s)))

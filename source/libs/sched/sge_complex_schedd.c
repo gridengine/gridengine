@@ -1222,13 +1222,51 @@ int main(int argc, char *argv[], char *envp[])
 }
 #endif
 
-/* Updates all consumable actual values of queue/host
-   for 'slots' slots of the given job. Since it is also 
-   allowed to pass negative slot amounts for purposes of undebiting
+/****** schedlib/debit_consumable() **********************************************
+*  NAME
+*     debit_consumable() -- Debit/Undebit consumables.
+*
+*  SYNOPSIS
+*     int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 
+*             int slots, int config_nm, int actual_nm, const char *obj_name)
+*
+*  FUNCTION
+*     Updates all consumable actual values of queue/host
+*     for 'slots' slots of the given job. Positive slots numbers 
+*     cause debiting, negative ones cause undebiting.
+*
+*  INPUTS
+*     lListElem *jep       - The job (JB_Type) defining which resources and how
+*                            much of them need to be (un)debited
+*                            
+*     lListElem *ep        - The resource container (global/host/queue) 
+*                            that owns the resources (EH_Type).
+* 
+*     lList *complex_list  - The global complex list that is needed to interpret
+*                            the jobs' resource requests.
+*
+*     int slots            - The number of slots for which we are debiting.
+*                            Positive slots numbers cause debiting, negative 
+*                            ones cause undebiting.
+*
+*     int config_nm        - The CULL field of the 'ep' object that contains a
+*                            CE_Type list of configured complex values.
+* 
+*     int actual_nm        - The CULL field of the 'ep' object that contains a
+*                            CE_Type list of actual complex values.
+*
+*     const char *obj_name - The name of the object we are debiting from. This
+*                            is only used for monitoring/diagnosis purposes.
+*
+*  RESULT
+*     Returns -1 in case of an error. Otherwise the number of (un)debitations 
+*     that actually took place is returned. If 0 is returned that means the
+*     consumable resources of the 'ep' object has not changed.
+*
+********************************************************************************
 */
-int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
-                     int slots, int config_nm, int actual_nm, 
-                     const char *obj_name) 
+int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, int slots, int config_nm,
+int actual_nm, const char *obj_name) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;

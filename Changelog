@@ -1,3 +1,6 @@
+EB-2002-05-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param.
+                 Issues:    #248
+
 EB-2002-05-09-0: Cleanup:   libgdi:
                             - Moved some functions into libuti
                             - Put all 'answer' specific functions into a module 

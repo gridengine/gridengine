@@ -442,9 +442,12 @@ char *file
          */
          FPRINTF((fp, "processors                 %d\n", 
             (int) lGetUlong(ep, EH_processors)));
+      }
+
+      if (spool) {
+         int printed = 0;
 
          /* reschedule unknown list */
-         printed = 0;
          FPRINTF((fp, "reschedule_unknown_list    "));
          for_each(sep, lGetList(ep, EH_reschedule_unknown_list)) {
             if (printed) {

@@ -300,12 +300,13 @@ proc check_option_v {} {
 proc check_option_sync {} {
    global ::errorCode
    global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ARCH
+   global ts_config CHECK_SCRIPT_FILE_DIR
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-sync y"
-   set jobargs "$option -o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/exit.sh 5" 
+   set jobargs "$option -o /dev/null -j y $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/qsub_exit.sh 5" 
    set client_binary $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub
 
    catch {  eval exec "$client_binary" "$jobargs" } result
@@ -356,12 +357,13 @@ proc check_option_sync {} {
 proc check_option_sync_t {} {
    global ::errorCode
    global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ARCH
+   global ts_config CHECK_SCRIPT_FILE_DIR
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-sync y -t 1-2"
-   set jobargs "$option -o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/exit.sh 5" 
+   set jobargs "$option -o /dev/null -j y $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/qsub_exit.sh 5" 
    set client_binary $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub
 
    catch {  eval exec "$client_binary" "$jobargs" } result

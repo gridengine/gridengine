@@ -1,3 +1,5 @@
+CR-2005-04-06-7: Testsuite: added missing file for qsub tests (-sync)
+
 CR-2005-04-06-6: Testsuite: qdel test: delete all jobs before starting next
                             sub test
 

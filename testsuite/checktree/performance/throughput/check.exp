@@ -660,7 +660,7 @@ proc compare_dump_directory { dir } {
    }
 }
 
-proc compare_dump_data_file { file1 file2 } } {
+proc compare_dump_data_file { file1 file2 } {
 
    global CHECK_OUTPUT
 

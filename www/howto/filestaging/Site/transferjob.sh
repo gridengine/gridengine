@@ -16,10 +16,13 @@ FTP_DEST=$4
 
 cd $FTP_DEST
 
+# NOTE: the program 'rftp' does FTP across a firewall
+# you need to have a .netrc file in your home directory
+# which does the authentication for the ftp login
+#
 /usr/dist/exe/rftp $FTP_SITE << END
 cd $FTP_PATH
 get $FTP_FILE
 quit
 END
-
 

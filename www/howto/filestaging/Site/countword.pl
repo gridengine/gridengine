@@ -3,9 +3,9 @@
 #$ -S /usr/bin/perl
 #$ -cwd
 
-print "Word Report for $ARGV[0]\n\n";
-print "Occurences\t\tWord\n";
-print "===================================================\n";
+sub by_count {
+	$count{$b} <=> $count{$a};
+}
 
 while (<>) {
 	@words = split(/\W+/);
@@ -15,10 +15,11 @@ while (<>) {
 		}
 	}
 
+print "Word Report for $ARGV[0]\n\n";
+print "Occurences\t\tWord\n";
+print "===================================================\n";
+
 foreach $word (sort by_count keys %count) {
 	print "$count{$word}\t\t\t$word\n";
 	}
 
-sub by_count {
-	$count{$b} <=> $count{$a};
-}

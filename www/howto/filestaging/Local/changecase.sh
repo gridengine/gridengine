@@ -22,10 +22,10 @@ fi
 
 # actual job begins here
 
-# it's recommended to work in $TMPDIR, since this directory
-# is automatically cleaned and removed by SGE after the epilog
+# it's recommended to work in $TMPDIR, since it's a unique directory
+# and is automatically cleaned and removed by SGE after the epilog
 #
-#cd $TMPDIR
+cd $TMPDIR
 
 # this sample job just does some character conversions
 #

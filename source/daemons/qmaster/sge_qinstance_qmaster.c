@@ -348,7 +348,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
                   /* the following lSetList will free old_value */
-                  lSetList(this_elem, attribute_name, new_value);
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
                   if (attribute_name == QU_consumable_config_list) {
                      qinstance_reinit_consumable_actual_list(this_elem, 
@@ -379,7 +379,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                      lSetUlong(this_elem, QU_gdi_do_later, GDI_DO_LATER);
                   }
    
-                  lSetList(this_elem, attribute_name, new_value);
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
                }
             }

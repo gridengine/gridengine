@@ -1,3 +1,5 @@
+JG-2003-12-03-0: Bugfix:    Fixed build for HP11.
+
 SG-2003-12-02-0: Bugfix.:   The enhancement AH-2003-11-11-0 disabled the use
                             REStrings as a complex type.
                  Changed:   qmaster, scheduler,...                            

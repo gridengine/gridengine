@@ -585,7 +585,10 @@ reporting_create_sharelog_record(lList **answer_list)
       dstring prefix_dstring = DSTRING_INIT;
       dstring data_dstring   = DSTRING_INIT;
       format_t format;
-      char delim[2] = { REPORTING_DELIMITER, '\0' };
+/*       char delim[2] = { REPORTING_DELIMITER, '\0' }; doesn't work on HP11 */
+      char delim[2];
+      delim[0] = REPORTING_DELIMITER;
+      delim[1] = '\0';
 
       /* we need a prefix containing the reporting file std fields */
       sge_dstring_sprintf(&prefix_dstring, U32CFormat"%csharelog%c",

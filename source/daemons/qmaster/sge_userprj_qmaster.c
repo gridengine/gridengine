@@ -71,6 +71,8 @@
 #include "sge_suser.h"
 #include "sge_lock.h"
 
+#include "uti/sge_bootstrap.h"
+
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
@@ -78,7 +80,7 @@
 #include "msg_qmaster.h"
 
 
-static int do_add_auto_user(lListElem*, int, lList**);
+static int do_add_auto_user(lListElem*, lList**);
 
 
 int userprj_mod(
@@ -283,8 +285,8 @@ int sge_del_userprj(
 lListElem *up_ep,
 lList **alpp,
 lList **upl,    /* list to change */
-char *ruser,
-char *rhost,
+const char *ruser,
+const char *rhost,
 int user        /* =1 user, =0 project */
 ) {
    const char *name;
@@ -439,76 +441,66 @@ const char *obj_name   /* e.g. "fangorn"  */
 
 /*-------------------------------------------------------------------------*/
 /* sge_automatic_user_cleanup_handler - handles automatically deleting     */
-/* GEEE automatic user objects which have expired.                         */
+/* automatic user objects which have expired.                         */
 /*-------------------------------------------------------------------------*/
 void
 sge_automatic_user_cleanup_handler(te_event_t anEvent)
 {
-   lListElem *user, *next;
-   u_long32 now = sge_get_gmt();
-   char *root = "root";
-   const char *qmaster_host = uti_state_get_qualified_hostname();
-
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
    SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   /*
-    * Check each user for deletion time. We don't use for_each()
-    * because we are deleting entries.
-    */
-   for (user=lFirst(Master_User_List); user; user=next) {
-      u_long32 delete_time = lGetUlong(user, UP_delete_time);
-      next = lNext(user);
-#define EXTEND_AUTO_USER_DELETE_TIME
-#ifdef EXTEND_AUTO_USER_DELETE_TIME
-      if (delete_time > 0 && conf.auto_user_delete_time > 0) {
-         /*
-          * The delete time will be (re)set to a value of 1 when a new
-          * job is submitted.  If the delete time is 1 and there are
-          * no more jobs for this user, we set the actual time
-          * that the job will be deleted.
+   /* shall auto users be deleted again? */
+   if (conf.auto_user_delete_time > 0) {
+      lListElem *user, *next;
+
+      u_long32 now = sge_get_gmt();
+      u_long32 next_delete = now + conf.auto_user_delete_time;
+
+      const char *admin = bootstrap_get_admin_user();
+      const char *qmaster_host = uti_state_get_qualified_hostname();
+
+      /*
+       * Check each user for deletion time. We don't use for_each()
+       * because we are deleting entries.
+       */
+      for (user=lFirst(Master_User_List); user; user=next) {
+         u_long32 delete_time = lGetUlong(user, UP_delete_time);
+         next = lNext(user);
+
+         /* 
+          * For non auto users, delete_time = 0. 
+          * Never delete them automatically 
           */
-         const char *name = lGetString(user, UP_name);
-         lList *answer_list = NULL;
-         if (delete_time == 1 && suser_get_job_counter(suser_list_find(Master_SUser_List, lGetString(user, UP_name))) == 0) {
-            delete_time = now + conf.auto_user_delete_time;
-            lSetUlong(user, UP_delete_time, delete_time);
-            /*
-             * Note: If we don't spool the delete time change,
-             * we run the risk of never deleting user entries if
-             * the qmaster is restarted at an interval which
-             * is less than the configured auto_user_delete_time.
-             */
-            sge_event_spool(&answer_list, 0, sgeE_USER_MOD,
-                            0, 0, name, NULL, NULL,
-                            user, NULL, NULL, true, true);
-         }
-         if (delete_time > 1 && delete_time < now) {
-            if (sge_del_userprj(user, &answer_list, &Master_User_List, root,
-                                 (char *)qmaster_host, 1) != STATUS_OK) {
-               /* only try to delete it once ... */
-               lSetUlong(user, UP_delete_time, 0);
+         if (delete_time > 0) {
+            const char *name = lGetString(user, UP_name);
+
+            /* if the user has jobs, we increment the delete time */
+            if (suser_get_job_counter(suser_list_find(Master_SUser_List, name)) > 0) {
+               lSetUlong(user, UP_delete_time, next_delete);
+            } else {
+               /* if the delete time has expired, delete user */
+               if (delete_time <= now) {
+                  lList *answer_list = NULL;
+                  if (sge_del_userprj(user, &answer_list, &Master_User_List, admin,
+                                       (char *)qmaster_host, 1) != STATUS_OK) {
+                     /* 
+                      * if deleting the user failes (due to user being referenced
+                      * in other objects, e.g. queue), regard him as non auto user
+                      */
+                     lSetUlong(user, UP_delete_time, 0);
+                  }
+                  /* output low level error messages */
+                  answer_list_output(&answer_list);
+               }
             }
          }
-         /* output low level error messages */
-         answer_list_output(&answer_list);
       }
-#else
-      if (delete_time > 0 && delete_time < now) {
-         if (sge_del_userprj(user, NULL, &Master_User_List, root,
-                              (char *)qmaster_host, 1) != STATUS_OK) {
-            /* only try to delete it once ... */
-            lSetUlong(user, UP_delete_time, 0);
-         }
-      }
-#endif
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
-   return;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -516,100 +508,58 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 /*    called in sge_gdi_add_job                                            */
 /*-------------------------------------------------------------------------*/
 int
-sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp)
+sge_add_auto_user(const char *user, lList **alpp)
 {
-   int manager_added = 0, admin_host_added = 0;
-   lListElem *uep, *ep = NULL;
+   lListElem *uep;
    int status = STATUS_OK;
 
    DENTER(TOP_LAYER, "sge_add_auto_user");
 
    uep = userprj_list_locate(Master_User_List, user);
 
-   /*
-    * if permanent user already exists or we don't need to
-    * extend the life of the automatic user, we're done
-    */
-   if (uep && lGetUlong(uep, UP_delete_time) <= 1)
-   {
+   /* if the user already exists */
+   if (uep != NULL) {
+      /* and is an auto user */
+      if (lGetUlong(uep, UP_delete_time) != 0) {
+         /* and we shall not keep auto users forever */
+         if (conf.auto_user_delete_time > 0) {
+            lSetUlong(uep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+         }
+      }
+      /* and we are done */
       DEXIT;
       return STATUS_OK;
    }
 
-   /*
-    * User object will be added or modifed by this user, so temporarily
-    * make the user a manager and the host an admin host.
-    */
-   if (!manop_is_manager(user))
-   {
-      lAddElemStr(&Master_Manager_List, MO_name, user, MO_Type);
-      manager_added = 1;
-   }
+   /* create a new auto user */
+   uep = lCreateElem(UP_Type);
+   if (uep == NULL) {
+      DEXIT;
+      return STATUS_EMALLOC;
+   } else {
+      /* set user object attributes */
+      lSetString(uep, UP_name, user);
 
-   if (!host_list_locate(Master_Adminhost_List, host))
-   {
-      lAddElemHost(&Master_Adminhost_List, AH_name, host, AH_Type);
-      admin_host_added = 1;
-   }
-
-   ep = lCreateElem(UP_Type); /* create the user element to be added */ 
-
-   if (uep)
-   {
-      /* modify user element (extend life) */
-      lSetString(ep, UP_name, user);
-
-      if (conf.auto_user_delete_time > 0)
-      {
-#ifdef EXTEND_AUTO_USER_DELETE_TIME
-         lSetUlong(ep, UP_delete_time, 1);
-#else
-         lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
-#endif
+      if (conf.auto_user_delete_time > 0) {
+         lSetUlong(uep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+      } else {
+         lSetUlong(uep, UP_delete_time, 0);
       }
-      else
-      {
-         lSetUlong(ep, UP_delete_time, 0);
+
+      lSetUlong(uep, UP_oticket, conf.auto_user_oticket);
+      lSetUlong(uep, UP_fshare, conf.auto_user_fshare);
+
+      if (conf.auto_user_default_project == NULL || 
+          strcasecmp(conf.auto_user_default_project, "none") == 0) {
+         lSetString(uep, UP_default_project, NULL);
+      } else {
+         lSetString(uep, UP_default_project, conf.auto_user_default_project);
       }
-   }
-   else
-   {
-      /* add automatic user element */
-      lSetString(ep, UP_name, user);
-      lSetUlong(ep, UP_oticket, conf.auto_user_oticket);
-      lSetUlong(ep, UP_fshare, conf.auto_user_fshare);
-
-      if (!conf.auto_user_default_project || !strcasecmp(conf.auto_user_default_project, "none"))
-         lSetString(ep, UP_default_project, NULL);
-      else
-         lSetString(ep, UP_default_project, conf.auto_user_default_project);
-
-      if (conf.auto_user_delete_time > 0)
-      {
-#ifdef EXTEND_AUTO_USER_DELETE_TIME
-         lSetUlong(ep, UP_delete_time, 1);
-#else
-         lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
-#endif
-      }
-      else
-      {
-         lSetUlong(ep, UP_delete_time, 0);
-      }
-   }
-
-   status = do_add_auto_user(ep, ((NULL != uep) ? SGE_GDI_MOD : SGE_GDI_ADD), alpp); 
-
-   /* clean up the manager and admin host */
-   if (manager_added) {
-      lDelElemStr(&Master_Manager_List, MO_name, user);
-   }
-
-   if (admin_host_added) {
-      lDelElemHost(&Master_Adminhost_List, AH_name, host);
-   }
    
-   ep = lFreeElem(ep);
+      /* add the auto user via GDI request */
+      status = do_add_auto_user(uep, alpp); 
+      uep = lFreeElem(uep);
+   }
 
    DEXIT;
    return status;
@@ -620,25 +570,29 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
 *     do_add_auto_user() -- add auto user to SGE_USER_LIST
 *
 *  SYNOPSIS
-*     static int do_add_auto_user(lListElem*, int, lList**) 
+*     static int do_add_auto_user(lListElem*, lList**) 
 *
 *  NOTES
 *     MT-NOTE: do_add_auto_user() is not MT safe 
 *
 *******************************************************************************/
-static int do_add_auto_user(lListElem* anUser, int aMode, lList** anAnswer)
+static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
 {
-   int flag, res = STATUS_EUNKNOWN;
+   int res = STATUS_EUNKNOWN;
    gdi_object_t *userList = NULL;
    lList *tmpAnswer = NULL;
 
    DENTER(TOP_LAYER, "do_add_auto_user");
 
-   flag = (SGE_GDI_MOD == aMode) ? 0 : 1; /* add or modify user? */
-
    userList = get_gdi_object(SGE_USER_LIST);
 
-   res = sge_gdi_add_mod_generic(&tmpAnswer, anUser, flag, userList, "", "", 0);
+   /* 
+    * Add anUser to the user list.
+    * Owner of the operation is the admin user on the qmaster host.
+    */
+   res = sge_gdi_add_mod_generic(&tmpAnswer, anUser, 1, userList, 
+                                 bootstrap_get_admin_user(), 
+                                 uti_state_get_qualified_hostname(), 0);
 
    if ((STATUS_OK != res) && (NULL != tmpAnswer))
    {
@@ -648,8 +602,10 @@ static int do_add_auto_user(lListElem* anUser, int aMode, lList** anAnswer)
       u_long32 quality = lGetUlong(err, AN_quality);
 
       answer_list_add(anAnswer, text, status, quality);
+   }
 
-      lFreeList(tmpAnswer);
+   if (tmpAnswer != NULL) {
+      tmpAnswer = lFreeList(tmpAnswer);
    }
 
    DEXIT;

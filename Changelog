@@ -1,4 +1,10 @@
-SG-2004-09-29-0: Bugfix:    the master spooled the user and projects in every scheduling run
+JG-2004-09-29-0: Bugfix:    Automatic users were deleted even if they had jobs 
+                            (running or pending).
+                 Review:    SG
+                 Changed:   qmaster
+
+SG-2004-09-29-0: Bugfix:    the master spooled the user and projects in every 
+                            scheduling run
                  Review:    JG
                  Changed:   qmaster
 

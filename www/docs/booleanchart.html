@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>Issuezila Boolean Charts</title>
+</head>
+<body>
+<p><span class="Header" nowrap>Using the Boolean chart</span></p>
+<span class="PlainText">
+<p>The Issuezilla query page allows you to define your search parameters by all fields in the Issue database. To limit your search to a specific set of values in those fields, you can use the "Boolean chart" at the bottom of the page.</p>
+<p>Each Boolean chart can contain one or more <i>terms</i> - the fields/values to search by and how each should be treated - and Boolean operators - either <i>AND</i> or <i>OR</i>.</p> 
+<p>To define a term, select an item from each pulldown box, specifying the field and the type of match, and enter a value in the data field. For example, if you select <b>Issue #</b> from the first pulldown, <b>equal to</b> from the second pulldown, and enter 001 in the data field, you will see only issue #001 in your search results.</p>
+<p>The Boolean operators, i.e. the <b> And</b> button and the <b>Or</b> button, allow you to search by multiple terms.</p>
+<p>Clicking the <b>And</b> button allows you to define a new term and have the result of the query include anything that matches <i>both</i> of the terms.</p>
+<p>Clicking the <b>Or</b> button allows you to define a new term and the result of the query will be anything that matches <i>either</i> of the terms. </p>
+<p>You can add as many terms as you like by clicking the <b>And</b> or <b>Or</b> button after each term. You can also use both <b>And</b> and <b>Or</b> in a single query. Terms separated by <b>Or</b> are treated as a single statement. Terms separated by <b>And</b> are treated as separate statements. For example, you could search for all <i>P1</i> and <i>P2</i> issues with a status <i>New</i> or <i>Pending</i>. Your Boolean chart would look like this:</p>
+<table width="710" border="1" cellpadding="0" cellspacing="0">
+<tr>
+<td width="95"><span class="PlainText">Status</span></td>
+<td width="150"><span class="PlainText">Equal to</span></td>
+<td width="100"><span class="PlainText">New</span></td>
+<td width="45"><span class="PlainText"><i>OR</i></span></td>
+<td width="110"><span class="PlainText">Status</span></td>
+<td width="100"><span class="PlainText">Equal to</span></td>
+<td width="75"><span class="PlainText">Pending</span></td></tr></table>
+<i>AND</i>
+<table width="710" border="1" cellpadding="0" cellspacing="0">
+<tr>
+<td width="95"><span class="PlainText">Priority</span></td>
+<td width="150"><span class="PlainText">Equal to</span></td>
+<td width="100"><span class="PlainText">P2</span></td>
+<td width="45"><span class="PlainText"><i>OR</i></span></td>
+<td width="110"><span class="PlainText">Priority</span></td>
+<td width="100"><span class="PlainText">Equal to</span></td>
+<td width="75"><span class="PlainText">P1</span></td>
+</tr>
+</table>
+<p>You can use the <b>Add another Boolean chart</b> button to search for multiple instances of a field that can have several entries associated with a single issue. For example all of the <i>changed</i>... match types and fields like <b>IssuesThisDependsOn</b>, <b>Comments</b>, and <b>CC, </b>etc. can have several entries in a single issue. If you have multiple terms in your search that refer to one field, they will always return the same instance unless the terms appear on different charts. </p>
+<p> For example, if you search for &quot;Priority <i>changed to</i> P5 <b>And</b> Priority <i>changed by</i> person@addr,&quot; your results would include only issues where the person@addr changed the Priority to P5. However, if you want to find all issues for which person@addr changed the priority, and for which the priority was changed to P5 by anyone, you would put the two terms in two different charts that would look like this:</p>
+<table width="450" border="1" cellpadding="0" cellspacing="0">
+<tr>
+<td width="120"><span class="PlainText">Priority</span></td>
+<td width="145"><span class="PlainText">Changed by</span></td>
+<td width="175"><span class="PlainText">person@addr</span></td>
+</tr></table><hr><table width="450" border="1" cellpadding="0" cellspacing="0"><tr>
+<td width="120"><span class="PlainText">Priority</span></td>
+<td width="145"><span class="PlainText">Changed to</span></td>
+<td width="175"><span class="PlainText">P5</span></td>
+</tr>
+</table>
+
+<hr noshade size=1>
+<a href="ProjectIssues.html">Back to Project Issues help</a><br>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+
+</span>
+</body>
+</html>

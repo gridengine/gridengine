@@ -1,0 +1,83 @@
+<html>
+<head>
+
+<title>SSH Guide</title>
+
+</head>
+<body>
+<span class="PlainText">
+
+<p><span class="Header">Tunneling with SSH</span></p>
+
+<span class="PlainText"><b>SSH Guide: Index</b>
+
+<ul>
+	<dl>
+<dt><b>You are here: About this Guide</b>
+
+<dd><a href="#aboutssh">About SSH</a></li>
+
+<dd><a href="#furtherdocumentation">Further Documentation</a></li>
+
+<dt><a href="ddSSHGuideConcepts.html">Concepts</a>
+
+<dt><a href="ddSSHGuideChoosing.html">Choosing the Desktop Terminal</a>
+
+<dt><a href="ddSSHGuideTerminals.html">Using the Desktop Terminal</a>
+	
+	<dd><a href="ddSSHGuideTerminals.html#macs">Macintosh</a></dd>
+	
+	<dd><a href="ddSSHGuideTerminals.html#windows">Windows</a></dd>
+	
+<dt><a href="ddSSHGuideCygwin.html">Tunneling Using Cygwin: The Desktop Unix Emulator</a>
+	</dl>
+</ul>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+
+<p>
+<hr noshade size=1>
+<a name="thisguide"></a><span class="InputHeader">About this Guide</span>
+
+<p><i><b>What this guide discusses</b></i>. The purpose of this discussion is to provide a guide for users to tunnel to the desired server using SSH (Secure Shell).  We have broken the guide into several distinct elements.  If you wish, you can jump to those sections that most pertain to your questions without referring to the previous sections. If you have questions that are beyond the scope of this Help, we have listed below some resources that might help you out.
+
+<p><b><i>What this guide does not discuss</i></b>. This guide does not explain how to use CVS, only how to set up the tunnel so that you can use CVS. However,a brief description of the command to begin using CVS, once the tunnel has been established, is appended at the end of this document.
+<p>
+
+<hr noshade size=1>
+<a name="aboutssh"></a><span class="InputHeader">About SSH</span>
+
+<p>SSH is a flexible and more secure replacement for telnet and rlogin. It is widely used in development projects to provide access control and data-transport security. SSH can be used to create an unobtrusive, transparent "port tunnel" to the CVS (concurrent versions system) server. Data sent through the tunnel is encrypted, but the process is invisible to you or to the client software you are using to access the CVS repository. Because it is easy to use and very secure, we recommend SSH for developers accessing the CVS repository. 
+
+<p>Accessing the CVS repository without SSH runs the very real risk of having a third-party thief snoop your CVS password. And, with your CVS password, the thief can wreak serious mischief. For instance, he or she might quite plausibly compromise a project's CVS repository by inserting a virus in the source code.
+<p>
+
+<hr noshade size=1>
+<a name="furtherdocumentation"></a><span class="InputHeader">Further Documentation</span>
+<ul>
+<li> <a href=" http://openbsd.appli.se/openssh/windows.html" target="_new">OpenBSD.org</a> has a list of "free" clients for interoperating with OpenSSH from both Windows and Macintosh boxes: http://openbsd.appli.se/openssh/windows.html
+
+<li><a href="http://www.dreamwvr.com/ssh/ssh-faq.html" target="_new">The Secure Shell</a> (SSH) Frequently Asked Questions: http://www.dreamwvr.com/SSH-faq/ 
+
+<li><a href="http://www.ssh.org/" target="_new">The Secure Shell Community Site:</a> http://www.ssh.org/
+
+<li><a href="http://www.openssh.com/" target="_new">OpenSSH:</a>  http://www.openssh.com/ 
+
+<li><a href="http://sources.redhat.com/ml/cygwin/" target="_new">The Cygwin Project Mailing List Archives</a>: http://sources.redhat.com/ml/cygwin/ 
+
+<li><a href="http://www.ssh.org/" target="_new">The Secure Shell Community Site</a>: http://www.ssh.org/ 
+
+<li><a href="http://www.linuxhelp.net/guides/sirplaya/ssh.phtml target="_new"">Secure Shell (SSH/SSH) Setup (Linux):</a> http://www.linuxhelp.net/guides/sirplaya/ssh.phtml 
+
+<li><a href="http://www.SecureMac.com/" target="_new">Macintosh Security Issues</a>: http://www.SecureMac.com/
+
+<li><a href="http://www.macssh.com/" target="_new">MacSSH</a> (open-source SSH1 and 2 for the Mac!): http://www.macssh.com/ 
+
+<li><a href="http://www.cvsgui.org/ssh.html" target="_new">SSH with WinCvs:</a> http://www.wincvs.org/ssh.html
+</ul>
+<p>
+
+<hr noshade size=1>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+</span>
+</body>
+</html>

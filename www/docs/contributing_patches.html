@@ -1,0 +1,69 @@
+<html>
+<head>
+
+<title>Contributing Patches</title>
+
+</head>
+<body>
+
+    <span class="Header" nowrap>Contributing Patches</span>
+<p>
+    <span class="PlainText"><strong>Additional resources about issues: Index</strong>
+<ul>
+	<dl>
+	<dt><a href="ProjectIssues.html">Project Issues help</a>
+		<dd><a href="issue_lifecycle.html">The issue life cycle</a> 
+		<dd><a href="issuewritinghelp.html">Issue writing guidelines</a>
+		<dd><a href="issuezilla_tipsandtricks.html"> IssueZilla tips and tricks</a>
+		<dd><strong>You are here: Contributing patches</strong>
+	<dt><a href="/servlets/HelpTOC">Back to main Help index</a>
+	</dl>
+</ul>
+
+<hr noshade size=1>
+     <p>
+
+Well-described, easy-to-apply patches are a pleasure for other developers to encounter and go a long way towards making the module or component more stable and powerful.
+
+     <p><span class=plaintextbold>If you are not yet a member of an open source project</span> on this site but you have mailing list access, you can post a message about your proposed patch to the project's developer mailing list. (Read more about <a href="Subscribing.html">subscribing to project mailing lists</a>.)</p>
+
+     <p><span class=plaintextbold>If you are a project member</span>, first conduct a query of the project's issue database to determine whether this patch is associated with an already reported defect. 
+
+     <p>If your patch pertains to an existing issue, you should use the <span class=plaintextbold>File Attach</span> field in the issue edit screen to submit your patch and the <span class=plaintextbold>Add Comment</span> section to post an explanatory message. (Remember that changes to issues generate automatic email messages to the issue's owner and anyone on the cc list. All of those people will receive your message and a link to your patch.)
+     <p>If an issue <i>does not exist</i>, submit your patch as a new issue, using the <i>Patch</i> link in the "Enter An Issue" section of the <b>Project Issues</b> page. Attach your patch file to the new issue. Here's how to do it:</p>
+     <ol>    
+  <li>First, make sure you are making changes in the most recent version of the source files -- for this, it is best to use CVS to check out the source (on the CVS trunk), make your modifications (but do not check them in), and then run the command: </p>
+<p>
+<span class=plaintextbold>cvs diff -c > mypatch</span>
+<p>
+... to get a context-format patch for the sources. This gives you a patch file which includes information about the version you are patching, the filenames, and the contents of the change. This is the preferred way to keep track of patches and makes it easier for others to find and test your patch.
+     <p>
+<li>To apply a patch, go to the proper directory and run: 
+<p>
+<span class=plaintextbold>patch &lt; issuepatch.diff</span>
+<p>
+
+<li>Always include a message with your patch with the following information:
+<p>
+     <ul>
+
+      <li>A description of what problem or defect you are attempting to fix, and the steps to reproduce it, if possible.
+<p>
+      <li>A description of what the behavior should be with the patch in place. 
+<p>
+      <li>A description of how the patch works, if reasonable. If a significant amount of code is involved, include within the message that you agree to let the patch be used under the applicable project license as part of the IDE's code.
+     </ul>
+</ol>
+<span class=plaintext>
+     <p>The developer responsible for the section of code affected should either apply the patch and mark the defect (if there is one registered) as fixed, or reply with an objection if it does not seem safe, does not appear to fix the problem, or there is not really a problem to begin with. Notifications of any changes to the issues database, as well as CVS check-ins, are automatically sent to the appropriate issue assignee/cc'd and CVS mailing lists, so you can monitor whether the patch has been applied. Be sure to subscribe to at least the CVS and issue mailing lists for the module you are working on.</p>
+
+     <p>If you do not know exactly how to fix a problem, but have an idea about what is causing it, you can post a message about this on the developer discussion list for other project members' suggestions or to find someone who knows how to fix it.</p>
+
+
+<hr noshade size=1>
+<a href="ProjectIssues.html">Back to Project Issues help</a><br>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+    </span>
+ 
+</body>
+</html>

@@ -1,0 +1,79 @@
+<HTML>
+<HEAD>
+
+<TITLE>Licenses</TITLE>
+
+</HEAD>
+<BODY>
+<TABLE BORDER="0" CELLSPACING="1" CELLPADDING="3" BORDER="0" WIDTH="100%">
+  <TR>
+    <TD class="Header" nowrap>Licenses</TD>  
+  </TR>
+</TABLE>
+
+<TABLE BORDER="0" CELLSPACING="2" CELLPADDING="2" BORDER="0" width="100%">
+  <TR>
+    <TD class="InputHeader" VALIGN="top">The following licenses are used on this site:</TD>
+  </TR>
+  <TR>
+    <TD>&nbsp;</TD>
+  </TR>
+
+<!-- temporary static html -->
+  <TR>
+    <TD class="ProjectDownloadHeader" bgcolor="#efefef">$license_name</TD>
+  </TR>
+  <TR>
+    <TD class="PlainText">$license_description</TD>
+  </TR>
+  <TR>
+    <TD class="PlainText"><A HREF="$license_more_info_url">more info</A></TD>
+  </TR>
+  <TR>
+    <TD>&nbsp;</TD>
+  </TR>
+  <TR>
+    <TD class="ProjectDownloadHeader" bgcolor="#efefef">$license_name</TD>
+  </TR>
+  <TR>
+    <TD class="PlainText">$license_description</TD>
+  </TR>
+  <TR>
+    <TD class="PlainText"><A HREF="$license_more_info_url">more info</A></TD>
+  </TR>
+  <TR>
+    <TD>&nbsp;</TD>
+  </TR>
+  <TR>
+    <TD class="ProjectDownloadHeader" bgcolor="#efefef">$license_name</TD>
+  </TR>
+  <TR>
+    <TD class="PlainText">$license_description</TD>
+  </TR>
+  <TR>
+    <TD class="PlainText"><A HREF="$license_more_info_url">more info</A></TD>
+  </TR>
+
+<!-- webmacro commented out -->
+#if (false) 
+{
+#foreach $license in $currentDomain.licenseList()
+  {
+  <TR> 
+    <TD class="ProjectDownloadHeader" bgcolor="#efefef">$license.getName()</TD> 
+  </TR> 
+  <TR> 
+    <TD class="PlainText">$license.getLongDescription</TD> 
+  </TR> 
+  <TR> 
+    <TD class="PlainText"><A HREF="$license.getInfoURL">more info</A></TD> 
+  </TR> 
+  <TR> 
+    <TD>&nbsp;</TD> 
+  </TR> 
+  }
+}
+
+</table>
+</BODY>
+</HTML>

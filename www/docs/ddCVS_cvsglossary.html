@@ -1,0 +1,99 @@
+<HTML>
+<HEAD>
+<TITLE>A version control glossary</TITLE>
+</HEAD>
+
+<BODY>
+
+<TABLE BORDER="0" CELLSPACING="1" CELLPADDING="3" BORDER="0" WIDTH="100%">
+  <TR>
+    <SPAN CLASS="Header">A version control glossary</SPAN>
+	  
+<P>
+<SPAN CLASS="PlainText"><SPAN CLASS="PlainText"><B>CVS tool documents: Index</B>
+<P>
+<UL>
+<DL>
+<DT><A HREF="ddCVS.html">About source code version control with CVS</A>
+<DT><B>You are here: A version control glossary
+<UL>
+<LI><A HREF="#whatis">What is version control?</A>
+<LI><A HREF="#keyterms">Key terms in version control</A>
+<LI><A HREF="#devcycle">The copy-modify-merge development cycle</A>
+</UL></B>
+<DD><A HREF="ddUsingCVS_command-line.html">Using command-line CVS to access project source files</A>
+<DD><A HREF="ddCVS_cvsmanaging.html">Managing project files and directories with CVS</A>
+<DT><A HREF="/servlets/HelpTOC">Back to main Help index</A>
+</DL>
+</UL>
+<P>
+
+<HR NOSHADE SIZE=1>
+<A NAME="whatis"></A><SPAN CLASS="InputHeader">What is version control?</SPAN>
+<P>
+A version control system maintains an organized set of all the versions of files that are made over time. Version control systems allow people to go back to previous revisions of individual files, and to compare any two revisions to view the changes between them. In this way, version control keeps a historically accurate and retrievable log of a file's revisions. More importantly, version control systems help several people (even in geographically disparate locations) work together on a development project over the Internet or private network by merging their changes into the same source repository.
+<P>
+
+<HR NOSHADE SIZE=1>
+<A NAME="keyterms"></A><SPAN CLASS="InputHeader">Key terms in version control</SPAN>
+     <DL>
+<DT><SPAN CLASS="PlainTextBold">Checking in a file or directory</SPAN> <DD>This copies your working directory back into the repository as a new version. 
+     <P>
+	<DT><SPAN CLASS="PlainTextBold">Checking out files or directories</SPAN> <DD>This copies the latest revision of a file from the repository to your workspace. When you check out a directory, you check out all files and subdirectories under it. 
+     <P>
+ <DT><SPAN CLASS="PlainTextBold">Committing a file or directory</SPAN> <DD>This is the same as checking in a file or directory. Often version control users will say that they have "committed a change"; this means that they made changes to their working copies of files and committed these back to the repository. 
+     <P>
+<DT><SPAN CLASS="PlainTextBold">Conflict</SPAN> <DD>When two developers make changes to their working copies of the same file and commit them to the repository, their work may conflict. When this happens, CVS will detect the conflict and require someone to resolve resolve it before committing their changes.
+     <P>
+<DT><SPAN CLASS="PlainTextBold">Merging</SPAN> <DD>Combining multiple changes made to different working copies of the same files in the source repository. Merging is a strategy for managing conflicts by letting multiple developers work at the same time (with no locks on files), and then incorporating their work into one combined version. Merging works well when two sets of changes are made to different lines in a files and can be easily combined. When changes to a file are made on the same line or lines, conflicts occur, requiring someone to edit the file manually before the changes can be committed to the source repository successfully.
+	<P>
+
+     <DT><SPAN CLASS="PlainTextBold">Repository</SPAN> <DD>A shared database with the complete revision history of all files under version control. 
+     <P>
+	<DT><SPAN CLASS="PlainTextBold">Resolving</SPAN> <DD>Conflicts within a file created by two developers attempting to commit conflicting changes must be addressed by manually editing the file. Someone must go through the file line by line to accept one set of changes and delete the other set. Files with conflicts cannot be committed into the source repository successfully until they are resolved.
+<P> 
+    <DT><SPAN CLASS="PlainTextBold">Revision</SPAN> <DD>A numbered draft of specific updates to individual files. Each time you edit a file and commit it back to the repository, the file's revision number increases.
+     <P>
+	<DT><SPAN CLASS="PlainTextBold">Version</SPAN> <DD>The numbering scheme used to identify <I>sets of files</I> that are tagged and named at a certain point in time.
+	 <P>
+	<DT><SPAN CLASS="PlainTextBold">Workspace</SPAN> <DD>Your copies of the files you want to edit on your local hard disk or Unix user account. When you edit files in your workspace, they will become out of sync with the repository. That's progress! Then you need to get your changes back into the repository so that everyone else can see them.
+     <P>
+  </DL>
+
+<HR NOSHADE SIZE=1>
+<A NAME="devcycle"></A><SPAN CLASS="InputHeader">The copy-modify-merge development cycle</SPAN>
+<SPAN CLASS="PlainText">
+<P>
+Because CVS is a vastly powerful tool, the learning curve might seem formidable. Certainly there are plenty of books and web sites offering comprehensive CVS knowledge bases (many good sources are referenced at the bottom of this site's main CVS page). However, it is not necessary to digest an entire tome to be able to incorporate CVS into your software development practices immediately and effectively.
+<P>
+CVS allows you to work within your own development cycle while keeping track of the project's overall development cycle:
+<OL>
+<LI>You begin working on a project by obtaining your own working copy of files, known as <I>checking out</I> the project repository or modules, individual groups of project source files. 
+<P>
+<LI>You make your contributions to the project by modifying these files and creating new files.
+<P>
+This part of the cycle doesn't involve cvs directly. You modify your working copies of project files using a file editor on your local machine. You can save and compile your edited files to test how your changes affect the particular project module you are working in without affecting anyone else's work on those same project files. Nothing you do affects other project participants until you merge your changes into the project repository. 
+<P>
+<LI>You test and tweak your latest changes in your own workspace to make sure these work without breaking or corrupting the overall project.
+<P>
+<LI>Finally, you contribute back or <I>check in</I> your changes to the main or "top" body of project files, merging your work with the most recent working version known in CVS terminology as the <I>head</I>.
+<P>
+Committing your changes to merge with other developers' work is the most powerful aspect of CVS, but that power also makes it the most critical aspect. It's possible to get confused and accidentally overwrite someone else's changes or your own. Your contributed changes invariably will conflict with someone else's at some point. Understanding how and when to update your working copies and how to resolve merge conflicts are two particularly critical aspects of using CVS in collaborative development projects.
+</OL>
+<P>
+This <I>copy-modify-merge cycle</I> is repeated throughout the life of the project by all contributing developers. CVS enables everyone to work on project files simultaneously, to stay up to date on the latest changes contributed by others, and to test how their own changes affect the overall project without interrupting other developers' cycles.
+<P>
+If you are new to CVS, learn more at:
+<P>
+<A HREF="http://www.cvshome.org/new_users.html" TARGET="_new">CVS for New Users</A> (an article)<BR>
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#An_Overview_of_CVS" TARGET="_new">An Overview of CVS</A> (from the online version of Karl Fogel's book <I>Open Source Development with CVS</I>)
+<P>
+
+<HR NOSHADE SIZE=1>
+<A HREF="/servlets/HelpTOC">Back to main Help index</A></P>
+
+</SPAN>
+</TR>
+</TABLE>
+</BODY>
+</HTML>

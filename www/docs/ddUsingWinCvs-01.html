@@ -1,0 +1,116 @@
+<html>
+<head>
+
+<title>Using WinCVS</title>
+
+</head>
+<body>
+
+
+<p>
+    <p><span class="Header" nowrap>Checking files in and out of 
+    WinCvs</span>
+<p>
+<span class="PlainText">  
+      <p> <b>Help for WinCvs: Index</b></p>
+
+
+
+      <dl> 
+        <dt><a href="ddUsingWinCvs.html">Setting up WinCvs</a> 
+        <dt><b>You are here: Checking source files in and out of WinCvs
+          <ul>
+              <li><a href="#checkingout">Checking out source files</a>
+			  <li><a href="#cvsadd">Adding/committing files</a> 
+			  <li><a href="#cvsupdate">Updating/merging files</a>	
+          </ul></b>
+        <dt><a href="ddUsingWinCvs-02.html">Managing files in WinCvs</a></dt>
+      </dl>
+
+<hr noshade size=1>
+      <a name="checkingout"></a><span class="InputHeader">Checking out source 
+      files</span> <span class="PlainText"> 
+      <p>Before you can make changes to source files, you must <i>check out</i> 
+        (make a copy on your local hard disk) the project or "module" files you 
+        want. A module is a subset of the entire project file repository.</p>
+      <p>Log in to the project's CVS server and provide your password. Then select 
+        <strong>Checkout module...</strong> from the <strong>Create</strong> menu 
+        to retrieve the latest versions of files. The default selection is <strong><em>all</em></strong> 
+        file, or you can select a specific module to check out.</p>
+      <img src="images/wincvs_checkout.gif"> 
+      <p>You can use the left-hand navigation pane to see the directories and 
+        files in that module:</p>
+      <p><img src="images/wincvs_dir.gif"></p>
+      <p> <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646179" target="_new">More 
+        about logging in to the project server</a><br>
+        <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646180" target="_new">More 
+        about checking out source files</a> 
+      <p> 
+      <hr noshade size=1>
+      <a name="cvsadd"></a><span class="InputHeader">Adding/committing files</span> 
+      <p>WinCvs is not a file editor. You can use the file editor of choice on 
+        your local machine to modify project files you have checked out. When 
+        you have completed your changes to files on your hard drive, you can <i>commit</i> 
+        those changes back into the project's CVS repository.</p>
+      <p>The following example shows the WinCvs window after committing some changes 
+        in a directory containing html content files.</p>
+      <p><img src="images/wincvs_afterchange.gif"></p>
+      <p>Whenever you <i>create</i> a new file on your hard disk and you want 
+        to add that file to the project, an "unknown file" icon <img src="images/wincvs_unknown_icon.gif"> 
+        will appear next to your new files.</p>
+      <p>Select the new file and click the "Add Selected" <img src="images/wincvs_addselected.gif"> 
+        or "Add Selected Binary" <img src="images/wincvs_addbinary.gif"> button 
+        in the toolbar to mark the file as under version control. <br>
+      <blockquote>Use "<strong>Add Selected</strong> " for files that are basically 
+        text files (e.g., *.txt or *.html).<br>
+        Use "<strong>Add Selected Binary</strong>" for files that have non-text 
+        formats (e.g., application data files or graphics).</blockquote>
+      <strong>Note:</strong> Marking the file as "added" <i>does not</i> put it 
+      into the project's CVS repository! You must then commit it. 
+      <p></p>
+      <p>Files that still need to be committed display a red icon <img src="images/wincvs_modified_icon.gif"> 
+        next to them. To commit these files:</p>
+      <ol>
+        <li>Select the entire directory in the left-hand pane, or select only 
+          those individual files to be committed. 
+        <li>Click the commit icon <img src="images/wincvs_commit_icon.gif"> in 
+          the tool bar. You are prompted for a log message. 
+        <li>Enter a brief description of the changes made to each file.</li>
+      </ol>
+      <p>The results of the committing a file are displayed in the lower right-hand 
+        pane. If problems or <i>conflicts</i> are encountered during the merge, 
+        WinCvs aborts the commit process. You must then open the file in your 
+        file editor, resolve the conflicts, save it again, and then commit. <!--For more about resolving conflicts, see [LINK].--> 
+      <p><img src="images/wincvs_commit.gif"></p>
+      <p> <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646186" target="_new">More 
+        about adding files</a><br>
+        <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646185" target="_new">More 
+        about committing files</a> 
+      <p> 
+      <hr noshade size=1>
+      <a name="cvsupdate"></a><span class="InputHeader">Updating/merging files</span> 
+      <p>You should always update your working copy of the project repository 
+        before you commit your changes. This ensures that you are making changes 
+        to the most recent versions of files. Updating will not overwrite your 
+        modifications if another developer has made changes to the same file(s). 
+        Instead, WinCvs attempts to merge the two versions. 
+      <p>To update, select <strong>Update files...</strong> on the <strong>CVS 
+        Files</strong> menu and select the file(s) or folder(s) you wish to update. 
+      <p><img src="images/wincvs_update.gif"></p>
+      <p> <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646181" target="_new">More 
+        about updating</a><br>
+        <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646192" target="_new">More 
+        about merging</a> 
+      </span>
+      <p>For information on file statuses and comparing files, see <a href="ddUsingWinCvs-02.html">Managing 
+        files in WinCvs</a>. </p>
+      <span class="PlainText">
+<hr noshade size=1>
+      <a href="/servlets/HelpTOC">Back to main Help index</a> 
+      <p></p>
+      </span> 
+    <p></p>
+
+</span>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<html>
+<head>
+
+<title>Project Help for Project Owner Administration</title>
+
+</head>
+<body>
+<p>
+    <span class="Header" nowrap>Editing and maintaining the Project Home page</span> 
+<p>
+<span class="PlainText"><b>Project help for project owner administration: Index</b>
+<p>
+  <ul>
+<dl>
+<dt><a href="ProjectOwnerAdmin.html">Project owner administration</a>
+	<dd><strong>You are here: Editing and maintaining the 
+    Project Home page          
+		<ul>
+		<li><a href="#updatehome">Maintaining project information</a>
+		<li><a href="#useindex">About the 'Use Project Home Page' option</a>
+		<li><a href="#ownersmessage">Updating the owner's message</a>
+		<li><a href="#aboutlists">About configuring project mailing lists</a></li>
+		<li><a href="#aboutlocking">About project locking</a>
+		</ul></strong>
+	<dd><a href="ProjectOwnerNews.html">Managing project site news</a>
+	<dd><a href="ProjectOwnerFiles.html">Managing project files</a>
+	<dd><a href="ProjectOwnerMembers.html">Adding project members and approving roles</a>
+	<dd><a href="ProjectOwnerMailingLists.html">Configuring and managing project mailing lists</a>
+	<dd><a href="ProjectOwnerDocuments.html">Managing project documentation</a>
+	<dd><a href="ProjectOwnerSource.html">Managing project source code</a>
+	<dd><a href="ProjectOwnerIssues.html">Tracking project issues</a>
+<dt><a href="/servlets/HelpTOC">Back to the main Help index</a></dt>
+</dl>
+</ul>
+
+<p>
+
+<hr noshade size=1>
+<a name="updatehome"></a><span class="InputHeader">Maintaining project information</span>
+<p>                         The <strong>Project Home </strong>page is the entry 
+point for all project users, members as well as potential contributors.&nbsp;The 
+primary role of the <strong>Project Home </strong>                                                page is&nbsp;to highlight the project's mission, primary goals, current status, and ongoing needs.
+<p><strong>NOTE</strong>: 
+For a good example of summarizing project goals and status, see the open source <a href="http://subversion.tigris.org/" target="_new">Subversion project home page</a>.
+<p>
+        Project information can be modified through the <b>Administer Projects</b> page, accessed by one of the following methods:&nbsp;
+<p>
+<ul>
+<li>At first login, the&nbsp;home page has 
+  a&nbsp;<strong>My Projects</strong> link as well as 
+  an&nbsp;<strong>Admin</strong> link to the <strong>Project Edit 
+  </strong>      page.
+<p></p>
+<li>Once you are on your <strong>Project Home 
+  </strong>page or other project pages, use the <strong>Admin </strong> link in the Project 
+  Resources tool bar at the top of every screen.</li>              
+</ul>
+<p>
+The <strong>Project Home </strong>page has the following 
+fields which are also part of the project creation process: 
+<ul><p><li>Project Name 
+  <li>Summary 
+  <li>Description 
+  <li>License 
+  <li>Project Category.
+</li></ul>
+By clicking on the 
+<strong>Edit this Project </strong>link you can modify the information in each of these fields. Because the description field accommodates html formatting and graphics, you can use this to customize and add information to your project home page.
+
+<p>There are several additional fields in the <b>Administer Projects</b> page that do not appear during the project creation process: </p>
+<p><ul><li>Message From the Owner(s)
+  <li>Edit this Project
+  <li>Request New Project Role
+  <p></p></li></ul>
+<p>
+
+
+<hr noshade size=1>
+<a name="useindex"></a><span class="InputHeader">About the 'Use Project Home Page' option</span>
+<p>
+
+Your <b>Project Home</b>               page by default displays the content that you entered in the Description field in the <b>Administer Project</b> page.
+<p>
+Because some projects require more complex home pages, however, you have the option to store and display special home page content from a different file. The "Use Index" flag in the <b>Administer Project</b> page indicates that your project home page should display the contents of the "index.html" file instead of displaying description field information from the database. This file is located in:
+<blockquote>
+<b>http://yourprojectname.this domain/www/index.html</b>
+</blockquote>This 
+file is part of&nbsp; the project's source code repository under CVS version control. If you check the "Use Index" flag, this means you must update your home page content by editing the index.html file, saving it, and then committing it into CVS to display the newest file revision in your project's home page.  When you use the index.html file, you can include HTML formatting, graphics, and other more complex elements for your project's home page.
+<p>
+
+<hr noshade size=1>
+<a name="ownersmessage"></a><span class="InputHeader"><b>Updating the owner's message</b></span>
+
+<p>            Initially you use the field&nbsp;to identify&nbsp;yourself as the project owner and convey project goals. As the project progresses, use the Owner's Message&nbsp;to&nbsp;highlight project milestones, list changing requirements, and identify particular resource needs. For example,&nbsp;you&nbsp;may advertise the types&nbsp;of development expertise currently being sought:
+<blockquote>
+  <p>
+<i>"Desperately seeking experienced Java servlet developers with a passion for creating apps that will change the world."</i> 
+  </p></blockquote>
+  <p>Or, you can give updates about the current status of development and what's 
+  coming up next. </p>       
+
+               
+<p>
+           However you use this field, your Owner's Message should be updated frequently:&nbsp;usually once a week, but&nbsp;no less than monthly. Fresh messages convey a sense of excitement and momentum; critical perceptions to the growth of development projects.
+<p>
+
+<hr noshade size=1>
+<a name="aboutlists"></a><span class="InputHeader"><b>About configuring  project mailing lists</b></span>
+<p>
+The <strong>Project Edit </strong>
+    page is also the place to administer your project's mailing list. To find out more about this, see <a href="ProjectOwnerMailingLists.html">Configuring and managing project mailing lists</a>.
+<p>
+
+<hr noshade size=1>
+<a name="aboutlocking"></a><span class="InputHeader">About project locking</span>
+<p>
+If you have received email notification that your project is locked, you should contact a site administrator immediately for further information. Project locking means that site administrators have temporarily disabled your project. This may be due to site policy matters, technical issues, or other reasons.
+<p>
+When you load your <b>Project Home</b> or <b>Project Edit</b> page, you encounter the "Locked" flag in red at the top. All site-related project activity is suspended in locked projects. Your project pages can still be accessed and all existing project data is intact, however <b><i>you and your project members temporarily have read-only access</i></b> to the source code repository, email archives, issue database, project files, and documents.  No one -- including you -- can commit source code, enter issues, upload or download files and documents, change web content, or subscribe to or modify mailing lists. If your locked project is a public project, other site users can still view your project's home page but the project is flagged as "locked."
+<p>
+A site administrator must unlock your project to reactivate it. You will receive email notification when this action is taken also.
+<p>
+
+<hr noshade size=1>
+<a href="ProjectOwnerAdmin.html">Back to Help for project owner administration</a><br>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+
+</span>
+</body>
+</html>

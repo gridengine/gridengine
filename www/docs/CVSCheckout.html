@@ -1,0 +1,131 @@
+<HTML>
+<HEAD>
+
+<TITLE>CVS Checkout</TITLE>
+
+</HEAD>
+<BODY>
+<table border="0" width="100%">
+<tr>
+<td class="PlainText">
+<p>
+  You can use CVS to check out your own copies of project source code files if
+  you are a member of this project with CVS login access. CVS is an
+  open source version control for keeping track of all modifications
+  to project source code files. You can choose either a <A
+  HREF="http://www.cvshome.org/downloads.html">command-line CVS
+  client</A> or <A
+  HREF="http://www.wincvs.org/download.html">WinCvs</A> with a Windows
+  interface. What you can do with source files depends upon your role
+  in this project. (<A
+  HREF="/project/www/docs/Help.html#ProjectRoles">Roles?</A>)
+<P>
+
+<A NAME="commandlinecvs"></A><SPAN CLASS="InputHeader">Command-line
+CVS checkout instructions</SPAN>&nbsp;&nbsp;&nbsp;(<A
+HREF="#wincvs">Skip to WinCvs checkout instructions</A>)
+
+<P>
+Before you can do a cvs checkout, you must set the cvsroot to indicate
+where the CVS repository for this project is located.
+
+<OL>
+<LI>The command to set cvsroot and login is:
+<P>
+          <B>cvs -d :pserver:username@projectname.domain.net:/cvs login</B>
+<P>
+(Substitute in your login for username, and the project name and associated domain, of course.)
+
+<P>
+If this is the only project you working on, you only need to set the
+cvsroot once. Thereafter when you log in to this domain, the cvs
+repository for this project is assumed. If you are working multiple
+projects, however, you must specify the cvsroot each time you log in
+to ensure that the cvs repository you are accessing is the right one.
+
+<P>
+<LI>To check out the project source repository an individual module
+(if you don't need the entire repository), type:
+
+<P>
+          <B>cvs -d :pserver:username@projectname.domain.net:/cvs checkout [projectname]</B>
+<P>
+This command should result in a scrolling list of files being added to
+the local directory you specified on your machine. Now you are ready
+to use your file editor to work with individual files and make
+changes.
+
+</OL>
+
+<P>
+When you are ready to contribute your work into the project's CVS
+repository, you must <I>commit</I> each file you have modified into
+the project repository. But before you do that, you should set up an
+SSH tunnel for security purposes.
+
+<P>
+<A HREF="/project/www/docs/DomainDocsSSHGuide.html">More about SSH tunneling</A><BR>
+<A HREF="/project/www/docs/DomainDocsCVS.html">More about basic CVS commands and principles</A>
+<P>
+<A NAME="wincvs"></A><SPAN CLASS="InputHeader">WinCvs checkout instructions</SPAN><BR>
+
+<P>
+To use WinCvs to check out your own set of source code files, you must
+first set up the correct cvs root using the following steps.
+
+<P>
+<OL>
+<LI>Launch WinCvs and select <B>Cvs Admin - Preferences</B>. Enter the CVSroot:
+<P>
+<B>:pserver:username@[projectname].[domain].net:/cvs</B>
+<P>
+Click OK.
+<P>
+
+<LI>If this your first cvs checkout, create a folder in Windows
+Explorer to hold all of your cvs project folders. Then create a
+subfolder for this project. (You may even want to create separate
+subfolders for each module if you're working in more than one.)
+<P>
+
+<LI>In WinCvs, select <B>Cvs Admin - Login</B> and enter your cvs
+password.
+
+<P>
+<LI>Click on the left window in the program and select a folder. Then
+select <B>Cvs Admin - Checkout Module</B>. Select the project folder
+you created earlier.
+
+<P>
+<LI>Enter project module name and click OK. You should see a scrolling
+list of filenames as these are created in your folder(s).
+
+<P>
+<LI>Repeat the module creation process for each additional cvs module
+you wish to check out.
+</OL>
+</UL>
+
+
+
+<!--
+##  This link is not working yet
+
+## For more information, see <A
+## HREF="/project/www/docs/wincvs_instructions.html">step-by-step
+## WinCvs graphic tutorial</A> with instructions included for
+## committing files.
+
+## TODO: need some way to replace lost cvs passwords          
+
+-->
+
+<hr size="1" noshade>
+
+<A HREF="/project/www/docs/DomainDocsCVS.html#morecvsdoc">More CVS documentation</A>
+
+
+</td>
+</tr>
+</table></BODY>
+</HTML>

@@ -1,4 +1,9 @@
-AS-2003-09-29-0: CVS        Created V53p5_TAG (linkage with OpenSSL 0.9.7c)
+SG-2003-12-08-0: Bugfix:    Storing a job template in qmon set -hold_jid to
+                            the wrong value (always 0)
+                 Review:    AA
+                 Changed:   qmon
+
+AS-2003-11-29-0: CVS        Created V53p5_TAG (linkage with OpenSSL 0.9.7c)
 ---------------------------------------------------------------------------
 
 AA-2003-11-13-0  Bugfix:    qmon dumps core if it gets an empty hold list

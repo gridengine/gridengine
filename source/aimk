@@ -1543,7 +1543,7 @@ case SOLARIS86:
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-xO4"
+      set OFLAG = "-xO3"
    endif
 
    set MTCFLAGS = "-DSGE_MT -mt"

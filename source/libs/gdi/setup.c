@@ -39,6 +39,7 @@
 #include "sge_prognames.h"
 #include "sge_answerL.h"
 #include "sge_gdi_intern.h"
+#include "sge_get_confval.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_exit.h"
@@ -52,6 +53,9 @@
 #include "sge_switch_user.h"
 #include "msg_utilib.h"
 #include "sge_feature.h"
+#include "sge_parse_num_par.h"
+
+static int init_hostcpy_policy(void);
 
 extern long compression_level;
 extern long compression_threshold;
@@ -87,6 +91,11 @@ lList **alpp
       SGE_EXIT(1);
    }
 
+   /* initialize hostcompare policy consisting 
+      of default_domain and ignore_fqdn settings */ 
+   if (init_hostcpy_policy()) {
+      SGE_EXIT(1);
+   }
       
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    /* gdi lib call */
@@ -156,3 +165,32 @@ int reresolve_me_qualified_hostname()
    DEXIT;
    return CL_OK;
 }
+
+/* initialize policy used in hostcpy() consisting of 
+   default_domain and ignore_fqdn settings */ 
+static int init_hostcpy_policy(void)
+{
+   const char *s;
+   u_long32 uval;
+
+   DENTER(TOP_LAYER, "init_hostcpy_policy");
+
+   if (!(s = get_confval("ignore_fqdn", path.conf_file))) {
+      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S, path.conf_file));
+      DEXIT;
+      return -1;
+   }
+   parse_ulong_val(NULL, &uval, TYPE_BOO, s, NULL, 0);
+   fqdn_cmp = !uval;
+
+   if (!(s = get_confval("default_domain", path.conf_file))) {
+      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S, path.conf_file));
+      DEXIT;
+      return -1;
+   }
+   default_domain = sge_strdup(default_domain, s);
+
+   DEXIT;
+   return 0;
+}
+

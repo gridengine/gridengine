@@ -861,11 +861,7 @@ lList *report_list
                                           lGetList(report, REP_list))) {
             DPRINTF(("configuration on host %s is not up to date\n", rhost));
 
-            if (!strcmp(prognames[EXECD], commproc))
-               ret = notify_new_conf_2_execd(hep);
-
             ret = notify_new_conf_2_execd(hep);
-
             if (ret) {
                ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
                break;

@@ -162,5 +162,6 @@ void sge_show_conf(void);
 int get_conf_and_daemonize(tDaemonizeFunc dfunc, lList **conf_list);
 int get_configuration(char *config_name, lListElem **gepp, lListElem **lepp);
 int get_merged_configuration(lList **conf_list);
+void chg_conf_val(lList *lp_cfg, char *name, char **field, u_long32 *val, int type);
 
 #endif /* __SGE_CONF_H */

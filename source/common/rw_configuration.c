@@ -122,6 +122,21 @@ FPRINTF_ERROR:
    return -1;
 }
 
+
+/****** rw_configuration/read_adminuser_from_configuration() *******************
+*  NAME
+*     read_adminuser_from_configuration() 
+*
+*  SYNOPSIS
+*     const char* read_adminuser_from_configuration(const char *fname, const 
+*     char *conf_name, u_long32 flags) 
+*
+*  BUGS
+*     Memory leak when used multiple times - shadowd only
+*
+*  SEE ALSO
+*     should better use get_confval() instead
+*******************************************************************************/
 const char *read_adminuser_from_configuration(
 const lListElem *el,
 const char *fname, 
@@ -142,8 +157,9 @@ u_long32 flags
          ret = lGetString(conf, CF_value); 
          break;
       } 
-   } 
+   }
    DPRINTF(("admin_user: "SFN"\n", ret));
+
    DEXIT;
    return ret;
 }

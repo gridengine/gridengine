@@ -95,7 +95,7 @@ lList **lpp
    DIR *dir;
    SGE_STRUCT_DIRENT *dent;
    char fstr[256];
-   lListElem *el, *epc;
+   lListElem *el;
    int ret;
    static int admin_user_initialized = 0;
 
@@ -119,25 +119,25 @@ lList **lpp
       create one with compiled in defaults */
 
    el = read_configuration(path.conf_file, SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
-   if (el)
+   if (el) {
       lAppendElem(*lpp, el);
-   else {
+   } else {
       lList *lpDefaults = NULL;
       char config_str[1024], real_config_str[1024];
 
       WARNING((SGE_EVENT, MSG_GLOBALCONFDOESNOTEXISTCREATING));
       lpDefaults = sge_set_defined_defaults(lpDefaults);
    
-      epc = lCreateElem(CONF_Type);
-      lSetHost(epc, CONF_hname, SGE_GLOBAL_NAME);
-      lSetList(epc, CONF_entries, lCopyList("global config", lpDefaults));
-      lAppendElem(*lpp, epc);
+      el = lCreateElem(CONF_Type);
+      lSetHost(el, CONF_hname, SGE_GLOBAL_NAME);
+      lSetList(el, CONF_entries, lCopyList("global config", lpDefaults));
+      lAppendElem(*lpp, el);
       lFreeList(lpDefaults);
       
       sprintf(config_str, "%s/%s/.%s", path.cell_root, 
             "common", "configuration"); 
       sprintf(real_config_str, "%s", path.conf_file); 
-      if ((ret=write_configuration(1, NULL, config_str, epc, NULL, 
+      if ((ret=write_configuration(1, NULL, config_str, el, NULL, 
          FLG_CONF_SPOOL))) {
          /* answer list gets filled in write_configuration() */
          DEXIT;
@@ -166,7 +166,6 @@ lList **lpp
    }
    
    /* read local configurations from local_conf_dir */ 
-
    dir = opendir(path.local_conf_dir);
    if (!dir) {
       DEXIT;

@@ -1,3 +1,7 @@
+AH-2002-03-22-0  Bugfix:    Retrieve ignore_fqdn and default_domain at client/daemon 
+                            startup from global cluster config to overcome problems
+                            with hashing of hostnames in certain cases.
+
 AA-2002-03-21-1  Bugfix:    sorting in functional/override policy,
                             fix for not emptying matrix
 

@@ -988,8 +988,10 @@ int ckpt_type
 #else
    if (!strcmp("job", childname) && ckpt_type) {
       if (signalled_ckpt_job) {
-         if ((fp = fopen("checkpointed", "w"))) {
-            fclose(fp);
+         if (SGE_STAT("checkpointed", &buf)) {
+            if ((fp = fopen("checkpointed", "w"))) {
+               fclose(fp);
+            }
          }
       } else {
          if (ckpt_type & CKPT_KERNEL) {

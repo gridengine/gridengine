@@ -277,8 +277,6 @@ static void schedd_exit_func(int i)
 /*--------------------------------------------------------------*/
 static int parse_cmdline_schedd(int argc, char *argv[]) 
 {
-   int ret = 0, i;
-
    DENTER(TOP_LAYER, "parse_cmdline_schedd");
 
    if (argc > 1) {

@@ -151,6 +151,7 @@ while [ $ARGC != 0 ]; do
    -sm)
      SHADOW="install"
      . ./util/install_modules/inst_qmaster.sh
+     . ./util/install_modules/inst_execd.sh
      #echo Install Shadowhost
      ;;
    -usm)
@@ -521,12 +522,16 @@ if [ $SHADOW = "install" ]; then
                       "shadow host,\n has read/write permissions to the qmaster spool " \
                       "and SGE_ROOT/<cell>/common \ndirectory! For using a shadow master it " \
                       "is recommended to set up a \nBerkeley DB Spooling Server\n\n Hit <RETURN> to continue >> "
+      
+      CheckForLocalHostResolving
       ProcessSGERoot
 
       $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
 
       SGE_CELL=`Enter default`
       export SGE_CELL
+   
+      CheckHostNameResolving
  
       if [ $HOST != "" ]; then
          $SGE_UTILBIN/gethostname -all | grep $HOST > /dev/null
@@ -545,22 +550,30 @@ if [ $SHADOW = "install" ]; then
       fstype=`$SGE_UTILBIN/fstype $db_home`
       if [ $? != 0 ]; then
          $INFOTEXT "\n Shadow master can not access spool directory at %s! \n" $db_home 
-         $INFOTEXT "Check if the spool directory is mounted and have read/write permissions.\n"
+         $INFOTEXT "Check if the spool directory is mounted and has read/write permissions.\n"
          exit 1
       elif [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
          if [ "$spooling_method" = "berkeleydb" ]; then
             if [ `echo $fstype | grep "nfs" | wc -l` -gt 0 ]; then
                if [ "$fstype" != "nfs4" ]; then
                   $INFOTEXT "Spooling directory exported as $s is not supported!\n" $fstype
-                  $INFOTEXT "\nPlease install the database directory on a NFSv4 ileserver or use the RPC Client/Server mechanism"
+                  $INFOTEXT "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
                   exit 1;
+               else
+                  $INFOTEXT "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
+                            "mixed architectures.\n\n "
+                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to continue (y/n) ('n' will abort) [y] >> "
+                  if [ $? != 0 ]; then
+                     $INFOTEXT "Installation aborted"
+                     exit 1;
+                  fi
                fi
             fi
          fi
       fi
 
       #creating the local_conf now!
-      AddLocalConfiguration
+      AddLocalConfiguration_With_Qconf
 
       $INFOTEXT "Creating shadow_masters file for host %s\n" $SHADOW_HOST
       $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST    

@@ -190,31 +190,17 @@ ExecuteAsAdmin()
    fi
 
    if [ $? != 0 ]; then
-      if [ $SHADOW = "install" ]; then
-         $ECHO >&2
-         Translate 1 "Command failed: %s" "$*"
-         $ECHO >&2
-         Translate 1 "Probably a permission or architecture mismatch problem."
-         Translate 1 "Please check file access permissions and be sure the shadow host"
-         Translate 1 "is of the same architecture as the master host"
-         $ECHO >&2
 
-         $INFOTEXT -log "Command failed: %s" $*
-         $INFOTEXT -log "Probably a permission or architecture mismatch problem."
-         $INFOTEXT -log "Please check file access permissions and be sure the shadow host"
-         $INFOTEXT -log "is of the same architecture as the master host"
-      else
-         $ECHO >&2
-         Translate 1 "Command failed: %s" "$*"
-         $ECHO >&2
-         Translate 1 "Probably a permission problem. Please check file access permissions."
-         Translate 1 "Check read/write permission. Check if SGE daemons are running."
-         $ECHO >&2
+      $ECHO >&2
+      Translate 1 "Command failed: %s" "$*"
+      $ECHO >&2
+      Translate 1 "Probably a permission problem. Please check file access permissions."
+      Translate 1 "Check read/write permission. Check if SGE daemons are running."
+      $ECHO >&2
 
-         $INFOTEXT -log "Command failed: %s" $*
-         $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
-         $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
-      fi
+      $INFOTEXT -log "Command failed: %s" $*
+      $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
+      $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
       if [ $AUTO = true ]; then
          MoveLog

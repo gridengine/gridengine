@@ -170,6 +170,7 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
          }
       }  
       *load /= load_slots;
+      *available -= *used;
    }
    DEXIT;
    return ret;

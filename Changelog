@@ -1,3 +1,11 @@
+DT-2004-04-30-0: Bugfix:    o drmaa_control(DRMAA_CONTROL_TERMINATE) now
+                              behaves like qmon when deleting
+                            o Brought test_drmaa in sync with drmaa.c
+                            - test_drmaa still fails the DRMAA_V_ENV test in
+                              ST_ATTRIBUTE_CHECK.
+                 Changed:   DRMAA
+                 Issue:     979
+
 AD-2004-04-30-0: Cleanup:   Did move 'get_local_conf_val()'.
                  Changed:   qmaster
 

@@ -143,7 +143,7 @@ static void merge_drmaa_options (lList **opts_all, lList **opts_default,
                                  lList **opts_drmaa);
 static int opt_list_append_opts_from_drmaa_attr (lList **args, const lList *attrs,
    const lList *vattrs, int is_bulk, dstring *diag);
-char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag);
+static char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag);
 static char *drmaa_get_home_directory (lList *alp);
 static char *drmaa_expand_wd_path(const char *path, lList *alp);
 static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
@@ -457,10 +457,12 @@ int drmaa_allocate_job_template(drmaa_job_template_t **jtp, char *error_diagnosi
 int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
 
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
 
    if (jt == NULL) {
@@ -468,7 +470,7 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    } 
  
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -1467,13 +1469,15 @@ int drmaa_job_ps(const char *job_id, int *remote_ps, char *error_diagnosis, size
 int drmaa_wifexited(int *exited, int stat, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
    
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -1512,13 +1516,15 @@ int drmaa_wifexited(int *exited, int stat, char *error_diagnosis, size_t error_d
 int drmaa_wexitstatus(int *exit_status, int stat, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
    
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -1560,13 +1566,15 @@ int drmaa_wexitstatus(int *exit_status, int stat, char *error_diagnosis, size_t 
 int drmaa_wifsignaled(int *signaled, int stat, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
    
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -1608,13 +1616,15 @@ int drmaa_wifsignaled(int *signaled, int stat, char *error_diagnosis, size_t err
 int drmaa_wtermsig(char *signal, size_t signal_len, int stat, char *error_diagnosis, size_t error_diag_len)
 {
    dstring sig, diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
    
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -1658,13 +1668,15 @@ int drmaa_wtermsig(char *signal, size_t signal_len, int stat, char *error_diagno
 int drmaa_wcoredump(int *core_dumped, int stat, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
    
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -1703,13 +1715,15 @@ int drmaa_wcoredump(int *core_dumped, int stat, char *error_diagnosis, size_t er
 int drmaa_wifaborted(int *aborted, int stat, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
+   dstring *diagp = NULL;
    int ret = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
    
-   ret = japi_was_init_called(&diag);
+   ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
       return ret;
@@ -3332,7 +3346,7 @@ o   -V                                     export all environment variables
 *     MT-NOTE: drmaa_time2sge_time() is MT safe
 *
 *******************************************************************************/
-char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
+static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 {
    /* SGE time format is [[CC]]YY]MMDDhhmm.[ss] */
    /* DRMAA time format is [[[[CC]YY/]MM/]DD] hh:mm[:ss] [{-|+}UU:uu] */
@@ -3809,4 +3823,3 @@ static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
       return 1;
    }
 }
-

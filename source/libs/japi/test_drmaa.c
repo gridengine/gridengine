@@ -469,17 +469,22 @@ const struct test_name2number_map {
 #define FIRST_NON_AUTOMATED_TEST ST_INPUT_BECOMES_OUTPUT
 
 static int test(int *argc, char **argv[], int parse_args);
-static void *submit_and_wait(void *vp);
-static void *submit_sleeper_single(void *vp);
-static void *submit_sleeper(int n);
-static void *submit_input_mirror(int n, const char *mirror_job, 
-      const char *input_path, const char *output_path, const char *error_path, int join);
-static void *do_submit(drmaa_job_template_t *jt, int n);
-static int wait_all_jobs(void *vp);
+static int submit_and_wait(int n);
+static int submit_sleeper(int n);
+static int submit_input_mirror(int n, const char *mirror_job, 
+                               const char *input_path, const char *output_path,
+                               const char *error_path, int join);
+static int do_submit(drmaa_job_template_t *jt, int n);
+static int wait_all_jobs(int n);
 static int wait_n_jobs(int n);
-static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bulk_job, int in_hold);
-static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int as_bulk_job);
+static drmaa_job_template_t *create_sleeper_job_template(int seconds,
+                                                         int as_bulk_job,
+                                                         int in_hold);
+static drmaa_job_template_t *create_exit_job_template(const char *exit_job,
+                                                      int as_bulk_job);
 static void report_session_key(void);
+static void *submit_and_wait_thread (void *v);
+static void *submit_sleeper_thread (void *v);
 
 int str2drmaa_state(const char *str);
 static int str2drmaa_ctrl(const char *str);
@@ -736,7 +741,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          drmaa_delete_job_template(jt, NULL, 0);
 
-         if (wait_all_jobs(&n) != DRMAA_ERRNO_SUCCESS) {
+         if (wait_all_jobs(n) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -854,11 +859,11 @@ static int test(int *argc, char **argv[], int parse_args)
          report_session_key();
 
          for (i=0; i<NTHREADS; i++)
-            pthread_create(&submitter_threads[i], NULL, submit_sleeper_single, &job_chunk);
+            pthread_create(&submitter_threads[i], NULL, submit_sleeper_thread, &job_chunk);
          for (i=0; i<NTHREADS; i++)
             if (pthread_join(submitter_threads[i], NULL)) 
                printf("pthread_join() returned != 0\n");
-         if (wait_all_jobs(&n) != DRMAA_ERRNO_SUCCESS) {
+         if (wait_all_jobs(n) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
 
@@ -878,7 +883,7 @@ static int test(int *argc, char **argv[], int parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
          printf("sleeper_job = %s\n", sleeper_job);
          for (i=0; i<NTHREADS; i++) {
-            pthread_create(&submitter_threads[i], NULL, submit_sleeper_single, &job_chunk);
+            pthread_create(&submitter_threads[i], NULL, submit_sleeper_thread, &job_chunk);
          }
 
          /* delay drmaa_init() */
@@ -893,7 +898,7 @@ static int test(int *argc, char **argv[], int parse_args)
             if (pthread_join(submitter_threads[i], NULL))
                printf("pthread_join() returned != 0\n");
 
-         if (wait_all_jobs(&n) != DRMAA_ERRNO_SUCCESS) {
+         if (wait_all_jobs(n) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -919,7 +924,7 @@ static int test(int *argc, char **argv[], int parse_args)
          report_session_key();
 
          for (i=0; i<NTHREADS; i++)
-            pthread_create(&submitter_threads[i], NULL, submit_sleeper_single, &job_chunk);
+            pthread_create(&submitter_threads[i], NULL, submit_sleeper_thread, &job_chunk);
          sleep(1);
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
@@ -949,7 +954,7 @@ static int test(int *argc, char **argv[], int parse_args)
          report_session_key();
 
          for (i=0; i<NTHREADS; i++)
-            pthread_create(&submitter_threads[i], NULL, submit_and_wait, &job_chunk);
+            pthread_create(&submitter_threads[i], NULL, submit_and_wait_thread, &job_chunk);
 
          for (i=0; i<NTHREADS; i++)
             if (pthread_join(submitter_threads[i], NULL))
@@ -976,7 +981,7 @@ static int test(int *argc, char **argv[], int parse_args)
          report_session_key();
 
          for (i=0; i<NTHREADS; i++)
-            pthread_create(&submitter_threads[i], NULL, submit_and_wait, &job_chunk);
+            pthread_create(&submitter_threads[i], NULL, submit_and_wait_thread, &job_chunk);
          sleep(2);
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
@@ -3594,7 +3599,7 @@ static int test(int *argc, char **argv[], int parse_args)
             
             /* Allow 10 seconds for scheduling and run time.  This test will fail
              * if run at midnight. */
-            if (time_diff > 70) {
+            if (time_diff > 80) {
                printf ("Job took %d seconds longer than expected\n", time_diff - 60);
                failed_test = 1;
             }
@@ -3650,6 +3655,7 @@ static int test(int *argc, char **argv[], int parse_args)
             drmaa_set_vector_attribute(jt, DRMAA_V_ENV, job_env, NULL, 0);
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
             drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/echo", NULL, 0);
+            drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-shell y", NULL, 0);
             set_path_attribute_plus_colon(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);
 
             printf ("Running job\n");
@@ -4123,176 +4129,291 @@ static int test(int *argc, char **argv[], int parse_args)
 }
 
 
-static void *submit_and_wait(void *vp)
-{
+static void *submit_and_wait_thread (void *vp) {
    int n;
-   if (vp) 
+   
+   if (vp != NULL) {
       n = *(int *)vp;
-   else 
+   }
+   else {
       n = 1;
-
-   submit_sleeper_single(&n);
-   wait_all_jobs(&n);
-
-   return NULL;
+   }
+   
+   submit_and_wait (n);
+   
+   return (void *)NULL;
 }
 
-static void *submit_sleeper_single(void *vp)
+static int submit_and_wait(int n)
 {
+   int ret = DRMAA_ERRNO_SUCCESS;
+   
+   ret = submit_sleeper(n);
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = wait_all_jobs(n);
+   }
+
+   return ret;
+}
+
+static void *submit_sleeper_thread (void *vp) {
    int n;
-   if (vp) 
+   
+   if (vp != NULL) {
       n = *(int *)vp;
-   else 
+   }
+   else {
       n = 1;
-   return submit_sleeper(n);
+   }
+
+   submit_sleeper(n);
+   
+   return (void *)NULL;
 }
 
 static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int as_bulk_job)
 {
    const char *job_argv[2];
    drmaa_job_template_t *jt = NULL;
+   int ret = DRMAA_ERRNO_SUCCESS;
 
-   drmaa_allocate_job_template(&jt, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);
+   ret = drmaa_allocate_job_template(&jt, NULL, 0);
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
+   }
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, exit_job, NULL, 0);
+   }
 
-   job_argv[0] = "0"; 
-   job_argv[1] = NULL;
-   drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      job_argv[0] = "0"; 
+      job_argv[1] = NULL;
+      ret = drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+   }
 
-   drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
+   }
 
-   /* no output please */
-   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      /* no output please */
+      ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
+   }
 
-   return jt;
+   if (ret == DRMAA_ERRNO_SUCCESS) {   
+      return jt;
+   }
+   else {
+      return NULL;
+   }
 }
+
 static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bulk_job, int in_hold)
 {
    const char *job_argv[2];
    drmaa_job_template_t *jt = NULL;
    char buffer[100];
+   int ret = DRMAA_ERRNO_SUCCESS;
 
-   drmaa_allocate_job_template(&jt, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, sleeper_job, NULL, 0);
-   sprintf(buffer, "%d", seconds);
-   job_argv[0] = buffer; 
-   job_argv[1] = NULL;
-   drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
+   ret = drmaa_allocate_job_template(&jt, NULL, 0);
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
+   }
+      
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, sleeper_job, NULL, 0);
+   }
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      sprintf(buffer, "%d", seconds);
+      job_argv[0] = buffer; 
+      job_argv[1] = NULL;
+      ret = drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
+   }
 
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
+   }
+
+   if (ret == DRMAA_ERRNO_SUCCESS) {
 #if 0
-   if (!as_bulk_job)
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
-   else
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+      if (!as_bulk_job) {
+         ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
+      }
+      else {
+         ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+      }
 #else
-   /* no output please */
-   drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
+      /* no output please */
+      ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
 #endif
+   }
 
-   if (in_hold) 
-      drmaa_set_attribute(jt, DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_HOLD, NULL, 0);
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      if (in_hold) {
+         ret = drmaa_set_attribute(jt, DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_HOLD, NULL, 0);
+      }
+   }
 
-   return jt;
+   if (ret == DRMAA_ERRNO_SUCCESS) {   
+      return jt;
+   }
+   else {
+      return NULL;
+   }
 }
 
-static void *submit_sleeper(int n)
+static int submit_sleeper(int n)
 {
    drmaa_job_template_t *jt;
-   void *p;
+   int ret = DRMAA_ERRNO_SUCCESS;
 
    jt = create_sleeper_job_template(10, 0, 0);
-   p = do_submit(jt, n);
-   drmaa_delete_job_template(jt, NULL, 0);
+   
+   if (jt != NULL) {
+      ret = do_submit(jt, n);
+   
+      /* We don't care about the error code from this one.  It doesn't affect
+       * anything. */
+      drmaa_delete_job_template(jt, NULL, 0);
+   }
 
-   return p;
+   return ret;
 }
 
-static void *submit_input_mirror(int n, const char *mirror_job, 
-      const char *input_path, const char *output_path, const char *error_path, int join)
+static int submit_input_mirror(int n, const char *mirror_job, 
+                               const char *input_path, const char *output_path,
+                               const char *error_path, int join)
 {
    drmaa_job_template_t *jt = NULL;
-   void *p;
    char buffer[10000];
+   int ret = DRMAA_ERRNO_SUCCESS;
 
-   drmaa_allocate_job_template(&jt, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
-   drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, mirror_job, NULL, 0);
-   if (join)
-      drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
-   else
-      drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "n", NULL, 0);
-
-   if (input_path) {
-      strcpy(buffer, ":");
-      strcat(buffer, input_path);
-      drmaa_set_attribute(jt, DRMAA_INPUT_PATH, buffer, NULL, 0);
+   ret = drmaa_allocate_job_template(&jt, NULL, 0);
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_WD, DRMAA_PLACEHOLDER_HD, NULL, 0);
    }
-   if (output_path) {
-      strcpy(buffer, ":");
-      strcat(buffer, output_path);
-      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, buffer, NULL, 0);
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, mirror_job, NULL, 0);
    }
-   if (error_path) {
-      strcpy(buffer, ":");
-      strcat(buffer, error_path);
-      drmaa_set_attribute(jt, DRMAA_ERROR_PATH, buffer, NULL, 0);
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      if (join) {
+         ret = drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
+      }
+      else {
+         ret = drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "n", NULL, 0);
+      }
+   }
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      if (input_path) {
+         strcpy(buffer, ":");
+         strcat(buffer, input_path);
+         ret = drmaa_set_attribute(jt, DRMAA_INPUT_PATH, buffer, NULL, 0);
+      }
+   }
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      if (output_path) {
+         strcpy(buffer, ":");
+         strcat(buffer, output_path);
+         ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, buffer, NULL, 0);
+      }
+   }
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      if (error_path) {
+         strcpy(buffer, ":");
+         strcat(buffer, error_path);
+         ret = drmaa_set_attribute(jt, DRMAA_ERROR_PATH, buffer, NULL, 0);
+      }
+   }
+   
+   if (ret == DRMAA_ERRNO_SUCCESS) {
+      ret = do_submit(jt, n);
+
+      /* We don't care about the error code here because it doesn't affect
+       * anything. */
+      drmaa_delete_job_template(jt, NULL, 0);
    }
 
-   p = do_submit(jt, n);
-
-   drmaa_delete_job_template(jt, NULL, 0);
-
-   return p;
+   return ret;
 }
 
-static void *do_submit(drmaa_job_template_t *jt, int n)
+static int do_submit(drmaa_job_template_t *jt, int n)
 {
    int i;
    char diagnosis[1024];
    char jobid[100];
-   int drmaa_errno;
+   int drmaa_errno = DRMAA_ERRNO_SUCCESS;
+   int error = DRMAA_ERRNO_SUCCESS;
 
    for (i=0; i<n; i++) {
       /* submit job */
-      while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
-         if ((test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT || 
-              test_case == MT_EXIT_DURING_SUBMIT) 
-              && drmaa_errno == DRMAA_ERRNO_NO_ACTIVE_SESSION) {
-            break;
+      while (true) {
+         drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            printf("failed submitting job (%s)\n", drmaa_strerror(drmaa_errno));
          }
-         printf("failed submitting job (%s) retry: %s\n", drmaa_strerror(drmaa_errno), diagnosis);
-         sleep(1);
+         
+         /* Only retry on "try again" error. */
+         if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
+            printf("retry: %s\n", diagnosis);
+            sleep(1);
+         }
+         else {
+            break; /* while */
+         }
       }
-      if (drmaa_errno== DRMAA_ERRNO_SUCCESS)
+      
+      if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("submitted job \"%s\"\n", jobid);
+      }
+      else {
+         printf("unable to submit job\n");
+      }
+      
+      if (((test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT) || 
+           (test_case == MT_EXIT_DURING_SUBMIT)) &&
+          (drmaa_errno == DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
+         /* It's supposed to do that. */
+         drmaa_errno = DRMAA_ERRNO_SUCCESS;
+      }
+      
+      if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+         /* If there is ever an error, we will return an error. */
+         error = drmaa_errno;
+      }
    }
 
-   return NULL;
+   return error;
 }
 
-static int wait_all_jobs(void *vp)
+static int wait_all_jobs(int n)
 {
    char jobid[100];
-   int n, drmaa_errno = DRMAA_ERRNO_SUCCESS;
+   int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int stat;
-
-   if (vp) 
-      n = *(int *)vp;
-   else 
-      n = -1; /* all */
 
    do {
       drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
+      
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
-         if (n != -1)
+         if (n != -1) {
             if (--n == 0) {
                printf("waited for last job\n");
                break;
             }
+         }
       } else if (drmaa_errno != DRMAA_ERRNO_INVALID_JOB) {
          printf("drmaa_wait() returned %s\n", drmaa_strerror(drmaa_errno));
       }
@@ -4303,8 +4424,9 @@ static int wait_all_jobs(void *vp)
       printf("no more jobs to wait\n");
       drmaa_errno = DRMAA_ERRNO_SUCCESS;
    }
-   if (drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE  && 
-         test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT) {
+   else if ((drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) &&
+            (test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT)) {
+      /* It's supposed to do that. */
       drmaa_errno = DRMAA_ERRNO_SUCCESS;
    }
 
@@ -4316,20 +4438,38 @@ static int wait_n_jobs(int n)
    char jobid[100];
    int i, stat;
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
+   int error = DRMAA_ERRNO_SUCCESS;
 
    for (i=0; i<n; i++) {
-      do {
-         drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, 
-                  DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
+      while (true) {
+         drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid,
+                                  sizeof(jobid)-1, &stat,
+                                  DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
+         
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
-            printf("drmaa_wait() returned %s\n", drmaa_strerror(drmaa_errno));
+            printf("failed waiting for job (%s)\n", drmaa_strerror(drmaa_errno));
+         }
+         
+         /* Only retry on "try again" error. */
+         if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
+            printf("retry...\n");
             sleep(1);
          }
-      } while (drmaa_errno != DRMAA_ERRNO_SUCCESS);
-      printf("waited job \"%s\"\n", jobid);
+         else {
+            break;
+         }
+      }
+
+      if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
+         printf("waited job \"%s\"\n", jobid);
+      }
+      else {
+         /* If there is ever an error, we will return an error. */
+         error = drmaa_errno;
+      }
    }
 
-   return drmaa_errno;
+   return error;
 }
 
 static void report_session_key(void) 

@@ -65,6 +65,7 @@
 #include "sge_unistd.h"
 #include "sge_string.h"
 #include "sge_bootstrap.h"
+#include "uti/sge_hostname.h"
 
 /* COMMLIB */
 #include "commlib.h"
@@ -97,6 +98,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_range.h"
 #include "msg_common.h"
+#include "gdi/sge_any_request.h"
 
 /* OBJ */
 #include "sge_jobL.h"
@@ -401,9 +403,10 @@ static void japi_dec_threads(const char *func)
 *******************************************************************************/
 int japi_init_mt(dstring *diag)
 {
-   int gdi_errno;
    lList *alp = NULL;
-  
+   cl_com_handle_t* handle = NULL;
+   int gdi_errno;
+   
    /* never print errors to console always return them only in diag */
    log_state_set_log_gui(0);
 
@@ -429,9 +432,31 @@ int japi_init_mt(dstring *diag)
    if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
       answer_to_dstring(lFirst(alp), diag);
       lFreeList(alp);
+      japi_session = JAPI_SESSION_INACTIVE;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
+   /* Make sure the commlib handle exists  If it doesn't, create it. */
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
+   
+   if (handle == NULL) {
+/* Not sure which way is better. */
+#if 0
+      prepare_enroll(prognames[prog_number], 0, NULL);
+      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
+#else
+      handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,
+                                    sge_get_qmaster_port(),
+                                    (char*)prognames[uti_state_get_mewho()], 0,
+                                    1, 0);      
+#endif
+   }
+
+   if (handle == NULL) {
+      sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE);
+      return DRMAA_ERRNO_INTERNAL_ERROR;
+   }
+   
    return DRMAA_ERRNO_SUCCESS;
 }
 
@@ -501,7 +526,7 @@ int japi_init(const char *contact, const char *session_key_in,
               error_handler_t handler, dstring *diag)
 {
    int ret;
-
+  
    DENTER(TOP_LAYER, "japi_init");
 
    JAPI_LOCK_SESSION();
@@ -523,9 +548,7 @@ int japi_init(const char *contact, const char *session_key_in,
 
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
-      JAPI_LOCK_SESSION();
       japi_session = JAPI_SESSION_INACTIVE;
-      JAPI_UNLOCK_SESSION();
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -1015,9 +1038,13 @@ int japi_exit(bool close_session, int flag, dstring *diag)
          japi_ec_state = JAPI_EC_FINISHING;
          JAPI_UNLOCK_EC_STATE();
 
+/* This call appears to be causing several problems. */
+#if 1
          /* This call will cause the event client thread to return immediately
           * from ec_get(), which is the only place it could be blocked. */
          cl_com_ignore_timeouts(CL_TRUE);
+#endif
+
          DPRINTF (("Waiting for event client to terminate.\n"));
          pthread_join (japi_event_client_thread, (void *)&value);
          japi_ec_state = JAPI_EC_DOWN;
@@ -1074,7 +1101,7 @@ int japi_exit(bool close_session, int flag, dstring *diag)
     * ask the GDI to ask the event client to shutdown.  If we've gotten here,
     * the event client thread is stopped and no further communications are
     * needed. */
-#if 1
+
    /* 
     * disconnect from commd
     */
@@ -1085,7 +1112,10 @@ int japi_exit(bool close_session, int flag, dstring *diag)
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
-#endif
+
+   /* Restore timeouts in case japi_init() gets called again. */
+   cl_com_ignore_timeouts(CL_FALSE);
+   
    /* We have to wait to free the job list until any waiting or syncing threads
     * have exited.  Otherwise, they may think their jobs exited badly. */
    JAPI_LOCK_JOB_LIST();    
@@ -1994,8 +2024,22 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
                if (id_list) {
                   /* This function frees id_list */
-                  int ret = DRMAA_ERRNO_SUCCESS;
+                  int ret = DRMAA_ERRNO_SUCCESS;                  
+                  lList *idlp = NULL;
+                  lListElem *idp = NULL;
                   
+                  /* Look for jobs from any user. */
+                  for_each (idp, id_list) {
+                     idlp = lGetList (idp, ID_user_list);
+
+                     if (idlp == NULL) {
+                        idlp = lCreateList ("User List", ST_Type);
+                        lSetList (idp, ID_user_list, idlp);
+                     }
+
+                     lAddElemStr (&idlp, ST_name, "*", ST_Type);
+                  }
+
                   JAPI_ENTER_CR();
                   ret = do_gdi_delete (&id_list, drmaa_action, diag);
                   JAPI_EXIT_CR();
@@ -2031,6 +2075,20 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
          if (id_list) {
             int ret = DRMAA_ERRNO_SUCCESS;
+            lList *idlp = NULL;
+            lListElem *idp = NULL;
+
+            /* Look for jobs from any user. */
+            for_each (idp, id_list) {
+               idlp = lGetList (idp, ID_user_list);
+
+               if (idlp == NULL) {
+                  idlp = lCreateList ("User List", ST_Type);
+                  lSetList (idp, ID_user_list, idlp);
+               }
+
+               lAddElemStr (&idlp, ST_name, "*", ST_Type);
+            }
 
             JAPI_ENTER_CR();
             /* This function frees id_list */
@@ -4751,7 +4809,7 @@ static int do_gdi_delete (lList **id_list, int action, dstring *diag)
    lListElem *aep = NULL;
 
    DENTER (TOP_LAYER, "do_gdi_delete");
-   
+
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, id_list, NULL, NULL);
    *id_list = lFreeList(*id_list);
 
@@ -4763,9 +4821,9 @@ static int do_gdi_delete (lList **id_list, int action, dstring *diag)
          return ret;
       }
    }
-   
+
    alp = lFreeList(alp);
-   
+
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }

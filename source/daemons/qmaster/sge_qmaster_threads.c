@@ -387,7 +387,7 @@ void sge_create_and_join_threads(void)
    enum { NUM_THRDS = 5 };
 
    pthread_t tids[NUM_THRDS];
-   int threads = 1;
+   int threads = 2;
    int i;
 
    DENTER(TOP_LAYER, "sge_create_and_join_threads");

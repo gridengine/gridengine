@@ -1,3 +1,6 @@
+AD-2003-10-02-1: Bugfix.:   Fixed the build
+                 Changed:   schedd_message.h
+
 AD-2003-10-02-0: Enhancem.: Added new library ('liblck') which provides
                             a locking API to be used by lock clients and
                             lock service providers. 

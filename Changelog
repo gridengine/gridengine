@@ -1,3 +1,8 @@
+SD-2003-01-22-2  Enhancem.  Added code to source/libs/cull/cull_list.c to
+                            randomize the elements before calling qsort. This
+                            code is currently turned off until tests can
+                            be run to find out if it improves performance.
+
 AH-2003-01-22-1  Bugfix:    STRING complex attribute handling with RELOP "!=" is
                             broken
                  IZ:        #450

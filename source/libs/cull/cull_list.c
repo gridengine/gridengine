@@ -2074,8 +2074,20 @@ int lSortList(lList *lp, const lSortOrder *sp)
       return -1;                /* low memory */
    }
 
+#ifdef RANDOMIZE_QSORT_ELEMENTS
+
+   for (i = 0, ep = lFirst(lp); ep; i++, ep = lNext(ep)) {
+      int j = (int)((double)i*rand()/(RAND_MAX+1.0));
+      pointer[i] = pointer[j];
+      pointer[j] = ep;
+   }
+
+#else
+
    for (i = 0, ep = lFirst(lp); ep; i++, ep = lNext(ep))
       pointer[i] = ep;
+
+#endif
 
    /* 
     * step 2: sort the pointer array using parsed sort order 

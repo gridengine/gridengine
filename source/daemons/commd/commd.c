@@ -188,11 +188,9 @@ char **argv
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
-   prog_mt_init();
    log_mt_init();
    uidgid_mt_init();
    path_mt_init();
-   cull_mt_init();
    bootstrap_mt_init();
    feature_mt_init();
 

@@ -32,11 +32,9 @@
 
 #include "sge_mt_init.h"
 
-#include "sge_prog.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"
 #include "setup_path.h"
-#include "cull_state.h"
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
 #include "sec_lib.h"
@@ -74,11 +72,9 @@
 *******************************************************************************/
 void sge_mt_init(void)
 {
-   prog_mt_init();
    log_mt_init();
    uidgid_mt_init();
    path_mt_init();
-   cull_mt_init();
 
    bootstrap_mt_init(); 
    feature_mt_init();

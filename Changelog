@@ -1,3 +1,6 @@
+AD-2003-12-24-0: Bugfix:    Did fix 'AD-2003-12-22-1' and 'AD-2003-12-23-0'
+                 Changed:   cull uti
+
 JG-2003-12-23-0: Enhancem.: Added infrastructure for job logging and basic job
                             logging functionality.
                             Added reporting_params in the global config.

@@ -50,7 +50,6 @@
 #include "sge_gdiP.h"
 #include "commlib.h"
 #include "cull_list.h"
-#include "cull_state.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
@@ -106,15 +105,11 @@ static void gdi_init_mt(void) {
   
 void gdi_once_init(void) {
    /* uti */
-   prog_mt_init();
    log_mt_init();
    uidgid_mt_init();
 
    bootstrap_mt_init();
    feature_mt_init();
-
-   /* cull */
-   cull_mt_init();
 
    /* commlib */
    commlib_mt_init();

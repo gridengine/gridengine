@@ -106,8 +106,6 @@ extern const char *prognames[];
 
 void sge_getme(u_long32 sge_formal_prog_name);
 
-void prog_mt_init(void);
-
 const char *    uti_state_get_sge_formal_prog_name(void);
 const char *    uti_state_get_qualified_hostname(void);
 const char *    uti_state_get_unqualified_hostname(void);

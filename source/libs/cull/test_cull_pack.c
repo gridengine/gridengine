@@ -53,8 +53,6 @@ int main(int argc, char *argv[])
    FILE *fd;
    char *buffer;
 
-   cull_mt_init();
-
    lInit(nmv);
 
    /* create an element */

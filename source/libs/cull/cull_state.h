@@ -36,8 +36,6 @@
 #include "cull_list.h"
 
 
-void cull_mt_init(void);
-
 void cull_state_set_lerrno(int i);
 void cull_state_set_noinit(char *s);
 void cull_state_set_global_sort_order(const lSortOrder *so);

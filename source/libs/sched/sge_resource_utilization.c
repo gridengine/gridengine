@@ -410,7 +410,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
       slots = 0;
       for (next_gel = lGetElemHostFirst(a->gdil, JG_qhostname, eh_name, &queue_iterator);
           (gel = next_gel);
-           next_gel = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &queue_iterator)) {
+         next_gel = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &queue_iterator)) {
          
          slots += lGetUlong(gel, JG_slots);
       }

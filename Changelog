@@ -1,3 +1,6 @@
+AH-2004-02-19-1: Bugfix:    sge_schedd crashed when parallel jobs were assigned 
+                            into more than one queues instance of the same host.
+
 AS-2004-02-19-0  Cleanup:   removed/add compiler warning level switches
                             compile with +O2 on HP11 due to compiler bug
                             Unify HP11 and HP1164 settings in one section

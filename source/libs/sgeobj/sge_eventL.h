@@ -180,7 +180,17 @@ NAMEEND
 
 
 
-/* documentation see libs/evc/sge_event_client.c */
+/* documentation see libs/evc/sge_event_client.c       */
+/*                                                     */
+/* If this enum is changed, one has to be aware of the */
+/* the following arrays in libs/evm/sge_event_master.c */
+/*    block_events                                     */
+/*    total_update_events                              */
+/*    EVENT_LIST                                       */
+/*    FIELD_LIST                                       */
+/*    SOURCE_LIST                                      */
+/* They might have to be addapted as well.             */
+
 typedef enum {
    sgeE_ALL_EVENTS,                 /* + = impl. and tested, - = not available */
 

@@ -69,7 +69,7 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-DRMAAJ_FILES="../CLASSES/drmaa.jar"
+DRMAAJ_FILES="CLASSES/drmaa.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -727,6 +727,7 @@ for prog in $PROG; do
             instdoc=true
             insttxtdoc=true
             instjavadoc=true
+            instjava=true
             ;;
          esac    
          ;;
@@ -865,7 +866,7 @@ if [ $instcommon = true ]; then
       MakeDir examples
       MakeDir examples/jobs      
       Execute cp dist/examples/jobs/*.sh $DEST_SGE_ROOT/examples/jobs
-      Execute chmod 755 dist/examples/jobs/*.sh
+      Execute chmod 755 $DEST_SGE_ROOT/examples/jobs/*.sh
       MakeDir examples/drmaa
       Execute cp libs/japi/example.c $DEST_SGE_ROOT/examples/drmaa
       Execute cp libs/japi/howto/*.c $DEST_SGE_ROOT/examples/drmaa
@@ -934,6 +935,16 @@ if [ $instcommon = true ]; then
       Cleanup include
    fi
 
+   if [ $instjava = true ]; then
+      for filename in $DRMAAJ_FILES; do
+         if [ -f $filename ]; then
+            echo Installing DRMAA jar file \"`basename $filename`\"
+            Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
+            Install 0.0 755 $filename $DEST_SGE_ROOT/lib
+         fi
+      done
+   fi
+
    if [ $instmpi = true ]; then
       echo Installing \"mpi/\"
       rm -rf $DEST_SGE_ROOT/mpi
@@ -998,12 +1009,13 @@ if [ $instcommon = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
-#      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-DRMAA-Java.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
    fi
 
+   # this rule must come *after* the "insttxtdoc" rule
    if [ $instjavadoc = true ]; then
       if [ -d ../doc/javadocs ]; then
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
@@ -1013,6 +1025,7 @@ if [ $instcommon = true ]; then
          Cleanup doc/javadocs
       fi
    fi
+
 
    if [ $instckpt = true ]; then
       echo Installing \"ckpt/\"
@@ -1294,13 +1307,6 @@ for i in $ARCH; do
             ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
          fi
 
-         for filename in $DRMAAJ_FILES; do
-            if [ -f $filename ]; then
-                echo Installing `basename $filename`
-                Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
-                Install 0.0 755 $filename $DEST_SGE_ROOT/lib
-            fi
-         done
       fi
       cd ..
    fi     

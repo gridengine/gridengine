@@ -541,6 +541,7 @@ char *rhost
    ev_d_time    = lGetUlong(clio, EV_d_time);
    subscription = lGetString(clio, EV_subscription);
 
+   /* check for validity */
    if(ev_d_time < 1) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, u32c(ev_d_time)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -555,10 +556,18 @@ char *rhost
       return STATUS_ESEMANTIC;
    }
 
+   /* event delivery interval changed. 
+    * We have to update the next delivery time to 
+    * next_delivery_time - old_interval + new_interval 
+    */
    if(ev_d_time != lGetUlong(event_client, EV_d_time)) {
+      lSetUlong(event_client, EV_next_send_time, 
+                lGetUlong(event_client, EV_next_send_time) - 
+                lGetUlong(event_client, EV_d_time) + ev_d_time);
       lSetUlong(event_client, EV_d_time, ev_d_time);
    }
 
+   /* subscription changed */
    old_subscription = lGetString(event_client, EV_subscription);
    if(strcmp(subscription, old_subscription) != 0) {
       lSetString(event_client, EV_subscription, subscription);
@@ -586,6 +595,7 @@ char *rhost
 #endif      
    }
 
+   /* busy state changed */
    if(busy != lGetUlong(event_client, EV_busy)) {
       lSetUlong(event_client, EV_busy, busy);
    }

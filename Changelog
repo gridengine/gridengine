@@ -1,3 +1,7 @@
+JG-2002-10-11-1  Bugfix:    Changing the event delivery interval of an event 
+                            client had only effect for the next but one 
+                            delivery.
+
 JG-2002-10-11-0  Bugfix:    qlogin and qrsh checked the DISPLAY variable
                             this is only necessary for qsh.
 

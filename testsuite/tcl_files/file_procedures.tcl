@@ -216,6 +216,143 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
    return $file_name
 }
 
+#****** file_procedures/create_gnuplot_xy_gif() ********************************
+#  NAME
+#     create_gnuplot_xy_gif() -- create xy chart with gnuplot application
+#
+#  SYNOPSIS
+#     create_gnuplot_xy_gif { data_array_name row_array_name } 
+#
+#  FUNCTION
+#     This procedure works only if the gnuplot binary is in the local user path.
+#
+#  INPUTS
+#     data_array_name(output_file) - chart output file (gif format) 
+#     data_array_name(xlabel)      - chart label for x axis
+#     data_array_name(ylabel)      - chart label for y axis
+#     data_array_name(title)       - chart title
+#
+#     row_array_name(ROW,COUNTER,x) - x value for data ROW, position COUNTER
+#     row_array_name(ROW,COUNTER,y) - y value for data ROW, position COUNTER
+#     row_array_name(ROW,drawmode)  - drawmode for data ROW 
+#                                     (="lines", "linespoints", "points", ...)
+#     row_array_name(ROW,title)     - title for data ROW
+#     row_array_name(ROW,show)      - show data ROW ( 0=don't show, 1=show row)
+#
+#  EXAMPLE
+#     for { set i 0 } { $i < 300 } { incr i 1 }  {
+#        set x [ expr ( $i / 100.00 ) ]
+#        set dr1(0,$i,y) [expr ( sin($x) )]
+#        set dr1(0,$i,x) $x 
+#        set dr1(1,$i,y) [expr ( cos($x) )]
+#        set dr1(1,$i,x) $x
+#     }
+#     set dr1(0,drawmode) "lines"  ;# or linespoints
+#     set dr1(0,title) "sin(x)"
+#     set dr1(0,show) 1
+#     set dr1(1,drawmode) "lines"
+#     set dr1(1,title) "cos(x)"
+#     set dr1(1,show) 1
+#  
+#     set test(output_file) [get_tmp_file_name]
+#     set test(xlabel) "x"
+#     set test(ylabel) "y"
+#     set test(title)  "sin(x) and cos(x)"
+#     create_gnuplot_xy_gif test dr1
+#
+#*******************************************************************************
+proc create_gnuplot_xy_gif { data_array_name row_array_name } {
+
+   global CHECK_HOST CHECK_USER CHECK_OUTPUT CHECK_TESTSUITE_ROOT
+
+   upvar $data_array_name data
+   upvar $row_array_name rows
+
+
+   # generate data files
+   set file_name_list ""
+   set drawmode_list ""
+   set title_list ""
+
+   set datarows 0
+   set row_index ""
+   while { [info exists rows($datarows,0,x) ] } {
+      lappend row_index $datarows
+      incr datarows 1 
+   }
+
+   set command_file [get_tmp_file_name]
+   set cmd_file [open $command_file w]
+
+
+   foreach row $row_index {
+      if { $rows($row,show) == 0 } {
+         continue
+      }
+
+      set file_name [get_tmp_file_name "" "$row"]
+      lappend file_name_list $file_name
+      set file_pointer [open $file_name w]
+
+      set counter 0
+      while { [ info exists rows($row,$counter,x)] && [ info exists rows($row,$counter,y)] } {
+         set x_val $rows($row,$counter,x)
+         set y_val $rows($row,$counter,y)
+         puts $file_pointer "$x_val $y_val"
+         incr counter 1
+      }
+      close $file_pointer
+
+      if { [ info exists rows($row,drawmode) ] } {
+         lappend drawmode_list $rows($row,drawmode)
+      } else {
+         lappend drawmode_list "linespoints"
+      }
+      if { [ info exists rows($row,title) ] } {
+         lappend title_list $rows($row,title)
+      } else {
+         lappend title_list "row $row"
+      }
+   }
+
+
+   set command_file [get_tmp_file_name "" "cmd"]
+   set cmd_file [open $command_file w]
+   puts $cmd_file "set terminal gif"
+   puts $cmd_file "set output \"$data(output_file)\""
+#   puts $cmd_file "set xtics (0,1,2,3,4,5,6,7,8,9,10)"
+#   puts $cmd_file "set ytics (0,5,10)"
+   puts $cmd_file "set xlabel \"$data(xlabel)\""
+   puts $cmd_file "set ylabel \"$data(ylabel)\""
+   puts $cmd_file "set title \"$data(title)\""
+#   puts $cmd_file "set pointsize 1.5"
+
+   puts -nonewline $cmd_file "plot "
+   for { set i 0 } { $i < [llength $file_name_list] } { incr i 1 } {
+      set filename [lindex $file_name_list $i]
+      set drawmode [lindex $drawmode_list $i]
+      set title    [lindex $title_list $i]
+      if { $i > 0 } {
+         puts -nonewline $cmd_file ", "
+      }
+      puts -nonewline $cmd_file "'$filename' index 0 title \"$title\" with $drawmode"
+   }
+   close $cmd_file
+
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER gnuplot $command_file prg_exit_state 60 0 "" 1 0 0]
+   if { $prg_exit_state == 0 } {
+      return $data(output_file)
+   } else {
+      puts $CHECK_OUTPUT $result
+      add_proc_error "create_gnuplot_xy_gif" -3 "error starting gnuplot:\n$result"
+      catch { file copy $CHECK_TESTSUITE_ROOT/images/no_gnuplot.gif $data(output_file) }
+
+      return $data(output_file)
+   }
+}
+
+
+
 #****** file_procedures/dump_array_data() **************************************
 #  NAME
 #     dump_array_data() -- dump array data to $CHECK_OUTPUT

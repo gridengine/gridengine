@@ -39,14 +39,14 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spoolinit \
-                 tst_pthread_signals fstype gridping
+                 tst_pthread_signals fstype qping
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spoolinit.c \
-               tst_pthread_signals.c fstype.c gridping.c
+               tst_pthread_signals.c fstype.c qping.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -98,11 +98,11 @@ gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
 
 #---------------------------------------------------------------------
-gridping:	gridping.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gridping.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(LIBS)
+qping:	qping.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+		$(CC) -o $@ qping.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(LIBS)
 
-gridping.o:	$(UTILBIN_DIR)/gridping.c
-		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gridping.c
+qping.o:	$(UTILBIN_DIR)/qping.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/qping.c
 
 
 #---------------------------------------------------------------------

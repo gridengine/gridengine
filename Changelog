@@ -1,3 +1,8 @@
+AD-2003-09-03-1: Cleanup:   Rearrangement of high level message handling code.
+
+                 Changed:   sge_qmaster
+                 Review:    AH
+
 AD-2003-09-03-0: Bugfix:    Fixed build on Mac OS X. Removed unused variable.
 
                  Changed:   sge_cqueue.c

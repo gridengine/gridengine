@@ -48,181 +48,251 @@
 #include "sge_c_report.h"
 #include "qmaster.h"
 
-/****** sge_qmaster_process_message() *********************************************
+
+typedef struct {
+   char snd_host[MAXHOSTLEN];      /* sender hostname; NULL -> all */
+   char snd_name[MAXCOMPONENTLEN]; /* sender name (aka 'commproc'); NULL -> all */
+   u_short snd_id;                 /* sender identifier; 0 -> all */
+   int tag;                        /* message tag; TAG_NONE -> all */
+   sge_pack_buffer buf;            /* message buffer */
+} msg_t;
+
+static int determine_timeout(void);
+static void do_gdi_request(msg_t *aMsg);
+static void do_report_request(msg_t *aMsg);
+
+
+/****** sge_qmaster_process_message/sge_qmaster_process_message() **************
 *  NAME
-*     sge_qmaster_process_message() -- process message
+*     sge_qmaster_process_message() -- Entry point for qmaster message handling
 *
 *  SYNOPSIS
-*     void *sge_qmaster_process_message(void *anArg)
+*     void* sge_qmaster_process_message(void *anArg) 
 *
 *  FUNCTION
-*     This function is intended to be used as a 'thread function' later. Hence
-*     the function signature.
+*     Determine timeout for communication. Get a pending message. Handle message
+*     based on message tag.
+* 
 *
 *  INPUTS
-*     void *anArg - not used
+*     void *anArg - none 
 *
 *  RESULT
-*     void * - returns 'anArg'
+*     void* - none
 *
-******************************************************************************/
+*  NOTES
+*     'sge_get_any_request()' could raise a signal 'SIGPIPE'. This happens,
+*     if we try to write a socket which has been closed by the receiving
+*     side. In this case we just 'ignore' the signal by resetting the
+*     'sigpipe_received' variable.
+*     
+*     This function is intended to be used as a 'thread function' Hence the 
+*     signature.
+*
+*     MT-NOTE: thread safety needs to be verified!
+*
+*******************************************************************************/
 void *sge_qmaster_process_message(void *anArg)
 {
-   enum { TIMELEVEL = 0 };
-
-   char host[MAXHOSTLEN];
-   char commproc[MAXCOMPONENTLEN];
-   u_short id;
-   int i, tag;
-   time_t now, next_flush;
-   int old_timeout, rcv_timeout;
-   sge_pack_buffer pb;
-   sge_gdi_request *gdi = NULL;
-   sge_gdi_request *ar = NULL;
-   sge_gdi_request *an = NULL;
-   sge_gdi_request *answer = NULL;
-   lList *report_list = NULL;
-
+   int old, new; /* timeout values */
+   int res;
+   msg_t msg;
 
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
-   host[0] = '\0';
-   commproc[0] = '\0';
-   id = 0;
-   tag = 0; /* we take everyting */
-
-   now = sge_get_gmt();
-   next_flush = sge_next_flush(now);
-   DPRINTF(("next_flush: "u32" now: "u32"\n", next_flush, now));
+   memset((void*)&msg, 0, sizeof(msg_t));
    
-   old_timeout = commlib_state_get_timeout_srcv();
+   old = commlib_state_get_timeout_srcv();
+   new = determine_timeout();
 
-   if (next_flush && ((next_flush - now) >= 0))
-      rcv_timeout = MIN(MAX(next_flush - now, 2), 20);
-   else
-      rcv_timeout = 20;
+   DPRINTF(("setting sync receive timeout to %d seconds\n", new));
       
-   set_commlib_param(CL_P_TIMEOUT_SRCV, rcv_timeout, NULL, NULL);
-
-   DPRINTF(("setting sync receive timeout to %d seconds\n", rcv_timeout));
-
-   i = sge_get_any_request(host, commproc, &id, &pb, &tag, 1);
-
-   set_commlib_param(CL_P_TIMEOUT_SRCV, old_timeout, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SRCV, new, NULL, NULL);
+   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1);
+   set_commlib_param(CL_P_TIMEOUT_SRCV, old, NULL, NULL);
 
    if (sigpipe_received) {
       sigpipe_received = 0;
       INFO((SGE_EVENT, "SIGPIPE received"));
    }
    
-   if (i != CL_OK) {
-      sge_stopwatch_log(TIMELEVEL, "sge_get_any_request != 0");
-      
-      if ( i != COMMD_NACK_TIMEOUT ) {
-         DPRINTF(("Problems reading request: %s\n", cl_errstr(i)));
-         sleep(2);
-      }
+   if (res != CL_OK) {
+      DPRINTF(("sge_get_any_request returned: %s\n", cl_errstr(res)));
       return anArg;              
    }
-   else {
-      sge_stopwatch_log(TIMELEVEL, "sge_get_any_request == 0");
-      sge_stopwatch_start(TIMELEVEL);
-   }
 
-   switch (tag) {
-
-   /* ======================================== */
-#ifdef SECURE
-   case TAG_SEC_ANNOUNCE:    /* completly handled in libsec  */
-      clear_packbuffer(&pb);
-      sge_stopwatch_log(TIMELEVEL, "request handling SEC_ANNOUNCE");
-      break;
-#endif
-
-   /* ======================================== */
-   case TAG_GDI_REQUEST:
-
-      if (sge_unpack_gdi_request(&pb, &gdi)) {
-         ERROR((SGE_EVENT,MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI,
-            host, commproc, (int)id));
-         clear_packbuffer(&pb);   
+   switch (msg.tag)
+   {
+      case TAG_SEC_ANNOUNCE:
+         break; /* All processing done in libsec */
+      case TAG_GDI_REQUEST:
+         do_gdi_request(&msg);
          break;
-      }
-      clear_packbuffer(&pb);
-
-      for (ar = gdi; ar; ar = ar->next) { 
-          
-         /* use id, commproc and host for authentication */  
-         ar->id = id;
-         ar->commproc = sge_strdup(NULL, commproc); 
-         ar->host = sge_strdup(NULL, host);
-
-#ifndef __SGE_NO_USERMAPPING__
-         /* perform administrator user mapping with sge_gdi_request
-            structure, this can change the user name (ar->user) */
-         sge_map_gdi_request(ar);
-#endif
-
-         if (ar == gdi) {
-            answer = an = new_gdi_request();
-         }
-         else {
-            an->next = new_gdi_request();
-            an = an->next;
-         }
-
-         sge_c_gdi(host, ar, an);
-      }
-
-      sge_send_gdi_request(0, host, commproc, (int)id, answer);
-      answer = free_gdi_request(answer);
-      gdi = free_gdi_request(gdi);
-      sge_stopwatch_log(TIMELEVEL, "request handling GDI_REQUEST");
-
-      break;
-   /* ======================================== */
-   case TAG_ACK_REQUEST:
-
-      DPRINTF(("SGE_ACK_REQUEST(%s/%s/%d)\n", host, commproc, id));
-
-      sge_c_ack(host, commproc, &pb);
-      clear_packbuffer(&pb);
-      sge_stopwatch_log(TIMELEVEL, "request handling ACK_REQUEST");
-      break;
-
-   /* ======================================== */
-   case TAG_EVENT_CLIENT_EXIT:
-
-      DPRINTF(("SGE_EVENT_CLIENT_EXIT(%s/%s/%d)\n", host, commproc, id));
-
-      sge_event_client_exit(host, commproc, &pb);
-      clear_packbuffer(&pb);
-      sge_stopwatch_log(TIMELEVEL, "request handling EVENT_CLIENT_EXIT");
-      break;
-
-   /* ======================================== */
-   case TAG_REPORT_REQUEST: 
-
-      DPRINTF(("SGE_REPORT(%s/%s/%d)\n", host, commproc, id));
-
-      if (cull_unpack_list(&pb, &report_list)) {
-         ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
+      case TAG_ACK_REQUEST:
+         sge_c_ack(msg.snd_host, msg.snd_name, &(msg.buf));
          break;
-      }
-      clear_packbuffer(&pb);
-
-      sge_c_report(host, commproc, id, report_list);
-      lFreeList(report_list);
-      report_list = NULL;
-      sge_stopwatch_log(TIMELEVEL, "request handling REPORT");
-      break;
-
-   /* ======================================== */
-   default:
-      DPRINTF(("***** UNKNOWN TAG TYPE %d\n", tag));
-      clear_packbuffer(&pb);
+      case TAG_EVENT_CLIENT_EXIT:
+         sge_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
+         break;
+      case TAG_REPORT_REQUEST: 
+         do_report_request(&msg);
+         break;
+      default:
+         DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
    }
+   clear_packbuffer(&(msg.buf));
+
    DEXIT;
    return anArg; 
 } /* sge_qmaster_process_message */
 
+/****** sge_qmaster_process_message/determine_timeout() ************************
+*  NAME
+*     determine_timeout() -- determine communication timeout
+*
+*  SYNOPSIS
+*     static int determine_timeout(void) 
+*
+*  FUNCTION
+*     The timeout is affected by pending events. Pending events need to be
+*     delivered on time to registered event clients. If there are pending events,
+*     the (positiv) delta between event delivery time and current time is
+*     calculated. If this delta is less than 'DEFAULT_TIMEOUT', it is used as
+*     timeout. Otherwise 'DEFAULT_TIMEOUT' is used. The minimal timeout used is
+*     'MIN_TIMEOUT'. With no pending events, 'DEFAULT_TIMEOUT' is used.
+*
+*  RESULT
+*     int - timeout value 
+*
+*  NOTES
+*     MT-NOTE: determine_timeout() is thread safe
+*
+*******************************************************************************/
+static int determine_timeout(void)
+{
+   enum { MIN_TIMEOUT = 2, DEFAULT_TIMEOUT = 20 }; /* seconds */
+
+   time_t now;   /* current time */
+   time_t flush; /* time next event flush is due */
+   int res = DEFAULT_TIMEOUT;
+
+   DENTER(TOP_LAYER, "determine_timeout");
+
+   now = sge_get_gmt();
+   flush = sge_next_flush(now);
+
+   if (flush && ((flush - now) >= 0)) {
+      res = MIN(MAX((flush - now), MIN_TIMEOUT), DEFAULT_TIMEOUT);
+   }
+
+   DEXIT;
+   return res;
+} /* determine_timeout */
+
+/****** sge_qmaster_process_message/do_gdi_request() ***************************
+*  NAME
+*     do_gdi_request() -- Process GDI request messages
+*
+*  SYNOPSIS
+*     static void do_gdi_request(msg_t *aMsg) 
+*
+*  FUNCTION
+*     Process GDI request messages (TAG_GDI_REQUEST). Unpack a GDI request from
+*     the pack buffer, which is part of 'aMsg'. Process GDI request and send a
+*     response to 'commd'.
+*
+*  INPUTS
+*     msg_t *aMsg - GDI request message
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     A pack buffer may contain more than a single GDI request. This is a so 
+*     called 'multi' GDI request. In case of a multi GDI request, the 'sge_gdi_request'
+*     structure filled in by 'sge_unpack_gdi_request' is the head of a linked
+*     list of 'sge_gdi_request' structures.
+*
+*******************************************************************************/
+static void do_gdi_request(msg_t *aMsg)
+{
+   enum { ASYNC = 0, SYNC = 1 };
+
+   sge_pack_buffer *buf = &(aMsg->buf);
+   sge_gdi_request *req_head = NULL;  /* head of request linked list */
+   sge_gdi_request *resp_head = NULL; /* head of response linked list */
+   sge_gdi_request *req = NULL;
+   sge_gdi_request *resp = NULL;
+
+   DENTER(TOP_LAYER, "do_gid_request");
+
+   if (sge_unpack_gdi_request(buf, &req_head)) {
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, (char *)aMsg->snd_host, (char *)aMsg->snd_name, (int)aMsg->snd_id));
+      return;
+   }
+   resp_head = new_gdi_request();
+
+   for (req = req_head; req; req = req->next) {
+      req->id = aMsg->snd_id;
+      req->commproc = sge_strdup(NULL, aMsg->snd_name);
+      req->host = sge_strdup(NULL, aMsg->snd_host);
+
+#ifndef __SGE_NO_USERMAPPING__
+      sge_map_gdi_request(req);
+#endif
+   
+      if (req == req_head) {
+         resp = resp_head;
+      } else {
+         resp->next = new_gdi_request();
+         resp = resp->next;
+      }
+
+      sge_c_gdi(aMsg->snd_host, req, resp);
+   }
+
+   sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name, (int)aMsg->snd_id, resp_head);
+
+   free_gdi_request(resp_head);
+   free_gdi_request(req_head);
+
+   DEXIT;
+   return;
+} /* do_gdi_request */
+
+/****** sge_qmaster_process_message/do_report_request() ************************
+*  NAME
+*     do_report_request() -- Process execd load report 
+*
+*  SYNOPSIS
+*     static void do_report_request(msg_t *aMsg) 
+*
+*  FUNCTION
+*     Process execd load reports (TAG_REPORT_REQUEST). Unpack a CULL list with
+*     the load report from the pack buffer, which is part of 'aMsg'. Process
+*     execd load report.
+*
+*  INPUTS
+*     msg_t *aMsg - execd load report message
+*
+*  RESULT
+*     void - none 
+*
+*******************************************************************************/
+static void do_report_request(msg_t *aMsg)
+{
+   lList *rep = NULL;
+
+   DENTER(TOP_LAYER, "do_report_request");
+
+   if (cull_unpack_list(&(aMsg->buf), &rep)) {
+      ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
+      return;
+   }
+
+   sge_c_report(aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep);
+   lFreeList(rep);
+
+   DEXIT;
+   return;
+} /* do_report_request */

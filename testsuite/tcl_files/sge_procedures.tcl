@@ -6164,26 +6164,23 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   # if qconf failed, we also will not be able to shutdown qmaster with qconf
-   if { ! $do_ps_kill } {
-      sleep 5  ;# give the schedd and execd's some time to shutdown
+   sleep 5  ;# give the schedd and execd's some time to shutdown
 
-      puts $CHECK_OUTPUT "killing qmaster ..."
+   puts $CHECK_OUTPUT "killing qmaster ..."
 
-      set result ""
-      set do_ps_kill 0
-      set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" ]
+   set result ""
+   set do_ps_kill 0
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" ]
 
-      puts $CHECK_OUTPUT "qconf -km returned $prg_exit_state"
-      if { $prg_exit_state == 0 } {
-         puts $CHECK_OUTPUT $result
-      } else {
-         set do_ps_kill 1
-         puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
-      }
-
-      sleep 5  ;# give the qmaster some time to shutdown
+   puts $CHECK_OUTPUT "qconf -km returned $prg_exit_state"
+   if { $prg_exit_state == 0 } {
+      puts $CHECK_OUTPUT $result
+   } else {
+      set do_ps_kill 1
+      puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
+
+   sleep 5  ;# give the qmaster some time to shutdown
 
    if { $ts_config(gridengine_version) == 53 } {
       puts $CHECK_OUTPUT "killing all commds in the cluster ..." 

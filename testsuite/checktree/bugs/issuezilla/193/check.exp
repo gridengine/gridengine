@@ -146,9 +146,8 @@ proc issue193_setup {} {
    set_config myconfig
 
    puts $CHECK_OUTPUT "disabling all cluster queues"
-   foreach elem $CHECK_CORE_EXECD {
-      puts "${elem}.q"
-      disable_queue "${elem}.q"
+   foreach host $CHECK_CORE_EXECD {
+      disable_queue [get_queue_instance "all.q" $host]
    }
 
    if {[add_operator $ts_user_config(first_foreign_user)] != 0} {
@@ -159,24 +158,18 @@ proc issue193_setup {} {
    puts $CHECK_OUTPUT "using host \"$rerun_host\" for queue with rerun=TRUE"
    puts $CHECK_OUTPUT "using host \"$no_rerun_host\" for queue with rerun=FALSE"
 
-   set new_queue(qname)    $rerun_queue
-   set new_queue(hostname) $rerun_host
    set new_queue(rerun)    "TRUE"
    set new_queue(qtype)    "BATCH INTERACTIVE PARALLEL CHECKPOINTING"
    set new_queue(load_thresholds) "np_load_avg=8.00"
    set new_queue(slots)    "100"
 
-   add_queue new_queue 
+   add_queue $rerun_queue $rerun_host new_queue
  
-   set new_queue(qname)    $rerun_queue2
-   set new_queue(hostname) $no_rerun_host 
-   add_queue new_queue
+   add_queue $rerun_queue2 $no_rerun_host new_queue
 
-   set new_queue(qname)    $no_rerun_queue
-   set new_queue(hostname) $no_rerun_host
    set new_queue(rerun)    "FALSE"
 
-   add_queue new_queue
+   add_queue $no_rerun_queue  $no_rerun_host new_queue
 
    # add checkpointobject for test
    puts $CHECK_OUTPUT "creating checkpointobjects ..."
@@ -184,12 +177,12 @@ proc issue193_setup {} {
    set new_checkpointobj(interface)  "userdefined"
    set new_checkpointobj(when) "r"
    add_checkpointobj "new_checkpointobj"
-   assign_queues_with_ckpt_object $rerun_queue qmod_with_r
+   assign_queues_with_ckpt_object $rerun_queue $rerun_host qmod_with_r
 
    set new_checkpointobj(ckpt_name)  "qmod_without_r"
    set new_checkpointobj(when) "s"
    add_checkpointobj "new_checkpointobj"
-   assign_queues_with_ckpt_object $rerun_queue qmod_without_r
+   assign_queues_with_ckpt_object $rerun_queue $rerun_host qmod_without_r
 
    # add pe_object for test
    puts $CHECK_OUTPUT "creating pe object ..."
@@ -200,7 +193,8 @@ proc issue193_setup {} {
       set new_peobj(allocation_rule) [lindex $pe_alloc_rule $index]
       incr index 1
       add_pe new_peobj
-      assign_queues_with_pe_object "$rerun_queue2 $rerun_queue" $new_peobj(pe_name)
+      assign_queues_with_pe_object $rerun_queue2 $no_rerun_host $new_peobj(pe_name)
+      assign_queues_with_pe_object $rerun_queue $rerun_host $new_peobj(pe_name)
    } 
 
    set_error 0 "ok"

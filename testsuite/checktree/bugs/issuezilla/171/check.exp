@@ -202,10 +202,7 @@ proc issue_171_check {} {
 proc issue_171_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
 
-   puts $CHECK_OUTPUT "do qdel -uall"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
-   puts $CHECK_OUTPUT $catch_result
- 
+   delete_all_jobs
    wait_for_end_of_all_jobs 60 
 
 

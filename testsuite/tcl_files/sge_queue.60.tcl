@@ -273,7 +273,7 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
             set split_host_value [split $host_value "="]
             set host [lindex $split_host_value 0]
             set value [lrange $split_host_value 1 end]
-            set value [string trimright $value ",\]"]
+            set value [string trimright $value ",\]\\"]
             puts $CHECK_OUTPUT "--> $host = $value"
             set host_values($host) $value
          }
@@ -299,19 +299,19 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
    }
 
    # check if all hosts / hostgroups are in the hostlist attribute
-   if { $hostlist != "" } {
-      set new_hosts {}
-      foreach host $hostlist {
-         if { [lsearch -exact $currar(hostlist) $host] == -1 } {
-            lappend new_hosts $host
-            puts $CHECK_OUTPUT "--> host $host is not yet in hostlist"
-         }
-      }
-
-      if { [llength $new_hosts] > 0 } {
-         set chgar(hostlist) "$currar(hostlist) $new_hosts"
-      }
-   }
+#   if { $hostlist != "" } {
+#      set new_hosts {}
+#      foreach host $hostlist {
+#         if { [lsearch -exact $currar(hostlist) $host] == -1 } {
+#            lappend new_hosts $host
+#            puts $CHECK_OUTPUT "--> host $host is not yet in hostlist"
+#         }
+#      }
+#
+#      if { [llength $new_hosts] > 0 } {
+#         set chgar(hostlist) "$currar(hostlist) $new_hosts"
+#      }
+#   }
 }
 
 #****** sge_procedures.60/queue/set_queue() ******************************************
@@ -447,3 +447,8 @@ proc get_qinstance_list {{filter ""}} {
    return $result
 }
 
+# queue for -q request or as subordinate queue
+# is the 6.0 cluster queue
+proc get_requestable_queue { queue host } {
+   return $queue
+}

@@ -289,3 +289,8 @@ proc get_queue_list {} {
    return $result
 }
 
+# queue for -q request or as subordinate queue
+# is the 5.3 queue
+proc get_requestable_queue { queue host } {
+   return [get_queue_instance $queue $host]
+}

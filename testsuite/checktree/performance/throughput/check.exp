@@ -361,7 +361,7 @@ proc setup_queues {} {
 
 proc cleanup_queues {} {
    global CHECK_CORE_EXECD  CHECK_OUTPUT
-   global queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
+   global host_list queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
    global stored_configuration throughput_sharetree nr_queues
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
@@ -393,7 +393,7 @@ proc cleanup_queues {} {
    puts $CHECK_OUTPUT "deleting queues"
    for {set i 0} {$i < $nr_queues} {incr i} {
       set qname tp_${i}
-      del_queue $qname $CHECK_CORE_EXECD 1 1
+      del_queue $qname $host_list 0 1
    }
 
    puts $CHECK_OUTPUT "enabling default queues"
@@ -422,7 +422,6 @@ proc get_event_client_time { string  } {
 }
 
 proc run_throughput_test {} {
-
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR CHECK_CORE_EXECD

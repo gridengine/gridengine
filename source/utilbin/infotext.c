@@ -55,7 +55,7 @@ typedef struct sge_infotext_opt {
       char* yes; /* yes parameter for -ask */
       char* no;  /* no parameter for -ask */
       char* def; /* default parameter for -ask */
-      int log; /* file logging on/off */ //MD: 05.12.03
+      int log; /* file logging on/off */
    } sge_infotext_options;
 
 
@@ -420,7 +420,7 @@ static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* op
       output=stderr;
    }
 
-   if ((getenv("SGE_NOMSG") != NULL && options->log == 1) || (getenv("SGE_NOMSG") == NULL && options->log == 0)) {  //MD: 05.12.03
+   if ((getenv("SGE_NOMSG") != NULL && options->log == 1) || (getenv("SGE_NOMSG") == NULL && options->log == 0)) {
       fprintf(output,"%s",sge_dstring_get_string(&line));
       if (options->n != 1 && line_length > 0 ) {
          fprintf(output,"\n");
@@ -648,7 +648,7 @@ static void sge_infotext_usage(void) {
    printf("  wait - wait for return key\n");
    printf("  ask  - wait for user input\n");
    printf("  def  - default answer when user is just pressing RETURN\n\n");
-   printf("  log  - write output to log, if SGE_NOMSG is set\n");  //MD: 05.12.03 Print logfile output only!!!
+   printf("  log  - write output to log, if SGE_NOMSG is set\n");
    printf("used environment variables:\n");
    printf("SGE_INFOTEXT_MAX_COLUMN - column for word break (default 79)\n");
 }
@@ -704,7 +704,7 @@ int main( int argc, char* argv[] ) {
    options.no = "";
    options.yes = "";
    options.def = "";
-   options.log = 0; //MD: 05.12.03
+   options.log = 0;
 
    for(i=1; i< argc; i++) {
       char* arg = argv[i];
@@ -726,7 +726,7 @@ int main( int argc, char* argv[] ) {
             do_test = 1;
             break;
          }
-         if ( strcmp(option,"log") == 0) {     //MD: 05.12.03
+         if ( strcmp(option,"log") == 0) {
             options.log = 1;
             continue;
          }

@@ -343,7 +343,6 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    close_spawn_process $id
 
 
-   log_user 1
    # parse output: cut leading sequence 
    set help_str [ split $output "\n" ]
    set index 0
@@ -588,7 +587,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                 }
              }
    
-             set mytries 10
+             set mytries 15
              debug_puts "waiting for shell response ..."
              set timeout 1
              set next_timeout 1
@@ -821,7 +820,6 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
    uplevel 1 { 
       send -i $open_remote_spawn__id "unset correct\n"
       send -i $open_remote_spawn__id "$open_remote_spawn__script_name\n"
-      log_user 1
    }
 
    if { $background == 2 } {
@@ -1577,10 +1575,13 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    } 
 
    set open_spawn_buffer $sp_id
-   catch { uplevel $my_uplevel { close -i $open_spawn_buffer
-            debug_puts "closed buffer: $open_spawn_buffer" } }
-
-   flush $open_spawn_buffer
+   catch { 
+      uplevel $my_uplevel { 
+         close -i $open_spawn_buffer
+         debug_puts "closed buffer: $open_spawn_buffer"
+         flush $open_spawn_buffer
+      }
+   }
    log_user 1
    set wait_return "" 
    catch { set wait_return [ uplevel $my_uplevel { wait -i $open_spawn_buffer } ] }

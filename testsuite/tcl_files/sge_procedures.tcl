@@ -162,6 +162,8 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGE_5.3beta2_1)      2
    set versions(SGEEE_5.3beta2_2)    2
    set versions(SGE_5.3beta2_2)      2
+   set versions(SGEEE_5.3.1beta1)    2
+   set versions(SGE_5.3.1beta1)      2
    set versions(SGEEE_pre6.0_(Maintrunk))    2
    set versions(SGE_pre6.0_(Maintrunk))      2
 
@@ -4794,11 +4796,13 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #      puts $CHECK_OUTPUT $line
       if { [lindex $line 0] == $jobid } {
          lappend back $line
+         continue
       }
       if { $add_empty != 0 } {
          if { [llength $line] == 8 } {
             lappend back "-1 $line"
             puts $CHECK_OUTPUT "adding empty job lines" 
+            continue
          }
       }
       if { $get_all != 0 } {
@@ -5348,12 +5352,14 @@ proc wait_for_end_of_transfer { jobid seconds } {
              if { $job_state != $tmp_job_state } {
                 puts $CHECK_OUTPUT "job has different states ..."
                 set had_error 1
+                break
              }
           }
        }
     }
 
     if { $had_error != 0 } {
+       sleep 1
        continue
     }
 

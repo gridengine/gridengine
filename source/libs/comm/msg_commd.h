@@ -43,7 +43,7 @@
 /* 
 ** commd/commd.c
 */ 
-#define MSG_COMMD_POINTERNULL                         _MESSAGE(39003, _("(null)"))
+/* #define MSG_COMMD_POINTERNULL                         _message(39003, _("(null)")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_COMMD_STATHOSTALIASFILEFAILED_SS          _MESSAGE(39004, _("can't stat host alias file "SFQ": "SFN""))
 #define MSG_COMMD_OPENFILEFORMESSAGELOGFAILED_SS      _MESSAGE(39005, _("can't open file "SFQ" for message logging: "SFN""))
 #define MSG_NET_USINGPORT_I                           _MESSAGE(39006, _("using port \"%d\"\n"))
@@ -65,7 +65,7 @@
 #define MSG_USAGE                                     _MESSAGE(39022, _("usage:"))
 #define MSG_COMMD_s_OPT_USAGE                         _MESSAGE(39023, _("use this service for connections from other commds"))
 #define MSG_COMMD_p_OPT_USAGE                         _MESSAGE(39024, _("use this port for connections from other commds"))
-#define MSG_COMMD_S_OPT_USAGE                         _MESSAGE(39025, _("enable port security\n"))
+/* #define MSG_COMMD_S_OPT_USAGE                         _message(39025, _("enable port security\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_COMMD_ml_OPT_USAGE                        _MESSAGE(39026, _("message logging to file\n"))
 #define MSG_COMMD_ll_OPT_USAGE                        _MESSAGE(39027, _("logging level 2-7 (lower numbers log only higher priority messages\n" ))
 #define MSG_COMMD_nd_OPT_USAGE                        _MESSAGE(39028, _("do not daemonize\n"   ))
@@ -89,7 +89,7 @@
 #define MSG_COMMDCNTL_t_OPT_USAGE                     _MESSAGE(39039, _("trace\n"))
 #define MSG_COMMDCNTL_d_OPT_USAGE                     _MESSAGE(39040, _("dump structures to"))
 #define MSG_COMMDCNTL_p_OPT_USAGE                     _MESSAGE(39041, _("port commd is waiting on\n"))
-#define MSG_COMMDCNTL_S_OPT_USAGE                     _MESSAGE(39042, _("secure mode\n"))
+/* #define MSG_COMMDCNTL_S_OPT_USAGE                     _message(39042, _("secure mode\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_COMMDCNTL_U_OPT_USAGE                     _MESSAGE(39043, _("switch off secure mode\n"))
 #define MSG_COMMDCNTL_gid_OPT_USAGE                   _MESSAGE(39044, _("get id of commproc\n"))
 #define MSG_COMMDCNTL_unreg_OPT_USAGE                 _MESSAGE(39045, _("unregister commproc\n"))

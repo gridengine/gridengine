@@ -96,9 +96,9 @@
 #define MSG_CULL_ADDELEMSTRERRORXRUNTIMETYPE_S           _MESSAGE(41053, _("error: lAddElemStr("SFN"): run time type error\n"))
 #define MSG_CULL_ADDELEMHOSTERRORXRUNTIMETYPE_S           _MESSAGE(41054, _("error: lAddElemHost("SFN"): run time type error\n"))
 #define MSG_CULL_DELSUBSTRERRORXRUNTIMETYPEERROR_S       _MESSAGE(41055, _("error: lDelSubStr("SFN"): run time type error\n"))
-#define MSG_CULL_DELSUBHOSTERRORXRUNTIMETYPEERROR_S       _MESSAGE(41056, _("error: lDelSubHost("SFN"): run time type error\n"))
+/* #define MSG_CULL_DELSUBHOSTERRORXRUNTIMETYPEERROR_S       _message(41056, _("error: lDelSubHost("SFN"): run time type error\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_DELELEMSTRERRORXRUNTIMETYPEERROR_S      _MESSAGE(41057, _("error: lDelElemStr("SFN"): run time type error\n"))
-#define MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPEERROR_S      _MESSAGE(41058, _("error: lDelElemHost("SFN"): run time type error\n"))
+/* #define MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPEERROR_S      _message(41058, _("error: lDelElemHost("SFN"): run time type error\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S            _MESSAGE(41059, _("error: lGetSubStr("SFN"): run time type error\n"))
 #define MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S           _MESSAGE(41060, _("error: lGetElemStr("SFN"): run time type error\n"))
 #define MSG_CULL_ADDSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41062, _("error: lAddSubUlong("SFN"): run time type error\n"))
@@ -107,14 +107,14 @@
 #define MSG_CULL_DELELEMULONGERRORXRUNTIMETYPE_S         _MESSAGE(41065, _("error: lDelElemUlong("SFN"): run time type error\n"))
 #define MSG_CULL_GETSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41066, _("error: lGetSubUlong("SFN"): run time type error\n"))
 #define MSG_CULL_GETELEMULONGERRORXRUNTIMETYPE_S         _MESSAGE(41067, _("error: lGetElemUlong("SFN"): run time type error\n"))
-#define MSG_CULL_ADDSUBCASESTRERRORXRUNTIMETYPE_S        _MESSAGE(41068, _("error: lAddSubCaseStr("SFN"): run time type error\n"))
-#define MSG_CULL_ADDELEMCASESTRERRORXRUNTIMETYPE_S       _MESSAGE(41069, _("error: lAddElemCaseStr("SFN"): run time type error\n"))
+/* #define MSG_CULL_ADDSUBCASESTRERRORXRUNTIMETYPE_S        _message(41068, _("error: lAddSubCaseStr("SFN"): run time type error\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_CULL_ADDELEMCASESTRERRORXRUNTIMETYPE_S       _message(41069, _("error: lAddElemCaseStr("SFN"): run time type error\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_DELSUBCASESTRERRORXRUNTIMETYPE_S        _MESSAGE(41070, _("error: lDelSubCaseStr("SFN"): run time type error\n"))
 #define MSG_CULL_DELELEMCASESTRERRORXRUNTIMETYPE_S       _MESSAGE(41071, _("error: lDelElemCaseStr("SFN"): run time type error\n"))
 #define MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPE_S          _MESSAGE(41072, _("error: lDelElemHost("SFN"): run time type error\n"))
 #define MSG_CULL_GETSUBCASESTRERRORXRUNTIMETYPE_S        _MESSAGE(41073, _("error: lGetSubCaseStr("SFN"): run time type error\n"))
 #define MSG_CULL_GETELEMCASESTRERRORXRUNTIMETYPE_S       _MESSAGE(41074, _("error: lGetElemCaseStr("SFN"): run time type error\n"))
-#define MSG_CULL_GETELEMCASEHOSTERRORXRUNTIMETYPE_S      _MESSAGE(41075, _("error: lGetElemCaseHost("SFN"): run time type error\n"))
+/* #define MSG_CULL_GETELEMCASEHOSTERRORXRUNTIMETYPE_S      _message(41075, _("error: lGetElemCaseHost("SFN"): run time type error\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_GETELEMHOSTERRORXRUNTIMETYPE_S          _MESSAGE(41076, _("error: lGetElemHost("SFN"): run time type error\n"))
 #define MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION          _MESSAGE(41077, _("!!!!!!!!!! lGetPosUlong() got an invalid pos !!!!!!!!!!!!\n"))
 #define MSG_CULL_GETPOSLIST_GOTANINVALIDPOS              _MESSAGE(41078, _("!!!!!!!!!!!11 lGetPosList() got an invalid pos !!!!!!!!\n"))
@@ -230,7 +230,7 @@
 #define MSG_CULL_GETOBJECT_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41161, _("lGetObject: wrong type for field "SFN" ("SFN")\n"))
 #define MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S        _MESSAGE(41162, _("!!!!!!!!!! lDechainObject(): "SFN" not found in element !!!!!!!!!!\n"))
 #define MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S       _MESSAGE(41163, _("lDechainObject: wrong type for field "SFN" ("SFN")\n"))
-#define MSG_CULL_DECHAINOBJECT_INCONSISTENTCONTENT_S       _MESSAGE(41164, _("lDechainObject: element to dechain from field "SFQ" is not the requested element\n"))
+/* #define MSG_CULL_DECHAINOBJECT_INCONSISTENTCONTENT_S       _message(41164, _("lDechainObject: element to dechain from field "SFQ" is not the requested element\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_GETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41165, _("lGetBool: wrong type for field "SFN" ("SFN")\n"))
 #define MSG_CULL_SETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41166, _("lSetBool: wrong type for field "SFN" ("SFN")\n"))
 #define MSG_CULL_WHERE_SHOULDBEBOOL                     _MESSAGE(41167, _("lWhere (should be a lBoolT)\n"))

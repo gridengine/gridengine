@@ -63,7 +63,7 @@
 #define MSG_PROC_INVALIDPRIORITYMUSTBEGREATERTHANMINUS1024       _MESSAGE(27012, _("ERROR! invalid priority, priority must be greater than -1024\n"))
 #define MSG_LIST_ERRORFORMATINGHARDQUEUELISTASQ       _MESSAGE(27013, _("Error formatting hard_queue_list as -q\n"))
 #define MSG_LIST_ERRORFORMATINGSOFTQUEUELISTASQ       _MESSAGE(27014, _("Error formatting soft_queue_list as -q\n"))
-#define MSG_LIST_ERRORFORMATINGQSARGSLIST       _MESSAGE(27015, _("Error formatting qs_args list\n"))
+/* #define MSG_LIST_ERRORFORMATINGQSARGSLIST       _message(27015, _("Error formatting qs_args list\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_LIST_ERRORFORMATINGSHELLLIST       _MESSAGE(27016, _("Error formatting shell_list\n"))
 #define MSG_LIST_ERRORFORMATINGENVIRONMENTLISTASV       _MESSAGE(27017, _("Error formatting environment list as -v\n"))
 #define MSG_LIST_ERRORFORMATINGJOBARGUMENTS       _MESSAGE(27018, _("Error formatting job argumentents\n"))
@@ -214,7 +214,7 @@
 
 #define MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS       _MESSAGE(27087, _(SFN"\n Exit Status      = "SFN"\n Signal           = "SFN"\n User             = "SFN"\n Queue            = "SFN"\n Host             = "SFN"\n Start Time       = "SFN"\n End Time         = "SFN"\n CPU              = "SFN"\n Max vmem         = "SFN"\nfailed "SFN" because:\n"SFN SFN))
 #define MSG_MAIL_TYPE_STATE                     _MESSAGE(27088, _("job abortion/end"))
-#define MSG_MAIL_TYPE_ABORT                     _MESSAGE(27089, _("job abortion"))
+/* #define MSG_MAIL_TYPE_ABORT                     _message(27089, _("job abortion")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_MAIL_UNKNOWN_NAME                   _MESSAGE(27090, _("<unknown>"))
 
 #endif /* MSG_DAEMONS_COMMON_H */

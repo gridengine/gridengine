@@ -44,9 +44,9 @@
 #define MSG_SPOOL_CORRUPTRULEINCONTEXT_SSS          _MESSAGE(59003, _("corrupt rule "SFQ" in spooling context "SFQ": "SFQ" is missing\n"))
 #define MSG_SPOOL_CANNOTSPOOLFREEOBJECT             _MESSAGE(59004, _("cannot spool free object\n"))
 #define MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS     _MESSAGE(59005, _("rule "SFQ" in spooling context "SFQ" failed writing an object\n"))
-#define MSG_SPOOL_INVALIDSPOOLEDOBJECTTYPE_D        _MESSAGE(59006, _("invalid spooled object type %d\n"))
-#define MSG_SPOOL_NODESCRIPTORFOROBJECTTYPEALL      _MESSAGE(59007, _("no descriptor available for object type ALL\n"))
-#define MSG_SPOOL_NOKEYFOROBJECTTYPEALL             _MESSAGE(59008, _("no key field available for object type ALL\n"))
+/* #define MSG_SPOOL_INVALIDSPOOLEDOBJECTTYPE_D        _message(59006, _("invalid spooled object type %d\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SPOOL_NODESCRIPTORFOROBJECTTYPEALL      _message(59007, _("no descriptor available for object type ALL\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SPOOL_NOKEYFOROBJECTTYPEALL             _message(59008, _("no key field available for object type ALL\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SPOOL_NOVALIDCONTEXT_S                  _MESSAGE(59009, _("no valid spooling context passed to "SFQ"\n"))
 #define MSG_SPOOL_CONTEXTNEEDSNAME                  _MESSAGE(59010, _("spooling context has to have a name\n"))
 #define MSG_SPOOL_NOVALIDSPOOLTYPE_S                _MESSAGE(59011, _("no valid spool type passed to "SFQ"\n"))

@@ -93,11 +93,11 @@
 /* 
 ** utilib/sge_getloadavg.c
 */ 
-#define MSG_PROCESSOR_SETNOTFOUND_I          _MESSAGE(49025, _("processor set %d not found.\n"))
-#define MSG_PROCESSOR_TOTALLOADAVG_F         _MESSAGE(49026, _("total load_avg %2.2f\n") )  
-#define MSG_PROCESSOR_KNLISTFAILED           _MESSAGE(49027, _("Can't knlist()\n"))
-#define MSG_PROCESSOR_KMEMFAILED             _MESSAGE(49028, _("Can't read kmem\n"))
-#define MSG_PROCESSOR_NLISTFAILED            _MESSAGE(49029, _("Can't nlist()\n"))
+/* #define MSG_PROCESSOR_SETNOTFOUND_I          _message(49025, _("processor set %d not found.\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PROCESSOR_TOTALLOADAVG_F         _message(49026, _("total load_avg %2.2f\n") )   __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PROCESSOR_KNLISTFAILED           _message(49027, _("Can't knlist()\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PROCESSOR_KMEMFAILED             _message(49028, _("Can't read kmem\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PROCESSOR_NLISTFAILED            _message(49029, _("Can't nlist()\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 
@@ -131,8 +131,8 @@
 /* 
 ** utilib/sge_put_get_file.c
 */ 
-#define MSG_FILE_WRITEOPENFAILED_SS             _MESSAGE(49044, _("couldn't open "SFN" for writing: "SFN"\n"))
-#define MSG_FILE_READOPENFAILED_SS              _MESSAGE(49045, _("couldn't open "SFN" for reading: "SFN""))
+/* #define MSG_FILE_WRITEOPENFAILED_SS             _message(49044, _("couldn't open "SFN" for writing: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_FILE_READOPENFAILED_SS              _message(49045, _("couldn't open "SFN" for reading: "SFN"")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 

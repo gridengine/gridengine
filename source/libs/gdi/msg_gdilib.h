@@ -109,7 +109,7 @@
 ** gdilib/sge_any_request.c
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data\n"))
-#define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _MESSAGE(43046, _("failed initialize Kerberos security data\n"))
+/* #define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _message(43046, _("failed initialize Kerberos security data\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GDI_ENROLLTOCOMMDFAILED_S                 _MESSAGE(43047, _("can't enroll to commd: "SFN"\n"))
 #define MSG_GDI_COMMDUP                               _MESSAGE(43048, _("commd is up"))
 #define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43049, _("commd is down: "SFN""))
@@ -147,12 +147,12 @@
 #define MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS          _MESSAGE(43067, _("failed resolving uid %d to username: "SFN""))
 #define MSG_GDI_MISSINGINENVIRONMENT_S                   _MESSAGE(43068, _("missing "SFQ" in environment"))
 #define MSG_GDI_STRINGISINVALID_SS                       _MESSAGE(43069, _("string "SFQ" in env var "SFQ" is not a valid job/taskid"))
-#define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _MESSAGE(43070, _("proposed task id "SFN" "SFQ" is invalid"))
-#define MSG_GDI_TASKEXISTS_S                             _MESSAGE(43071, _("task "SFN" already exists"))
-#define MSG_GDI_SETUPGDILIBFAILED                        _MESSAGE(43072, _("failed setting up gdi library"))
+/* #define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _message(43070, _("proposed task id "SFN" "SFQ" is invalid")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_TASKEXISTS_S                             _message(43071, _("task "SFN" already exists")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_SETUPGDILIBFAILED                        _message(43072, _("failed setting up gdi library")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _MESSAGE(43073, _("failed sending task to execd@"SFN": "SFN""                  ))
 #define MSG_GDI_TASKNOTEXIST_S                           _MESSAGE(43074, _("task "SFQ" does not exist"))
-#define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _MESSAGE(43075, _("rcv_from_exec(): failed enrolling to local sge commd: "SFN""))
+/* #define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _message(43075, _("rcv_from_exec(): failed enrolling to local sge commd: "SFN"")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _MESSAGE(43076, _("failed receiving message from execd: "SFN" %d"))
 #define MSG_GDI_TASKNOTFOUND_S                           _MESSAGE(43077, _("cannot find task with taskid "SFQ"\n"))
 #define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _MESSAGE(43078, _("cannot find task without taskid - should become task "SFQ""))
@@ -241,7 +241,7 @@
 /* 
 ** gdilib/utility.c
 */
-#define MSG_GDI_STRING_STRINGTOINTFAILED_S               _MESSAGE(43116, _("unable to convert string "SFQ" to integer\n"))
+/* #define MSG_GDI_STRING_STRINGTOINTFAILED_S               _message(43116, _("unable to convert string "SFQ" to integer\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 
@@ -249,10 +249,10 @@
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
-#define MSG_GDI_NEEDUIDINEVIRONMENT                      _MESSAGE(43119, _("need UID in environment\n"))
-#define MSG_GDI_NEEDUSERNAMEINENVIRONMENT                _MESSAGE(43120, _("need USERNAME in environment\n"))
-#define MSG_GDI_NEEDGIDINENVIRONMENT                     _MESSAGE(43121, _("need GID in environment\n"))
-#define MSG_GDI_NEEDGROUPNAMEINENVIRONMENT               _MESSAGE(43122, _("need GROUPNAME in environment\n"))
+/* #define MSG_GDI_NEEDUIDINEVIRONMENT                      _message(43119, _("need UID in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_NEEDUSERNAMEINENVIRONMENT                _message(43120, _("need USERNAME in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_NEEDGIDINENVIRONMENT                     _message(43121, _("need GID in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_NEEDGROUPNAMEINENVIRONMENT               _message(43122, _("need GROUPNAME in environment\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43123, _("failed to getpwuid(%d): "SFN"\n"))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
@@ -265,8 +265,8 @@
 #define MSG_GDI_REQUESTFORMATERROR                          _MESSAGE(43132, _("format error while packing gdi request\n"))
 #define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST       _MESSAGE(43133, _("unexpected error while packing gdi request\n"))
 #define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S                  _MESSAGE(43134, _("error unpacking gdi request: "SFN"\n"))
-/* #define MSG_GDI_REQUESTFORMATERRORWHILEUNPACKING              _MESSAGE(43135, _("format error while unpacking gdi request\n")) */
-/* #define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _MESSAGE(43136, _("unexpected error while unpacking gdi request\n")) */
+/* #define MSG_GDI_REQUESTFORMATERRORWHILEUNPACKING              _message(43135, _("format error while unpacking gdi request\n")) __TS Removed automatically from testsuite!! TS__ */
+/* #define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _message(43136, _("unexpected error while unpacking gdi request\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
 #define MSG_JOB_JLPPNULL                  _MESSAGE(43140, _("jlpp == NULL in job_add_job()\n"))
@@ -341,10 +341,10 @@
 #define MSG_EVENT_ADDEXECHOSTX_IS                  _MESSAGE(43200, _("%d. EVENT ADD EXECHOST "SFN""))
 #define MSG_EVENT_MODEXECHOSTX_IS                  _MESSAGE(43201, _("%d. EVENT MOD EXECHOST "SFN""))
 #define MSG_EVENT_EXECHOSTLISTXELEMENTS_II         _MESSAGE(43202, _("%d. EVENT EXECHOST LIST %d Elements"))
-#define MSG_EVENT_DELFEATURE_SETX_IS                  _MESSAGE(43203, _("%d. EVENT DEL FEATURE_SET "SFN""))
-#define MSG_EVENT_ADDFEATURE_SETX_IS                  _MESSAGE(43204, _("%d. EVENT ADD FEATURE_SET "SFN""))
-#define MSG_EVENT_MODFEATURE_SETX_IS                  _MESSAGE(43205, _("%d. EVENT MOD FEATURE_SET "SFN""))
-#define MSG_EVENT_FEATURE_SETLISTXELEMENTS_II         _MESSAGE(43206, _("%d. EVENT FEATURE_SET LIST %d Elements"))
+/* #define MSG_EVENT_DELFEATURE_SETX_IS                  _message(43203, _("%d. EVENT DEL FEATURE_SET "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_ADDFEATURE_SETX_IS                  _message(43204, _("%d. EVENT ADD FEATURE_SET "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_MODFEATURE_SETX_IS                  _message(43205, _("%d. EVENT MOD FEATURE_SET "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_FEATURE_SETLISTXELEMENTS_II         _message(43206, _("%d. EVENT FEATURE_SET LIST %d Elements")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_EVENT_DELMANAGERX_IS                  _MESSAGE(43207, _("%d. EVENT DEL MANAGER "SFN""))
 #define MSG_EVENT_ADDMANAGERX_IS                  _MESSAGE(43208, _("%d. EVENT ADD MANAGER "SFN""))
 #define MSG_EVENT_MODMANAGERX_IS                  _MESSAGE(43209, _("%d. EVENT MOD MANAGER "SFN""))
@@ -387,7 +387,7 @@
 #define MSG_EVENT_MODJATASK_US                     _MESSAGE(43246, _(U32CFormat". EVENT MOD JATASK "SFN""))
 #define MSG_EVENT_ADDPETASK_US                     _MESSAGE(43247, _(U32CFormat". EVENT ADD PETASK "SFN""))
 #define MSG_EVENT_DELPETASK_US                     _MESSAGE(43248, _(U32CFormat". EVENT DEL PETASK "SFN""))
-#define MSG_EVENT_MODPETASK_US                     _MESSAGE(43249, _(U32CFormat". EVENT MOD PETASK "SFN""))
+/* #define MSG_EVENT_MODPETASK_US                     _message(43249, _(U32CFormat". EVENT MOD PETASK "SFN"")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_EVENT_NOTKNOWN_I                       _MESSAGE(43250, _("%d. EVENT ????????"))
 #define MSG_PEREFINJOB_SU                          _MESSAGE(43251, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
 #define MSG_CKPTREFINJOB_SU                        _MESSAGE(43252, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))

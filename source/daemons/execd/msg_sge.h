@@ -94,7 +94,7 @@
 #define MSG_SGE_KILLINGPIDXY_UI                          _MESSAGE(31050, _("killing pid "U32CFormat"/%d" ))
 #define MSG_SGE_DONOTKILLROOTPROCESSXY_UI                _MESSAGE(31051, _("do not kill root process "U32CFormat"/%d"   ))
 #define MSG_SGE_PTDISPATCHPROCTOJOBMALLOCFAILED          _MESSAGE(31052, _("pt_dispatch_proc_to_job: malloc failed\n" ))
-#define MSG_SGE_PIOCPSINFOFAILED                         _MESSAGE(31053, _("PIOCPSINFO failed\n"))
+/* #define MSG_SGE_PIOCPSINFOFAILED                         _message(31053, _("PIOCPSINFO failed\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 

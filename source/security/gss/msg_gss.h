@@ -58,7 +58,7 @@
 #define MSG_GSS_DISPLAYSTATUS_REGISTERINGIDENTITY  _MESSAGE(51015, _("registering identity"))
 #define MSG_GSS_DISPLAYSTATUS_ACCEPTINGCONTEXT     _MESSAGE(51016, _("accepting context"))
 #define MSG_GSS_DISPLAYSTATUS_DISPLAYINGNAME       _MESSAGE(51017, _("displaying name"))
-#define MSG_GSS_DISPLAYSTATUS_COMPARINGNAME       _MESSAGE(51018, _("comparing name"))
+/* #define MSG_GSS_DISPLAYSTATUS_COMPARINGNAME       _message(51018, _("comparing name")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GSS_DISPLAYSTATUS_RELEASINGNAME        _MESSAGE(51019, _("releasing name"))
 #define MSG_GSS_DISPLAYSTATUS_GETTINGKRB5CONTEXT   _MESSAGE(51020, _("getting krb5 context"))
 #define MSG_GSS_DISPLAYSTATUS_GSSDCESETCREDCONTEXTOWNERSHIP _MESSAGE(51021, _("gssdce_set_cred_context_ownership"))
@@ -121,7 +121,7 @@
 #define MSG_GSS_COULDNOTCHANGEOWNERSHIPOFXTOYZ_SSS       _MESSAGE(51049, _("could not change ownership of "SFN" to "SFN" - "SFN"\n"))
 #define MSG_GSS_PERROR_SETGID                            _MESSAGE(51050, _("setgid"))
 #define MSG_GSS_PERROR_SETUID                            _MESSAGE(51051, _("setuid"))
-#define MSG_GSS_PERROR_EXECFAILED                        _MESSAGE(51052, _("exec failed"))
+/* #define MSG_GSS_PERROR_EXECFAILED                        _message(51052, _("exec failed")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GSS_COULDNOTLINKXTODCECREDENTIALSCACHEFILEYZ_SSS   _MESSAGE(51053, _("Could not link "SFN" to DCE credentials cache file "SFN" - "SFN"\n"))
 #define MSG_GSS_COULDNOTLINKXTODCECREDENTIALSCACHEFILEYINVALIDKRB5CCNAMEENVIRONMENTVARIABLEFORMAT_SS  _MESSAGE(51054, _("Could not link "SFN" to DCE credentials cache file "SFN" - invalid KRB5CCNAME environment variable format\n"))
 

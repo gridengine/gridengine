@@ -41,7 +41,7 @@
 #define MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S    _MESSAGE(17003, _("\nYour interactive job "SFN" has been successfully scheduled.\n"))
 #define MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS    _MESSAGE(17004, _("Establishing "SFN" session to host "SFN" ...\n"))
 #define MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER    _MESSAGE(17005, _("\nCannot get configuration from qmaster.\n"))
-#define MSG_JOB_CANTGETHOSTOFJOB    _MESSAGE(17006, _("Cannot get host of job.\n"))
+/* #define MSG_JOB_CANTGETHOSTOFJOB    _message(17006, _("Cannot get host of job.\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_EXEC_CANTEXECXYZ_SS    _MESSAGE(17007, _("\nCould not exec "SFN": "SFN"\n"))
 #define MSG_QSH_CANTSTARTINTERACTIVEJOB    _MESSAGE(17008, _("\nCould not start interactive job.\n"))
 #define MSG_QSH_ERROROPENINGSTREAMSOCKET_S   _MESSAGE(17009, _("error opening stream socket: "SFN"\n"))
@@ -63,7 +63,7 @@
 #define MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS _MESSAGE(17025, _("executing task of job %d failed: "SFN"\n"))
 #define MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS _MESSAGE(17026, _("\ncannot get connection to "SFQ" at host "SFQ"\n"))
 #define MSG_QSH_ERRORREADINGCONTEXTFROMQLOGIN_STARTER_S _MESSAGE(17027, _("\nerror reading job context from "SFQ"\n"))
-#define MSG_QSH_LINEFEED _MESSAGE(17028, _("\n"))
+/* #define MSG_QSH_LINEFEED _message(17028, _("\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QSH_UNKNOWNJOBSTATUS_X _MESSAGE(17029, _("unknown job status " X32CFormat "\n"))
 #define MSG_QSH_SENDINGTASKTO_S _MESSAGE(17030, _("Starting server daemon at host "SFQ"\n"))
 #define MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S _MESSAGE(17031, _("Server daemon successfully started with task id "SFQ"\n"))

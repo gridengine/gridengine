@@ -85,9 +85,9 @@
 #define MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_S    _MESSAGE(29031, _("can't open \"job_pid\" file for job "SFN"\n"))
 #define MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U    _MESSAGE(29032, _("remove_acked_job_exit called with "U32CFormat".0"))
 #define MSG_JOB_XYHASNOTASKZ_UUS    _MESSAGE(29033, _("job "U32CFormat"."U32CFormat" has no task "SFQ))
-#define MSG_SHEPHERD_CANTSTARTXFORJOBY_SU    _MESSAGE(29034, _("can't start command "SFQ" for job " U32CFormat " to delete credentials"))
-#define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXCOMMANDYFAILEDWITHCODEZ_USI    _MESSAGE(29035, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d"))
-#define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _MESSAGE(29036, _("could not delete credentials for job " U32CFormat" - "SFN" binary does not exist"))
+/* #define MSG_SHEPHERD_CANTSTARTXFORJOBY_SU    _message(29034, _("can't start command "SFQ" for job " U32CFormat " to delete credentials")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXCOMMANDYFAILEDWITHCODEZ_USI    _message(29035, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _message(29036, _("could not delete credentials for job " U32CFormat" - "SFN" binary does not exist")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_CANTREMOVEDIRECTORY_SS    _MESSAGE(29037, _("can't remove directory "SFQ": "SFN))
 #define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS    _MESSAGE(29038, _("acknowledge for unknown job "U32CFormat"."U32CFormat"/"SFN))
 #define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT    _MESSAGE(29039, _("acknowledge for unknown job's exit"))
@@ -132,7 +132,7 @@
 #define MSG_SCHEDD_JOBXPIDYSCHEDSETSCHEDULERFAILURE_UUS    _MESSAGE(29073, _("job "U32CFormat" pid "U32CFormat" sched_setscheduler failure: "SFN"\n"))
 #define MSG_PRIO_JOBXNICEMFAILURE_S                        _MESSAGE(29074, _("job "U32CFormat" nicem failure: "SFN"\n"))
 #define MSG_PRIO_JOBXNICEJFAILURE_S                        _MESSAGE(29075, _("job "U32CFormat" nicej failure: "SFN"\n"))
-#define MSG_PRIO_JOBXSETPRIORITYFAILURE_US                 _MESSAGE(29076, _("job "U32CFormat" setpriority failure: "SFN"\n"))
+/* #define MSG_PRIO_JOBXSETPRIORITYFAILURE_US                 _message(29076, _("job "U32CFormat" setpriority failure: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_WHERE_FAILEDTOBUILDWHERECONDITION              _MESSAGE(29077, _("failed to build where-condition"))
 #define MSG_PRIO_PTFMINMAX_II                              _MESSAGE(29078, _("PTF_MAX_PRIORITY=%d, PTF_MIN_PRIORITY=%d\n"))
 #define MSG_PRIO_NICEMFAILED_S                             _MESSAGE(29079, _("nicem failed: "SFN"\n"))
@@ -166,7 +166,7 @@
 */
 #define MSG_EXECD_INVALIDUSERNAME_S   _MESSAGE(29093, _("invalid user name "SFQ"\n"))
 #define MSG_EXECD_NOHOMEDIR_S         _MESSAGE(29094, _("missing home directory for user "SFQ"\n"))
-#define MSG_BUFFEROFSIZETOOSMALLFOR_DS _MESSAGE(29095, _("buffer of size %d is too small for path "SFN"...\n"))
+/* #define MSG_BUFFEROFSIZETOOSMALLFOR_DS _message(29095, _("buffer of size %d is too small for path "SFN"...\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /*
@@ -180,7 +180,7 @@
 ** exec_job.c
 */
 #define MSG_FILE_RMDIR_SS             _MESSAGE(29098, _("can't remove directory "SFQ": "SFN"\n"))
-#define MSG_FILE_CREATEDIRDEL_SS      _MESSAGE(29099, _("can't create directory "SFN" after deletion: "SFN))
+/* #define MSG_FILE_CREATEDIRDEL_SS      _message(29099, _("can't create directory "SFN" after deletion: "SFN)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_CREATEDIR_SS         _MESSAGE(29100, _("can't create directory "SFN": "SFN))
 #define MSG_EXECD_NOSGID              _MESSAGE(29101, _("supplementary group ids could not be found in /proc"))
 #define MSG_EXECD_NOPARSEGIDRANGE     _MESSAGE(29102, _("can not parse gid_range"))
@@ -228,7 +228,7 @@
 #define MSG_EXECD_NOADDGIDOPEN_SSS   _MESSAGE(29130, _("failed opening addgrpid file "SFN" of job "SFN": "SFN))
 #define MSG_JOB_NOREGISTERPTF_SS     _MESSAGE(29131, _("failed registering job "SFN" at ptf: "SFN))
 #define MSG_EXECD_NOOSJOBIDOPEN_SSS  _MESSAGE(29132, _("failed opening os jobid file "SFN" of job "SFN": "SFN))
-#define MSG_EXECD_NOOSJOBIDREAD_SUUS  _MESSAGE(29133, _("failed reading os jobid file "SFN" of job "U32CFormat"."U32CFormat": "SFN))
+/* #define MSG_EXECD_NOOSJOBIDREAD_SUUS  _message(29133, _("failed reading os jobid file "SFN" of job "U32CFormat"."U32CFormat": "SFN)) __TS Removed automatically from testsuite!! TS__*/
 /*
 ** execd_job_exec.c
 */
@@ -241,12 +241,12 @@
 #define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "U32CFormat" but this job is not here\n"))
 #define MSG_JOB_TASKNOTASKINJOB_UU    _MESSAGE(29141, _("received task belongs to job "U32CFormat" but this job is here but the JobArray task "U32CFormat" is not here\n"))
 #define MSG_JOB_TASKNOSUITABLEJOB_U   _MESSAGE(29142, _("received task belongs to job "U32CFormat" but this job is not suited for starting tasks\n"))
-#define MSG_JOB_TASKALREADYEXISTS_US  _MESSAGE(29143, _("received task "U32CFormat"/"SFN" which is already here\n"))
-#define MSG_JOB_NOTASKPASSINGIF_SU    _MESSAGE(29144, _(SFN" does not fulfill task passing interface for job "U32CFormat"\n"))
+/* #define MSG_JOB_TASKALREADYEXISTS_US  _message(29143, _("received task "U32CFormat"/"SFN" which is already here\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_NOTASKPASSINGIF_SU    _message(29144, _(SFN" does not fulfill task passing interface for job "U32CFormat"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "U32CFormat" of user "SFN"@"SFN" (localhost = "SFN")\n"))
-#define MSG_JOB_NOSUCHQ_SUSS          _MESSAGE(29146, _("no such queue "SFQ" as requested by job "U32CFormat" from user "SFN"@"SFN"\n"))
-#define MSG_JOB_NOREQQONHOST_SSS      _MESSAGE(29147, _("requested queue "SFQ" resides not at this host "SFN" but at host "SFN"\n"))
-#define MSG_JOB_REQQFULL_SII          _MESSAGE(29148, _("requested queue "SFQ" is already full (%d/%d)\n"))
+/* #define MSG_JOB_NOSUCHQ_SUSS          _message(29146, _("no such queue "SFQ" as requested by job "U32CFormat" from user "SFN"@"SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_NOREQQONHOST_SSS      _message(29147, _("requested queue "SFQ" resides not at this host "SFN" but at host "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_REQQFULL_SII          _message(29148, _("requested queue "SFQ" is already full (%d/%d)\n")) __TS Removed automatically from testsuite!! TS__*/
 /*
 ** execd_kill_execd.c
 */
@@ -280,7 +280,7 @@
 #define MSG_LS_STOPLS_S               _MESSAGE(29161, _("stopping load sensor "SFN"\n"))
 #define MSG_LS_STARTLS_S              _MESSAGE(29162, _("starting load sensor "SFN"\n"))
 #define MSG_LS_RESTARTLS_S            _MESSAGE(29163, _("restarting load sensor "SFN"\n"))
-#define MSG_LS_NORESTARTLS            _MESSAGE(29164, _("load sensor not restarted because load sensor file was not modified\n"))
+/* #define MSG_LS_NORESTARTLS            _message(29164, _("load sensor not restarted because load sensor file was not modified\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_LS_NOMODTIME_SS           _MESSAGE(29165, _("can't get mod_time from load sensor file "SFN": "SFN"\n"))
 #define MSG_LS_FORMAT_ERROR_SS        _MESSAGE(29166, _("Format error of loadsensor "SFQ". Received: \"%100s\""))
 
@@ -308,7 +308,7 @@
 /*
  *
  */
-#define MSG_EXECD_CMDNEXISTS          _MESSAGE(29182, _("The given command does not exist"))
+/* #define MSG_EXECD_CMDNEXISTS          _message(29182, _("The given command does not exist")) __TS Removed automatically from testsuite!! TS__*/
 
 #endif /* __MSG_EXECD_H */
 

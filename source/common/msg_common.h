@@ -40,7 +40,7 @@
 */
 
 #define MSG_SGETEXT_SGEROOTNOTFOUND_S         _MESSAGE(23000, _("SGE_ROOT directory "SFQ" doesn't exist\n"))
-#define MSG_SGETEXT_SGEROOTNOTSET             _MESSAGE(23001, _("SGE_ROOT is not set\n"))
+/* #define MSG_SGETEXT_SGEROOTNOTSET             _message(23001, _("SGE_ROOT is not set\n")) __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_PARSE_TOOMANYOPTIONS              _MESSAGE(23002, _("ERROR! too many options\n"))
 #define MSG_UNKNOWN_OBJECT                    _MESSAGE(23003, _("??? unknown object ???"))
@@ -125,9 +125,9 @@
 ** parse_qlist.c
 */
 #define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S        _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting\n"))
-#define MSG_PARSE_WORNGOBJLISTFORMATXSPECIFIEDTOYOPTION_SS    _MESSAGE(23064, _("ERROR! Wrong object list format "SFQ" specified to "SFN" option\n"))
-#define MSG_PARSE_DOPTIONMUSTHAVEFILEARGUMENT                 _MESSAGE(23065, _("ERROR! -d option must have file argument\n"))
-#define MSG_PARSE_WRONGFIELDLISTFORMATXSPECIFIEDFORFOPTION_S  _MESSAGE(23066, _("ERROR! Wrong field list format "SFQ" specified to -f option\n"))
+/* #define MSG_PARSE_WORNGOBJLISTFORMATXSPECIFIEDTOYOPTION_SS    _message(23064, _("ERROR! Wrong object list format "SFQ" specified to "SFN" option\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PARSE_DOPTIONMUSTHAVEFILEARGUMENT                 _message(23065, _("ERROR! -d option must have file argument\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PARSE_WRONGFIELDLISTFORMATXSPECIFIEDFORFOPTION_S  _message(23066, _("ERROR! Wrong field list format "SFQ" specified to -f option\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /*
@@ -181,7 +181,7 @@
 ** parse_qconf.c
 */
 #define MSG_QCONF_CANTCHANGEQUEUENAME_S           _MESSAGE(23110, _(SFN": cannot change queuename\n"))
-#define MSG_QCONF_CANTCHANGEHOSTNAME_S           _MESSAGE(23111, _(SFN": cannot change hostname\n") )  
+/* #define MSG_QCONF_CANTCHANGEHOSTNAME_S           _message(23111, _(SFN": cannot change hostname\n") )   __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_NOFILEARGUMENTGIVEN           _MESSAGE(23112, _("no file argument given\n"))
 #define MSG_PARSE_EDITFAILED                   _MESSAGE(23113, _("edit failed\n"))
 #define MSG_FILE_FILEUNCHANGED                 _MESSAGE(23114, _("file unchanged\n"))
@@ -214,12 +214,12 @@
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23142, _(SFN": missing filename as option argument\n"))
 #define MSG_QCONF_XISNOTAOBJECTATTRIB_SSS         _MESSAGE(23143, _(SFN": "SFQ" is not a "SFN" attribute\n"))
 #define MSG_QCONF_XISNOTAQUEUEATTRIB_SS           _MESSAGE(23144, _(SFN": "SFQ" is not a queue attribute\n"))
-#define MSG_QCONF_XISNOTAEXECHOSTATTRIB_SS           _MESSAGE(23145, _(SFN": "SFQ" is not a exec host attribute\n"))
+/* #define MSG_QCONF_XISNOTAEXECHOSTATTRIB_SS           _message(23145, _(SFN": "SFQ" is not a exec host attribute\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23146, _(SFN": cannot change "SFN"\n"))
 #define MSG_QCONF_INTERNALFAILURE_S               _MESSAGE(23147, _(SFN": internal failure\n"))
 #define MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S       _MESSAGE(23148, _(SFN": missing object list\n"))
 #define MSG_QCONF_MQATTR_MISSINGQUEUELIST_S       _MESSAGE(23149, _(SFN": missing queue list\n"))
-#define MSG_QCONF_MQATTR_MISSINGHOSTLIST_S       _MESSAGE(23150, _(SFN": missing host list\n") )        
+/* #define MSG_QCONF_MQATTR_MISSINGHOSTLIST_S       _message(23150, _(SFN": missing host list\n") )         __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION  _MESSAGE(23151, _("changed scheduler configuration\n"))
 #define MSG_USER_XISNOKNOWNUSER_S                 _MESSAGE(23152, _(SFN" is not known as user\n"))
 #define MSG_PROJECT_XISNOKNWOWNPROJECT_S          _MESSAGE(23153, _(SFN" is not known as project\n"))
@@ -309,9 +309,9 @@
 /*
 ** sched_conf.c
 */
-#define MSG_SCHEDCONF_ALPPISNULLNOSCHEDULERCONFIGURATION    _MESSAGE(23224, _("alpp == NULL - no scheduler configuration"))
-#define MSG_ANSWER_NOSCHEDULERCONFIGURATION    _MESSAGE(23225, _("no scheduler configuration"))
-#define MSG_SCHEDCONF_CANTOPENSCHEDULERCONFIGURATIONFILE_SS    _MESSAGE(23226, _("cant open scheduler configuration file "SFQ": "SFN"\n"))
+/* #define MSG_SCHEDCONF_ALPPISNULLNOSCHEDULERCONFIGURATION    _message(23224, _("alpp == NULL - no scheduler configuration")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_ANSWER_NOSCHEDULERCONFIGURATION    _message(23225, _("no scheduler configuration")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SCHEDCONF_CANTOPENSCHEDULERCONFIGURATIONFILE_SS    _message(23226, _("cant open scheduler configuration file "SFQ": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S    _MESSAGE(23227, _("invalid value "SFQ" for queue_sort_method"))
 #define MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION    _MESSAGE(23228, _("can't create scheduler configuration\n"))
 
@@ -1008,16 +1008,16 @@
 #define MSG_GDI_UTEXT_nohist_OPT                         _MESSAGE(23464, _("do not write history" ))
 
 #define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
-#define MSG_GDI_UTEXT_noread_argfile_OPT                 _MESSAGE(23465, _("do not read \"qmaster_args\" file"))
+/* #define MSG_GDI_UTEXT_noread_argfile_OPT                 _message(23465, _("do not read \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_GDI_USAGE_nowrite_argfile_OPT                "[-nowrite-argfile]"
-#define MSG_GDI_UTEXT_nowrite_argfile_OPT                _MESSAGE(23466, _("do not write \"qmaster_args\" file"))
+/* #define MSG_GDI_UTEXT_nowrite_argfile_OPT                _message(23466, _("do not write \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_GDI_USAGE_truncate_argfile_OPT               "[-truncate-argfile]"
-#define MSG_GDI_UTEXT_truncate_argfile_OPT               _MESSAGE(23467, _("truncate  \"qmaster_args\" file"))
+/* #define MSG_GDI_UTEXT_truncate_argfile_OPT               _message(23467, _("truncate  \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_GDI_USAGE_nostart_schedd_OPT                 "[-nostart-schedd]"
-#define MSG_GDI_UTEXT_nostart_schedd_OPT                 _MESSAGE(23468, _("do not start schedd"))
+/* #define MSG_GDI_UTEXT_nostart_schedd_OPT                 _message(23468, _("do not start schedd")) __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_GDI_USAGE_nostart_commd_OPT                  "[-nostart-commd]"
 #define MSG_GDI_UTEXT_nostart_commd_OPT                  _MESSAGE(23469, _("do not start commd"))
@@ -1065,7 +1065,7 @@
 #define MSG_GDI_UTEXT_Aattr_OPT                          _MESSAGE(23483, _("add to a list attribute of an object") ) 
 
 #define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
-#define MSG_GDI_UTEXT_show_license_OPT                   _MESSAGE(23484, _("show license information"))
+/* #define MSG_GDI_UTEXT_show_license_OPT                   _message(23484, _("show license information")) __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
@@ -1121,10 +1121,10 @@
 #define MSG_INVALIDFILENAMENULLOREMPTY    _MESSAGE(60200, _("invalid file name: NULL pointer or empty string\n"))
 #define MSG_STDFILEHANDLECLOSEDORCORRUPTED_S _MESSAGE(60201, _("standard file handle "SFN" has been closed or corrupted\n"))
 #define MSG_ERRORGETTINGTMPNAM_S          _MESSAGE(60202, _("error getting temporary file name: "SFN"\n"))
-#define MSG_ERROROPENINGFILEFORREADING_SS _MESSAGE(60203, _("error opening file "SFQ" for reading: "SFN"\n"))
+/* #define MSG_ERROROPENINGFILEFORREADING_SS _message(60203, _("error opening file "SFQ" for reading: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN"\n"))
 #define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN"\n"))
-#define MSG_ERROR_READINGFILE_SS          _MESSAGE(60206, _("error reading from file "SFQ": "SFN"\n"))
+/* #define MSG_ERROR_READINGFILE_SS          _message(60206, _("error reading from file "SFQ": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
 
 /* parsing of parameters */

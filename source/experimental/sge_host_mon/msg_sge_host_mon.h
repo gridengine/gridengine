@@ -55,7 +55,7 @@
 #define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _MESSAGE(37018, _(SFN" is not a valid interval\n"))
 #define MSG_ERROR_XISNOTAVALIDCOUNT_S           _MESSAGE(37019, _(SFN" is not a valid count\n"))
 #define MSG_FILE_COULDNOTOPENXFORY_SS           _MESSAGE(37020, _("could not open "SFN" for "SFN"\n"))
-#define MSG_ERROR_UNABLETODUMPLIST              _MESSAGE(37021, _("Unable to dump list\n"))
+/* #define MSG_ERROR_UNABLETODUMPLIST              _message(37021, _("Unable to dump list\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 

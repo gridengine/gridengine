@@ -50,31 +50,28 @@ RemoveQmaster()
 
    if [ $? = 0 ]; then
       $INFOTEXT -n "We're going to uninstall the master host now!\n"
-      CheckRunningExecd
+      CheckRegisteredExecd
 
    else
       exit 0 
    fi
 }
 
-CheckRunningExecd()
+CheckRegisteredExecd()
 {
    $INFOTEXT -n "Checking Running Execution Hosts\n"
    $INFOTEXT -log -n "Checking Running Execution Hosts\n"
    
-   for h in `qconf -sel`; do
+   registered=`qconf -sel`
 
-     running=`qconf -se $h | grep load_values | grep load_avg`
-
-     if [ "$running" = "" ]; then
+     if [ "$registered" = "" ]; then
         :
      else
-        $INFOTEXT "Found running execution hosts, exiting uninstallation!\n"
-        $INFOTEXT -log "Found running execution hosts, exiting uninstallation!\n"
+        $INFOTEXT "Found registered execution hosts, exiting uninstallation!\n"
+        $INFOTEXT -log "Found registered execution hosts, exiting uninstallation!\n"
         exit 0
      fi
 
-   done
    $INFOTEXT "There are no running execution host registered!\n"
    $INFOTEXT -log "There are no running execution host registered!\n"
    ShutdownMaster

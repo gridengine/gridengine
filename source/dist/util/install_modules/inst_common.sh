@@ -338,7 +338,7 @@ ErrUsage()
    myname=`basename $0`
    $ECHO >&2
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux|-sm|-usm|-db|-upd <SGE_ROOT> <SGE_CELL>\n" \
+             "Usage: %s -m|-um|-x|-ux [all] |-sm|-usm|-db|-upd <SGE_ROOT> <SGE_CELL>\n" \
              "              |-bup|-rst [-auto filename ] [-csp] [-resport] \n" \
              "              [-afs] [-host] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
@@ -369,11 +369,17 @@ ErrUsage()
              "                     util/install_modules/inst_template.conf)\n" \
              "   inst_sge -ux -host hostname\n" \
              "                     Uninstalls execd on given executionhost\n" \
+             "   inst_sge -ux all  Uninstalls all registered executionhosts\n" \
              "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
              "   inst_sge -sm      Install a Shadow Master Host on local host\n" \
              "   inst_sge -upd <SGE_ROOT> <SGE_CELL>                         \n" \
              "   <SGE_ROOT> = SGE_ROOT directory of old 5.x installation.\n" \
-             "   <SGE_CELL> = SGE_CELL name of old 5.x installation." $myname 
+             "   <SGE_CELL> = SGE_CELL name of old 5.x installation.\n\n" $myname
+
+   if [ "$option" != "" ]; then 
+      $INFOTEXT -e "   The option %s is not valid!" $option 
+   fi
+
    $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
 
       if [ $AUTO = true ]; then
@@ -1175,6 +1181,14 @@ BackupConfig()
 RestoreConfig()
 {
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
+
+   CheckRunningDaemon sge_qmaster
+
+   if [ $? != 0 ]; then
+      $INFOTEXT "The sge_qmaster is running, please shutdown sge_qmaster\n" \
+                "first and restart the restore procedure!"
+      exit 1
+   fi
 
    $INFOTEXT -u "SGE Configuration Restore"
    $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \

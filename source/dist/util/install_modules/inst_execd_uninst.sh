@@ -44,16 +44,27 @@ WelcomeUninstall()
    fi
 
    $INFOTEXT -u "Grid Engine unistallation"
-   $INFOTEXT "\nYour are going to uninstall a execution host!\n" \
-             "If you are not sure what you are doing, than please stop\n" \
-             "this procedure with <CTRL-C>!\n" 
-
+   if [ "$ALL_EXECDS" = true ]; then
+      $INFOTEXT "\nYour are going to uninstall all execution hosts!\n" \
+                "If you are not sure what you are doing, than please stop\n" \
+                "this procedure with <CTRL-C>!\n" 
+   else
+      $INFOTEXT "\nYour are going to uninstall a execution host!\n" \
+                "If you are not sure what you are doing, than please stop\n" \
+                "this procedure with <CTRL-C>!\n"
+   fi
+   
    $INFOTEXT -wait -n "\nHit <ENTER>, to continue! >>"
 }
+
 FetchHostname()
 {
    if [ $AUTO = "true" ]; then
       HOST=$EXEC_HOST_LIST_RM
+   fi
+
+   if [ "$ALL_EXECDS" = true ]; then
+      HOST=`qconf -sel`
    fi
 
    for h in $HOST; do

@@ -132,6 +132,11 @@ while [ $ARGC != 0 ]; do
      ;;
    -ux)
      EXECD="uninstall"
+     if [ $2 = "all" ]; then
+        ALL_EXECDS=true
+        shift
+        ARGC=`expr $ARGC - 1`
+     fi
      . ./util/install_modules/inst_execd_uninst.sh
      . ./util/install_modules/inst_qmaster.sh
      ;;
@@ -209,6 +214,7 @@ while [ $ARGC != 0 ]; do
      ErrUsage
      ;;
    *)
+     option=$1
      ErrUsage
      ;;
    esac
@@ -432,10 +438,6 @@ if [ $BERKELEY = "install" ]; then
 
 fi
 
-if [ $QMASTER = "uninstall" ]; then
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh
-   RemoveQmaster
-fi
 
 if [ $EXECD = "uninstall" ]; then
 
@@ -461,9 +463,22 @@ if [ $EXECD = "uninstall" ]; then
    if [ $AUTO = "true" ]; then
       MoveLog
    fi
- 
-   exit 0
+   
+   $INFOTEXT "If you have local execution host spool directories,\n" \
+             "please remove them by hand!\n\n"
+
+   if [ $QMASTER != "uninstall" ]; then 
+      exit 0
+   fi
+
 fi
+
+
+if [ $QMASTER = "uninstall" ]; then
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
+   RemoveQmaster
+fi
+
 
 if [ $SHADOW = "install" ]; then
 

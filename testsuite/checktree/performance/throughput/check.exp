@@ -2570,7 +2570,7 @@ proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb }
 
 proc create_reports { results_array job_array_name schedd_array_name} {
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
-   global CHECK_CORE_EXECD 
+   global CHECK_CORE_EXECD CHECK_HOST CHECK_USER
    global end_job_count                 ;# number of jobs
    global enable_queues_job_count         ;# after with job, enable queues
    global nr_queues                       ;# nr of queues on each host
@@ -2675,8 +2675,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    spool_array_to_file $prot_output_file "job data"       jobs    0
    spool_array_to_file $prot_output_file "scheduler data" schedd  0
 
-   
-
+   file delete ${prot_output_file}.old
 
    # job results
    calculate_average_cluster_times results cluster_results
@@ -2706,6 +2705,9 @@ proc create_reports { results_array job_array_name schedd_array_name} {
 
    analyse_dump_data_file $prot_output_file 1
    compare_dump_directory $prot_output_dir
+   puts $CHECK_OUTPUT "to gzip $prot_output_file ..."
+   puts $CHECK_OUTPUT [start_remote_prog $CHECK_HOST $CHECK_USER gzip $prot_output_file prg_exit_state 60 0 "" 1 0 0]
+   
 }
 
 proc calculate_average_cluster_times { results_array cluster_results_array { dump_file "" } } {

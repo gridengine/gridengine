@@ -1,3 +1,6 @@
+CR-2003-02-05-3  Testsuite: Throughput performance test:
+                              gzip of data file to save disk space
+
 CR-2003-02-05-2  Testsuite: Throughput performance test:
                               New protocol path for test results
                               when local spooldirs are used on execds

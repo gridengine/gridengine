@@ -130,6 +130,7 @@ int sgeee_scheduler ( sge_Sdescr_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,
                     lList *pending_jobs,
+                    lList *pending_jobs_excluded,
                     lList **orderlist,
                     bool has_queues,
                     bool has_pending_jobs );

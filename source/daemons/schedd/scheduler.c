@@ -495,6 +495,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                     *(splitted_job_lists[SPLIT_RUNNING]),
                     *(splitted_job_lists[SPLIT_FINISHED]),
                     *(splitted_job_lists[SPLIT_PENDING]),
+                    *(splitted_job_lists[SPLIT_PENDING_EXCLUDED]),
                     orderlist,
                     queue != NULL,
                     nr_pending_jobs > 0); 

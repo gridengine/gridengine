@@ -1,3 +1,10 @@
+SG-2003-08-27-1: Bugfix:    Fixed a bug, which I added during some code cleanup
+                            with the last commit. Jobs, which did exed the maxujobs
+                            limit were ignored during the ticket calculation and kept
+                            their tickets from the last calculation.
+
+                 Changed:   sge_schedd
+
 SG-2003-08-26-1: Bugfix:    The scheduler handled strings in a hard and hard 
                             with a soft request differently, when it was defined 
                             in a host and overwritten in a queue.

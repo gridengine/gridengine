@@ -1,3 +1,7 @@
+JG-2004-04-23-0: Bugfix:    Fixed core dump in event master module.
+                 Changed:   qmaster
+                 Review:    AD
+
 AD-2004-04-22-1: Bugfix:    Changed thread startup order back to old one.
                             Register job resend events for jobs with status
                             'JTRANSFERING' in a separate function.

@@ -1,3 +1,5 @@
+EB-2001-11-06-1: Fix: qdel of pending job task array took a long time
+
 CR-2001-11-06-0: Testsuite:
                     - comparing reset_scheduler setup values on startup 
                       with the default from installation

@@ -435,6 +435,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    int spool_single_task_files;
    lList *master_list = handle_as_zombie ? Master_Zombie_List : Master_Job_List;
    lListElem *job = lGetElemUlong(master_list,  JB_job_number, jobid);
+   int try_to_remove_sub_dirs = 0;
 
    DENTER(TOP_LAYER, "job_remove_spool_file");
 
@@ -467,13 +468,15 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
                    MSG_JOB_TASK_SPOOL_FILE, task_spool_file));
             DTRACE;
          }
+
+         /*
+          * Following rmdir call may fail. We can ignore this error.
+          * This is only an indicator that another task is running which has been
+          * spooled in the directory.
+          */  
+         DPRINTF(("try to remove "SFN"\n", task_spool_dir));
+         rmdir(task_spool_dir);
       }
-      /*
-       * Following rmdir call may fail. We can ignore this error.
-       * This is only an indicator that another task is running which has been
-       * spooled in the directory.
-       */  
-      rmdir(task_spool_dir);
    }
 
    sge_get_file_path(spool_dir, JOB_SPOOL_DIR, 
@@ -484,6 +487,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
                      FORMAT_SECOND_PART, flags, jobid, ja_taskid);
    sge_get_file_path(spoolpath_common, JOB_SPOOL_FILE, 
                      FORMAT_DEFAULT, flags, jobid, ja_taskid);
+   try_to_remove_sub_dirs = 0;
    if (spool_single_task_files) {
       if (ja_taskid == 0) { 
          DPRINTF(("removing "SFN"\n", spoolpath_common));
@@ -492,26 +496,34 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
                    MSG_JOB_JOB_SPOOL_FILE, spoolpath_common)); 
             DTRACE;
          }
+         DPRINTF(("removing "SFN"\n", spool_dir));
          if (recursive_rmdir(spool_dir, error_string)) {
             ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
                    MSG_JOB_JOB_SPOOL_DIRECTORY, spool_dir));
             DTRACE;
          }
+         try_to_remove_sub_dirs = 1;
       }
    } else {
+      DPRINTF(("removing "SFN"\n", spool_dir));
       if (sge_unlink(NULL, spool_dir)) {
          ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_JOB_SPOOL_FILE,
                 spool_dir));
          DTRACE;
       }
+      try_to_remove_sub_dirs = 1;
    }
    /*
     * Following rmdir calls may fail. We can ignore these errors.
     * This is only an indicator that another job is running which has been
     * spooled in the same directory.
     */
-   if (!rmdir(spool_dir_third)) {
-      rmdir(spool_dir_second); 
+   if (try_to_remove_sub_dirs) {
+      DPRINTF(("try to remove "SFN"\n", spool_dir_third));
+      if (!rmdir(spool_dir_third)) {
+         DPRINTF(("try to remove "SFN"\n", spool_dir_second));
+         rmdir(spool_dir_second); 
+      }
    }
 
    DEXIT;

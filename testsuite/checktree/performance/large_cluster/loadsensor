@@ -1,0 +1,6 @@
+#!/bin/sh
+mypath=`dirname $0`
+unset SGE_DEBUG_LEVEL
+ARCH=`$SGE_ROOT/util/arch`
+export ARCH
+exec /vol2/tools/SW/$ARCH/bin/tclsh8.3 $mypath/loadsensor.tcl

@@ -1,3 +1,11 @@
+JG-2002-01-24-1: Testsuite: New test "large_cluster" testing performance and
+                            scalability of a Grid Engine cluster.
+                            Simulating a large cluster using the simulation
+                            mechanisms provided by JG-2002-01-18-0. 
+                            Tests performance dependent on 
+                            - number of hosts and number of jobs
+                            - number of hosts and size of a sharetree (GEEE)
+
 JG-2002-01-24-0: Testsuite: New functions in sge_procedures:
                             - add_exechost: add an exec host object
                             - add_user    : add a user (GEEE)

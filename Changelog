@@ -1,6 +1,9 @@
+DT-2005-01-19-2: Testsuite: o Fixed drmaa-j test
+                            - merged from maintrunk DT-2005-01-19-0
+                 Changed:   DRMAA
+
 DT-2005-01-19-1: Bugfix:    o Added new test target for Ant for testing binaries
                             - merged from maintrunk DT-2005-01-18-0
-                 Changed:   DRMAA
 
 DT-2005-01-19-0: Cleanup:   o Made JAPI Makefile more readable
                  Bugfix:    o JAPI makefile didn't delete drmaa.o on clean

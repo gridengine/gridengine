@@ -37,6 +37,13 @@
 #   include <fcntl.h>
 #endif
 
+#if defined(DARWIN)
+#   include <mach/host_info.h>
+#   include <mach/mach_host.h>
+#   include <mach/mach_init.h>
+#   include <mach/machine.h>
+#endif
+
 /* IRIX 5, 6 */
 #if defined(__sgi)
 #   include <sys/types.h>
@@ -160,6 +167,19 @@ int sge_nprocs()
       nprocs=1;
    }
 #endif
+
+#if defined(DARWIN)
+  struct host_basic_info cpu_load_data;
+
+  int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
+  mach_port_t host_priv_port = mach_host_self();
+
+  host_info(host_priv_port, HOST_BASIC_INFO , (host_info_t)&cpu_load_data, &host_count);
+
+  nprocs =  cpu_load_data.avail_cpus;
+
+#endif
+
 
 /* IRIX 5, 6 */
 #ifdef __sgi

@@ -177,7 +177,6 @@ lListElem *hep
             if ((cep=lGetElemStr(gdil_ep_JG_complex, CE_name, lGetString(ep2, CE_name))))  {  
                lSetString(cep, CE_stringval, lGetString(ep2, CE_stringval));
                DPRINTF(("complex: %s = %s\n", lGetString(ep2, CE_name), lGetString(ep2, CE_stringval)));
-               break;
             }
             if (!cep) {
                DPRINTF(("complex %s not found\n", lGetString(ep2, CE_name)));

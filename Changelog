@@ -1,3 +1,10 @@
+AH-2003-02-27-1  Bugfix:    overriding queue limits with job request limits
+                            is incomplete for OS architecture dependent
+                            resource limits (NEC)
+                 Issue:     #503
+                 Review     AS
+                 Changed    sge_qmaster
+
 CR-2003-02-27-0  Testsuite: enabled bug test for issue 226 by allowing translation
                             of macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I
                             in set_config() for SGE/EE 5.3 systems. 

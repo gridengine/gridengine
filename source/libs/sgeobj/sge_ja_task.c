@@ -43,6 +43,7 @@
 #include "sge_range.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
+#include "sgeobj/sge_mesobj.h"
 
 #include "sge_job.h"
 #include "sgeobj/sge_idL.h"
@@ -354,6 +355,30 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    ** free the dupped string
    */
    FREE(job_str); 
+   DEXIT;
+   return ret;
+}
+
+/* EB: ADOC: add commets */
+
+bool
+ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "ja_task_message_add");
+   ret = object_message_add(this_elem, JAT_message_list, type, message);
+   DEXIT;
+   return ret;
+}
+
+bool
+ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "ja_task_message_trash_all_of_type_X");
+   ret = object_message_trash_all_of_type_X(this_elem, JAT_message_list, type);
    DEXIT;
    return ret;
 }

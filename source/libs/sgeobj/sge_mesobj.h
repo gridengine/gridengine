@@ -1,5 +1,5 @@
-#ifndef __SGE_QINSTANCE_MSG_H
-#define __SGE_QINSTANCE_MSG_H
+#ifndef __SGE_MESOBJ_H
+#define __SGE_MESOBJ_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -36,12 +36,14 @@
 #include "sge_dstring.h"
 #include "cull.h"
 
-#include "sge_qinstance.h"
+#include "sge_mesobjL.h"
 
 bool
-qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
+object_message_add(lListElem *this_elem, int name, 
+                   u_long32 type, const char *message);
 
 bool
-qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
+object_message_trash_all_of_type_X(lListElem *this_elem, int name,
+                                   u_long32 type);
 
-#endif /* __SGE_QINSTANCE_MSG_H */
+#endif /* __SGE_MESOBJ_H */

@@ -1063,7 +1063,6 @@ bool object_type_free_master_list(const sge_object_type type)
    return ret;
 }
 
-
 /****** sgeobj/object/object_type_get_name() *********************************
 *  NAME
 *     object_type_get_name() -- get a printable name for event type
@@ -1101,6 +1100,23 @@ const char *object_type_get_name(const sge_object_type type)
       ret = object_base[type].type_name;
    }
    DEXIT;
+   return ret;
+}
+
+/* EB: ADOC: add commets */
+sge_object_type object_name_get_type(const char *name)
+{
+   sge_object_type ret = SGE_TYPE_ALL;
+   int i;
+
+   for (i = 0; i < SGE_TYPE_ALL; i++) {
+      int length = strlen(object_base[i].type_name);
+
+      if (!strncasecmp(object_base[i].type_name, name, length)) {
+         ret = i;
+         break;
+      }
+   }
    return ret;
 }
 

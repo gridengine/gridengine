@@ -72,7 +72,6 @@
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_qinstance.h"
-#include "sge_qinstance_message.h"
 #include "sge_qinstance_state.h"
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"

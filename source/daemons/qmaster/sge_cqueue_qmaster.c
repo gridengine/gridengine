@@ -53,7 +53,6 @@
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_qinstance.h"
-#include "sge_qinstance_message.h"
 #include "sge_qinstance_state.h"
 #include "sge_userset.h"
 #include "sge_host.h"

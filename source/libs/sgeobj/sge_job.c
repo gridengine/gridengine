@@ -57,7 +57,7 @@
 #include "sge_qinstance.h"
 #include "sge_host.h"
 #include "symbols.h"
-#include "sge_messageL.h"
+#include "sge_mesobj.h"
 #include "sge_parse_num_par.h"
 
 #include "msg_sgeobjlib.h"

@@ -48,11 +48,13 @@ enum {
    IQ = 0x02                 /* interactive Q */
 };
 
+#if 0
 /* *INDENT-OFF* */
 
 /*
  * Qinstance explanation element
  */
+
 enum {
    QIM_type = QIM_LOWERBOUND,
    QIM_message
@@ -71,6 +73,7 @@ NAMEEND
 #define QIMS sizeof(QIMN)/sizeof(char*)
 
 /* *INDENT-ON* */
+#endif 
 
 /* *INDENT-OFF* */
 

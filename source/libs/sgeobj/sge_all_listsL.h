@@ -88,6 +88,7 @@
 #include "sge_helperL.h"
 #include "sge_cqueueL.h"
 #include "sge_qinstanceL.h"
+#include "sge_mesobjL.h"
 #include "sge_qref.h"
 #include "cull_packL.h"
 #include "sge_resource_utilizationL.h"

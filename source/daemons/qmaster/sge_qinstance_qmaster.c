@@ -50,7 +50,6 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_qmaster.h"
-#include "sge_qinstance_message.h"
 #include "subordinate_qmaster.h"
 #include "sge_qmod_qmaster.h"
 

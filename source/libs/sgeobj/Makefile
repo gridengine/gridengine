@@ -65,12 +65,12 @@ SGEOBJLIB_SRC = \
          sge_load.c \
          sge_mailrec.c \
          sge_manop.c \
+         sge_mesobj.c \
          sge_object.c \
          sge_path_alias.c \
          sge_pe.c \
          sge_pe_task.c \
          sge_qinstance.c \
-         sge_qinstance_message.c \
          sge_qinstance_state.c \
          sge_qref.c \
          sge_range.c \
@@ -197,6 +197,9 @@ sge_mailrec.o: $(SGEOBJLIB_DIR)/sge_mailrec.c
 sge_manop.o: $(SGEOBJLIB_DIR)/sge_manop.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_manop.c
 
+sge_mesobj.o: $(SGEOBJLIB_DIR)/sge_mesobj.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_mesobj.c
+
 sge_object.o: $(SGEOBJLIB_DIR)/sge_object.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_object.c
 
@@ -211,9 +214,6 @@ sge_pe_task.o: $(SGEOBJLIB_DIR)/sge_pe_task.c
 
 sge_qinstance.o: $(SGEOBJLIB_DIR)/sge_qinstance.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance.c
-
-sge_qinstance_message.o: $(SGEOBJLIB_DIR)/sge_qinstance_message.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_message.c
 
 sge_qinstance_state.o: $(SGEOBJLIB_DIR)/sge_qinstance_state.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_state.c

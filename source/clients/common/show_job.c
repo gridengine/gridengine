@@ -506,8 +506,9 @@ void cull_show_job(lListElem *job, int flags)
          dst += lGetDouble(uep, UA_value); \
       }
 
-   if ( lGetPosViaElem(job, JB_ja_tasks)>=0) {
+   if (lGetPosViaElem(job, JB_ja_tasks) >= 0) {
       lListElem *uep, *jatep, *pe_task_ep;
+
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
          double cpu, mem, io, vmem, maxvmem;
          int first_task = 1;
@@ -562,6 +563,26 @@ void cull_show_job(lListElem *job, int flags)
             sge_dstring_free(&cpu_string);
             sge_dstring_free(&vmem_string);
             sge_dstring_free(&maxvmem_string);
+         }
+      }
+   }
+   if (lGetPosViaElem(job, JB_ja_tasks) >= 0) {
+      lListElem *jatep;
+
+      for_each (jatep, lGetList(job, JB_ja_tasks)) {
+         bool first_task = true;
+         lListElem *mesobj;
+
+         for_each(mesobj, lGetList(jatep, JAT_message_list)) {
+            const char *message = lGetString(mesobj, QIM_message);
+
+            if (message != NULL) {
+               printf(SFN" %4d:          "SFN"\n", 
+                      first_task ? "error reason" : "            ",
+                      (int)lGetUlong(jatep, JAT_task_number),
+                      message);
+            }
+            first_task = false;
          }
       }
    }

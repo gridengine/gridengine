@@ -62,7 +62,6 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
-#include "sge_qinstance_message.h"
 #include "sge_qinstance_state.h"
 #include "sge_urgency.h"
 #include "sge_pe.h"

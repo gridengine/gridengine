@@ -236,7 +236,9 @@ enum {
    /*JAT_progress_in_former_runs,*/
    JAT_stop_initiate_time,
    JAT_prio,
-   JAT_ntix
+   JAT_ntix,
+
+   JAT_message_list
 };
 
 SLISTDEF(JAT_Type, Task)
@@ -279,6 +281,8 @@ SLISTDEF(JAT_Type, Task)
    SGE_ULONG(JAT_stop_initiate_time, CULL_DEFAULT | CULL_SUBLIST)         
    SGE_DOUBLE(JAT_prio, CULL_DEFAULT)         
    SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
+
+   SGE_LIST(JAT_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(JATN)
@@ -318,6 +322,8 @@ NAMEDEF(JATN)
    NAME("JAT_stop_initiate_time")
    NAME("JAT_prio")
    NAME("JAT_ntix")
+
+   NAME("JAT_message_list")
 NAMEEND
 
 /* *INDENT-ON* */

@@ -65,7 +65,6 @@
 #include "sge_hostname.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
-#include "sgeobj/sge_qinstance_message.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_report_execd.h"
@@ -191,12 +190,14 @@ lListElem *jatep
       */
    else if ((failed && general_failure==GFSTATE_JOB)) {
 /*       job_log(jobid, jataskid, MSG_LOG_JERRORSET); */
-      DPRINTF(("set job "u32"."u32" in ERROR state\n", lGetUlong(jep, JB_job_number),
-         jataskid));
+      DPRINTF(("set job "u32"."u32" in ERROR state\n", 
+               lGetUlong(jep, JB_job_number), jataskid));
       reporting_create_acct_record(NULL, jr, jep, jatep);
       /* JG: TODO: we need more information in the log message */
-      reporting_create_job_log(NULL, timestamp, JL_ERROR, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JERRORSET);
+      reporting_create_job_log(NULL, timestamp, JL_ERROR, MSG_EXECD, hostname, 
+                               jr, jep, jatep, NULL, MSG_LOG_JERRORSET);
       lSetUlong(jatep, JAT_start_time, 0);
+      ja_task_message_add(jatep, 1, err_str);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT);
    }
       /*
@@ -205,10 +206,12 @@ lListElem *jatep
        */
    else if (((failed && (failed <= SSTATE_BEFORE_JOB)) || 
         general_failure)) {
-      DTRACE;
 /*       job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE); */
       /* JG: TODO: we need more information in the log message */
-      reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JNOSTARTRESCHEDULE);
+      reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, 
+                               hostname, jr, jep, jatep, NULL, 
+                               MSG_LOG_JNOSTARTRESCHEDULE);
+      ja_task_message_add(jatep, 1, err_str);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
       reporting_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);

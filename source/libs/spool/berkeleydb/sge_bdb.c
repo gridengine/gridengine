@@ -1668,6 +1668,7 @@ spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
       } else {
          sge_pack_buffer pb;
          int cull_ret;
+         const lDescr *descr;
 
          DPRINTF(("read object with key "SFQ", size %d\n", 
                   key_dbt.data, data_dbt.size));
@@ -1682,7 +1683,9 @@ spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
             ret = false;
          }
          DPRINTF(("init_packbuffer succeeded\n"));
-         cull_ret = cull_unpack_elem_partial(&pb, &ret, NULL, pack_part);
+
+         descr = object_type_get_descr(object_name_get_type(key_dbt.data));
+         cull_ret = cull_unpack_elem_partial(&pb, &ret, descr, pack_part);
          if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 

@@ -1,3 +1,14 @@
+EB-2004-03-03-0  Bugfix:    - job will be shown twice in qstat/qmon after 
+                              restart of sge_qmaster
+                            - dbstat utility is unable to show certain objects
+                            - Show reason for queue and job error state in qstat
+                 Issue:     160, 757, 761
+                 Changed:   dbstat, sge_qmaster
+                 Review:    SG
+
+                 NOTE:      Cull data structure for ja_task has been changed.
+                            REEINSTALLION NECESARRY!
+
 SG-2004-03-03-0: Bugfix:    - the clients print an error message in case of a
                               bad bootstrap file (part 2).
                  Changed:   all
@@ -26,11 +37,11 @@ MD-2004-03-02-2  Bugfix:    - adapted path to module files
 MD-2004-03-02-1  Enhancem:  - renamed installation files
               
 CR-2004-03-02-2  Bugfix:    - removed some ENABLE_NGC code parts
-                 Cleanup:   - qconf -mconf did not print out an error message when
-                              qmaster wasn't reachable
+                 Cleanup:   - qconf -mconf did not print out an error message 
+                              when qmaster wasn't reachable
                             - check_isalive() returns now commlib error
                             - all clients will no longer log error and critical 
-                              messages to stderr ( log_state_set_log_gui(False) )
+                              messages to stderr (log_state_set_log_gui(False))
                               (produces duplicate error messages)
                  Issue:     662           
                  Changed:   all clients
@@ -89,7 +100,7 @@ MD-2004-01-03-0  Enhancem:  - Add DB_CONFIG file (Berkeley Config)
                  Changed:   inst_sgeee
 
 AA-2004-02-27-1  Bugfix:    - q filtering -> segv
-                 IZ:        725
+                 Issue:     725
                  Changed:   qmon
 
 AA-2004-02-27-0  Bugfix:    - qi dialogue shows only fixed number of queues
@@ -97,7 +108,7 @@ AA-2004-02-27-0  Bugfix:    - qi dialogue shows only fixed number of queues
                             - cq modify queue name line insensitive
                             - time helper dialogue
                             - comment, msg corrections
-                 IZ:        747, 739, 736, 723
+                 Issue:     747, 739, 736, 723
                  Changed:   qmon, msg header changed -> all is recompiled
                  
                             

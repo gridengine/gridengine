@@ -50,6 +50,7 @@
 #include "sge_dstring.h"
 #include "sge_answer.h"
 #include "sge_attr.h"
+#include "sge_calendar.h"
 #include "sge_centry.h"
 #include "sge_ckpt.h"
 #include "sge_cqueue.h"
@@ -57,17 +58,17 @@
 #include "sge_object.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
-#include "sge_calendar.h"
+#include "sge_ja_task.h"
+#include "sge_mesobj.h"
 #include "sge_pe.h"
+#include "sge_qref.h"
 #include "sge_range.h"
 #include "sge_str.h"
 #include "sge_userset.h"
-#include "sge_utility.h"
-#include "sge_ja_task.h"
-#include "sge_qref.h"
 #include "sge_subordinate.h"
 #include "sge_host.h"
 #include "sge_load.h"
+#include "sge_utility.h"
 
 #include "sge_select_queue.h"
 #include "sge_resource_utilization.h"
@@ -704,4 +705,26 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots
    return mods;
 }
 
+/* EB: ADOC: add commets */
 
+bool
+qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_message_add");
+   object_message_add(this_elem, QU_message_list, type, message);
+   DEXIT;
+   return ret;
+}
+
+bool
+qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_message_trash_all_of_type_X");
+   object_message_trash_all_of_type_X(this_elem, QU_message_list, type);
+   DEXIT;
+   return ret;
+}

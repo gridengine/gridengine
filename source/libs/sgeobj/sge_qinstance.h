@@ -119,6 +119,11 @@ qinstance_debit_consumable(lListElem *this_elem, lListElem *job,
 void
 qinstance_check_unknown_state(lListElem *this_elem);
 
+bool
+qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
+
+bool
+qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
 
 /* EB: TODO: queue -> qinstance */
 
@@ -136,5 +141,7 @@ explicit_job_request(lListElem *jep, const char *name);
 bool
 qinstance_list_find_matching(const lList *this_list, lList **answer_list,
                              const char *hostname_pattern, lList **qref_list);
+
+
 
 #endif /* __SGE_QINSTANCE_H */

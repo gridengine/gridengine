@@ -58,7 +58,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 
-#include "sgeobj/sge_qinstance_message.h"
+#include "sgeobj/sge_mesobj.h"
 #include "sgeobj/sge_qinstance_state.h"
 
 #include "msg_common.h"

@@ -48,13 +48,13 @@
 
 #include "sge_ckpt.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
 #include "sge_conf.h"
 #include "sge_schedd_conf.h"
 #include "sge_host.h"
 #include "sge_pe.h"
-#include "sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
-#include "sgeobj/sge_qinstance_message.h"
 #include "sge_userset.h"
 
 #include "sort_hosts.h"

@@ -1,3 +1,6 @@
+AS-2002-06-04-2  CVS        Created V531_beta1_TAG
+--------------------------------------------------
+
 SD-2002-06-04-0: Bugfix:    Removed max_jobs reference from 5.3 branch
 		 Issue:	    #273
 

@@ -1,3 +1,7 @@
+AS-2003-06-17-1: Bugfix     removed references to CODINE/GRD in ckpt
+                            template scripts and README
+                 Changed:   Files in ckpt/
+
 EB-2003-06-17-0: Bugfix:    Checkpointed job was migrated on bad exit status
                             Restarted kernel/app level checkpointing jobs
                             where rescheduled forever

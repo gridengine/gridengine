@@ -1,3 +1,6 @@
+AH-2002-03-26-2  Bugfix:    Fixed "missing node XXXXX in dst trees" problem where
+                            a temporary share tree node was being sent to qmaster
+
 AH-2002-03-26-1  Bugfix:    Found and fixed infinite loop in commd in case host
                             formerly resolved by gethostbyname(3) is no longer
                             resolvable. Also fix commd option -dhr which was -drh

@@ -1,3 +1,6 @@
+JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the 
+                            necessity to use the options -v PATH and -cwd.
+
 AA-2002-03-11-0: Bugfix:    Save Setting, Clear functionality bugs 
 
 AS-2002-03-11-2: CVS:       Created V53_beta2_2_TAG 

@@ -1490,20 +1490,40 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(OBJECT_LAYER, "object_parse_ulong32_from_string");
    if (this_elem != NULL && string != NULL) {
       int pos = lGetPosViaElem(this_elem, name);
-      long value;
 
       if (strlen(string) == 0) {
          /*
           * Empty string will be parsed as '0'
           */
          lSetPosUlong(this_elem, pos, (u_long32)0);
-      } else if ((sscanf(string, "%ld", &value) == 1) && (value >= 0)) {
-         lSetPosUlong(this_elem, pos, (u_long32)value);
       } else {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                 ANSWER_QUALITY_ERROR,
-                                 MSG_ULONG_INCORRECTSTRING, string);
-         ret = false;
+         const double epsilon = 1.0E-12;
+         char *end_ptr = NULL;
+         double dbl_value;
+         u_long32 ulng_value;
+
+         dbl_value = strtod(string, &end_ptr);
+         ulng_value = dbl_value;
+         if (dbl_value < 0 || dbl_value - ulng_value > epsilon) {
+            /*
+             * value to big for u_long32 variable
+             */
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_OBJECT_VALUENOTULONG_S, string);
+            ret = false;
+         } else if (end_ptr != NULL && *end_ptr == '\0') {
+            lSetPosUlong(this_elem, pos, ulng_value);
+         } else {
+            /*
+             * Not a number or
+             * garbage after number
+             */
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_ULONG_INCORRECTSTRING, string);
+            ret = false;
+         }
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

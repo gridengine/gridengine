@@ -1876,7 +1876,11 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
          /* find actual complex attribute */
          if ((cep = lGetElemStr(rlp, CE_name, name)) == NULL) {
             /* no complex attribute for threshold -> ERROR */
-            sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
+            if (qinstance_state_is_unknown(qep)) {
+               sprintf(buffer, MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S, name);
+            } else {
+               sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
+            }
             strncat(reason, buffer, reason_size);
             continue;
          }

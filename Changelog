@@ -1,3 +1,7 @@
+AD-2003-08-08-0: Bugfix:    Darwin: use 'pid_t' for typedef of 'JobID_t'
+                 Changed:   sgedefs.h
+                 Review:    
+
 SG-2003-08-05-0: Bugfix:    The profiling worked only in the first scheduling run.
                             An error occured in the second run, which turned the
                             profiling of.

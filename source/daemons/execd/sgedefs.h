@@ -46,7 +46,7 @@ typedef unsigned long uint64;   /* This should work on all current machines */
 #define UINT64_FMT "%ld"
 #endif
 
-#if !defined(LINUX) && !defined(ALINUX) && !defined(ALPHA) && !defined(SOLARIS)
+#if !defined(LINUX) && !defined(ALINUX) && !defined(ALPHA) && !defined(SOLARIS) && !defined(DARWIN)
 typedef uint64 JobID_t;
 #else
 typedef pid_t JobID_t;

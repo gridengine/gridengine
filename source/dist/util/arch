@@ -203,7 +203,11 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=/usr/share/man
       ;;
    alinux|glinux)
-      DEFAULTMANPATH=/usr/man
+      if [ "`which manpath 2>/dev/null`" != "" ]; then
+         DEFAULTMANPATH=`manpath 2>/dev/null`
+      else
+         DEFAULTMANPATH=/usr/local/man:/usr/share/man:/usr/man:/usr/X11R6/man
+      fi
       ;;
    osf4|tru64)
       DEFAULTMANPATH=/usr/share/man:/usr/dt/share/man:/usr/local/man

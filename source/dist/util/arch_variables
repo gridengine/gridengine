@@ -162,6 +162,7 @@ MKDIR=mkdir
 CHMOD=chmod
 CHOWN=chown
 CP=cp
+MV=mv
 
 # Some of the following shell function require this variable set to false or
 # true
@@ -435,7 +436,7 @@ SetAdminUser()
       exit 1
    fi
  
-   if [ `echo $user| env LC_ALL=C tr "A-Z" "a-z"` = "none" ]; then
+   if [ `echo "$user"| env LC_ALL=C tr "A-Z" "a-z"` = "none" ]; then
       ADMINUSER=default
    else
       ADMINUSER=$user

@@ -38,7 +38,8 @@
 
 # Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin:/usr/ucb:/sbin:/usr/sbin
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/ucb
+umask 022
   
 # Easy way to prevent clearing of screen
 #
@@ -58,70 +59,33 @@ SGE_I18N=true
 #
 CheckForOldJobs()
 {
-   first=true
    doexit=false
-   for i in `ls $MSPOOLdir/jobs` ; do
-         if [ $first = true ]; then
-            echo
-            echo "           CRITICAL WARNING"
-            echo "           ----------------"
-            echo 
-            echo "There are old jobs in the directory"
-            echo 
-            echo "   $MSPOOLdir/jobs"
-            echo
-            echo "The following jobs must be deleted manually before continuing"
-            echo "with this update procedure."
-            echo
-            $ECHO "Press <RETURN> to see the job numbers >> \c"
-            read dummy
-            first=false
+   for dir in jobs job_scripts zombies; do
+      if [ -d $MSPOOLdir/$dir ]; then
+         if [ `ls $MSPOOLdir/$dir | wc -l` -gt 0 ]; then
+            Translate 0 "Found old jobs in: %s" $MSPOOLdir/$dir
             doexit=true
          fi
-         $ECHO "`basename $i` \c"
-   done
-
-   first=true
-   for i in `ls $MSPOOLdir/job_scripts` ; do
-      if [ $first = true ]; then
-         echo
-         echo
-         echo "           CRITICAL WARNING"
-         echo "           ----------------"
-         echo 
-         echo "There are old job scripts in the directory"
-         echo
-         echo "     $MSPOOLdir/job_scripts"
-         echo 
-         echo "The following job scripts must be deleted manually before continuing"
-         echo "with this update procedure."
-         echo
-         $ECHO "Press <RETURN> to see the job script numbers >> \c"
-         read dummy 
-         first=false
-         doexit=true
       fi
-      $ECHO "`basename $i` \c"
    done
 
    if [ $doexit = true ]; then
-      $ECHO "\n\nPress <RETURN> to continue >> \c"
-      read dummy
-      clear
       echo
-      echo Please delete the files in your \"jobs/\" and \"job_scripts\" directories
-      echo before restarting this update procedure.
+      Translate 0 "Please delete the files in the above directories"
+      Translate 0 "before restarting this update procedure."
       echo
-      echo Please verify if the spool directories of your execution daemons
-      echo do not contain any old jobs.
+      Translate 0 "Please verify if the spool directories of your execution daemons"
+      Translate 0 "do not contain any old jobs."
       echo 
-      echo You can delete the following directories of your 
-      echo execution host spool directories:
+      Translate 0 "You should also delete the following directories of your"
+      Translate 0 "execution host spool directories:"
       echo
-      echo "       active_jobs/"
-      echo "       jobs/"
-      echo "       job_scripts/"
-      echo 
+      Translate 0 "   %s" active_jobs/
+      Translate 0 "   %s" jobs/
+      Translate 0 "   %s" job_scripts/
+      echo
+      Translate 0 "Update failed. No changes where made."
+      echo
       exit 1
    fi
 }
@@ -160,18 +124,16 @@ WelcomeTheUser()
 {
 
    $CLEAR
-
-   $ECHO
    Translate 0 "Updating Grid Engine configuration to version 5.3"
    $ECHO "-------------------------------------------------"
-   Translate 0 ""
+   $ECHO
    Translate 0 "The environment variables"
-   Translate 0 ""
+   $ECHO
    Translate 0 "   SGE_ROOT"
    Translate 0 "   SGE_CELL     (only if other than \"default\")"
-   Translate 0 ""
+   Translate 0 "   COMMD_PORT   (only if service sge_commd/tcp is not used"
+   $ECHO
    Translate 0 "must be set and point to the directory of your Grid Engine installation."
-   Translate 0 ""
    Translate 0 "You may not use this script unless you are upgrading from:"
    $ECHO
    Translate 0 "   CODINE versions 5.0.x and 5.1.x"
@@ -186,13 +148,399 @@ WelcomeTheUser()
    Translate 0 "before starting this update procedure."
 
    Translate 4 "Do you want to proceed with the update proecdure"
-   YesNo "\n$transout" n
+   YesNo "\n$transout" y
 
    if [ $? = 1 ]; then
       $ECHO
       Translate 0 "Exiting update procedure. No changes were made."
       exit 1
    fi
+
+
+   C_DIR=$SGE_ROOT/$SGE_CELL/common
+   MSPOOLdir=`env LC_ALL=C grep qmaster_spool_dir $C_DIR/configuration | env LC_ALL=C awk '{print $2}'`
+
+   $CLEAR
+   $ECHO
+   Translate 0 "Using the following directories for this update procedure"
+   $ECHO "---------------------------------------------------------"      
+   $ECHO
+   Translate 0 "The >common< directory in:"
+   $ECHO
+   Translate 0 "   %s" $C_DIR
+   $ECHO
+   Translate 0 "The qmaster spool directory in:"
+   $ECHO
+   Translate 0 "   %s" $MSPOOLdir
+   Translate 4 "Do you want to use the above directories for upgrading"
+   YesNo "\n$transout" y
+
+   if [ $? = 1 ]; then
+      $ECHO
+      Translate 0 "Please set your environment variables and restart this script."
+      Translate 0 "No changes were made."
+      $ECHO
+      exit 1
+   fi
+}
+
+#--------------------------------------------------------------------------
+# CheckPrerequisites
+#    Check a bare minimum of files and directories which must exist
+#
+CheckPrerequisites()
+{
+
+   file1=""
+   file2=""
+   if [ -f $C_DIR/grd5 ]; then
+      file1=$C_DIR/grd5
+   fi
+   if [ -f $C_DIR/codine5 ]; then
+      file2=$C_DIR/codine5
+   fi
+   
+   if [ -f $C_DIR/rcsge ]; then
+      file2=$C_DIR/rcsge
+   fi
+
+   if [ "$file1" = "" -a "$file2" = "" ]; then
+      $CLEAR
+      echo
+      Translate 0 "ERROR: startup script"
+      echo
+      Translate 0 "   %s or" $C_DIR/grd5
+      Translate 0 "   %s" $C_DIR/codine5
+      echo
+      Translate 0 "does not exist."
+      echo
+      Translate 0 "Update failed. No changes were made."
+      echo
+      exit 1
+   elif [ "$file1" != "" -a "$file2" != "" ]; then
+      $CLEAR
+      echo
+      Translate 0 "ERROR: There are both startup scripts"
+      echo
+      Translate 0 "    %s and" $C_DIR/grd5
+      Translate 0 "    %s" $C_DIR/codine5
+      echo
+      Translate 0 "Please delete the obsolete script and restart this update script."
+      echo
+      Translate 0 "Update failed. No changes were made."
+      echo
+      exit 1
+   else
+      if [ "$file1" != "" ]; then
+         file="$file1"
+      else
+         file="$file2"
+      fi
+      RC_FILE_USED=$file
+   fi
+
+   env LC_ALL=C grep "COMMD_PORT=" $file 2>&1 >/dev/null
+
+   if [ $? = 0 ]; then
+      commd_port=`env LC_ALL=C grep "COMMD_PORT=" $file | tr -d '[A-Z][a-z]; _='`
+      if [ $commd_port != "$COMMD_PORT" ]; then
+         $CLEAR
+         echo
+         Translate 0 "ERROR: The >%s< variable in your startup script" "\$COMMD_PORT"
+         echo
+         Translate 0 "   %s" $file
+         echo
+         Translate 0 "is set to >%s<, while your environment variable is set to >%s<" $commd_port $COMMD_PORT
+         echo
+         Translate 0 "Please set your environment variable >%s< correctly and and" "\$COMMD_PORT"
+         Translate 0 "restart this update script."
+         echo
+         Translate 0 "Update failed. No changes were made."
+         echo
+         exit 1
+      fi
+   fi
+
+   CMD_DIR=$SGE_ROOT/util/update_commands
+
+   if [ ! -d "$C_DIR" ]; then
+      $CLEAR
+      echo 
+      Translate 0 "ERROR: The directory"
+      echo
+      Translate 0 "   %s" $C_DIR
+      echo
+      Translate 0 "does not exist. Please verify your environment variables and start"
+      Translate 0  "this update script again."
+      echo
+      exit 1
+   fi
+
+   if [ ! -f $C_DIR/configuration ]; then
+      $CLEAR      
+      echo
+      Translate 0 "ERROR: The cluster configuration file"
+      echo ""
+      Translate 0 "   %s" $C_DIR/configuration
+      echo ""
+      Translate 0  "does not exist. Please verify your environment variables and start"
+      Translate 0 "this update script again."
+      echo
+      exit 1
+   fi
+
+   if [ ! -f $SGE_ROOT/util/startup_template ]; then
+      $CLEAR
+      echo
+      Translate 0 "ERROR: The new Grid Engine startup template file"
+      echo ""
+      Translate 0 "   %s" $SGE_ROOT/util/startup_template
+      echo ""
+      Translate 0 "does not exist. Please verify your distribution"
+      Translate 0 "and start this update script again."
+      echo
+      exit 1
+   fi
+
+   if [ ! -d "$MSPOOLdir" ]; then
+      $CLEAR
+      echo
+      Translate 0 "ERROR: Apparently your qmaster spool directory"
+      echo ""
+      Translate 0 "   %s" $MSPOOLdir
+      echo ""
+      Translate 0 "which is defined in the file"
+      echo ""
+      echo "   %s" $C_DIR/configuration
+      echo ""
+      Translate 0 "does not exist. Please verify your configuration and start"
+      Translate 0 "this update script again."
+      echo
+      exit 1
+   fi
+}
+
+#-------------------------------------------------------------------------
+# GetGidRange
+#    
+GetGidRange()
+{
+   done=false
+   while [ $done = false ]; do
+      $CLEAR
+      $ECHO ""
+      Translate 0 "%s group id range" SGE
+      $ECHO "------------------"
+      $ECHO ""
+      Translate 0 "When jobs are started under the control of %s an additional group id is set" SGE
+      Translate 0 "on platforms which do not support jobs. This is done to provide maximum control"
+      Translate 0 "for %s jobs." SGE
+      Translate 0 "This additional UNIX group id range MUST be unused group id's in your system."
+      Translate 0 "Each job will be assigned a unique id during the time it is running."
+      Translate 0 "Therefore you need to provide a range of id's which will be assigned"
+      Translate 0 "dynamically for jobs."
+      Translate 0 "The range must be big enough to provide enough numbers for the maximum number"
+      Translate 0 "of %s jobs running at a single moment on a single host. E.g. a range like" SGE
+      $ECHO ""
+      Translate 0 "   20000-20050"
+      $ECHO ""
+      Translate 0 "means, that %s will use the group ids from 20000-20050 and provides a range" SGE
+      Translate 0 "for 50 %s jobs at the same time on a single host." SGE
+      Translate 0 "You can change at any time the group id range in your cluster configuration."
+      $ECHO ""
+      Translate 2 "Please enter a range: "
+
+      GID_RANGE=`Enter ""`
+
+      if [ "$GID_RANGE" != "" ]; then
+         Translate 4 "Do you want to use >%s< as gid range." "$GID_RANGE"
+         YesNo "\n$transout" y
+         if [ $? = 0 ]; then
+            done=true
+         fi
+      fi
+   done
+}
+
+#-------------------------------------------------------------------------
+# GetCompatibilityMode
+#    
+GetCompatibilityMode()
+{
+   done=false
+   while [ $done = false ]; do
+      $CLEAR
+      $ECHO ""
+      Translate 0 "Compatibility mode for environment variables"
+      $ECHO       "--------------------------------------------"
+      $ECHO ""
+      Translate 0 "Grid Engine version prior release 5.3 used environment variables" 
+      Translate 0 "with the prefix >CODINE_<, >COD_<, >GRD_<, e.g."
+      $ECHO ""
+      Translate 0 "   \$CODINE_ROOT, \$GRD_ROOT, \$COD_O_HOME etc."
+      $ECHO ""
+      Translate 0 "Grid Engine 5.3 uses environment variables beginning with >SGE_<."
+      $ECHO ""
+      Translate 0 "This version (but not version 6.0) supports a compatibility mode where for job"
+      Translate 0 "execution the old variables are set in addition to the new variables. It is not"
+      Translate 0 "recommended to use this compatibility mode. However if migration for your users"
+      Translate 0 "to the new variables is difficult you can enable the support."
+      $ECHO ""
+      Translate 0 "Please enter now what compatibility mode you want to enable."
+      $ECHO ""
+      Translate 0 "   0  - no compatibility mode  (default, use >SGE_< prefix only)"
+      Translate 0 "   1  - support COD_/CODINE_ variable prefix"
+      Translate 0 "   2  - support GRD_ variable prefix"
+      Translate 0 "   3  - support COD_/CODINE_/GRD variable prefix"
+      $ECHO ""
+      Translate 2 "Please enter [0-3] >> "
+      select=`Enter 0`
+
+      $CLEAR
+      echo
+      valid=true
+      if [ $select = 0 ]; then
+         Translate 0 "We will not enable the variable compatibility mode"
+         SGE_COMPATIBILITY=none
+      elif [ $select = 1 ]; then
+         Translate 0 "We will enable the variable compatibility mode for the COD_/CODINE_ prefix"
+         SGE_COMPATIBILITY="SET_COD_ENV=true"
+      elif [ $select = 2 ]; then
+         Translate 0 "We will enable the variable compatibility mode for the GRD_ prefix"
+         SGE_COMPATIBILITY="SET_GRD_ENV=true"
+      elif [ $select = 3 ]; then
+         Translate 0 "We will enable the variable compatibility mode for the COD_/CODINE_/GRD prefix"
+         SGE_COMPATIBILITY="SET_COD_ENV=true SET_GRD_ENV=true"
+      else
+         Translate 0 "Invalid input."
+         valid=false   
+      fi
+
+      if [ $valid = true ]; then
+         Translate 4 "Do you want to use the selected compatibility mode" y
+         YesNo "\n$transout" y
+         if [ $? = 0 ]; then
+            done=true
+            WaitClear clear
+         fi
+      else
+         WaitClear clear
+      fi
+   done
+}
+
+
+#--------------------------------------------------------------------------
+# CheckUpgradeType
+#    find out if user want to upgrade to SGE or SGEEE
+CheckUpgradeType()
+{
+  $CLEAR
+ 
+  chk_sgeee=false
+  chk_sge=false
+
+   egrep "grd|sgeee" $C_DIR/product_mode 2>&1 >/dev/null
+   if [ $? = 0 ]; then
+      chk_sgeee=true
+   else
+      egrep "codine|sge" $C_DIR/product_mode 2>&1 >/dev/null
+      if [ $? = 0 ]; then
+         chk_sge=true
+      fi
+   fi
+
+   if [ $chk_sgeee = false -a $chk_sge = false ]; then
+      echo
+      Translate 0 "Can't read your product mode file:"
+      echo
+      Translate 0 "   %s" $C_DIR/product_mode 
+      echo
+      Translate 0 "Can't read string >codine< or >grd< >sge< >sgeee< in >%s< file." product_mode
+      echo
+      Translate 0 "Update failed. Exit."
+      exit 1
+    fi
+
+   if [ $chk_sge = true ]; then
+      OLD_SGE_MODE=sge
+      echo
+      Translate 0 "You can upgrade to Grid Engine Enterprise Edition (%s)" SGEEE
+      echo        "---------------------------------------------------------"
+      echo
+      Translate 0 "Your old Grid Engine installation is a %s or %s system." CODINE SGE
+      echo
+      Translate 0 "It is possible to upgrade your installation to a Grid Engine"
+      Translate 1 "Enterprise Edition (%s) system. You should only upgrade your installation" SGEEE
+      Translate 0 "to a >%s< system if you are familiar with the concepts of %s" SGEEE SGEEE
+      echo
+      Translate 0 "It will be neccessary to carry out a couple of further configuration"
+      Translate 0 "steps if you want to make use of the additional %s features." SGEEE
+      Translate 4 "Do you want to upgrade to %s" SGEEE
+      YesNo "\n$transout" n
+      if [ $? = 0 ]; then
+         SGE_MODE=sgeee
+         echo
+         Translate 0 "We will upgrade your installation to %s." SGEEE
+      else
+         SGE_MODE=sge
+         echo
+         Translate 0 "Your installation will be upgraded to SGE."
+      fi
+      env LC_ALL=C grep '^gid_range' $C_DIR/configuration $2 2>&1 >/dev/null
+      if [ $? != 0 ]; then
+         GetGidRange
+      else
+         GID_RANGE=notused
+      fi
+   else
+      OLD_SGE_MODE=sgeee
+      SGE_MODE=sgeee
+      GID_RANGE=notused
+      echo
+      Translate 0 "Your old Grid Engine installation is a GRD or SGEEE system."
+      echo
+      Translate 0 "We will update your system to >%s<" "SGEEE 5.3beta2"
+   fi
+   echo
+   WaitClear clear
+
+   GetCompatibilityMode
+}
+
+
+#--------------------------------------------------------------------------
+# MakeBackupDirs
+#  create backup directory hierarchy in "common" dir
+#  exit if there'sa failure
+#
+MakeBackupDirs()
+{
+   backdirbase=`env LC_ALL=C date "+%Y%m%d-%H:%M:%S"`
+
+   if [ "$backdirbase" = "" ]; then
+      echo
+      Translate 0 "ERROR: cannot define a backup directory name with the command"
+      echo
+      Translate 0 "   >%s<" "env LC_ALL=C date \"+%Y%m%d-%H:%M:%S\""
+      echo
+      Translate 0 "Update failed. No changes where made."
+      echo
+      exit 1
+   fi
+
+   BACKUP_DIR_COMMON=$C_DIR/$backdirbase/common
+   BACKUP_DIR_COMPLEXES=$C_DIR/$backdirbase/complexes
+   BACKUP_DIR_EXEC_HOSTS=$C_DIR/$backdirbase/exec_hosts
+   BACKUP_DIR_QUEUES=$C_DIR/$backdirbase/queues
+   BACKUP_DIR_USERSETS=$C_DIR/$backdirbase/usersets
+
+   Execute $MKDIR $C_DIR/$backdirbase
+   Execute $MKDIR $BACKUP_DIR_COMMON
+   Execute $MKDIR $BACKUP_DIR_COMPLEXES
+   Execute $MKDIR $BACKUP_DIR_EXEC_HOSTS
+   Execute $MKDIR $BACKUP_DIR_QUEUES
+   Execute $MKDIR $BACKUP_DIR_USERSETS
 }
 
 #--------------------------------------------------------------------------
@@ -268,602 +616,372 @@ V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
 
 WelcomeTheUser
 CheckWhoCalls
+CheckPrerequisites
+CheckUpgradeType
 
-
-C_DIR=$SGE_ROOT/$SGE_CELL/common
-CMD_DIR=$SGE_ROOT/util/update_commands
-
-
-if [ ! -d "$C_DIR" ]; then
-   echo 
-   echo "ERROR: The directory"
-   echo ""
-   echo "     $C_DIR"
-   echo ""
-   echo "does not exist. Please verify you environment variables and start"
-   echo "this update script again."
+Translate 4 "Do you want to start the update procedure"
+YesNo "$transout" y
+if [ $? != 0 ]; then
    echo
+   Translate 0 "Exiting update procedure. No changes were made."
    exit 1
 fi
 
-
-if [ ! -f $C_DIR/configuration ]; then
-   echo
-   echo "ERROR: The cluster configuration file"
-   echo ""
-   echo "   $C_DIR/configuration"
-   echo ""
-   echo "does not exist. Please verify your environment variables and start"
-   echo "this update script again."
-   echo
-   exit 1
-fi
-
-if [ ! -f $SGE_ROOT/util/startup_template ]; then
-   echo
-   echo "ERROR: The new $QSYST startup template file"
-   echo ""
-   echo "   $SGE_ROOT/util/startup_template"
-   echo ""
-   echo "does not exist. Please verify your distribution"
-   echo "and start this update script again."
-   echo
-   exit 1
-fi
-
-
-MSPOOLdir=`grep qmaster_spool_dir $C_DIR/configuration | awk '{print $2}'`
-
-if [ ! -d "$MSPOOLdir" ]; then
-   echo
-   echo "ERROR: Apparently your qmaster spool directory"
-   echo ""
-   echo "     $MSPOOLdir"
-   echo ""
-   echo "which is defined in the file"
-   echo ""
-   echo "     $C_DIR/configuration"
-   echo ""
-   echo "does not exist. Please verify your configuration and start"
-   echo "this update script again."
-   echo
-   exit 1
-else
-   clear
-   echo
-   echo "$QSYST qmaster spool directory"
-   echo "$LINES------------------------"
-   echo
-   echo Using directory
-   echo
-   echo "     $MSPOOLdir"
-   echo
-   echo "from your cluster configuration as qmaster spool directory for this"
-   echo "update procedure."
-   echo
-   $ECHO "Do you want to continue and use this directory (y/n) [N] >> \c"
-   read yes
-   if [ "$yes" = y -o "$yes" = Y ]; then
-      : 
-   else   
-      echo
-      echo Exiting update procedure. Please verify your cluster configuration file and
-      echo restart this update procedure.
-      echo
-      exit 1 
-   fi
-fi
-
-
-#-----------------------------------------------------------------
-clear
-echo
-
-if [ -f $SGE_ROOT/doc/CODINE5_0.ps -o -f $SGE_ROOT/doc/GRD5_0.ps ]; then
-   OLDVERSION=5.0
-   NOTOLDVERSION=${VERSION}.2
-else
-   OLDVERSION=${VERSION}.2
-   NOTOLDVERSION=5.0
-fi
-
-echo
-echo "Guessing your previous $QSYST version"
-echo "-----------------------$LINES--------"
-echo
-echo "It seems that your old $QSYST version is $OLDVERSION."
-echo
-echo "You can run this update procedure either from version ${VERSION}.2 or 5.0."
-echo ""
-echo "If you are upgrading from version 5.0 no configuration files will be changed"
-echo "and only some old files will be deleted and a new startup script is created."
-echo
-$ECHO "Is your previous $QSYST system version $OLDVERSION (y/n) [Y] >> \c"
-read yes
-
-echo
-
-if [ "$yes" = "" -o "$yes" = y -o "$yes" = Y ]; then
-   $ECHO "This script will update your system from version $OLDVERSION --> 5.1"
-else
-   $ECHO "This script will update your system from version $NOTOLDVERSION --> 5.1"
-   OLDVERSION=5.0
-fi
-
-echo
-$ECHO "Hit <RETURN> to begin or press INTR (Ctrl-C) to stop this procedure >> \c"
-read ans
-
-#-----------------------------------------------------------------
-# IMPORTANT CHECK/1 - not from 5.0
-# check if this update procedure already ran
-
-if [ $OLDVERSION != 5.0 ]; then 
-   OLD_QUEUEDIR=queues-${VERSION}.2
-   OLD_EXECDIR=exec_hosts-${VERSION}.2
-   OLD_PEDIR=pe-${VERSION}.2
-   OLD_ACCFILE=accounting-${VERSION}.2
-   OLD_CONFFILE=configuration-${VERSION}.2
-   OLD_SCHEDCONFFILE=sched_configuration-${VERSION}.2
-   OLD_HOSTCOMPLEX=host_complex-${VERSION}.2
-
-   found=false
-   for i in $MSPOOLdir/$OLD_QUEUEDIR $MSPOOLdir/$OLD_EXECDIR $MSPOOLdir/$OLD_PEDIR; do
-      if [ -d $i ]; then
-         found=true
-         echo Directory already exists: $i
-      fi
-   done
-
-   for i in $C_DIR/$OLD_ACCFILE $C_DIR/$OLD_CONFFILE $C_DIR/$OLD_SCHEDCONFFILE $MSPOOLdir/$OLD_HOSTCOMPLEX; do
-      if [ -f $i ]; then
-         found=true
-         echo File already exists: $i
-      fi
-   done
-
-
-   if [ $found = true ]; then
-      echo 
-      echo "Apparently you already run this update procedure."
-      echo 
-      echo "Please rename the listed backup directory(s) and file(s) and restart"
-      echo "this update procedure."
-      echo
-      exit 1
-   fi
-fi
-    
-#-----------------------------------------------------------------
-# IMPORTANT CHECK/2
-# check if there are old jobs in the qmaster spool directory and exit if yes
-#
 CheckForOldJobs
+MakeBackupDirs
 
-clear
 echo
-echo Starting update $QSYST procedure
-echo ----------------$LINES----------
-echo
-echo "Deleting $QSYST version $VERSION.0, $VERSION.1 $VERSION.2 files and directories"
-echo
+Translate 0 "Deleting obsolete files..."
 
 #-----------------------------------------------------------------
-# DELETE: cleanup of CODINE 4.0 files
+# DELETE: cleanup of 5.0, 5.1, 5.2 files
 #
-if [ -f $C_DIR/schedd_configuration ]; then
-   echo Deleting $QSYST $VERSION.0 \"$C_DIR/schedd_configuration\" file
-   Execute rm $C_DIR/schedd_configuration
-fi   
 
-if [ -f $C_DIR/schedd_configuration.obsolete ]; then
-   echo Deleting $QSYST $VERSION.0 scheduler configuration backup file
-   Execute rm $SGE_ROOT/$SGE_CELL/common/schedd_configuration.obsolete
+rm -f $SGE_ROOT/VERSION_5.0* 2>&1 >/dev/null
+rm -f $SGE_ROOT/VERSION_5.1* 2>&1 >/dev/null
+rm -f $SGE_ROOT/VERSION_5.2* 2>&1 >/dev/null
+
+if [ -d $SGE_ROOT/util/commands50 ]; then
+   rm -rf $SGE_ROOT/util/commands50
 fi
 
-if [ -f $C_DIR/configuration.old ]; then
-   echo Deleting $QSYST $VERSION.0 backup cluster configuration file \"$C_DIR/configuration.old\" 
-   Execute rm $C_DIR/configuration.old
+if [ -d $SGE_ROOT/util/commands51 ]; then
+   rm -rf $SGE_ROOT/util/commands51
 fi
 
-if [ -f $SGE_ROOT/util/conv_exec.sh ]; then
-   echo Deleting $QSYST $VERSION.0 update procedure \"$SGE_ROOT/util/conv_exec.sh\"
-   Execute rm $SGE_ROOT/util/conv_exec.sh
-fi
-
-if [ -f $SGE_ROOT/util/update_4.01-4.02.sh ]; then
-   echo Deleting $QSYST $VERSION.0 update procedure \"$SGE_ROOT/util/update_4.01-4.02.sh\"
-   Execute rm $SGE_ROOT/util/update_4.01-4.02.sh
-fi
-
-if [ -f $SGE_ROOT/util/defmanpath ]; then
-   echo Deleting $QSYST $VERSION.0 script \"$C_DIR/defmanpath\"
-   Execute rm $SGE_ROOT/util/defmanpath
-fi
-
-if [ -f $MSPOOLdir/old_host_complex ]; then
-   echo Deleting $QSYST $VERSION.0 back host complex file \"$MSPOOLdir/old_host_complex\"
-   Execute rm $MSPOOLdir/old_host_complex
-fi
-
-if [ -d $MSPOOLdir/queues4.02b ]; then
-   echo Deleting backup queue directory of $QSYST $VERSION.0
-   Execute rm -rf $MSPOOLdir/queues4.02b 
-fi
-
-
-#-----------------------------------------------------------------
-# DELETE: cleanup of CODINE 4.1 files
-#
-if [ -f $SGE_ROOT/README_4.02-4.1 ]; then
-   echo Deleting $QSYST $VERSION.1 readme file \"$SGE_ROOT/README_4.02-4.1\"
-   Execute rm $SGE_ROOT/README_4.02-4.1
-fi
-
-if [ -f $SGE_ROOT/util/update_4.02-4.1.sh ]; then
-   echo Deleting $QSYST $VERSION.1 update script \"$SGE_ROOT/util/update_4.02-4.1.sh\2
-   Execute rm $SGE_ROOT/util/update_4.02-4.1.sh
-fi
-
-if [ -f $C_DIR/gds_mode ]; then
-   echo Deleting \"$C_DIR/gds_mode\" file
-   Execute rm $C_DIR/gds_mode
-fi
-
-if [ -f $C_DIR/configuration.41 ]; then
-   echo Deleting $QSYST $VERSION.1 global cluster configuration file
-   Execute rm $C_DIR/configuration.41
-fi
-
-#-----------------------------------------------------------------
-# DELETE: cleanup of x.2 files
-#
-echo Deleting $QSYST VERSION_${VERSION}\* files
-rm -f $SGE_ROOT/VERSION_${VERSION}*
-
-if [ -f $SGE_ROOT/README-${VERSION}2 ]; then
-   echo Deleting $QSYST $VERSION.2 readme file \"$SGE_ROOT/README_-${VERSION}2\"
-   Execute rm $SGE_ROOT/README-${VERSION}2
-fi
-
-echo Deleting $QSYST $VERSION.2 files in \"$SGE_ROOT/util\"
-if [ -d $SGE_ROOT/util/sedcommands42 ]; then
-   Execute rm -rf $SGE_ROOT/util/sedcommands42
-fi
-
-rm -f $SGE_ROOT/util/cod_update-42.sh
-rm -f $SGE_ROOT/util/codine4_startup_template
-rm -f $SGE_ROOT/util/codine_arch
-rm -f $SGE_ROOT/util/complexes-42.sh
-
-if [ $mode = codine ]; then
-   rm -f $SGE_ROOT/util/cod_update-42.sh
-else
-   rm -f $SGE_ROOT/util/grd_update-12.sh
-   rm -f $SGE_ROOT/util/codine_aliases
-fi
-
-#-----------------------------------------------------------------
-# DELETE: cleanup of CODINE 5.0 files
-#
-echo Deleting $QSYST VERSION_5.0\* files
-rm -f $SGE_ROOT/VERSION_5.0*
-rm -rf $SGE_ROOT/util/commands50
-
-if [ $mode = codine ]; then
+if [ -f  $SGE_ROOT/util/cod_update-50.sh ]; then
    rm -f $SGE_ROOT/util/cod_update-50.sh
-else
+fi
+
+if [ -f  $SGE_ROOT/util/grd_update-50.sh ]; then
    rm -f $SGE_ROOT/util/grd_update-50.sh
 fi
 
 #-----------------------------------------------------------------
-# DELETE: history directory tree - not from 5.0
+# DELETE: history directory tree
 #
-if [ $OLDVERSION != 5.0 ]; then
-   if [ -d $C_DIR/history ]; then
-      echo Deleting \"$C_DIR/history\" directory tree
-      Execute rm -rf $C_DIR/history
-      Execute mkdir $C_DIR/history
-   fi
+if [ -d $C_DIR/history ]; then
+   Translate 0 "Deleting history directory tree: %s" $C_DIR/history
+   Execute rm -rf $C_DIR/history
+   Execute mkdir $C_DIR/history
+fi
+
+#-----------------------------------------------------------------
+# DELETE: qsi directory tree
+#
+if [ -d $C_DIR/qsi ]; then
+   Translate 0 "Deleting directory tree: %s" $C_DIR/qsi
+   Execute rm -rf $C_DIR/qsi
 fi
 
 #-----------------------------------------------------------------
 # DELETE: statistics file
 #
 if [ -f $C_DIR/statistics ]; then
-   echo Deleting \"$C_DIR/statistics\" file
+   Translate 0 "Deleting file: %s" $C_DIR/statistics
    Execute rm $C_DIR/statistics
 fi        
 
 #-----------------------------------------------------------------
-# UPGRADE: global cluster configuration - not from 5.0
+# DELETE: sched_runlog file
 #
-if [ $OLDVERSION != 5.0 ]; then
-   echo Updating global cluster config file \"$C_DIR/configuration\"
-   Execute mv $C_DIR/configuration $C_DIR/$OLD_CONFFILE
-   $CMD_DIR/configuration2-51.sh -$mode $C_DIR/$OLD_CONFFILE $C_DIR/configuration $QLOGIN_DAEMON 30000-30100
+if [ -f $C_DIR/sched_runlog ]; then
+   Translate 0 "Deleting file: %s" $C_DIR/sched_runlog
+   Execute rm $C_DIR/sched_runlog
+fi        
+
+#-----------------------------------------------------------------
+# DELETE: license file
+#
+if [ -f $C_DIR/license ]; then
+   Translate 0 "Deleting file: %s" $C_DIR/license
+   Execute rm $C_DIR/license
+fi        
+
+#-----------------------------------------------------------------
+# RENAME: codine_aliases file
+#
+if [ -f $C_DIR/codine_aliases ]; then
+   Translate 0 "Renaming file: %s" $C_DIR/codine_aliases
+   Execute $MV $C_DIR/codine_aliases $C_DIR/sge_aliases
 fi
 
 #-----------------------------------------------------------------
-# UPGRADE: accounting file - not from 5.0
+# RENAME: cod_request file
 #
-if [ $OLDVERSION != 5.0 ]; then
-   if [ -f $C_DIR/accounting ]; then
-      echo Updating accounting file
-      Execute mv $C_DIR/accounting $C_DIR/$OLD_ACCFILE
-      $AWK -v mode=$mode -f $CMD_DIR/accounting2-51.awk $C_DIR/$OLD_ACCFILE > $C_DIR/accounting
-   fi
+if [ -f $C_DIR/cod_request ]; then
+   Translate 0 "Renaming file: %s" $C_DIR/cod_request
+   Execute $MV $C_DIR/cod_request $C_DIR/sge_request
 fi
 
 #-----------------------------------------------------------------
-# UPGRADE: scheduler configuration - not from 5.0
+# UPGRADE: global cluster configuration
 #
-if [ $OLDVERSION != 5.0 ]; then
-   if [ -f $C_DIR/sched_configuration ]; then
-      echo Updating scheduler configuration
-      Execute cp $C_DIR/sched_configuration $C_DIR/$OLD_SCHEDCONFFILE
-      grep "^schedd_job_info" $C_DIR/sched_configuration 2>&1 > /dev/null
-      status=$?
-      if [ $status != 0 ]; then
-         echo "schedd_job_info            true" >> $C_DIR/sched_configuration
+Translate 0 "Updating global cluster configuration file"
+
+Execute $CP $C_DIR/configuration $BACKUP_DIR_COMMON
+Execute $RM $C_DIR/configuration
+Execute $TOUCH $C_DIR/configuration
+$CMD_DIR/configuration.sh $SGE_MODE $BACKUP_DIR_COMMON/configuration $C_DIR/configuration \
+                          $GID_RANGE "$SGE_COMPATIBILITY"
+if [ $? != 0 ]; then
+   Translate 0 "Failed updating cluster config: %s" $C_DIR/configuration
+fi
+
+#-----------------------------------------------------------------
+# CREATE: settings.[c]sh
+#
+Translate 0 "Create new settings.[c]sh files"
+Execute $CP $C_DIR/settings.sh $BACKUP_DIR_COMMON
+Execute $CP $C_DIR/settings.csh $BACKUP_DIR_COMMON
+$SGE_ROOT/util/create_settings.sh $C_DIR
+
+#-----------------------------------------------------------------
+# CREATE: product_mode file
+#    be careful about the "-" combinations in this file, do not
+#    destroy any additional settings in this file
+#
+Translate 0 "Creating new >%s< file" product_mode
+Execute $CP $C_DIR/product_mode $BACKUP_DIR_COMMON
+Execute $RM $C_DIR/product_mode
+
+if [ $OLD_SGE_MODE = sgeee ]; then
+   grep sgeee $BACKUP_DIR_COMMON/product_mode 2>&1 > /dev/null
+   if [ $? != 0 ]; then
+      grep grd $BACKUP_DIR_COMMON/product_mode 2>&1 > /dev/null
+      if [ $? = 0 ]; then
+         sed -e 's/grd/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
+      else
+         sed -e 's/sge/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
       fi
+   else
+      Execute $CP $BACKUP_DIR_COMMON/product_mode $C_DIR/product_mode
+   fi
+elif [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
+   grep codine $BACKUP_DIR_COMMON/product_mode 2>&1 > /dev/null
+   if [ $? = 0 ]; then
+      sed -e 's/codine/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
+   else
+      sed -e -e 's/sge/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
+   fi
+elif [ $OLD_SGE_MODE = sge -a $SGE_MODE = sge ]; then
+   sed -e 's/codine/sge/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
+else
+   Translate "Ooops, this should not happen - please check your product_mode file"
+   Execute $CP $BACKUP_DIR_COMMON/product_mode $C_DIR/product_mode
+fi
+
+#-----------------------------------------------------------------
+# UPGRADE: accounting file
+#
+if [ -f $C_DIR/accounting ]; then
+   Translate 0 "Updating accounting file"
+   Execute $CP $C_DIR/accounting $BACKUP_DIR_COMMON
+   Execute $RM $C_DIR/accounting
+   env LC_ALL=C $AWK -f $CMD_DIR/accounting.awk $BACKUP_DIR_COMMON/accounting > $C_DIR/accounting
+   if [ $? != 0 ]; then
+      Translate 0 "Failed updating accounting file: %s" $C_DIR/accounting
    fi
 fi
 
-echo
-echo "Finished upgrading files in \"$C_DIR\""
-echo 
-$ECHO "Press <RETURN> to continue >> \c"
-read dummy
-
-# No configuration files format changed since 5.0
+#-----------------------------------------------------------------
+# UPGRADE: scheduler configuration
 #
-if [ $OLDVERSION != 5.0 ]; then
+if [ -f $C_DIR/sched_configuration ]; then
+   Translate 0 "Updating scheduler configuration"
+   Execute $CP $C_DIR/sched_configuration $BACKUP_DIR_COMMON/sched_configuration
+   Execute $RM $C_DIR/sched_configuration
+   sed -e '/^maxgjobs/d' -e 's/grd_schedule_interval/sgeee_schedule_interval/' \
+          $BACKUP_DIR_COMMON/sched_configuration > $C_DIR/sched_configuration
+   if [ $SGE_MODE = sgeee -a $OLD_SGE_MODE = sge ]; then
+      cat $CMD_DIR/sgeee-sched_configuration.template >> $C_DIR/sched_configuration  
+   fi
+fi
 
-   # UPGRADE: "queues"
-   #
-   if [ ! -d $MSPOOLdir/queues ]; then
-      echo 
-      echo ERROR: Cannot find directory: $MSPOOLdir/queues
-      echo Update failed.
-      echo
-      exit 1
-   else
-      echo
-      echo Updating queues. Your old queues are saved in 
-      echo
-      echo "   $MSPOOLdir/$OLD_QUEUEDIR"
-      echo 
+#-----------------------------------------------------------------
+# Create startup script "rcsge"
+#
+Translate 0 "Creating new startup script: %s" $C_DIR/rcsge
+Execute $CP $RC_FILE_USED $BACKUP_DIR_COMMON
+Execute $RM $RC_FILE_USED
 
-      Execute mv $MSPOOLdir/queues $MSPOOLdir/$OLD_QUEUEDIR
-      Execute mkdir $MSPOOLdir/queues
+TMP_V5_STARTUP_FILE=/tmp/rcsge.$$
+if [ -f ${TMP_V5_STARTUP_FILE}.0 ]; then
+   Execute rm ${TMP_V5_STARTUP_FILE}.0
+fi
+Execute sed -e "s%=GENROOT%=$SGE_ROOT%g" \
+            -e "s%=GENCELL%=$SGE_CELL%g" \
+            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" $SGE_ROOT/util/startup_template > ${TMP_V5_STARTUP_FILE}.0
+if [ "$COMMD_PORT" != "" ]; then
+   Execute sed -e "s/=GENCOMMD_PORT/=$COMMD_PORT/" ${TMP_V5_STARTUP_FILE}.0 > $C_DIR/rcsge
+else
+   Execute sed -e "/=GENCOMMD_PORT/d" ${TMP_V5_STARTUP_FILE}.0 > $C_DIR/rcsge
+fi
 
-      for i in `ls $MSPOOLdir/$OLD_QUEUEDIR`; do
+$RM ${TMP_V5_STARTUP_FILE}.0
+
+Execute chmod 755 $C_DIR/rcsge
+
+#-----------------------------------------------------------------
+# UPGRADE: queues/
+#
+if [ ! -d $MSPOOLdir/queues ]; then
+   Translate 0 "No queue directory found: %s" $MSPOOLdir/queues
+else
+   Translate 0 "Updating queues"
+
+   if [ "`ls $MSPOOLdir/queues`" != "" ]; then
+      Execute $CP $MSPOOLdir/queues/* $BACKUP_DIR_QUEUES
+      Execute $RM -f $MSPOOLdir/queues/.??*
+      Execute $RM -f $MSPOOLdir/queues/*
+      
+      for i in `ls $BACKUP_DIR_QUEUES`; do
          if [ $i = template ]; then
-            echo Skipping pseudo queue \"template\"
+            Translate 0 "   Skipping pseudo queue \"template\""
          else   
-            echo updating queue: $i
-            grep "^starter_method" $MSPOOLdir/$OLD_QUEUEDIR/$i 2>&1 > /dev/null
-            status=$?
-            if [ $status = 0 ]; then
-               echo "   queue \"$i\" is already updated to $QSYST 5.1 - skipping"
-               Execute cp $MSPOOLdir/$OLD_QUEUEDIR/$i $MSPOOLdir/queues/$i
+            Translate 0 "   updating queue: %s" $i
+            env LC_ALL=C grep "^max_migr_time" $BACKUP_DIR_QUEUES/$i 2>&1 > /dev/null
+            if [ $? != 0 ]; then
+               Translate 0 "      queue is already updated - skipping"
+               Execute cp $BACKUP_DIR_QUEUES/$i $MSPOOLdir/queues
             else
-               Execute sed -f $CMD_DIR/queues2-51.sed $MSPOOLdir/$OLD_QUEUEDIR/$i > $MSPOOLdir/queues/$i
-            fi
-         fi
-      done       
-      echo
-      $ECHO "Press <RETURN> to continue >> \c"
-      read dummy
-   fi
-
-   #-----------------------------------------------------------------
-   # UPGRADE: "host" complex
-   #
-   if [ ! -d $MSPOOLdir/complexes ]; then
-      echo 
-      echo ERROR: Cannot find directory: $MSPOOLdir/complexes
-      echo Update failed.
-      echo
-      exit 1
-   else
-      echo "Updating \"host\" complex. Your old \"host\" complex is saved as"
-      echo ""
-      echo "   $MSPOOLdir/$OLD_HOSTCOMPLEX"
-      echo ""
-
-      Execute mv $MSPOOLdir/complexes/host $MSPOOLdir/$OLD_HOSTCOMPLEX
-      sed -f $CMD_DIR/complexes2-51.sed $MSPOOLdir/$OLD_HOSTCOMPLEX > $MSPOOLdir/complexes/host
-      grep "^swap_rsvd" $MSPOOLdir/complexes/host 2>&1 > /dev/null
-      if [ $? != 0 ]; then
-         echo "swap_rsvd        srsv       MEMORY 0               >=    NO          NO         0" >> $MSPOOLdir/complexes/host
-         echo "swap_rate        sr         MEMORY 0               >=    NO          NO         0" >> $MSPOOLdir/complexes/host
-      fi
-      echo
-      $ECHO "Press <RETURN> to continue >> \c"
-      read dummy
-   fi
-
-   #-----------------------------------------------------------------
-   # UPGRADE: exec_hosts
-   #
-   if [ ! -d $MSPOOLdir/exec_hosts ]; then
-      echo
-      echo ERROR: Cannot find directory: $MSPOOLdir/exec_hosts
-      echo Update failed.
-      echo
-      exit 1
-   else
-      echo "Updating exec_hosts. Your old exec_hosts are saved in"
-      echo ""
-      echo "   $MSPOOLdir/$OLD_EXECDIR"
-      echo ""
-
-      Execute mv $MSPOOLdir/exec_hosts $MSPOOLdir/$OLD_EXECDIR
-      Execute mkdir $MSPOOLdir/exec_hosts
-
-      for i in `ls $MSPOOLdir/$OLD_EXECDIR`; do
-         echo updating exec_host: $i
-         grep "^user_lists" $MSPOOLdir/$OLD_EXECDIR/$i 2>&1 > /dev/null
-         status=$?
-         if [ $status = 0 ]; then
-            echo "   exec_host \"$i\" is already updated to $QSYST $VERSION.2 - skipping"
-            Execute cp $MSPOOLdir/$OLD_EXECDIR/$i $MSPOOLdir/exec_hosts/$i
-         else
-            if [ $mode = codine ]; then
-               sed -f $CMD_DIR/cod_exec_hosts2-51.sed $MSPOOLdir/$OLD_EXECDIR/$i > $MSPOOLdir/exec_hosts/$i
-            else
-               sed -f $CMD_DIR/grd_exec_hosts2-51.sed $MSPOOLdir/$OLD_EXECDIR/$i > $MSPOOLdir/exec_hosts/$i
+               if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
+                  Execute sed -f $CMD_DIR/sge2sgeee-queues.sed $BACKUP_DIR_QUEUES/$i > $MSPOOLdir/queues/$i
+               else
+                  Execute sed -f $CMD_DIR/queues.sed $BACKUP_DIR_QUEUES/$i > $MSPOOLdir/queues/$i
+               fi
             fi
          fi
       done
-
-      echo
-      $ECHO "Press <RETURN> to continue >> \c"
-      read dummy 
-   fi
-
-   #-----------------------------------------------------------------
-   # UPGRADE: "PE" - only variable $codine_hostfile must be replaced
-   #
-   if [ ! -d $MSPOOLdir/pe ]; then
-      echo
-      echo ERROR: Cannot find directory: $MSPOOLdir/pe
-      echo Update failed.
-      echo
-      exit 1
-   else
-      echo "Updating parallel environment (PE). Your old PE's are saved in"
-      echo ""
-      echo "   $MSPOOLdir/$OLD_PEDIR"
-      echo ""
-
-      Execute mv $MSPOOLdir/pe $MSPOOLdir/$OLD_PEDIR
-      Execute mkdir $MSPOOLdir/pe
-
-      for i in `ls $MSPOOLdir/$OLD_PEDIR`; do
-         echo updating pe: $i
-         sed -e 's/codine_hostfile/pe_hostfile/g' $MSPOOLdir/$OLD_PEDIR/$i > $MSPOOLdir/pe/$i
-      done
-
-      echo
-      $ECHO "Press <RETURN> to continue >> \c"
-      read dummy 
-   fi
-
-   #-----------------------------------------------------------------
-   # UPGRADE: settings.[c]sh for GRD
-   #
-   if [ $mode = grd ]; then
-      echo
-      echo "Adding new environment variable GRD_ROOT to settings.[c]sh"
-      echo "setenv GRD_ROOT $SGE_ROOT" >> $C_DIR/settings.csh
-      echo "GRD_ROOT=$SGE_ROOT; export GRD_ROOT" >> $C_DIR/settings.sh
-
-      if [ $SGE_CELL != default ]; then
-         echo "Adding new environment variable GRD_CELL to settings.[c]sh"
-         echo "setenv GRD_CELL $SGE_CELL" >> $C_DIR/settings.csh
-         echo "GRD_CELL=$SGE_CELL; export SGE_CELL" >> $C_DIR/settings.sh
-      fi
-
-      $ECHO "For migration purposes the variables SGE_ROOT and SGE_CELL are still supported."
-      $ECHO "It is recommended to only the variables GRD_ROOT and GRD_CELL in the future."
-      $ECHO
-      $ECHO "Press <RETURN> to continue >> \c"
-      read dummy
    fi
 fi
-#
-# end of o configuration files format changed since 5.0     
 
 #-----------------------------------------------------------------
-# NEW: startup script
+# UPGRADE: exec_hosts/
 #
-clear
-echo
-echo "Creating new $QSYST startup template script"
-echo "-------------$LINES------------------------"
-echo
-
-grep "^setenv COMMD_PORT" $C_DIR/settings.csh 2>&1 > /dev/null
-status=$?
-if [ $status = 0 ]; then
-   COMMD_PORT=`grep "^setenv COMMD_PORT" $C_DIR/settings.csh | awk '{print $3}'`
-
-   $ECHO ""
-   $ECHO "Apparently your $QSYST system uses the environment variable"
-   $ECHO ""
-   $ECHO "      COMMD_PORT=$COMMD_PORT"
-   $ECHO ""
-   $ECHO "We will set this variable also in your new startup script"
-   Execute $CMD_DIR/startup-51.sh $mode $COMMD_PORT \
-           $SGE_ROOT/util/startup_template $C_DIR/${mode}5
+if [ ! -d $MSPOOLdir/exec_hosts ]; then
+   Translate 0 "No queue directory found: %s" $MSPOOLdir/exec_hosts
 else
-   Execute $CMD_DIR/startup-51.sh $mode 0 \
-           $SGE_ROOT/util/startup_template $C_DIR/${mode}5
+   Translate 0 "Updating exec_hosts"
+
+   if [ "`ls $MSPOOLdir/exec_hosts`" != "" ]; then
+      Execute cp $MSPOOLdir/exec_hosts/* $BACKUP_DIR_EXEC_HOSTS
+      Execute $RM -f $MSPOOLdir/exec_hosts/.??*
+      Execute $RM -f $MSPOOLdir/exec_hosts/*
+      
+      for i in `ls $BACKUP_DIR_EXEC_HOSTS`; do
+         Translate 0 "   updating exec host: %s" $i
+         env LC_ALL=C grep "^real_host_name" $BACKUP_DIR_EXEC_HOSTS/$i 2>&1 > /dev/null
+         if [ $? != 0 ]; then
+            Translate 0 "      exec host is already updated - skipping"
+            Execute cp $BACKUP_DIR_EXEC_HOSTS/$i $MSPOOLdir/exec_hosts
+         else
+            if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
+               Execute sed -e '/^reschedule_unknown_list/d' -f $CMD_DIR/sge2sgeee-exec_hosts.sed $BACKUP_DIR_EXEC_HOSTS/$i > $MSPOOLdir/exec_hosts/$i
+            else
+               Execute sed -e '/^reschedule_unknown_list/d' -f $CMD_DIR/exec_hosts.sed $BACKUP_DIR_EXEC_HOSTS/$i > $MSPOOLdir/exec_hosts/$i
+            fi
+         fi
+      done
+   fi
 fi
 
-Execute chmod 755 $C_DIR/${mode}5
-
-$ECHO "A new $QSYST startup script has been installed as"
-$ECHO ""
-$ECHO "     $C_DIR/${mode}5"
-$ECHO ""
-$ECHO "This script may be used on all your hosts an all architectures for"
-$ECHO "starting $QSYST."
-$ECHO
-$ECHO "Please delete your old $QSYST startup files:"
-$ECHO ""
-
-if [ $mode = codine ]; then
-   $ECHO "     /etc/codine4_startup"
-   $ECHO "     /etc/init.d/codine4_startup  (if applicable)"
-   $ECHO "     /sbin/init.d/codine4_startup (if applicable)"
-   $ECHO "     /etc/rcX.d/S95codine4        (if applicable)"
+#-----------------------------------------------------------------
+# UPGRADE: "queue" complex
+#
+if [ ! -d $MSPOOLdir/complexes ]; then
+   Translate 0 "No complex directory found: %s" $MSPOOLdir/complexes
 else
-   $ECHO "     /etc/grd_startup"
-   $ECHO "     /etc/init.d/grd_startup   (if applicable)"
-   $ECHO "     /sbin/init.d/grd_startup  (if applicable)"
-   $ECHO "     /etc/rcX.d/S95grd         (if applicable)"
+   Translate 0 "Updating >%s< complex" queue
+   Execute cp $MSPOOLdir/complexes/queue $BACKUP_DIR_COMPLEXES
+   sed -e "/^priority */d" $BACKUP_DIR_COMPLEXES/queue > $MSPOOLdir/complexes/queue
 fi
 
-$ECHO ""
-$ECHO "on all your hosts where $QSYST is installed."
-$ECHO ""
-$ECHO "Press <RETURN> to continue >> \c"
-read dummy 
+#-----------------------------------------------------------------
+# UPGRADE: usersets
+#
+if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
+   Translate 0 "Updating usersets"
+   if [ "`ls $MSPOOLdir/usersets" != "" ]; then
 
-clear
+      Execute $CP $MSPOOLdir/usersets/* $BACKUP_DIR_USERSETS
+      Execute $RM -f $MSPOOLdir/usersets/*
+      Execute $RM -f $MSPOOLdir/usersets/.??*
 
-$ECHO
-$ECHO "System wide installation of new $QSYST startup script"
-$ECHO "----$LINES-------------------------------------------"
-$ECHO
-$ECHO "It is recommended to install the new startup script"
-$ECHO ""
-$ECHO "     $C_DIR/${mode}5"
-$ECHO ""
-$ECHO "on all your $QSYST hosts as"
-$ECHO ""
-$ECHO "     /{etc|sbin}/init.d/${mode}5"
-$ECHO ""
-$ECHO "and create the necessary symbolic links in"
-$ECHO ""
-$ECHO "     /{etc|sbin}/rcX.d/S95${mode}5"
-$ECHO ""
-$ECHO "Press <RETURN> to continue >> \c"
-read dummy 
+      for i in `ls $BACKUP_DIR_USERSETS`; do
+         Translate 0 "   updating userset: %s" $i
+         env LC_ALL=C grep "^type" $BACKUP_DIR_USERSETS/$i 2>&1 > /dev/null
+         if [ $? = 0 ]; then
+            Translate 0 "      userset is already updated - skipping"
+            Execute cp $BACKUP_DIR_USERSETS/$i $MSPOOLdir/usersets
+         else
+            Execute sed -f $CMD_DIR/usersets.sed $BACKUP_DIR_USERSETS/$i > $MSPOOLdir/usersets/$i
+         fi
+       done   
+   fi
 
-clear
+   if [ ! -f $MSPOOLdir/usersets/defaultdepartment ]; then
+      Translate 0 "adding %s >%s< userset" SGEEE defaultdepartment
+      Execute $CP $SGE_ROOT/util/resources/usersets/defaultdepartment $MSPOOLdir/usersets
+   fi
+   if [ ! -f $MSPOOLdir/usersets/deadlineusers ]; then
+      Translate 0 "adding %s >%s< userset" SGEEE deadlineusers
+      Execute $CP $SGE_ROOT/util/resources/usersets/deadlineusers $MSPOOLdir/usersets
+   fi
+fi
 
 echo
-echo "             The $QSYST update procedure has completed"
-echo "             ----$LINES-------------------------------"
-echo "" 
-echo "Please make sure to carry out all other steps as outlined in the file:"
-echo ""
-echo "		doc/UPGRADE-51"
-echo ""
+WaitClear clear
+
+echo
+Translate 0 "A new Grid Engine startup script has been installed as"
+$ECHO ""
+Translate 0 "   %s" $C_DIR/rcsge
+$ECHO ""
+Translate 0 "This script may be used on all your hosts an all architectures for"
+Translate 0 "starting Grid Engine."
+$ECHO
+Translate 0 "Please delete your old $QSYST startup files (not all of"
+Translate 0 "of these files will exist on your systems):"
+$ECHO ""
+Translate 0 "     /etc/codine5_startup"        
+Translate 0 "     /etc/init.d/codine5_startup"
+Translate 0 "     /sbin/init.d/codine5_startup"
+Translate 0 "     /etc/rcX.d/S95codine5"
+Translate 0 "     /etc/grd_startup"
+Translate 0 "     /etc/init.d/grd_startup"
+Translate 0 "     /sbin/init.d/grd_startup"
+Translate 0 "     /etc/rcX.d/S95grd"
+$ECHO ""
+Translate 0 "on all your hosts where Grid Engine is installed."
+echo
+WaitClear clear
+
+
+Translate 0 "System wide installation of new Grid Engine startup script"
+$ECHO "----------------------------------------------------------"
+$ECHO
+Translate 0 "It is recommended to install the new startup script"
+$ECHO ""
+Translate 0 "     $C_DIR/rcsge"
+$ECHO ""
+Translate 0 "on all your $QSYST hosts as"
+$ECHO ""
+Translate 0 "     /{etc|sbin}/init.d/rcsge"
+$ECHO ""
+Translate 0 "and create the necessary symbolic links in"
+$ECHO ""
+Translate 0 "     /{etc|sbin}/rcX.d/S95rcsge"
+$ECHO ""
+WaitClear clear
+
+Translate 0 "The Grid Engine update procedure has completed"
+$ECHO "----------------------------------------------"
+$ECHO "" 
+Translate 0 "Please make sure to carry out all other steps as outlined in the file:"
+$ECHO ""
+Translate 0 "   %s" doc/UPGRADE
+$ECHO ""
+Translate 0 "of the Grid Engine distribution."
 
 exit 0

@@ -1,6 +1,9 @@
-AH-2004-03-10-0: Enhancem.: Use more intuitive defaults for weight_ticket, 
-                            weight_urgency and weight_priority. Lower 
-                            impact of waiting time in urgency formula.
+AS-2004-03-10-0: CVS        Created V60_beta1_target_{BRANCH,TAG}
+-----------------------------------------------------------------
+
+AH-2004-03-10-0: Enhancem.: Use more intuitive defaults for weight_ticket,
+                            weight_urgency and weight_priority. Lower impact
+                            of waiting time in urgency formula.
    
 EB-2004-03-10-2: Bugfix:    calendar handling is broken
                  Issue:     825
@@ -12,7 +15,8 @@ MD-2004-03-10-0: Bugfix:    really bad typo
                  Changed:   inst_sge
 
 JG-2004-03-10-2: Testsuite: Some fixes for the testsuite queue handling and
-                            tests bugs/issuezilla/193 and functional/migration.
+                            tests bugs/issuezilla/193 and
+                            functional/migration.
 
 JG-2004-03-10-1: Enhancem.: Added datastructures for the reporting of long 
                             running jobs.
@@ -24,7 +28,7 @@ EB-2004-03-10-1: Bugfix:    Unsuspend on subordinate is broken
                  Changed:   sge_qmaster
                  Review:    AH 
 
-SG-2004-03-10-1: Bugfix:    the japi event client does get qmaster goes down 
+SG-2004-03-10-1: Bugfix:    the japi event client does get qmaster goes down
                             events and client shut down events. Part of 788
                  Changed:   qmaster
 

@@ -1,3 +1,6 @@
+CR-2002-03-20-0  Bugfix:   qselect/qstat -U is (partially) broken
+                 Issue:    #191
+
 JG-2002-03-20-0  Bugfix:   Reduce memory consumption of qmaster and size of 
                            spool files for tightly integrated parallel jobs 
                            that start series of tasks per slot reserved 

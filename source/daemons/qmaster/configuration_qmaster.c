@@ -71,6 +71,7 @@
 #include "sge_hostname.h"
 #include "sge_prog.h"
 #include "sge_uidgid.h" 
+#include "sge_spool.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    
@@ -153,8 +154,7 @@ lList **lpp
       char err_str[MAX_STRING_SIZE];
       int lret;
 
-      admin_user = read_adminuser_from_configuration(el, path.conf_file,
-                                             SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
+      admin_user = sge_get_confval("admin_user", path.conf_file);
       lret = sge_set_admin_username(admin_user, err_str);
       if (lret == -1) {
          ERROR((SGE_EVENT, err_str));
@@ -232,8 +232,16 @@ lList **lpp
                DEXIT;
                return -1;
             } else {
+               char old_fname[SGE_PATH_MAX];
+
                if (rename(fname, real_fname) == -1) {
                   free(old_name);
+                  sge_switch2start_user();
+                  DEXIT;
+                  return -1;
+               }
+               sprintf(old_fname, "%s/%s", path.local_conf_dir, old_name);
+               if (sge_unlink(NULL, old_fname)) {
                   sge_switch2start_user();
                   DEXIT;
                   return -1;

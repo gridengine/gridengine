@@ -970,7 +970,7 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
    int ret;
 
    DENTER(TOP_LAYER, "rc_time_by_slots");
-  
+ 
    clear_resource_tags(requested, QUEUE_TAG); 
 
    /* ensure availability of implicit slot request */
@@ -4635,8 +4635,9 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
          attrname, (lGetBool(cplx_el, CE_consumable)?"true":"false")));
 
    if (!lGetBool(cplx_el, CE_consumable)) {
-      if (ready_time == DISPATCH_TIME_QUEUE_END)
+      if (ready_time == DISPATCH_TIME_QUEUE_END) {
          *start_time = now;
+      }   
       DPRINTF(("%s: ri_time_by_slots(%s) <is no consumable>\n", object_name, attrname));
       cplx_el = lFreeElem(cplx_el);
       DEXIT;
@@ -4833,9 +4834,16 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
    }
 
    request_val = lGetDouble(request, CE_doubleval);
+
    if (request_val != 0) {
-      *slots      = (int)((total - used) / request_val);
-      *slots_qend = (int)(total / request_val);
+      if (total == DBL_MAX) {
+         *slots = INT_MAX;
+         *slots_qend = INT_MAX;
+      }
+      else {
+         *slots      = (int)((total - used) / request_val);
+         *slots_qend = (int)(total / request_val);
+      }
    }
    else {
       *slots = INT_MAX;

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2003/12/08 09:31:58 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2004/01/22 13:23:42 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMOD 1 "$Date: 2003/12/08 09:31:58 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMOD 1 "$Date: 2004/01/22 13:23:42 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmod \- modify a xxQS_NAMExx queue
 .\"
@@ -59,6 +59,11 @@ for any queue and job in a cluster.
 .\"
 .IP "\fB\-c\fP"
 Clears the error state of the specified jobs(s)/queue(s).
+Do not use this switch anymore, use -cj / -cq instead.
+.IP "\fB\-cj\fP"
+Clears the error state of the specified jobs(s).
+.IP "\fB\-cq\fP"
+Clears the error state of the specified queue(s).
 .IP "\fB\-d\fP"
 Disables the queue(s), i.e. no further jobs are dispatched to
 disabled queues while jobs already executing in these queues
@@ -82,31 +87,56 @@ manager/operator privileges.
 .\"
 .IP "\fB\-help\fP"
 Prints a listing of all options.
+.\"
 .IP "\fB\-r\fP"
 If applied to queues,
 reschedules all jobs currently running in this queue.
 If applied to running jobs, reschedules the jobs. Requires root or 
+manager privileges. Do not use this switch anymore, use -rj /-rq
+instead.
+.\"
+.IP "\fB\-rj\fP"
+If applied to running jobs, reschedules the jobs. Requires root or 
 manager privileges.
+.\"
+.IP "\fB\-rq\fP"
+If applied to queues,
+reschedules all jobs currently running in this queue.
+Requires root or manager privileges.
 .\"
 .IP "\fB\-s\fP"
 If applied to queues,
 suspends the queues and any jobs which might
-be active. If applied to running jobs, suspends the jobs. If a job is
+be active. If applied to running jobs, suspends the jobs. 
+Do not use this switch anymore, use -sj / -jq instead.
+.\"
+.IP "\fB\-sj\fP"
+If applied to running jobs, suspends the jobs. If a job is
 both suspended explicitly and via suspension of its queue, a
 following unsuspend of the queue will not release the suspension
 state on the job.
+.\"
+.IP "\fB\-sq\fP"
+If applied to queues,
+suspends the queues and any jobs which might
+be active. 
 .\"
 .IP "\fB\-us\fP"
 If applied to queues,
 unsuspends the queues and any jobs which might
-be active. If applied to jobs, unsuspends the jobs. If a job is
+be active. If applied to jobs, unsuspends the jobs. Do not use
+this switch anymore, use -usj / -usq instead.
+.\"
+.IP "\fB\-usj\fP"
+If applied to jobs, unsuspends the jobs. If a job is
 both suspended explicitly and via suspension of its queue, a
 following unsuspend of the queue will not release the suspension
 state on the job.
 .\"
-.IP "\fB\-verify\fP"
-performs no modifications but just prints what would be done if
-\fB\-verify\fB was not present.
+.IP "\fB\-usq\fP"
+If applied to queues,
+unsuspends the queues and any jobs which might
+be active. 
 .\"
 .IP "\fBjob/task_id_list | queue_list\fP"
 The jobs or queues upon which
@@ -144,6 +174,10 @@ The \fIqueue_list\fP is specified by one of the following forms:
 Alternatively a wildcard charcter "*" can be used for specifying
 queues,  e.g. "s*" will select all queues starting with "s".
 .\"
+.sp 1
+The same features of the \fIqueue_list\fP work as well for the 
+job list. A job list can contain of any mixure of job name, job id, and
+pattern separated by "," or " ".
 .\"
 .SH "ENVIRONMENTAL VARIABLES"
 .\" 

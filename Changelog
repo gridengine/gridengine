@@ -1,9 +1,12 @@
+SG-2004-01-22-2: Enhancem.: updated man page for qmod
+                 Changed:   man1/qmod.1
+
 SG-2004-01-22-1: Bugfix:    Removed the renaming of users via qconf. It never
                             worked and should not have been part of qconf.
                  Changed:   qconf
                  Issue:     646
 
-SG-2004-01-22-0: Ehancem.:  2 part of the qmod adaption
+SG-2004-01-22-0: Enhancem.: 2. part of the qmod adaption
                  Changed:   qmod, qmaster
 
 EB-2004-01-22-0: Bugfix:    CQ related bugfixes

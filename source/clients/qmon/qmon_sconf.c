@@ -403,7 +403,7 @@ lListElem *sep
    /* this depends on the kind queue_sort_method is represented */
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
       data.user_sort = lGetUlong(sep, SC_user_sort) ? 1 : 0;
    }
 
@@ -418,7 +418,7 @@ lListElem *sep
    data.load_formula = sge_strdup(data.load_formula, 
                               lGetString(sep, SC_load_formula));
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
+   if (feature_is_enabled(FEATURE_SGEEE)) {
       data.sgeee_schedule_interval = sge_strdup(data.sgeee_schedule_interval, 
                               lGetString(sep, SC_sgeee_schedule_interval));
    }
@@ -505,7 +505,7 @@ lListElem *sep
   
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
       lSetUlong(sep, SC_user_sort, (u_long32) data.user_sort);
    }
 
@@ -531,7 +531,7 @@ lListElem *sep
    }
    lSetString(sep, SC_load_formula, data.load_formula);
   
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
+   if (feature_is_enabled(FEATURE_SGEEE)) {
       if (!data.sgeee_schedule_interval || 
             data.sgeee_schedule_interval[0] == '\0') {
          qmonMessageShow(qmon_sconf, True, "@{SGE Schedule Interval required!}");

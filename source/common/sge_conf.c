@@ -693,8 +693,8 @@ lList **lpp
             } else {
                set_grd_environment = 0;                        
             }
-         } else if (!strncasecmp(s, "NO_REPRIORIZATION", sizeof("NO_REPRIORIZATION")-1)) {
-            if (!strcasecmp(s, "NO_REPRIORIZATION=true") || !strcasecmp(s, "NO_REPRIORIZATION=1")) {
+         } else if (!strncasecmp(s, "NO_REPRIORITIZATION", sizeof("NO_REPRIORITIZATION")-1)) {
+            if (!strcasecmp(s, "NO_REPRIORITIZATION=true") || !strcasecmp(s, "NO_REPRIORITIZATION=1")) {
                deactivate_ptf = 1;                        
             } else {
                deactivate_ptf = 0;                        

@@ -1,3 +1,5 @@
+EB-2002-01-24-2: Bugfix:    Typo: NO_REPRIORIZATION -> NO_REPRIORITIZATION
+
 AA-2002-01-24-2: Feature.: sge_ca permission problem for daemon cert fixed
 
 AA-2002-01-24-0: Feature.: sge_ca -copy to install user cert and key

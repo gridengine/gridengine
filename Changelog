@@ -1,3 +1,9 @@
+SG-2005-01-21-1: Bugfix:   - qmaster crashed in case of some calendar configs.
+                 Review:   AH
+                 Changed:  qmaster
+                 Issue:    1427
+                 Bugtraq:  6220060
+
 SG-2005-01-21-0: Bugfix:   - fixed qstat -t
                            - fixed a minor uninit variables in the execd
                  Review:   DT

@@ -115,7 +115,7 @@ static cal_entry_t calendars[] = {
                                     "queue is supended during the night, and turned suspended for 2 month."},   
 
 
-/* no calendar */                 {"NONE", "NONE",
+/* no calendar */                  {"NONE", "NONE",
                                     "no calendar defined"},
                                     
                                     
@@ -161,8 +161,13 @@ static cal_entry_t calendars[] = {
                                  
                                    {"NONE","Sun-Sat=suspended Wed-Fri=on",
                                     "queue is always suspended except Wednesday till Friday"},
-                                 
-                                   {NULL, NULL}
+
+/* disabling queues */             {"off","NONE","queue is always off"},
+                                   {"suspended", "NONE","queue is always suspended"},
+                                   {"NONE", "off", "queue is always off"},
+                                   {"NONE", "suspended", "queue is always suspended"},
+
+/* end of definition */            {NULL, NULL}
                                 };
 /**
  *
@@ -244,6 +249,11 @@ static date_entry_t tests[] = { {0, {0,0,0, 1,0,104, 0,0,0}, {0,0,0, 1,1,104, 0,
                                 {20, {0,0,20, 1,1,104, 0,0,0}, {0,0, 9, 2,1,104, 0,0,0}, QI_DO_NOTHING,     {0,0,18, 2,1,104, 0,0,0}, QI_DO_CAL_SUSPEND},
 
                                 {21, {0,0, 0,20,8,104, 0,0,1}, {0,0, 0,22,8,104, 0,0,1}, QI_DO_CAL_SUSPEND,     {0,0, 0,25,8,104, 0,0,1}, QI_DO_NOTHING},
+
+                                {22, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_DISABLE, {0,0,1, 1,0, 70, 0,0,0}, -1}, 
+                                {23, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,1, 1,0, 70, 0,0,0}, -1},
+                                {24, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_DISABLE, {0,0,1, 1,0, 70, 0,0,0}, -1},
+                                {25, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,1, 1,0, 70, 0,0,0}, -1},                                
 
                                 {-1, {0,0,0, 0,0,104, 0,0,0}, {0,0,0, 0,0,104, 0,0,0}, -1, {0,0,0, 0,0,104, 0,0,0}, -1}
                                   };

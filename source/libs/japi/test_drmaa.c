@@ -603,7 +603,7 @@ static int test(int *argc, char **argv[], int parse_args)
    int job_chunk = JOB_CHUNK;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    drmaa_job_template_t *jt = NULL;
-   int drmaa_errno;
+   int drmaa_errno=0;
 
    switch (test_case) {
    case ST_MULT_INIT:

@@ -1,3 +1,5 @@
+SG-2004-01-11-0: Bugfix:    Fixed the build
+
 DT-2004-01-09-2: Enhancem.: More minor updates to test_drmaa.  Updated comments
                             in drmaa.c.  Updated testsuite to use new tests in
                             test_drmaa.  Updated TODO list in drmaa.html.

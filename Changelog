@@ -1,17 +1,20 @@
+DT-2004-03-04-1  Bugfix:    o Removed duplicate error message for missing
+                              SGE_ROOT
+                 Changed:   age_arch.c
+                 Issue:     768
+
 MD-2004-03-04-0  Bugfix:    - Removed warning message at execd install
                             - Formatting, text cleaning, typo
                  Issue:     763
                  Changed:   testsuite, inst_sge
 
-EB/2004-03-04-0  Bugfix:    - misleading message of "qstat -explain a" if 
+EB-2004-03-04-0  Bugfix:    - misleading message of "qstat -explain a" if 
                               execd is down
                             - slots in queue_conf(5) accepts 1,myslots=5, \
                               [@allhosts=4]
                  Issue:     765, 755
                  Changed:   qstat, qmon, qmaster
                  Review:    SG
-
-EB-2004-03-03-0  Bugfix:    - job will be shown twice in qstat/qmon after 
 
 SG-2004-03-04-1: Bugfix:    - another qstat -xml fix
                             - fixed the build under glinux

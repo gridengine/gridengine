@@ -1401,10 +1401,10 @@ static int read_CQ_hostlist (lListElem *ep, int nm, const char *buffer,
    lString2List(buffer, &lp, HR_Type, HR_name, delims); 
 
    if (lp != NULL) {
-      if (strcasecmp("NONE", lGetHost(lFirst(lp), HR_name))) {
+      if (strcasecmp("NONE", lGetHost(lFirst(lp), HR_name)) != 0) {
          lSetList(ep, CQ_hostlist, lp);
       } else {
-         lFreeList(lp);
+         lp = lFreeList(lp);
       }
    }
 

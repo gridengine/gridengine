@@ -1,3 +1,9 @@
+SD-2002-10-17-0  Bugfix:    SGEEE - Fixed bug in the pending functional
+                            ticket calculation which incorrectly
+                            calculated the number of functional tickets
+                            for some pending jobs.
+                 Changed:   sge_schedd
+
 AA-2002-10-16-0  BUGFIX:    openssl0.9.6g in aimk.site
 
 SD-2002-10-15-1  Bugfix:    Fix no newline problem with path aliases file

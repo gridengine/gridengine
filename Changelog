@@ -1,3 +1,6 @@
+CR-2004-02-27-3: Cleanup:   setting larger default timeouts for communications
+                 Changed:   commlib
+
 CR-2004-02-27-2: Bugfix:    changed DEBUG_FLAG from -g3 to -g2 for ALPHA5 (tru64)
                             sytems (-g3 produced segmentation faults in gethostname
                             binary)

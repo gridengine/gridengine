@@ -873,12 +873,15 @@ proc qconf_de_check {} {
    # - Disable line breaks in qconf so that the grep can work
    set env(SGE_SINGLE_LINE) 1
 
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > /tmp/$execd" } result ]
+   # the tmp_file is automatically removed from testsuite
+   set tmp_file [get_tmp_file_name]
+   
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > $tmp_file" } result ]
    
    if { $catch_result != 0 } {
       add_proc_error "qconf_de_check" "-1" "could not store execd config: $result"
    }
-
+   puts $CHECK_OUTPUT "tmp file is: $tmp_file"
    set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -dattr hostgroup hostlist $execd @allhosts" } result ]
    
    if { $catch_result != 0 } {
@@ -887,6 +890,7 @@ proc qconf_de_check {} {
 
    # Test
    set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
+   puts $CHECK_OUTPUT $result
    
    set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $ts_config(master_host) $execd "execution host"]
 
@@ -895,13 +899,15 @@ proc qconf_de_check {} {
       set_error -1 "Bug 1269: qconf -de still crashes qmaster"
       return
    }
+   puts $CHECK_OUTPUT "removed execd $execd from cluster"
 
    # Cleanup
    unset env(SGE_SINGLE_LINE)
 
-   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae /tmp/$execd" } result 
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae $tmp_file" } result 
    catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result
-   catch { eval exec "/usr/bin/rm /tmp/$execd" } result
+
+   puts $CHECK_OUTPUT "added execd $execd to cluster"
 
    set_error 0 "ok"
 }

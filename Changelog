@@ -1,3 +1,7 @@
+CR-2004-11-19-0: Testsuite: qconf test created files in /tmp/ which can
+                            cause problems for multiple testsuites running
+                            on the same host.
+
 JG-2004-11-18-1: Testsuite: Fixes for tests functional/job_environment and
                             system_tests/clients/qmod,
                             some cleanup

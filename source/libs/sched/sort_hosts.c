@@ -305,7 +305,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
 
    /* search complex */
 
-   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list))){
+   if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){
       /* 
        * admin has forgotten to configure complex for 
        * load value in load formula 

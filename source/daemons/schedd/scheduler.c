@@ -1049,7 +1049,7 @@ lList **load_list
             a.load_adjustments,
             a.gdil,
             is_consumable_load_alarm,
-            /*(*load_list != NULL)*/false, QU_load_thresholds)) {   /* use load thresholds here */
+            false, QU_load_thresholds)) {   /* use load thresholds here */
             
          DPRINTF(("couldn't split queue list concerning load\n"));
          assignment_release(&a);

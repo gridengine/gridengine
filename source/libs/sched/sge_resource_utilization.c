@@ -388,6 +388,12 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
 
    DENTER(TOP_LAYER, "utilization_max");
 
+   /* someone is asking for the current utilization */
+   if (start_time == DISPATCH_TIME_NOW) {
+      return lGetDouble(cr, RUE_utilized_now);
+   }
+
+   
 #if 0
    utilization_print(cr, "the object");
 #endif

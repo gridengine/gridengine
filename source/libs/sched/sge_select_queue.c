@@ -89,7 +89,7 @@ static int sge_maximize_slots(sge_assignment_t *best);
 
 static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *assignment);
 
-static int sge_tag_host_slots(sge_assignment_t *a, lListElem *hep, int *slots, 
+static int sge_tag_host_slots(sge_assignment_t *a, lListElem *hep, lListElem *global, int *slots, 
    int *slots_qend, int host_soft_violations, bool *master_host, int *host_seqno, 
    double *previous_load, bool *previous_load_inited);
 
@@ -101,8 +101,7 @@ static int sge_tags2gdil(sge_assignment_t *assignment);
 /* -- these implement sequential assignemnt ---------------------- */
 
 static int host_order_2_queue_sequence_number(lList *host_list, lList *queues);
-static int sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, 
-      lList *centry_list, const  lList *load_adjustments);
+static int sge_max_host_slot_by_threshold(sge_assignment_t *a, lListElem *host, lListElem *global);
 
 /* -- base functions ---------------------------------------------- */
  
@@ -145,7 +144,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 double lc_global, const lList *load_adjustments, int load_is_value); 
 
 static void clear_resource_tags( lList *resources, u_long32 max_tag); 
-
+static int np_load_value_adjustment(const char* name, lListElem *hep, double *load_correction);
 
 /* ---- helpers for consumable evaluation for load in queues ----- */
 static lListElem *locate_load_elem(lList *load_list, lListElem *global_consumable, 
@@ -1615,28 +1614,21 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             }
 
             if (hlep) {
+               int nproc;
                load_correction *= lc_host;
 
-               if (!strncmp(name, "np_", 3)) {
-                  int nproc = 1;
-                  lListElem *ep_nproc;
-                  const char *cp;
-
-                  if ((ep_nproc = lGetSubStr(hep, HL_name, LOAD_ATTR_NUM_PROC, EH_load_list))) {
-                     cp = lGetString(ep_nproc, HL_value);
-                     if (cp)
-                        nproc = MAX(1, atoi(cp));
-                  }
-                  if (nproc != 1) {
-                     load_correction /= nproc;
-                  }
+               if ((nproc = np_load_value_adjustment(name, hep,  &load_correction)) > 0) {
                   sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOSTNP_SFI,
                          load_correction_str, lc_host, nproc);
-               } else {
+               }
+               else {
                   sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOST_SF,
                          load_correction_str, lc_host);
+               
                }
-            } else {
+            
+            } 
+            else {
                load_correction *= lc_global;
                sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGGLOBAL_SF,
                          load_correction_str, lc_global);
@@ -1698,6 +1690,56 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
 
    DEXIT;
    return 0;
+}
+
+/****** sge_select_queue/np_load_value_adjustment() ****************************
+*  NAME
+*     np_load_value_adjustment() -- adjusts np load values for the number of processors
+*
+*  SYNOPSIS
+*     static int np_load_value_adjustment(const char* name, lListElem *hep, 
+*     double *load_correction) 
+*
+*  FUNCTION
+*     Tests the load value name for "np_*". If this pattern is found, it will
+*     retrieve the number of processors and adjusts the load_correction accordingly.
+*     If the pattern is not found, it does nothing and returns 0 for number of processors.
+*
+*  INPUTS
+*     const char* name        - load value name
+*     lListElem *hep          - host object 
+*     double *load_correction - current load_correction for further corrections
+*
+*  RESULT
+*     static int - number of processors, or 0 if it was called on a none np load value 
+*
+*  NOTES
+*     MT-NOTE: np_load_value_adjustment() is MT safe 
+*
+*******************************************************************************/
+static int np_load_value_adjustment(const char* name, lListElem *hep, double *load_correction) {
+ 
+   int nproc = 1;
+   if (!strncmp(name, "np_", 3)) {
+      int nproc = 1;
+      lListElem *ep_nproc;
+
+      if ((ep_nproc = lGetSubStr(hep, HL_name, LOAD_ATTR_NUM_PROC, EH_load_list))) {
+         const char* cp = lGetString(ep_nproc, HL_value);
+         if (cp) {
+            nproc = atoi(cp);
+      
+            if (nproc > 1) {
+               *load_correction /= nproc;
+            }
+         }
+      }
+   } 
+   else {
+      nproc = 0;          
+   }
+  
+   return nproc;
 }
 
 static int resource_cmp(u_long32 relop, double req, double src_dl) 
@@ -1836,7 +1878,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
             hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
          }
          /* load thesholds... */
-         if (!(cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list))) {
+         if (!(cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list, DISPATCH_TIME_NOW, 0))) {
             if (reason)
                sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
             DEXIT;
@@ -2003,7 +2045,7 @@ u_long32 ttype
                               lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
             nverified++;
 
-            if (sge_load_alarm(reason, qep, thresholds, exechost_list, centry_list, load_adjustments, is_comprehensive)!=0) {
+            if (sge_load_alarm(reason, qep, thresholds, exechost_list, centry_list, load_adjustments, is_comprehensive) != 0) {
                load_alarm = 1;
                if (ttype==QU_suspend_thresholds) {
                   DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
@@ -2440,6 +2482,7 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
    lListElem *hep, *qep;
    int best_result = -1, result, gslots, gslots_qend;
    int host_seqno = 0;
+   lListElem *global = NULL;
    double previous_load;
    bool previous_load_inited = false;
    int allocation_rule, minslots;
@@ -2480,6 +2523,8 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
    allocation_rule = sge_pe_slots_per_host(a->pe, a->slots);
    minslots = ALLOC_RULE_IS_BALANCED(allocation_rule)?allocation_rule:1;
 
+   global = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
+   
    /* first select hosts with lowest share/load 
       and then select queues with */
    /* tag amount of slots we can get served with resources limited per host */
@@ -2500,7 +2545,7 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
       if (!(qep=lGetElemHost(a->queue_list, QU_qhostname, eh_name)))
          continue;   
 
-      result = sge_tag_host_slots(a, hep, &hslots, &hslots_qend, global_soft_violations, 
+      result = sge_tag_host_slots(a, hep, global, &hslots, &hslots_qend, global_soft_violations, 
           &suited_as_master_host, &host_seqno, &previous_load, &previous_load_inited);
 #if 0
       if (result != 0)
@@ -2619,6 +2664,7 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
 static int sge_tag_host_slots(
 sge_assignment_t *a,
 lListElem *hep, 
+lListElem *global,
 int *slots,
 int *slots_qend,
 int global_soft_violations, 
@@ -2651,15 +2697,7 @@ bool *previous_load_inited)
 
    host_soft_violations = global_soft_violations;
 
-   result = host_slots_by_time(a->start, a->duration, &hslots, &hslots_qend, 
-      &host_soft_violations, a->job, a->ja_task, hep, a->queue_list, a->centry_list, 
-      a->acl_list, a->load_adjustments, false); 
-#if 0
-   if (result != 0) {
-      DEXIT;
-      return result;
-   }
-#endif
+   result = host_slots_by_time(a, &hslots, &hslots_qend, &host_soft_violations, hep, global, false);
 
    DPRINTF(("HOST %s itself (and queue threshold) will get us %d slots (%d later) ... "
          "we need %d\n", eh_name, hslots, hslots_qend, min_host_slots));
@@ -2742,74 +2780,137 @@ bool *previous_load_inited)
  * 
  * for each queue Q at this host {
  *    for each threshold T of a queue {
- *       avail(Q, T) = threshold - load / adjustment      
+ *       if compare operator > or >=
+ *          avail(Q, T) = <threshold - load / adjustment) + 1     
+ *       else
+ *          avail(Q, T) = (threshold - load / -adjustMent) + 1
  *    }
  *    avail(Q) = MIN(all avail(Q, T))
  * }
  * host_slot_max_by_T = MAX(all min(Q))
  */
-static int sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, lList *centry_list, 
-   const lList *load_adjustments)
-{
+static int sge_max_host_slot_by_threshold(sge_assignment_t *a, lListElem *host, lListElem *global) {
    int avail_h = 0, avail_q;
    int avail;
-   lListElem *next_queue, *qep;
+   lListElem *next_queue, *qep, *centry = NULL;
    lListElem *lv, *lc, *tr, *fv, *cep;
-   bool load_is_value;
-   const char *eh_name = lGetHost(hep, EH_name);
+   const char *eh_name = lGetHost(host, EH_name);
    const void *queue_iterator = NULL;
    const char *load_value, *limit_value, *adj_value;
    u_long32 type;
+   bool is_np_adjustment = false;
+   lList *requests = lGetList(a->job, JB_hard_resource_list);
 
-   for (next_queue = lGetElemHostFirst(queue_list, QU_qhostname, eh_name, &queue_iterator); 
+   DENTER(TOP_LAYER, "sge_tag_host_slots");
+
+   for (next_queue = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &queue_iterator); 
        (qep = next_queue);
-        next_queue = lGetElemHostNext(queue_list, QU_qhostname, eh_name, &queue_iterator)) {
-
+        next_queue = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &queue_iterator)) {
+      lList *load_thresholds = lGetList(qep, QU_load_thresholds);
       avail_q = INT_MAX;
-      for_each (lc, load_adjustments) {
-         const char *name = lGetString(lc, CE_name);
-         if ((tr=lGetSubStr(qep, CE_name, name, QU_load_thresholds))) {
-            double load, threshold, adjustment;
-            cep = centry_list_locate(centry_list, name);
-            if ((lv=lGetSubStr(hep, HL_name, name, EH_load_list))) {
+
+      for_each(tr, load_thresholds) {
+         double load, threshold, adjustment;
+         const char *name = lGetString(tr, CE_name);
+         if ((cep = centry_list_locate(a->centry_list, name)) == NULL) {
+            continue;
+         }   
+         
+         if (!lGetBool(cep, CE_consumable)) { /* work on the load values */
+            if ((lc = lGetElemStr(a->load_adjustments, CE_name, name)) == NULL) {
+               continue;
+            } 
+            if ((lv=lGetSubStr(host, HL_name, name, EH_load_list)) != NULL) {
                load_value = lGetString(lv, HL_value);
-               load_is_value = true;
-            } else {
+            }
+            else if ((lv = lGetSubStr(global, HL_name, name, EH_load_list)) != NULL) {
+               load_value = lGetString(lv, HL_value);
+            } 
+            else {
                fv = lGetSubStr(qep, CE_name, name, QU_consumable_config_list);
                load_value = lGetString(fv, CE_stringval);
-               load_is_value = false;
             }
-
-            limit_value = lGetString(tr, CE_stringval);
             adj_value = lGetString(lc, CE_stringval);
-            type = lGetUlong(cep, CE_valtype);
+            is_np_adjustment = true;
+            adj_value = lGetString(lc, CE_stringval);
 
-            switch (type) {
-               case TYPE_INT:
-               case TYPE_TIM:
-               case TYPE_MEM:
-               case TYPE_BOO:
-               case TYPE_DOUBLE:
-
-                  if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0) ||
-                      !parse_ulong_val(&threshold, NULL, type, limit_value, NULL, 0) ||
-                      !parse_ulong_val(&adjustment, NULL, type, adj_value, NULL, 0)) {
-                     continue;
-                  }
-
-                  break;
-
-               default:
-                  continue;    
+         }
+         else { /* work on a consumable */
+            
+            if ((lc = lGetElemStr(requests, CE_name, name)) != NULL) {
+               adj_value = lGetString(lc, CE_stringval);
+            }
+            else { /* is default value */
+               adj_value = lGetString(cep, CE_default);
             }
 
-            avail = (threshold - load)/adjustment;
-            avail_q = MIN(avail, avail_q);
+            if ((centry = get_attribute_by_name(global, host, qep, name, a->centry_list, a->start, a->duration)) == NULL) {
+                /* no load value, no assigned consumable to queue, host, or global */
+                DPRINTF(("the consumable "SFN" used in queue "SFN" as load threshold has no instance at queue, host or global level\n", 
+                         name, lGetString(qep, QU_full_name))); 
+                return 0;
+               continue;
+            }    
+
+            load_value = lGetString(centry, CE_pj_stringval);
          }
+
+         limit_value = lGetString(tr, CE_stringval);
+         type = lGetUlong(cep, CE_valtype);
+
+         /* get the needed values. If the load value is not a number, ignore it */
+         switch (type) {
+            case TYPE_INT:
+            case TYPE_TIM:
+            case TYPE_MEM:
+            case TYPE_BOO:
+            case TYPE_DOUBLE:
+
+               if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0) ||
+                   !parse_ulong_val(&threshold, NULL, type, limit_value, NULL, 0) ||
+                   !parse_ulong_val(&adjustment, NULL, type, adj_value, NULL, 0)) {
+                   if (centry != NULL) centry = lFreeElem(centry);
+                  continue;
+               }
+
+               break;
+
+            default:
+               if (centry != NULL) centry = lFreeElem(centry);
+               continue;    
+         }
+         /* the string in load_value is not needed anymore, we can free the element */
+         if (centry != NULL) centry = lFreeElem(centry);
+
+         /* a adjustment of NULL is ignored here. We can dispatch unlimited jobs based
+            on the load value Ü*/
+         if (adjustment == 0) {
+            continue;
+         }
+
+         switch (lGetUlong(cep, CE_relop)) {
+            case CMPLXEQ_OP :
+            case CMPLXNE_OP : continue; /* we cannot compute a usefull range */
+            case CMPLXLT_OP :
+            case CMPLXLE_OP : adjustment *= -1;
+               break;
+         }
+
+         if (is_np_adjustment) {
+            np_load_value_adjustment(name, host, &adjustment);
+         }
+
+         /* load alarm is defined in a way, that a host can go with one
+            used slot into alarm and not that the dispatching prevents
+            the alarm state. For this behavior we have to add 1 to the
+            available slots. */
+         avail = (threshold - load)/adjustment + 1;
+         avail_q = MIN(avail, avail_q);         
       }
+
       avail_h = MAX(avail_h, avail_q);
    }
-
+   DEXIT;
    return avail_h;
 }
 
@@ -3559,25 +3660,13 @@ lList *acl_list)
 *
 *  RESULT
 *******************************************************************************/
-int host_slots_by_time(   
-u_long32 start, 
-u_long32 duration,
-int *slots, 
-int *slots_qend, 
-int *violations, 
-lListElem *job, 
-lListElem *ja_task, 
-lListElem *hep, 
-lList *queue_list, 
-lList *centry_list, 
-lList *acl_list,
-const lList *load_adjustments, 
-bool allow_non_requestable) 
-{
+int host_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
+                       lListElem *hep, lListElem *global, bool allow_non_requestable) {
+
    int hslots = 0, hslots_qend = 0;
    const char *eh_name;
    int result = -1;
-   lList *hard_requests = lGetList(job, JB_hard_resource_list);
+   lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
    lList *load_list = lGetList(hep, EH_load_list); 
    lList *config_attr = lGetList(hep, EH_consumable_config_list);
    lList *actual_attr = lGetList(hep, EH_resource_utilization);
@@ -3587,7 +3676,7 @@ bool allow_non_requestable)
 
    eh_name = lGetHost(hep, EH_name);
 
-   if (host_match_static(job, ja_task, hep, centry_list, acl_list)==0) {
+   if (host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list)==0) {
 
       /* cause load be raised artificially to reflect load correction when
          checking job requests */
@@ -3597,12 +3686,12 @@ bool allow_non_requestable)
             lc_factor = ((double)ulc_factor)/100;
       }
 
-      result = rc_slots_by_time(hard_requests, start, duration, &hslots, &hslots_qend, 
-            config_attr, actual_attr, load_list, centry_list, false, NULL, 
+      result = rc_slots_by_time(hard_requests, a->start, a->duration, &hslots, &hslots_qend, 
+            config_attr, actual_attr, load_list, a->centry_list, false, NULL, 
                DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, false, lGetHost(hep, EH_name));
 
       if (hslots>0) {
-         int t_max = sge_max_host_slot_by_theshold(hep, queue_list, centry_list, load_adjustments);
+         int t_max = sge_max_host_slot_by_threshold(a, hep, global);
          if (t_max<hslots) {
             DPRINTF(("\thost_slots_by_time(%s) threshold load adjustment reduces slots"
                   " from %d to %d\n", eh_name, hslots, t_max));
@@ -3613,8 +3702,8 @@ bool allow_non_requestable)
 
    *slots = hslots;
    *slots_qend = hslots_qend;
-   *violations = sge_soft_violations(NULL, *violations, job, NULL, config_attr, 
-         actual_attr, centry_list, DOMINANT_LAYER_HOST, 0, HOST_TAG);
+   *host_soft_violations= sge_soft_violations(NULL, *host_soft_violations, a->job, NULL, config_attr, 
+         actual_attr, a->centry_list, DOMINANT_LAYER_HOST, 0, HOST_TAG);
 #if 0
       char buff[1024 + 1];
       centry_list_append_to_string(lGetList(job, JB_hard_resource_list), buff, sizeof(buff) - 1);
@@ -4008,7 +4097,7 @@ sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
 
    /* find matching */
    *has_value_from_object = false;
-   if (( ep = get_attribute_by_name(global, host, q, attrname, centry_list)) &&
+   if (( ep = get_attribute_by_name(global, host, q, attrname, centry_list, DISPATCH_TIME_NOW, 0)) &&
          ((type=lGetUlong(ep, CE_valtype)) != TYPE_STR) && 
          (type != TYPE_CSTR) && (type != TYPE_RESTR) && (type != TYPE_HOST) ) {
          
@@ -4063,7 +4152,7 @@ const lList *centry_list
    global = host_list_locate(exechost_list, "global"); 
    host = host_list_locate(exechost_list, lGetHost(q, QU_qhostname));
 
-   ep = get_attribute_by_name(global, host, q, attrname, centry_list);
+   ep = get_attribute_by_name(global, host, q, attrname, centry_list, DISPATCH_TIME_NOW, 0);
 
    /* first copy ... */
    if (ep && dst)
@@ -4226,7 +4315,7 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
    schedule_based = (duration != 0 && sconf_get_max_reservations()>0);
 
    if (!(cplx_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, queue,layer, 
-                        lc_factor, reason, schedule_based))) {
+                        lc_factor, reason, schedule_based, DISPATCH_TIME_NOW, 0))) {
       DEXIT;
       return 2; 
    }
@@ -4365,7 +4454,7 @@ static int ri_slots_by_time(u_long32 start, u_long32 duration, int *slots, int *
 
    if (!no_centry) {
       if (!(cplx_el = get_attribute(name, total_list, rue_list, load_attr, centry_list, queue,layer, 
-                           lc_factor, reason, schedule_based))) {
+                           lc_factor, reason, schedule_based, DISPATCH_TIME_NOW, 0))) {
          DEXIT;
          return 2; /* does not exist */
       }
@@ -4815,17 +4904,26 @@ bool sge_load_list_alarm(lList *load_list, const lList *host_list,
 
       elem = lGetPosRef(load, LDR_global_pos);
       if (elem != NULL) {
-         is_recalc = is_recalc || sge_bitfield_changed(elem->changed);
+         if ( sge_bitfield_changed(elem->changed)) {
+            is_recalc = true;
+            sge_bitfield_reset(elem->changed); 
+         }
       }
       
       elem = lGetPosRef(load, LDR_host_pos);
       if (elem != NULL) {
-         is_recalc = is_recalc || sge_bitfield_changed(elem->changed);
+         if ( sge_bitfield_changed(elem->changed)) {
+            is_recalc = true;
+            sge_bitfield_reset(elem->changed); 
+         }
       }
       
       elem = lGetPosRef(load, LDR_queue_pos);
       if (elem != NULL) {
-         is_recalc = is_recalc || sge_bitfield_changed(elem->changed);
+         if ( sge_bitfield_changed(elem->changed)) {
+            is_recalc = true;
+            sge_bitfield_reset(elem->changed); 
+         }
       }
      
       if (is_recalc) {

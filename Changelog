@@ -1,3 +1,21 @@
+SG-2004-04-06-2: Bugfix:    Finished the implementation for consumables
+                            as queue load_thresholds. It is working for
+                            parallel jobs now. (SG-2004-03-31-0)
+                 Changed:   scheduler
+                 Issue:     464
+                 Review:    AH
+
+SG-2004-04-06-1: Bugfix:    fixed the handling of job_load_adjustments
+                            for parallel jobs.
+                 Changed:   scheduler           
+                 Issue:     957
+                 Review:    AH
+
+SG-2004-04-06-0: Bugfix:    fixed the profiling output in the mirror
+                            interface.
+                 Changed:   scheduler
+                 Review:    AH
+
 EB-2004-04-06-0: Bugfix:    qconf -Mprj bad error message
                             qconf -sprj gives bogus error message
                  Issue:     923, 926
@@ -63,7 +81,7 @@ SG-2004-03-31-0: Bugfix:    First part of bugfix 464. Only parallel jobs and
                             The new code is not active in the case, that no
                             consumables as load_thresholds are used.
                  Changed:   scheduler, qmaster, qmon, qstat, qhost
-                 Review:    JG, (AH is pending)
+                 Review:    JG, AH is pending
                  Issue:     464
 
 JG-2004-03-30-0: Bugfix:    At startup of an array task, all running array tasks

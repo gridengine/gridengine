@@ -782,7 +782,6 @@ centry_list_append_to_string(lList *this_list, char *buff,
       return ret;
    }
 
-   DPRINTF(("buff: %s\n", buff));
    DEXIT;
    return 0;
 }

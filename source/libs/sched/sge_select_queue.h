@@ -179,11 +179,9 @@ int host_time_by_slots(int slots, u_long32 *start, u_long32 duration,
    int *host_soft_violations, lListElem *job, lListElem *ja_task, lListElem *hep, 
    lList *centry_list, lList *acl_list);
 
-int host_slots_by_time(u_long32 start, u_long32 duration, int *slots, 
-   int *slots_qend, int *host_soft_violations, lListElem *job, lListElem *ja_task, 
-   lListElem *hep, lList *queue_list, lList *centry_list, lList *acl_list, 
-   const lList *load_adjustments, bool allow_non_requestable);
-
+int host_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
+                       lListElem *hep, lListElem *global, bool allow_non_requestable);
+  
 int queue_slots_by_time( u_long32 start, u_long32 duration, int *slots, int *slots_qend, 
    int *violations, lListElem *job, lListElem *qep, const lListElem *pe, const lListElem *ckpt,
    lList *centry_list, lList *acl_list, bool allow_non_requestable);

@@ -131,6 +131,8 @@ u_long32 mask
 *     Extracts the attribut specified with 'attrname' and finds the 
 *     more important one, if it is defined multiple times on the same 
 *     level. It only cares about one level.
+*     If the attribute is a consumable, one can specify a point in time and a duration.
+*     This will get the caller the min amount of that resource during the time frame.
 *
 *  INPUTS
 *     const char *attrname - attribute name one is looking for 
@@ -142,6 +144,9 @@ u_long32 mask
 *     u_long32 layer       - the current layer 
 *     double lc_factor     - the load correction value 
 *     dstring *reason      - space for error messages or NULL 
+*     bool zero_utilization - ???
+*     u_long32 start_time  - begin of the time interval, one asks for the resource
+*     u_long32 duration    - the duration the interval
 *
 *  RESULT
 *     static lListElem* - the element one was looking for or NULL
@@ -149,7 +154,7 @@ u_long32 mask
 *******************************************************************************/
 lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr, 
    const lList *centry_list, lListElem *queue, u_long32 layer, double lc_factor, dstring *reason,
-   bool zero_utilization)
+   bool zero_utilization, u_long32 start_time, u_long32 duration)
 {
    lListElem *actual_el=NULL;
    lListElem *load_el=NULL;
@@ -160,7 +165,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
    /* resource_attr is a complex_entry (CE_Type) */
    if (config_attr) {
       lListElem *temp = lGetElemStr(config_attr, CE_name, attrname);
-DTRACE;
+
       if(temp){ 
 
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
@@ -176,9 +181,7 @@ DTRACE;
       }
    }
 
-DTRACE;
    if(cplx_el && lGetBool(cplx_el, CE_consumable)) {
-DTRACE;
       lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_CONSUMABLE );
       lSetUlong(cplx_el, CE_dominant,DOMINANT_TYPE_VALUE );
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
@@ -186,7 +189,7 @@ DTRACE;
          if (actual_attr && (actual_el = lGetElemStr(actual_attr, RUE_name, attrname))){
             dstring ds;
             char as_str[20];
-            double utilized = zero_utilization ? 0 : lGetDouble(actual_el, RUE_utilized_now);
+            double utilized = zero_utilization ? 0 : utilization_max(actual_el, start_time, duration);
 
             switch (lGetUlong(cplx_el, CE_relop)) {
                case CMPLXGE_OP:
@@ -217,7 +220,6 @@ DTRACE;
       }
    }
 
-DTRACE;
    /** check for a load value */
    if ( load_attr && 
         (sconf_get_qs_state()==QS_STATE_FULL || sge_is_static_load_value(attrname)) &&
@@ -226,7 +228,7 @@ DTRACE;
       ) {
          lListElem *ep_nproc=NULL;
          int nproc=1;
-DTRACE;
+
          if (!cplx_el){
             cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
                if(!cplx_el){
@@ -327,7 +329,6 @@ DTRACE;
       }
    }
 
-DTRACE;
    /* we are working on queue level, so we have to check for queue resource values */
    if (queue){
       bool created=false;
@@ -715,7 +716,7 @@ static lList *get_attribute_list_by_names(lListElem *global, lListElem *host,
    int i;
 
    for (i=0; i<max_names; i++){
-      attr = get_attribute_by_name(global, host, queue, attrnames[i], centry_list);
+      attr = get_attribute_by_name(global, host, queue, attrnames[i], centry_list, DISPATCH_TIME_NOW, 0);
       if (attr) {
          if (!list )
             list = lCreateList("attr", CE_Type);
@@ -1227,11 +1228,11 @@ int force_existence
 *     int reason_size      - the max length of an error message 
 *
 *  RESULT
-*     void lListElem* - the element one is looking for or NULL.
+*     void lListElem* - the element one is looking for (a copy) or NULL.
 *
 *******************************************************************************/
 lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, 
-    const char* attrname, const lList *centry_list){
+    const char* attrname, const lList *centry_list, u_long32 start_time, u_long32 duration){
    lListElem *global_el=NULL;
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
@@ -1243,7 +1244,6 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
    lList *actual_attr = NULL; 
 
    DENTER(BASIS_LAYER, "get_attribute_by_name");
-
 
    if(global){
       load_attr = lGetList(global, EH_load_list);  
@@ -1257,7 +1257,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       }
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
-                                lc_factor, NULL, false);
+                                lc_factor, NULL, false, start_time, duration);
       ret_el = global_el;
    } 
 
@@ -1272,7 +1272,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
             lc_factor = ((double)ulc_factor)/100;
       }
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
-                              lc_factor, NULL, false);
+                              lc_factor, NULL, false, start_time, duration);
       if(!global_el && host_el)
          ret_el = host_el;
       else if(global_el && host_el){
@@ -1291,7 +1291,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       actual_attr = lGetList(queue, QU_resource_utilization);
       
       queue_el = get_attribute(attrname, config_attr, actual_attr, NULL, centry_list, queue, DOMINANT_LAYER_QUEUE, 
-                              0.0, NULL, false);
+                              0.0, NULL, false, start_time, duration);
 
       if(!ret_el)
          ret_el = queue_el;

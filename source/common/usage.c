@@ -87,6 +87,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME; 
      case OA_DESTIN_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST; 
+     case OA_DESTIN_ID_LIST2:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST2; 
      case OA_HOLD_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
      case OA_HOST_ID_LIST:
@@ -622,7 +624,7 @@ FILE *fp
    if (VALID_OPT(masterq_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST, 
          MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND );
-      MARK(OA_DESTIN_ID_LIST);
+      MARK(OA_DESTIN_ID_LIST2);
    }
 
    if (VALID_OPT(mattr_OPT, me.who)) {
@@ -834,7 +836,7 @@ FILE *fp
          PRINTITD(MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST, 
             MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO);
       }
-      MARK(OA_DESTIN_ID_LIST);
+      MARK(OA_DESTIN_ID_LIST2);
    }
 
    if (VALID_OPT(qs_args_OPT, me.who)) {

@@ -430,9 +430,8 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
 
  ************************************************************************/
 
-static void signal_handler(
-int signal 
-) {
+static void signal_handler(int signal) 
+{
    char err_str[256];
 
    sprintf(err_str, "received signal %s", sge_sys_sig2str(signal));
@@ -441,10 +440,8 @@ int signal
    received_signal = signal;
 }
 
-int main(
-int argc,
-char **argv 
-) {
+int main(int argc, char **argv) 
+{
    char err_str[2*SGE_PATH_MAX+128];
    char *admin_user;
    char *script_file;
@@ -1095,14 +1092,38 @@ char *method_name
    }
 }
 
-/***************************************************************
- We have gotten a signal. Look for it and forward it to the
- group of the job.
-
- no timeout means implicitly the job 
- ***************************************************************/
-static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
-                                  int remaining_alarm, pid_t ctrl_pid[3])
+/****** shepherd/core/forward_signal_to_job() *********************************
+*  NAME
+*     forward_signal_to_job() -- Forward signal to job. 
+*
+*  SYNOPSIS
+*     static void forward_signal_to_job(int pid, int timeout, 
+*                                       int *postponed_signal, 
+*                                       int remaining_alarm, 
+*                                       pid_t ctrl_pid[3]) 
+*
+*  FUNCTION
+*     We have gotten a signal. Look for it and forward it to the
+*     group of the jobs. 
+*
+*  INPUTS
+*     int pid               - pid of the process (group) to be signaled 
+*     int timeout           - timeout value (0 means implicitly the job) 
+*     int *postponed_signal - input/output parameter. 
+*                             used to detect and prevent repeated 
+*                             initiation of notify mechanism
+*                             as this can delay final job 
+*                             suspension endlessly
+*     int remaining_alarm   - if it is necessary to set the alarm
+*                             clock, then this timeout value
+*                             will be used.
+*     pid_t ctrl_pid[3]     - used to store the pids of:
+*                             resume_method, stop_method, terminate_method 
+*******************************************************************************/
+static void forward_signal_to_job(int pid, int timeout, 
+                                  int *postponed_signal, 
+                                  int remaining_alarm, 
+                                  pid_t ctrl_pid[3])
 {
    int sig;
    FILE *fp;
@@ -1120,11 +1141,11 @@ static void forward_signal_to_job(int pid, int timeout, int *postponed_signal,
             shepherd_trace("timeout expired - killing process");
             shepherd_signal_job(-pid, SIGKILL);
          }
+         return;
       } else {
          shepherd_trace("SIGALRM without timeout");
       }
       received_signal = 0;
-      return;
    }
 
    /* store signal if we got one */

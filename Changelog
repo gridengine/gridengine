@@ -1,3 +1,7 @@
+CR-2005-01-03-0: Testsuite: - added binary test module for issue #1389
+                            and issue #1400
+                            - added testsuite test for test module
+
 JG-2005-01-03-1: Bugfix:    Fixed broken build.
 
 JG-2005-01-03-0: Bugfix:    Fixed aimk -no-mk.

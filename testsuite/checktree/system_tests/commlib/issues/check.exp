@@ -1,0 +1,191 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "commlib_issues"
+set check_description(0)      "check commlib issue test module"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "yes"
+set check_functions           ""
+lappend check_functions       "commlib_issues_setup"          ;# functions to call (in order)
+lappend check_functions       "commlib_issues_run"
+lappend check_functions       "commlib_issues_cleanup"
+set check_highest_level       0
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {
+       
+       return -1
+   }
+
+    # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+   return -1
+}
+
+
+
+
+
+
+proc commlib_issues_setup {} {
+   global ts_config CHECK_HOST
+
+   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
+   after 5000
+   set_error 0 "ok"
+}
+proc commlib_issues_run  {} {
+   global ts_config  CHECK_OUTPUT CHECK_USER
+   
+   set server_host [lindex $ts_config(execd_hosts) 0]
+   set client_host [lindex $ts_config(execd_hosts) 1]
+   
+   puts $CHECK_OUTPUT "using server host $server_host"
+   puts $CHECK_OUTPUT "using client host $client_host"
+
+   set server_up_arch [resolve_build_arch $server_host]
+   set client_up_arch [resolve_build_arch $client_host]
+
+   set server_binary $ts_config(source_dir)/$server_up_arch/test_issues
+   set client_binary $ts_config(source_dir)/$client_up_arch/test_issues
+
+   set server_args "0 TCP server $ts_config(commd_port) $server_host"
+   set client_args "0 TCP client $ts_config(commd_port) $server_host"
+
+   set server_sid [open_remote_spawn_process $server_host "root" $server_binary $server_args]
+   set client_sid [open_remote_spawn_process $client_host "ts_def_con" $client_binary $client_args]
+
+   set server_id [lindex $server_sid 1]
+   set client_id [lindex $client_sid 1]
+   set both_list "$client_id $server_id"
+
+   set in_loop 1
+   while { $in_loop } {
+      set timeout 60
+      expect {
+         -i $both_list full_buffer {
+            add_proc_error "commlib_issues_run" -1 "expect full_buffer error"
+            return -1
+         }
+         -i $both_list timeout {
+            puts $CHECK_OUTPUT "---->>>>>>>>> got timeout"
+            add_proc_error "commlib_issues_run" -1 "got timeout"
+            set in_loop 0   
+         }
+         -i $both_list eof {
+            set spawn_id $expect_out(spawn_id)
+            puts $CHECK_OUTPUT "got eof for spawn_id $spawn_id"
+            add_proc_error "commlib_issues_run" -1 "got eof"
+            set in_loop 0   
+         }
+         -i $server_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               puts $CHECK_OUTPUT "server: $help"
+            }
+         }
+         -i $client_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               puts $CHECK_OUTPUT "client: $help"
+               if { [string match "*_exit_status_:(*)*" $help] } {
+                 
+                  set st [string first "(" $help]
+                  set ed [string first ")" $help]
+                  incr st 1
+                  incr ed -1
+                  set exit_state [string range $help $st $ed]
+                  puts $CHECK_OUTPUT "found exit status of client: ($exit_state)"
+                  if { $exit_state != 0 } {
+                     set known_exit_state 0
+                     if { $exit_state == 1 } {
+                        add_proc_error "commlib_issues_run" -1 "issue #1389 is present"
+                        set known_exit_state 1
+                     } 
+                     if { $exit_state == 2 } {
+                        add_proc_error "commlib_issues_run" -1 "issue #1400 is present"
+                        set known_exit_state 1
+                     }
+                     if { $known_exit_state != 1 } {
+                        add_proc_error "commlib_issues_run" -1 "exit state of client is $exit_state"
+                     }
+                  }
+                 
+                  set in_loop 0
+               }
+            }
+         }
+      }
+   }
+   close_spawn_process $server_sid
+   close_spawn_process $client_sid
+   
+   
+
+   set_error 0 "ok"
+}
+
+
+proc commlib_issues_cleanup {} {
+   global ts_config 
+   startup_qmaster
+
+   set_error 0 "ok"
+}
+
+
+
+
+
+
+
+
+

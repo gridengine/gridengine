@@ -40,7 +40,7 @@ set check_init_level_procedure "init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
 set check_name                "commlib_deadlock"
-set check_description(0)      "qmaster cannot bind port below 1024 on Linux"
+set check_description(0)      "qmaster deadlock"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
 set check_functions           ""

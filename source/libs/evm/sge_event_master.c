@@ -76,6 +76,36 @@
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
 
+/****** transaction handling implementation ************
+ *
+ * Well, one cannot realy the transaction implementation
+ * transaction handling. First of all, there is no role
+ * back. Second, there is only one transaction in the 
+ * whole system, one no way to distinguish between the 
+ * events added by the thread, which opend the transaction, 
+ * and other threads just adding events.
+ *
+ * We need the current implementation for the scheduler
+ * protocol. All gdi requets have to be atomic from the
+ * scheduler point of view. Therefore we have a second
+ * (the transaction) list to add events, and put them
+ * into the send queue, when the gdi request has been
+ * handled.
+ * 
+ * Important variables:
+ *  pthread_mutex_t  transaction_mutex;  
+ *  lList            *transaction_events;
+ *  pthread_mutex_t  t_add_event_mutex;
+ *  bool             is_transaction;   
+ *
+ * related methods:
+ *  sge_set_commit_required()
+ *  sge_is_commit_required()
+ *  sge_commit() 
+ *
+ *******************************************************/
+
+
 /****** subscription_t definition **********************
  *
  * This is a subscription entry in a two dimensional 
@@ -96,7 +126,20 @@ typedef struct {
       lEnumeration *what;        /* limits the target element                 */
 } subscription_t;
 
+
+/****** event_master_control_t definition ********************
+ *
+ * This struct contains all the control information needed
+ * to have the event master running. It contains the references
+ * to all lists, mutexes, and booleans.
+ *
+ ************************************************************/
 typedef struct {
+   pthread_mutex_t  transaction_mutex;    /* a mutix ensuring that only one transaction is running at a time */
+   lList            *transaction_events;  /* a list storing all events happening, while a transaction is open, a
+                                             transaction is not thread specific*/
+   pthread_mutex_t  t_add_event_mutex;    /* garding the transaction_events list and the boolean is_transaction */
+   bool             is_transaction;       /* identifies, if a transaction is open, or not */
    pthread_mutex_t  mutex;                 /* used for mutual exclusion. only use in public functions   */
    pthread_cond_t   lockfield_cond_var;    /* used for waiting                                          */
    pthread_cond_t   waitfield_cond_var;    /* used for waiting                                          */
@@ -338,6 +381,10 @@ const int SOURCE_LIST[LIST_MAX][3] = {
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
 static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
+                                                NULL,
+                                                PTHREAD_MUTEX_INITIALIZER,
+                                                false,
+                                                PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_COND_INITIALIZER, 
                                                 PTHREAD_COND_INITIALIZER, 
                                                 PTHREAD_COND_INITIALIZER, 
@@ -349,8 +396,6 @@ static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
                                                 NULL, NULL, false};
 static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
-static pthread_key_t          Event_Queue_Key;
-static pthread_key_t          Event_Commit_Key;
 
 static void       event_master_once_init(void);
 static void       init_send_events(void); 
@@ -371,7 +416,6 @@ static void       total_update_event(lListElem*, ev_event);
 static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
 static lListElem* eventclient_list_locate_by_adress(const char*, const char*, u_long32);
-/*static const lDescr* getDescriptor(subscription_t*, const lListElem*, int);*/
 static const lDescr* getDescriptorL(subscription_t*, const lList*, int);
 static void       lock_all_clients(void);
 static void       unlock_all_clients(void);
@@ -383,7 +427,6 @@ static void       set_event_client(u_long32 id, lListElem *client);
 static u_long32   assign_new_dynamic_id (void);
 static void       process_acks(void);
 static void       process_sends(void);
-static void       destroy_event_queue (void *queue);
 static void       set_flush (void);
 static bool       should_flush_event_client (u_long32 id, ev_event type,
                                              bool has_lock);
@@ -1620,6 +1663,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    lListElem *etp = lCreateElem (ET_Type); /* actual event object */
    lListElem *client = NULL;
    bool res = true;
+   bool is_add_direct = true;
    
    DENTER(TOP_LAYER, "add_list_event_for_client");
    
@@ -1642,20 +1686,22 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    lSetString (etp, ET_strkey, strkey);
    lSetString (etp, ET_strkey2, strkey2);
    lSetList (etp, ET_new_version, list);   
-   
-   if (sge_is_commit_required ()) {
-      lList *qlp = (lList *)pthread_getspecific (Event_Queue_Key);
-      
-      if (qlp == NULL) {
-         qlp = lCreateListHash ("Event_Queue", EV_Type, false);
-         res = (pthread_setspecific (Event_Queue_Key, (void *)qlp) == 0);
+   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
+   if (Master_Control.is_transaction) {
+      is_add_direct = false; 
+      if (Master_Control.transaction_events == NULL) {
+         Master_Control.transaction_events = lCreateListHash ("Event_Queue", EV_Type, false);
       }
 
       /* If the setspecific worked, add the event. */
-      if (res) {
-         lAppendElem (qlp, evp);
+      if (Master_Control.transaction_events != NULL) {
+         lAppendElem (Master_Control.transaction_events , evp);
+         res = true;
       }
-   } else {
+   } 
+   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
+   
+   if (is_add_direct) {
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
       lAppendElem (Master_Control.send_events, evp);
@@ -2232,9 +2278,6 @@ static void event_master_once_init(void)
            (Master_Control.len_event_clients + 1) * sizeof (int));
 
    init_send_events();
-
-   pthread_key_create (&Event_Queue_Key, destroy_event_queue);
-   pthread_key_create (&Event_Commit_Key, NULL);
 
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -4050,68 +4093,6 @@ DPRINTF (("value: 0\n"));
    return (u_long32)0;
 }
 
-/****** sge_event_master/destroy_event_queue() *********************************
-*  NAME
-*     destroy_event_queue() -- destroyer for Event_Queue_Key
-*
-*  SYNOPSIS
-*     static void destroy_event_queue (void *queue)
-*
-*  FUNCTION
-*     Frees any events that may still be hanging around when a thread exits.
-*
-*  INPUTS
-*     void * queue       - the head of the event queue for this thread
-*
-*  NOTE
-*     MT-NOTE: destroy_event_queue is thread safe.
-*******************************************************************************/
-static void destroy_event_queue (void *queue)
-{
-   lList *lp = (lList *)queue;
-   
-   lp = lFreeList (lp);
-}
-
-/****** sge_event_master/sge_rollback() ****************************************
-*  NAME
-*     sge_rollback() -- Roll back the queued events
-*
-*  SYNOPSIS
-*     bool sge_rollback (void)
-*
-*  FUNCTION
-*     Frees any events that this thread currently has queued.
-*
-*  RESULTS
-*     Whether the call succeeded.  It will return false if
-*     sge_is_commit_required() returns false or if there was a problem accessing
-*     the event queue.
-*
-*  NOTE
-*     MT-NOTE: sge_rollback is thread safe.
-*******************************************************************************/
-bool sge_rollback (void)
-{
-   pthread_once(&Event_Master_Once, event_master_once_init);
-
-   if (sge_is_commit_required ()) {
-      lList *qlp = (lList *)pthread_getspecific (Event_Queue_Key);
-
-      if (qlp != NULL) {
-         qlp = lFreeList (qlp);
-         if (pthread_setspecific (Event_Queue_Key, (void *)NULL) != 0) {
-            return false;
-         }
-      }
-      
-      return true;
-   }
-   else {
-      return false;
-   }
-}
-
 /****** sge_event_master/sge_commit() ****************************************
 *  NAME
 *     sge_commit() -- Commit the queued events
@@ -4132,20 +4113,24 @@ bool sge_rollback (void)
 *******************************************************************************/
 bool sge_commit (void)
 {
+   bool ret = false;
+
    DENTER (TOP_LAYER, "sge_commit");
    
    pthread_once(&Event_Master_Once, event_master_once_init);
 
-   if (sge_is_commit_required ()) {
-      lList *qlp = NULL;
+   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
+   
+   if (Master_Control.is_transaction) {
       bool flush = false;
+     
+      Master_Control.is_transaction = false;
       
       /* We don't have to worry about holding a lock while we work on this list
        * because the list is thread specific. */
-      qlp = (lList *)pthread_getspecific (Event_Queue_Key);
 
-      if (qlp != NULL) {
-         lListElem *ep = lFirst (qlp);
+      if (Master_Control.transaction_events != NULL) {
+         lListElem *ep = lFirst (Master_Control.transaction_events);
 
          /* Do this math here before we destroy qlp, and while we're not holding
           * the lock. */
@@ -4156,30 +4141,32 @@ bool sge_commit (void)
             /* We do this without first getting a lock because this method may
              * not need to aquire the lock.  By letting this method get the lock
              * if it's needed, we may save some locking and unlocking. */
-            flush |= should_flush_event_client (lGetUlong (ep, EV_id),
-                 lGetUlong (lFirst (lGetList (ep, EV_events)), ET_type), false);
+            flush |= should_flush_event_client(lGetUlong (ep, EV_id),
+                                               lGetUlong (lFirst (lGetList (ep, EV_events)), ET_type), 
+                                               false);
             
-            ep = lNext (ep);
+            ep = lNext(ep);
          }
 
          sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-         /* Since lAppendList doesn't free qlp, we don't have to store a new
-          * value in Event_Queue_Key. */
-         lAppendList (Master_Control.send_events, qlp);
+         lAppendList (Master_Control.send_events, Master_Control.transaction_events);
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
          
          if (flush) {
-            set_flush ();
+            set_flush();
          }
       }
-
-      DEXIT;
-   return true;
-}
-   else {
-      DEXIT;
-      return false;
+      ret = true;
    }
+   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
+  
+   if (ret){
+      sge_mutex_unlock("event_master_transaction_mutex", SGE_FUNC, __LINE__, &Master_Control.transaction_mutex);
+   }
+   
+   DEXIT;
+   return ret;
+  
 }
 
 /****** sge_event_master/blockEvents() ****************************************
@@ -4317,25 +4304,34 @@ static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
 
 /****** sge_event_master/sge_set_commit_required() *****************************
 *  NAME
-*     sge_set_commit_required() -- Require commits for this thread's events
+*     sge_set_commit_required() -- Require commits (make multipe object changes atomic)
 *
 *  SYNOPSIS
-*     void sge_set_commit_required (bool require_commit)
+*     void sge_set_commit_required ()
 *
 *  FUNCTION
-*     Turns transactional event processing on or off.  If turned on, this means
-*     that sge_commit() must be called in order to actually send events
-*     queued with sge_add_[list_]event[_for_client]().
+*  Enables transactions on events. Sofar a rollback is not suported. It allows to acumulate
+*  events, while multiple objects are modified and events are issued and to submit them as
+*  one event package. There can only be one event session open at a time. The transaction_mutex
+*  will block multiple calles to this method.
+*  The method cannot be called recursivly, and sge_commit has to be called to close the transaction. 
+*
 *
 *  NOTE
 *     MT-NOTE: sge_set_commit_required is thread safe.  Transactional event
 *     processing is handled for each thread individually.
 *******************************************************************************/
-void sge_set_commit_required (bool require_commit)
-{
-   pthread_once(&Event_Master_Once, event_master_once_init);
+void sge_set_commit_required () {
 
-   pthread_setspecific (Event_Commit_Key, (void *)require_commit);
+   DENTER(TOP_LAYER,"sge_set_commit_required");
+   
+   pthread_once(&Event_Master_Once, event_master_once_init);
+   sge_mutex_lock("event_master_transaction_mutex", SGE_FUNC, __LINE__, &Master_Control.transaction_mutex);
+   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex); 
+   Master_Control.is_transaction = true;
+   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);   
+   
+   DEXIT;
 }
 
 /****** sge_event_master/sge_is_commit_required() ******************************
@@ -4354,9 +4350,16 @@ void sge_set_commit_required (bool require_commit)
 *     MT-NOTE: sge_is_commit_required is thread safe.  Transactional event
 *     processing is handled for each thread individually.
 *******************************************************************************/
-bool sge_is_commit_required (void)
-{
+bool sge_is_commit_required (void) {
+   bool ret = false;
+  
+   DENTER(TOP_LAYER,"sge_is_commit_required");
+   
    pthread_once(&Event_Master_Once, event_master_once_init);
+   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);   
+   ret = Master_Control.is_transaction;
+   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);   
 
-   return (bool)pthread_getspecific (Event_Commit_Key);
+   DEXIT;
+   return ret;
 }

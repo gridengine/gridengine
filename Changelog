@@ -1,3 +1,12 @@
+SG-2004-07-28-0: Bugfix:    - fixed the event master theading problem
+                            - fixed the job names and accouting string evaluation.
+                            - removed an abort in qmaster, when sched conf was not
+                              valid.
+                 Bugtraq:   5075849
+                 Issue:     1099
+                 Changed:   qmaster, submit.1
+                 Review:    JG
+
 JG-2004-07-27-0: Bugfix:    Fixes in reporting file:
                             - pe_task_id for non pe jobs were inconsistend (in 
                               some cases "none", in others "NONE").

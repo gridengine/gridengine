@@ -1704,7 +1704,7 @@ error:
 *
 *     Please note: The "*_O_*" env variables get their final
 *                  name shortly before job execution. Find more 
-*                  information in the ADOC comment of
+*                  information in the comment of
 *                  job_initialize_env()
 *
 *  INPUTS
@@ -1742,7 +1742,7 @@ const char *job_get_env_string(const lListElem *job, const char *variable)
 *
 *     Please note: The "*_O_*" env variables get their final
 *                  name shortly before job execution. Find more 
-*                  information in the ADOC comment of
+*                  information in the comment of
 *                  job_initialize_env()
 *
 *  INPUTS
@@ -2344,58 +2344,29 @@ bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
    return true;
 }
 
-/****** sgeobj/job/job_has_valid_account_string() *****************************
+/****** sgeobj/job/job_resolve_host_for_path_list() ***************************
 *  NAME
-*     job_has_valid_account_string() -- is job account string valid 
+*     job_resolve_host_for_path_list() -- resolves hostnames in path lists 
 *
 *  SYNOPSIS
-*     bool job_has_valid_account_string(const lListElem *job, 
-*                                       lList **answer_list) 
+*     int 
+*     job_resolve_host_for_path_list(const lListElem *job, 
+*                                    lList **answer_list, int name) 
 *
 *  FUNCTION
-*     Returns true if the account string contained in "job" does not
-*     contain any colon (':'). 
-*
-*  INPUTS
-*     const lListElem *job - JB_Type element 
-*     lList **answer_list  - AN_Type element 
-*
-*  RESULT
-*     bool - true if account string is valid 
-******************************************************************************/
-bool job_has_valid_account_string(const lListElem *job, lList **answer_list)
-{
-   bool ret = true;
-
-   if (strchr(lGetString(job, JB_account), ':')) {
-      answer_list_add(answer_list, MSG_COLONNOTALLOWED, STATUS_EUNKNOWN, 
-                      ANSWER_QUALITY_ERROR);
-      ret = false;
-   }
-   return ret;
-}
-
-/****** sge_job/job_resolve_host_for_path_list() *******************************
-*  NAME
-*     job_resolve_host_for_path_list() -- is a hostname valid 
-*
-*  SYNOPSIS
-*     int job_resolve_host_for_path_list(const lListElem *job, lList 
-*     **answer_list, int name) 
-*
-*  FUNCTION
-*     ??? 
+*     Resolves hostnames in path lists. 
 *
 *  INPUTS
 *     const lListElem *job - the submited cull list 
 *     lList **answer_list  - AN_Type element
-*     int name             - a JB_Type ( JB_stderr_path_list or JB_stout_path_list)
+*     int name             - a JB_Type (JB_stderr_path_list or 
+*                                       JB_stout_path_list)
 *
 *  RESULT
-*     int - error code ( STATUS_OK, or ...) 
-*
+*     int - error code (STATUS_OK, or ...) 
 *******************************************************************************/
-int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name)
+int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, 
+                                   int name)
 {
    bool ret_error=false;
    lListElem *ep;
@@ -2470,8 +2441,28 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
       return STATUS_OK;
 }
 
-/* EB: ADOC: add commets */
-
+/****** sgeobj/job/job_get_request() ******************************************
+*  NAME
+*     job_get_request() -- Returns the requested centry name 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     job_get_request(const lListElem *this_elem, const char **centry_name) 
+*
+*  FUNCTION
+*     Returns the requested centry name if it is requested by the give
+*     job (JB_Type). 
+*
+*  INPUTS
+*     const lListElem *this_elem - JB_Type element 
+*     const char *centry_name    - name 
+*
+*  RESULT
+*     lListElem * - CE_Type element
+*
+*  NOTES
+*     MT-NOTE: job_get_request() is MT safe 
+*******************************************************************************/
 lListElem *
 job_get_request(const lListElem *this_elem, const char *centry_name) 
 {
@@ -2489,6 +2480,8 @@ job_get_request(const lListElem *this_elem, const char *centry_name)
    DEXIT;
    return ret;
 }
+
+/* EB: ADOC: add commets */
 
 bool
 job_get_contribution(const lListElem *this_elem, lList **answer_list,

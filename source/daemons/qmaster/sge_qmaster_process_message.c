@@ -191,8 +191,10 @@ static void do_gdi_request(struct_msg_t *aMsg)
          resp->next = new_gdi_request();
          resp = resp->next;
       }
-
+      
+      sge_set_commit_required();
       sge_c_gdi(aMsg->snd_host, req, resp);
+      sge_commit();
    }
 
    sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,

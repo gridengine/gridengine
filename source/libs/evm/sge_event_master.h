@@ -67,8 +67,7 @@ extern u_long32 sge_get_max_dynamic_event_clients(void);
 
 extern void sge_event_shutdown(void);
 extern bool sge_commit(void);
-extern bool sge_rollback(void);
-extern void sge_set_commit_required(bool require_commit);
+extern void sge_set_commit_required(void);
 extern bool sge_is_commit_required(void);
 
 #endif /* __SGE_M_EVENT_H */

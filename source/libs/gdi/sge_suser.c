@@ -214,8 +214,7 @@ u_long32 suser_get_job_counter(lListElem *suser)
 *     int - 1 => limit would be exceeded
 *           0 => otherwise
 ******************************************************************************/
-int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs,
-                           int force_registration)
+int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs)
 {
    const char *submit_user = NULL;
    lListElem *suser = NULL;
@@ -225,19 +224,11 @@ int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs,
    submit_user = lGetString(job, JB_owner);
    suser = suser_list_add(&Master_SUser_List, NULL, submit_user);
    if (suser != NULL) {
-      if(max_u_jobs == 0 || force_registration || 
+      if(max_u_jobs == 0 ||  
          max_u_jobs > suser_get_job_counter(suser))
          ret = 0;
       else
          ret = 1;
-/* 
-      if (max_u_jobs > 0 && !force_registration &&
-          max_u_jobs <= suser_get_job_counter(suser)) {
-         ret = 1;
-      } else {
-         ret = 0;
-      }
-*/
    }      
    DEXIT;
    return ret;
@@ -283,7 +274,8 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
    submit_user = lGetString(job, JB_owner);
    suser = suser_list_find(Master_SUser_List, submit_user);
 
-   ret = suser_check_new_job(job, max_u_jobs, force_registration);
+   if(!force_registration)
+      ret = suser_check_new_job(job, max_u_jobs);
    if( ret == 0){ 
       suser_increase_job_counter(suser);
    }

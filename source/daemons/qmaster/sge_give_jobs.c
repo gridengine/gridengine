@@ -1174,7 +1174,9 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       /*
        * remove the job
        */
-      suser_unregister_job(job);
+      if(suser_unregister_job(job) != 0){
+        WARNING((SGE_EVENT, MSG_JOB_DECREASE_COUNT_ER)); 
+      }
       lRemoveElem(Master_Job_List, job);
 #ifdef ENABLE_438_FIX
       ftref_del_job(job_id);

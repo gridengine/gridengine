@@ -222,13 +222,10 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetUlong(jep, JB_gid, gid);
    
    /* check conf.max_u_user */
-   { 
-      int ret = suser_check_new_job(jep, conf.max_u_jobs, 0);
-      printf("status: %d\n", ret);
-      if (  (lGetUlong(jep, JB_verify_suitable_queues)!=JUST_VERIFY) 
-         && (ret != 0)) {
-         INFO(( SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, u32c(conf.max_u_jobs), 
-                                                       u32c(suser_job_count(jep)) ));
+   if((lGetUlong(jep, JB_verify_suitable_queues) != JUST_VERIFY)) {
+      if(suser_check_new_job(jep, conf.max_u_jobs) != 0) {
+         INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER_UU, u32c(conf.max_u_jobs), 
+                                                         u32c(suser_job_count(jep))));
          sge_add_answer(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, 0);
          DEXIT;
          return STATUS_NOTOK_DOAGAIN;

@@ -1,11 +1,12 @@
 SG-2003-07-02-1: Bugfix:    max jobs allowed per user
+                            The sge_add_job had multiple exits after the max_u_job
+                            counter was increased. This was fixed and a modifcation
+                            of the decrease function. It checks for overflows now.                           
                  Bugtrag:   4886026
                  Issue:     576
-                 Review:
+                 Review:    AS
                  Changed:   qmaster
-                            It is not sure, if the bug and this fix are realy 
-                            related, but they generate the same behavior. 
-                              
+                           
 
 JG-2003-07-02-0: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment
                             of tightly integrated tasks
@@ -93,6 +94,7 @@ SG-2003-06-04-0  Bugfix:    the queue name was truncated to 10 chars
                             - for all other outputs enables the env variable 
                               "SGE_LONG_QNAMES"
                             the output of long queue names. 
+                 Bugtraq:   4886025
                  Issue:     555
                  Changed:   qstat
                  Review:    AH, AA
@@ -103,6 +105,7 @@ AS-2003-05-27-1  Bugfix:    cannot install on Solaris 10
 
 SG-2003-05-26-0: Bugfix     qstat crashed, when used with the options -r -s z
                             - added the required information to the list
+                 Bugtraq:   4886017
                  Issue:     545
                  Changed:   qstat
                  Review:    AH

@@ -1,3 +1,5 @@
+AA-2003-03-21-3  Bugfix:    3rdparty/qtcsh/DARWIN added
+
 AA-2003-03-21-2  Bugfix:    MOTIFHOME for darwin fix from Derek added
 
 AA-2003-03-21-1  Bugfix:    SIGCLD define for DARWIN FREEBSD

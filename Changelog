@@ -1,3 +1,8 @@
+AS-2004-06-03-1  Cleanup:   changed message when "qmod -X" mod is not done
+                            because queue already has the specified state.
+
+AS-2004-06-03-0: Bugfix:    formatting, typos of various text files
+
 DT-2004-06-03-4: Bugfix:    o Fixed check-in problem with DT-2004-06-03-3
                  Changed:   DRMAA
 

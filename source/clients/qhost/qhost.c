@@ -816,19 +816,6 @@ u_long32 show
 
    DENTER(TOP_LAYER, "get_all_lists");
    
-#if 0
-   /*
-   ** 2nd solution:
-   ** request info from qmaster, qmaster handles which lists
-   ** are needed
-   ** ehl serves as a inout container for delivering request info
-   ** and receiving the result
-   */
-   ehl = host_list;
-lWriteListTo(ehl, stdout);
-   alp = sge_gdi(SGE_QHOST, SGE_GDI_GET, &ehl, NULL, NULL);
-#endif
-
    /*
    ** exechosts
    ** build where struct to filter out  either all hosts or only the 
@@ -842,6 +829,12 @@ lWriteListTo(ehl, stdout);
       else
          where = lOrWhere(where, nw);
    }
+   /* the global host has to be retrieved as well */
+   if (where != NULL) {
+      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, SGE_GLOBAL_NAME);
+      where = lOrWhere(where, nw);
+   }
+   
    nw = lWhere("%T(%I != %s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    if (where)
       where = lAndWhere(where, nw);

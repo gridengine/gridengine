@@ -1,3 +1,7 @@
+SG-2004-01-21-1: Bugfix:    qhost -F -h Name did not display global consumables
+                 Changed:   qhost
+                 Issue:     607
+
 RC-2004-01-14-0: Bugfix:    support the NEC/CRAY SX-6 'ARCH=sx'
 
 BD-2004-01-14-2: Enhancem.: Add basic fbsd-amd64 build support.

@@ -1,0 +1,87 @@
+Source Code Review Form 
+=======================
+(version 1.0)
+
+Date:
+
+1 Identification
+1.1 Issue:        1096, 1098
+1.2 Bugtraq:      5063987
+1.3 Summary:      qmaster cannot bind port below 1024 on Linux
+1.4 Changelog ID: CR-2004-06-18-0 and CR-2004-06-18-1
+1.5 Developer(s): CR
+1.6 Reviewer(s):  JG
+
+
+2 Conformance to specification
+2 [x] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+3.1 user/admin guide
+3.1 [x] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view)
+3.2 [x] yes
+3.2 [ ] no - comment:
+
+3.3 -help output
+3.3 [x] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs)
+3.4 [x] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats
+3.5 [x] yes
+3.5 [ ] no - comment:
+
+
+4 Source review
+4.1 Style guide conformance
+4.1 [x] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [x] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [x] yes
+4.3 [ ] no
+
+5 Tests
+5.1 Manual tests
+Description: Startup qmaster on linux host with port < 1024
+Successfull execution
+5.1 [x] yes
+5.1 [ ] no - comment:
+
+5.1 Used memory leak debugger
+5.1 [ ] yes
+5.1 [x] no - comment: Not necessary for these changes
+
+5.2 Testsuite covers issue
+5.2 [x] yes
+5.2 [ ] no - comment:
+
+5.3 If 5.2 = no: Testsuite issue created
+5.3 [ ] yes
+5.3 [ ] no - comment:
+
+5.4 Testsuite run successfull
+5.4 [x] yes
+5.4 [ ] no - comment:
+
+
+6 Comments
+- Testsuite config version changed from 1.6 to 1.7
+
+7 Accepted
+7 [x] yes
+7 [ ] no - comment:
+
+

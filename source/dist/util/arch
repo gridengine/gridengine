@@ -144,7 +144,7 @@ HP-UX)
       if [ -x /usr/bin/getconf ]; then
          bits="`/usr/bin/getconf KERNEL_BITS`"
          if [ $bits -eq 64 ]; then
-            ARCH=hp11
+            ARCH=hp11-64
          else
             ARCH=hp11
          fi

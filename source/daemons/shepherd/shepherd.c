@@ -47,11 +47,6 @@
 #  include <grp.h>
 #endif
 
-#if defined(HPUX)
-    /* times() */
-#   include <sys/times.h>
-#endif
-
 #if defined(CRAY)
 #   if !defined(SIGXCPU)
 #       define SIGXCPU SIGCPULIM
@@ -100,7 +95,7 @@ struct rusage {
 
 #include "sge_reportL.h"
 
-#if defined(IRIX6)
+#if defined(IRIX)
 #include "sge_processes_irix.h"
 #endif
 
@@ -589,7 +584,7 @@ int main(int argc, char **argv)
    }
    fprintf(fp, pid_t_fmt"\n", pid);
    fflush(fp);
-#if (IRIX6)
+#if (IRIX)
    fsync(fileno(fp));
 #endif
    fclose(fp);
@@ -806,7 +801,7 @@ int ckpt_type
    FILE *fp;
    int core_dumped, ckpt_interval, ckpt_pid;
 
-#if defined(IRIX6)
+#if defined(IRIX)
    ash_t ash = 0;
 #elif defined(NECSX4) || defined(NECSX5)
 	id_t jobid = 0;
@@ -830,7 +825,7 @@ int ckpt_type
       fprintf(fp, "%s\n", get_conf_val("ckpt_osjobid"));
       fclose(fp);
 
-#if defined(IRIX6)
+#if defined(IRIX)
       sscanf(get_conf_val("ckpt_osjobid"), "%lld", &ash);
       shepherd_trace_sprintf("reusing old array session handle %lld", ash);
 #elif defined(NECSX4) || defined(NECSX5)
@@ -1101,7 +1096,7 @@ int ckpt_type
 #endif
 #endif       
 
-#if defined(SOLARIS) || defined(HPUX) || defined(CRAY)
+#if defined(SOLARIS) || defined(CRAY)
       fprintf(fp, "ru_utime=%ld\n", rusage.ru_utime.tv_sec);
       fprintf(fp, "ru_stime=%ld\n", rusage.ru_stime.tv_sec);
 #else
@@ -1656,10 +1651,10 @@ char *childname            /* "job", "pe_start", ...     */
    int remaining_alarm;
    pid_t ctrl_pid[3];
 
-#if defined(HP10) || defined(HP11)
+#if defined(HPUX)
    struct rusage rusage_hp10;
 #endif
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    struct tms t1, t2;
 #endif
 
@@ -1683,7 +1678,7 @@ char *childname            /* "job", "pe_start", ...     */
       inArena = 0;
    }
 
-#if defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    times(&t1);
 #endif
    
@@ -1691,13 +1686,13 @@ char *childname            /* "job", "pe_start", ...     */
       if (ckpt_interval && rest_ckpt_interval)
          alarm(rest_ckpt_interval);
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
       npid = waitpid(-1, &status, 0);
 #else
       npid = wait3(&status, 0, rusage);
 #endif
 
-#if defined(HP10) || defined(HP11)
+#if defined(HPUX)
       /* wait3 doesn't return CPU usage */
       getrusage(RUSAGE_CHILDREN, &rusage_hp10);
 #endif
@@ -1853,19 +1848,19 @@ char *childname            /* "job", "pe_start", ...     */
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0));
 
-#if defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 
    times(&t2);
 
    rusage->ru_utime.tv_sec  = (t2.tms_cutime - t1.tms_cutime) / sysconf(_SC_CLK_TCK);
    rusage->ru_stime.tv_sec  = (t2.tms_cstime - t1.tms_cstime) / sysconf(_SC_CLK_TCK);
    
-#endif  /* HPUX || CRAY */
+#endif  /* CRAY */
 
-#if defined(HP10) || defined(HP11)
+#if defined(HPUX)
    rusage->ru_utime.tv_sec = rusage_hp10.ru_utime.tv_sec;
    rusage->ru_stime.tv_sec = rusage_hp10.ru_stime.tv_sec;
-#endif   
+#endif
 
    return job_status;
 }
@@ -2125,11 +2120,11 @@ static void shepherd_signal_job(
 pid_t pid,
 int sig 
 ) {
-#if defined(IRIX6) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    FILE *fp;
    static int first = 1;
    int n;
-#  if (IRIX6)
+#  if (IRIX)
    static ash_t osjobid = 0;
 #	elif defined(NECSX4) || defined(NECSX5)
    char err_str[512];
@@ -2144,7 +2139,7 @@ int sig
 #endif   
 #endif
 
-#if defined(IRIX6) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 
    do {
 
@@ -2155,7 +2150,7 @@ int sig
       if (first) {
          fp = fopen("osjobid", "r");
          if (fp) {
-#if defined(IRIX6)
+#if defined(IRIX)
             n = fscanf(fp, "%lld", &osjobid);
 #else
             n = fscanf(fp, "%d", &osjobid);      
@@ -2177,7 +2172,7 @@ int sig
       }
 
       sge_switch2start_user();
-#     if defined(IRIX6)
+#     if defined(IRIX)
       kill_ash(osjobid, sig, sig == 9);
 #     elif defined(CRAY)
       killm(C_JOB, osjobid, sig);

@@ -463,15 +463,9 @@ char **argv
 #endif
          cnt = 0;
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-         while ((i = select(FD_SETSIZE, (int *) &readfds, (int *) &writefds,
-                            NULL, &timeout)) == -1 && errno == EINTR)
-            cnt++;
-#else
          while ((i = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout))
                 == -1 && errno == EINTR)
             cnt++;
-#endif
          if (cnt || i) {
             DPRINTF(("select returned with %d - count %d\n", i, cnt));
          }
@@ -503,15 +497,9 @@ char **argv
                (int) timeout.tv_usec));
 #endif
          cnt = 0;
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-         while ((i = select(FD_SETSIZE, (int *) &readfds, (int *) &writefds,
-                            NULL, &timeout)) == -1 && errno == EINTR)
-            cnt++;
-#else
          while ((i = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout))
                 == -1 && errno == EINTR)
             cnt++;
-#endif
          if (cnt || i) {
             DPRINTF(("select returned with %d - count %d\n", i, cnt));
          }
@@ -1297,11 +1285,7 @@ fd_set *wfds
             timeout.tv_sec = 0;
             timeout.tv_usec = 0;
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-            ret = select(nfds, (int *) &check_set, NULL, NULL, &timeout);
-#else
             ret = select(nfds, &check_set, NULL, NULL, &timeout);
-#endif
             if (ret == -1 && errno == EBADF) {
                /* found it */
                return i;
@@ -1320,11 +1304,7 @@ fd_set *wfds
             timeout.tv_sec = 0;
             timeout.tv_usec = 0;
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-            ret = select(nfds, NULL, (int *) &check_set, NULL, &timeout);
-#else
             ret = select(nfds, NULL, &check_set, NULL, &timeout);
-#endif
             if (ret == -1 && errno == EBADF) {
                /* found it */
                return i;

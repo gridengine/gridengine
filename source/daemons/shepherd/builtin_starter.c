@@ -617,7 +617,7 @@ int set_environment()
       return 1;
    }
 
-#if defined(IRIX6)
+#if defined(IRIX)
    {
       FILE *fp;
       ash_t ash;

@@ -87,11 +87,9 @@ const sig_mapT sig_map[] =
    {SGE_SIGTTIN, SIGTTIN, "TTIN"},
    {SGE_SIGTTOU, SIGTTOU, "TTOU"},
    {SGE_SIGIO, SIGIO, "IO"},
-#if !defined(HPUX)
    {SGE_SIGXCPU, SIGXCPU, "XCPU"},
 #ifndef CRAY
    {SGE_SIGXFSZ, SIGXFSZ, "XFSZ"},
-#endif
 #endif
 #if !(defined(CRAY) || defined(NECSX4) || defined(NECSX5))
    {SGE_SIGVTALRM, SIGVTALRM, "VTALRM"},
@@ -357,7 +355,7 @@ void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
  
    errno = 0;
    for (i=1; i < NSIG; i++) {
-#if !defined(HP10) && !defined(HP10_01) && !defined(HPCONVEX) && !defined(HP11)
+#if !defined(HPUX)
       if (i != SIGKILL && i != SIGSTOP && i != sig_num)
 #else
       if (i != SIGKILL && i != SIGSTOP &&

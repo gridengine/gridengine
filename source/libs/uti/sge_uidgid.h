@@ -37,7 +37,7 @@
 #include "sge_dstring.h"
 #include "sge_unistd.h"
 
-#if defined(HP10) || defined(HP11)
+#if defined(HPUX)
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif 

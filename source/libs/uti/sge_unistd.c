@@ -195,11 +195,7 @@ void sge_sleep(int sec, int usec)
    timeout.tv_sec = sec;
    timeout.tv_usec = usec;
  
-#if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX))
    select(0, (fd_set *) 0, (fd_set *) 0, (fd_set *) 0, &timeout);
-#else
-   select(0, (int *) 0, (int *) 0, (int *) 0, &timeout);
-#endif
 }       
 
 /****** uti/unistd/sge_chdir_exit() *******************************************

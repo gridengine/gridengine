@@ -316,7 +316,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       int pid2;
       int exit_status;
 
-      #if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX))
+      #if !defined(CRAY)
          struct rusage rusage;
       #endif
 
@@ -325,7 +325,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       #else
          int status;
       #endif
-      #if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX)
+      #if defined(CRAY)
          pid2 = waitpid(pid, &status, 0);
       #else
          pid2 = wait3(&status, 0, &rusage);

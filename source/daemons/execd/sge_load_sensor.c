@@ -189,11 +189,7 @@ static int sge_ls_status(lListElem *this_ls)
    FD_SET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds);
 
    /* is load sensor ready to read ? */
-#if defined(HPUX) || defined(HP10_01) || defined(HP10CONVEX)
-   ret = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, NULL);
-#else
    ret = select(FD_SETSIZE, NULL, &writefds, NULL, NULL);
-#endif
 
    if (ret <= 0) {
       DEXIT;
@@ -597,11 +593,7 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    timeleft.tv_usec = 0;
 
    /* wait for writing on fd_in */
-#ifdef HPUX
-   ret = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeleft);
-#else
    ret = select(FD_SETSIZE, NULL, &writefds, NULL, &timeleft);
-#endif
    if (ret == -1) {
       if (errno == EINTR) {
          DEXIT;

@@ -403,7 +403,7 @@ static int sge_get_loadavg(lList **lpp)
    sge_add_double2load_report(lpp, LOAD_ATTR_VIRTUAL_USED,    (mem_info.mem_total + mem_info.swap_total)- 
                                           (mem_info.mem_free  + mem_info.swap_free), uti_state_get_qualified_hostname(), "M");
 
-#ifdef IRIX6
+#ifdef IRIX
    sge_add_double2load_report(lpp, LOAD_ATTR_SWAP_RSVD,        mem_info.swap_rsvd, uti_state_get_qualified_hostname(), "M");
 #endif
 

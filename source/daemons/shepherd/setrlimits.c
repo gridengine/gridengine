@@ -44,17 +44,9 @@
 #   include <sys/category.h>
 #endif
 
-#if defined(HP10_01) || defined(HPCONVEX)
-#   define _KERNEL
-#endif
-
 #include <sys/resource.h>
 
-#if defined(HP10_01) || defined(HPCONVEX)
-#   undef _KERNEL
-#endif
-
-#if defined(IRIX6) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
 #   define RLIMIT_STRUCT_TAG rlimit64
 #else
 #   define RLIMIT_STRUCT_TAG rlimit
@@ -151,10 +143,7 @@ int trace_rlimit
 #ifdef CRAY
    long clock_tick;
 #else
-#if !defined(HPUX)
-/*  */
    struct RLIMIT_STRUCT_TAG rlp;
-#endif
 #endif
 
 #define PARSE_IT(dstp, attr) \
@@ -169,10 +158,8 @@ int trace_rlimit
    PARSE_IT(&h_data, "h_data");
    PARSE_IT(&s_stack, "s_stack");
    PARSE_IT(&h_stack, "h_stack");
-#ifndef SINIX 
    PARSE_IT(&s_rss, "s_rss");
    PARSE_IT(&h_rss, "h_rss");
-#endif
    PARSE_IT(&s_fsize, "s_fsize");
    PARSE_IT(&h_fsize, "h_fsize");
    PARSE_IT(&s_vmem, "s_vmem");
@@ -274,7 +261,7 @@ int trace_rlimit
    /* Too bad they didn't have a sysconf call to get bytes/click */
    /* and clicks/disk block. */
 
-#elif !defined(HPUX)
+#else
    rlp.rlim_cur = s_cpu;
    rlp.rlim_max = h_cpu;
    pushlimit(RLIMIT_CPU, &rlp, trace_rlimit);
@@ -421,7 +408,7 @@ static int get_resource_info(u_long32 resource, char **name,
  */
 
 
-#if !defined(CRAY) && !defined(HPUX)
+#if !defined(CRAY)
 static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp, 
                       int trace_rlimit) 
 {
@@ -440,12 +427,8 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 
    /* Process limit */
    if ((resource_type & RES_PROC)) {
-#if defined(IRIX5) || defined(IRIX6)
-#if defined(IRIX5)
-      getrlimit(resource,&dlp);
-#else
+#if defined(IRIX6)
       getrlimit64(resource,&dlp);
-#endif
       if (rlp->rlim_cur>dlp.rlim_max)
          rlp->rlim_cur=dlp.rlim_max;
       if (rlp->rlim_max>dlp.rlim_max)
@@ -458,7 +441,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 
 #if defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX6) || defined(HP11) || defined(HP10) || defined(DARWIN) || defined(FREEBSD)
+#elif defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD)
 #  define limit_fmt "%lld"
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
 #  define limit_fmt "%lu"
@@ -467,7 +450,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 #endif
 
       sge_switch2start_user();
-#if defined(IRIX6) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
       ret = setrlimit64(resource, rlp);
 #else
       ret = setrlimit(resource,rlp);
@@ -481,7 +464,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
             shepherd_trace(trace_str);
       }
       else {
-#if defined(IRIX6) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
          getrlimit64(resource,&dlp);
 #else
          getrlimit(resource,&dlp);

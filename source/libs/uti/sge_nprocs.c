@@ -45,7 +45,6 @@
 #   include <mach/machine.h>
 #endif
 
-/* IRIX 5, 6 */
 #if defined(__sgi)
 #   include <sys/types.h>
 #   include <sys/sysmp.h>
@@ -225,7 +224,6 @@ int sge_nprocs()
 #endif
 
 
-/* IRIX 5, 6 */
 #ifdef __sgi
    nprocs = sysmp(MP_NPROCS);
 #endif
@@ -240,7 +238,7 @@ int sge_nprocs()
    nprocs = sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 
-#if defined(__hpux) && !defined(HPCONVEX)
+#if defined(__hpux)
    union pstun pstatbuf;
    struct pst_dynamic dinfo;
 
@@ -250,10 +248,6 @@ int sge_nprocs()
           exit(1);
    }
    nprocs = dinfo.psd_proc_cnt;
-#endif
-
-#if defined(HPCONVEX)
-   nprocs = 1;
 #endif
 
 #ifdef CRAY

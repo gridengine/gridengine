@@ -456,11 +456,7 @@ int run_client_test(char* host, int port, int repeat) {
       
       timeout.tv_sec = 2; 
       timeout.tv_usec = 0;
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-      select_back = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeout);
-#else
       select_back = select(FD_SETSIZE, NULL, &writefds, NULL, &timeout);
-#endif
       if (select_back > 0) {
          strcpy(buffer,mydata);
          while (sent_data != help) {
@@ -578,11 +574,7 @@ int run_client_test2(char* host, int port, int repeat) {
       timeout.tv_sec = 2; 
       timeout.tv_usec = 0;
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-      select_back = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeout);
-#else
       select_back = select(FD_SETSIZE, NULL, &writefds, NULL, &timeout);
-#endif
       if (select_back > 0) {
          strcpy(buffer,mydata);
          while (sent_data != help) {
@@ -653,11 +645,7 @@ void start_server_handling(int sockfd) {
 
    timeout.tv_sec = 2; 
    timeout.tv_usec = 0;
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-   select_back = select(FD_SETSIZE, (int *) &readfds, (int *) &writefds, NULL, &timeout);
-#else
    select_back = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
-#endif
       
 /*      printf("waiting for connections (select_back=%d)(open=%d)...\n",
              select_back,
@@ -787,11 +775,7 @@ void start_server_handling2(int sockfd,int repeat) {
 
    timeout.tv_sec = 2; 
    timeout.tv_usec = 0;
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-   select_back = select(FD_SETSIZE, (int *) &readfds, (int *) &writefds, NULL, &timeout);
-#else
    select_back = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
-#endif
       
 /*      printf("waiting for connections (select_back=%d)(open=%d)...\n",
              select_back,

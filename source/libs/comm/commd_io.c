@@ -202,11 +202,7 @@ int readnbytes_nb(int sfd, char *ptr, int n, int timeout)
       timeleft.tv_sec = to;
       timeleft.tv_usec = 0;
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-      res = select(FD_SETSIZE, (int *) &readfds, NULL, NULL, &timeleft);
-#else
       res = select(FD_SETSIZE, &readfds, NULL, NULL, &timeleft);
-#endif
 
 #ifndef WIN32NATIVE
       errorcode = errno;
@@ -342,11 +338,7 @@ int writenbytes_nb(int sfd, const char *ptr, int n, int timeout)
    timeleft.tv_sec = to;
    timeleft.tv_usec = 0;
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-      res = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeleft);
-#else
       res = select(FD_SETSIZE, NULL, &writefds, NULL, &timeleft);
-#endif
 
 #ifndef WIN32NATIVE
       errorcode=errno;

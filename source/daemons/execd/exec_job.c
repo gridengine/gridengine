@@ -880,7 +880,7 @@ char *err_str
          uti_state_get_qualified_hostname()))) 
       cwd = cp;
    fprintf(fp, "cwd=%s\n", cwd);
-#if defined(IRIX6)
+#if defined(IRIX)
    {
       const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOST");
 

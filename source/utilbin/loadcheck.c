@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
    print_mem_load(LOAD_ATTR_SWAP_USED, name, precision, mem_info.swap_total - mem_info.swap_free, m); 
    print_mem_load(LOAD_ATTR_VIRTUAL_USED, name, precision,(mem_info.mem_total + mem_info.swap_total) - 
                                           (mem_info.mem_free  + mem_info.swap_free), m); 
-#  ifdef IRIX6
+#  ifdef IRIX
    print_mem_load(LOAD_ATTR_SWAP_USED, name, precision, mem_info.swap_rsvd, m); 
 #  endif
 #endif /* SGE_LOADMEM */

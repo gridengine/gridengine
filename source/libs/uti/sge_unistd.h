@@ -40,7 +40,7 @@
 
 #include "sge_dstring.h"
 
-#ifdef IRIX6
+#ifdef IRIX
 #  define SGE_STAT(filename, buffer) stat64(filename, buffer)
 #  define SGE_LSTAT(filename, buffer) lstat64(filename, buffer)
 #  define SGE_FSTAT(filename, buffer) fstat64(filename, buffer)
@@ -63,7 +63,7 @@
 #  define SGE_OFF_T off_t
 #endif                
 
-#ifdef IRIX6
+#ifdef IRIX
 #  define SGE_READDIR(directory) readdir64(directory)
 #  define SGE_TELLDIR(directory) telldir64(directory)
 #  define SGE_SEEKDIR(directory, offset) seekdir64(directory, offset)

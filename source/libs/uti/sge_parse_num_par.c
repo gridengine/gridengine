@@ -47,7 +47,7 @@
 #include "msg_utilib.h"
 
 
-#if defined(IRIX6)
+#if defined(IRIX)
    /* to be independent from irix' compiler options */
 #  undef RLIM_INFINITY
 #  define  RLIM_INFINITY  0x7fffffffffffffffLL

@@ -129,7 +129,7 @@ const char *buf
    FILE *fp;
    stringT user_str;
 
-#if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX))
+#if !defined(CRAY)
    struct rusage rusage;
 #endif
 
@@ -210,7 +210,7 @@ const char *buf
       sigprocmask(SIG_SETMASK, &io_mask, &omask);
       sigaction(SIGALRM, &sigalrm_vec, &sigalrm_ovec);
 
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX)
+#if defined(CRAY)
       pid2 = waitpid(pid, &status, 0);
 #else
       pid2 = wait3(&status, 0, &rusage);

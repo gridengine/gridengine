@@ -281,11 +281,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
                   stimeout.tv_sec = 0; 
                   stimeout.tv_usec = 0;   /* don't waste time */
                }
-   #if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-               select_back = select(sockfd + 1, NULL, (int *) &writefds, NULL, &stimeout);
-   #else
                select_back = select(sockfd + 1, NULL, &writefds, NULL, &stimeout);
-   #endif
                if (select_back > 0) {
                   int socket_error;
                   int socklen = sizeof(socket_error);
@@ -555,11 +551,7 @@ static int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsig
       timeout.tv_sec = 1; 
       timeout.tv_usec = 0;  /* 0 ms */
       /* do select */
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-      select_back = select(fd + 1, NULL ,(int *) &writefds , NULL , &timeout);
-#else
       select_back = select(fd + 1, NULL, &writefds, NULL , &timeout);
-#endif
 
       if (select_back == -1) {
          CL_LOG(CL_LOG_INFO,"select error");
@@ -700,11 +692,7 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
       timeout.tv_usec = 0;  /* 0 ms */
 
       /* do select */
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-      select_back = select(fd + 1, (int *) &readfds, NULL, NULL , &timeout);
-#else
       select_back = select(fd + 1, &readfds,NULL , NULL , &timeout);
-#endif
       if (select_back == -1) {
          CL_LOG(CL_LOG_INFO,"select error");
          return CL_RETVAL_SELECT_ERROR;
@@ -1193,11 +1181,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
 
    timeout.tv_sec = timeout_val_sec; 
    timeout.tv_usec = timeout_val_usec;
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-   select_back = select(server_fd + 1, (int *) &readfds, NULL, NULL, &timeout);
-#else
    select_back = select(server_fd + 1, &readfds, NULL, NULL, &timeout);
-#endif
    if (select_back == -1) {
       return CL_RETVAL_SELECT_ERROR;
    }
@@ -2177,11 +2161,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    } 
 
    errno = 0;
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-   select_back = select(max_fd + 1 , (int *) &my_read_fds, &my_write_fds, NULL, &timeout);
-#else
    select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
-#endif
    my_errno = errno;
 
    if (max_fd == 0) {

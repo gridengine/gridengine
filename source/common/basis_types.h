@@ -82,12 +82,12 @@ typedef enum {
 #define x32c(x)  (unsigned long)(x)
 
 
-#if defined(IRIX6) || defined(IRIX64)
+#if defined(IRIX)
 #define u64 "%lld"
 #define u64c(x)  (unsigned long long)(x)
 #endif
 
-#if defined(ALPHA) || defined(HP11)
+#if defined(ALPHA) || defined(HP11) || defined(HP1164)
 #  include <limits.h>
 #else
 #  ifndef WIN32NATIVE
@@ -129,13 +129,13 @@ extern "C" {
 */
 #define uid_t_fmt pid_t_fmt
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX6)
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX)
 #  define pid_t_fmt    "%ld"
 #else
 #  define pid_t_fmt    "%d"
 #endif
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX6) 
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) 
 #  define gid_t_fmt    "%ld"
 #elif defined(LINUX86)
 #  define gid_t_fmt    "%u"
@@ -190,7 +190,7 @@ typedef char stringT[MAX_STRING_SIZE];
 /* non-quoted string not limited intentionally */
 #define SN_UNLIMITED  "%s"
 
-#if defined(HP10) || defined(HP11)
+#if defined(HPUX)
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif

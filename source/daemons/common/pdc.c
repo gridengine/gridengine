@@ -73,7 +73,7 @@ int main(int argc,char *argv[])
 #include <sys/types.h>
 #include <sys/time.h>
 
-#if defined(IRIX6)
+#if defined(IRIX)
 #include <sys/sysmp.h>
 #include <sys/syssgi.h>
 #include <sys/arsess.h>

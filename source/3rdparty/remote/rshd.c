@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.14 2004/02/04 11:03:01 joga Exp $	*/
+/*	$Id: rshd.c,v 1.15 2004/02/09 14:06:46 andy Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -42,7 +42,7 @@
  *	data
  */
 
-#if defined HP11
+#if defined(HP11) || defined(HP1164)
 #define _XOPEN_SOURCE_EXTENDED
 #endif
 
@@ -87,7 +87,7 @@
 #include <config_file.h>
 #include <sge_uidgid.h>
 
-#if defined SOLARIS || HP11 || HP10 || NECSX5 || CRAY
+#if defined SOLARIS || HPUX || NECSX5 || CRAY
 #define _PATH_NOLOGIN "/etc/nologin"
 #define _PATH_BSHELL "/bin/sh"
 #define _PATH_DEFPATH "/usr/bin:/bin"
@@ -95,15 +95,15 @@
 #include <paths.h>
 #endif
 
-#if defined AIX || ALPHA || IRIX6
+#if defined AIX || ALPHA || IRIX
 #define _PATH_DEFPATH "/usr/bin:/bin"
 #endif
 
-#if defined ALPHA4 || HP10 || IRIX6 || (SOLARIS && !HAS_SOCKLEN_T) || NECSX5 || CRAY || DARWIN6
+#if defined ALPHA4 || HP10 || IRIX || (SOLARIS && !HAS_SOCKLEN_T) || NECSX5 || CRAY || DARWIN6
 typedef int socklen_t;
 #endif
 
-#if defined HP10 || IRIX6 || LINUX || NECSX5 || CRAY 
+#if defined HP10 || IRIX || LINUX || NECSX5 || CRAY 
 #ifndef HAS_IN_PORT_T
 typedef unsigned short in_port_t;
 #endif
@@ -113,7 +113,7 @@ typedef unsigned short in_port_t;
 extern int ruserok(char *host, int root_user, char *remote_user, char *local_user);
 #endif 
 
-#ifdef IRIX6
+#ifdef IRIX
 #define NCARGS ARG_MAX
 #endif
 
@@ -622,7 +622,7 @@ error(const char *fmt, ...)
       len = 1;
    } else
       len = 0;
-#if defined ALPHA4 || HP10 || IRIX6 || (SOLARIS && ! SOLARIS64) 
+#if defined ALPHA4 || HP10 || IRIX || (SOLARIS && ! SOLARIS64) 
    vsprintf(bp, fmt, ap);
 #else   
    vsnprintf(bp, sizeof(buf) - 1, fmt, ap);

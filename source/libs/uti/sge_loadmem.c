@@ -438,7 +438,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 #endif /* SOLARIS */
 
 /*--------------------------------------------------------------------------*/
-#if defined(HP10) || defined(HP11)
+#if defined(HPUX)
 #include <sys/param.h>
 #include <sys/pstat.h>
 
@@ -551,7 +551,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
    return 0;
 }
-#endif /* HP10 */
+#endif /* HPUX */
 
 
 /*--------------------------------------------------------------------------*/
@@ -619,7 +619,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
 
 /*--------------------------------------------------------------------------*/
-#if defined(IRIX6)
+#if defined(IRIX)
 #include <stdio.h>
 #include <sys/sysinfo.h>
 #include <sys/sysmp.h>
@@ -664,7 +664,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    mem_info->swap_rsvd = ((double)swaprsrv * 512)/(1024.0*1024.0);
    return 0;
 }
-#endif /* IRIX6 */
+#endif /* IRIX */
 
 
 /*--------------------------------------------------------------------------*/

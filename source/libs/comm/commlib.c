@@ -1679,11 +1679,7 @@ int send2commd(unsigned char *buffer, int buflen
 #else
                FD_SET((u_int)commlib_state_get_sfd(), &writefds);
 #endif
-#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
-               si = select(commlib_state_get_sfd() + 1 ,NULL ,(int *) &writefds, NULL, &timeout);
-#else
                si = select(commlib_state_get_sfd() + 1 ,NULL ,(fd_set *) &writefds, NULL, &timeout);
-#endif
       
                DPRINTF(("select returns %d\n", si));
             

@@ -1,8 +1,14 @@
+AS-2004-02-09-1: Enhancem.: porting changes for HP (begin native 64bit port),
+                            IRIX (support only IRIX 6.5) and Linux (AMD64
+                            and IA64).
+                            No functional tests done yet. Only #define
+                            cleanup and changes
+
 JG-2004-02-09-0: Testsuite: Enable testsuite installation on aix51.
 
 CR-2004-02-09-1: Bugfix:    Fixed compile problem for AMD64
 
-AS-2004-02-06-1  Bugfix:    pass -Wno-strict-prototypes to gcc on Linux
+AS-2004-02-09-1  Bugfix:    pass -Wno-strict-prototypes to gcc on Linux
                             to compile sec_lib.c without error
                             (introduced -Wstrict-prototypes for all Linuxes
                             with AS-2004-02-06-1)

@@ -31,7 +31,7 @@
 /*___INFO__MARK_END__*/
 int dummy_processes_irix_c; /* Just for compilers complaining about empty files */
 
-#if defined(IRIX6)
+#if defined(IRIX)
 
 /* Feature test switches. */
 #define _KMEMUSER 1
@@ -93,10 +93,7 @@ extern void shepherd_trace(char *str);
 struct prpsinfo pi;
 struct prstatus ps;
 struct prusage pu;
-#if 0
-struct proc p;
-#endif
-struct pracinfo pa;     /* macro is dummy in IRIX 5.x */
+struct pracinfo pa;
 
 /**********************************************************
  We want to get a list of all processes belonging to a job.
@@ -284,4 +281,4 @@ int main(int argc, char **argv)
 }
 
 #endif /* TEST */
-#endif /* IRIX6 */
+#endif /* IRIX */

@@ -1999,6 +1999,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
 
    for_each (tep, threshold) {
       lListElem *hlep = NULL, *glep = NULL, *queue_ep = NULL, *cep  = NULL;
+      bool need_free_cep = false;
       const char *name;
       u_long32 relop, type;
 
@@ -2045,12 +2046,13 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       }
       else {
          /* load thesholds... */
-         if (!(cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list, DISPATCH_TIME_NOW, 0))) {
+         if ((cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list, DISPATCH_TIME_NOW, 0)) == NULL ) {
             if (reason)
                sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
             DEXIT;
             return 1;
          }
+         need_free_cep = true;
      
          load_value = lGetString(cep, CE_pj_stringval);
          load_is_value = (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_MASK) != DOMINANT_TYPE_CLOAD; 
@@ -2063,10 +2065,15 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       if(load_check_alarm(reason, name, load_value, limit_value, relop, 
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
+         if (need_free_cep) {
+            cep = lFreeElem(cep);
+         }
          DEXIT;
          return 1;
       }   
-
+      if (need_free_cep) {
+         cep = lFreeElem(cep);
+      }
    } 
 
    DEXIT;
@@ -5073,7 +5080,9 @@ void sge_create_load_list(const lList *queue_list, const lList *host_list,
 
             if (*load_list == NULL) {
                *load_list = lCreateList("load_ref_list", LDR_Type);
-               if (*load_list == NULL) goto error;
+               if (*load_list == NULL) {
+                  goto error;
+               }   
             }
             else {
                load_elem = load_locate_elem(*load_list, global_consumable, 
@@ -5082,7 +5091,9 @@ void sge_create_load_list(const lList *queue_list, const lList *host_list,
             }
             if (load_elem == NULL) {
                load_elem = lCreateElem(LDR_Type);
-               if (load_elem == NULL) goto error;
+               if (load_elem == NULL) {
+                  goto error;
+               }   
                lSetPosRef(load_elem, LDR_global_pos, global_consumable);
                lSetPosRef(load_elem, LDR_host_pos, host_consumable);
                lSetPosRef(load_elem, LDR_queue_pos, queue_consumable);
@@ -5093,12 +5104,16 @@ void sge_create_load_list(const lList *queue_list, const lList *host_list,
             queue_ref_list = lGetPosList(load_elem, LDR_queue_ref_list_pos);
             if (queue_ref_list == NULL) {
                queue_ref_list = lCreateList("", QRL_Type);
-               if (queue_ref_list == NULL) goto error;
+               if (queue_ref_list == NULL) {
+                  goto error;
+               }   
                lSetPosList(load_elem, LDR_queue_ref_list_pos, queue_ref_list);
             }
                
             queue_ref_elem = lCreateElem(QRL_Type);
-            if (queue_ref_elem == NULL) goto error;
+            if (queue_ref_elem == NULL) {
+               goto error;
+            }   
             lSetRef(queue_ref_elem, QRL_queue, queue);
             lAppendElem(queue_ref_list, queue_ref_elem);
 

@@ -205,7 +205,8 @@ int event_handler_default_scheduler()
          }
 
          for_each(queue, qinstance_list) {
-            lAppendElem(copy.all_queue_list, lCopyElem(queue));
+            lListElem *ep = lCopyElem(queue);
+            lAppendElem(copy.all_queue_list, ep);
          }
       }
       copy.queue_list = lSelect("sel_qi_list", copy.all_queue_list, where_queue, what_queue2);

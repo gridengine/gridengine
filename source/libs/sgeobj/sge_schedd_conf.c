@@ -322,8 +322,9 @@ static void sconf_clear_pos(void){
          if (pos.c_halflife_decay_list)
             pos.c_halflife_decay_list = lFreeList(pos.c_halflife_decay_list);
 
-         if (pos.c_params)
+         if (pos.c_params) {
             pos.c_params = lFreeList(pos.c_params);
+         }   
          
          pos.c_default_duration = DEFAULT_DURATION_I;
 
@@ -2224,6 +2225,9 @@ bool sconf_validate_config_(lList **answer_list){
       serf_set_active(false);
 
       if (sparams) {
+         if (pos.c_params == NULL) {
+            pos.c_params = lCreateList("params", PARA_Type);
+         }
          for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;
             bool added = false;
@@ -2658,7 +2662,7 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
       ret = false;
    }
    if (elem){
-      lAppendElem(pos.c_params, elem);
+      lAppendElem(param_list, elem);
    }
 
    DEXIT;
@@ -2715,7 +2719,7 @@ static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **ans
       ret = false;
    }
    if (elem){
-      lAppendElem(pos.c_params, elem);
+      lAppendElem(param_list, elem);
    }
 
    DEXIT;
@@ -2775,7 +2779,7 @@ static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, co
       ret = false;
    }
    if (elem){
-      lAppendElem(pos.c_params, elem);
+      lAppendElem(param_list, elem);
    }
 
    serf_set_active(do_monitoring);

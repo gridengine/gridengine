@@ -1,3 +1,11 @@
+SG-2004-11-02-0: Bugfix:    - fixed a memory leak in the scheduler configuration
+                            - fixed a memory leak in the scheduler. It ocoured,
+                              when consumables were used as load thresholds.
+                 Review:    AA
+                 Changed:   scheduler
+                 Issue:     1315
+                 Bugtraq:   6189286
+
 CR-2004-10-29-0: Bugfix:    - fixed gdi bug for commlib error reporting
                             - new commlib function: cl_is_commlib_error()
                  Changed:   gdi, commlib

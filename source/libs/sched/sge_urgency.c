@@ -150,7 +150,8 @@ static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency,
 
       /* job deadline dependent contribution */
       if ((deadline=lGetUlong(jep, JB_deadline))) {
-          int time_left = now - deadline;
+          int time_left = deadline - now;
+/*           DPRINTF(("free: %d now: "u32" deadline: "u32"\n", time_left, now, deadline)); */
           /* might be too late for this job anyways we're optimistic and treat it high prior */
           dtc = weight_deadline / MAX(time_left, 1);
       }

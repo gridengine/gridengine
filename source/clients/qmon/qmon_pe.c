@@ -830,13 +830,13 @@ lListElem *pep
    lSetList(pep, PE_xuser_list, xacl);
    
    start_args = XmtInputFieldGetString(pe_start_w);
-   if (!strcasecmp(start_args, "none"))
+   if (!start_args || !strcasecmp(start_args, "none"))
       lSetString(pep, PE_start_proc_args, NULL);
    else   
       lSetString(pep, PE_start_proc_args, start_args);
 
    stop_args = XmtInputFieldGetString(pe_stop_w);
-   if (!strcasecmp(stop_args, "none"))
+   if (!stop_args || !strcasecmp(stop_args, "none"))
       lSetString(pep, PE_stop_proc_args, NULL);
    else   
       lSetString(pep, PE_stop_proc_args, stop_args);

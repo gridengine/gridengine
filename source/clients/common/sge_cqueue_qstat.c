@@ -29,16 +29,30 @@
  *
  ************************************************************************/
 
+#include <string.h>
 
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_hostL.h"
+#include "sge_peL.h"
+#include "sge_qrefL.h"
+#include "sge_strL.h"
 #include "sge_cqueueL.h"
 #include "sge_qinstanceL.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_select_queue.h"
 #include "sge_cqueue_qstat.h"
+#include "qstat_printing.h"
+#include "sge_pe.h"
+#include "sge_host.h"
+#include "sge_conf.h"
+#include "sge_qref.h"
+#include "sge_centry.h"
+#include "valid_queue_user.h"
+#include "sge_cqueue.h"
+#include "sge_complex_schedd.h"
+#include "msg_clients_common.h"
 
 
 bool cqueue_calculate_summary(const lListElem *cqueue, 
@@ -156,4 +170,426 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
    }
    DEXIT;
    return ret;
+}
+
+int 
+select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qref_list)
+{
+   int ret = 0;
+   lList *queueref_list = NULL;
+
+   DENTER(TOP_LAYER, "select_by_qref_list");
+
+   /* 
+    * Resolve queue pattern
+    */
+   {
+      lList *tmp_list = NULL;
+      bool found_something = true;
+      queueref_list = lCopyList("", qref_list);
+
+      qref_list_resolve(queueref_list, NULL, &tmp_list, 
+                        &found_something, cqueue_list, hgrp_list, true, true);
+      if (!found_something) {
+         queueref_list = lFreeList(queueref_list);
+         DEXIT;
+         return -1;
+      }
+      queueref_list = lFreeList(queueref_list);
+      queueref_list = tmp_list;
+      tmp_list = NULL;
+   }
+
+   
+   if (cqueue_list != NULL && queueref_list != NULL) {
+      lListElem *cqueue = NULL;
+      lListElem *qref = NULL;
+
+      for_each(qref, queueref_list) {
+         dstring cqueue_buffer = DSTRING_INIT;
+         dstring hostname_buffer = DSTRING_INIT;
+         const char *full_name = NULL;
+         const char *cqueue_name = NULL;
+         const char *hostname = NULL;
+         bool has_hostname = false;
+         bool has_domain = false;
+         lListElem *cqueue = NULL;
+         lListElem *qinstance = NULL;
+         lList *qinstance_list = NULL;
+         u_long32 tag = 0;
+
+         full_name = lGetString(qref, QR_name); 
+         cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer,
+                           &has_hostname, &has_domain);
+         cqueue_name = sge_dstring_get_string(&cqueue_buffer);
+         hostname = sge_dstring_get_string(&hostname_buffer);
+         cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+         qinstance_list = lGetList(cqueue, CQ_qinstances);
+         qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
+
+         tag = lGetUlong(qinstance, QU_tag);
+         lSetUlong(qinstance, QU_tag, tag | TAG_SELECT_IT);
+
+         sge_dstring_free(&cqueue_buffer);
+         sge_dstring_free(&hostname_buffer);
+      } 
+
+      for_each(cqueue, cqueue_list) {
+         lListElem *qinstance = NULL;
+         lList *qinstance_list = NULL;
+
+         qinstance_list = lGetList(cqueue, CQ_qinstances);
+         for_each(qinstance, qinstance_list) {
+            u_long32 tag = lGetUlong(qinstance, QU_tag);
+            bool selected = (tag & TAG_SELECT_IT) != 0;
+
+            if (!selected) {
+               tag &= ~(TAG_SELECT_IT | TAG_SHOW_IT);
+               lSetUlong(qinstance, QU_tag, tag);
+            } else {
+               ret++;
+            }
+         }
+      } 
+   }
+
+   lFreeList(queueref_list);
+
+   DEXIT;
+   return ret;
+}
+
+/* 
+   untag all queues not selected by a -pe
+
+   returns 
+      0 ok
+      -1 error 
+
+*/
+int select_by_pe_list(
+lList *queue_list,
+lList *peref_list,   /* ST_Type */
+lList *pe_list 
+) {
+   int nqueues = 0;
+   lList *pe_selected = NULL;
+   lListElem *pe, *qep, *cqueue;
+
+   DENTER(TOP_LAYER, "select_by_pe_list");
+
+  /*
+   * iterate through peref_list and build up a new pe_list
+   * containing only those pe's referenced in peref_list
+   */
+   for_each(pe, peref_list) {
+      lListElem *ref_pe;   /* PE_Type */
+      lListElem *copy_pe;  /* PE_Type */
+
+      ref_pe = pe_list_locate(pe_list, lGetString(pe, ST_name));
+      copy_pe = lCopyElem(ref_pe);
+      if (pe_selected == NULL) {
+         const lDescr *descriptor = lGetElemDescr(ref_pe);
+
+         pe_selected = lCreateList("", descriptor);
+      }
+      lAppendElem(pe_selected, copy_pe);
+   }
+   if (lGetNumberOfElem(pe_selected)==0) {
+      fprintf(stderr, MSG_PE_NOSUCHPARALLELENVIRONMENT);
+      return -1;
+   }
+
+   /* 
+    * untag all non-parallel queues and queues not referenced 
+    * by a pe in the selected pe list entry of a queue 
+    */
+   for_each(cqueue, queue_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+      for_each(qep, qinstance_list) { 
+         lListElem* found = NULL;
+
+         if (!qinstance_is_parallel_queue(qep)) {
+            lSetUlong(qep, QU_tag, 0);
+            continue;
+         }
+         for_each (pe, pe_selected) {
+            const char *pe_name = lGetString(pe, PE_name);
+
+            found = lGetSubStr(qep, ST_name, pe_name, QU_pe_list);
+            if (found != NULL) {
+               break;
+            }
+         }
+         if (found == NULL) {
+            lSetUlong(qep, QU_tag, 0);
+         } else {
+            nqueues++;
+         }
+      }
+   }
+
+   if (pe_selected != NULL) {
+      lFreeList(pe_selected);
+   }
+   DEXIT;
+   return nqueues;
+}
+
+/* 
+   untag all queues not selected by a -pe
+
+   returns 
+      0 ok
+      -1 error 
+
+*/
+int select_by_queue_user_list(
+lList *exechost_list,
+lList *cqueue_list,
+lList *queue_user_list,
+lList *acl_list 
+) {
+   int nqueues = 0;
+   lListElem *qu = NULL;
+   lListElem *qep = NULL;
+   lListElem *cqueue = NULL;
+   lListElem *ehep = NULL;
+   lList *h_acl = NULL;
+   lList *h_xacl = NULL;
+   lList *global_acl = NULL;
+   lList *global_xacl = NULL;
+   lList *config_acl = NULL;
+   lList *config_xacl = NULL;
+ 
+
+   DENTER(TOP_LAYER, "select_by_queue_user_list");
+
+   /* untag all queues where no of the users has access */
+
+   ehep = host_list_locate(exechost_list, "global"); 
+   global_acl  = lGetList(ehep, EH_acl);
+   global_xacl = lGetList(ehep, EH_xacl);
+
+   config_acl  = conf.user_lists;
+   config_xacl = conf.xuser_lists;
+
+   for_each(cqueue, cqueue_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+      for_each(qep, qinstance_list) {
+         int access = 0;
+         const char *host_name = NULL;
+
+         /* get exec host list element for current queue 
+            and its access lists */
+         host_name = lGetHost(qep, QU_qhostname);
+         ehep = host_list_locate(exechost_list, host_name);
+         if (ehep != NULL) {
+            h_acl  = lGetList(ehep, EH_acl);
+            h_xacl = lGetList(ehep, EH_xacl);
+         }
+
+         for_each (qu, queue_user_list) {
+            int q_access = 0;
+            int h_access = 0;
+            int gh_access = 0;
+            int conf_access = 0;
+
+            const char *name = lGetString(qu, ST_name);
+            if (name == NULL)
+               continue;
+
+            DPRINTF(("-----> checking queue user: %s\n", name )); 
+
+            DPRINTF(("testing queue access lists\n"));
+            q_access = (name[0]=='@')?
+                  sge_has_access(NULL, &name[1], qep, acl_list): 
+                  sge_has_access(name, NULL, qep, acl_list); 
+            if (!q_access) {
+               DPRINTF(("no access\n"));
+            } else {
+               DPRINTF(("ok\n"));
+            }
+
+            DPRINTF(("testing host access lists\n"));
+            h_access = (name[0]=='@')?
+                  sge_has_access_(NULL, &name[1], h_acl, h_xacl , acl_list):
+                  sge_has_access_(name, NULL, h_acl, h_xacl , acl_list); 
+            if (!h_access) {
+               DPRINTF(("no access\n"));
+            }else {
+               DPRINTF(("ok\n"));
+            }
+
+            DPRINTF(("testing global host access lists\n"));
+            gh_access = (name[0]=='@')?
+                  sge_has_access_(NULL, &name[1], global_acl , global_xacl , acl_list):
+                  sge_has_access_(name, NULL,global_acl , global_xacl , acl_list);
+            if (!gh_access) {
+               DPRINTF(("no access\n"));
+            }else {
+               DPRINTF(("ok\n"));
+            }
+
+            DPRINTF(("testing cluster config access lists\n"));
+            conf_access = (name[0]=='@')?
+                  sge_has_access_(NULL, &name[1],config_acl , config_xacl , acl_list): 
+                  sge_has_access_(name, NULL, config_acl , config_xacl  , acl_list); 
+            if (!conf_access) {
+               DPRINTF(("no access\n"));
+            }else {
+               DPRINTF(("ok\n"));
+            }
+
+            access = q_access && h_access && gh_access && conf_access;
+            if (!access) {
+               break;
+            }
+         }
+         if (!access) {
+            DPRINTF(("no access for queue %s\n", lGetString(qep,QU_qname) ));
+            lSetUlong(qep, QU_tag, 0);
+         }
+         else {
+            DPRINTF(("access for queue %s\n", lGetString(qep,QU_qname) ));
+            nqueues++;
+         }
+      }
+   }
+   DEXIT;
+   return nqueues;
+}
+
+/* 
+   untag all queues not in a specific state 
+
+   returns 
+      0 ok
+      -1 error 
+
+*/
+int select_by_queue_state(
+u_long32 queue_states,
+lList *exechost_list,
+lList *queue_list,
+lList *centry_list 
+) {
+   bool has_value_from_object; 
+   double load_avg;
+   char *load_avg_str;
+   lListElem *cqueue = NULL;
+
+   DENTER(TOP_LAYER, "select_by_queue_state");
+
+   /* only show queues in the requested state */
+   /* make it possible to display any load value in qstat output */
+   if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
+      load_avg_str = LOAD_ATTR_LOAD_AVG;
+
+   for_each(cqueue, queue_list){
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qep = NULL;
+      for_each(qep, qinstance_list) { 
+
+         /* compute the load and suspend alarm */
+         sge_get_double_qattr(&load_avg, load_avg_str, qep, exechost_list, centry_list, &has_value_from_object);
+         if (sge_load_alarm(NULL, qep, lGetList(qep, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+            qinstance_state_set_alarm(qep, true);
+         }
+         if (sge_load_alarm(NULL, qep, lGetList(qep, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+            qinstance_state_set_suspend_alarm(qep, true);
+         }
+
+      
+         if (!qinstance_has_state(qep, queue_states)) {
+            lSetUlong(qep, QU_tag, 0);
+         }   
+      }
+   }
+   DEXIT;
+   return 0;
+}   
+
+/* 
+   untag all queues not covered by -l  
+
+   returns 
+      0  successfully untagged qinstances if necessary
+     -1  error 
+
+*/
+int select_by_resource_list(
+lList *resource_list,
+lList *exechost_list,
+lList *queue_list,
+lList *centry_list, 
+u_long32 empty_qs
+) {
+   lListElem *cqueue = NULL;
+
+   DENTER(TOP_LAYER, "select_by_resource_list");
+
+   if (centry_list_fill_request(resource_list, centry_list, true, true, false)) {
+      /* 
+      ** error message gets written by centry_list_fill_request into 
+      ** SGE_EVENT 
+      */
+      DEXIT;
+      return -1;
+   }
+
+   /* prepare request */
+   for_each(cqueue, queue_list) {
+      lListElem *qep;
+      int selected;
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+      for_each(qep, qinstance_list) {
+         if (empty_qs)
+            set_qs_state(QS_STATE_EMPTY);
+
+         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, 1, NULL, 0, -1);
+         if (empty_qs)
+            set_qs_state(QS_STATE_FULL);
+
+         if (!selected)
+            lSetUlong(qep, QU_tag, 0);
+      }
+   }
+
+   DEXIT;
+   return 0;
+}   
+
+bool is_cqueue_selected(lList *queue_list)
+{
+   lListElem *cqueue;
+   bool a_qinstance_is_selected = false;
+   bool a_cqueue_is_selected = false;
+
+   DENTER(TOP_LAYER, "is_qinstance_selected");
+   
+   for_each(cqueue, queue_list) {
+      lListElem *qep;
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      bool tmp_a_qinstance_is_selected = false;
+
+      for_each(qep, qinstance_list) {
+         if (lGetUlong(qep, QU_tag) & TAG_SHOW_IT) {
+            tmp_a_qinstance_is_selected = true;
+            break;
+         }
+      }
+      a_qinstance_is_selected |= tmp_a_qinstance_is_selected;
+      if (!tmp_a_qinstance_is_selected) {
+         lSetUlong(cqueue, CQ_tag, TAG_DEFAULT);
+      } else {
+         a_cqueue_is_selected |= true;
+      }
+   }
+
+   DEXIT;
+   return a_cqueue_is_selected;
 }

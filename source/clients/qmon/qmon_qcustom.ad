@@ -119,21 +119,23 @@ Qmon*pe_filter.pe_remove.labelPixmap:     leftarrow
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*misc_filter.tabLabel:  @{@fBMisc Filters}
 Qmon*misc_filter.xmtChildren:  \
-   XmtInputField     misc_filter_user; \
-   XmtInputField     misc_filter_q; \
-   StringList        misc_filter_user_sp; \
-   StringList        misc_filter_q_sp; \
-   XmtChooser        misc_filter_state;
+   XmtInputField     misc_filter_user, \
+                     misc_filter_q; \
+   StringList        misc_filter_user_sp, \
+                     misc_filter_q_sp; \
+   XmtChooser        misc_filter_state; \
+   XmPushButton      misc_filter_user_del, \
+                     misc_filter_q_del;
 
 Qmon*misc_filter.layout: \
    Col { \
       Caption tl "@{@fBFilter by User}" Col { \
          Fixed misc_filter_user \
-         misc_filter_user_sp \
+         Row { misc_filter_user_sp Fixed Centered misc_filter_user_del } \
       } \
       Caption tl "@{@fBFilter by Queue Pattern}" Col { \
          Fixed misc_filter_q \
-         misc_filter_q_sp \
+         Row { misc_filter_q_sp Fixed Centered misc_filter_q_del }\
       } \
       Caption tl "@{@fBFilter by Queue State}" misc_filter_state \
    }
@@ -153,4 +155,19 @@ Qmon*misc_filter.misc_filter_state.strings: \
    "@{D}", \
    "@{E}", \
    "@{S}"
+
+
+Qmon*misc_filter*misc_filter_user_sp*scrollBarDisplayPolicy:       AS_NEEDED
+Qmon*misc_filter*misc_filter_user_sp*selectionPolicy:              EXTENDED_SELECT
+Qmon*misc_filter*misc_filter_user_sp*visibleItemCount:             5
+
+Qmon*misc_filter.misc_filter_user_del.labelType:   PIXMAP
+Qmon*misc_filter.misc_filter_user_del.labelPixmap: trashcan
+
+Qmon*misc_filter*misc_filter_q_sp*scrollBarDisplayPolicy:       AS_NEEDED
+Qmon*misc_filter*misc_filter_q_sp*selectionPolicy:              EXTENDED_SELECT
+Qmon*misc_filter*misc_filter_q_sp*visibleItemCount:             5
+
+Qmon*misc_filter.misc_filter_q_del.labelType:   PIXMAP
+Qmon*misc_filter.misc_filter_q_del.labelPixmap: trashcan
 

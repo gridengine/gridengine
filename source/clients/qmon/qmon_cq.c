@@ -78,8 +78,12 @@
 #include "sge_qinstance_state.h"
 #include "load_correction.h"
 #include "sge_complex_schedd.h"
+#include "qstat_printing.h"
+#include "sge_centry.h"
 
 static Widget qmon_cq = 0;
+static Widget cq_cqfolder = 0;
+static Widget cq_customize = 0;
 static Widget cq_tree = 0;
 static Widget cq_message = 0;
 static Widget cluster_queue_settings = 0;
@@ -119,6 +123,27 @@ static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQinstanceSetLoad(Widget matrix, const char *qiname);
 static void qmonQinstanceShowLoad(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQinstanceExplain(Widget w, XtPointer cld, XtPointer cad);
+static int filter_queues(
+lList **filtered_queue_list,
+lList *queue_list, 
+lList *centry_list,
+lList *hgrp_list,
+lList *exechost_list,
+lList *acl_list,
+lList *pe_list,
+lList *resource_list, 
+lList *queueref_list, 
+lList *peref_list, 
+lList *queue_user_list,
+u_long32 queue_states);
+
+static void qmonQinstanceShowBrowserExplain(
+dstring *info,
+lListElem *q,
+lList *centry_list,
+lList *exechost_list,
+u_long32 explain_bits);
 /* static void qmonCQSetValues(ListTreeItem *item); */
 
 #if 0
@@ -199,7 +224,9 @@ XtPointer cld, cad;
    /*
    ** fill the displayed dialogues
    */
+   qmonQCUReadPreferences();
    qmonCQUpdate(qmon_cq, NULL, NULL);
+   XmTabSetTabWidget(cq_cqfolder, current_matrix, True);
 
    
    xmui_manage(qmon_cq);
@@ -231,7 +258,7 @@ static Widget qmonCQCreate(
 Widget parent 
 ) {
    Widget cq_layout, cq_close, cq_update, cq_main_link, 
-          cq_tickets, cq_customize, cq_cqfolder;
+          cq_tickets;
 
    DENTER(GUI_LAYER, "qmonCQCreate");
 
@@ -309,6 +336,9 @@ Widget parent
                      qmonQinstanceShowLoad, NULL);
    XtAddCallback(cq_sick, XmNactivateCallback, 
                      qmonCQSick, NULL);
+   XtAddCallback(cq_explain, XmNactivateCallback, 
+                     qmonQinstanceExplain, NULL);
+
 
 
    XtAddCallback(cq_cqfolder, XmNvalueChangedCallback, 
@@ -331,6 +361,10 @@ Widget parent
    XtAddEventHandler(XtParent(cq_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
+   XtSetSensitive(cq_load, False);
+   XtSetSensitive(cq_explain_states, False);
+   XtSetSensitive(cq_explain, False);
+
    DEXIT;
    return cq_layout;
 }
@@ -347,8 +381,12 @@ void qmonCQUpdate( Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   qmonCQUpdateCQMatrix();
+   if (current_matrix == cluster_queue_settings)
+      qmonCQUpdateCQMatrix();
+   else if (current_matrix == qinstance_settings)
+      qmonCQUpdateQIMatrix();
 /*    qmonCQUpdateTree(); */
+
 
    DEXIT;
 }
@@ -1206,6 +1244,167 @@ lListElem *qep
 }
 
 /*-------------------------------------------------------------------------*/
+static void qmonQinstanceExplain(Widget w, XtPointer cld, XtPointer cad)
+{
+   int rows, i;
+   char *str;
+   u_long32 explain_bits = QI_DEFAULT;
+   int state = 0;
+   Widget explain_w;
+   Widget matrix = current_matrix;
+   lListElem *qp = NULL;
+   lList *alp = NULL;
+   int nr_selected_rows = 0;
+
+   DENTER(GUI_LAYER, "qmonQinstanceExplain");
+
+   /* 
+   ** loop over selected entries and build id list
+   */
+   rows = XbaeMatrixNumRows(matrix);
+   /*
+   ** number of selected rows
+   */
+   nr_selected_rows = XbaeMatrixGetNumSelected(matrix)/XbaeMatrixNumColumns(matrix);
+   
+   if (nr_selected_rows > 0) {
+      char line[BUFSIZ];
+      sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
+
+      qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T,  &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return;
+      }
+      /*
+      ** cld contains the action we need, check if a force is involved
+      */
+      explain_w = XmtNameToWidget(w, "*cq_explain_states"); 
+      state = XmtChooserGetState(explain_w);
+ 
+      if (ISSET(state,(1<<0))) {
+         explain_bits |= QI_AMBIGUOUS;
+      }   
+      if (ISSET(state,(1<<1))) {
+         explain_bits |= QI_ALARM;
+      }   
+      if (ISSET(state,(1<<2))) {
+         explain_bits |= QI_SUSPEND_ALARM;
+      }   
+      if (ISSET(state,(1<<3))) {
+         explain_bits |= QI_ERROR;
+      }   
+   
+      if (explain_bits != QI_DEFAULT) {
+         /*
+         ** open browser window
+         */
+         qmonBrowserOpen(w, NULL, NULL);
+
+         for (i=0; i<rows; i++) {
+            /* is this row selected */ 
+            if (XbaeMatrixIsRowSelected(matrix, i)) {
+               str = XbaeMatrixGetCell(matrix, i, 0);
+               if ( str && *str != '\0' ) { 
+                  dstring queue_info = DSTRING_INIT;
+                  DPRINTF(("CQ/QI to explain: %s\n", str));
+                  qp = cqueue_list_locate_qinstance(
+                                 qmonMirrorList(SGE_CQUEUE_LIST), str);
+                  if (qp) {
+                     qmonQinstanceShowBrowserExplain(&queue_info, qp,
+                                             qmonMirrorList(SGE_CENTRY_LIST),
+                                             qmonMirrorList(SGE_EXECHOST_LIST),
+                                             explain_bits);
+                     qmonBrowserShow(sge_dstring_get_string(&queue_info));
+                     qmonBrowserShow(line);
+                  }
+                  sge_dstring_free(&queue_info);
+               }
+            }
+         }
+      }
+   } else { 
+      qmonMessageShow(w, True, "@{Select at least one queue instance!}");
+   }
+
+   DEXIT;
+}   
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonQinstanceShowBrowserExplain( dstring *info, lListElem *q,
+lList *centry_list, lList *exechost_list, u_long32 explain_bits) 
+{
+
+   char *load_avg_str;
+   char load_alarm_reason[MAX_STRING_SIZE];
+   char suspend_alarm_reason[MAX_STRING_SIZE];
+   bool is_load_value;
+   bool has_value_from_object; 
+   double load_avg;
+
+   DENTER(GUI_LAYER, "qmonQinstanceShowBrowserExplain");
+
+   if (explain_bits == QI_DEFAULT) {
+      DEXIT;
+      return;
+   }
+
+   *load_alarm_reason = 0;
+   *suspend_alarm_reason = 0;
+
+   if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
+         load_avg_str = LOAD_ATTR_LOAD_AVG;
+
+   /* compute the load and check for alarm states */
+   is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object);
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+      qinstance_state_set_alarm(q, true);
+      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
+                            centry_list, load_alarm_reason, 
+                            MAX_STRING_SIZE - 1, "load");
+   }
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+      qinstance_state_set_suspend_alarm(q, true);
+      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
+                            exechost_list, centry_list, suspend_alarm_reason, 
+                            MAX_STRING_SIZE - 1, "suspend");
+   }
+
+   sge_dstring_sprintf(info, "Queue: %s\n", lGetString(q, QU_full_name));
+   if ((explain_bits & QI_ALARM) > 0) {
+      if(*load_alarm_reason) {
+         sge_dstring_sprintf_append(info, load_alarm_reason); 
+      }
+   }
+   if ((explain_bits & QI_SUSPEND_ALARM) > 0) {
+      if(*suspend_alarm_reason) {
+         sge_dstring_sprintf_append(info, suspend_alarm_reason); 
+      }
+   }
+   if (explain_bits != QI_DEFAULT) {
+      lList *qim_list = lGetList(q, QU_message_list);
+      lListElem *qim = NULL;
+
+      for_each(qim, qim_list) {
+         u_long32 type = lGetUlong(qim, QIM_type);
+
+         if ((explain_bits & QI_AMBIGUOUS) == type || 
+             (explain_bits & QI_ERROR) == type) {
+            const char *message = lGetString(qim, QIM_message);
+
+            sge_dstring_sprintf_append(info, "\t"); 
+            sge_dstring_sprintf_append(info, message); 
+         }
+      }
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
 static void qmonCQHandleEnterLeave(
 Widget w,
 XtPointer cld,
@@ -1444,6 +1643,7 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
    if (!strcmp(XtName(cbs->tab_child), "clusterqueue_layout")) {
       current_matrix = cluster_queue_settings;
       qmonCQUpdateCQMatrix();
+
       XtSetSensitive(cq_add, True);
       XtSetSensitive(cq_mod, True);
       XtSetSensitive(cq_delete, True);
@@ -1461,6 +1661,7 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
    } else { 
       current_matrix = qinstance_settings;
       qmonCQUpdateQIMatrix();
+
       XtSetSensitive(cq_add, False);
       XtSetSensitive(cq_mod, False);
       XtSetSensitive(cq_delete, False);
@@ -1486,14 +1687,23 @@ static void qmonCQUpdateCQMatrix(void)
    lList *alp = NULL;
    lList *ehl = NULL;
    lList *cl = NULL;
+   lList *acl = NULL;
    lList *ql = NULL;
+   lList *fql = NULL;
+   lList *ul = NULL;
+   lList *rl = NULL;
+   lList *prl = NULL;
+   lList *pel = NULL;
+   lList *qrl = NULL;
+   lList *hgl = NULL;
    lListElem *cq = NULL;
    int row;
    char buf[BUFSIZ];
+   u_long32 qstate = U_LONG32_MAX; 
 
    DENTER(GUI_LAYER, "qmonCQUpdateCQMatrix");
 
-   qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T,  &alp);
+   qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T | USERSET_T | PE_T |HGROUP_T,  &alp);
    if (alp) {
       qmonMessageBox(cluster_queue_settings, alp, 0);
       alp = lFreeList(alp);
@@ -1501,10 +1711,37 @@ static void qmonCQUpdateCQMatrix(void)
       return;
    }
 
+   rl = qmonGetQCUResourceList();
+   qrl = qmonGetQCUQrefList();
+   ul = qmonGetQCUUserRefList();
+   prl = qmonGetQCUPERefList();
+   qstate = qmonGetQCUQueueState();
+
+   /*
+   ** set the customize button label
+   */
+   if (rl || qrl || ul || prl || qstate != U_LONG32_MAX) {
+      setButtonLabel(cq_customize, "@{Customize +}");
+   } else {   
+      setButtonLabel(cq_customize, "@{Customize}");
+   }   
    
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
    cl = qmonMirrorList(SGE_CENTRY_LIST);
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   acl = qmonMirrorList(SGE_USERSET_LIST);
+   pel = qmonMirrorList(SGE_PE_LIST);
+   hgl = qmonMirrorList(SGE_HGROUP_LIST);
+
+   /*
+   ** match filter criteria
+   */
+   filter_queues(&fql, ql, cl, hgl, ehl, acl, pel, rl, qrl, prl, ul, qstate);
+
+   /*
+   ** sort according to sorting criteria
+   */
+   lPSortList(fql, "%I+ ", CQ_name);
 
    /*
    ** Cluster Queue Pane
@@ -1515,7 +1752,7 @@ static void qmonCQUpdateCQMatrix(void)
 /*    TODO                                            */    
 /*    is correct_capacities needed here ???           */    
 /*    correct_capacities(ehl, cl); */
-   for_each (cq, ql) {
+   for_each (cq, fql) {
       double load = 0.0;
       u_long32 used, total;
       u_long32 temp_disabled, available, manual_intervention;
@@ -1576,6 +1813,8 @@ static void qmonCQUpdateCQMatrix(void)
    
       row++;
    }   
+
+   fql = lFreeList(fql);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1584,24 +1823,61 @@ static void qmonCQUpdateQIMatrix(void)
    lList *alp = NULL;
    lList *ehl = NULL;
    lList *cl = NULL;
+   lList *acl = NULL;
    lList *ql = NULL;
+   lList *fql = NULL;
+   lList *ul = NULL;
+   lList *rl = NULL;
+   lList *prl = NULL;
+   lList *pel = NULL;
+   lList *qrl = NULL;
+   lList *hgl = NULL;
    lListElem *cq = NULL;
    int row;
    char buf[BUFSIZ];
+   u_long32 qstate = U_LONG32_MAX; 
 
    DENTER(GUI_LAYER, "qmonCQUpdateQIMatrix");
 
-   qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T,  &alp);
+   qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T | USERSET_T | PE_T |HGROUP_T,  &alp);
    if (alp) {
-      qmonMessageBox(qinstance_settings, alp, 0);
+      qmonMessageBox(cluster_queue_settings, alp, 0);
       alp = lFreeList(alp);
       DEXIT;
       return;
    }
 
+   rl = qmonGetQCUResourceList();
+   qrl = qmonGetQCUQrefList();
+   ul = qmonGetQCUUserRefList();
+   prl = qmonGetQCUPERefList();
+   qstate = qmonGetQCUQueueState();
+   
+   /*
+   ** set the customize button label
+   */
+   if (rl || qrl || ul || prl || qstate != U_LONG32_MAX) {
+      setButtonLabel(cq_customize, "@{Customize +}");
+   } else {   
+      setButtonLabel(cq_customize, "@{Customize}");
+   }   
+   
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
    cl = qmonMirrorList(SGE_CENTRY_LIST);
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   acl = qmonMirrorList(SGE_USERSET_LIST);
+   pel = qmonMirrorList(SGE_PE_LIST);
+   hgl = qmonMirrorList(SGE_HGROUP_LIST);
+
+   /*
+   ** match filter criteria
+   */
+   filter_queues(&fql, ql, cl, hgl, ehl, acl, pel, rl, qrl, prl, ul, qstate);
+
+   /*
+   ** sort according to sorting criteria
+   */
+   lPSortList(fql, "%I+ ", CQ_name);
 
    /*
    ** Cluster Queue Instances Pane
@@ -1609,7 +1885,7 @@ static void qmonCQUpdateQIMatrix(void)
    XtVaSetValues(qinstance_settings, XmNcells, NULL, NULL);
 
    row=0;
-   for_each(cq, ql) {
+   for_each(cq, fql) {
       lListElem *qp;
       char to_print[80];
       char arch_string[80];
@@ -1687,6 +1963,8 @@ static void qmonCQUpdateQIMatrix(void)
          row++;
       }   
    }   
+
+   fql = lFreeList(fql);
 
    DEXIT;
 }
@@ -1840,12 +2118,19 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
    lList *hgl = NULL;
    lListElem *qp = NULL;
    Widget matrix = cluster_queue_settings;
+   int nr_selected_rows = 0;
 
    DENTER(GUI_LAYER, "qmonCQSick");
 
    rows = XbaeMatrixNumRows(matrix);
-   if (XbaeMatrixGetNumSelected(matrix) > 0) {
+   /*
+   ** number of selected rows
+   */
+   nr_selected_rows = XbaeMatrixGetNumSelected(matrix)/XbaeMatrixNumColumns(matrix);
+   
+   if (nr_selected_rows > 0) {
       dstring ds = DSTRING_INIT;
+      qmonBrowserOpen(w, NULL, NULL);
       for (i=0; i<rows; i++) {
          /* is this row selected */ 
          if (XbaeMatrixIsRowSelected(matrix, i)) {
@@ -1862,8 +2147,130 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
       sge_dstring_free(&ds);
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
+   } else { 
+      qmonMessageShow(w, True, "@{Select at least one queue !}");
    }
 
    DEXIT;
 }
 
+
+/*-------------------------------------------------------------------------*/
+static int filter_queues(
+lList **filtered_queue_list,
+lList *queue_list, 
+lList *centry_list,
+lList *hgrp_list,
+lList *exechost_list,
+lList *acl_list,
+lList *pe_list,
+lList *resource_list, 
+lList *queueref_list, 
+lList *peref_list, 
+lList *queue_user_list,
+u_long32 queue_states)
+{
+   static lCondition *tagged_queues = NULL;
+   static lEnumeration *all_fields = NULL;
+   int nqueues = 0;
+   u_long32 empty_qs = 0; 
+
+   DENTER(GUI_LAYER, "filter_queues");
+
+   if (!tagged_queues) {
+      tagged_queues = lWhere("%T(%I == %u)", CQ_Type, CQ_tag, TAG_SHOW_IT);
+      all_fields = lWhat("%T(ALL)", CQ_Type);
+   }
+   centry_list_init_double(centry_list);
+
+   DPRINTF(("------- selecting queues -----------\n"));
+   /* all queues are selected */
+   cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
+
+   /* unseclect all queues not selected by a -q (if exist) */
+   if (lGetNumberOfElem(queueref_list)>0) {
+      if ((nqueues=select_by_qref_list(queue_list, hgrp_list, queueref_list))<0) {
+         DEXIT;
+         return -1;
+      }
+
+      if (nqueues==0) {
+         *filtered_queue_list = NULL;
+         DEXIT;
+         return 0;
+      }
+   }
+
+   /* unselect all queues not selected by -qs */
+   select_by_queue_state(queue_states, exechost_list, queue_list, centry_list);
+  
+   /* unselect all queues not selected by a -U (if exist) */
+   if (lGetNumberOfElem(queue_user_list)>0) {
+      if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list))<0) {
+         DEXIT;
+         return -1;
+      }
+
+      if (nqueues==0) {
+         *filtered_queue_list = NULL;
+         DEXIT;
+         return 0;
+      }
+   }
+
+   /* unselect all queues not selected by a -pe (if exist) */
+   if (lGetNumberOfElem(peref_list)>0) {
+      if ((nqueues=select_by_pe_list(queue_list, peref_list, pe_list))<0) {
+         DEXIT;
+         return -1;
+      }
+
+      if (nqueues==0) {
+         *filtered_queue_list = NULL;
+         DEXIT;
+         return 0;
+      }
+   }
+   /* unselect all queues not selected by a -l (if exist) */
+   if (lGetNumberOfElem(resource_list)) {
+      if (select_by_resource_list(resource_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
+         DEXIT;
+         return -1;
+      }
+   }   
+
+   if (qmon_debug) {
+      lListElem *cqueue;
+      for_each(cqueue, queue_list) {
+         lListElem *qep;
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+         for_each(qep, qinstance_list) {
+            if ((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) {
+               dstring qinstance_name = DSTRING_INIT;
+
+               qinstance_get_name(qep, &qinstance_name);
+               printf("++ %s\n", sge_dstring_get_string(&qinstance_name));
+               sge_dstring_free(&qinstance_name);
+            } else {
+               dstring qinstance_name = DSTRING_INIT;
+
+               qinstance_get_name(qep, &qinstance_name);
+               printf("-- %s\n", sge_dstring_get_string(&qinstance_name));
+               sge_dstring_free(&qinstance_name);
+            }
+         }
+      }
+   }
+
+
+   if (!is_cqueue_selected(queue_list)) {
+      *filtered_queue_list = NULL;
+      DEXIT;
+      return 0;
+   }
+   *filtered_queue_list = lSelect("FQL", queue_list, tagged_queues, all_fields);  
+
+   DEXIT;
+   return 1;
+}

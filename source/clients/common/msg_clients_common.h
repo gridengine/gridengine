@@ -80,6 +80,7 @@
 #define MSG_CQUEUE_DEFOVERWRITTEN_SSSSS  _MESSAGE(1036, _("default value of "SFQ" is overwritten for hostgroup "SFQ" in queue "SFQ". Not all hosts of "SFQ" are contained in the hostlist specification of queue "SFQ".\n"))
 #define MSG_CQUEUE_UNUSEDATTRSETTING_SS  _MESSAGE(1037, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ".\n"))
 
+#define MSG_PE_NOSUCHPARALLELENVIRONMENT                 _MESSAGE(1038, _("error: no such parallel environment\n"))
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

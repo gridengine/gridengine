@@ -140,7 +140,7 @@ static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
 /* #define SGEEE_FIELDS    10 */
-#define SGEEE_FIELDS    16
+#define SGEEE_FIELDS    18
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 

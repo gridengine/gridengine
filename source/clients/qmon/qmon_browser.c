@@ -121,8 +121,10 @@ StringConst s
    }
       
    browser = XmtNameToWidget(BrowserShell, "*browser");   
-   XmtCliPuts(s, browser);
-   XmtCliFlush(browser);
+   if (s) {
+      XmtCliPuts(s, browser);
+      XmtCliFlush(browser);
+   }   
 
    /*    XBell(XtDisplay(browser), 0); */
 

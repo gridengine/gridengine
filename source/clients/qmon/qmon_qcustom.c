@@ -39,6 +39,7 @@
 #include <Xmt/Dialog.h>
 #include <Xmt/Create.h>
 #include <Xmt/Layout.h>
+#include <Xmt/Chooser.h>
 #include <Xmt/Converters.h>
 #include <Xmt/Procedures.h>
 #include <Xmt/WidgetType.h>
@@ -50,7 +51,7 @@
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_qcustom.h"
-#include "qmon_queue.h"
+#include "qmon_cq.h"
 #include "qmon_util.h"
 #include "qmon_request.h"
 #include "qmon_comm.h"
@@ -62,6 +63,8 @@
 #include "IconList.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
+#include "sge_bitfield.h"
+#include "sge_qinstance_state.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -76,8 +79,10 @@ static void qmonResFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPEFilterSet(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPEAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonPERemove(Widget w, XtPointer cld, XtPointer cad);
-
-static lList* qmonQFilterRequest(void);
+static void qmonUserFilterSet(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQFilterSet(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQStateFilterSet(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCUAddEntryToList(Widget w, XtPointer cld, XtPointer cad);
 
 /*
 ** this list restricts the selected qs, queues displayed
@@ -93,6 +98,11 @@ static Widget r_filter_ar = 0;
 static Widget r_filter_sr = 0;
 static Widget pe_filter_ap = 0;
 static Widget pe_filter_sp = 0;
+static Widget misc_filter_user_sp = 0;
+static Widget misc_filter_user = 0;
+static Widget misc_filter_q_sp = 0;
+static Widget misc_filter_q = 0;
+static Widget misc_filter_state = 0;
 
 /*-------------------------------------------------------------------------*/
 void qmonPopupQCU(Widget w, XtPointer cld, XtPointer cad)
@@ -116,16 +126,116 @@ void qmonPopupQCU(Widget w, XtPointer cld, XtPointer cad)
    DEXIT;
 }
 
+/*-------------------------------------------------------------------------*/
+void qmonQCUReadPreferences(void)
+{
+   static bool preferences_set = false;
+
+   DENTER(GUI_LAYER, "qmonQCUReadPreferences");
+
+   if (!preferences_set) {
+      const char *qfs;
+      queue_filter_resources = lCopyList("", lGetList(qmonGetPreferences(), 
+                                          PREF_queue_filter_resources));
+      queue_filter_pe = lCopyList("", lGetList(qmonGetPreferences(), 
+                                          PREF_queue_filter_pe));
+      queue_filter_user = lCopyList("", lGetList(qmonGetPreferences(), 
+                                          PREF_queue_filter_user));
+      queue_filter_q = lCopyList("", lGetList(qmonGetPreferences(), 
+                                          PREF_queue_filter_q));
+      qfs = lGetString(qmonGetPreferences(), PREF_queue_filter_state);
+      strcpy(queue_filter_state, qfs ? qfs: ""); 
+      preferences_set = true;
+   }
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+lList *qmonGetQCUResourceList(void)
+{
+   return queue_filter_resources;
+}
+
+/*-------------------------------------------------------------------------*/
+lList *qmonGetQCUQrefList(void)
+{
+   return queue_filter_q;
+}
+
+/*-------------------------------------------------------------------------*/
+lList *qmonGetQCUUserRefList(void)
+{
+   return queue_filter_user;
+}
+
+/*-------------------------------------------------------------------------*/
+lList *qmonGetQCUPERefList(void)
+{
+   return queue_filter_pe;
+}
+
+/*-------------------------------------------------------------------------*/
+u_long32 qmonGetQCUQueueState(void)
+{
+   u_long32 filter = 0xFFFFFFFF;
+   u_long32 state = qinstance_state_from_string(queue_filter_state, 
+                                                NULL, filter);
+   return state;
+}
+
 
 /*-------------------------------------------------------------------------*/
 static void okCB(Widget w, XtPointer cld, XtPointer cad)
 {
+   static char state_string[] = "acdosuACDES";
+   char *qp;
+   int i;
+   int state;
+   lList *lp;
+
    DENTER(GUI_LAYER, "okCB");
 
-#if FIXME
-   updateQueueList();
-#endif   
-   queue_filter_pe = XmStringToCull(pe_filter_sp, ST_Type, ST_name, ALL_ITEMS);
+   /*
+   ** pe filter
+   */
+   lp = XmStringToCull(pe_filter_sp, ST_Type, ST_name, ALL_ITEMS);
+   queue_filter_pe = lFreeList(queue_filter_pe);
+   queue_filter_pe = lp;
+   
+   /*
+   ** user filter
+   */
+   lp = XmStringToCull(misc_filter_user_sp, ST_Type, ST_name, ALL_ITEMS);
+   queue_filter_user = lFreeList(queue_filter_user);
+   queue_filter_user = lp;
+
+   /*
+   ** q wildcard filter
+   */
+   queue_filter_q = XmStringToCull(misc_filter_q_sp, ST_Type, ST_name, ALL_ITEMS);
+   queue_filter_q = lFreeList(queue_filter_q);
+   queue_filter_q = lp;
+   
+   for (i=0; i<sizeof(queue_filter_state); i++) {
+      queue_filter_state[i]='\0';
+   }   
+
+   state = XmtChooserGetState(misc_filter_state);
+   if (state == 0) {
+      strcpy(queue_filter_state, "NONE");
+   } else {   
+      for (qp=queue_filter_state, i=0;i<sizeof(state_string); i++) {
+         if (ISSET(state,(1<<i))) {
+            *qp = state_string[i];
+            qp++;
+         }   
+      }         
+   }
+
+   /*
+   ** update the CQ dialog 
+   */
+   qmonCQUpdate(w, NULL, NULL);
 
    xmui_unmanage(qcu);
 
@@ -179,7 +289,8 @@ XtPointer cld
 ) {
 
    Widget qcu_ok, qcu_cancel, qcu_folder, r_filter_clear,
-          qcu_save, pe_add, pe_remove;
+          qcu_save, pe_add, pe_remove, misc_filter_user_del,
+          misc_filter_q_del;
    
    DENTER(GUI_LAYER, "qmonCreateQCU");
 
@@ -200,28 +311,26 @@ XtPointer cld
                                  "r_filter_clear", &r_filter_clear,
                                  "pe_filter_ap", &pe_filter_ap,
                                  "pe_filter_sp", &pe_filter_sp,
+                                 "misc_filter_user_sp", &misc_filter_user_sp,
+                                 "misc_filter_q_sp", &misc_filter_q_sp,
+                                 "misc_filter_user", &misc_filter_user,
+                                 "misc_filter_user_del", &misc_filter_user_del,
+                                 "misc_filter_q", &misc_filter_q,
+                                 "misc_filter_q_del", &misc_filter_q_del,
+                                 "misc_filter_state", &misc_filter_state,
                                  "pe_add", &pe_add,
                                  "pe_remove", &pe_remove,
                                  NULL); 
 
-   if (qmonGetPreferences()) {
-      queue_filter_resources = lCopyList("", lGetList(qmonGetPreferences(), 
-                                          PREF_queue_filter_resources));
-      queue_filter_pe = lCopyList("", lGetList(qmonGetPreferences(), 
-                                          PREF_queue_filter_pe));
-      queue_filter_user = lCopyList("", lGetList(qmonGetPreferences(), 
-                                          PREF_queue_filter_user));
-      queue_filter_q = lCopyList("", lGetList(qmonGetPreferences(), 
-                                          PREF_queue_filter_q));
-      strcpy(queue_filter_state, lGetString(qmonGetPreferences(), 
-                                          PREF_queue_filter_state));
-   }
       
    /*
    ** preset qfilter resources
    */
    qmonResFilterSet(qcu, NULL, NULL);
    qmonPEFilterSet(qcu, NULL, NULL);
+   qmonUserFilterSet(qcu, NULL, NULL);
+   qmonQFilterSet(qcu, NULL, NULL);
+   qmonQStateFilterSet(qcu, NULL, NULL);
 
    XtAddCallback(r_filter_ar, XmNactivateCallback,
                         qmonResFilterEditResource, (XtPointer)0);
@@ -236,6 +345,17 @@ XtPointer cld
                         qmonPEAdd, NULL);
    XtAddCallback(pe_remove, XmNactivateCallback,
                         qmonPERemove, NULL);
+
+   XtAddCallback(misc_filter_q_del, XmNactivateCallback,
+                        DeleteItems, (XtPointer) misc_filter_q_sp);
+   XtAddCallback(misc_filter_user_del, XmNactivateCallback,
+                        DeleteItems, (XtPointer) misc_filter_user_sp);
+
+   XtAddCallback(misc_filter_q, XmtNinputCallback,
+                        qmonQCUAddEntryToList, (XtPointer) misc_filter_q_sp);
+   XtAddCallback(misc_filter_user, XmtNinputCallback,
+                        qmonQCUAddEntryToList, (XtPointer) misc_filter_user_sp);
+
 
 
    XtAddCallback(qcu_ok, XmNactivateCallback,
@@ -468,21 +588,93 @@ static void qmonPERemove(Widget w, XtPointer cld, XtPointer cad)
 
 
 /*-------------------------------------------------------------------------*/
-static lList* qmonQFilterRequest(void)
-{
-   return queue_filter_resources;
-}
-
-#if 0
-/*-------------------------------------------------------------------------*/
 static void qmonUserFilterSet(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonUserFilterSet");
 
-   UpdateXmListFromCull(_filter_sp, XmFONTLIST_DEFAULT_TAG, 
+   UpdateXmListFromCull(misc_filter_user_sp, XmFONTLIST_DEFAULT_TAG, 
                            queue_filter_user, ST_name);
 
    DEXIT;
 }
-#endif
 
+/*-------------------------------------------------------------------------*/
+static void qmonQFilterSet(Widget w, XtPointer cld, XtPointer cad)
+{
+   DENTER(GUI_LAYER, "qmonQFilterSet");
+
+   UpdateXmListFromCull(misc_filter_q_sp, XmFONTLIST_DEFAULT_TAG, 
+                           queue_filter_q, ST_name);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonQStateFilterSet(Widget w, XtPointer cld, XtPointer cad)
+{
+   int state = 0;
+   int i;
+
+   DENTER(GUI_LAYER, "qmonQStateFilterSet");
+
+   if (!strcmp(queue_filter_state, "NONE")) {
+      state = 0;
+   } else {
+      for (i=0; i <sizeof(queue_filter_state); i++) {
+         switch (queue_filter_state[i]) {
+            case 'a':
+               state |= (1<<0);
+               break;
+            case 'c':    
+               state |= (1<<1);
+               break;
+            case 'd':    
+               state |= (1<<2);
+               break;
+            case 'o':    
+               state |= (1<<3);
+               break;
+            case 's':    
+               state |= (1<<4);
+               break;
+            case 'u':    
+               state |= (1<<5);
+               break;
+            case 'A':    
+               state |= (1<<6);
+               break;
+            case 'C':    
+               state |= (1<<7);
+               break;
+            case 'D':    
+               state |= (1<<8);
+               break;
+            case 'E':    
+               state |= (1<<9);
+               break;
+            case 'S':    
+               state |= (1<<10);
+               break;
+         }
+      }
+   }   
+   XmtChooserSetState(misc_filter_state, state, False);
+
+   DEXIT;
+}
+
+static void qmonQCUAddEntryToList(Widget w, XtPointer cld, XtPointer cad)
+{
+   Widget list = (Widget) cld;
+   char *text = NULL;
+   
+   DENTER(GUI_LAYER, "qmonQCUAddEntryToList");
+
+   text = XmtInputFieldGetString(w);
+   if (text && text[0] != '\0') {
+      XmListAddItemUniqueSorted(list, text);
+   }
+   XmtInputFieldSetString(w, "");
+   
+   DEXIT;
+}

@@ -38,7 +38,7 @@ Qmon*qmon_cq.cq.defaultSpacing:  2
 Qmon*qmon_cq.cq.autoUnmanage:    False
 Qmon*qmon_cq.cq.resizePolicy:    RESIZE_NONE
 Qmon*qmon_cq.cq.dialogTitle:     @{QMON +++ Cluster Queues}
-Qmon*qmon_cq.cq.fontList:        $dialog_font
+!!Qmon*qmon_cq.cq.fontList:        $dialog_font
 
 Qmon*qmon_cq.cq.XmtInputField.marginHeight:  2
 Qmon*qmon_cq.cq.XmtInputField.marginWidth:   2
@@ -60,7 +60,7 @@ Qmon*qmon_cq.cq.xmtChildren: \
 Qmon*qmon_cq.cq.layout: \
    Fixed Shadowed Out 4 2 LREvenSpaced Row cq_title { \
       Fixed Centered cq_main_link \
-      Centered Color "$title_fg" "@{@f Cluster Queue Control}" \
+      Centered Color "$title_fg" "@{@fB Cluster Queue Control}" \
    } \
    # \
    Row cq_main_row { \

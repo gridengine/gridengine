@@ -1,3 +1,10 @@
+AA-2004-02-11-1: Enhancem:  qmon
+                            - explain functionality
+                            - cq filtering
+                            - funcs from qstat relocated to be shared with qmon
+                 Review:    SG
+                 Changed:   qstat, qmon
+
 AA-2004-02-11-0: Bugfix:    Compiler warnings removed
                  Review:    CR
                  Changed:   all

@@ -55,5 +55,11 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
                                      u_long32 *manual_intervention);
  
 
+int select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qref_list);
+int select_by_pe_list(lList *queue_list, lList *peref_list, lList *pe_list);
+int select_by_queue_user_list(lList *exechost_list, lList *queue_list, lList *queue_user_list, lList *acl_list);
+int select_by_queue_state(u_long32 queue_states, lList *exechost_list, lList *queue_list, lList *centry_list);
+int select_by_resource_list(lList *resource_list, lList *exechost_list, lList *queue_list, lList *centry_list, u_long32 empty_qs);
+bool is_cqueue_selected(lList *queue_list);
 
 #endif /* __SGE_CQUEUE_QSTAT */

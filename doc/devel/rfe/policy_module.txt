@@ -1,5 +1,6 @@
-         Specification of 6.0 changes in Enterprise Edition policy module 
-                 as preparation for resource reservation 
+         Specification of 6.0 changes in Grid Engine Enterprise Edition 
+             policy module as preparation for resource reservation 
+                      and for the SGE 5.3 mimic mode 
 
 1. Concepts
 
@@ -7,18 +8,26 @@
 
       The new Enterprise Edition priority used by the scheduler 
       to determine pending job list order unites the existing
-      5.3 ticket policy and a new urgency policy. For both 
-      policies a weighting factor can be specified that determines 
-      to what degree ticket policy resp. urgency policy shall be 
-      in effect. To facilitate easier control on each policies 
-      values range a normalized ticket amount resp. a normalized 
-      urgency value ("ntckts"/"nurg") is used rather than the raw 
-      values ticket amount resp. urgency value ("tckts"/"urg"):
+      5.3 ticket policy, the new urgency policy and the policy 
+      that is implemented through the priority controlled via 
+      -p <priority> submit option. The latter one is also called 
+      POSIX priority which indicates it's origin. This term is 
+      used to delimit this priority from priorty concept that is 
+      used by the scheduler to finally decide about pending job 
+      list order. For each policy a weighting factor can be specified 
+      determining to degree it shall be in effect. To facilitate 
+      easier control on each policies values range a normalized 
+      ticket amount ("ntckts"), a normalized urgency value ("nurg") 
+      and a normalized POSIX priority ("pprio") is used rather than 
+      the raw values ticket amount resp. urgency value ("tckts"/"urg"):
 
-         prio    = nurg * weight_urgency + weight_ticket * ntckts  
+         prio    =     weight_urgency * nurg + 
+                       weight_ticket  * ntckts +
+                       weight_priority * pprio
 
          nurg    = normalized(urg)
          ntckts  = normalized(tckts)
+         pprio   = normalized(-p <priority>)
       
     b) New urgency sub-policy 
 
@@ -75,6 +84,14 @@
         disappearance of the deadline ticket policy (as reflected by this 
         document) the 5.3 documentation is still applicable.
 
+     d) 6.0 Changes to unite SGE 5.3 -p priority concept with new GEEE 6.0 
+        priority concept
+
+        The -p <priority> as described in qsub(1), qalter(1), etc. can be 
+        used for implementing site specific priority policies. Priorities can 
+        be specified within a range -1023 to 1024 whereas higher numbers 
+        always mean higher priority. 
+
 2. Use cases
 
    The following new use cases show how problems for known problems
@@ -122,6 +139,23 @@
       -->  -l medium jobs always must be dispatched before -l low jobs
       -->  share-tree policy must cause 'p1' and 'p2' jobs be dispatched with a resource 
            usage relation 50:50 over time
+
+   d) Strict -p priority classes overlaying resource-based urgency overlaying
+      functional policy to implement equal share user sort
+
+      * use 1 as 'weight_priority', 0.001 as 'weight_urgency' and 0.00001 as 
+        'weight_ticket' in sched_conf(5)
+      * use auto_user_fshare of '100' in sge_conf(5)
+      * use auto_user_delete_time of '60' in sge_conf(5)
+      * use enforce_user of 'auto' in sge_conf(5)
+
+      --> for jobs with the same -p priority that request the same resources 
+          the equal share user sort will be in effect
+      --> for jobs with the same -p priority that differ regarding their requested
+          resources the urgency policy will be in effect whereas the equal share user 
+          sort will not be determining
+      --> for jobs with different -p priority the priority determines which one is
+          dispatched first and other policies will not be determining
 
 3. Changes with command line interface and configuration file formats
 

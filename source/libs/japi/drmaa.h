@@ -513,7 +513,7 @@ int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, c
  * analogous set of macros is defined in POSIX for analyzing the wait3(2) OUT
  * parameter 'stat'.
  *
- * drmaa_synchronize() SHALL return DRMAA_ERRNO_SUCCESS on success, otherwise:
+ * drmaa_wait() SHALL return DRMAA_ERRNO_SUCCESS on success, otherwise:
  *    DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE,
  *    DRMAA_ERRNO_AUTH_FAILURE,
  *    DRMAA_ERRNO_NO_RUSAGE,

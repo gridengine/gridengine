@@ -2065,7 +2065,7 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
          centry_list_modify_from_file(&answer_list, file);
-         show_gdi_request_answer(answer_list);
+         show_gdi_request_answer_list(answer_list);
          spp++;
          continue;
       }

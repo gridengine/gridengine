@@ -312,7 +312,7 @@ lListElem *jr
    DENTER(TOP_LAYER, "unregister_from_ptf");
 
    if ((ptf_error=ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage))) {
-      ERROR((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
+      WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
          u32c(job_id), ptf_errstr(ptf_error)));
    } else if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
       if (usage) {

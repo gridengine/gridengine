@@ -1,3 +1,10 @@
+AH-2002-07-02-3: Bugfix:    Fix problem with flittering load adjustment
+                 Issue:     #309
+                 Bugtraq:   #4710514
+                 Changed:   sge_schedd
+
+AH-2002-07-02-1: Bugfix:    Added missing newline character to error msg.
+
 EB-2002-07-02-0: Cleanup:   see EB-2002-06-30-0
 
 SD-2002-07-01-0: Enhancem:  Updated MPICH/Myrinet integration

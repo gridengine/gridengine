@@ -2964,7 +2964,7 @@ bool allow_non_requestable)
    lList *config_attr = lGetList(qep, QU_consumable_config_list);
    lList *actual_attr = lGetList(qep, QU_resource_utilization);
    const char *qname = lGetString(qep, QU_full_name);
-   int qslots, qslots_qend;
+   int qslots = 0, qslots_qend = 0;
    int result = -1;
 
    DENTER(TOP_LAYER, "queue_slots_by_time");
@@ -2983,7 +2983,7 @@ bool allow_non_requestable)
    if (result == 0) {
       DPRINTF(("\tqueue_slots_by_time(%s) returns %d/%d\n", qname, qslots, qslots_qend));
    } else {
-      DPRINTF(("\ttqueue_slots_by_time(%s) returns <error>\n", qname));
+      DPRINTF(("\tqueue_slots_by_time(%s) returns <error>\n", qname));
    }
 
    DEXIT;
@@ -3840,7 +3840,7 @@ static int ri_slots_by_time(u_long32 start, u_long32 duration, int *slots, int *
       }
 
       ret = match_static(1, request, cplx_el, reason, reason_size, false, false, allow_non_requestable);
-      if (ret != 0 || !schedule_based) {
+      if (ret != 0) {
          DEXIT;
          return ret;
       }
@@ -3872,7 +3872,7 @@ static int ri_slots_by_time(u_long32 start, u_long32 duration, int *slots, int *
 
    if (sconf_get_qs_state()==QS_STATE_EMPTY) {
       used = 0;
-   } else if (duration != 0 && sconf_get_max_reservations()>0) {
+   } else if (schedule_based) {
       if (start == DISPATCH_TIME_NOW)
          start = sconf_get_now();
       used = utilization_max(uep, start, duration);
@@ -3913,7 +3913,7 @@ static int rc_slots_by_time(lList *requests, u_long32 start, u_long32 duration,
       u_long32 tag, bool allow_non_requestable, const char *object_name)
 {
    int avail, avail_qend;
-   double max_slots = DBL_MAX, max_slots_qend = DBL_MAX;
+   int max_slots = INT_MAX, max_slots_qend = INT_MAX;
    const char *name;
    static lListElem *implicit_slots_request = NULL;
    lListElem *tep, *cep, *actual, *req;
@@ -3968,7 +3968,7 @@ static int rc_slots_by_time(lList *requests, u_long32 start, u_long32 duration,
 
                if (ri_slots_by_time(start, duration, &avail, &avail_qend, 
                         rue_list, cep, load_attr, total_list, queue, centry_list, layer, lc_factor,   
-                        NULL, 0, allow_non_requestable, false, object_name)) {
+                        NULL, 0, allow_non_requestable, false, object_name)==-1) {
                   DEXIT;
                   return -1;
                }

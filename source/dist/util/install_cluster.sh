@@ -31,8 +31,12 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
+
+PATH=/bin:/usr/bin
+
 #
-# Install execution daemons on a given list of hosts via rsh access
+# Install execution daemons on a given list of hosts via rsh or ssh access
+#
 # "$SGE_ROOT" must be set in current environment.
 # 
 # $1 may be the string "-noqueue"
@@ -45,17 +49,20 @@ if [ "$SGE_ROOT" = "" ]; then
    exit 1
 fi
 
+
 if [ $# -lt 1 -o "$1" = "-h" -o "$1" = "-help" ]; then
-   echo "install execution daemons via \"rsh\" access "
+   echo "install execution daemons via \"rsh\" or \"ssh\" access "
    echo
-   echo "usage: $0 [-noqueue] host1 host2 host3 ..."
+   echo "usage: $0 [-noqueue] [-ssh] host1 host2 host3 ..."
+   echo "       -ssh      use ssh command instead of rsh"
    echo "       -noqueue  do not add ad default queue when installing the exec host"
+   echo 
+   echo "The following command will be executed"
    echo
-   echo The following command will be executed for all hosts given in the commandline:
-   echo
-   echo "   rsh <hostname> \"cd $SGE_ROOT && ./install_execd -fast -auto [-noqueue]\""
+   echo "   # rsh|ssh <hostname> \"cd $SGE_ROOT && ./install_execd -fast -auto [-noqueue]\""
    exit 1
 fi
+
 
 if [ "$1" = "-noqueue" ]; then
    noqueue=-noqueue
@@ -69,10 +76,17 @@ if [ $# -lt 1 ]; then
    exit 1
 fi
 
+if [ "$SGE_CELL" = "" ]; then
+   SGE_CELL=default
+   export SGE_CELL
+fi
+
+echo Installing execution hosts for cell \"$SGE_CELL\"
+
 for host in $*; do
    echo
    echo Installing execution daemon on host \"$host\"
-   
-   rsh $host "cd $SGE_ROOT && ./install_execd -fast -auto $noqueue"
+
+   echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./install_execd -fast -auto $noqueue" | rsh $host /bin/sh
    echo ==============================================================================
 done

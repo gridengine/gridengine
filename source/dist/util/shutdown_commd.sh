@@ -32,28 +32,49 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#
-# usage: shutdown_commd.sh -all|host...
-#
-# Shutdown commd's on all hosts given as argument.
-#
-# Started without argument "-all" commd's on all hosts 
-# found in the directory $SGE_ROOT/default/spool 
-# are shutdown.
+PATH=/bin/:/usr/bin
 
-if [ "x$SGE_ROOT" = "x" ]; then
-   echo Assuming /usr/CODINE as \$SGE_ROOT
-   SGE_ROOT=/usr/CODINE
-   export SGE_ROOT
+# usage: shutdown_commd.sh -all|host1 host2 ...
+#
+# Started without argument "-all" shutdown commd's on all given hosts
+#
+# Started with the "-all" argument shutdown all commd found in the qmaster
+# spool directory exec_hosts subdirectory
+#
+
+if [ "$SGE_ROOT" = "" ]; then
+   echo "SGE_ROOT environment variable not set. Exit."
+   exit 1
+fi
+
+if [ "$SGE_CELL" = "" ]; then
+   SGE_CELL=default
+   export $SGE_CELL
 fi
 
 if [ $# = 1 -a $1 = "-all" ]; then
-   targets=`ls $SGE_ROOT/default/spool|egrep -v "qmaster"`
+   qma_spool_dir=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/configuration | \
+                  awk '{ print $2 }'`
+   targets=`ls $qma_spool_dir/exec_hosts|egrep -v "template|global"`
 else
    targets=$*
 fi
 
+bin_dir=`grep binary_path $SGE_ROOT/$SGE_CELL/common/configuration | \
+              awk '{ print $2 }'`
+
 ARCH=`$SGE_ROOT/util/arch`
+
+if [ ! -x $bin_dir/$ARCH/sgecommdcntl ]; then
+   if [ ! -x $bin_dir/sgecommdcntl ]; then
+      echo "command >sgecommdcntl< not found in >$bin_dir/$ARCH< or >$bin_dir<. Exit."
+      exit 1
+   else
+      SGECOMMCNTL=$bin_dir/$ARCH/sgecommdcntl
+   fi
+else
+   SGECOMMCNTL=$bin_dir/$ARCH/sgecommdcntl
+fi
 
 for h in $targets; do
    echo shutting down commd at host $h

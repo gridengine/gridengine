@@ -62,7 +62,6 @@
 #include "dispatcher.h"
 #include "tmpdir.h"
 #include "sge_job_qmaster.h"
-#include "job_log.h"
 #include "execution_states.h"
 #include "sge_load_sensor.h"
 #include "reaper_execd.h"
@@ -412,7 +411,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       lSetUlong(jr, JR_failed, ESSTATE_NO_CONFIG);
       lSetString(jr, JR_err_str, (char *) MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART);
 
-      job_log(job_id, ja_task_id, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
       sge_dstring_free(&fname);
       sge_dstring_free(&jobdir);
       DEXIT;
@@ -772,8 +770,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             job_get_id_string(job_id, ja_task_id, pe_task_id),
             general_failure));
 
-   job_log(job_id, ja_task_id, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
-
    /* Check whether a message about tasks exit has to be sent.
       We need job data to know whether an ack about exit status was requested */
    /* JG: TODO (257): This message will never be read by anybody. 
@@ -912,7 +908,6 @@ lListElem *jr
       } else { 
          master_q = responsible_queue(jep, jatep, NULL);
       }   
-      job_log(job_id, ja_task_id, MSG_SHEPHERD_GOTACKFORJOBEXIT);
      
       /* use mail list of job instead of tasks one */
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
@@ -1001,7 +996,6 @@ lListElem *jr
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
                 u32c(job_id),  u32c(ja_task_id), 
                 (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
-         job_log(job_id, ja_task_id, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT);
 
       /*
       ** security hook
@@ -1151,10 +1145,6 @@ int failed
    lSetUlong(jr, JR_general_failure, general);
    lSetString(jr, JR_err_str, error_string);
   
-   job_log(jobid, jataskid, (failed==SSTATE_FAILURE_BEFORE_JOB)?
-      MSG_SHEPHERD_REPORINGJOBSTARTFAILURETOQMASTER:
-      MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER);
-
    lSetUlong(jr, JR_state, JEXITING);
 
    job_related_adminmail(jr, job_is_array(jep));
@@ -1189,8 +1179,6 @@ char *qname
       lSetUlong(jr, JR_failed, ESSTATE_UNKNOWN_JOB); 
       lSetUlong(jr, JR_state, JEXITING);
       lSetString(jr, JR_err_str, (char*) MSG_JR_ERRSTR_EXECDDONTKNOWJOB);
-   
-      job_log(jobid, jataskid, MSG_SHEPHERD_ACKINGUNKNWONJOB);
    }
 
    DEXIT;

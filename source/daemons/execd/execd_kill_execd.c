@@ -34,7 +34,6 @@
 #include "dispatcher.h"
 #include "reaper_execd.h"
 #include "sge_signal.h"
-#include "job_log.h"
 #include "sge_load_sensor.h"
 #include "commlib.h"
 #include "execd_kill_execd.h"

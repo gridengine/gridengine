@@ -45,7 +45,6 @@
 #include "dispatcher.h"
 #include "sge_string.h"
 #include "sge_parse_num_par.h"
-#include "job_log.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
@@ -306,8 +305,6 @@ int slave
    /* now we have a queue and a job filled */
    DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"< with "u32" tickets\n", jobid, jataskid,
                (u_long32)lGetDouble(jatep, JAT_tix)));
-
-   job_log(jobid, jataskid, MSG_COM_RECEIVED);
 
    if (cull_unpack_list(pb, &qlp)) {
       sge_dstring_sprintf(&err_str, MSG_COM_UNPACKINGQ);

@@ -609,7 +609,7 @@ spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info)
       }
 
       bdb_set_txn(info, txn);
-      DPRINTF(("BEGIN transaction %d\n", txn->id(txn)));
+      DEBUG((SGE_EVENT, "BEGIN transaction\n"));
    }
 
    DEXIT;
@@ -650,12 +650,12 @@ spool_berkeleydb_end_transaction(lList **answer_list, bdb_info info,
          ret = false;
       } else {
          if (commit) {
-            DPRINTF(("COMMIT transaction %d\n", txn->id(txn)));
+            DEBUG((SGE_EVENT, "COMMIT transaction\n"));
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             dbret = txn->commit(txn, 0);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          } else {
-            DPRINTF(("ABORT transaction %d\n", txn->id(txn)));
+            DEBUG((SGE_EVENT, "ABORT transaction\n"));
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_WARNING, 
                                     MSG_BERKELEY_ABORTINGTRANSACTION);

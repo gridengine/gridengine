@@ -56,7 +56,6 @@
 #include "sge_job_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_give_jobs.h"
-#include "job_log.h"
 #include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_userset_qmaster.h"
@@ -1518,6 +1517,10 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
          sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
+         /* IZ 664: Where is SGE_EVENT initialized??? 
+          * generate the ERROR/INFO message here or pass answer_list to 
+          * sge_commit_job!!!
+          */
          answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
                          ANSWER_QUALITY_INFO);
       } else {

@@ -38,7 +38,6 @@
 #endif
 
 #include "dispatcher.h"
-#include "job_log.h"
 #include "execd_ticket.h"
 #include "sge_log.h"
 #include "msg_execd.h"

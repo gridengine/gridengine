@@ -1,3 +1,8 @@
+JG-2004-05-19-1: Bugfix:    Fixed broken qdel -f output (see also IZ 664).
+                 Cleanup:   Removed job_log from execd and scheduler.
+                 Changed:   qmaster, schedd, execd
+                 Review:    SG
+
 MD-2004-05-19-0: Bugfix:    - Upgrade Welcome Text
                             - inst_template comments
                             - autoinst always used default schedd config

@@ -54,7 +54,6 @@
 #include "execd_kill_execd.h"
 #include "execd_signal_queue.h"
 #include "execd_ticket.h"
-#include "job_log.h"
 #include "job_report_execd.h"
 #include "sge_report_execd.h"
 #include "load_avg.h"
@@ -478,7 +477,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    lList *alp = NULL;
    int usageshowed = 0;
    u_long32 flag;
-   char *filename;
 
    DENTER(TOP_LAYER, "sge_parse_execd");
 
@@ -498,13 +496,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
       /* -nostart-commd */
       if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
          start_commd = false;
-         continue;
-      }
-
-      /* -lj */
-      if(parse_string(ppcmdline, "-lj", &alp, &filename)) {
-         enable_job_logging(filename);
-         FREE(filename);
          continue;
       }
    }

@@ -39,7 +39,6 @@
 #include "sge.h"
 #include "basis_types.h"
 #include "cull.h"
-#include "job_log.h"
 #include "config_file.h"
 #include "sge_prog.h"
 #include "sgermon.h"

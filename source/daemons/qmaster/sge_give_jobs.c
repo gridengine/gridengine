@@ -52,7 +52,6 @@
 #include "sge_conf.h"
 #include "sge_any_request.h"
 #include "commlib.h"
-#include "job_log.h"
 #include "pack_job_delivery.h"
 #include "sge_subordinate_qmaster.h" 
 #include "sge_complex_schedd.h" 
@@ -663,7 +662,6 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
 
-/*       job_log(jobid, jataskid, MSG_LOG_SENT2EXECD); */
       reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
       /* should use jobs gdil instead of tagging queues */
@@ -729,7 +727,6 @@ sge_commit_flags_t commit_flags
 
    case COMMIT_ST_ARRIVED:
       lSetUlong(jatep, JAT_status, JRUNNING);
-/*       job_log(jobid, jataskid, MSG_LOG_DELIVERED); */
       reporting_create_job_log(NULL, now, JL_DELIVERED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_DELIVERED);
       job_enroll(jep, NULL, jataskid);
       {
@@ -870,7 +867,6 @@ sge_commit_flags_t commit_flags
       break;
 
    case COMMIT_ST_FINISHED_FAILED:
-/*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
       remove_from_reschedule_unknown_lists(jobid, jataskid);
       if (handle_zombies) {
@@ -884,7 +880,6 @@ sge_commit_flags_t commit_flags
       break;
    case COMMIT_ST_FINISHED_FAILED_EE:
       jobid = lGetUlong(jep, JB_job_number);
-/*       job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL); */
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
       remove_from_reschedule_unknown_lists(jobid, jataskid);
 
@@ -909,10 +904,22 @@ sge_commit_flags_t commit_flags
                          lGetUlong(jatep, JAT_task_number),
                          NULL, NULL, lGetString(jep, JB_session), 
                          lGetList(jatep, JAT_scaled_usage_list));
-
-      sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
-                      jobid, jataskid, NULL, NULL, session,
-                      jep, jatep, NULL, false, true);
+      {
+         /* IZ 664
+          * Workaround to fix qdel -f.
+          * It copies SGE_EVENT set in sge_commit_job or in a sub function
+          * call to an answer list.
+          * As other functions, like the following sge_event_spool may also
+          * use ERROR/WARNING/INFO or even DEBUG, the message qdel relies apon
+          * may be overwritten.
+          */
+         char save[4 * MAX_STRING_SIZE];
+         strncpy(save, SGE_EVENT, sizeof(save) - 1);
+         sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
+                         jobid, jataskid, NULL, NULL, session,
+                         jep, jatep, NULL, false, true);
+         strncpy(SGE_EVENT, save, sizeof(save) - 1);
+      }
 
       /* finished all ja-tasks => remove job script */
       for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
@@ -930,7 +937,6 @@ sge_commit_flags_t commit_flags
 
    case COMMIT_ST_DEBITED_EE: /* triggered by ORT_remove_job */
    case COMMIT_ST_NO_RESOURCES: /* triggered by ORT_remove_immediate_job */
-/*       job_log(jobid, jataskid, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE); */
       reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, hostname, jr, jep, jatep, NULL, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jobid = lGetUlong(jep, JB_job_number);
 
@@ -1252,7 +1258,6 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
     * Remove one ja task
     */
    if (remove_job) {
-/*       job_log(job_id, ja_task_id, MSG_LOG_EXITED); */
       release_successor_jobs(job);
 
       /*
@@ -1287,7 +1292,6 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
    } else {
       int is_enrolled = job_is_enrolled(job, ja_task_id);
 
-/*       job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT); */
 
       if (!no_events) {
          sge_add_event( 0, sgeE_JATASK_DEL, job_id, ja_task_id, 

@@ -37,7 +37,6 @@ DAEMONS_COMMON_DIR = $(SDIR)/daemons/common
 DAEMONS_COMMON_SRC = admin_mail.c \
                     category.c \
                     err_trace.c \
-                    job_log.c \
                     lock.c \
                     mail.c \
                     qlogin_starter.c \
@@ -86,9 +85,6 @@ category.o:	$(DAEMONS_COMMON_DIR)/category.c
 
 err_trace.o:	$(DAEMONS_COMMON_DIR)/err_trace.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) $(MEMCFLAG) -c $(DAEMONS_COMMON_DIR)/err_trace.c
-
-job_log.o   : $(DAEMONS_COMMON_DIR)/job_log.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/job_log.c
 
 lock.o: 	$(DAEMONS_COMMON_DIR)/lock.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/lock.c

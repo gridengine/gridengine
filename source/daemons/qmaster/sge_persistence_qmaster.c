@@ -520,9 +520,10 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       /* clear the changed bits */
       lListElem_clear_changed_info(object);
    }
-   sge_dstring_free(&key_buffer);
 
+   sge_dstring_free(&key_buffer);
    sge_dstring_free(&buffer);
+
    return ret;
 }
 

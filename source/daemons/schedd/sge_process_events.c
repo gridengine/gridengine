@@ -72,7 +72,6 @@
 #include "parse.h"
 #include "msg_schedd.h"
 #include "scheduler.h"
-#include "job_log.h"
 #include "sge_job.h"
 #include "sge_conf.h"
 #include "sge_userprj.h"

@@ -74,7 +74,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_schedd_text.h"
-#include "job_log.h"
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "sge_pe.h"
@@ -1069,8 +1068,6 @@ lList **load_list
          lSetString(ja_task, JAT_granted_pe, lGetString(a.pe, PE_name));
       }
 
-      job_log(a.job_id, lGetUlong(ja_task, JAT_task_number), 
-         "dispatched");
       orders->jobStartOrderList = sge_create_orders(orders->jobStartOrderList, ORT_start_job, 
             job, ja_task, a.gdil, false, true);
 

@@ -39,7 +39,6 @@
 #include "sge_job_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_host.h"
-#include "job_log.h"
 #include "job_exit.h"
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
@@ -174,7 +173,6 @@ lListElem *jatep
    if (((lGetUlong(jatep, JAT_state) & JDELETED) == JDELETED) ||
          (failed && !lGetString(jep, JB_exec_file)) ||
          (failed && general_failure==GFSTATE_JOB && JOB_TYPE_IS_NO_ERROR(lGetUlong(jep, JB_type)))) {
-/*       job_log(jobid, jataskid, MSG_LOG_JREMOVED); */
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
@@ -189,7 +187,6 @@ lListElem *jatep
       *    --> application controlled job error
       */
    else if ((failed && general_failure==GFSTATE_JOB)) {
-/*       job_log(jobid, jataskid, MSG_LOG_JERRORSET); */
       DPRINTF(("set job "u32"."u32" in ERROR state\n", 
                lGetUlong(jep, JB_job_number), jataskid));
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
@@ -206,7 +203,6 @@ lListElem *jatep
        */
    else if (((failed && (failed <= SSTATE_BEFORE_JOB)) || 
         general_failure)) {
-/*       job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE); */
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, 
                                hostname, jr, jep, jatep, NULL, 
@@ -225,7 +221,6 @@ lListElem *jatep
              (lGetUlong(jep, JB_checkpoint_attr) & ~NO_CHECKPOINT)) ||
              (!lGetUlong(jep, JB_restart) && lGetBool(queueep, QU_rerun)))) {
       DTRACE;
-/*       job_log(jobid, jataskid, MSG_LOG_JRERUNRESCHEDULE); */
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
@@ -241,7 +236,6 @@ lListElem *jatep
        */
    else if (failed == SSTATE_MIGRATE) {
       DTRACE;
-/*       job_log(jobid, jataskid, MSG_LOG_JCKPTRESCHEDULE); */
       /* job_restarted == 2 means a checkpoint in the ckpt arena */
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
@@ -257,7 +251,6 @@ lListElem *jatep
        *                            or because of a rerun e.g. triggered by qmod -r <jobid>
        */
    else if (failed == SSTATE_AGAIN) {
-/*       job_log(jobid, jataskid, MSG_LOG_JNORESRESCHEDULE); */
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
@@ -271,7 +264,6 @@ lListElem *jatep
        * case 7: job finished 
        */
    else {
-/*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_FINISHED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT);

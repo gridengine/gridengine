@@ -92,7 +92,6 @@
 #include "sge_reporting_qmaster.h"
 #include "parse.h"
 #include "usage.h"
-#include "job_log.h"
 #include "qmaster_to_execd.h"
 #include "shutdown.h"
 #include "sge_hostname.h"

@@ -43,7 +43,6 @@
 #include "sge_log.h"
 #include "admin_mail.h"
 #include "sge_signal.h"
-#include "job_log.h"
 #include "commlib.h"
 #include "execd_signal_queue.h"
 #include "sig_handlers.h"
@@ -129,7 +128,6 @@ int answer_error;
 
                      /* job signaling triggerd by a queue signal */
                      sprintf(tmpstr, "%s (%s)", sge_sig2str(signal), qnm);
-                     job_log(lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), tmpstr);
                      /* if the queue gets suspended and the job is already suspended
                         we do not deliver a signal */
                      if (signal == SGE_SIGSTOP) {
@@ -617,8 +615,6 @@ u_long32 signal
    const void *iterator;
 
    DENTER(TOP_LAYER, "signal_job");
-
-   job_log(jobid, jataskid, sge_sig2str(signal));
 
    /* search appropriate array task and job */
    jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);

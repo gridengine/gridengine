@@ -69,7 +69,6 @@
 #include "sge_string.h"
 #include "setup_path.h" 
 #include "sge_time.h" 
-#include "job_log.h" 
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_spool.h"

@@ -516,14 +516,7 @@ int japi_init(const char *contact, const char *session_key_in,
    if (my_prog_num > 0) {
       prog_number = my_prog_num;
    }
-#if 0
-   ret = japi_read_dynamic_attributes(diag);
-   if(ret != DRMAA_ERRNO_SUCCESS) {
-      /* diag was set in drmaa_read_dynamic_attributes() */
-      DEXIT;
-      return ret;
-   }
-#endif
+
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
       JAPI_LOCK_SESSION();
@@ -5088,7 +5081,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
    int        ret=0;
    int        drmaa_errno=DRMAA_ERRNO_SUCCESS;
    lList      *pSubList;
-   lListElem  *config;
+   lListElem  *config = NULL;
    lListElem  *ep = NULL;
    const char *pStr = NULL;
 
@@ -5121,16 +5114,22 @@ static int japi_read_dynamic_attributes(dstring *diag)
       return drmaa_errno;
    }
 
-   pSubList = lGetList( config, CONF_entries );
-   if( pSubList ) {
-      ep = lGetElemStr( pSubList, CF_name, "delegated_file_staging");
-      if( ep ) {
-         pStr = lGetString( ep, CF_value );
-         if( strcmp( pStr, "true" )==0 ) {
+   pSubList = lGetList(config, CONF_entries);
+   if (pSubList != NULL) {
+      ep = lGetElemStr(pSubList, CF_name, "delegated_file_staging");
+      if (ep != NULL) {
+         pStr = lGetString(ep, CF_value);
+         
+         if (strcasecmp( pStr, "true") ==0) {
             japi_delegated_file_staging_is_enabled = true;
          }
+         else {
+            japi_delegated_file_staging_is_enabled = false;
+         }
+         
       }
    }
+
    JAPI_UNLOCK_SESSION();
    DEXIT;
    return drmaa_errno;

@@ -1,3 +1,7 @@
+SG-2004-04-19-1: Bugfix:    fixed another sec fault in qsub.
+                 Changed:   qsub
+                 Review:    DT, HP
+
 AS-2004-04-19-1: Bugfix:    get correct error message of hostname resolving
                             problem
                  Changed:   util/install_modules/inst_execd.sh

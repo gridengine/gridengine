@@ -1,3 +1,8 @@
+EB-2004-04-27-2: Bugfix:    Wrong qconf -sq CQ@HOST output for xuser_lists
+                 Issue:     991
+                 Changed:   qconf
+                 Review:    JG
+
 EB-2004-04-27-1: Bugfix:    scheduling info should say "queue instance"
                  Issue:     965
                  Changed:   sge_schedd

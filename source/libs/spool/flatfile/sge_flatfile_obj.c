@@ -952,7 +952,7 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
                              US_sub_fields, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_acl, 21, "user_lists",
                              US_sub_fields, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], QU_acl, 21, "xuser_lists",
+      create_spooling_field (&fields[count++], QU_xacl, 21, "xuser_lists",
                              US_sub_fields, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_subordinate_list, 21,
                              "subordinate_list", SO_sub_fields, NULL, NULL,

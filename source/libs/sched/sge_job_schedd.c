@@ -259,7 +259,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
        * JG: Disabled hashing - it seems to have negative impact
        *     on performance - further analysis has to follow.
        */
-if(1)      {
+if(0)      {
          const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
          int pos = lGetPosInDescr(descr, JB_owner);
         

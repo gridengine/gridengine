@@ -227,6 +227,11 @@ proc qdel_submit_delete_when_transfered {} {
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
    global CHECK_ACT_LEVEL
  
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+
    if { $CHECK_ACT_LEVEL == 0 } {
       if { $ts_config(gridengine_version) == 60 } {
          set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
@@ -503,6 +508,10 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
 proc qdel_delete_job_0 {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
 
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "0" } output ]
    
    puts $CHECK_OUTPUT "qdel output    : \n---\n$output\n---"
@@ -555,6 +564,9 @@ proc qdel_delete_job_0 {} {
 proc qdel_help {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_PRODUCT_VERSION_NUMBER
    global qdel_help_lines
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-help" } output ]
 
@@ -614,6 +626,9 @@ proc qdel_job_task_list {} {
 
     global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
 
+    delete_all_jobs
+    wait_for_end_of_all_jobs 60
+
     # submit jobs to delete
     set job_list [submit_testjobs]
 
@@ -670,6 +685,9 @@ proc qdel_job_task_list {} {
 proc qdel_delete_unknown_jobid {} {
    global ts_config
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    # submit jobs to delete
    set job_list [submit_testjobs]
@@ -808,6 +826,10 @@ proc qdel_delete_unknown_jobid_proc {job_list default_output} {
 proc qdel_delete_negative_jobid {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
 
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-1" } output ]
    
    puts $CHECK_OUTPUT "qdel output    : \n---\n$output\n---"
@@ -860,6 +882,9 @@ proc qdel_all {} {
    global ts_config
    global CHECK_OUTPUT CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    if {$ts_config(gridengine_version) == 53} {
       set all_args "all"
@@ -1034,6 +1059,9 @@ proc qdel_uall {} {
       set_error -3 "root access required"
       return
    } 
+   
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    if {$ts_config(gridengine_version) == 53} {
       set uall_args "-uall"
@@ -1136,6 +1164,9 @@ proc qdel_user_list {} {
       set_error -3 "root access required"
       return
    } 
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    # submit jobs to delete
    set job_list_user1 [submit_testjobs]  
@@ -1282,6 +1313,8 @@ proc qdel_force {} {
       return
    } 
 
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    # unset ENABLE_FORCED_QDEL with set_config
    get_config saved_array 

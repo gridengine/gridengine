@@ -1,3 +1,6 @@
+CR-2005-04-06-6: Testsuite: qdel test: delete all jobs before starting next
+                            sub test
+
 CR-2005-04-06-5: Testsuite: test for issue 1096 disabled for CSP systems
 
 CR-2005-04-06-4: Testsuite: fixed job_environment test

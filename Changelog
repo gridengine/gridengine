@@ -1,3 +1,8 @@
+CR-2004-10-29-0: Bugfix:    - fixed gdi bug for commlib error reporting
+                            - new commlib function: cl_is_commlib_error()
+                 Changed:   gdi, commlib
+                 Review:    SG
+
 SG-2004-10-29-2: Bugfix:    - fixed profiling im scheduler
                             - fixed cpu consumption in event master. The
                               event master never slept.

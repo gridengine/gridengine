@@ -44,9 +44,20 @@
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_get_error_text()"
-const char* cl_get_error_text(int error_id) {       /* CR check */
+#define __CL_FUNCTION__ "cl_is_commlib_error()"
+int cl_is_commlib_error(int error_id) {
+   if ( error_id >= CL_RETVAL_OK && error_id < CL_RETVAL_LAST_ID) {
+      return 1;
+   } else {
+      return 0;
+   }
+}
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_get_error_text()"
+const char* cl_get_error_text(int error_id) {
    switch(error_id) {
       case CL_RETVAL_OK                        : {
          return MSG_CL_RETVAL_OK;

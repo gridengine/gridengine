@@ -391,7 +391,7 @@ char **argv
       }
 
       if (i) {
-         if ( strcmp(cl_get_error_text(i), CL_RETVAL_UNDEFINED_STR) != 0 ) {
+         if (cl_is_commlib_error(i)) {
             if (i != CL_RETVAL_OK) {
                WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
                if (i == CL_RETVAL_CONNECTION_NOT_FOUND ||

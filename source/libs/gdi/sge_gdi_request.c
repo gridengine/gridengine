@@ -719,7 +719,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    }
 
    if (ret) {
-      if ( (*commlib_error = check_isalive(rhost) != CL_RETVAL_OK)) {
+      if ( (*commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          DEXIT;
          return -4;
       } 

@@ -1,3 +1,7 @@
+CR-2003-02-14-2  Testsuite: fixed bug in get_ps_info() which caused qrsh test
+                            to fail
+                 Bugfix:
+
 CR-2003-02-14-1  Testsuite: throughput test now sets maxujobs parameter
                             in scheduler configuration 
 

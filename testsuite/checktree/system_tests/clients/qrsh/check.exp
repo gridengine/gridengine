@@ -124,7 +124,6 @@ proc init_level {} {
       }
       200 {
          set qrsh_hostlist $CHECK_CORE_EXECD
-         #set qrsh_hostlist "ARAGORN"
          return 0
       }
    }
@@ -896,14 +895,17 @@ proc qrsh_suspend {} {
       if { [info exists job_pid] && [info exists job_id] } {
          # check process status (should be sleeping or running)
          get_ps_info $job_pid $host 
+         
          if { $ps_info($job_pid,error) != 0 } {
                close_spawn_process $qrsh_id
                set_error -1 "cannot get info about process $job_pid on host $host"
                continue
          }
+         puts $CHECK_OUTPUT $ps_info($job_pid,index_names) 
+         puts $CHECK_OUTPUT $ps_info($job_pid,string)
          if {[string first $ps_info($job_pid,state) $running_state] == -1} {
                close_spawn_process $qrsh_id
-               set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)"
+               set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)\nps output:\n$ps_info($job_pid,index_names)\n$ps_info($job_pid,string)\n"
                continue
          }
          # suspend job

@@ -520,7 +520,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
    switch -- $host_arch {
 
       "solaris64" - 
-      "solaris86" { 
+      "solaris86" -
+      "solaris" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"s=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"args=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
@@ -535,20 +536,20 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set command_pos 8
       }
      
-      "solaris" { 
-         set myenvironment(COLUMNS) "500"
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
-         set index_names "  PID  PGID  PPID   UID S    STIME  VSZ        TIME COMMAND"
-         set pid_pos     0
-         set gid_pos     1
-         set ppid_pos    2
-         set uid_pos     3
-         set state_pos   4
-         set stime_pos   5
-         set vsz_pos     6
-         set time_pos    7
-         set command_pos 8
-      }
+#      "solaris" { 
+#         set myenvironment(COLUMNS) "500"
+#         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
+#         set index_names "  PID  PGID  PPID   UID S    STIME  VSZ        TIME COMMAND"
+#         set pid_pos     0
+#         set gid_pos     1
+#         set ppid_pos    2
+#         set uid_pos     3
+#         set state_pos   4
+#         set stime_pos   5
+#         set vsz_pos     6
+#         set time_pos    7
+#         set command_pos 8
+#      }
 
       "osf4" -
       "tru64" { 
@@ -654,8 +655,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       
       "glinux"    { 
          set myenvironment(COLUMNS) "500"
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
-         set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid=BIGGERUID s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
+         set index_names "  PID  PGID  PPID BIGGERUID S STIME   VSZ     TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
          set ppid_pos    2
@@ -741,9 +742,11 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
    set help_list [ split $result "\n" ]
 
+#   set fdp [open "psinfo.txt" "w"]
 #   foreach elem $help_list {
-#      puts $CHECK_OUTPUT $elem
+#      puts $fdp $elem
 #   }
+#   close $fdp
 
 
    # delete empty lines (occurs e.g. on alinux)

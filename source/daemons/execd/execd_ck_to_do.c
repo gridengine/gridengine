@@ -450,6 +450,26 @@ int answer_error
    if (jobs_to_start) {
       sge_start_jobs();
       jobs_to_start = 0;
+#if 0
+      /* 
+       * -CR- TODO: 
+       * When this code is enabled started jobs go immediately from 
+       * transfering into running state (in qmaster) when they are 
+       * started, because * flush_jr will trigger a load report.
+       *
+       * This will increase the number of incoming load reports at
+       * qmaster (which is bad for the qmaster). 
+       *
+       * We should implement a kind of method to send not too much
+       * load reports. 
+       *
+       * INFO:
+       * Qmaster handles the transfer state like the running state 
+       * till he gets a load report where the specified job is reported
+       * as running.
+       */
+      flush_jr = 1; /* this will trigger an load report after job start */
+#endif
    }
 
    now = sge_get_gmt();

@@ -53,7 +53,7 @@ set check_init_level_procedure "tight_integration_init_level"
 # define test's name and run level descriptions
 set check_name            "tight_integration"
 set check_category        "COMPATIBILITY SYSTEM"
-set check_highest_level   0
+set check_highest_level   1
 set check_description(0)  "check tightly integrated parallel jobs submitted with qsub"
 set check_description(1)  "check tightly integrated parallel jobs submitted with qrsh"
 
@@ -449,8 +449,8 @@ proc tight_integration_master_killed {} {
       wait_for_job_state $jobid "r" 60
 
       # kill pid of master task and wait some seconds
-      puts $CHECK_OUTPUT "killing master task: pid $info(master,pid) on host $info(master,host)"
-      start_remote_prog $info(master,host) $CHECK_USER kill "-9 $info(master,pid)"
+      puts $CHECK_OUTPUT "killing process group of master task: pid $info(master,pid) on host $info(master,host)"
+      start_remote_prog $info(master,host) $CHECK_USER kill "-9 -$info(master,pid)"
 
       if {![tight_integration_wait_for_delete_state $jobid 60]} {
          add_proc_error "tight_integration_master_killed" -1 "failed master task does not cause the job to be deleted (issue 579 present)"

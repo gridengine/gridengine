@@ -1,3 +1,5 @@
+JG-2003-07-23-0: Testsuite: Fixed tight integration test for runlevel 1 (qrsh).
+
 BD-2003-07-22-0: Cleanup:   Remove definition of MAX_GROUPS.  It is unused.
                  Changed:   common/basis_types.h
                  Review:    AS

@@ -60,12 +60,12 @@ set check_needs           "init_core_system"
 # define test's procedure order
 set check_functions ""
 lappend check_functions "reschedule_setup"
-#lappend check_functions "reschedule_submit_jobs"
-#lappend check_functions "reschedule_checkpointing"
+lappend check_functions "reschedule_submit_jobs"
+lappend check_functions "reschedule_checkpointing"
 #lappend check_functions "reschedule_qsh_qlogin_qrsh_qrlogin"
 #lappend check_functions "reschedule_pe_jobs"
 #lappend check_functions "reschedule_deleted_job"
-#lappend check_functions "reschedule_cleanup"
+lappend check_functions "reschedule_cleanup"
 
 
 
@@ -218,9 +218,6 @@ proc reschedule_setup {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
    global CHECK_CORE_EXECD stored_configuration rerun_queue2
 
-
-   set_error -3 "test not completely implemented"
-   return
 
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
       set_error -3 "need 2 execd hosts"
@@ -496,7 +493,12 @@ proc reschedule_submit_jobs {} {
 proc reschedule_checkpointing {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
    global CHECK_PRODUCT_ROOT CHECK_ARCH
-  
+ 
+
+   set_error -3 "check not completele implemented"
+   return
+
+ 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
       return -3
@@ -627,7 +629,7 @@ proc reschedule_checkpointing {} {
 #
 proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
    
 
    if { [is_version_ok] != 0 } {
@@ -643,7 +645,8 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       set_error -3 "root access required for submitting qlogin"
       set no_jobs 3
    } else {
-      set qlogin_id  [ open_root_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
+#      set qlogin_id  [ open_root_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
+      set qlogin_id  [ open_remote_spawn_process $CHECK_HOST "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin" "-q $rerun_queue" ]
       set no_jobs 4
    }
    set ru_jobs 0

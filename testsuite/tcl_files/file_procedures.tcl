@@ -264,8 +264,9 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} }
    global CHECK_DEBUG_LEVEL 
  
    upvar $envlist users_env
- 
-   
+
+    
+   set_users_environment users_env
 
    set script [ open "$scriptfile" "w" ]
 
@@ -285,6 +286,10 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} }
 
    puts $script "   . $CHECK_PRODUCT_ROOT/default/common/settings.sh"
    puts $script "else"
+   puts $script "   unset GRD_ROOT"
+   puts $script "   unset CODINE_ROOT"
+   puts $script "   unset GRD_CELL"
+   puts $script "   unset CODINE_CELL"
    puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
    puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
    puts $script "   export COMMD_PORT"

@@ -1,3 +1,21 @@
+CR-2002-01-08-0: Testsuite: 
+                    - New settings file version "4" because of new parameters
+                      "dns_domain_name" and "user_environment".
+                    - unsetting GRD_ROOT and CODINE_ROOT variables (if set) at
+                      startup 
+                    - qmod/reschedule test is now testing more, but still not
+                      full implemented.
+                    - changed output of handle_vi_edit()
+                    - new parser procedure parse_qconf_se()
+                    - commented open_root_spawn_process() this procedure
+                      should not be used anymore. 
+                      open_remote_spawn_process() should be used therefor.
+                    - new procedures: 
+                         get_complex(), set_complex(), get_qconf_se_info()
+                    - enhanced sumbit_job() for specific error value handling                           
+                    - new check:
+                         system_tests/qmaster/complex
+
 JG-2002-01-08-0: Enhancem.: Made "with I18N" default for solaris, solaris64
                             and glinux architectures.
                             Fixed broken build with I18N.

@@ -1031,6 +1031,56 @@ proc get_config { change_array {host global}} {
 }
 
 
+#****** sge_procedures/get_complex() *******************************************
+#  NAME
+#     get_complex() -- get complex configuration settings
+#
+#  SYNOPSIS
+#     get_complex { change_array complex_list } 
+#
+#  FUNCTION
+#     Get the complex configuration for a specific complex list
+#
+#  INPUTS
+#     change_array - name of an array variable that will get set by 
+#                    get_config
+#     complex_list - name of a complex list
+#
+#  RESULT
+#     The change_array variable is build as follows:
+#
+#                      
+#     set change_array(mem_free) "mf MEMORY 0 <= YES NO 0"   
+#   
+#     index (mem_free) is the complex name
+#     value is "shortcut type value relop requestable consumable default"
+#    
+#*******************************************************************************
+proc get_complex { change_array complex_list } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sc" "$complex_list"} result ]
+  if { $catch_result != 0 } {
+     add_proc_error "get_complex" "-1" "qconf error or binary not found ($CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf)\n$result"
+     return
+  } 
+
+  # split each line as listelement
+  set help [split $result "\n"]
+  foreach elem $help {
+     set id [lindex $elem 0]
+     if { [ string first "#" $id ]  != 0 } {
+        set value [lrange $elem 1 end]
+        if { [string compare $value ""] != 0 } {
+           set chgar($id) $value
+        }
+     }
+  }
+}
+
+
+
 #                                                             max. column:     |
 #****** sge_procedures/set_config() ******
 # 
@@ -1141,6 +1191,66 @@ proc set_config { change_array {host global} {do_add 0}} {
   }
   return $result
 }
+
+#****** sge_procedures/set_complex() *******************************************
+#  NAME
+#     set_complex() -- change complex configuration for a complex list
+#
+#  SYNOPSIS
+#     set_complex { change_array complex_list } 
+#
+#  FUNCTION
+#     Set the complex configuration for a specific complex list
+#
+#  INPUTS
+#     change_array - name of an array variable that contains the new complex 
+#                    definition
+#     complex_list - name of the complex list to change
+#
+#  RESULT
+#     The change_array variable is build as follows:
+#
+#     set change_array(mem_free) "mf MEMORY 0 <= YES NO 0"   
+#   
+#     index (mem_free) is the complex name
+#     value is "shortcut type value relop requestable consumable default"
+#
+#  EXAMPLE
+#     set mycomplex(load_long) "ll DOUBLE 55.55 >= NO NO 0"
+#     set_complex mycomplex host
+#
+#*******************************************************************************
+proc set_complex { change_array complex_list } {
+  global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  upvar $change_array chgar
+  set values [array names chgar]
+
+  get_complex old_values $complex_list
+
+  set vi_commands ""
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal $chgar($elem)
+     if {[info exists old_values($elem)]} {
+        if { $newVal == "" } {
+          lappend vi_commands ":%s/^$elem .*$//\n"
+        } else {
+          set newVal1 [split $newVal {/}]
+          set newVal [join $newVal1 {\/}]
+          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        }
+     } else {
+        lappend vi_commands "A\n$elem  $newVal"
+        lappend vi_commands [format "%c" 27]
+     }
+  } 
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mc $complex_list" $vi_commands "modified" "edit failed" "added" ]
+  if { $result != 0  } {
+     add_proc_error "set_complex" -1 "could not modify complex $complex_list ($result)"
+  }
+  return $result
+}
+
 
 
 #                                                             max. column:     |
@@ -1423,6 +1533,9 @@ proc set_queue { q_name change_array } {
 
   set vi_commands ""
   foreach elem $values {
+     if { $elem == "" } {
+        continue;
+     }
      # this will quote any / to \/  (for vi - search and replace)
      set newVal [set chgar($elem)]
      set newVal1 [split $newVal {/}]
@@ -1434,7 +1547,7 @@ proc set_queue { q_name change_array } {
     add_proc_error "set_queue" -1 "$q_name is not a queue"
   }
   if { $result != 0  } {
-    add_proc_error "set_queue" -1 "error modify queue $q_name"
+    add_proc_error "set_queue" -1 "error modify queue $q_name, $result"
   } 
   return $result
 }
@@ -1811,7 +1924,9 @@ proc get_queue { q_name change_array } {
   foreach elem $help {
      set id [lindex $elem 0]
      set value [lrange $elem 1 end]
-     set chgar($id) $value
+     if { $id != "" } {
+        set chgar($id) $value
+     }
   }
 }
 
@@ -3385,6 +3500,11 @@ proc delete_job { jobid } {
 #        -4   if verify output was printed on -verify argument
 #        -5   if verify output was NOT printed on -verfiy argument
 #        -6   job could not be scheduled, try later
+#        -7   has to much tasks - error
+#        -8   unknown resource - error
+#        -9   can't resolve hostname - error
+#       -10   resource not requestable - error
+
 #      -100   on error 
 #     
 #
@@ -3491,6 +3611,15 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
        -i $sp_id -- "submit a job with more than" {
           set return_value -7
        }
+       -i $sp_id -- "unknown resource" {
+          set return_value -8
+       }
+       -i $sp_id -- "can't resolve hostname" {
+          set return_value -9
+       }
+       -i $sp_id -- "configured as non requestable" {
+          set return_value -10
+       }
      }
  
      # close spawned process 
@@ -3509,6 +3638,11 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           "-4" { add_proc_error "submit_job" 0 "verify output was printed on -verify argument - ok" }
           "-5" { add_proc_error "submit_job" $return_value "verify output was NOT printed on -verfiy argument - error" }
           "-6" { add_proc_error "submit_job" $return_value "job could not be scheduled, try later - error" }
+          "-7" { add_proc_error "submit_job" $return_value "has to much tasks - error" }
+          "-8" { add_proc_error "submit_job" $return_value "unknown resource - error" }
+          "-9" { add_proc_error "submit_job" $return_value "can't resolve hostname - error" }
+          "-10" { add_proc_error "submit_job" $return_value "resource not requestable - error" }
+
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
      }
@@ -3919,6 +4053,40 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
    return 0
 }
 
+
+
+#****** sge_procedures/get_qconf_se_info() *************************************
+#  NAME
+#     get_qconf_se_info() -- get qconf -se information
+#
+#  SYNOPSIS
+#     get_qconf_se_info { hostname {variable qconf_se_info} } 
+#
+#  FUNCTION
+#     This procedure starts qconf -se for the given hostname and returns
+#     an tcl array with the output of the command.
+#
+#  INPUTS
+#     hostname                 - execution host name
+#     {variable qconf_se_info} - array to store information
+#
+#
+#  SEE ALSO
+#      parser/parse_qconf_se()
+#*******************************************************************************
+proc get_qconf_se_info {hostname {variable qconf_se_info}} {
+   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_OUTPUT
+   upvar $variable jobinfo
+
+   set exit_code [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -se $hostname" } result]
+   if { $exit_code == 0 } {
+      set result "$result\n"
+      parse_qconf_se result jobinfo $hostname 
+      return 1
+   }
+   return 0
+}
 
 
 
@@ -4523,7 +4691,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
   
   if { $runcheck == 1 } {
      if { [is_job_running $jobid $jobname] != 1 } {
-        add_proc_error "wait_for_jobend" -2 "job \"$jobid\" \"$jobname\" is not running"
+        add_proc_error "wait_for_jobend" -1 "job \"$jobid\" \"$jobname\" is not running"
         return -2
      }
   }

@@ -90,6 +90,10 @@ set CHECK_QMASTER_INSTALL_OPTIONS ""
 set CHECK_EXECD_INSTALL_OPTIONS   ""
 
 # test system specific 
+global CHECK_DNS_DOMAINNAME
+set CHECK_DNS_DOMAINNAME ""
+global CHECK_REMOTE_ENVIRONMENT
+set CHECK_REMOTE_ENVIRONMENT ""
 global CHECK_DISPLAY_OUTPUT 
 set CHECK_DISPLAY_OUTPUT "undefined"
 global CHECK_SETTINGS_VERSION    ;# settings file version number
@@ -360,7 +364,7 @@ global CHECK_SETUP_NAMES
 
 
 global CHECK_CURRENT_SETTINGS_VERSION
-set CHECK_CURRENT_SETTINGS_VERSION "3"
+set CHECK_CURRENT_SETTINGS_VERSION "4"
 set CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION
 
 set CHECK_SETUP_NAMES(index) "settings_version"
@@ -422,6 +426,12 @@ set CHECK_SETUP_NAMES(qmaster_install_options) "CHECK_QMASTER_INSTALL_OPTIONS"
 
 lappend CHECK_SETUP_NAMES(index) "execd_install_options"
 set CHECK_SETUP_NAMES(execd_install_options) "CHECK_EXECD_INSTALL_OPTIONS"
+
+lappend CHECK_SETUP_NAMES(index) "dns_domain_name"
+set CHECK_SETUP_NAMES(dns_domain_name) "CHECK_DNS_DOMAINNAME"
+
+lappend CHECK_SETUP_NAMES(index) "user_environment"
+set CHECK_SETUP_NAMES(user_environment) "CHECK_REMOTE_ENVIRONMENT"
 
 lappend CHECK_SETUP_NAMES(index) "first_foreign_system_username"
 set CHECK_SETUP_NAMES(first_foreign_system_username) "CHECK_FIRST_FOREIGN_SYSTEM_USER"
@@ -1108,6 +1118,7 @@ proc save_defaults {} {
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
+  global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
   global CHECK_DEFAULT_DOMAIN
@@ -1132,10 +1143,10 @@ proc save_defaults {} {
   lappend data $CHECK_SOURCE_COMPILE_HOSTS
   lappend data $CHECK_AIMK_COMPILE_OPTIONS
   lappend data $CHECK_DIST_INSTALL_OPTIONS
-  if { $CHECK_SETTINGS_VERSION >= 2  } {
-     lappend data $CHECK_QMASTER_INSTALL_OPTIONS
-     lappend data $CHECK_EXECD_INSTALL_OPTIONS 
-  }
+  lappend data $CHECK_QMASTER_INSTALL_OPTIONS
+  lappend data $CHECK_EXECD_INSTALL_OPTIONS 
+  lappend data $CHECK_DNS_DOMAINNAME
+  lappend data $CHECK_REMOTE_ENVIRONMENT
   lappend data $CHECK_FIRST_FOREIGN_SYSTEM_USER
   lappend data $CHECK_SECOND_FOREIGN_SYSTEM_USER
   lappend data $CHECK_FIRST_FOREIGN_SYSTEM_GROUP
@@ -1312,6 +1323,7 @@ proc read_edit_defaults_file { filename } {
    global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
    global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
+   global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
    global CHECK_DEFAULT_DOMAIN
@@ -1361,7 +1373,12 @@ proc read_edit_defaults_file { filename } {
         puts $CHECK_OUTPUT "product_type can only be \"sge\" or \"sgeee\""
         return -1
    }
-  
+ 
+   if { [set_users_environment] == -1 } {
+        puts $CHECK_OUTPUT "error setting users environment"
+        return -1
+   }
+ 
    if { [ string compare $CHECK_CORE_MASTER [lindex $CHECK_CORE_EXECD 0] ] != 0 } {
          set new_core_execd "$CHECK_CORE_MASTER"
          puts $CHECK_OUTPUT "setting qmaster host $CHECK_CORE_MASTER on top of execd list"
@@ -1491,6 +1508,7 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
+  global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
   global CHECK_DEFAULT_DOMAIN
@@ -1557,6 +1575,7 @@ proc load_defaults {} {
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
+  global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
   global CHECK_DEFAULT_DOMAIN CHECK_DO_SETUP
@@ -1605,6 +1624,8 @@ proc load_defaults {} {
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
   set CHECK_QMASTER_INSTALL_OPTIONS ""
   set CHECK_EXECD_INSTALL_OPTIONS ""
+  set CHECK_DNS_DOMAINNAME ""
+  set CHECK_REMOTE_ENVIRONMENT ""
   set CHECK_SOURCE_CVS_RELEASE "maintrunc"  
   set CHECK_CONFIG_DIR "$CHECK_CURRENT_WORKING_DIR/demo_config_dir"
   if { [info exists env(HOST)] } {
@@ -1760,6 +1781,57 @@ proc load_defaults {} {
             puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
             exit -1
         }
+        if { $CHECK_SETTINGS_VERSION == 3 } {
+            puts $CHECK_OUTPUT "this settings file has version number 3 -> upgrading to version 4"
+            set CHECK_SETTINGS_VERSION "4"
+            set CHECK_TESTSUITE_ROOT                   [lindex $data 1]
+            set CHECK_CHECKTREE_ROOT                   [lindex $data 2]
+            set CHECK_CORE_MASTER                      [lindex $data 3]
+            set CHECK_CORE_EXECD                       [lindex $data 4]
+            set CHECK_CORE_PROCESSORS                  [lindex $data 5]
+            set CHECK_SUBMIT_ONLY_HOSTS                [lindex $data 6]      ;# added for version 3
+            set CHECK_COMMD_PORT                       [lindex $data 7]
+            set CHECK_MAIN_RESULTS_DIR                 [lindex $data 8]
+            set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
+            set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
+          
+            set CHECK_PRODUCT_TYPE                     [lindex $data 9]
+            set CHECK_PRODUCT_ROOT                     [lindex $data 10]
+            set CHECK_SOURCE_DIR                       [lindex $data 11]
+            set CHECK_SOURCE_HOSTNAME                  [lindex $data 12]
+            set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 13]
+            set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 14]
+            set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
+            set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
+            set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
+            set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 18]
+            set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 19]
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 20]
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 21]
+            set CHECK_DEFAULT_DOMAIN                   [lindex $data 22]
+            set CHECK_MAILX_HOST                       [lindex $data 23]
+            set CHECK_REPORT_EMAIL_TO                  [lindex $data 24]
+            set CHECK_REPORT_EMAIL_CC                  [lindex $data 25]
+            set CHECK_SEND_ERROR_MAILS                 [lindex $data 26]
+            set CHECK_MAX_ERROR_MAILS                  [lindex $data 27]
+            set CHECK_USE_SSH                          [lindex $data 28]
+            set CHECK_SOURCE_CVS_RELEASE               [lindex $data 29]
+            set CHECK_CONFIG_DIR                       [lindex $data 30]
+
+            set CHECK_DNS_DOMAINNAME                   ""
+            set CHECK_REMOTE_ENVIRONMENT               ""
+            
+            puts $CHECK_OUTPUT "added dns_domain_name" 
+            puts $CHECK_OUTPUT "added user_environment"
+            wait_for_enter
+            source_procedures
+            save_defaults 
+            set CHECK_DO_SETUP 1 
+            setup 
+            puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
+            exit -1
+        }
+        
         exit -1
       } else {
         puts "could not copy defaults file"
@@ -1790,19 +1862,21 @@ proc load_defaults {} {
   set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
   set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
   set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
-  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 18]
-  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 19]
-  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 20]
-  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 21]
-  set CHECK_DEFAULT_DOMAIN                   [lindex $data 22]
-  set CHECK_MAILX_HOST                       [lindex $data 23]
-  set CHECK_REPORT_EMAIL_TO                  [lindex $data 24]
-  set CHECK_REPORT_EMAIL_CC                  [lindex $data 25]
-  set CHECK_SEND_ERROR_MAILS                 [lindex $data 26]
-  set CHECK_MAX_ERROR_MAILS                  [lindex $data 27]
-  set CHECK_USE_SSH                          [lindex $data 28]
-  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 29]
-  set CHECK_CONFIG_DIR                       [lindex $data 30]
+  set CHECK_DNS_DOMAINNAME                   [lindex $data 18]      ;# added for version 4
+  set CHECK_REMOTE_ENVIRONMENT               [lindex $data 19]      ;# added for version 4
+  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 20]
+  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 21]
+  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 22]
+  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 23]
+  set CHECK_DEFAULT_DOMAIN                   [lindex $data 24]
+  set CHECK_MAILX_HOST                       [lindex $data 25]
+  set CHECK_REPORT_EMAIL_TO                  [lindex $data 26]
+  set CHECK_REPORT_EMAIL_CC                  [lindex $data 27]
+  set CHECK_SEND_ERROR_MAILS                 [lindex $data 28]
+  set CHECK_MAX_ERROR_MAILS                  [lindex $data 29]
+  set CHECK_USE_SSH                          [lindex $data 30]
+  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 31]
+  set CHECK_CONFIG_DIR                       [lindex $data 32]
 
 
   source_procedures
@@ -1894,6 +1968,33 @@ proc check_executable_files {  } {
    }
 }
 
+proc set_users_environment {{variable_name env}} {
+   global CHECK_REMOTE_ENVIRONMENT CHECK_OUTPUT
+
+   upvar $variable_name environment
+
+   foreach u_env $CHECK_REMOTE_ENVIRONMENT {
+      set help [split $u_env "="]
+      set env_name  [lindex $help 0]
+      set env_value [lindex $help 1]
+      if { [string compare $env_name ""] == 0 } {
+         puts $CHECK_OUTPUT "error setting users environment (setup parameter user_environment)"
+         return -1
+      }
+      if { [string compare $env_value ""] == 0 } {
+         puts $CHECK_OUTPUT "error setting users environment (setup parameter user_environment)"
+         return -1
+      }
+      if { [string compare $variable_name "env"] == 0 } {
+         puts $CHECK_OUTPUT "setting local user environment variable $env_name to \"$env_value\""
+      } else {
+         puts $CHECK_OUTPUT "setting remote user environment variable $env_name to \"$env_value\""
+      }
+      set environment($env_name) $env_value 
+   } 
+   return 0
+}
+
 #                                                             max. column:     |
 #****** check/setup() ******
 # 
@@ -1939,6 +2040,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
+  global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
   global CHECK_DEFAULT_DOMAIN be_quiet
@@ -1947,6 +2049,16 @@ proc setup { {do_only_hostname_resolving 0} } {
   global check_name CHECK_ACT_LEVEL CHECK_SEND_ERROR_MAILS CHECK_MAX_ERROR_MAILS
 
   puts "starting setup ..."
+
+  if { [info exists env(GRD_ROOT) ] } {
+     puts "unsetting GRD_ROOT"
+     unset env(GRD_ROOT)
+  }
+  if { [info exists env(CODINE_ROOT) ] } {
+     puts "unsetting CODINE_ROOT"
+     unset env(CODINE_ROOT)
+  }
+
   set check_name "setup"
   set CHECK_ACT_LEVEL "0"
   set have_defaults 0
@@ -2031,6 +2143,7 @@ proc setup { {do_only_hostname_resolving 0} } {
      
      set env(COMMD_PORT) $CHECK_COMMD_PORT;
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
+     set_users_environment
    
      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
         set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
@@ -2077,6 +2190,7 @@ proc setup { {do_only_hostname_resolving 0} } {
 
      set env(COMMD_PORT) $CHECK_COMMD_PORT;
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
+     set_users_environment
    
      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
         set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
@@ -2157,6 +2271,8 @@ proc setup { {do_only_hostname_resolving 0} } {
      puts "       dist inst opt.:       $CHECK_DIST_INSTALL_OPTIONS"
      puts "       qmaster inst opt.:    $CHECK_QMASTER_INSTALL_OPTIONS"
      puts "       execd inst opt.:      $CHECK_EXECD_INSTALL_OPTIONS"
+     puts "       dns_domain_name:      $CHECK_DNS_DOMAINNAME"
+     puts "       user_environment:     $CHECK_REMOTE_ENVIRONMENT"
      puts "       other system users:   $CHECK_FIRST_FOREIGN_SYSTEM_USER, $CHECK_SECOND_FOREIGN_SYSTEM_USER"
      puts "       other system groups:  $CHECK_FIRST_FOREIGN_SYSTEM_GROUP, $CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
      puts "       default domain:       $CHECK_DEFAULT_DOMAIN"

@@ -1334,6 +1334,33 @@ proc parse_qstat_j {input output {jobid 0} } {
 }
 
 
+#****** parser/parse_qconf_se() ************************************************
+#  NAME
+#     parse_qconf_se() -- parse information from qconf -se command
+#
+#  SYNOPSIS
+#     parse_qconf_se { input output hostname } 
+#
+#  FUNCTION
+#     This procedure parses the output given from a qconf -se command and
+#     returns the information in a TCL array indexed by the fieldnames.
+#
+#  INPUTS
+#     input    - name of a string variable containing the output of qconf -se
+#     output   - TCL array in which to store the results
+#     hostname - hostname of execution host for qconf -se command
+#
+#  RESULT
+#     The output array is filled with the processed data.
+#
+#*******************************************************************************
+proc parse_qconf_se { input output hostname } {
+   upvar $input  in
+   upvar $output out
+ 
+    process_named_record in out "no_delemiter___" "hostname" $hostname
+}
+
 #                                                             max. column:     |
 #****** parser/output_array() ******
 # 

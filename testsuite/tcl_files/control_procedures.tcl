@@ -89,8 +89,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
-   puts $CHECK_OUTPUT "starting \"$prog_binary $prog_args\""
-
 #  set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
@@ -154,8 +152,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          sleep 1
       }
       send -i $sp_id ":wq\n"
-      log_user 1
-
       set timeout 100
       set doStop 0
       if { [string compare "" $expected_result ] == 0 } {
@@ -211,8 +207,8 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
            }
         }
      }
-     puts $CHECK_OUTPUT $expect_out(buffer)
-     close_spawn_process $id
+  puts $CHECK_OUTPUT $expect_out(buffer)
+  close_spawn_process $id
   log_user 1
   foreach elem $vi_command_sequence {
       debug_puts "sequence: $elem"
@@ -246,6 +242,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
   }
   flush stdout
+  if {$CHECK_DEBUG_LEVEL != 0} {
+    log_user 1
+  } else {
+    log_user 0 
+  }
+
   return $result
 }
 

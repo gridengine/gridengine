@@ -802,86 +802,86 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
 #     remote_procedures/start_remote_tcl_prog
 #     remote_procedures/start_remote_prog
 #*******************************
-proc open_root_spawn_process {args} {
-
-   global CHECK_OUTPUT open_spawn_buffer CHECK_HOST env CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
-   global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
-   uplevel 1 { global CHECK_EXPECT_MATCH_MAX_BUFFER  } 
-   uplevel 1 { global CHECK_OUTPUT }
-   uplevel 1 { global CHECK_DEBUG_LEVEL }
-
-   set arguments ""
-   set arg_nr 0 
-   foreach elem $args {
-
-      incr arg_nr 1
-
-      if { $arg_nr == 1 } {
-        set programm "$elem" 
-      }  
-      if { $arg_nr == 2 } {
-        set arguments "$elem"
-      }
-      if { $arg_nr > 2  } {
-        set arguments "$arguments $elem"
-      }
-   }
-   debug_puts "open_root_spawn_process"
-   debug_puts "programm:  \"$programm\""
-   debug_puts "arguments: \"$arguments\""
-
-   if { [have_root_passwd] == -1 } {
-      set_error -2 "root access required"
-      return "" 
-   }
-   if { $arg_nr == 1 } {
-      set open_spawn_buffer "$programm"
-   } else {
-      set open_spawn_buffer "$programm $arguments"
-   }
-   debug_puts "open_spawn_buffer: $open_spawn_buffer"
-
-   uplevel 1 { set open_root_spawn_arguments "$open_spawn_buffer" }
-   if { [have_ssh_access] == 0 } {
-     set pid [ uplevel 1 { spawn "su" "root" "-c" "$open_root_spawn_arguments" } ]
-   } else {
-     set pid [ uplevel 1 { spawn "ssh" "-l" "root" "$CHECK_HOST" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/ssh_progstarter.csh \"[get_current_working_dir]\" \"$CHECK_PRODUCT_ROOT\" \"$CHECK_COMMD_PORT\" $open_root_spawn_arguments" } ]
-   }
-   set sp_id [uplevel 1 { set spawn_id }]
-
-   set back $pid
-   lappend back $sp_id
-   uplevel 1 {
-      match_max -i $spawn_id $CHECK_EXPECT_MATCH_MAX_BUFFER
-      debug_puts "open_root_spawn_process -> buffer size is: [match_max]"
-   }
-   debug_puts "open_root_spawn_process:  arguments: $args"
-
-   flush $CHECK_OUTPUT
-
-   if {$pid == 0 } {
-     add_proc_error "open_root_spawn_process" -1 "could not spawn! (ret_pid = $pid)" 
-   }
-
-   if { [have_ssh_access] == 0 } {
-      uplevel 1 { set timeout 60 }
-      uplevel 1 { expect -i $spawn_id "assword:" }
-
-      sleep 5  ;# for some architectures it is neccessary to 
-               ;# login in "human keystrock" speed
-      uplevel 1 { 
-        log_user 0
-        sleep 2
-        send "[get_root_passwd]\r" }
-        debug_puts "root password sent" 
-        if { $CHECK_DEBUG_LEVEL != 0 } {
-           log_user 1
-        }
-
-   }
-
-   return $back
-}
+# proc open_root_spawn_process {args} {
+# 
+#    global CHECK_OUTPUT open_spawn_buffer CHECK_HOST env CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
+#    global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
+#    uplevel 1 { global CHECK_EXPECT_MATCH_MAX_BUFFER  } 
+#    uplevel 1 { global CHECK_OUTPUT }
+#    uplevel 1 { global CHECK_DEBUG_LEVEL }
+# 
+#    set arguments ""
+#    set arg_nr 0 
+#    foreach elem $args {
+# 
+#       incr arg_nr 1
+# 
+#       if { $arg_nr == 1 } {
+#         set programm "$elem" 
+#       }  
+#       if { $arg_nr == 2 } {
+#         set arguments "$elem"
+#       }
+#       if { $arg_nr > 2  } {
+#         set arguments "$arguments $elem"
+#       }
+#    }
+#    debug_puts "open_root_spawn_process"
+#    debug_puts "programm:  \"$programm\""
+#    debug_puts "arguments: \"$arguments\""
+# 
+#    if { [have_root_passwd] == -1 } {
+#       set_error -2 "root access required"
+#       return "" 
+#    }
+#    if { $arg_nr == 1 } {
+#       set open_spawn_buffer "$programm"
+#    } else {
+#       set open_spawn_buffer "$programm $arguments"
+#    }
+#    debug_puts "open_spawn_buffer: $open_spawn_buffer"
+# 
+#    uplevel 1 { set open_root_spawn_arguments "$open_spawn_buffer" }
+#    if { [have_ssh_access] == 0 } {
+#      set pid [ uplevel 1 { spawn "su" "root" "-c" "$open_root_spawn_arguments" } ]
+#    } else {
+#      set pid [ uplevel 1 { spawn "ssh" "-l" "root" "$CHECK_HOST" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/ssh_progstarter.csh \"[get_current_working_dir]\" \"$CHECK_PRODUCT_ROOT\" \"$CHECK_COMMD_PORT\" $open_root_spawn_arguments" } ]
+#    }
+#    set sp_id [uplevel 1 { set spawn_id }]
+# 
+#    set back $pid
+#    lappend back $sp_id
+#    uplevel 1 {
+#       match_max -i $spawn_id $CHECK_EXPECT_MATCH_MAX_BUFFER
+#       debug_puts "open_root_spawn_process -> buffer size is: [match_max]"
+#    }
+#    debug_puts "open_root_spawn_process:  arguments: $args"
+# 
+#    flush $CHECK_OUTPUT
+# 
+#    if {$pid == 0 } {
+#      add_proc_error "open_root_spawn_process" -1 "could not spawn! (ret_pid = $pid)" 
+#    }
+# 
+#    if { [have_ssh_access] == 0 } {
+#       uplevel 1 { set timeout 60 }
+#       uplevel 1 { expect -i $spawn_id "assword:" }
+# 
+#       sleep 5  ;# for some architectures it is neccessary to 
+#                ;# login in "human keystrock" speed
+#       uplevel 1 { 
+#         log_user 0
+#         sleep 2
+#         send "[get_root_passwd]\r" }
+#         debug_puts "root password sent" 
+#         if { $CHECK_DEBUG_LEVEL != 0 } {
+#            log_user 1
+#         }
+# 
+#    }
+# 
+#    return $back
+# }
 
 
 #                                                             max. column:     |

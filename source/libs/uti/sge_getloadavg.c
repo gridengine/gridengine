@@ -136,7 +136,10 @@
 # include <mach/mach_init.h>
 # include <mach/machine.h>
 #elif defined(FREEBSD)
-#  include <sys/dkstat.h>
+#  if defined(__FreeBSD_version) && __FreeBSD_version < 500101
+#     include <sys/dkstat.h>
+#  endif
+#  include <sys/resource.h>
 #  include <fcntl.h>
 #  include <kvm.h>
 #endif

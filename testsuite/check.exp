@@ -5332,11 +5332,12 @@ proc compile_source {} {
          puts $CHECK_OUTPUT "output:\n$output"
          puts $CHECK_OUTPUT "------------------------------------------"
       }
-   } 
+   }
+   set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
 
    puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $CHECK_SOURCE_HOSTNAME ..."
-   set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" ]
+   puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5349,21 +5350,21 @@ proc compile_source {} {
       append my_compile_options " -secure"
       puts $CHECK_OUTPUT "-> adding compile option -csp"
    }
-   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options -only-depend on host $CHECK_SOURCE_HOSTNAME ..."
-   set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options -only-depend" ]
+   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options -only-depend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options -only-depend" ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "output:\n$output"
    puts $CHECK_OUTPUT "------------------------------------------"
    if { $prg_exit_state != 0 } {
-      mail_report $mail_subject "$mail_body aimk $my_compile_options -only-depend on host $CHECK_SOURCE_HOSTNAME returned:\n$output"
+      mail_report $mail_subject "$mail_body aimk $my_compile_options -only-depend on host $depend_host_name returned:\n$output"
       return -1
    }
 
    puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $CHECK_SOURCE_HOSTNAME ..."
-   set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" ]
+   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5371,7 +5372,7 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
 
    if { $prg_exit_state != 0 } {
-      mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $CHECK_SOURCE_HOSTNAME returned:\n$output"
+      mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
       return -1
    }
 

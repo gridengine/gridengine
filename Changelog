@@ -1,3 +1,6 @@
+AA-2002-04-17-0: Bugfix:    Broken build for aix
+                            correction in csp.html
+
 JG-2002-04-17-1: Enhancem.: New qconf options -Astree and -Mstree
                  Issue:     #133
 

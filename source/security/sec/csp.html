@@ -351,7 +351,7 @@ can be performed.</P>
 On the master machine as user root:
 # umask 077
 # (cd /; tar cvpf /var/sgeCA/port6789.tar /var/sgeCA/port6789/default)
-On the master machine as user root:
+On the execution host machine as user root:
 # scp /var/sgeCA/port6789.tar@&lt;master host&gt; /
 # (cd /; tar xvpf /var/sgeCA/port6789.tar )
 Verify the file permissions:

@@ -234,7 +234,7 @@ lListElem **pjob
       job_set_submit_task_ids(*pjob, 1, 1, 1);
    }
    job_initialize_id_lists(*pjob, &answer);
-   if (answer != NULL)
+   if (answer != NULL) {
       DEXIT;
       return answer;
    }

@@ -231,6 +231,8 @@ AA-2002-11-21-0  Security:  SHA_1 define, sge_ca enhancements to support sha-1,
 CR-2002-11-22-1  Bugfix:    Uninitialized pointer cause segmentation fault in 
                             qsh/qrsh on submit only hosts.
                  Changed:   qsh/qrsh
+                 Bugtraq:   #4815774
+                 IZ:        #487
 
 AA-2002-11-21-0  Bugfix:    aix51 arch in util/arch script
 

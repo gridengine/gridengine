@@ -1,3 +1,7 @@
+CR-2001-07-26-0: Testsuite:
+                    - added compile error output to mail on compile error
+                    - added compile output log file generation in protocol dir 
+
 JG-2001-07-26-0: (Issue# 15): startup_template: replaced fixed path by reference
                  to SGE_ROOT
 

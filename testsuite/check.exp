@@ -4444,7 +4444,7 @@ proc compile_source {} {
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-   global CHECK_CORE_EXECD
+   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR
 
 
    set check_name "compile_source"
@@ -4491,7 +4491,6 @@ proc compile_source {} {
          } 
       }
    } 
-   
 
    puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $CHECK_SOURCE_HOSTNAME ..."
    set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; scripts/zerodepend\"" } output ]
@@ -4505,9 +4504,11 @@ proc compile_source {} {
 
    
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
-
+   
    set num 0
    set spawn_list {} 
+   set file_list {}
+   set file_name_list {}
    foreach elem $host_list {
       # compile the staff
       puts $CHECK_OUTPUT "-> starting compiling on host $elem ..."
@@ -4517,15 +4518,30 @@ proc compile_source {} {
       
       eval spawn rsh $elem "\"$prog $par1 $par2\""
       lappend spawn_list $spawn_id
+      set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile.out"
+      lappend file_name_list $myfilename
+      catch { file delete $myfilename }
+      lappend file_list [open $myfilename w]
+     
       incr num 
       puts $CHECK_OUTPUT " spawn id is $spawn_id"
+
    }
+  
+   append mail_body "\n\ncompile output saved in the files:"
+   foreach elem $file_name_list {
+      append mail_body "\n$elem"
+   }
+   append mail_body "\n"
+
    puts $CHECK_OUTPUT "now waiting for end of compile ..." 
    set timeout -1
    set done_count 0
    set compile_bad {}
-   set compile_good {}
    log_user 0
+
+   set original_spawn_list $spawn_list  
+ 
    while { [llength $spawn_list] > 0   } {
       if {[info exists spawn_id]} {
             unset spawn_id
@@ -4535,8 +4551,15 @@ proc compile_source {} {
          }
          -i $spawn_list "remotecompile * aimk compile error" {
               set spawn_id $expect_out(spawn_id)
-              lappend compile_bad $expect_out(0,string)
-              #puts $CHECK_OUTPUT "spawn id $spawn_id done"
+              set host_index 0
+              set host_nr 0
+              foreach el $original_spawn_list {
+                 if { [string compare $el $spawn_id] == 0 } {
+                    set host_index $host_nr
+                 }
+                 incr host_nr 1
+              }
+              lappend compile_bad [lindex $host_list $host_index]
               puts $CHECK_OUTPUT $expect_out(0,string)
               catch {wait -i $spawn_id} output
               catch {close -i $spawn_id} output
@@ -4545,24 +4568,55 @@ proc compile_source {} {
          }
          -i $spawn_list "remotecompile * aimk no errors" {
               set spawn_id $expect_out(spawn_id)
-              lappend compile_good $expect_out(0,string)
-              #puts $CHECK_OUTPUT "spawn id $spawn_id done"
               puts $CHECK_OUTPUT $expect_out(0,string)
               catch {wait -i $spawn_id} output
               catch {close -i $spawn_id} output
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
          }
+         -i $spawn_list "*\n" {
+              set spawn_id $expect_out(spawn_id)
+              set index 0
+              set nr 0
+              foreach elem $original_spawn_list {
+                 if { [string compare $elem $spawn_id] == 0 } {
+                    set index $nr
+                 }
+                 incr nr 1
+              }
+#              puts [lindex $file_list $index] "$spawn_id report from host [lindex $host_list $index]"
+              puts [lindex $file_list $index] "$expect_out(0,string)"
+              flush [lindex $file_list $index]
+         }
       }
    }
    log_user 1
- 
+   foreach elem $file_list {
+      flush $elem
+      close $elem
+   } 
+
+   set compile_error 0
    foreach elem $compile_bad {
-      set host_name [lindex $elem 1]
-      puts $CHECK_OUTPUT "compile error on host $host_name"
-      mail_report $mail_subject "$mail_body compile error on host $host_name"
-      return -1
+      set compile_error 1
+      puts $CHECK_OUTPUT "\n=============\ncompile error on host $elem:\n=============\n"
+      append mail_body "\n=============\ncompile error on host $elem:\n=============\n"
+      foreach file $file_name_list {
+         if { [string first $elem $file] >= 0 } {
+             catch { eval exec "touch $file"  }
+             set fp [open $file r]
+             while { [gets $fp line] >= 0 } {
+                append mail_body "\n$line"
+                puts $CHECK_OUTPUT $line
+             }
+             close $fp
+         } 
+      }
    }
+   if { $compile_error != 0 } {
+      mail_report $mail_subject $mail_body
+      return -1
+   } 
 
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"

@@ -84,6 +84,7 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -1338,6 +1339,9 @@ int force
                      jep_JB_job_number = lGetUlong(jep, JB_job_number);
                      jep_JB_job_name   = lGetString(jep, JB_job_name);
 
+                     /* CR: don't localize mail subject, until we send it in Mime format!
+                      *     The message definition is not l10n'ed (no _() macro used)!!!        
+                      */
                      sprintf(sge_mail_subj, MSG_MAIL_JOBKILLEDSUBJ_US, 
                              u32c(jep_JB_job_number), 
                              jep_JB_job_name);
@@ -1345,7 +1349,7 @@ int force
                              u32c(jep_JB_job_number), 
                              jep_JB_job_name, 
                              hostname);
-                     cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job abortion");
+                     cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_ABORT);
                   }
     
                   /* this job has the killed exechost as master host */

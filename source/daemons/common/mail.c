@@ -64,6 +64,10 @@ static void sge_send_mail(const char *mailer, int mailer_has_subj_line,
 ** PARAMETER
 **   user_list     -   mail recipients list (MR_Type)
 **   subj          -   subject line
+
+** CR: don't localize mail subject, until we send it in Mime format!
+**     The message definition is not l10n'ed (no _() macro used)!!!        
+
 **   buf           -   message contents
 ** RETURN
 **   none

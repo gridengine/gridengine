@@ -216,13 +216,20 @@ int is_array
       else {
          sprintf(str_general, MSG_NONE);
       }
-      if (is_array)
-         sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SUU, 
-                 feature_get_product_name(FS_SHORT_VERSION), 
-                 u32c(jobid), u32c(jataskid));
-      else
-         sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
-                 feature_get_product_name(FS_SHORT_VERSION), u32c(jobid));
+      if (is_array) {
+          /* CR: don't localize mail subject, until we send it in Mime format!
+           *     The message definition is not l10n'ed (no _() macro used)!!!        
+           */
+          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SUU, 
+                  feature_get_product_name(FS_SHORT_VERSION), 
+                  u32c(jobid), u32c(jataskid));
+      } else {
+          /* CR: don't localize mail subject, until we send it in Mime format!
+           *     The message definition is not l10n'ed (no _() macro used)!!!        
+           */
+          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
+                  feature_get_product_name(FS_SHORT_VERSION), u32c(jobid));
+      }
       sprintf(sge_mail_body,
               MSG_MAIL_BODY_USSSSSSSS,
               u32c(jobid),

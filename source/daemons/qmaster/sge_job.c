@@ -1328,11 +1328,17 @@ void job_ja_task_send_abort_mail(const lListElem *job,
 
    if (send_abort_mail) {
       if (is_array(job)) {
+         /* CR: don't localize mail subject, until we send it in Mime format!
+          *     The message definition is not l10n'ed (no _() macro used)!!!        
+          */
          sprintf(subject, MSG_MAIL_TASKKILLEDSUBJ_UUS,
                  u32c(job_id), u32c(ja_task_id), job_name);
          sprintf(body, MSG_MAIL_TASKKILLEDBODY_UUSSS,
                  u32c(job_id), u32c(ja_task_id), job_name, ruser, rhost);
-      } else {                   
+      } else {    
+         /* CR: don't localize mail subject, until we send it in Mime format!
+          *     The message definition is not l10n'ed (no _() macro used)!!!        
+          */
          sprintf(subject, MSG_MAIL_JOBKILLEDSUBJ_US,
                  u32c(job_id), job_name);
          sprintf(body, MSG_MAIL_JOBKILLEDBODY_USSS,
@@ -1342,7 +1348,7 @@ void job_ja_task_send_abort_mail(const lListElem *job,
          strcat(body, MSG_MAIL_BECAUSE);
          strcat(body, err_str);
       }
-      cull_mail(users, subject, body, "job abortion");
+      cull_mail(users, subject, body, MSG_MAIL_TYPE_ABORT);
    }  
 }
 
@@ -1503,11 +1509,17 @@ char *commproc
 
    if (VALID(MAIL_AT_ABORT, mail_options) && !(lGetUlong(t, JAT_state) & JDELETED)) {
       if (is_array(j)) {
+         /* CR: don't localize mail subject, until we send it in Mime format!
+          *     The message definition is not l10n'ed (no _() macro used)!!!        
+          */
          sprintf(sge_mail_subj, MSG_MAIL_TASKKILLEDSUBJ_UUS,
                   u32c(job_number), u32c(task_number), job_name);
          sprintf(sge_mail_body, MSG_MAIL_TASKKILLEDBODY_UUSSS,
                   u32c(job_number), u32c(task_number), job_name, ruser, rhost);
       } else {
+         /* CR: don't localize mail subject, until we send it in Mime format!
+          *     The message definition is not l10n'ed (no _() macro used)!!!        
+          */
          sprintf(sge_mail_subj, MSG_MAIL_JOBKILLEDSUBJ_US,
                   u32c(job_number), job_name);
          sprintf(sge_mail_body, MSG_MAIL_JOBKILLEDBODY_USSS,
@@ -1517,7 +1529,7 @@ char *commproc
          strcat(sge_mail_body, MSG_MAIL_BECAUSE);
          strcat(sge_mail_body, err_str);
       }
-      cull_mail( mail_users, sge_mail_subj, sge_mail_body, "job abortion");
+      cull_mail( mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_ABORT);
    }
 
    if (commproc) {

@@ -547,7 +547,12 @@ DTRACE;
             char mail_body[1024];
 
             mail_users = lGetList(jep, JB_mail_list);
+
+           /* CR: don't localize mail subject, until we send it in Mime format!
+            *     The message definition is not l10n'ed (no _() macro used)!!!        
+            */
             sprintf(mail_subject, MSG_RU_MAILSUB_SS, mail_type, mail_ids);
+
             sprintf(mail_body, MSG_RU_MAILBODY_SSSS,
                mail_type, mail_ids, hostname, mail_action, mail_type);
             cull_mail(mail_users, mail_subject, mail_body, MSG_RU_MAILTYPE);

@@ -402,12 +402,18 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        if (signal == SGE_SIGSTOP) {
           /* suspended */
           if (is_array(jep)) {
+              /* CR: don't localize mail subject, until we send it in Mime format!
+               *     The message definition is not l10n'ed (no _() macro used)!!!        
+               */
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS,
                       u32c(jobid), 
                       u32c(taskid), 
                       job_name);
           } else {
+              /* CR: don't localize mail subject, until we send it in Mime format!
+               *     The message definition is not l10n'ed (no _() macro used)!!!        
+               */
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JOB_SUSP_US,
                       u32c(jobid), 
@@ -417,12 +423,18 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        } else if (signal == SGE_SIGCONT ) {
           /* continued */
           if (is_array(jep)) {
+              /* CR: don't localize mail subject, until we send it in Mime format!
+               *     The message definition is not l10n'ed (no _() macro used)!!!        
+               */
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS,
                       u32c(jobid), 
                       u32c(taskid), 
                       job_name);
           } else {
+              /* CR: don't localize mail subject, until we send it in Mime format!
+               *     The message definition is not l10n'ed (no _() macro used)!!!        
+               */
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JOB_CONT_US,
                       u32c(jobid), 
@@ -438,6 +450,9 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        /* create mail body */
        sprintf(mail_body,
                MSG_MAIL_BODY_SSSSSS,
+               /* CR: don't localize mail subject, until we send it in Mime format!
+                *     The message definition is not l10n'ed (no _() macro used)!!!        
+                */
                mail_subject,
                job_master_queue,
                job_owner,

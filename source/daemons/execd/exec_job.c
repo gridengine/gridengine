@@ -1615,6 +1615,9 @@ char *err_str
    strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
    if (VALID(MAIL_AT_BEGINNING, mail_options)) {
       if (is_array(jep)) {
+         /* CR: don't localize mail subject, until we send it in Mime format!
+          *     The message definition is not l10n'ed (no _() macro used)!!!        
+          */
          sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(lGetUlong(jep, JB_job_number)),
                  u32c(lGetUlong(jatep, JAT_task_number)), lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
@@ -1626,6 +1629,9 @@ char *err_str
              lGetHost(master_q, QU_qhostname), sge_mail_start);
       } 
       else {
+         /* CR: don't localize mail subject, until we send it in Mime format!
+          *     The message definition is not l10n'ed (no _() macro used)!!!        
+          */
          sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(lGetUlong(jep, JB_job_number)),
             lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,

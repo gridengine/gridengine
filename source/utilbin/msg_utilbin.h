@@ -73,6 +73,10 @@
 #define MSG_SYSTEM_UIDRESOLVEFAILED          _("can't resolve userid")
 
 
+/* 
+** utilbin/gethostbyname.c
+*/ 
+#define MSG_SYSTEM_GETHOSTBYNAMEFAILED       _("gethostbyname() failed")
 
 /* 
 ** utilbin/gethostbyaddr.c

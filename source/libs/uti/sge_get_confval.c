@@ -56,45 +56,83 @@ char *get_confval(
 const char *conf_val,
 const char *fname    
 ) {
+   static char valuev[1][1025];
+   const char *namev[1];
+   
+   namev[0] = conf_val;
+   if (get_confval_array(fname, 1, namev, valuev))
+      return NULL;
+   else
+      return valuev[0];
+}
+
+
+/****** sge_get_confval/get_confval_array() ************************************
+*  NAME
+*     get_confval_array()
+*
+*  SYNOPSIS
+*     int get_confval_array(const char *fname, int n, const char *name[], char 
+*     value[][1025]) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  RESULT
+*     int - 
+*
+*  BUGS
+*     
+*******************************************************************************/
+int get_confval_array(
+const char *fname,
+int n,
+const char *name[],
+char value[][1025]
+) {
    FILE *fp;
    char buf[1024], *cp;
-   static char valbuf[1025];
+   int i, nmissing = n;
    
    DENTER(TOP_LAYER, "get_confval");
+
+   for (i=0; i<n; i++)
+      value[i][0] = '\0';
 
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno))); 
       DEXIT;
-      return NULL;
+      return n;
    }
    
    while (fgets(buf, sizeof(buf), fp)) {
       /* set chrptr to the first non blank character
        * If line is empty continue with next line   
        */
-       if(!(cp = strtok(buf, " \t\n")))
+      if(!(cp = strtok(buf, " \t\n")))
           continue;
 
-       /* allow commentaries */
-       if (cp[0] == '#')
+      /* allow commentaries */
+      if (cp[0] == '#')
           continue;
- 
-       if (strcasecmp(conf_val, cp))
-          continue;
-       else {
-          fclose(fp);
-          if ((cp = strtok(NULL, " \t\n"))) {
-              strncpy(valbuf, cp, 512);
-              cp = valbuf;
-          }
-          DEXIT;
-          return cp;
-       }         
+   
+      /* search for all requested configuration values */ 
+      for (i=0; i<n; i++)
+         if (!strcasecmp(name[i], cp) && (cp = strtok(NULL, " \t\n"))) {
+             strncpy(value[i], cp, 512);
+             cp = value[i];
+             if (!--nmissing) {
+                fclose(fp);
+                DEXIT;
+                return 0;
+             }
+             break;
+         }
    }
 
    fclose(fp);
    DEXIT;
-   return 0;
+   return nmissing;
 }
 
 /*--------------------------------------------------------------------

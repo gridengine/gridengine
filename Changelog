@@ -1,3 +1,7 @@
+AH-2002-03-25-0  Bugfix:    gethostbyname -aname was broken
+                 Optimiz.:  Ensure global conf is read only one time by
+                            AH-2002-03-22-0 code
+
 JG-2002-03-25-0  Testsuite: Bugfix: In a cluster with very similar hostnames
                             testsuite wrongly reused open remote connections.
 

@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 char *get_confval(const char *conf_val, const char *file);
+int get_confval_array(const char *fname, int n, const char *name[], char value[][1025]);
 
 pid_t readpid(const char *fname);
 

@@ -168,25 +168,22 @@ int reresolve_me_qualified_hostname()
    default_domain and ignore_fqdn settings */ 
 static int init_hostcpy_policy(void)
 {
-   const char *s;
    u_long32 uval;
+   const char *name[2] = { "ignore_fqdn", "default_domain" };
+   char value[2][1025];
 
    DENTER(TOP_LAYER, "init_hostcpy_policy");
 
-   if (!(s = get_confval("ignore_fqdn", path.conf_file))) {
+   if (get_confval_array(path.conf_file, 2, name, value)) {
       ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S, path.conf_file));
       DEXIT;
       return -1;
    }
-   parse_ulong_val(NULL, &uval, TYPE_BOO, s, NULL, 0);
-   fqdn_cmp = !uval;
 
-   if (!(s = get_confval("default_domain", path.conf_file))) {
-      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S, path.conf_file));
-      DEXIT;
-      return -1;
-   }
-   default_domain = sge_strdup(default_domain, s);
+   DPRINTF(("ignore_fqdn: %s default_domain: %s\n", value[0], value[1]));
+   parse_ulong_val(NULL, &uval, TYPE_BOO, value[0], NULL, 0);
+   fqdn_cmp = !uval;
+   default_domain = sge_strdup(default_domain, value[1]);
 
    DEXIT;
    return 0;

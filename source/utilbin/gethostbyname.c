@@ -84,16 +84,20 @@ int main(int argc, char *argv[])
 	(h_errno == NO_RECOVERY)?"NO_RECOVERY":
 	(h_errno == NO_DATA)?"NO_DATA":
 	(h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>");
-    perror(MSG_SYSTEM_GETHOSTBYADDRFAILED );
+    perror(MSG_SYSTEM_GETHOSTBYNAMEFAILED );
     exit(1);
   }
 
   if (name_only) {
+      char tmpname[MAXHOSTLEN+1];
       const char *s;
-      if (sge_aliasing && (s=resolve_hostname_local(he->h_name)))
+
+      /* resolve_hostname_local() internally overwrites he->h_name */
+      strcpy(tmpname, he->h_name);
+      if (sge_aliasing && (s=resolve_hostname_local(tmpname)))
          printf("%s\n", s);
       else /* no aliased name */
-         printf("%s\n", he->h_name);
+         printf("%s\n", tmpname);
   } else {
      printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
      printf(MSG_SYSTEM_ALIASES );

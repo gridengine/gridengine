@@ -51,7 +51,7 @@
 #include "sge_prog.h"
 #include "sge_answer.h"
 
-static char *get_root_defaults_file_path ();
+static char *get_root_defaults_file_path (void);
 static char *get_user_home_defaults_file_path (lList **answer_list);
 static char *get_cwd_defaults_file_path (lList **answer_list);
 static void append_opts_from_default_files (lList **pcmdline, 

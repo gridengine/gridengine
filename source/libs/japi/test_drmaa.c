@@ -2357,13 +2357,12 @@ static int test(int *argc, char **argv[], int parse_args)
          DRMAA_BLOCK_EMAIL
          DRMAA_V_EMAIL */
       {
-         int status, job_state, exit_status, exited;
+         int status, job_state, exit_status;
          int failed_test = 0, test_failed = 0;
          char diagnosis[1024];
          const char *job_argv[4];
          char jobid[1024], new_jobid[1024];
          char buffer[100];
-         u_long32 jobidl;
          lList *alp, *job_lp;
          lListElem *job_ep;
          const char *mirror_text = "thefoxjumps...";
@@ -2489,7 +2488,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
             lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
             alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
@@ -2528,7 +2527,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "Job \"%s\" was not in hold state\n");
+               fprintf (stderr, "Job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
                failed_test = 1;
             }
 
@@ -2953,7 +2952,7 @@ static int test(int *argc, char **argv[], int parse_args)
             drmaa_delete_job_template(jt, NULL, 0);
             jt = NULL;
 
-            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
             lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
             alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
@@ -2993,7 +2992,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "Job \"%s\" was not in hold state\n");
+               fprintf (stderr, "Job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
                failed_test = 1;
             }
 
@@ -3056,7 +3055,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
             what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
             alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
@@ -3095,7 +3094,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "job \"%s\" was not in hold state\n");
+               fprintf (stderr, "job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
                failed_test = 1;
             }
 
@@ -3174,7 +3173,7 @@ static int test(int *argc, char **argv[], int parse_args)
             drmaa_delete_job_template(jt, NULL, 0);
             jt = NULL;
 
-            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
             lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
             alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
@@ -3214,7 +3213,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "Job \"%s\" was not in hold state\n");
+               fprintf (stderr, "Job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
                failed_test = 1;
             }
 
@@ -3277,7 +3276,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            printf ("Getting job name for job %u from GDI\n", atol(jobid));
+            printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
             what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
             alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
@@ -3316,7 +3315,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
-               fprintf (stderr, "job \"%s\" was not in hold state\n");
+               fprintf (stderr, "job \"%s\" was not in hold state\n", lGetString(job_ep, JB_job_name));
                failed_test = 1;
             }
 

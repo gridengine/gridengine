@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
 /* values for 'addr' of set_sgemode() */
 enum { 
    CATCH_EXEC_MODE_REMOTE,
@@ -51,7 +50,6 @@ enum {
    int get_sgemode __P((int addr)); 
    int sge_quick_count_num_args __P((const char* args));
    void sge_parse_args __P((const char* args, char** pargs));
-   char** sge_get_qtask_args __P((char *taskname, lList *alp));
 #else
    /* prototypes: sge source code like */
 

@@ -92,8 +92,10 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
 static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
+/*
 static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt, int is_bulk, 
    int nm, const char *attribute_key, dstring *diag);
+*/
 static int japi_drmaa_path2path_opt(lList *attrs, lList **args,
    int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag);
 static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk, 
@@ -101,7 +103,6 @@ static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk,
 static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
    const char *attribute_key, int do_wd, const char **new_path, dstring *diag);
 static void prune_arg_list (lList *args);
-static const char *get_job_category (lList *drmaa_strings);
 static void opt_list_append_default_drmaa_opts (lList **opts);
 static void merge_drmaa_options (lList **opts_all, lList **opts_default,
                                  lList **opts_defaults, lList **opts_scriptfile,
@@ -1962,7 +1963,6 @@ static int japi_drmaa_path2path_opt (lList *attrs, lList **args, int is_bulk,
    const char *new_path = NULL;
    int ret_val;
    lList *path_list = lCreateList("path list", PN_Type);
-   lListElem *ep = NULL;
    
    DENTER (TOP_LAYER, "japi_drmaa_path2path_opt");
 
@@ -2148,7 +2148,6 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
    lList *opts_defaults = NULL;
    lList *opts_scriptfile = NULL;
    lList *opts_all = NULL;
-   char *job_cat = NULL;
    int read_scriptfile = 0;
 
    DENTER (TOP_LAYER, "japi_drmaa_job2sge_job");
@@ -2244,9 +2243,9 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
    
    if (opt_list_is_X_true (opts_native, "-b") ||
        (!opt_list_has_X (opts_native, "-b") &&
-        opt_list_is_X_true (opts_defaults, "-b") ||
+        (opt_list_is_X_true (opts_defaults, "-b") ||
         (!opt_list_has_X (opts_defaults, "-b") &&
-         opt_list_is_X_true (opts_default, "-b")))) {
+         opt_list_is_X_true (opts_default, "-b"))))) {
       DPRINTF(("Skipping options from script due to -b option\n"));
    } else {
       opt_list_append_opts_from_script (&opts_scriptfile, &alp, opts_all, environ);
@@ -2276,7 +2275,6 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
        * in jt->strings. */
       char *job_cat = NULL;
       char **args = NULL;
-      lList *arg_list = NULL;
       lListElem *ep = NULL;
       
       DPRINTF (("Processing job category\n"));
@@ -2964,21 +2962,21 @@ o   -V                                     export all environment variables
    DENTER(TOP_LAYER, "prune_arg_list");
    
    /* skip arguments that aren't supported */
-   while (element = lGetElemStr (args, SPA_switch, "-help")) {
+   while ((element = lGetElemStr (args, SPA_switch, "-help"))) {
       lRemoveElem (args, element);
    }
    
    /* This one isn't supported because bulk jobs are handled through the
     * drmaa_run_bulk_jobs() method. */
-   while (element = lGetElemStr (args, SPA_switch, "-t")) {
+   while ((element = lGetElemStr (args, SPA_switch, "-t"))) {
       lRemoveElem (args, element);
    }
    
-   while (element = lGetElemStr (args, SPA_switch, "-verify")) {
+   while ((element = lGetElemStr (args, SPA_switch, "-verify"))) {
       lRemoveElem (args, element);
    }
    
-   while (element = lGetElemStr (args, SPA_switch, "-w")) {
+   while ((element = lGetElemStr (args, SPA_switch, "-w"))) {
       lRemoveElem (args, element);
    }
    

@@ -1,3 +1,5 @@
+AD-2003-11-18-0: Bugfix:    Fixed the build
+
 DT-2003-11-17-1: Enhancem.: Implemented remaining DRMAA attributes.  Reworked
 														drmaa_job2sge_job() to reuse the parameter parsing
 														code in parse_job_cull.c, parse_qsub.c,

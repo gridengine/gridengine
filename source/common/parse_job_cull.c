@@ -974,3 +974,4 @@ static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
    DEXIT;
    return strdup (tmp_str);
 }
+

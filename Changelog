@@ -1,3 +1,8 @@
+SG-2004-11-17-0: Bugfix:    - the deletion of the queue calendar did not reset
+                              the cal for the scheduler.
+                 Review:    EB
+                 Changed:   qmaster
+
 CR-2004-11-17-0: Testsuite: Fixed some problems for commlib performance tests
                             when grid engine port is < 1024
 

@@ -142,6 +142,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                   } else {
                      qinstance_state_set_cal_disabled(this_elem, false);
                      qinstance_state_set_cal_suspended(this_elem, false);
+                     lSetList(this_elem, QU_state_changes, NULL);
                   }
                   lSetString(this_elem, attribute_name, new_value);
                   *has_changed_conf_attr = true;

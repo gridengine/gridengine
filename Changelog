@@ -1,4 +1,9 @@
-CR-2002-12-02-0  Testsuite: a) Removed unused, duplicate message macro from source
+CR-2002-12-02-1  Testsuite: a) setting default configuration max_unheard to
+                               00:01:00
+                            b) new procedure: soft_execd_shutdown() 
+
+CR-2002-12-02-0  Testsuite: a) Removed unused, duplicate message macro from 
+                               source
                             b) Removed wait_for_enter() call in submit_del test
                                after pass2 (blocked automatic testsuite run)
 
@@ -6,7 +11,8 @@ CR-2002-11-29-1  Testsuite: L10N bugfixes
 
 CR-2002-11-29-0  Testsuite: a) using testsuite root directory for lockfile, not
                  Bugfix:       testsuite results directory.
-                            b) get_version_info() may not reset install_core_system
+                            b) get_version_info() may not reset 
+                               install_core_system
                                test if version is not ascertainable.
 
 CR-2002-11-28-2  Cleanup:   un-commented message macros not used in source code

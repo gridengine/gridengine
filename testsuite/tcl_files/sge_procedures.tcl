@@ -3932,12 +3932,59 @@ proc wait_for_queue_state { queue state wait_timeout } {
    }
 }
 
+
+#****** sge_procedures/soft_execd_shutdown() ***********************************
+#  NAME
+#     soft_execd_shutdown() -- soft shutdown of execd
+#
+#  SYNOPSIS
+#     soft_execd_shutdown { host } 
+#
+#  FUNCTION
+#     This procedure starts a qconf -ke $host. If qconf reports an error,
+#     the execd is killed by the shtudown_system_deamon() procedure.
+#     After that qstat is called. When the load value for the given 
+#     host-queue ($host.q) is 99.99 the procedure returns without error.
+#     
+#  INPUTS
+#     host - execution daemon host to shutdown
+#
+#  RESULT
+#     0 - success
+#    -1 - error
+#
+#  SEE ALSO
+#     sge_procedures/shutdown_system_daemon()
+#*******************************************************************************
+proc soft_execd_shutdown { host } {
+ 
+   global CHECK_CORE_MASTER CHECK_OUTPUT
+   global CHECK_PRODUCT_ROOT CHECK_USER CHECK_ARCH
+
+   set tries 0
+   while { $tries <= 8 } {   
+      incr tries 1
+      set result [ start_remote_prog $CHECK_CORE_MASTER $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-ke $host" ]
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state, hard killing execd"
+         shutdown_system_daemon $host execd
+      }
+      set load [wait_for_unknown_load 15 "${host}.q" 1]
+      if { $load == 0 } {
+         puts $CHECK_OUTPUT "execd on host $host reports 99.99 load value"
+         return 0
+      }
+   }
+   add_proc_error "soft_execd_shutdown" -1 "could not shutdown execd on host $host"
+   return -1
+}
+
 #****** sge_procedures/wait_for_unknown_load() *********************************
 #  NAME
 #     wait_for_unknown_load() -- wait for load to get >= 99 for a list of queues
 #
 #  SYNOPSIS
-#     wait_for_unknown_load { seconds queue_array } 
+#     wait_for_unknown_load { seconds queue_array { do_error_check 1 } } 
 #
 #  FUNCTION
 #     This procedure is starting the qstat -f command and parse the output for
@@ -3946,19 +3993,21 @@ proc wait_for_queue_state { queue state wait_timeout } {
 #     generated after timeout.
 #
 #  INPUTS
-#     seconds     - number of seconds to wait before creating timeout error
-#     queue_array - an array of queue names for which to wait
+#     seconds        - number of seconds to wait before creating timeout error
+#     queue_array    - an array of queue names for which to wait
+#     do_error_check - (optional) if 1: report errors
+#                                 if 0: don't report errors
 #
 #  SEE ALSO
 #     sge_procedures/wait_for_load_from_all_queues()
 #  
 #*******************************************************************************
-proc wait_for_unknown_load { seconds queue_array } {
+proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
    global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
    while { 1 } {
-      sleep 5
+      sleep 1
       puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
       set result ""
       set catch_return [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result ]
@@ -4004,18 +4053,19 @@ proc wait_for_unknown_load { seconds queue_array } {
          }
 
          if { $failed == 0 } {
-            return 
+            return 0
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"
       }
 
       set runtime [expr ( [timestamp] - $time) ]
-      if { $runtime >= $seconds } {
+      if { $runtime >= $seconds && $do_error_check == 1 } {
           add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
           return -1
       }
    }
+   return 0
 }
 
 

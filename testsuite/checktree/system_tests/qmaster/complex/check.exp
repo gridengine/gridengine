@@ -143,15 +143,12 @@ proc complex_loadsensor_test {} {
    set host [lindex $CHECK_CORE_EXECD 0]
 
    puts $CHECK_OUTPUT "shutdown execd on host $host"
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke $host" ]
 
-   puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state"
-   if { $prg_exit_state != 0 } {
-        shutdown_system_daemon $host execd
-   }
-   wait_for_unknown_load 180 "${host}.q"
+
+   soft_execd_shutdown $host
 
    startup_execd $host
+
    wait_for_load_from_all_queues 180 
 
    get_qconf_se_info $host
@@ -238,14 +235,8 @@ proc complex_cleanup  {} {
    set_config complex_old_config $host
 
    puts $CHECK_OUTPUT "shutdown execd on host $host"
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke $host" ]
 
-   puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state"
-   if { $prg_exit_state != 0 } {
-        shutdown_system_daemon $host execd
-   }
-   wait_for_unknown_load 180 "${host}.q"
-
+   soft_execd_shutdown $host
    startup_execd $host
    wait_for_load_from_all_queues 180
 

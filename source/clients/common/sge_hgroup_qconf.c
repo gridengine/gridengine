@@ -247,13 +247,37 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
    return ret;
 }
 
-bool hgroup_add(lList **answer_list, const char *name) 
+/****** sge_hgroup_qconf/hgroup_add() ******************************************
+*  NAME
+*     hgroup_add() -- creates a default hgroup object.
+*
+*  SYNOPSIS
+*     bool hgroup_add(lList **answer_list, const char *name, bool 
+*     is_name_validate) 
+*
+*  FUNCTION
+*     To create a new hgrp, qconf needs a default object, that can be edited.
+*
+*  INPUTS
+*     lList **answer_list   - any errors?
+*     const char *name      - name of the hgrp
+*     bool is_name_validate - should the name be validated? false, if one generates
+*                             a template
+*
+*  RESULT
+*     bool - true, if everything went fine
+*
+*  NOTES
+*     MT-NOTE: hgroup_add() is MT safe 
+*
+*******************************************************************************/
+bool hgroup_add(lList **answer_list, const char *name, bool is_name_validate ) 
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "hgroup_add");
    if (name != NULL) {
-      lListElem *hgroup = hgroup_create(answer_list, name, NULL);
+      lListElem *hgroup = hgroup_create(answer_list, name, NULL, is_name_validate);
 
       if (hgroup == NULL) {
          ret = false;
@@ -402,7 +426,7 @@ bool hgroup_delete(lList **answer_list, const char *name)
 
    DENTER(TOP_LAYER, "hgroup_delete");
    if (name != NULL) {
-      lListElem *hgroup = hgroup_create(answer_list, name, NULL); 
+      lListElem *hgroup = hgroup_create(answer_list, name, NULL, true); 
    
       if (hgroup != NULL) {
          ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_DEL); 

@@ -1851,7 +1851,7 @@ XtPointer cld, cad;
    }
 
    href_list = XmStringToCull(hg_memberlist_w, HR_Type, HR_name, ALL_ITEMS);
-   hg_ep = hgroup_create(&alp, hgname, href_list);
+   hg_ep = hgroup_create(&alp, hgname, href_list, true);
 
    if (add_mode) {
       hgroup_add_del_mod_via_gdi(hg_ep, &alp, SGE_GDI_ADD);

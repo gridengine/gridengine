@@ -91,7 +91,7 @@ BasicSettings()
      exit 1
   fi
 
-  HOST=`$SGE_UTILBIN/gethostname -aname`
+  HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 1

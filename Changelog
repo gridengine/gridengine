@@ -1,3 +1,9 @@
+MD-2004-08-10-0: Bugfix:    Refix Issue 1113
+                 Issue:     1214
+                 Bugtraq:   5084927
+                 Review:    HP
+                 Changed:   inst_sge
+
 CR-2004-08-10-2: Testsuite: - wait for all queues to report load before
                               starting any test
                             - wait for all queues to report unknown load

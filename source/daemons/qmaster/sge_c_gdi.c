@@ -29,8 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
+
 #include "sge_all_listsL.h"
 #include "cull.h"
 #include "sge.h"
@@ -86,6 +89,7 @@
 #include "qidl_c_gdi.h"
 #endif
 
+
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int *before, int *after);
 static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int return_list_flag);
 static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request *answer, int sub_command);
@@ -95,6 +99,9 @@ static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *reques
 static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer);
+
+static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*);
+static int  get_client_id(lListElem*, int*);
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
@@ -107,7 +114,7 @@ static int schedd_mod( lList **alpp, lListElem *modp, lListElem *ep, int add, co
 /* *INDENT-OFF* */
 static gdi_object_t gdi_object[] = {
    { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                &Master_Calendar_List,        NULL,                  calendar_mod, calendar_spool, calendar_update_queue_states },
-   { SGE_EVENT_LIST,        0,         NULL,      "event",                   &EV_Clients,                  NULL,                  NULL,         NULL,           NULL },
+   { SGE_EVENT_LIST,        0,         NULL,      "event",                   NULL,                         NULL,                  NULL,         NULL,           NULL },
    { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               &Master_Adminhost_List,       NULL,                  host_mod,     host_spool,     host_success },
    { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              &Master_Submithost_List,      NULL,                  host_mod,     host_spool,     host_success },
    { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                &Master_Exechost_List,        NULL,                  host_mod,     host_spool,     host_success },
@@ -572,8 +579,9 @@ int sub_command
                      lGetUlong(ep, OR_seq_no), lGetNumberOfRemainingElem(ep)));
                ep = lLast(request->lp); /* this will exit the loop */
 
-               if (ret==-2)
-                  reinit_event_client(EV_ID_SCHEDD);
+               if (ret==-2) {
+                  sge_resync_schedd();
+               }
             }
          }
          break;
@@ -1022,8 +1030,8 @@ sge_gdi_request *answer
    case SGE_MASTER_EVENT: /* kill master */
       sge_gdi_kill_master(host, request, answer);
       break;
-   case SGE_EVENT_LIST: /* kill schedler */
-      sge_gdi_kill_eventclient(host, request, answer);
+   case SGE_EVENT_LIST:
+      sge_gdi_shutdown_event_client(host, request, answer);
       break;
    case SGE_SC_LIST: /* trigger scheduler monitoring */
       sge_gdi_tsm(host, request, answer);
@@ -1036,6 +1044,129 @@ sge_gdi_request *answer
    DEXIT;
    return;
 }
+
+/****** qmaster/sge_c_gdi/sge_gdi_shutdown_event_client() **********************
+*  NAME
+*     sge_gdi_shutdown_event_client() -- shutdown event client 
+*
+*  SYNOPSIS
+*     static void sge_gdi_shutdown_event_client(const char *aHost, 
+*     sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
+*
+*  FUNCTION
+*     Shutdown event clients by client id. 'aRequest' does contain a list of 
+*     client id's. This is a list of 'ID_Type' elements.
+*
+*  INPUTS
+*     const char *aHost         - sender 
+*     sge_gdi_request *aRequest - request 
+*     sge_gdi_request *anAnswer - answer 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_shutdown_event_client() is NOT MT safe. 
+*
+*******************************************************************************/
+static void sge_gdi_shutdown_event_client(const char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer)
+{
+   uid_t uid = 0;
+   gid_t gid = 0;
+   char user[128]  = { '\0' };
+   char group[128] = { '\0' };
+   lListElem *elem = NULL; /* ID_Type */
+
+   DENTER(TOP_LAYER, "sge_gdi_shutdown_event_client");
+
+   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1)
+   {
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
+      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return;
+   }
+
+   for_each (elem, aRequest->lp)
+   {
+      int client_id = EV_ID_ANY;
+
+      if (get_client_id(elem, &client_id) != 0) {
+         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         continue;
+      }
+
+      if (EV_ID_ANY == client_id)
+      {
+         sge_shutdown_dynamic_event_clients(user);
+      }
+      else
+      {
+         if (sge_shutdown_event_client(client_id, user, uid) != 0)
+         {
+            ERROR((SGE_EVENT, MSG_GDI_SHUTDOWNEVCLIENTFAILED_US, u32c(client_id), SGE_FUNC));
+            answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            continue;
+         }
+      }
+   }
+
+   DEXIT;
+   return;
+} /* sge_gdi_shutdown_event_client() */
+
+/****** qmaster/sge_c_gdi/get_client_id() **************************************
+*  NAME
+*     get_client_id() -- get client id from ID_Type element. 
+*
+*  SYNOPSIS
+*     static int get_client_id(lListElem *anElem, int *anID) 
+*
+*  FUNCTION
+*     Get client id from ID_Type element. The client id is converted to an
+*     integer and stored in 'anID'.
+*
+*  INPUTS
+*     lListElem *anElem - ID_Type element 
+*     int *anID         - will contain client id on return
+*
+*  RESULT
+*     EINVAL - failed to extract client id. 
+*     0      - otherwise
+*
+*  NOTES
+*     MT-NOTE: get_client_id() is MT safe. 
+*
+*     Using 'errno' to check for 'strtol' error situations is recommended
+*     by POSIX.
+*
+*******************************************************************************/
+static int get_client_id(lListElem *anElem, int *anID)
+{
+   const char *id = NULL;
+
+   DENTER(TOP_LAYER, "get_client_id");
+
+   if ((id = lGetString(anElem, ID_str)) == NULL)
+   {
+      DEXIT;
+      return EINVAL;
+   }
+
+   errno = 0; /* errno is thread local */
+
+   *anID = strtol(id, NULL, 0);
+
+   if (errno != 0)
+   {
+      ERROR((SGE_EVENT, MSG_GDI_EVENTCLIENTIDFORMAT_S, id));
+      DEXIT;
+      return EINVAL;
+   }
+
+   DEXIT;
+   return 0;
+} /* get_client_id() */
 
 static void sge_c_gdi_mod(
 gdi_object_t *ao,

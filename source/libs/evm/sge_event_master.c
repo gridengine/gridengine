@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+
+#include "sge_event_master.h"
 
 #include "sge.h"
 #include "cull.h"
@@ -64,47 +67,32 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_object.h"
-#include "sge_lock.h"
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
 
-#include "sge_event_master.h"
-
-typedef struct {
-      bool         subscription;
-      bool         flush;
-      u_long32     flush_time;
-      lCondition   *where;
-      lDescr       *descr;
-      lEnumeration *what;
-}subscription_t;
-
-
-/********************************************************************
- *
- * Some events have to be delivered even so they have no date left
- * after filtering for them. These are for example all update list
- * events. 
- * The ensure, that is is done as fast as posible, we define an 
- * array of the size of the number of events, we have a init function
- * which sets the events which will be updated. To add a new event
- * ones has only to update that function.
- * Events which do not contain any data are not affected. They are
- * allways delivered.
- *
- * SEE ALSO:
- * - Array:
- *    SEND_EVENTS
- *    IS_INIT_SEND_EVENTS
- *
- * - Init function:
- *    evm/sge_event_master/sge_init_send_events()
- *
- *******************************************************************/
- 
-static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
-static bool IS_INIT_SEND_EVENTS = false;
+/****** Eventclient/Server/-Event_Client_Server_Defines ************************
+*  NAME
+*     Defines -- Constants used in the module
+*
+*  SYNOPSIS
+*     #define FLUSH_INTERVAL 15
+*     #define EVENT_ACK_MIN_TIMEOUT 600
+*     #define EVENT_ACK_MAX_TIMEOUT 1200
+*
+*  FUNCTION
+*     FLUSH_INTERVAL is the default event delivery interval, if the client
+*     would not set a correct interval.
+*
+*     EVENT_ACK_MIN/MAX_TIMEOUT is the minimum/maximum timeout value for an event
+*     client sending the acknowledge for the delivery of events.
+*     The real timeout value depends on the event delivery interval for the 
+*     event client (10 * event delivery interval).
+*
+*******************************************************************************/
+#define FLUSH_INTERVAL 15
+#define EVENT_ACK_MIN_TIMEOUT 600
+#define EVENT_ACK_MAX_TIMEOUT 1200
 
 /********************************************************************
  *
@@ -143,409 +131,77 @@ static bool IS_INIT_SEND_EVENTS = false;
  *
  *********************************************************************/
 #define LIST_MAX 2
+
 const int EVENT_LIST[LIST_MAX][6] = {
-                              {sgeE_JOB_LIST, sgeE_JOB_ADD, sgeE_JOB_DEL, sgeE_JOB_MOD, sgeE_JOB_MOD_SCHED_PRIORITY, -1},
-                              {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1},
-                              };
+   {sgeE_JOB_LIST, sgeE_JOB_ADD, sgeE_JOB_DEL, sgeE_JOB_MOD, sgeE_JOB_MOD_SCHED_PRIORITY, -1},
+   {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1},
+};
 
 const int FIELD_LIST[LIST_MAX][3] = {
-                              {JB_ja_tasks, JB_ja_template, -1},
-                              {CQ_qinstances, -1, -1},
-                             };
+   {JB_ja_tasks, JB_ja_template, -1},
+   {CQ_qinstances, -1, -1},
+};
 
 const int SOURCE_LIST[LIST_MAX][3] = {
-                               {sgeE_JATASK_MOD, sgeE_JATASK_ADD, -1},
-                               {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1},
-                              };
+   {sgeE_JATASK_MOD, sgeE_JATASK_ADD, -1},
+   {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1},
+};
 
-/****** Eventclient/Server/--Event_Client_Server ******************************
-*  NAME
-*     Event Client Interface -- Server Functionality
-*
-*  SYNOPSIS
-*
-*  FUNCTION
-*     The server module of the event client interface is used to integrate
-*     the capability to server event clients into server daemons.
-*     
-*     It is used in the Grid Engine qmaster but should be capable to handle
-*     any event client server integration.
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/--Event_Client_Interface
-*     Eventclient/Server/reinit_event_client()
-*     Eventclient/Server/sge_add_event_client()
-*     Eventclient/Server/sge_mod_event_client()
-*     Eventclient/Server/sge_event_client_exit()
-*     Eventclient/Server/sge_gdi_kill_eventclient()
-*     Eventclient/Server/sge_eventclient_subscribed()
-*     Eventclient/Server/sge_ack_event()
-*     Eventclient/Server/ck_4_deliver_events()
-*     Eventclient/Server/sge_flush_events()
-*     Eventclient/Server/sge_next_flush()
-*     Eventclient/Server/sge_add_list_event()
-*     Eventclient/Server/sge_add_event()
-*     Eventclient/Server/sge_get_next_event_number()
-*     Eventclient/Server/sge_gdi_tsm()
-*     Eventclient/Server/eventclient_list_locate()
-*     Eventclient/Server/set_event_client_busy()
-*******************************************************************************/
+/********************************************************************
+ *
+ * Some events have to be delivered even so they have no date left
+ * after filtering for them. These are for example all update list
+ * events. 
+ * The ensure, that is is done as fast as posible, we define an 
+ * array of the size of the number of events, we have a init function
+ * which sets the events which will be updated. To add a new event
+ * ones has only to update that function.
+ * Events which do not contain any data are not affected. They are
+ * allways delivered.
+ *
+ * SEE ALSO:
+ * - Array:
+ *    SEND_EVENTS
+ *    IS_INIT_SEND_EVENTS
+ *
+ * - Init function:
+ *    evm/sge_event_master/sge_init_send_events()
+ *
+ *******************************************************************/
+static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
+static bool IS_INIT_SEND_EVENTS = false;
+
+static lList *EV_Clients = NULL;
+
+
+typedef struct {
+      bool         subscription;
+      bool         flush;
+      u_long32     flush_time;
+      lCondition   *where;
+      lDescr       *descr;
+      lEnumeration *what;
+}subscription_t;
+
+
 static void sge_init_send_events(void); 
+static void total_update(lListElem*);
+static void sge_total_update_event(lListElem*, ev_event);
+static void sge_add_event_(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lListElem*);
+static int  sge_add_list_event_(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lList*, int); 
+static void sge_flush_events(lListElem *event_client, int interval);
+static void sge_flush_events_(lListElem*, int, int );
+static int  sge_eventclient_subscribed(const lListElem *, ev_event, const char*);
+static void check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
+static void sge_build_subscription(lListElem*);
+static const lDescr* getDescriptorL(subscription_t*, const lList*, int);
+static const lDescr* getDescriptor(subscription_t*, const lListElem*, int);
+static bool sge_list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
+static lListElem *elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
+static lListElem* eventclient_list_locate(ev_registration_id);
+static lListElem * eventclient_list_locate_by_adress(const char*, const char*, u_long32);
+static int purge_event_list(lList* aList, ev_event anEvent); 
 
-static void total_update(lListElem *event_client);
-
-static void sge_total_update_event(lListElem *event_client, ev_event type);
-
-static void 
-sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
-               u_long32 intkey, u_long32 intkey2, const char *strkey, 
-               const char *strkey2, lListElem *element);
-
-static int 
-sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
-                    u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                    const char *strkey2, lList *list, int need_copy_elem); 
-
-static void 
-sge_flush_events_(lListElem *event_client, int interval, int now);
-
-static int 
-sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
-                               const char *session);
-static void 
-sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, 
-                          const char *user, uid_t uid, sge_gdi_request *answer);
-
-static void 
-check_send_new_subscribed_list(const subscription_t *old_subscription, 
-                               const subscription_t *new_subscription, 
-                               lListElem *event_client, ev_event event);
-
-static void sge_build_subscription(lListElem *event_el);
-
-static lListElem *
-eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long32 id);
-
-static const lDescr* getDescriptorL(subscription_t *subscription, const lList* list, int type);
-static const lDescr* getDescriptor(subscription_t *subscription, const lListElem* element, int type);
-static bool sge_list_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
-                       const lEnumeration *fields,  const lDescr *descr);
-                       
-static lListElem *elem_select(subscription_t *subscription, lListElem *element, 
-                              const int ids[], const lCondition *selection, 
-                              const lEnumeration *fields, const lDescr *dp, int sub_type);    
-                              
-/* static void dump_subscription(const char *subscription); */
-
-/****** Eventclient/Server/-Event_Client_Server_Defines ************************
-*  NAME
-*     Defines -- Constants used in the module
-*
-*  SYNOPSIS
-*     #define FLUSH_INTERVAL 15
-*     #define EVENT_ACK_MIN_TIMEOUT 600
-*     #define EVENT_ACK_MAX_TIMEOUT 1200
-*
-*  FUNCTION
-*     FLUSH_INTERVAL is the default event delivery interval, if the client
-*     would not set a correct interval.
-*
-*     EVENT_ACK_MIN/MAX_TIMEOUT is the minimum/maximum timeout value for an event
-*     client sending the acknowledge for the delivery of events.
-*     The real timeout value depends on the event delivery interval for the 
-*     event client (10 * event delivery interval).
-*
-*******************************************************************************/
-#define FLUSH_INTERVAL 15
-#define EVENT_ACK_MIN_TIMEOUT 600
-#define EVENT_ACK_MAX_TIMEOUT 1200
-
-lList *EV_Clients = NULL;
-
-/****** Eventclient/Server/sge_flush_events() **********************************
-*  NAME
-*     sge_flush_events() -- set the flushing time for events
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     sge_flush_events(lListElem *event_client, int interval) 
-*
-*  FUNCTION
-*     Sets the timestamp for the next flush of events for all or a specific
-*     event client.
-*     When events will be next sent to an event client is stored in its
-*     event client object in the variable EV_next_send_time.
-*
-*  INPUTS
-*     lListElem *event_client - the event client for which to define flushing,
-*                               or NULL (flush all event clients)
-*     int interval            - time in seconds until next flush
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Server/ck_4_deliver_events()
-*
-*******************************************************************************/
-void 
-sge_flush_events(lListElem *event_client, int interval) 
-{
-   int now = sge_get_gmt();
-
-   DENTER(TOP_LAYER, "sge_flush_events");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if (event_client == NULL) {
-      for_each (event_client, EV_Clients) {
-         sge_flush_events_(event_client, interval, now);
-      }
-   } else {
-      sge_flush_events_(event_client, interval, now);
-   }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return;
-} /* sge_flush_events() */
-
-static void 
-sge_flush_events_(lListElem *event_client, int interval, int now)
-{
-   u_long32 next_send, flush_delay;
-
-   DENTER(TOP_LAYER, "sge_flush_events");
-
-   next_send = lGetUlong(event_client, EV_next_send_time);
-   next_send = MIN(next_send, now + interval);
-
-   /* never send out two event packages in the very same second */
-   flush_delay = 1;
-
-   if (lGetUlong(event_client, EV_busy_handling) == EV_THROTTLE_FLUSH) {
-      u_long32 busy_counter = lGetUlong(event_client, EV_busy);
-      u_long32 ed_time = lGetUlong(event_client, EV_d_time);
-      u_long32 flush_delay_rate = MAX(lGetUlong(event_client, EV_flush_delay), 1);
-      if (busy_counter >= flush_delay_rate) {
-         /* busy counters larger than flush delay cause events being 
-            sent out in regular event delivery interval for alive protocol 
-            purposes with event client */
-         flush_delay = MAX(flush_delay, ed_time);
-      } else {
-         /* for smaller busy counters event delivery interval is scaled 
-            down with the busy counter */
-         flush_delay = MAX(flush_delay, ed_time * busy_counter / flush_delay_rate);
-      }
-   }
-
-   next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
-
-   lSetUlong(event_client, EV_next_send_time, next_send);
-   DPRINTF(("ev_client: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
-         lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
-         now, next_send, 
-         lGetHost(event_client, EV_host), 
-         lGetString(event_client, EV_commproc),
-         lGetUlong(event_client, EV_commid))); 
-
-   DEXIT;
-   return;
-}
-
-/****** Eventclient/Server/sge_next_flush() ************************************
-*  NAME
-*     sge_next_flush() -- when will be the next flush of events?
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     int 
-*     sge_next_flush(int now) 
-*
-*  FUNCTION
-*     Returns the timestamp of the next required flush to any event client 
-*     (the minimum of EV_next_send_time for all event clients).
-*
-*  INPUTS
-*     int now - actual timestamp
-*
-*  RESULT
-*     int - the timestamp of the next flush or
-*           0, if no event client is connected and up.
-*
-*  NOTES
-*     Qmaster calls sge_next_flush() in main loop. With a raising number of 
-*     event clients registered at Qmaster the performance impact of this 
-*     operation could become a severe problem. A better approach to handle 
-*     those future events ahead would be the use of the time event manager 
-*     module (find description under daemons/qmaster/time_event.c). If the
-*     time event manager were used sge_next_flush() would effectively become
-*     a new time event manager function.
-*
-*  SEE ALSO
-*     Timeeventmanager/--Concept
-*******************************************************************************/
-int 
-sge_next_flush(int now) 
-{
-   int any_client_up = 0;
-   int min_next_send = MAX_ULONG32;
-
-   lListElem *event_client;
-   
-   DENTER(TOP_LAYER, "sge_next_flush");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   for_each (event_client, EV_Clients) {
-      DPRINTF(("next flush for %s/"u32" at "u32"\n",
-         lGetString(event_client, EV_name),
-         lGetUlong(event_client, EV_id),
-         lGetUlong(event_client, EV_next_send_time)));
-
-      if (now < (lGetUlong(event_client, EV_last_heard_from) + 
-                 lGetUlong(event_client, EV_d_time) * 5)) {
-         any_client_up = 1;
-         min_next_send = MIN(min_next_send, 
-                             lGetUlong(event_client, EV_next_send_time));
-      }
-   }
- 
-   if (any_client_up) {
-      return min_next_send;
-   }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return 0;
-} /* sge_next_flush() */   
-
-/****** Eventclient/Server/reinit_event_client() *******************************
-*  NAME
-*     reinit_event_client() -- do a total update for the scheduler
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     int 
-*     reinit_event_client(ev_registration_id id) 
-*
-*  FUNCTION
-*     Does a total update (send all lists) to the event client specified by id
-*     and outputs an error message.
-*
-*  INPUTS
-*     ev_registration_id id - the id of the event client to reinitialize.
-*
-*  RESULT
-*     int - 0 if reinitialization failed, e.g. because the event client does
-*           not exits, else 0
-*
-*  NOTES
-*     MT-NOTE: reinit_event_client() is MT safe.
-*
-*  SEE ALSO
-*     Eventclient/Server/total_update()
-*
-*******************************************************************************/
-int 
-reinit_event_client(ev_registration_id id)
-{
-   lListElem *event_client;
-
-   DENTER(TOP_LAYER, "reinit_event_client");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if ((event_client = eventclient_list_locate(id)) != NULL)
-   {
-      ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S,lGetString(event_client, EV_name)));
-
-      total_update(event_client);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      DEXIT;
-      return 1;
-   }
-
-   ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(id), "reinit"));
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return 0;
-} /* reinit_event_client() */
-
-/****** Eventclient/Server/total_update() **************************************
-*  NAME
-*     total_update() -- send all data to eventclient
-*
-*  SYNOPSIS
-*     static void 
-*     total_update(lListElem *event_client) 
-*
-*  FUNCTION
-*     Sends all complete lists it subscribed to an eventclient.
-*     If the event client receives a complete list instead of single events,
-*     it should completely update it's database.
-*
-*  INPUTS
-*     lListElem *event_client - the event client to update
-*
-*  NOTES
-*     MT-NOTE: total_update() is MT safe, IF the function is invoked with
-*     MT-NOTE: 'LOCK_EVENT_CLIENT_LST' locked! This is in accordance with
-*     MT-NOTE: the acquire/release protocol as defined by the Grid Engine
-*     MT-NOTE: Locking API.
-*
-*  SEE ALSO
-*     libs/lck/sge_lock.h
-*     libs/lck/sge_lock.c
-*
-*******************************************************************************/
-static void 
-total_update(lListElem *event_client)
-{
-   DENTER(TOP_LAYER, "total_update");
-
-   sge_total_update_event(event_client, sgeE_ADMINHOST_LIST);
-   sge_total_update_event(event_client, sgeE_CALENDAR_LIST);
-   sge_total_update_event(event_client, sgeE_CKPT_LIST);
-   sge_total_update_event(event_client, sgeE_CENTRY_LIST);
-   sge_total_update_event(event_client, sgeE_CONFIG_LIST);
-   sge_total_update_event(event_client, sgeE_EXECHOST_LIST);
-   sge_total_update_event(event_client, sgeE_JOB_LIST);
-   sge_total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST);
-   sge_total_update_event(event_client, sgeE_MANAGER_LIST);
-   sge_total_update_event(event_client, sgeE_OPERATOR_LIST);
-   sge_total_update_event(event_client, sgeE_PE_LIST);
-   sge_total_update_event(event_client, sgeE_CQUEUE_LIST);
-   sge_total_update_event(event_client, sgeE_SCHED_CONF);
-   sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST);
-   sge_total_update_event(event_client, sgeE_USERSET_LIST);
-
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      sge_total_update_event(event_client, sgeE_NEW_SHARETREE);
-      sge_total_update_event(event_client, sgeE_PROJECT_LIST);
-      sge_total_update_event(event_client, sgeE_USER_LIST);
-   }
-
-   sge_total_update_event(event_client, sgeE_HGROUP_LIST);
-
-#ifndef __SGE_NO_USERMAPPING__
-   sge_total_update_event(event_client, sgeE_CUSER_LIST);
-#endif
-
-   DEXIT;
-   return;
-} /* total_update() */
 
 /****** Eventclient/Server/sge_add_event_client() ******************************
 *  NAME
@@ -556,7 +212,7 @@ total_update(lListElem *event_client)
 *
 *     int 
 *     sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
-*                          char *ruser, char *rhost) 
+*     char *ruser, char *rhost) 
 *
 *  FUNCTION
 *     Registeres a new event client. 
@@ -578,16 +234,10 @@ total_update(lListElem *event_client)
 *     int - AN_status value. STATUS_OK on success, else error code
 *
 *  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Server/sge_mod_event_client()
-*     Eventclient/Server/sge_gdi_kill_eventclient()
-*     Eventclient/Server/total_update()
+*     MT-NOTE: sge_add_event_client() is NOT MT safe.
 *
 *******************************************************************************/
-int 
-sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, 
-                     char *rhost)
+int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost)
 {
    lListElem *ep=NULL;
    u_long32 now;
@@ -601,8 +251,6 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    u_long32 commproc_id;
 
    DENTER(TOP_LAYER,"sge_add_event_client");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    sge_init_send_events();
 
@@ -623,8 +271,6 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, u32c(id)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -632,8 +278,6 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
       DEXIT;
       return STATUS_ESEMANTIC;
@@ -712,92 +356,9 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
          ruser, rhost, name, MSG_EVE_EVENTCLIENT));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
    DEXIT; 
    return STATUS_OK;
 } /* sge_add_event_client() */
-
-/****** sge_event_master/sge_build_subscription() ******************************
-*  NAME
-*     sge_build_subscription() -- generates an array out of the cull registration
-*                                 structure
-*
-*  SYNOPSIS
-*     static void sge_build_subscription(lListElem *event_el) 
-*
-*  FUNCTION
-*      generates an array out of the cull registration
-*      structure. The array contains all event elements and each of them 
-*      has an identifier, if it is subscribed or not. Before that is done, it is
-*      tested, the EV_changed flag is set. If not, the function simply returns.
-*
-*
-*  INPUTS
-*     lListElem *event_el - the event element, which event structure will be transformed 
-*
-*******************************************************************************/
-static void sge_build_subscription(lListElem *event_el) {
-   lList *subscription = lGetList(event_el, EV_subscribed);
-   lListElem *sub_el = NULL;
-   subscription_t *sub_array = NULL; 
-
-   DENTER(TOP_LAYER, "sge_build_subscription");
-
-
-   if (!lGetBool(event_el, EV_changed)) {
-      DEXIT;
-      return;
-   }
-
-   DPRINTF(("rebuild event mask for a client\n"));
-
-   sub_array = (subscription_t *) malloc(sizeof(subscription_t) * sgeE_EVENTSIZE);
-   
-   memset(sub_array, 0, sizeof(subscription_t) * sgeE_EVENTSIZE); 
-   {
-      int i;
-      for (i=0; i<sgeE_EVENTSIZE; i++){
-         sub_array[i].subscription = EV_NOT_SUBSCRIBED;
-      }
-   } 
-   for_each(sub_el, subscription){
-      const lListElem *temp = NULL;
-      u_long32 event = lGetUlong(sub_el, EVS_id);   
-      
-      sub_array[event].subscription = EV_SUBSCRIBED; 
-      sub_array[event].flush = lGetBool(sub_el, EVS_flush);
-      sub_array[event].flush_time = lGetUlong(sub_el, EVS_interval);
-     
-      if ((temp = lGetObject(sub_el, EVS_where)))
-         sub_array[event].where = lWhereFromElem(temp);
-
-      if ((temp = lGetObject(sub_el, EVS_what))) {      
-         sub_array[event].what = lWhatFromElem(temp);
-      }   
-      
-   }
-   {
-      subscription_t *old_sub_array = lGetRef(event_el, EV_sub_array);
-      if (old_sub_array) {
-         int i;
-         for (i=0; i<sgeE_EVENTSIZE; i++){ 
-            if (old_sub_array[i].where)
-               lFreeWhere(old_sub_array[i].where);
-            if (old_sub_array[i].what)
-               lFreeWhat(old_sub_array[i].what);
-            if (old_sub_array[i].descr){
-               cull_hash_free_descr(old_sub_array[i].descr);
-               free(old_sub_array[i].descr);
-            }
-         }
-         free(old_sub_array);
-      }
-      lSetRef(event_el, EV_sub_array, sub_array);
-      lSetBool(event_el, EV_changed, false);
-   }
-   DEXIT;
-}
 
 /****** Eventclient/Server/sge_mod_event_client() ******************************
 *  NAME
@@ -808,7 +369,7 @@ static void sge_build_subscription(lListElem *event_el) {
 *
 *     int 
 *     sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
-*                          char *ruser, char *rhost) 
+*     char *ruser, char *rhost) 
 *
 *  FUNCTION
 *     An event client object is modified.
@@ -828,15 +389,10 @@ static void sge_build_subscription(lListElem *event_el) {
 *     int - AN_status code. STATUS_OK on success, else error code
 *
 *  NOTES
-*     MT-NOTE: sge_mod_event_client() is MT safe.
-*
-*  SEE ALSO
-*     Eventclient/Server/check_send_new_subscribed_list()
+*     MT-NOTE: sge_mod_event_client() is NOT MT safe.
 *
 *******************************************************************************/
-int 
-sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, 
-                     char *rhost ) 
+int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost) 
 {
    lListElem *event_client=NULL;
    u_long32 id;
@@ -844,8 +400,6 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    u_long32 ev_d_time;
 
    DENTER(TOP_LAYER,"sge_mod_event_client");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    /* try to find event_client */
    id = lGetUlong(clio, EV_id);
@@ -855,8 +409,6 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    if (event_client == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(id), "modify"));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
       DEXIT;
       return STATUS_EEXIST;
@@ -871,8 +423,6 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, u32c(ev_d_time)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -880,8 +430,6 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    if (lGetList(clio, EV_subscribed) == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
       DEXIT;
       return STATUS_ESEMANTIC;
@@ -969,110 +517,84 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       lAppendElem(*eclpp, lCopyElem(event_client));
    }
 
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
    DEXIT; 
    return STATUS_OK;
 } /* sge_mod_event_client() */
 
-/****** Eventclient/Server/check_send_new_subscribed_list() ********************
+/****** evm/sge_event_master/sge_event_client_registered() *********************
 *  NAME
-*     check_send_new_subscribed_list() -- check suscription for new list events
+*     sge_event_client_registered() -- check if event client is registered
 *
 *  SYNOPSIS
-*     static void 
-*     check_send_new_subscribed_list(const subscription_t *old_subscription, 
-*                                    const subscription_t *new_subscription, 
-*                                    lListElem *event_client, 
-*                                    ev_event event) 
+*     bool sge_event_client_registered(u_long32 aClientID) 
 *
 *  FUNCTION
-*     Checks, if sgeE*_LIST events have been added to the subscription of a
-*     certain event client. If yes, send these lists to the event client.
+*     Check if event client is registered. 
 *
 *  INPUTS
-*     const subscription_t *old_subscription - former subscription
-*     const subscription_t *new_subscription - new subscription
-*     lListElem *event_client      - the event client object
-*     ev_event event               - the event to check
+*     u_long32 aClientID - event client id to check
 *
-*  SEE ALSO
-*     Eventclient/Server/sge_total_update_event()
+*  RESULT
+*     true  - client is registered 
+*     false - otherwise
+*
+*  NOTES
+*     MT-NOTE: sge_event_client_registered() is NOT MT safe. 
 *
 *******************************************************************************/
-static void 
-check_send_new_subscribed_list(const subscription_t *old_subscription, 
-                               const subscription_t *new_subscription, 
-                               lListElem *event_client, ev_event event)
+bool sge_event_client_registered(u_long32 aClientID)
 {
-   if ((new_subscription[event].subscription & EV_SUBSCRIBED) && 
-       (old_subscription[event].subscription == EV_NOT_SUBSCRIBED)) {
-      sge_total_update_event(event_client, event);
-   }   
-}
+   bool res = false;
 
+   DENTER(TOP_LAYER, "sge_event_client_registered");
 
+   if (lGetElemUlong(EV_Clients, EV_id, aClientID) != NULL) {
+      res = true;
+   }
 
-/****** Eventclient/Server/sge_event_client_exit() *****************************
+   DEXIT;
+   return res;
+} /* sge_event_client_registered() */
+
+/****** evm/sge_event_master/sge_remove_event_client() *************************
 *  NAME
-*     sge_event_client_exit() -- event client deregisters
+*     sge_remove_event_client() -- remove event client 
 *
 *  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     sge_event_client_exit(const char *host, const char *commproc, 
-*                           sge_pack_buffer *pb) 
+*     void sge_remove_event_client(u_long32 aClientID) 
 *
 *  FUNCTION
-*     Deregistration of an event client.
-*     The event client tells qmaster that it wants to deregister - usually 
-*     before it exits.
-*     The event client is removed from the list of all event clients.
+*     Remove event client. Fetch event client from event client list. Purge
+*     event subscription array. Remove event client from event client list.
 *
 *  INPUTS
-*     const char *host     - host that sent the exit message
-*     const char *commproc - commproc of the sender
-*     sge_pack_buffer *pb  - packbuffer containing information about event 
-*                            client
+*     u_long32 aClientID - event client id 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_remove_event_client() is NOT MT safe. 
 *
 *******************************************************************************/
-void 
-sge_event_client_exit(const char *host, const char *commproc, 
-                      sge_pack_buffer *pb)
+void sge_remove_event_client(u_long32 aClientID)
 {
-   u_long32 ec_id;
-   lListElem *ec;
+   lListElem *client;
 
-   DENTER(TOP_LAYER, "sge_event_client_exit");
+   DENTER(TOP_LAYER, "sge_remove_event_client");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if (unpackint(pb, &ec_id)) {
-      ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 1));
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
+   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
       DEXIT;
       return;
    }
 
-   ec = lGetElemUlong(EV_Clients, EV_id, ec_id);
+   INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(client, EV_name), u32c(lGetUlong(client, EV_id))));
 
-   if (ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), "unregister"));
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      DEXIT;
-      return;
-   }
-
-   INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(ec, EV_name), 
-         u32c(lGetUlong(ec, EV_id))));
    {        
       int i;
-      subscription_t *old_sub = lGetRef(ec, EV_sub_array);
+      subscription_t *old_sub = lGetRef(client, EV_sub_array);
       if (old_sub) {
          for (i=0; i<sgeE_EVENTSIZE; i++){ 
             if (old_sub[i].where)
@@ -1085,104 +607,341 @@ sge_event_client_exit(const char *host, const char *commproc,
             }
          } 
          free(old_sub);
-         lSetRef(ec, EV_sub_array, NULL);
+         lSetRef(client, EV_sub_array, NULL);
       }
    }
-   lRemoveElem(EV_Clients, ec);
 
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   lRemoveElem(EV_Clients, client);
 
    DEXIT;
    return;
-} /* sge_event_client_exit() */
+} /* sge_remove_event_client() */
 
-/****** Eventclient/Server/sge_eventclient_subscribed() ************************
+/****** evm/sge_event_master/sge_shutdown_event_client() ***********************
 *  NAME
-*     sge_eventclient_subscribed() -- has event client subscribed an event?
+*     sge_shutdown_event_client() -- shutdown an event client 
 *
 *  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     int 
-*     sge_eventclient_subscribed(const lListElem *event_client, ev_event event) 
+*     int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, 
+*     uid_t anUID) 
 *
 *  FUNCTION
-*     Checks if the given event client has a certain event subscribed.
-*     For event clients that use session filtering additional conditions
-*     must be fulfilled otherwise the event counts not as subscribed.
+*     Shutdown an event client. Send the event client denoted by 'aClientID' 
+*     a shutdown event.
+*
+*     Shutting down an event client is only permitted if 'anUser' does have
+*     manager privileges OR is the owner of event client 'aClientID'.
 *
 *  INPUTS
-*     const lListElem *event_client - event client to check
-*     ev_event event                - event to check
-*     const char *session           - session key of this event
+*     u_long32 aClientID - event client ID 
+*     const char* anUser - user which did request this operation 
+*     uid_t anUID        - user id of request user
 *
 *  RESULT
-*     int - 0 = not subscribed, 1 = subscribed
+*     EPERM - operation not permitted  
+*     ESRCH - client with given client id is unknown
+*     0     - otherwise
 *
-*  SEE ALSO
-*     Eventclient/-Session filtering
+*  NOTES
+*     MT-NOTE: sge_shutdown_event_client() is not MT safe. 
+*
 *******************************************************************************/
-static int 
-sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
-   const char *session)
+int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUID)
 {
-   const subscription_t *subscription = NULL;
-   const char *ec_session;
+   lListElem *client = NULL;
 
-   DENTER(TOP_LAYER, "sge_eventclient_subscribed");
+   DENTER(TOP_LAYER, "sge_shutdown_event_client");
 
-   if (event_client == NULL) {
+   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
       DEXIT;
-      return 0;
+      return ESRCH;
+   }
+   else if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid)))
+   {
+      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
+      DEXIT;
+      return EPERM;
    }
 
-   subscription = lGetRef(event_client, EV_sub_array);
-   ec_session = lGetString(event_client, EV_session);
+   sge_add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, lGetString(client, EV_session), NULL);
+   sge_flush_events(client, 0);
 
-   if (subscription == NULL) {
+   DEXIT;
+   return 0;
+} /* sge_shutdown_event_client */
+
+/****** evm/sge_event_master/sge_shutdown_dynamic_event_clients() **************
+*  NAME
+*     sge_shutdown_dynamic_event_clients() -- shutdown all dynamic event clients
+*
+*  SYNOPSIS
+*     int sge_shutdown_dynamic_event_clients(const char *anUser) 
+*
+*  FUNCTION
+*     Shutdown all dynamic event clients. Each dynamic event client known will
+*     be send a shutdown event.
+*
+*     An event client is a dynamic event client if it's client id is greater
+*     than or equal to 'EV_ID_FIRST_DYNAMIC'. 
+*
+*     Shutting down all dynamic event clients is only permitted if 'anUser' does
+*     have manager privileges.
+*
+*  INPUTS
+*     const char *anUser - user which did request this operation 
+*
+*  RESULT
+*     EPERM - operation not permitted 
+*     0     - otherwise
+*
+*  NOTES
+*     MT-NOTES: sge_shutdown_dynamic_event_clients() is NOT MT safe. 
+*
+*******************************************************************************/
+int sge_shutdown_dynamic_event_clients(const char *anUser)
+{
+   lListElem *client;
+
+   DENTER(TOP_LAYER, "sge_shutdown_dynamic_event_clients");
+
+   if (!manop_is_manager(anUser))
+   {
+      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
       DEXIT;
-      return 0;
+      return EPERM;
    }
 
-   if (ec_session) {
-      if (session) {
-         /* events that belong to a specific session are not subscribed 
-            in case the event client is not interested in that session */
-         if (strcmp(session, ec_session)) {
-            DEXIT;
-            return 0;
-         }
-      } else {
-         /* events that do not belong to a specific session are not 
-            subscribed if the event client is interested in events of a 
-            specific session. 
-            The only exception are list events, because list events do not 
-            belong to a specific session. These events require filtering on 
-            a more fine grained level */
-         if (!IS_TOTAL_UPDATE_EVENT(event)) {
-            DEXIT;
-            return 0;
-         }
+   for_each (client, EV_Clients)
+   {
+      if (lGetUlong(client, EV_id) < EV_ID_FIRST_DYNAMIC) {
+         continue;
       }
-   }
-   if (subscription[event].subscription == EV_SUBSCRIBED) {
-      DEXIT;
-      return 1;
+
+      sge_add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, lGetString(client, EV_session), NULL);
+      sge_flush_events(client, 0);
    }
 
    DEXIT;
    return 0;
-}
+} /* sge_shutdown_dynamic_event_clients() */
 
-/****** Eventclient/Server/sge_ack_event() *************************************
+/****** evm/sge_event_master/sge_get_event_client_data() ***************************
 *  NAME
-*     sge_ack_event() -- process acknowledge to event delivery
+*     sge_get_event_client_data() -- get event client data 
+*
+*  SYNOPSIS
+*     u_long32 sge_get_event_client_data(u_long32 aClientID) 
+*
+*  FUNCTION
+*     Get event client data. 
+*
+*  INPUTS
+*     u_long32 aClientID - event client id 
+*
+*  RESULT
+*     u_long32 - event client data
+*
+*  NOTES
+*     MT-NOTE: sge_get_event_client_data() is NOT MT safe. 
+*
+*******************************************************************************/
+u_long32 sge_get_event_client_data(u_long32 aClientID)
+{
+   u_long32 res = 0;
+   lListElem *ep = NULL;
+
+   DENTER(TOP_LAYER, "sge_get_event_client_data");
+
+   if ((ep = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+      DEXIT;
+      return 0;
+   }
+
+   res = lGetUlong(ep, EV_clientdata); /* will fail if ep == NULL */
+
+   DEXIT;
+   return res;
+} /* sge_get_event_client_data() */
+
+/****** evm/sge_event_master/sge_set_event_client_data() ***********************
+*  NAME
+*     sge_set_event_client_data() -- set event client data 
+*
+*  SYNOPSIS
+*     int sge_set_event_client_data(u_long32 aClientID, u_long32 theData) 
+*
+*  FUNCTION
+*     Set event client data. 
+*
+*  INPUTS
+*     u_long32 aClientID - event client id 
+*     u_long32 theData   - data 
+*
+*  RESULT
+*     EACCES - failed to set data
+*     0      - success
+*
+*  NOTES
+*     MT-NOTE: sge_set_event_client_data() is NOT MT safe. 
+*
+*******************************************************************************/
+int sge_set_event_client_data(u_long32 aClientID, u_long32 theData)
+{
+   int res = EACCES;
+   lListElem *ep = NULL;
+
+   DENTER(TOP_LAYER, "sge_set_event_client_data");
+
+   if ((ep = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+      DEXIT;
+      return EACCES;
+   }
+
+   res = (lSetUlong(ep, EV_clientdata, theData) == 0) ? 0 : EACCES;
+
+   DEXIT;
+   return res;
+} /* sge_set_event_client_data() */
+
+/****** Eventclient/Server/sge_add_event() *************************************
+*  NAME
+*     sge_add_event() -- add an object as event
 *
 *  SYNOPSIS
 *     #include "sge_event_master.h"
 *
-*     int 
-*     sge_ack_event(lListElem *event_client, ev_event event_number) 
+*     void 
+*     sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
+*                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
+*                   const char *strkey2, lListElem *element) 
+*
+*  FUNCTION
+*     Adds an object to the list of events to deliver. Called, if an event 
+*     occurs to that object, e.g. it was added to Grid Engine, modified or 
+*     deleted.
+*  
+*     Internally, a list with that single object is created and passed to 
+*     sge_add_list_event().
+*
+*  INPUTS
+*     lListElem *event_client - the event client to receive the event, if NULL,
+*                               all event clients will receive the event
+*     u_long32 timestamp      - time stamp in gmt for the even; if 0 is passed,
+*                               sge_add_list_event will insert the actual time
+*     ev_event type           - the event id
+*     u_long32 intkey         - additional data
+*     u_long32 intkey2        - additional data
+*     const char *strkey      - additional data
+*     const char *strkey2     - additional data
+*     const char *session     - events session key
+*     lListElem *element      - the object to deliver as event
+*
+*  NOTES
+*     MT-NOTE: sge_add_event() is NOT MT safe.
+*
+*******************************************************************************/
+void sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, u_long32 intkey,
+   u_long32 intkey2, const char *strkey, const char *strkey2, const char *session, lListElem *element) 
+{
+   DENTER(TOP_LAYER, "sge_add_event"); 
+
+   if (timestamp == 0) {
+      timestamp = sge_get_gmt();
+   }
+   if (event_client != NULL) {
+      if (sge_eventclient_subscribed(event_client, type, session)) {
+         sge_add_event_(event_client, timestamp, type, 
+                        intkey, intkey2, strkey, strkey2, element);
+      }   
+   } else {
+      for_each (event_client, EV_Clients) {
+         if (sge_eventclient_subscribed(event_client, type, session)) {
+            sge_add_event_(event_client, timestamp, type, 
+                           intkey, intkey2, strkey, strkey2, element);
+         }
+      }
+
+   }
+
+   DEXIT;
+   return;
+} /* sge_add_event() */
+
+/****** Eventclient/Server/sge_add_list_event() ********************************
+*  NAME
+*     sge_add_list_event() -- add a list as event
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     void 
+*     sge_add_list_event(lListElem *event_client, u_long32 timestamp,
+*                        ev_event type, 
+*                        u_long32 intkey, u_long32 intkey2, const char *strkey,
+*                        const char *session, lList *list) 
+*
+*  FUNCTION
+*     Adds a list of objects to the list of events to deliver, e.g. the 
+*     sgeE*_LIST events.
+*
+*  INPUTS
+*     lListElem *event_client - the event client to receive the event, if NULL,
+*                               all event clients will receive the event
+*     u_long32 timestamp      - time stamp in gmt for the even; if 0 is passed,
+*                               sge_add_list_event will insert the actual time
+*     ev_event type           - the event id
+*     u_long32 intkey         - additional data
+*     u_long32 intkey2        - additional data
+*     const char *strkey      - additional data
+*     const char *session     - events session key
+*     lList *list             - the list to deliver as event
+*
+*  NOTES
+*     MT-NOTE: sge_add_list_event() is MT safe.
+*
+*******************************************************************************/
+void sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
+                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
+                   const char *strkey2, const char *session, lList *list) 
+{
+   DENTER(TOP_LAYER, "sge_add_list_event");
+
+   if (timestamp == 0) {
+      timestamp = sge_get_gmt();
+   }
+   if (event_client != NULL) {
+      if (sge_eventclient_subscribed(event_client, type, session)) {
+         sge_add_list_event_(event_client, timestamp, type, 
+                             intkey, intkey2, strkey, strkey2, list, true);
+      }
+   } else {
+      for_each (event_client, EV_Clients) {
+         if (sge_eventclient_subscribed(event_client, type, session)) {
+            sge_add_list_event_(event_client, timestamp, type, 
+                                intkey, intkey2, strkey, strkey2, list, true);
+         }
+      }
+   }
+
+   DEXIT;
+   return;
+} /* sge_add_list_event() */
+
+/****** Eventclient/Server/sge_handle_event_ack() ******************************
+*  NAME
+*     sge_handle_event_ack() -- acknowledge event delivery
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     void 
+*     sge_handle_event_ack(u_long32 aClientID, ev_event anEvent) 
 *
 *  FUNCTION
 *     After the server sent events to an event client, it has to acknowledge
@@ -1193,79 +952,257 @@ sge_eventclient_subscribed(const lListElem *event_client, ev_event event,
 *     EV_BUSY_UNTIL_ACK, the event client will be set to "not busy".
 *
 *  INPUTS
-*     lListElem *event_client - event client sending acknowledge
-*     ev_event event_number   - serial number of the last event to acknowledge
+*     u_long32 aClientID - event client sending acknowledge
+*     ev_event anEvent   - serial number of the last event to acknowledge
 *
 *  RESULT
-*     int - always 0
-*
-*  MT-NOTE: sge_ack_event() is MT safe.
+*     void - none
 *
 *  NOTES
-*     Returncode makes no sense anymore. Either improve error handling or
-*     make function return void.
+*     MT-NOTE: sge_handle_event_ack() is MT safe.
 *
 *  SEE ALSO
 *     Eventclient/Server/sge_get_next_event_number()
 *
 *******************************************************************************/
-int 
-sge_ack_event(lListElem *event_client, ev_event event_number)
+int sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
 {
-   int pos;
-   lList *lp;
-   lListElem *event, *tmp;
+   int res = 0;
+   lList *list = NULL;
+   lListElem *client = NULL;
 
-   DENTER(TOP_LAYER, "sge_ack_event");
+   DENTER(TOP_LAYER, "sge_handle_event_ack");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   /* little optimazation */
-   pos = lGetPosInDescr(ET_Type, ET_number);
-   lp = lGetList(event_client, EV_events);
-
-   /*  
-      we delete all messages with lower or 
-      equal numbers than event_number
-   */
-   if (event_number) {
-      int trashed = 0;
-
-      event=lFirst(lp);
-      while (event) {
-         tmp=event;
-         event = lNext(event);
-
-         if (lGetPosUlong(tmp, pos) <= event_number) {
-            lRemoveElem(lp, tmp);      
-            trashed++;
-         } else 
-            break;
-      }
-      DPRINTF(("Trashed %d acked events\n", trashed));
-   } else {
-      DPRINTF(("Got empty event ack\n"));
+   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL) {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+      DEXIT;
+      return 0;
    }
 
-   /* register time of ack */
-   lSetUlong(event_client, EV_last_heard_from, sge_get_gmt());
+   list = lGetList(client, EV_events);
 
-   /* unset busy if configured accordingly */
-   switch (lGetUlong(event_client, EV_busy_handling)) {
+   res = purge_event_list(list, anEvent);
+
+   DPRINTF(("%s: purged %d acknowleded events\n", SGE_FUNC, res));
+
+   lSetUlong(client, EV_last_heard_from, sge_get_gmt()); /* note time of ack */
+
+   switch (lGetUlong(client, EV_busy_handling))
+   {
    case EV_BUSY_UNTIL_ACK:
    case EV_THROTTLE_FLUSH:
-      lSetUlong(event_client, EV_busy, 0);
+      lSetUlong(client, EV_busy, 0); /* clear busy state */
       break;
    default:
       break;
    }
-   
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
-   return 0;
-} /* sge_ack_event() */
+   return res;
+} /* sge_handle_event_ack() */
 
+/****** evm/sge_event_master/sge_deliver_events_immediately() ******************
+*  NAME
+*     sge_deliver_events_immediately() -- deliver events immediately 
+*
+*  SYNOPSIS
+*     void sge_deliver_events_immediately(u_long32 aClientID) 
+*
+*  FUNCTION
+*     Deliver all events for the event client denoted by 'aClientID'
+*     immediately.
+*
+*  INPUTS
+*     u_long32 aClientID - event client id 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_deliver_events_immediately() is NOT MT safe. 
+*
+*******************************************************************************/
+void sge_deliver_events_immediately(u_long32 aClientID)
+{
+   lListElem *client = NULL;
+
+   DENTER(TOP_LAYER, "sge_event_immediate_delivery");
+
+   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL) {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+      DEXIT;
+      return;
+   }
+
+   sge_flush_events(client, 0);
+
+   DEXIT;
+   return;
+} /* sge_deliver_event_immediately() */
+
+/****** Eventclient/Server/sge_get_next_event_number() *************************
+*  NAME
+*     sge_get_next_event_number() -- next event number for an event client
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     u_long32 
+*     sge_get_next_event_number(u_long32 client_id) 
+*
+*  FUNCTION
+*     Retrieves the next serial event number for an event client.
+*
+*  INPUTS
+*     u_long32 client_id - id of the event client
+*
+*  RESULT
+*     u_long32 - serial number for next event to deliver
+*
+*  MT-NOTE: sge_get_next_event_number() is NOT MT safe.
+*
+*  BUGBUG-AD: Change signature of this function to allow for better error 
+*  BUGBUG-AD: handling!
+*
+*******************************************************************************/
+u_long32 sge_get_next_event_number(u_long32 aClientID) 
+{
+   lListElem *client;
+   u_long32 ret = EACCES;
+
+   DENTER(TOP_LAYER, "sge_get_next_event_number");
+
+   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL) {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+      DEXIT;
+      return EACCES;
+   }
+
+   ret = lGetUlong(client, EV_next_number);
+
+   DEXIT;
+   return ret;
+} /* sge_get_next_event_number() */
+
+/****** Eventclient/Server/sge_gdi_tsm() ***************************************
+*  NAME
+*     sge_gdi_tsm() -- trigger scheduling
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     void 
+*     sge_gdi_tsm(char *host, sge_gdi_request *request, 
+*                 sge_gdi_request *answer) 
+*
+*  FUNCTION
+*     Triggers a scheduling run for the scheduler as special event client.
+*
+*  INPUTS
+*     char *host               - host that triggered scheduling
+*     sge_gdi_request *request - request structure
+*     sge_gdi_request *answer  - answer structure to return to client
+*
+*  MT-NOTE: sge_gdi_tsm() is MT safe.
+*
+*  NOTES
+*     This function should not be part of the core event client interface.
+*     Or it should be possible to trigger any event client.
+*
+*  SEE ALSO
+*     qconf -tsm
+*
+*******************************************************************************/
+void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
+{
+   uid_t uid;
+   gid_t gid;
+   char user[128];
+   char group[128];
+   lListElem *scheduler;
+
+   DENTER(GDI_LAYER, "sge_gdi_tsm");
+
+   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      DEXIT;
+      return;
+   }
+
+   if (!manop_is_manager(user)) {
+      WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
+                      ANSWER_QUALITY_WARNING);
+
+      DEXIT;
+      return;
+   }
+     
+   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
+     
+   if (scheduler == NULL) {
+      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, 
+                      ANSWER_QUALITY_WARNING);
+
+      DEXIT;
+      return;
+   }
+
+   sge_add_event(scheduler, 0, sgeE_SCHEDDMONITOR, 0, 0, 
+                 NULL, NULL, NULL, NULL);
+
+   INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
+   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   DEXIT;
+   return;
+} /* sge_gdi_tsm() */
+
+/****** evm/sge_event_master/sge_resync_schedd() *******************************
+*  NAME
+*     sge_resync_schedd() -- resync schedd 
+*
+*  SYNOPSIS
+*     int sge_resync_schedd(void) 
+*
+*  FUNCTION
+*     Does a total update (send all lists) to schedd and outputs an error
+*     message.
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     0 - resync successful
+*    -1 - otherwise
+*
+*  NOTES
+*     MT-NOTE: sge_resync_schedd() in NOT MT safe. 
+*
+*******************************************************************************/
+int sge_resync_schedd(void)
+{
+   lListElem *event_client;
+
+   DENTER(TOP_LAYER, "sge_sync_schedd");
+
+   if ((event_client = eventclient_list_locate(EV_ID_SCHEDD)) != NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S,lGetString(event_client, EV_name)));
+
+      total_update(event_client);
+
+      DEXIT;
+      return 0;
+   }
+
+   ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(EV_ID_SCHEDD), SGE_FUNC));
+
+   DEXIT;
+   return -1;
+} /* sge_resync_schedd() */
 
 /****** Eventclient/Server/sge_remote_event_delivery_handler() *****************
 *  NAME
@@ -1305,8 +1242,6 @@ void sge_remote_event_delivery_handler(te_event_t anEvent)
    time_t now = time(NULL);
 
    DENTER(TOP_LAYER, "sge_remote_event_delivery_handler");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DPRINTF(("There are %d event clients\n", lGetNumberOfElem(EV_Clients)));
 
@@ -1424,81 +1359,493 @@ void sge_remote_event_delivery_handler(te_event_t anEvent)
       event_client = lNext(event_client);
    }
 
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
    DEXIT;
    return;
 } /* sge_remote_event_delivery_handler() */
 
-/****** Eventclient/Server/sge_add_list_event() ********************************
+/****** evm/sge_event_master/sge_event_shutdown() ******************************
 *  NAME
-*     sge_add_list_event() -- add a list as event
+*     sge_event_shutdown() -- shutdown event delivery 
+*
+*  SYNOPSIS
+*     void sge_event_shutdown(void) 
+*
+*  FUNCTION
+*     Shutdown event delivery. 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_event_shutdown() is NOT MT safe. 
+*
+*******************************************************************************/
+void sge_event_shutdown(void)
+{
+   time_t now = time(NULL);
+   lListElem *client;
+
+   DENTER(TOP_LAYER, "sge_event_shutdown");
+
+   for_each (client, EV_Clients)
+   {
+      if (sge_eventclient_subscribed(client, sgeE_QMASTER_GOES_DOWN, NULL))
+      {
+         sge_add_list_event_(client, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, false);
+         DPRINTF(("%s: added event for %s with id " u32 "\n", SGE_FUNC, lGetString(client, EV_name), lGetUlong(client, EV_id)));
+      }
+
+      lSetUlong(client, EV_busy, 0);
+   }
+
+   sge_remote_event_delivery_handler(NULL); /* BUGBUG-AD: get rid of this soon! */
+
+   DEXIT;
+   return;
+} /* sge_event_shutdown() */
+
+/****** Eventclient/Server/sge_flush_events() **********************************
+*  NAME
+*     sge_flush_events() -- set the flushing time for events
 *
 *  SYNOPSIS
 *     #include "sge_event_master.h"
 *
-*     void 
-*     sge_add_list_event(lListElem *event_client, u_long32 timestamp,
-*                        ev_event type, 
-*                        u_long32 intkey, u_long32 intkey2, const char *strkey,
-*                        const char *session, lList *list) 
+*     static void 
+*     sge_flush_events(lListElem *event_client, int interval) 
 *
 *  FUNCTION
-*     Adds a list of objects to the list of events to deliver, e.g. the 
-*     sgeE*_LIST events.
+*     Sets the timestamp for the next flush of events for all or a specific
+*     event client.
+*     When events will be next sent to an event client is stored in its
+*     event client object in the variable EV_next_send_time.
 *
 *  INPUTS
-*     lListElem *event_client - the event client to receive the event, if NULL,
-*                               all event clients will receive the event
-*     u_long32 timestamp      - time stamp in gmt for the even; if 0 is passed,
-*                               sge_add_list_event will insert the actual time
-*     ev_event type           - the event id
-*     u_long32 intkey         - additional data
-*     u_long32 intkey2        - additional data
-*     const char *strkey      - additional data
-*     const char *session     - events session key
-*     lList *list             - the list to deliver as event
-*
-*  MT-NOTE: sge_add_list_event() is MT safe.
+*     lListElem *event_client - the event client for which to define flushing,
+*                               or NULL (flush all event clients)
+*     int interval            - time in seconds until next flush
 *
 *  NOTES
-*     Do we need the additional data fields?
 *
 *  SEE ALSO
-*     Eventclient/Server/sge_add_event()
+*     Eventclient/Server/ck_4_deliver_events()
 *
 *******************************************************************************/
-void 
-sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
-                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                   const char *strkey2, const char *session, lList *list) 
+static void 
+sge_flush_events(lListElem *event_client, int interval) 
 {
-   DENTER(TOP_LAYER, "sge_add_list_event");
+   int now = sge_get_gmt();
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   DENTER(TOP_LAYER, "sge_flush_events");
 
-   if (timestamp == 0) {
-      timestamp = sge_get_gmt();
-   }
-   if (event_client != NULL) {
-      if (sge_eventclient_subscribed(event_client, type, session)) {
-         sge_add_list_event_(event_client, timestamp, type, 
-                             intkey, intkey2, strkey, strkey2, list, true);
+   if (event_client == NULL) {
+      for_each (event_client, EV_Clients) {
+         sge_flush_events_(event_client, interval, now);
       }
    } else {
-      for_each (event_client, EV_Clients) {
-         if (sge_eventclient_subscribed(event_client, type, session)) {
-            sge_add_list_event_(event_client, timestamp, type, 
-                                intkey, intkey2, strkey, strkey2, list, true);
-         }
-      }
+      sge_flush_events_(event_client, interval, now);
    }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
    return;
-} /* sge_add_list_event() */
+} /* sge_flush_events() */
+
+static void 
+sge_flush_events_(lListElem *event_client, int interval, int now)
+{
+   u_long32 next_send, flush_delay;
+
+   DENTER(TOP_LAYER, "sge_flush_events");
+
+   next_send = lGetUlong(event_client, EV_next_send_time);
+   next_send = MIN(next_send, now + interval);
+
+   /* never send out two event packages in the very same second */
+   flush_delay = 1;
+
+   if (lGetUlong(event_client, EV_busy_handling) == EV_THROTTLE_FLUSH) {
+      u_long32 busy_counter = lGetUlong(event_client, EV_busy);
+      u_long32 ed_time = lGetUlong(event_client, EV_d_time);
+      u_long32 flush_delay_rate = MAX(lGetUlong(event_client, EV_flush_delay), 1);
+      if (busy_counter >= flush_delay_rate) {
+         /* busy counters larger than flush delay cause events being 
+            sent out in regular event delivery interval for alive protocol 
+            purposes with event client */
+         flush_delay = MAX(flush_delay, ed_time);
+      } else {
+         /* for smaller busy counters event delivery interval is scaled 
+            down with the busy counter */
+         flush_delay = MAX(flush_delay, ed_time * busy_counter / flush_delay_rate);
+      }
+   }
+
+   next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
+
+   lSetUlong(event_client, EV_next_send_time, next_send);
+   DPRINTF(("ev_client: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
+         lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
+         now, next_send, 
+         lGetHost(event_client, EV_host), 
+         lGetString(event_client, EV_commproc),
+         lGetUlong(event_client, EV_commid))); 
+
+   DEXIT;
+   return;
+}
+
+/****** Eventclient/Server/reinit_event_client() *******************************
+*  NAME
+*     reinit_event_client() -- do a total update for the scheduler
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     int 
+*     reinit_event_client(ev_registration_id id) 
+*
+*  FUNCTION
+*     Does a total update (send all lists) to the event client specified by id
+*     and outputs an error message.
+*
+*  INPUTS
+*     ev_registration_id id - the id of the event client to reinitialize.
+*
+*  RESULT
+*     int - 0 if reinitialization failed, e.g. because the event client does
+*           not exits, else 0
+*
+*  NOTES
+*     MT-NOTE: reinit_event_client() is MT safe.
+*
+*  SEE ALSO
+*     Eventclient/Server/total_update()
+*
+*******************************************************************************/
+
+/****** Eventclient/Server/total_update() **************************************
+*  NAME
+*     total_update() -- send all data to eventclient
+*
+*  SYNOPSIS
+*     static void 
+*     total_update(lListElem *event_client) 
+*
+*  FUNCTION
+*     Sends all complete lists it subscribed to an eventclient.
+*     If the event client receives a complete list instead of single events,
+*     it should completely update it's database.
+*
+*  INPUTS
+*     lListElem *event_client - the event client to update
+*
+*  NOTES
+*     MT-NOTE: total_update() is MT safe, IF the function is invoked with
+*     MT-NOTE: 'LOCK_EVENT_CLIENT_LST' locked! This is in accordance with
+*     MT-NOTE: the acquire/release protocol as defined by the Grid Engine
+*     MT-NOTE: Locking API.
+*
+*  SEE ALSO
+*     libs/lck/sge_lock.h
+*     libs/lck/sge_lock.c
+*
+*******************************************************************************/
+static void 
+total_update(lListElem *event_client)
+{
+   DENTER(TOP_LAYER, "total_update");
+
+   sge_total_update_event(event_client, sgeE_ADMINHOST_LIST);
+   sge_total_update_event(event_client, sgeE_CALENDAR_LIST);
+   sge_total_update_event(event_client, sgeE_CKPT_LIST);
+   sge_total_update_event(event_client, sgeE_CENTRY_LIST);
+   sge_total_update_event(event_client, sgeE_CONFIG_LIST);
+   sge_total_update_event(event_client, sgeE_EXECHOST_LIST);
+   sge_total_update_event(event_client, sgeE_JOB_LIST);
+   sge_total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST);
+   sge_total_update_event(event_client, sgeE_MANAGER_LIST);
+   sge_total_update_event(event_client, sgeE_OPERATOR_LIST);
+   sge_total_update_event(event_client, sgeE_PE_LIST);
+   sge_total_update_event(event_client, sgeE_CQUEUE_LIST);
+   sge_total_update_event(event_client, sgeE_SCHED_CONF);
+   sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST);
+   sge_total_update_event(event_client, sgeE_USERSET_LIST);
+
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      sge_total_update_event(event_client, sgeE_NEW_SHARETREE);
+      sge_total_update_event(event_client, sgeE_PROJECT_LIST);
+      sge_total_update_event(event_client, sgeE_USER_LIST);
+   }
+
+   sge_total_update_event(event_client, sgeE_HGROUP_LIST);
+
+#ifndef __SGE_NO_USERMAPPING__
+   sge_total_update_event(event_client, sgeE_CUSER_LIST);
+#endif
+
+   DEXIT;
+   return;
+} /* total_update() */
+
+
+/****** sge_event_master/sge_build_subscription() ******************************
+*  NAME
+*     sge_build_subscription() -- generates an array out of the cull registration
+*                                 structure
+*
+*  SYNOPSIS
+*     static void sge_build_subscription(lListElem *event_el) 
+*
+*  FUNCTION
+*      generates an array out of the cull registration
+*      structure. The array contains all event elements and each of them 
+*      has an identifier, if it is subscribed or not. Before that is done, it is
+*      tested, the EV_changed flag is set. If not, the function simply returns.
+*
+*
+*  INPUTS
+*     lListElem *event_el - the event element, which event structure will be transformed 
+*
+*******************************************************************************/
+static void sge_build_subscription(lListElem *event_el) {
+   lList *subscription = lGetList(event_el, EV_subscribed);
+   lListElem *sub_el = NULL;
+   subscription_t *sub_array = NULL; 
+
+   DENTER(TOP_LAYER, "sge_build_subscription");
+
+
+   if (!lGetBool(event_el, EV_changed)) {
+      DEXIT;
+      return;
+   }
+
+   DPRINTF(("rebuild event mask for a client\n"));
+
+   sub_array = (subscription_t *) malloc(sizeof(subscription_t) * sgeE_EVENTSIZE);
+   
+   memset(sub_array, 0, sizeof(subscription_t) * sgeE_EVENTSIZE); 
+   {
+      int i;
+      for (i=0; i<sgeE_EVENTSIZE; i++){
+         sub_array[i].subscription = EV_NOT_SUBSCRIBED;
+      }
+   } 
+   for_each(sub_el, subscription){
+      const lListElem *temp = NULL;
+      u_long32 event = lGetUlong(sub_el, EVS_id);   
+      
+      sub_array[event].subscription = EV_SUBSCRIBED; 
+      sub_array[event].flush = lGetBool(sub_el, EVS_flush);
+      sub_array[event].flush_time = lGetUlong(sub_el, EVS_interval);
+     
+      if ((temp = lGetObject(sub_el, EVS_where)))
+         sub_array[event].where = lWhereFromElem(temp);
+
+      if ((temp = lGetObject(sub_el, EVS_what))) {      
+         sub_array[event].what = lWhatFromElem(temp);
+      }   
+      
+   }
+   {
+      subscription_t *old_sub_array = lGetRef(event_el, EV_sub_array);
+      if (old_sub_array) {
+         int i;
+         for (i=0; i<sgeE_EVENTSIZE; i++){ 
+            if (old_sub_array[i].where)
+               lFreeWhere(old_sub_array[i].where);
+            if (old_sub_array[i].what)
+               lFreeWhat(old_sub_array[i].what);
+            if (old_sub_array[i].descr){
+               cull_hash_free_descr(old_sub_array[i].descr);
+               free(old_sub_array[i].descr);
+            }
+         }
+         free(old_sub_array);
+      }
+      lSetRef(event_el, EV_sub_array, sub_array);
+      lSetBool(event_el, EV_changed, false);
+   }
+   DEXIT;
+}
+
+/****** Eventclient/Server/check_send_new_subscribed_list() ********************
+*  NAME
+*     check_send_new_subscribed_list() -- check suscription for new list events
+*
+*  SYNOPSIS
+*     static void 
+*     check_send_new_subscribed_list(const subscription_t *old_subscription, 
+*                                    const subscription_t *new_subscription, 
+*                                    lListElem *event_client, 
+*                                    ev_event event) 
+*
+*  FUNCTION
+*     Checks, if sgeE*_LIST events have been added to the subscription of a
+*     certain event client. If yes, send these lists to the event client.
+*
+*  INPUTS
+*     const subscription_t *old_subscription - former subscription
+*     const subscription_t *new_subscription - new subscription
+*     lListElem *event_client      - the event client object
+*     ev_event event               - the event to check
+*
+*  SEE ALSO
+*     Eventclient/Server/sge_total_update_event()
+*
+*******************************************************************************/
+static void 
+check_send_new_subscribed_list(const subscription_t *old_subscription, 
+                               const subscription_t *new_subscription, 
+                               lListElem *event_client, ev_event event)
+{
+   if ((new_subscription[event].subscription & EV_SUBSCRIBED) && 
+       (old_subscription[event].subscription == EV_NOT_SUBSCRIBED)) {
+      sge_total_update_event(event_client, event);
+   }   
+}
+
+/****** Eventclient/Server/sge_eventclient_subscribed() ************************
+*  NAME
+*     sge_eventclient_subscribed() -- has event client subscribed an event?
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     int 
+*     sge_eventclient_subscribed(const lListElem *event_client, ev_event event) 
+*
+*  FUNCTION
+*     Checks if the given event client has a certain event subscribed.
+*     For event clients that use session filtering additional conditions
+*     must be fulfilled otherwise the event counts not as subscribed.
+*
+*  INPUTS
+*     const lListElem *event_client - event client to check
+*     ev_event event                - event to check
+*     const char *session           - session key of this event
+*
+*  RESULT
+*     int - 0 = not subscribed, 1 = subscribed
+*
+*  SEE ALSO
+*     Eventclient/-Session filtering
+*******************************************************************************/
+static int 
+sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
+   const char *session)
+{
+   const subscription_t *subscription = NULL;
+   const char *ec_session;
+
+   DENTER(TOP_LAYER, "sge_eventclient_subscribed");
+
+   if (event_client == NULL) {
+      DEXIT;
+      return 0;
+   }
+
+   subscription = lGetRef(event_client, EV_sub_array);
+   ec_session = lGetString(event_client, EV_session);
+
+   if (subscription == NULL) {
+      DEXIT;
+      return 0;
+   }
+
+   if (ec_session) {
+      if (session) {
+         /* events that belong to a specific session are not subscribed 
+            in case the event client is not interested in that session */
+         if (strcmp(session, ec_session)) {
+            DEXIT;
+            return 0;
+         }
+      } else {
+         /* events that do not belong to a specific session are not 
+            subscribed if the event client is interested in events of a 
+            specific session. 
+            The only exception are list events, because list events do not 
+            belong to a specific session. These events require filtering on 
+            a more fine grained level */
+         if (!IS_TOTAL_UPDATE_EVENT(event)) {
+            DEXIT;
+            return 0;
+         }
+      }
+   }
+   if (subscription[event].subscription == EV_SUBSCRIBED) {
+      DEXIT;
+      return 1;
+   }
+
+   DEXIT;
+   return 0;
+}
+
+/****** evm/sge_event_master/purge_event_list() ********************************
+*  NAME
+*     purge_event_list() -- purge event list
+*
+*  SYNOPSIS
+*     static int purge_event_list(lList* aList, ev_event anEvent) 
+*
+*  FUNCTION
+*     Remove all events from 'aList' which do have an event id less than or
+*     equal to 'anEvent'.
+*
+*  INPUTS
+*     lList* aList     - event list
+*     ev_event anEvent - event
+*
+*  RESULT
+*     int - number of events purged.
+*
+*  NOTES
+*     MT-NOTE: purge_event_list() is NOT MT safe. 
+*     MT-NOTE: 
+*     MT-NOTE: Do not call this function without having 'aList' locked!
+*
+*  BUGS
+*     BUGBUG-AD: If 'anEvent' == 0, not events will be purged. However zero is
+*     BUGBUG-AD: also the id of 'sgeE_ALL_EVENTS'. Is this behaviour correct?
+*
+*******************************************************************************/
+static int purge_event_list(lList* aList, ev_event anEvent) 
+{
+   int purged, pos = 0;
+   lListElem *ev = NULL;
+
+   DENTER(TOP_LAYER, "purge_event_list");
+
+   if (0 == anEvent) {
+      DEXIT;
+      return 0;
+   }
+
+   pos = lGetPosInDescr(ET_Type, ET_number);
+
+   ev = lFirst(aList);
+
+   while (ev)
+   {
+      lListElem *tmp = ev;
+
+      ev = lNext(ev); /* fetch next event, before the old one will be deleted */
+
+      if (lGetPosUlong(tmp, pos) > anEvent) {
+         break;
+      }
+
+      lRemoveElem(aList, tmp);
+      purged++;
+   }
+
+   DEXIT;
+   return purged;
+} /* remove_events_from_client() */
 
 static int 
 sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
@@ -1594,83 +1941,6 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    return EV_Clients?consumed:1;
 }
 
-/****** Eventclient/Server/sge_add_event() *************************************
-*  NAME
-*     sge_add_event() -- add an object as event
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
-*                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
-*                   const char *strkey2, lListElem *element) 
-*
-*  FUNCTION
-*     Adds an object to the list of events to deliver. Called, if an event 
-*     occurs to that object, e.g. it was added to Grid Engine, modified or 
-*     deleted.
-*  
-*     Internally, a list with that single object is created and passed to 
-*     sge_add_list_event().
-*
-*  INPUTS
-*     lListElem *event_client - the event client to receive the event, if NULL,
-*                               all event clients will receive the event
-*     u_long32 timestamp      - time stamp in gmt for the even; if 0 is passed,
-*                               sge_add_list_event will insert the actual time
-*     ev_event type           - the event id
-*     u_long32 intkey         - additional data
-*     u_long32 intkey2        - additional data
-*     const char *strkey      - additional data
-*     const char *strkey2     - additional data
-*     const char *session     - events session key
-*     lListElem *element      - the object to deliver as event
-*
-*  MT-NOTE: sge_add_event() is MT safe
-*
-*  NOTES
-*     Do we need the additional data fields?
-*
-*  SEE ALSO
-*     Eventclient/Server/sge_add_list_event()
-*     Eventclient/-Session filtering
-*
-*******************************************************************************/
-void 
-sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
-              u_long32 intkey, u_long32 intkey2, const char *strkey, 
-              const char *strkey2, const char *session, lListElem *element) 
-{
-
-   DENTER(TOP_LAYER, "sge_add_event"); 
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if (timestamp == 0) {
-      timestamp = sge_get_gmt();
-   }
-   if (event_client != NULL) {
-      if (sge_eventclient_subscribed(event_client, type, session)) {
-         sge_add_event_(event_client, timestamp, type, 
-                        intkey, intkey2, strkey, strkey2, element);
-      }   
-   } else {
-      for_each (event_client, EV_Clients) {
-         if (sge_eventclient_subscribed(event_client, type, session)) {
-            sge_add_event_(event_client, timestamp, type, 
-                           intkey, intkey2, strkey, strkey2, element);
-         }
-      }
-
-   }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return;
-} /* sge_add_event() */
-
 static void 
 sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
                u_long32 intkey, u_long32 intkey2, const char *strkey, 
@@ -1740,50 +2010,6 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
  
    return;
 }
-
-/****** Eventclient/Server/sge_get_next_event_number() *************************
-*  NAME
-*     sge_get_next_event_number() -- next event number for an event client
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     u_long32 
-*     sge_get_next_event_number(u_long32 client_id) 
-*
-*  FUNCTION
-*     Retrieves the next serial event number for an event client.
-*
-*  INPUTS
-*     u_long32 client_id - id of the event client
-*
-*  RESULT
-*     u_long32 - serial number for next event to deliver
-*
-*  MT-NOTE: sge_get_next_event_number() is MT safe.
-*
-*******************************************************************************/
-u_long32 
-sge_get_next_event_number(u_long32 client_id) 
-{
-   lListElem *event_client;
-   u_long32 ret = 0;
-
-   DENTER(TOP_LAYER, "sge_get_next_event_number");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   event_client = lGetElemUlong(EV_Clients, EV_id, client_id);
-   if (event_client != NULL) {
-      ret = lGetUlong(event_client, EV_next_number);
-   }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return ret;
-} /* sge_get_next_event_number() */
-
 
 /****** Eventclient/Server/sge_total_update_event() ****************************
 *  NAME
@@ -2240,11 +2466,7 @@ eventclient_list_locate(ev_registration_id id)
 
    DENTER(TOP_LAYER, "eventclient_list_locate");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
    ep = lGetElemUlong(EV_Clients, EV_id, id);
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
    return ep;
@@ -2294,272 +2516,6 @@ eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long
    DEXIT;
    return ep;
 }
-
-
-/****** Eventclient/Server/sge_gdi_kill_eventclient() *************************
-*  NAME
-*     sge_gdi_kill_eventclient() -- kill an event client
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, 
-*                              sge_gdi_request *answer) 
-*
-*  FUNCTION
-*     Kills one or all dynamic event clients.
-*     If a certain event client id is contained in the request, an event client
-*     with that id is killed.
-*     If the requested id is EC_ID_ANY (0), all event clients with dynamic ids
-*     are killed.
-*     Killing an event client is done by sending it the special event
-*     sgeE_SHUTDOWN and flushing immediately.
-*
-*  INPUTS
-*     const char *host         - host that sent the kill request
-*     sge_gdi_request *request - request containing the event client id
-*     sge_gdi_request *answer  - answer structure to return an answer to the 
-*                                client issuing the kill command (usually qconf)
-*
-*  MT-NOTE: sge_gdi_kill_eventclient() is MT safe
-*
-*  SEE ALSO
-*     qconf  -kec
-*
-*******************************************************************************/
-void 
-sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, 
-                         sge_gdi_request *answer) 
-{
-   uid_t uid;
-   gid_t gid;
-   char user[128];
-   char group[128];
-   lListElem *idep, *event_client;
-
-   DENTER(GDI_LAYER, "sge_gdi_kill_eventclient");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(answer->alp), SGE_EVENT, 
-                      STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      DEXIT;
-      return;
-   }
-
-   for_each (idep, request->lp) {
-      int id;
-      const char *idstr = lGetString(idep, ID_str);
-
-      if (idstr == NULL) {
-         id = EV_ID_ANY;
-      } else {
-         char *dptr;
-         id = strtol(idstr, &dptr, 0); 
-         if (dptr == idstr) {
-            ERROR((SGE_EVENT, MSG_EVE_ILLEGALEVENTCLIENTID_S, idstr));
-            answer_list_add(&(answer->alp), SGE_EVENT, 
-                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            continue;
-         }
-      }
-
-      if (id == EV_ID_ANY) {
-         /* kill all event clients except schedd */
-         for_each (event_client, EV_Clients) {
-            if (lGetUlong(event_client, EV_id) >= EV_ID_FIRST_DYNAMIC) {
-               sge_gdi_kill_eventclient_(event_client, host, user, uid, answer);
-            }
-         }
-      } else {
-         event_client = lGetElemUlong(EV_Clients, EV_id, id);
-         if (event_client == NULL)
-         {
-            if (id == EV_ID_SCHEDD) {
-               ERROR((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-            } else {
-               ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(id), "finish"));
-            }
-            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            continue;
-         }
-         sge_gdi_kill_eventclient_(event_client, host, user, uid, answer);
-      }
-   }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return;
-} /* sge_gid_kill_eventclient() */
-   
-static void 
-sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, 
-                          const char *user, uid_t uid, sge_gdi_request *answer) 
-{
-   DENTER(GDI_LAYER, "sge_gdi_kill_eventclient_");
-
-   /* must be either manager or owner of the event client */
-   if (!manop_is_manager(user) && uid != lGetUlong(event_client, EV_uid)) {
-      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
-      answer_list_add(&(answer->alp), SGE_EVENT, 
-                      STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return;
-   }
-
-   sge_add_event(event_client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
-                 lGetString(event_client, EV_session), NULL);
-
-   sge_flush_events(event_client, 0);
-
-   INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, 
-         lGetString(event_client, EV_name)));
-   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   DEXIT;
-}
-
-/****** Eventclient/Server/sge_gdi_tsm() ***************************************
-*  NAME
-*     sge_gdi_tsm() -- trigger scheduling
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     sge_gdi_tsm(char *host, sge_gdi_request *request, 
-*                 sge_gdi_request *answer) 
-*
-*  FUNCTION
-*     Triggers a scheduling run for the scheduler as special event client.
-*
-*  INPUTS
-*     char *host               - host that triggered scheduling
-*     sge_gdi_request *request - request structure
-*     sge_gdi_request *answer  - answer structure to return to client
-*
-*  MT-NOTE: sge_gdi_tsm() is MT safe.
-*
-*  NOTES
-*     This function should not be part of the core event client interface.
-*     Or it should be possible to trigger any event client.
-*
-*  SEE ALSO
-*     qconf -tsm
-*
-*******************************************************************************/
-void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
-{
-   uid_t uid;
-   gid_t gid;
-   char user[128];
-   char group[128];
-   lListElem *scheduler;
-
-   DENTER(GDI_LAYER, "sge_gdi_tsm");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      DEXIT;
-      return;
-   }
-
-   if (!manop_is_manager(user)) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
-                      ANSWER_QUALITY_WARNING);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      DEXIT;
-      return;
-   }
-     
-   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
-     
-   if (scheduler == NULL) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, 
-                      ANSWER_QUALITY_WARNING);
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      DEXIT;
-      return;
-   }
-
-   sge_add_event(scheduler, 0, sgeE_SCHEDDMONITOR, 0, 0, 
-                 NULL, NULL, NULL, NULL);
-
-   INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
-   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return;
-} /* sge_gdi_tsm() */
-
-
-/****** Eventclient/Server/set_event_client_busy() *****************************
-*  NAME
-*     set_event_client_busy() -- set the busy state of event clients
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     set_event_client_busy(lListElem *event_client, int busy) 
-*
-*  FUNCTION
-*     Sets the busy state of one or all event clients.
-*
-*  INPUTS
-*     lListElem *event_client - the event client to modify - NULL to modify all 
-*     int busy                - busy state - 0 = not busy, 1 = busy
-*
-*  MT-NOTE: set_event_client_busy() is MT safe.
-*
-*  NOTES
-*     The busy state should better be a boolean if it this datatype was 
-*     available in the cull library.
-*
-*  SEE ALSO
-*     
-*******************************************************************************/
-void 
-set_event_client_busy(lListElem *event_client, int busy)
-{
-   DENTER(TOP_LAYER, "set_event_client_busy");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   if (event_client == NULL) {
-      for_each (event_client, EV_Clients) {
-         lSetUlong(event_client, EV_busy, busy);
-      }
-   } else {
-      lSetUlong(event_client, EV_busy, busy);
-   }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return;
-} /* set_event_client_busy() */
-
 
 /****** sge_event_master/sge_init_send_events() ********************************
 *  NAME

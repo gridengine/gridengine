@@ -175,25 +175,28 @@
 #define MSG_COM_ACK_US               _MESSAGE(33111, _("ack event for job " U32CFormat  " can't find queue "SFN"\n"))
 #define MSG_COM_ACK_QUEUE_U          _MESSAGE(33112, _("ack event for unknown queue " U32CFormat "\n"))
 #define MSG_COM_ACK_UNKNOWN          _MESSAGE(33113, _("unknown ack event\n"))
-#define MSG_COM_NO_EVCLIENTWITHID_U  _MESSAGE(33114, _("no event client with id "U32CFormat" registered\n"))
 
 /*
 ** sge_c_gdi.c
 */
-#define MSG_GDI_WRONG_GDI_SSISS       _MESSAGE(33115, _("denied: client ("SFN"/"SFN"/%d) uses old GDI version "SFN" while qmaster uses newer version "SFN"\n"))
-#define MSG_GDI_WRONG_GDI_SSIUS       _MESSAGE(33116, _("denied: client ("SFN"/"SFN"/%d) uses newer GDI version "U32CFormat" while qmaster uses older version "SFN"\n"))
+#define MSG_GDI_WRONG_GDI_SSISS  _MESSAGE(33115, _("denied: client ("SFN"/"SFN"/%d) uses old GDI version "SFN" while qmaster uses newer version "SFN"\n"))
+#define MSG_GDI_WRONG_GDI_SSIUS  _MESSAGE(33116, _("denied: client ("SFN"/"SFN"/%d) uses newer GDI version "U32CFormat" while qmaster uses older version "SFN"\n"))
 
+#define MSG_GDI_NULL_IN_GDI_SSS  _MESSAGE(33117, _("denied: got NULL in "SFN"/"SFN" of gdi request from host "SFQ"\n"))
+#define MSG_GDI_OKNL             _MESSAGE(33118, _("ok\n"))
+#define MSG_MEM_MALLOC           _MESSAGE(33121, _("malloc failure\n"))
+#define MSG_SGETEXT_UNKNOWNOP    _MESSAGE(33122, _("unknown operation\n"))
 
-#define MSG_GDI_NULL_IN_GDI_SSS       _MESSAGE(33117, _("denied: got NULL in "SFN"/"SFN" of gdi request from host "SFQ"\n"))
-#define MSG_GDI_OKNL                  _MESSAGE(33118, _("ok\n"))
-#define MSG_MEM_MALLOC                _MESSAGE(33121, _("malloc failure\n"))
-#define MSG_SGETEXT_UNKNOWNOP                   _MESSAGE(33122, _("unknown operation\n"))
 #define MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S _MESSAGE(33123, _("feature not available for "SFN" system\n"))
-#define MSG_SGETEXT_OPNOIMPFORTARGET            _MESSAGE(33125, _("operation not implemented for target\n"))
-#define MSG_SGETEXT_NOADMINHOST_S               _MESSAGE(33126, _("denied: host "SFQ" is no admin host\n"))
-#define MSG_SGETEXT_NOSUBMITHOST_S              _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
-#define MSG_SGETEXT_NOSUBMITORADMINHOST_S       _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
-#define MSG_SGETEXT_ALREADYEXISTS_SS            _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
+#define MSG_SGETEXT_OPNOIMPFORTARGET             _MESSAGE(33125, _("operation not implemented for target\n"))
+#define MSG_SGETEXT_NOADMINHOST_S                _MESSAGE(33126, _("denied: host "SFQ" is no admin host\n"))
+#define MSG_SGETEXT_NOSUBMITHOST_S               _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
+#define MSG_SGETEXT_NOSUBMITORADMINHOST_S        _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
+#define MSG_SGETEXT_ALREADYEXISTS_SS             _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
+
+#define MSG_GDI_SHUTDOWNEVCLIENTFAILED_US  _MESSAGE(33130, _("shutdown event client with id " U32CFormat " failed in %s\n"))
+#define MSG_GDI_EVENTCLIENTIDFORMAT_S      _MESSAGE(33131, _("invalid event client id format " SFQ "\n"))
+
 
 /*
 ** sge_calendar_qmaster.c

@@ -42,39 +42,31 @@
 #include "sig_handlers.h"
 #include "sge_log.h"
 #include "sge_gdi_request.h"
-#include "msg_qmaster.h"
 #include "sge_string.h"
 #include "sge_c_gdi.h"
 #include "sge_c_ack.h"
 #include "sge_c_report.h"
 #include "sge_qmaster_main.h"
+#include "msg_qmaster.h"
+#include "msg_common.h"
 
 
-#ifdef ENABLE_NGC
 typedef struct {
-   char snd_host[MAXHOSTLEN];      /* sender hostname; NULL -> all */
-   char snd_name[MAXHOSTLEN];      /* sender name (aka 'commproc'); NULL -> all */
-   u_short snd_id;                 /* sender identifier; 0 -> all */
-   int tag;                        /* message tag; TAG_NONE -> all */
-   u_long32 request_mid;           /* message id of request */
-   sge_pack_buffer buf;            /* message buffer */
+   char snd_host[MAXHOSTLEN]; /* sender hostname; NULL -> all              */
+   char snd_name[MAXHOSTLEN]; /* sender name (aka 'commproc'); NULL -> all */
+   u_short snd_id;            /* sender identifier; 0 -> all               */
+   int tag;                   /* message tag; TAG_NONE -> all              */
+   u_long32 request_mid;      /* message id of request                     */
+   sge_pack_buffer buf;       /* message buffer                            */
 } struct_msg_t;
-#else
-typedef struct {
-   char snd_host[MAXHOSTLEN];      /* sender hostname; NULL -> all */
-   char snd_name[MAXCOMPONENTLEN]; /* sender name (aka 'commproc'); NULL -> all */
-   u_short snd_id;                 /* sender identifier; 0 -> all */
-   int tag;                        /* message tag; TAG_NONE -> all */
-   sge_pack_buffer buf;            /* message buffer */
-} struct_msg_t;
-#endif
-
-static int determine_timeout(void);
-static void do_gdi_request(struct_msg_t *aMsg);
-static void do_report_request(struct_msg_t *aMsg);
 
 
-/****** sge_qmaster_process_message/sge_qmaster_process_message() **************
+static void do_gdi_request(struct_msg_t*);
+static void do_report_request(struct_msg_t*);
+static void do_event_client_exit(const char*, const char*, sge_pack_buffer*);
+
+
+/****** qmaster/sge_qmaster_process_message/sge_qmaster_process_message() ******
 *  NAME
 *     sge_qmaster_process_message() -- Entry point for qmaster message handling
 *
@@ -82,9 +74,7 @@ static void do_report_request(struct_msg_t *aMsg);
 *     void* sge_qmaster_process_message(void *anArg) 
 *
 *  FUNCTION
-*     Determine timeout for communication. Get a pending message. Handle message
-*     based on message tag.
-* 
+*     Get a pending message. Handle message based on message tag.
 *
 *  INPUTS
 *     void *anArg - none 
@@ -93,24 +83,13 @@ static void do_report_request(struct_msg_t *aMsg);
 *     void* - none
 *
 *  NOTES
-*     'sge_get_any_request()' could raise a signal 'SIGPIPE'. This happens,
-*     if we try to write a socket which has been closed by the receiving
-*     side. In this case we just 'ignore' the signal by resetting the
-*     'sigpipe_received' variable.
-*     
-*     This function is intended to be used as a 'thread function' Hence the 
-*     signature.
-*
 *     MT-NOTE: thread safety needs to be verified!
+*     MT-NOTE:
+*     MT-NOTE: This function should only be used as a 'thread function'
 *
 *******************************************************************************/
 void *sge_qmaster_process_message(void *anArg)
 {
-   int new; /* timeout values */
-#ifdef ENABLE_NGC
-#else
-   int old;
-#endif
    int res;
    struct_msg_t msg;
 
@@ -118,37 +97,12 @@ void *sge_qmaster_process_message(void *anArg)
    
    memset((void*)&msg, 0, sizeof(struct_msg_t));
    
-   new = determine_timeout();
-
-#ifdef ENABLE_NGC
-#else
-   old = commlib_state_get_timeout_srcv();
-
-   DPRINTF(("setting sync receive timeout to %d seconds\n", new));
-   set_commlib_param(CL_P_TIMEOUT_SRCV, new, NULL, NULL);
-#endif
    res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid);
-#ifdef ENABLE_NGC
-#else
-   set_commlib_param(CL_P_TIMEOUT_SRCV, old, NULL, NULL);
-#endif
 
-   if (sigpipe_received) {
-      sigpipe_received = 0;
-      INFO((SGE_EVENT, "SIGPIPE received"));
-   }
-   
-#ifdef ENABLE_NGC
    if (res != CL_RETVAL_OK) {
-      DPRINTF(("sge_get_any_request returned: %s\n", cl_get_error_text(res)));
+      DPRINTF(("%s returned: %s\n", SGE_FUNC, cl_get_error_text(res)));
       return anArg;              
    }
-#else
-   if (res != CL_OK) {
-      DPRINTF(("sge_get_any_request returned: %s\n", cl_errstr(res)));
-      return anArg;              
-   }
-#endif
 
    switch (msg.tag)
    {
@@ -161,7 +115,7 @@ void *sge_qmaster_process_message(void *anArg)
          sge_c_ack(msg.snd_host, msg.snd_name, &(msg.buf));
          break;
       case TAG_EVENT_CLIENT_EXIT:
-         sge_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
+         do_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
          break;
       case TAG_REPORT_REQUEST: 
          do_report_request(&msg);
@@ -169,54 +123,12 @@ void *sge_qmaster_process_message(void *anArg)
       default:
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
    }
+
    clear_packbuffer(&(msg.buf));
 
    DEXIT;
    return anArg; 
 } /* sge_qmaster_process_message */
-
-/****** sge_qmaster_process_message/determine_timeout() ************************
-*  NAME
-*     determine_timeout() -- determine communication timeout
-*
-*  SYNOPSIS
-*     static int determine_timeout(void) 
-*
-*  FUNCTION
-*     The timeout is affected by pending events. Pending events need to be
-*     delivered on time to registered event clients. If there are pending events,
-*     the (positiv) delta between event delivery time and current time is
-*     calculated. If this delta is less than 'DEFAULT_TIMEOUT', it is used as
-*     timeout. Otherwise 'DEFAULT_TIMEOUT' is used. The minimal timeout used is
-*     'MIN_TIMEOUT'. With no pending events, 'DEFAULT_TIMEOUT' is used.
-*
-*  RESULT
-*     int - timeout value 
-*
-*  NOTES
-*     MT-NOTE: determine_timeout() is thread safe
-*
-*******************************************************************************/
-static int determine_timeout(void)
-{
-   enum { MIN_TIMEOUT = 2, DEFAULT_TIMEOUT = 20 }; /* seconds */
-
-   time_t now;   /* current time */
-   time_t flush; /* time next event flush is due */
-   int res = DEFAULT_TIMEOUT;
-
-   DENTER(TOP_LAYER, "determine_timeout");
-
-   now = sge_get_gmt();
-   flush = sge_next_flush(now);
-
-   if (flush && ((flush - now) >= 0)) {
-      res = MIN(MAX((flush - now), MIN_TIMEOUT), DEFAULT_TIMEOUT);
-   }
-
-   DEXIT;
-   return res;
-} /* determine_timeout */
 
 /****** sge_qmaster_process_message/do_gdi_request() ***************************
 *  NAME
@@ -325,3 +237,50 @@ static void do_report_request(struct_msg_t *aMsg)
    DEXIT;
    return;
 } /* do_report_request */
+
+/****** qmaster/sge_qmaster_process_message/do_event_client_exit() *************
+*  NAME
+*     do_event_client_exit() -- handle event client exit message 
+*
+*  SYNOPSIS
+*     static void do_event_client_exit(const char *aHost, const char *aSender, 
+*     sge_pack_buffer *aBuffer) 
+*
+*  FUNCTION
+*     Handle event client exit message. Extract event client id from pack
+*     buffer. Remove event client. 
+*
+*  INPUTS
+*     const char *aHost        - sender 
+*     const char *aSender      - communication endpoint 
+*     sge_pack_buffer *aBuffer - buffer 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: do_event_client_exit() is NOT MT safe. 
+*
+*******************************************************************************/
+static void do_event_client_exit(const char *aHost, const char *aSender, sge_pack_buffer *aBuffer)
+{
+   u_long32 client_id = 0;
+
+   DENTER(TOP_LAYER, "do_event_client_exit");
+
+   if (unpackint(aBuffer, &client_id) != PACK_SUCCESS)
+   {
+      ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 1));
+      DPRINTF(("%s: client id unpack failed - host %s - sender %s\n", SGE_FUNC, aHost, aSender));
+      DEXIT;
+      return;
+   }
+
+   DPRINTF(("%s: remove client " u32 " - host %s - sender %s\n", SGE_FUNC, client_id, aHost, aSender));
+
+   sge_remove_event_client(client_id);
+
+   DEXIT;
+   return;
+} /* do_event_client_exit() */
+

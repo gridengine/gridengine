@@ -120,7 +120,6 @@ lList **topp  /* ticket orders ptr ptr */
    u_long32 force, state;
    u_long32 pe_slots = 0, q_slots, q_version, task_id_range = 0;
    lListElem *pe = NULL;
-   lListElem *scheduler;
 
    DENTER(TOP_LAYER, "sge_follow_order");
 
@@ -131,20 +130,20 @@ lList **topp  /* ticket orders ptr ptr */
    force=lGetUlong(ep, OR_force);
    or_pe=lGetString(ep, OR_pe);
 
-   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
-   if(scheduler == NULL) {
+   if(!sge_event_client_registered(EV_ID_SCHEDD)) {
       ERROR((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       DEXIT;
       return -2;
    }
 
    /* last order has been sent again - ignore it */
-   if (seq_no == lGetUlong(scheduler, EV_clientdata)) {
+   if (sge_get_event_client_data(EV_ID_SCHEDD) == seq_no) {
       WARNING((SGE_EVENT, MSG_IGNORE_ORDER_RETRY_I, seq_no));
       DEXIT;
       return STATUS_OK;
    }
-   lSetUlong(scheduler, EV_clientdata, seq_no);
+
+   sge_set_event_client_data(EV_ID_SCHEDD, seq_no);
 
    DPRINTF(("-----------------------------------------------------------------------\n"));
 

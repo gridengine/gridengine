@@ -55,7 +55,6 @@
 
 
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
-static void sge_c_event_ack(char *, char *, u_long32, u_long32, u_long32);
 
 /****************************************************
  Master code.
@@ -103,7 +102,7 @@ sge_pack_buffer *pb
          break;
 
       case ACK_EVENT_DELIVERY:
-         sge_c_event_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
+         sge_handle_event_ack(ack_ulong2, ack_ulong);
          break;
 
       default:
@@ -219,32 +218,5 @@ u_long32 ack_ulong2
    }
 
    DEXIT;
-   return;
-}
-
-
-/*******************************************************************/
-static void sge_c_event_ack(
-char *host, 
-char *commproc, 
-u_long32 ack_tag, 
-u_long32 event_number,
-u_long32 ev_id
-) {
-   lListElem *event_client;
-
-   DENTER(TOP_LAYER, "sge_c_event_ack");
-
-   /* search commproc in event client list */
-   event_client = lGetElemUlong(EV_Clients, EV_id, ev_id);
-   if (event_client == NULL) {
-      ERROR((SGE_EVENT, MSG_COM_NO_EVCLIENTWITHID_U, u32c(ev_id)));
-      DEXIT;
-      return;
-   }
-
-   sge_ack_event(event_client, event_number);
-
-   DEXIT;   
    return;
 }

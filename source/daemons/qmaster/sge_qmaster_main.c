@@ -1110,8 +1110,8 @@ static void wait_for_thread_termination(void)
 *     static void qmaster_shutdown(void) 
 *
 *  FUNCTION
-*     Clean up qmaster. Notify clients about shutdown. Shutdown persistence and
-*     reporting service. Shutdown timed event delivery. Clean-up communication
+*     Shutdown qmaster. Shutdown persistence and reporting service. Shutdown
+*     timed event delivery. Shutdown event delivery. Clean-up communication
 *     library.
 *
 *     This function must be the VERY last function which qmaster does invoke.
@@ -1125,27 +1125,20 @@ static void wait_for_thread_termination(void)
 *  NOTES
 *     MT-NOTE: qmaster_shutdown() is NOT MT safe. 
 *
+*     Do NOT change the shutdown operation sequence!
+*
 *******************************************************************************/
 static void qmaster_shutdown(void)
 {
-   time_t now = time(NULL);
-   te_event_t ev = NULL;
-
    DENTER(TOP_LAYER, "qmaster_shutdown");
-
-   sge_add_event(NULL, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
-
-   set_event_client_busy(NULL, 0); 
-
-   ev = te_new_event(time(NULL), TYPE_REMOTE_EVENT_DELIVERY_EVENT, ONE_TIME_EVENT, 0, 0, "remote-event-delivery-shutdown");
-   te_add_event(ev);
-   te_free_event(ev);
 
    sge_shutdown_persistence(NULL);
 
    reporting_shutdown(NULL);
 
    te_shutdown();
+
+   sge_event_shutdown();
 
    sge_shutdown();
 

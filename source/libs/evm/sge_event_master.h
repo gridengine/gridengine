@@ -32,51 +32,32 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
 #include "sge_gdiP.h"
 #include "sge_eventL.h"
 #include "sge_qmaster_timed_event.h"
 
+extern int  sge_add_event_client(lListElem*, lList**, lList**, char*, char*);
+extern int  sge_mod_event_client(lListElem*, lList**, lList**, char*, char*);
+extern bool sge_event_client_registered(u_long32);
+extern void sge_remove_event_client(u_long32);
+extern int  sge_shutdown_event_client(u_long32, const char*, uid_t);
+extern int  sge_shutdown_dynamic_event_clients(const char*);
 
-extern lList *EV_Clients;
+extern u_long32 sge_get_event_client_data(u_long32);
+extern int      sge_set_event_client_data(u_long32, u_long32);
 
-int reinit_event_client(ev_registration_id id);
+extern void sge_add_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lListElem*);
+extern void sge_add_list_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*); 
+extern int  sge_handle_event_ack(u_long32, ev_event);
+extern void sge_deliver_events_immediately(u_long32);
 
-int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
-                         char *ruser, char *rhost);
+extern u_long32 sge_get_next_event_number(u_long32);
+extern void     sge_gdi_tsm(char*, sge_gdi_request*, sge_gdi_request*);
+extern int      sge_resync_schedd(void);
 
-int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
-                         char *ruser, char *rhost);
+extern void sge_remote_event_delivery_handler(te_event_t);
 
-void sge_event_client_exit(const char *host, const char *commproc, 
-                           sge_pack_buffer *pb);
-
-void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, 
-                              sge_gdi_request *answer);
-
-int sge_ack_event(lListElem *er, ev_event event_number);
-
-void sge_remote_event_delivery_handler(te_event_t anEvent);
-
-void sge_flush_events(lListElem *event_client, int interval);
-
-int sge_next_flush(int);
-
-void sge_add_list_event(lListElem *event_client, u_long32 timestamp,
-                        ev_event type, u_long32 intkey, u_long32 intkey2, 
-                        const char *strkey, const char *strkey2,
-                        const char *session, lList *list); 
-
-void sge_add_event(lListElem *event_client, u_long32 timestamp,
-                   ev_event type, u_long32 intkey, u_long32 intkey2, 
-                   const char *strkey, const char *strkey2,
-                   const char *session, lListElem *element);
-
-u_long32 sge_get_next_event_number(u_long32 client_id);
-
-void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-
-lListElem* eventclient_list_locate(ev_registration_id id);
-
-void set_event_client_busy(lListElem *event_client, int busy);
+extern void sge_event_shutdown(void);
 
 #endif /* __SGE_M_EVENT_H */

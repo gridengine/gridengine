@@ -2235,7 +2235,8 @@ double calc_job_deadline_tickets_pass2 ( sge_ref_t *ref,
 
 double
 calc_job_override_tickets( sge_ref_t *ref,
-                           int shared )
+                           int shared,
+                           int include_queued_jobs)
 {
    double job_override_tickets = 0;
    double otickets, job_cnt;
@@ -2250,20 +2251,32 @@ calc_job_override_tickets( sge_ref_t *ref,
     *                        job.override_tickets;
     *-------------------------------------------------------*/
 
-   if (ref->user)
+   if (ref->user) {
+      job_cnt = lGetUlong(ref->user, UP_job_cnt);
+      if (include_queued_jobs)
+         job_cnt += lGetUlong(ref->user, UP_pending_job_cnt);
       if (((otickets = lGetUlong(ref->user, UP_oticket)) &&
-          ((job_cnt = shared ? lGetUlong(ref->user, UP_job_cnt) : 1))))
+          ((job_cnt = shared ? job_cnt : 1))))
          job_override_tickets += (otickets / job_cnt);
+   }
 
-   if (ref->project)
+   if (ref->project) {
+      job_cnt = lGetUlong(ref->project, UP_job_cnt);
+      if (include_queued_jobs)
+         job_cnt += lGetUlong(ref->project, UP_pending_job_cnt);
       if (((otickets = lGetUlong(ref->project, UP_oticket)) &&
-          ((job_cnt = shared ? lGetUlong(ref->project, UP_job_cnt) : 1))))
+          ((job_cnt = shared ? job_cnt : 1))))
          job_override_tickets += (otickets / job_cnt);
+   }
 
-   if (ref->dept)
+   if (ref->dept) {
+      job_cnt = lGetUlong(ref->dept, US_job_cnt);
+      if (include_queued_jobs)
+         job_cnt += lGetUlong(ref->dept, US_pending_job_cnt);
       if (((otickets = lGetUlong(ref->dept, US_oticket)) &&
-          ((job_cnt = shared ? lGetUlong(ref->dept, US_job_cnt) : 1))))
+          ((job_cnt = shared ? job_cnt : 1))))
          job_override_tickets += (otickets / job_cnt);
+   }
 
    job_override_tickets += lGetUlong(ref->job, JB_override_tickets);
 
@@ -2275,8 +2288,11 @@ calc_job_override_tickets( sge_ref_t *ref,
       for_each(granted_pe, lGetList(ref->ja_task, JAT_granted_destin_identifier_list)) {
          jobclass_otickets = 0;
          if (ref->task_jobclass[i]) {
+            job_cnt = lGetUlong(ref->task_jobclass[i], QU_job_cnt);
+            if (include_queued_jobs)
+               job_cnt += lGetUlong(ref->task_jobclass[i], QU_pending_job_cnt);
             if (((otickets = lGetUlong(ref->task_jobclass[i], QU_oticket)) &&
-                ((job_cnt = shared ? lGetUlong(ref->task_jobclass[i], QU_job_cnt) : 1))))
+                ((job_cnt = shared ? job_cnt : 1))))
                jobclass_otickets = (otickets / (double)job_cnt);
 #if 0
             lSetDouble(granted_pe, JG_oticket,
@@ -2290,10 +2306,14 @@ calc_job_override_tickets( sge_ref_t *ref,
          i++;
       }
       job_override_tickets += ref->total_jobclass_otickets;
-   } else if (ref->jobclass)
+   } else if (ref->jobclass) {
+      job_cnt = lGetUlong(ref->jobclass, QU_job_cnt);
+      if (include_queued_jobs)
+         job_cnt += lGetUlong(ref->jobclass, QU_pending_job_cnt);
       if (((otickets = lGetUlong(ref->jobclass, QU_oticket)) &&
-          ((job_cnt = shared ? lGetUlong(ref->jobclass, QU_job_cnt) : 1))))
+          ((job_cnt = shared ? job_cnt : 1))))
          job_override_tickets += (otickets / job_cnt);
+   }
 
    REF_SET_OTICKET(ref, job_override_tickets);
 
@@ -2891,7 +2911,8 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
       sum_of_active_override_tickets +=
                   calc_job_override_tickets(&job_ref[job_ndx],
-                  share_override_tickets);
+                  share_override_tickets,
+                  classic_sgeee_scheduling ? 1 : 0);
 
       sum_of_active_tickets += calc_job_tickets(&job_ref[job_ndx]);
 
@@ -3143,7 +3164,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          if (jref->queued) {
-            calc_job_override_tickets(jref, share_override_tickets);
+            calc_job_override_tickets(jref, share_override_tickets, 0);
             if (hierarchy[policy_ndx].dependent)
                jref->tickets += REF_GET_OTICKET(jref);
          }
@@ -3251,7 +3272,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          /* calculate override tickets */
 
-         calc_job_override_tickets(jref, share_override_tickets);
+         calc_job_override_tickets(jref, share_override_tickets, 0);
 
          /* calculate deadline tickets */
 
@@ -3708,13 +3729,36 @@ sge_dump_list( lList *list )
 
    if (!(f=fdopen(1, "w"))) {
       fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED );
-      exit(1);
+      return;
    }
 
    if (lDumpList(f, list, 0) == EOF) {
       fprintf(stderr, MSG_SGE_UNABLETODUMPJOBLIST );
    }
 }
+
+
+/*--------------------------------------------------------------------
+ * sge_dump_list - dump list to file (for calling while in debugger)
+ *--------------------------------------------------------------------*/
+
+void
+sge_dump_list_to_file(const char *file, lList *list)
+{
+   FILE *f;
+
+   if (!(f=fopen(file, "w+"))) {
+      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED );
+      return;
+   }
+
+   if (lDumpList(f, list, 0) == EOF) {
+      fprintf(stderr, MSG_SGE_UNABLETODUMPJOBLIST );
+   }
+
+   fclose(f);
+}
+
 
 /*--------------------------------------------------------------------
  * get_mod_share_tree - return reduced modified share tree

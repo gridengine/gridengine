@@ -509,7 +509,8 @@ lList **splitted_job_lists[]
                                   *(splitted_job_lists[SPLIT_PENDING]),
                                   0);
 
-         *orderlist = sge_build_sge_orders(lists, NULL, lists->job_list, NULL,
+         *orderlist = sge_build_sge_orders(lists, NULL,
+                                           *(splitted_job_lists[SPLIT_PENDING]), NULL,
                                            *orderlist, 0, seqno);
       }
 

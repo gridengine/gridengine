@@ -182,21 +182,28 @@ enum {
    SPLIT_LAST
 };
 
-void split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
-                u_long32 max_aj_instances, lList **result_lists[]); 
+void 
+split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
+           u_long32 max_aj_instances, lList **result_lists[]); 
 
-void job_lists_split_with_reference_to_max_running(lList **job_lists[],
-                                                   lList **user_list,
-                                                   int max_jobs_per_user);
+void 
+job_lists_split_with_reference_to_max_running(lList **job_lists[],
+                                              lList **user_list,
+                                              const char *user_name,
+                                              int max_jobs_per_user);
 
-void job_move_first_pending_to_running(lListElem **pending_job,
-                                       lList **result_lists[]);
+void 
+job_move_first_pending_to_running(lListElem **pending_job,
+                                  lList **result_lists[]);
 
-void trash_splitted_jobs(lList **job_list[]);
+void 
+trash_splitted_jobs(lList **job_list[]);
 
-void job_lists_print(lList **job_list[]);
+void 
+job_lists_print(lList **job_list[]);
 
-void user_list_init_jc(lList **user_list, const lList *running_list);
+void 
+user_list_init_jc(lList **user_list, const lList *running_list);
 
 #endif /* __SGE_JOB_SCHEDD_H */
 

@@ -280,18 +280,21 @@ void user_list_init_jc(lList **user_list, const lList *running_list)
 *     void job_lists_split_with_reference_to_max_running(
 *              lList **job_lists[], 
 *              lList **user_list, 
+*              const char* user_name,
 *              int max_jobs_per_user) 
 *
 *  FUNCTION
 *     Move those jobs which would exceed the configured 
 *     'max_u_jobs' limit (schedd configuration) from 
-*     job_lists[SPLIT_PENDING] into 
-*     job_lists[SPLIT_PENDING_EXCLUDED]. 
-*      
+*     job_lists[SPLIT_PENDING] into job_lists[SPLIT_PENDING_EXCLUDED]. 
+*     Only the jobs of the given 'user_name' will be handled. If
+*     'user_name' is NULL than all jobs will be handled whose job owner 
+*     is mentioned in 'user_list'.
 *
 *  INPUTS
 *     lList **job_lists[]   - Array of JB_Type lists 
 *     lList **user_list     - User list of Type JC_Type 
+*     const char* user_name - user name
 *     int max_jobs_per_user - "max_u_jobs" 
 *
 *  NOTE
@@ -306,25 +309,39 @@ void user_list_init_jc(lList **user_list, const lList *running_list)
 *******************************************************************************/
 void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                                    lList **user_list,
+                                                   const char* user_name,
                                                    int max_jobs_per_user)
 {
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
    if (max_jobs_per_user != 0 && 
-       job_lists[SPLIT_PENDING] != NULL && *(job_lists[SPLIT_PENDING]) != NULL &&
+       job_lists[SPLIT_PENDING] != NULL && 
+       *(job_lists[SPLIT_PENDING]) != NULL &&
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
       lListElem *user = NULL;
+      lListElem *next_user = NULL;
 
 #ifndef CULL_NO_HASH
-      /* create a hash table on JB_owner to speedup 
+      /* 
+       * create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
        */
       cull_hash_new_check(*(job_lists[SPLIT_PENDING]), JB_owner, 0);
 #endif      
 
-      for_each(user, *user_list) {
+      if (user_name == NULL) {
+         next_user = lFirst(*user_list);
+      } else {
+         next_user = lGetElemStr(*user_list, JC_name, user_name);
+      }
+      while ((user = next_user) != NULL) {
          u_long32 jobs_for_user = lGetUlong(user, JC_jobs);
          const char *user_name = lGetString(user, JC_name);
 
+         if (user_name == NULL) {
+            next_user = lNext(user);
+         } else {
+            next_user = NULL;
+         }
          if (jobs_for_user >= max_jobs_per_user) {
             const void *user_iterator = NULL;
             lListElem *user_job = NULL;         /* JB_Type */

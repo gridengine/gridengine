@@ -230,15 +230,20 @@ int scheduler(sge_Sdescr_t *lists) {
       PROFILING_STOP_MEASUREMENT;
 
       logginglevel = LOG_INFO;
-      INFO((SGE_EVENT, "scheduled in %.3f s: %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J, %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+      INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(x), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          profiling_get_measurement_wallclock(),
+         profiling_get_measurement_utime(),
+         profiling_get_measurement_stime(),
+         profiling_get_measurement_utime() + profiling_get_measurement_stime(),
          scheduled_fast_jobs,
          scheduled_complex_jobs,
          lGetNumberOfElem(orderlist), 
          lGetNumberOfElem(lists->host_list), 
          lGetNumberOfElem(lists->queue_list),
          lGetNumberOfElem(lists->all_queue_list),
-         lGetNumberOfElem(lists->job_list),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_RUNNING])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_FINISHED])),
          lGetNumberOfElem(lists->complex_list),
          lGetNumberOfElem(lists->acl_list),
          lGetNumberOfElem(lists->pe_list),
@@ -458,6 +463,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    user_list_init_jc(&user_list, *(splitted_job_lists[SPLIT_RUNNING]));
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                                  &user_list,
+                                                 NULL,
                                                  scheddconf.maxujobs);
 
    trash_splitted_jobs(splitted_job_lists);
@@ -827,7 +833,9 @@ SKIP_THIS_JOB:
           * should be done after resort_job() 'cause job is referenced 
           */
          job_lists_split_with_reference_to_max_running(splitted_job_lists,
-                                          &user_list, scheddconf.maxujobs);
+                                             &user_list, 
+                                             lGetString(job, JB_owner),
+                                             scheddconf.maxujobs);
          trash_splitted_jobs(splitted_job_lists);
       } else {
          schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0);

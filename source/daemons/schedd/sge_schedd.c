@@ -57,6 +57,7 @@
 #include "schedd_monitor.h"
 #include "sig_handlers.h"
 #include "sge_conf.h"
+#include "gdi_conf.h"
 #include "sge_process_events.h"
 #include "basis_types.h"
 #include "qm_name.h"

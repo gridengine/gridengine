@@ -163,8 +163,4 @@ lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);
 void sge_show_conf(void);
 
-int get_conf_and_daemonize(tDaemonizeFunc dfunc, lList **conf_list);
-int get_configuration(const char *config_name, lListElem **gepp, lListElem **lepp);
-int get_merged_configuration(lList **conf_list);
-
 #endif /* __SGE_CONF_H */

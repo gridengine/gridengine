@@ -1,3 +1,5 @@
+#ifndef __GDI_CONF_H
+#define __GDI_CONF_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,51 +31,15 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <string.h>
-#include "sge_conf.h"
-#include "gdi_conf.h"
-#include "dispatcher.h"
-#include "execd_get_new_conf.h"
-#include "sge_load_sensor.h"
-#include "sgermon.h"
-#include "admin_mail.h"
-#include "sge_string.h"
 
-extern lList *execd_config_list;
+int 
+get_configuration(const char *config_name, 
+                  lListElem **gepp, 
+                  lListElem **lepp);
 
-/*
-** DESCRIPTION
-**   retrieves new configuration from qmaster, very similar to what is
-**   executed on startup. This function is triggered by the execd
-**   dispatcher table when the tag TAG_GET_NEW_CONF is received.
-*/
-int execd_get_new_conf(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
-struct dispatch_entry *de;
-sge_pack_buffer *pb, *apb; 
-u_long *rcvtimeout; 
-int *synchron; 
-char *err_str; 
-int answer_error;
-{
-   int ret;
-   u_long32 dummy; /* always 0 */ 
+int get_conf_and_daemonize(tDaemonizeFunc dfunc, 
+                           lList **conf_list);
 
-   DENTER(TOP_LAYER, "execd_get_new_conf");
+int get_merged_configuration(lList **conf_list);
 
-   unpackint(pb, &dummy);
-
-   ret = get_merged_configuration(&execd_config_list);
-
-   /*
-   ** admin mail block is released on new conf
-   */
-   adm_mail_reset(BIT_ADM_NEW_CONF);
-
-   sge_ls_qidle(use_qidle);
-   DPRINTF(("use_qidle: %d\n", use_qidle));
-
-   DEXIT;
-   return ret;
-}
-
-
+#endif /* __GDI_CONF_H */

@@ -37,6 +37,7 @@
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_conf.h"
+#include "gdi_conf.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
 #include "sge_ja_task.h"

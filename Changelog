@@ -1,3 +1,6 @@
+EB-2003-02-13-0: Enhancem.: Merged code form Branch
+                            Resolved conflict libgdi <-> ligsgeobj
+
 CR-2003-02-13-1  Testsuite: Bugfix in read_array_from_file_data() 
                             - error reading in file without comment lines
                  Enhancem.: New command line parameter: execute_func

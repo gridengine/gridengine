@@ -41,6 +41,7 @@ GDILIB_SRC = gdi_setup.c \
          gdi_qmod.c \
          gdi_checkpermissions.c \
          gdi_utility.c \
+         gdi_conf.c \
          pack_job_delivery.c \
          sge_any_request.c \
          sge_gdi_request$(QIDLEXT).c \
@@ -97,6 +98,9 @@ include $(GDILIB_DIR)/gdi_dependencies
 ###############################################################################
 version.o:	$(GDILIB_DIR)/version.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/version.c
+
+gdi_conf.o:	$(GDILIB_DIR)/gdi_conf.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_conf.c
 
 gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_setup.c

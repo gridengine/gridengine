@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
    while(!shut_me_down) {
       sge_mirror_process_events();
       timestamp = sge_get_gmt();
-      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_reqistered=%ld:ECL_TIME=%ld)\n",Global_jobs_running,Global_jobs_registered,timestamp);
+      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME=%ld)\n",Global_jobs_running,Global_jobs_registered,timestamp);
       fflush(stdout);  
    }
 

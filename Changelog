@@ -1,7 +1,14 @@
+SG-2004-04-10-0: Bugfix:    - fixed the qdel help output
+                            - fixed qdel -u "*". The action is denied, if
+                              a non manager wants to execute it.
+                 Issue:     863, 903
+                 Review:    pending
+                 Changed:   qmaster, qdel
+
 SG-2004-04-09-3: Bugfix:    The qmaster loged errors in case that a job in
                             T state was deleted. 
                  Review:    EB
-                 Bug:       954
+                 Issue:     954
                  Changed:   qmaster
 
 SG-2004-04-09-2: Bugfix:    If the qmaster is killed while jobs are deleted,

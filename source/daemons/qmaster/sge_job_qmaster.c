@@ -821,7 +821,7 @@ int sub_command
    int all_jobs_flag;
    int all_users_flag;
    int jid_flag;
-   int user_list_flag;
+   int user_list_flag = false;
    const char *jid_str;
    lCondition *job_where = NULL; 
    lCondition *user_where = NULL;
@@ -830,6 +830,7 @@ int sub_command
    u_long32 time;
    u_long32 start_time;
    lList *range_list = NULL;        /* RN_Type */
+   lList *user_list = lGetList(idep, ID_user_list);
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -841,15 +842,22 @@ int sub_command
    }
 
    /* sub-commands */
-   all_jobs_flag = ((sub_command & SGE_GDI_ALL_JOBS) > 0);
-   all_users_flag = ((sub_command & SGE_GDI_ALL_USERS) > 0);
+   all_jobs_flag = ((sub_command & SGE_GDI_ALL_JOBS) != 0);
+
+   all_users_flag = ((sub_command & SGE_GDI_ALL_USERS) != 0);
 
    /* Did we get a user list? */
-   if (lGetList(idep, ID_user_list) 
-       && lGetNumberOfElem(lGetList(idep, ID_user_list)) > 0)
-      user_list_flag = 1;
-   else
-      user_list_flag = 0;
+   if (user_list && lGetNumberOfElem(user_list) > 0) {
+       lListElem *user = NULL;
+       for_each(user, user_list) {
+          if (strcmp(lGetString(user, ST_name), "*") == 0) {
+             all_users_flag = true;
+          }
+      }
+      if (!all_users_flag) { 
+         user_list_flag = true;
+      }
+   }   
 
    jid_str = lGetString(idep, ID_str);
 

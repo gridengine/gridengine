@@ -55,6 +55,7 @@
 #include "execd_ticket.h"
 #include "job_log.h"
 #include "job_report_execd.h"
+#include "sge_report_execd.h"
 #include "load_avg.h"
 #include "parse.h"
 #include "sge_feature.h"
@@ -70,6 +71,7 @@
 #include "sge_answer.h"
 #include "basis_types.h"
 #include "sge_language.h"
+#include "sge_job.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -90,8 +92,6 @@ volatile int waiting4osjid = 1;
 char execd_spool_dir[SGE_PATH_MAX];
 
 lList *execd_config_list = NULL;
-lList *Master_Job_List = NULL;
-lList *Master_Zombie_List = NULL;
 
 static void execd_exit_func(int i);
 static void execd_register(void);

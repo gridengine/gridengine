@@ -49,18 +49,15 @@
 #include "sge_conf.h"
 #include "sge_time.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_ckptL.h"
-#include "sge_complexL.h"
-#include "sge_queueL.h"
 #include "sge_stringL.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_queue.h"
 #include "parse.h"
 #include "get_path.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "tmpdir.h"
 #include "read_write_queue.h"
 #include "exec_job.h"
@@ -82,7 +79,7 @@
 #include "sge_string.h" 
 #include "jb_now.h"
 #include "sge_feature.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
@@ -90,6 +87,8 @@
 #include "sge_os.h"
 #include "sge_var.h"
 #include "sge_range.h"
+#include "sge_complex.h"
+#include "sge_ckpt.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -103,10 +102,6 @@ static int arch_dep_config(FILE *fp, lList *cplx, char *err_str);
 
 /* from execd.c import the working dir of the execd */
 extern char execd_spool_dir[SGE_PATH_MAX];
-
-
-/* import Master Job List */
-extern lList *Master_Job_List;
 
 #if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)

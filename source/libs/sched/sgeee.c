@@ -49,11 +49,9 @@
 #include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sge_time.h"
-#include "sge_complex.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "scheduler.h"
-/* #include "sge_schedd.h" */
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
 
@@ -62,15 +60,8 @@
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_schedd_conf.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_userprjL.h"
-#include "sge_share_tree_nodeL.h"
-/* #include "sge_sharetree.h" */
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
 #include "sge_eejobL.h"
 
 #include "sort_hosts.h"
@@ -79,8 +70,12 @@
 #include "sge_string.h"
 #include "slots_used.h"
 #include "sge_conf.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_range.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
+#include "sge_host.h"
+#include "sge_userprj.h"
 
 static sge_Sdescr_t *all_lists;
 static u_long32 sge_scheduling_run;
@@ -92,8 +87,6 @@ static int sge_calc_node_targets(lListElem *root, lListElem *node, sge_Sdescr_t 
 static int sge_calc_sharetree_targets(lListElem *root, sge_Sdescr_t *lists,
                            lList *decay_list, u_long curr_time,
                            u_long seqno);
-
-static lListElem *locate_user_or_project(lList *user_list, const char *name);
 
 static void task_ref_initialize_table(u_long32 number_of_tasks);
 static void task_ref_destroy_table(void);
@@ -424,24 +417,6 @@ job_is_active( lListElem *job,
 #endif
 }
 
-
-/*--------------------------------------------------------------------
- * locate_user_or_project - locate the user or project object by name
- *--------------------------------------------------------------------*/
-
-static lListElem *locate_user_or_project(lList *user_list, const char *name)
-{
-   if (!name)
-      return NULL;
-
-   /*-------------------------------------------------------------
-    * Look up the user or project object by name
-    *-------------------------------------------------------------*/
-
-   return lGetElemStr(user_list, UP_name, name);
-}
-
-
 /*--------------------------------------------------------------------
  * locate_department - locate the department object by name
  *--------------------------------------------------------------------*/
@@ -476,7 +451,7 @@ locate_jobclass( lList *job_class_list,
     * Look up the job class object by name
     *-------------------------------------------------------------*/
 
-   return lGetElemStr(job_class_list, QU_qname, name);
+   return queue_list_locate(job_class_list, name);
 }
 
 #if 0
@@ -508,9 +483,9 @@ locate_jobclass_for_pending_job( lListElem *jep,
    for_each(qep, queue_list) {
       lList *ccl[3];
       lListElem *ep;
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"),
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"),
 EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -584,8 +559,8 @@ sge_set_job_refs( lListElem *job,
     * locate user object and save off reference
     *-------------------------------------------------------------*/
 
-   ref->user = locate_user_or_project(lists->user_list,
-                                      lGetString(job, JB_owner));
+   ref->user = userprj_list_locate(lists->user_list,
+                                   lGetString(job, JB_owner));
    if (ref->user) {
       lSetUlong(ref->user, UP_job_cnt, 0);
       lSetUlong(ref->user, UP_pending_job_cnt, 0);
@@ -595,8 +570,8 @@ sge_set_job_refs( lListElem *job,
     * locate project object and save off reference
     *-------------------------------------------------------------*/
 
-   ref->project = locate_user_or_project(lists->project_list,
-                                         lGetString(job, JB_project));
+   ref->project = userprj_list_locate(lists->project_list,
+                                      lGetString(job, JB_project));
    if (ref->project) {
       lSetUlong(ref->project, UP_job_cnt, 0);
       lSetUlong(ref->project, UP_pending_job_cnt, 0);
@@ -633,7 +608,7 @@ sge_set_job_refs( lListElem *job,
     *-------------------------------------------------------------*/
 
    if (is_enrolled_ja_task && (pe_str=lGetString(ja_task, JAT_granted_pe)) && 
-       (pe=lGetElemStr(all_lists->pe_list, PE_name, pe_str)) &&
+       (pe=pe_list_locate(all_lists->pe_list, pe_str)) &&
        lGetUlong(pe, PE_control_slaves) &&
        (granted=lGetList(ja_task, JAT_granted_destin_identifier_list))) {
 
@@ -1121,7 +1096,7 @@ set_share_tree_project_flags( lList *project_list,
    if (!project_list || !node)
       return;
 
-   if (lGetElemStr(project_list, UP_name, lGetString(node, STN_name)))
+   if (userprj_list_locate(project_list, lGetString(node, STN_name)))
       lSetUlong(node, STN_project, 1);
    else
       lSetUlong(node, STN_project, 0);
@@ -2344,7 +2319,7 @@ calc_job_tickets ( sge_ref_t *ref )
    /* for PE slave-controlled jobs, set tickets for each granted queue */
 
    if (ja_task && (pe_str=lGetString(ja_task, JAT_granted_pe))
-         && (pe=lGetElemStr(all_lists->pe_list, PE_name, pe_str))
+         && (pe=pe_list_locate(all_lists->pe_list, pe_str))
          && lGetUlong(pe, PE_control_slaves)
          && (granted=lGetList(ja_task, JAT_granted_destin_identifier_list))) {
 
@@ -3345,8 +3320,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       sge_task_ref_t *tref = task_ref_get_first_job_entry();
 
       while(tref != NULL) {
-         lListElem *job = lGetElemUlong(queued_jobs, JB_job_number, 
-                                        tref->job_number); 
+         lListElem *job = job_list_locate(queued_jobs, tref->job_number); 
 
          if (job) {
             lListElem *ja_task_template;
@@ -3777,7 +3751,7 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
 
          for_each(ja_task, lGetList(job, JB_ja_tasks)) {
             if ((pe_str=lGetString(ja_task, JAT_granted_pe))
-                  && (pe=lGetElemStr(all_lists->pe_list, PE_name, pe_str))
+                  && (pe=pe_list_locate(all_lists->pe_list, pe_str))
                   && lGetUlong(pe, PE_control_slaves))
 
                granted=lGetList(ja_task, JAT_granted_destin_identifier_list);
@@ -4162,8 +4136,8 @@ sort_host_list_by_share_load( lList *hl,
 #endif
 
    /* collect  share load parameter totals  for each host*/
-   global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-   template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
+   global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+   template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
    for_each (hlp, hl) {
       lDouble hlp_EH_sort_value;
       /* EH_sort_value (i.e., load) should not be less than 1 */
@@ -4191,8 +4165,8 @@ sort_host_list_by_share_load( lList *hl,
    }
 
    if ( total_resource_capability_factor == 0.0)  {
-      global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-      template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
+      global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+      template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
       for_each(hlp, hl)  { 
          if ( (hlp != global_host_elem) && (hlp != template_host_elem) &&  /* don't treat global and template */
                !(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)) { 
@@ -4204,8 +4178,8 @@ sort_host_list_by_share_load( lList *hl,
  
 
    /* Calculate share load parameter percentages for each host*/
-   global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-   template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
+   global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+   template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
    for_each (hlp, hl) {  
 
       if (hlp == template_host_elem)
@@ -4238,8 +4212,8 @@ sort_host_list_by_share_load( lList *hl,
    } /* for_each(hlp, hl) */
 
    /* Calculate share load quantities for each job */
-   global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
-   template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
+   global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+   template_host_elem = host_list_locate(hl, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
 
    for_each (hlp, hl) {  
       if (hlp == template_host_elem)

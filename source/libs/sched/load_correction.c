@@ -42,6 +42,8 @@
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_schedd_conf.h"
+#include "sge_queue.h"
+#include "sge_host.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 
@@ -58,7 +60,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
       return 1;
    }
 
-   global_host = lGetElemHost(host_list, EH_name, "global");
+   global_host = host_list_locate(host_list, "global");
    now = sge_get_gmt();
 
    for_each (job, running_jobs) {   
@@ -91,7 +93,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
             u_long32 slots;
             
             qnm = lGetString(granted_queue, JG_qname);
-            qep = lGetElemStr(queue_list, QU_qname, qnm);
+            qep = queue_list_locate(queue_list, qnm);
             if (qep == NULL) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
                         "list of job "u32"."u32"\n", qnm, job_id, ja_task_id));

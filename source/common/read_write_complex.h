@@ -1,3 +1,5 @@
+#ifndef __READ_WRITE_COMPLEX_H
+#define __READ_WRITE_COMPLEX_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,38 +31,10 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
 
-#include "sgermon.h"
-#include "sge_usersetL.h"
-#include "sge_userset.h"
+lListElem *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp);
 
+int write_cmplx(int spool, const char *fname, lList *lpc, FILE *fpout, lList **alpp);
 
-/*****************************************************************
- is_deadline_user
-
- ask whether a given user is allowed to sumbit deadline jobs.
- *****************************************************************/
-int is_deadline_user(
-char *username,         /* user we ask for */
-lList *lp               /* userset list to scan for deadline users */
-) {
-   lListElem *deadline_users;
-
-   DENTER(TOP_LAYER, "is_deadline_user");
-
-   deadline_users = lGetElemStr(lp, US_name, DEADLINE_USERS);
-
-   if (deadline_users && lGetSubStr(deadline_users, UE_name, username, 
-         US_entries)) {
-      DEXIT;
-      return 1; /* found user in deadline user list */
-   }
-
-   DEXIT;
-   return 0;
-}
+#endif /* __READ_WRITE_COMPLEX_H */
 

@@ -35,13 +35,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
-#include "sge_ckptL.h"
-#include "sge_usersetL.h"
-#include "sge_complexL.h"
 #include "sge_requestL.h"
-#include "sge_userprjL.h"     /*added to support SGE*/
 #include "sge_job_schedd.h"
 #include "sge_range_schedd.h"
 #include "valid_queue_user.h"
@@ -57,9 +51,12 @@
 #include "sge_schedd_text.h"
 #include "sge_string.h"
 #include "sge_range.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "jb_now.h"
 #include "sge_time.h"
+#include "sge_queue.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
 
 #include "cull_hash.h"
 
@@ -535,7 +532,7 @@ void split_jobs(lList **job_list, lList **answer_list,
                   u_long32 queue_state;
 
                   queue_name = lGetString(granted_queue, JG_qname);  
-                  queue = lGetElemStr(queue_list, QU_qname, queue_name);
+                  queue = queue_list_locate(queue_list, queue_name);
                   queue_state = lGetUlong(queue, QU_state);
                   
                   if ((queue_state & QSUSPENDED) ||

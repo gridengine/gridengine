@@ -29,17 +29,19 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "basis_types.h"
 #include "sge_os.h"
 #include "msg_utilbin.h"
 #include "sge_language.h"
 #include "sge_prog.h"
 #include "sge_os.h"
-#include "sge_hostL.h"
+#include "sge_host.h"
 
 void usage(void);
 void print_mem_load(char *, char *, int, double, char*);

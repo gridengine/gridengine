@@ -36,16 +36,15 @@
 
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_confL.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
-#include "sge_rangeL.h"
 #include "sge_stdio.h"
 #include "sge_feature.h" 
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_conf.h"
 
 #include "msg_common.h"
 

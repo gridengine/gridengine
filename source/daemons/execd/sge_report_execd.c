@@ -33,23 +33,19 @@
 #include <strings.h>
 
 #include "sge.h"
-#include "sge_load_reportL.h"
 #include "sge_static_load.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
-#include "sge_job_reportL.h"
-#include "sge_reportL.h"
 #include "sge_usageL.h"
 #include "commlib.h"
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "load_avg.h"
-#include "report.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qm_name.h"
 #include "sge_gdi_intern.h"
+#include "sge_report_execd.h"
+#include "sge_report.h"
 
 #ifndef NO_SGE_COMPILE_DEBUG
 static char* report_types[] = {
@@ -109,8 +105,8 @@ report_source *report_sources
        *  so let him send this empty list for having an alive protocol
        */
       /* send load report asynchron to qmaster */
-      ret = sge_send_reports(sge_get_master(0), prognames[QMASTER], 0, 
-         report_list, 0, NULL);
+      ret = report_list_send(report_list, sge_get_master(0), 
+                             prognames[QMASTER], 0, 0, NULL);
 
       lFreeList(report_list);
    }

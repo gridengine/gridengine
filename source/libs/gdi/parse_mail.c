@@ -34,7 +34,7 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "def.h"
-#include "sge_jobL.h"
+#include "sge_job.h"
 #include "parse_mail.h"
 #include "cull_parse_util.h"
 

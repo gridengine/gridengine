@@ -52,8 +52,6 @@ GDILIB_SRC = sge_all_listsL.c \
          setup_path.c \
          resolve_host.c \
          qm_name.c \
-         sge_job_queue.c \
-         sge_job_report.c \
          config.c \
          cull_parse_util.c \
          sge_parse_num_par.c \
@@ -69,7 +67,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_range.c \
          sge_var.c \
          sge_path_alias.c \
-         sge_job_jatask.c \
+         sge_job.c \
          sge_ja_task.c \
          sge_pe_task.c \
          sge_suser.c \
@@ -78,6 +76,15 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_pe.c \
          sge_ckpt.c \
          sge_queue.c \
+         sge_userprj.c \
+         sge_host.c \
+         sge_hostgroup.c \
+         sge_userset.c \
+         sge_complex.c \
+         sge_manop.c \
+         sge_calendar.c \
+         sge_sharetree.c \
+         sge_usermap.c \
          version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
@@ -156,12 +163,6 @@ setup.o: 	$(GDILIB_DIR)/setup.c
 setup_path.o: 	$(GDILIB_DIR)/setup_path.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/setup_path.c
 
-sge_job_queue.o: 	$(GDILIB_DIR)/sge_job_queue.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_queue.c
-
-sge_job_report.o: 	$(GDILIB_DIR)/sge_job_report.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_report.c
-
 pack_job_delivery.o:	$(GDILIB_DIR)/pack_job_delivery.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/pack_job_delivery.c
 
@@ -213,8 +214,8 @@ sge_var.o: $(GDILIB_DIR)/sge_var.c
 sge_path_alias.o: $(GDILIB_DIR)/sge_path_alias.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_path_alias.c
 
-sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_jatask.c
+sge_job.o: $(GDILIB_DIR)/sge_job.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job.c
 
 sge_ja_task.o: $(GDILIB_DIR)/sge_ja_task.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ja_task.c
@@ -239,6 +240,33 @@ sge_ckpt.o: $(GDILIB_DIR)/sge_ckpt.c
 
 sge_queue.o: $(GDILIB_DIR)/sge_queue.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_queue.c
+
+sge_userprj.o: $(GDILIB_DIR)/sge_userprj.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_userprj.c
+
+sge_host.o: $(GDILIB_DIR)/sge_host.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_host.c
+
+sge_hostgroup.o: $(GDILIB_DIR)/sge_hostgroup.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_hostgroup.c
+
+sge_userset.o: $(GDILIB_DIR)/sge_userset.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_userset.c
+
+sge_complex.o: $(GDILIB_DIR)/sge_complex.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_complex.c
+
+sge_manop.o: $(GDILIB_DIR)/sge_manop.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_manop.c
+
+sge_calendar.o: $(GDILIB_DIR)/sge_calendar.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_calendar.c
+
+sge_sharetree.o: $(GDILIB_DIR)/sge_sharetree.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_sharetree.c
+
+sge_usermap.o: $(GDILIB_DIR)/sge_usermap.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_usermap.c
 
 sge_event.o: $(GDILIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c

@@ -41,8 +41,6 @@
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
 #include "sge_string.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
 #include "sge_schedd_conf.h"
 #include "cull.h"
@@ -56,6 +54,8 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_schedd_conf.h"
+#include "sge_complex.h"
+
 #include "msg_schedd.h"
 
 sge_schedd_conf_type scheddconf = { 

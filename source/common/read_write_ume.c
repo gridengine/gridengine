@@ -38,11 +38,9 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_usermapL.h"
+#include "sge_usermap.h"
 #include "sge_stringL.h"
-#include "sge_confL.h"
 #include "sge_answer.h"
-/*#include "sge_usersetL.h"*/
 #include "read_write_ume.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -50,6 +48,8 @@
 #include "read_object.h"
 #include "sge_stdio.h"
 #include "sge_io.h"
+#include "sge_conf.h"
+
 #include "msg_common.h"
 
 

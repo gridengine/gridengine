@@ -1,5 +1,5 @@
-#ifndef __SGE_SHARETREE_H
-#define __SGE_SHARETREE_H
+#ifndef _SGE_USERSET_H
+#define _SGE_USERSET_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -31,9 +31,14 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-int write_sharetree(lList **alpp, lListElem *ep, char *fname, FILE *fpout, int spool, int recurse, int root_node);
-int show_sharetree(lListElem *ep, char *intend);
-int show_sharetree_path(lListElem *ep, const char *path);
-lListElem *read_sharetree(char *fname, FILE *fp, int spool, char *errstr, int recurse, lListElem *rootelem);
-lListElem *getSNTemplate(void);
-#endif /* __SGE_SHARETREE_H */
+
+#include "sge_usersetL.h"
+
+extern lList *Master_Userset_List;
+
+int is_deadline_user(char *username, lList *lp);
+
+#endif /* _SGE_USERSET_H */
+
+
+

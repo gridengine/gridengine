@@ -38,11 +38,11 @@
 #include "sge_c_gdi.h"
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_calendar_qmaster.h"
-#include "sge_manop.h"
+#include "sge_manop_qmaster.h"
 #include "complex_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_conf.h"
@@ -69,36 +69,23 @@
 #include "sge_security.h"  
 #include "sge_answer.h"
 #include "sge_pe.h"
+#include "sge_ckpt.h"
 #include "sge_queue.h"
+#include "sge_userprj.h"
+#include "sge_job.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_sharetree.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
-#endif
-
-extern lList *Master_User_List;
-extern lList *Master_Userset_List;
-extern lList *Master_Project_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Config_List;
-extern lList *Master_Sched_Config_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Job_List;
-extern lList *Master_Submithost_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Ckpt_List;
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
-extern lList *Master_Calendar_List;
-extern lList *Master_Job_Schedd_Info_List;
-extern lList *Master_Zombie_List;
-
-#ifndef __SGE_NO_USERMAPPING__
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
 #endif
 
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int *before, int *after);
@@ -961,14 +948,14 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
     /* check for manager permission */
     value = 0;
-    if (lGetElemStr(Master_Manager_List, MO_name, user ) != NULL ) {
+    if (sge_locate_manager(user) != NULL) {
        value = 1; 
     }   
     lSetUlong(ep, PERM_manager, value);
 
     /* check for operator permission */
     value = 0;
-    if (lGetElemStr(Master_Operator_List, MO_name, user ) != NULL ) {
+    if (sge_locate_operator(user) != NULL) {
        value = 1; 
     }   
     lSetUlong(ep, PERM_operator, value);
@@ -1022,7 +1009,7 @@ sge_gdi_request *answer
    case SGE_MASTER_EVENT: /* kill master */
    case SGE_EVENT_LIST: /* kill scheduler */
    case SGE_SC_LIST: /* trigger scheduler monitoring */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+      if (!host_list_locate(Master_Adminhost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -1295,7 +1282,7 @@ lListElem *ep
    case SGE_FEATURESET_LIST:
       
       /* host must be SGE_ADMINHOST_LIST */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+      if (!host_list_locate(Master_Adminhost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -1307,8 +1294,8 @@ lListElem *ep
       
       /* host must be either admin host or exec host and execd */
 
-      if (!(sge_locate_host(host, SGE_ADMINHOST_LIST) ||
-         (sge_locate_host(host, SGE_EXECHOST_LIST) && !strcmp(commproc, prognames[EXECD])))) {
+      if (!(host_list_locate(Master_Adminhost_List, host) ||
+         (host_list_locate(Master_Exechost_List, host) && !strcmp(commproc, prognames[EXECD])))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -1324,7 +1311,7 @@ lListElem *ep
       */
       if ( mod && (lGetPosViaElem(ep, JB_override_tickets) >= 0)) {
          /* host must be SGE_ADMINHOST_LIST */
-         if ( !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+         if (!host_list_locate(Master_Adminhost_List, host)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -1334,7 +1321,7 @@ lListElem *ep
       }    
 #endif      
       /* host must be SGE_SUBMITHOST_LIST */
-      if ( !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
+      if (!host_list_locate(Master_Submithost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -1347,8 +1334,8 @@ lListElem *ep
          performs modify requests on itself
          it must be on a submit or an admin host 
        */
-      if ( (!sge_locate_host(host, SGE_SUBMITHOST_LIST)) 
-        && (!sge_locate_host(host, SGE_ADMINHOST_LIST))) {
+      if ( (!host_list_locate(Master_Submithost_List, host)) 
+        && (!host_list_locate(Master_Adminhost_List, host))) {
         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
         DEXIT;
@@ -1415,8 +1402,8 @@ sge_gdi_request *request
    case SGE_JOB_SCHEDD_INFO:
       
       /* host must be admin or submit host */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
-           !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
+      if ( !host_list_locate(Master_Adminhost_List, host) &&
+           !host_list_locate(Master_Submithost_List, host)) {
 
          if (last_id != request->id) {     /* only log the first error
                                               in an api multi request */
@@ -1434,9 +1421,9 @@ sge_gdi_request *request
 
    case SGE_CONFIG_LIST:
       /* host must be admin or submit host or exec host */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
-           !sge_locate_host(host, SGE_SUBMITHOST_LIST) &&
-           !sge_locate_host(host, SGE_EXECHOST_LIST)) {
+      if ( !host_list_locate(Master_Adminhost_List, host) &&
+           !host_list_locate(Master_Submithost_List, host) &&
+           !host_list_locate(Master_Exechost_List, host)) {
          if (last_id != request->id) {  /* only log the first error
                                               in an api multi request */
             ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));

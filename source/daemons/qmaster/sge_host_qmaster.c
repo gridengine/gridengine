@@ -38,14 +38,8 @@
 #include "sge_prog.h"
 #include "sge_time.h"
 #include "sge_feature.h"
-#include "sge_hostL.h"
-#include "sge_load_reportL.h"
-#include "sge_usersetL.h"
-#include "sge_queueL.h"
 #include "sge_identL.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_userprjL.h"
 #include "commlib.h"
 #include "sge_host.h"
 #include "read_write_host.h"
@@ -72,7 +66,6 @@
 #include "sge_userset_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "time_event.h"
-#include "sge_complexL.h"
 #include "sge_complex_schedd.h"
 #include "reschedule.h"
 #include "sge_string.h"
@@ -81,17 +74,14 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_report.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Job_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Submithost_List;
-extern lList *Master_Config_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Project_List;
 
 static int sge_has_active_queue(char *uniquie);
 
@@ -227,7 +217,7 @@ u_long32 target
 
    /* check if host is in host list */
    found_host = 1;
-   if ((ep=sge_locate_host(host, target))==NULL) {
+   if ((ep=host_list_locate(*host_list, host))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       found_host = 0;
@@ -247,7 +237,7 @@ u_long32 target
       }
       /* again check if host is in host list. This time use the unique
          hostname */
-      if ((ep=sge_locate_host(unique, target))==NULL) {
+      if ((ep=host_list_locate(*host_list, unique))==NULL) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -700,7 +690,7 @@ lList *lp
 
       /* update load value list of rhost */
       if ( !*hepp) {
-         *hepp = sge_locate_host(host, SGE_EXECHOST_LIST);
+         *hepp = host_list_locate(Master_Exechost_List, host);
          if (!*hepp) {
             if (!global) {
                report_host = lGetHost(ep, LR_host); /* this is our error indicator */
@@ -826,9 +816,9 @@ u_long32 now
 
    comproc = prognames[EXECD];
    /* get "global" element pointer */
-   global_host_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME);    
+   global_host_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);    
    /* get "template" element pointer */
-   template_host_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME); 
+   template_host_elem = host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME); 
    /* take each host including the "global" host */
    for_each(hep, Master_Exechost_List) {   
       if (hep == template_host_elem)
@@ -1209,7 +1199,7 @@ sge_gdi_request *answer
             WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(rep, ID_str)));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
-            if ((lel = lGetElemHost(Master_Exechost_List, EH_name, host))) {
+            if ((lel = host_list_locate(Master_Exechost_List, host))) {
                kill_jobs = lGetUlong(rep, ID_force)?1:0;
                /*
                ** if a host name is given, then a kill is forced
@@ -1424,7 +1414,7 @@ u_long32 target) {
       return STATUS_EUNKNOWN;
    }
    
-   hep = sge_locate_host(rhost, SGE_EXECHOST_LIST);
+   hep = host_list_locate(Master_Exechost_List, rhost);
    if(!hep) {
       if (sge_add_host_of_type(rhost, SGE_EXECHOST_LIST) < 0) {
          ERROR((SGE_EVENT, MSG_OBJ_INVALIDHOST_S, rhost));
@@ -1434,7 +1424,7 @@ u_long32 target) {
       } 
    }
 
-   hep = sge_locate_host(rhost, SGE_EXECHOST_LIST);
+   hep = host_list_locate(Master_Exechost_List, rhost);
    if(!hep) {
       ERROR((SGE_EVENT, MSG_OBJ_NOADDHOST_S, rhost));
       answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);

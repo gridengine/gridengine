@@ -43,28 +43,26 @@
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
-#include "sge_groups.h"
 #include "def.h"
 #include "sge_stringL.h"
-#include "sge_jobL.h"
-#include "sge_groupL.h"
 #include "commlib.h"
 #include "sge_log.h"
 #include "sge_answer.h"
+#include "sge_hostgroup.h"
+
 #include "msg_common.h"
+
+#ifndef __SGE_NO_USERMAPPING__
+lList *Master_Host_Group_List = NULL;
+#endif
 
 static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, const char* extraSubgroupCheck , int ignoreSupergroupLinks);
 
-/****** src/sge_verify_host_group_entry() **********************************
-*
+/****** gdi/hostgroup/sge_verify_host_group_entry() ***************************
 *  NAME
-*     sge_verify_host_group_entry() -- check if entries in element are correct 
+*     sge_verify_host_group_entry() -- check hostgroup elements 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_verify_host_group_entry(lList** alpp, 
 *                                     lList* hostGroupList, 
 *                                     lListElem* hostGroupElem, 
@@ -72,34 +70,26 @@ static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem*
 *       
 *
 *  FUNCTION
-*     This function is used after creating new entries in a lList* from GRP_List Type
-*     elements which are used for creating hostgroups. All the member entries are
-*     hostnames, so this function tries to resolve the hostnames. It will check
-*     if any subtree has a deadlock (pointer to group which is already a subgroup of
-*     itself).
+*     This function is used after creating new entries in a lList* 
+*     from GRP_List Type elements which are used for creating 
+*     hostgroups. All the member entries are hostnames, so this 
+*     function tries to resolve the hostnames. It will check
+*     if any subtree has a deadlock (pointer to group which is already 
+*     a subgroup of itself).
 *  
 *  INPUTS
 *     lList** alpp              - answer list pointer pointer
-*     lList* hostGroupList      - pointer to main hostGroupList (is used for checking subgroups)
-*                                 if this pointer is NULL, no group checking is made
+*     lList* hostGroupList      - pointer to main hostGroupList (is 
+*                                 used for checking subgroups)
+*                                 if this pointer is NULL, no group 
+*                                 checking is made
 *     lListElem* hostGroupElem  - new element to check
-*     char* filename            - the name in GRP_group_name must be exactly the same like this parameter
+*     char* filename            - the name in GRP_group_name must be 
+*                                 exactly the same like this parameter
 *
 *  RESULT
-*     int TRUE on success or FALSE on failure
-* 
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
+*     int - TRUE on success or FALSE on failure
+******************************************************************************/
 int sge_verify_host_group_entry(
 lList **alpp,          
 lList *hostGroupList,
@@ -167,28 +157,20 @@ const char *filename
    return FALSE;
 }
 
-
-
-
-/****** src/sge_add_group_elem() **********************************
-*
+/****** gdi/hostgroup/sge_add_group_elem() *************************************
 *  NAME
 *     sge_add_group_elem() -- create and add new group element 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_add_group_elem(lList* groupList,
 *                            char* groupName
 *                            char* subGroupName
 *                            char* superGroupName);
 *       
-*
 *  FUNCTION
-*     This function is generating a new lListElem* of type GRP_Type with given
-*     groupName as GRP_groupname. It checks following conditions:
+*     This function is generating a new lListElem* of type GRP_Type 
+*     with given groupName as GRP_groupname. It checks following 
+*     conditions:
 *
 *        - does group allready exist
 *        - if subGroupName and superGroupName is not NULL it checks if they
@@ -201,26 +183,11 @@ const char *filename
 *     char* superGroupName - name of super group (can be NULL)
 *
 *  RESULT
-*     int TRUE on success, FALSE on error
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_add_group_elem(
-lList *groupList,
-const char *groupName,
-const char *subGroupName,
-const char *superGroupName 
-) {
+*     int - TRUE on success, FALSE on error
+*******************************************************************************/
+int sge_add_group_elem(lList *groupList, const char *groupName,
+                       const char *subGroupName, const char *superGroupName) 
+{
   lListElem* newGroupElem = NULL;
   int error = 0;
 
@@ -259,8 +226,6 @@ const char *superGroupName
   DEXIT;
   return FALSE;
 }
-
-
 
 static int sge_verify_group_entry(
 lList **alpp,                 /* answer list pointer reference */
@@ -383,28 +348,23 @@ int ignoreSupergroupLinks
    return FALSE;
 }
 
-/****** src/sge_add_subgroup2group() **********************************
-*
+/****** gdi/hostgroup/sge_add_subgroup2group() *********************************
 *  NAME
 *     sge_add_subgroup2group() -- add sub group name to GRP_subgroup_list 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_add_subgroup2group(lList* groupList,
 *                                lListElem* groupElem
 *                                char* subGroupName,
 *                                int makeChanges);
-*       
 *
 *  FUNCTION
 *     This function adds subGroupName to the GRP_subgroup_list in the
 *     given groupElem. Following checkes are made:
 *
 *          - if groupList is NOT NULL: check if sub group exists
-*          - if groupList is NOT NULL: make super group entry in sub group
+*          - if groupList is NOT NULL: make super group entry in 
+*            sub group
 *          - given groupElem must have group name
 *          - group name of groupElem can not be subGroupName
 * 
@@ -412,30 +372,17 @@ int ignoreSupergroupLinks
 *     lList* groupList     - global group list (can be NULL)
 *     lListElem* groupElem - pointer to lListElem* (can be NULL)
 *     char* subGroupName   - new subgroup entry
-*     int makeChanges      - TRUE means that groupList can be changed, FALSE make
-*                            no changes in groupList (supergroup references)
+*     int makeChanges      - TRUE means that groupList can be changed, 
+*                            FALSE make no changes in groupList 
+*                            (supergroup references)
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_add_subgroup2group(
-lList **alpp,                 /* answer list pointer reference */
-lList *groupList,
-lListElem *groupElem,
-const char *subGroupName,
-int makeChanges 
-) {
+*******************************************************************************/
+int sge_add_subgroup2group(lList **alpp, lList *groupList, 
+                           lListElem *groupElem, const char *subGroupName,
+                           int makeChanges) 
+{
   lList* subGroupList = NULL;
   lListElem* subGroupElem = NULL;
   const char*  groupName = NULL;
@@ -515,20 +462,15 @@ int makeChanges
   DEXIT;
   return FALSE;
 }
-/****** src/sge_del_subgroup_from_group() **********************************
-*
+
+/****** gdi/hostgroup/sge_del_subgroup_from_group() ****************************
 *  NAME
-*     sge_del_subgroup_from_group() -- delete sub group name from GRP_subgroup_list 
+*     sge_del_subgroup_from_group() -- delete sub group name  
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_del_subgroup_from_group(lList* groupList,
 *                                     lListElem* groupElem
 *                                     char* subGroupName);
-*       
 *
 *  FUNCTION
 *     This function dels subGroupName from the GRP_subgroup_list in the
@@ -543,23 +485,10 @@ int makeChanges
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_del_subgroup_from_group(
-lList *groupList,
-lListElem *groupElem,
-const char *subGroupName 
-) {
+*******************************************************************************/
+int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
+                                const char *subGroupName) 
+{
   lList*  subgroupList = NULL;
   lListElem* ep = NULL; 
 
@@ -603,21 +532,14 @@ const char *subGroupName
   return FALSE;
 }
 
-
-/****** src/sge_add_supergroup2group() **********************************
-*
+/****** gdi/hostgroup/sge_add_supergroup2group() ******************************
 *  NAME
 *     sge_add_supergroup2group() -- set super group name in GRP_supergroup 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_add_supergroup2group(lList* groupList,
 *                                  lListElem* groupElem
 *                                  char* superGroupName);
-*       
 *
 *  FUNCTION
 *     This function set superGroupName in GRP_supergroup in the
@@ -635,24 +557,10 @@ const char *subGroupName
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_add_supergroup2group(
-lList *groupList,
-lListElem *groupElem,
-const char *superGroupName 
-) {
+*******************************************************************************/
+int sge_add_supergroup2group(lList *groupList, lListElem *groupElem, 
+                             const char *superGroupName) 
+{
   lList* subGroupList = NULL;
   lListElem* superGroupElem = NULL;
   const char*  groupName = NULL;
@@ -716,48 +624,24 @@ const char *superGroupName
   return FALSE;
 }
 
-
-
-
-/****** src/sge_is_group_supergroup() **********************************
+/****** gdi/hostgroup/sge_is_group_supergroup() *******************************
 *
 *  NAME
-*     sge_is_group_supergroup() -- check if group is supergroup to given group element 
+*     sge_is_group_supergroup() -- check if group is supergroup  
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_is_group_supergroup(lListElem* groupElem, char* groupName);
-*       
 *
 *  FUNCTION
-*     If the super group name of the given groupElem is groupName the function
-*     returns TRUE.
+*     If the super group name of the given groupElem is groupName the 
+*     function returns TRUE.
 *
 *  INPUTS
 *     lListElem* groupElem - pointer to lListElem* of type GRP_Type
 *     char* groupName      - name of group to compare
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_is_group_supergroup(
-lListElem *groupElem,
-const char *groupName 
-) {
+*******************************************************************************/
+int sge_is_group_supergroup(lListElem *groupElem, const char *groupName) 
+{
   const char*  superGroupName = NULL;
   DENTER(TOP_LAYER,"sge_is_group_in_supergroup");
 
@@ -774,62 +658,43 @@ const char *groupName
   return FALSE;
 }
 
-
-
-/****** src/sge_is_group_subgroup() **********************************
+/****** gdi/hostgroup/sge_is_group_subgroup() *********************************
 *
 *  NAME
-*     sge_is_group_subgroup() -- check if group is subgroup to given group element 
+*     sge_is_group_subgroup() -- check if group is subgroup  
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
-*     int sge_is_group_subgroup(lList*      groupList,
-*                               lListElem*  groupElem, 
-*                               char*       groupName, 
-*                               lList*      rec_list);
-*       
+*     int sge_is_group_subgroup(lList *groupList, 
+*                               lListElem *groupElem, 
+*                               char *groupName, 
+*                               lList *rec_list);
 *
 *  FUNCTION
-*     This function checks if groupName is sub group from groupElem. It will make
-*     recursive calls to get the subgroups.
+*     This function checks if groupName is sub group from groupElem. 
+*     It will make recursive calls to get the subgroups.
 *
 *  INPUTS
 *     lList*      groupList - pointer to global group list
-*     lListElem*  groupElem - element pointer to the group we are looking for a sub group
+*     lListElem*  groupElem - element pointer to the group we are 
+*                             looking for a sub group
 *     char*       groupName - sub group name 
-*     lList*      rec_list  - used for recursive calls (must be NULL, or can be ST_Type 
-*                             list with group names. If a list is given the group names
-*                             in the list are not searched. The caller must delete the
-*                             list. In case of rec_list = NULL, the function itself will
-*                             create and delete the list. If a list is searched the name
-*                             of the list is appeded to rec_list. So no deadlock will happen
+*     lList*      rec_list  - used for recursive calls (must be NULL, 
+*                             or can be ST_Type list with group names. 
+*                             If a list is given the group names in 
+*                             the list are not searched. The caller 
+*                             must delete the list. In case of 
+*                             rec_list = NULL, the function itself will
+*                             create and delete the list. If a list is 
+*                             searched the name of the list is appeded 
+*                             to rec_list. So no deadlock will happen
 *                             in recursive subcalls.)
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-* 
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_is_group_subgroup(
-lList *hostGroupList,
-lListElem *groupElem,
-const char *groupName,
-lList *rec_list    /* STR ST_Type list, defines allready searched groups 
-                      (must be NULL for first call in normal case) */
-) {
+*******************************************************************************/
+int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
+                          const char *groupName, lList *rec_list) 
+{
   lListElem* ep = NULL;
   lList* subGroupList = NULL;
   const char* tmpSubGroupName = NULL;
@@ -926,17 +791,11 @@ lList *rec_list    /* STR ST_Type list, defines allready searched groups
   return FALSE;
 }
 
-
-/****** src/sge_add_member2group() **********************************
-*
+/****** gdi/hostgroup/sge_add_member2group() ***********************************
 *  NAME
 *     sge_add_member2group() -- add new member entry to group element 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_add_member2group(lListElem* groupElem, char* memberName);
 *       
 *
@@ -950,23 +809,9 @@ lList *rec_list    /* STR ST_Type list, defines allready searched groups
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-*    
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_add_member2group(
-lListElem *groupElem,
-const char *memberName 
-) {
+*******************************************************************************/
+int sge_add_member2group(lListElem *groupElem, const char *memberName) 
+{
   lList* memberList = NULL;
   DENTER(TOP_LAYER,"sge_add_member2group");
 
@@ -991,21 +836,12 @@ const char *memberName
   return FALSE;
 }
 
-
-
-/****** src/sge_is_group() **********************************
-*
+/****** gdi/hostgroup/sge_is_group() ******************************************
 *  NAME
-*     sge_is_group() -- check if any element in grouplist has the given group name 
+*     sge_is_group() -- check any element 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     int sge_is_group(lList* groupList, char* groupName);
-*     
-*       
 *
 *  FUNCTION
 *     check if any element in grouplist has the given group name
@@ -1016,23 +852,9 @@ const char *memberName
 *      
 *  RESULT
 *     TRUE on success, FALSE on error (group not existing)   
-* 
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_is_group(
-lList *groupList,
-const char *groupName 
-) {
+*******************************************************************************/
+int sge_is_group(lList *groupList, const char *groupName) 
+{
   lListElem* ep = NULL;
   const char* tmpName = NULL;
   int matches = 0;
@@ -1062,19 +884,12 @@ const char *groupName
   return FALSE;
 }
 
-
-/****** src/sge_get_group_elem() **********************************
-*
+/****** gdi/hostgroup/sge_get_group_elem() *************************************
 *  NAME
 *     sge_get_group_elem() -- get lListElem pointer for given groupname 
 *
 *  SYNOPSIS
-*
-*     #include "sge_groups.h"
-*     #include <src/sge_groups.h>
-* 
 *     lListElem* sge_get_group_elem(lList* groupList, char* groupName);
-*       
 *
 *  FUNCTION
 *     get element pointer for groupName     
@@ -1085,23 +900,9 @@ const char *groupName
 *    
 *  RESULT
 *     pointer to lListElem or NULL
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-lListElem* sge_get_group_elem(
-lList *groupList,
-const char *groupName 
-) {
+*******************************************************************************/
+lListElem* sge_get_group_elem(lList *groupList, const char *groupName) 
+{
   lListElem* ep = NULL;
   lListElem* answer = NULL;
   const char* tmpName = NULL;
@@ -1135,14 +936,9 @@ const char *groupName
   return NULL;
 }
 
-
-
-
-
-/****** src/sge_is_member_in_group() **********************************
-*
+/****** gdi/hostgroup/sge_is_member_in_group() ********************************
 *  NAME
-*     sge_is_member_in_group() -- check if given member is in memberlist of group 
+*     sge_is_member_in_group() -- check if member is in list of group 
 *
 *  SYNOPSIS
 *
@@ -1153,43 +949,29 @@ const char *groupName
 *                                char*  groupName, 
 *                                char*  memberName, 
 *                                lList* rec_list);
-*       
 *
 *  FUNCTION
-*     Look if member is in group. This function will also look recursive in all sub groups. 
+*     Look if member is in group. This function will also look 
+*     recursive in all sub groups. 
 *
 *  INPUTS
 *     lList*     groupList  - pointer to global group list
 *     char*      groupName  - name of group where member should be in
 *     char*     memberName  - name of member we are looking for
-*     lList*      rec_list  - used for recursive calls (must be NULL, or can be ST_Type 
-*                             list with group names. If a list is given the group names
-*                             in the list are not searched. The caller must delete the
-*                             list. In case of rec_list = NULL, the function itself will
-*                             create and delete the list. If a list is searched the name
-*                             of the list is appeded to rec_list. So no deadlock will happen
+*     lList*      rec_list  - used for recursive calls (must be NULL, 
+*                             or can be ST_Type list with group names. 
+*                             If a list is given the group names
+*                             in the list are not searched. The caller 
+*                             must delete the list. In case of 
+*                             rec_list = NULL, the function itself will
+*                             create and delete the list. If a list is 
+*                             searched the name of the list is appeded 
+*                             to rec_list. So no deadlock will happen
 *                             in recursive subcalls.)
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-int sge_is_member_in_group(
-lList *hostGroupList,
-const char *groupName,
-const char *memberName,
-lList *rec_list    /* STR ST_Type list, defines allready searched groups 
-                      (must be NULL for first call in normal case) */
-) {
+*******************************************************************************/
+int sge_is_member_in_group(lList *hostGroupList, const char *groupName,
+                           const char *memberName, lList *rec_list) 
+{
    lListElem* ep = NULL;
    lListElem* group_ep = NULL;
    lListElem* subgroup_ep = NULL;
@@ -1308,17 +1090,3 @@ lList *rec_list    /* STR ST_Type list, defines allready searched groups
    DEXIT;
    return FALSE;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

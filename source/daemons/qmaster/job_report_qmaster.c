@@ -36,13 +36,10 @@
 #include "sge.h"
 #include "def.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
-#include "sge_reportL.h"
-#include "sge_job_report.h"
+#include "sge_report_execd.h"
 #include "sge_sched.h"
 #include "sge_prog.h"
 #include "execution_states.h"
@@ -51,7 +48,7 @@
 #include "job_exit.h"
 #include "sge_signal.h"
 #include "sge_m_event.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_host.h"
 #include "sge_give_jobs.h"
 #include "sge_pe_qmaster.h"
@@ -63,10 +60,9 @@
 #include "msg_qmaster.h"
 #include "sge_string.h"
 #include "sge_var.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
+#include "sge_report.h"
 
-extern lList *Master_Job_List;
-extern lList *Master_Exechost_List;
 
 static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, const char *task_str);
 
@@ -208,7 +204,7 @@ sge_pack_buffer *pb
          continue;
       }
 
-      jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
+      jep = job_list_locate(Master_Job_List, jobid);
       if(jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
       }
@@ -252,7 +248,7 @@ sge_pack_buffer *pb
 
                   /* do we expect a pe task report from this host? */
                   if (lGetString(jatep, JAT_granted_pe)
-                        && (pe=pe_locate(lGetString(jatep, JAT_granted_pe)))
+                        && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
                         && lGetUlong(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                     
@@ -375,7 +371,7 @@ sge_pack_buffer *pb
                   /* clear state with regards to slave controlled container */
                   lListElem *host;
 
-                  host = lGetElemHost(Master_Exechost_List, EH_name, rhost);
+                  host = host_list_locate(Master_Exechost_List, rhost);
                   update_reschedule_unknown_list_for_job(host, jobid, jataskid);
 
                   DPRINTF(("RU: CLEANUP FOR SLAVE JOB "u32"."u32" on host "SFN"\n", 
@@ -444,7 +440,7 @@ sge_pack_buffer *pb
             } else {
                lListElem *pe;
                if ( lGetString(jatep, JAT_granted_pe)
-                  && (pe=pe_locate(lGetString(jatep, JAT_granted_pe)))
+                  && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
                   && lGetUlong(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                   /* here we get usage of tasks that ran on slave/master execd's 

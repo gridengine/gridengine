@@ -35,7 +35,6 @@
 #include <errno.h>
 
 #include "sge_conf.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sgermon.h"
@@ -46,6 +45,7 @@
 #include "sge_dstring.h"
 #include "msg_execd.h"
 #include "sge_unistd.h"
+#include "sge_job.h"
 
 static const char* expand_path(const char *path_in, u_long32 job_id, 
                                u_long32 ja_task_id, const char *job_name, 

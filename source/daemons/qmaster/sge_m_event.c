@@ -49,18 +49,26 @@
 #include "sge_conf.h"
 #include "sge_security.h"
 #include "sge_answer.h"
-#include "msg_qmaster.h"
 #include "sge_queue.h"
+#include "sge_report.h"
+#include "sge_ckpt.h"
+#include "sge_pe.h"
+#include "sge_userprj.h"
+#include "sge_job.h"
+#include "sge_host.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_sharetree.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
+
 #ifdef QIDL
 #include "qidl_c_gdi.h"
 #endif
 
-#ifndef __SGE_NO_USERMAPPING__
-extern lList *Master_Host_Group_List;
-extern lList *Master_Usermapping_Entry_List;
-#endif
-
-
+#include "msg_qmaster.h"
 
 /****** Eventclient/Server/--Event_Client_Server ******************************
 *  NAME
@@ -139,57 +147,6 @@ static void check_send_new_subscribed_list(const char *old_subscription, const c
 #define FLUSH_INTERVAL 15
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
-
-/****** Eventclient/Server/-Event_Client_Server_Global_Variables **************
-*  NAME
-*     -Global_Variables() -- global Variables
-*
-*  SYNOPSIS
-*     extern lList *Master_Adminhost_List;
-*     extern lList *Master_Calendar_List;
-*     extern lList *Master_Ckpt_List;
-*     extern lList *Master_Complex_List;
-*     extern lList *Master_Config_List;
-*     extern lList *Master_Exechost_List;
-*     extern lList *Master_Job_List;
-*     extern lList *Master_Job_Schedd_Info_List;
-*     extern lList *Master_Manager_List;
-*     extern lList *Master_Operator_List;
-*     extern lList *Master_Pe_List;
-*     extern lList *Master_Project_List;
-*     extern lList *Master_Sched_Config_List;
-*     extern lList *Master_Sharetree_List;
-*     extern lList *Master_Submithost_List;
-*     extern lList *Master_User_List;
-*     extern lList *Master_Userset_List;
-*     
-*     lList *EV_Clients = NULL;
-*     
-*  FUNCTION
-*     The extern lList's reference all object lists that can be used
-*     in a Grid Engine event client interface.
-*
-*     EV_Clients is a list of all event clients to the event server.
-*
-*  NOTES
-*******************************************************************************/
-extern lList *Master_Adminhost_List;
-extern lList *Master_Calendar_List;
-extern lList *Master_Ckpt_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Config_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Job_List;
-extern lList *Master_Job_Schedd_Info_List;
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
-extern lList *Master_Pe_List;
-extern lList *Master_Project_List;
-extern lList *Master_Sched_Config_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Submithost_List;
-extern lList *Master_User_List;
-extern lList *Master_Userset_List;
 
 lList *EV_Clients = NULL;
 
@@ -959,7 +916,7 @@ u_long32 now
                   numevents?lGetUlong(lLast(lp), ET_number):0,
                   host, commproc, id));
             }
-            ret = sge_send_reports(host, commproc, id, report_list, 0, NULL);
+            ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
             if (ret == 0) { /* otherwise retry is triggered */
                if(lGetUlong(event_client, EV_busy_handling) != EV_BUSY_NO_HANDLING) {

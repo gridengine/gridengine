@@ -42,9 +42,7 @@
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "sge_confL.h"
 #include "sge_usageL.h"
-#include "sge_share_tree_nodeL.h"
 #include "sge_sharetree.h"
 #include "cull_parse_util.h"
 #include "sge_m_event.h"
@@ -360,7 +358,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
 /***************************************************
  Generate a Template for a sharetreenode
  ***************************************************/
-lListElem *getSNTemplate()
+lListElem *getSNTemplate(void)
 {
    lListElem *ep;
 

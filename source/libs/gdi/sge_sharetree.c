@@ -1,5 +1,3 @@
-#ifndef __SGE_JOB_H
-#define __SGE_JOB_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,32 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef __SGE_GDI__INTERN_H
-#   include "sge_gdi_intern.h"
-#endif
+#include "sge_string.h"
+#include "sgermon.h"
+#include "sge_log.h"
+#include "def.h"   
+#include "cull_list.h"
 
-#include "sge_eventL.h"
+#include "sge_sharetree.h"
 
-int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
-int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
-
-int sge_gdi_mod_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
-
-int sge_gdi_del_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
-
-void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
-
-void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
-
-void job_suc_pre(lListElem *jep);
-
-lListElem *sge_locate_job(u_long32);
-
-/* searches by id or jobname */
-lListElem *locate_job_by_identifier(const char *s, const char *owner);
-
-void get_rid_of_job(lList **alpp, lListElem *jep, lListElem *jatep, int force, 
-                    sge_pack_buffer *pb, char *pb_host, char *ruser, 
-                    char *rhost, const char *err_str, char *commproc);
-
-#endif /* __SGE_JOB_H */
+lList *Master_Sharetree_List = NULL;

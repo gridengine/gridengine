@@ -38,7 +38,6 @@
 #include <pwd.h>
 #include <errno.h>
 
-#include "sge_confL.h"
 #include "sge_answer.h"
 #include "read_object.h"
 #include "sge_gdi_intern.h"
@@ -50,6 +49,7 @@
 #include "sge_uidgid.h"
 #include "sge_prog.h"
 #include "sge_answer.h"
+#include "sge_conf.h"
 
 #include "msg_common.h"
 

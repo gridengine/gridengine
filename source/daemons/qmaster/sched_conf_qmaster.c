@@ -35,11 +35,8 @@
 #include <errno.h>
 
 #include "sgermon.h"
-#include "sge_confL.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_complexL.h"
 #include "sched_conf.h"
 #include "sched_conf_qmaster.h"
 #include "sge_m_event.h"
@@ -47,11 +44,10 @@
 #include "sge_log.h"
 #include "setup_path.h"
 #include "sge_answer.h"
+#include "sge_complex.h"
 
 #include "msg_qmaster.h"
 #include "msg_common.h"
-
-extern lList *Master_Complex_List;
 
 /************************************************************
   sge_mod_sched_configuration - Master code

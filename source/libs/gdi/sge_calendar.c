@@ -1,5 +1,3 @@
-#ifndef __SGE_HOST_H
-#define __SGE_HOST_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,11 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern lList *exechost_list;
-extern lList *submithost_list;
-extern lList *adminhost_list;
+#include "sge_string.h"
+#include "sgermon.h"
+#include "sge_log.h"
+#include "def.h"   
+#include "cull_list.h"
 
-lListElem *sge_locate_host(const char *unique, u_long32 target);
+#include "sge_calendar.h"
 
-#endif /* __SGE_HOST_H */
-
+lList *Master_Calendar_List = NULL;

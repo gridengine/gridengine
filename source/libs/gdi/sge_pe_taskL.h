@@ -110,7 +110,7 @@ extern "C" {
 *         +---------+         +----------+         +----------+
 *
 *  SEE ALSO
-*     gdi/job_jatask/JB_Type
+*     gdi/job/--JB_Type
 *     gdi/job_jatask/JAT_Type                             
 ******************************************************************************/
 enum {

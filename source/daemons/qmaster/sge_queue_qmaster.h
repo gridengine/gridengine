@@ -62,7 +62,6 @@ int verify_complex_list(lList **alpp, const char *obj_name, const char *qname,
 int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
 
 void sge_clear_tags(void);
-lListElem *sge_locate_queue(const char *cp);
 
 #endif /* __SGE_QUEUE_QMASTER_H */
 

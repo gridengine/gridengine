@@ -54,10 +54,7 @@
 #include "reschedule.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"
-#include "sge_job_queue.h"
 #include "sge_queue.h"
-
-extern lList *Master_Job_List;
 
 static void log_consumables(FILE *fp, lList *actual, lList *total); 
 static void log_stat_file(u_long32 now);
@@ -131,7 +128,7 @@ u_long32 now
          for_each(qep, Master_Queue_List) {
             memset(str, 0, sizeof(str));
 
-            if (( hep = sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
+            if (( hep = host_list_locate(Master_Exechost_List, lGetHost(qep, QU_qhostname)))) {
                 /* use load avg */
                 if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
                    load_avg = strtod(lGetString(ep, HL_value), NULL);
@@ -163,7 +160,7 @@ u_long32 now
             fprintf(fp, ":");
 
             /* global consumables */
-            if ((hep = sge_locate_host("global", SGE_EXECHOST_LIST)))
+            if ((hep = host_list_locate(Master_Exechost_List, "global")))
                log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
             fprintf(fp, "\n");
 

@@ -36,9 +36,7 @@
 #include "sge.h"
 #include "def.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_usersetL.h"
 #include "sge_pe_qmaster.h"
 #include "job_log.h"
 #include "sge_queue_qmaster.h"
@@ -55,12 +53,12 @@
 #include "gdi_utility_qmaster.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_job.h"
+#include "sge_userset.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-extern lList *Master_Userset_List;
-extern lList *Master_Job_List;
 
 static char object_name[] = "parallel environment";
 
@@ -248,7 +246,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EUNKNOWN;
    }
 
-   if ((ep=pe_locate(pe))==NULL) {
+   if ((ep=pe_list_locate(Master_Pe_List, pe))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;

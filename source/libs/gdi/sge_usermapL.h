@@ -73,9 +73,9 @@ NAMEDEF(UMEN)
    NAME("UME_mapping_list")
 NAMEEND
 
-/* *INDENT-ON* */   
-
 #define UMES sizeof(UMEN)/sizeof(char*)
+
+/* *INDENT-ON* */   
 
 /****** gdi/usermap/UM_Type ***************************************************
 *  NAME
@@ -107,9 +107,10 @@ NAMEDEF(UMN)
    NAME("UM_host_list")
 NAMEEND
 
+#define UMS sizeof(UMN)/sizeof(char*)
+
 /* *INDENT-ON* */  
 
-#define UMS sizeof(UMN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

@@ -38,10 +38,7 @@
 #include <pwd.h>
 
 #include "sge.h"
-#include "sge_usersetL.h"
-#include "sge_userprjL.h"
 #include "sge_gdi_intern.h"
-#include "sge_confL.h"
 #include "sge_log.h"
 #include "sge_parse_num_par.h"
 #include "sgermon.h"
@@ -53,7 +50,6 @@
 #include "resolve_host.h"
 #include "config_file.h"
 #include "rw_configuration.h"
-#include "sge_hostL.h"
 #include "sge_userset_qmaster.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_userprj_qmaster.h"
@@ -68,16 +64,15 @@
 #include "sge_uidgid.h" 
 #include "sge_spool.h"
 #include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_host.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    
-extern lList *Master_Config_List;
-extern lList *Master_Project_List;
-extern lList *Master_Exechost_List;
-
 /* make chached values from configuration invalid */
 int new_config = 1;
 

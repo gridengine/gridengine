@@ -35,13 +35,9 @@
 
 #include "def.h"
 #include "sge.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_job_report.h"
 #include "sge_job_refL.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_host.h"
@@ -69,8 +65,10 @@
 #include "sge_spool.h"
 #include "sge_hostname.h"
 #include "sge_queue.h"
-
-extern lList *Master_Userset_List;
+#include "sge_job.h"
+#include "sge_report.h"
+#include "sge_report_execd.h"
+#include "sge_userset.h"
 
 /************************************************************************
  Master routine for job exit
@@ -129,7 +127,7 @@ lListElem *jatep
    DPRINTF(("reaping job "u32"."u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
-   if (!(queueep = lGetElemStr(Master_Queue_List, QU_qname, qname))) {
+   if (!(queueep = queue_list_locate(Master_Queue_List, qname))) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
    }
 
@@ -255,7 +253,8 @@ lListElem *jatep
       ** in this case we have to halt all queues on this host
       */
       if (general_failure == GFSTATE_HOST) {
-         hep = sge_locate_host(lGetHost(queueep, QU_qhostname), SGE_EXECHOST_LIST);
+         hep = host_list_locate(Master_Exechost_List, 
+                  lGetHost(queueep, QU_qhostname));
          if (hep) {
             host = lGetHost(hep, EH_name);
             for_each(qep, Master_Queue_List) {

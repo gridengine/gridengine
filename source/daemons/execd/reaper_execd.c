@@ -48,17 +48,14 @@
 #include "def.h"
 #include "symbols.h"
 #include "config.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_job_report.h"
+#include "sge_queue.h"
 #include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
 #include "slots_used.h"
-#include "sge_queueL.h"
-#include "sge_confL.h"
 #include "admin_mail.h"
 #include "mail.h"
 #include "exec_job.h"
@@ -66,7 +63,7 @@
 #include "sge_signal.h"
 #include "dispatcher.h"
 #include "tmpdir.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "job_log.h"
 #include "execution_states.h"
 #include "sge_load_sensor.h"
@@ -88,10 +85,11 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "read_write_job.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_var.h"
+#include "sge_report.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -107,7 +105,6 @@ static void build_derived_final_usage(lListElem *jr);
 
 static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
-extern lList *Master_Job_List;
 
 /*****************************************************************************
  This code is used only by execd.
@@ -658,8 +655,7 @@ int is_array
          int job_caused_failure = 0;
 
          if (failed==SSTATE_NO_SHELL) {
-            lListElem *job = lGetElemUlong(Master_Job_List, JB_job_number, 
-                                           job_id); 
+            lListElem *job = job_list_locate(Master_Job_List, job_id); 
             lListElem *ja_task = job_search_task(job, NULL, ja_task_id, 0);
             lListElem *master_queue = NULL;
 

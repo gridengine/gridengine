@@ -29,11 +29,13 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
+
 #include "cull.h"
 #include "subordinate_schedd.h"
-#include "sge_queueL.h"
 #include "sgermon.h"
+#include "sge_queue.h"
 
 /* -----------------------------------------------
 
@@ -106,7 +108,7 @@ int sos_schedd(const char *qname, lList *qlist)
 
    DENTER(TOP_LAYER, "sos_schedd");
 
-   q = lGetElemStr(qlist, QU_qname, qname);
+   q = queue_list_locate(qlist, qname);
    if (!q) {
       /* 
          In the qlist we got is only a subset of all

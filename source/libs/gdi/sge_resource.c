@@ -33,16 +33,14 @@
 
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_rangeL.h"
-#include "sge_queueL.h"
 #include "sge_requestL.h"
-#include "sge_complexL.h"
-#include "sge_complex.h"
 #include "sge_resource.h"
 #include "cull_parse_util.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_range.h"
+#include "sge_complex.h"
+
 #include "msg_gdilib.h"
 
 static void sge_show_ce_type_list(lList *cel, const char *indent, const char *separator);

@@ -35,8 +35,7 @@
 #include <string.h>
 
 #include "sge_pe.h"
-#include "sge_jobL.h"
-#include "sge_hostL.h"
+#include "sge_job.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
@@ -48,7 +47,10 @@
 #include "schedd_monitor.h"
 #include "sge_schedd_text.h"
 #include "schedd_message.h"
+#include "sge_host.h"
+
 #include "msg_schedd.h"
+
 #ifdef WIN32NATIVE
 #	define strcasecmp( a, b) stricmp( a, b)
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)

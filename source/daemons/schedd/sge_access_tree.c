@@ -39,10 +39,10 @@
 #include "sge_category.h"
 #include "sge_access_tree.h"
 #include "sge_job_schedd.h"
+#include "sge_job.h"
 #include "schedd_conf.h"
 
 #include "sge_access_treeL.h"
-#include "sge_jobL.h"
 #include "sge_ctL.h"
 #include "msg_schedd.h"
 
@@ -561,7 +561,7 @@ lList *job_list
                   lGetUlong(current_jr, JRL_jobid)));
       } else {
          u_long32 temp = lGetUlong(current_jr, JRL_jobid);
-         job_array = lGetElemUlong(job_list, JB_job_number, temp);
+         job_array = job_list_locate(job_list, temp);
       }
    } while (!job_array && (current_jr=lNext(current_jr)));
       

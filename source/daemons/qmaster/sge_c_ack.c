@@ -32,10 +32,8 @@
 #include <string.h>
 
 #include "sge.h"
-#include "sge_jobL.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_ja_task.h"
-#include "sge_queueL.h"
 #include "sge_give_jobs.h"
 #include "sge_m_event.h"
 #include "read_write_queue.h"
@@ -46,10 +44,8 @@
 #include "sge_time_eventL.h"
 #include "time_event.h"
 #include "msg_qmaster.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_queue.h"
-
-extern lList *Master_Job_List;
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
@@ -137,7 +133,7 @@ u_long32 ack_ulong2
    case TAG_SIGJOB:
       DPRINTF(("TAG_SIGJOB\n"));
       /* ack_ulong is the jobid */
-      if (!(jep = sge_locate_job(ack_ulong))) {
+      if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, u32c(ack_ulong) ));
          DEXIT;
          return;
@@ -150,7 +146,7 @@ u_long32 ack_ulong2
 
       }
 
-      if (!(qep = lGetElemStr(Master_Queue_List, QU_qname, 
+      if (!(qep = queue_list_locate(Master_Queue_List,  
                         lGetString(jatep, JAT_master_queue)))) {
          ERROR((SGE_EVENT, MSG_COM_ACK_US, u32c(ack_ulong), 
                 lGetString(jatep, JAT_master_queue) ?

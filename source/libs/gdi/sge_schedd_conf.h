@@ -34,6 +34,8 @@
 
 #include "sge_schedd_confL.h"
 
+extern lList *Master_Sched_Config_List;
+
 int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                       lList **answer_list,
                                       const lList *cmplx_list);

@@ -29,12 +29,14 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "sgermon.h"
-#include "sge_queueL.h"
 #include "tmpdir.h"
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
+#include "sge_queue.h"
+
 #include "msg_execd.h"
 
 /*******************************************************/

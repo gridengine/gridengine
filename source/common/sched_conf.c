@@ -38,10 +38,7 @@
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_confL.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
-#include "sge_complexL.h"
 #include "sge_schedd_conf.h"
 #include "config.h"
 #include "sched_conf.h"
@@ -58,6 +55,8 @@
 #include "sge_prog.h"
 #include "sge_io.h"
 #include "sge_answer.h"
+#include "sge_complex.h"
+#include "sge_conf.h"
 
 static intprt_type intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
 

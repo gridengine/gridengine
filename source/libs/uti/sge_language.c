@@ -271,7 +271,6 @@ int sge_init_languagefunc(char *package, char *localeDir)
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
-*
 ******************************************************************************/
 void sge_init_language_func(gettext_func_type new_gettext, 
                             setlocale_func_type new_setlocale,
@@ -313,9 +312,9 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *     void sge_set_message_id_output(int flag) 
 *
 *  FUNCTION
-*     This procedure is used to enable the adding of message id's when showing
-*     error messages. This function is used in the macro SGE_ADD_MSG_ID(x)
-*     to enable the message id for errors.
+*     This procedure is used to enable the adding of message id's when 
+*     showing error messages. This function is used in the macro 
+*     SGE_ADD_MSG_ID(x) to enable the message id for errors.
 *
 *  INPUTS
 *     int flag - 0 = off ; 1 = on
@@ -328,7 +327,6 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
-*
 *******************************************************************************/
 void sge_set_message_id_output(int flag) {
    if (flag == 0) {
@@ -345,8 +343,8 @@ void sge_set_message_id_output(int flag) {
 *     int sge_get_message_id_output(void) 
 *
 *  FUNCTION
-*     This function returns the value stored in the static global varialbe
-*     sge_message_id_view_flag.
+*     This function returns the value stored in the static global 
+*     variable sge_message_id_view_flag.
 *
 *  RESULT
 *     int - value of sge_message_id_view_flag
@@ -359,7 +357,6 @@ void sge_set_message_id_output(int flag) {
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
-*
 *******************************************************************************/
 int sge_get_message_id_output(void) {
    if (sge_enable_msg_id == 0) {
@@ -392,7 +389,6 @@ int sge_get_message_id_output(void) {
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
-*
 *******************************************************************************/
 const char *sge_gettext(char *x) {
    return x;
@@ -407,9 +403,9 @@ const char *sge_gettext(char *x) {
 *
 *  FUNCTION
 *     This function is used for adding the message id to the translated 
-*     gettext message string. The message id is only added when the function
-*     sge_get_message_id_output() returns not "0" and the message string
-*     contains at least one SPACE character.
+*     gettext message string. The message id is only added when the 
+*     function sge_get_message_id_output() returns not "0" and the 
+*     message string contains at least one SPACE character.
 *
 *  INPUTS
 *     int msg_id          - message id
@@ -426,7 +422,6 @@ const char *sge_gettext(char *x) {
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
-*
 *******************************************************************************/
 const char *sge_gettext_(int msg_id, const char *msg_str) 
 {
@@ -448,8 +443,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 #endif
 }
 
-
-/****** uti/language/sge_gettext__() ********************************************
+/****** uti/language/sge_gettext__() *******************************************
 *  NAME
 *     sge_gettext__() -- get translated message from message file
 *
@@ -475,7 +469,6 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 *     uti/language/sge_gettext__()
 *     uti/language/sge_get_message_id_output()
 *     uti/language/sge_set_message_id_output()
-*
 *******************************************************************************/
 const char *sge_gettext__(char *x) 
 {

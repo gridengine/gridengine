@@ -33,12 +33,12 @@
 #include <stdlib.h>
 
 #include "sge_gdi_intern.h"
-#include "sge_usersetL.h"
 #include "sge_client_access.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_answer.h"
+#include "sge_userset.h"
 
 #include "msg_qconf.h"
 

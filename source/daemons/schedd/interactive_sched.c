@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_orderL.h"
 #include "sge_orders.h"
@@ -39,7 +38,7 @@
 #include "sgermon.h"
 #include "sge_range.h"
 #include "jb_now.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 
 /*------------------------------------------------------------------
  * CHECK ALL REMAINING JOBS WHETHER THEY ARE IMMEDIATE JOBS

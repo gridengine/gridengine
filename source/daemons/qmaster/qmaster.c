@@ -39,7 +39,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 #ifdef QIDL
 #include <pthread.h>
 #include "qidl_setup.h"
@@ -88,7 +87,6 @@
 #include "qmaster.h"
 #include "sge_feature.h"
 #include "sge_user_mapping.h"
-#include "sge_groups.h"
 #include "sge_language.h"
 #include "sge_bitop.h"
 #include "setup_path.h"
@@ -99,6 +97,8 @@
 #include "sge_spool.h"
 #include "sge_os.h"
 #include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_hostgroup.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -116,30 +116,7 @@ static pthread_t        corba_thread;
 
 int in_spool_dir = 0;                 /* to prevent lock file writing */
 
-/*
-** the global lists of the master referenced somewhere else
-*/
-lList *Master_Adminhost_List           = NULL;
-lList *Master_Calendar_List            = NULL;
-lList *Master_Ckpt_List                = NULL;
-lList *Master_Complex_List             = NULL;
-lList *Master_Config_List              = NULL;
-lList *Master_Exechost_List            = NULL;
-lList *Master_Feature_Set_List         = NULL;
-lList *Master_Job_List                 = NULL;
-lList *Master_Job_Schedd_Info_List     = NULL;
-lList *Master_Manager_List             = NULL;
-lList *Master_Operator_List            = NULL;
-lList *Master_Project_List             = NULL;
-lList *Master_Sched_Config_List        = NULL;
-lList *Master_Sharetree_List           = NULL;
-lList *Master_Submithost_List          = NULL;
-lList *Master_User_List                = NULL;
-lList *Master_Userset_List             = NULL;
-lList *Master_Zombie_List              = NULL;
-
 #ifndef __SGE_NO_USERMAPPING__
-lList *Master_Host_Group_List          = NULL;
 lList *Master_Usermapping_Entry_List   = NULL;
 #endif
 
@@ -802,7 +779,7 @@ lList *report_list
    }
   
    /* need exec host for all types of reports */
-   if (!(hep = sge_locate_host(rhost, SGE_EXECHOST_LIST))) {
+   if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
       DEXIT;
       return;

@@ -47,16 +47,15 @@
 #include "def.h"
 /* #include "cull_list.h" */
 #include "sge_stringL.h"
-#include "sge_jobL.h"
-#include "sge_usermapL.h"
 #include "commlib.h"
 #include "sge_log.h"
-#include "sge_groups.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
 
 static int   sge_isHostInHostList(lList *hostGroupList, lList *hostList, const char *hostName);
 static int   sge_isNameInMappingList(lList *mapList, const char *mappedName);

@@ -29,66 +29,38 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 
-#include "sge_all_listsL.h"
-#include "sge_host.h"
-#include "sge_m_event.h"
-#include "commlib.h"
 #include "sgermon.h"
-#include "sge_log.h"
+#include "sge_userset.h"
 
-#include "msg_common.h"
+lList *Master_Userset_List = NULL;
 
-extern lList *Master_Exechost_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Submithost_List;
+/*****************************************************************
+ is_deadline_user
 
-
-/* ------------------------------------------------------------ */
-
-lListElem *sge_locate_host(
-const char *unique,
-u_long32 target 
+ ask whether a given user is allowed to sumbit deadline jobs.
+ *****************************************************************/
+int is_deadline_user(
+char *username,         /* user we ask for */
+lList *lp               /* userset list to scan for deadline users */
 ) {
-   lListElem *ep = NULL;
-   lList *host_list = NULL;
-   int nm = 0;
-   lDescr *type = NULL;
+   lListElem *deadline_users;
 
-   DENTER(CULL_LAYER, "sge_locate_host");
+   DENTER(TOP_LAYER, "is_deadline_user");
 
-   if (!unique) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+   deadline_users = lGetElemStr(lp, US_name, DEADLINE_USERS);
+
+   if (deadline_users && lGetSubStr(deadline_users, UE_name, username, 
+         US_entries)) {
       DEXIT;
-      return NULL;
+      return 1; /* found user in deadline user list */
    }
-
-   switch ( target ) {
-   case SGE_EXECHOST_LIST:
-      host_list = Master_Exechost_List;
-      nm = EH_name;
-      type = EH_Type;
-      break;
-   case SGE_ADMINHOST_LIST:
-      host_list = Master_Adminhost_List;
-      nm = AH_name;
-      type = AH_Type;
-      break;
-   case SGE_SUBMITHOST_LIST:
-      host_list = Master_Submithost_List;
-      nm = SH_name;
-      type = SH_Type;
-      break;
-   default:
-     DEXIT;
-     return NULL;
-   }
-
-   ep = lGetElemHost(host_list, nm, unique);
 
    DEXIT;
-   return ep;
+   return 0;
 }
-
 

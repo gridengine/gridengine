@@ -40,7 +40,6 @@
 #include "sge_log.h"
 #include "cull.h"
 #include "sge_select_queue.h"
-#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_resource.h"
 #include "sge_complex_schedd.h"
@@ -51,15 +50,9 @@
 #include "slots_used.h"
 
 #include "sge_requestL.h"
-#include "sge_queueL.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
 #include "sge_pe.h"
-#include "sge_complexL.h"
-#include "sge_usersetL.h"
+#include "sge_complex.h"
 #include "sge_schedd_conf.h"
-#include "sge_ckptL.h"
-#include "sge_userprjL.h"
 #include "sort_hosts.h"
 #include "schedd_monitor.h"
 #include "schedd_message.h"
@@ -71,6 +64,11 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_schedd_conf.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_userprj.h"
+#include "sge_host.h"
+#include "sge_ckpt.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
@@ -562,7 +560,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          DEXIT;
          return 9;
       }
-      if ((!lGetElemStr(projects, UP_name, project))) {
+      if ((!userprj_list_locate(projects, project))) {
          schedd_add_message(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "queue", queue_name);
          DEXIT;
@@ -573,7 +571,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job can run in queue based on excluded projects */
    if ((projects = lGetList(queue, QU_xprojects))) {
       if (((project = lGetString(job, JB_project)) &&
-           lGetElemStr(projects, UP_name, project))) {
+           userprj_list_locate(projects, project))) {
          schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
             project, "queue", queue_name);
          DEXIT;
@@ -877,7 +875,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
          return 2;
       }
 
-      if ((!lGetElemStr(projects, UP_name, project))) {
+      if ((!userprj_list_locate(projects, project))) {
          schedd_add_message(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "host", eh_name);
          DEXIT;
@@ -888,7 +886,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    /* check if job can run on host based on excluded projects */
    if ((projects = lGetList(host, EH_xprj))) {
       if (((project = lGetString(job, JB_project)) &&
-           lGetElemStr(projects, UP_name, project))) {
+           userprj_list_locate(projects, project))) {
          schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
             project, "host", eh_name);
          DEXIT;
@@ -1143,7 +1141,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
       return 0;
    }
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
+   hep = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
 
    if(!hep) { 
       if (reason)
@@ -1158,7 +1156,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
       lc_host = ((double)ulc_factor)/100;
    }   
 
-   if ((global_hep = lGetElemHost(exechost_list, EH_name, "global")) != NULL) {
+   if ((global_hep = host_list_locate(exechost_list, "global")) != NULL) {
       if ((lGetPosViaElem(global_hep, EH_load_correction_factor) >= 0)
           && (ulc_factor=lGetUlong(global_hep, EH_load_correction_factor)))
          lc_global = ((double)ulc_factor)/100;
@@ -1238,7 +1236,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       return reason;
    }
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
+   hep = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
 
    if(!hep) { 
       /* no host for queue -> ERROR */
@@ -1247,7 +1245,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       return reason;
    }
 
-   global_hep = lGetElemHost(exechost_list, EH_name, "global");
+   global_hep = host_list_locate(exechost_list, "global");
 
    for_each (tep, threshold) {
       lListElem *hlep = NULL, *glep = NULL, *cep  = NULL;
@@ -1641,7 +1639,7 @@ int host_order_changed) {
       for_each(qep, queues)
          lSetUlong(qep, QU_tagged, 0);
 
-      global_hep = lGetElemHost(host_list, EH_name, "global");
+      global_hep = host_list_locate(host_list, "global");
 
       ccl[0] = lGetList(global_hep, EH_consumable_config_list);
       ccl[1] = NULL;
@@ -1727,7 +1725,7 @@ int host_order_changed) {
          /* do static and dynamic checks for "global" host */ 
          if (!sge_why_not_job2host(job, ja_task, global_hep, complex_list, acl_list)) {
             for_each (qep, queues) { /* in queue sort order */
-               hep = lGetElemHost(host_list, EH_name, lGetHost(qep, QU_qhostname));
+               hep = host_list_locate(host_list, lGetHost(qep, QU_qhostname));
                ccl[1] = lGetList(hep, EH_consumable_config_list);
                ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -2127,7 +2125,7 @@ int host_order_changed) {
 
          /* ensure host of this queue has enough slots */
          eh_name = lGetHost(qep, QU_qhostname);
-         hep = lGetElemHost(host_list, EH_name, eh_name);
+         hep = host_list_locate(host_list, eh_name);
          if ((int) lGetUlong(hep, EH_tagged) >= minslots && 
                (int) lGetUlong(hep, EH_seq_no)==-1) {
             lSetUlong(hep, EH_seq_no, host_seq_no++);
@@ -2529,7 +2527,7 @@ lList *acl_list;
 
    /* check if job has access to any hosts globally */
    if (sge_why_not_job2host(job, ja_task, 
-         lGetElemHost(host_list, EH_name, SGE_GLOBAL_NAME ), complex_list, acl_list)>0) {
+         host_list_locate(host_list, SGE_GLOBAL_NAME ), complex_list, acl_list)>0) {
       DEXIT;
       return 0;
    }
@@ -2553,7 +2551,7 @@ lList *acl_list;
 
    /* initially looked at global slots */
    if (!*global_resources)
-      global_complexes2scheduler(global_resources, lGetElemHost(host_list, EH_name, "global"), complex_list, 0);
+      global_complexes2scheduler(global_resources, host_list_locate(host_list, "global"), complex_list, 0);
  
    for (; global_slots; 
             global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {

@@ -50,18 +50,18 @@
 #include "read_write_ume.h"
 #include "read_write_job.h"
 #include "read_write_userset.h"
+#include "read_write_sharetree.h"
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_queue_qmaster.h"
-#include "sge_manop.h"
-#include "sge_complex.h"
+#include "sge_manop_qmaster.h"
 #include "slots_used.h"
 #include "complex_qmaster.h"
 #include "complex_history.h"
 #include "path_history.h"
 #include "opt_history.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "configuration_qmaster.h"
 #include "qmaster_heartbeat.h"
 #include "qm_name.h"
@@ -89,13 +89,12 @@
 #include "time_event.h"
 #include "sge_give_jobs.h"
 #include "sge_user_mapping.h"
-#include "sge_groups.h"
 #include "setup_path.h"
 #include "reschedule.h"
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "reschedule.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_spool.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
@@ -104,28 +103,18 @@
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_ckpt.h"
+#include "sge_userprj.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_sharetree.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
 
-extern lList *Master_Project_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Userset_List;
-extern lList *Master_Sched_Config_List;
-extern lList *Master_User_List;
-extern lList *Master_Config_List;
-extern lList *Master_Job_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Submithost_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Ckpt_List;
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
-extern lList *Master_Calendar_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Zombie_List;
+#include "msg_common.h"
 
 #ifndef __SGE_NO_USERMAPPING__
-#include "msg_common.h"
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
 static int sge_read_user_mapping_entries_from_disk(void);
 static int sge_read_host_group_entries_from_disk(void);
 #endif
@@ -276,21 +265,21 @@ int sge_setup_qmaster()
 
    
 
-   if (!sge_locate_host(SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST)) {
+   if (!host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
       if (sge_add_host_of_type(SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
-   if (!sge_locate_host(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST)) {
+   if (!host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
       if (sge_add_host_of_type(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
-   if (!sge_locate_host(me.qualified_hostname, SGE_ADMINHOST_LIST)) {
+   if (!host_list_locate(Master_Adminhost_List, me.qualified_hostname)) {
       if (sge_add_host_of_type(me.qualified_hostname, SGE_ADMINHOST_LIST)) {
          DEXIT;
          return -1;
@@ -316,7 +305,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("manager_list----------------------------\n"));
    read_manop(SGE_MANAGER_LIST);
-   if (!lGetElemStr(Master_Manager_List, MO_name, "root")) {
+   if (!sge_locate_manager("root")) {
       lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
       if (write_manop(1, SGE_MANAGER_LIST)) {
@@ -337,7 +326,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("operator_list----------------------------\n"));
    read_manop(SGE_OPERATOR_LIST);
-   if (!lGetElemStr(Master_Operator_List, MO_name, "root")) {
+   if (!sge_locate_operator("root")) {
       lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
       if (write_manop(1, SGE_OPERATOR_LIST)) {
@@ -493,8 +482,8 @@ int sge_setup_qmaster()
 
                set_qslots_used(qep, 0);
                
-               if (!(exec_host = sge_locate_host(lGetHost(qep, QU_qhostname), 
-                   SGE_EXECHOST_LIST))) {
+               if (!(exec_host = host_list_locate(Master_Exechost_List, 
+                     lGetHost(qep, QU_qhostname)))) {
                   if (lGetUlong(qep, QU_qtype) & TQ) {
                      ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
                      lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
@@ -744,10 +733,10 @@ int sge_setup_qmaster()
       lListElem *template_host_elem = NULL;
 
       /* get "global" element pointer */
-      global_host_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME);   
+      global_host_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);   
 
       /* get "template" element pointer */
-      template_host_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME);
+      template_host_elem = host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME);
   
       for_each(host, Master_Exechost_List) {
          if ( (host != global_host_elem ) && (host != template_host_elem ) ) {
@@ -781,7 +770,7 @@ int user
          next = lNext(upu);
 
          jobid = lGetUlong(upu, UPU_job_number);
-         if (!sge_locate_job(jobid)) {
+         if (!job_list_locate(Master_Job_List, jobid)) {
             lRemoveElem(lGetList(up, UP_debited_job_usage), upu);
             WARNING((SGE_EVENT, "removing reference to no longer existing job "u32" of %s "SFQ"\n",
                            jobid, user?"user":"project", lGetString(up, UP_name)));
@@ -1331,17 +1320,17 @@ static int debit_all_jobs_from_qs()
             queue_name = lGetString(gdi, JG_qname);
             slots = lGetUlong(gdi, JG_slots);
             
-            if (!(qep = lGetElemStr(Master_Queue_List, QU_qname, queue_name))) {
+            if (!(qep = queue_list_locate(Master_Queue_List, queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
                   queue_name, u32c(lGetUlong(jep, JB_job_number))));
                lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);   
             }
 
             /* debit in all layers */
-            debit_host_consumable(jep, sge_locate_host("global", 
-                     SGE_EXECHOST_LIST), Master_Complex_List, slots);
-            debit_host_consumable(jep, hep = sge_locate_host(
-                     lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST), 
+            debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+                     "global"), Master_Complex_List, slots);
+            debit_host_consumable(jep, hep = host_list_locate(
+                     Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
                      Master_Complex_List, slots);
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             if (!master_hep)

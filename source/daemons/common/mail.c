@@ -41,11 +41,11 @@
 #include "mail.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_jobL.h"
 #include "sig_handlers.h"
 #include "sge_pgrp.h"
 #include "sge_prog.h"
 #include "sge_os.h"
+#include "sge_job.h"
 #include "msg_daemons_common.h"
 
 

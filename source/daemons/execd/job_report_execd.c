@@ -33,8 +33,7 @@
 #include <stdlib.h>
 
 #include "cull.h"
-#include "sge_jobL.h"
-#include "sge_job_report.h"
+#include "sge_report_execd.h"
 #include "sge_usageL.h"
 #include "sge_gdi_intern.h"
 #include "job_report_execd.h"
@@ -45,8 +44,9 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "msg_execd.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_ja_task.h"
+#include "sge_report.h"
 
 lList *jr_list = NULL;
 int flush_jr = 0;
@@ -103,7 +103,7 @@ lListElem *jep
          if(petaskid != NULL) {
             petep = ja_task_search_pe_task(jatep, petaskid);
          }   
-         init_from_job(jr, jep, jatep, petep);
+         job_report_init_from_job(jr, jep, jatep, petep);
       }
    }
  

@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
@@ -38,9 +37,12 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_answer.h"
-#include "sge_complexL.h"
-#include "msg_gdilib.h"
 #include "sge_schedd_conf.h"
+#include "sge_complex.h"
+
+#include "msg_gdilib.h"
+
+lList *Master_Sched_Config_List = NULL;
 
 int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                       lList **answer_list,

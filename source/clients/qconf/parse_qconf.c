@@ -45,23 +45,12 @@
 #include "sge_options.h"
 #include "sge_gdi_intern.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
-#include "sge_hostL.h"
-#include "sge_ckptL.h"
-#include "sge_confL.h"
+#include "sge_queue.h"
 #include "sge_string.h"
 #include "sge_eventL.h"
-#include "sge_queueL.h"
 #include "sge_identL.h"
-#include "sge_manopL.h"
 #include "sge_answer.h"
-#include "sge_usersetL.h"
-#include "sge_userprjL.h"
-#include "sge_complexL.h"
-#include "sge_calendarL.h"
-#include "sge_usermapL.h"
-#include "sge_groupL.h"
-#include "sge_share_tree_nodeL.h"
+#include "sge_usermap.h"
 #include "parse.h"
 #include "usage.h"
 #include "commlib.h"
@@ -77,14 +66,15 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "read_write_host.h"
-#include "sge_complex.h"
 #include "sched_conf.h"
 #include "read_write_userprj.h"
+#include "read_write_sharetree.h"
 #include "sge_sharetree.h"
 #include "sge_userset.h"
 #include "sge_feature.h"
 #include "read_write_ckpt.h"
 #include "read_write_userset.h"
+#include "read_write_complex.h"
 #include "gdi_tsm.h"
 #include "gdi_checkpermissions.h"
 #include "sgermon.h"
@@ -98,6 +88,13 @@
 #include "sge_signal.h"
 #include "sge_io.h"
 #include "sge_schedd_conf.h"
+#include "sge_userprj.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_hostgroup.h"
+#include "sge_conf.h"
+#include "sge_ckpt.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -6290,7 +6287,7 @@ char *host
    }
    lFreeList(alp);
 
-   ep = lGetElemHost(lp, AH_name, host);
+   ep = host_list_locate(lp, host);
 
    if (!ep) {
       /*

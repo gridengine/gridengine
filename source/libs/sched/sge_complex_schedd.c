@@ -40,16 +40,15 @@
 #include "sge_sched.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
 #include "sge_parse_num_par.h"
 #include "sge_static_load.h"
-#include "sge_complex.h"
 #include "sge_language.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_schedd_conf.h"
+#include "sge_queue.h"
+#include "sge_host.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -434,7 +433,7 @@ int recompute_debitation_dependent
    /* build global complex and add it to result */
    if (recompute_debitation_dependent || !*new_complex_list) {
       global_complexes2scheduler(new_complex_list, 
-                                 lGetElemHost(exechost_list, EH_name, "global"), 
+                                 host_list_locate(exechost_list, "global"), 
                                  complex_list,
                                  recompute_debitation_dependent);
    }
@@ -472,7 +471,7 @@ int recompute_debitation_dependent
       host_complexes2scheduler(
          new_complex_list, 
          queue ?
-            lGetElemHost(exechost_list, EH_name, lGetHost(queue, QU_qhostname))
+            host_list_locate(exechost_list, lGetHost(queue, QU_qhostname))
             :NULL, 
          exechost_list, 
          complex_list, 

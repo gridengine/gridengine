@@ -40,7 +40,7 @@ QSTAT_SRC = qstat.c
 
 QSTAT_ADD_SRC = \
                qstat_printing.c \
-               sge_complex.c \
+               read_write_complex.c \
                show_job.c \
                sig_handlers.c \
                usage.c sge_options.c

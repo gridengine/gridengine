@@ -91,9 +91,6 @@ sge_gdi_request* new_gdi_request(void);
 
 #define INIT_ALPP(alpp) (alpp && !*alpp)?((*alpp=lCreateList("answers", AN_Type))!=NULL):0
 
-/* sge_send_reports */
-int sge_send_reports(const char *rhost, const char *commproc, int id, lList *report_list, int synchron, u_long32 *mid);
-
 /* sge_any_request.c */
 enum {
    TAG_NONE            = 0,     /* usable e.g. as delimiter in a tag array */

@@ -65,6 +65,7 @@
 #include "qmon_globals.h"
 #include "AskForItems.h"
 #include "sge_dstring.h"
+#include "sge_pe.h"
 
 
 static Widget qmon_pe = 0;
@@ -312,7 +313,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ep = lGetElemStr(qmonMirrorList(SGE_PE_LIST), PE_name, pename);
+   ep = pe_list_locate(qmonMirrorList(SGE_PE_LIST), pename);
 
    XtFree((char*) pename);
 
@@ -554,7 +555,7 @@ XtPointer cld, cad;
       XtVaSetValues( pe_name_w,
                      XmNeditable, False,
                      NULL);
-      pep = lGetElemStr(qmonMirrorList(SGE_PE_LIST), PE_name, pestr);
+      pep = pe_list_locate(qmonMirrorList(SGE_PE_LIST), pestr);
       XtFree((char*)pestr);
       if (pep) {
          add_mode = 0;

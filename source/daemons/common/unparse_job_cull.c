@@ -35,11 +35,9 @@
 #include "sge_options.h"
 #include "def.h"
 #include "sge_gdi_intern.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_stringL.h"
 #include "sge_pe.h"
-#include "sge_usersetL.h"
 #include "sge_string.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"
@@ -60,6 +58,8 @@
 #include "sge_feature.h"
 #include "sge_dstring.h"
 #include "sge_range.h"
+#include "sge_job.h"
+#include "sge_userset.h"
 #include "msg_daemons_common.h"
 
 static char *sge_unparse_checkpoint_attr(int opr, char *string);

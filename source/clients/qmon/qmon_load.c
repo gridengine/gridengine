@@ -34,9 +34,8 @@
 #include <Xmt/Dialogs.h>
 
 #include "sge_gdi.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
 #include "sge_stringL.h"
+#include "sge_complex.h"
 
 #include "qmon_rmon.h"
 #include "qmon_matrix.h"

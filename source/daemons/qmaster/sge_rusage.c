@@ -32,8 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_job_reportL.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_usageL.h"
 #include "sge_rusage.h"
@@ -42,8 +40,9 @@
 #include "sge_string.h"
 #include "sge_job_schedd.h"
 #include "sge_schedd.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_spool.h"
+#include "sge_report.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define ARCH_COLUMN ":%s"

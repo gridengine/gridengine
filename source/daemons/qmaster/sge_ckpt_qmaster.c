@@ -35,11 +35,7 @@
 #include "sge.h"
 #include "def.h"
 #include "sge_pe.h"
-#include "sge_ckptL.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
 #include "sge_ja_task.h"
-#include "sge_usersetL.h"
 #include "sge_ckpt_qmaster.h"
 #include "job_log.h"
 #include "sge_queue_qmaster.h"
@@ -59,6 +55,8 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_ckpt.h"
+#include "sge_queue.h"
+#include "sge_job.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -66,9 +64,6 @@
 /* #include "pw_def.h" */
 /* #include "pw_proto.h"  */
 #include "sge_parse_num_par.h"
-
-extern lList *Master_Ckpt_List;
-extern lList *Master_Job_List;
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
 *  NAME
@@ -351,7 +346,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
       DEXIT;
       return STATUS_EUNKNOWN;
    }                    
-   found = lGetElemStr(*lpp, CK_name, ckpt_name);
+   found = ckpt_list_locate(*lpp, ckpt_name);
 
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CKPT, ckpt_name));
@@ -400,32 +395,6 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    return STATUS_OK;
 }                     
 
-
-/****** qmaster/ckpt/sge_locate_ckpt() ****************************************
-*
-*  NAME
-*     sge_locate_ckpt -- find a ckpt object in the Master_Ckpt_List 
-*
-*  SYNOPSIS
-*     int sge_locate_ckpt(
-*        char *ckpt_name;
-*     );
-*
-*  FUNCTION
-*     This function will return a ckpt object by name if it exists.
-*
-*
-*  INPUTS
-*     ckpt_name   - name of the ckpt object. 
-*
-*  RESULT
-*     NULL - ckpt object with name "ckpt_name" does not exist
-*     !NULL - pointer to the cull element (CK_Type) 
-******************************************************************************/ 
-lListElem *sge_locate_ckpt(const char *ckpt_name) {
-   return lGetElemStr(Master_Ckpt_List, CK_name, ckpt_name);
-}
-
 /****** src/sge_change_queue_version_qr_list() ********************************
 *  NAME
 *     sge_change_queue_version_qr_list --  
@@ -471,7 +440,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    */
    for_each (qrep, nq) {
       q_name = lGetString(qrep, QR_name);
-      if ((qep = sge_locate_queue(q_name))) {
+      if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
          sge_change_queue_version(qep, 0, 0);
          cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
             qep);
@@ -487,7 +456,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    for_each (qrep, oq) {
       q_name = lGetString(qrep, QR_name);
       if (!lGetElemStr(nq, QR_name, q_name) 
-          && (qep = sge_locate_queue(q_name))) {
+          && (qep = queue_list_locate(Master_Queue_List, q_name))) {
          sge_change_queue_version(qep, 0, 0);
          cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
             qep);

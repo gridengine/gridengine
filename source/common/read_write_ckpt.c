@@ -36,9 +36,7 @@
 
 #include "sge.h"
 #include "cull.h"
-#include "sge_ckptL.h"
 #include "sge_pe.h"         
-#include "sge_confL.h"
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_ckpt.h"
@@ -51,6 +49,7 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
+#include "sge_ckpt.h"
 
 /****
  **** cull_read_in_ckpt

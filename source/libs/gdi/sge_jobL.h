@@ -149,7 +149,7 @@ enum {
 #define CONTEXT_IOR "IOR"
 #define CONTEXT_PARENT "PARENT"
 
-/****** gdi/job_jatask/--JB_Type **********************************************
+/****** gdi/job/--JB_Type *****************************************************
 *  NAME
 *     JB_Type - CULL job element 
 *
@@ -435,7 +435,7 @@ I        ("qsub -t tid_range")
 *     and one 'JAT_Type' element.
 *
 *  SEE ALSO
-*     gdi/job_jatask/JAT_Type                             
+*     gdi/job/--JAT_Type                             
 ******************************************************************************/
 enum {
    JB_job_number = JB_LOWERBOUND,
@@ -879,9 +879,30 @@ NAMEDEF( JGN )
    NAME( "JG_jcfticket" )
 NAMEEND
 
-/* *INDENT-ON* */
-
 #define JGS sizeof(JGN)/sizeof(char*)
+
+enum {
+   JQ_job_number = JQ_LOWERBOUND,
+   JQ_job,
+   JQ_queue
+};
+
+LISTDEF(JQ_Type)
+   /* misc setup variables */
+   SGE_ULONG(JQ_job_number)
+   SGE_LIST(JQ_job)
+   SGE_LIST(JQ_queue)
+LISTEND
+
+NAMEDEF(JQN)
+   NAME("JQ_job_number")
+   NAME("JQ_job")
+   NAME("JQ_queue")
+NAMEEND
+
+#define JQS sizeof(JQN)/sizeof(char*)
+
+/* *INDENT-ON* */
 
 #ifdef  __cplusplus
 }

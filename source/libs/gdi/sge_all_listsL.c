@@ -33,28 +33,50 @@
 #include <stdio.h>
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
+#include "cull_list.h"
 #include "sge_all_listsL.h"
 
-int is_obj_of_type(
-lListElem *ep,
-lDescr *descr 
-) {
+int object_has_type(const lListElem *ep, const lDescr *descr) 
+{
    int ret = 0;
  
    /*
-   ** we assume that object is of the given type when the 
-   ** primary key is contained in the element
-   **
-   ** --> additional objects will be added when we need them
-   */
-   if ((descr == EH_Type && lGetPosInDescr(ep->descr, EH_name) != -1)
-       || (descr == QU_Type && lGetPosInDescr(ep->descr, QU_qname) != -1)
-       || (descr == JB_Type && lGetPosInDescr(ep->descr, JB_job_number) != -1)
-       || (descr == JAT_Type && lGetPosInDescr(ep->descr, JAT_task_number) !=-1)
-       || (descr == PET_Type && lGetPosInDescr(ep->descr, PET_id) !=-1)
-       || (descr == RN_Type && lGetPosInDescr(ep->descr, RN_min) !=-1)
-      ) {
+    * we assume that "ep" is of the given type when the 
+    * primary key is contained in the element
+    *
+    * --> make sure that your object is handled in object_get_primary_key() 
+    */
+   if (lGetPosInDescr(ep->descr, object_get_primary_key(descr)) != -1) {
       ret = 1;
-   };
+   }
    return ret;
-}  
+} 
+
+int object_get_primary_key(const lDescr *descr)
+{
+   int ret = NoName;
+
+   if (descr == EH_Type) {
+      ret = EH_name;
+   } else if (descr == AH_Type) {
+      ret = AH_name;
+   } else if (descr == SH_Type) {
+      ret = SH_name;
+   } else if (descr == QU_Type) {
+      ret = QU_qname;
+   } else if (descr == JB_Type) {
+      ret = JB_job_number;
+   } else if (descr == JAT_Type) {
+      ret = JAT_task_number;
+   } else if (descr == PET_Type) {
+      ret = PET_id;
+   } else if (descr == RN_Type) {
+      ret = RN_min;
+   } else if (descr == PE_Type) {
+      ret = PE_name;
+   } else if (descr == VA_Type) {
+      ret = VA_variable;
+   }
+   return ret;
+}
+ 

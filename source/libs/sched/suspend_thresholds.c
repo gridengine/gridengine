@@ -35,9 +35,9 @@
 
 #include "cull.h"
 #include "sge_conf.h"
-#include "sge_jobL.h"
+#include "sge_job.h"
 #include "sge_ja_task.h"
-#include "sge_queueL.h"
+#include "sge_queue.h"
 #include "sge_orderL.h"
 #include "sge_time.h"
 #include "sge_select_queue.h"

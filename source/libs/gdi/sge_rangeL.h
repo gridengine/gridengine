@@ -81,7 +81,6 @@ extern "C" {
 *          (e.g. 1-9:2; 11-20:1; 25-28:3)
 *
 *  SEE ALSO 
-*     gdi/range/RN_Type
 *     gdi/range/range_list_calculate_union_set()
 *     gdi/range/range_list_calculate_difference_set()
 *     gdi/range/range_list_calculate_intersection_set() 

@@ -45,7 +45,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_feature.h"
 #include "msg_clients_common.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "symbols.h"
 #include "sge_var.h"
 #include "sge_range.h"

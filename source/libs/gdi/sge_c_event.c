@@ -41,12 +41,13 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_eventL.h"
-#include "sge_reportL.h"
 #include "sge_c_event.h"
 #include "qm_name.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_answer.h"
+#include "sge_report.h"
+
 #include "msg_gdilib.h"
 
 /****** Eventclient/--Event_Client_Interface **********************************

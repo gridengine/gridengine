@@ -53,7 +53,7 @@ EXECD_SRC   =  execd.c \
               procfs.c \
               ptf.c \
               reaper_execd.c \
-              report.c \
+              sge_report_execd.c \
               setup_execd.c \
               tmpdir.c \
 
@@ -160,8 +160,8 @@ ptf.o: 		$(EXECD_DIR)/ptf.c
 reaper_execd.o:	$(EXECD_DIR)/reaper_execd.c
 		$(CC) $(CFLAGS) -c $(EXECD_DIR)/reaper_execd.c
 
-report.o   : $(EXECD_DIR)/report.c
-		$(CC) $(CFLAGS) -c $(EXECD_DIR)/report.c
+sge_report_execd.o   : $(EXECD_DIR)/sge_report_execd.c
+		$(CC) $(CFLAGS) -c $(EXECD_DIR)/sge_report_execd.c
 
 setup_execd.o   : $(EXECD_DIR)/setup_execd.c
 		$(CC) $(CFLAGS) -c $(EXECD_DIR)/setup_execd.c

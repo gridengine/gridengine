@@ -248,7 +248,8 @@ int feature_initialize_from_file(const char *filename)
 *     0 OK
 *    -3 unknown mode-string
 ******************************************************************************/
-int feature_initialize_from_string(const char *mode) {
+int feature_initialize_from_string(const char *mode) 
+{
    featureset_id_t id;
    int ret;
 
@@ -284,9 +285,8 @@ int feature_initialize_from_string(const char *mode) {
 *  RESULT
 *     modifies the Master_FeatureSet_List  
 ******************************************************************************/
-void feature_activate(
-featureset_id_t id 
-) {
+void feature_activate(featureset_id_t id) 
+{
    lListElem *active_set;
    lListElem *inactive_set;
 
@@ -329,9 +329,8 @@ featureset_id_t id
 *     0 (false)
 *     1 (true) 
 ******************************************************************************/
-int feature_is_active(
-featureset_id_t id 
-) {
+int feature_is_active(featureset_id_t id) 
+{
    lListElem *feature;
    int ret = 0;
 
@@ -389,9 +388,8 @@ featureset_id_t feature_get_active_featureset_id(void)
 *  RESULT
 *     mode string 
 ******************************************************************************/
-const char *feature_get_featureset_name(
-featureset_id_t id 
-) {
+const char *feature_get_featureset_name(featureset_id_t id) 
+{
    int i = 0;
    char *ret = "<<unknown>>";
 
@@ -424,9 +422,8 @@ featureset_id_t id
 *  RESULT
 *     featureset_id_t 
 ******************************************************************************/
-featureset_id_t feature_get_featureset_id(
-const char *name 
-) {
+featureset_id_t feature_get_featureset_id(const char *name) 
+{
    int i = 0;
    featureset_id_t ret = FEATURESET_UNINITIALIZED;
 
@@ -468,9 +465,8 @@ const char *name
 *  RESULT
 *     char* - static string
 ******************************************************************************/
-const char *feature_get_product_name(
-featureset_product_name_id_t style 
-) {
+const char *feature_get_product_name(featureset_product_name_id_t style) 
+{
    const char *long_name  = "";
    const char *short_name = "";
    const char *version    = "";
@@ -545,9 +541,8 @@ featureset_product_name_id_t style
 *     0 (false)
 *     1 (true)
 ******************************************************************************/
-int feature_is_enabled(
-feature_id_t id 
-) {
+int feature_is_enabled(feature_id_t id) 
+{
    lListElem *active_set;
    lListElem *feature = NULL;
    int ret = 0;
@@ -582,9 +577,8 @@ feature_id_t id
 *             (or "<<unknown>>" when the id isn't a valid 
 *              feature constant) 
 ******************************************************************************/
-const char *feature_get_name(
-feature_id_t id 
-) {
+const char *feature_get_name(feature_id_t id) 
+{
    int i = 0;
    char *ret = "<<unknown>>";
 
@@ -615,9 +609,8 @@ feature_id_t id
 *  RESULT
 *     feature_id_t 
 ******************************************************************************/
-feature_id_t feature_get_id(
-const char *name 
-) {
+feature_id_t feature_get_id(const char *name) 
+{
    int i = 0;
    feature_id_t ret = FEATURESET_UNINITIALIZED;
 

@@ -37,7 +37,6 @@
 
 #include "sge.h"
 #include "sge_log.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sgermon.h"
 #include "cull_file.h"
@@ -46,19 +45,16 @@
 #include "sge_spool.h"
 #include "utility_daemon.h"
 #include "sge_stringL.h"
+#include "sge_job_qmaster.h"
 #include "sge_job.h"
-#include "sge_job_jatask.h"
 #include "sge_answer.h"
 #include "msg_qmaster.h"
 #include "msg_common.h"
 #include "sge_suser.h"
 #include "sge_conf.h"
 #include "sge_unistd.h"
-#include "sge_job.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
-
-extern lList *Master_Job_List;
 
 static lList *ja_task_list_create_from_file(u_long32 job_id, 
                                             u_long32 ja_task_id,
@@ -91,9 +87,6 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
                                            u_long32 ja_task_id,
                                            const char *pe_task_id,
                                            sge_spool_flags_t flags);
-
-extern lList *Master_Job_List;
-extern lList *Master_Zombie_List;
 
 /* Here we cache the path of the last task spool dir that has been created.
    In case a task spool dir is removed the cache is no longer a proof of the
@@ -292,7 +285,7 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
    
 }
 
-/****** sge/job_jatask/job_write_spool_file() *********************************
+/****** sge/job/job_write_spool_file() ****************************************
 *  NAME
 *     job_write_spool_file() -- makes a job/task persistent 
 *
@@ -635,7 +628,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
    int one_file;
    lList *master_list = handle_as_zombie ? Master_Zombie_List : Master_Job_List;
-   lListElem *job = lGetElemUlong(master_list,  JB_job_number, jobid);
+   lListElem *job = job_list_locate(master_list, jobid);
    int try_to_remove_sub_dirs = 0;
 
    DENTER(TOP_LAYER, "job_remove_spool_file");

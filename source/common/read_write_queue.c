@@ -38,13 +38,7 @@
 #include "sge_feature.h"
 #include "commlib.h"
 #include "sge_gdi_intern.h"
-#include "sge_queueL.h"
 #include "sge_answer.h"
-#include "sge_confL.h"
-#include "sge_hostL.h"
-#include "sge_usersetL.h"
-#include "sge_complexL.h"
-#include "sge_userprjL.h"
 #include "read_write_queue.h"
 #include "read_object.h"
 #include "config.h"
@@ -55,9 +49,15 @@
 #include "sge_spool.h"
 #include "sge_io.h"
 #include "sge_answer.h"
-#include "msg_common.h"
 #include "sched_conf.h"
 #include "sge_range.h"
+#include "sge_queue.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+#include "sge_conf.h"
+
+#include "msg_common.h"
 
 static char *queue_types[] = {
    "BATCH",        

@@ -54,6 +54,7 @@
 #include "sge_time.h"
 #include "sge_feature.h"
 #include "qmon_init.h"
+#include "sge_job.h"
 
 #define for_each2(ep1, lp1, ep2, lp2) \
    for (ep1=lFirst(lp1), ep2=lFirst(lp2); ep1 && ep2;\
@@ -337,11 +338,10 @@ lEnumeration *what
             u_long32 jid = atol(lGetString(ep, ID_str));
             DPRINTF(("Job: " u32 "gets removed\n", jid));
             if (local) {
-               lGetElemUlong(local, JB_job_number, jid); 
+               job_list_locate(local, jid); 
             }
             else {
-               sep = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), 
-                                    JB_job_number, jid);
+               sep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), jid);
                if (sep) {
                   lListElem *jatep;
                   for_each (jatep, lGetList(sep, JB_ja_tasks)) {
@@ -515,7 +515,7 @@ lEnumeration *what
                *local = lCreateList(lGetListName(*lpp), lGetListDescr(*lpp));
             else {
                if (nm == JB_job_number) {
-                  rem = lGetElemUlong(*local, nm, lGetUlong(ep, nm));
+                  rem = job_list_locate(*local, lGetUlong(ep, nm));
                } else {
                   listDescriptor = lGetListDescr(*local);
                   dataType = lGetPosType(listDescriptor, lGetPosInDescr(listDescriptor, nm));

@@ -32,9 +32,9 @@
 #include <stdio.h>
 
 #include "sge_eventL.h"
-#include "sge_share_tree_nodeL.h"
-#include "sge_jobL.h"
 #include "cull.h"
+#include "sge_job.h"
+#include "sge_sharetree.h"
 #include "sge_event.h"
 
 #include "msg_gdilib.h"

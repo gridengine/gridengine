@@ -40,10 +40,8 @@
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_queueL.h"
 #include "slots_used.h"
 #include "dispatcher.h"
 #include "sge_string.h"
@@ -63,17 +61,17 @@
 #include "setup_path.h"
 #include "jb_now.h"
 #include "sge_security.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_var.h"
+#include "sge_queue.h"
 #include "get_path.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
 
 extern volatile int jobs_to_start;
-extern lList *Master_Job_List;
 
 static int handle_job(lListElem *jelem, lListElem *jatep, struct dispatch_entry *de, sge_pack_buffer *pb, int slave);
 static int handle_task(lListElem *petrep, struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, int *synchron);
@@ -286,7 +284,7 @@ int slave
    /* store queues as sub elems of gdil */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       qnm=lGetString(gdil_ep, JG_qname);
-      if (!(qep=lGetElemStr(qlp, QU_qname, qnm))) {
+      if (!(qep=queue_list_locate(qlp, qnm))) {
          sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, u32c(lGetUlong(jelem, JB_job_number)));
          DEXIT;
          goto Error;
@@ -417,7 +415,7 @@ Ignore:
    return -1;  
 }
 
-/****** execd/job_jatask/job_set_queue_info_in_task() *************************
+/****** execd/job/job_set_queue_info_in_task() ********************************
 *  NAME
 *     job_set_queue_info_in_task() -- set queue to use for task
 *
@@ -449,7 +447,7 @@ static lList *job_set_queue_info_in_task(const char *qname, lListElem *petep)
    return lGetList(petep, PET_granted_destin_identifier_list);
 }
 
-/****** execd/job_jatask/job_get_queue_with_task_about_to_exit() **************
+/****** execd/job/job_get_queue_with_task_about_to_exit() *********************
 *  NAME
 *     job_get_queue_with_task_about_to_exit -- find Q with already exited task
 *
@@ -482,7 +480,7 @@ static lList *job_set_queue_info_in_task(const char *qname, lListElem *petep)
 *     else NULL
 *
 *  SEE ALSO
-*     execd/job_jatask/job_set_queue_info_in_task()
+*     execd/job/job_set_queue_info_in_task()
 ******************************************************************************/
 static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
                                                     lListElem *jatep, 
@@ -531,7 +529,7 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
    return NULL;
 }
 
-/****** execd/job_jatask/job_get_queue_for_task() *****************************
+/****** execd/job/job_get_queue_for_task() ************************************
 *  NAME
 *     job_get_queue_for_task() -- find a queue suited for task execution
 *
@@ -557,7 +555,7 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
 *     else NULL
 *
 *  SEE ALSO
-*     execd/job_jatask/job_set_queue_info_in_task()
+*     execd/job/job_set_queue_info_in_task()
 ******************************************************************************/
 static lList *job_get_queue_for_task(lListElem *jatep, lListElem *petep, const char *queuename) 
 {

@@ -37,62 +37,87 @@
 #include "def.h"   
 #include "cull_list.h"
 
-#include "sge_jobL.h"
 #include "sge_answer.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_pe.h"
 
 #include "msg_gdilib.h"
 
 lList *Master_Pe_List = NULL;
 
-/****** gdi/pe/pe_match() *****************************************************
+/****** gdi/pe/pe_is_matching() ***********************************************
 *  NAME
-*     pe_match() -- Find a PE matching a wildcard expression 
+*     pe_is_matching() -- Does Pe name match the wildcard? 
 *
 *  SYNOPSIS
-*     lListElem* pe_match(const char *wildcard) 
+*     int pe_is_matching(const lListElem *pe, const char *wildcard) 
+*
+*  FUNCTION
+*     The function returns true (1) if the name of the given
+*     "pe" matches the "wildcard". 
+*
+*  INPUTS
+*     const lListElem *pe  - PE_Type element 
+*     const char *wildcard - wildcard 
+*
+*  RESULT
+*     int - true (1) or false (0)
+******************************************************************************/
+int pe_is_matching(const lListElem *pe, const char *wildcard) 
+{
+   return !fnmatch(wildcard, lGetString(pe, PE_name), 0);
+}
+
+/****** gdi/pe/pe_list_find_matching() ****************************************
+*  NAME
+*     pe_list_find_matching() -- Find a PE matching a wildcard expression 
+*
+*  SYNOPSIS
+*     lListElem* pe_list_find_matching(lList *pe_list, 
+*                                      const char *wildcard) 
 *
 *  FUNCTION
 *     Try to find a PE that matches the given "wildcard" expression.
 *
 *  INPUTS
+*     lList *pe_list       - PE_Type list
 *     const char *wildcard - Wildcard expression 
 *
 *  RESULT
 *     lListElem* - PE_Type object or NULL
 *******************************************************************************/
-lListElem *pe_match(const char *wildcard) 
+lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard) 
 {
-   lListElem *pep;
+   lListElem *ret = NULL;
 
-   for_each (pep, Master_Pe_List) {
-      if (!fnmatch(wildcard, lGetString(pep, PE_name), 0)) {
-         return pep;
+   for_each (ret, pe_list) {
+      if (pe_is_matching(ret, wildcard)) {
+         break;
       }
    }
-   return NULL;
+   return ret;
 }
 
-/****** gdi/pe/pe_locate() ****************************************************
+/****** gdi/pe/pe_list_locate() ***********************************************
 *  NAME
-*     pe_locate() -- Locate a certain PE 
+*     pe_list_locate() -- Locate a certain PE 
 *
 *  SYNOPSIS
-*     lListElem* pe_locate(const char *pe_name) 
+*     lListElem* pe_list_locate(lList *pe_list, const char *pe_name) 
 *
 *  FUNCTION
 *     Locate the PE with the name "pe_name". 
 *
 *  INPUTS
+*     lList *pe_list      - PE_Type list
 *     const char *pe_name - PE name 
 *
 *  RESULT
 *     lListElem* - PE_Type object or NULL
 *******************************************************************************/
-lListElem *pe_locate(const char *pe_name) 
+lListElem *pe_list_locate(lList *pe_list, const char *pe_name) 
 {
-   return lGetElemStr(Master_Pe_List, PE_name, pe_name);
+   return lGetElemStr(pe_list, PE_name, pe_name);
 }
 
 /****** gdi/pe/pe_is_referenced() **********************************************
@@ -119,12 +144,12 @@ lListElem *pe_locate(const char *pe_name)
 int pe_is_referenced(const lListElem *pe, lList **answer_list,
                      const lList *master_job_list)
 {
-   const char *pe_name = lGetString(pe, PE_name);
    lListElem *job = NULL;
    int ret = 0;
 
    for_each(job, master_job_list) {
-      if (job_is_pe_referenced(job, pe_name)) {
+      if (job_is_pe_referenced(job, pe)) {
+         const char *pe_name = lGetString(pe, PE_name);
          u_long32 job_id = lGetUlong(job, JB_job_number);
 
          sprintf(SGE_EVENT, MSG_PEREFINJOB_SU, pe_name, u32c(job_id));

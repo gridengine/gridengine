@@ -51,8 +51,6 @@
 #include <Xmt/Dialogs.h>
 #include <Xmt/SetValue.h>
 
-
-
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge.h"
@@ -75,11 +73,12 @@
 #include "qmon_qcustom.h"
 #include "qmon_jobcustom.h"
 #include "sge_feature.h"
+#include "sge_queue.h"
+#include "sge_host.h"
 #include "sge_complex_schedd.h"
 #include "slots_used.h"
 #include "Matrix.h"
 #include "load_correction.h"
-#include "sge_job_queue.h"
 
 /*-------------------------------------------------------------------------*/
 static void qmonBuildQBG(Widget parent, XtPointer cld, XtPointer cad);
@@ -1522,7 +1521,7 @@ const char *qhostname
    }
    
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   ehp = lGetElemHost(ehl, EH_name, qhostname);
+   ehp = host_list_locate(ehl, qhostname);
    if (ehp)
       lep = lGetSubStr(ehp, HL_name, "arch", EH_load_list);
 

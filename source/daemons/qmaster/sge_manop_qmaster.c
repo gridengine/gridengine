@@ -36,19 +36,16 @@
 #include "commlib.h"
 #include "cull.h"
 #include "sgermon.h"
-#include "sge_manop.h"
+#include "sge_manop_qmaster.h"
 #include "read_write_manop.h"
-#include "sge_manopL.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"
 #include "sge_answer.h"
+#include "sge_manop.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
 
 /* ------------------------------------------------------------
 
@@ -242,19 +239,4 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    DEXIT;
    return STATUS_OK;
 }
-
-
-lListElem* sge_locate_manager(
-const char *cp 
-) {
-   return lGetElemStr(Master_Manager_List, MO_name, cp);
-}
-
-
-lListElem* sge_locate_operator(
-const char *cp 
-) {
-   return lGetElemStr(Master_Operator_List, MO_name, cp);
-}
-
 

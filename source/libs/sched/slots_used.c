@@ -29,12 +29,14 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "cull.h"
 #include "sge_log.h"
 #include "sgermon.h"
-#include "sge_complexL.h"
-#include "sge_queueL.h"
 #include "slots_used.h"
+#include "sge_queue.h"
+#include "sge_complex.h"
+
 #include "msg_schedd.h"
 
 int qslots_used(

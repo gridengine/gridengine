@@ -34,7 +34,11 @@
 
 #include "sge_ckptL.h"
 
+extern lList *Master_Ckpt_List;
+
 int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
                        const lList *master_job_list);
+
+lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name);
 
 #endif /* __SGE_CKPT_H */

@@ -35,12 +35,7 @@
 #include "sge.h"
 #include "sge_log.h"
 #include "sgermon.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
-#include "sge_hostL.h"
-#include "sge_userprjL.h"
 #include "sge_pe.h"
-#include "sge_usersetL.h"
 #include "sge_queue_qmaster.h"
 #include "sge_m_event.h"
 #include "sge_userset.h"
@@ -54,16 +49,12 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_userprj.h"
+#include "sge_host.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Project_List;
-extern lList *Master_Userset_List;
-
-extern lList *Master_Userset_List;
-extern lList *Master_Pe_List;
-extern lList *Master_Exechost_List;
 
 static void sge_change_queue_version_acl(const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);

@@ -54,7 +54,7 @@
 #include "exec_ifm.h"
 #include "pdc.h"
 #include "sge_feature.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_uidgid.h"
 #include "sge_pe_task.h"
 
@@ -1998,7 +1998,7 @@ int ptf_get_usage(lList **job_usage_list)
             continue;
          }
 
-         tmp_job = lGetElemUlong(temp_usage_list, JB_job_number, job_id);
+         tmp_job = job_list_locate(temp_usage_list, job_id);
          if(tmp_job == NULL) {
             tmp_job = lCreateElem(JB_Type);
             lSetUlong(tmp_job, JB_job_number, job_id);

@@ -90,7 +90,7 @@
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_security.h" 
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_var.h"
@@ -511,8 +511,8 @@ XtPointer cld, cad;
          DEXIT;
          return;
       }
-      job_to_set = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), JB_job_number,
-                                    submit_mode_data.job_id);
+      job_to_set = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+                                   submit_mode_data.job_id);
       /*
       ** is it an interactive job ?
       */

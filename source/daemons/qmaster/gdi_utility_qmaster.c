@@ -34,9 +34,7 @@
 #include "cull.h"
 #include "sgermon.h"
 #include "sge_string.h"
-#include "sge_complex.h"
 #include "sge_log.h"
-#include "sge_complexL.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_gdi_intern.h"
 #include "sge_parse_num_par.h"
@@ -44,10 +42,11 @@
 #include "sort_hosts.h"
 #include "config_file.h"
 #include "sge_answer.h"
-#include "sge_jobL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
+#include "sge_queue.h"
+#include "sge_host.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -285,7 +284,6 @@ char *attr_name,
 char *object_name 
 ) {
    int ret;
-   extern lList *Master_Complex_List;
 
    DENTER(TOP_LAYER, "attr_mod_threshold");
 
@@ -523,8 +521,6 @@ int nm
    const char *name, *obj_name = "none", *obj_descr = "none";
    lListElem *attr;
    lList *resources = NULL; 
-   extern lList *Master_Complex_List;
-   extern lList *Master_Exechost_List;
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
 

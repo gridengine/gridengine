@@ -117,6 +117,8 @@ void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value);
 
 void policy_hierarchy_print_array(policy_hierarchy_t array[]);
 
+extern lList *Master_Config_List;
+
 extern sge_conf_type conf;
 
 extern int use_qidle;

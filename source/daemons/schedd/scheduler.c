@@ -75,9 +75,11 @@
 #include "jb_now.h"
 #include "job_log.h"
 #include "sge_range.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_answer.h"
-
+#include "sge_pe.h"
+#include "sge_ckpt.h"
+#include "sge_host.h"
 
 /* profiling info */
 extern int scheduled_fast_jobs;
@@ -345,7 +347,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          of each queue after each dispatched job */
       {
          lListElem *gep, *lcep;
-         if ((gep = lGetElemHost(lists->host_list, EH_name, "global"))) {
+         if ((gep = host_list_locate(lists->host_list, "global"))) {
             for_each (lcep, scheddconf.job_load_adjustments) {
                const char *attr = lGetString(lcep, CE_name);
                if (lGetSubStr(gep, HL_name, attr, EH_load_list)) {
@@ -690,7 +692,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
        *------------------------------------------------------------------*/
       ckpt = NULL;
       if ((ckpt_name = lGetString(job, JB_checkpoint_object))) {
-         ckpt = lGetElemStr(lists->ckpt_list, CK_name, ckpt_name);
+         ckpt = ckpt_list_locate(lists->ckpt_list, ckpt_name);
          if (!ckpt) {
             schedd_add_message(lGetUlong(job, JB_job_number), 
                SCHEDD_INFO_CKPTNOTFOUND_);
@@ -704,10 +706,10 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
        *------------------------------------------------------------------*/
       if ((pe_name = lGetString(job, JB_pe))) {
          for_each(pe, lists->pe_list) {
-            if (fnmatch(pe_name, lGetString(pe, PE_name), 0)) {
-               continue;
-            } else {
+            if (pe_is_matching(pe, pe_name)) {
                matched_pe_count++;
+            } else {
+               continue;
             }
 
             /* any objections from pe ? */
@@ -937,7 +939,7 @@ int *sort_hostlist
       job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_ticket)/nslots;
 
       for_each(granted_el, granted) {
-         hep = lGetElemHost(host_list, EH_name, lGetHost(granted_el, JG_qhostname));
+         hep = host_list_locate(host_list, lGetHost(granted_el, JG_qhostname));
          old_host_tickets = lGetDouble(hep, EH_sge_tickets);
          lSetDouble(hep, EH_sge_tickets, (old_host_tickets + 
                job_tickets_per_slot*lGetUlong(granted_el, JG_slots)));

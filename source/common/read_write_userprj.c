@@ -46,10 +46,7 @@
 #include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_confL.h"
 #include "sge_usageL.h"
-#include "sge_userprjL.h"
-#include "sge_usersetL.h"
 #include "config.h"
 #include "sge_feature.h"
 #include "read_object.h"
@@ -59,6 +56,9 @@
 #include "sge_language.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_conf.h"
 
 #include "msg_common.h"
 

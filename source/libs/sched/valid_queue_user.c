@@ -38,10 +38,10 @@
 #include "valid_queue_user.h"
 #include "sge_string.h"
 #include "sge_answer.h"
-
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
+#include "sge_queue.h"
+#include "sge_userset.h"
 #include "sge_gdi_intern.h"
+
 #include "msg_schedd.h"
 
 static int sge_contained_in_access_list_(const char *user, const char *group, 

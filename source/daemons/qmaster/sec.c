@@ -31,14 +31,15 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
+#include "sgermon.h"
 #include "sec.h"
 #include "sge_job.h"
+#include "sge_job_qmaster.h"
+#include "sge_manop_qmaster.h"
 #include "sge_host.h"
+#include "sge_userset.h"
 #include "sge_manop.h"
-#include "sgermon.h"
 
-#include "sge_jobL.h"
-#include "sge_usersetL.h"
 
 /***********************************************************************/
 int sge_manager(
@@ -161,7 +162,7 @@ u_long32 job_number
       return 0;
    }
 
-   jep = sge_locate_job(job_number);
+   jep = job_list_locate(Master_Job_List, job_number);
    if (!jep) {
       DEXIT;
       return -1;

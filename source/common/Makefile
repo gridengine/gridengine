@@ -51,10 +51,9 @@ common_messages:
 COMMON_DIR = $(SDIR)/common
 
 COMMON_SRC = \
-            sge_groups.c \
             sge_options.c \
-            sge_sharetree.c \
-            sge_complex.c \
+            read_write_sharetree.c \
+            read_write_complex.c \
             complex_history.c \
             execution_states.c \
             parse_job_cull.c \
@@ -84,17 +83,14 @@ include $(COMMON_DIR)/common_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-sge_groups.o   : $(COMMON_DIR)/sge_groups.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_groups.c
-
 sge_options.o:	$(COMMON_DIR)/sge_options.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_options.c
 
-sge_sharetree.o: $(COMMON_DIR)/sge_sharetree.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_sharetree.c
+read_write_sharetree.o: $(COMMON_DIR)/read_write_sharetree.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_sharetree.c
 
-sge_complex.o: $(COMMON_DIR)/sge_complex.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_complex.c
+read_write_complex.o: $(COMMON_DIR)/read_write_complex.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_complex.c
 
 complex_history.o:	$(COMMON_DIR)/complex_history.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/complex_history.c

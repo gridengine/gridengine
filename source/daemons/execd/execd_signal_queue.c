@@ -36,10 +36,8 @@
 #include "sgermon.h"
 #include "def.h"
 #include "sge.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_queueL.h"
 #include "sge_parse_num_par.h"
 #include "dispatcher.h"
 #include "reaper_execd.h"
@@ -55,22 +53,24 @@
 #include "symbols.h"
 #include "sge_time.h"
 #include "job_report_execd.h"
-#include "msg_execd.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_conf.h"
-#include "sge_job_reportL.h"
 #include "sge_usageL.h"
 #include "mail.h"
 #include "admin_mail.h"
 #include "get_path.h"
+#include "sge_queue.h"
+#include "sge_report_execd.h"
+#include "sge_report.h"
+
+#include "msg_execd.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
 #endif
 
 extern volatile int shut_me_down;
-extern lList *Master_Job_List;
 
 /**************************************************************************
  called from dispatcher

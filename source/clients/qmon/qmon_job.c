@@ -78,9 +78,10 @@
 #include "sge_schedd_text.h"
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_range.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -440,9 +441,9 @@ int row
       if (!jat) {
          lListElem *first_elem = lFirst(tasks);
 
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(tasks);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(tasks, NULL);
 
             jat = job_get_ja_task_template(job, task_id);       
@@ -718,7 +719,7 @@ void updateJobList(void)
                lList *ehl = qmonMirrorList(SGE_EXECHOST_LIST);
                lList *cl = qmonMirrorList(SGE_COMPLEX_LIST);
                qnm = lGetString(lFirst(ql), JG_qname);
-               qep = lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, qnm);
+               qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), qnm);
                if (qep) {
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
@@ -1225,8 +1226,7 @@ XtPointer cld, cad;
       */
       selected_job = lFirst(jl);
       selected_job_id = lGetUlong(selected_job, JB_job_number);
-      job = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), JB_job_number, 
-                          selected_job_id);
+      job = job_list_locate(qmonMirrorList(SGE_JOB_LIST), selected_job_id);
       selected_ja_task = lFirst(lGetList(selected_job, JB_ja_tasks));
       selected_ja_task_id = lGetUlong(selected_ja_task, JAT_task_number);
       if (job_is_enrolled(job, selected_ja_task_id)) {
@@ -1383,8 +1383,8 @@ Boolean *ctd
                   str = XbaeMatrixGetCell(w, row, 0);
                   if (str && *str != '\0') {
                      job_nr = atoi(str);
-                     jep = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), 
-                                          JB_job_number, (u_long32)job_nr);
+                     jep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+                                          (u_long32)job_nr);
                      if (jep) {
                         sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
                         qmonBrowserShow(line);

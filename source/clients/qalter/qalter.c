@@ -50,7 +50,7 @@
 #include "sge_string.h"
 #include "cull_parse_util.h"
 #include "sge_var.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_answer.h"
 
 #include "msg_common.h"
@@ -754,7 +754,7 @@ int *all_users
       }
   
       /* multiple request for job */
-      if (lGetElemUlong(*prequestlist, JB_job_number, jobid)) {
+      if (job_list_locate(*prequestlist, jobid)) {
          char str[1024];
 
          sprintf(str, MSG_JOB_XMULTIPLEJOBID_U, u32c(jobid));

@@ -49,7 +49,6 @@
 
 #include "cull.h"
 #include "sge_load_sensor.h"
-#include "sge_load_reportL.h"
 #include "sgermon.h"
 
 struct times {

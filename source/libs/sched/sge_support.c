@@ -46,7 +46,6 @@
 #include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sgermon.h"
-#include "sge_complex.h"
 #include "sge_prog.h"
 #include "sge_c_event.h"
 #include "sge_schedd.h"
@@ -58,13 +57,8 @@
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_schedd_conf.h"
-#include "sge_jobL.h"
-#include "sge_userprjL.h"
-#include "sge_share_tree_nodeL.h"
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
+#include "sge_userprj.h"
 
 const long sge_usage_interval = SGE_USAGE_INTERVAL;
 static double sge_decay_rate;
@@ -357,7 +351,7 @@ sge_calc_node_usage( lListElem *node,
           * Get usage from project usage sub-list in user object
           *-------------------------------------------------------------*/
 
-         if ((userprj = lGetElemStr(user_list, UP_name,
+         if ((userprj = userprj_list_locate(user_list, 
                                       lGetPosString(node, sn_name_pos)))) {
 
             lList *projects = lGetList(userprj, UP_project);
@@ -375,12 +369,12 @@ sge_calc_node_usage( lListElem *node,
           * Get usage directly from corresponding user or project object
           *-------------------------------------------------------------*/
 
-         if ((userprj = lGetElemStr(user_list, UP_name,
+         if ((userprj = userprj_list_locate(user_list, 
                                       lGetPosString(node, sn_name_pos)))) {
 
             usage_list = lGetList(userprj, UP_usage);
 
-         } else if ((userprj = lGetElemStr(project_list, UP_name,
+         } else if ((userprj = userprj_list_locate(project_list, 
                               lGetPosString(node, sn_name_pos)))) {
 
             usage_list = lGetList(userprj, UP_usage);
@@ -397,7 +391,7 @@ sge_calc_node_usage( lListElem *node,
        *-------------------------------------------------------------*/
 
       if (!projname) {
-         if ((userprj = lGetElemStr(project_list, UP_name,
+         if ((userprj = userprj_list_locate(project_list, 
                                 lGetPosString(node, sn_name_pos)))) {
             project_node = 1;
             usage_list = lGetList(userprj, UP_usage);

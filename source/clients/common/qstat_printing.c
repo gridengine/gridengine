@@ -45,11 +45,8 @@
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
-#include "sge_jobL.h"
-#include "sge_complexL.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
@@ -64,12 +61,12 @@
 #include "sge_range.h"
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "get_path.h"
-#include "sge_job_queue.h"
-#include "sge_job_jatask.h"
 #include "sge_var.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_pe.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
@@ -446,7 +443,7 @@ char *indent
                   const char *pe_name;
                   lListElem *pe;
                   if (((pe_name=lGetString(jatep, JAT_granted_pe))) &&
-                      ((pe=lGetElemStr(pe_list, PE_name, pe_name))) &&
+                      ((pe=pe_list_locate(pe_list, pe_name))) &&
                       !lGetUlong(pe, PE_job_is_first_task))
 
                       slot_adjust = 1;
@@ -1083,7 +1080,7 @@ char *indent
       /* get tickets for job/slot */
       /* braces needed to suppress compiler warnings */
       if ((pe_name=lGetString(jatep, JAT_granted_pe)) &&
-           (pe=lGetElemStr(pe_list, PE_name, pe_name)) &&
+           (pe=pe_list_locate(pe_list, pe_name)) &&
            lGetUlong(pe, PE_control_slaves)
          && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, queue_name,
                JAT_granted_destin_identifier_list))) {
@@ -1252,9 +1249,9 @@ char *indent
                   if the consumable is specified in the global host. For running we print it
                   if the resource is managed at this node/queue */
                if ((qep && lGetSubStr(qep, CE_name, name, QU_consumable_config_list)) ||
-                   (qep && (hep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname))) &&
+                   (qep && (hep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname))) &&
                     lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) ||
-                     ((hep=lGetElemHost(exechost_list, EH_name, SGE_GLOBAL_NAME)) &&
+                     ((hep=host_list_locate(exechost_list, SGE_GLOBAL_NAME)) &&
                          lGetSubStr(hep, CE_name, name, EH_consumable_config_list)))
 
                printf("%s%s=%s (default)\n", QSTAT_INDENT, name, lGetString(ce, CE_default));      

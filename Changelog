@@ -1,3 +1,10 @@
+EB-2002-06-30-0: Cleanup:   in gdi library
+                            - removed code which was duplicated in the past
+                            - moved functions in differnet modules
+                            - renamed several function
+                            - wrote ADOC comments
+                            - ...
+
 EB-2002-06-28-0: Bucgfix:   Fix of EB-2002-06-17-0
 
 JG-2002-06-28-0: Testsuite: Test case for tightly integrated parallel jobs, 

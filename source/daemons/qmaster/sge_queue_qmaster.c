@@ -36,22 +36,12 @@
 #include "sge.h"
 #include "def.h"
 #include "commlib.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_hostL.h"
-#include "sge_complexL.h"
-#include "sge_queueL.h"
 #include "sge_requestL.h"
-#include "sge_calendarL.h"
 #include "sge_pe.h"
-#include "sge_userprjL.h"
-#include "sge_usersetL.h"
-#include "sge_peL.h"
-#include "sge_ckptL.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_feature.h"
 #include "sge_c_gdi.h"
@@ -77,11 +67,16 @@
 #include "config_file.h"
 #include "sge_userprj_qmaster.h"
 #include "read_write_job.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_ckpt.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -96,12 +91,6 @@ static int mod_queue_attributes(lList **alpp, lListElem *new_queue, lListElem *q
 static void clear_unknown(lListElem *qep);
 
 static u_long32 sge_get_queue_number(void);
-
-extern lList *Master_Ckpt_List;
-
-extern lList *Master_Complex_List;
-extern lList *Master_Job_List;
-extern lList *Master_Project_List;
 
 /* ------------------------------------------------------------
 
@@ -139,7 +128,8 @@ lListElem *qep
 
    DENTER(TOP_LAYER, "clear_unknown");
 
-   if (!(hep = sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))) {
+   if (!(hep = host_list_locate(Master_Exechost_List, 
+                  lGetHost(qep, QU_qhostname)))) {
       ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
       DEXIT;
       return;
@@ -181,20 +171,6 @@ static u_long32 sge_get_queue_number()
          return 0;      /* out of queue numbers -> real awkward */
       }
    }
-}
-
-lListElem *sge_locate_queue(
-const char *cp 
-) {
-   DENTER(BASIS_LAYER, "sge_locate_queue");
-
-   if (!cp) {
-      DEXIT;
-      return NULL;
-   }
-
-   DEXIT;
-   return (lGetElemStr(Master_Queue_List, QU_qname, cp));
 }
 
 void sge_clear_tags()
@@ -340,14 +316,14 @@ int sub_command
          
          /* add the exechost for the real hostname */
          strcpy(qhostname, lGetHost(new_queue, QU_qhostname));
-         if (!sge_locate_host(qhostname, SGE_EXECHOST_LIST))
+         if (!host_list_locate(Master_Exechost_List, qhostname))
             sge_add_host_of_type(qhostname, SGE_EXECHOST_LIST);
 
          /* enter the pseudohostname to the queue */
          lSetHost(new_queue, QU_qhostname, pseudohostname);
 
          /* enter the real host name to the pseudo host object */
-         hel = sge_locate_host(pseudohostname, SGE_EXECHOST_LIST);
+         hel = host_list_locate(Master_Exechost_List, pseudohostname);
          lSetString(hel, EH_real_name, qhostname);
       }
       if (sub_command == SGE_GDI_APPEND || sub_command == SGE_GDI_CHANGE) {
@@ -726,7 +702,7 @@ int sub_command
    }
 
    qname = lGetString(qep, QU_qname); 
-   old_queue = sge_locate_queue(qname);
+   old_queue = queue_list_locate(Master_Queue_List, qname);
 
    if ((old_queue && add) ||
       (!old_queue && !add)) {
@@ -920,7 +896,8 @@ int sub_command
    signal_on_calendar(new_queue, old_cal_state, new_cal_state);
 
    if (add) {
-      if (!sge_locate_host(lGetHost(new_queue, QU_qhostname), SGE_EXECHOST_LIST) &&
+      if (!host_list_locate(Master_Exechost_List, 
+                           lGetHost(new_queue, QU_qhostname)) &&
          !(lGetUlong(new_queue, QU_qtype) & TQ))
          sge_add_host_of_type(lGetHost(new_queue, QU_qhostname), SGE_EXECHOST_LIST);
       clear_unknown(new_queue);
@@ -1096,7 +1073,7 @@ char *rhost
 
 
 
-   if (!(oqep = sge_locate_queue(qname))) {
+   if (!(oqep = queue_list_locate(Master_Queue_List, qname))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
       DEXIT;
@@ -1143,36 +1120,6 @@ char *rhost
    return STATUS_OK;
 
 }
-
-
-#if 0
-/* verify that all project names 
-   in the queues project list exist */
-int verify_project_list(
-lList **alpp,
-char *obj_name,
-char *qname,
-lList *project_list  /* UP_Type */
-) {
-   lListElem *pep;
-
-   DENTER(TOP_LAYER, "verify_project_list");
-
-   for_each (pep, project_list) {
-      if (!lGetElemStr(Master_Project_List, UP_name, lGetString(pep, UP_name))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNPROJECT_SSS, 
-               lGetString(pep, UP_name), obj_name, qname));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return STATUS_OK;
-}
-#endif
-
 
 int verify_complex_list(
 lList **alpp,
@@ -1272,7 +1219,7 @@ const char *qname
       return -1;
    }
 
-   qep = sge_locate_queue(qname);
+   qep = queue_list_locate(Master_Queue_List, qname);
    if (!qep) {
       ERROR((SGE_EVENT, MSG_QUEUE_CANTLOCATEQUEUEX_S, qname));
       DEXIT;
@@ -1350,7 +1297,7 @@ const char *obj_name   /* e.g. "pvm", "hibernator"  */
       if (!strcasecmp(lGetString(qrep, QR_name), SGE_ATTRVAL_ALL)) {
          lSetString(qrep, QR_name, SGE_ATTRVAL_ALL);
          all_name_exists = 1;
-      } else if (!sge_locate_queue(lGetString(qrep, QR_name))) {
+      } else if (!queue_list_locate(Master_Queue_List, lGetString(qrep, QR_name))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNQUEUE_SSSS, 
             lGetString(qrep, QR_name), attr_name, obj_descr, obj_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);

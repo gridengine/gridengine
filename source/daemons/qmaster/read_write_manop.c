@@ -39,15 +39,12 @@
 #include "sge_log.h"
 #include "read_write_manop.h"
 #include "cull.h"
-#include "sge_manopL.h"
 #include "sge_stdio.h"
 #include "msg_common.h" 
 #include "msg_qmaster.h"
 #include "sge_feature.h"
+#include "sge_manop.h"
 #include "sge_spool.h"
-
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
 
 /* ------------------------------------------------------------
 

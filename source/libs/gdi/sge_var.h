@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_jobL.h"
 #include "sge_varL.h"
 
 #define VAR_PREFIX "__SGE_PREFIX__"

@@ -47,17 +47,12 @@
 #include "sge_feature.h"
 #include "sec.h"
 #include "mail.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_queueL.h"
 #include "sge_requestL.h"
-#include "sge_complexL.h"
-#include "sge_ckptL.h"
 #include "sge_pe.h"
-#include "sge_userprjL.h"
 #include "sge_job_refL.h"
 #include "sge_host.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_give_jobs.h"
 #include "job_log.h"
 #include "sge_pe_qmaster.h"
@@ -67,7 +62,6 @@
 #include "sge_ckpt_qmaster.h"
 #include "job_report_qmaster.h"
 #include "sge_parse_num_par.h"
-#include "sge_complex.h"
 #include "sge_m_event.h"
 #include "sge_signal.h"
 #include "subordinate_qmaster.h"
@@ -78,7 +72,6 @@
 #include "cull_parse_util.h"
 #include "schedd_monitor.h"
 #include "sge_messageL.h"
-#include "sge_rangeL.h"
 #include "sge_identL.h"
 #include "sge_afsutil.h"
 #include "sge_ulongL.h"
@@ -87,8 +80,7 @@
 #include "jb_now.h"
 #include "sge_security.h"
 #include "sge_range.h"
-#include "sge_job_jatask.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "qmaster.h"
 #include "sge_suser.h"
 #include "sge_io.h"
@@ -97,19 +89,12 @@
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
 #include "sge_queue.h"
+#include "sge_ckpt.h"
+#include "sge_userprj.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Exechost_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Project_List;
-extern lList *Master_Userset_List;
-extern lList *Master_User_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Job_List;
-extern lList *Master_Job_Schedd_Info_List;
-extern lList *Master_Zombie_List;
 
 extern int enable_forced_qdel;
 
@@ -301,7 +286,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
       for_each (ep, lGetList(jep, JB_hard_queue_list)) {
          qname = lGetString(ep, QR_name);
-         if (!sge_locate_queue(qname)) {
+         if (!queue_list_locate(Master_Queue_List, qname)) {
             ERROR((SGE_EVENT, MSG_JOB_QUNKNOWN_S, qname));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -324,7 +309,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
       for_each (ep, lGetList(jep, JB_master_hard_queue_list)) {
          qname = lGetString(ep, QR_name);
-         if (!sge_locate_queue(qname)) {
+         if (!queue_list_locate(Master_Queue_List, qname)) {
             ERROR((SGE_EVENT, MSG_JOB_QUNKNOWN_S, qname));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -352,7 +337,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    pe_name = lGetString(jep, JB_pe);
    if (pe_name) {
       lListElem *pep;
-      pep = pe_match(pe_name);
+      pep = pe_list_find_matching(Master_Pe_List, pe_name);
       if (!pep) {
          ERROR((SGE_EVENT, MSG_JOB_PEUNKNOWN_S, pe_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -384,7 +369,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* request for non existing ckpt object will be refused */
    if ((ckpt_name = lGetString(jep, JB_checkpoint_object))) {
-      if (!(ckpt_ep = sge_locate_ckpt(ckpt_name)))
+      if (!(ckpt_ep = ckpt_list_locate(Master_Ckpt_List, ckpt_name)))
          ckpt_err = 1;
       else if (!ckpt_attr) {
          ckpt_attr = sge_parse_checkpoint_attr(lGetString(ckpt_ep, CK_when));
@@ -449,7 +434,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
       /* ensure user exists if enforce_user flag is set */
       if (conf.enforce_user && !strcasecmp(conf.enforce_user, "true") && 
-               !sge_locate_user_prj(ruser, Master_User_List)) {
+               !userprj_list_locate(Master_User_List, ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -459,14 +444,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       /* set default project */
       if (!lGetString(jep, JB_project) && ruser && Master_User_List) {
          lListElem *uep;
-         if ((uep = sge_locate_user_prj(ruser, Master_User_List)))
+         if ((uep = userprj_list_locate(Master_User_List, ruser)))
             lSetString(jep, JB_project, lGetString(uep, UP_default_project));
       }
 
       /* project */
       if ((project=lGetString(jep, JB_project))) {
          lListElem *pep;
-         if (!(pep = sge_locate_user_prj(project, Master_Project_List))) {
+         if (!(pep = userprj_list_locate(Master_Project_List, project))) {
             ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -486,9 +471,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
          /* verify project can submit jobs */
          if ((conf.xprojects &&
-              lGetElemStr(conf.xprojects, UP_name, project)) ||
+              userprj_list_locate(conf.xprojects, project)) ||
              (conf.projects &&
-              !lGetElemStr(conf.projects, UP_name, project))) {
+              !userprj_list_locate(conf.projects, project))) {
             ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -940,8 +925,7 @@ int sub_command
             if (conf.zombie_jobs > 0) {
                lListElem *zombie;
 
-               zombie = lGetElemUlong(Master_Zombie_List, JB_job_number, 
-                                      job_number);
+               zombie = job_list_locate(Master_Zombie_List, job_number);
                if (zombie) { 
                   job_write_spool_file(zombie, 0, NULL, SPOOL_HANDLE_AS_ZOMBIE);
                }
@@ -1316,7 +1300,7 @@ char *commproc
    task_number = lGetUlong(t, JAT_task_number);
    job_name = lGetString(j, JB_job_name);
 
-   qep = sge_locate_queue(lGetString(t, JAT_master_queue));
+   qep = queue_list_locate(Master_Queue_List, lGetString(t, JAT_master_queue));
    if (!qep) {
       ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDQOFJOB_S,  
              lGetString(t, JAT_master_queue)));
@@ -1686,7 +1670,7 @@ lListElem *locate_job_by_identifier(const char *pre_ident, const char *owner)
 
    DENTER(TOP_LAYER, "locate_job_by_identifier");
    if (isdigit(pre_ident[0])) {
-      ret = sge_locate_job(atoi(pre_ident));
+      ret = job_list_locate(Master_Job_List, atoi(pre_ident));
    } else {
       lListElem *user_job = NULL;         /* JB_Type */
       lListElem *next_user_job = NULL;    /* JB_Type */
@@ -2319,7 +2303,7 @@ int *trigger
 
       DPRINTF(("got new JB_checkpoint_object\n")); 
       ckpt_name = lGetString(jep, JB_checkpoint_object);
-      if (ckpt_name && !sge_locate_ckpt(ckpt_name)) {
+      if (ckpt_name && !ckpt_list_locate(Master_Ckpt_List, ckpt_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
             MSG_OBJ_CKPT, ckpt_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -2567,7 +2551,7 @@ int *trigger
       DPRINTF(("got new JB_project\n")); 
       
       project = lGetString(jep, JB_project);
-      if (project && !sge_locate_user_prj(project, Master_Project_List)) {
+      if (project && !userprj_list_locate(Master_Project_List, project)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_JOB_PROJECT, project));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -2593,7 +2577,7 @@ int *trigger
 
       DPRINTF(("got new JB_pe\n")); 
       pe_name = lGetString(jep, JB_pe);
-      if (pe_name && !pe_match(pe_name)) {
+      if (pe_name && !pe_list_find_matching(Master_Pe_List, pe_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
                MSG_OBJ_PE, pe_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -2749,7 +2733,7 @@ int *trigger
    return 0;
 }
 
-/****** qmaster/job_jatask/job_verify_name() **********************************
+/****** qmaster/job/job_verify_name() *****************************************
 *  NAME
 *     job_verify_name() - verifies job name
 *
@@ -2816,7 +2800,7 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 }
 
 
-/****** qmaster/job_jatask/job_is_referenced_by_jobname() *********************
+/****** qmaster/job/job_is_referenced_by_jobname() ****************************
 *  NAME
 *     job_is_referenced_by_jobname() -- is job referenced by another one
 *
@@ -2847,7 +2831,7 @@ static u_long32 job_is_referenced_by_jobname(lListElem *jep)
       for_each (succ_ep, succ_lp) { 
          u_long32 succ_jid;
          succ_jid = lGetUlong(succ_ep, JRE_job_number);
-         if ((succ_jep = sge_locate_job(succ_jid)) &&
+         if ((succ_jep = job_list_locate(Master_Job_List, succ_jid)) &&
             lGetSubStr(succ_jep, JRE_job_name, 
                        job_name, JB_jid_predecessor_list)) {
             DEXIT;
@@ -2860,7 +2844,7 @@ static u_long32 job_is_referenced_by_jobname(lListElem *jep)
    return 0;
 }
 
-/****** qmaster/job_jatask/job_verify_predecessors() **************************
+/****** qmaster/job/job_verify_predecessors() *********************************
 *  NAME
 *     job_verify_predecessors() -- verify -hold_jid list of a job
 *
@@ -3138,21 +3122,6 @@ static u_long32 guess_highest_job_number()
 }   
       
       
-/*******************************************************/
-lListElem *sge_locate_job(
-u_long32 jobid 
-) {
-   lListElem *jep = NULL;
-
-   DENTER(BASIS_LAYER, "sge_locate_job");
-   
-   jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
-
-   DEXIT;
-   return jep;
-}
-
-
 /* all modifications are done now verify schedulability */
 static int verify_suitable_queues(
 lList **alpp,
@@ -3184,7 +3153,7 @@ int *trigger
          /* parallel */
          if ((pe_name=lGetString(jep, JB_pe))) {
             if (!sge_is_pattern(pe_name))
-               pep = pe_locate(pe_name);
+               pep = pe_list_locate(Master_Pe_List, pe_name);
             else {
                /* use the first matching pe if we got a wildcard -pe requests */
                for_each (pep, Master_Pe_List) {
@@ -3202,7 +3171,7 @@ int *trigger
 
          /* checkpointing */
          if (try_it && (ckpt_name=lGetString(jep, JB_checkpoint_object)))
-            if (!(ckpt_ep = sge_locate_ckpt(ckpt_name)))
+            if (!(ckpt_ep = ckpt_list_locate(Master_Ckpt_List, ckpt_name)))
                try_it = 0;
 
          if (try_it) {
@@ -3296,7 +3265,7 @@ sge_gdi_request *request
    /* seek job */
    seek_jid = lGetUlong(jep, JB_job_number);
    DPRINTF(("SEEK jobid "u32" for COPY operation\n", seek_jid));
-   if (!(old_jep = sge_locate_job(seek_jid))) {
+   if (!(old_jep = job_list_locate(Master_Job_List, seek_jid))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SU, "job", u32c(seek_jid)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;

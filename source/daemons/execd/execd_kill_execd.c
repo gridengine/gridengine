@@ -37,16 +37,15 @@
 #include "job_log.h"
 #include "sge_load_sensor.h"
 #include "commlib.h"
-#include "sge_jobL.h"
 #include "execd_kill_execd.h"
 #include "execd_signal_queue.h"
 #include "sge_log.h"
 #include "symbols.h"
 #include "msg_execd.h"
 #include "sge_feature.h"
+#include "sge_job.h"
 
 extern int shut_me_down;
-extern lList *Master_Job_List;
 
 int execd_kill_execd(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
 struct dispatch_entry *de;

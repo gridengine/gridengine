@@ -55,7 +55,6 @@
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
-#include "sge_complex.h"
 #include "qstat_printing.h"
 #include "sge_range.h"
 #include "load_correction.h"
@@ -66,8 +65,9 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_log.h"
-#include "sge_job_queue.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_complex.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)

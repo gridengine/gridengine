@@ -34,7 +34,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_confL.h"
 #include "sge_gdi_intern.h"
 #include "config.h"
 #include "read_object.h"
@@ -42,6 +41,7 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_conf.h"
 
 #include "msg_common.h"
 

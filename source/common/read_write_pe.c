@@ -37,9 +37,7 @@
 
 #include "sge.h"
 #include "sge_pe.h"
-#include "sge_confL.h"
 #include "sge_answer.h"
-#include "sge_usersetL.h"
 #include "read_write_pe.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -51,6 +49,7 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
+#include "sge_userset.h"
 
 /****
  **** cull_read_in_pe

@@ -1,5 +1,5 @@
-#ifndef __SGE_JOB_JATASK_H 
-#define __SGE_JOB_JATASK_H 
+#ifndef __SGE_JOB_H 
+#define __SGE_JOB_H 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -34,6 +34,11 @@
 
 #include "sge_htable.h"
 #include "sge_dstring.h"
+#include "sge_jobL.h"
+
+extern lList *Master_Job_List;
+extern lList *Master_Zombie_List;
+extern lList *Master_Job_Schedd_Info_List;
 
 int job_is_enrolled(const lListElem *job, 
                     u_long32 ja_task_number);
@@ -144,8 +149,12 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list);
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
                               const char *pe_task_id);
 
-int job_is_pe_referenced(const lListElem *job, const char* pe_name);
+int job_is_pe_referenced(const lListElem *job, const lListElem *pe);
 
-int job_is_ckpt_referenced(const lListElem *job, const char* ckpt_name);
+int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt);
 
-#endif /* __SGE_JOB_JATASK_H */    
+void job_get_state_string(char *str, u_long32 op);
+
+lListElem *job_list_locate(lList *job_list, u_long32 job_id);
+
+#endif /* __SGE_JOB_H */    

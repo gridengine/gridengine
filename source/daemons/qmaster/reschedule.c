@@ -55,13 +55,12 @@
 #include "msg_qmaster.h"
 #include "sge_conf.h"
 #include "sge_string.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_ckpt.h"
 
-extern lList *Master_Job_List;
-extern lList *Master_Exechost_List;
 
 u_long32 add_time = 0;
 
@@ -129,7 +128,7 @@ void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 timeout,
    /*
     * locate the host object which went in unknown-state
     */
-   if (!(hep = lGetElemHost(Master_Exechost_List, EH_name, hostname))) {
+   if (!(hep = host_list_locate(Master_Exechost_List, hostname))) {
       DEXIT;
       goto Error;
    }
@@ -221,14 +220,14 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
     * running on that host. if it is of type QU_Type than we will
     * only reschedule the jobs for that queue
     */
-   if (is_obj_of_type(ep, EH_Type)) {
+   if (object_has_type(ep, EH_Type)) {
       hep = ep;
       qep = NULL;
       hostname = lGetHost(ep, EH_name);
-   } else if (is_obj_of_type(ep, QU_Type)) {
+   } else if (object_has_type(ep, QU_Type)) {
       qep = ep;
       hostname = lGetHost(qep, QU_qhostname);
-      hep = lGetElemHost(Master_Exechost_List, EH_name, hostname);
+      hep = host_list_locate(Master_Exechost_List, hostname);
    } else {
       ret = 1;
    }
@@ -344,14 +343,14 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
        * only reschedule the tasks for that queue. if it is NULL than we will
        * reschedule all tasks of that job
        */
-      if (ep && is_obj_of_type(ep, EH_Type)) {
+      if (ep && object_has_type(ep, EH_Type)) {
          hep = ep;
          qep = NULL;
          hostname = lGetHost(ep, EH_name);
-      } else if (ep && is_obj_of_type(ep, QU_Type)) {
+      } else if (ep && object_has_type(ep, QU_Type)) {
          qep = ep;
          hostname = lGetHost(qep, QU_qhostname);
-         hep = lGetElemHost(Master_Exechost_List, EH_name, hostname);
+         hep = host_list_locate(Master_Exechost_List, hostname);
       } else {
          qep = NULL;
          hep = NULL;
@@ -415,7 +414,8 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
       if (!force && lGetString(jep, JB_checkpoint_object)) {
          lListElem *ckpt_ep; /* CK_Type */
     
-         ckpt_ep = sge_locate_ckpt(lGetString(jep, JB_checkpoint_object));
+         ckpt_ep = ckpt_list_locate(Master_Ckpt_List, 
+                                    lGetString(jep, JB_checkpoint_object));
          if (ckpt_ep) {
             u_long32 flags;
     
@@ -461,8 +461,8 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
             JG_qname), lGetString(qep, QU_qname))) {
             queue = qep;
          } else {
-            queue = sge_locate_queue(lGetString(first_granted_queue,
-                     JG_qname));
+            queue = queue_list_locate(Master_Queue_List,
+                                     lGetString(first_granted_queue, JG_qname));
          }
          if (!lGetUlong(queue, QU_rerun)) {
             INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
@@ -481,7 +481,8 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
           lGetHost(hep, EH_name))) {
          host = hep;
       } else {
-         host = sge_locate_host(lGetHost(first_granted_queue, JG_qhostname), SGE_EXECHOST_LIST);
+         host = host_list_locate(Master_Exechost_List, 
+                  lGetHost(first_granted_queue, JG_qhostname));
          hostname = lGetHost(first_granted_queue, JG_qhostname);
       }
       if (get_from_reschedule_unknown_list(host, job_number, task_number)) {
@@ -904,8 +905,8 @@ void update_reschedule_unknown_timout_values(const char *config_name)
       lListElem *global_exechost_elem   = NULL;
       lListElem *template_exechost_elem = NULL;
 
-      global_exechost_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME); 
-      template_exechost_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME); 
+      global_exechost_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME); 
+      template_exechost_elem = host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME); 
 
       for_each(host, Master_Exechost_List) {
          if ( (host != global_exechost_elem) && (host != template_exechost_elem) ) {
@@ -914,7 +915,7 @@ void update_reschedule_unknown_timout_values(const char *config_name)
       }
    } else {
       if ( strcmp(SGE_TEMPLATE_NAME, config_name) != 0 ) {
-         host = lGetElemHost(Master_Exechost_List, EH_name, config_name); 
+         host = host_list_locate(Master_Exechost_List, config_name); 
          if (!host) {
             DPRINTF(("!!!!!!!update_reschedule_unknown_timout_values: got null for host\n"));
          }

@@ -55,7 +55,6 @@
 /* #include "sgermon.h" */
 /* #include "basis_types.h" */
 
-#include "sge_complex.h"
 #include "sge_prog.h"
 #include "msg_krb.h"
 

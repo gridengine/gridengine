@@ -95,7 +95,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
    return sb->s;
 }
 
-/****** uti/dstring/sge_dstring_append_dstring() **************************************
+/****** uti/dstring/sge_dstring_append_dstring() ******************************
 *  NAME
 *     sge_dstring_append() -- strcat() for dstring's 
 *
@@ -122,7 +122,8 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *     sge_dstring_sprintf() -- sprintf() for dstring's 
 *
 *  SYNOPSIS
-*     const char* sge_dstring_sprintf(dstring *sb, const char *format, ...) 
+*     const char* sge_dstring_sprintf(dstring *sb, 
+*                                     const char *format, ...) 
 *
 *  FUNCTION
 *     see sprintf() 
@@ -139,9 +140,9 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
-*                     Either use a vsnprintf implementation (if available for
-*                     all platforms) or find other means to prevent buffer
-*                     overflows.
+*                     Either use a vsnprintf implementation (if 
+*                     available for all platforms) or find other means 
+*                     to prevent buffer overflows.
 ******************************************************************************/
 const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
@@ -156,17 +157,18 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
    return sge_dstring_copy_string(sb, buf);
 }
 
-/****** uti/dstring/sge_dstring_sprintf_append() *************************************
+/****** uti/dstring/sge_dstring_sprintf_append() ******************************
 *  NAME
 *     sge_dstring_sprintf_append() -- sprintf() and append for dstring's 
 *
 *  SYNOPSIS
-*     const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...) 
+*     const char* sge_dstring_sprintf_append(dstring *sb, 
+*                                            const char *format, ...) 
 *
 *  FUNCTION
 *     See sprintf() 
-*     The string created by sprintf is appended already existing contents of
-*     the dstring.
+*     The string created by sprintf is appended already existing 
+*     contents of the dstring.
 *
 *  INPUTS
 *     dstring *sb        - dynamic string 
@@ -180,9 +182,9 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
-*                     Either use a vsnprintf implementation (if available for
-*                     all platforms) or find other means to prevent buffer
-*                     overflows.
+*                     Either use a vsnprintf implementation (if 
+*                     available for all platforms) or find other 
+*                     means to prevent buffer overflows.
 ******************************************************************************/
 const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
@@ -236,7 +238,8 @@ const char *sge_dstring_copy_string(dstring *sb, const char *str)
 *     sge_dstring_copy_dstring() -- strcpy() for dstrings's 
 *
 *  SYNOPSIS
-*     const char* sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2) 
+*     const char* sge_dstring_copy_dstring(dstring *sb1, 
+*                                          const dstring *sb2) 
 *
 *  FUNCTION
 *     strcpy() for dstrings's 

@@ -39,15 +39,10 @@
 #include "sge.h"
 #include "def.h"
 #include "sgermon.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_complexL.h"
 #include "sge_schedd_conf.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
-#include "sge_complex.h"
 #include "complex_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_m_event.h"
@@ -62,19 +57,17 @@
 #include "sge_host.h"
 #include "sge_stdio.h"
 #include "read_write_queue.h"
+#include "read_write_complex.h"
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
 #include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Job_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Sched_Config_List;
 
 static void sge_change_queue_version_complex(const char *cmplx_name);
 static int verify_complex_deletion(lList **alpp, const char *userset_name);
@@ -382,17 +375,19 @@ gdi_object_t *object
          slots = 0;
          for_each (gdil, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
-            if (!(qep = lGetElemStr(Master_Queue_List, QU_qname, lGetString(gdil, JG_qname)))) 
+            if (!(qep = queue_list_locate(Master_Queue_List, 
+                                          lGetString(gdil, JG_qname)))) 
                continue;
 
             qslots = lGetUlong(gdil, JG_slots);
-            debit_host_consumable(jep, sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST),
-                              Master_Complex_List, qslots);
+            debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+                  lGetHost(qep, QU_qhostname)), Master_Complex_List, qslots);
             debit_queue_consumable(jep, qep, Master_Complex_List, qslots);
 
             slots += qslots;
          }
-         debit_host_consumable(jep, sge_locate_host("global", SGE_EXECHOST_LIST), Master_Complex_List, slots);
+         debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+            "global"), Master_Complex_List, slots);
       }
    }
 

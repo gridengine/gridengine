@@ -39,13 +39,7 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge_schedd_conf.h"
-#include "sge_jobL.h"
-#include "sge_userprjL.h"
-#include "sge_share_tree_nodeL.h"
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
 #include "sge_time.h"
 #include "msg_schedd.h"
 #include "sge_language.h"
@@ -53,6 +47,8 @@
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_answer.h"
+#include "sge_complex.h"
+#include "sge_userprj.h"
 
 typedef struct {
    int name_format;
@@ -407,10 +403,10 @@ print_nodes(FILE *out, lListElem *node, lListElem *parent,
    lList *children = lGetList(node, STN_children);
 
    if (!project)
-      project = lGetElemStr(projects, UP_name, lGetString(node, STN_name));
+      project = userprj_list_locate(projects, lGetString(node, STN_name));
 
    if (children == NULL)
-      user = lGetElemStr(users, UP_name, lGetString(node, STN_name));
+      user = userprj_list_locate(users, lGetString(node, STN_name));
    else
       user = NULL;
 

@@ -271,10 +271,6 @@
 #define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _MESSAGE(43136, _("unexpected error while unpacking gdi request\n"))
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
-
-
-/* sge_job_jatask.c */
-
 #define MSG_JOB_REJECTED_NO_TASK_LIST     _MESSAGE(43139, _("job "u32" was rejected because it was not possible to create task list\n"))
 #define MSG_JOB_JLPPNULL                  _MESSAGE(43140, _("jlpp == NULL in job_add_job()\n"))
 #define MSG_JOB_JEPNULL                   _MESSAGE(43141, _("jep == NULL in job_add_job()\n"))

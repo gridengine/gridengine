@@ -461,7 +461,9 @@ int lGetPosInDescr(const lDescr *dp, int name)
       return -1;
    }
 
-   for (ldp = dp; ldp->nm != name && ldp->nm != NoName; ldp++);
+   for (ldp = dp; ldp->nm != name && ldp->nm != NoName; ldp++) {
+      ;
+   }
 
    if (ldp->nm == NoName) {
       LERROR(LENAMENOT);

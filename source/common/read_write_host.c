@@ -34,10 +34,7 @@
 #include <errno.h>
 
 #include "sge.h"
-#include "sge_hostL.h"
-#include "sge_complexL.h"
-#include "sge_usersetL.h"
-#include "sge_userprjL.h"
+#include "cull.h"
 #include "complex_history.h"
 #include "read_write_queue.h"
 #include "read_write_host.h"
@@ -52,6 +49,10 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+#include "sge_host.h"
 
 static intprt_type intprt_as_scaling[] = { HS_name, HS_value, 0 };
 static intprt_type intprt_as_load[] = { HL_name, HL_value, 0 };

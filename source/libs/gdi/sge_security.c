@@ -38,7 +38,6 @@
 #include "sge_gdi_intern.h"
 #include "sge_log.h"
 #include "setup_path.h"
-#include "sge_jobL.h"
 #include "sge_string.h"
 #include "sge_afsutil.h"
 #include "execution_states.h"
@@ -53,6 +52,7 @@
 #include "sge_stdio.h"
 #include "sge_prog.h"
 #include "sge_var.h"
+#include "sge_job.h"
 #include "sge_answer.h"
 
 #include "msg_gdilib.h"

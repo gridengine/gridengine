@@ -37,7 +37,6 @@
 #include "sge_conf.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
-#include "sge_job_reportL.h"
 #include "execution_states.h"
 #include "parse_mail.h"
 #include "admin_mail.h"
@@ -47,6 +46,7 @@
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "sge_feature.h"
+#include "sge_report.h"
 
 int admail_states[MAX_SSTATE + 1] = {
                                       0,

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
+#include "cull_list.h"
 
 lListElem *cull_read_in_cal(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
 

@@ -68,7 +68,7 @@
 #include "setup_path.h" 
 #include "sge_afsutil.h"
 #include "sge_conf.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_qexec.h"
 #include "qm_name.h"
 #include "sge_pgrp.h"

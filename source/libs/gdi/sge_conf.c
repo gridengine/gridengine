@@ -38,9 +38,6 @@
 #include "def.h"
 #include "sge.h"
 #include "sge_conf.h"
-#include "sge_confL.h"
-#include "sge_usersetL.h"
-#include "sge_userprjL.h"
 #include "cull.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
@@ -52,8 +49,6 @@
 #include "sge_userset_qmaster.h"
 #include "sge_prog.h"
 #include "setup_path.h"
-#include "sge_confL.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
 #include "sge_gdi.h"
 #include "sge_time.h"
@@ -62,6 +57,9 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+#include "sge_host.h"
 
 #define SGE_BIN "bin"
 
@@ -69,7 +67,7 @@ const char *const policy_hierarchy_chars = "OFSD";
 
 extern u_long32 logginglevel;
 extern u_long32 loggingfacility;
-extern lList *Master_Config_List; 
+lList *Master_Config_List = NULL; 
 
 sge_conf_type conf;
 
@@ -1234,16 +1232,16 @@ lList **conf_list
    return 0;
 }
 
-/****** qmaster/conf/policy_hierarchy_enum2char() *****************************
+/****** gdi/conf/policy_hierarchy_enum2char() *********************************
 *  NAME
-*     policy_hierarchy_enum2char() -- Return policy char for an enum value 
+*     policy_hierarchy_enum2char() -- Return policy char for a value 
 *
 *  SYNOPSIS
 *     char policy_hierarchy_enum2char(policy_type_t value) 
 *
 *  FUNCTION
-*     Returns the first letter of a policy name corresponding to the enum 
-*     "value".
+*     Returns the first letter of a policy name corresponding to the 
+*     enum "value".
 *
 *  INPUTS
 *     policy_type_t value - enum value 
@@ -1256,16 +1254,16 @@ char policy_hierarchy_enum2char(policy_type_t value)
    return policy_hierarchy_chars[value - 1];
 }
  
-/****** qmaster/conf/policy_hierarchy_char2enum() *****************************
+/****** gdi/conf/policy_hierarchy_char2enum() *********************************
 *  NAME
-*     policy_hierarchy_char2enum() -- Return enum value for a policy char
+*     policy_hierarchy_char2enum() -- Return value for a policy char
 *
 *  SYNOPSIS
 *     policy_type_t policy_hierarchy_char2enum(char character) 
 *
 *  FUNCTION
-*     This function returns a enum value for the first letter of a policy
-*     name. 
+*     This function returns a enum value for the first letter of a 
+*     policy name. 
 *
 *  INPUTS
 *     char character - "O", "F", "S" or "D" 
@@ -1287,7 +1285,7 @@ policy_type_t policy_hierarchy_char2enum(char character)
    return ret;
 }
 
-/****** qmaster/conf/policy_hierarchy_verify_value() **************************
+/****** gdi/conf/policy_hierarchy_verify_value() ******************************
 *  NAME
 *     policy_hierarchy_verify_value() -- verify a policy string 
 *
@@ -1295,7 +1293,8 @@ policy_type_t policy_hierarchy_char2enum(char character)
 *     int policy_hierarchy_verify_value(const char* value) 
 *
 *  FUNCTION
-*     The function tests whether the given policy string (value) is valid. 
+*     The function tests whether the given policy string (value) is i
+*     valid. 
 *
 *  INPUTS
 *     const char* value - policy string 
@@ -1348,7 +1347,7 @@ int policy_hierarchy_verify_value(const char* value)
    return ret;
 }
 
-/****** qmaster/conf/policy_hierarchy_fill_array() ****************************
+/****** gdi/conf/policy_hierarchy_fill_array() ********************************
 *  NAME
 *     policy_hierarchy_fill_array() -- fill the policy array 
 *
@@ -1357,7 +1356,8 @@ int policy_hierarchy_verify_value(const char* value)
 *                                      const char *value) 
 *
 *  FUNCTION
-*     Fill the policy "array" according to the characters given by "value".
+*     Fill the policy "array" according to the characters given by 
+*     "value".
 *
 *     value == "FODS":
 *        policy_hierarchy_t array[4] = {
@@ -1392,10 +1392,11 @@ int policy_hierarchy_verify_value(const char* value)
 *        }; 
 *
 *  INPUTS
-*     policy_hierarchy_t array[] - array with at least POLICY_VALUES values 
+*     policy_hierarchy_t array[] - array with at least POLICY_VALUES 
+*                                  values 
 *     const char* value          - "NONE" or any combination
-*                                  of the first letters of the policy names 
-*                                  (e.g. "OFSD")
+*                                  of the first letters of the policy 
+*                                  names (e.g. "OFSD")
 *
 *  RESULT
 *     "array" will be modified 
@@ -1433,7 +1434,7 @@ void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char *value)
    DEXIT;
 }
 
-/****** qmaster/conf/policy_hierarchy_print_array() ***************************
+/****** gdi/conf/policy_hierarchy_print_array() *******************************
 *  NAME
 *     policy_hierarchy_print_array() -- print hierarchy array 
 *
@@ -1444,7 +1445,8 @@ void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char *value)
 *     Print hierarchy array in the debug output 
 *
 *  INPUTS
-*     policy_hierarchy_t array[] - array with at least POLICY_VALUES values 
+*     policy_hierarchy_t array[] - array with at least 
+*                                  POLICY_VALUES values 
 ******************************************************************************/
 void policy_hierarchy_print_array(policy_hierarchy_t array[])
 {

@@ -80,6 +80,8 @@
 #include "resolve_host.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
+
 /*-------------------------------------------------------------------------*/
 
 
@@ -1034,8 +1036,8 @@ XtPointer cld, cad;
    XmtDialogGetDialogValues(qc_dialog, &current_entry);
 
    if (current_entry.qname) {
-      moq = lCopyElem(lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, 
-                           current_entry.qname));
+      moq = lCopyElem(queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST),  
+                                        current_entry.qname));
    }
 
    if (moq) {
@@ -1127,7 +1129,7 @@ int how
    
    qmonMirrorMulti(QUEUE_T);
    ql = qmonMirrorList(SGE_QUEUE_LIST);
-   qep = lGetElemStr(ql, QU_qname, qname);
+   qep = queue_list_locate(ql, qname);
    qmonCullToQC(qep, data, how);
 
    DEXIT;

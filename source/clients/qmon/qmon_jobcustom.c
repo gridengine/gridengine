@@ -60,7 +60,6 @@
 #include "qmon_matrix.h"
 #include "sge.h"
 #include "symbols.h"
-#include "sge_complex.h"
 #include "sge_sched.h"      
 #include "commlib.h"
 #include "sge_gdi_intern.h"
@@ -73,9 +72,11 @@
 #include "qmon_preferences.h"
 #include "qmon_message.h"
 #include "sge_range.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_host.h"
+#include "sge_complex.h"
 #include "sge_parse_num_par.h"
-#include "sge_job_queue.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -217,9 +218,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
  
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
             jat = job_get_ja_task_template(ep, task_id);
@@ -273,9 +274,9 @@ int nm
          if (eleml && !jat) {
             lListElem *first_elem = lFirst(eleml);
        
-            if (is_obj_of_type(first_elem, JAT_Type)) {
+            if (object_has_type(first_elem, JAT_Type)) {
                jat = lFirst(eleml);
-            } else if (is_obj_of_type(first_elem, RN_Type)) {
+            } else if (object_has_type(first_elem, RN_Type)) {
                u_long32 task_id = range_list_get_first_id(eleml, NULL);
        
                jat = job_get_ja_task_template(ep, task_id);
@@ -337,9 +338,9 @@ int nm
          if (eleml && !jat) {
             lListElem *first_elem = lFirst(eleml);
     
-            if (is_obj_of_type(first_elem, JAT_Type)) {
+            if (object_has_type(first_elem, JAT_Type)) {
                jat = lFirst(eleml);
-            } else if (is_obj_of_type(first_elem, RN_Type)) {
+            } else if (object_has_type(first_elem, RN_Type)) {
                u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
                jat = job_get_ja_task_template(ep, task_id);
@@ -518,9 +519,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
 
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
 
             jat = job_get_ja_task_template(ep, task_id);
@@ -609,9 +610,9 @@ const char *field
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
     
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
@@ -659,9 +660,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
     
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
@@ -805,9 +806,9 @@ int nm
    if (eleml && !jat) {
       lListElem *first_elem = lFirst(eleml);
  
-      if (is_obj_of_type(first_elem, JAT_Type)) {
+      if (object_has_type(first_elem, JAT_Type)) {
          jat = lFirst(eleml);
-      } else if (is_obj_of_type(first_elem, RN_Type)) {
+      } else if (object_has_type(first_elem, RN_Type)) {
          u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
          jat = job_get_ja_task_template(ep, task_id);
@@ -926,9 +927,9 @@ int nm
       } else if (eleml) {
          lListElem *first_elem = lFirst(eleml);
 
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             ja_task_list_print_to_string(eleml, &dyn_buf2);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             range_list_print_to_string(eleml, &dyn_buf2, 0);
          }
       }
@@ -970,9 +971,9 @@ int nm
    if (eleml && !jat) {
       lListElem *first_elem = lFirst(eleml);
  
-      if (is_obj_of_type(first_elem, JAT_Type)) {
+      if (object_has_type(first_elem, JAT_Type)) {
          jat = lFirst(eleml);
-      } else if (is_obj_of_type(first_elem, RN_Type)) {
+      } else if (object_has_type(first_elem, RN_Type)) {
          u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
          jat = job_get_ja_task_template(ep, task_id);  
@@ -1007,7 +1008,7 @@ int nm
 
       /* check suspension of queue */
       if (n>0) {
-         qep = lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, 
+         qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), 
                               lGetString(lFirst(ql), JG_qname));
          if (qep && (lGetUlong(qep, QU_state) & (QSUSPENDED|QSUSPENDED_ON_SUBORDINATE|QCAL_SUSPENDED))) {
             tstate &= ~JRUNNING;                   /* unset bit JRUNNING */
@@ -1056,9 +1057,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
     
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
@@ -1979,8 +1980,8 @@ lList *exec_host_list
       lListElem *ep;
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -2023,8 +2024,8 @@ lList *exec_host_list
       lList *ccl[3];
       lListElem *ep;
 
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -2148,8 +2149,8 @@ lList *complex_list
    for_each(qep, queue_list) {
       lList *ccl[3];
       lListElem *ep;
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 

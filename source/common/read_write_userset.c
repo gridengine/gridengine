@@ -38,8 +38,6 @@
 #include "sge.h"
 #include "cull.h"
 #include "sge_gdi_intern.h"
-#include "sge_usersetL.h"
-#include "sge_confL.h"
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_userset.h"
@@ -50,6 +48,7 @@
 #include "sge_stdio.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
+#include "sge_userset.h"
 
 #include "msg_common.h"
 

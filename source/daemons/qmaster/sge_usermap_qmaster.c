@@ -47,20 +47,19 @@
 #include "read_write_ume.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_usermapL.h"
 #include "sge_string.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_user_mapping.h"
 #include "sge_usermap_qmaster.h"
 #include "sge_answer.h"
 #include "sge_unistd.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
 #ifndef __SGE_NO_USERMAPPING__
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
 
 /****** src/usermap_mod() **********************************
 *

@@ -44,12 +44,9 @@
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
 #include "sig_handlers.h"
-#include "sge_jobL.h"
-#include "sge_complexL.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
@@ -72,6 +69,9 @@
 #include "sge_support.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_ckpt.h"
+#include "sge_complex.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -323,8 +323,8 @@ char **argv
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
          queue_complexes2scheduler(&ce, qep, exechost_list, complex_list, 0);
-         ccl[0] = lGetList(lGetElemHost(exechost_list, EH_name, "global"), EH_consumable_config_list);
-         ccl[1] = (ep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname)))?
+         ccl[0] = lGetList(host_list_locate(exechost_list, "global"), EH_consumable_config_list);
+         ccl[1] = (ep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname)))?
                   lGetList(ep, EH_consumable_config_list):NULL;
          ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -415,11 +415,11 @@ char **argv
          int ret, show_job;
 
          pe = lGetString(jep, JB_pe)?
-                  lGetElemStr(pe_list, PE_name, lGetString(jep, JB_pe)):
+                  pe_list_locate(pe_list, lGetString(jep, JB_pe)):
                   NULL; /* aargh ! wildcard pe */
          ckpt = lGetString(jep, JB_checkpoint_object)?
-                     lGetElemStr(ckpt_list, CK_name, 
-                        lGetString(jep, JB_checkpoint_object)): NULL;
+                           ckpt_list_locate(ckpt_list, 
+                           lGetString(jep, JB_checkpoint_object)): NULL;
          show_job = 0;
 
          for_each(qep, queue_list) {
@@ -1081,7 +1081,7 @@ lList *pe_list
       lListElem *ref_pe;   /* PE_Type */
       lListElem *copy_pe;  /* PE_Type */
 
-      ref_pe = lGetElemStr(pe_list, PE_name, lGetString(pe, STR));
+      ref_pe = pe_list_locate(pe_list, lGetString(pe, STR));
       copy_pe = lCopyElem(ref_pe);
       if (pe_selected == NULL) {
          const lDescr *descriptor = lGetElemDescr(ref_pe);
@@ -1155,7 +1155,7 @@ lList *acl_list
 
    /* untag all queues where no of the users has access */
 
-   ehep = lGetElemHost(exechost_list, EH_name, "global"); 
+   ehep = host_list_locate(exechost_list, "global"); 
    global_acl  = lGetList(ehep, EH_acl);
    global_xacl = lGetList(ehep, EH_xacl);
 
@@ -1170,7 +1170,7 @@ lList *acl_list
       /* get exec host list element for current queue 
          and its access lists */
       host_name = lGetHost(qep,QU_qhostname);
-      ehep = lGetElemHost(exechost_list, EH_name, host_name); 
+      ehep = host_list_locate(exechost_list, host_name); 
       h_acl  = lGetList(ehep, EH_acl);
       h_xacl = lGetList(ehep, EH_xacl);
 

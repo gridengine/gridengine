@@ -40,7 +40,6 @@
 #endif
 
 #include "sge_unistd.h"
-#include "sge_load_reportL.h"
 #include "sge_loadsensorL.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
@@ -48,9 +47,11 @@
 #include "sgermon.h"
 #include "sge_conf.h"
 #include "def.h"
-#include "report.h"
 #include "sge_stdio.h"
 #include "sge_prog.h"
+#include "sge_report_execd.h"
+#include "sge_report.h"
+
 #include "msg_execd.h"
 
 

@@ -29,13 +29,14 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <string.h>
+
 #include "cull.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
+#include "sge_host.h"
 #include "sge_sched.h"
 #include "sgermon.h"
 

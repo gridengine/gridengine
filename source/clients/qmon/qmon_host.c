@@ -76,6 +76,7 @@
 #include "resolve_host.h"
 #include "load_correction.h"
 #include "sge_prog.h"
+#include "sge_host.h"
 
 #include "Tab.h"
 
@@ -524,7 +525,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ehp = lGetElemHost(qmonMirrorList(SGE_EXECHOST_LIST), EH_name, ehname);
+   ehp = host_list_locate(qmonMirrorList(SGE_EXECHOST_LIST), ehname);
    XtFree((char*) ehname);
 
    if (ehp) {
@@ -958,7 +959,7 @@ String name
       /*
       ** get the selected host element
       */
-      ehp = lGetElemHost(ehl, EH_name, name);
+      ehp = host_list_locate(ehl, name);
       if (host_data.name)
          XtFree((char*)host_data.name);
       host_data.name = XtNewString(name);

@@ -50,7 +50,9 @@
 #include "sge_feature.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "sge_host.h"
 #include "msg_schedd.h"
+
 static char load_ops[]={
         '+',
         '-',
@@ -345,7 +347,7 @@ int *sort_hostlist
       int slots = lGetUlong(gel, JG_slots);
 
       hnm = lGetHost(gel, JG_qhostname);
-      hep = lGetElemHost(host_list, EH_name, hnm); 
+      hep = host_list_locate(host_list, hnm); 
 
       if (scheddconf.load_adjustment_decay_time && lGetNumberOfElem(scheddconf.job_load_adjustments)) {
          /* increase host load for each scheduled job slot */
@@ -354,7 +356,7 @@ int *sort_hostlist
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
-      debit_host_consumable(job, lGetElemHost(host_list, EH_name, "global"), complex_list, slots);
+      debit_host_consumable(job, host_list_locate(host_list, "global"), complex_list, slots);
       debit_host_consumable(job, hep, complex_list, slots);
 
       /* compute new combined load for this host and put it into the host */

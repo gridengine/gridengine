@@ -38,8 +38,6 @@
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
 #include "sge_pe.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
 #include "sge_stringL.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"
@@ -49,12 +47,12 @@
 #include "sge_parse_date_time.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sge_rangeL.h"
 #include "sge_identL.h"
 #include "msg_common.h"
 #include "msg_gdilib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_job.h"
 
 int hard = TRUE;
 

@@ -39,11 +39,11 @@
 #include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "sge_log.h"
-#include "sge_jobL.h"
 #include "sge_ulongL.h"
 #include "sge_schedd_text.h"
 #include "msg_schedd.h"
 #include "sge_range.h"
+#include "sge_job.h"
 
 /* 
 ** Message structure where job scheduling informations are stored i

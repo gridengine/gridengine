@@ -45,8 +45,6 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 /* funtions called via gdi and inside the qmaster */
 int sge_del_ckpt(lListElem *, lList **, char *, char *);
 
-lListElem *sge_locate_ckpt(const char *ckpt_name);
-
 void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
                                       const char *obj_name, 
                                       const char *ckpt_name);

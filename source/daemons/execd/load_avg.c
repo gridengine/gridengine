@@ -35,14 +35,8 @@
 #include <float.h>
 
 #include "sge_gdi_intern.h"
-#include "sge_load_reportL.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_job_reportL.h"
-#include "sge_reportL.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
 #include "sge_prog.h"
@@ -53,7 +47,7 @@
 #include "sge_load_sensor.h"
 #include "load_avg.h"
 #include "execd_ck_to_do.h"
-#include "report.h"
+#include "sge_report_execd.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_conf.h"
@@ -64,6 +58,9 @@
 #include "sge_uidgid.h"
 #include "sge_hostname.h"
 #include "sge_os.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_report.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -90,12 +87,9 @@ int report_seqno = 0;
 
 extern lList *execd_config_list;
 extern lList *jr_list;
-extern lList *Master_Job_List;
 
-/*-------------------------------------------------------------------------*/
-static int execd_add_load_report(
-lList *report_list 
-) {
+static int execd_add_load_report(lList *report_list) 
+{
    lListElem *report;
 
    /*
@@ -116,10 +110,8 @@ lList *report_list
 }
 
 
-/*-------------------------------------------------------------------------*/
-static int execd_add_conf_report(
-lList *report_list 
-) {
+static int execd_add_conf_report(lList *report_list) 
+{
    lListElem *report;
    /*
    ** 2. report about the configuration versions
@@ -138,11 +130,8 @@ lList *report_list
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static int execd_add_license_report(
-lList *report_list 
-) {
+static int execd_add_license_report(lList *report_list) 
+{
    lListElem *report;
    /*
    ** 3. license report
@@ -171,11 +160,8 @@ lList *report_list
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static int execd_add_job_report(
-lList *report_list 
-) {
+static int execd_add_job_report(lList *report_list) 
+{
    lListElem *job_report = NULL;
 
    /* in case of SGE we need to update the usage list 
@@ -201,11 +187,7 @@ lList *report_list
    return 0;
 }
 
-
-
-
-/*-------------------------------------------------------------------------*/
-lList *sge_build_load_report()
+lList *sge_build_load_report(void)
 {
    lList *lp = NULL;
    lListElem *ep;
@@ -321,12 +303,8 @@ lList *sge_build_load_report()
    return lp;
 }
 
-
-
-/*-------------------------------------------------------------------------*/
-static int sge_get_loadavg(
-lList **lpp 
-) {
+static int sge_get_loadavg(lList **lpp) 
+{
    double avg[3];
    int loads;
    int nprocs; 
@@ -550,10 +528,7 @@ lList **lpp
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-
-static void update_job_usage()
+static void update_job_usage(void)
 {
    lList *usage_list = NULL;
    lListElem *jr;
@@ -698,9 +673,8 @@ static void update_job_usage()
 }
 
 /* calculate reserved resource usage */
-static void get_reserved_usage(
-lList **job_usage_list 
-) {
+static void get_reserved_usage(lList **job_usage_list) 
+{
    lList *temp_job_usage_list, *new_ja_task_list;
    lListElem *q=NULL, *jep, *gdil_ep, *jatep, *new_job, *new_ja_task;
    double cpu_val, vmem_val, io_val, iow_val, vmem, maxvmem;

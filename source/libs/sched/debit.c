@@ -36,7 +36,6 @@
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
 #include "sge_pe_schedd.h"
-#include "sge_jobL.h"
 #include "sgermon.h"
 
 /* -------------------------------------------------------------

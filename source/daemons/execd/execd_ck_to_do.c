@@ -40,16 +40,14 @@
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_conf.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_usageL.h"
-#include "sge_queueL.h"
-#include "sge_job_reportL.h"
 #include "dispatcher.h"
 #include "sge_parse_num_par.h"
 #include "reaper_execd.h"
@@ -72,6 +70,7 @@
 #include "sge_hostname.h"
 #include "sge_prog.h"
 #include "get_path.h"
+#include "sge_report.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -98,7 +97,6 @@ extern int shut_me_down;
 extern volatile int jobs_to_start;
 
 extern lList *jr_list;
-extern lList *Master_Job_List;
 
 #ifdef COMPILE_DC
 static void notify_ptf(void);

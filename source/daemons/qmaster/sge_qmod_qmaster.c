@@ -36,13 +36,10 @@
 
 #include "sge.h"
 #include "def.h"
-#include "sge_queueL.h"
 #include "symbols.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_stringL.h"
 #include "sge_identL.h"
-#include "sge_hostL.h"
 #include "sge_pe.h"
 #include "sec.h"
 #include "sge_signal.h"
@@ -50,7 +47,7 @@
 #include "sge_qmod_qmaster.h"
 #include "read_write_job.h"
 #include "read_write_queue.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_host.h"
 #include "sge_parse_num_par.h"
@@ -61,23 +58,20 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "sge_rangeL.h"
 #include "time_event.h"
 #include "reschedule.h"
 #include "sge_security.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_answer.h"
 #include "sge_conf.h"
-#include "sge_complexL.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_queue.h"
+#include "sge_range.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Job_List;
-
 
 /*-------------------------------------------------------------------------*/
 static void signal_slave_jobs_in_queue(int how, lListElem *jep);
@@ -195,7 +189,7 @@ sge_gdi_request *answer
                alltasks = 1;
             }
 
-            job = sge_locate_job(jobid);
+            job = job_list_locate(Master_Job_List, jobid);
             if (job)
                jatask = lFirst(lGetList(job, JB_ja_tasks));
             while ((tmp_task = jatask)) {
@@ -331,7 +325,8 @@ lList **answer
 
    /* look for queue this job runs in */
    if (lGetString(jatep, JAT_master_queue))
-      queueep = lGetElemStr(Master_Queue_List, QU_qname, lGetString(jatep, JAT_master_queue));
+      queueep = queue_list_locate(Master_Queue_List, 
+                                  lGetString(jatep, JAT_master_queue));
    else
       queueep = NULL;
 
@@ -1151,16 +1146,17 @@ const char *queue
    DENTER(TOP_LAYER, "resend_signal_event");
 
    if (!queue) {
-      if (!(jep = sge_locate_job(jobid)) || 
+      if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
           !(jatep=job_search_task(jep, NULL, jataskid, 0))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
          DEXIT;
          return;
       }
-      if ((qep = lGetElemStr(Master_Queue_List, QU_qname, lGetString(jatep, JAT_master_queue))))
+      if ((qep = queue_list_locate(Master_Queue_List, 
+                                   lGetString(jatep, JAT_master_queue))))
          sge_signal_queue(lGetUlong(jatep, JAT_pending_signal), qep, jep, jatep);
    } else {
-      if (!(qep = sge_locate_queue(queue))) {
+      if (!(qep = queue_list_locate(Master_Queue_List, queue))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALQ_S, queue));
          DEXIT;
          return;
@@ -1201,7 +1197,8 @@ lListElem *jatep
       if (lGetUlong(qep, QU_qtype) & TQ) {
          lListElem *hep;
          pnm = prognames[QSTD];
-         if (!(hep=sge_locate_host(lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST))
+         if (!(hep=host_list_locate(Master_Exechost_List, 
+                                    lGetHost(qep, QU_qhostname)))
             || !(hnm=lGetString(hep, EH_real_name))) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(hep, EH_name)));
             DEXIT;
@@ -1217,7 +1214,7 @@ lListElem *jatep
          lListElem *hep = NULL;
          const lListElem *simhost = NULL;
 
-         hep = sge_locate_host(hnm, SGE_EXECHOST_LIST);
+         hep = host_list_locate(Master_Exechost_List, hnm);
          if(hep != NULL) {
             simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
             if(simhost != NULL) {
@@ -1330,7 +1327,7 @@ lListElem *qep
             since they are not known to the apropriate execd - we should
             omit signalling in this case to prevent waste of communication bandwith */ 
          if (!(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-             !(pe=pe_locate(pe_name)) /* ||
+             !(pe=pe_list_locate(Master_Pe_List, pe_name)) /* ||
              ** signal also jobs, that are not slave controlled
              ** master task must be signaled in every case (JG)
              !lGetUlong(pe, PE_control_slaves) */)
@@ -1341,7 +1338,7 @@ lListElem *qep
             if (!strcmp(lGetString(gdil_ep, JG_qname), qname)) {
 
                /* search master queue - needed for signalling of a job */
-               if ((mq = sge_locate_queue(mqname = lGetString(
+               if ((mq = queue_list_locate(Master_Queue_List, mqname = lGetString(
                      lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname)))) {
                   DPRINTF(("found slave job "u32" in queue %s master queue is %s\n", 
                      lGetUlong(jep, JB_job_number), qname, mqname));
@@ -1380,10 +1377,10 @@ lListElem *jatep
       in case of slave controlled jobs */
    if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 || 
          !(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-         !(pe=pe_locate(pe_name)) ||
+         !(pe=pe_list_locate(Master_Pe_List, pe_name)) ||
          !lGetUlong(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
-         if ((mq = sge_locate_queue(qname = lGetString(gdil_ep, JG_qname)))) {
+         if ((mq = queue_list_locate(Master_Queue_List, qname = lGetString(gdil_ep, JG_qname)))) {
             DPRINTF(("found slave job "u32" in queue %s\n", 
                lGetUlong(jep, JB_job_number), qname));
             sge_signal_queue(how, mq, jep, jatep);

@@ -51,11 +51,11 @@
 
 #include "def.h"
 #include "sge_all_listsL.h"
-#include "sge_complex.h"
 #include "complex_history.h"
 #include "sge_sched.h"
 #include "sge_resource.h"
 #include "read_write_queue.h"
+#include "read_write_complex.h"
 #include "path_history.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -65,10 +65,10 @@
 #include "sge_language.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
+#include "sge_complex.h"
+
 #include "msg_common.h"
 #include "msg_history.h"
-
-extern lList *Master_Complex_List;
 
 /*
 ** local defines

@@ -30,9 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include "sge_pe.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
-#include "sge_queueL.h"
 #include "sgermon.h"
 
 #ifdef COMPILE_DC
@@ -45,6 +43,7 @@
 #include "sge_log.h"
 #include "msg_execd.h"
 #include "sge_feature.h"
+#include "sge_job.h"
 
 extern volatile int jobs_to_start;
 

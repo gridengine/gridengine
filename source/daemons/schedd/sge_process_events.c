@@ -48,24 +48,17 @@
 #include "sge.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
-#include "sge_ckptL.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_schedd.h"
 #include "sge_process_events.h"
 #include "sge_prog.h"
-#include "sge_queueL.h"
 #include "sge_ctL.h"
 #include "sge_schedd_conf.h"
-#include "sge_usersetL.h"
-#include "sge_share_tree_nodeL.h"
-#include "sge_userprjL.h"
 #include "sge_time.h"
 #include "sgermon.h"
 #include "commlib.h"
@@ -83,8 +76,14 @@
 #include "msg_schedd.h"
 #include "scheduler.h"
 #include "job_log.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_conf.h"
+#include "sge_userprj.h"
+#include "sge_ckpt.h"
+#include "sge_host.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+#include "sge_sharetree.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -586,7 +585,7 @@ int sge_process_all_events(lList *event_list)
          {
             u_long32 was_running;
 
-            ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            ep = job_list_locate(lists.job_list, intkey);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTODELETE_U ,
                       u32c(intkey)));
@@ -721,7 +720,7 @@ int sge_process_all_events(lList *event_list)
                DEXIT;
                goto Error;
             }
-            ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            ep = job_list_locate(lists.job_list, intkey);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTOMODIFY_U , u32c(intkey)));
                DEXIT;
@@ -831,7 +830,7 @@ int sge_process_all_events(lList *event_list)
                DEXIT;
                goto Error;
             }
-            ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            ep = job_list_locate(lists.job_list, intkey);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTOMODIFYTASKY_UU , u32c(intkey), u32c(intkey2)));
                DEXIT;
@@ -907,7 +906,7 @@ int sge_process_all_events(lList *event_list)
             }
            
             /* search job */
-            job = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            job = job_list_locate(lists.job_list, intkey);
             if (job == NULL) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORADDINGPETASK_U, 
                       u32c(intkey)));
@@ -958,7 +957,7 @@ int sge_process_all_events(lList *event_list)
             lList *task_list;
    
             /* search job */
-            job = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            job = job_list_locate(lists.job_list, intkey);
             if (job == NULL) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORDELETINGPETASK_U, 
                       u32c(intkey)));
@@ -999,7 +998,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+         ep = job_list_locate(lists.job_list, intkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTOMODIFYPRIORITY_U ,
                    u32c(intkey)));
@@ -1025,7 +1024,7 @@ int sge_process_all_events(lList *event_list)
             u_long32 was_running;
             lListElem *job, *ja_task, *pe_task = NULL;
 
-            job = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            job = job_list_locate(lists.job_list, intkey);
             if (job == NULL) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U, 
                       u32c(intkey)));
@@ -1091,7 +1090,7 @@ int sge_process_all_events(lList *event_list)
          break;
 
       case sgeE_QUEUE_DEL:
-         ep = lGetElemStr(lists.queue_list, QU_qname, strkey);
+         ep = queue_list_locate(lists.queue_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEXTODELETE_S ,
                    strkey));
@@ -1110,7 +1109,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(lists.queue_list, QU_qname, strkey);
+         ep = queue_list_locate(lists.queue_list, strkey);
          if (ep) {
             DPRINTF(("Had to add Queue %s but it's already here\n",
                      strkey));
@@ -1133,7 +1132,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(lists.queue_list, QU_qname, strkey);
+         ep = queue_list_locate(lists.queue_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEXTOMODIFY_S ,
                    strkey));
@@ -1151,7 +1150,7 @@ int sge_process_all_events(lList *event_list)
          {
             u_long32 state;
 
-            ep = lGetElemStr(lists.queue_list, QU_qname, strkey);
+            ep = queue_list_locate(lists.queue_list, strkey);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEXTOYONSUBORDINATE_SS , strkey,
                       (type == sgeE_QUEUE_SUSPEND_ON_SUB) ? MSG_QUEUE_SUSPEND  : MSG_QUEUE_UNSUSPEND ));
@@ -1314,7 +1313,7 @@ int sge_process_all_events(lList *event_list)
          lpp = (type == sgeE_USER_DEL) ?
             &(lists.user_list) :
             &(lists.project_list);
-         ep = lGetElemStr(*lpp, UP_name, strkey);
+         ep = userprj_list_locate(*lpp, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_SCHEDD_CANTFINDUSERORPROJECTXTODELETE_SS ,
                    type == sgeE_USER_DEL ? MSG_USER : MSG_PROJECT,
@@ -1338,7 +1337,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(*lpp, UP_name, strkey);
+         ep = userprj_list_locate(*lpp, strkey);
          if (ep) {
             DPRINTF(("Had to add %s %s but it's already here\n",
                      type == sgeE_USER_ADD ? MSG_USER : MSG_PROJECT,
@@ -1366,7 +1365,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(*lpp, UP_name, strkey);
+         ep = userprj_list_locate(*lpp, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_SCHEDD_CANTFINDUSERORPROJECTXTOMODIFY_S ,
                    strkey));
@@ -1389,7 +1388,7 @@ int sge_process_all_events(lList *event_list)
          break;
 
       case sgeE_EXECHOST_DEL:
-         ep = lGetElemHost(lists.host_list, EH_name, strkey);
+         ep = host_list_locate(lists.host_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_EXECHOST_CANTFINDEXECHOSTXTODELETE_S ,
                    strkey));
@@ -1407,7 +1406,7 @@ int sge_process_all_events(lList *event_list)
             goto Error;
          }
 
-         ep = lGetElemHost(lists.host_list, EH_name, strkey);
+         ep = host_list_locate(lists.host_list, strkey);
          if (ep) {
             DPRINTF(("Had to add exechost %s but it's already here\n",
                      strkey));
@@ -1430,7 +1429,7 @@ int sge_process_all_events(lList *event_list)
             goto Error;
          }
 
-         ep = lGetElemHost(lists.host_list, EH_name, strkey);
+         ep = host_list_locate(lists.host_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_EXECHOST_CANTFINDEXECHOSTXTOMODIFY_S ,
                    strkey));
@@ -1452,7 +1451,7 @@ int sge_process_all_events(lList *event_list)
          break;
 
       case sgeE_PE_DEL:
-         ep = lGetElemStr(lists.pe_list, PE_name, strkey);
+         ep = pe_list_locate(lists.pe_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_PARENV_CANTFINDPARENVXTODELETE_S ,
                    strkey));
@@ -1469,7 +1468,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(lists.pe_list, PE_name, strkey);
+         ep = pe_list_locate(lists.pe_list, strkey);
          if (ep) {
             DPRINTF(("Had to add parallel environment %s but it's already here\n",
                      strkey));
@@ -1491,7 +1490,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(lists.pe_list, PE_name, strkey);
+         ep = pe_list_locate(lists.pe_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_PARENV_CANTFINDPARENVXTOMODIFY_S ,
                    strkey));
@@ -1530,7 +1529,7 @@ int sge_process_all_events(lList *event_list)
          break;
 
       case sgeE_CKPT_DEL:
-         ep = lGetElemStr(lists.ckpt_list, CK_name, strkey);
+         ep = ckpt_list_locate(lists.ckpt_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_CHKPNT_CANTFINDCHKPNTINTXTODELETE_S ,
                    strkey));
@@ -1547,7 +1546,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(lists.ckpt_list, CK_name, strkey);
+         ep = ckpt_list_locate(lists.ckpt_list, strkey);
          if (ep) {
             DPRINTF(("Had to add ckpt interface definition %s but it's already here\n",
                      strkey));
@@ -1569,7 +1568,7 @@ int sge_process_all_events(lList *event_list)
             DEXIT;
             goto Error;
          }
-         ep = lGetElemStr(lists.ckpt_list, CK_name, strkey);
+         ep = ckpt_list_locate(lists.ckpt_list, strkey);
          if (!ep) {
             ERROR((SGE_EVENT, MSG_CHKPNT_CANTFINDCHKPNTINTXTOMODIFY_S , strkey));
             DEXIT;
@@ -1589,7 +1588,7 @@ int sge_process_all_events(lList *event_list)
          {
             u_long32 was_running;
 
-            ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            ep = job_list_locate(lists.job_list, intkey);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTODELETEJOBARRAYTASK_U , 
                       u32c(intkey)));

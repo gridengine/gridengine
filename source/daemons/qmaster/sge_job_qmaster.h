@@ -1,6 +1,5 @@
-#ifndef __SGE_LOAD_REPORTL_H
-#define __SGE_LOAD_REPORTL_H
-
+#ifndef __SGE_JOB_QMASTER_H
+#define __SGE_JOB_QMASTER_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -33,43 +32,30 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_boundaries.h"
-#include "cull.h"
-
-#ifdef  __cplusplus
-extern "C" {
+#ifndef __SGE_GDI__INTERN_H
+#   include "sge_gdi_intern.h"
 #endif
 
-/* *INDENT-OFF* */   
+#include "sge_eventL.h"
 
-enum {
-   LR_name = LR_LOWERBOUND,
-   LR_value,
-   LR_global,
-   LR_static,
-   LR_host
-};
+int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
+int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
 
-LISTDEF(LR_Type)
-   SGE_STRING(LR_name)
-   SGE_STRING(LR_value)
-   SGE_ULONG(LR_global)       /* ==1 global load value */
-   SGE_ULONG(LR_static)       /* ==1 static load value */
-   SGE_HOSTH(LR_host)        /* sender host of load value */  /* CR - hostname change */
-LISTEND 
+int sge_gdi_mod_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
 
-NAMEDEF(LRN)
-   NAME("LR_name")
-   NAME("LR_value")
-   NAME("LR_global")
-   NAME("LR_static")
-   NAME("LR_host")
-NAMEEND
+int sge_gdi_del_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
 
-/* *INDENT-ON* */
+void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
 
-#define LRS sizeof(LRN)/sizeof(char*)
-#ifdef  __cplusplus
-}
-#endif
-#endif                          /* __SGE_LOAD_REPORTL_H */
+void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
+
+void job_suc_pre(lListElem *jep);
+
+/* searches by id or jobname */
+lListElem *locate_job_by_identifier(const char *s, const char *owner);
+
+void get_rid_of_job(lList **alpp, lListElem *jep, lListElem *jatep, int force, 
+                    sge_pack_buffer *pb, char *pb_host, char *ruser, 
+                    char *rhost, const char *err_str, char *commproc);
+
+#endif /* __SGE_JOB_QMASTER_H */

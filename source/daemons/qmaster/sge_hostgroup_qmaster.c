@@ -47,25 +47,20 @@
 #include "read_write_host_group.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_groupL.h"
 #include "sge_stringL.h"
 #include "sge_string.h"
 #include "gdi_utility_qmaster.h"
-#include "sge_groups.h"
-#include "sge_usermapL.h"
+#include "sge_usermap.h"
 #include "sge_hostgroup_qmaster.h"
 #include "sge_user_mapping.h"
 #include "sge_answer.h"
 #include "sge_unistd.h"
+#include "sge_hostgroup.h"
 
 #ifndef __SGE_NO_USERMAPPING__
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
-
 
 /****** src/hostgrp_mod() **********************************
 *

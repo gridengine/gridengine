@@ -35,12 +35,13 @@
 #include "def.h"   
 #include "cull_list.h"
 
-#include "sge_jobL.h"
 #include "sge_answer.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_ckpt.h"
 
 #include "msg_gdilib.h"
+
+lList *Master_Ckpt_List = NULL;
 
 /****** gdi/ckpt/ckpt_is_referenced() *****************************************
 *  NAME
@@ -48,30 +49,30 @@
 *
 *  SYNOPSIS
 *     int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list, 
-*                            const lList *master_job_list) 
+*                            const lList *job_list) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given "ckpt" is referenced
-*     in a job contained in "master_job_list". If this is the case than
+*     in a job contained in "job_list". If this is the case than
 *     a corresponding message will be added to the "answer_list". 
 *
 *  INPUTS
-*     const lListElem *ckpt        - CK_Type object 
-*     lList **answer_list          - AN_Type list 
-*     const lList *master_job_list - JB_Type list 
+*     const lListElem *ckpt - CK_Type object 
+*     lList **answer_list   - AN_Type list 
+*     const lList *job_list - JB_Type list 
 *
 *  RESULT
 *     int - true (1) or false (0) 
 ******************************************************************************/
 int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
-                       const lList *master_job_list)
+                       const lList *job_list)
 {
-   const char *ckpt_name = lGetString(ckpt, CK_name);
    lListElem *job = NULL;
    int ret = 0;
 
-   for_each(job, master_job_list) {
-      if (job_is_ckpt_referenced(job, ckpt_name)) {
+   for_each(job, job_list) {
+      if (job_is_ckpt_referenced(job, ckpt)) {
+         const char *ckpt_name = lGetString(ckpt, CK_name);
          u_long32 job_id = lGetUlong(job, JB_job_number);
 
          sprintf(SGE_EVENT, MSG_CKPTREFINJOB_SU, ckpt_name, u32c(job_id));
@@ -82,3 +83,28 @@ int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
    } 
    return ret;
 }
+
+/****** gdi/ckpt/ckpt_list_locate() *******************************************
+*  NAME
+*     ckpt_list_locate -- find a ckpt object in a list 
+*
+*  SYNOPSIS
+*     lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name)
+*
+*  FUNCTION
+*     This function will return a ckpt object by name if it exists.
+*
+*
+*  INPUTS
+*     lList *ckpt_list      - CK_Type object
+*     const char *ckpt_name - name of the ckpt object. 
+*
+*  RESULT
+*     NULL - ckpt object with name "ckpt_name" does not exist
+*     !NULL - pointer to the cull element (CK_Type) 
+******************************************************************************/
+lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name)
+{
+   return lGetElemStr(ckpt_list, CK_name, ckpt_name);
+}
+

@@ -43,10 +43,7 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_confL.h"
 #include "sge_usageL.h"
-#include "sge_userprjL.h"
-#include "sge_share_tree_nodeL.h"
 #include "sge_sharetree.h"
 #include "sge_sharetree_qmaster.h"
 #include "sge_userprj_qmaster.h"
@@ -54,14 +51,11 @@
 #include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_answer.h"
+#include "sge_userprj.h"
+#include "read_write_sharetree.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_User_List;
-extern lList *Master_Project_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Userset_List;
 
 /************************************************************
   sge_add_sharetree - Master code
@@ -229,7 +223,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
       /* not a leaf node */
 
       /* check if this is a project node */
-      if ((pep=sge_locate_user_prj(name, project_list))) {
+      if ((pep=userprj_list_locate(project_list, name))) {
 
          /* check for sub-projects (not allowed) */
          if (project) {
@@ -256,7 +250,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          *found = NULL;
 
          /* check for user appearing as non-leaf node */
-      } else if (sge_locate_user_prj(name, user_list)) {
+      } else if (userprj_list_locate(user_list, name)) {
             ERROR((SGE_EVENT, MSG_STREE_USERNONLEAF_S, name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -307,7 +301,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
       /* a leaf node */
 
       /* check if this is a project node */
-      if (sge_locate_user_prj(name, project_list)) {
+      if (userprj_list_locate(project_list, name)) {
          lSetUlong(node, STN_type, STT_PROJECT);
       }   
 
@@ -316,7 +310,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          /* project set means this is a project sub-tree */
          
          /* check for sub-projects */
-         if (sge_locate_user_prj(name, project_list)) {
+         if (userprj_list_locate(project_list, name)) {
             ERROR((SGE_EVENT, MSG_STREE_PRJINPTJSUBTREE_SS, name, lGetString(project, UP_name)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -324,7 +318,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          }
 
          /* leaf nodes of project sub-trees must be users */
-         if (!sge_locate_user_prj(name, user_list) &&
+         if (!userprj_list_locate(user_list, name) &&
              strcmp(name, "default")) {
             ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_SHARE_TREE_REF_TO_SS, MSG_OBJ_USER, name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -358,9 +352,9 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          const char *objname = MSG_OBJ_USER;
 
          /* non project sub-tree leaf nodes must be a user or a project */
-         if (!sge_locate_user_prj(name, user_list) &&
+         if (!userprj_list_locate(user_list, name) &&
              ((objname=MSG_JOB_PROJECT) &&
-              !sge_locate_user_prj(name, project_list))) {
+              !userprj_list_locate(project_list, name))) {
 
             ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_SHARE_TREE_REF_TO_SS, 
                      MSG_OBJ_USERPRJ, name));

@@ -1,5 +1,5 @@
-#ifndef _SGE_JOB_REPORT_H_
-#define _SGE_JOB_REPORT_H_
+#ifndef _SGE_MANOP_H
+#define _SGE_MANOP_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,9 +32,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_job_reportL.h"
+#include "sge_manopL.h"
 
-void print_usage(FILE *fp, lListElem *jr);
-int init_from_job(lListElem *jr, lListElem *jep, lListElem *jatep, lListElem *petep);
+extern lList *Master_Manager_List;
+extern lList *Master_Operator_List;
 
-#endif /* _SGE_JOB_REPORT_H_ */
+lListElem *manop_list_locate(lList *manop_list, const char *name);
+
+lListElem* sge_locate_manager(const char *cp);
+
+lListElem* sge_locate_operator(const char *cp);
+
+#endif /* _SGE_MANOP_H */
+
+
+

@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/job_jatask/--JAT_Type *********************************************
+/****** gdi/ja_task/--JAT_Type ************************************************
 *  NAME
 *     JAT_Type - CULL array task 
 *
@@ -174,7 +174,7 @@ extern "C" {
 *     after the job has been dispatched.
 *        
 *  SEE ALSO 
-*     gdi/job_jatask/JB_Type
+*     gdi/job/--JB_Type
 ******************************************************************************/
 
 /* *INDENT-OFF* */

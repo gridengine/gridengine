@@ -39,7 +39,6 @@
 #include "sge_conf.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
-#include "sge_jobL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_stringL.h"
@@ -54,20 +53,21 @@
 #include "sge_string.h"
 #include "reaper_execd.h"
 #include "execution_states.h"
-#include "msg_common.h"
-#include "msg_daemons_common.h"
-#include "msg_execd.h"
 #include "sge_feature.h"
 #include "read_write_job.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_os.h"
+#include "sge_job.h"
+
+#include "msg_common.h"
+#include "msg_daemons_common.h"
+#include "msg_execd.h"
 
 extern char execd_spool_dir[SGE_PATH_MAX];
 extern lList *execd_config_list;
 extern lList *jr_list;
-extern lList *Master_Job_List;
 
 char execd_messages_file[SGE_PATH_MAX];
 

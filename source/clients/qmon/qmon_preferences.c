@@ -40,7 +40,6 @@
 #include "sge.h"
 #include "sge_gdi_intern.h"
 #include "qmon_prefL.h"
-#include "sge_complexL.h"
 #include "sge_stringL.h"
 #include "qmon_preferences.h"
 #include "sge_string.h"
@@ -51,6 +50,8 @@
 #include "version.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
+#include "sge_complex.h"
+
 #include "msg_common.h"
 
 static int read_pref_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);

@@ -65,6 +65,7 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_queue.h"
 
 typedef struct {
    int host;
@@ -854,7 +855,7 @@ char **argv
             lAppendElem(exechost_list, global_host);
          }
          else {
-            queue = lGetElemStr(queue_list, QU_qname, dusage.qname);
+            queue = queue_list_locate(queue_list, dusage.qname);
             if (!queue) {
                WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
                          (int)dusage.job_number, dusage.qname));

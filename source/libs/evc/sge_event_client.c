@@ -191,6 +191,48 @@
 *     Eventclient/Client/ec_subscribe_flush()
 ****************************************************************************
 */
+
+/****** Eventclient/-List filtering***************************************
+*
+*  NAME
+*     List filtering -- Configuration of the list filtering 
+*
+*  FUNCTION
+*    The date send with an event can be filtered on the master side.
+*    Therefore one can set a where and what condition. If the
+*    all client date is removed via where condition, no event will
+*    be send.
+*
+*    The method expects a lListElem representation of the lCondition
+*    and lEnumeration. The two methods: "lWhatToElem" and 
+*    "lWhereToElem" will convert the structures.
+*
+*  NOTES
+*    One has to be carefull reducing the elements via what condition.
+*    One has to ensure, that all elements have a custom descriptor
+*    and that not elements with different descriptors are mixed in
+*    the same list.
+*
+*    The master and client can benifit (in speed and memory consumption)
+*    a lot by requesting only the data, the client needs.
+*
+*    All registered events for the same cull data structure needs to have
+*    the same what and where filter.
+*
+*    The JAT_Type list is handled special, because it is subscribable as
+*    an event, and it is also a sub-structure in the JB_Type list. When
+*    a JAT_Type filter is set, the JAT-Lists in the JB-List are filtered
+*    as well.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_mod_subscription_where()
+*     cull/cull_what/lWhatToElem()
+*     cull/cull_what/lWhatFromElem()
+*     cull/cull_where/lWhereToElem()
+*     cull/cull_where/lWhereFromElem()
+****************************************************************************
+*/
+
 /****** Eventclient/-Busy-state ***************************************
 *
 *  NAME
@@ -1394,7 +1436,33 @@ static void ec_mod_subscription_flush(lListElem *event_el, ev_event event, bool 
    DEXIT;
 }
 
-bool ec_mod_subscription_where(ev_event event, lListElem *what, lListElem *where) {
+/****** sge_event_client/ec_mod_subscription_where() ***************************
+*  NAME
+*     ec_mod_subscription_where() -- adds an element filter to the event 
+*
+*  SYNOPSIS
+*     bool ec_mod_subscription_where(ev_event event, const lListElem *what, 
+*     const lListElem *where) 
+*
+*  FUNCTION
+*     Allows to filter the event date on the master side to reduce the
+*     date, which is send to the clients.
+*
+*  INPUTS
+*     ev_event event         - event type 
+*     const lListElem *what  - what condition 
+*     const lListElem *where - where condition 
+*
+*  RESULT
+*     bool - true, if everything went fine 
+*
+*  SEE ALSO
+*     cull/cull_what/lWhatToElem()
+*     cull/cull_what/lWhatFromElem()
+*     cull/cull_where/lWhereToElem()
+*     cull/cull_where/lWhereFromElem()
+*******************************************************************************/
+bool ec_mod_subscription_where(ev_event event, const lListElem *what, const lListElem *where) {
    lList *subscribed = NULL;
    lListElem *sub_el = NULL;
    bool ret = false;

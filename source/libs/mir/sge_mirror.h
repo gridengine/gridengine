@@ -162,7 +162,7 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
                                       sge_mirror_callback callback_before, 
                                       sge_mirror_callback callback_after, 
                                       void *clientdata,
-                                      lCondition *where, lEnumeration *what);
+                                      const lCondition *where, const lEnumeration *what);
 
 sge_mirror_error sge_mirror_unsubscribe(sge_object_type type);
 

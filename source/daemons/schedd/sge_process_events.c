@@ -96,27 +96,26 @@ bool rebuild_accesstree = true;
 
 static void sge_rebuild_access_tree(lList *job_list, int trace_running);
 
-
-
-lCondition 
+const lCondition 
       *where_queue = NULL,
       *where_queue2 = NULL,
       *where_all_queue = NULL,
       *where_job = NULL,
       *where_host = NULL,
       *where_dept = NULL,
-      *where_acl = NULL; 
+      *where_acl = NULL,
+      *where_jat = NULL;
 
 
-lEnumeration 
+const lEnumeration 
    *what_queue = NULL,
    *what_queue2 = NULL,
    *what_job = NULL,
-   *what_job2 = NULL,
    *what_host = NULL,
    *what_acl = NULL,
    *what_centry = NULL,
-   *what_dept = NULL;
+   *what_dept = NULL,
+   *what_jat = NULL;
 
 static void ensure_valid_what_and_where(void);
 
@@ -197,13 +196,6 @@ int event_handler_default_scheduler()
 
    ensure_valid_what_and_where();
 
-   if (!what_job2){
-      what_job2 = lWhat("%T(ALL)", lGetListDescr(Master_Job_List));
-   }      
-
-
-/*   copy.job_list = lSelect("", Master_Job_List,
-                           where_job, what_job2);i*/
    copy.job_list = lCopyList("", Master_Job_List);                           
 
    /* the scheduler functions have to work with a reduced copy .. */
@@ -214,9 +206,6 @@ int event_handler_default_scheduler()
                              where_queue, what_queue2);
 
    /* name all queues not suitable for scheduling in tsm-logging */
-/*   copy.all_queue_list = lSelect("", Master_Queue_List,
-                                 where_all_queue, what_queue2);*/
-
    copy.all_queue_list = lCopyList("", Master_Queue_List);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
@@ -624,6 +613,64 @@ DTRACE;
    if (what_job == NULL) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED ));
    }
+/**
+ * The filtern does not work so easy. I am not sure, how 
+ * the jat structures are created and submitted. But
+ * if these are filtered, one gets a mixture of full
+ * and reduced elements in the same list.
+ */
+#if 1 
+   /* ---------------------------------------- */
+
+   if (what_jat == NULL) {
+   
+#define NM10 "%I%I%I%I%I%I%I%I%I%I"
+#define NM5  "%I%I%I%I%I"
+#define NM2  "%I%I"
+
+      what_jat = lWhat("%T(" NM10 NM5 NM2 NM2")", JAT_Type,
+         JAT_task_number, 
+         JAT_status,     
+         JAT_start_time,
+         /*JAT_end_time,*/ 
+         JAT_hold,
+         JAT_granted_pe,
+
+         /*JAT_job_restarted,*/
+         JAT_granted_destin_identifier_list,
+         JAT_master_queue,                 
+         JAT_state,                       
+         /*JAT_pvm_ckpt_pid, */ 
+
+         /*JAT_pending_signal,*/   
+         /*JAT_pending_signal_delivery_time,*/ 
+         /*JAT_pid,  */                        
+         /*JAT_osjobid,  */                   
+         /*JAT_usage_list,   */              
+
+         JAT_scaled_usage_list,
+         JAT_fshare,          
+         JAT_tix,            
+         JAT_oticket,       
+         JAT_dticket,      
+
+         JAT_fticket,     
+         JAT_sticket,    
+         JAT_share,     
+         /*JAT_suitable,*/ 
+         JAT_task_list,  
+         /*JAT_finished_task_list, */
+
+         /*JAT_previous_usage_list, */
+
+         /*JAT_pe_object,*/      
+         /*JAT_next_pe_task_id,*/
+         /*JAT_stop_initiate_time,*/
+         JAT_prio,
+         JAT_ntix
+      );
+   }
+#endif
 
    DEXIT;
    return;
@@ -1139,7 +1186,7 @@ int subscribe_default_scheduler(void)
                         sge_process_job_event_after,        NULL, where_job, what_job);
                         
    sge_mirror_subscribe(SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
-                        sge_process_ja_task_event_after,    NULL, NULL, NULL);
+                        sge_process_ja_task_event_after,    NULL, where_jat, what_jat);
                                                 
    sge_mirror_subscribe(SGE_TYPE_USERSET,        NULL, 
                         sge_process_userset_event_after,    NULL, NULL, NULL);

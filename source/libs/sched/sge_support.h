@@ -57,9 +57,9 @@ double sge_calc_node_usage (lListElem *node, lList *user_list,
                             lList *project_list, lList *decay_list, u_long curr_time, 
                             const char *projname, u_long seqno );
 
-void _sge_calc_share_tree_proportions ( lList *share_tree, lList *user_list, lList *project_list, lList *config_list, lList *decay_list, u_long curr_time );
+void _sge_calc_share_tree_proportions ( lList *share_tree, lList *user_list, lList *project_list, lList *decay_list, u_long curr_time );
 
-void sge_calc_share_tree_proportions ( lList *share_tree, lList *user_list, lList *project_list, lList *config_list, lList *decay_list );
+void sge_calc_share_tree_proportions ( lList *share_tree, lList *user_list, lList *project_list, lList *decay_list );
 
 lListElem *search_userprj_node (lListElem *ep, const char *username, const char *projname, lListElem **pep );
 

@@ -55,7 +55,54 @@
 #include "msg_sgeobjlib.h"
 #include "msg_common.h"
 
-/* default values for scheduler configuration */
+
+/******************************************************
+ *
+ * All configuration values are stored in one cull
+ * master list: Master_Sched_Config_List. This list
+ * has only one element: the config element (SC_Type).
+ *
+ * The configuratin is stored in a CULL list due to the
+ * current configuration handling in the system. There
+ * are methods outside this module, which need complete
+ * access to the list. Therefore exist two methods to 
+ * access the whole configuration:
+ *
+ * - sconf_get_config_list 
+ *     (returns a pointer to the cull list 
+ *
+ * - sconf_get_config 
+ *      returns a const pointer the config object.
+ *
+ * Both methods should only be used, when there is no
+ * other way. Usualy the values in the configuration
+ * should be accessed via access-function. The module
+ * stores the position for each config element for
+ * fast access, validates the configuration, when it
+ * is changed, and pre-computes some values to return
+ * them in the right way.
+ *
+ * If the configuration is changed directly in the CULL
+ * list without using 
+ *                "sconf_set_config"
+ * , the 
+ *               "sconf_validate_config" 
+ * needs to be called to ensure that the internal data 
+ * is updated.
+ *
+ * The access is not thread save. The current implementation
+ * of the configuration does not allow an easy way to
+ * make it thread save. But if only access functions
+ * are used it should be easy to make this module thread
+ * save, when the configuration is made thread save.
+ *
+ ******************************************************/
+
+
+
+/* default values for scheduler configuration 
+ * not all defaults are defined here :-)
+ */
 #define DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME "0:7:30"
 #define _DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME 7*60+30
 #define DEFAULT_LOAD_FORMULA                "np_load_avg"
@@ -160,6 +207,9 @@ static policy_type_t policy_hierarchy_char2enum(char character);
 
 static int policy_hierarchy_verify_value(const char* value);
 
+/* array structure. pre-init. Make sure that a default value is added
+ * when the config_pos_type is edited
+ */
 static config_pos_type pos = {true, 
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  
@@ -193,19 +243,14 @@ const char *delis[] = {"=", ",", ""};
 
 /****** sge_schedd_conf/clear_pos() ********************************************
 *  NAME
-*     clear_pos() -- ??? 
+*     clear_pos() -- resets the position information 
 *
 *  SYNOPSIS
 *     static void clear_pos(void) 
 *
 *  FUNCTION
-*     ??? 
+*     is needed, when a new configuration is set 
 *
-*  INPUTS
-*     void - ??? 
-*
-*  RESULT
-*     static void - 
 *******************************************************************************/
 static void sconf_clear_pos(void){
 
@@ -329,20 +374,26 @@ static bool sconf_calc_pos(void){
 
 /****** sge_schedd_conf/schedd_conf_set_config() *******************************
 *  NAME
-*     schedd_conf_set_config() -- ??? 
+*     schedd_conf_set_config() -- overwrites the existing configuration 
 *
 *  SYNOPSIS
 *     bool schedd_conf_set_config(lList **config, lList **answer_list) 
 *
 *  FUNCTION
-*     ??? 
+*    - validates the new configuration 
+*    - precalculates some values and caches them
+*    - stores the position of each attribute in the structure
+*    - and sets the new configuration, if the validation worked
+*
+*    If the new configuration is a NULL pointer, the current configuration
+*    if deleted.
 *
 *  INPUTS
-*     lList **config      - ??? 
-*     lList **answer_list - ??? 
+*     lList **config      - new configuration (SC_Type)
+*     lList **answer_list - error messages 
 *
 *  RESULT
-*     bool - 
+*     bool - true, if it worked
 *******************************************************************************/
 bool sconf_set_config(lList **config, lList **answer_list){
    lList *store = Master_Sched_Config_List;
@@ -513,18 +564,18 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
 
 /****** sge_schedd_conf/sconf_create_default() ***************************
 *  NAME
-*     sconf_create_default() -- ??? 
+*     sconf_create_default() -- returns a default configuration 
 *
 *  SYNOPSIS
 *     lListElem* sconf_create_default() 
 *
 *  FUNCTION
-*     ??? 
-*
-*  INPUTS
+*     Creates a default configuration, but does not change the current
+*     active configuration. A set config has to be used to make the
+*     current configuration the active one.
 *
 *  RESULT
-*     lListElem* - 
+*     lListElem* - default configuration (SC_Type)
 *
 *******************************************************************************/
 lListElem *sconf_create_default()
@@ -1774,19 +1825,13 @@ const lList* sconf_get_halflife_decay_list(void){
 
 /****** sge_schedd_conf/sconf_is() *********************************************
 *  NAME
-*     sconf_is() -- ??? 
+*     sconf_is() -- checks, if a configuration exists
 *
 *  SYNOPSIS
 *     bool sconf_is(void) 
 *
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
 *  RESULT
-*     bool - 
+*     bool - true, if a configuration exists
 *
 *******************************************************************************/
 bool sconf_is(void) {
@@ -1800,19 +1845,17 @@ bool sconf_is(void) {
 
 /****** sge_schedd_conf/sconf_get_config() *************************************
 *  NAME
-*     sconf_get_config() -- ??? 
+*     sconf_get_config() -- returns a config object.  
 *
 *  SYNOPSIS
 *     const lListElem* sconf_get_config(void) 
 *
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
 *  RESULT
-*     const lListElem* - 
+*     const lListElem* - the current config object
+*
+* NOTE
+*  DO NOT USE this method. ONLY when there is NO OTHER way. All config
+*  settings can be accessed via access function.
 *
 *******************************************************************************/
 const lListElem *sconf_get_config(void){
@@ -1821,19 +1864,25 @@ const lListElem *sconf_get_config(void){
 
 /****** sge_schedd_conf/sconf_get_config_list() ********************************
 *  NAME
-*     sconf_get_config_list() -- ??? 
+*     sconf_get_config_list() -- returns a pointer to the list, which contains
+*                                the configuration
 *
 *  SYNOPSIS
 *     lList** sconf_get_config_list(void) 
 *
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
 *  RESULT
-*     lList** - 
+*     lList** - pointer to the config list
+*
+* NOTE
+*  DO NOT USE this method. ONLY when there is NO OTHER way. All config
+*  settings can be accessed via access function. The config can be set
+*  via sconf_set_config(...)
+*
+* IMPORTANT
+*
+*  If you modify the configuration by directly accessing, you have to call
+*  sconf_validate_config_ afterwards to ensure, that the caches reflect
+*  your changes.
 *
 *******************************************************************************/
 lList **sconf_get_config_list(void){
@@ -1842,15 +1891,10 @@ lList **sconf_get_config_list(void){
 
 /****** sge_schedd_conf/sconf_print_config() ***********************************
 *  NAME
-*     sconf_print_config() -- ??? 
+*     sconf_print_config() -- prints the current configuration to the INFO stream 
 *
 *  SYNOPSIS
 *     void sconf_print_config() 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
 *
 *******************************************************************************/
 void sconf_print_config(void){
@@ -2029,16 +2073,16 @@ void sconf_print_config(void){
 
 /****** sge_schedd_conf/sconf_validate_config_() *******************************
 *  NAME
-*     sconf_validate_config_() -- ??? 
+*     sconf_validate_config_() -- validates the current config 
 *
 *  SYNOPSIS
 *     bool sconf_validate_config_(lList **answer_list) 
 *
 *  FUNCTION
-*     ??? 
+*     validates the current config and updates the caches. 
 *
 *  INPUTS
-*     lList **answer_list - ??? 
+*     lList **answer_list - error messages 
 *
 *  RESULT
 *     bool - false for invalid scheduler configuration
@@ -2241,20 +2285,17 @@ bool sconf_validate_config_(lList **answer_list){
 
 /****** sge_schedd_conf/sconf_validate_config() ********************************
 *  NAME
-*     sconf_validate_config() -- ??? 
+*     sconf_validate_config() -- validate a given configuration 
 *
 *  SYNOPSIS
 *     bool sconf_validate_config(lList **answer_list, lList *config) 
 *
-*  FUNCTION
-*     ??? 
-*
 *  INPUTS
-*     lList **answer_list - ??? 
-*     lList *config       - ??? 
+*     lList **answer_list - error messages 
+*     lList *config       - config to validate 
 *
 *  RESULT
-*     bool - 
+*     bool - true, if the config is valid
 *
 *******************************************************************************/
 bool sconf_validate_config(lList **answer_list, lList *config){

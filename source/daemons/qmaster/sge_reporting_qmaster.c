@@ -75,8 +75,6 @@
 /* messages */
 #include "msg_common.h"
 
-extern lList *Master_Sched_Config_List;
-
 /* flush time in seconds 
  * JG: TODO: this should be a reporting config parameter.
  */
@@ -614,7 +612,6 @@ reporting_create_sharelog_record(lList **answer_list)
       SGE_LOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
       SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_WRITE);
       SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_WRITE);
-      SGE_LOCK(LOCK_SCHEDD_CONFIG_LST, LOCK_WRITE);
 
       /* JG: TODO: Where is calculation of the data done?
        *           Do we really do it here, or is it delivered from scheduler?
@@ -623,12 +620,10 @@ reporting_create_sharelog_record(lList **answer_list)
       sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                           Master_User_List,
                           Master_Project_List,
-                          Master_Sched_Config_List,
                           true,
                           false,
                           NULL,
                           &format);
-      SGE_UNLOCK(LOCK_SCHEDD_CONFIG_LST, LOCK_WRITE);
       SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_WRITE);
       SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_WRITE);
       SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);

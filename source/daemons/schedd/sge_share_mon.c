@@ -49,6 +49,7 @@
 #include "sge_support.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
+#include "sge_schedd_conf.h"
 
 #include "sge_sharetree_printing.h"
 
@@ -299,8 +300,9 @@ main(int argc, char **argv)
 
    while(count == -1 || count-- > 0) {
       setup_lists(&sharetree, &users, &projects, &config);
+      sconf_set_config(&config, NULL);
 
-      sge_sharetree_print(&output_dstring, sharetree, users, projects, config, group_nodes, decay_usage, names, &format);
+      sge_sharetree_print(&output_dstring, sharetree, users, projects, group_nodes, decay_usage, names, &format);
 
       if (count && strlen(format.rec_delim)) {
 	      sge_dstring_sprintf_append(&output_dstring, "%s", format.rec_delim);

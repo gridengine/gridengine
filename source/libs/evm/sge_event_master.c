@@ -1516,6 +1516,12 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 {
    const lDescr *dp = NULL;
    lList *lp = NULL;
+   bool job_jat_filter = ((type == sgeE_JOB_LIST) | 
+                          (type == sgeE_JOB_ADD) | 
+                          (type == sgeE_JOB_DEL) | 
+                          (type == sgeE_JOB_MOD) | 
+                          (type == sgeE_JOB_MOD_SCHED_PRIORITY)) ;
+
 
    /* build a list from the element */
    if (element) {
@@ -1526,13 +1532,53 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       dp = subscription[type].descr;
 
       if (fields) {
-        
+         lList *ja_template = NULL;
+         lList *ja_tasks = NULL;
          if (!dp){
             subscription[type].descr = lGetReducedDescr(lGetElemDescr(element), fields);
             dp = subscription[type].descr; 
          }
          
+         if (job_jat_filter){
+            lXchgList(element, JB_ja_tasks, &ja_tasks);
+            lXchgList(element, JB_ja_template, &ja_template);
+         }
          el = lSelectElemD(element, selection, dp, fields);
+
+         /* special handling for the JAT_Type lists stored in the job
+          * structure. 
+          */
+         if (job_jat_filter) {
+            if (el) {
+               const lCondition *jat_selection = NULL; 
+               const lEnumeration *jat_fields = NULL;
+               if (subscription[sgeE_JATASK_MOD].what){
+                  jat_selection = subscription[sgeE_JATASK_MOD].where;
+                  jat_fields = subscription[sgeE_JATASK_MOD].what;
+               }
+               else if (subscription[sgeE_JATASK_ADD].what){
+                  jat_selection = subscription[sgeE_JATASK_ADD].where;
+                  jat_fields = subscription[sgeE_JATASK_ADD].what;
+               }
+               
+               if (lGetPosViaElem(el, JB_ja_tasks) != -1) {
+                  if (jat_fields) 
+                     lSetList(el, JB_ja_tasks, lSelect("",ja_tasks, jat_selection, jat_fields));
+                  else
+                     lSetList(el, JB_ja_tasks, lCopyList("", ja_tasks));
+               } 
+               if (lGetPosViaElem(el, JB_ja_template) != -1) {
+                  if (jat_fields) 
+                     lSetList(el, JB_ja_template, lSelect("", ja_template, jat_selection, jat_fields));
+                  else
+                     lSetList(el, JB_ja_template, lCopyList("", ja_template));
+               }
+               
+            }
+            lXchgList(element, JB_ja_tasks, &ja_tasks);
+            lXchgList(element, JB_ja_template, &ja_template);
+         }
+         
          /* do not send empty elements */
          if (!el)
             return;

@@ -596,7 +596,6 @@ void
 _sge_calc_share_tree_proportions( lList *share_tree,
                                   lList *user_list,
                                   lList *project_list,
-                                  lList *config_list,
                                   lList *decay_list,
                                   u_long curr_time )
 {
@@ -605,13 +604,12 @@ _sge_calc_share_tree_proportions( lList *share_tree,
 
    DENTER(TOP_LAYER, "sge_calc_share_tree_proportions");
 
-   if (!share_tree || !config_list || !((root=lFirst(share_tree)))) {
+   if (!share_tree || !((root=lFirst(share_tree)))) {
       DEXIT;
       return;
    }
 
-   calculate_default_decay_constant(lGetUlong(lFirst(config_list),
-         SC_halftime));
+   calculate_default_decay_constant( sconf_get_halftime());
 
    total_usage = sge_calc_node_usage(root,
                                      user_list,
@@ -632,11 +630,10 @@ void
 sge_calc_share_tree_proportions( lList *share_tree,
                                  lList *user_list,
                                  lList *project_list,
-                                 lList *config_list,
                                  lList *decay_list )
 {
    _sge_calc_share_tree_proportions(share_tree, user_list, project_list,
-                                    config_list, decay_list, sge_get_gmt());
+                                    decay_list, sge_get_gmt());
    return;
 }
 

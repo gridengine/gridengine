@@ -151,6 +151,7 @@ extern "C" {
 *
 *     SGE_DOUBLE(JAT_progress_in_former_runs)         
 *        The proportion of the total job run time earlier runs achieved and secured. 
+*        No where used.
 *
 *     SGE_ULONG(JAT_stop_initiate_time)         
 *        The time when the action to initiate a job finish (i.e. job termination,
@@ -237,7 +238,7 @@ enum {
 
    JAT_pe_object,
    JAT_next_pe_task_id,
-   JAT_progress_in_former_runs,
+   /*JAT_progress_in_former_runs,*/
    JAT_stop_initiate_time,
    JAT_prio,
    JAT_ntix
@@ -280,7 +281,7 @@ SLISTDEF(JAT_Type, Task)
 
    SGE_OBJECT(JAT_pe_object, PE_Type, CULL_DEFAULT)   
    SGE_ULONG(JAT_next_pe_task_id, CULL_DEFAULT)
-   SGE_DOUBLE(JAT_progress_in_former_runs, CULL_DEFAULT | CULL_SUBLIST)         
+/*   SGE_DOUBLE(JAT_progress_in_former_runs, CULL_DEFAULT | CULL_SUBLIST)         */
    SGE_ULONG(JAT_stop_initiate_time, CULL_DEFAULT | CULL_SUBLIST)         
    SGE_DOUBLE(JAT_prio, CULL_DEFAULT)         
    SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
@@ -320,7 +321,7 @@ NAMEDEF(JATN)
 
    NAME("JAT_pe_object")
    NAME("JAT_next_pe_task_id")
-   NAME("JAT_progress_in_former_runs")
+/*   NAME("JAT_progress_in_former_runs")*/
    NAME("JAT_stop_initiate_time")
    NAME("JAT_prio")
    NAME("JAT_ntix")

@@ -232,7 +232,7 @@ static double calculate_share(ListTreeItem *item);
 static lList *buildShac(lListElem *parent, int depth);
 static ListTreeItem* CullToTree(Widget tree, ListTreeItem *parent, lList *shac);
 static lList* TreeToCull(Widget tree, ListTreeItem *item);
-static void CullToParameters(tSTREntry *data, lListElem *sep);
+static void CullToParameters(tSTREntry *data, const lListElem *sep);
 static void ParametersToCull(lListElem *sep, tSTREntry *data);
 static void qmonShareTreeSetValues(ListTreeItem *item);
 static void node_data(ListTreeItem *node, Cardinal share, lListElem *ep);
@@ -1093,11 +1093,17 @@ XtPointer cld, cad;
    share_tree = qmonMirrorList(SGE_SHARETREE_LIST);
    ul = qmonMirrorList(SGE_USER_LIST);
    pl = qmonMirrorList(SGE_PROJECT_LIST);
-   scl = qmonMirrorList(SGE_SC_LIST);
+   
+   /* TODO: SG: needs a better solution */
+   /* do we have to do this Andre? */
+   if (!sconf_is()){
+      scl = lCopyList("", qmonMirrorList(SGE_SC_LIST));
+      sconf_set_config(&scl, NULL);
+   }
    /*
    ** fill the share tree with the actual values
    */
-   sge_calc_share_tree_proportions(share_tree, ul, pl, scl, NULL);
+   sge_calc_share_tree_proportions(share_tree, ul, pl, NULL);
 
    ListTreeRefreshOff(tree);
    /*
@@ -1143,8 +1149,9 @@ XtPointer cld, cad;
    /*
    ** refresh the Sharetree Parameters section 
    */
-   if (scl) {
-      CullToParameters(&ratio_data, lFirst(scl));
+/*   if (scl) { */
+   if (sconf_is()) {
+      CullToParameters(&ratio_data, sconf_get_config());
       XmtDialogSetDialogValues(st_ratio, &ratio_data);
    }
    
@@ -1581,7 +1588,7 @@ ListTreeItem *item
 /*-------------------------------------------------------------------------*/
 static void CullToParameters(
 tSTREntry *data,
-lListElem *sep 
+const lListElem *sep 
 ) {
    lList *usage_weight_list;
    lListElem *ep;

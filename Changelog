@@ -1,3 +1,23 @@
+SG-2003-12-03-3: Bugfix:    The enhancement AH-2003-11-11-0 kept the old priority
+                            when reporting pjob tickets is turned off in a running
+                            system. The priority and mtix are set to 0, when the
+                            reporting is turned off.
+                 Changed:   scheduler                         
+
+SG-2003-12-03-2: Enhancem.: The event master JAT-Type filtering was incomplete.
+                            The JB-Type JAT-Type sub-lists are now filtered as
+                            well. 
+                            Enabled JAT-Type filtering in the scheduler
+                 Changed:   qmaster, scheduler                            
+
+SG-2003-12-03-1: Enhancem.: Updated the event client to use the event client
+                            filtering mechanisments. Also limited the subscripted
+                            events to the ones, which are really needed.
+                 Changed:   qevent                            
+
+SG-2003-12-03-0: Enhancem.: added documentation for sge_schedd_conf and 
+                            sge_event_client
+
 JG-2003-12-03-0: Bugfix:    Fixed build for HP11.
 
 SG-2003-12-02-0: Bugfix.:   The enhancement AH-2003-11-11-0 disabled the use

@@ -619,11 +619,12 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
       lListElem *template_task = NULL;
       lList *ja_task_list = lGetList(job, JB_ja_tasks);
 
+      template_task = job_get_ja_task_template_pending(job, ja_task_number); 
+
       if (ja_task_list == NULL) {
-         ja_task_list = lCreateList("", JAT_Type);
+         ja_task_list = lCreateList("", lGetElemDescr(template_task) );
          lSetList(job, JB_ja_tasks, ja_task_list);
       }
-      template_task = job_get_ja_task_template_pending(job, ja_task_number); 
       ja_task = lCopyElem(template_task);
       lAppendElem(ja_task_list, ja_task); 
    }

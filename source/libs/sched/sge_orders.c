@@ -153,14 +153,15 @@ bool update_execd
          lSetDouble(ep, OR_ntix,      lGetDouble(ja_task, JAT_ntix));
          lSetDouble(ep, OR_prio,      lGetDouble(ja_task, JAT_prio));
       }
-      else
+      else {
          lSetDouble(ep, OR_ticket, 0.0);
-
+         lSetDouble(ep, OR_ntix, 0.0); 
+         lSetDouble(ep, OR_prio, 0.0);
+      }
       if (type == ORT_tickets|| type == ORT_ptickets) {
          lListElem *jep;
          lList *jlist = lCreateList("", lGetElemDescr(job));
          lList *tlist;
-
          /* Create a reduced task list with only the required fields */
          tlist = lCreateList("", lGetElemDescr(ja_task));
          lAppendElem(tlist, lCopyElem(ja_task));
@@ -180,7 +181,7 @@ bool update_execd
                JAT_prio,
                JAT_ntix,
                JAT_granted_destin_identifier_list);
-               
+
                tix2_what = lWhat("%T(%I %I %I %I %I %I %I %I %I %I)",
                lGetElemDescr(ja_task), 
                JAT_task_number, 
@@ -201,10 +202,12 @@ bool update_execd
                abort();
             }
 
-            if (update_execd)
+            if (update_execd){
                tmp_list = lSelect("", tlist, NULL, tix_what);
-            else
+            }
+            else {
                tmp_list = lSelect("", tlist, NULL, tix2_what);
+            }
 
             if (tmp_list) {
                lFreeList(tlist);
@@ -256,7 +259,7 @@ bool update_execd
          lSetList(ep, OR_joker, jlist);
       }
    }
-   
+
    lSetUlong(ep, OR_seq_no, get_seq_nr());
    lSetUlong(ep, OR_type, type);
    lSetUlong(ep, OR_job_number, lGetUlong(job, JB_job_number));

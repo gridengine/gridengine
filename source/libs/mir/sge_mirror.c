@@ -85,7 +85,7 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
                                               void *clientdata,
-                                              lCondition *where, lEnumeration *what);
+                                              const lCondition *where, const lEnumeration *what);
 
 static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type);     
 
@@ -298,7 +298,7 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
                                       sge_mirror_callback callback_before, 
                                       sge_mirror_callback callback_after, 
                                       void *clientdata,
-                                      lCondition *where, lEnumeration *what)
+                                      const lCondition *where, const lEnumeration *what)
 {
    sge_mirror_error ret = SGE_EM_OK;
 
@@ -330,7 +330,7 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
                                               void *clientdata,
-                                              lCondition *where, lEnumeration *what)
+                                              const lCondition *where, const lEnumeration *what)
 {
 lListElem *what_el = lWhatToElem(what);
 lListElem *where_el = lWhereToElem(where);
@@ -1650,7 +1650,6 @@ sge_mirror_error sge_mirror_update_master_list(lList **list, const lDescr *list_
             DEXIT;
             return SGE_EM_KEY_NOT_FOUND;
          }
-
          lRemoveElem(*list, ep);
          data_list = lGetList(event, ET_new_version);
          lAppendElem(*list, lDechainElem(data_list, lFirst(data_list)));

@@ -434,8 +434,7 @@ print_hdr(dstring *out, const format_t *format)
 *******************************************************************************/
 void
 sge_sharetree_print(dstring *out, lList *sharetree, lList *users, 
-                    lList *projects, lList *config, 
-                    bool group_nodes, bool decay_usage, 
+                    lList *projects, bool group_nodes, bool decay_usage, 
                     const char **names, const format_t *format)
 {
 
@@ -453,7 +452,7 @@ sge_sharetree_print(dstring *out, lList *sharetree, lList *users,
       curr_time = sge_get_gmt();
    }
 
-   _sge_calc_share_tree_proportions(sharetree, users, projects, config, NULL, 
+   _sge_calc_share_tree_proportions(sharetree, users, projects, NULL, 
                                     curr_time);
 
    print_nodes(out, root, NULL, NULL, users, projects, 

@@ -163,8 +163,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
    job_id = lGetUlong(*pending_job, JB_job_number);
    ja_task_list = lGetList(*pending_job, JB_ja_tasks);
    ja_task = lFirst(ja_task_list);
-   running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]), 
-                               JB_job_number, job_id);
+   
    /*
     * Create list for running jobs
     */
@@ -172,7 +171,10 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       const lDescr *descriptor = lGetElemDescr(*pending_job);
       *(splitted_jobs[SPLIT_RUNNING]) = lCreateList("", descriptor);
    }
-
+   else {
+      running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]), 
+                               JB_job_number, job_id);
+   }
    /*
     * Create a running job if it does not exist aleady 
     */
@@ -194,15 +196,6 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       lAppendElem(*(splitted_jobs[SPLIT_RUNNING]), running_job); 
    } 
 
-   /*
-    * Create an array task list if necessary
-    */
-   r_ja_task_list = lGetList(running_job, JB_ja_tasks); 
-   if (r_ja_task_list == NULL) {
-      r_ja_task_list = lCreateList("", JAT_Type);
-      lSetList(running_job, JB_ja_tasks, r_ja_task_list);
-   }
-   
    /* 
     * Create an array instance and add it to the running job
     * or move the existing array task into the running job 
@@ -221,12 +214,23 @@ void job_move_first_pending_to_running(lListElem **pending_job,
        */
       if(ja_task == NULL) {
          ja_task = job_create_task(*pending_job, NULL, ja_task_id);
+         
       }
       ja_task_list = lGetList(*pending_job, JB_ja_tasks);
    }
+  
+   /*
+    * Create an array task list if necessary
+    */
+   r_ja_task_list = lGetList(running_job, JB_ja_tasks); 
+   if (r_ja_task_list == NULL) {
+      r_ja_task_list = lCreateList("", lGetElemDescr(ja_task));
+      lSetList(running_job, JB_ja_tasks, r_ja_task_list);
+   }
+  
    lDechainElem(ja_task_list, ja_task);
    lAppendElem(r_ja_task_list, ja_task); 
-
+   
    /*
     * Remove pending job if there are no pending tasks anymore
     */

@@ -504,7 +504,7 @@ void cleanup_default_scheduler(void)
 }
 
 bool 
-sge_process_schedd_conf_event(sge_event_type type, sge_event_action action, 
+sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
                                   lListElem *event, void *clientdata)
 {
    lListElem *ep;
@@ -547,7 +547,7 @@ sge_process_schedd_conf_event(sge_event_type type, sge_event_action action,
 }
 
 bool 
-sge_process_job_event_before(sge_event_type type, sge_event_action action, 
+sge_process_job_event_before(sge_object_type type, sge_event_action action, 
                              lListElem *event, void *clientdata)
 {
    u_long32 job_id;
@@ -626,7 +626,7 @@ sge_process_job_event_before(sge_event_type type, sge_event_action action,
    return true;
 }   
 
-bool sge_process_job_event_after(sge_event_type type, sge_event_action action, 
+bool sge_process_job_event_after(sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata)
 {
    u_long32 job_id = 0;
@@ -740,7 +740,7 @@ bool sge_process_job_event_after(sge_event_type type, sge_event_action action,
 
 
 bool 
-sge_process_ja_task_event_before(sge_event_type type, 
+sge_process_ja_task_event_before(sge_object_type type, 
                                  sge_event_action action, 
                                  lListElem *event, void *clientdata)
 {
@@ -823,7 +823,7 @@ sge_process_ja_task_event_before(sge_event_type type,
  * Do we really need it?
  * Isn't a job delete event sent after the last array task exited?
  */
-bool sge_process_ja_task_event_after(sge_event_type type, 
+bool sge_process_ja_task_event_after(sge_object_type type, 
                                     sge_event_action action, 
                                     lListElem *event, void *clientdata)
 {
@@ -852,7 +852,7 @@ bool sge_process_ja_task_event_after(sge_event_type type,
    return true;
 }
 
-bool sge_process_userset_event_after(sge_event_type type, 
+bool sge_process_userset_event_after(sge_object_type type, 
                                      sge_event_action action, 
                                      lListElem *event, void *clientdata)
 {
@@ -863,7 +863,7 @@ bool sge_process_userset_event_after(sge_event_type type,
    return true;
 }
 
-bool sge_process_schedd_monitor_event(sge_event_type type, 
+bool sge_process_schedd_monitor_event(sge_object_type type, 
                                      sge_event_action action, 
                                      lListElem *event, void *clientdata)
 {
@@ -874,7 +874,7 @@ bool sge_process_schedd_monitor_event(sge_event_type type,
    return true;
 }   
 
-bool sge_process_global_config_event(sge_event_type type, 
+bool sge_process_global_config_event(sge_object_type type, 
                                     sge_event_action action, 
                                     lListElem *event, void *clientdata)
 {
@@ -910,32 +910,32 @@ static void sge_rebuild_access_tree(lList *job_list, int trace_running)
 int subscribe_default_scheduler(void)
 {
    /* subscribe event types for the mirroring interface */
-   sge_mirror_subscribe(SGE_EMT_CKPT,           NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_COMPLEX,        NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_EXECHOST,       NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_SHARETREE,      NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_PROJECT,        NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_PE,             NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_QUEUE,          NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_USER,           NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_CKPT,           NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_COMPLEX,        NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_EXECHOST,       NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_QUEUE,          NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL);
   
    /* event types with callbacks */
-   sge_mirror_subscribe(SGE_EMT_SCHEDD_CONF,    NULL, 
+   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    NULL, 
                         sge_process_schedd_conf_event,      NULL);
                                                 
-   sge_mirror_subscribe(SGE_EMT_SCHEDD_MONITOR, NULL, 
+   sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
                         sge_process_schedd_monitor_event,   NULL);
                                                 
-   sge_mirror_subscribe(SGE_EMT_GLOBAL_CONFIG,  NULL, 
+   sge_mirror_subscribe(SGE_TYPE_GLOBAL_CONFIG,  NULL, 
                         sge_process_global_config_event,    NULL);
                                                 
-   sge_mirror_subscribe(SGE_EMT_JOB,            sge_process_job_event_before, 
+   sge_mirror_subscribe(SGE_TYPE_JOB,            sge_process_job_event_before, 
                         sge_process_job_event_after,        NULL);
 
-   sge_mirror_subscribe(SGE_EMT_JATASK,         sge_process_ja_task_event_before, 
+   sge_mirror_subscribe(SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
                         sge_process_ja_task_event_after,    NULL);
                                                 
-   sge_mirror_subscribe(SGE_EMT_USERSET,        NULL, 
+   sge_mirror_subscribe(SGE_TYPE_USERSET,        NULL, 
                         sge_process_userset_event_after,    NULL);
 
    /* set flush parameters for job */

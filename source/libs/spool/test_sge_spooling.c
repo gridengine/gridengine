@@ -82,7 +82,7 @@
  *           other interfaces, e.g. use callbacks).
  *            
  *           Instead of hardcoding each list, we could loop over
- *           the sge_event_type enum. Problem is currently that
+ *           the sge_object_type enum. Problem is currently that
  *           a certain order of unspooling is required.
  *           This could be eliminated by splitting the read list 
  *           functions (from classic spooling) into reading and 
@@ -101,79 +101,79 @@ static bool read_spooled_data(void)
    context = spool_get_default_context();
 
    /* cluster configuration */
-   spool_read_list(context, &Master_Config_List, SGE_EMT_CONFIG);
+   spool_read_list(context, &Master_Config_List, SGE_TYPE_CONFIG);
    DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
 
    /* complexes */
-   spool_read_list(context, &Master_Complex_List, SGE_EMT_COMPLEX);
+   spool_read_list(context, &Master_Complex_List, SGE_TYPE_COMPLEX);
    DPRINTF(("read %d entries to Master_Complex_List\n", lGetNumberOfElem(Master_Complex_List)));
 
    /* hosts */
-   spool_read_list(context, &Master_Exechost_List, SGE_EMT_EXECHOST);
+   spool_read_list(context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
    DPRINTF(("read %d entries to Master_Exechost_List\n", lGetNumberOfElem(Master_Exechost_List)));
-   spool_read_list(context, &Master_Adminhost_List, SGE_EMT_ADMINHOST);
+   spool_read_list(context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
    DPRINTF(("read %d entries to Master_Adminhost_List\n", lGetNumberOfElem(Master_Adminhost_List)));
-   spool_read_list(context, &Master_Submithost_List, SGE_EMT_SUBMITHOST);
+   spool_read_list(context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
    DPRINTF(("read %d entries to Master_Submithost_List\n", lGetNumberOfElem(Master_Submithost_List)));
 
    /* managers */
-   spool_read_list(context, &Master_Manager_List, SGE_EMT_MANAGER);
+   spool_read_list(context, &Master_Manager_List, SGE_TYPE_MANAGER);
    DPRINTF(("read %d entries to Master_Manager_List\n", lGetNumberOfElem(Master_Manager_List)));
 
    /* host groups */
-   spool_read_list(context, &Master_Host_Group_List, SGE_EMT_HOSTGROUP);
+   spool_read_list(context, &Master_Host_Group_List, SGE_TYPE_HOSTGROUP);
    DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_Host_Group_List)));
 
    /* operators */
-   spool_read_list(context, &Master_Operator_List, SGE_EMT_OPERATOR);
+   spool_read_list(context, &Master_Operator_List, SGE_TYPE_OPERATOR);
    DPRINTF(("read %d entries to Master_Operator_List\n", lGetNumberOfElem(Master_Operator_List)));
 
    /* usersets */
-   spool_read_list(context, &Master_Userset_List, SGE_EMT_USERSET);
+   spool_read_list(context, &Master_Userset_List, SGE_TYPE_USERSET);
    DPRINTF(("read %d entries to Master_Userset_List\n", lGetNumberOfElem(Master_Userset_List)));
 
    /* calendars */
-   spool_read_list(context, &Master_Calendar_List, SGE_EMT_CALENDAR);
+   spool_read_list(context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
    DPRINTF(("read %d entries to Master_Calendar_List\n", lGetNumberOfElem(Master_Calendar_List)));
 
 #ifndef __SGE_NO_USERMAPPING__
    /* user mapping */
-   spool_read_list(context, &Master_Usermapping_Entry_List, SGE_EMT_USERMAPPING);
+   spool_read_list(context, &Master_Usermapping_Entry_List, SGE_TYPE_USERMAPPING);
    DPRINTF(("read %d entries to Master_Usermapping_List\n", lGetNumberOfElem(Master_Usermapping_Entry_List)));
 #endif
 
    /* queues */
-   spool_read_list(context, &Master_Queue_List, SGE_EMT_QUEUE);
+   spool_read_list(context, &Master_Queue_List, SGE_TYPE_QUEUE);
    DPRINTF(("read %d entries to Master_Queue_List\n", lGetNumberOfElem(Master_Queue_List)));
 
    /* pes */
-   spool_read_list(context, &Master_Pe_List, SGE_EMT_PE);
+   spool_read_list(context, &Master_Pe_List, SGE_TYPE_PE);
    DPRINTF(("read %d entries to Master_Pe_List\n", lGetNumberOfElem(Master_Pe_List)));
 
    /* ckpt */
-   spool_read_list(context, &Master_Ckpt_List, SGE_EMT_CKPT);
+   spool_read_list(context, &Master_Ckpt_List, SGE_TYPE_CKPT);
    DPRINTF(("read %d entries to Master_Ckpt_List\n", lGetNumberOfElem(Master_Ckpt_List)));
 
    /* jobs */
-   spool_read_list(context, &Master_Job_List, SGE_EMT_JOB);
+   spool_read_list(context, &Master_Job_List, SGE_TYPE_JOB);
    DPRINTF(("read %d entries to Master_Job_List\n", lGetNumberOfElem(Master_Job_List)));
 
    /* user list */
-   spool_read_list(context, &Master_User_List, SGE_EMT_USER);
+   spool_read_list(context, &Master_User_List, SGE_TYPE_USER);
    DPRINTF(("read %d entries to Master_User_List\n", lGetNumberOfElem(Master_User_List)));
 
    /* project list */
-   spool_read_list(context, &Master_Project_List, SGE_EMT_PROJECT);
+   spool_read_list(context, &Master_Project_List, SGE_TYPE_PROJECT);
    DPRINTF(("read %d entries to Master_Project_List\n", lGetNumberOfElem(Master_Project_List)));
 
    /* sharetree */
-   spool_read_list(context, &Master_Sharetree_List, SGE_EMT_SHARETREE);
+   spool_read_list(context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
    DPRINTF(("read %d entries to Master_Sharetree_List\n", lGetNumberOfElem(Master_Sharetree_List)));
 
    return true;
 }
 
-bool spool_event_before(sge_event_type type, sge_event_action action, 
+bool spool_event_before(sge_object_type type, sge_event_action action, 
                        lListElem *event, void *clientdata)
 {
    lListElem *context, *ep;
@@ -184,16 +184,16 @@ bool spool_event_before(sge_event_type type, sge_event_action action,
 
    context = spool_get_default_context();
    
-   master_list = sge_mirror_get_type_master_list(type);
-   key_nm      = sge_mirror_get_type_key_nm(type);
+   master_list = object_type_get_master_list(type);
+   key_nm      = object_type_get_key_nm(type);
    new_list    = lGetList(event, ET_new_version);
 
    if(action == SGE_EMA_LIST) {
       switch(type) {
-         case SGE_EMT_ADMINHOST:      
-         case SGE_EMT_EXECHOST:
-         case SGE_EMT_SUBMITHOST:
-         case SGE_EMT_CONFIG:
+         case SGE_TYPE_ADMINHOST:      
+         case SGE_TYPE_EXECHOST:
+         case SGE_TYPE_SUBMITHOST:
+         case SGE_TYPE_CONFIG:
             for_each(ep, *master_list) {
                lListElem *new_ep;
 
@@ -219,20 +219,20 @@ bool spool_event_before(sge_event_type type, sge_event_action action,
                }
             }
             break;
-         case SGE_EMT_CALENDAR:
-         case SGE_EMT_CKPT:
-         case SGE_EMT_COMPLEX:
-         case SGE_EMT_MANAGER:
-         case SGE_EMT_OPERATOR:
-         case SGE_EMT_PE:
-         case SGE_EMT_PROJECT:
-         case SGE_EMT_QUEUE:
-         case SGE_EMT_USER:
-         case SGE_EMT_USERSET:
+         case SGE_TYPE_CALENDAR:
+         case SGE_TYPE_CKPT:
+         case SGE_TYPE_COMPLEX:
+         case SGE_TYPE_MANAGER:
+         case SGE_TYPE_OPERATOR:
+         case SGE_TYPE_PE:
+         case SGE_TYPE_PROJECT:
+         case SGE_TYPE_QUEUE:
+         case SGE_TYPE_USER:
+         case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
-         case SGE_EMT_USERMAPPING:
+         case SGE_TYPE_USERMAPPING:
 #endif
-         case SGE_EMT_HOSTGROUP:
+         case SGE_TYPE_HOSTGROUP:
             for_each(ep, *master_list) {
                lListElem *new_ep;
 
@@ -265,8 +265,8 @@ bool spool_event_before(sge_event_type type, sge_event_action action,
 
    if(action == SGE_EMA_DEL) {
       switch(type) {
-            case SGE_EMT_JATASK:
-            case SGE_EMT_PETASK:
+            case SGE_TYPE_JATASK:
+            case SGE_TYPE_PETASK:
                {
                   u_long32 job_id, ja_task_id;
                   const char *pe_task_id;
@@ -280,7 +280,7 @@ bool spool_event_before(sge_event_type type, sge_event_action action,
                   spool_delete_object(context, type, job_key);
                }
                break;
-            case SGE_EMT_JOB:
+            case SGE_TYPE_JOB:
                {
                   u_long32 job_id;
                   const char *job_key;
@@ -300,7 +300,7 @@ bool spool_event_before(sge_event_type type, sge_event_action action,
    return true;
 }
 
-bool spool_event_after(sge_event_type type, sge_event_action action, 
+bool spool_event_after(sge_object_type type, sge_event_action action, 
                       lListElem *event, void *clientdata)
 {
    lListElem *context, *ep;
@@ -312,13 +312,13 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
 
    context = spool_get_default_context();
    
-   master_list = sge_mirror_get_type_master_list(type);
-   key_nm      = sge_mirror_get_type_key_nm(type);
+   master_list = object_type_get_master_list(type);
+   key_nm      = object_type_get_key_nm(type);
 
    switch(action) {
       case SGE_EMA_LIST:
          switch(type) {
-            case SGE_EMT_SHARETREE:
+            case SGE_TYPE_SHARETREE:
                ep = lFirst(*master_list);
                if(ep == NULL) {
                   /* delete sharetree */
@@ -328,8 +328,8 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
                   spool_write_object(context, ep, NULL, type);
                }
                break;
-            case SGE_EMT_MANAGER:
-            case SGE_EMT_OPERATOR:
+            case SGE_TYPE_MANAGER:
+            case SGE_TYPE_OPERATOR:
                /* The "classic" spooling functions always write all list entries
                 * to the spool file, not individual ones.
                 * Therefore we have to call the writing function once after
@@ -348,24 +348,24 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
    
       case SGE_EMA_DEL:
          switch(type) {
-            case SGE_EMT_ADMINHOST:
-            case SGE_EMT_EXECHOST:
-            case SGE_EMT_SUBMITHOST:
-            case SGE_EMT_CONFIG:
-            case SGE_EMT_CALENDAR:
-            case SGE_EMT_CKPT:
-            case SGE_EMT_COMPLEX:
-            case SGE_EMT_MANAGER:
-            case SGE_EMT_OPERATOR:
-            case SGE_EMT_PE:
-            case SGE_EMT_PROJECT:
-            case SGE_EMT_QUEUE:
-            case SGE_EMT_USER:
-            case SGE_EMT_USERSET:
+            case SGE_TYPE_ADMINHOST:
+            case SGE_TYPE_EXECHOST:
+            case SGE_TYPE_SUBMITHOST:
+            case SGE_TYPE_CONFIG:
+            case SGE_TYPE_CALENDAR:
+            case SGE_TYPE_CKPT:
+            case SGE_TYPE_COMPLEX:
+            case SGE_TYPE_MANAGER:
+            case SGE_TYPE_OPERATOR:
+            case SGE_TYPE_PE:
+            case SGE_TYPE_PROJECT:
+            case SGE_TYPE_QUEUE:
+            case SGE_TYPE_USER:
+            case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
-            case SGE_EMT_USERMAPPING:
+            case SGE_TYPE_USERMAPPING:
 #endif   
-            case SGE_EMT_HOSTGROUP:
+            case SGE_TYPE_HOSTGROUP:
                key = lGetString(event, ET_strkey);
                spool_delete_object(context, type, key);
 
@@ -377,15 +377,15 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
       case SGE_EMA_ADD:
       case SGE_EMA_MOD:
          switch(type) {
-            case SGE_EMT_ADMINHOST:
-            case SGE_EMT_EXECHOST:
-            case SGE_EMT_SUBMITHOST:
-            case SGE_EMT_CONFIG:
+            case SGE_TYPE_ADMINHOST:
+            case SGE_TYPE_EXECHOST:
+            case SGE_TYPE_SUBMITHOST:
+            case SGE_TYPE_CONFIG:
                key = lGetString(event, ET_strkey);
                ep = lGetElemHost(*master_list, key_nm, lGetString(event, ET_strkey));
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
-                         sge_mirror_get_type_name(type), key));
+                         object_type_get_name(type), key));
                   DEXIT;
                   return false;
                }
@@ -393,25 +393,25 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
                spool_write_object(context, ep, key, type);
                break;
 
-            case SGE_EMT_CALENDAR:
-            case SGE_EMT_CKPT:
-            case SGE_EMT_COMPLEX:
-            case SGE_EMT_MANAGER:
-            case SGE_EMT_OPERATOR:
-            case SGE_EMT_PE:
-            case SGE_EMT_PROJECT:
-            case SGE_EMT_QUEUE:
-            case SGE_EMT_USER:
-            case SGE_EMT_USERSET:
+            case SGE_TYPE_CALENDAR:
+            case SGE_TYPE_CKPT:
+            case SGE_TYPE_COMPLEX:
+            case SGE_TYPE_MANAGER:
+            case SGE_TYPE_OPERATOR:
+            case SGE_TYPE_PE:
+            case SGE_TYPE_PROJECT:
+            case SGE_TYPE_QUEUE:
+            case SGE_TYPE_USER:
+            case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
-            case SGE_EMT_USERMAPPING:
+            case SGE_TYPE_USERMAPPING:
 #endif
-            case SGE_EMT_HOSTGROUP:
+            case SGE_TYPE_HOSTGROUP:
                key = lGetString(event, ET_strkey);
                ep = lGetElemStr(*master_list, key_nm, lGetString(event, ET_strkey));
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
-                         sge_mirror_get_type_name(type), key));
+                         object_type_get_name(type), key));
                   DEXIT;
                   return false;
                }
@@ -419,19 +419,19 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
                spool_write_object(context, ep, key, type);
                break;
 
-            case SGE_EMT_SCHEDD_CONF:
+            case SGE_TYPE_SCHEDD_CONF:
                ep = lFirst(*master_list);
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element not found\n",
-                         sge_mirror_get_type_name(type)));
+                         object_type_get_name(type)));
                   DEXIT;
                   return false;
                }
                spool_write_object(context, ep, NULL, type);
                break;
-            case SGE_EMT_JATASK:
-            case SGE_EMT_PETASK:
-            case SGE_EMT_JOB:
+            case SGE_TYPE_JATASK:
+            case SGE_TYPE_PETASK:
+            case SGE_TYPE_JOB:
                {
                   u_long32 job_id, ja_task_id;
                   const char *pe_task_id;
@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
    
    /* initialize mirroring */
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_EMT_ALL, spool_event_before, spool_event_after, NULL);
+   sge_mirror_subscribe(SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL);
    profiling_start();
 
    while(!shut_me_down) {

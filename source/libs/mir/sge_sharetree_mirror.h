@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-bool sharetree_update_master_list(sge_event_type type, sge_event_action action,
+#include "sge_object.h"
+
+bool sharetree_update_master_list(sge_object_type type, sge_event_action action,
                                  lListElem *event, void *clientdata);
 
 #endif /* __SGE_SHARETREE_MIRROR_H */

@@ -35,7 +35,7 @@
 #include "basis_types.h"
 
 /* sge_mirror.c */
-#define MSG_MIRROR_INVALID_EVENT_GROUP_SI          _MESSAGE(67000, _("%s: invalid event group %d\n"))
+#define MSG_MIRROR_INVALID_OBJECT_TYPE_SI          _MESSAGE(67000, _("%s: invalid object type %d\n"))
 #define MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED      _MESSAGE(67001, _("qmaster alive timeout expired\n"))
 #define MSG_MIRROR_CALLBACKFAILED_S                _MESSAGE(67002, _("callback function for event "SFQ" failed\n"))
 

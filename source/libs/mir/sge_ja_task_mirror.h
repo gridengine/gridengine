@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-bool ja_task_update_master_list(sge_event_type type, sge_event_action action,
+#include "sge_object.h"
+
+bool ja_task_update_master_list(sge_object_type type, sge_event_action action,
                                lListElem *event, void *clientdata);
 
 bool ja_task_update_master_list_usage(lListElem *event);

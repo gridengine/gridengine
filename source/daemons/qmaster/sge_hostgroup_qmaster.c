@@ -441,7 +441,7 @@ gdi_object_t *object
  
    if (!spool_write_object(spool_get_default_context(), upe, 
                            lGetString(upe, GRP_group_name), 
-                           SGE_EMT_HOSTGROUP)) {
+                           SGE_TYPE_HOSTGROUP)) {
       const char* groupName = NULL;
       groupName = lGetString(upe, GRP_group_name); 
       ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, groupName ));

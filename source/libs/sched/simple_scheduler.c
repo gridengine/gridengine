@@ -73,7 +73,7 @@ static void get_workload_info(void);
 static void get_policy_info(void);
 
 /* implementation of a simple job scheduler */
-static int remove_finished_job(sge_event_type type, sge_event_action action, 
+static int remove_finished_job(sge_object_type type, sge_event_action action, 
                                lListElem *event, void *clientdata);
 static int queue_get_free_slots(lListElem *queue);
 static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_long32 *procs);
@@ -81,7 +81,7 @@ static void simple_scheduler(void);
 static void delete_some_jobs(void);
 
 
-static bool remove_finished_job(sge_event_type type, sge_event_action action, 
+static bool remove_finished_job(sge_object_type type, sge_event_action action, 
                                lListElem *event, void *clientdata)
 {
    /* if we get a final usage event for a ja_task,
@@ -554,12 +554,12 @@ static bool register_scheduler()
 
    /* initialize mirroring interface */
    sge_mirror_initialize(EV_ID_SCHEDD, "simple_scheduler");
-   sge_mirror_subscribe(SGE_EMT_ALL, NULL, NULL, NULL); 
+   sge_mirror_subscribe(SGE_TYPE_ALL, NULL, NULL, NULL); 
 
    /* in an sgeee system we have to explicitly remove finished jobs 
     * from qmaster 
     */
-   sge_mirror_subscribe(SGE_EMT_JOB, remove_finished_job, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JOB, remove_finished_job, NULL, NULL);
 
    return true;
 }

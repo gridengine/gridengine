@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-bool schedd_conf_update_master_list(sge_event_type type, 
+#include "sge_object.h"
+
+bool schedd_conf_update_master_list(sge_object_type type, 
                                     sge_event_action action,
                                     lListElem *event, void *clientdata);
 

@@ -355,7 +355,7 @@ gdi_object_t *object
 ) {  
    DENTER(TOP_LAYER, "usermap_spool");
  
-   if (!spool_write_object(spool_get_default_context(), upe, lGetString(upe, UME_cluster_user), SGE_EMT_USERMAPPING)) {
+   if (!spool_write_object(spool_get_default_context(), upe, lGetString(upe, UME_cluster_user), SGE_TYPE_USERMAPPING)) {
       const char* clusterUser = NULL;
       clusterUser = lGetString(upe, UME_cluster_user); 
       ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));

@@ -133,7 +133,7 @@ spool_template_default_startup_func(const lListElem *rule)
 *     spool_template_default_list_func(const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      lList **list, 
-*                                      const sge_event_type event_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
@@ -141,7 +141,7 @@ spool_template_default_startup_func(const lListElem *rule)
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_event_type event_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -156,7 +156,7 @@ spool_template_default_startup_func(const lListElem *rule)
 *******************************************************************************/
 bool
 spool_template_default_list_func(const lListElem *type, const lListElem *rule,
-                                    lList **list, const sge_event_type event_type)
+                                    lList **list, const sge_object_type event_type)
 {
    DENTER(TOP_LAYER, "spool_template_default_list_func");
 
@@ -173,7 +173,7 @@ spool_template_default_list_func(const lListElem *type, const lListElem *rule,
 *     spool_template_default_read_func(const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      const char *key, 
-*                                      const sge_event_type event_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
@@ -181,7 +181,7 @@ spool_template_default_list_func(const lListElem *type, const lListElem *rule,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_event_type event_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -197,7 +197,7 @@ spool_template_default_list_func(const lListElem *type, const lListElem *rule,
 lListElem *
 spool_template_default_read_func(const lListElem *type, const lListElem *rule,
                                  const char *key, 
-                                 const sge_event_type event_type)
+                                 const sge_object_type event_type)
 {
    lListElem *ep = NULL;
 
@@ -217,7 +217,7 @@ spool_template_default_read_func(const lListElem *type, const lListElem *rule,
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
-*                                       const sge_event_type event_type) 
+*                                       const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate template spooling functions.
@@ -227,7 +227,7 @@ spool_template_default_read_func(const lListElem *type, const lListElem *rule,
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_event_type event_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -243,7 +243,7 @@ spool_template_default_read_func(const lListElem *type, const lListElem *rule,
 bool
 spool_template_default_write_func(const lListElem *type, const lListElem *rule, 
                                   const lListElem *object, const char *key, 
-                                  const sge_event_type event_type)
+                                  const sge_object_type event_type)
 {
    DENTER(TOP_LAYER, "spool_template_default_write_func");
 
@@ -260,7 +260,7 @@ spool_template_default_write_func(const lListElem *type, const lListElem *rule,
 *     spool_template_default_delete_func(const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
-*                                        const sge_event_type event_type) 
+*                                        const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Deletes an object in the template spooling.
@@ -269,7 +269,7 @@ spool_template_default_write_func(const lListElem *type, const lListElem *rule,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_event_type event_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -285,7 +285,7 @@ spool_template_default_write_func(const lListElem *type, const lListElem *rule,
 bool
 spool_template_default_delete_func(const lListElem *type, const lListElem *rule,
                                    const char *key, 
-                                   const sge_event_type event_type)
+                                   const sge_object_type event_type)
 {
    DENTER(TOP_LAYER, "spool_template_default_delete_func");
 

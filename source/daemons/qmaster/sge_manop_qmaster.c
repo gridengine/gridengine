@@ -124,8 +124,8 @@ DTRACE;
 
    /* update on file */
    if(!spool_write_object(spool_get_default_context(), added, manop_name,
-                          target == SGE_MANAGER_LIST ? SGE_EMT_MANAGER : 
-                                                       SGE_EMT_OPERATOR)) {
+                          target == SGE_MANAGER_LIST ? SGE_TYPE_MANAGER : 
+                                                       SGE_TYPE_OPERATOR)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
@@ -224,8 +224,8 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
    /* update on file */
       if (!spool_delete_object(spool_get_default_context(), 
-                               target == SGE_MANAGER_LIST ? SGE_EMT_MANAGER :
-                                                            SGE_EMT_OPERATOR,
+                               target == SGE_MANAGER_LIST ? SGE_TYPE_MANAGER :
+                                                            SGE_TYPE_OPERATOR,
                                manop_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);

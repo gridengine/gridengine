@@ -231,7 +231,7 @@ gdi_object_t *object
    /* write user or project to file */
    if (!spool_write_object(spool_get_default_context(), upe, 
                            lGetString(upe, object->key_nm), 
-                           user_flag ? SGE_EMT_USER : SGE_EMT_PROJECT)) {
+                           user_flag ? SGE_TYPE_USER : SGE_TYPE_PROJECT)) {
       /* answer list gets filled in write_userprj() */
       DEXIT;
       return 1;
@@ -352,7 +352,7 @@ int user        /* =1 user, =0 project */
 
    /* delete user or project file */
    if (!spool_delete_object(spool_get_default_context(), 
-                            user ? SGE_EMT_USER : SGE_EMT_PROJECT, name)) {
+                            user ? SGE_TYPE_USER : SGE_TYPE_PROJECT, name)) {
       DEXIT;
       return STATUS_EDISK;
    }

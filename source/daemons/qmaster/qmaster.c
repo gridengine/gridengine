@@ -743,7 +743,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
       spool_write_object(spool_get_default_context(), hep, 
-                         lGetHost(hep, EH_name), SGE_EMT_EXECHOST);
+                         lGetHost(hep, EH_name), SGE_TYPE_EXECHOST);
       if (!is_nohist()) {
          write_host_history(hep);
       }

@@ -231,7 +231,7 @@ const char *sge_ctime32(u_long32 *i, dstring *buffer)
 #endif
    time_t temp = *i;
 
-#if 0
+#if defined(AIX42)
    /* if ctime_r() does not exist a mutex must be used to guard *all* ctime() calls */
    s = ctime((time_t *)&temp);
 #else 

@@ -39,9 +39,27 @@
 #include "sge_string.h"
 
 #include "sge_all_listsL.h"
-#include "sge_answer.h"
+#include "sge_calendar.h"
+#include "sge_ckpt.h"
+#include "sge_complex.h"
+#include "sge_conf.h"
+#include "sge_host.h"
+#include "sge_hostgroup.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
+#include "sge_manop.h"
+#include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_schedd_conf.h"
+#include "sge_sharetree.h"
+#include "sge_usermap.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
+
+#include "sge_answer.h"
 #include "sge_range.h"
+
 #include "sge_object.h"
 
 #include "gdi_utility.h"
@@ -50,7 +68,49 @@
 #include "msg_sgeobjlib.h"
 
 
-/****** sgeobj/object/object_has_type() ***************************************
+/* Datastructure for internal storage of object/message related information */
+typedef struct {
+   lList **list;                          /* master list                    */
+   const char *type_name;                 /* type name, e.g. "JOB"          */
+   lDescr *descr;                         /* descriptor, e.g. JB_Type       */
+   const int key_nm;                      /* nm of key attribute            */
+} object_description;
+
+/* One entry per event type */
+static object_description object_base[SGE_TYPE_ALL] = {
+   /* master list                    name                 descr      key               */
+   { &Master_Adminhost_List,         "ADMINHOST",         AH_Type,   AH_name           },
+   { &Master_Calendar_List,          "CALENDAR",          CAL_Type,  CAL_name          },
+   { &Master_Ckpt_List,              "CKPT",              CK_Type,   CK_name           },
+   { &Master_Complex_List,           "COMPLEX",           CX_Type,   CX_name           },
+   { &Master_Config_List,            "CONFIG",            CONF_Type, CONF_hname        },
+   { NULL,                           "GLOBAL_CONFIG",     NULL,      NoName            },
+   { &Master_Exechost_List,          "EXECHOST",          EH_Type,   EH_name           },
+   { NULL,                           "JATASK",            JAT_Type,  JAT_task_number   },
+   { NULL,                           "PETASK",            PET_Type,  PET_id            },
+   { &Master_Job_List,               "JOB",               JB_Type,   JB_job_number     },
+   { &Master_Job_Schedd_Info_List,   "JOB_SCHEDD_INFO",   SME_Type,  NoName            },
+   { &Master_Manager_List,           "MANAGER",           MO_Type,   MO_name           },
+   { &Master_Operator_List,          "OPERATOR",          MO_Type,   MO_name           },
+   { &Master_Sharetree_List,         "SHARETREE",         STN_Type,  STN_name          },
+   { &Master_Pe_List,                "PE",                PE_Type,   PE_name           },
+   { &Master_Project_List,           "PROJECT",           UP_Type,   UP_name           },
+   { &Master_Queue_List,             "QUEUE",             QU_Type,   QU_qname          },
+   { &Master_Sched_Config_List,      "SCHEDD_CONF",       SC_Type,   NoName            },
+   { NULL,                           "SCHEDD_MONITOR",    NULL,      NoName            },
+   { NULL,                           "SHUTDOWN",          NULL,      NoName            },
+   { NULL,                           "QMASTER_GOES_DOWN", NULL,      NoName            },
+   { &Master_Submithost_List,        "SUBMITHOST",        SH_Type,   SH_name           },
+   { &Master_User_List,              "USER",              UP_Type,   UP_name           },
+   { &Master_Userset_List,           "USERSET",           US_Type,   US_name           },
+
+#ifndef __SGE_NO_USERMAPPING__
+   { &Master_Usermapping_Entry_List, "USERMAPPING",       UME_Type,  UM_mapped_user    },
+#endif
+   { &Master_Host_Group_List,        "HOSTGROUP",         GRP_Type,  GRP_group_name    },
+};
+
+/****** sgeobj/Object/object_has_type() ***************************************
 *  NAME
 *     object_has_type() -- has an object a certain type?
 *
@@ -76,7 +136,7 @@
 *     object types.
 *
 *  SEE ALSO
-*     sgeobj/object/object_get_primary_key()
+*     sgeobj/Object/object_get_primary_key()
 *******************************************************************************/
 bool 
 object_has_type(const lListElem *object, const lDescr *descr) 
@@ -97,7 +157,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
    return ret;
 } 
 
-/****** sgeobj/object/object_get_type() ***************************************
+/****** sgeobj/Object/object_get_type() ***************************************
 *  NAME
 *     object_get_type() -- return type (descriptor) for object
 *
@@ -153,7 +213,7 @@ object_get_type(const lListElem *object)
    return ret;
 }
 
-/****** sgeobj/object/object_get_subtype() ************************************
+/****** sgeobj/Object/object_get_subtype() ************************************
 *  NAME
 *     object_get_subtype() -- get type of a sublist
 *
@@ -212,7 +272,7 @@ object_get_subtype(int nm)
    return ret;
 }
 
-/****** sgeobj/object/object_get_primary_key() ********************************
+/****** sgeobj/Object/object_get_primary_key() ********************************
 *  NAME
 *     object_get_primary_key() -- get primary key for object type
 *
@@ -273,7 +333,7 @@ object_get_primary_key(const lDescr *descr)
    return ret;
 }
  
-/****** sgeobj/object/object_get_name_prefix() ********************************
+/****** sgeobj/Object/object_get_name_prefix() ********************************
 *  NAME
 *     object_get_name_prefix() -- get prefix of cull attribute name
 *
@@ -302,7 +362,7 @@ object_get_primary_key(const lDescr *descr)
 *     For types not handled in object_get_primary_key, NULL will be returned.
 *
 *  SEE ALSO
-*     sgeobj/object/object_get_primary_key()
+*     sgeobj/Object/object_get_primary_key()
 *******************************************************************************/
 const char * 
 object_get_name_prefix(const lDescr *descr, dstring *buffer)
@@ -331,7 +391,7 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
    return NULL;
 }
 
-/****** sgeobj/object/object_get_field_contents() *****************************
+/****** sgeobj/Object/object_get_field_contents() *****************************
 *  NAME
 *     object_get_field_contents() -- get object field contents as string
 *
@@ -360,8 +420,8 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *     For sublists, subobjects and references NULL is returned.
 *
 *  SEE ALSO
-*     sgeobj/object/--GDI-Object-Handling
-*     sgeobj/object/object_set_field_contents()
+*     sgeobj/Object/--GDI-Object-Handling
+*     sgeobj/Object/object_set_field_contents()
 *******************************************************************************/
 const char * 
 object_get_field_contents(const lListElem *object, lList **answer_list, 
@@ -464,7 +524,7 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
    return result;
 }
 
-/****** sgeobj/object/object_set_field_contents() *****************************
+/****** sgeobj/Object/object_set_field_contents() *****************************
 *  NAME
 *     object_set_field_contents() -- set object attribute contents from string
 *
@@ -491,8 +551,8 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
 *     Sublists, subobjects and references cannot be set with this function.
 *
 *  SEE ALSO
-*     sgeobj/object/--GDI-Object-Handling
-*     sgeobj/object/object_get_field_contents()
+*     sgeobj/Object/--GDI-Object-Handling
+*     sgeobj/Object/object_get_field_contents()
 ******************************************************************************/
 bool 
 object_set_field_contents(lListElem *object, lList **answer_list, const int nm, 
@@ -653,7 +713,7 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
    return ret;
 }
 
-/****** sgeobj/object/object_delete_range_id() ********************************
+/****** sgeobj/Object/object_delete_range_id() ********************************
 *  NAME
 *     object_delete_range_id() -- deletes a certain id from an objects range_list
 *
@@ -684,7 +744,7 @@ object_delete_range_id(lListElem *object, lList **answer_list,
    lXchgList(object, rnm, &range_list);
 }
 
-/****** sgeobj/object/object_set_range_id() **********************************
+/****** sgeobj/Object/object_set_range_id() **********************************
 *  NAME
 *     object_set_range_id() -- store the initial range ids in "job"
 *
@@ -739,3 +799,220 @@ int object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end
    return ret;
 }          
 
+
+/****** sgeobj/Object/object_type_get_master_list() **************************
+*  NAME
+*     object_type_get_master_list() -- get master list for an object type
+*
+*  SYNOPSIS
+*     lList** object_type_get_master_list(const sge_object_type type) 
+*
+*  FUNCTION
+*     Returns a pointer to the master list holding objects of the given type.
+*
+*  INPUTS
+*     const sge_object_type type - the object type 
+*
+*  RESULT
+*     lList** - the corresponding master list, or NULL, if the object type has 
+*               no associated master list
+*
+*  EXAMPLE
+*     object_type_get_master_list(SGE_TYPE_JOB) will return a pointer to the 
+*     Master_Job_List.
+*
+*     object_type_get_master_list(SGE_TYPE_SHUTDOWN) will return NULL,
+*     as this object type has no associated master list.
+*
+*  NOTES
+*
+*  SEE ALSO
+*     sgeobj/Object/object_type_get_master_list()
+*     sgeobj/Object/object_type_get_name()
+*     sgeobj/Object/object_type_get_descr()
+*     sgeobj/Object/object_type_get_key_nm()
+*******************************************************************************/
+lList **object_type_get_master_list(const sge_object_type type)
+{
+   lList **ret = NULL;
+
+   DENTER(TOP_LAYER, "object_type_get_master_list");
+
+   if(type < 0 || type >= SGE_TYPE_ALL) {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   } else {
+      ret = object_base[type].list;
+   }
+
+   return ret;
+}
+
+/****** sgeobj/Object/object_type_free_master_list() ***************************
+*  NAME
+*     object_type_free_master_list() -- free the master list for a certain type
+*
+*  SYNOPSIS
+*     bool 
+*     object_type_free_master_list(const sge_object_type type) 
+*
+*  FUNCTION
+*     Frees the masterlist for a certain type of objects.
+*
+*  INPUTS
+*     const sge_object_type type - the object type
+*
+*  RESULT
+*     bool - true, if the list existed and could be freed, else false
+*
+*  NOTES
+*
+*  SEE ALSO
+*     sgeobj/Object/--Object-Typedefs
+*******************************************************************************/
+bool object_type_free_master_list(const sge_object_type type)
+{
+   lList **list;
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "object_type_free_master_list");
+   
+   list = object_type_get_master_list(type);
+   if (list != NULL) {
+      lFreeList(*list);
+      *list = NULL;
+      ret = true;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+
+/****** sgeobj/Object/object_type_get_name() *********************************
+*  NAME
+*     object_type_get_name() -- get a printable name for an event type
+*
+*  SYNOPSIS
+*     const char* object_type_get_name(const sge_object_type type) 
+*
+*  FUNCTION
+*     Returns a printable name for an event type.
+*
+*  INPUTS
+*     const sge_object_type type - the event type
+*
+*  RESULT
+*     const char* - string describing the type
+*
+*  EXAMPLE
+*     object_type_get_name(SGE_TYPE_JOB) will return "JOB"
+*
+*  SEE ALSO
+*     sgeobj/Object/object_type_get_master_list()
+*     sgeobj/Object/object_type_get_descr()
+*     sgeobj/Object/object_type_get_key_nm()
+*******************************************************************************/
+const char    *object_type_get_name(const sge_object_type type)
+{
+   const char *ret = "unknown";
+
+   DENTER(TOP_LAYER, "object_type_get_name");
+
+   if(type < 0 || type > SGE_TYPE_ALL) {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   } else if(type == SGE_TYPE_ALL) {
+      ret = "default";
+   } else {
+      ret = object_base[type].type_name;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/Object/object_type_get_descr() ********************************
+*  NAME
+*     object_type_get_descr() -- get the descriptor for an event type
+*
+*  SYNOPSIS
+*     const lDescr* object_type_get_descr(const sge_object_type type) 
+*
+*  FUNCTION
+*     Returns the CULL element descriptor for the object type associated with
+*     the given event.
+*
+*  INPUTS
+*     const sge_object_type type - the event type
+*
+*  RESULT
+*     const lDescr* - the descriptor, or NULL, if no descriptor is associated
+*                     with the type
+*
+*  EXAMPLE
+*     object_type_get_descr(SGE_TYPE_JOB) will return the descriptor JB_Type,
+*     object_type_get_descr(SGE_TYPE_SHUTDOWN) will return NULL
+*
+*  SEE ALSO
+*     sgeobj/Object/object_type_get_master_list()
+*     sgeobj/Object/object_type_get_name()
+*     sgeobj/Object/object_type_get_key_nm()
+*******************************************************************************/
+const lDescr *object_type_get_descr(const sge_object_type type)
+{
+   const lDescr *ret = NULL;
+
+   DENTER(TOP_LAYER, "object_type_get_descr");
+
+   if(type < 0 || type >= SGE_TYPE_ALL) {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   } else {
+      ret = object_base[type].descr;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/Object/object_type_get_key_nm() *******************************
+*  NAME
+*     object_type_get_key_nm() -- get the primary key attribute for a type
+*
+*  SYNOPSIS
+*     int object_type_get_key_nm(const sge_object_type type) 
+*
+*  FUNCTION
+*     Returns the primary key attribute for the object type associated with
+*     the given event type.
+*
+*  INPUTS
+*     const sge_object_type type - event type
+*
+*  RESULT
+*     int - the key number (struct element nm of the descriptor), or
+*           -1, if no object type is associated with the event type
+*
+*  EXAMPLE
+*     object_type_get_key_nm(SGE_TYPE_JOB) will return JB_job_number
+*     object_type_get_key_nm(SGE_TYPE_SHUTDOWN) will return -1
+*
+*  SEE ALSO
+*     sgeobj/Object/object_type_get_master_list()
+*     sgeobj/Object/object_type_get_name()
+*     sgeobj/Object/object_type_get_descr()
+*******************************************************************************/
+int object_type_get_key_nm(const sge_object_type type)
+{
+   int ret = NoName;
+
+   DENTER(TOP_LAYER, "object_type_get_key_nm");
+
+   if(type < 0 || type >= SGE_TYPE_ALL) {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   } else {
+      ret = object_base[type].key_nm;
+   }
+
+   DEXIT;
+   return ret;
+}
+ 

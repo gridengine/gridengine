@@ -48,7 +48,7 @@
 #include "sge_mirror.h"
 #include "sge_event.h"
 
-bool print_event(sge_event_type type, sge_event_action action, 
+bool print_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -60,7 +60,7 @@ bool print_event(sge_event_type type, sge_event_action action,
 
 
    /* create a callback error to test error handling */
-   if(type == SGE_EMT_GLOBAL_CONFIG) {
+   if(type == SGE_TYPE_GLOBAL_CONFIG) {
       return false;
    }
    
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
    }   
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_EMT_ALL, print_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL);
    
    while(!shut_me_down) {
       sge_mirror_process_events();

@@ -182,7 +182,7 @@ u_long32 ack_ulong2
       lSetUlong(qep, QU_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, lGetString(qep, QU_qname), 0, 0);
       spool_write_object(spool_get_default_context(), qep, 
-                         lGetString(qep, QU_qname), SGE_EMT_QUEUE);
+                         lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
       break;
    case TAG_SIGJOB:
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
@@ -190,7 +190,7 @@ u_long32 ack_ulong2
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
       spool_write_object(spool_get_default_context(), jep, 
                          job_get_key(lGetUlong(jep, JB_job_number), ack_ulong2, 
-                                     NULL), SGE_EMT_JOB);
+                                     NULL), SGE_TYPE_JOB);
       break;
    }
 

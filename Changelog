@@ -1,3 +1,8 @@
+JG-2003-02-25-0  Enhancem.: Moved type handling commodity functions from mirror 
+                            library to sgeobj library.
+                            Eliminated libspool's dependency on libmir.
+                 Review:    EB
+
 AH-2003-02-24-0  Enhancem.: Documented MT safety of utilib
                             made some funcs MT safe
                  Review:    JG

@@ -47,7 +47,7 @@
 *
 *  SYNOPSIS
 *     bool 
-*     queue_update_master_list(sge_event_type type, sge_event_action action,
+*     queue_update_master_list(sge_object_type type, sge_event_action action,
 *                              lListElem *event, void *clientdata)
 *
 *  FUNCTION
@@ -56,7 +56,7 @@
 *     The function is called from the event mirroring interface.
 *
 *  INPUTS
-*     sge_event_type type     - event type
+*     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
 *     void *clientdata        - client data
@@ -73,7 +73,7 @@
 *     Eventmirror/sge_mirror_update_master_list_str_key()
 *******************************************************************************/
 bool 
-queue_update_master_list(sge_event_type type, sge_event_action action,
+queue_update_master_list(sge_object_type type, sge_event_action action,
                          lListElem *event, void *clientdata)
 {
    lList **list;

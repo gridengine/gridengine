@@ -185,4 +185,9 @@
 
 #define MSG_GDI_NULL_FEATURE                       _MESSAGE(64166, _("NULL ptr passed to feature_initialize_from_file()"))
 
+/* 
+ * sge_object.c
+ */
+#define MSG_OBJECT_INVALID_OBJECT_TYPE_SI          _MESSAGE(64167, _("%s: invalid object type %d\n"))
+
 #endif /* __MSG_SGEOBJLIB_H */

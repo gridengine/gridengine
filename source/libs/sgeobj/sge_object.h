@@ -36,10 +36,10 @@
 
 #include "sge_dstring.h"
 
-/****** sgeobj/object/--Object-Handling ***************************************
+/****** sgeobj/Object/--Object-Handling ***************************************
 *
 *  NAME
-*     Object Handling -- utilities for gdi object access
+*     Object Handling -- utilities for sgeobj object access
 *
 *  FUNCTION
 *     This module provides utility functions for accessing CULL 
@@ -51,13 +51,18 @@
 *     be moved here.
 *
 *  SEE ALSO
-*     gdi/object/object_has_type()
-*     gdi/object/object_get_type()
-*     gdi/object/object_get_subtype()
-*     gdi/object/object_get_primary_key()
-*     gdi/object/object_get_name_prefix()
-*     gdi/object/object_get_field_contents()
-*     gdi/object/object_set_field_contents()
+*     sgeobj/Object/object_has_type()
+*     sgeobj/Object/object_get_type()
+*     sgeobj/Object/object_get_subtype()
+*     sgeobj/Object/object_get_primary_key()
+*     sgeobj/Object/object_get_name_prefix()
+*     sgeobj/Object/object_get_field_contents()
+*     sgeobj/Object/object_set_field_contents()
+*     sgeobj/Object/object_type_get_master_list()
+*     sgeobj/Object/object_type_free_master_list()
+*     sgeobj/Object/object_type_get_name()
+*     sgeobj/Object/object_type_get_descr()
+*     sgeobj/Object/object_type_get_key_nm()
 ******************************************************************************/
 
 #define NULL_OUT_NONE(ep, nm) \
@@ -66,13 +71,106 @@
       lSetString(ep, nm, NULL); \
    }
 
+/****** sgeobj/Object/--Object-Typedefs ***************************************
+*
+*  NAME
+*     Object-Typedefs -- typedefs for generic object handling
+*
+*  SYNOPSIS
+*     The enumeration sge_object_type defines different object and 
+*     message types.
+*
+*     The following types are defined:
+*        SGE_TYPE_ADMINHOST
+*        SGE_TYPE_CALENDAR
+*        SGE_TYPE_CKPT
+*        SGE_TYPE_COMPLEX
+*        SGE_TYPE_CONFIG
+*        SGE_TYPE_GLOBAL_CONFIG
+*        SGE_TYPE_EXECHOST
+*        SGE_TYPE_JATASK
+*        SGE_TYPE_PETASK
+*        SGE_TYPE_JOB
+*        SGE_TYPE_JOB_SCHEDD_INFO
+*        SGE_TYPE_MANAGER
+*        SGE_TYPE_OPERATOR
+*        SGE_TYPE_SHARETREE
+*        SGE_TYPE_PE
+*        SGE_TYPE_PROJECT
+*        SGE_TYPE_QUEUE
+*        SGE_TYPE_SCHEDD_CONF
+*        SGE_TYPE_SCHEDD_MONITOR
+*        SGE_TYPE_SHUTDOWN
+*        SGE_TYPE_QMASTER_GOES_DOWN
+*        SGE_TYPE_SUBMITHOST
+*        SGE_TYPE_USER
+*        SGE_TYPE_USERSET
+*        SGE_TYPE_USERMAPPING
+*
+*     If usermapping is enabled, an additional object type is defined:
+*        SGE_TYPE_HOSTGROUP
+*  
+*     The last value defined as obect type is SGE_TYPE_ALL. 
+****************************************************************************
+*/
+typedef enum {
+   SGE_TYPE_ADMINHOST = 0,
+   SGE_TYPE_CALENDAR,
+   SGE_TYPE_CKPT,
+   SGE_TYPE_COMPLEX,
+   SGE_TYPE_CONFIG,
+   SGE_TYPE_GLOBAL_CONFIG,
+   SGE_TYPE_EXECHOST,
+   SGE_TYPE_JATASK,
+   SGE_TYPE_PETASK,
+   SGE_TYPE_JOB,
+   SGE_TYPE_JOB_SCHEDD_INFO,
+   SGE_TYPE_MANAGER,
+   SGE_TYPE_OPERATOR,
+   SGE_TYPE_SHARETREE,
+   SGE_TYPE_PE,
+   SGE_TYPE_PROJECT,
+   SGE_TYPE_QUEUE,
+   SGE_TYPE_SCHEDD_CONF,
+   SGE_TYPE_SCHEDD_MONITOR,
+   SGE_TYPE_SHUTDOWN,
+   SGE_TYPE_QMASTER_GOES_DOWN,
+   SGE_TYPE_SUBMITHOST,
+   SGE_TYPE_USER,
+   SGE_TYPE_USERSET,
+#ifndef __SGE_NO_USERMAPPING__
+   SGE_TYPE_USERMAPPING,
+#endif
+   SGE_TYPE_HOSTGROUP,
 
+   SGE_TYPE_ALL            /* must be last entry */
+} sge_object_type;
+
+lList **
+object_type_get_master_list(const sge_object_type type);
+
+bool
+object_type_free_master_list(const sge_object_type type);
+
+const char *
+object_type_get_name(const sge_object_type type);
+
+const lDescr *
+object_type_get_descr(const sge_object_type type);
+
+int
+object_type_get_key_nm(const sge_object_type type);
+
+/* JG: TODO: rename to object_has_descr, make function object_has_type 
+             and call this function where possible */
 bool 
 object_has_type(const lListElem *object, const lDescr *descr);
 
+/* JG: TODO: rename to object_get_type_descr, check all calls, if possible pass sge_object_type */
 const lDescr *
 object_get_type(const lListElem *object);
 
+/* JG: TODO: rename to object_get_subtype_descr */
 const lDescr *
 object_get_subtype(int nm);
 

@@ -100,7 +100,7 @@ char *rhost
       old_SC_weight_tickets_override);
    lAppendElem(*confl, lCopyElem(confp));
 
-   if (!spool_write_object(spool_get_default_context(), lFirst(*confl), NULL, SGE_EMT_SCHEDD_CONF)) {
+   if (!spool_write_object(spool_get_default_context(), lFirst(*confl), NULL, SGE_TYPE_SCHEDD_CONF)) {
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

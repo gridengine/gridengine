@@ -297,7 +297,7 @@ lList **answer
    }
 
    spool_write_object(spool_get_default_context(), qep, 
-                      lGetString(qep, QU_qname), SGE_EMT_QUEUE);
+                      lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
    DEXIT;
    return result;
 }
@@ -353,7 +353,7 @@ lList **answer
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
             spool_write_object(spool_get_default_context(), jep,
                                job_get_key(job_id, task_id, NULL), 
-                               SGE_EMT_JOB);
+                               SGE_TYPE_JOB);
             if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
             } else {
@@ -415,7 +415,7 @@ int isowner
 
    sge_change_queue_version(qep, 0, 0);
    if (!spool_write_object(spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_EMT_QUEUE)) {
+                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname))); 
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -468,7 +468,7 @@ int isowner
 
    sge_change_queue_version(qep, 0, 0);
    if (!spool_write_object(spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_EMT_QUEUE)) {
+                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -522,7 +522,7 @@ int isowner
 
    sge_change_queue_version(qep, 0, 0);
    if (!spool_write_object(spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_EMT_QUEUE)) {
+                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       ERROR((SGE_EVENT, MSG_QUEUE_NOTMODIFIEDSPOOL_S, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -641,7 +641,7 @@ int isowner
       }
    }
    if (!spool_write_object(spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_EMT_QUEUE)) {
+                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       lListElem *tmp_elem;
 
       /* rollback */
@@ -758,7 +758,7 @@ int isowner
       }
    }
    if (!spool_write_object(spool_get_default_context(), qep, 
-                           lGetString(qep, QU_qname), SGE_EMT_QUEUE)) {
+                           lGetString(qep, QU_qname), SGE_TYPE_QUEUE)) {
       lListElem *tmp_elem;
 
       /* rollback */
@@ -917,7 +917,7 @@ char *host
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       spool_write_object(spool_get_default_context(), jep,
                          job_get_key(jobid, jataskid, NULL), 
-                         SGE_EMT_JOB);
+                         SGE_TYPE_JOB);
    }
    else {   /* job wasn't suspended yet */
       if (queueep) {
@@ -951,7 +951,7 @@ char *host
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
          spool_write_object(spool_get_default_context(), jep,
                             job_get_key(jobid, jataskid, NULL), 
-                            SGE_EMT_JOB);
+                            SGE_TYPE_JOB);
       }
       else {
          if (!i) {
@@ -969,7 +969,7 @@ char *host
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
             spool_write_object(spool_get_default_context(), jep,
                                job_get_key(jobid, jataskid, NULL), 
-                               SGE_EMT_JOB);
+                               SGE_TYPE_JOB);
          }
       }
    }
@@ -1013,7 +1013,7 @@ char *host
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
          spool_write_object(spool_get_default_context(), jep,
                             job_get_key(jobid, jataskid, NULL), 
-                            SGE_EMT_JOB);
+                            SGE_TYPE_JOB);
          DEXIT;
          return;
       } 
@@ -1099,7 +1099,7 @@ char *host
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
          spool_write_object(spool_get_default_context(), jep,
                             job_get_key(jobid, jataskid, NULL), 
-                            SGE_EMT_JOB);
+                            SGE_TYPE_JOB);
       }
       else {
          /* set job state only if communication works */
@@ -1118,7 +1118,7 @@ char *host
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
             spool_write_object(spool_get_default_context(), jep,
                                job_get_key(jobid, jataskid, NULL), 
-                               SGE_EMT_JOB);
+                               SGE_TYPE_JOB);
          }
       }
    }

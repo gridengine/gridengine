@@ -292,7 +292,7 @@ sge_pack_buffer *pb
                         spool_write_object(spool_get_default_context(), jep,
                                            job_get_key(jobid, jataskid, 
                                                        pe_task_id_str), 
-                                           SGE_EMT_JOB);
+                                           SGE_TYPE_JOB);
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -528,7 +528,7 @@ sge_pack_buffer *pb
 
                         /* remove pe task from job/jatask */
                         spool_delete_object(spool_get_default_context(), 
-                                            SGE_EMT_JOB, 
+                                            SGE_TYPE_JOB, 
                                             job_get_key(jobid, jataskid, 
                                                         pe_task_id_str));
                         lRemoveElem(lGetList(jatep, JAT_task_list), petask);

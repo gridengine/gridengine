@@ -143,7 +143,7 @@ char *rhost
 #endif   
 
     
-   spool_delete_object(spool_get_default_context(), SGE_EMT_CONFIG, 
+   spool_delete_object(spool_get_default_context(), SGE_TYPE_CONFIG, 
                        config_name);
     
    /* now remove it from our internal list*/
@@ -294,7 +294,7 @@ char *rhost
       lSetUlong(confp, CONF_version, old_conf_version + 1);
    }
    spool_write_object(spool_get_default_context(), confp, 
-                      lGetHost(confp, CONF_hname), SGE_EMT_CONFIG);
+                      lGetHost(confp, CONF_hname), SGE_TYPE_CONFIG);
    /*
    ** is the configuration change relevant for the qmaster itsself?
    ** if so, initialise conf struct anew

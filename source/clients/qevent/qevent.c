@@ -55,7 +55,7 @@
 u_long Global_jobs_running = 0;
 u_long Global_jobs_registered = 0;
 
-bool print_event(sge_event_type type, sge_event_action action, 
+bool print_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -65,14 +65,14 @@ bool print_event(sge_event_type type, sge_event_action action,
 
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
    /* create a callback error to test error handling */
-   if(type == SGE_EMT_GLOBAL_CONFIG) {
+   if(type == SGE_TYPE_GLOBAL_CONFIG) {
       return false;
    }
    
    return true;
 }
 
-bool print_jatask_event(sge_event_type type, sge_event_action action, 
+bool print_jatask_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
    int pos;
@@ -139,7 +139,7 @@ bool print_jatask_event(sge_event_type type, sge_event_action action,
 
    }
    /* create a callback error to test error handling */
-   if(type == SGE_EMT_GLOBAL_CONFIG) {
+   if(type == SGE_TYPE_GLOBAL_CONFIG) {
       return false;
    }
    
@@ -167,8 +167,8 @@ int main(int argc, char *argv[])
    }   
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_EMT_JOB, print_jatask_event, NULL, NULL);
-   sge_mirror_subscribe(SGE_EMT_JATASK, print_jatask_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL);
    
    ec_set_flush(sgeE_JATASK_MOD,0);
    ec_set_flush(sgeE_JOB_FINAL_USAGE,0);
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
    ec_set_flush(sgeE_JOB_DEL,0);
 
    
-/*   sge_mirror_subscribe(SGE_EMT_ALL, print_event, NULL, NULL); */
+/*   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL); */
    
    while(!shut_me_down) {
       sge_mirror_process_events();

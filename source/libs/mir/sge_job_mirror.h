@@ -32,13 +32,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-bool job_update_master_list(sge_event_type type,
+#include "sge_object.h"
+
+bool job_update_master_list(sge_object_type type,
                             sge_event_action action,
                             lListElem *event,
                             void *clientdata);
 
 bool
-job_schedd_info_update_master_list(sge_event_type type,
+job_schedd_info_update_master_list(sge_object_type type,
                                    sge_event_action action,
                                    lListElem *event, void *clientdata);
 

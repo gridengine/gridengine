@@ -108,7 +108,7 @@ ja_task_update_master_list_usage(lListElem *event)
 *
 *  SYNOPSIS
 *     bool 
-*     ja_task_update_master_list(sge_event_type type, sge_event_action action,
+*     ja_task_update_master_list(sge_object_type type, sge_event_action action,
 *                                lListElem *event, void *clientdata)
 *
 *  FUNCTION
@@ -121,7 +121,7 @@ ja_task_update_master_list_usage(lListElem *event)
 *     as this data is maintained by separate events.
 *
 *  INPUTS
-*     sge_event_type type     - event type
+*     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
 *     void *clientdata        - client data
@@ -137,7 +137,7 @@ ja_task_update_master_list_usage(lListElem *event)
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
 bool 
-ja_task_update_master_list(sge_event_type type, sge_event_action action,
+ja_task_update_master_list(sge_object_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
    u_long32 job_id, ja_task_id;

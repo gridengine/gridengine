@@ -47,7 +47,7 @@
 *
 *  SYNOPSIS
 *     bool 
-*     schedd_conf_update_master_list(sge_event_type type, 
+*     schedd_conf_update_master_list(sge_object_type type, 
 *                                    sge_event_action action,
 *                                    lListElem *event, void *clientdata)
 *
@@ -59,7 +59,7 @@
 *     modify event arrives.
 *
 *  INPUTS
-*     sge_event_type type     - event type
+*     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
 *     void *clientdata        - client data
@@ -74,7 +74,7 @@
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
 bool 
-schedd_conf_update_master_list(sge_event_type type, 
+schedd_conf_update_master_list(sge_object_type type, 
                                sge_event_action action,
                                lListElem *event, void *clientdata)
 {

@@ -315,18 +315,18 @@ u_long32 target
    /* remove host file and send event */
    switch(target) {
       case SGE_ADMINHOST_LIST:
-         spool_delete_object(spool_get_default_context(), SGE_EMT_ADMINHOST,
+         spool_delete_object(spool_get_default_context(), SGE_TYPE_ADMINHOST,
                              host);
          sge_add_event(NULL, 0, sgeE_ADMINHOST_DEL, 0, 0, host, NULL);
          break;
       case SGE_EXECHOST_LIST:
          sge_add_event(NULL, 0, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
-         spool_delete_object(spool_get_default_context(), SGE_EMT_EXECHOST,
+         spool_delete_object(spool_get_default_context(), SGE_TYPE_EXECHOST,
                              host);
          break;
       case SGE_SUBMITHOST_LIST:
          sge_add_event(NULL, 0, sgeE_SUBMITHOST_DEL, 0, 0, host, NULL);
-         spool_delete_object(spool_get_default_context(), SGE_EMT_SUBMITHOST,
+         spool_delete_object(spool_get_default_context(), SGE_TYPE_SUBMITHOST,
                              host);
          break;
    }
@@ -504,7 +504,7 @@ gdi_object_t *object
    int pos;
    int dataType;
    const char *key;
-   sge_event_type host_type = SGE_EMT_ADMINHOST;
+   sge_object_type host_type = SGE_TYPE_ADMINHOST;
 
    DENTER(TOP_LAYER, "host_spool");
 
@@ -518,13 +518,13 @@ gdi_object_t *object
      
    switch (object->key_nm) {
       case AH_name:
-         host_type = SGE_EMT_ADMINHOST;
+         host_type = SGE_TYPE_ADMINHOST;
          break;
       case EH_name:
-         host_type = SGE_EMT_EXECHOST;
+         host_type = SGE_TYPE_EXECHOST;
          break;
       case SH_name:
-         host_type = SGE_EMT_SUBMITHOST;
+         host_type = SGE_TYPE_SUBMITHOST;
          break;
    }
      
@@ -759,7 +759,7 @@ lList *lp
    */
    if (statics_changed && host_ep) {
       spool_write_object(spool_get_default_context(), host_ep, 
-                         lGetHost(host_ep, EH_name), SGE_EMT_EXECHOST);
+                         lGetHost(host_ep, EH_name), SGE_TYPE_EXECHOST);
       if (!is_nohist()) {
          write_host_history(host_ep);
       }
@@ -996,7 +996,7 @@ const char *exechost_name
       for_each(qep, Master_Queue_List) {   
          sge_change_queue_version(qep, 0, 0);
          spool_write_object(spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
+                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
       }
    } else {
       qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
@@ -1005,7 +1005,7 @@ const char *exechost_name
                   SFQ" changed\n", lGetString(qep, QU_qname), exechost_name));
          sge_change_queue_version(qep, 0, 0);
          spool_write_object(spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
+                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
          qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
       }
    } 
@@ -1216,7 +1216,7 @@ int force
                                      job_get_key(lGetUlong(jep, JB_job_number), 
                                             lGetUlong(jatep, JAT_task_number), 
                                             NULL), 
-                                     SGE_EMT_JOB);
+                                     SGE_TYPE_JOB);
                }
             }
          }
@@ -1286,7 +1286,7 @@ u_long32 target) {
       if (queue_set_initial_state(qep, rhost)) {
          sge_change_queue_version(qep, 0, 0);
          spool_write_object(spool_get_default_context(), qep, 
-                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
+                            lGetString(qep, QU_qname), SGE_TYPE_QUEUE);
       } 
       qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, rhost, &iterator); 
    }

@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_confL.h"
-#include "sge_mirror.h"
+/* #include "sge_mirror.h" */
 
 struct confel {                       /* cluster configuration parameters */
     char        *qmaster_spool_dir;   /* qmaster spool directory path */

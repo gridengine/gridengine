@@ -139,7 +139,7 @@ char *rhost
   
    /* write sharetree to file */
    if (!spool_write_object(spool_get_default_context(), ep, NULL, 
-                           SGE_EMT_SHARETREE)) {
+                           SGE_TYPE_SHARETREE)) {
       /* answer list gets filled in write_sharetree() */
       DEXIT;
       return ret;
@@ -178,7 +178,7 @@ char *rhost
       return STATUS_EEXIST;
    }
 
-   spool_delete_object(spool_get_default_context(), SGE_EMT_SHARETREE, NULL);
+   spool_delete_object(spool_get_default_context(), SGE_TYPE_SHARETREE, NULL);
 
    lFreeList(*lpp);
    *lpp = NULL;

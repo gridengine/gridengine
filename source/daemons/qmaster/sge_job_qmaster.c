@@ -641,7 +641,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    job_suc_pre(jep);
 
    if (!spool_write_object(spool_get_default_context(), jep, 
-                           job_get_key(job_number, 0, NULL), SGE_EMT_JOB)) {
+                           job_get_key(job_number, 0, NULL), SGE_TYPE_JOB)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -961,7 +961,7 @@ int sub_command
             if (existing_tasks > deleted_tasks) {
                spool_write_object(spool_get_default_context(), job, 
                                   job_get_key(job_number, 0, NULL), 
-                                  SGE_EMT_JOB);
+                                  SGE_TYPE_JOB);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
             }
@@ -1467,7 +1467,7 @@ void job_mark_job_as_deleted(lListElem *j,
       spool_write_object(spool_get_default_context(), j,
                          job_get_key(lGetUlong(j, JB_job_number),
                                      lGetUlong(t, JAT_task_number), NULL),
-                         SGE_EMT_JOB);
+                         SGE_TYPE_JOB);
    }
    DEXIT;
 }
@@ -1608,7 +1608,7 @@ int sub_command
 
          /* all job modifications to be saved on disk must be made in new_job */
          if (!spool_write_object(spool_get_default_context(), new_job, 
-                                job_get_key(jobid, 0, NULL), SGE_EMT_JOB)) {
+                                job_get_key(jobid, 0, NULL), SGE_TYPE_JOB)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             lFreeList(tmp_alp);

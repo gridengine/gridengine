@@ -201,7 +201,7 @@ int sge_setup_qmaster()
    /*
    ** get cluster configuration
    */
-   spool_read_list(spooling_context, &Master_Config_List, SGE_EMT_CONFIG);
+   spool_read_list(spooling_context, &Master_Config_List, SGE_TYPE_CONFIG);
 
    ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
    if (ret) {
@@ -269,12 +269,12 @@ int sge_setup_qmaster()
    ** read in all objects and check for correctness
    */
    DPRINTF(("Complexes-------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Complex_List, SGE_EMT_COMPLEX);
+   spool_read_list(spooling_context, &Master_Complex_List, SGE_TYPE_COMPLEX);
 
    DPRINTF(("host_list----------------------------\n"));
-   spool_read_list(spooling_context, &Master_Exechost_List, SGE_EMT_EXECHOST);
-   spool_read_list(spooling_context, &Master_Adminhost_List, SGE_EMT_ADMINHOST);
-   spool_read_list(spooling_context, &Master_Submithost_List, SGE_EMT_SUBMITHOST);
+   spool_read_list(spooling_context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
+   spool_read_list(spooling_context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
+   spool_read_list(spooling_context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
 
    if (!host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
@@ -315,11 +315,11 @@ int sge_setup_qmaster()
 #endif
 
    DPRINTF(("manager_list----------------------------\n"));
-   spool_read_list(spooling_context, &Master_Manager_List, SGE_EMT_MANAGER);
+   spool_read_list(spooling_context, &Master_Manager_List, SGE_TYPE_MANAGER);
    if (!manop_is_manager("root")) {
       ep = lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
-      if (!spool_write_object(spooling_context, ep, "root", SGE_EMT_MANAGER)) {
+      if (!spool_write_object(spooling_context, ep, "root", SGE_TYPE_MANAGER)) {
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
          return -1;
       }
@@ -328,14 +328,14 @@ int sge_setup_qmaster()
       DPRINTF(("%s\n", lGetString(ep, MO_name)));
 
    DPRINTF(("host group definitions-----------\n"));
-   spool_read_list(spooling_context, &Master_Host_Group_List, SGE_EMT_HOSTGROUP);
+   spool_read_list(spooling_context, &Master_Host_Group_List, SGE_TYPE_HOSTGROUP);
 
    DPRINTF(("operator_list----------------------------\n"));
-   spool_read_list(spooling_context, &Master_Operator_List, SGE_EMT_OPERATOR);
+   spool_read_list(spooling_context, &Master_Operator_List, SGE_TYPE_OPERATOR);
    if (!manop_is_operator("root")) {
       ep = lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
-      if (!spool_write_object(spooling_context, ep, "root", SGE_EMT_OPERATOR)) {
+      if (!spool_write_object(spooling_context, ep, "root", SGE_TYPE_OPERATOR)) {
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEOPERATORLIST)); 
          return -1;
       }
@@ -345,29 +345,29 @@ int sge_setup_qmaster()
 
 
    DPRINTF(("userset_list------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Userset_List, SGE_EMT_USERSET);
+   spool_read_list(spooling_context, &Master_Userset_List, SGE_TYPE_USERSET);
 
    DPRINTF(("calendar list ------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Calendar_List, SGE_EMT_CALENDAR);
+   spool_read_list(spooling_context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
 
 #ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("administrator user mapping-----------\n"));
-   spool_read_list(spooling_context, &Master_Usermapping_Entry_List, SGE_EMT_USERMAPPING);
+   spool_read_list(spooling_context, &Master_Usermapping_Entry_List, SGE_TYPE_USERMAPPING);
 #endif
 
    DPRINTF(("queue_list---------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Queue_List, SGE_EMT_QUEUE);
+   spool_read_list(spooling_context, &Master_Queue_List, SGE_TYPE_QUEUE);
    queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
 
 
    DPRINTF(("pe_list---------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Pe_List, SGE_EMT_PE);
+   spool_read_list(spooling_context, &Master_Pe_List, SGE_TYPE_PE);
 
    DPRINTF(("ckpt_list---------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Ckpt_List, SGE_EMT_CKPT);
+   spool_read_list(spooling_context, &Master_Ckpt_List, SGE_TYPE_CKPT);
 
    DPRINTF(("job_list-----------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Job_List, SGE_EMT_JOB);
+   spool_read_list(spooling_context, &Master_Job_List, SGE_TYPE_JOB);
 
    for_each(jep, Master_Job_List) {
       DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
@@ -424,24 +424,24 @@ int sge_setup_qmaster()
 
    /* scheduler configuration stuff */
    DPRINTF(("scheduler config -----------------------------------\n"));
-   spool_read_list(spooling_context, &Master_Sched_Config_List, SGE_EMT_SCHEDD_CONF);
+   spool_read_list(spooling_context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
 
       /* SGEEE: read user list */
-      spool_read_list(spooling_context, &Master_User_List, SGE_EMT_USER);
+      spool_read_list(spooling_context, &Master_User_List, SGE_TYPE_USER);
 
       remove_invalid_job_references(1);
 
       /* SGE: read project list */
-      spool_read_list(spooling_context, &Master_Project_List, SGE_EMT_PROJECT);
+      spool_read_list(spooling_context, &Master_Project_List, SGE_TYPE_PROJECT);
 
       remove_invalid_job_references(0);
    }
    
    if (feature_is_enabled(FEATURE_SGEEE)) {
       /* SGEEE: read share tree */
-      spool_read_list(spooling_context, &Master_Sharetree_List, SGE_EMT_SHARETREE);
+      spool_read_list(spooling_context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
       ep = lFirst(Master_Sharetree_List);
       if (ep) {
          lList *alp = NULL;
@@ -507,8 +507,8 @@ int user
 
       if (spool_me) {
          spool_write_object(spool_get_default_context(), up, 
-                            lGetString(up, UP_name), user ? SGE_EMT_USER : 
-                                                            SGE_EMT_PROJECT);
+                            lGetString(up, UP_name), user ? SGE_TYPE_USER : 
+                                                            SGE_TYPE_PROJECT);
       }
    }
 

@@ -34,6 +34,7 @@
 #include "cull.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_gdi.h"
 #include "sge_conf.h"
 #include "sge_string.h"
 #include "sge_host.h"

@@ -722,7 +722,7 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_start_time, now);
       job_enroll(jep, NULL, jataskid);
       spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_EMT_JOB);
+                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
@@ -731,7 +731,7 @@ sge_commit_flags_t commit_flags
       job_log(jobid, jataskid, "job received by execd");
       job_enroll(jep, NULL, jataskid);
       spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_EMT_JOB);
+                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
       break;
 
    case 2:
@@ -838,7 +838,7 @@ sge_commit_flags_t commit_flags
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_EMT_JOB);
+                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
@@ -863,7 +863,7 @@ sge_commit_flags_t commit_flags
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
       spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_EMT_JOB);
+                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
             lGetUlong(jatep, JAT_task_number),
@@ -911,7 +911,7 @@ sge_commit_flags_t commit_flags
       sge_clear_granted_resources(jep, jatep, 0);
       job_enroll(jep, NULL, jataskid);
       spool_write_object(spool_get_default_context(), jep, 
-                         job_get_key(jobid, jataskid, NULL), SGE_EMT_JOB);
+                         job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
    }
@@ -1136,7 +1136,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       if (lGetString(job, JB_script_file)) {
          unlink(lGetString(job, JB_exec_file));
       }
-      spool_delete_object(spool_get_default_context(), SGE_EMT_JOB, 
+      spool_delete_object(spool_get_default_context(), SGE_TYPE_JOB, 
                           job_get_key(job_id, 0, NULL));
       /*
        * remove the job
@@ -1160,7 +1160,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        * remove the task
        */
       if (is_enrolled) {
-         spool_delete_object(spool_get_default_context(), SGE_EMT_JOB, 
+         spool_delete_object(spool_get_default_context(), SGE_TYPE_JOB, 
                              job_get_key(job_id, ja_task_id, NULL));
          lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
       } else {
@@ -1168,7 +1168,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
          if (spool_job) {
             spool_write_object(spool_get_default_context(), job, 
                                job_get_key(job_id, ja_task_id, NULL), 
-                               SGE_EMT_JOB);
+                               SGE_TYPE_JOB);
          }
       }
 #if 0

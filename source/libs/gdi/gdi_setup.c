@@ -74,7 +74,7 @@ struct gdi_state_t {
    u_long32 ec_reg_id;
 
    /* event mirror */
-/*    mirror_entry mirror_base[SGE_EMT_ALL]; */
+/*    mirror_entry mirror_base[SGE_TYPE_ALL]; */
 /*    u_long32 last_heared; */
 };
 

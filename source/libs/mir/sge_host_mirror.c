@@ -45,7 +45,7 @@
 *
 *  SYNOPSIS
 *     bool 
-*     host_update_master_list(sge_event_type type, sge_event_action action,
+*     host_update_master_list(sge_object_type type, sge_event_action action,
 *                             lListElem *event, void *clientdata)
 *
 *  FUNCTION
@@ -56,7 +56,7 @@
 *     on the event received.
 *
 *  INPUTS
-*     sge_event_type type     - event type
+*     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
 *     void *clientdata        - client data
@@ -73,7 +73,7 @@
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
 bool 
-host_update_master_list(sge_event_type type, sge_event_action action,
+host_update_master_list(sge_object_type type, sge_event_action action,
                         lListElem *event, void *clientdata)
 {
    lList **list;
@@ -86,17 +86,17 @@ host_update_master_list(sge_event_type type, sge_event_action action,
    DENTER(TOP_LAYER, "host_update_master_list");
 
    switch (type) {
-      case SGE_EMT_ADMINHOST:
+      case SGE_TYPE_ADMINHOST:
          list = &Master_Adminhost_List;
          list_descr = AH_Type;
          key_nm = AH_name;
          break;
-      case SGE_EMT_EXECHOST:
+      case SGE_TYPE_EXECHOST:
          list = &Master_Exechost_List;
          list_descr = EH_Type;
          key_nm = EH_name;
          break;
-      case SGE_EMT_SUBMITHOST:
+      case SGE_TYPE_SUBMITHOST:
          list = &Master_Submithost_List;
          list_descr = SH_Type;
          key_nm = SH_name;

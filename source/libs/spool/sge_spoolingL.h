@@ -215,8 +215,8 @@ NAMEEND
 *  ELEMENTS
 *     SGE_ULONG(SPT_type, CULL_HASH | CULL_UNIQUE)
 *        Unique type identifier.
-*        See enum sge_event_type in libs/gdi/sge_mirror.h
-*        SGE_EMT_ALL describes a default type entry for all
+*        See enum sge_object_type in libs/gdi/sge_mirror.h
+*        SGE_TYPE_ALL describes a default type entry for all
 *        object types.
 *
 *     SGE_STRING(SPT_name, CULL_DEFAULT)
@@ -230,7 +230,7 @@ NAMEEND
 *
 *  FUNCTION
 *     Objects to be spooled have a certain type that can be identified
-*     by the sge_event_type enum.
+*     by the sge_object_type enum.
 *     A spooling context can contain information about individual
 *     types and/or define a default behaviour for all (not individually
 *     handled) types.
@@ -252,7 +252,7 @@ NAMEEND
 */
 
 enum {
-   SPT_type = SPT_LOWERBOUND,      /* sge_event_type, SGE_EMT_ALL = default */
+   SPT_type = SPT_LOWERBOUND,      /* sge_object_type, SGE_TYPE_ALL = default */
    SPT_name,                       /* name of the type, e.g. "JB_Type" */
    SPT_rules                       /* list of rules to spool this object type */
 };

@@ -102,7 +102,7 @@ static int job_update_master_list_usage(lListElem *event)
 *     job_update_master_list() -- update the master list of jobs
 *
 *  SYNOPSIS
-*     bool job_update_master_list(sge_event_type type,
+*     bool job_update_master_list(sge_object_type type,
 *                                     sge_event_action action,
 *                                     lListElem *event, void *clientdata)
 *
@@ -117,7 +117,7 @@ static int job_update_master_list_usage(lListElem *event)
 *     are only used in scheduler, are not updated.
 *
 *  INPUTS
-*     sge_event_type type     - event type
+*     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
 *     void *clientdata        - client data
@@ -133,7 +133,7 @@ static int job_update_master_list_usage(lListElem *event)
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/job/job_update_master_list_usage()
 *******************************************************************************/
-bool job_update_master_list(sge_event_type type, sge_event_action action,
+bool job_update_master_list(sge_object_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
    lList **list;
@@ -224,7 +224,7 @@ bool job_update_master_list(sge_event_type type, sge_event_action action,
 }
 
 bool 
-job_schedd_info_update_master_list(sge_event_type type, 
+job_schedd_info_update_master_list(sge_object_type type, 
                                    sge_event_action action, 
                                    lListElem *event, void *clientdata)
 {

@@ -46,18 +46,18 @@ spool_classic_common_startup_func(const lListElem *rule);
 
 bool 
 spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
-                                lList **list, const sge_event_type event_type);
+                                lList **list, const sge_object_type event_type);
 lListElem *
 spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
                                 const char *key, 
-                                const sge_event_type event_type);
+                                const sge_object_type event_type);
 bool 
 spool_classic_default_write_func(const lListElem *type, const lListElem *rule, 
                                  const lListElem *object, const char *key, 
-                                 const sge_event_type event_type);
+                                 const sge_object_type event_type);
 bool 
 spool_classic_default_delete_func(const lListElem *type, const lListElem *rule, 
                                   const char *key, 
-                                  const sge_event_type event_type);
+                                  const sge_object_type event_type);
 
 #endif /* __SGE_SPOOLING_CLASSIC_H */    

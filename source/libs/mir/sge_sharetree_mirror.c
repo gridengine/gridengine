@@ -47,7 +47,7 @@
 *
 *  SYNOPSIS
 *     bool 
-*     sharetree_update_master_list(sge_event_type type, sge_event_action action,
+*     sharetree_update_master_list(sge_object_type type, sge_event_action action,
 *                                  lListElem *event, void *clientdata)
 *
 *  FUNCTION
@@ -58,7 +58,7 @@
 *     replaces an existing sharetree in the master list.
 *
 *  INPUTS
-*     sge_event_type type     - event type
+*     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
 *     void *clientdata        - client data
@@ -73,7 +73,7 @@
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
 bool 
-sharetree_update_master_list(sge_event_type type, sge_event_action action,
+sharetree_update_master_list(sge_object_type type, sge_event_action action,
                              lListElem *event, void *clientdata)
 {
    lList *src;

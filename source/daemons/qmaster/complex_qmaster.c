@@ -329,7 +329,7 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "complex_spool");
 
    if (!spool_write_object(spool_get_default_context(), cep, 
-                           lGetString(cep, CX_name), SGE_EMT_COMPLEX)) {
+                           lGetString(cep, CX_name), SGE_TYPE_COMPLEX)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CPLX, 
                lGetString(cep, CX_name)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
@@ -458,7 +458,7 @@ char *rhost
    }
 
    /* If this is the qmaster we delete the complex from disk */
-   spool_delete_object(spool_get_default_context(), SGE_EMT_COMPLEX, cmplxname);
+   spool_delete_object(spool_get_default_context(), SGE_TYPE_COMPLEX, cmplxname);
    sge_add_event(NULL, 0, sgeE_COMPLEX_DEL, 0, 0, cmplxname, NULL);
 
    /* change versions of corresponding queues */ 
@@ -493,7 +493,7 @@ const char *cmplx_name
    for_each(ep, Master_Queue_List) {
       sge_change_queue_version(ep, 0, 0);
       spool_write_object(spool_get_default_context(), ep, 
-                         lGetString(ep, QU_qname), SGE_EMT_QUEUE);
+                         lGetString(ep, QU_qname), SGE_TYPE_QUEUE);
       sge_add_event(NULL, 0, sgeE_QUEUE_MOD, 0, 0, lGetString(ep, QU_qname), ep);
    }
    for_each(ep, Master_Exechost_List)

@@ -209,8 +209,6 @@
 /*
 ** sge_give_jobs.c
 */
-/* #define MSG_OBJ_NOREALNAMEINHOST_S    _message(33136, _("missing real name in host "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_COM_NOTENROLLEDONHOST_SSU _MESSAGE(33137, _("target "SFQ" not enrolled on host "SFQ" for delivering job \""U32CFormat"\"\n")) */
 #define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't delivering job \""U32CFormat"\"\n"))
   
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33138, _("can't find checkpointing object "SFQ"\n"))

@@ -212,7 +212,7 @@ typedef char stringT[MAX_STRING_SIZE];
       init_func(variable); \
       ret = pthread_setspecific(key, (void*)variable); \
       if (ret != 0) { \
-         fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(ret)); \
+         fprintf(stderr, "pthread_setspecific(%s) failed: %s\n", func_name, strerror(ret)); \
          abort(); \
       } \
    } \

@@ -516,14 +516,14 @@ int japi_init(const char *contact, const char *session_key_in,
    if (my_prog_num > 0) {
       prog_number = my_prog_num;
    }
-
+#if 0
    ret = japi_read_dynamic_attributes(diag);
    if(ret != DRMAA_ERRNO_SUCCESS) {
       /* diag was set in drmaa_read_dynamic_attributes() */
       DEXIT;
       return ret;
    }
-   
+#endif
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
       JAPI_LOCK_SESSION();
@@ -532,6 +532,14 @@ int japi_init(const char *contact, const char *session_key_in,
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
+
+   ret = japi_read_dynamic_attributes(diag);
+   if(ret != DRMAA_ERRNO_SUCCESS) {
+      /* diag was set in drmaa_read_dynamic_attributes() */
+      DEXIT;
+      return ret;
+   }
+
 
    if (enable_wait) {
       /* spawn implementation thread japi_implementation_thread() */

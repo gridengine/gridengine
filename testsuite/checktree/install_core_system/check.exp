@@ -2689,7 +2689,6 @@ proc setup_schedconf {} {
   } else {
      add_proc_error "setup_schedconf" -1 "parameter count new/old scheduler configuration error"
   }
-
   set_error 0 "ok"
 }
 

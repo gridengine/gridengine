@@ -1364,7 +1364,9 @@ proc reset_schedd_config {} {
          set default_array(weight_waiting_time)             "1"
          set default_array(weight_deadline)                 "1000000"
          set default_array(weight_urgency)                  "0.0"
-      }
+     } else {
+         set default_array(weight_tickets_deadline)    "10000"
+     }
   }
 
   set ret_value [ set_schedd_config default_array ]

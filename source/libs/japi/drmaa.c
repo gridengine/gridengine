@@ -253,7 +253,8 @@ static const char *drmaa_supported_vector[] = {
 *  NOTES
 *      MT-NOTE: drmaa_init() is MT safe
 *******************************************************************************/
-int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len)
+int drmaa_init(const char *contact, char *error_diagnosis,
+               size_t error_diag_len)
 {
    int ret;
    dstring diag, session_key_in = DSTRING_INIT, 
@@ -278,8 +279,9 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
     * env var SGE_SESSION_KEY is used 
     * to interface JAPI session key forth ... 
     */
-   ret = japi_init(contact, set_session?sge_dstring_get_string(&session_key_in):NULL, 
-        &session_key_out, DRMAA, 1, diagp);
+   ret = japi_init(contact,
+                   set_session?sge_dstring_get_string(&session_key_in):NULL, 
+                   &session_key_out, DRMAA, 1, NULL, diagp);
 
    if (set_session)
       sge_dstring_free(&session_key_in);

@@ -1,3 +1,15 @@
+DT-2004-03-17-0: Bugfix:    o qsub -sync y now survives the qmaster going down.
+                            o JAPI allows client to register an error message
+                              callback for error messages from the event client
+                              thread.
+                            o qsub prints message when the qmaster goes away and
+                              comes back.
+                            o Left over checkin from DRMAA Java binding
+                            o Left over checkin from Flatfile Spooling
+                 Changed:   JAPI, qsub, DRMAA
+                 Issue:     826
+                 Review:    SG
+
 MD-2004-03-17-3  Bugfix:    merged fixes from beta branch to maintrunc
                             adapted testsuite to changed message parts
                  Changed:   inst_sge, testsuite

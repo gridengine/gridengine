@@ -70,6 +70,7 @@ static void qsub_setup_sig_handlers (void);
 static void qsub_terminate(void);
 static void *sig_thread (void *dummy);
 static int report_exit_status (int stat, const char *jobid);
+static void error_handler (const char *message);
 
 int main(int argc, char **argv);
 
@@ -105,8 +106,10 @@ char **argv
 
    DPRINTF (("Initializing JAPI\n"));
 
-   if (japi_init(NULL, NULL, NULL, QSUB, false, &diag) != DRMAA_ERRNO_SUCCESS) {
-      fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S, sge_dstring_get_string (&diag));
+   if (japi_init(NULL, NULL, NULL, QSUB, false, NULL, &diag)
+                                                      != DRMAA_ERRNO_SUCCESS) {
+      fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
+              sge_dstring_get_string (&diag));
       DEXIT;
       exit (1);
    }
@@ -206,15 +209,18 @@ char **argv
       qsub_setup_sig_handlers(); 
 
       if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
-         fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S, " error preparing signal handling thread");
+         fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
+                 " error preparing signal handling thread");
          
          exit_status = 1;
          goto Error;
       }
       
-      if (japi_enable_job_wait (NULL, &session_key_out, &diag) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+      if (japi_enable_job_wait (NULL, &session_key_out, error_handler, &diag) ==
+                                       DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
          const char *msg = sge_dstring_get_string (&diag);
-         fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S, msg?msg:" error starting event client thread");
+         fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
+                 msg?msg:" error starting event client thread");
          
          exit_status = 1;
          goto Error;
@@ -367,6 +373,29 @@ Error:
    return 0;
 }
 
+/****** get_bulk_jobid_string() ************************************************
+*  NAME
+*     get_bulk_jobid_string() -- Turn the job id and parameters into a string
+*
+*  SYNOPSIS
+*     char *get_bulk_jobid_string (long job_id, int start, int end, int step)
+*
+*  FUNCTION
+*     Creates a string from the job id, start task, end task, and task step.
+*     The return job id string must be freed by the caller.
+*
+*  INPUT
+*     long job_id   - The job's id number
+*     int start     - The number of the first task in the job
+*     int end       - The number of the last task in the job
+*     int step      - The increment between job task numbers
+*
+*  RESULT
+*     static char * - The job id string
+*
+*  NOTES
+*     MT-NOTES: get_bulk_jobid_string() is MT safe
+*******************************************************************************/
 static char *get_bulk_jobid_string (long job_id, int start, int end, int step)
 {
    char *jobid_str = (char *)malloc (sizeof (char) * 1024);
@@ -379,7 +408,20 @@ static char *get_bulk_jobid_string (long job_id, int start, int end, int step)
    return ret_str;
 }
 
-static void qsub_setup_sig_handlers ()
+/****** qsub_setup_sig_handlers() **********************************************
+*  NAME
+*     qsub_setup_sig_handlers() -- Set up the signal handlers
+*
+*  SYNOPSIS
+*     void qsub_setup_sig_handlers (void)
+*
+*  FUNCTION
+*     Blocks all signals so that the signal handler thread receives them.
+*
+*  NOTES
+*     MT-NOTES: get_bulk_jobid_string() is MT safe
+*******************************************************************************/
+static void qsub_setup_sig_handlers (void)
 {
    sigset_t sig_set;
 
@@ -387,6 +429,19 @@ static void qsub_setup_sig_handlers ()
    pthread_sigmask (SIG_BLOCK, &sig_set, NULL);
 }
 
+/****** qsub_terminate() *******************************************************
+*  NAME
+*     qsub_terminate() -- Terminates qsub
+*
+*  SYNOPSIS
+*     void qsub_terminate(void)
+*
+*  FUNCTION
+*     Prints out messages that qsub is ending and exits JAPI.
+*
+*  NOTES
+*     MT-NOTES: qsub_terminate() is MT safe
+*******************************************************************************/
 static void qsub_terminate(void)
 {
    dstring diag = DSTRING_INIT;
@@ -406,6 +461,25 @@ static void qsub_terminate(void)
    sge_mutex_unlock("qsub_exit_mutex", "qsub_terminate", __LINE__, &exit_mutex);
 }
 
+/****** sig_thread() ***********************************************************
+*  NAME
+*     sig_thread() -- Signal handler thread
+*
+*  SYNOPSIS
+*     void *sig_thread (void *dummy)
+*
+*  FUNCTION
+*     Waits for a SIGINT or SIGTERM and then calls qsub_terminate().
+*
+*  INPUT
+*     void *dummy - Unused
+*
+*  RESULT
+*     static void * - Always NULL
+*
+*  NOTES
+*     MT-NOTES: sig_thread() is MT safe
+*******************************************************************************/
 static void *sig_thread (void *dummy)
 {
    int sig;
@@ -429,6 +503,26 @@ static void *sig_thread (void *dummy)
    return (void *)NULL;
 }
 
+/****** report_exit_status() ***************************************************
+*  NAME
+*     report_exit_status() -- Prints a job's exit status
+*
+*  SYNOPSIS
+*     static int report_exit_status (int stat, const char *jobid)
+*
+*  FUNCTION
+*     Prints a job's exit status to stdout.
+*
+*  INPUT
+*     int stat          - The job's exit status
+*     const char *jobid - The job id string
+*
+*  RESULT
+*     static int        - The exit code of the job
+*
+*  NOTES
+*     MT-NOTES: report_exit_status() is MT safe
+*******************************************************************************/
 static int report_exit_status (int stat, const char *jobid)
 {
    int aborted, exited, signaled;
@@ -463,4 +557,25 @@ static int report_exit_status (int stat, const char *jobid)
    }
    
    return exit_status;
+}
+
+/****** error_handler() ********************************************************
+*  NAME
+*     error_handler() -- Prints JAPI error messages
+*
+*  SYNOPSIS
+*     static void error_handler (const char *message)
+*
+*  FUNCTION
+*     Prints error messages from JAPI event client thread to stderr
+*
+*  INPUT
+*     const char *message - The message to print
+*
+*  NOTES
+*     MT-NOTES: error_handler() is MT safe
+*******************************************************************************/
+static void error_handler (const char *message)
+{
+   fprintf (stderr, message);
 }

@@ -34,7 +34,7 @@
 #include <stdlib.h>
 
 #include "japi/drmaa.h"
-#include "japi/sun_sge_drmaa_SGESession.h"
+#include "japi/com_sun_grid_drmaa_SGESession.h"
 #include "uti/sge_signal.h"
 
 #define BUFFER_LENGTH 1024

@@ -1123,7 +1123,9 @@ case LINUXIA64:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set OFLAG = "-O2"
-      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
+      if ( $SEC ==  1 ) then
+         set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
+      endif
       set LIBS = "$LIBS"
    endif
 

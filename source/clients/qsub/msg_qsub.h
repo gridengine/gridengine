@@ -40,7 +40,7 @@
 #define MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER    _MESSAGE(21003, _("\nYour qsub request could not be scheduled, try again later.\n"))
 #define MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S    _MESSAGE(21004, _("\nYour immediate job "SFN" has been successfully scheduled.\n"))
 #define MSG_QSUB_COULDNOTINITIALIZEENV_S    _MESSAGE(21005, _("\nUnable to initialize environment because of error: "SFN"\nExiting.\n"))
-#define MSG_QSUB_COULDNOTRUNJOB_S    _MESSAGE(21006, _("Unable to run job because of error: "SFN".\nExiting.\n"))
+#define MSG_QSUB_COULDNOTRUNJOB_S    _MESSAGE(21006, _("Unable to run job: "SN_UNLIMITED".\nExiting.\n"))
 #define MSG_QSUB_COULDNOTWAITFORJOB_S    _MESSAGE(21007, _("\nUnable to wait for job because of error: "SFN"\nExiting.\n"))
 #define MSG_QSUB_JOBNEVERRAN_S    _MESSAGE(21008, _("Unable to run job "SFN"\n"))
 #define MSG_QSUB_JOBRECEIVEDSIGNAL_SS    _MESSAGE(21009, _("Job "SFN" exited because of signal "SFN"\n"))

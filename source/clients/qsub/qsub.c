@@ -169,7 +169,7 @@ char **argv
    /* Remove all -sync switches since cull_parse_job_parameter()
     * doesn't know what to do with them. */
    while ((ep = lGetElemStr(opts_all, SPA_switch, "-sync"))) {
-      if (lGetInt (ep, SPA_argval_lIntT) == TRUE) {
+      if (lGetInt(ep, SPA_argval_lIntT) == TRUE) {
          wait_for_job = 1;
       }
       
@@ -177,7 +177,7 @@ char **argv
    }
    
    if (wait_for_job) {
-      DPRINTF (("Wait for job end\n"));
+      DPRINTF(("Wait for job end\n"));
    }
    
    alp = cull_parse_job_parameter(opts_all, &job);
@@ -301,10 +301,12 @@ char **argv
    }
   
    /* only success message is printed to stdout */
-   if (!just_verify)
+   if (!just_verify) {
       printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
-   else
+   }   
+   else {
       printf(MSG_JOB_VERIFYFOUNDQ);
+   }   
 
    if (wait_for_job || is_immediate) {
       int event;

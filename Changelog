@@ -1,4 +1,11 @@
-SG-2004-08-04-1: Bugfix:    qstat -ext -urg did not display the submit/start
+SG-2004-08-04-1: Bugfix:    fixed an aspect of bug 1195: the error message
+                            truncated to 100 characters.
+                 Review:    RH
+                 Issue:     -NA-
+                 Bugtraq:   -NA-
+                 Changed:   qsub
+
+SG-2004-08-04-0: Bugfix:    qstat -ext -urg did not display the submit/start
                             time
                  Review:    RH
                  Issue:     1192

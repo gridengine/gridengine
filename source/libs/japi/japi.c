@@ -1528,7 +1528,7 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
    DENTER(TOP_LAYER, "japi_run_job");
 
    /* per thread initialization */
-   if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt(diag) != DRMAA_ERRNO_SUCCESS) {
       /* diag written by japi_init_mt() */
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;

@@ -43,7 +43,8 @@
 ** PARAMETER
 **   ref_list     - queue reference list, ST_Type
 **   option_flags  - 0 or BIT_QMOD_FORCE
-**   action_flag   - QDISABLED, QENABLED, QSUSPENDED, QRUNNING
+**   action_flag   - QDISABLED, QENABLED, QSUSPENDED, 
+**                   QRUNNING, QERROR, QRESCHEDULED
 ** RETURN
 **   answer list 
 ** EXTERNAL

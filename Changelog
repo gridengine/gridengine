@@ -1,3 +1,7 @@
+AH-2002-09-02-1  Doc:       qmod man page for "-r" incorrect (user)
+                            daemons to crash at startup phase
+                 Issue:     #193
+
 CR-2002-09-02-1  Testsuite: - enhancements for project_access_lists test
                             - added version information for 5.3.1beta5 -
                               5.3.1beta8

@@ -757,7 +757,7 @@ unsigned long flags
    }
 
    if (!lp) {
-      if (max_len && (cb_sum + strlen("NONE") > max_len)) {
+      if (max_len && (cb_sum + (sizeof("NONE") - 1) > max_len)) {
          DPRINTF(("max_len too small even for zero list\n"));
          DEXIT;
          return -1;
@@ -766,8 +766,8 @@ unsigned long flags
          cb = FPRINTF((fp, "NONE"));
       }
       else {
-         cb = strlen("NONE");
-         sprintf(buff, "NONE");
+         cb = sizeof("NONE") - 1;
+         strcpy(buff, "NONE");
       }
       buff += cb;
       cb_sum += cb;

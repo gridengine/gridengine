@@ -1,3 +1,28 @@
+SG-2003-05-26-0  Bugfix    the queue name was truncated to 10 chars
+                           - added a queue name line to the qstat -r option, which
+                           displays the full name
+                IZ:        #555
+                Changed:   qstat
+                Review:    AH
+
+SG-2003-05-26-0: Bugfix    qstat crashed, when used with the options -r -s z
+                           - added the required information to the list
+                IZ:        #545
+                Changed:   qstat
+                Review:    AH
+
+SG-2003-05-22-0: Bugfix:    enabled output file names to have a ":" inside for qsub
+                            - changed the hostname file definition for the c
+                              parameters -e, -o -S
+                            - updated the man pages
+                            - implemented a hostname resolving, returning an error
+                              if the name could not be found.
+                            - implemented a check, if the files are only specified
+                              once per machine.
+                IZ:         #540
+                Changed:    qsub, qsh, qalter, sge_qmaster, qmon
+                Review:     AH,
+ 
 JG-2003-06-04-0: Enhancem.: PostgreSQL spooling:
                             - compile time option to switch between synchronous 
                               and asynchronous communication

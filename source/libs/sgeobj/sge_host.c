@@ -208,7 +208,6 @@ int sge_resolve_host(lListElem *ep, int nm)
           hostname = NULL;
           break;
    }
-
    ret = sge_resolve_hostname(hostname, unique, nm);
 
    if (ret == CL_OK) {

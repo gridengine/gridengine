@@ -207,19 +207,19 @@ char **argv
 
 
    get_all_lists(
-      &queue_list, 
-      qselect_mode?NULL:&job_list, 
-      &complex_list, 
-      &exechost_list, 
+      &queue_list, /**/
+      qselect_mode?NULL:&job_list, /**/
+      &complex_list, /**/
+      &exechost_list, /**/
       &sc_config, 
       &pe_list,
       &ckpt_list,
       &acl_list,
-      &zombie_list,
+      &zombie_list, /**/
       queueref_list,
       peref_list,
       user_list,
-      full_listing);
+      full_listing); /**/
 
    complex_list_init_double_attr(complex_list);
 
@@ -731,6 +731,7 @@ u_long32 show
                      JB_soft_resource_list,
                      JB_hard_queue_list,
                      JB_soft_queue_list,
+                     JB_master_hard_queue_list,
                      JB_ja_structure,
                      JB_ja_n_h_ids,
                      JB_ja_u_h_ids,

@@ -1972,12 +1972,34 @@ char *time_str
 }
 
 /***************************************************************************/
+
+
+/****** parse_qsub/cull_parse_path_list() **************************************
+*  NAME
+*     cull_parse_path_list() -- ??? 
+*
+*  SYNOPSIS
+*     int cull_parse_path_list(lList **lpp, char *path_str) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **lpp    - ??? 
+*     char *path_str - ??? 
+*
+*  RESULT
+*     int - error code 
+*        0 = okay
+*        1 = error 
+*
+*******************************************************************************/
 int cull_parse_path_list(
 lList **lpp,
 char *path_str 
 
 /*
-   [host:]path[,[host:]path...]
+   [[host]:]path[,[[host]:]path...]
 
    str0 - path
    str1 - host
@@ -1988,75 +2010,95 @@ char *path_str
 ) {
    char *path = NULL;
    char *cell = NULL;
-   char **str_str;
-   char **pstr;
-   lListElem *ep;
-   char *path_string;
+   char **str_str = NULL;
+   char **pstr = NULL;
+   lListElem *ep = NULL;
+   char *path_string = NULL;
+   bool ret_error=false;
 
    DENTER(TOP_LAYER, "cull_parse_path_list");
 
+   ret_error = !lpp;
+/*
    if (!lpp) {
       DEXIT;
       return 1;
    }
-
-
-   path_string = sge_strdup(NULL, path_str);
+*/
+   if(!ret_error){
+      path_string = sge_strdup(NULL, path_str);
+      ret_error = !path_string;
+   }
+/*
    if (!path_string) {
       *lpp = NULL;
       DEXIT;
       return 2;
    }
-
-   str_str = string_list(path_string, ",", NULL);
+*/
+   if(!ret_error){
+      str_str = string_list(path_string, ",", NULL);
+      ret_error = !str_str || !*str_str;
+   }
+/*
    if (!str_str || !*str_str) {
       *lpp = NULL;
       FREE(path_string);
       DEXIT;
       return 3;
    }
-
-   if (!*lpp) {
+*/
+   if ( (!ret_error) && (!*lpp)) {
       *lpp = lCreateList("path list", PN_Type);
+      ret_error = !*lpp;
+/*
       if (!*lpp) {
          FREE(path_string);
          FREE(str_str);
          DEXIT;
          return 4;
       }
+*/
    }
 
-   for (pstr = str_str; *pstr; pstr++) {
+   if(!ret_error){
+      for (pstr = str_str; *pstr; pstr++) {
       /* cell given ? */
-      if (**pstr == ':') {
-         cell = NULL;
-         path = sge_strtok(*pstr, ":");
-      }
-      else if (strstr(*pstr, ":")) {
-         cell = sge_strtok(*pstr, ":");
-         path = sge_strtok(NULL, ":");
-      }
-      else {
-         cell = NULL;
-         path = *pstr;
-      }
+         if (*pstr[0] == ':') {  /* :path */
+            cell = NULL;
+            path = *pstr+1;
+         } else if ((path = strstr(*pstr, ":"))){ /* host:path */
+            path[0] = '\0';
+            cell = strdup(*pstr);
+            path[0] = ':';
+            path += 1;
+         } else { /* path */
+            cell = NULL;
+            path = *pstr;
+         }
 
-      SGE_ASSERT((path));
+         SGE_ASSERT((path));
 
-      ep = lCreateElem(AT_Type);
-      /* SGE_ASSERT(ep); */
-      lAppendElem(*lpp, ep);
+         ep = lCreateElem(AT_Type);
+         /* SGE_ASSERT(ep); */
+         lAppendElem(*lpp, ep);
 
-      lSetString(ep, PN_path, path);
-      if (cell) {
-         lSetHost(ep, PN_host, cell);
+         lSetString(ep, PN_path, path);
+        if (cell) {
+            lSetHost(ep, PN_host, cell);
+            FREE(cell);
+         }
       }
    }
-
-   FREE(path_string);
-   FREE(str_str);
+   if(path_string)
+      FREE(path_string);
+   if(str_str)
+      FREE(str_str);
    DEXIT;
-   return 0;
+   if(ret_error)
+      return 1;
+   else
+      return 0;
 }
 
 

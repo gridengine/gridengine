@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/01/22 14:39:26 $     Revision: $Revision: 1.24 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/06/04 12:47:54 $     Revision: $Revision: 1.25 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2003/01/22 14:39:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/06/04 12:47:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -546,7 +546,7 @@ maximum as configured by the xxQS_NAMExx administrator.
 .br
 This option is applicable for users allowed to submit deadline jobs only.
 .\"
-.IP "\fB\-e [hostname:]path,...\fP"
+.IP "\fB\-e [[hostname]:]path,...\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Defines or redefines
@@ -559,7 +559,8 @@ path in case the \fB\-cwd\fP (see above) switch is also
 specified or with the home directory path otherwise. If 
 \fBhostname\fP is present, the standard error stream will be
 placed under the corresponding location if the job runs on
-the specified host.
+the specified host. If the path should contain ":" without a
+\fBhostname\fP, a leading ":" has to be specified.
 .sp 1
 By default the file name for standard
 error has the form \fIjob_name.\fPe\fIjob_id\fP and
@@ -694,7 +695,7 @@ allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
-.IP "\fB\-i [hostname:]file,...\fP"
+.IP "\fB\-i [[hostname]:]file,...\fP"
 Available for \fIqsub\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the file used for the standard input stream of
@@ -960,7 +961,7 @@ are executed in parallel using \fIqrsh\fP, e.g. in a
 .M make 1
 process - it would be undefined, which process would get the input.
 .\"
-.IP "\fB\-o [hostname:]path,...\fP"
+.IP "\fB\-o [[hostname]:]path,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
@@ -1140,7 +1141,7 @@ stage of the scan, all resource requests following it once
 again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
-.IP "\fB\-S [host:]pathname,...\fP"
+.IP "\fB\-S [[hostname]:]pathname,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP and \fIqalter\fP.
 .sp 1
 Specifies the interpreting shell for the job. Only one \fBpathname\fP

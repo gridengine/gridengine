@@ -1236,7 +1236,11 @@ char *indent
 
    /* print additional job info if requested */
    if (print_jobid && (full_listing & QSTAT_DISPLAY_RESOURCES)) {
-         printf(QSTAT_INDENT "Full jobname:     %s\n", lGetString(job, JB_job_name)); 
+         printf(QSTAT_INDENT "Full jobname:     %s\n", lGetString(job, JB_job_name));
+
+         if(queue_name)
+            printf(QSTAT_INDENT "Master queue:     %s\n", queue_name);
+
          if (lGetString(job, JB_pe)) {
             dstring range_string = DSTRING_INIT;
 
@@ -1314,7 +1318,6 @@ char *indent
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }
-
          ql = lGetList(job, JB_master_hard_queue_list);
          if (ql) {
             printf(QSTAT_INDENT "Master task hard requested queues: ");
@@ -1323,7 +1326,6 @@ char *indent
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }
-
          ql = lGetList(job, JB_jid_predecessor_list);
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");

@@ -37,6 +37,7 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
+#include "commlib.h"
 #include "cull_list.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
@@ -54,6 +55,7 @@
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_queue.h"
+#include "sge_host.h"
 
 #include "sge_messageL.h"
 
@@ -62,7 +64,7 @@
 #include "msg_common.h"
 
 #include "sge_job.h"
-
+  
 lList *Master_Job_List = NULL;
 lList *Master_Zombie_List = NULL;
 lList *Master_Job_Schedd_Info_List = NULL;
@@ -1825,7 +1827,8 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
       } else if (!has_x_ids) {
          job_initialize_id_lists(job, answer_list);
       }
-   }       
+   }
+  
    DEXIT; 
 }
 
@@ -2318,3 +2321,81 @@ bool job_has_valid_account_string(const lListElem *job, lList **answer_list)
    }
    return ret;
 }
+
+/****** sge_job/job_resolve_host_for_path_list() *******************************
+*  NAME
+*     job_resolve_host_for_path_list() -- is a hostname valid 
+*
+*  SYNOPSIS
+*     int job_resolve_host_for_path_list(const lListElem *job, lList 
+*     **answer_list, int name) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const lListElem *job - the submited cull list 
+*     lList **answer_list  - AN_Type element
+*     int name             - a JB_Type ( JB_stderr_path_list or JB_stout_path_list)
+*
+*  RESULT
+*     int - error code ( STATUS_OK, or ...) 
+*
+*******************************************************************************/
+int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name)
+{
+   bool ret_error=false;
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "job_resolve_host_for_path_list");
+
+   for_each( ep, lGetList(job, name) ){
+      int res=sge_resolve_host(ep, PN_host);
+
+      if( (res != 0) && (res != -1) && (res !=1 ) ){ /* 0 = everything is fine, 1 = no host specified*/
+         const char *hostname = lGetHost(ep, PN_host);
+
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret_error=true;
+      }  
+      else if(res==-1){/*something in the data-structure is wrong */
+         ERROR((SGE_EVENT, MSG_PARSE_NULLPOINTERRECEIVED));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret_error=true;
+      }
+      /* ensure, that each hostname is only specified once */
+      if(!ret_error){
+         const char *hostname = lGetHost(ep, PN_host);       
+         lListElem *temp;         
+
+         for(temp= lPrev(ep); temp; temp =lPrev(temp)){
+            const char *temp_hostname = lGetHost(temp, PN_host);
+
+            if(hostname == NULL){
+               if(temp_hostname == NULL){
+                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                  ret_error=true;
+               }
+            } 
+            else if(strcmp(hostname, temp_hostname)==0){
+               ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               ret_error=true;
+            }
+            if(ret_error)
+               break;
+         }/* end for */ 
+      }
+      if(ret_error)
+         break;
+   }/*end for*/
+
+   DEXIT;
+   if(ret_error)
+      return STATUS_EUNKNOWN;
+   else
+      return STATUS_OK;
+}
+

@@ -223,11 +223,37 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
    job_check_correct_id_sublists(jep, alpp);
    if (answer_list_has_error(alpp)) {
       DEXIT;
       return STATUS_EUNKNOWN;
+   }
+
+   /*
+    * resolve host names. If this is not possible an error is produced
+    */ 
+   {
+      int status;
+      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stdin_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stderr_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
    }
 
    /*
@@ -2355,7 +2381,14 @@ int *trigger
 
    /* ---- JB_stderr_path_list */
    if ((pos=lGetPosViaElem(jep, JB_stderr_path_list))>=0) {
+      int status;
       DPRINTF(("got new JB_stderr_path_list\n")); 
+      
+      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stderr_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
       lSetList(new_job, JB_stderr_path_list, 
             lCopyList("", lGetList(jep, JB_stderr_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDERRPATHLIST, u32c(jobid));
@@ -2364,7 +2397,15 @@ int *trigger
    
    /* ---- JB_stdin_path_list */
    if ((pos=lGetPosViaElem(jep, JB_stdin_path_list))>=0) {
+      int status;
       DPRINTF(("got new JB_stdin_path_list\n")); 
+      
+      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_stdin_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+
+ 
       lSetList(new_job, JB_stdin_path_list, 
             lCopyList("", lGetList(jep, JB_stdin_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDINPATHLIST, 
@@ -2578,7 +2619,14 @@ int *trigger
 
    /* ---- JB_stdout_path_list */
    if ((pos=lGetPosViaElem(jep, JB_stdout_path_list))>=0) {
-      DPRINTF(("got new JB_stdout_path_list\n")); 
+      int status;
+      DPRINTF(("got new JB_stdout_path_listß\n")); 
+      
+      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
+ 
       lSetList(new_job, JB_stdout_path_list, 
                lCopyList("", lGetList(jep, JB_stdout_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDOUTPATHLIST, u32c(jobid));
@@ -2699,7 +2747,13 @@ int *trigger
 
    /* ---- JB_shell_list */
    if ((pos=lGetPosViaElem(jep, JB_shell_list))>=0) {
+      int status;
       DPRINTF(("got new JB_shell_list\n")); 
+      
+      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK){
+         DEXIT;
+         return status;
+      }
 
       lSetList(new_job, JB_shell_list, 
                lCopyList("", lGetList(jep, JB_shell_list)));

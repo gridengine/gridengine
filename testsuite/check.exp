@@ -12953,6 +12953,13 @@ proc compile_source { { do_only_install 0 } } {
          puts $CHECK_OUTPUT "output:\n$output"
          puts $CHECK_OUTPUT "------------------------------------------"
       }
+      set macro_messages_file [get_macro_messages_file_name]
+      puts $CHECK_OUTPUT "deleting macro messages file after update!"
+      puts $CHECK_OUTPUT "file: $macro_messages_file"
+      if { [ file isfile $macro_messages_file] } {
+         file delete $macro_messages_file
+      }
+      update_macro_messages_list
    }
    }
    

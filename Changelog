@@ -1,3 +1,7 @@
+CR-2002-11-21-0  Testsuite: remove source code macro dump file after source
+                            code update ( procedure compile_source() ) and
+                            create a new one.
+
 CR-2002-11-20-1  Testsuite: install_core_system check doesn't work without 
                  Bugfix:    root password (noroot)
 

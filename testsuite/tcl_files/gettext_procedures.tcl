@@ -70,13 +70,24 @@ proc test_file { me two} {
   puts $CHECK_OUTPUT "printing \"$me\" \"$two\". host is [exec hostname]" 
   return "test ok"
 }
+
+proc get_macro_messages_file_name { } {
+  global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE
+  
+  set filename $CHECK_PROTOCOL_DIR/source_code_macros_${CHECK_SOURCE_CVS_RELEASE}.dump
+  
+  return $filename
+}
+
 proc update_macro_messages_list {} {
   global CHECK_OUTPUT CHECK_SOURCE_DIR macro_messages_list
   global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE
   if { [info exists macro_messages_list]} {
      unset macro_messages_list
   }
-  set filename $CHECK_PROTOCOL_DIR/source_code_macros_${CHECK_SOURCE_CVS_RELEASE}.dump
+  set filename [get_macro_messages_file_name]
+
+   
 
   if { [ file isfile $filename ] } {
      puts $CHECK_OUTPUT "reading macro messages spool file:\n\"$filename\" ..."

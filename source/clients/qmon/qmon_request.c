@@ -174,6 +174,7 @@ XtPointer cld, cad;
             rp = lGetElemStr(rll, CE_shortcut, lGetString(ep, CE_name));
          if (rp) {
             lSetString(ep, CE_name, lGetString(rp, CE_name));
+            lSetString(ep, CE_default, NULL);
             lSetUlong(ep, CE_valtype, lGetUlong(rp, CE_valtype)); 
          }
       }
@@ -533,6 +534,7 @@ XtPointer cld, cad;
    */
    if (status) {
       lSetString(fill_in_request, CE_stringval, stringval);
+      lSetString(fill_in_request, CE_default, NULL);
     
       /* put it in the hard or soft resource list if necessary */
       if (!how) {
@@ -541,11 +543,12 @@ XtPointer cld, cad;
                soft_requests = lCreateList("soft_requests", CE_Type);
             }
             if (!(ep = lGetElemStr(soft_requests, CE_name, 
-                                    cbs->element->string[0])))
+                                    cbs->element->string[0]))) {
                lAppendElem(soft_requests, lCopyElem(fill_in_request));
-            else 
+            } else {
                lSetString(ep, CE_stringval, lGetString(fill_in_request, CE_stringval));
-               
+               lSetString(ep, CE_default, NULL);
+            }   
                
          }
          else {
@@ -553,10 +556,12 @@ XtPointer cld, cad;
                hard_requests = lCreateList("hard_requests", CE_Type);
             }
             if (!(ep = lGetElemStr(hard_requests, CE_name, 
-                                    cbs->element->string[0])))
+                                    cbs->element->string[0]))) {
                lAppendElem(hard_requests, lCopyElem(fill_in_request));
-            else 
+            } else {
                lSetString(ep, CE_stringval, lGetString(fill_in_request, CE_stringval));
+               lSetString(ep, CE_default, NULL);
+            }
          }
       }
       qmonRequestDraw(request_sr, soft_requests, 1);

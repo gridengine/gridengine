@@ -558,7 +558,7 @@ lListElem *sge_get_configuration_entry_by_name(const char *aHost, const char *an
    lListElem *conf = NULL;
    lListElem *elem = NULL;
    
-   DENTER(TOP_LAYER, "sge_get_configuration_value_by_name");
+   DENTER(TOP_LAYER, "sge_get_configuration_entry_by_name");
    
    SGE_ASSERT((NULL != aHost) && (NULL != anEntryName));
    
@@ -569,7 +569,7 @@ lListElem *sge_get_configuration_entry_by_name(const char *aHost, const char *an
    conf = lFreeElem(conf);
    
    /* local configuration did not work, try global one */
-   if ((elem == NULL) && (conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) != NULL) {
+   if ((elem == NULL) && ((conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) != NULL)) {
       elem = get_entry_from_conf(conf, anEntryName);
    }
   

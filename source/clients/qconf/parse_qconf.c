@@ -1189,7 +1189,13 @@ DPRINTF(("ep: %s %s\n",
          /* no adminhost/manager check needed here */
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, EH_Type, EH_name, *spp);
+printf("1..\n");         
+lWriteListTo(lp, stdout);
+printf("1..\n");
          del_host_of_type(lp, SGE_EXECHOST_LIST);
+printf("2..\n");         
+lWriteListTo(lp, stdout);
+printf("2..\n");
          lp = lFreeList(lp);
 
          spp++;
@@ -4730,6 +4736,8 @@ u_long32 target
 
    for_each (argep, arglp) {
 
+#if 0
+      
 #ifdef ENABLE_NGC
       /* resolve hostname */
       if (sge_resolve_host(argep, nm) != CL_RETVAL_OK) {
@@ -4743,7 +4751,7 @@ u_long32 target
          continue;
       }
 #endif
-
+#endif
       /* make a new host element */
       lp = lCreateList("host to add", type);
       ep = lCopyElem(argep);

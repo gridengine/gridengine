@@ -1,3 +1,9 @@
+SG-2004-01-31-1: Bugfix:    fixed qconf -de. A exec host can be removed, even
+                            so the host can not be resolved.
+                 Changed:   qconf
+                 Issue:     566
+                 Review:    pending
+
 JG-2004-01-31-1: Testsuite: Fixed a number of installation problems caused by
                             changed objects (queue, schedd_conf) and changed
                             architecture names.

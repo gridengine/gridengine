@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
 	<META NAME="AUTHOR" CONTENT=" ">
 	<META NAME="CREATED" CONTENT="20020111;13083600">
-	<META NAME="CHANGED" CONTENT="20030625;14254500">
+	<META NAME="CHANGED" CONTENT="20030626;16133700">
 	<STYLE>
 	<!--
 		H2 { font-family: "Sunsans Demi" }
@@ -20,16 +20,20 @@
 <P STYLE="margin-bottom: 0cm">The <B>qmon(1) </B>graphical user
 interface can be used to perform all administrative tasks in Grid
 Engine, as well as providing users with a way to submit and monitor
-jobs. By default, both adminstrative and operational features appear
-together in a single GUI. This HOWTO goes over ways to customize the
-behavior of qmon so that only certain functions are operable. It also
-shows how to make the GUI buttons larger, for greater ease of use.</P>
+jobs. By default, both<SPAN LANG="en-US"> administrative </SPAN>and
+operational features appear together in a single GUI. This HOWTO goes
+over ways to customize the behavior of qmon so that only certain
+functions are operable. It also shows how to make the GUI more
+user-friendly, by increasing button size and modifying field size in
+the Job Control window.</P>
 <H3>Contents</H3>
 <OL>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Specifying which buttons are active|outline">Specifying
 	which buttons are active</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Changing the size of the main screen buttons|outline">Changing
 	the size of the main screen buttons</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Resizing Job Control fields|outline">Resizing
+	Job Control fields</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#Setting Administrator Defaults|outline">Setting
 	administrator defaults</A></P>
 </OL>
@@ -42,15 +46,16 @@ that calls the actual binary with a modified environment variable:</P>
 <P CLASS="text-body-indent"><CODE>#!/bin/ksh<BR># wrapper script for
 qmon to change default appearance<BR>export
 XFILESEARCHPATH=$SGE_ROOT/qmon/Qmon<BR>qmon.real</CODE></P>
-<P STYLE="margin-bottom: 0cm">Rename the <CODE>qmon</CODE> binary to
-<CODE>qmon.bin</CODE>.  Note this must be done individually for all
-architecture binaries of qmon, eg, all of  <CODE>$SGE_ROOT/bin/*/qmon</CODE></P>
+<P STYLE="margin-bottom: 0cm">Rename the <CODE>qmon</CODE> binary to<SPAN LANG="en-US">
+<CODE>qmon.real</CODE>. </SPAN>Note this must be done individually
+for all architecture binaries of qmon, <SPAN LANG="en-US">e.g.</SPAN>,
+all of <CODE>$SGE_ROOT/bin/*/qmon</CODE></P>
 <P STYLE="margin-bottom: 0cm">Next, the file <CODE>$SGE_ROOT/qmon/Qmon</CODE>
 must be modified to reflect the changes. Add the end of the file, add
 the following:</P>
-<PRE STYLE="margin-left: 2cm">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+<PRE STYLE="margin-left: 2cm">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! CHANGES
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Qmon*JOB_CONTROL.sensitive:        False
 !Qmon*QUEUE_CONTROL.sensitive:      False
 !Qmon*SUBMIT_JOB.sensitive:         False
@@ -67,44 +72,70 @@ Qmon*TICKET_OVERVIEW.sensitive:    False
 Qmon*PROJECT_CONFIG.sensitive:     False
 !Qmon*EXIT.sensitive:               False
 Qmon*MainMenuBar.sensitive:        False</PRE><P STYLE="margin-bottom: 0cm">
-This disables the admininstrative functions and the menu bar (which
-is another path to administrative functions). If you uncomment
-(remove the !)</P>
-<PRE STYLE="margin-left: 2cm">!Qmon*QUEUE_CONTROL.sensitive: False</PRE><P STYLE="margin-bottom: 0cm">
+This disables the<SPAN LANG="en-US"> administrative </SPAN>functions
+and the menu bar (which is another path to administrative functions).
+If you <SPAN LANG="en-US">uncomment</SPAN> (remove the !)</P>
+<PRE STYLE="margin-left: 2cm; margin-bottom: 0.5cm">!Qmon*QUEUE_CONTROL.sensitive: False</PRE><P STYLE="margin-bottom: 0cm">
 then users cannot see the Queue Control either. Basically, any button
-which is not commented out by a &ldquo;!&rdquo; becomes disabled.</P>
+which is not commented out by ! becomes disabled.</P>
 <H2><A NAME="Changing the size of the main screen buttons|outline"></A>
 Changing the size of the main screen buttons</H2>
 <P STYLE="margin-bottom: 0cm">The default button size on the main
 screen of qmon is small and the function of the button cannot be seen
-without hovering the pointer over it to view the tooltip. You can
-change the size of these buttons and make them large enough to read
-the action written on them.</P>
+without hovering the pointer over it to view the<SPAN LANG="en-US">
+ToolTip. </SPAN>You can change the size of these buttons and make
+them large enough to read the action written on them.</P>
 <P STYLE="margin-bottom: 0cm">To do this, change the same Qmon file
 as above from:</P>
-<PRE STYLE="margin-left: 2cm">!! Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm<BR>Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm</PRE><P STYLE="margin-bottom: 0cm">
+<PRE STYLE="margin-left: 2cm">!! Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm
+Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm</PRE><P STYLE="margin-bottom: 0cm">
 to</P>
 <PRE STYLE="margin-left: 2cm">Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm
 !! Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm</PRE>
 <HR>
-<P STYLE="margin-bottom: 0cm">Below is a screenshot of the window
-resulting from both of the above modifications:</P>
+<P STYLE="margin-bottom: 0cm">Below is a <SPAN LANG="en-US">screenshot</SPAN>
+of the window resulting from both of the above modifications:</P>
 <P STYLE="margin-bottom: 0cm"><BR>
 </P>
 <IMG SRC="qmon_custom.gif" NAME="Customized Qmon appearance" ALIGN=LEFT WIDTH=593 HEIGHT=208 BORDER=0><BR CLEAR=LEFT>
 <HR>
+<H2 STYLE="margin-top: 0cm; margin-bottom: 0cm"><A NAME="Resizing Job Control fields|outline"></A>
+Resizing Job Control fields</H2>
+<P STYLE="margin-bottom: 0cm">The Job Control window provides a way
+to see a summary of pending, running, and finished jobs.  The fields
+which are displayed can be easily changed by pressing the C<I>ustomize</I><SPAN STYLE="font-style: normal">
+button in that window.  However, there is also a way to change the
+field widths so that the full information for each field can be
+viewed.  A horizontal scroll bar permits viewing of all information
+in case it doesn't fit on the screen all at once.</SPAN></P>
+<P STYLE="margin-bottom: 0cm; font-style: normal">To change field
+widths in any of the three Job Control panes, 
+</P>
+<OL>
+	<LI><P STYLE="margin-bottom: 0cm; font-style: normal">move the mouse
+	pointer below any field divider</P>
+	<LI><P STYLE="margin-bottom: 0cm; font-style: normal">Click and hold
+	<I>Control-middle-mouse-button</I> and a vertical separator line
+	will appear</P>
+	<LI><P STYLE="margin-bottom: 0cm; font-style: normal">drag this
+	separator with the mouse to the desired width, and release</P>
+</OL>
+<P STYLE="margin-bottom: 0cm; font-style: normal">The diagram shows
+an example after resizing the job name field.</P>
+<IMG SRC="qmon_custom_job2.gif" NAME="Graphic1" ALIGN=LEFT WIDTH=723 HEIGHT=565 BORDER=0><BR CLEAR=LEFT>
+<HR>
 <H2 STYLE="margin-top: 0cm; margin-bottom: 0cm"><A NAME="Setting Administrator Defaults|outline"></A>
 Setting Administrator Defaults</H2>
 <P STYLE="margin-bottom: 0cm">Using a wrapper script and modified
-Qmon resource file, the changes are global.  However, these changes
-can be overridden for individual users, such as the SGE admin user. 
+Qmon resource file, the changes are global. However, these changes
+can be overridden for individual users, such as the SGE admin user.
 To have user-specific settings, do the following:</P>
 <OL>
 	<LI><P STYLE="margin-bottom: 0cm">create a private copy of the Qmon
 	resource in the home directory of the user, which specifies all
-	desired features.  For example, have big buttons, and do not disable
+	desired features. For example, have big buttons, and do not disable
 	any of them.</P>
-	<LI><P STYLE="margin-bottom: 0cm">have the user invoke the qmon.real
+	<LI><P STYLE="margin-bottom: 0cm">have the user invoke the <CODE>qmon.real</CODE>
 	binary (as opposed to the wrapper script)</P>
 </OL>
 <P STYLE="margin-bottom: 0cm">In this way, the SGE admin user can

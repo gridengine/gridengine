@@ -49,6 +49,7 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_schedd_conf.h"
+#include "sge_profiling.h"
 
 #include "sge_sharetree_printing.h"
 
@@ -206,6 +207,8 @@ main(int argc, char **argv)
    char *output_mode = "a";
 
    dstring output_dstring = DSTRING_INIT;
+
+   sge_prof_setup();
    
    format.name_format  = false;
    format.delim        = "\t";
@@ -284,6 +287,7 @@ main(int argc, char **argv)
 
    if (err) {
       usage();
+      sge_prof_cleanup();
       exit(1);
    }
 
@@ -322,6 +326,7 @@ main(int argc, char **argv)
 
    sge_gdi_shutdown();
 
+   sge_prof_cleanup();
    sge_dstring_free(&output_dstring);
 
    return 0;

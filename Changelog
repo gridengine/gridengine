@@ -1,3 +1,7 @@
+SG-2004-10-20-0: Bugfix:    - sge_share_mon crashed on startup
+                 Changed:   sge_share_mon
+                 Review:    MD
+
 CR-2004-10-19-0: Testsuite: - new testsuite test for commlib:
                               checktree/performance/throughput/commlib/check.exp
                  Changed:   commlib test binaries testsuite

@@ -1,3 +1,7 @@
+SD-2002-01-24-4: Bugfix:    IRIX C compiler didn't like default: 
+                            followed directly by a } in a switch
+                            statement.
+
 AA-2002-01-24-3: Bugfix:    coshepherd Makefile SLIBS was missing
 
 EB-2002-01-24-2: Bugfix:    Typo: NO_REPRIORIZATION -> NO_REPRIORITIZATION

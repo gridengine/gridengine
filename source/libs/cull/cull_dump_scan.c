@@ -45,6 +45,7 @@
 #include "cull_multitypeP.h"
 #include "cull_lerrnoP.h"
 #include "basis_types.h"
+#include "sge_dstring.h"
 
 #define READ_LINE_LENGHT 255
 
@@ -1082,10 +1083,11 @@ static int fGetUlong(FILE *fp, lUlong *up)
 
 static int fGetString(FILE *fp, lString *tp) 
 {
-   int i;
+   int i, j;
    char line[READ_LINE_LENGHT + 1];
-   char sp[READ_LINE_LENGHT + 1];
+   dstring sp = DSTRING_INIT;
    char *s;
+   bool multiline=true;
 
    DENTER(CULL_LAYER, "fGetString");
 
@@ -1094,7 +1096,6 @@ static int fGetString(FILE *fp, lString *tp)
       DEXIT;
       return -1;
    }
-
    if (fGetLine(fp, line, READ_LINE_LENGHT)) {
       LERROR(LEFGETLINE);
       DEXIT;
@@ -1102,23 +1103,46 @@ static int fGetString(FILE *fp, lString *tp)
    }
    s = line;
 
-   while (isspace((int) *s))
+   while (isspace((int) *s)) {
       s++;
+   }
    if (*s++ != '"') {
       LERROR(LESYNTAX);
       DEXIT;
       return -1;
    }
-   for (i = 0; s[i] != '\0' && s[i] != '"'; i++)
-      sp[i] = s[i];
-   if (s[i] != '"') {
-      LERROR(LESYNTAX);
-      DEXIT;
-      return -1;
+   for (i = 0; s[i] != '\0' && s[i] != '"'; i++) {
+      sge_dstring_append_char(&sp, s[i]);
    }
-   sp[i] = '\0';
+   if (s[i] != '"') {
+      /* String is diveded by a newline */
+      while ( true ) {
+         if (fGetLine(fp, line, READ_LINE_LENGHT)) {
+            sge_dstring_free(&sp);
+            LERROR(LEFGETLINE);
+            DEXIT;
+            return -1;
+         }
+         s = line;
+         for (j = 0; s[j] != '\0' && s[j] != '"'; j++, i++) {
+            sge_dstring_append_char(&sp, s[j]);
+         }
+         if (s[j] == '"') {
+            break;
+         }
+      }
+   } 
 
-   if (!(*tp = strdup(sp))) {
+   s = sge_dstring_get_string(&sp);
+   if (s == NULL) {
+      *tp = strdup(""); 
+   } else {
+      *tp = strdup(s);
+   }
+
+   sge_dstring_free(&sp);
+
+   if (!(*tp)) {
       LERROR(LESTRDUP);
       DEXIT;
       return -1;
@@ -1336,16 +1360,17 @@ int fGetList(FILE *fp, lList **lpp)
       DEXIT;
       return -1;
    }
-
+   
    if (strstr(s, "empty") != NULL)
       *lpp = NULL;              /* empty sublist */
    else {
+/*
       if (strstr(s, "full") == 0) {
          LERROR(LESYNTAX);
          DEXIT;
          return -1;
       }
-
+*/
       if ((*lpp = lUndumpList(fp, NULL, NULL)) == NULL) {
          LERROR(LEUNDUMPLIST);
          DEXIT;

@@ -88,8 +88,11 @@ init_framework(bdb_info *info)
                               bootstrap_get_spooling_method(),
                               bootstrap_get_spooling_lib(), 
                               bootstrap_get_spooling_params());
+
    answer_list_output(&answer_list);
-   if (spooling_context == NULL) {
+   if (!strcmp(bootstrap_get_spooling_method(),"classic")) {
+      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING));
+   } else if (spooling_context == NULL) {
       CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
    } else {
       spool_set_default_context(spooling_context);
@@ -110,8 +113,7 @@ init_framework(bdb_info *info)
          ret = EXIT_SUCCESS;
       }
       answer_list_output(&answer_list);
-
-   }
+   }  
 
    DEXIT;
    return ret;

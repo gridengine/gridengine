@@ -1,3 +1,8 @@
+RD-2005-03-11-0: Bugfix:   Spooledit fails during database upgradeA
+                 Issue:    1425
+                 Bugtraq:  6239394
+                 Review:   JG
+
 RH-2005-03-11-1: Enhancem.: checkprog accepts now the options -ppid. The parent
                             process will be printed to stdout
                  Changed:   checkprog

@@ -60,7 +60,7 @@
 #include "sge_dirent.h"
 
 sge_schedd_conf_type scheddconf = { 
-   NULL, 0, 0, 0, 0, 0, NULL, 0, NULL 
+   NULL, 0, 0, 0, 0, NULL, 0, NULL 
 };
 lList *schedd_config_list = NULL;
 

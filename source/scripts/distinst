@@ -47,10 +47,12 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
                  adminrun qrsh_starter testsuidroot \
-                 sge_share_mon openssl infotext \
-                 spooldefaults spooledit spoolinit \
-                 berkeley_db_svc db_dump db_load db_archive db_checkpoint \
+                 sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype"
+
+BDBUTILITYBINARIES="berkeley_db_svc db_dump db_load db_archive db_checkpoint"
+
+SSLUTILITYBINARIES="openssl"
 
 REMOTEBINARIES="rsh rshd rlogin"
 
@@ -113,8 +115,10 @@ ErrUsage()
    echo "       -libs          = all libraries"
    echo "       -local         = install in \$SGE_ROOT"
    echo "       -mansrc <dir>  = take man pages from MANSBUILD_<dir>"
+   echo "       -nobdb         = do not install the Berkeley DB binaries and libs"
    echo "       -noexit        = do not exit on installation errors"
    echo "       -noinst        = no install, show target arch"
+   echo "       -noopenssl     = do not install the OpenSSL binaries and libs"
    echo "       -nosource      = do not source \"distinst.private\""
    echo "       -onlybin       = all binaries, no libraries"
    echo "       -classic-targets = qmaster+spool* from <ARCHDIR>_classic"
@@ -461,6 +465,8 @@ instsec=false
 instsecbin=false
 inst3rdparty=false
 instclassictargets=false
+instopenssl=true
+instbdb=true
 
 cmdname=`basename $0`
 
@@ -575,12 +581,18 @@ while [ $# -ge 1 ]; do
          exit 1
       fi
       ;;
+   -nobdb)
+      instbdb=false
+      ;;
    -noexit)
       exit_on_error=false
       ;;
    -noinst)
       PROG="$DEFAULTPROG"
       INSTOPT="noinst"
+      ;;
+   -noopenssl)
+      instopenssl=false
       ;;
    -v)
       verbose=true
@@ -609,6 +621,15 @@ while [ $# -ge 1 ]; do
    esac
    shift
 done
+
+if [ $instbdb = true ]; then
+   UTILITYBINARIES="$UTILITYBINARIES $BDBUTILITYBINARIES"
+fi
+
+if [ $instopenssl = true ]; then
+   UTILITYBINARIES="$UTILITYBINARIES $SSLUTILITYBINARIES"
+fi
+
 
 if [ $localinst = false ]; then
    if [ $BASEDIR = undefined ]; then
@@ -727,7 +748,6 @@ for prog in $PROG; do
             instdoc=true
             insttxtdoc=true
             instjavadoc=true
-            instjava=true
             ;;
          esac    
          ;;
@@ -932,17 +952,17 @@ if [ $instcommon = true ]; then
       for f in $DRMAA_HEADER_FILES; do
          Execute cp $f $DEST_SGE_ROOT/include
       done
-      Cleanup include
-   fi
 
-   if [ $instjava = true ]; then
       for filename in $DRMAAJ_FILES; do
          if [ -f $filename ]; then
-            echo Installing DRMAA jar file \"`basename $filename`\"
-            Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
-            Install 0.0 755 $filename $DEST_SGE_ROOT/lib
+             echo Installing `basename $filename`
+             Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
+             MakeDir lib
+             Install 0.0 755 $filename $DEST_SGE_ROOT/lib
          fi
       done
+
+      Cleanup include
    fi
 
    if [ $instmpi = true ]; then
@@ -992,7 +1012,9 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
-      Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
+      if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/catman ]; then
+         Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
+      fi
       Cleanup man catman
    fi
 
@@ -1009,13 +1031,12 @@ if [ $instcommon = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
+#      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
-      Execute cp ../doc/README-DRMAA-Java.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
    fi
 
-   # this rule must come *after* the "insttxtdoc" rule
    if [ $instjavadoc = true ]; then
       if [ -d ../doc/javadocs ]; then
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
@@ -1025,7 +1046,6 @@ if [ $instcommon = true ]; then
          Cleanup doc/javadocs
       fi
    fi
-
 
    if [ $instckpt = true ]; then
       echo Installing \"ckpt/\"
@@ -1252,40 +1272,45 @@ for i in $ARCH; do
             fi
          done
 
-         for lib in $OPENSSL_SHARED_LIBRARIES; do
-            if [ $DSTARCH = tru64 ]; then
-               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
-            elif [ $DSTARCH = darwin ];  then
-               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
-            else
-               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
-            fi
-            if [ -f $libname ]; then
-               InstallProg $libname
-               if [ $DSTARCH = tru64 ]; then
-                  :
-               elif [ $DSTARCH = darwin ]; then
-                  (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
-                   ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
-               else
-                  (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
-               fi
-               
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-               exit 1
-            fi
-         done
+         if [ $instopenssl = true ]; then
+            for lib in $OPENSSL_SHARED_LIBRARIES; do
 
-         for lib in $BERKELEYDB_SHARED_LIBRARIES; do
-            libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-                exit 1
-            fi
-         done
+               if [ $DSTARCH = tru64 ]; then
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
+               elif [ $DSTARCH = darwin ];  then
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
+               else
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
+               fi
+
+               if [ -f $libname ]; then
+                  InstallProg $libname
+                  if [ $DSTARCH = tru64 ]; then
+                     :
+                  elif [ $DSTARCH = darwin ]; then
+                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
+                      ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
+                  else
+                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
+                  fi
+               elif [ $exit_on_error = true ]; then
+                  echo "\"$libname\" not found. Installation failed."
+                  exit 1
+               fi
+            done
+         fi
+
+         if [ $instbdb = true ]; then
+            for lib in $BERKELEYDB_SHARED_LIBRARIES; do
+               libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               elif [ $exit_on_error = true ]; then
+                  echo "\"$libname\" not found. Installation failed."
+                  exit 1
+               fi
+            done
+         fi
 
          for lib in $DRMAA_SHARED_LIBRARIES; do
             libname=$lib.$shlibext
@@ -1306,7 +1331,6 @@ for i in $ARCH; do
 
             ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
          fi
-
       fi
       cd ..
    fi     

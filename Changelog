@@ -1,3 +1,7 @@
+MD-2005-01-31-0: Bugfix:    distinst assumes certain files always exist
+                 Issue:     1361
+                 Review:    AS
+
 AS-2005-01-25-0  Bugfix:    set file permissions in destination directory"
                  Changed:   scripts/distinst
                  Review:    MD

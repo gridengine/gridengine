@@ -367,6 +367,8 @@ extern int main(int argc, char** argv)
            if (ret_val != CL_RETVAL_OK) {
               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
            }
+           cl_com_application_debug(handle, "message sent (1)");
+           cl_com_application_debug(handle, "message sent (2)");
         }
 
         message->message = NULL;

@@ -82,6 +82,9 @@ int cl_message_list_append_message(cl_raw_list_t* list_p,cl_com_message_t* messa
       }
       return CL_RETVAL_MALLOC;
    }
+
+   gettimeofday(&(message->message_insert_time),NULL);
+
    
    /* unlock the thread list */
    if (lock_list == 1) {
@@ -113,6 +116,8 @@ int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* mess
    while ( elem != NULL) { 
       if (elem->message == message) {
          /* found matching element */
+         gettimeofday(&(message->message_remove_time),NULL);
+
          function_return = CL_RETVAL_OK;
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          free(elem);

@@ -171,8 +171,9 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_add_debug_message()"
+/* WARNING: connection_list must be locked by caller */
 int cl_com_add_debug_message(cl_com_connection_t* connection, const char* message, cl_com_message_t* ms) {
-#define CL_DEBUG_MESSAGE_FORMAT_STRING "%.6f\t%s\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%s\t%s\t%s\n"
+#define CL_DEBUG_MESSAGE_FORMAT_STRING "%lu\t%.6f\t%s\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%s\t%s\t%s\t%s\t%lu\n"
 
    cl_com_handle_t* handle = NULL;
    int ret_val = CL_RETVAL_OK;
@@ -180,10 +181,12 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    char*          dm_buffer = NULL;
    unsigned long  dm_buffer_len = 0;
    char*          xml_msg_buffer = NULL;
+   cl_com_debug_message_tag_t debug_message_tag = CL_DMT_MESSAGE;
 
    char sender[256];
    char receiver[256];
    char message_time[256];
+   char commlib_time[256];
    char message_tag_number[256];
 
    const char*     message_tag = NULL;
@@ -196,9 +199,11 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    unsigned long   rcv_id   = 0;
    cl_bool_t       outgoing = CL_FALSE;
    char*           direction = "<-";
+   unsigned long   nr_of_connections = 0;
 
    double time_now = 0.0;
    double msg_time = 0.0;
+   double com_time = 0.0;
    char* info      = NULL;
 
    if (connection == NULL || ms == NULL ) {
@@ -208,6 +213,11 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    if (handle == NULL) {
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
+
+   if (handle->connection_list != NULL) {
+      nr_of_connections = cl_raw_list_get_elem_count(handle->connection_list);
+   }
+
    if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
       return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
    }
@@ -228,9 +238,16 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       outgoing = CL_TRUE;
       msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
       snprintf(message_time,256,"%.6f", msg_time);
+
+      com_time = msg_time - (ms->message_insert_time.tv_sec + (ms->message_insert_time.tv_usec / 1000000.0));
+      snprintf(commlib_time,256,"%.6f", com_time);
+      
    } else {
       msg_time = ms->message_receive_time.tv_sec + (ms->message_receive_time.tv_usec / 1000000.0);
       snprintf(message_time,256,"%.6f", msg_time);
+
+      com_time = (ms->message_remove_time.tv_sec + (ms->message_remove_time.tv_usec / 1000000.0)) - msg_time;
+      snprintf(commlib_time,256,"%.6f", com_time);
    }
    if (outgoing == CL_TRUE) {
       direction = "->";
@@ -292,6 +309,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       message_tag = message_tag_number;
    }
 
+   dm_buffer_len += cl_util_get_ulong_number_length((unsigned long)debug_message_tag);
    dm_buffer_len += cl_util_get_double_number_length(time_now);
    dm_buffer_len += strlen(sender);
    dm_buffer_len += strlen(direction);
@@ -305,6 +323,8 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    dm_buffer_len += strlen(message_time);
    dm_buffer_len += strlen(xml_data);
    dm_buffer_len += strlen(info);
+   dm_buffer_len += strlen(commlib_time);
+   dm_buffer_len += cl_util_get_ulong_number_length(nr_of_connections);
    dm_buffer_len += strlen(CL_DEBUG_MESSAGE_FORMAT_STRING);
    dm_buffer_len += 1;
 
@@ -313,6 +333,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       ret_val = CL_RETVAL_MALLOC;
    } else {
       snprintf(dm_buffer,dm_buffer_len,CL_DEBUG_MESSAGE_FORMAT_STRING,
+                         (unsigned long)debug_message_tag,
                          time_now,
                          sender,
                          direction,
@@ -325,7 +346,9 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
                          ms->message_length,
                          message_time,
                          xml_data,
-                         info); 
+                         info,
+                         commlib_time,
+                         nr_of_connections); 
       
       ret_val = cl_string_list_append_string(handle->debug_list, dm_buffer , 1);
 
@@ -606,8 +629,14 @@ int cl_com_create_message(cl_com_message_t** message) {
    (*message)->message_length = 0;
    (*message)->message_snd_pointer = 0;
    (*message)->message_rcv_pointer = 0;
-   memset(&((*message)->message_send_time), 0,sizeof (struct timeval));
-   memset(&((*message)->message_receive_time), 0,sizeof (struct timeval));
+   (*message)->message_send_time.tv_sec  = 0;
+   (*message)->message_send_time.tv_usec = 0;
+   (*message)->message_receive_time.tv_sec  = 0;
+   (*message)->message_receive_time.tv_usec = 0;
+   (*message)->message_remove_time.tv_sec  = 0;
+   (*message)->message_remove_time.tv_usec = 0;
+   (*message)->message_insert_time.tv_sec  = 0;
+   (*message)->message_insert_time.tv_usec = 0;
    (*message)->message = NULL;
    return CL_RETVAL_OK;
 }
@@ -3641,6 +3670,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   dummy_message->message_df = CL_MIH_DF_CM;
                   dummy_message->message_mat = CL_MIH_MAT_NAK;
                   gettimeofday(&dummy_message->message_receive_time,NULL);
+                  gettimeofday(&dummy_message->message_remove_time,NULL);
                   dummy_message->message = (cl_byte_t*) &(connection->data_read_buffer[(connection->data_read_buffer_processed - connection->read_gmsh_header->dl)]);
                   dummy_message->message_length = connection->read_gmsh_header->dl;
                   cl_com_add_debug_message(connection, NULL , dummy_message);
@@ -4180,6 +4210,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                      int   crm_pos = 0;
                      dummy_message->message_df = CL_MIH_DF_CRM;
                      dummy_message->message_mat = CL_MIH_MAT_NAK;
+                     gettimeofday(&dummy_message->message_insert_time,NULL);
                      gettimeofday(&dummy_message->message_send_time,NULL);
                      
                      for (crm_pos = 0; crm_pos < connection->data_write_buffer_pos - 3; crm_pos++) {

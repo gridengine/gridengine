@@ -42,6 +42,13 @@
 #include "cl_lists.h"
 #include "cl_xml_parsing.h"
 
+typedef enum cl_com_debug_message_tag_type {
+   CL_DMT_MESSAGE = 1,  /* default */
+   CL_DMT_APP_MESSAGE,
+/* ... */
+   CL_DMT_MAX_TYPE  /* this must be the last one */
+} cl_com_debug_message_tag_t;
+
 /* typedef for tcp port options */
 typedef enum cl_tcp_connect_def {
    CL_TCP_DEFAULT = 1,           /* standard tcp/ip options */
@@ -361,7 +368,9 @@ typedef struct cl_com_message_type {
    unsigned long            message_snd_pointer;
    unsigned long            message_rcv_pointer;
    struct timeval           message_receive_time;
+   struct timeval           message_remove_time;
    struct timeval           message_send_time;
+   struct timeval           message_insert_time;
    cl_byte_t*               message;
 } cl_com_message_t;
 

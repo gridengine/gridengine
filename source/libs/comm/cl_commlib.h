@@ -117,6 +117,8 @@ int cl_com_set_error_func(cl_error_func_t error_func);
 int cl_com_set_tag_name_func(cl_tag_name_func_t tag_name_func);
 int cl_com_setup_callback_functions(cl_com_connection_t* connection);
 
+/* allow application to send messages to connected debug clients */
+int cl_com_application_debug(cl_com_handle_t* handle, const char* message);
 
 
 

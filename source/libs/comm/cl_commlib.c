@@ -2730,8 +2730,6 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             }
          }
 
-         cl_com_add_debug_message(connection, NULL, message);
-
          switch(message->message_df) {
             case CL_MIH_DF_BIN:
                CL_LOG(CL_LOG_INFO,"received binary message");
@@ -2773,12 +2771,14 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          unsigned long           run_time = 0;
 
          switch(message->message_df) {
-            case CL_MIH_DF_SIM:
+            case CL_MIH_DF_SIM: {
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
+               cl_com_add_debug_message(connection, NULL, message);
+
                return_value = cl_xml_parse_SIM((unsigned char*)message->message, message->message_length, &sim_message);
                if (return_value != CL_RETVAL_OK) {
                   cl_com_free_message(&message);
@@ -2816,12 +2816,14 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                cl_com_free_message(&message);
                cl_com_free_sim_message(&sim_message);
                return CL_RETVAL_OK;
-            case CL_MIH_DF_SIRM:
+            }
+            case CL_MIH_DF_SIRM: {
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
+               cl_com_add_debug_message(connection, NULL, message);
 
                return_value = cl_xml_parse_SIRM((unsigned char*)message->message, message->message_length, &sirm_message);
                if (return_value != CL_RETVAL_OK) {
@@ -2854,13 +2856,15 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
 
                cl_com_free_message(&message);
                return CL_RETVAL_OK;
-
-            case CL_MIH_DF_AM:
+            }
+            case CL_MIH_DF_AM: {
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
+               cl_com_add_debug_message(connection, NULL, message);
+               
                return_value = cl_xml_parse_AM((unsigned char*)message->message, message->message_length, &ack_message);
                if (return_value != CL_RETVAL_OK) {
                   cl_com_free_message(&message);
@@ -2893,13 +2897,15 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                cl_com_free_message(&message);
                cl_com_free_am_message(&ack_message);
                return CL_RETVAL_OK;
-
-            case CL_MIH_DF_CCM:
+            }
+            case CL_MIH_DF_CCM: {
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
+               cl_com_add_debug_message(connection, NULL, message);
+
                return_value = cl_xml_parse_CCM((unsigned char*)message->message, message->message_length, &ccm_message);
                if (return_value != CL_RETVAL_OK) {
                   cl_com_free_message(&message);
@@ -2921,13 +2927,15 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                cl_com_free_message(&message);
                cl_com_free_ccm_message(&ccm_message);
                return CL_RETVAL_OK;
-
-            case CL_MIH_DF_CCRM:
+            }
+            case CL_MIH_DF_CCRM: {
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
+               cl_com_add_debug_message(connection, NULL, message);
+
                return_value = cl_xml_parse_CCRM((unsigned char*)message->message, message->message_length, &ccrm_message);
                if (return_value != CL_RETVAL_OK) {
                   cl_com_free_message(&message);
@@ -2943,14 +2951,17 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                cl_com_free_message(&message);
                cl_com_free_ccrm_message(&ccrm_message);
                return CL_RETVAL_OK;
-
-            default:
+            }
+            default: {
                CL_LOG(CL_LOG_ERROR,"reseived unsupported protocol message");
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                if (return_value == CL_RETVAL_OK) {
                   cl_com_free_message(&message);
                }
+               cl_com_add_debug_message(connection, NULL, message);
+
                break;
+            }
          }
       }
 
@@ -3307,6 +3318,53 @@ int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_stat
 
    return ret_val;
 }
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_application_debug()"
+int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
+#define CL_DEBUG_DMT_APP_MESSAGE_FORMAT_STRING "%lu\t%.6f\t%s\n"
+   int                          ret_val           = CL_RETVAL_OK;
+   double                       time_now          = 0.0;
+   char*                        dm_buffer         = NULL;
+   unsigned long                dm_buffer_len     = 0;
+   cl_com_debug_message_tag_t   debug_message_tag = CL_DMT_APP_MESSAGE;
+   struct timeval now;
+
+
+   if (handle == NULL || message == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
+      return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+   }
+
+   gettimeofday(&now,NULL);
+   time_now = now.tv_sec + (now.tv_usec / 1000000.0);
+
+   dm_buffer_len += cl_util_get_ulong_number_length((unsigned long)debug_message_tag);
+   dm_buffer_len += cl_util_get_double_number_length(time_now);
+   dm_buffer_len += strlen(message);
+   dm_buffer_len += strlen(CL_DEBUG_DMT_APP_MESSAGE_FORMAT_STRING);
+   dm_buffer_len += 1;
+
+   dm_buffer = (char*) malloc(sizeof(char)*dm_buffer_len);
+   if (dm_buffer == NULL) {
+      return CL_RETVAL_MALLOC;
+   } else {
+      snprintf(dm_buffer,dm_buffer_len,CL_DEBUG_DMT_APP_MESSAGE_FORMAT_STRING,
+                         (unsigned long)debug_message_tag,
+                         time_now,
+                         message);
+      ret_val = cl_string_list_append_string(handle->debug_list, dm_buffer , 1);
+      free(dm_buffer);
+      dm_buffer = NULL;
+   }
+
+   return ret_val;
+}
+
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -4041,6 +4099,8 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                         }
   
                         handle->last_receive_message_connection = connection;                       
+
+                        cl_com_add_debug_message(connection, NULL, *message);
 
                         cl_raw_list_unlock(handle->connection_list);
 

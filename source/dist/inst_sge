@@ -2240,8 +2240,8 @@ InitCA()
 myname=`basename $0`
 
 cmdline=$*
-for  arg in $*; do
-   if [ $arg = -sgeee ]; then
+for arg in $*; do
+   if [ "$arg" = -sgeee ]; then
       myname=inst_sgeee
    fi
 done
@@ -2286,7 +2286,6 @@ fi
 
 . ./util/arch_variables
 
-
 if [ ! -f util/arch ]; then
    $ECHO "missing shell script \"util/arch\""
    exit 1
@@ -2330,11 +2329,6 @@ fi
 export $QSYST_CELL
 
 ADMINUSER=default
-
-# exit if there are missing binaries
-#
-CheckBinaries
-
 MYUID=`$V5UTILBIN/uidgid -uid`
 MYGID=`$V5UTILBIN/uidgid -gid`
 DIRPERM=755
@@ -2409,6 +2403,10 @@ done
 if [ "$WHICH" = "undef" ]; then
    ErrUsage $0
 fi
+
+# exit if there are missing binaries
+#
+CheckBinaries
 
 $CLEAR
 

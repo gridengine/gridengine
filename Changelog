@@ -1,25 +1,22 @@
+AS-2002-02-13-3: CVS:       Created V53_beta2_sx6_TAG and V53_beta2_sx6_BRANCH
+------------------------------------------------------------------------------
+
 CR-2002-02-15-0: Testsuite: - compile option: handle eof and response timeout 
 
 CR-2002-02-14-0: Testsuite: - Bugfix: error on updating defaults file version
                             - is_job_running() now first will get the current
-                              job state and then evtl. make a sleep ( timming )  
+                              job state and then evtl. make a sleep (timing)  
                             
-
 EB-2002-02-14-0: Bugfix:    - Error in qdel return message if task does not 
                               exist
                  Issue:     #144
                   
-
-EB-2002-02-12-0: Bugfix:    - step size will be ignored from qdel command
-                            - qmaster will core if task id range comprises 
-                              not existing task at the end   
-                 Issue:     #138 #139
-
-CR-2002-02-13-0: Testsuite: secure feature: - add user keys for submit only hosts
-                                            - submit large script mod. timeout for
-                                              job end waiting
-                                            - submit hosts test: wait for end of
-                                              transfer before deleting job
+CR-2002-02-13-0: Testsuite: secure feature: 
+                               - add user keys for submit only hosts
+                               - submit large script mod. timeout for
+                                 job end waiting
+                               - submit hosts test: wait for end of
+                                 transfer before deleting job
 
 AS-2002-02-13-3: CVS:       Created V53_beta2_1_TAG
 ---------------------------------------------------
@@ -35,6 +32,7 @@ AS-2002-02-13-0: Change:    set version string to "5.3beta2_1"
 EB-2002-02-12-0: Bugfix:    - step size was ignored from qdel command for job arrays
                             - qmaster crashed when job array task id range comprises 
                               non existing task at the end
+                 Issue:     #138 #139
 
 AS-2002-02-12-0: Bugfix:    Sun HPC installation script failed since default
                             queue type now is already PARALLEL

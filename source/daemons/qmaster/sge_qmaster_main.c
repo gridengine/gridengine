@@ -69,14 +69,23 @@
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
 
 
+/*
+ * This is NOT officially approved by POSIX. In fact, POSIX does not specify a
+ * 'null thread id'. Given, that any variable with static storage class will be
+ * initialized to '0', using '0' as a thread id would be an insane choice anyway.
+ */
+enum { INVALID_THREAD = 0 };
+
 typedef struct {
-   pthread_mutex_t mutex;       /* used for thread exclusion */
-   pthread_cond_t  cond_var;    /* used for thread waiting   */
-   bool            shutdown;    /* true -> shutdown qmaster  */
-   short           thrd_count;  /* number of active threads (main thread does not count) */
+   pthread_mutex_t mutex;      /* used for thread exclusion  */
+   pthread_cond_t  cond_var;   /* used for thread waiting    */
+   pthread_t       sig_thrd;   /* signal thread              */
+   bool            shutdown;   /* true -> shutdown qmaster   */
+   short           thrd_count; /* number of active threads (main thread does not count) */
 } qmaster_control_t;
 
-static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, 0};
+
+static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, INVALID_THREAD, false, 0};
 static pthread_mutex_t*  Global_Locks;
 
 /* lock service provider */
@@ -87,12 +96,14 @@ static void unlock_callback(sge_locktype_t, sge_lockmode_t, sge_locker_t);
 static sge_locker_t id_callback(void);
 
 /* thread management */
-static void  create_and_join_threads(void);
-static void  inc_thread_count(void);
-static bool  should_terminate(void);
-static void  wait_for_thread_termination(void);
-static void* signal_thread(void*);
-static void* message_thread(void*);
+static void      create_and_join_threads(void);
+static void      inc_thread_count(void);
+static bool      should_terminate(void);
+static void      wait_for_thread_termination(void);
+static void      set_signal_thread(pthread_t);
+static pthread_t get_signal_thread(void);
+static void*     signal_thread(void*);
+static void*     message_thread(void*);
 
 /* misc functions */
 static void daemonize_qmaster(void);
@@ -222,10 +233,13 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
       return;
    }
 
-   kill(getpid(), SIGINT);
-      
-   INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
-   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   if (pthread_kill(get_signal_thread(), SIGINT) == 0) {
+      INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   } else {
+      ERROR((SGE_EVENT, MSG_SGETEXT_KILL_FAILED_SSS, username, host, prognames[QMASTER]));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+   }
 
    DEXIT;
    return;
@@ -370,6 +384,9 @@ static void start_heartbeat(void)
 *     Create and join qmaster threads. This function does block until all 
 *     created threads could have been joined.
 *
+*     NOTE: 'set_signal_thread()' must be invoked *before* the message thread
+*     is created. Otherwise a GID request to kill the qmaster may not work!
+*
 *  INPUTS
 *     void - none 
 *
@@ -391,6 +408,8 @@ static void create_and_join_threads(void)
 
    pthread_create(&(tids[0]), NULL, signal_thread, NULL);
    inc_thread_count();
+   
+   set_signal_thread(tids[0]);
 
    pthread_create(&(tids[1]), NULL, message_thread, NULL);
    inc_thread_count();
@@ -402,6 +421,84 @@ static void create_and_join_threads(void)
    DEXIT;
    return;
 } /* create_and_join_threads() */
+
+/****** qmaster/sge_qmaster_main/set_signal_thread() ***************************
+*  NAME
+*     set_signal_thread() -- Store signal thread in qmaster control structure
+*
+*  SYNOPSIS
+*     static void set_signal_thread(pthread_t aThread) 
+*
+*  FUNCTION
+*     Store signal thread in qmaster control structure. To invalidate the
+*     signal thread, use 'INVALID_THREAD' as an argument
+*
+*     NOTE: This function should *ONLY* be invoked from the function which
+*     does create the signal thread or from the signal thread itself.
+*
+*  INPUTS
+*     pthread_t aThread - signal thread or 'INVALID_THREAD'.
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: set_signal_thread() is MT safe.
+*
+*******************************************************************************/
+static void set_signal_thread(pthread_t aThread)
+{
+   DENTER(TOP_LAYER, "set_signal_thread");
+
+   sge_mutex_lock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   Qmaster_Control.sig_thrd = aThread;
+
+   sge_mutex_unlock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   DEXIT;
+   return;
+} /* set_signal_thread() */
+
+/****** qmaster/sge_qmaster_main/get_signal_thread() ***************************
+*  NAME
+*     get_signal_thread() -- Get signal thread from the qmaster control
+*                            structure.
+*
+*  SYNOPSIS
+*     static pthread_t get_signal_thread(void) 
+*
+*  FUNCTION
+*     Get signal thread from the qmaster control structure.
+*
+*     NOTE: There is *NO* guarantee that the signal thread returned by this 
+*     function still is alive and kicking! 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     pthread_t - signal thread or 'INVALID_THREAD'. 
+*
+*  NOTES
+*     MT-NOTE: get_signal_thread() is MT safe 
+*
+*******************************************************************************/
+static pthread_t get_signal_thread(void)
+{
+   pthread_t thrd = INVALID_THREAD;
+
+   DENTER(TOP_LAYER, "get_signal_thread");
+
+   sge_mutex_lock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   thrd = Qmaster_Control.sig_thrd;
+
+   sge_mutex_unlock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   DEXIT;
+   return thrd;
+} /* get_signal_thread() */
 
 /****** qmaster/sge_qmaster_main/increment_heartbeat() *************************
 *  NAME
@@ -820,7 +917,8 @@ static bool should_terminate(void)
 *     Signal handling thread function. Establish recognized signal set. Enter
 *     signal wait loop. Wait for signal. Handle signal.
 *
-*     If signal is 'SIGINT' or 'SIGTERM', kick-off shutdown.
+*     If signal is 'SIGINT' or 'SIGTERM', kick-off shutdown and invalidate
+*     signal thread.
 *
 *     NOTE: The signal thread will terminate on return of this function.
 *
@@ -861,6 +959,7 @@ static void* signal_thread(void* anArg)
          case SIGINT:
          case SIGTERM:
             wait_for_thread_termination();
+            set_signal_thread(INVALID_THREAD);
             DEXIT;
             return NULL;
          default:

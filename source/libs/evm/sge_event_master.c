@@ -166,8 +166,6 @@ typedef struct {
 *     #define EVENT_DELIVERY_INTERVAL_N 0 
 *     #define EVENT_ACK_MIN_TIMEOUT 600
 *     #define EVENT_ACK_MAX_TIMEOUT 1200
-*     #define NUM_ACKS_PER_LOOP 100
-*     #define NUM_SENDS_PER_LOOP 100
 *
 *  FUNCTION
 *     EVENT_DELIVERY_INTERVAL_S is the event delivery interval. It is set in seconds.
@@ -178,16 +176,12 @@ typedef struct {
 *     The real timeout value depends on the event delivery interval for the 
 *     event client (10 * event delivery interval).
 *
-*     NUM_ACKS_PER_LOOP and NUM_SENDS_PER_LOOP control how many acks and sends
-*     will be processed, respectively, in each send_thread loop.
 *
 *******************************************************************************/
 #define EVENT_DELIVERY_INTERVAL_S 1
 #define EVENT_DELIVERY_INTERVAL_N 0
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
-#define NUM_ACKS_PER_LOOP 100
-#define NUM_SENDS_PER_LOOP 100
 
 /********************************************************************
  *
@@ -1604,6 +1598,7 @@ static void process_sends ()
    lListElem *send = NULL;
    lListElem *event = NULL;
    lList *event_list = NULL;
+   lListElem *lastElem = NULL;
    u_long32 ec_id = 0;
    const char *session = NULL;
    ev_event type = 0;
@@ -1614,7 +1609,7 @@ static void process_sends ()
    lListElem *et_buffer = NULL;
    u_long32 id_buffer = 0;
 #endif
-   int num_sends_processed = 0;
+   
 /* See comment on ifdef below. */
 #if 0
    int num_events = 0;
@@ -1623,7 +1618,7 @@ static void process_sends ()
    DENTER(TOP_LAYER, "process_sends");
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-   
+   lastElem = lLast (Master_Control.send_events);
    send = lFirst (Master_Control.send_events);
    
    while (send != NULL) {
@@ -1877,8 +1872,15 @@ static void process_sends ()
       } /* else */
 
       send = lFreeElem (send);
+      if (send != lastElem) {
+         send = lFreeElem (send);
 
-      if (++num_sends_processed < NUM_SENDS_PER_LOOP) {
+         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
+                        &Master_Control.send_mutex);
+
+         send = lFirst (Master_Control.send_events);
+      }
+      else {
          sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
                         &Master_Control.send_mutex);
 
@@ -1886,14 +1888,8 @@ static void process_sends ()
       }
    } /* while */
 
-   if (num_sends_processed < NUM_SENDS_PER_LOOP) {
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
                        &Master_Control.send_mutex);
-   }
-   else {
-      DPRINTF (("Processed maximum number of sends for this loop.\n"));
-   }
-   
    DEXIT;
    return;
 } /* process_sends() */
@@ -1971,7 +1967,7 @@ static void process_acks(void)
    lListElem *client = NULL;
    lListElem *ack = NULL;
    u_long32 ec_id = 0;
-   int num_acks_processed = 0;
+   lListElem *lastElem = NULL;
 /* See comment on ifdef below. */
 #if 0
    int num_acks = 0;
@@ -1980,7 +1976,7 @@ static void process_acks(void)
    DENTER(TOP_LAYER, "process_acks");
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
-
+   lastElem = lLast(Master_Control.ack_events);
    ack = lFirst (Master_Control.ack_events);
    
    while (ack != NULL) {
@@ -2057,23 +2053,23 @@ static void process_acks(void)
          unlock_client (ec_id);
       } /* else */
 
-      ack = lFreeElem (ack);
+      if (ack != lastElem) { 
 
-      if (++num_acks_processed < NUM_ACKS_PER_LOOP) {
+         ack = lFreeElem (ack);
          sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
                         &Master_Control.ack_mutex);
 
          ack = lFirst (Master_Control.ack_events);
       }
+      else {
+         ack = lFreeElem (ack);
+         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
+                        &Master_Control.ack_mutex);
+      }
    } /* while */
 
-   if (num_acks_processed < NUM_ACKS_PER_LOOP) {
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
+  sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
                        &Master_Control.ack_mutex);
-   }
-   else {
-      DPRINTF (("Processed maximum number of acks for this loop.\n"));
-   }
    
    DEXIT;
 } /* sge_handle_event_ack() */

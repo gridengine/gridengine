@@ -1,3 +1,9 @@
+SG-2004-04-29-0: Bugfix:    the event master would only deliver a limited
+                            number of events. In case of a scheduler, this
+                            results in wrong scheduling runs.
+                 Changed:   qmaster
+                 Review:    DT
+
 JG-2004-04-29-0: Bugfix:    Fixed classic spooling of jobs.
                  Changed:   qmaster
                  Review:    EB

@@ -4280,14 +4280,20 @@ proc delete_job { jobid { wait_for_end 0 }} {
    }
    if { $wait_for_end != 0 } {
       set my_timeout [timestamp]
-      incr my_timeout 90
+      set my_second_qdel_timeout $my_timeout
+      incr my_second_qdel_timeout 80
+      incr my_timeout 160
       while { [get_qstat_j_info $jobid ] != 0 } {
           puts $CHECK_OUTPUT "waiting for jobend ..."
-          sleep 2
           if { [timestamp] > $my_timeout } {
              add_proc_error "delete_job" -1 "timeout while waiting for jobend"
              break;
           }
+          if { [timestamp] > $my_second_qdel_timeout } {
+             set my_second_qdel_timeout $my_timeout
+             delete_job $jobid
+          }
+          sleep 2
       }
    }
    return $result

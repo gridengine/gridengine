@@ -327,7 +327,7 @@ static int sge_is_number(const char *string)
    char *end;
 
    value = strtod(string, &end);
-   return (*end == NULL) ? 1 : 0;
+   return (*end == '\0') ? 1 : 0;
 }
 
 static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,

@@ -650,7 +650,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    if (!lGetString(jep, JB_account)) {
       lSetString(jep, JB_account, DEFAULT_ACCOUNT);
    } else {
-      if (!job_has_valid_account_string(jep, alpp)) {
+      if (!job_has_valid_account_string(lGetString(jep, JB_account), alpp)) {
          return STATUS_EUNKNOWN;
       }
    }
@@ -2545,7 +2545,7 @@ int *trigger
    /* ---- JB_account */
    if ((pos=lGetPosViaElem(jep, JB_account))>=0) {
       DPRINTF(("got new JB_account\n")); 
-      if (!job_has_valid_account_string(jep, alpp)) {
+      if (!job_has_valid_account_string(lGetString(jep, JB_account), alpp)) {
          return STATUS_EUNKNOWN;
       }
       lSetString(new_job, JB_account, lGetString(jep, JB_account));
@@ -3150,57 +3150,73 @@ static bool contains_dependency_cycles(const lListElem * new_job, u_long32 job_n
 *  RESULT
 *     int - returns != 0 if there is a problem with the job name
 ******************************************************************************/
-static int job_verify_name(const lListElem *job, lList **alpp, 
+static int job_verify_name(const lListElem *job, lList **answer_list, 
                            const char *job_descr)
 {
    const char *job_name = lGetString(job, JB_job_name);
    int ret = 0;
-#define MAX_characters 7
-   const char characters[MAX_characters] = { '\n', '\t', '\r', '/', ':', '@', '\\'};
-   const char *output[MAX_characters] = {"\\n", "\\t", "\\r", "/", ":", "@", "\\"};
    
    DENTER(TOP_LAYER, "job_verify_name");
-
-   if (isdigit(job_name[0])) {
-      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_S, job_name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      ret = STATUS_EUNKNOWN;
-   }
-   else {
-      int i;
-      for (i=0; i < MAX_characters; i++) {
-         if (strchr(job_name, characters[i])) {
-            ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, output[i])); 
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = STATUS_EUNKNOWN;
-            break;  
-         }   
+   if (job_name != NULL) {
+      if (isdigit(job_name[0])) {
+         ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_S, job_name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+      else if (!job_has_valid_account_string(job_name, answer_list)) {
+         ret = STATUS_EUNKNOWN;
       }
    }
-      
-/*      
-      if (strchr(job_name, '/')) {
-      ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, MSG_GDI_KEYSTR_COLON, '/'));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-      ret = STATUS_EUNKNOWN;
-   }
-   else if (strchr(job_name, ':')) {
-      ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, MSG_GDI_KEYSTR_COLON, ':'));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-      ret = STATUS_EUNKNOWN;
-   } 
-*/
-
-   
-/*   else {
-      ret = verify_str_key(alpp, job_name, "job"); 
-   }
-*/   
 
    DEXIT;
    return ret;
 }
 
+/****** sgeobj/job/job_has_valid_account_string() *****************************
+*  NAME
+*     job_has_valid_account_string() -- is job account string valid 
+*
+*  SYNOPSIS
+*     bool job_has_valid_account_string(const lListElem *job, 
+*                                       lList **answer_list) 
+*
+*  FUNCTION
+*     Returns true if the account string contained in "job" does not
+*     contain any colon (':'). 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     lList **answer_list  - AN_Type element 
+*
+*  RESULT
+*     bool - true if account string is valid 
+******************************************************************************/
+bool job_has_valid_account_string(const char *name, lList **answer_list) {
+   bool ret = true;
+
+#define MAX_characters 9 
+   const char characters[MAX_characters] = { '\n', '\t', '\r', '/', ':', '@', '\\', '?', '*'};
+   const char *output[MAX_characters] = {"\\n", "\\t", "\\r", "/", ":", "@", "\\", "?", "*"};
+   int i;
+   
+   DENTER(TOP_LAYER, "job_verify_name");
+
+   if (name != NULL) {
+      for (i=0; i < MAX_characters; i++) {
+         if (strchr(name, characters[i])) {
+            ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, output[i])); 
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = false;
+            break;  
+         }   
+      }
+   }
+
+   DEXIT;
+
+   
+   return ret;
+}
 
 /****** qmaster/job/job_is_referenced_by_jobname() ****************************
 *  NAME

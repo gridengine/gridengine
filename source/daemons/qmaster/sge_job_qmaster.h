@@ -47,6 +47,8 @@ int sge_gdi_del_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int 
 
 void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
 
+bool job_has_valid_account_string(const char *name, lList **answer_list);
+
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
 void job_suc_pre(lListElem *jep);

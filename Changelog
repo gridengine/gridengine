@@ -1,3 +1,8 @@
+DT-2004-03-05-5: Bugfix:    o Changed error messages from DT-2004-03-05-4 to
+                              start with lower case letters.
+                 Changed:   GDI
+                 Issue:     783
+
 DT-2004-03-05-4: Bugfix:    o Moved internal details from DPRINTF back into
                               comm lib error message.  Now there are two
                               different messages.  One is for the usual case of

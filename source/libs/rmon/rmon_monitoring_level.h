@@ -1,5 +1,5 @@
-#ifndef __RMON_MONITORING_LEVEL_H
-#define __RMON_MONITORING_LEVEL_H
+#ifndef _RMON_MONITORING_LEVEL_H_
+#define _RMON_MONITORING_LEVEL_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,17 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef WIN32NATIVE
-#	include <sys/types.h>
-#else /* WIN32NATIVE */
-#	include "win32nativetypes.h"
-#endif /* WIN32NATIVE */
+#include <sys/types.h>
 
-
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
 
 /* different layers for monitoring */
 #define N_LAYER   8
@@ -57,17 +48,11 @@ extern "C" {
 #define PACK_LAYER     7 /* p */
 
 /* different classes of monitoring messages */
-/* different classes of monitoring messages */
-#ifndef WIN32NATIVE
-#	define TRACE            1 /* t */
-#else 
-#	define TRACEPRINT       1 /* t , since TRACE is used for MFC Debugging */
-#endif 
-
+#define TRACE            1 /* t */
 #define INFOPRINT        2 /* i */
 #define JOBTRACE         4 /* j */
 #define SPECIAL	       8 /* s */
-#define TIMING         16 /* m */
+#define TIMING          16 /* m */
 
 #define FREE_CLASS_X	   32 /* X */
 #define FREE_CLASS_Y	   64 /* Y */
@@ -81,32 +66,13 @@ typedef struct _monitoring_level {
    u_long ml[N_LAYER];
 } monitoring_level;
 
-#ifndef WIN32NATIVE
-
-int rmon_mlcmp(monitoring_level *, monitoring_level *);
-int rmon_mliszero(monitoring_level *);
-
-void rmon_mlcpy(monitoring_level *, monitoring_level *);
-void rmon_mlclr(monitoring_level *);
-
-void rmon_mlor(monitoring_level *, monitoring_level *);
-int rmon_mland(monitoring_level *, monitoring_level *);
-
-void rmon_mlset(monitoring_level *, u_long to_set);
-
+int    rmon_mliszero(monitoring_level *);
+void   rmon_mlcpy(monitoring_level *, monitoring_level *);
+void   rmon_mlclr(monitoring_level *);
 u_long rmon_mlgetl(monitoring_level *, int);
-void rmon_mlputl(monitoring_level *, int, u_long);
+void   rmon_mlputl(monitoring_level *, int, u_long);
 
-int rmon_mlnlayer(void);
-void rmon_mlprint(monitoring_level *);
-
-#endif
-
-#ifdef  __cplusplus
-}
-#endif
-
-#endif
+#endif /* _RMON_MONITORING_LEVEL_H_ */
 
 
 

@@ -1,3 +1,8 @@
+AD-2003-11-07-0: Cleanup:   Removed obsolete RMON functionality. Preserved
+                            local RMON functionality (RMON light).
+                 Changed:   rmon
+                 Review:    AH
+
 SG-2003-11-07-2: Bugfix:    scheduler crashed, when bool resources were
                             used
                  Changed.   scheduler                            

@@ -34,89 +34,57 @@
 
 #ifndef NO_SGE_COMPILE_DEBUG
 
-#ifndef WIN32NATIVE
-#	include "rmon.h"
-#endif
+#include "rmon.h"
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
 
-#ifndef WIN32NATIVE
-#define DENTER_MAIN( layer, program ) \
+#define DENTER_MAIN(layer, program)        \
    static const char SGE_FUNC[] = "main";  \
-   int LAYER = 0; \
-   \
-   rmon_mopen(&argc,argv,program); \
-   LAYER = layer; \
-   if ( __CONDITION(TRACE) ) \
+   static const int xaybzc = layer;        \
+                                           \
+   rmon_mopen(&argc,argv,program);         \
+   if (rmon_condition(layer, TRACE))       \
       rmon_menter (SGE_FUNC)
-
-#define DENTER( layer, function) \
-   int LAYER = layer; \
+ 
+#define DENTER(layer, function)             \
    static const char SGE_FUNC[] = function; \
-   \
-   if ( __CONDITION(TRACE) ) \
+   static int xaybzc = layer;               \
+                                            \
+   if (rmon_condition(layer, TRACE))        \
       rmon_menter (SGE_FUNC)
 
-#define DENTERBLOCK( layer, save ) \
-   save = LAYER; \
-   LAYER = layer
+#define DEXIT                                   \
+   if (rmon_condition(xaybzc, TRACE))           \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__)
 
-#define DEXITBLOCK(save) \
-   LAYER = save
+#define DTRACE                                   \
+   if (rmon_condition(TOP_LAYER, TRACE))         \
+      rmon_mtrace(SGE_FUNC, __FILE__, __LINE__)
 
-#define DEXIT  __CONDITION(TRACE)  ? \
-    rmon_mexit(SGE_FUNC,__FILE__,__LINE__),1   : 0
+#define DPRINTF(msg)                           \
+   if (rmon_condition(TOP_LAYER, INFOPRINT))   \
+      rmon_mprintf msg
 
-#define DTRACE          __CONDITION(TRACE)      ?  \
-        rmon_mtrace(SGE_FUNC,__FILE__,__LINE__),1 : 0
+#define DTIMEPRINTF(msg)                   \
+   if (rmon_condition(TOP_LAYER, TIMING))  \
+      rmon_mprintf msg
 
-#define DPRINTF(x)      __CONDITION(INFOPRINT)  ?  rmon_mprintf x ,1 : 0
-#define DTIMEPRINTF(x)  __CONDITION(TIMING)  ?  rmon_mprintf x ,1 : 0
-#define DSPECIALPRINTF(x) __CONDITION(SPECIAL)  ?  rmon_mprintf x ,1 : 0
-#define DTRACEID(x)     __CONDITION(TRACE)      ?  DEBUG_TRACEID=x,1 : 0;
-#define DJOBTRACE(x)    __CONDITION(JOBTRACE)   ?  rmon_mjobtrace x,1 : 0
-#define DCLOSE                                     rmon_mclose ()
-#define DMAYCLOSE(x)                               rmon_mmayclose(x)
-#define TRACEON         (MTYPE == RMON_LOCAL && !rmon_mliszero(&DEBUG_ON))
-#define DEXECLP(x)                                 rmon_mexeclp x
-#define DEXECVP(x)                                 rmon_mexecvp x
-#define DFORK                                      rmon_mfork
-#define ISTRACE         __CONDITION(TRACE)
+#define DSPECIALPRINTF(msg)                 \
+   if (rmon_condition(TOP_LAYER, SPECIAL))  \
+      rmon_mprintf msg
+
+#define ISTRACE (rmon_condition(TOP_LAYER, TRACE))
+
+#define TRACEON  (rmon_is_enabled() && !rmon_mliszero(&DEBUG_ON))
+
+#define DCLOSE
 
 #ifndef __INSURE__
-#   define SGE_EXIT(x)     (DTRACE, sge_exit(x),0)?0:1
+#   define SGE_EXIT(x) DTRACE, sge_exit(x)
 #else
 #   define SGE_EXIT(x) sge_exit(x)
 #endif
 
-#else
-
-#include "DebugC.h"
-
-#define DENTER( layer, function ) \
-	int LAYER = layer; \
-	static const char SGE_FUNC[] = function; \
-	DebugObj_Enter((LAYER), (SGE_FUNC))
-
-#define DEXIT \
-	DebugObj_Exit((LAYER), (SGE_FUNC))
-
-#define DPRINTF(x) \
-	DebugObj_PrintInfoMsg x 
-
-#define SGE_EXIT(x) \
-	sge_exit(x)
-
-#define DCLOSE \
-	DebugObj_PrintInfoMsg("DCLOSE")
-
-//	(DTRACE, sge_exit(x),0)?0:1
-
-#endif /* WIN32NATIVE */
-
-#else
+#else /* NO_SGE_COMPILE_DEBUG */
 
 #define DENTER_MAIN( layer, program )
 #define DENTER( layer, function)
@@ -125,21 +93,11 @@ extern "C" {
 #define DPRINTF(x)
 #define DTIMEPRINTF(x)
 #define DSPECIALPRINTF(x)
-#define DTRACEID(x)
-#define DJOBTRACE(x)
 #define DCLOSE
-#define DMAYCLOSE(x)
 #define TRACEON
-#define DEXECLP(x)
-#define DEXECVP(x)
-#define DFORK
 #define ISTRACE
 #define SGE_EXIT(x)     sge_exit(x)
 
 #endif /* NO_SGE_COMPILE_DEBUG */
-
-#ifdef  __cplusplus
-}
-#endif
 
 #endif /* __SGERMON_H */

@@ -208,6 +208,8 @@ sge_flush_events_(lListElem *event_client, int interval, int now)
 {
    u_long32 next_send, flush_delay;
 
+   DENTER(TOP_LAYER, "sge_flush_events");
+
    next_send = lGetUlong(event_client, EV_next_send_time);
    next_send = MIN(next_send, now + interval);
 
@@ -240,6 +242,9 @@ sge_flush_events_(lListElem *event_client, int interval, int now)
          lGetHost(event_client, EV_host), 
          lGetString(event_client, EV_commproc),
          lGetUlong(event_client, EV_commid))); 
+
+   DEXIT;
+   return;
 }
 
 /****** Eventclient/Server/sge_next_flush() ************************************

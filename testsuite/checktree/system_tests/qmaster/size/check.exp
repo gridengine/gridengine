@@ -1010,7 +1010,7 @@ proc get_job_count {} {
 
    set job_count 0
 
-   catch {set job_count [llength [glob -directory $qmaster_spool_dir/jobs "*"]]}
+   catch {set job_count [llength [glob -directory $qmaster_spool_dir/jobs "*/*/*"]]}
    return $job_count
 }
 
@@ -1055,6 +1055,11 @@ proc check_flood {} {
 
    set num_hosts [llength $CHECK_CORE_EXECD]
 
+   # limit the number of hosts, otherwise we could get out of filehandles
+   if {$num_hosts > 10} {
+      set num_hosts 10
+   }
+
    set queue_list {}
    foreach i $CHECK_CORE_EXECD {
       lappend queue_list $i.q
@@ -1075,12 +1080,25 @@ proc check_flood {} {
 
       set spawn_list {}
       set num 0
+
+      if {[info exists flood_ids]} {
+         unset flood_ids
+      }
+
       foreach host $CHECK_CORE_EXECD {
          puts $CHECK_OUTPUT "start flooding qsubs on host $host"
-         spawn "rsh" "$host" "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT" "$jobs_per_host" "'$types'" "$num"
+#         spawn "rsh" "$host" "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT" "$jobs_per_host" "'$types'" "$num"
+#         lappend spawn_list $spawn_id
+         set flood_id [open_remote_spawn_process $host $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT $jobs_per_host '$types' $num"]
+         set spawn_id [lindex $flood_id 1]
+         set flood_ids($spawn_id) $flood_id
          lappend spawn_list $spawn_id
          incr num
          puts $CHECK_OUTPUT "started flood submitter on host $host with spawn id $spawn_id"
+
+         if {$num >= $num_hosts } {
+            break
+         }
       }
 
       while { [llength $spawn_list] > 0 } {
@@ -1099,16 +1117,27 @@ proc check_flood {} {
             -i $spawn_list -- "finished submitting" {
                set spawn_id $expect_out(spawn_id)
                puts $CHECK_OUTPUT "reaping flood submitter with id $spawn_id"
-               catch {wait -i $spawn_id} output
-               catch {close -i $spawn_id} output
+               close_spawn_process $flood_ids($spawn_id)
+#               catch {wait -i $spawn_id} output
+#               catch {close -i $spawn_id} output
+               set index [lsearch -exact $spawn_list $spawn_id]
+               set spawn_list [lreplace $spawn_list $index $index]
+            }
+            -i $spawn_list -- "_exit_status_" {
+               set spawn_id $expect_out(spawn_id)
+               puts $CHECK_OUTPUT "reaping flood submitter with id $spawn_id"
+               close_spawn_process $flood_ids($spawn_id)
+#               catch {wait -i $spawn_id} output
+#               catch {close -i $spawn_id} output
                set index [lsearch -exact $spawn_list $spawn_id]
                set spawn_list [lreplace $spawn_list $index $index]
             }
             -i $spawn_list default {
                set spawn_id $expect_out(spawn_id)
                puts $CHECK_OUTPUT "reaping failed flood submitter with id $spawn_id"
-               catch {close -i $spawn_id} output
-               catch {wait -i $spawn_id} output
+               close_spawn_process $flood_ids($spawn_id)
+#               catch {close -i $spawn_id} output
+#               catch {wait -i $spawn_id} output
                set index [lsearch -exact $spawn_list $spawn_id]
                set spawn_list [lreplace $spawn_list $index $index]
             } 

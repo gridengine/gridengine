@@ -4881,3 +4881,76 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
    return 1;
 }
 
+int lSetAnyType(lListElem *elem, int name, void *value) 
+{
+   int ret = 0;
+   int pos = lGetPosViaElem(elem, name);
+   int type = lGetPosType(lGetElemDescr(elem), pos);
+   
+   DENTER(CULL_LAYER, "lSetAnyType");
+   if (type == lStringT) {
+      ret = lSetPosString(elem, pos, *((const char **)value));
+   } else if (type == lHostT) {
+      ret = lSetPosHost(elem, pos, *((const char **)value));
+   } else if (type == lUlongT) {
+      ret = lSetPosUlong(elem, pos, *((lUlong*)value));
+   } else if (type == lDoubleT) {
+      ret = lSetPosDouble(elem, pos, *((lDouble*)value));
+   } else if (type == lFloatT) {
+      ret = lSetPosFloat(elem, pos, *((lFloat*)value));
+   } else if (type == lLongT) {
+      ret = lSetPosLong(elem, pos, *((lLong*)value));
+   } else if (type == lCharT) {
+      ret = lSetPosChar(elem, pos, *((lChar*)value));
+   } else if (type == lBoolT) {
+      ret = lSetPosBool(elem, pos, *((lBool*)value));
+   } else if (type == lIntT) {
+      ret = lSetPosInt(elem, pos, *((int*)value));
+   } else if (type == lObjectT) {
+      ret = lSetPosObject(elem, pos, *((lListElem **)value));
+   } else if (type == lRefT) {
+      ret = lSetPosRef(elem, pos, *((lRef*)value));
+   } else {
+      /* not possible */
+      ret = 1;
+   }
+   DEXIT;
+   return ret;
+}
+
+void lGetAnyType(lListElem *ep, int name, void *value)
+{
+   int pos = lGetPosViaElem(ep, name);
+   int type = lGetPosType(lGetElemDescr(ep), pos);
+
+   DENTER(CULL_LAYER, "lGetAnyType");
+   if (value != NULL) {
+      if (type == lStringT) {
+         *((const char **)value) = lGetPosString(ep, pos);
+      } else if (type == lHostT) {
+         *((const char **)value) = lGetPosHost(ep, pos);
+      } else if (type == lUlongT) {
+         *((lUlong*)value) = lGetPosUlong(ep, pos);
+      } else if (type == lDoubleT) {
+         *((lDouble*)value) = lGetPosDouble(ep, pos);
+      } else if (type == lFloatT) {
+         *((lFloat*)value) = lGetPosFloat(ep, pos);
+      } else if (type == lLongT) {
+         *((lLong*)value) = lGetPosLong(ep, pos);
+      } else if (type == lCharT) {
+         *((lChar*)value) = lGetPosChar(ep, pos);
+      } else if (type == lBoolT) {
+         *((lBool*)value) = lGetPosBool(ep, pos);
+      } else if (type == lIntT) {
+         *((int*)value) = lGetPosInt(ep, pos);
+      } else if (type == lObjectT) {
+         *((lListElem **)value) = lGetPosObject(ep, pos);
+      } else if (type == lRefT) {
+         *((lRef *)value) = lGetPosRef(ep, pos);
+      } else {
+         /* not possible */
+      }
+   }
+   DEXIT;
+}
+

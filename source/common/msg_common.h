@@ -87,7 +87,7 @@
 ** parse_job_cull.c
 */
 #define MSG_PARSE_NULLPOINTERRECEIVED       _MESSAGE(23034, _("NULL pointer received\n"))
-#define MSG_MEM_MEMORYALLOCFAILED           _MESSAGE(23035, _("memory allocation failed\n"))
+#define MSG_MEM_MEMORYALLOCFAILED_S         _MESSAGE(23035, _("memory allocation failed "SFN"\n"))
 #define MSG_ANSWER_GETCWDFAILED             _MESSAGE(23036, _("getcwd() failed\n"))
 #define MSG_ANSER_CANTDELETEHGRPXREFERENCEDINUSERMAPPINGFORCLUSTERUSERY_SS _MESSAGE(23037, _("can't delete host group "SFQ" - referenced in user mapping for cluster user "SFQ"\n"))
 #define MSG_ANSWER_HELPNOTALLOWEDINCONTEXT  _MESSAGE(23038, _("-help not allowed in this context\n"))
@@ -1155,9 +1155,8 @@
 #define MSG_SGETEXT_ADDEDTOLIST_SSSS            _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSSS         _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n"))
 #define MSG_SGETEXT_KILL_SSS                    _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN"\n"))
-
-/* authentication */
 #define MSG_GDI_FAILEDTOEXTRACTAUTHINFO    _MESSAGE(60600, _("failed to extract authentication information"))
+#define MSG_INAVLID_PARAMETER_IN_S         _MESSAGE(60601, _("invalid parameter in "SFN"\n"))
 /* =================================================
  * please do not enter new messages after this point,
  * if they are global messages (meaningfull for all modules)

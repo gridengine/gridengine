@@ -52,9 +52,9 @@
 #include "sched_conf_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_ckpt_qmaster.h"
-#include "sge_usermap_qmaster.h"
-#include "sge_hostgroup_qmaster.h"
+#include "sge_hgroup_qmaster.h"
 #include "sge_sharetree_qmaster.h"
+#include "sge_cuser_qmaster.h"
 #include "sge_feature.h"
 #include "sge_qmod_qmaster.h"
 #include "read_write_queue.h"
@@ -63,7 +63,6 @@
 #include "sge_log.h"
 #include "qmaster.h"
 #include "sge_host.h"
-#include "sge_user_mapping.h"
 #include "sge_time.h"  
 #include "version.h"  
 #include "sge_security.h"  
@@ -78,8 +77,8 @@
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_sharetree.h"
-#include "sge_hostgroup.h"
-#include "sge_usermap.h"
+#include "sge_hgroup.h"
+#include "sge_cuser.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -129,9 +128,9 @@ static gdi_object_t gdi_object[] = {
    { SGE_JOB_SCHEDD_INFO,   0,                NULL,     "schedd info",             &Master_Job_Schedd_Info_List,   NULL,         NULL,           NULL },
    { SGE_ZOMBIE_LIST,       0,                NULL,     "job zombie list",         &Master_Zombie_List,            NULL,         NULL,           NULL },
 #ifndef __SGE_NO_USERMAPPING__
-   { SGE_USER_MAPPING_LIST, UME_cluster_user, UME_Type, "user mapping entry",      &Master_Usermapping_Entry_List, usermap_mod,  usermap_spool,  usermap_success },
+   { SGE_USER_MAPPING_LIST, CU_name, CU_Type, "user mapping entry",      &Master_Cuser_List,             usermap_mod,  usermap_spool,  usermap_success },
 #endif
-   { SGE_HOST_GROUP_LIST,   GRP_group_name,   GRP_Type, "host group",              &Master_Host_Group_List,        hostgrp_mod,  hostgrp_spool,  hostgrp_success },
+   { SGE_HGROUP_LIST,       HGRP_name,        HGRP_Type,"host group",              &Master_HGroup_List,  hgroup_mod,    hgroup_spool,  hgroup_success },
    { SGE_DUMMY_LIST,        0,                NULL,     "general request",         NULL,                           NULL,         NULL,           NULL },
    { 0,                     0,                NULL,     NULL,                      NULL,                           NULL,         NULL,           NULL }
 };
@@ -820,10 +819,9 @@ int sub_command
          case SGE_USER_MAPPING_LIST:
             sge_del_usermap(ep, &(answer->alp), user, host);
             break;
-#endif /* __SGE_NO_USERMAPPING__ */                           
-
-         case SGE_HOST_GROUP_LIST:
-            sge_del_hostgrp(ep, &(answer->alp), user, host);
+#endif
+         case SGE_HGROUP_LIST:
+            sge_del_hgroup(ep, &(answer->alp), user, host);
             break;
          default:
             SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -920,8 +918,9 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
  
    if (answer->lp == NULL)
    { 
-      char* mappingName = NULL;
-      const char* requestedHost = NULL;
+      const char *mapped_user = NULL;
+      const char* requested_host = NULL;
+      bool did_mapping = false;
 
       lUlong value;
       /* create PERM_Type list for answer structure*/
@@ -931,60 +930,59 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
       /* set sge username */ 
       lSetString(ep, PERM_sge_username, user );
- 
+
       /* set requested host name */
       if (request->lp == NULL) {
-         requestedHost = host;
+         requested_host = host;
       } else {
          lList*     tmp_lp = NULL;
          lListElem* tmp_ep = NULL;
      
          tmp_lp = request->lp;
          tmp_ep = tmp_lp->first;
-         requestedHost = lGetHost(tmp_ep, PERM_req_host);
+         requested_host = lGetHost(tmp_ep, PERM_req_host);
 #ifndef __SGE_NO_USERMAPPING__
-         mappingName =  sge_malloc_map_out_going_username( Master_Host_Group_List,
-                                                         Master_Usermapping_Entry_List,
-                                                         user , 
-                                                         requestedHost );
+         cuser_list_map_user(*(cuser_list_get_master_list()), NULL,
+                             user, requested_host, &mapped_user); 
+         did_mapping = true;
 #endif
-    }
+      }
 
-    if (requestedHost != NULL) {
-       lSetHost(ep, PERM_req_host, requestedHost );  
-    }   
+      if (requested_host != NULL) {
+         lSetHost(ep, PERM_req_host, requested_host);  
+      }   
 
-    if (mappingName != NULL) {
-      DPRINTF(("execution mapping: user %s mapped to %s on host %s\n",user ,mappingName, requestedHost));
-      lSetString(ep, PERM_req_username, mappingName);
-      free(mappingName);
-      mappingName = NULL; 
-    } else { 
-      lSetString(ep, PERM_req_username, "");
-    }
+      if (did_mapping && strcmp(mapped_user, user)) {
+         DPRINTF(("execution mapping: user %s mapped to %s on host %s\n",
+                  user, mapped_user, requested_host));
+
+         lSetString(ep, PERM_req_username, mapped_user);
+      } else { 
+         lSetString(ep, PERM_req_username, "");
+      }
     
 
-    /* check for manager permission */
-    value = 0;
-    if (manop_is_manager(user)) {
-       value = 1; 
-    }   
-    lSetUlong(ep, PERM_manager, value);
+      /* check for manager permission */
+      value = 0;
+      if (manop_is_manager(user)) {
+         value = 1; 
+      }   
+      lSetUlong(ep, PERM_manager, value);
 
-    /* check for operator permission */
-    value = 0;
-    if (manop_is_operator(user)) {
-       value = 1; 
-    }   
-    lSetUlong(ep, PERM_operator, value);
-    if ((request->cp != NULL) && (request->enp != NULL)) {
-       answer->lp = lSelect("permissions", lp, request->cp, request->enp);
-       lFreeList(lp); 
-       lp = NULL;
-    } else {
-       answer->lp = lp;
-    }
-  }
+      /* check for operator permission */
+      value = 0;
+      if (manop_is_operator(user)) {
+         value = 1; 
+      }   
+      lSetUlong(ep, PERM_operator, value);
+      if ((request->cp != NULL) && (request->enp != NULL)) {
+         answer->lp = lSelect("permissions", lp, request->cp, request->enp);
+         lFreeList(lp); 
+         lp = NULL;
+      } else {
+         answer->lp = lp;
+      }
+   }
 
   sprintf(SGE_EVENT, MSG_GDI_OKNL);
   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO); 
@@ -1214,7 +1212,7 @@ char *user
    case SGE_CKPT_LIST:
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
-   case SGE_HOST_GROUP_LIST:
+   case SGE_HGROUP_LIST:
       /* user must be a manager */
       if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
@@ -1298,7 +1296,7 @@ lListElem *ep
    case SGE_CKPT_LIST:
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
-   case SGE_HOST_GROUP_LIST:
+   case SGE_HGROUP_LIST:
       
       /* host must be SGE_ADMINHOST_LIST */
       if (!host_list_locate(Master_Adminhost_List, host)) {
@@ -1413,7 +1411,7 @@ sge_gdi_request *request
    case SGE_CKPT_LIST:
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
-   case SGE_HOST_GROUP_LIST:
+   case SGE_HGROUP_LIST:
    case SGE_EXECHOST_LIST:
    case SGE_JOB_LIST:
    case SGE_ZOMBIE_LIST:

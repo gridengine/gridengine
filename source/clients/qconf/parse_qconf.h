@@ -32,12 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-int sge_parse_qconf(char **argv);
-
-   
-
 typedef struct object_info_entry {
    u_long32 target;
    char *object_name;
@@ -47,6 +41,11 @@ typedef struct object_info_entry {
    int (*read_objectname_work)(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);    
    lListElem *(*cull_read_in_object)(const char *dirname, const char *filename, int spool, int type, int *tag, int fields[]);
 } object_info_entry;
+
+int sge_edit(char *fname);
+
+int sge_parse_qconf(char **argv);
+
 
 #endif /* __PARSE_QCONF_H */
 

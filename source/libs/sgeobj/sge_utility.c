@@ -98,9 +98,10 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
       if (str[0] == forbidden_char) {
          if (isprint((int) forbidden_char)) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_SC,
-               begin_strings[i], begin_chars[i]));
+                           begin_strings[i], begin_chars[i]));
          } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, begin_strings[i]));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, 
+                           begin_strings[i]));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          return STATUS_EUNKNOWN;
@@ -113,9 +114,10 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
       if (strchr(str, forbidden_char)) {
          if (isprint((int) forbidden_char)) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC,
-               mid_strings[i], mid_characters[i]));
+                           mid_strings[i], mid_characters[i]));
          } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, mid_strings[i]));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, 
+                           mid_strings[i]));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          return STATUS_EUNKNOWN;
@@ -126,7 +128,8 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
    i = -1;
    while ((forbidden_string = keyword[++i])) {
       if (!strcasecmp(str, forbidden_string)) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_KEYWORD_SS, keyword_strings[i],
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_KEYWORD_SS, 
+                        keyword_strings[i],
             forbidden_string));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          return STATUS_EUNKNOWN;

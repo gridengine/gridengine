@@ -43,11 +43,6 @@
 ** sge_ckptobj.c
 */
 #define MSG_OBJ_CKPT                  _MESSAGE(33005, _("checkpointing environment"))
-/* EB: remove
-#define MSG_OBJ_CKPTI                 _MESSAGE(33006, _("checkpoint interface"))
-*/
-/* #define MSG_SGETEXT_CANT_COPY_ELEM_S                  _message(33008, _("can't copy element "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_CANTCOUNT_CKPT_S                  _message(33009, _("can't count checkpoint objects in "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SGETEXT_NO_CKPT_LIC                       _MESSAGE(33010, _("no checkpoint license available\n") )  
 
 
@@ -621,16 +616,10 @@
 #define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not guilty\n"))
 #define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not guilty\n"))
 #define MSG_HGRP_CANTADDMEMBERXTOGROUPY_SS      _MESSAGE(33495, _("can't add member "SFQ" to host group "SFQ"\n"))
-/* #define MSG_HGRP_CANTNOTADDSUBGROUPXTOGROUPY_SS _message(33496, _("can't add subgroup "SFQ" to host group "SFQ": subgroup not guilty\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_HGRP_INCONSISTENTHOSTGROUPENTRYX_S  _message(33497, _("inconsistent host group entry "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_UM_MAPLISTFORXEXISTS_S     _MESSAGE(33498, _("mapping list for "SFQ" allready exist\n"))
 #define MSG_HGRP_MEMBERLISTFORXEXISTS_S _MESSAGE(33499, _("member list for "SFQ" allready exist\n"))
 #define MSG_UM_NOMAPLISTFORXFOUND_S    _MESSAGE(33500, _("no mapping list for "SFQ" found\n"))
-/* #define MSG_HGRP_NOMEMBERLISTFORXFOUND_S _message(33501, _("no member list for "SFQ" found\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_GRP_NOSUBGROUPLISTFORXFOUND_S _message(33502, _("no subgroup list for "SFQ" found\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_UM_EXIMINEMAPFORX_S        _MESSAGE(33503, _("examine mapping for cluster user "SFQ"\n"))
-/* #define MSG_UM_USERMAPPINGDISABLED     _message(33504, _("user mapping is disabled\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_GRP_HOSTGROUPDISABLED      _message(33505, _("host groups are disabled\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_UM_ERRORADDMAPENTRYXFORY_SS _MESSAGE(33506, _("error adding mapping entry "SFQ" for cluster user "SFQ""))
 #define MSG_UM_ERRORWRITESPOOLFORUSER_S _MESSAGE(33507, _("error writing spoolfile for cluster user "SFQ))
 #define MSG_HGRP_ERRORWRITESPOOLFORGROUP_S  _MESSAGE(33508, _("error writing spoolfile for host group "SFQ))
@@ -818,6 +807,12 @@
 #define MSG_QMASTER_ACLNOSHARE                     _MESSAGE(33679, _("not allowed to set \"fshare\" for ACL lists\n"))
 #define MSG_QMASTER_ACLNOTICKET                    _MESSAGE(33680, _("not allowed to set \"oticket\" for ACL lists\n"))
 #define MSG_SUSERCNTISALREADYZERO_S                _MESSAGE(33681, _("Job counter of user "SFQ" is already 0\n"))
+
+/*
+ */
+#define MSG_HGRP_NONAMECHANGE    _MESSAGE(33682, _("unable to change hostgroup name\n"))
+#define MSG_UME_NONAMECHANGE     _MESSAGE(33683, _("unable to change user mapping name\n"))
+
 
 #endif /* __MSG_QMASTER_H */
 

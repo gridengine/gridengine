@@ -1,5 +1,5 @@
-#ifndef _SGE_HOSTGROUP_QMASTER_H_
-#define _SGE_HOSTGROUP_QMASTER_H_
+#ifndef __SGE_CSTRING_H__
+#define __SGE_CSTRING_H__
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,17 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_c_gdi.h"
+bool 
+cstring_list_append_to_string(const lList *this_list, dstring *string);
 
-int hostgrp_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+bool 
+cstring_list_parse_from_string(lList **this_list, const char *string,
+                               const char *delimitor);
 
-int hostgrp_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
-                const char *ruser, const char *rhost, gdi_object_t *object, 
-                int sub_command);
+#endif /* __SGE_CSTRING_H__ */
 
-int hostgrp_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
-
-int sge_del_hostgrp(lListElem *cep, lList **alpp, char *ruser, char *rhost);
-
-#endif /* _SGE_HOSTGROUP_QMASTER_H_ */
 

@@ -73,7 +73,6 @@
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
 #include "sge_afsutil.h"
-#include "sge_user_mapping.h"
 #include "setup_path.h"
 #include "execution_states.h"
 #include "sge_parse_num_par.h"
@@ -95,8 +94,8 @@
 #include "sge_queue.h"
 #include "sge_ckpt.h"
 #include "sge_complex.h"
-#include "sge_hostgroup.h"
-#include "sge_usermap.h"
+#include "sge_hgroup.h"
+#include "sge_cuser.h"
 #include "sge_todo.h"
 
 #include "sge_spooling.h"
@@ -138,20 +137,6 @@ lListElem *hep
    
    DENTER(TOP_LAYER, "sge_give_job");
    
-   /*
-   originalUser = sge_strdup(NULL,lGetString(jep, JB_owner));
-   DPRINTF(("sge_give_job: Starting job from %s\n", originalUser));
-   mappedUser = sge_malloc_map_out_going_username(originalUser, lGetHost(master_qep, QU_qhostname));
-   if (mappedUser == NULL) {
-      DPRINTF(("user %s not mapped !\n",lGetString(jep, JB_owner) ));
-      FREE(originalUser);
-      originalUser = NULL;
-   } else {
-      DPRINTF(("user %s mapped to %s!\n", lGetString(jep, JB_owner) , mappedUser ));
-      lSetString(jep,JB_owner,mappedUser );
-   }
-   */
-
    target = prognames[EXECD];
    rhost = lGetHost(master_qep, QU_qhostname);
    DPRINTF(("execd host: %s\n", rhost));
@@ -243,11 +228,6 @@ int master
    lListElem *gdil_ep;
    char *str;
 
-#ifndef __SGE_NO_USERMAPPING__
-   char *mappedUser = NULL;   
-/*    char *originalUser = NULL;  */
-#endif
-  
    DENTER(TOP_LAYER, "send_job");
 
    /* map hostname if we are simulating hosts */
@@ -401,27 +381,24 @@ int master
    if (do_credentials) {
       cache_sec_cred(tmpjep, rhost);
    }
-   
-#ifndef __SGE_NO_USERMAPPING__
+  
+#ifndef __SGE_NO_USERMAPPING__ 
    /* 
    ** This is for administrator user mapping 
    */
-   DPRINTF(("send_job(): Starting job of %s\n",  lGetString(tmpjep, JB_owner)  ));
-   
-   if (Master_Usermapping_Entry_List != NULL) {
-      mappedUser = sge_malloc_map_out_going_username( Master_Host_Group_List,
-                                                      Master_Usermapping_Entry_List,
-                                                      lGetString(tmpjep, JB_owner) , 
-                                                      rhost);
-      if (mappedUser != NULL) {
-         DPRINTF(("execution mapping: user %s mapped to %s on host %s\n", lGetString(tmpjep, JB_owner) , mappedUser , rhost));
-  /*     INFO((SGE_EVENT, MSG_MAPPING_USERXMAPPEDTOYONHOSTZ_SSS, lGetString(tmpjep, JB_owner) , mappedUser , rhost )); */
-         lSetString(tmpjep,JB_owner,mappedUser );
-         FREE(mappedUser);
-         mappedUser = NULL;
+   {
+      const char *owner = lGetString(tmpjep, JB_owner);
+      const char *mapped_user;
+
+      DPRINTF(("send_job(): Starting job of %s\n", owner));
+      cuser_list_map_user(*(cuser_list_get_master_list()), NULL,
+                          owner, rhost, &mapped_user);
+      if (strcmp(mapped_user, owner)) {
+         DPRINTF(("execution mapping: user %s mapped to %s on host %s\n", 
+                  owner, mapped_user, rhost));
+         lSetString(tmpjep, JB_owner, mapped_user);
       }
    }
-#endif
    
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
       lFreeElem(tmpjep);
@@ -429,6 +406,7 @@ int master
       DEXIT;
       return -1;
    }
+#endif
 
    pack_job_delivery(&pb, tmpjep, qlp, pe);
    

@@ -49,7 +49,7 @@
 #include "sge_eventL.h"
 #include "sge_identL.h"
 #include "sge_answer.h"
-#include "sge_usermap.h"
+#include "sge_cuser.h"
 #include "parse.h"
 #include "usage.h"
 #include "commlib.h"
@@ -74,6 +74,7 @@
 #include "read_write_ckpt.h"
 #include "read_write_userset.h"
 #include "read_write_complex.h"
+#include "read_write_host_group.h"
 #include "gdi_tsm.h"
 #include "gdi_checkpermissions.h"
 #include "sgermon.h"
@@ -90,9 +91,11 @@
 #include "sge_complex.h"
 #include "sge_manop.h"
 #include "sge_calendar.h"
-#include "sge_hostgroup.h"
+#include "sge_hgroup.h"
 #include "sge_conf.h"
 #include "sge_ckpt.h"
+#include "sge_hgroup_qconf.h"
+#include "sge_cuser_qconf.h"
 
 #ifdef USE_FLATFILE_SPOOLING
 #include "sge_spooling_utilities.h"
@@ -231,7 +234,6 @@ const spool_flatfile_instr qconf_sfi =
 
 #endif
 
-static int sge_edit(char *fname);
 static int sge_next_is_an_opt(char **ptr);
 static int sge_error_and_exit(const char *ptr);
 
@@ -239,12 +241,8 @@ static int sge_error_and_exit(const char *ptr);
 static int show_object_list(u_long32, lDescr *, int, char *);
 static int show_processors(void);
 static int show_eventclients(void);
-#ifndef __SGE_NO_USERMAPPING__
-static int show_user_map_entry(char *user);
-#endif
 
 static void show_gdi_request_answer(lList *alp);
-static bool show_host_group_entry(char *group);
 /* ------------------------------------------------------------- */
 static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s);
 static int add_host_of_type(lList *arglp, u_long32 target);
@@ -257,21 +255,6 @@ static int edit_usersets(lList *arglp);
 /************************************************************************/
 static int add_chg_cmplx(char *cmplx_name, int add, char *fname);
 
-static lList* get_host_group_list_from_master(const char *group);
-static int add_host_group_entry(char *group);
-static int mod_host_group_entry(char *group);
-static int del_host_group_entry(char *group);
-static int add_host_group_entry_from_file(char *filename);
-static int mod_host_group_entry_from_file(char *filename);
-
-#ifndef __SGE_NO_USERMAPPING__
-static lList*     get_user_mapping_list_from_master(const char *user);
-static int add_user_map_entry(char *user, char *mapname, char *hostname);
-static int mod_user_map_entry(char *user);
-static int del_user_map_entry(char *user);
-static int add_user_map_entry_from_file(char *filename);
-static int mod_user_map_entry_from_file(char *filename);
-#endif
 static int print_cmplx(const char *cmplx_name);
 static int print_config(const char *config_name);
 static int delete_config(const char *config_name);
@@ -2525,14 +2508,12 @@ DPRINTF(("ep: %s %s\n",
      
 /* *INDENT-OFF* */ 
       static object_info_entry info_entry[] = {
-         {SGE_QUEUE_LIST,    SGE_OBJ_QUEUE,    QU_Type,  SGE_ATTR_QNAME,         QU_qname, read_queue_work, cull_read_in_qconf},
-         {SGE_EXECHOST_LIST, SGE_OBJ_EXECHOST, EH_Type,  SGE_ATTR_HOSTNAME,      EH_name,  read_host_work,  cull_read_in_host},
-         {SGE_PE_LIST,       SGE_OBJ_PE,       PE_Type,  SGE_ATTR_PE_NAME,       PE_name,  read_pe_work,    cull_read_in_pe},
-         {SGE_CKPT_LIST,     SGE_OBJ_CKPT,     CK_Type,  SGE_ATTR_CKPT_NAME,     CK_name,  read_ckpt_work,  cull_read_in_ckpt},
-#if 0
-         {SGE_CALENDAR_LIST, SGE_OBJ_CALENDAR, CAL_Type, SGE_ATTR_CALENDAR_NAME, CAL_name, read_cal_work,   cull_read_in_cal},
-#endif
-         {0,                 NULL,             0,        NULL,                   0,        NULL,            NULL}
+         {SGE_QUEUE_LIST,      SGE_OBJ_QUEUE,     QU_Type,   SGE_ATTR_QNAME,     QU_qname,  read_queue_work,      cull_read_in_qconf},
+         {SGE_EXECHOST_LIST,   SGE_OBJ_EXECHOST,  EH_Type,   SGE_ATTR_HOSTNAME,  EH_name,   read_host_work,       cull_read_in_host},
+         {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   read_pe_work,         cull_read_in_pe},
+         {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   read_ckpt_work,       cull_read_in_ckpt},
+         {SGE_HGROUP_LIST,     SGE_OBJ_HGROUP,    HGRP_Type, SGE_ATTR_HGRP_NAME, HGRP_name, read_host_group_work, cull_read_in_host_group},
+         {0,                   NULL,              0,         NULL,               0,         NULL,                 NULL}
       }; 
 /* *INDENT-ON* */
       
@@ -3893,33 +3874,30 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-
-      
-
-
       /* "-shgrpl" */
       if (!strcmp("-shgrpl", *spp)) {
-         show_object_list(SGE_HOST_GROUP_LIST, GRP_Type, GRP_group_name, "host group list");  
+         show_object_list(SGE_HGROUP_LIST, HGRP_Type, HGRP_name, "host group list");  
          spp++;
          continue;
       }
+
+/*----------------------------------------------------------------------------*/
 
 #ifndef __SGE_NO_USERMAPPING__
-/*----------------------------------------------------------------------------*/
-
       /* "-sumapl" */
       if (!strcmp("-sumapl", *spp)) {
-         show_object_list(SGE_USER_MAPPING_LIST, UME_Type, UME_cluster_user, "user mapping entries");  
+         show_object_list(SGE_USER_MAPPING_LIST, CU_Type, CU_name, "user mapping entries");  
          spp++;
          continue;
       }
+#endif
 
 /*----------------------------------------------------------------------------*/
 
-
-
+#ifndef __SGE_NO_USERMAPPING__
       /* "-Mumap user filename" */
       if (!strcmp("-Mumap", *spp)) {
+         lList *answer_list = NULL;
          char* file = NULL;
         
          /* no adminhost/manager check needed here */
@@ -3930,19 +3908,21 @@ DPRINTF(("ep: %s %s\n",
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         mod_user_map_entry_from_file(  file );
+         cuser_modify_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list);
          
          spp++;
          continue;
       }
-
 #endif
-/*----------------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------------*/
 
       /* "-Mhgrp user filename" */
       if (!strcmp("-Mhgrp", *spp)) {
+         lList *answer_list = NULL;
          char* file = NULL;
+
          /* no adminhost/manager check needed here */
 
          if (!sge_next_is_an_opt(spp)) {
@@ -3951,19 +3931,22 @@ DPRINTF(("ep: %s %s\n",
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         mod_host_group_entry_from_file( file );
-         
+         hgroup_modify_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
 
-#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
+#ifndef __SGE_NO_USERMAPPING__
       /* "-sumap user"  */
       if (!strcmp("-sumap", *spp)) {
+         lList *answer_list = NULL;
+
          spp = sge_parser_get_next(spp);
-         show_user_map_entry(*spp);
+         cuser_show(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
@@ -3972,91 +3955,90 @@ DPRINTF(("ep: %s %s\n",
 /*----------------------------------------------------------------------------*/
       /* "-shgrp group"  */
       if (!strcmp("-shgrp", *spp)) {
+         lList *answer_list = NULL;
+
          spp = sge_parser_get_next(spp);
-         show_host_group_entry(*spp);
+         hgroup_show(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
 
 
 
-#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
+#ifndef __SGE_NO_USERMAPPING__
       /* "-mumap user"  */
       if (!strcmp("-mumap", *spp)) {
-         char* user = NULL;
+         lList *answer_list = NULL;
 
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
-         user = *spp;
          sge_gdi_is_manager(uti_state_get_user_name());
-         mod_user_map_entry( user );
+         cuser_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
 #endif
+
 /*----------------------------------------------------------------------------*/
 
       /* "-mhgrp user"  */
       if (!strcmp("-mhgrp", *spp)) {
-         char* group = NULL;
+         lList *answer_list = NULL;
 
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
-         group = *spp;
          sge_gdi_is_manager(uti_state_get_user_name());
-         mod_host_group_entry( group );
+         hgroup_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
 
          
-#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
+#ifndef __SGE_NO_USERMAPPING__
       /* "-dumap user "  */
       if (!strcmp("-dumap", *spp)) {
-         char* user = NULL;
-
-         /* no adminhost/manager check needed here */
+         lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         user = *spp; 
-         
          sge_gdi_is_manager(uti_state_get_user_name());
-         del_user_map_entry( user );
+         cuser_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
-
 #endif
+
 /*----------------------------------------------------------------------------*/
 
       /* "-dhgrp user "  */
       if (!strcmp("-dhgrp", *spp)) {
-         char* group = NULL;
+         lList *answer_list = NULL;
    
-         /* no adminhost/manager check needed here */
-
          spp = sge_parser_get_next(spp);
-         group = *spp; 
-         
          sge_gdi_is_manager(uti_state_get_user_name());
-         del_host_group_entry( group );
+         hgroup_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list); 
          spp++;
          continue;
       }
 
-#ifndef __SGE_NO_USERMAPPING__
 /*----------------------------------------------------------------------------*/
 
+#ifndef __SGE_NO_USERMAPPING__
       /* "-Aumap user mapfile"  */
       if (!strcmp("-Aumap", *spp)) {
+         lList *answer_list = NULL;
          char* file = NULL;
 
          /* no adminhost/manager check needed here */
@@ -4067,36 +4049,38 @@ DPRINTF(("ep: %s %s\n",
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-    
-         add_user_map_entry_from_file( file );
+   
+         cuser_add_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list); 
          spp++;
          continue;
       }
+#endif
 
 /*----------------------------------------------------------------------------*/
 
+#ifndef __SGE_NO_USERMAPPING__
       /* "-aumap user"  */
       if (!strcmp("-aumap", *spp)) {
-         char* user = NULL;
+         lList *answer_list = NULL;
 
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
 
          spp = sge_parser_get_next(spp);
-         user = *spp;
          sge_gdi_is_manager(uti_state_get_user_name());
-         add_user_map_entry( user, NULL, NULL );
+         cuser_add(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
-
 #endif
-
 
 /*----------------------------------------------------------------------------*/
 
       /* "-ahgrp group"  */
       if (!strcmp("-ahgrp", *spp)) {
+         lList *answer_list = NULL;
          char* group = NULL;
 
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
@@ -4105,7 +4089,8 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          group = *spp;
          sge_gdi_is_manager(uti_state_get_user_name());
-         add_host_group_entry( group );
+         hgroup_add(&answer_list, group);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
@@ -4113,6 +4098,7 @@ DPRINTF(("ep: %s %s\n",
 
       /* "-Ahgrp file"  */
       if (!strcmp("-Ahgrp", *spp)) {
+         lList *answer_list = NULL;
          char* file = NULL;
 
          /* no adminhost/manager check needed here */
@@ -4123,8 +4109,8 @@ DPRINTF(("ep: %s %s\n",
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-    
-         add_host_group_entry_from_file(  file );
+         hgroup_add_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list); 
          spp++;
          continue;
       }
@@ -4341,7 +4327,7 @@ char *s
 
 /***********************************************************************/
 
-static int sge_edit(
+int sge_edit(
 char *fname 
 
 ) {
@@ -4972,109 +4958,6 @@ static int show_processors()
    return 0;
 }
 
-
-
-
-
-
-/***p** src/add_user_map_entry_from_file() **********************************
-*
-*  NAME
-*     add_user_map_entry_from_file() -- Option -Aumap 
-*
-*  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
-*     static int add_user_map_entry_from_file(char* filename); 
-*       
-*
-*  FUNCTION
-*     This function is used in the -Aumap Option. It will open the file with mapping 
-*     entries and send it to the qmaster. The entries in the file are used to define
-*     the mapping for a cluster user. 
-*
-*
-*  INPUTS
-*     char* filename - file with user mapping definition
-*
-*  RESULT
-*     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-#ifndef __SGE_NO_USERMAPPING__
-static int add_user_map_entry_from_file(
-char *filename 
-) {
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   DENTER(TOP_LAYER, "add_user_map_entry_from_file");
-
-
-   /* read in file */
-   if (filename == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE);
-      DEXIT;
-      return(-1);
-   }
-
-   genericElem = cull_read_in_ume(NULL, filename, 1, 0, 0 );
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE);
-      DEXIT;
-      return(-1);
-   }
-
-   if (lGetString(genericElem, UME_cluster_user) == NULL) {
-      fprintf(stderr, MSG_UM_NOCLUSTERUSERENTRYINFILEX_S,filename );
-      genericElem = lFreeElem(genericElem);
-      DEXIT;
-      return(-1);
-   }
-
-   /* get list from master */   
-   addList = get_user_mapping_list_from_master(lGetString(genericElem, UME_cluster_user));
-   if (addList != NULL) {
-     addList = lFreeList(addList);
-     fprintf(stderr, MSG_ANSWER_USERMAPENTRYALREADYEXISTS_S,lGetString(genericElem, UME_cluster_user));
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   } 
-
-   /*  create UME_list , add Element in UME_list */ 
-   addList = lCreateList("user mapping entry",UME_Type);
-   lAppendElem(addList, genericElem);
-
-   
-   /*  send new list to qmaster */
-   alp = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_ADD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-
-   DEXIT;
-   return 0; 
-}
-#endif
-
 /***p** src/show_gdi_request_answer() **********************************
 *
 *  NAME
@@ -5124,731 +5007,6 @@ lList *alp
    }
    DEXIT;
 }
-
-/***p** src/add_user_map_entry() **********************************
-*
-*  NAME
-*     add_user_map_entry() -- Option -aumap
-*
-*  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
-*     static int add_user_map_entry(char* user, 
-*                                         char* mapname, 
-*                                         char* hostname);
-*       
-*
-*  FUNCTION
-*     This function is used in the -aumap Option. A default mapping
-*     file is generated. Then the $EDITOR command is started and
-*     the user can modify the file. At least the file will be read
-*     in again and send to the qmaster. The parameters mapname and 
-*     hostname can be NULL.
-*     If they are not NULL, the parameters are writen to the default
-*     mapping file. 
-*
-*
-*  INPUTS
-*     char* user     - name of the cluster user to define the mapping 
-*     char* mapname  - a mapping name for the cluster user
-*     char* hostname - the hostname with user account for mapname
-*
-*  RESULT
-*     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-#ifndef __SGE_NO_USERMAPPING__
-static int add_user_map_entry(
-char *user,
-char *mapname,
-char *hostname 
-) {
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   char* filename         = NULL;
-   int   status           = 0;
-   DENTER(TOP_LAYER, "add_user_map_entry");
-
-   /* get list from master */   
-   addList = get_user_mapping_list_from_master(user);
-   if (addList != NULL) {
-     addList = lFreeList(addList);
-     fprintf(stderr, MSG_ANSWER_USERMAPENTRYALREADYEXISTS_S,user );
-     DEXIT;
-     return(-1); 
-   } 
-
-   /* create standard file and write it to tmp */
-   genericElem = sge_create_ume(user,mapname,hostname);
-   filename = write_ume(2,1,genericElem);
-   lFreeElem(genericElem);
-    
-   /* edit this file */
-   status = sge_edit(filename);
-   if (status < 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_PARSE_EDITFAILED);
-       DEXIT;
-       return(-1);
-   }
-
-   if (status > 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_FILE_FILEUNCHANGED);
-       DEXIT;
-       return(-1);
-   }
-
-   /* read it in again */
-   genericElem = cull_read_in_ume(NULL, filename, 1, 0, 0 );
-   unlink(filename);
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE);
-      DEXIT;
-      return(-1);
-   }
-
-   if (strcmp(lGetString(genericElem, UME_cluster_user), user) != 0) {
-     
-     fprintf(stderr, MSG_ANSWER_CLUSTERUNAMEXDIFFFROMY_SS,lGetString(genericElem, UME_cluster_user),user );
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   } 
-   
-   addList = lCreateList("user mapping entry",UME_Type);
-   lAppendElem(addList, genericElem);
-
-   alp = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_ADD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-
-   DEXIT;
-   return 0; 
-}
-#endif
-
-/***p** src/add_host_group_entry() ********************************************
-*
-*  NAME
-*     add_host_group_entry() -- Option qconf -ahgrp
-*
-*  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
-*     static int add_host_group_entry( char* group );
-*       
-*
-*  FUNCTION
-*     This function is used in the qconf -ahgrp Option. A default host
-*     group file is generated. Then the $EDITOR command is started and
-*     the user can modify the file. At least the file will be read
-*     in again and send to the qmaster.  
-*
-*  INPUTS
-*     char* group - name of the host group to define
-*
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-static int add_host_group_entry(
-char *group 
-) {
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   char* filename         = NULL;
-   int   status           = 0;
-   DENTER(TOP_LAYER, "add_host_group_entry");
-
-   /* get list from master */   
-   addList = get_host_group_list_from_master(group);
-   if (addList != NULL) {
-     addList = lFreeList(addList);
-     fprintf(stderr, MSG_ANSWER_HOSTGROUPENTRYALLREADYEXISTS_S,group );
-     DEXIT;
-     return(-1); 
-   } 
-
-   /* create standard file and write it to tmp */
-   genericElem = lCreateElem(GRP_Type);
-   lSetString(genericElem, GRP_group_name, group);
-   filename = write_host_group(2,1,genericElem);
-   lFreeElem(genericElem);
-    
-   /* edit this file */
-   status = sge_edit(filename);
-   if (status < 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_PARSE_EDITFAILED);
-       DEXIT;
-       return(-1);
-   }
-
-   if (status > 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_FILE_FILEUNCHANGED);
-       DEXIT;
-       return(-1);
-   }
-
-   /* read it in again */
-   genericElem = cull_read_in_host_group(NULL, filename, 1, 0, 0 );
-   unlink(filename);
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE);
-      DEXIT;
-      return(-1);
-   }
-
-   if (strcmp(lGetString(genericElem, GRP_group_name), group) != 0) {
-     
-     fprintf(stderr, MSG_ANSWER_HOSTGROUPNAMEXDIFFFROMY_SS,lGetString(genericElem, GRP_group_name),group );
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   } 
-   
-   addList = lCreateList("host group list",GRP_Type);
-   lAppendElem(addList, genericElem);
-
-   alp = sge_gdi(SGE_HOST_GROUP_LIST, SGE_GDI_ADD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-
-   DEXIT;
-   return 0; 
-}
-
-
-/***p** src/mod_user_map_entry() **********************************************
-*  NAME
-*     mod_user_map_entry() -- Option -mumap 
-*
-*  SYNOPSIS
-*     static int mod_user_map_entry (char* user);  
-*
-*  FUNCTION
-*     This function is used in the -mumap Option. It asks the qmaster
-*     for the mapping entries for the cluster user, given in the 
-*     parameter user. Then it write a temporary file with the entries
-*     for the user. After that the $EDITOR is called and the user
-*     can modify the file. At least the modified entries are sent to
-*     the qmaster.
-*
-*  INPUTS
-*     char* user     - name of the cluster user to define the mapping 
-*
-*  RESULT
-*     int 0 on success, -1 on error
-*******************************************************************************/
-#ifndef __SGE_NO_USERMAPPING__
-static int mod_user_map_entry(
-char *user 
-) {
-  lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   char* filename         = NULL;
-   int   status           = 0;
-   DENTER(TOP_LAYER, "mod_user_map_entry");
-
-
-   /* get list from master */   
-   addList = get_user_mapping_list_from_master(user);
-   if (addList == NULL) {
-     fprintf(stderr, MSG_ANSWER_USERMAPENTRYXNOTFOUND_S,user );
-     DEXIT;
-     return(-1); 
-   } 
-
-   /* write list to file */
-   genericElem = lFirst(addList);
-   filename = write_ume(2,1,genericElem);
-   addList = lFreeList(addList);   
- 
-   /* edit this file */
-   status = sge_edit(filename);
-   if (status < 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_PARSE_EDITFAILED );
-       DEXIT; 
-       return(-1); 
-   }
-
-   if (status > 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_FILE_FILEUNCHANGED );
-       DEXIT;
-       return(-1); 
-   }
-
-   /* read it in again */
-   genericElem = cull_read_in_ume(NULL, filename, 1, 0, 0 );
-   unlink(filename);
-   
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE );
-      DEXIT;
-      return (-1); 
-   }
-   if (strcmp(lGetString(genericElem, UME_cluster_user), user) != 0) {
-     
-     fprintf(stderr, MSG_ANSWER_CLUSTERUNAMEXDIFFFROMY_SS,lGetString(genericElem, UME_cluster_user),user );
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   }  
-   addList = lCreateList("user mapping entry",UME_Type);
-   lAppendElem(addList, genericElem);
-
-   alp = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_MOD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-   DEXIT;
-   return 0;  
-}
-#endif
-
-/***p** src/mod_host_group_entry() ********************************************
-*  NAME
-*     mod_host_group_entry() -- Option qconf -mhgrp 
-*
-*  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
-*     static int mod_host_group_entry ( char* group );  
-*
-*  FUNCTION
-*     This function is used in the qconf -mhgrp Option. It asks the qmaster
-*     for the existing host group entries in the host group, given in the 
-*     parameter "group". Then it write a temporary file with the entries
-*     for the group. After that, the $EDITOR is called and the user
-*     can modify the file. At least the modified entries are sent to
-*     the qmaster.
-*
-*  INPUTS
-*     char* group  - name of the host group to modify 
-*    
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-static int mod_host_group_entry(
-char *group 
-) { 
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   char* filename         = NULL;
-   int   status           = 0;
-   DENTER(TOP_LAYER, "mod_host_group_entry");
-
-
-   /* get list from master */   
-   addList = get_host_group_list_from_master(group);
-   if (addList == NULL) {
-     fprintf(stderr, MSG_ANSWER_HOSTGROUPENTRYXNOTFOUND_S,group );
-     DEXIT;
-     return(-1); 
-   } 
-
-   /* write list to file */
-   genericElem = lFirst(addList);
-   filename = write_host_group(2,1,genericElem);
-   addList = lFreeList(addList);   
- 
-   /* edit this file */
-   status = sge_edit(filename);
-   if (status < 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_PARSE_EDITFAILED );
-       DEXIT; 
-       return(-1); 
-   }
-
-   if (status > 0) {
-       unlink(filename);
-       fprintf(stderr, MSG_FILE_FILEUNCHANGED );
-       DEXIT;
-       return(-1); 
-   }
-
-   /* read it in again */
-   genericElem = cull_read_in_host_group(NULL, filename, 1, 0, 0 );
-   unlink(filename);
-   
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE );
-      DEXIT;
-      return (-1); 
-   }
-   if (strcmp(lGetString(genericElem, GRP_group_name), group) != 0) {
-     
-     fprintf(stderr, MSG_ANSWER_HOSTGROUPNAMEXDIFFFROMY_SS,lGetString(genericElem,GRP_group_name ),group );
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   }  
-   addList = lCreateList("host group list", GRP_Type);
-   lAppendElem(addList, genericElem);
-
-   alp = sge_gdi(SGE_HOST_GROUP_LIST , SGE_GDI_MOD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-   DEXIT;
-   return 0;  
-}
-
-/***p** src/del_host_group_entry() ********************************************
-*  NAME
-*     del_host_group_entry() -- Option qconf -dhgrp
-*
-*  SYNOPSIS
-*     static int del_host_group_entry( char* group );  
-*
-*  FUNCTION
-*     This function is used in the qconf -dhgrp Option. It creates a
-*     GRP_Type list for the host group to delete and will send
-*     the list to the qmaster in order to remove all entries for
-*     the host group specified in the parameter group.
-*
-*  INPUTS
-*     char* group   - name of the host group to delete
-*    
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-static int del_host_group_entry(
-char *group 
-) { 
-   lListElem* genericElem = NULL;
-   lList* delList         = NULL;
-   lList* alp             = NULL; 
-   DENTER(TOP_LAYER, "del_host_group_entry");
-
-   genericElem = lCreateElem(GRP_Type);
-   lSetString(genericElem, GRP_group_name, group);
-
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_PARSE_NULLPOINTERRECEIVED); 
-      DEXIT;
-      return (-1);
-   }
-  
-   delList = lCreateList("host group",GRP_Type);
-   lAppendElem(delList, genericElem);
-
-   alp = sge_gdi(SGE_HOST_GROUP_LIST , SGE_GDI_DEL, &delList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   delList = lFreeList(delList);
-   DEXIT;
-   return 0; 
-}
-
-/***p** src/add_host_group_entry_from_file() **********************************
-*  NAME
-*     add_host_group_entry_from_file() -- Option -Ahgrp 
-*
-*  SYNOPSIS
-*     static int add_host_group_entry_from_file (char* filename); 
-*
-*  FUNCTION
-*     This function is used in the -Ahgrp option of qconf. It will 
-*     open the file with host group entries and send it to the 
-*     qmaster. The entries in the file are used to define host groups 
-*     for user mapping.
-*
-*  INPUTS
-*     char* filename - file with host group definition
-*
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-static int add_host_group_entry_from_file(char *filename) {
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   DENTER(TOP_LAYER, "add_host_group_entry_from_file");
-
-   /* read in file */
-   if (filename == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE);
-      DEXIT;
-      return(-1);
-   }
-
-   genericElem = cull_read_in_host_group(NULL, filename, 1, 0, 0 );
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE);
-      DEXIT;
-      return(-1);
-   }
-
-   if (lGetString(genericElem, GRP_group_name) == NULL) {
-      fprintf(stderr, MSG_HGRP_NOHOSTGROUPENTRYINFILEX_S,filename );
-      genericElem = lFreeElem(genericElem);
-      DEXIT;
-      return(-1);
-   } 
-
-
-   /* get list from master */   
-   addList = get_host_group_list_from_master(lGetString(genericElem, GRP_group_name));
-   if (addList != NULL) {
-     fprintf(stderr, MSG_ANSWER_HOSTGROUPENTRYALLREADYEXISTS_S,lGetString(genericElem, GRP_group_name));
-     addList = lFreeList(addList);
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   } 
-
-   /*  create GRP_list , add Element in GRP_list */ 
-   addList = lCreateList("host group list",GRP_Type);
-   lAppendElem(addList, genericElem);
-
-   /*  send new list to qmaster */
-   alp = sge_gdi(SGE_HOST_GROUP_LIST, SGE_GDI_ADD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-
-   DEXIT;
-   return 0; 
-}
-
-
-/***p** src/mod_host_group_entry_from_file() **********************************
-*
-*  NAME
-*     mod_host_group_entry_from_file() -- Option -Mhgrp 
-*
-*  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
-*     static int mod_host_group_entry_from_file (char* filename);
-*
-*  FUNCTION
-*     This function is used in the -Mhgrp Option in qconf. It will open
-*     the file with mapping entries and send it to the qmaster. 
-*
-*  INPUTS
-*     char* filename - file with host group definition 
-*    
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-static int mod_host_group_entry_from_file(
-char *filename 
-) {
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   DENTER(TOP_LAYER, "mod_host_group_entry_from_file");
-
-   /* read in file */
-   if (filename == NULL) {
-      sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE);
-   }
-
-   genericElem = cull_read_in_host_group(NULL, filename, 1, 0, 0 );
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE );
-      DEXIT;
-      return(-1); 
-   }
-
-   if (lGetString(genericElem, GRP_group_name) == NULL) {
-      fprintf(stderr, MSG_HGRP_NOHOSTGROUPENTRYINFILEX_S,filename );
-      genericElem = lFreeElem(genericElem);
-      DEXIT;
-      return(-1);
-   } 
-
-   /* get list from master */   
-   addList = get_host_group_list_from_master(lGetString(genericElem, GRP_group_name));
-   if (addList == NULL) {
-     
-     fprintf(stderr,MSG_ANSWER_HOSTGROUPENTRYXNOTFOUND_S ,lGetString(genericElem, GRP_group_name));
-     genericElem = lFreeElem(genericElem);
-     addList = lFreeList(addList);
-     DEXIT;
-     return(-1); 
-   } 
-   addList = lFreeList(addList);
-   
-   addList = lCreateList("host group list",GRP_Type);
-   lAppendElem(addList, genericElem);
- 
-   alp = sge_gdi(SGE_HOST_GROUP_LIST, SGE_GDI_MOD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-
-   DEXIT;
-   return 0;  
-}
-
-/***p** src/mod_user_map_entry_from_file() ************************************
-*  NAME
-*     mod_user_map_entry_from_file() -- Option -Mumap 
-*
-*  SYNOPSIS
-*     static int mod_user_map_entry_from_file (char* filename);
-*
-*  FUNCTION
-*     This function is used in the -Mumap Option. It will open 
-*     the file with mapping entries and send it to the qmaster. 
-*     The entries in the file are used to define the mapping 
-*     for the cluster user specified in the parameter user. 
-*
-*  INPUTS
-*     char* filename - file with user mapping definition 
-*    
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-#ifndef __SGE_NO_USERMAPPING__
-static int mod_user_map_entry_from_file(
-char *filename 
-) {
-   lListElem* genericElem = NULL;
-   lList* addList         = NULL;
-   lList* alp             = NULL; 
-   DENTER(TOP_LAYER, "mod_user_map_entry_from_file");
-
-   /* read in file */
-   if (filename == NULL) {
-      sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE);
-   }
-
-   genericElem = cull_read_in_ume(NULL, filename, 1, 0, 0 );
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_FILE_ERRORREADINGINFILE );
-      DEXIT;
-      return(-1); 
-   }
-
-   if (lGetString(genericElem, UME_cluster_user) == NULL) {
-      fprintf(stderr, MSG_UM_NOCLUSTERUSERENTRYINFILEX_S,filename );
-      genericElem = lFreeElem(genericElem);
-      DEXIT;
-      return(-1);
-   }
-
-   /* get list from master */   
-   addList = get_user_mapping_list_from_master(lGetString(genericElem, UME_cluster_user));
-   if (addList == NULL) {
-     fprintf(stderr, MSG_ANSWER_USERMAPENTRYXNOTFOUND_S,lGetString(genericElem, UME_cluster_user) );
-     addList = lFreeList(addList);
-     genericElem = lFreeElem(genericElem);
-     DEXIT;
-     return(-1); 
-   } 
-
-   addList = lFreeList(addList);
-   
-   addList = lCreateList("user mapping entry",UME_Type);
-   lAppendElem(addList, genericElem);
- 
-   alp = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_MOD, &addList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   addList = lFreeList(addList);
-
-   DEXIT;
-   return 0;  
-}
-
-/***p** src/del_user_map_entry() **********************************************
-*
-*  NAME
-*     del_user_map_entry() -- Option -dumap
-*
-*  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-*   
-*     static int del_user_map_entry (char* user);  
-*
-*  FUNCTION
-*     This function is used in the -dumap Option. It creates a
-*     UME_Type list for the user mapping to delete and will send
-*     the list to the qmaster in order to remove all entries for
-*     the cluster user specified in the parameter user.
-*
-*  INPUTS
-*     char* user     - name of the cluster user to delete the mapping
-*    
-*  RESULT
-*     int 0 on success, -1 on error
-******************************************************************************/
-static int del_user_map_entry(
-char *user 
-) {   
-   lListElem* genericElem = NULL;
-   lList* delList         = NULL;
-   lList* alp             = NULL; 
-   DENTER(TOP_LAYER, "del_user_map_entry");
-
-   genericElem = sge_create_ume(user,NULL,NULL);
-
-   lSetString(genericElem, UME_cluster_user, user);
-   if (genericElem == NULL) {
-      fprintf(stderr, MSG_PARSE_NULLPOINTERRECEIVED); 
-      DEXIT;
-      return (-1);
-   }
-  
-   delList = lCreateList("user mapping entry",UME_Type);
-   lAppendElem(delList, genericElem);
-
-   alp = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_DEL, &delList, NULL, NULL);
-   show_gdi_request_answer(alp);
-
-   alp = lFreeList(alp);
-   delList = lFreeList(delList);
-   DEXIT;
-   return 0; 
-}
-
-#endif
 
 /***************************************************************************
   -ac|-Ac|-mc|-Mc|-dc option 
@@ -6706,219 +5864,4 @@ struct object_info_entry *info_entry
 
    DEXIT;
    return 0;
-}
-
-#ifndef __SGE_NO_USERMAPPING__
-/***p** src/get_user_mapping_list_from_master() ******************************
-*  NAME
-*     get_user_mapping_list_from_master() -- get u. mapping entry list 
-*
-*  SYNOPSIS
-*     static lList*     get_user_mapping_list_from_master(char* user);
-*
-*  FUNCTION
-*     The function performs a SGE_GDI_GET request to the qmaster in
-*     order to get the user mapping entry list for the specified user.
-*
-*  INPUTS
-*     char* user - name of the cluster user
-*
-*  RESULT
-*     lList*     - pointer to UME_Type list (caller must free the list)
-*     NULL       - on error
-*******************************************************************************/
-lList* get_user_mapping_list_from_master(
-const char *user 
-) {
-   lList *alp = NULL; 
-   lList *umlp = NULL;
-   DENTER(TOP_LAYER, "get_user_mapping_list_from_master");
-
-   if (user != NULL) {
-     lEnumeration *what = NULL;
-     lCondition *where = NULL;
-     lListElem *ep = NULL;
-
-     what = lWhat("%T(ALL)", UME_Type); 
-     where = lWhere("%T(%I==%s)", UME_Type, UME_cluster_user, user);
-     alp = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_GET, &umlp, where, what);
-     what = lFreeWhat(what);
-     where = lFreeWhere(where);
-
- 
-     ep = lFirst(alp);
-      answer_exit_if_not_recoverable(ep);
-     if (answer_get_status(ep) != STATUS_OK) {
-       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-       if (answer_get_status(ep) == STATUS_ENOIMP) {
-         alp = lFreeList(alp);
-         umlp = lFreeList(umlp);
-         SGE_EXIT(1); 
-       }  
-       alp = lFreeList(alp);
-       umlp = lFreeList(umlp);
-       
-       DEXIT;
-       return NULL;
-     }
-     alp = lFreeList(alp);
-   }
-
-   DEXIT;
-   return umlp; 
-}
-#endif
-
-/****** src/get_host_group_list_from_master() *********************************
-*  NAME
-*     get_host_group_list_from_master() -- get GRP_List using GDI request 
-*
-*  SYNOPSIS
-*     static lList*     get_host_group_list_from_master(char* group);
-*       
-*  FUNCTION
-*     The function performs a SGE_GDI_GET request to the qmaster in
-*     order to get the GRP_Type list for the specified group.
-*
-*  INPUTS
-*     char* group - name of the host group 
-*
-*  RESULT
-*     lList*      - pointer to GRP_Type list (caller must free the list)
-*     NULL        - on error
-******************************************************************************/
-lList*  get_host_group_list_from_master(
-const char *group 
-) {
-   lList *alp = NULL; 
-   lList *umlp = NULL;
-   DENTER(TOP_LAYER, "get_host_group_list_from_master");
-
-   if (group != NULL) {
-     lEnumeration *what = NULL;
-     lCondition *where = NULL;
-     lListElem *ep = NULL;
-
-     what = lWhat("%T(ALL)", GRP_Type); 
-     where = lWhere("%T(%I==%s)", GRP_Type, GRP_group_name, group);
-     alp = sge_gdi(SGE_HOST_GROUP_LIST, SGE_GDI_GET, &umlp, where, what);
-     what = lFreeWhat(what);
-     where = lFreeWhere(where);
-
- 
-     ep = lFirst(alp);
-     answer_exit_if_not_recoverable(ep);
-     if (answer_get_status(ep) != STATUS_OK) {
-       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-       if (answer_get_status(ep) == STATUS_ENOIMP) {
-         alp = lFreeList(alp);
-         umlp = lFreeList(umlp);
-         SGE_EXIT(1); 
-       }  
-       alp = lFreeList(alp);
-       umlp = lFreeList(umlp);
-       
-       DEXIT;
-       return NULL;
-     }
-     alp = lFreeList(alp);
-   }
-
-   DEXIT;
-   return umlp; 
-}
-
-/***p** src/show_user_map_entry() *********************************************
-*  NAME
-*     show_user_map_entry() -- print user map entries of cluster user 
-*
-*  SYNOPSIS
-*     static bool show_user_map_entry(char *user);
-*
-*  FUNCTION
-*     print current user mapping entries to stdout. The parameter
-*     user specifies the name of the cluster user.
-*
-*  INPUTS
-*     char* user - name of the cluster user to show the mapping
-*
-*  RESULT
-*     bool true on success, false on error
-******************************************************************************/
-#ifndef __SGE_NO_USERMAPPING__
-static bool show_user_map_entry(char *user)
-{ 
-    lList *umlp = NULL;
-    lListElem *ep = NULL;
- 
-    DENTER(TOP_LAYER, "show_user_map_entry");
-  
-    if (user == NULL) {
-       DEXIT;
-       return false;
-    }
-      
-    umlp = get_user_mapping_list_from_master(user);   
-
-    if ((ep = lFirst(umlp)) == NULL) {
-      fprintf(stderr, MSG_ERROR_USERXNOTDEFINED_S , user);
-      lFreeList(umlp);
-      DEXIT;
-      return false; 
-    }
-
-    for_each(ep, umlp) {
-      write_ume((int)0,(int)0, ep); 
-    }    
-
-    lFreeList(umlp);
-
-    DEXIT;
-    return true; 
-}
-#endif
-
-/****** src/show_host_group_entry() *******************************************
-*  NAME
-*     show_host_group_entry() -- print houst group to stdout 
-*
-*  SYNOPSIS
-*     static bool show_host_group_entry(char* group);
-*
-*  FUNCTION
-*     This function uses gdi request to get group from qmaster and
-*     prints the given group on stdout.
-*      
-*  INPUTS
-*     char* group - name of group
-******************************************************************************/
-static bool show_host_group_entry(char *group) 
-{ 
-    lList *grp_lp = NULL;
-    lListElem *ep = NULL;
- 
-    DENTER(TOP_LAYER, "show_host_group_entry");
-  
-    if (group == NULL) {
-       DEXIT;
-       return false;
-    }
-      
-    grp_lp = get_host_group_list_from_master(group);   
-
-    if ((ep = lFirst(grp_lp)) == NULL) {
-      fprintf(stderr, MSG_ERROR_GROUPXNOTDEFINED_S , group );
-      lFreeList(grp_lp);
-      DEXIT;
-      return false; 
-    }
-
-    for_each(ep, grp_lp) {
-      write_host_group((int)0,(int)0, ep); 
-    }    
-
-    lFreeList(grp_lp);
-
-    DEXIT;
-    return true; 
 }

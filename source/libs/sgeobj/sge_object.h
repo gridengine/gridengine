@@ -105,10 +105,10 @@
 *        SGE_TYPE_SUBMITHOST
 *        SGE_TYPE_USER
 *        SGE_TYPE_USERSET
-*        SGE_TYPE_USERMAPPING
+*        SGE_TYPE_CUSER
 *
 *     If usermapping is enabled, an additional object type is defined:
-*        SGE_TYPE_HOSTGROUP
+*        SGE_TYPE_HGROUP
 *  
 *     The last value defined as obect type is SGE_TYPE_ALL. 
 ****************************************************************************
@@ -138,10 +138,8 @@ typedef enum {
    SGE_TYPE_SUBMITHOST,
    SGE_TYPE_USER,
    SGE_TYPE_USERSET,
-#ifndef __SGE_NO_USERMAPPING__
-   SGE_TYPE_USERMAPPING,
-#endif
-   SGE_TYPE_HOSTGROUP,
+   SGE_TYPE_CUSER,
+   SGE_TYPE_HGROUP,
 
    SGE_TYPE_ALL            /* must be last entry */
 } sge_object_type;

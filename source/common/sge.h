@@ -51,6 +51,7 @@
 
 /* sge object names */
 #define SGE_OBJ_QUEUE                  "queue"
+#define SGE_OBJ_HGROUP                 "hostgroup"
 #define SGE_OBJ_EXECHOST               "exechost"
 #define SGE_OBJ_PE                     "pe"
 #define SGE_OBJ_CKPT                   "ckpt"
@@ -101,6 +102,7 @@
 #define SGE_ATTR_HOSTNAME              "hostname"
 #define SGE_ATTR_PE_NAME               "pe_name"
 #define SGE_ATTR_CKPT_NAME             "ckpt_name"
+#define SGE_ATTR_HGRP_NAME             "group_name"
 #define SGE_ATTR_CALENDAR_NAME         "calendar_name"
 #define SGE_ATTR_YEAR                  "year"
 #define SGE_ATTR_WEEK                  "week"
@@ -155,7 +157,7 @@
 #define COMPLEX_DIR               "complexes"
 #define PE_DIR                    "pe"
 #define UME_DIR                   "usermapping"
-#define HOSTGROUP_DIR             "hostgroups"
+#define HGROUP_DIR                "hostgroups"
 #define CKPTOBJ_DIR               "ckpt"
 #define CAL_DIR                   "calendars"
 #define ZOMBIE_DIR                "zombies"

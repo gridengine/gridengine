@@ -115,4 +115,6 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream);
 bool answer_list_add(lList **answer_list, const char *text,
                      u_long32 status, answer_quality_t quality);
 
+void answer_list_replace(lList **answer_list, lList **new_list);
+
 #endif /* __SGE_ANSWER_H */

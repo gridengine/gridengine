@@ -88,7 +88,6 @@
 #include "sge_qmod_qmaster.h"
 #include "time_event.h"
 #include "sge_give_jobs.h"
-#include "sge_user_mapping.h"
 #include "setup_path.h"
 #include "reschedule.h"
 #include "msg_daemons_common.h"
@@ -109,8 +108,8 @@
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_sharetree.h"
-#include "sge_hostgroup.h"
-#include "sge_usermap.h"
+#include "sge_hgroup.h"
+#include "sge_cuser.h"
 
 #include "sge_spooling.h"
 #include "sge_spooling_loader.h"
@@ -329,7 +328,8 @@ int sge_setup_qmaster()
       DPRINTF(("%s\n", lGetString(ep, MO_name)));
 
    DPRINTF(("host group definitions-----------\n"));
-   spool_read_list(spooling_context, &Master_Host_Group_List, SGE_TYPE_HOSTGROUP);
+   spool_read_list(spooling_context, hgroup_list_get_master_list(), 
+                   SGE_TYPE_HGROUP);
 
    DPRINTF(("operator_list----------------------------\n"));
    spool_read_list(spooling_context, &Master_Operator_List, SGE_TYPE_OPERATOR);
@@ -353,7 +353,7 @@ int sge_setup_qmaster()
 
 #ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("administrator user mapping-----------\n"));
-   spool_read_list(spooling_context, &Master_Usermapping_Entry_List, SGE_TYPE_USERMAPPING);
+   spool_read_list(spooling_context, cuser_list_get_master_list(), SGE_TYPE_CUSER);
 #endif
 
    DPRINTF(("queue_list---------------------------------\n"));

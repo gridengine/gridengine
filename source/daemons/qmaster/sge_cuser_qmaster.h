@@ -1,5 +1,5 @@
-#ifndef _READ_WRITE_HOST_GROUP_H
-#define _READ_WRITE_HOST_GROUP_H
+#ifndef _SGE_USERMAP_QMASTER_H_
+#define _SGE_USERMAP_QMASTER_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,12 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int
-read_host_group_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
-int spool, int flag, int *tag, int parsing_type);
+#include "sge_c_gdi.h"
 
-lListElem *cull_read_in_host_group(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
+int usermap_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+int usermap_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object,int sub_command);
+int usermap_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+int sge_del_usermap(lListElem *cep, lList **alpp, char *ruser, char *rhost);
 
-char *write_host_group(int spool, int how, const lListElem *hostGroupElement);
 
-#endif /* _READ_WRITE_HOST_GROUP_H */
+#endif /* _SGE_USERMAP_QMASTER_H_ */
+

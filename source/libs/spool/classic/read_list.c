@@ -85,13 +85,10 @@
 #include "read_write_queue.h"
 #include "read_write_userprj.h"
 #include "read_write_userset.h"
-
-#ifndef __SGE_NO_USERMAPPING__
-#include "sge_usermap.h"
+#include "sge_cuser.h"
 #include "read_write_ume.h"
-#endif
 
-#include "sge_hostgroup.h"
+#include "sge_hgroup.h"
 #include "read_write_host_group.h"
 
 
@@ -119,10 +116,10 @@ int sge_read_host_group_entries_from_disk()
   DENTER(TOP_LAYER, "sge_read_host_group_entries_from_disk");
  
  
-  direntries = sge_get_dirents(HOSTGROUP_DIR);
+  direntries = sge_get_dirents(HGROUP_DIR);
   if (direntries) {
-     if (Master_Host_Group_List == NULL) {
-        Master_Host_Group_List = lCreateList("main host group list", GRP_Type);
+     if (Master_HGroup_List == NULL) {
+        Master_HGroup_List = lCreateList("main host group list", HGRP_Type);
      }  
      if (!sge_silent_get()) { 
         printf(MSG_CONFIG_READINGHOSTGROUPENTRYS);
@@ -136,32 +133,13 @@ int sge_read_host_group_entries_from_disk()
               printf(MSG_SETUP_HOSTGROUPENTRIES_S, hostGroupEntry);
            }
 
-           ep = cull_read_in_host_group(HOSTGROUP_DIR, hostGroupEntry , 1, 0, NULL); 
-           lAppendElem(Master_Host_Group_List, ep);
+           ep = cull_read_in_host_group(HGROUP_DIR, hostGroupEntry , 1, 0, NULL, NULL); 
+           lAppendElem(Master_HGroup_List, ep);
         } else {
-           sge_unlink(HOSTGROUP_DIR, hostGroupEntry);
+           sge_unlink(HGROUP_DIR, hostGroupEntry);
         }   
      } 
      direntries = lFreeList(direntries);
- 
-     ep = Master_Host_Group_List->first;  
-
-     while (ep != NULL) {
-        hostGroupEntry = lGetString(ep, GRP_group_name);
-        if (hostGroupEntry != NULL) {
-           DPRINTF(("----------------> checking group '%s'\n",hostGroupEntry));
-        }  
-        if (sge_verify_host_group_entry(NULL, Master_Host_Group_List,ep,hostGroupEntry) == FALSE) {
-           WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGHOSTGROUP_S, hostGroupEntry  ));
-           
-           lDechainElem(Master_Host_Group_List, ep);
-           lFreeElem(ep);
-           ep = NULL;
-           ep = Master_Host_Group_List->first;
-        } else {
-           ep = ep->next;
-        }
-     } 
   }
 
   /* everything is done very well ! */
@@ -170,6 +148,7 @@ int sge_read_host_group_entries_from_disk()
 }
 
 #ifndef __SGE_NO_USERMAPPING__
+
 int sge_read_user_mapping_entries_from_disk()
 { 
   lList*     direntries = NULL; 
@@ -180,12 +159,11 @@ int sge_read_user_mapping_entries_from_disk()
 
   DENTER(TOP_LAYER, "sge_read_user_mapping_entries_from_disk");
  
- 
   direntries = sge_get_dirents(UME_DIR);
   if (direntries) {
-     if (Master_Usermapping_Entry_List == NULL) {
-        Master_Usermapping_Entry_List = 
-           lCreateList("Master_Usermapping_Entry_List", UME_Type);
+     if (*(cuser_list_get_master_list()) == NULL) {
+        *(cuser_list_get_master_list()) = 
+           lCreateList("", CU_Type);
      }  
      if (!sge_silent_get()) { 
         printf(MSG_CONFIG_READINGUSERMAPPINGENTRY);
@@ -199,11 +177,10 @@ int sge_read_user_mapping_entries_from_disk()
                printf(MSG_SETUP_MAPPINGETRIES_S, ume);
             }
 
-            ep = cull_read_in_ume(UME_DIR, ume , 1, 0, NULL); 
+            ep = cull_read_in_ume(UME_DIR, ume , 1, 0, NULL, NULL); 
          
-            if (sge_verifyMappingEntry(NULL, Master_Host_Group_List,ep, ume, 
-               Master_Usermapping_Entry_List) == TRUE) {
-               lAppendElem(Master_Usermapping_Entry_List, ep);
+            if (ep != NULL) {
+               lAppendElem(Master_Cuser_List, ep);
             } else {
                WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGMAPPINGFOR_S,  ume ));  
                ep = lFreeElem(ep);
@@ -220,6 +197,7 @@ int sge_read_user_mapping_entries_from_disk()
   DEXIT; 
   return ret;
 }
+
 #endif
 
 int sge_read_host_list_from_disk()

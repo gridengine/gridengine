@@ -58,9 +58,6 @@ int parse_string(lList **ppcmdline, const char *opt, lList **ppal, char **str);
 
 bool parse_multi_jobtaskslist(lList **ppcmdline, const char *opt, lList **ppal, lList **ppdestlist);
 
-void sge_parse_string_list(lList **lp, const char *str, int field, 
-                           lDescr *descr);
-
 int sge_unparse_ma_list(lList *head, char *mail_str, unsigned int mail_str_len); 
 
 int sge_parse_jobtasks(lList **lp, lListElem **idp, const char *str, lList **alpp);

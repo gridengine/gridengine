@@ -55,8 +55,8 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_sharetree_qmaster.c \
               sge_calendar_qmaster.c \
               sge_userprj_qmaster.c \
-              sge_usermap_qmaster.c \
-              sge_hostgroup_qmaster.c \
+              sge_cuser_qmaster.c \
+              sge_hgroup_qmaster.c \
               sge_userset_qmaster.c \
               complex_qmaster.c \
               configuration_qmaster.c \
@@ -66,8 +66,7 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               setup_qmaster.c \
               subordinate_qmaster.c \
               time_event.c \
-              sge_utility_qmaster.c \
-              sge_user_mapping.c
+              sge_utility_qmaster.c 
              
 QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               startprog.c shutdown.c \
@@ -193,11 +192,11 @@ sge_rusage.o:	$(QMASTER_DIR)/sge_rusage.c
 sge_userprj_qmaster.o:	$(QMASTER_DIR)/sge_userprj_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_userprj_qmaster.c
 
-sge_usermap_qmaster.o:	$(QMASTER_DIR)/sge_usermap_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_usermap_qmaster.c
+sge_cuser_qmaster.o:	$(QMASTER_DIR)/sge_cuser_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_cuser_qmaster.c
 
-sge_hostgroup_qmaster.o:	$(QMASTER_DIR)/sge_hostgroup_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_hostgroup_qmaster.c
+sge_hgroup_qmaster.o:	$(QMASTER_DIR)/sge_hgroup_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_hgroup_qmaster.c
 
 sge_calendar_qmaster.o: $(QMASTER_DIR)/sge_calendar_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_calendar_qmaster.c
@@ -231,9 +230,6 @@ time_event.o   : $(QMASTER_DIR)/time_event.c
 
 sge_utility_qmaster.o   : $(QMASTER_DIR)/sge_utility_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_utility_qmaster.c
-
-sge_user_mapping.o   : $(QMASTER_DIR)/sge_user_mapping.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_user_mapping.c
 
 qmaster.o: 	$(QMASTER_DIR)/qmaster.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/qmaster.c

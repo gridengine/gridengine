@@ -50,8 +50,6 @@ int read_all_configurations(lList **lpp,
                             const char *global_config_file, 
                             const char *local_config_dir);
 
-#ifndef __SGE_NO_USERMAPPING__
 int sge_read_user_mapping_entries_from_disk(void);
-#endif
 
 #endif /* __SGE_READ_LIST_H */    

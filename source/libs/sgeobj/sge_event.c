@@ -365,6 +365,20 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
 
    /* -------------------- */
+   case sgeE_HGROUP_LIST:
+      sge_dstring_sprintf(buffer, MSG_EVENT_HGROUPLISTXELEMENTS_II , (int)number, n);
+      break;
+   case sgeE_HGROUP_ADD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDHGROUPX_IS , (int)number, strkey);
+      break;
+   case sgeE_HGROUP_DEL:
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELHGROUPX_IS, (int)number, strkey);
+      break;
+   case sgeE_HGROUP_MOD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODHGROUPX_IS, (int)number, strkey);
+      break;
+
+   /* -------------------- */
    default:
       sge_dstring_sprintf(buffer, MSG_EVENT_NOTKNOWN_I, (int)number);
       break;

@@ -52,6 +52,7 @@
 #include "sge_stdlib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_cstring.h"
 
 #include "msg_common.h"
 
@@ -1484,7 +1485,7 @@ DTRACE;
  
          DPRINTF(("\"-u %s\"\n", *sp));
 
-         sge_parse_string_list(&user_list, *sp, STR, ST_Type);
+         cstring_list_parse_from_string(&user_list, *sp, ",");
 
          ep_opt = sge_add_arg(pcmdline, u_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, user_list);  

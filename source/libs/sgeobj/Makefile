@@ -47,14 +47,16 @@ SGEOBJLIB_SRC = \
          config.c \
          cull_parse_util.c \
          parse.c \
+         sge_attr.c \
          sge_calendar.c \
          sge_complex.c \
          sge_conf.c \
          sge_ckpt.c \
+         sge_cstring.c \
          sge_event.c \
          sge_host.c \
-         sge_hostgroup.c \
-         sge_hostref.c \
+         sge_hgroup.c \
+         sge_href.c \
          sge_ja_task.c \
          sge_job.c \
          sge_mailrec.c \
@@ -72,7 +74,7 @@ SGEOBJLIB_SRC = \
          sge_sharetree.c \
          sge_suser.c \
          sge_usage.c \
-         sge_usermap.c \
+         sge_cuser.c \
          sge_userprj.c \
          sge_userset.c \
          sge_utility.c \
@@ -133,6 +135,9 @@ cull_parse_util.o: $(SGEOBJLIB_DIR)/cull_parse_util.c
 parse.o: $(SGEOBJLIB_DIR)/parse.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/parse.c
 
+sge_attr.o: $(SGEOBJLIB_DIR)/sge_attr.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_attr.c
+
 sge_calendar.o: $(SGEOBJLIB_DIR)/sge_calendar.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_calendar.c
 
@@ -145,17 +150,20 @@ sge_conf.o: $(SGEOBJLIB_DIR)/sge_conf.c
 sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ckpt.c
 
+sge_cstring.o: $(SGEOBJLIB_DIR)/sge_cstring.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cstring.c
+
 sge_event.o:	$(SGEOBJLIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_event.c
 
 sge_host.o: $(SGEOBJLIB_DIR)/sge_host.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_host.c
 
-sge_hostgroup.o: $(SGEOBJLIB_DIR)/sge_hostgroup.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_hostgroup.c
+sge_hgroup.o: $(SGEOBJLIB_DIR)/sge_hgroup.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_hgroup.c
 
-sge_hostref.o: $(SGEOBJLIB_DIR)/sge_hostref.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_hostref.c
+sge_href.o: $(SGEOBJLIB_DIR)/sge_href.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_href.c
 
 sge_ja_task.o: $(SGEOBJLIB_DIR)/sge_ja_task.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ja_task.c
@@ -205,8 +213,8 @@ sge_sharetree.o: $(SGEOBJLIB_DIR)/sge_sharetree.c
 sge_suser.o: $(SGEOBJLIB_DIR)/sge_suser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_suser.c
 
-sge_usermap.o: $(SGEOBJLIB_DIR)/sge_usermap.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_usermap.c
+sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c
 
 sge_userprj.o: $(SGEOBJLIB_DIR)/sge_userprj.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_userprj.c
@@ -246,8 +254,11 @@ test_sge_object: test_sge_object.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLI
 test_sge_range: test_sge_range.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
 	$(CC) $(CFLAGS) -o test_sge_range $(LFLAGS) test_sge_range.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
-test_sge_hostgroup: test_sge_hostgroup.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_hostgroup $(LFLAGS) test_sge_hostgroup.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+test_sge_hgroup: test_sge_hgroup.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_hgroup $(LFLAGS) test_sge_hgroup.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_attr: test_sge_tattr.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_attr $(LFLAGS) test_sge_attr.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_object.o: $(SGEOBJLIB_DIR)/test_sge_object.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_object.c
@@ -255,6 +266,9 @@ test_sge_object.o: $(SGEOBJLIB_DIR)/test_sge_object.c
 test_sge_range.o: $(SGEOBJLIB_DIR)/test_sge_range.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_range.c
 
-test_sge_hostgroup.o: $(SGEOBJLIB_DIR)/test_sge_hostgroup.c
-	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_hostgroup.c
+test_sge_hgroup.o: $(SGEOBJLIB_DIR)/test_sge_hgroup.c
+	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_hgroup.c
+
+test_sge_attr.o: $(SGEOBJLIB_DIR)/test_sge_attr.c
+	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_attr.c
 

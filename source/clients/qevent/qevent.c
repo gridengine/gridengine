@@ -106,7 +106,8 @@ bool print_event(sge_object_type type, sge_event_action action,
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
+   fprintf(stdout, "%s\n", event_text(event, &buffer_wrapper));
+   fflush(stdout);
    /* create a callback error to test error handling */
    if(type == SGE_TYPE_GLOBAL_CONFIG) {
       return false;
@@ -577,11 +578,19 @@ static char* qevent_get_event_name(int event) {
 
 
 
-void qevent_testsuite_mode(void) {
+void qevent_testsuite_mode(void) 
+{
+#if 0 /* EB: debug */
+#define QEVENT_SHOW_ALL
+#endif
    u_long32 timestamp;
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
+
+#ifdef QEVENT_SHOW_ALL
+   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL); 
+#else
    sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL);
    
@@ -589,16 +598,16 @@ void qevent_testsuite_mode(void) {
    ec_set_flush(sgeE_JOB_FINAL_USAGE,0);
    ec_set_flush(sgeE_JOB_ADD,0);
    ec_set_flush(sgeE_JOB_DEL,0);
-
-   
-   /*   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL); */
+#endif
    
    while(!shut_me_down) {
       sge_mirror_process_events();
       timestamp = sge_get_gmt();
+#ifndef QEVENT_SHOW_ALL
       fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",
               Global_jobs_running,Global_jobs_registered,u32c(timestamp));
       fflush(stdout);  
+#endif
    }
 
    sge_mirror_shutdown();

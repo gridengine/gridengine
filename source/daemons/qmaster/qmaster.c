@@ -88,7 +88,6 @@
 #include "sched_conf_qmaster.h"
 #include "qmaster.h"
 #include "sge_feature.h"
-#include "sge_user_mapping.h"
 #include "sge_language.h"
 #include "sge_bitop.h"
 #include "setup_path.h"
@@ -100,12 +99,9 @@
 #include "sge_os.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
-#include "sge_hostgroup.h"
+#include "sge_hgroup.h"
 #include "sge_manop.h"
-
-#ifndef __SGE_NO_USERMAPPING__
-#include "sge_usermap.h"
-#endif
+#include "sge_cuser.h"
 
 #include "sge_spooling.h"
 
@@ -137,6 +133,77 @@ static int update_license_data(lListElem *hep, lList *lp_lic);
 extern char **environ;
 
 #define TIMELEVEL 0
+
+#ifndef __SGE_NO_USERMAPPING__
+/****** src/sge_map_gdi_request() *********************************************
+*  NAME
+*     sge_map_gdi_request() -- user mapping on gdi request
+*
+*  SYNOPSIS
+*     bool sge_map_gdi_request(sge_gdi_request *pApiRequest);
+*
+*
+*  FUNCTION
+*     This function is called from the qmaster when he receives an
+*     gdi request of an gdi client. If a guilty user mapping is
+*     defined in the user mapping entry list then the user name
+*     is mapped.
+*
+*  INPUTS
+*     sge_gdi_request* pApiRequest - pointer to gdi request struct
+*
+*  RESULT
+*     true  - user was mapped and pApiRequest is changed
+*     false - pApiRequest is unchanged, no guilty user mapping entry
+******************************************************************************/
+static bool
+sge_map_gdi_request(sge_gdi_request *pApiRequest)
+{
+   const char *mapped_user = NULL;
+   uid_t uid;
+   gid_t gid;
+   char user[128];
+   char group[128];
+
+   DENTER(TOP_LAYER,"sge_map_gdi_request" );
+
+
+   if ((pApiRequest == NULL)) {
+      DEXIT;
+      return false;
+   }
+
+   if (sge_get_auth_info(pApiRequest, &uid, user, &gid, group) == -1) {
+      DEXIT;
+      return false;
+   }
+
+   if ((user == NULL) || (pApiRequest->host == NULL)) {
+      DEXIT;
+      return false;
+   }
+
+   cuser_list_map_user(*(cuser_list_get_master_list()), NULL,
+                       user, pApiRequest->host, &mapped_user);
+
+   DPRINTF(("master mapping: user %s from host %s mapped to %s\n",
+             user, pApiRequest->host, mapped_user));
+
+   if (!strcmp(user, mapped_user)) {
+      DEXIT;
+      return false;
+   }
+
+   if (sge_set_auth_info(pApiRequest, uid, 
+                         (char*)mapped_user, gid, group) == -1) {
+      DEXIT;
+      return false;
+   }
+
+   DEXIT;
+   return true;
+}
+#endif
 
 int main(int argc, char *argv[]);
 
@@ -579,10 +646,9 @@ New behaviour:
 #ifndef __SGE_NO_USERMAPPING__
             /* perform administrator user mapping with sge_gdi_request
                structure, this can change the user name (ar->user) */
-            if (Master_Usermapping_Entry_List != NULL) {
-              sge_map_gdi_request(Master_Host_Group_List, Master_Usermapping_Entry_List,ar);
-            }       
+            sge_map_gdi_request(ar);
 #endif
+
             if (ar == gdi) {
                answer = an = new_gdi_request();
             }

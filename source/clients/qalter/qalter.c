@@ -53,6 +53,7 @@
 #include "sge_answer.h"
 #include "read_defaults.h"
 #include "sge_prog.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -244,7 +245,8 @@ int *all_users
    /* we need this job to parse our options in */
    job = lCreateElem(JB_Type);
    if (!job) {
-      answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+      sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+      answer_list_add(&answer, SGE_EVENT,
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
@@ -750,7 +752,8 @@ int *all_users
 
       rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
       if (!rep) { 
-         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+         answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;

@@ -1,5 +1,3 @@
-#ifndef _SGE_USERMAP_QMASTER_H_
-#define _SGE_USERMAP_QMASTER_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,18 +30,60 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
+#include "sgermon.h" 
+#include "sge_string.h"
+#include "sge_stringL.h"
+#include "sge_log.h"
+#include "sge_answer.h"
+#include "commlib.h"
 
+#include "msg_common.h"
+#include "msg_sgeobjlib.h"
 
-#include "sge_c_gdi.h"
+#define CSTRING_LAYER TOP_LAYER
 
-#ifndef __SGE_NO_USERMAPPING__
-int usermap_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
-int usermap_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object,int sub_command);
-int usermap_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+bool cstring_list_append_to_string(const lList *this_list, dstring *string)
+{
+   bool ret = true;
+   
+   DENTER(CSTRING_LAYER, "cstring_list_append_to_string");
+   if (this_list != NULL) {
+      lListElem *str;
+      bool is_first = true;
 
-int sge_del_usermap(lListElem *cep, lList **alpp, char *ruser, char *rhost);
+      for_each(str, this_list) {
+         const char *name = lGetString(str, STR);
 
-#endif /* #ifndef __SGE_NO_USERMAPPING__ */
+         if (!is_first) {
+            sge_dstring_sprintf_append(string, ",");
+         }
+         sge_dstring_sprintf_append(string, "%s", name);
+         is_first = false;
+      }
+   }
+   DEXIT;
+   return ret;
+}
 
-#endif /* _SGE_USERMAP_QMASTER_H_ */
+bool cstring_list_parse_from_string(lList **this_list, 
+                                    const char *string, const char *delimitor)
+{
+   bool ret = true;
+
+   DENTER(CSTRING_LAYER, "cstring_list_parse_from_string");
+   if (this_list != NULL) {
+      struct saved_vars_s *context = NULL;
+      const char *token;
+
+      token = sge_strtok_r(string, delimitor, &context);
+      while (token) {
+         lAddElemStr(this_list, STR, token, ST_Type);
+         token = sge_strtok_r(NULL, delimitor, &context); 
+      }
+      sge_free_saved_vars(context);
+   }
+   DEXIT;
+   return ret;
+}
 

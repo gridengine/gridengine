@@ -43,6 +43,7 @@
 #include "sge_answer.h"
 #include "sge_conf.h"
 #include "parse.h"
+#include "sge_attr.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -747,6 +748,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 #endif
    lList *tmplp = NULL;
    const char *str;
+   const char *tmp_str = NULL;;
    char delims[] = "\t \v\r,"; 
 
    DENTER(TOP_LAYER, "set_conf_list");
@@ -760,12 +762,79 @@ _Insight_set_option("suppress", "PARM_NULL");
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 
-   if (tmplp && strcasecmp("NONE", lGetString(lFirst(tmplp), sub_name_nm))) {
+   
+
+   if (tmplp != NULL) {
+      int pos, dataType;
+      lListElem *lep = lFirst(tmplp);
+
+      pos = lGetPosViaElem(lep, sub_name_nm);
+      dataType = lGetPosType(lGetElemDescr(lep),pos);
+      switch (dataType) {
+         case lStringT:
+            DPRINTF(("set_conf_list: lStringT data type (Type: %s)\n",lNm2Str(name_nm)));
+            tmp_str = lGetString(lep, sub_name_nm);
+            break;
+         case lHostT:
+            DPRINTF(("set_conf_list: lHostT data type (Type: %s)\n",lNm2Str(name_nm)));
+            tmp_str = lGetHost(lep, sub_name_nm);
+            break;
+         default:
+            DPRINTF(("!!!!!!!!!set_conf_string: unexpected data type !!!!!!!!!!!!!!!!!\n"));
+            break;
+      }
+      if (strcasecmp("NONE", tmp_str)) {
+         lSetList(ep, name_nm, tmplp);
+         DEXIT;
+         return true;
+      } else {
+         lFreeList(tmplp);
+      }
+   }
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
+
+bool set_conf_hostattr_str_list(lList **alpp, lList **clpp, int fields[], 
+                                const char *key, lListElem *ep, int name_nm, 
+                                lDescr *descr, int sub_name_nm) 
+{
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   bool ret;
+   lList *tmplp = NULL;
+   const char *str;
+   lList *lanswer_list = NULL;
+
+   DENTER(TOP_LAYER, "set_conf_list");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   ret = attr_str_list_parse_from_string(&tmplp, &lanswer_list, str,
+            HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
+   if (!ret) {
+      const char *text = lGetString(lFirst(lanswer_list), AN_text);
+
+      sprintf(SGE_EVENT, "%s - %s", key, text); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      return ret;
+   }
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+   if (tmplp != NULL) {
       lSetList(ep, name_nm, tmplp);
       DEXIT;
       return true;
    }
-   lFreeList(tmplp);
 
    DEXIT;
    return true;

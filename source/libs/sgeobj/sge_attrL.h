@@ -1,5 +1,6 @@
-#ifndef _READ_WRITE_HOST_GROUP_H
-#define _READ_WRITE_HOST_GROUP_H
+#ifndef __SGE_HOSTATTRL_H
+#define __SGE_HOSTATTRL_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,12 +33,35 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int
-read_host_group_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
-int spool, int flag, int *tag, int parsing_type);
+#include "sge_boundaries.h"
+#include "cull.h"
 
-lListElem *cull_read_in_host_group(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-char *write_host_group(int spool, int how, const lListElem *hostGroupElement);
+/* *INDENT-OFF* */  
 
-#endif /* _READ_WRITE_HOST_GROUP_H */
+enum {
+   ASTR_href = ASTR_LOWERBOUND,
+   ASTR_value                    
+};
+
+LISTDEF(ASTR_Type)
+   SGE_HOST(ASTR_href, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(ASTR_value, CULL_DEFAULT)
+LISTEND 
+
+NAMEDEF(ASTRN)
+   NAME("ASTR_href")
+   NAME("ASTR_value")
+NAMEEND
+
+#define ASTRS sizeof(ASTRN)/sizeof(char*)
+
+/* *INDENT-ON* */  
+
+#ifdef  __cplusplus
+}
+#endif
+#endif   

@@ -425,15 +425,15 @@
 *     If user mapping is enabled (compile time option), the following
 *     additional events can be subscribed:
 *
-*        sgeE_USERMAPPING_ENTRY_LIST      send list of user mappings
-*        sgeE_USERMAPPING_ENTRY_ADD       a new user mapping was added
-*        sgeE_USERMAPPING_ENTRY_DEL       a user mapping was deleted
-*        sgeE_USERMAPPING_ENTRY_MOD       a user mapping entry was changed
+*        sgeE_CUSER_ENTRY_LIST            send list of user mappings
+*        sgeE_CUSER_ENTRY_ADD             a new user mapping was added
+*        sgeE_CUSER_ENTRY_DEL             a user mapping was deleted
+*        sgeE_CUSER_ENTRY_MOD             a user mapping entry was changed
 *     
-*        sgeE_HOST_GROUP_LIST             send list of host groups
-*        sgeE_HOST_GROUP_ADD              a host group was added
-*        sgeE_HOST_GROUP_DEL              a host group was deleted
-*        sgeE_HOST_GROUP_MOD              a host group was changed
+*        sgeE_HGROUP_LIST                 send list of host groups
+*        sgeE_HGROUP_ADD                  a host group was added
+*        sgeE_HGROUP_DEL                  a host group was deleted
+*        sgeE_HGROUP_MOD                  a host group was changed
 *
 *  NOTES
 *     This list of events will increase as further event situations

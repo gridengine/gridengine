@@ -44,7 +44,7 @@
 #include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_host.h"
-#include "sge_hostgroup.h"
+#include "sge_hgroup.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
@@ -53,7 +53,7 @@
 #include "sge_queue.h"
 #include "sge_schedd_conf.h"
 #include "sge_sharetree.h"
-#include "sge_usermap.h"
+#include "sge_cuser.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_answer.h"
@@ -461,21 +461,21 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_USERSET_DEL);
          ec_subscribe(sgeE_USERSET_MOD);
          break;
+      case SGE_TYPE_HGROUP:
+         ec_subscribe(sgeE_HGROUP_LIST);
+         ec_subscribe(sgeE_HGROUP_ADD);
+         ec_subscribe(sgeE_HGROUP_DEL);
+         ec_subscribe(sgeE_HGROUP_MOD);
+         break;
 #ifndef __SGE_NO_USERMAPPING__
       /* JG: TODO: usermapping and hostgroup not yet implemented */
-      case SGE_TYPE_USERMAPPING:
-         ec_subscribe(sgeE_USERMAPPING_ENTRY_LIST);
-         ec_subscribe(sgeE_USERMAPPING_ENTRY_ADD);
-         ec_subscribe(sgeE_USERMAPPING_ENTRY_DEL);
-         ec_subscribe(sgeE_USERMAPPING_ENTRY_MOD);
+      case SGE_TYPE_CUSER:
+         ec_subscribe(sgeE_CUSER_LIST);
+         ec_subscribe(sgeE_CUSER_ADD);
+         ec_subscribe(sgeE_CUSER_DEL);
+         ec_subscribe(sgeE_CUSER_MOD);
          break;
 #endif
-      case SGE_TYPE_HOSTGROUP:
-         ec_subscribe(sgeE_HOST_GROUP_LIST);
-         ec_subscribe(sgeE_HOST_GROUP_ADD);
-         ec_subscribe(sgeE_HOST_GROUP_DEL);
-         ec_subscribe(sgeE_HOST_GROUP_MOD);
-         break;
 
       default:
          /* development fault: forgot to handle a valid event group */
@@ -680,20 +680,20 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_USERSET_DEL);
          ec_unsubscribe(sgeE_USERSET_MOD);
          break;
+      case SGE_TYPE_HGROUP:
+         ec_unsubscribe(sgeE_HGROUP_LIST);
+         ec_unsubscribe(sgeE_HGROUP_ADD);
+         ec_unsubscribe(sgeE_HGROUP_DEL);
+         ec_unsubscribe(sgeE_HGROUP_MOD);
+         break;
 #ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
-         ec_unsubscribe(sgeE_USERMAPPING_ENTRY_LIST);
-         ec_unsubscribe(sgeE_USERMAPPING_ENTRY_ADD);
-         ec_unsubscribe(sgeE_USERMAPPING_ENTRY_DEL);
-         ec_unsubscribe(sgeE_USERMAPPING_ENTRY_MOD);
+      case SGE_TYPE_CUSER:
+         ec_unsubscribe(sgeE_CUSER_LIST);
+         ec_unsubscribe(sgeE_CUSER_ADD);
+         ec_unsubscribe(sgeE_CUSER_DEL);
+         ec_unsubscribe(sgeE_CUSER_MOD);
          break;
 #endif
-      case SGE_TYPE_HOSTGROUP:
-         ec_unsubscribe(sgeE_HOST_GROUP_LIST);
-         ec_unsubscribe(sgeE_HOST_GROUP_ADD);
-         ec_unsubscribe(sgeE_HOST_GROUP_DEL);
-         ec_unsubscribe(sgeE_HOST_GROUP_MOD);
-         break;
 
       default:
          /* development fault: forgot to handle a valid event group */
@@ -1113,31 +1113,31 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
             break;
    
 #ifndef __SGE_NO_USERMAPPING__
-         case sgeE_USERMAPPING_ENTRY_LIST:
-            ret = sge_mirror_process_event(SGE_TYPE_USERMAPPING, SGE_EMA_LIST, event);
+         case sgeE_CUSER_LIST:
+            ret = sge_mirror_process_event(SGE_TYPE_CUSER, SGE_EMA_LIST, event);
             break;
-         case sgeE_USERMAPPING_ENTRY_ADD:
-            ret = sge_mirror_process_event(SGE_TYPE_USERMAPPING, SGE_EMA_ADD, event);
+         case sgeE_CUSER_ADD:
+            ret = sge_mirror_process_event(SGE_TYPE_CUSER, SGE_EMA_ADD, event);
             break;
-         case sgeE_USERMAPPING_ENTRY_DEL:
-            ret = sge_mirror_process_event(SGE_TYPE_USERMAPPING, SGE_EMA_DEL, event);
+         case sgeE_CUSER_DEL:
+            ret = sge_mirror_process_event(SGE_TYPE_CUSER, SGE_EMA_DEL, event);
             break;
-         case sgeE_USERMAPPING_ENTRY_MOD:
-            ret = sge_mirror_process_event(SGE_TYPE_USERMAPPING, SGE_EMA_MOD, event);
+         case sgeE_CUSER_MOD:
+            ret = sge_mirror_process_event(SGE_TYPE_CUSER, SGE_EMA_MOD, event);
             break;
 #endif
 
-         case sgeE_HOST_GROUP_LIST:
-            ret = sge_mirror_process_event(SGE_TYPE_HOSTGROUP, SGE_EMA_LIST, event);
+         case sgeE_HGROUP_LIST:
+            ret = sge_mirror_process_event(SGE_TYPE_HGROUP, SGE_EMA_LIST, event);
             break;
-         case sgeE_HOST_GROUP_ADD:
-            ret = sge_mirror_process_event(SGE_TYPE_HOSTGROUP, SGE_EMA_ADD, event);
+         case sgeE_HGROUP_ADD:
+            ret = sge_mirror_process_event(SGE_TYPE_HGROUP, SGE_EMA_ADD, event);
             break;
-         case sgeE_HOST_GROUP_DEL:
-            ret = sge_mirror_process_event(SGE_TYPE_HOSTGROUP, SGE_EMA_DEL, event);
+         case sgeE_HGROUP_DEL:
+            ret = sge_mirror_process_event(SGE_TYPE_HGROUP, SGE_EMA_DEL, event);
             break;
-         case sgeE_HOST_GROUP_MOD:
-            ret = sge_mirror_process_event(SGE_TYPE_HOSTGROUP, SGE_EMA_MOD, event);
+         case sgeE_HGROUP_MOD:
+            ret = sge_mirror_process_event(SGE_TYPE_HGROUP, SGE_EMA_MOD, event);
             break;
 
          default:

@@ -440,7 +440,7 @@ void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
                 lList **result_list[])
 {
-#if 1 /* EB: enable debug messages for this function */
+#if 0 /* EB: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
 #endif
    lListElem *job = NULL;

@@ -61,11 +61,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 
-#ifndef __SGE_NO_USERMAPPING__
-#include "sge_usermap.h"
-#endif
-
-#include "sge_hostgroup.h"
+#include "sge_hgroup.h"
 
 
 #include "msg_clients_common.h"
@@ -122,8 +118,8 @@ static bool read_spooled_data(void)
    DPRINTF(("read %d entries to Master_Manager_List\n", lGetNumberOfElem(Master_Manager_List)));
 
    /* host groups */
-   spool_read_list(context, &Master_Host_Group_List, SGE_TYPE_HOSTGROUP);
-   DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_Host_Group_List)));
+   spool_read_list(context, &Master_HGroup_List, SGE_TYPE_HGROUP);
+   DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_HGroup_List)));
 
    /* operators */
    spool_read_list(context, &Master_Operator_List, SGE_TYPE_OPERATOR);
@@ -139,8 +135,8 @@ static bool read_spooled_data(void)
 
 #ifndef __SGE_NO_USERMAPPING__
    /* user mapping */
-   spool_read_list(context, &Master_Usermapping_Entry_List, SGE_TYPE_USERMAPPING);
-   DPRINTF(("read %d entries to Master_Usermapping_List\n", lGetNumberOfElem(Master_Usermapping_Entry_List)));
+   spool_read_list(context, &Master_Cuser_List, SGE_TYPE_CUSER);
+   DPRINTF(("read %d entries to Master_Cuser_List\n", lGetNumberOfElem(Master_Cuser_List)));
 #endif
 
    /* queues */
@@ -231,9 +227,9 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
          case SGE_TYPE_USER:
          case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
-         case SGE_TYPE_USERMAPPING:
+         case SGE_TYPE_CUSER:
 #endif
-         case SGE_TYPE_HOSTGROUP:
+         case SGE_TYPE_HGROUP:
             for_each(ep, *master_list) {
                lListElem *new_ep;
 
@@ -364,9 +360,9 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_USER:
             case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
-            case SGE_TYPE_USERMAPPING:
+            case SGE_TYPE_CUSER:
 #endif   
-            case SGE_TYPE_HOSTGROUP:
+            case SGE_TYPE_HGROUP:
                key = lGetString(event, ET_strkey);
                spool_delete_object(context, type, key);
 
@@ -405,9 +401,9 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_USER:
             case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
-            case SGE_TYPE_USERMAPPING:
+            case SGE_TYPE_CUSER:
 #endif
-            case SGE_TYPE_HOSTGROUP:
+            case SGE_TYPE_HGROUP:
                key = lGetString(event, ET_strkey);
                ep = lGetElemStr(*master_list, key_nm, lGetString(event, ET_strkey));
                if(ep == NULL) {

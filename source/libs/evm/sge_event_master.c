@@ -60,8 +60,8 @@
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_sharetree.h"
-#include "sge_hostgroup.h"
-#include "sge_usermap.h"
+#include "sge_hgroup.h"
+#include "sge_cuser.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -359,9 +359,9 @@ total_update(lListElem *event_client)
       sge_total_update_event(event_client, sgeE_USER_LIST);
    }
 
-   sge_total_update_event(event_client, sgeE_HOST_GROUP_LIST);
+   sge_total_update_event(event_client, sgeE_HGROUP_LIST);
 #ifndef __SGE_NO_USERMAPPING__
-   sge_total_update_event(event_client, sgeE_USERMAPPING_ENTRY_LIST);
+   sge_total_update_event(event_client, sgeE_CUSER_LIST);
 #endif
 
    DEXIT;
@@ -625,12 +625,11 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
                                      event_client, sgeE_USER_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
                                      event_client, sgeE_USERSET_LIST);
-      
+      check_send_new_subscribed_list(old_subscription, subscription, 
+                                     event_client, sgeE_HGROUP_LIST);
 #ifndef __SGE_NO_USERMAPPING__
       check_send_new_subscribed_list(old_subscription, subscription, 
-                                     event_client, sgeE_HOST_GROUP_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
-                                     event_client, sgeE_USERMAPPING_ENTRY_LIST);
+                                     event_client, sgeE_CUSER_LIST);
 #endif      
    }
 
@@ -1562,13 +1561,12 @@ sge_total_update_event(lListElem *event_client, ev_event type)
          case sgeE_USERSET_LIST:
             lp = Master_Userset_List;
             break;
-
-#ifndef __SGE_NO_USERMAPPING__
-         case sgeE_HOST_GROUP_LIST:
-            lp = Master_Host_Group_List;
+         case sgeE_HGROUP_LIST:
+            lp = Master_HGroup_List;
             break;
-         case sgeE_USERMAPPING_ENTRY_LIST:
-            lp = Master_Usermapping_Entry_List;
+#ifndef __SGE_NO_USERMAPPING__
+         case sgeE_CUSER_LIST:
+            lp = Master_Cuser_List;
             break;
 #endif
          default:

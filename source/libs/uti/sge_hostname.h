@@ -50,6 +50,9 @@
 /* compare hosts with FQDN or not */
 #define MAXHOSTLEN 256
 
+/* char introducing a hostgroup name */
+#define HOSTGROUP_INITIAL_CHAR '@'
+
 /* host information based on the hostent structure */
 typedef struct host {
     struct hostent he;		/* copy of what we got from gethostbyname */
@@ -98,5 +101,7 @@ void sge_host_list_initialize(void);
 int sge_hostcmp(const char *h1, const char *h2);
  
 void sge_hostcpy(char *dst, const char *raw);       
+
+bool sge_is_hgroup_ref(const char *string);
 
 #endif /* __HOST_H */

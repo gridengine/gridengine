@@ -1,5 +1,6 @@
-#ifndef _SGE_USER_MAPPING_H__
-#define _SGE_USER_MAPPING_H__
+#ifndef __SGE_CUSERL_H
+#define __SGE_CUSERL_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,39 +33,35 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_c_gdi.h"
+#include "sge_boundaries.h"
+#include "cull.h"
 
-const char* 
-sge_getUserNameForHost(lList *hostGroupList, lList *mapList, 
-                       const char *hostName);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-bool 
-sge_map_gdi_request(lList *hostGroupList, lList *userMappingEntryList, 
-                    sge_gdi_request *pApiRequest);
+/* *INDENT-OFF* */  
 
-char * 
-sge_malloc_map_out_going_username(lList *hostGroupList, 
-                                  lList *userMappingEntryList, 
-                                  const char *clusterName, 
-                                  const char *hostName);
+enum {
+   CU_name = CU_LOWERBOUND,       
+   CU_ruser_list          
+};
 
-bool 
-sge_addMappingEntry(lList **alpp, lList *hostGroupList, lList *mapList, 
-                    const char *actMapName, lList *actHostList, 
-                    bool doResolving);
+LISTDEF(CU_Type)
+   SGE_STRING(CU_name, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(CU_ruser_list, ASTR_Type, CULL_DEFAULT)
+LISTEND 
 
-bool 
-sge_removeOverstock(lList **alpp, lListElem *newListElem, 
-                    lListElem *origListElem);
+NAMEDEF(CUN)
+   NAME("CU_name")
+   NAME("CU_ruser_list")
+NAMEEND
 
-lListElem* 
-sge_getElementFromMappingEntryList(lList *userMappingEntryList, 
-                                   const char *clusterName);
+#define CUS sizeof(CUN)/sizeof(char*)
 
-bool 
-sge_addHostToMappingList(lList *hostGroupList, lList *userMappingEntryList, 
-                         char *clusterName, char *mapName, char *newHostName);
+/* *INDENT-ON* */   
 
-#endif /* _SGE_USER_MAPPING_H__ */
-
-
+#ifdef  __cplusplus
+}
+#endif
+#endif /* __SGE_CUSERL_H */

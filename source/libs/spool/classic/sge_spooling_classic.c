@@ -58,11 +58,8 @@
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_hostgroup.h"
-
-#ifndef __SGE_NO_USERMAPPING__
-#include "sge_usermap.h"
-#endif
+#include "sge_hgroup.h"
+#include "sge_cuser.h"
 
 #include "read_list.h"
 #include "read_write_host.h"
@@ -77,17 +74,13 @@
 #include "read_write_pe.h"
 #include "read_write_userprj.h"
 #include "read_write_userset.h"
-#include "sched_conf.h"
-
-#ifndef __SGE_NO_USERMAPPING__
 #include "read_write_ume.h"
-#endif
 #include "read_write_host_group.h"
-
-#include "msg_spoollib_classic.h"
+#include "sched_conf.h"
 
 #include "sge_spooling_classic.h"
 
+#include "msg_spoollib_classic.h"
 /****** spool/classic/--Classic-Spooling ***************************************
 *
 *  NAME
@@ -278,12 +271,8 @@ spool_classic_default_startup_func(const lListElem *rule)
    sge_mkdir(CKPTOBJ_DIR, 0755, true);
    sge_mkdir(USERSET_DIR, 0755, true);
    sge_mkdir(CAL_DIR, 0755, true);
-
-   sge_mkdir(HOSTGROUP_DIR, 0755, true);
-#ifndef __SGE_NO_USERMAPPING__
+   sge_mkdir(HGROUP_DIR, 0755, true);
    sge_mkdir(UME_DIR, 0755, true);
-#endif
-
    sge_mkdir(USER_DIR, 0755, true);
    sge_mkdir(PROJECT_DIR, 0755, true);
 
@@ -467,11 +456,11 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
          sge_read_userset_list_from_disk();
          break;
 #ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
+      case SGE_TYPE_CUSER:
          sge_read_user_mapping_entries_from_disk();
          break;
 #endif
-      case SGE_TYPE_HOSTGROUP:
+      case SGE_TYPE_HGROUP:
          sge_read_host_group_entries_from_disk();
          break;
       default:
@@ -588,13 +577,11 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USERSET:
          ep = cull_read_in_userset(USERSET_DIR, key, 1, 0, NULL); 
          break;
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
-         ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL); 
+      case SGE_TYPE_CUSER:
+         ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL, NULL); 
          break;
-#endif
-      case SGE_TYPE_HOSTGROUP:
-         ep = cull_read_in_host_group(HOSTGROUP_DIR, key, 1, 0, NULL); 
+      case SGE_TYPE_HGROUP:
+         ep = cull_read_in_host_group(HGROUP_DIR, key, 1, 0, NULL, NULL); 
          break;
       default:
          break;
@@ -744,12 +731,10 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
                    sge_dstring_get_string(&real_name));
          }
          break;
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
+      case SGE_TYPE_CUSER:
          write_ume(1, 2, object);
          break;
-#endif
-      case SGE_TYPE_HOSTGROUP:
+      case SGE_TYPE_HGROUP:
          write_host_group(1, 2, object);
          break;
       default:
@@ -874,13 +859,11 @@ spool_classic_default_delete_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USERSET:
          sge_unlink(USERSET_DIR, key);
          break;
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
+      case SGE_TYPE_CUSER:
          sge_unlink(UME_DIR, key);
          break;
-#endif
-      case SGE_TYPE_HOSTGROUP:
-         sge_unlink(HOSTGROUP_DIR, key);
+      case SGE_TYPE_HGROUP:
+         sge_unlink(HGROUP_DIR, key);
          break;
       default:
          break;

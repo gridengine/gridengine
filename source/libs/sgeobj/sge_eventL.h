@@ -259,17 +259,15 @@ typedef enum {
    sgeE_USERSET_DEL,                /* + event userset delete */
    sgeE_USERSET_MOD,                /* + event userset modify */
    
-#ifndef __SGE_NO_USERMAPPING__
-   sgeE_USERMAPPING_ENTRY_LIST,
-   sgeE_USERMAPPING_ENTRY_ADD,
-   sgeE_USERMAPPING_ENTRY_DEL,
-   sgeE_USERMAPPING_ENTRY_MOD,
-#endif
+   sgeE_CUSER_LIST,
+   sgeE_CUSER_ADD,
+   sgeE_CUSER_DEL,
+   sgeE_CUSER_MOD,
 
-   sgeE_HOST_GROUP_LIST,
-   sgeE_HOST_GROUP_ADD,
-   sgeE_HOST_GROUP_DEL,
-   sgeE_HOST_GROUP_MOD,
+   sgeE_HGROUP_LIST,
+   sgeE_HGROUP_ADD,
+   sgeE_HGROUP_DEL,
+   sgeE_HGROUP_MOD,
 
    sgeE_EVENTSIZE 
 }ev_event;

@@ -61,6 +61,7 @@
 #include "sge_io.h"
 #include "sge_prog.h"
 #include "sge_var.h"
+#include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_mailrec.h"
 
@@ -122,7 +123,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    if (!*pjob) {
       *pjob = lCreateElem(JB_Type);
       if (!*pjob) {
-         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+         answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
@@ -136,7 +138,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       tmpl_task_list = lCreateList("template task list", JAT_Type);
       tmpl_task = lCreateElem(JAT_Type);
       if (!tmpl_task_list || !tmpl_task) {
-         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+         answer_list_add(&answer, SGE_EVENT, 
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;

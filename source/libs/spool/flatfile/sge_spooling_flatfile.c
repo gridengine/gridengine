@@ -227,12 +227,8 @@ spool_flatfile_default_startup_func(const lListElem *rule)
    sge_mkdir2(url, CKPTOBJ_DIR, 0755, true);
    sge_mkdir2(url, USERSET_DIR, 0755, true);
    sge_mkdir2(url, CAL_DIR, 0755, true);
-   sge_mkdir2(url, HOSTGROUP_DIR, 0755, true);
-
-#ifndef __SGE_NO_USERMAPPING__
+   sge_mkdir2(url, HGROUP_DIR, 0755, true);
    sge_mkdir2(url, UME_DIR, 0755, true);
-#endif
-
    sge_mkdir2(url, USER_DIR, 0755, true);
    sge_mkdir2(url, PROJECT_DIR, 0755, true);
 
@@ -407,11 +403,11 @@ spool_flatfile_default_list_func(const lListElem *type, const lListElem *rule,
          sge_read_userset_list_from_disk();
          break;
 #ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
+      case SGE_TYPE_CUSER:
          sge_read_user_mapping_entries_from_disk();
          break;
 #endif
-      case SGE_TYPE_HOSTGROUP:
+      case SGE_TYPE_HGROUP:
          sge_read_host_group_entries_from_disk();
          break;
       default:
@@ -528,13 +524,11 @@ spool_flatfile_default_read_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USERSET:
          ep = cull_read_in_userset(USERSET_DIR, key, 1, 0, NULL); 
          break;
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
+      case SGE_TYPE_CUSER:
          ep = cull_read_in_ume(UME_DIR, key , 1, 0, NULL); 
          break;
-#endif
-      case SGE_TYPE_HOSTGROUP:
-         ep = cull_read_in_host_group(HOSTGROUP_DIR, key, 1, 0, NULL); 
+      case SGE_TYPE_HGROUP:
+         ep = cull_read_in_host_group(HGROUP_DIR, key, 1, 0, NULL); 
          break;
       default:
          break;
@@ -618,10 +612,8 @@ spool_flatfile_default_write_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_SUBMITHOST:
       case SGE_TYPE_USER:
       case SGE_TYPE_USERSET:
-      case SGE_TYPE_HOSTGROUP:
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
-#endif
+      case SGE_TYPE_HGROUP:
+      case SGE_TYPE_CUSER:
       default:
          WARNING((SGE_EVENT, "writing of "SFQ" not yet implemented\n", 
                   object_type_get_name(event_type)));
@@ -778,13 +770,11 @@ spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
       case SGE_TYPE_USERSET:
          sge_unlink(USERSET_DIR, key);
          break;
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_USERMAPPING:
+      case SGE_TYPE_CUSER:
          sge_unlink(UME_DIR, key);
          break;
-#endif
       case SGE_TYPTYPEOSTGROUP:
-         sge_unlink(HOSTGROUP_DIR, key);
+         sge_unlink(HGROUP_DIR, key);
          break;
       default:
          break;

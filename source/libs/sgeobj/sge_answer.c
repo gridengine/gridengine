@@ -43,6 +43,8 @@
 
 #include "msg_sgeobjlib.h"
 
+#define ANSWER_LAYER TOP_LAYER
+
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
 *     AnswerList - Object used to return errors/warning/infos
@@ -110,7 +112,12 @@
 *******************************************************************************/
 bool answer_has_quality(const lListElem *answer, answer_quality_t quality) 
 {
-   return (lGetUlong(answer, AN_quality) ==  quality) ? true : false;
+   bool ret;
+
+   DENTER(ANSWER_LAYER, "answer_has_quality");
+   ret = (lGetUlong(answer, AN_quality) ==  quality) ? true : false;
+   DEXIT;
+   return ret;
 }
 
 /****** sgeobj/answer/answer_is_recoverable() *********************************
@@ -139,6 +146,7 @@ bool answer_is_recoverable(const lListElem *answer)
 {
    bool ret = true;
 
+   DENTER(ANSWER_LAYER, "answer_is_recoverable");
    if (answer != NULL) {
       const int max_non_recoverable = 3;
       const u_long32 non_recoverable[] = {
@@ -156,6 +164,7 @@ bool answer_is_recoverable(const lListElem *answer)
          }
       }
    }
+   DEXIT;
    return ret;
 }
 
@@ -180,8 +189,7 @@ bool answer_is_recoverable(const lListElem *answer)
 ******************************************************************************/
 void answer_exit_if_not_recoverable(const lListElem *answer)
 {
-   DENTER(GDI_LAYER, "answer_exit_if_not_recoverable");
-
+   DENTER(ANSWER_LAYER, "answer_exit_if_not_recoverable");
    if (!answer_is_recoverable(answer)) {
       fprintf(stderr, "%s %s", answer_get_quality_text(answer),
               lGetString(answer, AN_text));
@@ -213,11 +221,14 @@ const char *answer_get_quality_text(const lListElem *answer)
       "WARNING",
       "INFO"
    };
-   u_long32 quality = lGetUlong(answer, AN_quality);
+   u_long32 quality;
 
+   DENTER(ANSWER_LAYER, "answer_get_quality_text");
+   quality = lGetUlong(answer, AN_quality);
    if (quality > 2) {
       quality = 0;
    }
+   DEXIT;
    return quality_text[quality];
 }
 
@@ -239,7 +250,12 @@ const char *answer_get_quality_text(const lListElem *answer)
 ******************************************************************************/
 u_long32 answer_get_status(const lListElem *answer) 
 {
-   return lGetUlong(answer, AN_status);
+   u_long32 ret;
+
+   DENTER(ANSWER_LAYER, "answer_get_status");
+   ret = lGetUlong(answer, AN_status);
+   DEXIT;
+   return ret;
 }
 
 /****** sgeobj/answer/answer_print_text() *************************************
@@ -267,7 +283,10 @@ void answer_print_text(const lListElem *answer,
                        const char *prefix,
                        const char *suffix)
 {
-   const char *text = lGetString(answer, AN_text);
+   const char *text = NULL;
+
+   DENTER(ANSWER_LAYER, "answer_print_text");
+   text = lGetString(answer, AN_text);
 
    if (prefix != NULL) {
       fprintf(stream, "%s", prefix);
@@ -278,6 +297,7 @@ void answer_print_text(const lListElem *answer,
    if (suffix != NULL) {
       fprintf(stream, "%s", suffix);
    }
+   DEXIT;
 }
 
 /****** sgeobj/answer/answer_list_add_sprintf() *******************************
@@ -320,8 +340,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 {
    bool ret = false;
 
-   DENTER(GDI_LAYER, "answer_list_add");
-   
+   DENTER(ANSWER_LAYER, "answer_list_add");
    if (answer_list != NULL) {
       dstring buffer = DSTRING_INIT;
       const char *message;
@@ -364,6 +383,7 @@ bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 {
    bool ret = false;
 
+   DENTER(ANSWER_LAYER, "answer_list_has_quality");
    if (answer_list != NULL) {
       lListElem *answer;   /* AN_Type */
 
@@ -374,6 +394,7 @@ bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
          }
       }
    }
+   DEXIT;
    return ret;
 }
 
@@ -398,7 +419,7 @@ bool answer_list_has_error(lList **answer_list)
 {
    bool ret;
 
-   DENTER(TOP_LAYER, "answer_list_has_error");
+   DENTER(ANSWER_LAYER, "answer_list_has_error");
    ret = answer_list_has_quality(answer_list, ANSWER_QUALITY_ERROR);
    DEXIT;
    return ret;
@@ -425,10 +446,12 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 {
    lListElem *answer;   /* AN_Type */
 
+   DENTER(ANSWER_LAYER, "answer_list_on_error_print_or_exit");
    for_each(answer, *answer_list) {
       answer_exit_if_not_recoverable(answer);
       answer_print_text(answer, stream, NULL, NULL);
    }
+   DEXIT;
 }
 
 /****** sgeobj/answer/answer_list_print_err_warn() ****************************
@@ -468,7 +491,7 @@ int answer_list_print_err_warn(lList **answer_list,
    lListElem *answer;   /* AN_Type */
    u_long32 status = 0;
 
-   DENTER(TOP_LAYER, "answer_list_print_err_warn");
+   DENTER(ANSWER_LAYER, "answer_list_print_err_warn");
    for_each(answer, *answer_list) {
       if (answer_has_quality(answer, ANSWER_QUALITY_ERROR)) {
          answer_print_text(answer, stderr, err_prefix, NULL);
@@ -508,27 +531,28 @@ int answer_list_print_err_warn(lList **answer_list,
 *     int - first error or warning status code or STATUS_OK
 ******************************************************************************/
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
-   lListElem *answer;
-   int first_error = STATUS_OK;
+   int ret = STATUS_OK;
 
-   if(answer_list == NULL || *answer_list == NULL) {
+   DENTER(ANSWER_LAYER, "answer_list_handle_request_answer_list");
+   if(answer_list != NULL && *answer_list != NULL) {
+      lListElem *answer;
+
+      for_each(answer, *answer_list) {
+         if(answer_has_quality(answer, ANSWER_QUALITY_ERROR) ||
+            answer_has_quality(answer, ANSWER_QUALITY_WARNING)) {
+            answer_print_text(answer, stream, NULL, NULL);
+            if(ret == STATUS_OK) {
+               ret = lGetUlong(answer, AN_status);
+            }
+         }
+      }
+      *answer_list = lFreeList(*answer_list);
+   } else {
       fprintf(stream, MSG_ANSWER_NOANSWERLIST);
       return STATUS_EUNKNOWN;
    }
-
-   for_each(answer, *answer_list) {
-      if(answer_has_quality(answer, ANSWER_QUALITY_ERROR) ||
-         answer_has_quality(answer, ANSWER_QUALITY_WARNING)) {
-         answer_print_text(answer, stream, NULL, NULL);
-         if(first_error == STATUS_OK) {
-            first_error = lGetUlong(answer, AN_status);
-         }
-      }
-   }
-
-   *answer_list = lFreeList(*answer_list);
-
-   return first_error;
+   DEXIT;
+   return ret;
 }
 
 /****** sgeobj/answer/answer_list_add() ***************************************
@@ -571,8 +595,7 @@ answer_list_add(lList **answer_list, const char *text,
 {
    int ret = false;
 
-   DENTER(GDI_LAYER, "answer_list_add");
-
+   DENTER(ANSWER_LAYER, "answer_list_add");
    if (answer_list != NULL) {
       lListElem *answer = lCreateElem(AN_Type);
 
@@ -595,8 +618,40 @@ answer_list_add(lList **answer_list, const char *text,
          answer = lFreeElem(answer);
       }
    }
-
    DEXIT;
    return ret;
+}
+
+/****** sgeobj/answer/answer_list_replace() ***********************************
+*  NAME
+*     answer_list_replace() -- repalce a answer list 
+*
+*  SYNOPSIS
+*     void answer_list_replace(lList **answer_list, lList **new_list) 
+*
+*  FUNCTION
+*     free *answer_list and replace it by *new_list. 
+*
+*  INPUTS
+*     lList **answer_list - AN_Type 
+*     lList **new_list    - AN_Type 
+*
+*  RESULT
+*     void - none 
+*******************************************************************************/
+void answer_list_replace(lList **answer_list, lList **new_list)
+{
+   DENTER(ANSWER_LAYER, "answer_list_replace");
+   if (answer_list != NULL) {
+      *answer_list = lFreeList(*answer_list);
+
+      if (new_list != NULL) {
+         *answer_list = *new_list; 
+         *new_list = NULL;
+      } else {
+         *answer_list = NULL; 
+      }
+   }
+   DEXIT;
 }
 

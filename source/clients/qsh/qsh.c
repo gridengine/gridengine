@@ -1274,7 +1274,8 @@ int main(int argc, char **argv)
 
       job = lCreateElem(JB_Type);
       if (!job) {
-         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+         answer_list_add(&answer, SGE_EVENT, 
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          do_exit = parse_result_list(alp, &alp_error);
          lFreeList(answer);

@@ -182,12 +182,13 @@
 #define MSG_EVENT_ADDPETASK_US                     _MESSAGE(64163, _(U32CFormat". EVENT ADD PETASK "SFN""))
 #define MSG_EVENT_DELPETASK_US                     _MESSAGE(64164, _(U32CFormat". EVENT DEL PETASK "SFN""))
 #define MSG_EVENT_NOTKNOWN_I                       _MESSAGE(64165, _("%d. EVENT ????????"))
-
 #define MSG_GDI_NULL_FEATURE                       _MESSAGE(64166, _("NULL ptr passed to feature_initialize_from_file()"))
-
-/* 
- * sge_object.c
- */
 #define MSG_OBJECT_INVALID_OBJECT_TYPE_SI          _MESSAGE(64167, _("%s: invalid object type %d\n"))
+#define MSG_HGRP_UNKNOWNHOST                       _MESSAGE(64168, _("unable to resolve host "SFQ"\n"))
+#define MSG_CUSER_NOREMOTE_USER_S                  _MESSAGE(64169, _("attribute \'"SFQ"\' not available\n"))
+#define MSG_EVENT_HGROUPLISTXELEMENTS_II           _MESSAGE(64170, _("%d. EVENT HOST GROUP LIST %d Elements"))
+#define MSG_EVENT_DELHGROUPX_IS                    _MESSAGE(64171, _("%d. EVENT DEL HOST GROUP "SFN""))
+#define MSG_EVENT_ADDHGROUPX_IS                    _MESSAGE(64172, _("%d. EVENT ADD HOST GROUP "SFN""))
+#define MSG_EVENT_MODHGROUPX_IS                    _MESSAGE(64173, _("%d. EVENT MOD HOST GROUP "SFN""))
 
 #endif /* __MSG_SGEOBJLIB_H */

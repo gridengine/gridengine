@@ -1,3 +1,21 @@
+EB-2002-03-11-0  Enhancem.: Implemented hostgroups according to CQ spec. 
+                            - added new object (HR_Type) which will be used
+                              to store host and hostgroup references.
+                            - Reimplemented existing hostgroup code.
+                            - Changed fileformat of hostgroups
+                            - Enabled hostgroup GDI interface
+                            - Implemented all hostgroup related code for
+                              all qconf switches including -?attr options
+                            - Added code for the event handling of hostgroups
+                            - Changed code concerning usermapping 
+                            - Changed fileformat of usermapping
+                            - Added new object (ASTR_Type) which will be used to
+                              store default/hostgroup/host attributes for
+                              cluster queue and usermapping objects
+                            - Changed hostgroup(5), usermapping(5) man page
+                            - Added ADOC comments
+                            - ...
+
 CR-2003-03-10-0  Bugfix:    distinst failure for -allall option if user has
                             no access to PDF manual file.
 

@@ -9,7 +9,12 @@
 #define JOIN_ECT
 
 /* this must be moved to 3rdparty directory */
+
+/* EB: where is this file ? */
+#if 0
 #include "rdwr.h"
+#endif
+
 
 #include "japi.h"
 

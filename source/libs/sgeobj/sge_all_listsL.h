@@ -65,7 +65,7 @@
 #include "sge_eejobL.h"
 #include "sge_ulongL.h"
 #include "qmon_prefL.h"
-#include "sge_usermapL.h"
+#include "sge_cuserL.h"
 #include "sge_permissionL.h"
 #include "sge_loadsensorL.h"
 #include "sge_featureL.h"
@@ -80,12 +80,13 @@
 #include "sge_complexL.h"
 #include "sge_manopL.h"
 #include "sge_calendarL.h"
-#include "sge_hostgroupL.h"
+#include "sge_hgroupL.h"
 #include "sge_confL.h"
 #include "sge_spoolingL.h"
 #include "sge_mailrecL.h"
 #include "sge_japiL.h"
-#include "sge_hostrefL.h"
+#include "sge_hrefL.h"
+#include "sge_attrL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -194,13 +195,10 @@ extern "C" {
       {JL_LOWERBOUND, JLS, JLN},        /* ptf job list */
       {JO_LOWERBOUND, JOS, JON},        /* ptf O.S. job list */
 
-      {GRP_LOWERBOUND, GRPS, GRPN},     /* group list */
       {HGRP_LOWERBOUND, HGRPS, HGRPN},  /* hostgroup list */
       {HR_LOWERBOUND, HRS, HRN},        /* host/group reference list */
       {PERM_LOWERBOUND, PERMS, PERMN},  /* permission list */
-      {UM_LOWERBOUND, UMS, UMN},        /* usermap list for administrator
-                                         * mapping */
-      {UME_LOWERBOUND, UMES, UMEN},     /* usermap entry list for
+      {CU_LOWERBOUND, CUS, CUN},        /* usermap entry list for
                                          * administrator mapping */
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
       {FES_LOWERBOUND, FESS, FESN},     /* feature list */

@@ -42,6 +42,12 @@
 
 #define DSTRING_LAYER BASIS_LAYER
 
+/* please add here a defined(<ARCH>) if vsnprintf() family is not supported */
+#if 0
+#define HAS_NO_VSNPRINTF 
+#endif
+
+
 /* JG: TODO: Introduction uti/dstring/--Dynamic_String is missing */
 
 static void
@@ -210,9 +216,6 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
-*                     Either use a vsnprintf implementation (if 
-*                     available for all platforms) or find other means 
-*                     to prevent buffer overflows.
 ******************************************************************************/
 const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
@@ -230,10 +233,19 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
    }
 
    if (sb->is_static) {
+      /* add here a defined(<ARCH>) if snprintf is not supported */
+#if defined(HAS_NO_VSNPRINTF)
       vsprintf(sb->s, format, ap);
+#else
+      vsnprintf(sb->s, sb->size, format, ap);
+#endif
       sb->length = strlen(sb->s);
    } else {
+#if defined(HAS_NO_VSNPRINTF)
       vsprintf(buf, format, ap);
+#else
+      vsnprintf(buf, sizeof(buf)-1, format, ap);
+#endif
       sge_dstring_copy_string(sb, buf);
    }
 
@@ -264,9 +276,6 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
-*                     Either use a vsnprintf implementation (if 
-*                     available for all platforms) or find other means 
-*                     to prevent buffer overflows.
 ******************************************************************************/
 const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 {
@@ -280,10 +289,18 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
       return sb != NULL ? sb->s : NULL;
    }
    if (sb->is_static) {
+#if defined(HAS_NO_VSNPRINTF)
       vsprintf(sb->s, format, ap);
+#else
+      vsnprintf(sb->s, sb->size, format, ap);
+#endif
       sb->length = strlen(sb->s);
    } else {
+#if defined(HAS_NO_VSNPRINTF)
       vsprintf(buf, format, ap);
+#else
+      vsnprintf(buf, sizeof(buf)-1, format, ap);
+#endif
       sge_dstring_copy_string(sb, buf);
    }
 
@@ -317,9 +334,6 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 *     JG: TODO (265): Do not use a fixed size buffer and vprintf!
 *                     This undoes the benefits of a dynamic string
 *                     implementation.
-*                     Either use a vsnprintf implementation (if 
-*                     available for all platforms) or find other 
-*                     means to prevent buffer overflows.
 ******************************************************************************/
 const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
@@ -335,7 +349,12 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
       return sb != NULL ? sb->s : NULL;
    }
 
+#if defined(HAS_NO_VSNPRINTF)
    vsprintf(buf, format, ap);
+#else
+   vsnprintf(buf, sizeof(buf)-1, format, ap);
+#endif
+
    return sge_dstring_append(sb, buf);
 }
 

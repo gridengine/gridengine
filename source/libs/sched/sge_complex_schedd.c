@@ -271,9 +271,6 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
 
    DENTER(TOP_LAYER, "get_attribute");
 
-   
-
-
    /* resource_attr is a complex_entry (CE_Type) */
    if (config_attr){
       lListElem *temp = lGetElemStr(config_attr, CE_name, attrname);
@@ -297,7 +294,9 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
       if (get_qs_state() == QS_STATE_FULL) {
          if(actual_attr && (actual_el = lGetElemStr(actual_attr, CE_name, attrname))){
-            char as_str[10];
+            dstring ds;
+            char as_str[20];
+
             switch (lGetUlong(cplx_el, CE_relop)) {
                case CMPLXGE_OP:
                case CMPLXGT_OP:
@@ -312,16 +311,15 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                      lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el,CE_doubleval) - lGetDouble(actual_el, CE_doubleval)); 
                   break;
             }
-            sprintf(as_str, "%8.3f", (float)lGetDouble(cplx_el, CE_pj_doubleval));
+            sge_dstring_init(&ds, as_str, sizeof(as_str));
+            sge_dstring_sprintf(&ds, "%8.3f", (float)lGetDouble(cplx_el, CE_pj_doubleval));
             lSetString(cplx_el,CE_pj_stringval, as_str);
          }
          else{
             if (reason) {
-               char *temp = NULL;
-               temp = malloc(strlen(MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S) + strlen (attrname) + 10);
-               sprintf(temp, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
-               strncpy(reason, temp, reason_size);
-               FREE(temp);
+               dstring ds;
+               sge_dstring_init(&ds, reason, reason_size);
+               sge_dstring_sprintf(&ds, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
             }
             cplx_el = lFreeElem(cplx_el);
             DEXIT;

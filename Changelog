@@ -1,3 +1,6 @@
+AH-2003-11-21-0: Bugfix:    Fix schedd/qstat/... crash
+                 Review:    EB
+
 DT-2003-11-21-0: Enhancem.: Fixed broken build (AIX51) and added test for
 													  usage information from drmaa_wait()
 								 Changed:   test_drmaa.c
@@ -53,11 +56,11 @@ DT-2003-11-17-1: Enhancem.: Implemented remaining DRMAA attributes.  Reworked
                             could easily be added to qsub et al.  Also added
                             a test to test_drmaa to test all DRMAA attributes.
                  Changed:   libdrmaa.so and common parameter parsing routines
-								 Review:	  AH
+                 Review:    AH
 
 DT-2003-11-17-0: Bugfix.:   -b y in sge_request would override -b n on
                             commandline
-                 Changed:		qsub
+                 Changed:   qsub
 
 AD-2003-11-17-0: Bugfix:    Revoke AD-2003-11-14-0. 
 

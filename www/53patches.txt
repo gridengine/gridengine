@@ -1,3 +1,48 @@
+Bugs fixed in SGE 5.3prep4 since release 5.3p3
+----------------------------------------------
+
+Issue   Sun BugId  Description
+------- ---------- ---------------------------------------------------------------------------------
+174                Checkpointed job was migrated on bad exit status
+415     4775325    qrong qstat -j diagnosis message wrongly indicates not enough PE slots
+469,489 4815795    qstat -alarm was broken
+485     4813965    Reject tightly integrated array jobs (not supported in SGE 5.3)
+492     4819479    qhost -q -l arch=xx crashes if exec host is down
+499     4822742    deleted sharetree showed up again after qmaster restart
+501     4822746    spooling integrity improvement was missing for sharetree, projects and users
+502     4824104    SGEEE: allow qalter -p for running jobs
+503                overriding queue limits with job request limits incomplete for NEC
+504     4838650    Multiple job script writes for array jobs caused ETXTBSY error
+506     4847819    sge->sgeee upgrade failed
+508     4833346    qsh/qrsh/qlogin might core with segementation violation
+509     4841414    Unable to delete task array job with negative increment
+510     4835832    NOTIFY_SUSP signal only sent for first suspension of job
+511     4838595    maxujobs does not count suspended or held jobs
+513                qrsh (rshd) does not set limits after setting the osjobid (affects e.g. SUPER-UX/SX)
+514     4838549     maxujobs scheduler config functionality is broken
+515     4838636    sharetree can't be modified
+521     4869772    resource limits not correctly set for Linux x86
+522     4844838    sge_shepherd does not exit on SIGTERM (e.g. on "rcsge stop")
+523     4842844    commd performance, delay for first job start on machines with many job slots 
+524     4842878    qdel -u <user> does not delete all jobs of the user
+526     4845505    cannot qalter/qhold/qrls several tasks of same job
+531     4847802    scheduler crashes on Solaris(x86) due to compiler bug
+532     4847814    SGEEE: scheduler dispatches wrong jobs when jobs were in error state
+540                enabled output file names to have a ":" inside for qsub
+541                qlogin/qlogind whitespace checking removed to allow ssh/sshd with optional arguments
+545                qstat crashed, when used with the options -r -s z
+547     4860391    qmake dumped core when starting recursive make calls
+555                queue name was truncated to 10 chars
+557     4866711    SGE_O_* variables for a task within a tightly integrated job set incorrect
+560     4869784    upgrade to openssl 0.9.7a
+568                Allow "-" sign as first character of load_formula
+569                Impossible to disable qmaster profiling
+        4749151    sge_ca script -usercert needs RANDFILE env var
+        4822799    cannot install on Solaris 10
+        4851939    unexpected output for qstat -j and qmon "Why?"
+        4876169    An incomplete resource request (-l =1) caused qmaster to crash
+
+
 Bugs fixed in SGE 5.3p3 since release 5.3p2
 -------------------------------------------
 

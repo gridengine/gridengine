@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+#include <string.h>
+
 #include "rmon/sgermon.h"
 #include "uti/sge_log.h"
 #include "sgeobj/sge_answer.h"
@@ -86,40 +88,71 @@
 *     spool/--Spooling
 *******************************************************************************/
 lListElem *
-spool_create_dynamic_context(lList **answer_list, 
+spool_create_dynamic_context(lList **answer_list, const char *method,
                              const char *shlib_name, const char *args)
 {
-   const char *spooling_name;
+   const char *compiled_method;
    lListElem *context = NULL;
 
    DENTER(TOP_LAYER, "spool_create_dynamic_context");
 
 #ifdef SPOOLING_berkeleydb
-   spooling_name = "berkeleydb";
-   context = spool_berkeleydb_create_context(answer_list, args);
+   compiled_method = "berkeleydb";
+   if (strcmp(method, compiled_method) != 0) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_COMPILEDMETHODNECONFIGURED_SS,
+                              compiled_method, method);
+   } else {
+      context = spool_berkeleydb_create_context(answer_list, args);
+   }
 #endif
 #ifdef SPOOLING_classic
-   spooling_name = "classic";
-   context = spool_classic_create_context(answer_list, args);
+   compiled_method = "classic";
+   if (strcmp(method, compiled_method) != 0) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_COMPILEDMETHODNECONFIGURED_SS,
+                              compiled_method, method);
+   } else {
+      context = spool_classic_create_context(answer_list, args);
+   }
 #endif
 #ifdef SPOOLING_flatfile
-   spooling_name = "flatfile";
-   context = spool_flatfile_create_context(answer_list, args);
+   compiled_method = "flatfile";
+   if (strcmp(method, compiled_method) != 0) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_COMPILEDMETHODNECONFIGURED_SS,
+                              compiled_method, method);
+   } else {
+      context = spool_flatfile_create_context(answer_list, args);
+   }
 #endif
 #ifdef SPOOLING_postgres
-   spooling_name = "postgres";
-   context = spool_postgres_create_context(answer_list, args);
+   compiled_method = "postgres";
+   if (strcmp(method, compiled_method) != 0) { 
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_SPOOL_COMPILEDMETHODNECONFIGURED_SS,
+                              compiled_method, method);
+   } else {
+      context = spool_postgres_create_context(answer_list, args);
+   }
 #endif
 #ifdef SPOOLING_dynamic
-   spooling_name = "dynamic";
-   context = spool_dynamic_create_context(answer_list, shlib_name, args);
+   compiled_method = "dynamic"; /* don't need it here, but otherwise we get an
+                                 * unused variable compiler warning 
+                                 */
+   context = spool_dynamic_create_context(answer_list, method, shlib_name, 
+                                          args);
 #endif
 
    if (context == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_SPOOL_ERRORCREATINGCONTEXT_S, 
-                              spooling_name);
+                              method);
    }
 
    DEXIT;

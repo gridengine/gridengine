@@ -2514,15 +2514,15 @@ lListElem_clear_changed_info(lListElem *ep)
       for (i = 0; ep->descr[i].nm != NoName; i++) {
          int type = mt_get_type(descr[i].mt);
          
-         /* JG: TODO: clear whole bitfield in one call */
-         sge_bitfield_clear(ep->changed, i);
-
          if (type == lListT) {
             lList_clear_changed_info(ep->cont[i].glp);
          } else if (type == lObjectT) {
             lListElem_clear_changed_info(ep->cont[i].obj);
          }
       }
+
+      /* clear bitfield of this object */
+      sge_bitfield_reset(ep->changed);
    }
 
    return ret;

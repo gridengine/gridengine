@@ -565,8 +565,8 @@ int main(int argc, char *argv[])
    DENTER_MAIN(TOP_LAYER, "test_sge_spooling");
 
    /* parse commandline parameters */
-   if(argc != 3) {
-      ERROR((SGE_EVENT, "usage: test_sge_spooling <shared lib> <arguments>\n"));
+   if(argc != 4) {
+      ERROR((SGE_EVENT, "usage: test_sge_spooling <method> <shared lib> <arguments>\n"));
       SGE_EXIT(1);
    }
 
@@ -585,7 +585,7 @@ int main(int argc, char *argv[])
 #define defstring(str) #str
 
    /* initialize spooling */
-   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2]); 
+   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]); 
    answer_list_output(&answer_list);
    if(spooling_context == NULL) {
       SGE_EXIT(EXIT_FAILURE);

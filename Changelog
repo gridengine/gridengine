@@ -1,3 +1,10 @@
+JG-2004-04-22-0: Enhancem.: Allow the mixed use of binaries with dynamic and 
+                            static spooling. 
+                            aimk.site contains a rule to switch to static 
+                            spooling for platforms that don't support dynamic 
+                            loading of libraries (HP11).
+                 Review:    AS, MD
+
 AH-2004-04-22-0: Bugfix:    Minor fix with usermapping(5)
                  Review:    RC
 

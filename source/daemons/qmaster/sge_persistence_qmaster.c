@@ -62,6 +62,7 @@ sge_initialize_persistence(lList **answer_list)
 
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(answer_list, 
+                           bootstrap_get_spooling_method(),
                            bootstrap_get_spooling_lib(), 
                            bootstrap_get_spooling_params());
    if (spooling_context == NULL) {

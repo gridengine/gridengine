@@ -1,3 +1,5 @@
+AS-2005-01-01-0  Bugfix:    set version to 6.0u3
+
 JG-2005-01-03-0: Bugfix:    Fixed aimk -no-mk.
 
 DT-2004-12-31-0: Bugfix:    o Backed out some changes from DT-2004-12-30-3

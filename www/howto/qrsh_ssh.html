@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
 </head>
 <body>
 &nbsp;
@@ -22,9 +22,9 @@ to establish interactive sessions.
 <br>qrsh without a command will use rlogin,
 <br>qrsh with a command will establish a rsh connection.
 <p>To enable the rsh/rlogin mechanism, special rsh and rlogin binaries
-are provided with Grid Engine (utilbin/$ARCH/rsh /rlogin).
+are provided with Grid Engine (<tt>utilbin/$ARCH/rsh /rlogin</tt>).
 <p>To have full accounting and process control for interactive jobs, an
-extended rshd comes with Grid&nbsp;Engine.
+extended rshd comes with Grid Engine.
 <p>As an alternative, Grid Engine can be configured to use ssh instead
 to start interactive jobs.
 <br>&nbsp;
@@ -48,10 +48,11 @@ Disadvantages:</h3>
 
 <ul>
 <li STYLE="margin-bottom: 0in">
-no complete accounting</li>
+no complete accounting (you will get cpu usage at job end, but no online
+accounting and no values for memory and io)</li>
 
 <li STYLE="margin-bottom: 0in">
-no process control (reprioritization)</li>
+no process control (reprioritization) in sgeee mode</li>
 </ul>
 </td>
 </tr>
@@ -65,30 +66,46 @@ How to setup ssh for qrsh:</h3>
 Have ssh working, all keys created ...</li>
 
 <li>
-Set the parameters rsh_daemon and rlogin_daemon in your cluster configuration
-to ssh:</li>
+Set the parameters <tt>rsh_daemon</tt> and <tt>rlogin_daemon </tt>in your
+cluster configuration to ssh:</li>
 
-<p><br>rsh_daemon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/sbin/sshd
--i<br>
-rlogin_daemon&nbsp;&nbsp;&nbsp;&nbsp; /usr/sbin/sshd -i
-<br><br>
-If you have execution hosts with different architectures that have different
+<p><br><tt>rsh_daemon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/sbin/sshd
+-i</tt>
+<br><tt>rlogin_daemon&nbsp;&nbsp;&nbsp;&nbsp; /usr/sbin/sshd -i</tt> (see&nbsp;
+<font color="#FF0000"><a href="#Note">#Note</a></font> )
+<p>If you have execution hosts with different architectures that have different
 paths to ssh, you will have to make these settings for each execution host
-individualy (qconf -mconf host), else you can change the global cluster
-configuration (qconf -mconf).
+individualy (<tt>qconf -mconf host</tt>), else you can change the global
+cluster configuration (<tt>qconf -mconf</tt>).
+<br>&nbsp;
 <li>
-Set the parameters rsh_command and rlogin_command in your cluster configuration
-to ssh:</li>
+Set the parameters <tt>rsh_command</tt> and <tt>rlogin_command</tt> in
+your cluster configuration to ssh:</li>
 
-<p><br>rsh_command&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh
-<br>rlogin_command&nbsp; /usr/bin/ssh
+<p><br><tt>rsh_command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh</tt>
+<br><tt>rlogin_command&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh</tt>
 <p>If you have submit hosts with different architectures that have different
 paths to ssh, you will have to make these settings for each submit host
-individualy (qconf -mconf host), else you can change the global cluster
-configuration (qconf -mconf).
-<br>&nbsp;
-<br>&nbsp;
+individualy (<tt>qconf -mconf host</tt>), else you can change the global
+cluster configuration (<tt>qconf -mconf</tt>).
 <br>&nbsp;</ul>
 
+<h3>
+Screen based programs</h3>
+If you want to execute screen based programs (e.g. vi) through qrsh, you
+can configure ssh's -t option to be used.
+<br>Include the -t switch to the <tt>rsh_command</tt> parameter:
+<p><tt>rsh_command&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh
+-t </tt>(see&nbsp; <a href="#Note">#Note</a> )
+<br>&nbsp;
+<br>&nbsp;
+<h3>
+<a NAME="Note"></a><font color="#FF0000">Note</font></h3>
+<font color="#000000">In Version 5.3, only the <tt>rsh_daemon</tt> parameter
+can accept arguments. If you want to pass arguments with the other parameters,
+you have to write a small wrapper script, like the following and configure
+this script as the parameter, e.g. <tt>rlogin_daemon</tt>:</font><font color="#000000"></font>
+<p><tt><font color="#000000">#!/bin/sh</font></tt>
+<br><tt><font color="#000000">exec /usr/sbin/sshd -i</font></tt>
 </body>
 </html>

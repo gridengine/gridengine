@@ -1,4 +1,6 @@
-JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin
+JG-2002-05-31-1: Doc:       Improved howto for qrsh with ssh.
+
+JG-2002-05-31-0: Enhancem.: rshd: new switch -i: ignore /etc/nologin
                  Issue:     #272
 
 AH-2002-05-29-1: Bugfix:    Fix bug allowing non-privileged users to submit jobs
@@ -8,7 +10,7 @@ AH-2002-05-29-1: Bugfix:    Fix bug allowing non-privileged users to submit jobs
 
 CR-2002-05-29-2: Bugfix:    - uninitialized function pointer compiler warning
 
-JG-2002-05-29-2: Enhancem.  Allow specification of arguments to 
+JG-2002-05-29-2: Enhancem.: Allow specification of arguments to 
                             [rsh|rlogin|qlogin]_[daemon|command]
                  Issue:     #232           
 

@@ -599,6 +599,8 @@
 ** qmaster.c
 */
 #define MSG_SGETEXT_KILL_SSS                    _(""SFN"@"SFN" kills "SFN"\n")
+#define MSG_SETTING_PRIORITY_TAGS_S             _("setting SGE_PRIORITY_TAGS to %s\n")
+#define MSG_TOO_MANY_PRIORITY_TAGS_S            _("SGE_PRIORITY_TAGS %s contains too many tags (max 9)\n")
 
 
 /*

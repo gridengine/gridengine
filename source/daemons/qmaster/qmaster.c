@@ -268,12 +268,12 @@ New behaviour:
          char *tag_str = NULL;
          int tag_count = 0;
 
-         INFO((SGE_EVENT, "setting SGE_PRIORITY_TAGS to %s\n", tag_env));
+         INFO((SGE_EVENT, MSG_SETTING_PRIORITY_TAGS_S, tag_env));
          tag_tok = strdup(tag_env);
          tag_str = strtok(tag_tok, " ");
          while(tag_str != NULL) {
             if(tag_count > 8) {
-               WARNING((SGE_EVENT, "SGE_PRIORITY_TAGS %s contains too many tags (max 9)\n", tag_env));
+               WARNING((SGE_EVENT, MSG_TOO_MANY_PRIORITY_TAGS_S, tag_env));
                break;
             }   
             priority_tags[tag_count++] = atoi(tag_str);

@@ -1,3 +1,7 @@
+JG-2002-06-05-3: Cleanup:   Replaced %s in messages with macros SFN and SFQ
+                            for utilib.
+                 Issue:     #252           
+
 JG-2002-06-05-2: Bugfix:    qsub allowed submission of binary files
                  Issue:     #247
                  Bugtraq:   #4696768

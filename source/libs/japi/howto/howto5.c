@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
+#include <unistd.h>
 #include "drmaa.h"
 
 int main (int argc, char **argv) {
@@ -58,7 +59,7 @@ int main (int argc, char **argv) {
                   DRMAA_REMOTE_COMMAND, error);
       }
       else {
-         const char *args[2] = {"5", NULL};
+         const char *args[2] = {"60", NULL};
          
          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
                                               DRMAA_ERROR_STRING_BUFFER);
@@ -78,8 +79,56 @@ int main (int argc, char **argv) {
             fprintf (stderr, "Could not submit job: %s\n", error);
          }
          else {
+            int status = 0;
+            
             printf ("Your job has been submitted with id %s\n", jobid);
-         }
+            
+            sleep (20);
+            
+            errnum = drmaa_job_ps (jobid, &status, error,
+                                   DRMAA_ERROR_STRING_BUFFER);
+            
+            if (errnum != DRMAA_ERRNO_SUCCESS) {
+               fprintf (stderr, "Could not get job' status: %s\n", error);
+            }
+            else {
+               switch (status) {
+                  case DRMAA_PS_UNDETERMINED:
+                     printf ("Job status cannot be determined\n");
+                     break;
+                  case DRMAA_PS_QUEUED_ACTIVE:
+                     printf ("Job is queued and active\n");
+                     break;
+                  case DRMAA_PS_SYSTEM_ON_HOLD:
+                     printf ("Job is queued and in system hold\n");
+                     break;
+                  case DRMAA_PS_USER_ON_HOLD:
+                     printf ("Job is queued and in user hold\n");
+                     break;
+                  case DRMAA_PS_USER_SYSTEM_ON_HOLD:
+                     printf ("Job is queued and in user and system hold\n");
+                     break;
+                  case DRMAA_PS_RUNNING:
+                     printf ("Job is running\n");
+                     break;
+                  case DRMAA_PS_SYSTEM_SUSPENDED:
+                     printf ("Job is system suspended\n");
+                     break;
+                  case DRMAA_PS_USER_SUSPENDED:
+                     printf ("Job is user suspended\n");
+                     break;
+                  case DRMAA_PS_USER_SYSTEM_SUSPENDED:
+                     printf ("Job is user and system suspended\n");
+                     break;
+                  case DRMAA_PS_DONE:
+                     printf ("Job finished normally\n");
+                     break;
+                  case DRMAA_PS_FAILED:
+                     printf ("Job finished, but failed\n");
+                     break;
+               } /* switch */
+            } /* else */
+         } /* else */
       } /* else */
 
       errnum = drmaa_delete_job_template (jt, error, DRMAA_ERROR_STRING_BUFFER);

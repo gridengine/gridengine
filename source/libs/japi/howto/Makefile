@@ -61,3 +61,33 @@ howto3: howto3.o $(DRMAALIB)
 
 howto3.o: $(JAPIHOWTO_DIR)/howto3.c
 	$(CC) $(CFLAGS) -c $(JAPIHOWTO_DIR)/howto3.c
+
+howto3_1: howto3_1.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_1 howto3_1.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+howto3_1.o: $(JAPIHOWTO_DIR)/howto3_1.c
+	$(CC) $(CFLAGS) -c $(JAPIHOWTO_DIR)/howto3_1.c
+
+howto3_2: howto3_2.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_2 howto3_2.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+howto3_2.o: $(JAPIHOWTO_DIR)/howto3_2.c
+	$(CC) $(CFLAGS) -c $(JAPIHOWTO_DIR)/howto3_2.c
+
+howto4: howto4.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto4 howto4.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+howto4.o: $(JAPIHOWTO_DIR)/howto4.c
+	$(CC) $(CFLAGS) -c $(JAPIHOWTO_DIR)/howto4.c
+
+howto5: howto5.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto5 howto5.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+howto5.o: $(JAPIHOWTO_DIR)/howto5.c
+	$(CC) $(CFLAGS) -c $(JAPIHOWTO_DIR)/howto5.c
+
+howto6: howto6.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto6 howto6.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+howto6.o: $(JAPIHOWTO_DIR)/howto6.c
+	$(CC) $(CFLAGS) -c $(JAPIHOWTO_DIR)/howto6.c

@@ -43,6 +43,8 @@ int main (int argc, char **argv) {
       return 1;
    }
 
+   printf ("DRMAA library was started successfully\n");
+   
    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
 
    if (errnum != DRMAA_ERRNO_SUCCESS) {

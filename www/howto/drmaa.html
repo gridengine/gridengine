@@ -2,7 +2,7 @@
 
 <HTML>
    <HEAD>
-      <TITLE>UNDER CONSTRUCTION</TITLE>
+      <TITLE>Developing Applications with DRMAA</TITLE>
    </HEAD>
    <BODY>
    <H1>
@@ -38,7 +38,7 @@
 
    <P STYLE="margin-bottom: 0cm">
       Note that the example programs in this howto can be found in the CVS
-			<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/japi/howto">source tree</A>.
+      <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/libs/japi/howto">source tree</A>.
    </P>
 
    <H2>
@@ -55,29 +55,29 @@
 
 <PRE>01: #include <stdio.h>
 02: #include "drmaa.h"
-03: #define BUFFER_LENGTH 512
-04: 
-05: int main (int argc, char **argv) {
-06:    char error[BUFFER_LENGTH];
-07:    int errnum = 0;
-08: 
-09:    errnum = drmaa_init (NULL, error, BUFFER_LENGTH);
-10: 
-11:    if (errnum != DRMAA_ERRNO_SUCCESS) {
-12:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
-13:       return 1;
-14:    }
-15: 
-16:    errnum = drmaa_exit (error, BUFFER_LENGTH);
-17: 
-18:    if (errnum != DRMAA_ERRNO_SUCCESS) {
-19:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
-20:       return 1;
-21:    }
-22: 
-23:    return 0;
-24: }</PRE>
-
+03: 
+04: int main (int argc, char **argv) {
+05:    char error[DRMAA_ERROR_STRING_BUFFER];
+06:    int errnum = 0;
+07: 
+08:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+09: 
+10:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+11:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+12:       return 1;
+13:    }
+14: 
+15:    printf ("DRMAA library was started successfully\n");
+16:    
+17:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+18: 
+19:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+20:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+21:       return 1;
+22:    }
+23: 
+24:    return 0;
+25: }</PRE>
 
    <P STYLE="margin-bottom: 0cm">
       The first thing to notice is that every call to a DRMAA function will
@@ -90,7 +90,7 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      Now let's look at the functions being called.  First, on line 9, we call
+      Now let's look at the functions being called.  First, on line 8, we call
       drmaa_init().  This function sets up the DRMAA session and must be called
       before most other DRMAA functions.  Some functions, like
       drmaa_get_contact(), can be called before drmaa_init(), but these
@@ -114,7 +114,7 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      At the end of our program, on line 16, we call drmaa_exit().  drmaa_exit()
+      At the end of our program, on line 17, we call drmaa_exit().  drmaa_exit()
       cleans up the session and stops the event client listener thread.  Most
       other DRMAA functions must be called before drmaa_exit().  Some functions,
       like drmaa_get_contact(), can be called after drmaa_exit(), but these
@@ -139,84 +139,104 @@
 
 <PRE>01: #include <stdio.h>
 02: #include "drmaa.h"
-03: #define BUFFER_LENGTH 512
-04: 
-05: int main (int argc, char **argv) {
-06:    char error[BUFFER_LENGTH];
-07:    int errnum = 0;
-08:    drmaa_job_template_t *jt = NULL;
-09: 
-10:    errnum = drmaa_init (NULL, error, BUFFER_LENGTH);
-11: 
-12:    if (errnum != DRMAA_ERRNO_SUCCESS) {
-13:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
-14:       return 1;
-15:    }
-16: 
-17:    errnum = drmaa_allocate_job_template (&jt, error, BUFFER_LENGTH);
-18: 
-19:    if (errnum != DRMAA_ERRNO_SUCCESS) {
-20:       fprintf (stderr, "Could not create job template: %s\n", error);
-21:    }
-22:    else {
-23:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
-24:                                    error, BUFFER_LENGTH);
-25: 
-26:       if (errnum != DRMAA_ERRNO_SUCCESS) {
-27:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
-28:                   DRMAA_REMOTE_COMMAND, error);
-29:       }
-30:       else {
-31:          char jobid[BUFFER_LENGTH];
-32: 
-33:          errnum = drmaa_run_job (jobid, BUFFER_LENGTH, jt, error, BUFFER_LENGTH);
-34: 
-35:          if (errnum != DRMAA_ERRNO_SUCCESS) {
-36:             fprintf (stderr, "Could not submit job: %s\n", error);
-37:          }
-38:          else {
-39:             printf ("Your job has been submitted with id %s\n", jobid);
-40:          }
-41:       } /* else */
+03: 
+04: int main (int argc, char **argv) {
+05:    char error[DRMAA_ERROR_STRING_BUFFER];
+06:    int errnum = 0;
+07:    drmaa_job_template_t *jt = NULL;
+08: 
+09:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+10: 
+11:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+12:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+13:       return 1;
+14:    }
+15: 
+16:    errnum = drmaa_allocate_job_template (&jt, error, DRMAA_ERROR_STRING_BUFFER);
+17: 
+18:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+19:       fprintf (stderr, "Could not create job template: %s\n", error);
+20:    }
+21:    else {
+22:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
+23:                                     error, DRMAA_ERROR_STRING_BUFFER);
+24: 
+25:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+26:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+27:                   DRMAA_REMOTE_COMMAND, error);
+28:       }
+29:       else {
+30:          const char *args[2] = {"5", NULL};
+31:          
+32:          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,33:                                               DRMAA_ERROR_STRING_BUFFER);
+34:       }
+35:       
+36:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+37:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+38:                   DRMAA_REMOTE_COMMAND, error);
+39:       }
+40:       else {
+41:          char jobid[DRMAA_JOBNAME_BUFFER];
 42: 
-43:       errnum = drmaa_delete_job_template (jt, error, BUFFER_LENGTH);
-44: 
-45:       if (errnum != DRMAA_ERRNO_SUCCESS) {
-46:          fprintf (stderr, "Could not delete job template: %s\n", error);
-47:       }
-48:    } /* else */
-49: 
-50:    errnum = drmaa_exit (error, BUFFER_LENGTH);
-51: 
-52:    if (errnum != DRMAA_ERRNO_SUCCESS) {
-53:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
-54:       return 1;
-55:    }
-56: 
-57:    return 0;
-58: }</PRE>
+43:          errnum = drmaa_run_job (jobid, DRMAA_JOBNAME_BUFFER, jt, error,
+44:                                  DRMAA_ERROR_STRING_BUFFER);
+45: 
+46:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+47:             fprintf (stderr, "Could not submit job: %s\n", error);
+48:          }
+49:          else {
+50:             printf ("Your job has been submitted with id %s\n", jobid);
+51:          }
+52:       } /* else */
+53: 
+54:       errnum = drmaa_delete_job_template (jt, error, DRMAA_ERROR_STRING_BUFFER);
+55: 
+56:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+57:          fprintf (stderr, "Could not delete job template: %s\n", error);
+58:       }
+59:    } /* else */
+60: 
+61:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+62: 
+63:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+64:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+65:       return 1;
+66:    }
+67: 
+68:    return 0;
+69: }</PRE>
 
    <P STYLE="margin-bottom: 0cm">
       The beginning and end of this program are the same as the previous one.
-      What's different is in lines 17-48.  On line 17 we ask DRMAA to allocate a
+      What's different is in lines 16-59.  On line 16 we ask DRMAA to allocate a
       job template for us.  A job template is a structure used to store
       information about a job to be submitted.  The same template can be reused
       for multiple calls to drmaa_run_job() or drmaa_run_bulk_job().
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 23 we set the <CODE>DRMAA_REMOTE_COMMAND</CODE> attribute.  This
+      On line 22 we set the <CODE>DRMAA_REMOTE_COMMAND</CODE> attribute.  This
       attribute tells DRMAA where to find the program we want to run.  Its value
       is the path to the executable.  The path be be either relative or
-			absolute.  If relative, it is relative to the <CODE>DRMAA_WD</CODE>
-			attribute, which if not set defaults to the user's home directory.  For
-			more information on DRMAA attributes, please see the
-			<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman3/drmaa_attributes.html">drmaa_attributes</A>
-			man page.
+      absolute.  If relative, it is relative to the <CODE>DRMAA_WD</CODE>
+      attribute, which if not set defaults to the user's home directory.  For
+      more information on DRMAA attributes, please see the
+      <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman3/drmaa_attributes.html">drmaa_attributes</A>
+      man page.  Note that for this program to work, the script
+      &quot;sleeper.sh&quot; must be in your default path, i.e. the path set by
+      your shell script when you log in.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      On line 33 we submit the job with drmaa_run_jobs().  DRMAA will place the
+      On line 32 we set the <CODE>DRMAA_V_ARGV</CODE> attribute.  This
+      attribute tells DRMAA what arguments to pass to the executable.  For
+      more information on DRMAA attributes, please see the
+      <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman3/drmaa_attributes.html">drmaa_attributes</A>
+      man page.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 43 we submit the job with drmaa_run_job().  DRMAA will place the
       id assigned to the job into the character array we passed to
       drmaa_run_job().  The job is now running as though submitted by qsub.  At
       this point calling drmaa_exit() and/or terminating the program will have
@@ -224,13 +244,13 @@
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      To clean things up, we delete the job template on line 43.  This frees the
+      To clean things up, we delete the job template on line 54.  This frees the
       memory DRMAA set aside for the job template, but has no effect on
       submitted jobs.
    </P>
 
    <P STYLE="margin-bottom: 0cm">
-      Finally, on line 50, we call drmaa_exit().  The call to drmaa_exit()
+      Finally, on line 61, we call drmaa_exit().  The call to drmaa_exit() is
       outside of the if structure started on line 18 because regardless of
       whether the other commands succeed, once we've called drmaa_init(), we are
       obligated to call drmaa_exit() before terminating.
@@ -238,41 +258,41 @@
 
    <P STYLE="margin-bottom: 0cm">
       If instead of a single job we had wanted to submit an array job, we could
-      have replaced the else on lines 30-41 with the following:
+      have replaced the else on lines 40-52 with the following:
    </P>
    
    <H3>Example 2.1</H3>
 
-<PRE>30:       else {
-31:          drmaa_job_ids_t *ids = NULL;
-32: 
-33:          errnum = drmaa_run_bulk_jobs (&ids, jt, 1, 30, 2, error, BUFFER_LENGTH);
-34: 
-35:          if (errnum != DRMAA_ERRNO_SUCCESS) {
-36:             fprintf (stderr, "Could not submit job: %s\n", error);
-37:          }
-38:          else {
-39:             char jobid[BUFFER_LENGTH];
-40: 
-41:             while (drmaa_get_next_job_id (ids, jobid, BUFFER_LENGTH) == DRMAA_ERRNO_SUCCESS) {
-42:                printf ("A job task has been submitted with id %s\n", jobid);
-43:             }
-44:          }
-45: 
-46:          drmaa_release_job_ids (ids);
-47:       }</PRE>
+<PRE>40:       else {
+41:          drmaa_job_ids_t *ids = NULL;
+42: 
+43:          errnum = drmaa_run_bulk_jobs (&ids, jt, 1, 30, 2, error, DRMAA_ERROR_STRING_BUFFER);
+44: 
+45:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+46:             fprintf (stderr, "Could not submit job: %s\n", error);
+47:          }
+48:          else {
+49:             char jobid[DRMAA_JOBNAME_BUFFER];
+50: 
+51:             while (drmaa_get_next_job_id (ids, jobid, DRMAA_JOBNAME_BUFFER) == DRMAA_ERRNO_SUCCESS) {
+52:                printf ("A job task has been submitted with id %s\n", jobid);
+53:             }
+54:          }
+55: 
+56:          drmaa_release_job_ids (ids);
+57:       }</PRE>
    
    <P STYLE="margin-bottom: 0cm">
       This code segment submits an array job with 15 tasks numbered 1, 3, 5, 7,
       etc.  An important difference to note is that drmaa_run_bulk_jobs()
-      returns the job ids in an opaque structure.  On lines 41-43, before we can
-      print the job ids, we have extract them from the structure.  When we're
-      done with the job ids, we free the structure on line 46.  A more normal
+      returns the job ids in an opaque structure.  On lines 51-53, before we can
+      print the job ids, we have to extract them from the structure.  When we're
+      done with the job ids, we free the structure on line 56.  A more normal
       use pattern would be to use the while loop to extract job ids from the
       structure and place them into an array for future use.  We know when we've
       iterated over every element when drmaa_get_next_job_id() returns
       <CODE>DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE</CODE>.  Note that you can only
-			iterate through the structure once and only in one direction.
+      iterate through the structure once and only in one direction.
    </P>
    
    <H2>
@@ -288,133 +308,342 @@
    
    <H3>Example 3</H3>
 
-<PRE>01:#include "drmaa.h"
-02:#define BUFFER_LENGTH 512
-03:
-04:int main (int argc, char **argv) {
-05:   char error[BUFFER_LENGTH];
-06:   int errnum = 0;
-07:   drmaa_job_template_t *jt = NULL;
-08:
-09:   errnum = drmaa_init (NULL, error, BUFFER_LENGTH);
-10:
-11:   if (errnum != DRMAA_ERRNO_SUCCESS) {
-12:      fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
-13:      return 1;
-14:   }
-15:
-16:   errnum = drmaa_allocate_job_template (&jt, error, BUFFER_LENGTH);
-17:
-18:   if (errnum != DRMAA_ERRNO_SUCCESS) {
-19:      fprintf (stderr, "Could not create job template: %s\n", error);
-20:   }
-21:   else {
-22:      errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
-23:                                   error, BUFFER_LENGTH);
-24:
-25:      if (errnum != DRMAA_ERRNO_SUCCESS) {
-26:         fprintf (stderr, "Could not set attribute \"%s\": %s\n",
-27:                  DRMAA_REMOTE_COMMAND, error);
-28:      }
-29:      else {
-30:         char jobid[BUFFER_LENGTH];
-30:         char jobid_out[BUFFER_LENGTH];
-30:         int status = 0;
-31:
-32:         errnum = drmaa_run_job (jobid, BUFFER_LENGTH, jt, error, BUFFER_LENGTH);
-33:
-34:         if (errnum != DRMAA_ERRNO_SUCCESS) {
-35:            fprintf (stderr, "Could not submit job: %s\n", error);
-36:         }
-37:         else {
-38:            printf ("Your job has been submitted with id %s\n", jobid);
-39:
-39:            errnum = drmaa_wait (jobid, jobid_out, BUFFER_LENGTH, &status,
-39:                                 DRMAA_TIMEOUT_WAIT_FOREVER, rusage, error, BUFFER_LENGTH);
-39:         }
-40:      } /* else */
-41:
-42:      errnum = drmaa_delete_job_template (jt, error, BUFFER_LENGTH);
-43:
-44:      if (errnum != DRMAA_ERRNO_SUCCESS) {
-45:         fprintf (stderr, "Could not delete job template: %s\n", error);
-46:      }
-47:   } /* else */
-48:
-49:   errnum = drmaa_exit (error, BUFFER_LENGTH);
-50:
-51:   if (errnum != DRMAA_ERRNO_SUCCESS) {
-52:      fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
-53:      return 1;
-54:   }
-55:
-56:   return 0;
-57:}</PRE>
+<PRE>001: #include <stdio.h>
+002: #include "drmaa.h"
+003: 
+004: int main (int argc, char **argv) {
+005:    char error[DRMAA_ERROR_STRING_BUFFER];
+006:    int errnum = 0;
+007:    drmaa_job_template_t *jt = NULL;
+008: 
+009:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+010: 
+011:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+012:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+013:       return 1;
+014:    }
+015: 
+016:    errnum = drmaa_allocate_job_template (&jt, error, DRMAA_ERROR_STRING_BUFFER);
+017: 
+018:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+019:       fprintf (stderr, "Could not create job template: %s\n", error);
+020:    }
+021:    else {
+022:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
+023:                                    error, DRMAA_ERROR_STRING_BUFFER);
+024: 
+025:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+026:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+027:                   DRMAA_REMOTE_COMMAND, error);
+028:       }
+029:       else {
+030:          const char *args[2] = {"5", NULL};
+031:          
+032:          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
+033:                                               DRMAA_ERROR_STRING_BUFFER);
+034:       }
+035:       
+036:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+037:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+038:                   DRMAA_REMOTE_COMMAND, error);
+039:       }
+040:       else {
+041:          char jobid[DRMAA_JOBNAME_BUFFER];
+042:          char jobid_out[DRMAA_JOBNAME_BUFFER];
+043:          int status = 0;
+044:          drmaa_attr_values_t *rusage = NULL;
+045: 
+046:          errnum = drmaa_run_job (jobid, DRMAA_JOBNAME_BUFFER, jt, error,
+047:                                  DRMAA_ERROR_STRING_BUFFER);
+048: 
+049:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+050:             fprintf (stderr, "Could not submit job: %s\n", error);
+051:          }
+052:          else {
+053:             printf ("Your job has been submitted with id %s\n", jobid);
+054:             
+055:             errnum = drmaa_wait (jobid, jobid_out, DRMAA_JOBNAME_BUFFER, &status,
+056:                                  DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, error,
+057:                                  DRMAA_ERROR_STRING_BUFFER);
+058:             
+059:             if (errnum != DRMAA_ERRNO_SUCCESS) {
+060:                fprintf (stderr, "Could not wait for job: %s\n", error);
+061:             }
+062:             else {
+063:                char usage[DRMAA_ERROR_STRING_BUFFER];
+064:                int aborted = 0;
+065: 
+066:                drmaa_wifaborted(&aborted, status, NULL, 0);
+067: 
+068:                if (aborted == 1) {
+069:                   printf("Job %s never ran\n", jobid);
+070:                }
+071:                else {
+072:                   int exited = 0;
+073: 
+074:                   drmaa_wifexited(&exited, status, NULL, 0);
+075: 
+076:                   if (exited == 1) {
+077:                      int exit_status = 0;
+078: 
+079:                      drmaa_wexitstatus(&exit_status, status, NULL, 0);
+080:                      printf("Job %s finished regularly with exit status %d\n", jobid, exit_status);
+081:                   }
+082:                   else {
+083:                      int signaled = 0;
+084: 
+085:                      drmaa_wifsignaled(&signaled, status, NULL, 0);
+086: 
+087:                      if (signaled == 1) {
+088:                         char termsig[DRMAA_SIGNAL_BUFFER+1];
+089: 
+090:                         drmaa_wtermsig(termsig, DRMAA_SIGNAL_BUFFER, status, NULL, 0);
+091:                         printf("Job %s finished due to signal %s\n", jobid, termsig);
+092:                      }
+093:                      else {
+094:                         printf("Job %s finished with unclear conditions\n", jobid);
+095:                      }
+096:                   } /* else */
+097:                } /* else */
+098:                
+099:                printf ("Job Usage:\n");
+100:                
+101:                while (drmaa_get_next_attr_value (rusage, usage, DRMAA_ERROR_STRING_BUFFER) == DRMAA_ERRNO_SUCCESS) {
+102:                   printf ("  %s\n", usage);
+103:                }
+104:                
+105:                drmaa_release_attr_values (rusage);
+106:             } /* else */
+107:          } /* else */
+108:       } /* else */
+109: 
+110:       errnum = drmaa_delete_job_template (jt, error, DRMAA_ERROR_STRING_BUFFER);
+111: 
+112:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+113:          fprintf (stderr, "Could not delete job template: %s\n", error);
+114:       }
+115:    } /* else */
+116: 
+117:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+118: 
+119:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+120:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+121:       return 1;
+122:    }
+123: 
+124:    return 0;
+125: }</PRE>
 
-   <H3>Example 4</H3>
+   <P STYLE="margin-bottom: 0cm">
+      This example is very similar to Example 2 except for lines 55-106.  On
+      line 55 we call drmaa_wait() to wait for the job to end.  We have to give
+      drmaa_wait() both the id of the job for which we want to wait and a place
+      to write the id of the job for which we actually waited because the job
+      id we pass in could be <CODE>DRMAA_JOB_IDS_SESSION_ANY</CODE>, in which
+      case drmaa_wait() must have a way of tell us which job is the one that
+      made it return.  We also have to pass to drmaa_wait() how long we are
+      willing to wait for the job to finish.  This could be a number of seconds,
+      or it could be either <CODE>DRMAA_TIMEOUT_WAIT_FOREVER</CODE> or
+      <CODE>DRMAA_TIMEOUT_NO_WAIT</CODE>.  Lastly, aside from the usual error
+      buffer, we also have to pass in a place to write the exit status and the
+      usage information.  The exit status is an opaque number that is passed to
+      the drmaa_w...() functions to get information about how the job exited.
+      The usage information is a list of name=value pairs in a DRMAA values
+      structure.  The values structure works exactly the same as the ids
+      structure we talked about in Example 2.1.
+   </P>
 
-<PRE>01:#include "drmaa.h"
-02:#define BUFFER_LENGTH 512
-03:
-04:int main (int argc, char **argv) {
-05:   char error[BUFFER_LENGTH];
-06:   int errnum = 0;
-07:   drmaa_job_template_t *jt = NULL;
-08:
-09:   errnum = drmaa_init (NULL, error, BUFFER_LENGTH);
-10:
-11:   if (errnum != DRMAA_ERRNO_SUCCESS) {
-12:      fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
-13:      return 1;
-14:   }
-15:
-16:   errnum = drmaa_allocate_job_template (&jt, error, BUFFER_LENGTH);
-17:
-18:   if (errnum != DRMAA_ERRNO_SUCCESS) {
-19:      fprintf (stderr, "Could not create job template: %s\n", error);
-20:   }
-21:   else {
-22:      errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
-23:                                   error, BUFFER_LENGTH);
-24:
-25:      if (errnum != DRMAA_ERRNO_SUCCESS) {
-26:         fprintf (stderr, "Could not set attribute \"%s\": %s\n",
-27:                  DRMAA_REMOTE_COMMAND, error);
-28:      }
-29:      else {
-30:         char jobid[BUFFER_LENGTH];
-30:         char jobid_out[BUFFER_LENGTH];
-30:         int status = 0;
-31:
-32:         errnum = drmaa_run_job (jobid, BUFFER_LENGTH, jt, error, BUFFER_LENGTH);
-33:
-34:         if (errnum != DRMAA_ERRNO_SUCCESS) {
-35:            fprintf (stderr, "Could not submit job: %s\n", error);
-36:         }
-37:         else {
-38:            printf ("Your job has been submitted with id %s\n", jobid);
-39:
-39:            errnum = drmaa_synchrnoize (jobid, jobid_out, BUFFER_LENGTH, &status,
-39:                                 DRMAA_TIMEOUT_WAIT_FOREVER, rusage, error, BUFFER_LENGTH);
-39:         }
-40:      } /* else */
-41:
-42:      errnum = drmaa_delete_job_template (jt, error, BUFFER_LENGTH);
-43:
-44:      if (errnum != DRMAA_ERRNO_SUCCESS) {
-45:         fprintf (stderr, "Could not delete job template: %s\n", error);
-46:      }
-47:   } /* else */
-48:
-49:   errnum = drmaa_exit (error, BUFFER_LENGTH);
-50:
-51:   if (errnum != DRMAA_ERRNO_SUCCESS) {
-52:      fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
-53:      return 1;
-54:   }
-55:
-56:   return 0;
-57:}</PRE>
+   <P STYLE="margin-bottom: 0cm">
+      Assuming the wait worked, we query the job's exit status on lines 66-97
+      using the drmaa_w...() functions.  This if structure is a common usage
+      pattern for drmaa_wait() and should be encapsulated in a function for
+      ease of use.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      After checking the exit status, we query the job's usage on lines 99-105.
+      We use the drmaa_get_next_attr_value() function to walk through the usage
+      information and print out the results.  For further processing of the
+      usage, we'd have to split each string on the '=' character to extract the
+      name and value of each usage parameter.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      An alternative to drmaa_wait() when working with multiple jobs, such as
+      jobs submitted by drmmaa_run_bulk_jobs() or multiple calls to
+      drmaa_run_job() is drmaa_synchronize().  drmaa_synchronize() waits for
+      a set of jobs to finish.  To use drmaa_synchronize(), we could replace
+      lines 40-108 with the following:
+   </P>
+
+   <H3>Example 3.1</H3>
+
+<PRE>40:       else {
+41:          drmaa_job_ids_t *ids = NULL;
+42: 
+43:          errnum = drmaa_run_bulk_jobs (&ids, jt, 1, 30, 2, error, DRMAA_ERROR_STRING_BUFFER);
+44: 
+45:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+46:             fprintf (stderr, "Could not submit job: %s\n", error);
+47:          }
+48:          else {
+49:             char jobid[DRMAA_JOBNAME_BUFFER];
+50:             const char *jobids[2] = {DRMAA_JOB_IDS_SESSION_ALL, NULL};
+51: 
+52:             while (drmaa_get_next_job_id (ids, jobid, DRMAA_JOBNAME_BUFFER) == DRMAA_ERRNO_SUCCESS) {
+53:                printf ("A job task has been submitted with id %s\n", jobid);
+54:             }
+55:             
+56:             errnum = drmaa_synchronize (jobids, DRMAA_TIMEOUT_WAIT_FOREVER,
+57:                                         1, error, DRMAA_ERROR_STRING_BUFFER);
+58:             
+59:             if (errnum != DRMAA_ERRNO_SUCCESS) {
+60:                fprintf (stderr, "Could not wait for jobs: %s\n", error);
+61:             }
+62:             else {
+63:                printf ("All job tasks have finished.\n");
+64:             }
+65:          } /* else */
+66: 
+67:          drmaa_release_job_ids (ids);
+68:       } /* else */</PRE>
+
+   <H3>Example 3.1</H3>
+
+   <P STYLE="margin-bottom: 0cm">
+      Lines 41-43 now call drmaa_run_bulk_jobs() so that we have several jobs
+      for which to wait.  On line 56, instead of calling drmaa_wait(), we call
+      drmaa_synchronize().  drmaa_synchronize() takes only three iteresting
+      parameters.  The first is the list of ids for which to wait.  This list
+      must be a NULL-terminated array of strings.  If the special id,
+      <CODE>DRMAA_JOB_IDS_SESSION_ALL</CODE>, appears in the array,
+      drmaa_synchronize() will wait for all jobs submitted via DRMAA during this
+      session, i.e. since drmaa_init() was called.  The second is how long to
+      wait for all the jobs in the list to finish.  This is the same as the
+      timeout parameter for drmaa_wait().  The third is whether this call to
+      drmaa_synchronize() should clean up after the job.  After a job completes,
+      it leaves behind accounting information, such as exist status and usage,
+      until either drmaa_wait() or drmaa_synchronize() with dispose set to true
+      is called.  It is the responsibility of the application to make sure one
+      of these two functions is called for every job.  Not doing so creates a
+      memory leak.  Note that calling drmaa_synchronize() with dispose set to
+      true flushes all accounting information for all jobs in the list.  If you
+      want to use drmaa_synchronize() and still recover the accounting
+      information, set dispose to false and call drmaa_wait() for each job.  To
+      do this in Example 3, we would replace lines 40-108 with the following:
+   </P>
+
+   <H3>Example 3.2</H3>
+
+<PRE>040:       else {
+041:          drmaa_job_ids_t *ids = NULL;
+042:          int start = 1;
+043:          int end = 30;
+044:          int step = 2;
+045: 
+046:          errnum = drmaa_run_bulk_jobs (&ids, jt, start, end, step, error,
+047:                                        DRMAA_ERROR_STRING_BUFFER);
+048: 
+049:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+050:             fprintf (stderr, "Could not submit job: %s\n", error);
+051:          }
+052:          else {
+053:             char jobid[DRMAA_JOBNAME_BUFFER];
+054:             const char *jobids[2] = {DRMAA_JOB_IDS_SESSION_ALL, NULL};
+055: 
+056:             while (drmaa_get_next_job_id (ids, jobid, DRMAA_JOBNAME_BUFFER)
+057:                                                      == DRMAA_ERRNO_SUCCESS) {
+058:                printf ("A job task has been submitted with id %s\n", jobid);
+059:             }
+060:             
+061:             errnum = drmaa_synchronize (jobids, DRMAA_TIMEOUT_WAIT_FOREVER,
+062:                                         0, error, DRMAA_ERROR_STRING_BUFFER);
+063:             
+064:             if (errnum != DRMAA_ERRNO_SUCCESS) {
+065:                fprintf (stderr, "Could not wait for jobs: %s\n", error);
+066:             }
+067:             else {
+068:                char jobid[DRMAA_JOBNAME_BUFFER];
+069:                int status = 0;
+070:                drmaa_attr_values_t *rusage = NULL;
+071:                int count = 0;
+072:                
+073:                for (count = start; count < end; count += step) {
+074:                   errnum = drmaa_wait (DRMAA_JOB_IDS_SESSION_ANY, jobid,
+075:                                        DRMAA_JOBNAME_BUFFER, &status,
+076:                                        DRMAA_TIMEOUT_WAIT_FOREVER, &rusage,
+077:                                        error, DRMAA_ERROR_STRING_BUFFER);
+078: 
+079:                   if (errnum != DRMAA_ERRNO_SUCCESS) {
+080:                      fprintf (stderr, "Could not wait for job: %s\n", error);
+081:                   }
+082:                   else {
+083:                      char usage[DRMAA_ERROR_STRING_BUFFER];
+084:                      int aborted = 0;
+085: 
+086:                      drmaa_wifaborted(&aborted, status, NULL, 0);
+087: 
+088:                      if (aborted == 1) {
+089:                         printf("Job %s never ran\n", jobid);
+090:                      }
+091:                      else {
+092:                         int exited = 0;
+093: 
+094:                         drmaa_wifexited(&exited, status, NULL, 0);
+095: 
+096:                         if (exited == 1) {
+097:                            int exit_status = 0;
+098: 
+099:                            drmaa_wexitstatus(&exit_status, status, NULL, 0);
+100:                            printf("Job %s finished regularly with exit status %d\n",
+101:                                   jobid, exit_status);
+102:                         }
+103:                         else {
+104:                            int signaled = 0;
+105: 
+106:                            drmaa_wifsignaled(&signaled, status, NULL, 0);
+107: 
+108:                            if (signaled == 1) {
+109:                               char termsig[DRMAA_SIGNAL_BUFFER+1];
+110: 
+111:                               drmaa_wtermsig(termsig, DRMAA_SIGNAL_BUFFER, status, NULL, 0);
+112:                               printf("Job %s finished due to signal %s\n", jobid, termsig);
+113:                            }
+114:                            else {
+115:                               printf("Job %s finished with unclear conditions\n", jobid);
+116:                            }
+117:                         } /* else */
+118:                      } /* else */
+119: 
+120:                      printf ("Job Usage:\n");
+121: 
+122:                      while (drmaa_get_next_attr_value (rusage, usage, DRMAA_ERROR_STRING_BUFFER)
+123:                                                                           == DRMAA_ERRNO_SUCCESS) {
+124:                         printf ("  %s\n", usage);
+125:                      }
+126: 
+127:                      drmaa_release_attr_values (rusage);
+128:                   } /* else */
+129:                } /* for */
+130:             } /* else */
+131:          } /* else */
+132: 
+133:          drmaa_release_job_ids (ids);
+134:       } /* else */</PRE>
+
+   <P STYLE="margin-bottom: 0cm">
+      What's different is that on line 61, we set dispose to false, and then on
+      lines 68-130 we wait once for each job, printing the exit status and
+      usage information as we did in Example 3.  We pass
+      <CODE>DRMAA_JOB_IDS_SESSION_ANY</CODE> to drmaa_wait() as the job id
+      because we already know that all the jobs have finished, so we don't
+      really care in what order we process them.  In an interactive system
+      where we couldn't guarantee that more jobs wouldn't be submitted between
+      the synchronize and the wait, we would have to store the job ids from the
+      drmaa_run_bulk_jobs() in an array and then wait for each job specifically.
+      Otherwise, the drmaa_wait() could end up waiting for a job submitted after
+      the call to drmaa_synchronize().
+   </P>
 
    <H2>
       <FONT COLOR="#336699">
@@ -422,16 +651,409 @@
       </FONT>
    </H2>
 
+   <P STYLE="margin-bottom: 0cm">
+      Now let's look at an example of how to control a job from DRMAA:
+   </P>
+
+   <H3>Example 4</H3>
+
+<PRE>01: #include <stdio.h>
+02: #include "drmaa.h"
+03: 
+04: int main (int argc, char **argv) {
+05:    char error[DRMAA_ERROR_STRING_BUFFER];
+06:    int errnum = 0;
+07:    drmaa_job_template_t *jt = NULL;
+08: 
+09:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+10: 
+11:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+12:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+13:       return 1;
+14:    }
+15: 
+16:    errnum = drmaa_allocate_job_template (&jt, error, DRMAA_ERROR_STRING_BUFFER);
+17: 
+18:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+19:       fprintf (stderr, "Could not create job template: %s\n", error);
+20:    }
+21:    else {
+22:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
+23:                                     error, DRMAA_ERROR_STRING_BUFFER);
+24: 
+25:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+26:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+27:                   DRMAA_REMOTE_COMMAND, error);
+28:       }
+29:       else {
+30:          const char *args[2] = {"60", NULL};
+31:          
+32:          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
+33:                                               DRMAA_ERROR_STRING_BUFFER);
+34:       }
+35:       
+36:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+37:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+38:                   DRMAA_REMOTE_COMMAND, error);
+39:       }
+40:       else {
+41:          char jobid[DRMAA_JOBNAME_BUFFER];
+42: 
+43:          errnum = drmaa_run_job (jobid, DRMAA_JOBNAME_BUFFER, jt, error,
+44:                                  DRMAA_ERROR_STRING_BUFFER);
+45: 
+46:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+47:             fprintf (stderr, "Could not submit job: %s\n", error);
+48:          }
+49:          else {
+50:             printf ("Your job has been submitted with id %s\n", jobid);
+51:             
+52:             errnum = drmaa_control (jobid, DRMAA_CONTROL_TERMINATE, error,
+53:                                     DRMAA_ERROR_STRING_BUFFER);
+54:             
+55:             if (errnum != DRMAA_ERRNO_SUCCESS) {
+56:                fprintf (stderr, "Could not delete job: %s\n", error);
+57:             }
+58:             else {
+59:                printf ("Your job has been deleted\n");
+60:             }
+61:          }
+62:       } /* else */
+63: 
+64:       errnum = drmaa_delete_job_template (jt, error, DRMAA_ERROR_STRING_BUFFER);
+65: 
+66:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+67:          fprintf (stderr, "Could not delete job template: %s\n", error);
+68:       }
+69:    } /* else */
+70: 
+71:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+72: 
+73:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+74:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+75:       return 1;
+76:    }
+77: 
+78:    return 0;
+79: }</PRE>
+
+   <P STYLE="margin-bottom: 0cm">
+      This example is very similar to Example 2 except for lines 52-60.  On line
+      52 we use drmaa_control() to delete the job we just submitted.  Aside from
+      deleting the job, we could have also used drmaa_control() to suspend,
+      resume, hold, or release it.  For more information, see the
+      <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman3/drmaa_control.html">drmaa_control</A>
+      man page.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Note that drmaa_control() can be used to control jobs not submitted
+      through DRMAA.  Any valid SGE job id could be passed to drmaa_control() as
+      the id of the job to delete.
+   </P>
+
    <H2>
       <FONT COLOR="#336699">
          Getting Job Status
       </FONT>
    </H2>
 
+   <P STYLE="margin-bottom: 0cm">
+      Here's an example of using DRMAA to query the status of a job:
+   </P>
+
+   <H3>Example 5</H3>
+
+<PRE>001: #include <stdio.h>
+002: #include <unistd.h>
+003: #include "drmaa.h"
+004: 
+005: int main (int argc, char **argv) {
+006:    char error[DRMAA_ERROR_STRING_BUFFER];
+007:    int errnum = 0;
+008:    drmaa_job_template_t *jt = NULL;
+009: 
+010:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+011: 
+012:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+013:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+014:       return 1;
+015:    }
+016: 
+017:    errnum = drmaa_allocate_job_template (&jt, error, DRMAA_ERROR_STRING_BUFFER);
+018: 
+019:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+020:       fprintf (stderr, "Could not create job template: %s\n", error);
+021:    }
+022:    else {
+023:       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",024:                                     error, DRMAA_ERROR_STRING_BUFFER);
+025: 
+026:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+027:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+028:                   DRMAA_REMOTE_COMMAND, error);
+029:       }
+030:       else {
+031:          const char *args[2] = {"60", NULL};
+032:          
+033:          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
+034:                                               DRMAA_ERROR_STRING_BUFFER);
+035:       }
+036:       
+037:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+038:          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+039:                   DRMAA_REMOTE_COMMAND, error);
+040:       }
+041:       else {
+042:          char jobid[DRMAA_JOBNAME_BUFFER];
+043: 
+044:          errnum = drmaa_run_job (jobid, DRMAA_JOBNAME_BUFFER, jt, error,
+045:                                  DRMAA_ERROR_STRING_BUFFER);
+046: 
+047:          if (errnum != DRMAA_ERRNO_SUCCESS) {
+048:             fprintf (stderr, "Could not submit job: %s\n", error);
+049:          }
+050:          else {
+051:             int status = 0;
+052:             
+053:             printf ("Your job has been submitted with id %s\n", jobid);
+054:             
+055:             sleep (20);
+056:             
+057:             errnum = drmaa_job_ps (jobid, &status, error,
+058:                                    DRMAA_ERROR_STRING_BUFFER);
+059:             
+060:             if (errnum != DRMAA_ERRNO_SUCCESS) {
+061:                fprintf (stderr, "Could not get job' status: %s\n", error);
+062:             }
+063:             else {
+064:                switch (status) {
+065:                   case DRMAA_PS_UNDETERMINED:
+066:                      printf ("Job status cannot be determined\n");
+067:                      break;
+068:                   case DRMAA_PS_QUEUED_ACTIVE:
+069:                      printf ("Job is queued and active\n");
+070:                      break;
+071:                   case DRMAA_PS_SYSTEM_ON_HOLD:
+072:                      printf ("Job is queued and in system hold\n");
+073:                      break;
+074:                   case DRMAA_PS_USER_ON_HOLD:
+075:                      printf ("Job is queued and in user hold\n");
+076:                      break;
+077:                   case DRMAA_PS_USER_SYSTEM_ON_HOLD:
+078:                      printf ("Job is queued and in user and system hold\n");
+079:                      break;
+080:                   case DRMAA_PS_RUNNING:
+081:                      printf ("Job is running\n");
+082:                      break;
+083:                   case DRMAA_PS_SYSTEM_SUSPENDED:
+084:                      printf ("Job is system suspended\n");
+085:                      break;
+086:                   case DRMAA_PS_USER_SUSPENDED:
+087:                      printf ("Job is user suspended\n");
+088:                      break;
+089:                   case DRMAA_PS_USER_SYSTEM_SUSPENDED:
+090:                      printf ("Job is user and system suspended\n");
+091:                      break;
+092:                   case DRMAA_PS_DONE:
+093:                      printf ("Job finished normally\n");
+094:                      break;
+095:                   case DRMAA_PS_FAILED:
+096:                      printf ("Job finished, but failed\n");
+097:                      break;
+098:                } /* switch */
+099:             } /* else */
+100:          } /* else */
+101:       } /* else */
+102: 
+103:       errnum = drmaa_delete_job_template (jt, error, DRMAA_ERROR_STRING_BUFFER);
+104: 
+105:       if (errnum != DRMAA_ERRNO_SUCCESS) {
+106:          fprintf (stderr, "Could not delete job template: %s\n", error);
+107:       }
+108:    } /* else */
+109: 
+110:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+111: 
+112:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+113:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+114:       return 1;
+115:    }
+116: 
+117:    return 0;
+118: }</PRE>
+
+   <P STYLE="margin-bottom: 0cm">
+      Again, this example is very similar to Example 2, this time with the
+      exception of lines 55-99.  First, after submitting the job, we sleep for
+      20 seconds to give SGE time to schedule the job.  Then, on line 55, we
+      use drmaa_job_ps() to get the status of the job.  Lines 64-98 determine
+      what the job status is and report it.  This switch is a common usage
+      pattern for drmaa_job_ps() and should be encapsulated in a function for
+      ease of use.
+   </P>
+
    <H2>
       <FONT COLOR="#336699">
          Getting DRM information
       </FONT>
    </H2>
+
+   <P STYLE="margin-bottom: 0cm">
+      Lastly, let's look at how to query the DRMAA library for information about
+      the DRMS and the DRMAA implementation itself:
+   </P>
+
+   <H3>Example 6</H3>
+
+<PRE>01: #include <stdio.h>
+02: #include "drmaa.h"
+03: 
+04: int main (int argc, char **argv) {
+05:    char error[DRMAA_ERROR_STRING_BUFFER];
+06:    int errnum = 0;
+07:    char contact[DRMAA_CONTACT_BUFFER];
+08:    char drm_system[DRMAA_DRM_SYSTEM_BUFFER];
+09:    char drmaa_impl[DRMAA_DRM_SYSTEM_BUFFER];
+10:    unsigned int major = 0;
+11:    unsigned int minor = 0;
+12:       
+13:    errnum = drmaa_get_contact (contact, DRMAA_CONTACT_BUFFER, error,
+14:                                DRMAA_ERROR_STRING_BUFFER);
+15:    
+16:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+17:       fprintf (stderr, "Could not get the contact string list: %s\n", error);
+18:    }
+19:    else {
+20:       printf ("Supported contact strings: \"%s\"\n", contact);
+21:    }
+22: 
+23:    errnum = drmaa_get_DRM_system (drm_system, DRMAA_DRM_SYSTEM_BUFFER, error,
+24:                                DRMAA_ERROR_STRING_BUFFER);
+25:    
+26:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+27:       fprintf (stderr, "Could not get the DRM system list: %s\n", error);
+28:    }
+29:    else {
+30:       printf ("Supported DRM systems: \"%s\"\n", drm_system);
+31:    }
+32:    
+33:    errnum = drmaa_get_DRMAA_implementation (drmaa_impl, DRMAA_DRM_SYSTEM_BUFFER,
+34:                                             error, DRMAA_ERROR_STRING_BUFFER);
+35:    
+36:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+37:       fprintf (stderr, "Could not get the DRMAA implementation list: %s\n", error);
+38:    }
+39:    else {
+40:       printf ("Supported DRMAA implementations: \"%s\"\n", drmaa_impl);
+41:    }
+42: 
+43:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+44: 
+45:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+46:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+47:       return 1;
+48:    }
+49: 
+50:    errnum = drmaa_get_contact (contact, DRMAA_CONTACT_BUFFER, error,
+51:                                DRMAA_ERROR_STRING_BUFFER);
+52:    
+53:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+54:       fprintf (stderr, "Could not get the contact string: %s\n", error);
+55:    }
+56:    else {
+57:       printf ("Connected contact string: \"%s\"\n", contact);
+58:    }
+59: 
+60:    errnum = drmaa_get_DRM_system (drm_system, DRMAA_CONTACT_BUFFER, error,
+61:                                DRMAA_ERROR_STRING_BUFFER);
+62: 
+63:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+64:       fprintf (stderr, "Could not get the DRM system: %s\n", error);
+65:    }
+66:    else {
+67:       printf ("Connected DRM system: \"%s\"\n", drm_system);
+68:    }
+69: 
+70:    errnum = drmaa_get_DRMAA_implementation (drmaa_impl, DRMAA_DRM_SYSTEM_BUFFER,
+71:                                             error, DRMAA_ERROR_STRING_BUFFER);
+72:    
+73:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+74:       fprintf (stderr, "Could not get the DRMAA implementation list: %s\n", error);
+75:    }
+76:    else {
+77:       printf ("Supported DRMAA implementations: \"%s\"\n", drmaa_impl);
+78:    }
+79: 
+80:    errnum = drmaa_version (&major, &minor, error, DRMAA_ERROR_STRING_BUFFER);
+81: 
+82:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+83:       fprintf (stderr, "Could not get the DRMAA version: %s\n", error);
+84:    }
+85:    else {
+86:       printf ("Using DRMAA version %d.%d\n", major, minor);
+87:    }
+88:    
+89:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+90: 
+91:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+92:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+93:       return 1;
+94:    }
+95: 
+96:    return 0;
+97: }</PRE>
+
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 13, we get the contact string list.  This is the list of contact
+      strings that will be understood by this DRMAA instance.  Normally on of
+      these strings is used to select to which DRM this DRMAA instance should
+      be bound.  In the Grid Engine 6.0 implementation, the contact string list
+      is empty because there is only ever one possible DRM to which to bind.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 23, we get the list of supported DRM systems.  For the Grid Engine
+      6.0 implementation, this will always be Grid Engine 6.0.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 33, we get the list of supported DRMAA implementations.  For the
+      Grid Engine 6.0 implementation, this will always be Grid Engine 6.0.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 43, we call drmaa_init().  After drmaa_init() has been called, the
+      drmaa_get_contact() and drmaa_get_DRM_system() calls change.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 50, we call drmaa_get_contact() again, this time to get the
+      contact string that was used to bind to a DRMS in drmaa_init().  For the
+      Grid Engine 6.0 implementation, this will always be an empty string.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 60, we call drmaa_get_DRM_system() again, this time to get the
+      name of the DRMS to which DRMAA is bound.  For the Grid Engine 6.0
+      implementation, this will always be Grid Engine 6.0.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 70, we call drmaa_get_DRMAA_implementation() again, this time to
+      get the name of the DRMAA implementation to which the application is
+      bound.  For the Grid Engine 6.0 implementation, this will always be Grid
+      Engine 6.0.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 80, we get the version number of the DRMAA C binding specification
+      supported by this DRMAA implementation.  For the Grid Engine 6.0
+      implementation this is currently version 0.8.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Finally, on line 89, we end the session with drmaa_exit().
+   </P>
    </BODY>
 </HTML>

@@ -58,6 +58,17 @@ int main (int argc, char **argv) {
                   DRMAA_REMOTE_COMMAND, error);
       }
       else {
+         const char *args[2] = {"5", NULL};
+         
+         errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
+                                              DRMAA_ERROR_STRING_BUFFER);
+      }
+      
+      if (errnum != DRMAA_ERRNO_SUCCESS) {
+         fprintf (stderr, "Could not set attribute \"%s\": %s\n",
+                  DRMAA_REMOTE_COMMAND, error);
+      }
+      else {
          drmaa_job_ids_t *ids = NULL;
 
          errnum = drmaa_run_bulk_jobs (&ids, jt, 1, 30, 2, error, DRMAA_ERROR_STRING_BUFFER);

@@ -18,6 +18,31 @@ while (<FILE>) {
 
       next;
    }
+
+   $count++;
+}
+
+close FILE;
+
+$num_figs = 0;
+
+do {
+   $num_figs++;
+   $count /= 10;
+} while (int ($count) > 0);
+
+$count = -1;
+
+open (FILE, "<$file");
+
+while (<FILE>) {
+   if ($count < 0) {
+      if (m#/\*___INFO__MARK_END__\*/#) {
+         $count = 0;
+      }
+
+      next;
+   }
    elsif ($count == 0) {
       print "<PRE>";
    }
@@ -41,7 +66,9 @@ sub usage {
 }
 
 sub printCount {
-   if ($count < 9) {
+   $diff = $num_figs - length ($count + 1);
+
+   for (;$diff > 0; $diff--) {
       print "0";
    }
 

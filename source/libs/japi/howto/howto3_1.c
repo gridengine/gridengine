@@ -51,7 +51,7 @@ int main (int argc, char **argv) {
    }
    else {
       errnum = drmaa_set_attribute (jt, DRMAA_REMOTE_COMMAND, "sleeper.sh",
-                                    error, DRMAA_ERROR_STRING_BUFFER);
+                                   error, DRMAA_ERROR_STRING_BUFFER);
 
       if (errnum != DRMAA_ERRNO_SUCCESS) {
          fprintf (stderr, "Could not set attribute \"%s\": %s\n",
@@ -69,17 +69,33 @@ int main (int argc, char **argv) {
                   DRMAA_REMOTE_COMMAND, error);
       }
       else {
-         char jobid[DRMAA_JOBNAME_BUFFER];
+         drmaa_job_ids_t *ids = NULL;
 
-         errnum = drmaa_run_job (jobid, DRMAA_JOBNAME_BUFFER, jt, error,
-                                 DRMAA_ERROR_STRING_BUFFER);
+         errnum = drmaa_run_bulk_jobs (&ids, jt, 1, 30, 2, error, DRMAA_ERROR_STRING_BUFFER);
 
          if (errnum != DRMAA_ERRNO_SUCCESS) {
             fprintf (stderr, "Could not submit job: %s\n", error);
          }
          else {
-            printf ("Your job has been submitted with id %s\n", jobid);
-         }
+            char jobid[DRMAA_JOBNAME_BUFFER];
+            const char *jobids[2] = {DRMAA_JOB_IDS_SESSION_ALL, NULL};
+
+            while (drmaa_get_next_job_id (ids, jobid, DRMAA_JOBNAME_BUFFER) == DRMAA_ERRNO_SUCCESS) {
+               printf ("A job task has been submitted with id %s\n", jobid);
+            }
+            
+            errnum = drmaa_synchronize (jobids, DRMAA_TIMEOUT_WAIT_FOREVER,
+                                        1, error, DRMAA_ERROR_STRING_BUFFER);
+            
+            if (errnum != DRMAA_ERRNO_SUCCESS) {
+               fprintf (stderr, "Could not wait for jobs: %s\n", error);
+            }
+            else {
+               printf ("All job tasks have finished.\n");
+            }
+         } /* else */
+
+         drmaa_release_job_ids (ids);
       } /* else */
 
       errnum = drmaa_delete_job_template (jt, error, DRMAA_ERROR_STRING_BUFFER);

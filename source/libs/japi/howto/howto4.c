@@ -58,7 +58,7 @@ int main (int argc, char **argv) {
                   DRMAA_REMOTE_COMMAND, error);
       }
       else {
-         const char *args[2] = {"5", NULL};
+         const char *args[2] = {"60", NULL};
          
          errnum = drmaa_set_vector_attribute (jt, DRMAA_V_ARGV, args, error,
                                               DRMAA_ERROR_STRING_BUFFER);
@@ -79,6 +79,16 @@ int main (int argc, char **argv) {
          }
          else {
             printf ("Your job has been submitted with id %s\n", jobid);
+            
+            errnum = drmaa_control (jobid, DRMAA_CONTROL_TERMINATE, error,
+                                    DRMAA_ERROR_STRING_BUFFER);
+            
+            if (errnum != DRMAA_ERRNO_SUCCESS) {
+               fprintf (stderr, "Could not delete job: %s\n", error);
+            }
+            else {
+               printf ("Your job has been deleted\n");
+            }
          }
       } /* else */
 

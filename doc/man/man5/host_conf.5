@@ -1,0 +1,276 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2001/07/18 11:04:50 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH HOST_CONF 5 "$Date: 2001/07/18 11:04:50 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.\"
+.SH NAME
+host_conf \- xxQS_NAMExx execution host configuration file format
+.\"
+.\"
+.SH DESCRIPTION
+.I Host_conf
+reflects the format of the template file for the execution host configuration.
+Via the \fB\-ae\fP and \fB\-me\fP options of the
+.M qconf 1
+command, you can add execution hosts and modify the configuration of
+any execution host in the cluster. Default execution host entries are added
+automatically as soon as a
+.M xxqs_name_sxx_execd 8
+registers to
+.M xxqs_name_sxx_qmaster 8
+for the very first time from a certain host. The
+.M qconf 1
+\fB\-sel\fP switch can be used to display a list of execution host being
+currently configured in your xxQS_NAMExx system. Via the \fB\-se\fP
+option you can print the execution host configuration of a
+specified host.
+.PP
+The special hostname "global" can be used to define cluster global 
+characteristics.
+.\"
+.\"
+.SH FORMAT
+The format of a
+.I host_conf
+file is defined as follows:
+.IP "\fBhostname\fP"
+The name of the execution host.
+.IP "\fBload_scaling\fP"
+A comma separated list of scaling values to be applied to each or part
+of the load values being reported by the
+.M xxqs_name_sxx_execd 8
+on the host and being defined in the cluster global "host" complex
+(see
+.M complex 5 ).
+The load scaling factors are intended to level hardware or operating
+system specific differences between execution hosts. If, for example,
+the load average value (load_avg in the "host" complex; see also
+.M uptime 1 )
+of a multiprocessor machine is to be compared with a single processor
+machine the load as reported by the single CPU host needs to be
+weighted up against the multiprocessor load (given the same
+CPU hardware) to be comparable. The load scaling factors are integers being
+multiplied with the reported load quantities to constitute weighted load
+values. Thus, following the example given above, the load value of the
+single processor machine needs to be multiplied by the number of
+processors of the single processor machine to become comparable.
+.sp 1
+The syntax of a load factor specification is as follows: First the name of
+the load value (as defined in the "host" complex) is given and, separated
+by an equal sign, the load scaling value is provided. No blanks are
+allowed in between the load_scaling value string.
+.sp 1
+The parameter
+.B load_scaling
+is not meaningful for the definition of the "global" host.
+.IP "\fBcomplex_list\fP"
+The comma separated list of administrator defined complexes (see 
+.M complex 5
+for details) to be associated with the host. Only complex 
+attributes contained in the enlisted complexes and those from the "global" 
+and "host" complex, which are implicitly attached to each host, can be 
+used in the
+.B complex_values
+list below. In case of the "global" host, the 
+"host" complex is not attached and only "global" complex attributes are 
+allowed per default in the
+.B complex_values
+list of the "global" host.
+.sp 1
+The default value for this parameter is NONE, i.e. no administrator 
+defined complexes are associated with the host.
+.IP "\fBcomplex_values\fP"
+.B complex_values
+defines quotas for resource attributes managed via this 
+host. Each complex attribute is followed by an "=" sign and the value 
+specification compliant with the complex attribute type (see
+.M complex 5 ). 
+Quota specifications are separated by commas. Only attributes as defined in 
+.B complex_list
+(see above) may be used.
+.sp 1
+The quotas are related to the resource consumption of all jobs on a host in 
+the case of consumable resources (see
+.M complex 5
+for details on 
+consumable resources) or they are interpreted on a per job slot basis in the 
+case of non-consumable resources. Consumable resource attributes are 
+commonly used to manage free memory, free disk space or available 
+floating software licenses while non-consumable attributes usually define 
+distinctive characteristics like type of hardware installed.
+.sp 1
+For consumable resource attributes an available resource amount is 
+determined by subtracting the current resource consumption of all 
+running jobs on the host from the quota in the
+.B complex_values
+list. Jobs 
+can only be dispatched to a host if no resource requests exceed any
+corresponding resource 
+availability obtained by this scheme. The quota definition in the 
+.B complex_values
+list is automatically replaced by the current load value 
+reported for this attribute, if load is monitored for this resource and if the 
+reported load value is more stringent than the quota. This effectively 
+avoids oversubscription of resources.
+.sp 1
+.B Note:
+Load values replacing the quota specifications may have become 
+more stringent because they have been scaled (see
+.B load_scaling
+above) and/or
+load adjusted (see
+.M sched_conf 5 ).
+The \fI\-F\fP option of
+.M qstat 1
+and the load display in the
+.M qmon 1
+queue control dialog (activated by 
+clicking on a queue icon while the "Shift" key is pressed) provide 
+detailed information on the actual availability of consumable 
+resources and on the origin of the values taken into account currently.
+.sp 1
+.B Note also:
+The resource consumption of running jobs (used for the availability 
+calculation) as well as the resource requests of the jobs waiting to be 
+dispatched either may be derived from explicit user requests during 
+job submission (see the \fI\-l\fP option to
+.M qsub 1 )
+or from a "default" value 
+configured for an attribute by the administrator (see
+.M complex 5 ).
+The \fI\-r\fP option to
+.M qstat 1
+can be used for retrieving full detail on the actual 
+resource requests of all jobs in the system.
+.sp 1
+For non-consumable resources xxQS_NAMExx simply compares the 
+job's attribute requests with the corresponding specification in 
+.B complex_values
+taking the relation operator of the complex attribute 
+definition into account (see
+.M complex 5 ).
+If the result of the comparison is 
+"true", the host is suitable for the job with respect to the particular 
+attribute. For parallel jobs each job slot to be occupied by a parallel task is 
+meant to provide the same resource attribute value.
+.sp 1
+.B Note:
+Only numeric complex attributes can be defined as consumable 
+resources and hence non-numeric attributes are always handled on a 
+per job slot basis.
+.sp 1
+The default value for this parameter is NONE, i.e. no administrator 
+defined resource attribute quotas are associated with the host.
+.IP "\fBload_values\fP"
+This entry cannot be configured but is only displayed in case of a
+.M qconf 1
+\fB\-se\fP command. All load values are displayed as reported by the
+.M xxqs_name_sxx_execd 8
+on the host. The load values are enlisted in a comma separated list. Each
+load value start with its name, followed by an equal sign and the reported
+value.
+.IP "\fBprocessors\fP"
+This entry cannot be configured but is only displayed in case of a
+.M qconf 1
+\fB\-se\fP command. Its value is the number of processors which has been
+detected by
+.M xxqs_name_sxx_execd 8
+on the corresponding host.
+.IP "\fBusage_scaling\fP"
+This entry is only present in a xxQS_NAME_EExx system. It is not available in xxQS_NAME_Cxx.
+.sp 1
+The format is equivalent to
+.B load_scaling
+(see above), the only valid attributes to be scaled however are
+.B cpu
+for CPU time consumption,
+.B mem 
+for Memory consumption aggregated over the life-time of jobs and
+.B io
+for data transferred via any I/O devices. The default NONE means
+"no scaling", i.e. all scaling factors are 1.
+.IP "\fBresource_capability_factor\fP"
+This entry is only present in a xxQS_NAME_EExx system. It is not available in xxQS_NAME_Cxx.
+.sp 1
+The resource capability factor is used by xxQS_NAME_EExx when assigning jobs to 
+execution hosts. The resource capability factor tells xxQS_NAME_EExx how the 
+resources (CPU, memory, I/O, etc.) of one execution host compare to the 
+resources of other execution hosts. This helps to ensure that a job 
+requiring a large percentage of resources (i.e. lots of tickets) gets placed 
+on an execution host containing a large percentage of the available 
+resources. The load situation on the execution hosts is taken into account 
+in addition, to guarantee that the selected host is both powerful enough and 
+lightly loaded.
+.sp 1
+For example, you might consider setting your resource capability factors 
+for each execution host based on the number of CPUs, the speed of the 
+CPUs and the installed main memory:
+.sp 1
+.nf
+.ta \w'xxx'u
+	#_of_CPUs * (MHz/200) + GB_of_memory
+.fi
+.sp 1
+This would give an execution host with 32 200 MHz CPUs and 10 
+gigabytes of memory a resource capability factor of 42, while an 
+execution host with 24 200 MHz CPUs and 40 gigabytes of memory 
+would get a resource capability factor of 64, i.e. memory has a significant 
+impact in this example.
+.sp 1
+Other factors that you might want to consider in setting the resource 
+capability factor are:
+.sp 1
+.nf
+.ta \w'xxx'u \w'available disk spacexxxx'u
+	job mix	- CPU or memory bound jobs
+	CPU benchmarks	- comparison by CPU vendor
+	megaflops (MFLOPS)	- for number crunching
+	I/O capabilities	- disk/network speed
+	available disk space	- at the execution host
+.fi
+.sp 1
+The resource capability factor is stored as a floating point double value. 
+The range of values used is not important. xxQS_NAME_EExx only looks at the relation 
+between values of different hosts.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M qconf 1 ,
+.M uptime 1 ,
+.M complex 5 ,
+.M xxqs_name_sxx_execd 8 ,
+.M xxqs_name_sxx_qmater 8 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

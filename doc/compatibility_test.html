@@ -1,0 +1,299 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="christian reissmann">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body>
+
+<h1>
+<b><font size=+4>Standard Compatibility Test</font></b></h1>
+
+<p><br>Compatibility is an important aspect of the <a href="gridengine/www/Gridengine_SISSL_license.html">License</a>
+under which Grid Engine source code is made available. In this context,
+cross compatibility may have to be certified between a version of the Grid
+Engine software which you have enhanced and a version declared as one of
+Grid Engine's <font color="#990000">Standard Versions</font> from which
+your modification deviates. Note, that over time there can be multiple
+Standard Versions representing different stable software release levels.
+You might intend to test compatibility with one or with multiple of those
+Standard Versions. A list of the currently available Standard Versions
+with all pertinent information can be found <a href="standard_version.html">here</a>.
+<p>The following describes how to test compatibility between two versions.
+You will need to create a <a href="gridengine/source/dist/dist.html">binary
+distribution package</a>&nbsp; for both versions before you start with
+the compatibility checking process. You will also have to make all preparations
+to be able to run the Grid Engine <a href="/home/ff114084/CODINE/OS/gridengine/testsuite/testsuite.html">Testsuite</a>.
+You will have to use the Testsuite level as defined in the <a href="standard_versions.html">Standard
+Version definition</a>.
+<p>The compatibility test consist of a preparation step, a validation run
+of the Standard Version and multiple compatibility checks. Your changed
+version has to pass all tests without error and has to deliver the same
+results as the validation run to be considered compatible.
+<br>&nbsp;
+<h1>
+<font size=+2>Preparation:</font></h1>
+
+<ul>
+<li>
+<font size=+2>Set up a testsuite cluster with more than one host</font></li>
+</ul>
+
+<blockquote>The <a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/testsuite/testsuite.html">Testsuite</a>
+documentation is describing how this can be done. Use the <b><i>Standard
+Version</i></b> to which you want to test compatibility and run:</blockquote>
+
+<blockquote>
+<blockquote><tt>expect check.exp install</tt></blockquote>
+<tt>You will be asked on which hosts you want to install a testsuite cluster
+and you will have to use at least 2 for the purpose of the compatibility
+test.</tt></blockquote>
+
+<h1>
+<font size=+2>Validation:</font></h1>
+
+<ul>
+<li>
+<font size=+2>Run testsuite on Standard Version</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Run the testsuite with runlevel&nbsp; 1:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<p><br><tt>Do not remove the test results of the validation run. Every
+testsuite run will manipulate the results directory, so copy your validation
+results before running another test. You will need to compare your validation
+run results with the subsequent compatibility runs. No errors must occur
+during the validation run. If you encounter errors then this might be due
+to network setup problems in your cluster or similar issues. Fix those
+first before you proceed. Report your problem if it persits. You cannot
+test compatibility with a validation run with errors.</tt></ul>
+
+<h1>
+<font size=+2>Check 1: Qmaster compatibility</font></h1>
+
+<ul><tt>(If you are absolutely sure that your modification did not change
+sge_qmaster you may skip this step, but be aware that changes in some libraries,
+like for instance the scheduler library, may also modify sge_qmaster. Carry
+out the test if you are not 100% sure.)</tt>
+<br>&nbsp;
+<li>
+<font size=+2>Shutdown the system</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt></ul>
+</ul>
+
+<ul>
+<li>
+<font size=+2>Exchange the sge_qmaster binary with the one from your modified
+version</font></li>
+</ul>
+
+<ul>
+<li>
+<font size=+2>Run the testsuite</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<li>
+<font size=+2>Compare results with validation run</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p>Stop if the results are not equal.
+<br>&nbsp;
+<li>
+<font size=+2>Shutdown the system</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt></ul>
+
+<li>
+<font size=+2>Re-Exchange the sge_qmaster binary with the one from the
+Standard Version</font></li>
+</ul>
+
+<h1>
+<font size=+2>Check 2: Scheduler compatibility</font></h1>
+
+<ul><tt>(If you are absolutely sure that your modification did not change
+sge_schedd you may skip this step, but be aware that changes in some libraries,
+like for instance the GDI library, may also modify sge_schedd. Carry out
+the test if you are not 100% sure.)</tt></ul>
+
+<ul>
+<li>
+<font size=+2>Exchange the sge_schedd binary with the one from your modified
+version</font></li>
+</ul>
+
+<ul>
+<li>
+<font size=+2>Run the testsuite</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<li>
+<font size=+2>Compare results with validation run</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Stop if the results are not equal.
+<br>&nbsp;
+<li>
+<font size=+2>Shutdown the system</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt></ul>
+
+<li>
+<font size=+2>Re-Exchange the sge_schedd binary with the one from the Standard
+Version</font></li>
+</ul>
+
+<h1>
+<font size=+2>Check 3: Commd compatibility</font></h1>
+
+<blockquote><tt>(If you are absolutely sure that your modification did
+not change sge_commd you may skip this step, but be aware that changes
+in some libraries, like for instance the zlib, may also modify the sge_commd.
+Carry out the test if you are not 100% sure.)</tt></blockquote>
+
+<ul>
+<li>
+<font size=+2>Exchange all sge_commd binaries with the ones from your modified
+version</font></li>
+</ul>
+
+<ul>
+<li>
+<font size=+2>Run the testsuite</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<li>
+<font size=+2>Compare results with validation run</font></li>
+
+<ul>&nbsp;</ul>
+Stop if the results are not equal.
+<br>&nbsp;
+<li>
+<font size=+2>Shutdown the system</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt></ul>
+
+<li>
+<font size=+2>Re-Exchange the sge_commd binaries with the ones from the
+Standard Version</font></li>
+</ul>
+
+<h1>
+<font size=+2>Check 4: Client compatibility</font></h1>
+
+<blockquote><font size=+2>&nbsp;</font><tt>(If you are absolutely sure
+that your modification did not change any Grid Engine client binary you
+may skip this step, but be aware that changes in some libraries, like the
+GDI library,&nbsp; may also modify the client binaries. Carry out the test
+if you are not 100% sure.)</tt></blockquote>
+
+<ul>
+<li>
+<font size=+2>Exchange all client binaries with the new ones</font></li>
+</ul>
+
+<ul>
+<li>
+<font size=+2>Run the testsuite</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<li>
+<font size=+2>Compare results with validation run</font></li>
+
+<ul>&nbsp;</ul>
+Stop if the results are not equal.</ul>
+
+<h1>
+<font size=+2>Check 5: General compatibility</font></h1>
+
+<ul>
+<li>
+<font size=+2>Shutdown the system</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul>expect check.exp kill</ul>
+
+<li>
+<font size=+2>Set up a testsuite cluster with more than one host using
+the modified version</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>The <a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/testsuite/testsuite.html">Testsuite</a>
+documentation is describing how this can be done. Use the <b><i>modified
+version</i></b>.
+<br>&nbsp;
+<ul>&nbsp;expect check.exp install</ul>
+
+<p><br>You will be asked on which hosts you want to install a testsuite
+cluster and you will have to use at least 2 for the purpose of this test.
+<br>&nbsp;
+<li>
+<font size=+2>Run the testsuite on your modified version</font></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Run the testsuite test with runlevel&nbsp; 1:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<li>
+<font size=+2>Compare results with validation run</font></li>
+
+<ul>&nbsp;</ul>
+Stop if the results are not equal.
+<ul>&nbsp;</ul>
+</ul>
+
+</body>
+</html>

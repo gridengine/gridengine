@@ -1,0 +1,106 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2001/07/18 11:04:50 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2001/07/18 11:04:50 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.SH NAME
+xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
+.\"
+.\"
+.SH SYNOPSIS
+.B xxqs_name_sxx_shepherd
+.\"
+.\"
+.SH DESCRIPTION
+.PP
+.I xxqs_name_sxx_shepherd
+provides the parent process functionality for a single xxQS_NAMExx job.
+The parent functionality is necessary on UNIX systems to retrieve
+resource usage information (see
+.M getrusage 2 )
+after a job has finished. In addition, the
+.I xxqs_name_sxx_shepherd
+forwards signals to the job, such as the signals for suspension,
+enabling, termination and the xxQS_NAMExx checkpointing signal (see
+.M xxqs_name_sxx_ckpt 1
+for details).
+.PP
+The
+.I xxqs_name_sxx_shepherd
+receives information about the job to start from the
+.M xxqs_name_sxx_execd 8 .
+During the execution of the job it actually starts up to 3 child
+processes. First a prolog script if this feature is enabled by
+the \fBprolog\fP parameter in the cluster configuration
+(see
+.M xxqs_name_sxx_conf 5 ).
+Second the job itself and third an epilog script if requested by
+the \fBepilog\fP parameter in the cluster configuration. The prolog
+and epilog scripts are to be provided by the xxQS_NAMExx administration
+and are intended for site specific actions to be taken prior and
+after execution of the actual user job. See
+.M prolog 5
+or
+.M epilog 5
+for detailed information.
+.PP
+After the job has finished and the epilog script is processed,
+.I xxqs_name_sxx_shepherd
+retrieves resource usage statistics about
+the job, places them in a job specific subdirectory of the
+spool directory of
+.M xxqs_name_sxx_execd 8
+for reporting through
+.M xxqs_name_sxx_execd 8
+and finishes.
+.\"
+.\"
+.SH RESTRICTIONS
+.I xxqs_name_sxx_shepherd
+should not be invoked manually, but only by
+.M xxqs_name_sxx_execd 8 .
+.\"
+.\"
+.SH FILES
+.nf
+.ta \w'<execd_spool>/job_dir/<job_id>     'u
+\fI<execd_spool>/job_dir/<job_id>\fR	job specific directory
+.fi
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx_conf 5 ,
+.M xxqs_name_sxx_execd 8 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

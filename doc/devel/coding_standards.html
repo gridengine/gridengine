@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Linux)">
+	<META NAME="AUTHOR" CONTENT="Ernst Bablick">
+	<META NAME="CREATED" CONTENT="20010712;10065900">
+	<META NAME="CHANGEDBY" CONTENT="Ernst Bablick">
+	<META NAME="CHANGED" CONTENT="20010713;13285500">
+	<STYLE>
+	<!--
+		@page { margin-left: 1.25in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+		H3 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif }
+		H2 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif; font-size: 14pt; font-style: italic }
+		TD P { margin-bottom: 0.08in }
+		P { margin-bottom: 0.08in }
+	-->
+	</STYLE>
+</HEAD>
+<BODY>
+<H2>Formating the Source Code</H2>
+<P STYLE="margin-bottom: 0in">We are in the beginning to unify the
+structure and the lookout of our source code. This document describes
+some guideline which should be fulfilled by people modifying source
+code and related files concerning Grid Engine.</P>
+<P STYLE="margin-bottom: 0in">New code which will be written in
+future shall stick to the rules described here. Whenever old code
+will be modified it should also meet these guidelines. 
+</P>
+<P STYLE="margin-bottom: 0in">We intend to use the indent tool in future 
+to format C source code. Unfortunately this is not possible now, because to
+many code areas would look seedy afterwards. 
+</P>
+<H3>General</H3>
+<P>To prevent code sections to be formated, place a disabling control
+comment 
+</P>
+<PRE STYLE="margin-bottom: 0.2in">/* *INDENT-OFF* */</PRE><P STYLE="font-weight: medium">
+on a line by itself just before that section. The enabling control
+comment is 
+</P>
+<PRE STYLE="margin-bottom: 0.2in">/* *INDENT-ON* */</PRE><P STYLE="font-weight: medium">
+The script which will be used in future to automatically change the
+lookout can be found here:</P>
+<PRE STYLE="margin-bottom: 0.2in">gridengine/source/scripts/format.sh</PRE><P STYLE="font-weight: medium">
+There you will see, that we do not like tabs inside of our code and
+lines should be wrapped after the 80th character at the latest. Lines
+will be indented three spaces in each new block. More details follow
+below.</P>
+<H3>Comments</H3>
+<P>Source code documentation is essential in an increasing group of
+developers producing software efficiently which will be used in
+business area. Comments within the source code are one way to create
+a comprehensive documentation. This insures that the documentation is
+on the right place and makes it easier for the software engineer to
+maintain it.</P>
+<P>Inside Grid Engine we use line comments to describe certain
+attributes, block comments to explain bigger code sections and
+Autodoc comments (ADOC) to declare modules, functions and other
+important parts of the software.</P>
+<P>Line comments look like this</P>
+<PRE STYLE="margin-bottom: 0.2in">lList ptf_job;  /* JL_Type */ </PRE><P>
+They are at the end of a line after the code or in the line before it
+just like block comments.</P>
+<PRE>/*
+ * Stuff implementing fast access to the next job
+ * that is to be dispatched accordingly to the
+ * job sorting policy
+ */
+if (!so_pgr) {
+   so_pgr = lParseSor ...</PRE><P>
+ADOC comments can be extracted from the source code by the adoc tool.
+The adoc tool identifies the different section inside a ADOC comment
+and creates a texinfo file which can be converted to man/html pages,
+pdf, GNU Info ...</P>
+<PRE>/****** src/sge_ls_get_pid() *********************************
+*
+*  NAME
+*     sge_ls_get_pid -- get pid of a loadsensor
+*
+*  SYNOPSIS
+*     static pid_t sge_ls_get_pid(lListElem *this_ls)
+*
+*  FUNCTION
+*     Returns the pid which is stored in an CULL element of
+*     the type LS_Type. If the corresponding loadsensor was
+*     not started until now then -1 will be returned.
+*
+*  INPUTS
+*     this_ls - pointer to a CULL element of type LS_Type
+*
+*  RESULT
+*     returns pid or -1
+*
+*************************************************************/</PRE><P>
+This is a typical ADOC-comment describing a function. Source code
+inside ADOC comments should look like the real source code.
+Information about using ADOC can be found <A HREF="http://wwwsun.com/">here<SPAN STYLE="text-decoration: none">.</SPAN></A></P>
+<H3>Statements</H3>
+<P>Functions should have following format.</P>
+<P><BR><BR>
+</P>
+<PRE>static int qmod_queue_weakclean(lListElem *qep, u_long32 force, 
+                                lList **answer, char *user, 
+                                char *host, int isoperator, int isowner)
+{
+   ...
+}</PRE><P>
+It starts with the qualifier and return type. There is no space
+between the function name and the open parentheses. If the arguments
+do not fit into one line split the line and continue the arguments
+under the first one of the previous line. The brace in function
+definitions, has to be in column zero again. Statements inside the
+function body should be indented with 3 spaces like Statements inside
+a compound statement. In contrast to functions the opening left brace
+of a compound statement should be at the end of the line beginning
+the compound statement and the closing right brace should be alone on
+a line. Some examples:</P>
+<P><BR><BR>
+</P>
+<PRE>for (i = 0; i &lt; MAX; i++) {
+   ...
+}
+
+
+while (1) {
+   ...
+}
+
+
+do {
+   ...
+} while (!found);
+
+
+if (i == 1) {
+   ...
+} else if (i == -5) {
+   ...
+} else {
+   only_one_call();
+}     
+
+
+switch (i) {
+case 1,2:
+   ...
+   break;
+case 3:
+   ...
+   break;
+default:
+   ...
+}
+
+struct name {
+   char *first;
+}</PRE><P>
+<BR><BR>
+</P>
+<P>There is one space between the keyword and the open parentheses.
+Braces are in the same line like the keywords. They should be used
+even if it is not necessary. Function calls do not contain spaces
+between the function name and the open parentheses. 
+</P>
+<H3>Declarations</H3>
+<P>The format of a function prototype should be equivalent with the
+function definition. 
+</P>
+<P><BR><BR>
+</P>
+<PRE>static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds)
+{
+   int i, k, l;
+   int j = -1; 
+   int name[3] = { LS_out, LS_in, LS_err };
+   FILE *file;
+   ...</PRE><P>
+<BR><BR>
+</P>
+<P STYLE="margin-bottom: 0in">Multiple variables are declared in one
+line. Each pre initialized variable has its own line. The asterisk of
+a pointer declaration is part of the variable name. The space has to
+be put in between the type name an the asterisk. 
+</P>
+<H3>Clean use of C Constructs</H3>
+<P>The existing source code inspired us to summarize some advices:</P>
+<UL>
+	<LI><P>Huge parameter lists or function bodies are an indicator,
+	that it is time to split a function into some smaller functions
+	which are easier to read and understand.</P>
+	<LI><P>Try to avoid nested expressions where multiple assignments or
+	the ?-operators are envolved.</P>
+	<LI><P>Use #if 0 to disable code sections and add a short comment
+	why this code was disabled. 
+	</P>
+</UL>
+<H3>Naming 
+</H3>
+<P>Names for Variables, Functions, Macros etc. should be composed of
+words separated by underscores. Upper case letters are reserved for
+macros, enum constants and for name prefixes that follow a uniform
+convention. For variable names we suggest simply to adopt the 
+unwritten naming conventions used different source code regions.</P>
+</BODY>
+</HTML>

@@ -1,0 +1,256 @@
+Implementierungsplan commd
+--------------------------
+
+Der commd soll (wenn moeglich) innerhalb eines Prozesses laufen. Um
+nebenlaeufige Kommunikationen durchzufuehren muss er sich den Stand
+jeder Kommunikation merken (Message-Queue) und wenn moeglich mit der
+Kommunikation fortfahren. Im Falle von asynchroner Kommunikation muss
+er sich den Status der Kommunikation ueber das Ende der
+Kommunikationsphase hinaus merken. Der kommunizierende Prozess kann zu
+einem spaeteren Zeitpunkt abfragen, ob die Kommunikation korrekt
+beendet wurde. Das Abraeumen der Stati muss gewaehrleistet werden.
+
+Um Resourcen zu sparen soll nur ein commd pro Host laufen.
+
+Zwischen den commds ist eine TCP-Verbindung zu verwenden (Firewalls
+haben mit UDP evtl. Probleme). Darum wird als erster Ansatz auf allen
+Kommunikationswegen TCP verwendet (vereinfacht eine erste
+Implementierung).
+
+Der commd hat moeglichst zu jedem Zeitpunkt aufnahmefaehig zu sein.
+D.h. er darf nicht in Kommunikationen stecken bleiben. Das Schreiben
+(Lesen) auf Filedescriptoren darf deshalb nicht blockierend sein. Kann
+er auf einem Filedescriptor nicht mehr schreiben (lesen), weil der
+Empfaenger (Sender) nicht bereit ist, muss er sich den Stand des
+Schreib(Lese)vorganges merken und sobald der Empfanger (Sender) wieder
+bereit ist den Schreib(Lese)vorgang fortsetzen.
+
+Fuer jede Message benoetigt der commd eine Informationsstruktur, um
+sich Inhalt und Status der Uebertragung zu merken.
+
+Ueber jeden kommunizierenden Prozess ob lokal, remote oder
+remote-commd benoetigt der commd Informationen wie z.B.
+Host/Portnummer.
+
+
+DATENTYPEN
+==========
+
+COMMUNICATION-PROCESS (commproc)
+--------------------------------
+LOCAL            (local/remote client or remote commd)
+NAME             ("commd" or clientname)
+HOST             (if not local set to hostname of remote host)
+PORT             (communication port of partner; needed for security) 
+
+
+MESSAGE-STRUCT (message)
+------------------------
+FROM   (ptr to COMMUNICATION-PROCESS)
+TO     (         "                  )
+FLAGS  (SYNC/ASYNC, STATUS)
+
+BUFSTART 
+BUFSND
+BUFDATA
+BUFPROGRESS (zeigt auf naechstes zu empfangene/sendende Byte)
+
+FD    (Filedescriptor fuer Lese/Schreibvorgang)
+
+Die BUF...elememte beschreiben den Schreib/Lesepuffer, so wie er
+uebertragen wird. Es soll kein Kopieren der Daten innerhalb des commd
+durchgefuehrt werden (Performance). Darum wird beim Einlesen Platz vor
+den eigentlichen Daten fuer Headerinformationen frei gehalten.
+BUFSTART bezeichnet den Anfang des gesamten Speicherbereichs. BUFSND
+zeigt auf den Bereich, der uebertragen wird. BUFDATA zeigt auf die
+Nutzdaten. BUFPROGRESS zeigt auf das naechste zu lesende/schreibende
+Byte innerhalb des Puffers.
+
+
+BUFFER
+------
+
+|-------------------------------|   <- BUFSTART
+|				|
+| Leerbytes			|
+|				|
+|-------------------------------|   <-  BUFSND
+| Laenge der Uebertragungsdaten |
+| Sendende Komponente		|
+| Sendender Host		|
+| Empfangskomponente		|
+| Zielhost			|
+|-------------------------------|   <-  BUFDATA
+|                               |
+|				|
+|    D A T E N			|
+|				|
+|				|
+|-------------------------------|
+
+Die Leerbytes am Anfang ergeben sich durch die variable Laenge der
+Komponenten/Hostnamen.
+
+
+Der commd verwaltet:
+
+ - eine Liste von Messages (message)
+ - eine Liste von angemeldeten Kommunikationspartnern (commproc)
+
+
+Externes Interface (Ablaeufe)
+=============================
+
+Der commd befindet sich im Ruhezustand in einem blockierenden
+Systemaufruf, den er erst verlaesst, wenn eine weitere Aktion noetig
+wird. D.h. wenn die Moeglichkeit besteht eine Verbindung zu einem
+Empfaenger einer Message aufzubauen, ein Buffer weiter
+uebertragen/empfangen werden kann oder eine Netzwerkverbindung zu ihm
+aufgebaut wird. Netzwerkverbindungen zum commd werden in folgenden
+Faellen aufgebaut:
+
+Anmeldung eines Kommunikationsclienten:
+
+ - evtl. security check
+ - Eintrag in die commproc-liste
+ 
+
+Abmeldung eines Kommunikationsclienten:
+
+ - Ueberpruefen ob gleicher Port und Host wie bei Anmeldung
+ - Loeschen aus der commproc-liste
+
+Synchroner Send eines Kommunikationsclienten:
+
+ - Ueberpruefen ob gleicher Port und Host wie bei Anmeldung
+ - Empfang des Messagebuffers (local client wartet in read)
+ - Fuellen des Bufferheaders
+ - Setzen des Messagestatus auf S_RDY_4_SND
+ - Eintrag in die Messageliste
+ - Uebertragung zum remote commd *
+ - Warten auf ACK (kommt von Zielprozess ueber den remote commd)
+ - Senden von ACK zum local client
+ - Empfang von AACK vom local client
+ - Senden von AACK (noetig, wg. moeglichem Timeout des localen clients)
+
+ - Abbau der Verbindung
+
+
+ * Die Uebertragung findet u.U. nicht am Stueck statt. Siehe Abschnitt
+   Multiplexing
+
+ Der send kann zeitbegrenzt sein. Tritt ein timeout ein bricht der
+ local client die Verbindung ab. Der commd sendet dem remote commd eine
+ NACK-Meldung. ACKs werden mit NACKs beantwortet. (Alle ACKs auf nicht
+ vorhandene Messages werden mit NACK beantwortet).
+
+Asynchroner Send eines Kommunikationsclienten:
+
+ - Ueberpruefen ob gleicher Port und Host wie bei Anmeldung
+ - Empfang des Messagebuffers
+ - Abbau der Verbindung zum Kommunikationsclienten
+ - Fuellen des Bufferheaders
+ - Setzen des Messagestatus auf S_RDY_4_SND
+ - Eintrag in die Messageliste
+ - Uebertragung zum remote commd *
+ - Warten auf ACK (kommt von Zielprozess ueber den remote commd)
+ - Senden von AACK (noetig, wg. moeglichem Timeout des localen clients)
+ - Wegwerfen des Buffers; Message wird bis zur Anfrage des localen
+   clients aufgehoben
+
+Anfrage, ob lokaler Send gelungen ist:
+
+ - Ueberpruefen ob gleicher Port und Host wie bei Anmeldung
+ - Antwort an localen client
+ - Bei positiver Antwort wird die Message weggeworfen
+
+
+Receive:
+
+ - Ueberpruefen ob gleicher Port und Host wie bei Anmeldung
+ - Senden des Messagebuffers (wenn Message noch nicht vorhanden ist
+   blockiert lokaler client in read)
+ - Empfangen des ACKs vom lokalen client (localer client wartet im
+   read auf AACK)
+ - Senden des ACKs zum remote commd und dessen client
+ - Empfang von AACK vom remote commd
+ - Senden AACK zum lokalen client
+ - Wegwerfen der Message
+
+ Das Blockieren des Clients kann zeitbegrenzt sein. Der Client bricht
+ nach Ablauf der vorgegebenen Zeit die Verbindung zum commd ab. Der
+ commd registriert das und behaelt die Message bei sich. Es wird kein
+ ACK zum remote commd gesandt.
+
+
+Multiplexing
+============
+
+Der commd darf sich nie exclusiv einer Kommunikation widmen. D.h. wenn
+die Kommunikation keinen Fortschritt mehr macht, muss er sich den
+Status der Kommunikation merken um zu einem spaeteren Zeitpunkt
+weitermachen zu koennen. Dann hat er sich anderen moeglichen
+Kommunikationen zuzuwenden.
+
+
+client --->                         ----> client
+
+client --->    COMMD         COMMD  <---- client
+
+client <---                         <---- client
+
+
+Um diese Aufgabe zu erfuellen muss jeder commd eine Liste von Arbeiten
+haben, die Ihm sagen was alles zu tun ist. Diese Liste ist implizit
+mit den vorhandenen Messages gegeben. Der Messagestatus und der
+BUFPROGRESS-Zeiger geben Auskunft darueber, was mit einer Message
+alles zu tun ist.
+
+
+SICHERHEITSASPEKTE
+==================
+
+Die Komponenten von CODINE muessen sicherstellen koennen:
+
+- dass sie nur von Ihresgleichen kontaktiert werden 
+
+- dass nur von vom Administrator vorgegebenen Rechnern, bestimmte
+  Aktionen durchgefuehrt werden koennen
+
+Dazu muss jede CODINE-Komponente in der Lage sein zu verifizieren, ob
+sein Kommunikationspartner das ist, was er vorgibt.
+
+Moeglichkeiten, die Unix bietet:
+
+- Reservierte Ports: Nur root kann die Portnummern < 1024 belegen.
+  D.h. wenn ein Kommunikationspartner eine Portnummer < 1024 besitzt
+  kann man (sofern das UNIX-System der Gegenstelle nicht korrumpiert
+  ist) davon ausgehen, dass es sich um einen unter root gestarteten
+  Prozess handelt.
+
+- getpeername() Aufruf: Mit diesem Aufruf bekommt man die Adresse des
+  Partners einer Verbindung.
+
+
+Moeglichkeiten in CODINE Einzudringen:
+
+1. Einem Rechner wird eine Netzwerkadresse zugewiesen, die einem CODINE
+   trusted host gehoert. Es koennen Codine-Jobs unter beliebiger
+   Kennung (auch root) submitted werden (min_uid kann zumindest das
+   root-Problem beheben). Dies kann allerdings nur von Rechnern
+   erfolgen, die Netzwerkmaessig so angebunden sind, dass die
+   IP-Packete trotz falscher IP-Adresse zum CODINE-Cluster und zurueck
+   geroutet werden.
+
+2. Auf einem trustet Host startet ein unautorisierter Benutzer ein
+   Programm, das sich als CODINE-Komponente ausgibt.
+
+Punkt 2 kann durch Reservierte Ports verhindert werden. Punkt 1 kann
+nur duch ein Schluesselverfahren verhindert werden. Es muesste der
+CODINE-Komponente ein Schluessel uebergeben werden, mit dem es sich
+ausweist. Ein Public Key Verfahren koennte zum Einsatz kommen.
+
+Bei der Erstimplementierung sollen nur reservierte Ports benutzt
+werden. Im nachsten Schritt koennten sich Codine-Komponenten durch
+einen eincodierten Schluessel, der mit gesendeten Daten verknuepft
+wird authorisieren. 

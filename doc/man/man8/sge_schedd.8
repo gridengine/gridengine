@@ -1,0 +1,159 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2001/07/18 11:04:50 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2001/07/18 11:04:50 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.SH NAME
+xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
+.\"
+.\"
+.SH SYNOPSIS
+.B xxqs_name_sxx_schedd
+[
+.B \-help
+] [
+.B \-k
+] [
+.B \-salg
+]
+.\"
+.\"
+.SH DESCRIPTION
+.I xxqs_name_sxx_schedd
+computes the scheduling decision in a xxQS_NAMExx cluster. The information
+necessary for the decision is retrieved from
+.M xxqs_name_sxx_qmaster 8
+via the xxQS_NAMExx Database Interface (GDI - see
+.M xxqs_name_sxx_gdi 3
+for details). After applying the scheduling algorithm, 
+.I xxqs_name_sxx_schedd
+communicates the scheduling decision back to
+.M xxqs_name_sxx_qmaster 8
+again via the xxQS_NAMExx GDI. In order to trigger a
+.I xxqs_name_sxx_schedd
+run,
+.M xxqs_name_sxx_qmaster 8
+samples changes in the cluster status and notifies
+.I xxqs_name_sxx_schedd
+in periodical time intervals.
+.br
+Together with
+.I xxqs_name_sxx_schedd
+a
+.M xxqs_name_sxx_commd 8
+is brought up automatically on the same machine (if not
+already present).
+.PP
+By using the \fI\-tsm\fP option of the
+.M qconf 1
+command, 
+.I xxqs_name_sxx_schedd
+can be forced to print trace messages of its next scheduling run to the
+file \fI<xxqs_name_sxx_root>/<cell>/common/schedd_runlog\fP. The messages indicate
+the reasons for jobs and queues not being selected in that run
+.\"
+.\"
+.SH OPTIONS
+.\"
+.IP "\fB\-help\fP"
+Prints  a listing of all options.
+.\"
+.IP "\fB\-k\fP"
+Initiates a controlled shutdown of a running
+.I xxqs_name_sxx_schedd
+on the same host.
+.\"
+.IP "\fB\-salg\fP"
+Display a list of feasible scheduling algorithms to
+choose from via the scheduler configuration (see
+.M sched_conf 5 ).
+.\"
+.\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
+cell
+.I xxqs_name_sxx_schedd
+uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment 
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBCOMMD_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_commd 8
+is expected to listen for communication requests.
+Most installations will use a services map entry instead
+to define that port.
+.\"
+.\"
+.SH FILES
+.nf
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/spool/qmaster/schedd\fP
+	xxqs_name_sxx_schedd spool directory
+\fI<xxqs_name_sxx_root>/<cell>/common/sched_runlog\fP
+	xxqs_name_sxx_schedd trace information
+\fI<xxqs_name_sxx_root>/<cell>/common/sched_configuration\fP
+	xxqs_name_sxx_schedd configuration
+.fi
+See
+.M sched_conf 5
+for details on the scheduler configuration file.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx_gdi 3 ,
+.M sched_conf 5 ,
+.M xxqs_name_sxx_commd 8 ,
+.M xxqs_name_sxx_qmaster 8 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -1,0 +1,91 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: share_tree.5,v $     Last Update: $Date: 2001/07/18 11:04:50 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH SHARE_TREE 5 "$Date: 2001/07/18 11:04:50 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.\"
+.SH NAME
+share_tree \- xxQS_NAME_EExx share tree file format
+.\"
+.SH DESCRIPTION
+The share tree object is only available in case of a xxQS_NAME_EExx system. xxQS_NAME_Cxx has
+no share tree object.
+.PP
+The share tree 
+defines the long-term resource entitlements of users/projects and of a 
+hierarchy of arbitrary groups thereof.
+.PP
+The current share tree can be displayed via the
+.M qconf 1
+\fB\-sstree\fP option. The 
+output follows the \fIshare_tree\fP format description. A share tree can be
+created and an existing can be modified via the \fB\-astree\fP and
+\fB\-mstree\fP options to 
+.M qconf 1 .
+Individual share tree nodes can be created, modified, deleted, or shown
+via the \fB\-astnode\fP, \fB\-dstnode\fP, \fB\-mstnode\fP, and
+\fB\-sstnode\fP options to
+.M qconf 1 .
+.\"
+.\"
+.SH FORMAT
+.\"
+The format of a share tree file is defined as follows:
+.IP "\(bu" 3n
+A new node starts with the attribute \fBid\fP, and equal sign and the
+numeric identification number of the node. Further attributes of that
+node follow until another \fBid\fP-keyword is encountered.
+.IP "\(bu" 3n
+The attribute \fBchildnodes\fP contains a comma separated list of child
+nodes to this node.
+.IP "\(bu" 3n
+The parameter \fBname\fP refers to an arbitrary name for the node or to a
+corresponding user (see
+.M user 5 )
+or project (see
+.M project 5 )
+if the
+node is a leaf node of the share tree. The name for the root node of
+the tree is "Root" by convention.
+.IP "\(bu" 3n
+The parameter \fBshares\fP defines the share of the node among the nodes
+with the same parent node.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M qconf 1 ,
+.M project 5 ,
+.M user 5 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -1,0 +1,419 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: list_intro.3,v $     Last Update: $Date: 2001/07/18 11:04:50 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB      \" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T    \" switch to typewriter font
+.ft CW      \" probably want CW if you don't have TA font
+..
+.\"
+.de TY      \" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M    \" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH LIST_INTRO 3 "$Date: 2001/07/18 11:04:50 $" "xxRELxx" "xxQS_NAMExx List Library"
+.\"
+.SH NAME
+xxQS_NAMExx List Library \- a library providing generic list functionality and
+database like list management
+.\"
+.\"
+.SH DESCRIPTION
+The xxQS_NAMExx List Library provides the functionality of a generic list. This
+means the list functions are applicable to every list based on a number of
+certain basic types. List definitions are extensible on a per program basis
+as long as the old fields remain in the list definition.
+.\"
+.\"
+.SH "LIBRARY FUNCTIONS"
+The list library provides the following functions. These are explained in
+detail in the stated man pages.
+.\"
+.\"
+.SS "\fBLIST FUNCTIONS\fP"
+.TP
+.M lCreateList 3
+create a generic list
+.\"
+.TP
+.M lCreateElemList 3
+create a generic list with a certain number of empty elements
+.\"
+.TP
+.M lFreeList 3
+free the memory allocated for a generic list and all its sub-lists
+.\"
+.TP
+.M lCopyList 3
+copy a generic list with all its sub-lists and strings
+.\"
+.TP
+.M lAddList 3
+concatenate two generic lists
+.\"
+.TP
+.M lSortList 3
+sort a generic list 
+.\"
+.TP
+.M lDumpList 3
+dump a generic list to file
+.\"
+.TP
+.M lUndumpList 3
+undump a generic list with all its data from file
+.\"
+.TP
+.M lWriteList 3
+write a generic list to stdout
+.\"
+.TP
+.M lGetListName 3
+return the name of a generic list
+.\"
+.TP
+.M lGetListDescr 3
+return a pointer to the descriptor of a generic list
+.\"
+.TP
+.M lGetNumberOfElem 3
+return the number of list elements contained in a generic list
+.\"
+.TP
+.M lGetNumberOfRemainingElem 3
+return the number of list elements contained in the remainder of a
+generic list after a specified list element
+.\"
+.\"
+.SS "\fBLIST ELEMENT FUNCTIONS\fP"
+.TP
+.M lCreateElem 3
+create a generic list element
+.\"
+.TP
+.M lFreeElem 3
+frees the memory allocated for a generic list element, its strings and its
+sub-lists
+.\"
+.TP
+.M lCopyElem 3
+duplicate a list element with all its sub-lists and strings
+.\"
+.TP
+.M lAppendElem 3
+append a list element to an existing list
+.\"
+.TP
+.M lInsertElem 3
+insert a list element into an existing list after a specified element
+.\"
+.TP
+.M lDechainElem 3
+dechain a list element from a list, the dechained element is not freed
+.\"
+.TP
+.M lFirst 3
+get the first list element 
+.\"
+.TP
+.M lLast 3
+get the last list element
+.\"
+.TP
+.M lNext 3
+get the successor of the list element 
+.\"
+.TP
+.M lPrev 3
+get the predecessor of the list element 
+.\"
+.TP
+.M lFindFirst 3
+find the first list element matching specified conditions
+.\"
+.TP
+.M lFindLast 3
+find the last list element matching specified conditions
+.\"
+.TP
+.M lFindNext 3
+find the next list element starting at a certain list element matching
+specified conditions
+.\"
+.TP
+.M lFindPrev 3
+find the previous list element starting at a certain list element matching
+specified conditions
+.\"
+.TP
+.M lDumpElem 3
+dump a list element to file
+.\"
+.TP
+.M lUndumpElem 3
+undump a list element from file into memory
+.\"
+.TP
+.M lWriteElem 3
+write a list element to stdout
+.\"
+.TP
+.M lGetPosViaElem 3
+get the field position of a list element field with name 'nm' 
+.\"
+.\"
+.SS "\fBFIELD ACCESS FUNCTIONS\fP"
+.TP
+.M lGetInt 3
+.TP
+.M lGetUlong 3
+.TP
+.M lGetString 3
+.TP
+.M lGetList 3
+.TP
+.M lGetFloat 3
+.TP
+.M lGetDouble 3
+.TP
+.M lGetChar 3
+.TP
+.M lGetLong 3 
+.IP " "
+get the value of the specified type from a list element field;
+the element and the field name are delivered as arguments
+.\"
+.TP
+.M lSetInt 3
+.TP
+.M lSetUlong 3
+.TP
+.M lSetString 3
+.TP
+.M lSetList 3
+.TP
+.M lSetFloat 3
+.TP
+.M lSetDouble 3
+.TP
+.M lSetChar 3
+.TP
+.M lSetLong 3
+.IP " "
+set the value of the specified type in a corresponding list element field;
+the element, the field name and a new value are delivered as arguments
+.TP
+.M lGetPosInt 3
+.TP
+.M lGetPosUlong 3
+.TP
+.M lGetPosString 3
+.TP
+.M lGetPosList 3
+.TP
+.M lGetPosFloat 3
+.TP
+.M lGetPosDouble 3
+.TP
+.M lGetPosChar 3
+.TP
+.M lGetPosLong 3
+.IP " "
+get the value of the specified type in a corresponding list element field;
+the element and the field position are delivered as arguments
+.\"
+.TP
+.M lSetPosInt 3
+.TP
+.M lSetPosUlong 3
+.TP
+.M lSetPosString 3
+.TP
+.M lSetPosList 3
+.TP
+.M lSetPosFloat 3
+.TP
+.M lSetPosDouble 3
+.TP
+.M lSetPosChar 3
+.TP
+.M lSetPosLong 3
+.IP " "
+set the value of the specified type in a corresponding list element field;
+the element, the field position and the new value are delivered as arguments
+.\"
+.\"
+.SS "\fBLIST DESCRIPTOR FUNCTIONS\fP"
+.TP
+.M lInit 3
+initialize the name to string conversion
+.TP
+.M lNm2Str 3
+convert an int value specifying a field name to its corresponding name string
+.\"
+.TP
+.M _lNm2Str 3
+convert an int value specifying a field name to its corresponding name string
+using a specified name space
+.\"
+.TP
+.M lStr2Nm 3
+convert a field name to its corresponding field id
+.\"
+.TP
+.M _lStr2Nm 3
+convert a field name to its corresponding field id
+using a specified name space
+.\"
+.TP
+.M lCountDescr 3
+get the number of fields of a descriptor 
+.\"
+.TP
+.M lGetPosInDescr 3
+get the position of the field named 'nm' from the descriptor
+.\"
+.TP
+.M lDumpDescr 3
+dump a list descriptor to a file
+.\"
+.TP
+.M lUndumpDescr 3
+undump a list descriptor from a file to memory
+.\"
+.TP
+.M lWriteDescr 3
+write a descriptor to stdout
+.\"
+.\"
+.SS "\fBLIST DATABASE FUNCTIONS\fP"
+.TP
+.M lSelect 3
+select returns a list of elements that match the specified conditions. 
+.\"
+.TP
+.M lSelectDestroy 3
+select reduces a list to those elements matching the specified conditions. 
+.\"
+.TP
+.M lSplit 3
+splits a list into two parts. One part contains all elements fulfilling the 
+specified condition the other part contains the elements not fulfilling the 
+condition. 
+.\"
+.TP
+.M lJoinSublist 3
+join a specified list with one of its sub-lists; one can specify conditions
+for the list and the sub-list.
+The joined list is returned and the original list is unchanged.
+.\"
+.TP
+.M lJoin 3
+join two lists which fulfill the specified conditions to a new list that
+contains the enumerated fields.
+The joined list is returned and the original lists are unaltered.
+.\"
+.TP
+.M lWhere 3
+build a lCondition data structure which is used as condition 
+for various functions as lSelect or lJoin
+.\"
+.TP
+.M _lWhere 3
+build a lCondition data structure which is used as condition 
+for various functions as lSelect or lJoin
+.\"
+.TP
+.M lOrWhere 3
+build a lCondition data structure composed of two conditions
+connected by logical \fBor\fP
+.\"
+.TP
+.M lAndWhere 3
+build a lCondition data structure composed of two conditions
+connected by logical \fBand\fP
+.\"
+.TP
+.M lFreeWhere 3
+free a lCondition data structure
+.\"
+.TP
+.M lWriteWhere 3
+write a lCondition data structure to stdout 
+.\"
+.TP
+.M lWhat 3
+build a lEnumeration data structure which is used to specify the fields that
+are contained in a newly created list element
+.\"
+.TP
+.M lFreeWhat 3
+free a lEnumeration data structure
+.\"
+.TP
+.M lWriteWhat 3
+write a lEnumeration data structure to stdout 
+.\"
+.TP
+.M lCountWhat 3
+count the number of fields in a lEnumeration data structure 
+.\"
+.\"
+.SS "\fBDATA STRUCTURES\fP"
+The following essential data structures are used by the various list library
+functions.
+.IP "lDescr *descriptor"
+The descriptor contains the information which fields (name, type) are contained
+in a list. 
+.\"
+.IP "lList  *list"
+The lList pointer specifies a list created by lCreateList or any of
+the other functions generating a list. Here the name of the list, a reference
+to the descriptor, the number of contained list elements and a reference to
+the first and last list element are stored. 
+.\"
+.IP "lListElem *list_element"
+The lListElem pointer is returned on creation of a new list element and
+contains the actual data.
+.\"
+.IP "lCondition *conditions"
+The lCondition pointer is a representation of logically connected compare
+operations. It serves to decide whether it should be operated on a special list element.
+.\"
+.IP "lEnumeration *field_enumerations"
+The lEnumeration pointer specifies which fields of a given list element
+shall be involved in a specified action. It is possible under certain 
+circumstances to specify all fields or no field at all.
+.\"
+.IP "lSortOrder *sorting_order"
+The lSortOrder pointer is used to specify sorting criteria for a generic
+list. It is possible to declare combined sorting keys.
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 .
+.\"
+.\"
+.SH COPYRIGHT
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

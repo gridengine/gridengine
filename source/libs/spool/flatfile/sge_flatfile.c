@@ -1340,10 +1340,7 @@ FF_DEBUG("read field name");
          if (*token != SPFT_WORD) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_ERROR,
-                                    MSG_PARSINGOBJECTEXPECTEDBUTGOT_DSSD,
-                                    __LINE__,
-                                    "<field name>",
-                                    token == 0 ? "<EOF>" : spool_text,
+                                    MSG_PARSINGOBJECTNOATTRIBUTE_D,
                                     spool_line);
             stop = true;
             continue;
@@ -1396,10 +1393,8 @@ FF_DEBUG("read name_value_delimiter");
                    *spool_text != instr->name_value_delimiter) {
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                           ANSWER_QUALITY_ERROR,
-                                          MSG_PARSINGOBJECTEXPECTEDBUTGOT_DSSD,
-                                          __LINE__,
+                                          MSG_PARSINGOBJECTNAMEVALUESEP_SD,
                                           output_delimiter(instr->name_value_delimiter),
-                                          token == 0 ? "<EOF>" : spool_text,
                                           spool_line);
                   stop = true;
                   continue;
@@ -1517,7 +1512,6 @@ FF_DEBUG("detected end_token");
                                            sge_dstring_get_string (&buffer),
                                            answer_list);
          }
-DPRINTF (("%s=%s\n", lNm2Str (nm), sge_dstring_get_string(&buffer)));
       }
       else { /* if (type == lListT) */
          lList *list;
@@ -1529,7 +1523,6 @@ FF_DEBUG("reading list");
              sge_strnullcasecmp(spool_text, NONE_STR) == 0) {
 FF_DEBUG("empty list");
             *token = spool_lex();
-DPRINTF (("%s=NONE\n", lNm2Str (nm)));
 
             if (instr->recursion_info.recursion_field == nm) {
                record_end = true;
@@ -1590,9 +1583,7 @@ DPRINTF (("%s=NONE\n", lNm2Str (nm)));
                   lListElem *rep = root;
 
                   if (rep == NULL) {
-DPRINTF (("Root is NULL; using *object\n"));
                      rep = *object;
-DPRINTF (("object=%x\nroot=%x\n", *object, rep));
                   }
             
                   if (instr->field_delimiter != '\0') {
@@ -1600,11 +1591,9 @@ DPRINTF (("object=%x\nroot=%x\n", *object, rep));
                          *spool_text != instr->field_delimiter) {
                         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_PARSINGOBJECTEXPECTEDBUTGOT_DSSD,
-                                       __LINE__,
-                                       output_delimiter(instr->field_delimiter),
-                                       token == 0 ? "<EOF>" : spool_text,
-                                       spool_line);
+                                       MSG_PARSINGOBJECTUNKNOWNTRAILER_DS,
+                                       spool_line,
+                                       token == 0 ? "<EOF>" : spool_text);
                         stop = true;
                         continue;
                      }
@@ -1678,11 +1667,9 @@ FF_DEBUG("skipping field delimiter");
                 *spool_text != instr->field_delimiter) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_PARSINGOBJECTEXPECTEDBUTGOT_DSSD,
-                                       __LINE__,
-                                       output_delimiter(instr->field_delimiter),
-                                       token == 0 ? "<EOF>" : spool_text,
-                                       spool_line);
+                                       MSG_PARSINGOBJECTUNKNOWNTRAILER_DS,
+                                       spool_line,
+                                       token == 0 ? "<EOF>" : spool_text);
                stop = true;
                continue;
             }
@@ -1872,11 +1859,9 @@ FF_DEBUG("detected end_token");
                 *spool_text != instr->record_delimiter) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_PARSINGLISTEXPECTEDBUTGOT_DSSD,
-                                       __LINE__,
-                                       output_delimiter(instr->record_delimiter),
-                                       *token == 0 ? "<EOF>" : spool_text,
-                                       spool_line);
+                                       MSG_PARSINGLISTBADRECORDSEP_DS,
+                                       spool_line,
+                                       output_delimiter(instr->record_delimiter));
                stop = true;
                continue;
             }
@@ -1891,11 +1876,9 @@ FF_DEBUG("detected record_delimiter");
             *spool_text != instr->record_start) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_ERROR,
-                                    MSG_PARSINGLISTEXPECTEDBUTGOT_DSSD,
-                                    __LINE__,
-                                    output_delimiter(instr->record_start),
-                                    token == 0 ? "<EOF>" : spool_text,
-                                    spool_line);
+                                    MSG_PARSINGLISTBADRECORDSTART_DS,
+                                    spool_line,
+                                    output_delimiter(instr->record_start));
             stop = true;
             continue;
          }
@@ -1925,11 +1908,9 @@ FF_DEBUG("detected record_start");
             *spool_text != instr->record_end) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_ERROR,
-                                    MSG_PARSINGLISTEXPECTEDBUTGOT_DSSD,
-                                    __LINE__,
-                                    output_delimiter(instr->record_end),
-                                    token == 0 ? "<EOF>" : spool_text,
-                                    spool_line);
+                                    MSG_PARSINGLISTBADRECORDEND_DS,
+                                    spool_line,
+                                    output_delimiter(instr->record_end));
             stop = true;
             continue;
          }

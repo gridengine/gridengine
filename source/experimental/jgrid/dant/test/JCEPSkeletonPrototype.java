@@ -59,20 +59,20 @@ public class JCEPSkeletonPrototype implements JCEP {
 		
 		byte[] serializedJob = baos.toByteArray ();
 */		
-		dout.writeByte (SUBMIT_JOB);
+//		dout.writeByte (SUBMIT_JOB);
 //		dout.writeInt (serializedJob.length);
 //		dout.write (serializedJob);
-		dout.writeUTF ("MyJob");
-		
-		synchronized (jobLock) {
-			try {
-				System.out.println ("Waiting for job");
-				jobLock.wait ();
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace ();
-			}
-		}
+//		dout.writeUTF ("MyJob");
+//		
+//		synchronized (jobLock) {
+//			try {
+//				System.out.println ("Waiting for job");
+//				jobLock.wait ();
+//			}
+//			catch (InterruptedException e) {
+//				e.printStackTrace ();
+//			}
+//		}
 		
 		dout.writeByte (SHUTDOWN);
 
@@ -106,32 +106,32 @@ public class JCEPSkeletonPrototype implements JCEP {
 							String error = din.readUTF ();
 							System.out.println ("Error from " + jobId + ": " + error);
 							break;
-						case JOB_STARTED:
-							jobId = din.readUTF ();
-							System.out.println ("Job started: " + jobId);
-							break;
-						case JOB_COMPLETE:
-							jobId = din.readUTF ();
-							System.out.println ("Job completed: " + jobId);
-							
-							synchronized (jobLock) {
-								jobLock.notify ();
-							}
-							
-							break;
-						case JOB_CHECKPOINTED:
-							jobId = din.readUTF ();
-							System.out.println ("Job checkpointed: " + jobId);
-							break;
-						case JOB_EXITED:
-							jobId = din.readUTF ();
-							System.out.println ("Job canceled or errored: " + jobId);
-							
-							synchronized (jobLock) {
-								jobLock.notify ();
-							}
-							
-							break;
+//						case JOB_STARTED:
+//							jobId = din.readUTF ();
+//							System.out.println ("Job started: " + jobId);
+//							break;
+//						case JOB_COMPLETE:
+//							jobId = din.readUTF ();
+//							System.out.println ("Job completed: " + jobId);
+//							
+//							synchronized (jobLock) {
+//								jobLock.notify ();
+//							}
+//							
+//							break;
+//						case JOB_CHECKPOINTED:
+//							jobId = din.readUTF ();
+//							System.out.println ("Job checkpointed: " + jobId);
+//							break;
+//						case JOB_EXITED:
+//							jobId = din.readUTF ();
+//							System.out.println ("Job canceled or errored: " + jobId);
+//							
+//							synchronized (jobLock) {
+//								jobLock.notify ();
+//							}
+//							
+//							break;
 						case SHUTTING_DOWN:
 							System.out.println ("Server shutting down");
 							

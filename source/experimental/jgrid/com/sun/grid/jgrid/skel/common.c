@@ -45,6 +45,11 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <inttypes.h>
+
 #include "common.h"
 
 ssize_t readn (int fd, void* buf, size_t nbytes) {
@@ -79,6 +84,8 @@ ssize_t writen (int fd, const void* buf, size_t nbytes) {
 	ssize_t nwritten;
 	const char* p;
 	
+printf ("Writing %d bytes\n", nbytes);
+   
 	p = buf;
 	nleft = nbytes;
 	while (nleft > 0) {
@@ -90,11 +97,13 @@ ssize_t writen (int fd, const void* buf, size_t nbytes) {
 				return -1;
 			}
 		}
-		
+      
 		nleft -= nwritten;
 		p += nwritten;
 	}
 	
+printf ("Done\n");
+   
 	return nbytes;
 }
 
@@ -172,7 +181,7 @@ int readUTF (int fd, char* string) {
 		return -1;
 	}
 	
-	length = (short)nstoh (length);
+	length = (short)ntohs (length);
    
 	/* Read length bytes into array */
 	if (readn (fd, string, length) < 0) {
@@ -194,7 +203,7 @@ char* readNewUTF (int fd) {
 		return (char*)NULL;
 	}
 	
-	length = (short)nstoh (length);
+	length = (short)ntohs (length);
    
 	string = malloc (length + 1);
 	
@@ -219,7 +228,7 @@ int writeUTF (int fd, const char* string) {
 	}
 	
 	/* Write length bytes (ignore last 0x00) */
-	if (writen (fd, string, length) < 0) {
+	if (writen (fd, string, strlen (string)) < 0) {
 		return -1;
 	}
 	

@@ -50,6 +50,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include "JCEPskel.h"
 #include "common.h"
@@ -175,9 +176,6 @@ int main (int argc, char** argv) {
 		fprintf (stderr, "Listener thread received the following error:\n\t%s\n", errorMessage);
 		exit (1);
 	}
-	
-	/* Close sockets */
-	close (fd);
 	
 	/* Exit upon receipt of job finished notice */
 	return (EXIT_SUCCESS);
@@ -371,6 +369,7 @@ void printUsage () {
 
 int createConnection (char* ipAddress, int port) {
 	struct sockaddr_in address;
+   int on = 1;
 	
 	/* Create the socket */
 	if ((fd = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -409,7 +408,7 @@ int createConnection (char* ipAddress, int port) {
 		errorMessage = "Unable to connect to server";
 		return -1;
 	}
-	
+
 	if (doHandshake () < 0) {
 		return -1;
 	}
@@ -524,7 +523,7 @@ int shutdownServer () {
 	if (debug) {
 		printf ("**DEBUG: Shutting down server.\n");
 	}
-	
+
 	/* Write Shutdown code */
 	if (writen (fd, &SHUTDOWN, sizeof (SHUTDOWN)) < 0) {
 		errorMessage = "Error while writing code for Shutdown to socket stream";
@@ -539,11 +538,11 @@ int shutdownServer () {
 }
 
 int submitJob () {
+	char* job = malloc (MAX_BUFFER);
+	
 	if (debug) {
 		printf ("**DEBUG: Submitting job.\n");
 	}
-	
-	char* job = malloc (MAX_BUFFER);
 	
 	/* Write Submit Job code */
 	if (writen (fd, &SUBMIT_JOB, sizeof (SUBMIT_JOB)) < 0) {
@@ -664,16 +663,16 @@ int startListenerThread (pthread_t* threadId) {
 }
 
 void* listenerThread (void* arg) {
-	if (debug) {
-		printf ("**DEBUG: ListenerThread starting.\n");
-	}
-	
 	int running = 1;
 	char jobId[32];
 	char message[1024];
-	unsigned char code;
-	unsigned char state;
-	unsigned char command;
+	unsigned char code = 0;
+	unsigned char state = 0;
+	unsigned char command = 0;
+	
+	if (debug) {
+		printf ("**DEBUG: ListenerThread starting.\n");
+	}
 	
 	while (running == 1) {
 		if (debug) {
@@ -779,13 +778,13 @@ void* listenerThread (void* arg) {
 		else if (code == 0) {
 			/* Houston, we have a problem */
 			errorMessage = (char*)malloc (32);
-			sprintf (errorMessage, "***ERROR: Failure reading message type: no message type read");
+			sprintf (errorMessage, "Failure reading message type: no message type read");
 			
 			return (void*)-1;
 		}
 		else {
 			errorMessage = (char*)malloc (32);
-			sprintf (errorMessage, "***ERROR: Invalid message type: %x", code);
+			sprintf (errorMessage, "Invalid message type: %x", code);
 			
 			return (void*)-1;
 		}
@@ -833,7 +832,11 @@ void* signalThread (void* arg) {
 	}
 	
 	while (1) {
+#ifdef SOLARIS
 		sig = sigwait (&sigset);
+#else
+		sigwait (&sigset, &sig);
+#endif
 		
 		switch (sig) {
 			case SIGUSR1:

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/04/22 15:57:03 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/05/06 17:48:25 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/04/22 15:57:03 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/05/06 17:48:25 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -123,12 +123,105 @@ The drmaa_release_attr_names() function releases all resources associated with t
 string vector \fIvalues\fP.
 .PP
 .\"
+.SS "Attribute Priorities"
+DRMAA job template attributes can be set from six different sources.  In order
+of precedence, from lowest to highest, there are: options
+set by DRMAA automatically by default, options set in the sge_request file,
+options set in the script file, options set by the drmaa_job_category
+attribute, options set by the drmaa_native_specification attribute, and options
+set through other DRMAA attributes.
+.PP
+By default DRMAA sets three options for all jobs.  There are "-p 0", "-b yes",
+and "-shell no".  This means that by default, all jobs will have priority 0,
+all jobs will be treated as binary, i.e. no scripts args will be parsed, and
+all jobs will be executed without a wrapper shell.
+.PP
+The
+.M sge_request 5
+file, found in the $xxQS_NAMExx_ROOT/$xxQS_NAMExx_CELL/common
+directory, may contain options to be applied to all jobs.  See
+.M sge_request 5
+for more information.
+.PP
+If the
+.M sge_request 5
+file contains "-b no" or if the \fdrmaa_native_specification\fP attribute is set
+and contains "-b no", the script file will be parsed for in-line arguments.
+Otherwise, no scripts args will be interpreted.  See
+.M qsub 1
+for more information.  
+.PP
+If the \fdrmaa_job_category\fP attribute is set, and the category it points to
+exists in one of the
+.M qtask 5
+files, the options associated with that category will be applied to the job
+template.  See
+.M qtask 5
+and the \fdrmaa_job_category\fP attribute below for more information.
+.PP
+If the \fdrmaa_native_specification\fP attribute is set, all options contained
+therein will be applied to the job template.  See the
+\fdrmaa_native_specification\fP below for more information.
+.PP
+Other DRMAA attributes will override any previous settings.  For example, if
+the sge_request file contains "-j y", but the DRMAA_JOIN_FILES attribute is
+set to "n", the ultimate result is that the input and output files will remain
+separate.
+.PP
+.\"
+.SS Attribute Correlations
+The following DRMAA attributes correspond to the following
+.M qsub 1
+options:
+.PP
+DRMAA Attribute                  qsub Option
+------------------------------------------------------
+drmaa_remote_command             script file
+drmaa_v_argv                     script file arguments
+drmaa_js_state = "drmaa_hold"    -h
+drmaa_v_env                      -v
+drmaa_wd                         NONE
+drmaa_job_category               NONE
+drmaa_native_specification       NONE
+drmaa_v_email                    -M
+drmaa_block_email = "1"          -m n
+drmaa_start_time                 -a
+drmaa_job_name                   -N
+drmaa_input_path                 -i
+drmaa_output_path                -o
+drmaa_error_path                 -e
+drmaa_join_files                 -j
+drmaa_transfer_files             NONE
+drmaa_deadline_time              NONE
+drmaa_wct_hlimit                 NONE
+drmaa_wct_slimit                 NONE
+drmaa_run_duration_hlimit        NONE
+drmaa_run_duration_slimit        NONE
+.PP
+.PP
+.\"
 .\"
 .\"
 .SH "DRMAA JOB TEMPLATE ATTRIBUTES"
 .SS "drmaa_remote_command - ""<remote_command>"""
 Specifies the remote command to execute. The \fIremote_command\fP must be the path of an 
-executable that is available at the jobs execution host.
+executable that is available at the jobs execution host.  If the path is relative,
+it is assumed to be relative to the working directory set through the drmaa_wd
+attibute.  If drmaa_wd is not set, the path is assumed to be relative to the
+user's home directory.
+.PP
+The file pointed to by remote command may either be an executable binary or an
+executable script.  If a script, the script must include the path to the shell
+in a #! line at the beginning of the script.  By default, the remote command
+will be executed directly, as by
+.M exec 2.
+To have the remote command executed in a shell, such as to preserve environment
+settings, use the drmaa_native_specification attribute to include the "-shell yes"
+option.  Jobs which are executed by a wrapper shell fail differently from jobs
+which are executed directly.  A job executed by a wrapper shell which contains
+a user error, such as an invalid path to the executable, will execute successfully
+and exit with a return code of 1.  A job executed directly which contains such
+an error will enter the DRMAA_PS_FAILED state upon execution.
 .PP
 .\" 
 .\" 
@@ -144,18 +237,24 @@ submit option `-h'.
 .\" 
 .SS "drmaa_wd - ""<directory_name>"""
 Specifies the directory name where the job will be executed. A `$drmaa_hd_ph$' placeholder 
-at the begin of 
+at the begining of the
 \fIdirectory_name\fP 
-denotes the remaining string portion as a relative 
-directory name that is resolved relative to the job users home directory at the execution 
-host. When the DRMAA job template will be used for bulk job submission (see also
+denotes the remaining string portion as a relative directory name that is
+resolved relative to the job user's home directory at the execution 
+host. When the DRMAA job template is used for bulk job submission (see also
 .M drmaa_run_bulk_job 3 )
 the `$drmaa_incr_ph$' placeholder can be used at any position within \fIdirectory_name\fP 
 to cause a substitution with the parametric jobs index. 
 The \fIdirectory_name\fP must be specified in a syntax that is common at the host 
-where the job is executed. If set and no placeholder is used an absolute 
-directory specification is expected. If set and the directory does not 
-exist the job enters the state DRMAA_PS_FAILED.
+where the job is executed. If set to a relative path and no placeholder is used,
+a path relative to the user's home directory is assumed.  If not set, the
+working directory will default to the user's home directory.  If set and the
+given directory does not exist the job will enter the DRMAA_PS_FAILED state when run.
+.PP
+Note that the working directory path is the path on the execution host.  If
+binary mode is disabled, an attempt to find the job script will be made,
+relative to the working directory path.  That means that the path to the script
+must be the same on both the submission and execution hosts.
 .PP
 .\" 
 .\" 
@@ -268,7 +367,7 @@ options used in the referenced qtask file line are applied to the job template
 before submission to allow site-specific resolving of resources and/or policies. 
 The cluster qtask file, the local qtask file, and the user qtask file are
 searched. Job settings resulting from job template category are overridden by
-settings resulting from the job template 'drmaa_native_specification' attribute
+settings resulting from the job template \fdrmaa_native_specification\fP attribute
 as well as by explict DRMAA job template settings.
 .PP
 In order to avoid collisions with command names in the qtask files, it is
@@ -277,11 +376,16 @@ recommended that DRMAA job categories names take the form: <category_name>.cat.
 .\" 
 .\" 
 .SS "drmaa_native_specification - ""<native_specification>"""
-Specifies xxQS_NAMExx native specification. certain 
+Specifies xxQS_NAMExx native
 .M qsub 1 
-options contained in the \fInative_specification\fP are applied to the job template 
-before job submission. Job settings resulting from native specification can be 
-overridden with explict DRMAA job template settings.
+options which will be interpreted as part of the DRMAA job template.  All
+options available to
+.M qsub 1 
+may be used in the \fInative_specification\fP, except for -help, -t, -verify,
+and -w. Options set in the \fnative specification\fP will be 
+overridden by the corresponding DRMAA attributes.  See
+.M qsub 1
+for more information on qsub options.
 .PP
 .\" 
 .\" 

@@ -655,12 +655,17 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
             int i;
 
             for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
-               if (!strcasecmp(value, map_type2str(i)))  
+               if (strcasecmp(value, map_type2str(i)) == 0) {
                   type = i;
+               }
             }
 
             if (type == 0) {
                /* error output necessary? Should be created by parsing function */
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_S,
+                                       value);
                ret = false;
             } else {
                lSetUlong(object, nm, type);

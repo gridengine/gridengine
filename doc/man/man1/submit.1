@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/04/19 10:52:02 $     Revision: $Revision: 1.45 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/05/06 17:48:27 $     Revision: $Revision: 1.46 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/04/19 10:52:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/05/06 17:48:27 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1150,8 +1150,9 @@ allows changing this option even while the job executes.
 Available only for \fIqsub\fP.
 .sp 1
 \fB\-shell n\fP
-causes qsub not to start the commandline given to \fIqsub\fP in a users login
-shell but execute it without the wrapping shell.  This option only applies when
+causes qsub to execute the commandline directly, as if by
+.M exec 2
+.  No command shell will be executed for the job.  This option only applies when
 \fB\-b y\fP
 is also used.  Without
 \fB\-b y\fP
@@ -1162,11 +1163,14 @@ has no effect.
 The option can be used to speed up execution as some overhead like the  
 shell startup and sourcing the shell resource files is avoided.
 .sp 1
-The option can only be used, if no shell specific commandline parsing is
-required. If the commandline contains shell syntax like environment
+The option can only be used if no shell specific commandline parsing is
+required. If the commandline contains shell syntax, like environment
 variable substitution or (back) quoting, a shell must be started.
-In this case either do not use the \fB\-shell\fP option or include
-the shell call in the commandline.
+In this case either do not use the \fB\-shell n\fP option or execute the shell
+as the commandline and pass the path to the executable as a parameter.
+.sp 1
+If a job with \fB\-shell n\fP set fails due to a user error, such as an invalid
+path to the executable, the job will enter the error state.
 .sp 1
 \fB\-shell y\fP
 cancels the effect of a previous

@@ -233,10 +233,23 @@ char **argv
    num_tasks = (end - start) / step + 1;
 
    if (num_tasks > 1) {
-      if ((japi_run_bulk_jobs(&jobids, job, start, end, step, &diag) != DRMAA_ERRNO_SUCCESS)) {
+      int error = japi_run_bulk_jobs(&jobids, job, start, end, step, &diag);
+      if ((error != DRMAA_ERRNO_SUCCESS)) {
          fprintf(stderr, "%s\n", sge_dstring_get_string(&diag));
          
-         exit_status = 1;
+         /* BUGFIX: Issuezilla #1013
+          * To quickly fix this issue, I'm mapping the JAPI/DRMAA error code
+          * back into a GDI error code.  This is the easy solution.  The
+          * correct solution would be to address issue #859, presumably by
+          * having JAPI reuse the GDI error codes instead of the JAPI error
+          * codes. */
+         if (error == DRMAA_ERRNO_TRY_LATER) {
+            exit_status = STATUS_NOTOK_DOAGAIN;
+         }
+         else {
+            exit_status = 1;
+         }
+         
          goto Error;
       }
 
@@ -245,10 +258,24 @@ char **argv
       jobid_string = get_bulk_jobid_string (jobids->it.ji.jobid, start, end, step);
    }
    else if (num_tasks == 1) {
-      if (japi_run_job(&jobid, job, &diag) != DRMAA_ERRNO_SUCCESS) {
+      int error = japi_run_job(&jobid, job, &diag);
+      
+      if (error != DRMAA_ERRNO_SUCCESS) {
          fprintf(stderr, "%s\n", sge_dstring_get_string(&diag));
          
-         exit_status = 1;
+         /* BUGFIX: Issuezilla #1013
+          * To quickly fix this issue, I'm mapping the JAPI/DRMAA error code
+          * back into a GDI error code.  This is the easy solution.  The
+          * correct solution would be to address issue #859, presumably by
+          * having JAPI reuse the GDI error codes instead of the JAPI error
+          * codes. */
+         if (error == DRMAA_ERRNO_TRY_LATER) {
+            exit_status = STATUS_NOTOK_DOAGAIN;
+         }
+         else {
+            exit_status = 1;
+         }
+         
          goto Error;
       }
 
@@ -356,10 +383,14 @@ Error:
          sge_mutex_lock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);
          
          while (!exited) {
+#if 0
             if (pthread_cond_timedwait (&exit_cv, &exit_mutex, &ts) == ETIMEDOUT) {
                DPRINTF (("Exit has not finished after 15 seconds.  Exiting.\n"));
                break;
             }
+#else
+            sleep (15);
+#endif
          }
          
          sge_mutex_unlock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);

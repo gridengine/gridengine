@@ -351,6 +351,7 @@ class JCEPVersion10Module extends JCEPProtocolModule implements JCEP {
 	 * resulting commands through the protocol module.
 	 */	
 	private class ListenerThread extends Thread {
+		private static final String NO_JOB_ID = "<unknown>";
 		/** A flag to indicate whether the ListenerThread should continue running */		
 		private boolean running = false;
 		/** The thread which is running the ListenerThread.  Used to interrupt the
@@ -413,6 +414,8 @@ class JCEPVersion10Module extends JCEPProtocolModule implements JCEP {
 						}
 					}
 
+					log.finest ("Read code: 0x" + Integer.toString (code, 16));
+					
 					switch (code) {
 						case SUBMIT_JOB:
 							Job job = null;
@@ -436,16 +439,43 @@ class JCEPVersion10Module extends JCEPProtocolModule implements JCEP {
 							}
 							catch (MalformedURLException e) {
 								logErrorOrWarn (SYSTEM_ID, "Unable to load class from URL for submit: " + e.getMessage ());
+								
+								try {
+									notifyCommandFailed (SUBMIT_JOB, NO_JOB_ID, e.getMessage ());
+								}
+								catch (IOException e2) {
+									logErrorOrWarn (job.getJobId (), "Error while writing submit failure message to client: " + e.getMessage ());
+								
+									break;
+								}
 
 								break;
 							}
 							catch (IOException e) {
 								logErrorOrWarn (SYSTEM_ID, "Unable to read job file for submit: " + location);
 								
+								try {
+									notifyCommandFailed (SUBMIT_JOB, NO_JOB_ID, e.getMessage ());
+								}
+								catch (IOException e2) {
+									logErrorOrWarn (job.getJobId (), "Error while writing submit failure message to client: " + e.getMessage ());
+								
+									break;
+								}
+								
 								break;
 							}
 							catch (ClassNotFoundException e) {
 								logErrorOrWarn (SYSTEM_ID, "Unable to load job class for submit: " + e.getMessage ());
+								
+								try {
+									notifyCommandFailed (SUBMIT_JOB, NO_JOB_ID, e.getMessage ());
+								}
+								catch (IOException e2) {
+									logErrorOrWarn (job.getJobId (), "Error while writing submit failure message to client: " + e.getMessage ());
+								
+									break;
+								}
 
 								break;
 							}

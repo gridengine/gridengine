@@ -38,12 +38,12 @@
  * Version 1.0
  */
 
-#ifndef _common.h_H
-#define _common.h_H
+#ifndef _common_H
+#define _common_H
 
 #include <sys/types.h>
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -75,5 +75,5 @@ ssize_t writen (int fd, const void* buf, size_t nbytes);
 }
 #endif
 
-#endif	/* _common.h_H */
+#endif	/* _common_H */
 

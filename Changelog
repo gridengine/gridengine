@@ -1,9 +1,10 @@
-CR-2004-05-06-0: Enhancem.: added new test binaries to setup a communication
-                            test: 
-                               test_virtual_event_client, 
-                               test_virtual_gdi_client and
-                               test_virtual_qmaster
-                 
+DT-2004-04-06-0: Bugfix:    o Fixed bad error messages for qconf -mc
+                            o Fixed return code for qsub when max jobs reached
+                            o Improved qconf error messages
+                            o Updated DRMAA man pages
+                            o Fixed byte ordering bug in JGrid
+                 Issue:     773, 868, 1013
+                 Changed:   sgeobj, qconf, centry, qsub, JGrid
 
 AA-2004-05-06-0: Bugfix:    qtcsh shows strange error messages on AIX 43/51
                  Issue:     849

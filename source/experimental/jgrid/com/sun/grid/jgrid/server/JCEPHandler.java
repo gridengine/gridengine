@@ -105,7 +105,6 @@ public class JCEPHandler implements JCEPListener, LogListener {
 	/** The JCEPProtocolModule which is handling the client communications */	
 	private JCEPProtocolModule connection = null;
 	
-	
 	/** Creates a new instance of JCEPHandler
 	 * @param socket The socket connection to be used for communicating with the client
 	 * @throws IOException Thrown when an error occurs while establishing a client connection
@@ -186,8 +185,9 @@ public class JCEPHandler implements JCEPListener, LogListener {
 			}
 
 			log.finer ("Main thread finished grace period; exiting VM");
-			System.exit (0);
 		}
+		
+		System.exit (0);
 	}
 	
 	/** Parses the command line arguments and acts accordingly

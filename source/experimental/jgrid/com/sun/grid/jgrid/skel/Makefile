@@ -17,7 +17,10 @@ all: $(TARGETDIR_skeleton)/JCEPskeleton
 CC=cc
 #BASICOPTS=-xO3
 BASICOPTS=-g
-CFLAGS=$(BASICOPTS) -xCC -lsocket -lnsl -lpthread -mt
+#Uncomment the following line for Solaris
+#CFLAGS=$(BASICOPTS) -xCC -lsocket -lnsl -lpthread -mt
+#Uncomment the following line for Linux
+CFLAGS=$(BASICOPTS) -pthread
 #NETFLAGS=-DIPv6
 
 # Define the target directories.
@@ -50,4 +53,3 @@ clean::
 		$(TARGETDIR_skeleton)/JCEPskeleton.o
 # Enable dependency checking
 .KEEP_STATE_FILE: /home/dant/projects/jgrid/grid/com/sun/grid/jgrid/skel/.make.state.Makefile2
-

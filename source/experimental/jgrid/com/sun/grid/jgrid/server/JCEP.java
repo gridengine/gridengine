@@ -50,21 +50,21 @@ public interface JCEP {
 	/** Version 1.0 */	
 	public static final byte VERSION10 = (byte)0x10;
 	/** Submit a job for execution. */	
-	public static final byte SUBMIT_JOB = (byte)0x70;
+	public static final byte SUBMIT_JOB = (byte)0x40;
 	/** Cancel an executing job. */	
-	public static final byte CANCEL_JOB = (byte)0x71;
+	public static final byte CANCEL_JOB = (byte)0x41;
 	/** Checkpointing an executing job. */	
-	public static final byte CHECKPOINT_JOB = (byte)0x72;
+	public static final byte CHECKPOINT_JOB = (byte)0x42;
 	/** Shutdown the JCEP server. */	
-	public static final byte SHUTDOWN = (byte)0x73;
+	public static final byte SHUTDOWN = (byte)0x43;
 	/** Register for messages from a running job. */	
-	public static final byte REGISTER = (byte)0x74;
+	public static final byte REGISTER = (byte)0x44;
 	/** Unregister for messages for a job. */	
-	public static final byte UNREGISTER = (byte)0x75;
+	public static final byte UNREGISTER = (byte)0x45;
 	/** Suspend an executing job */
-	public static final byte SUSPEND = (byte)0x76;
+	public static final byte SUSPEND = (byte)0x46;
 	/** Resume a suspended job */
-	public static final byte RESUME = (byte)0x77;
+	public static final byte RESUME = (byte)0x47;
 	/** A message from an executing job. */	
 	public static final byte LOG_MESSAGE = (byte)0x80;
 	/** An error from an executing job. */	

@@ -665,30 +665,17 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
             is_last_token = true;
          }
 
-
-#if 0 
-         /* 
-          * It is not allowed to remove all white space because.
-          * The attribute value itself might use spaces as
-          * delimiter for string lists:
-          *
-          * Example: pe_list    pe1 pe2 pe3
+         /*
+          * There might be white space at the end of each token.
           */
-         sge_strip_blanks(token);
-#endif
-
+         sge_strip_white_space_at_eol(token);
          length = strlen(token);
+
          if (length >= 1) {
             const char *href_name = NULL;
             char *value = NULL;
             bool first_is_default = true;
   
-            /*
-             * There might be white space at the end of each token.
-             */
-            sge_strip_white_space_at_eol(token);
-            length = strlen(token);
-         
             /* 
              * All except the last token has to conatin a ',' as last
              * character in the string. This ',' has to be removed.
@@ -698,12 +685,17 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   token[length - 1] = '\0';
                   length--;
                } else {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                         MSG_ATTR_MISSINGCHAR_S, ","));
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_MISSINGCOMMA));
                   answer_list_add(answer_list, SGE_EVENT,
                                   STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                   ret = false;
                }
+            }
+            else if (ret && is_last_token && (token[length - 1] == ',')) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_TRAILINGCOMMA));
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+               ret = false;
             }
 
             /*
@@ -722,7 +714,7 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   length--;
                } else {
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                 MSG_ATTR_MISSINGCHAR_SS, "]", token));
+                                 MSG_ATTR_MISSINGBRACE_S, "]", token));
                   answer_list_add(answer_list, SGE_EVENT,
                                   STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                   ret = false;

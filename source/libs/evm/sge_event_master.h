@@ -34,7 +34,7 @@
 
 #include "basis_types.h"
 #include "sge_eventL.h"
-#include "sge_qmaster_timed_event.h"
+
 
 extern int  sge_add_event_client(lListElem*, lList**, lList**, char*, char*);
 extern int  sge_mod_event_client(lListElem*, lList**, lList**, char*, char*);
@@ -55,8 +55,6 @@ extern void sge_deliver_events_immediately(u_long32);
 
 extern u_long32 sge_get_next_event_number(u_long32);
 extern int      sge_resync_schedd(void);
-
-extern void sge_remote_event_delivery_handler(te_event_t);
 
 extern void sge_event_shutdown(void);
 

@@ -1050,7 +1050,6 @@ static void* message_thread(void* anArg)
    while (should_terminate() == false)
    {
       sge_qmaster_process_message(anArg);
-      sge_remote_event_delivery_handler(NULL);
    }
 
    DEXIT;
@@ -1141,6 +1140,8 @@ static void qmaster_shutdown(void)
    reporting_shutdown(NULL);
 
    te_shutdown();
+
+   sge_add_event(NULL, 0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
 
    sge_event_shutdown();
 

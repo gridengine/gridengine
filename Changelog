@@ -1,3 +1,9 @@
+AD-2004-02-12-0: Bugfix:    Finish 'AD-2004-02-08-0'. Event Master (evm) is
+                            now a self-contained modul and does use it's own
+                            thread to send events to event clients.
+                 Issue:     656
+                 Changed:   evm, qmaster
+
 CR-2004-02-11-4: Testsuite: - removed "press RETURN" in cleanup_system 
                               procedure of install_core_system test
 

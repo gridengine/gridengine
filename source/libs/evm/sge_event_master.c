@@ -66,6 +66,8 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_object.h"
+#include "sge_mtutil.h"
+#include "setup_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
@@ -78,8 +80,15 @@ typedef struct {
       lCondition   *where;
       lDescr       *descr;
       lEnumeration *what;
-}subscription_t;
+} subscription_t;
 
+typedef struct {
+   pthread_mutex_t  mutex;    /* used for mutual exclusion    */
+   pthread_cond_t   cond_var; /* used for waiting             */
+   bool             exit;     /* true -> exit event master    */
+   bool             send;     /* true -> send events          */
+   lList*           clients;  /* list of event master clients */
+} event_master_control_t;
 
 /****** Eventclient/Server/-Event_Client_Server_Defines ************************
 *  NAME
@@ -136,8 +145,8 @@ typedef struct {
  *     evm/sge_event_master/sge_list_select()
  *     evm/sge_event_master/elem_select() 
  *  and
- *     evm/sge_event_master/sge_add_list_event_
- *     evm/sge_event_master/sge_add_event_
+ *     evm/sge_event_master/add_list_event
+ *     evm/sge_event_master/add_event
  *
  *********************************************************************/
 #define LIST_MAX 2
@@ -172,33 +181,36 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  * SEE ALSO:
  * - Array:
  *    SEND_EVENTS
- *    IS_INIT_SEND_EVENTS
  *
  * - Init function:
  *    evm/sge_event_master/sge_init_send_events()
  *
  *******************************************************************/
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
-static bool IS_INIT_SEND_EVENTS = false;
 
-static lList *EV_Clients = NULL;
+static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, false, NULL};
+static pthread_once_t         Event_Master_Once  = PTHREAD_ONCE_INIT;
+static pthread_t              Event_Thread;
 
 
-static void sge_init_send_events(void); 
+static void  event_master_once_init(void);
+static void  init_send_events(void); 
+static void* send_thread(void*);
+static void  send_events(void);
+static bool  should_exit(void);
+
 static void total_update(lListElem*);
 static void sge_total_update_event(lListElem*, ev_event);
-static void sge_add_event_(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lListElem*);
-static int  sge_add_list_event_(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lList*, int); 
-static void sge_flush_events(lListElem *event_client, int interval);
-static void sge_flush_events_(lListElem*, int, int );
-static int  sge_eventclient_subscribed(const lListElem *, ev_event, const char*);
+static void add_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lListElem*);
+static int  add_list_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lList*, int); 
+static void flush_events(lListElem*, int, int );
+static int  eventclient_subscribed(const lListElem *, ev_event, const char*);
 static void check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
 static void sge_build_subscription(lListElem*);
 static const lDescr* getDescriptorL(subscription_t*, const lList*, int);
 static const lDescr* getDescriptor(subscription_t*, const lListElem*, int);
 static bool sge_list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
 static lListElem *elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
-static lListElem* eventclient_list_locate(ev_registration_id);
 static lListElem * eventclient_list_locate_by_adress(const char*, const char*, u_long32);
 static int purge_event_list(lList* aList, ev_event anEvent); 
 
@@ -252,7 +264,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    DENTER(TOP_LAYER,"sge_add_event_client");
 
-   sge_init_send_events();
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
    id = lGetUlong(clio, EV_id);
    name = lGetString(clio, EV_name);
@@ -283,6 +295,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       return STATUS_ESEMANTIC;
    }
 
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
    if (id == EV_ID_ANY) {   /* qmaster shall give id dynamically */
       id = first_dynamic_id++;
       lSetUlong(clio, EV_id, id);
@@ -297,7 +311,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
             commproc, u32c(commproc_id)));         
 
          /* delete old event client entry */
-         lRemoveElem(EV_Clients, ep);
+         lRemoveElem(Master_Control.clients, ep);
       } else {
          INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));         
       }
@@ -307,13 +321,13 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* if it already exists, delete the old one and register */
    /* the new one */
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
-      if ((ep=eventclient_list_locate(id))) {
+      if ((ep = lGetElemUlong(Master_Control.clients, EV_id, id))) {
          /* we already have this special client */
          ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
                 commproc, u32c(commproc_id)));         
 
          /* delete old event client entry */
-         lRemoveElem(EV_Clients, ep);
+         lRemoveElem(Master_Control.clients, ep);
       } else {
          INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));         
       }   
@@ -321,11 +335,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    ep=lCopyElem(clio);
    lSetBool(clio, EV_changed, false);
-   if (EV_Clients == NULL) {
-      EV_Clients=lCreateList("EV_Clients", EV_Type); 
-   }
 
-   lAppendElem(EV_Clients,ep);
+   lAppendElem(Master_Control.clients,ep);
    lSetUlong(ep, EV_next_number, 1);
 
    /* register this contact */
@@ -350,7 +361,13 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    total_update(ep);
 
    /* flush initial list events */
-   sge_flush_events(ep, 0);
+   flush_events(ep, 0, 0);
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
          ruser, rhost, name, MSG_EVE_EVENTCLIENT));
@@ -401,14 +418,20 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    DENTER(TOP_LAYER,"sge_mod_event_client");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
    /* try to find event_client */
    id = lGetUlong(clio, EV_id);
 
-   event_client = lGetElemUlong(EV_Clients, EV_id, id);
+   event_client = lGetElemUlong(Master_Control.clients, EV_id, id);
 
    if (event_client == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(id), "modify"));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
       DEXIT;
       return STATUS_EEXIST;
@@ -423,6 +446,8 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, u32c(ev_d_time)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -430,6 +455,8 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    if (lGetList(clio, EV_subscribed) == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
       DEXIT;
       return STATUS_ESEMANTIC;
@@ -517,6 +544,8 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       lAppendElem(*eclpp, lCopyElem(event_client));
    }
 
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
    DEXIT; 
    return STATUS_OK;
 } /* sge_mod_event_client() */
@@ -548,9 +577,15 @@ bool sge_event_client_registered(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_event_client_registered");
 
-   if (lGetElemUlong(EV_Clients, EV_id, aClientID) != NULL) {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if (lGetElemUlong(Master_Control.clients, EV_id, aClientID) != NULL) {
       res = true;
    }
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return res;
@@ -583,9 +618,16 @@ void sge_remove_event_client(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_remove_event_client");
 
-   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
    {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return;
    }
@@ -611,7 +653,9 @@ void sge_remove_event_client(u_long32 aClientID)
       }
    }
 
-   lRemoveElem(EV_Clients, client);
+   lRemoveElem(Master_Control.clients, client);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return;
@@ -652,21 +696,38 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUI
 
    DENTER(TOP_LAYER, "sge_shutdown_event_client");
 
-   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
    {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return ESRCH;
    }
    else if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid)))
    {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
+
       DEXIT;
       return EPERM;
    }
 
-   sge_add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, lGetString(client, EV_session), NULL);
-   sge_flush_events(client, 0);
+   add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL);
+
+   flush_events(client, 0, 0);
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return 0;
@@ -706,6 +767,8 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
 
    DENTER(TOP_LAYER, "sge_shutdown_dynamic_event_clients");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    if (!manop_is_manager(anUser))
    {
       ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
@@ -713,15 +776,26 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
       return EPERM;
    }
 
-   for_each (client, EV_Clients)
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   for_each (client, Master_Control.clients)
    {
-      if (lGetUlong(client, EV_id) < EV_ID_FIRST_DYNAMIC) {
+      int id;
+
+      if ((id = lGetUlong(client, EV_id)) < EV_ID_FIRST_DYNAMIC) {
          continue;
       }
 
-      sge_add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, lGetString(client, EV_session), NULL);
-      sge_flush_events(client, 0);
+      add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL);
+
+      flush_events(client, 0, 0);
    }
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return 0;
@@ -750,18 +824,27 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
 u_long32 sge_get_event_client_data(u_long32 aClientID)
 {
    u_long32 res = 0;
-   lListElem *ep = NULL;
+   lListElem *client = NULL;
 
    DENTER(TOP_LAYER, "sge_get_event_client_data");
 
-   if ((ep = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
    {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return 0;
    }
 
-   res = lGetUlong(ep, EV_clientdata); /* will fail if ep == NULL */
+   res = lGetUlong(client, EV_clientdata); /* will fail if client == NULL */
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return res;
@@ -796,14 +879,23 @@ int sge_set_event_client_data(u_long32 aClientID, u_long32 theData)
 
    DENTER(TOP_LAYER, "sge_set_event_client_data");
 
-   if ((ep = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((ep = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
    {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return EACCES;
    }
 
    res = (lSetUlong(ep, EV_clientdata, theData) == 0) ? 0 : EACCES;
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return res;
@@ -851,23 +943,36 @@ void sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, u
 {
    DENTER(TOP_LAYER, "sge_add_event"); 
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   SGE_ASSERT(NULL == event_client);
+
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
-   if (event_client != NULL) {
-      if (sge_eventclient_subscribed(event_client, type, session)) {
-         sge_add_event_(event_client, timestamp, type, 
-                        intkey, intkey2, strkey, strkey2, element);
-      }   
-   } else {
-      for_each (event_client, EV_Clients) {
-         if (sge_eventclient_subscribed(event_client, type, session)) {
-            sge_add_event_(event_client, timestamp, type, 
-                           intkey, intkey2, strkey, strkey2, element);
-         }
-      }
 
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   for_each (event_client, Master_Control.clients)
+   {
+      if (eventclient_subscribed(event_client, type, session))
+      {
+         add_event(event_client, timestamp, type, intkey, intkey2, strkey, strkey2, element);
+
+         if (type == sgeE_QMASTER_GOES_DOWN) {
+            lSetUlong(event_client, EV_busy, 0); /* can't be to busy for shutdown */
+            flush_events(event_client, 0, 0);
+         }
+
+         DPRINTF(("%s: added event for %s with id " u32 "\n", SGE_FUNC, lGetString(event_client, EV_name), lGetUlong(event_client, EV_id)));
+      }
    }
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return;
@@ -912,9 +1017,16 @@ int sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event a
 
    DENTER(TOP_LAYER, "sge_add_event_for_client");
 
-   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
    {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return EACCES;
    }
@@ -923,12 +1035,17 @@ int sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event a
       aTimestamp = time(NULL);
    }
 
-
-   if (sge_eventclient_subscribed(client, anID, aSession))
+   if (eventclient_subscribed(client, anID, aSession))
    {
-      sge_add_event_(client, aTimestamp, anID, anIntKey1, anIntKey2, aStrKey1, aStrKey2, anObject);
+      add_event(client, aTimestamp, anID, anIntKey1, anIntKey2, aStrKey1, aStrKey2, anObject);
       res = 0;
    }
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return res;
@@ -973,22 +1090,28 @@ void sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event ty
 {
    DENTER(TOP_LAYER, "sge_add_list_event");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   SGE_ASSERT(NULL == event_client);
+
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
-   if (event_client != NULL) {
-      if (sge_eventclient_subscribed(event_client, type, session)) {
-         sge_add_list_event_(event_client, timestamp, type, 
-                             intkey, intkey2, strkey, strkey2, list, true);
-      }
-   } else {
-      for_each (event_client, EV_Clients) {
-         if (sge_eventclient_subscribed(event_client, type, session)) {
-            sge_add_list_event_(event_client, timestamp, type, 
-                                intkey, intkey2, strkey, strkey2, list, true);
-         }
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   for_each (event_client, Master_Control.clients)
+   {
+      if (eventclient_subscribed(event_client, type, session)) {
+         add_list_event(event_client, timestamp, type, intkey, intkey2, strkey, strkey2, list, true);
       }
    }
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return;
@@ -1034,8 +1157,16 @@ int sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
 
    DENTER(TOP_LAYER, "sge_handle_event_ack");
 
-   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL) {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
+   {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return 0;
    }
@@ -1057,6 +1188,8 @@ int sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    default:
       break;
    }
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return res;
@@ -1089,13 +1222,27 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_event_immediate_delivery");
 
-   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL) {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
+   {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return;
    }
 
-   sge_flush_events(client, 0);
+   flush_events(client, 0, 0);
+
+   Master_Control.send = true;
+
+   pthread_cond_signal(&Master_Control.cond_var);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return;
@@ -1133,13 +1280,23 @@ u_long32 sge_get_next_event_number(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_get_next_event_number");
 
-   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL) {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, aClientID)) == NULL)
+   {
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+
       DEXIT;
       return EACCES;
    }
 
    ret = lGetUlong(client, EV_next_number);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return ret;
@@ -1169,15 +1326,25 @@ u_long32 sge_get_next_event_number(u_long32 aClientID)
 *******************************************************************************/
 int sge_resync_schedd(void)
 {
-   lListElem *event_client;
+   lListElem *client;
 
    DENTER(TOP_LAYER, "sge_sync_schedd");
 
-   if ((event_client = eventclient_list_locate(EV_ID_SCHEDD)) != NULL)
-   {
-      ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S,lGetString(event_client, EV_name)));
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
-      total_update(event_client);
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   if ((client = lGetElemUlong(Master_Control.clients, EV_id, EV_ID_SCHEDD)) != NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S,lGetString(client, EV_name)));
+
+      total_update(client);
+
+      Master_Control.send = true;
+
+      pthread_cond_signal(&Master_Control.cond_var);
+
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
       DEXIT;
       return 0;
@@ -1185,36 +1352,172 @@ int sge_resync_schedd(void)
 
    ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(EV_ID_SCHEDD), SGE_FUNC));
 
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
    DEXIT;
    return -1;
 } /* sge_resync_schedd() */
 
-/****** Eventclient/Server/sge_remote_event_delivery_handler() *****************
+/****** evm/sge_event_master/sge_event_shutdown() ******************************
 *  NAME
-*     sge_remote_event_delivery_handler() -- deliver events due
+*     sge_event_shutdown() -- shutdown event delivery 
 *
 *  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void sge_remote_event_delivery_handler(te_event_t anEvent) 
+*     void sge_event_shutdown(void) 
 *
 *  FUNCTION
-*     Checks delivery time of each event client - if it has been reached, 
-*     deliver all events for that client.
-*
-*     In addition, timed out event clients are removed. An event client times 
-*     out, if it doesn't acknowledge events within 10 * EV_ed_time 
-*     (respecting EVENT_ACK_MIN_TIMEOUT and EVENT_ACK_MAX_TIMEOUT).
+*     Shutdown event delivery. 
 *
 *  INPUTS
-*     te_event_t anEvent - remote event delivery event
+*     void - none 
 *
-*  SEE ALSO
-*     Eventclient/Server/-Event_Client_Server_Global_Variables
-*     Eventclient/Server/sge_ack_event()
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_event_shutdown() is NOT MT safe. 
 *
 *******************************************************************************/
-void sge_remote_event_delivery_handler(te_event_t anEvent)
+void sge_event_shutdown(void)
+{
+   DENTER(TOP_LAYER, "sge_event_shutdown");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   Master_Control.exit = true;
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DPRINTF(("%s: wait for send thread termination\n", SGE_FUNC));
+
+   pthread_join(Event_Thread, NULL);
+
+   DEXIT;
+   return;
+} /* sge_event_shutdown() */
+
+/****** evm/sge_event_master/event_master_once_init() **************************
+*  NAME
+*     event_master_once_init() -- one-time event master initialization
+*
+*  SYNOPSIS
+*     static void event_master_once_init(void) 
+*
+*  FUNCTION
+*     Initialize the event master control structure. Initialize permanent
+*     event array. Create and kick off event send thread.
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: event_master_once_init() is MT safe 
+*     MT-NOTE:
+*     MT-NOTE: This function must only be used as a one-time initialization
+*     MT-NOTE: function in conjunction with 'pthread_once()'.
+*
+*******************************************************************************/
+static void event_master_once_init(void)
+{
+   pthread_attr_t attr;
+
+   DENTER(TOP_LAYER, "event_master_once_init");
+
+   Master_Control.clients = lCreateList("EV_Clients", EV_Type);
+
+   init_send_events();
+
+   pthread_attr_init(&attr);
+   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+   pthread_create(&Event_Thread, &attr, send_thread, NULL);
+
+   DEXIT;
+   return;
+} /* event_master_one_init() */
+
+/****** evm/sge_event_master/init_send_events() ********************************
+*  NAME
+*     init_send_events() -- sets the events, that should allways be delivered 
+*
+*  SYNOPSIS
+*     void init_send_events() 
+*
+*  FUNCTION
+*     sets the events, that should allways be delivered 
+*
+*  NOTES
+*     MT-NOTE: init_send_events() is not MT safe 
+*
+*******************************************************************************/
+static void init_send_events(void)
+{
+   DENTER(TOP_LAYER, "init_send_events");
+
+   memset(SEND_EVENTS, false, sizeof(bool) * sgeE_EVENTSIZE);
+
+   SEND_EVENTS[sgeE_ADMINHOST_LIST] = true;
+   SEND_EVENTS[sgeE_CALENDAR_LIST] = true;
+   SEND_EVENTS[sgeE_CKPT_LIST] = true;
+   SEND_EVENTS[sgeE_CENTRY_LIST] = true;
+   SEND_EVENTS[sgeE_CONFIG_LIST] = true;
+   SEND_EVENTS[sgeE_EXECHOST_LIST] = true;
+   SEND_EVENTS[sgeE_JOB_LIST] = true;
+   SEND_EVENTS[sgeE_JOB_SCHEDD_INFO_LIST] = true;
+   SEND_EVENTS[sgeE_MANAGER_LIST] = true;
+   SEND_EVENTS[sgeE_OPERATOR_LIST] = true;
+   SEND_EVENTS[sgeE_PE_LIST] = true;
+   SEND_EVENTS[sgeE_PROJECT_LIST] = true;
+   SEND_EVENTS[sgeE_QMASTER_GOES_DOWN] = true;
+   SEND_EVENTS[sgeE_CQUEUE_LIST] = true;
+   SEND_EVENTS[sgeE_SUBMITHOST_LIST] = true;
+   SEND_EVENTS[sgeE_USER_LIST] = true;
+   SEND_EVENTS[sgeE_USERSET_LIST] = true;
+   SEND_EVENTS[sgeE_HGROUP_LIST] = true;
+#ifndef __SGE_NO_USERMAPPING__      
+   SEND_EVENTS[sgeE_CUSER_LIST] = true;
+#endif      
+
+   DEXIT;
+   return;
+} /* init_send_events() */
+
+static void* send_thread(void *anArg)
+{
+   DENTER(TOP_LAYER, "send_thread");
+
+   sge_qmaster_thread_init();
+
+   while (!should_exit())
+   {
+      send_events();
+   }
+
+   DEXIT;
+   return NULL;
+} /* send_thread() */
+
+static bool should_exit(void)
+{
+   bool res = false;
+
+   DENTER(TOP_LAYER, "should_exit");
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   res = Master_Control.exit;
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DEXIT;
+   return res;
+} /* should_exit() */
+
+static void send_events(void)
 {
    lListElem *report;
    lList *report_list;
@@ -1226,11 +1529,14 @@ void sge_remote_event_delivery_handler(te_event_t anEvent)
    int deliver_interval;
    time_t now = time(NULL);
 
-   DENTER(TOP_LAYER, "sge_remote_event_delivery_handler");
+   DENTER(TOP_LAYER, "send_events");
 
-   DPRINTF(("There are %d event clients\n", lGetNumberOfElem(EV_Clients)));
+   DPRINTF(("%s: %d event clients\n", SGE_FUNC, lGetNumberOfElem(Master_Control.clients)));
 
-   event_client = lFirst(EV_Clients);
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   event_client = lFirst(Master_Control.clients);
+
    while (event_client)
    {
       /* extract address of event client */
@@ -1271,7 +1577,7 @@ void sge_remote_event_delivery_handler(te_event_t anEvent)
                (int) timeout, commproc, (int) id, host));
          tmp = event_client;
          event_client = lNext(event_client);
-         lRemoveElem(EV_Clients, tmp); 
+         lRemoveElem(Master_Control.clients, tmp); 
          continue;
       }
 
@@ -1294,8 +1600,8 @@ void sge_remote_event_delivery_handler(te_event_t anEvent)
 
                lp = lGetList(event_client, EV_events);
                numevents = lGetNumberOfElem(lp);
-               DPRINTF((u32" sending %d events (" u32"-"u32 ") to (%s,%s,%d)\n", 
-                  sge_get_gmt(), numevents, 
+               DPRINTF(("%s: " u32 " sending %d events (" u32"-"u32 ") to (%s,%s,%d)\n", 
+                  SGE_FUNC, sge_get_gmt(), numevents, 
                   numevents?lGetUlong(lFirst(lp), ET_number):0,
                   numevents?lGetUlong(lLast(lp), ET_number):0,
                   host, commproc, id));
@@ -1344,106 +1650,31 @@ void sge_remote_event_delivery_handler(te_event_t anEvent)
       event_client = lNext(event_client);
    }
 
-   DEXIT;
-   return;
-} /* sge_remote_event_delivery_handler() */
+   Master_Control.send = false;
 
-/****** evm/sge_event_master/sge_event_shutdown() ******************************
-*  NAME
-*     sge_event_shutdown() -- shutdown event delivery 
-*
-*  SYNOPSIS
-*     void sge_event_shutdown(void) 
-*
-*  FUNCTION
-*     Shutdown event delivery. 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: sge_event_shutdown() is NOT MT safe. 
-*
-*******************************************************************************/
-void sge_event_shutdown(void)
-{
-   time_t now = time(NULL);
-   lListElem *client;
-
-   DENTER(TOP_LAYER, "sge_event_shutdown");
-
-   for_each (client, EV_Clients)
+   while (Master_Control.send == false)
    {
-      if (sge_eventclient_subscribed(client, sgeE_QMASTER_GOES_DOWN, NULL))
-      {
-         sge_add_list_event_(client, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, false);
-         DPRINTF(("%s: added event for %s with id " u32 "\n", SGE_FUNC, lGetString(client, EV_name), lGetUlong(client, EV_id)));
-      }
-
-      lSetUlong(client, EV_busy, 0);
+      DPRINTF(("%s: wait on condition variable\n", SGE_FUNC));
+      pthread_cond_wait(&Master_Control.cond_var, &Master_Control.mutex);
    }
 
-   sge_remote_event_delivery_handler(NULL); /* BUGBUG-AD: get rid of this soon! */
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
    return;
-} /* sge_event_shutdown() */
-
-/****** Eventclient/Server/sge_flush_events() **********************************
-*  NAME
-*     sge_flush_events() -- set the flushing time for events
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     static void 
-*     sge_flush_events(lListElem *event_client, int interval) 
-*
-*  FUNCTION
-*     Sets the timestamp for the next flush of events for all or a specific
-*     event client.
-*     When events will be next sent to an event client is stored in its
-*     event client object in the variable EV_next_send_time.
-*
-*  INPUTS
-*     lListElem *event_client - the event client for which to define flushing,
-*                               or NULL (flush all event clients)
-*     int interval            - time in seconds until next flush
-*
-*  NOTES
-*
-*  SEE ALSO
-*     Eventclient/Server/ck_4_deliver_events()
-*
-*******************************************************************************/
-static void 
-sge_flush_events(lListElem *event_client, int interval) 
-{
-   int now = sge_get_gmt();
-
-   DENTER(TOP_LAYER, "sge_flush_events");
-
-   if (event_client == NULL) {
-      for_each (event_client, EV_Clients) {
-         sge_flush_events_(event_client, interval, now);
-      }
-   } else {
-      sge_flush_events_(event_client, interval, now);
-   }
-
-   DEXIT;
-   return;
-} /* sge_flush_events() */
-
-static void 
-sge_flush_events_(lListElem *event_client, int interval, int now)
+} /* send_events() */
+ 
+static void flush_events(lListElem *event_client, int interval, int now)
 {
    u_long32 next_send, flush_delay;
 
-   DENTER(TOP_LAYER, "sge_flush_events");
+   DENTER(TOP_LAYER, "flush_events");
+
+   SGE_ASSERT(NULL != event_client);
+
+   if (0 == now) {
+      now = time(NULL);
+   }
 
    next_send = lGetUlong(event_client, EV_next_send_time);
    next_send = MIN(next_send, now + interval);
@@ -1470,8 +1701,8 @@ sge_flush_events_(lListElem *event_client, int interval, int now)
    next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
 
    lSetUlong(event_client, EV_next_send_time, next_send);
-   DPRINTF(("ev_client: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
-         lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
+   DPRINTF(("%s: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
+         SGE_FUNC, lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
          now, next_send, 
          lGetHost(event_client, EV_host), 
          lGetString(event_client, EV_commproc),
@@ -1479,7 +1710,7 @@ sge_flush_events_(lListElem *event_client, int interval, int now)
 
    DEXIT;
    return;
-}
+} /* flush_events() */
 
 /****** Eventclient/Server/reinit_event_client() *******************************
 *  NAME
@@ -1692,15 +1923,15 @@ check_send_new_subscribed_list(const subscription_t *old_subscription,
    }   
 }
 
-/****** Eventclient/Server/sge_eventclient_subscribed() ************************
+/****** Eventclient/Server/eventclient_subscribed() ************************
 *  NAME
-*     sge_eventclient_subscribed() -- has event client subscribed an event?
+*     eventclient_subscribed() -- has event client subscribed an event?
 *
 *  SYNOPSIS
 *     #include "sge_event_master.h"
 *
 *     int 
-*     sge_eventclient_subscribed(const lListElem *event_client, ev_event event) 
+*     eventclient_subscribed(const lListElem *event_client, ev_event event) 
 *
 *  FUNCTION
 *     Checks if the given event client has a certain event subscribed.
@@ -1719,13 +1950,13 @@ check_send_new_subscribed_list(const subscription_t *old_subscription,
 *     Eventclient/-Session filtering
 *******************************************************************************/
 static int 
-sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
+eventclient_subscribed(const lListElem *event_client, ev_event event, 
    const char *session)
 {
    const subscription_t *subscription = NULL;
    const char *ec_session;
 
-   DENTER(TOP_LAYER, "sge_eventclient_subscribed");
+   DENTER(TOP_LAYER, "eventclient_subscribed");
 
    if (event_client == NULL) {
       DEXIT;
@@ -1833,7 +2064,7 @@ static int purge_event_list(lList* aList, ev_event anEvent)
 } /* remove_events_from_client() */
 
 static int 
-sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
+add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
                     const char *strkey2, lList *list, int need_copy_list) 
 {
@@ -1844,7 +2075,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    char buffer[1024];
    dstring buffer_wrapper;
 
-   DENTER(TOP_LAYER, "sge_add_list_event_"); 
+   DENTER(TOP_LAYER, "add_list_event"); 
 
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
@@ -1919,15 +2150,15 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 
       if (subscription[type].flush) {
          DPRINTF(("flushing event client\n"));
-         sge_flush_events(event_client, subscription[type].flush_time);
+         flush_events(event_client, 0, subscription[type].flush_time);
       }
    }
    DEXIT;
-   return EV_Clients?consumed:1;
+   return Master_Control.clients?consumed:1;
 }
 
 static void 
-sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
+add_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
                u_long32 intkey, u_long32 intkey2, const char *strkey, 
                const char *strkey2, lListElem *element) 
 {
@@ -1989,7 +2220,7 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       }       
    }
   
-   sge_add_list_event_(event_client, timestamp, type, 
+   add_list_event(event_client, timestamp, type, 
                        intkey, intkey2, strkey, strkey2, lp, false);
    
  
@@ -2031,7 +2262,7 @@ sge_total_update_event(lListElem *event_client, ev_event type)
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    session = lGetString(event_client, EV_session);
 
-   if (sge_eventclient_subscribed(event_client, type, NULL)) {
+   if (eventclient_subscribed(event_client, type, NULL)) {
       switch (type) {
          case sgeE_ADMINHOST_LIST:
             lp = Master_Adminhost_List;
@@ -2420,44 +2651,6 @@ static const lDescr* getDescriptorL(subscription_t *subscription, const lList* l
 
 /****** Eventclient/Server/eventclient_list_locate() **************************
 *  NAME
-*     eventclient_list_locate() -- search for the scheduler
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     lListElem *
-*     eventclient_list_locate(ev_registration_id id) 
-*
-*  FUNCTION
-*     Searches the event client list for an event client with the
-*     specified id.
-*     Returns a pointer to the event client object or
-*     NULL, if no such event client is registered.
-*
-*  INPUTS
-*     ev_registration_id id - id of the event client to search
-*
-*  RESULT
-*     lListElem* - event client object or NULL.
-*
-*  NOTES
-*     MT-NOTE: eventclient_list_locate() is MT safe.
-*
-*******************************************************************************/
-static lListElem* eventclient_list_locate(ev_registration_id id)
-{
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "eventclient_list_locate");
-
-   ep = lGetElemUlong(EV_Clients, EV_id, id);
-
-   DEXIT;
-   return ep;
-} /* eventclient_list_locate() */
-
-/****** Eventclient/Server/eventclient_list_locate() **************************
-*  NAME
 *     eventclient_list_locate_by_adress() -- search event client by adress
 *
 *  SYNOPSIS
@@ -2491,7 +2684,7 @@ eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long
 
    DENTER(TOP_LAYER, "eventclient_list_locate_by_adress");
 
-   for_each (ep, EV_Clients)
+   for_each (ep, Master_Control.clients)
       if (lGetUlong(ep, EV_commid) == id &&
           !sge_hostcmp(lGetHost(ep, EV_host), host) &&
            !strcmp(lGetString(ep, EV_commproc), commproc))
@@ -2501,54 +2694,3 @@ eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long
    return ep;
 }
 
-/****** sge_event_master/sge_init_send_events() ********************************
-*  NAME
-*     sge_init_send_events() -- sets the events, that should allways be delivered 
-*
-*  SYNOPSIS
-*     void sge_init_send_events() 
-*
-*  FUNCTION
-*     sets the events, that should allways be delivered 
-*
-*  NOTES
-*     MT-NOTE: sge_init_send_events() is not MT safe 
-*     changes two global variables (SEND_EVENTS,IS_INIT_SEND_EVENTS).
-*     Should only be executed ones, during init of the event master
-*
-*******************************************************************************/
-static void sge_init_send_events(void) {
-   DENTER(TOP_LAYER, "sge_init_send_events");
-
-   if (!IS_INIT_SEND_EVENTS) {
-      IS_INIT_SEND_EVENTS = true;
-
-      memset(SEND_EVENTS, false, sizeof(bool) * sgeE_EVENTSIZE);
-
-      SEND_EVENTS[sgeE_ADMINHOST_LIST] = true;
-      SEND_EVENTS[sgeE_CALENDAR_LIST] = true;
-      SEND_EVENTS[sgeE_CKPT_LIST] = true;
-      SEND_EVENTS[sgeE_CENTRY_LIST] = true;
-      SEND_EVENTS[sgeE_CONFIG_LIST] = true;
-      SEND_EVENTS[sgeE_EXECHOST_LIST] = true;
-      SEND_EVENTS[sgeE_JOB_LIST] = true;
-      SEND_EVENTS[sgeE_JOB_SCHEDD_INFO_LIST] = true;
-      SEND_EVENTS[sgeE_MANAGER_LIST] = true;
-      SEND_EVENTS[sgeE_OPERATOR_LIST] = true;
-      SEND_EVENTS[sgeE_PE_LIST] = true;
-      SEND_EVENTS[sgeE_PROJECT_LIST] = true;
-      SEND_EVENTS[sgeE_QMASTER_GOES_DOWN] = true;
-      SEND_EVENTS[sgeE_CQUEUE_LIST] = true;
-      SEND_EVENTS[sgeE_SUBMITHOST_LIST] = true;
-      SEND_EVENTS[sgeE_USER_LIST] = true;
-      SEND_EVENTS[sgeE_USERSET_LIST] = true;
-      SEND_EVENTS[sgeE_HGROUP_LIST] = true;
-#ifndef __SGE_NO_USERMAPPING__      
-      SEND_EVENTS[sgeE_CUSER_LIST] = true;
-#endif      
-
-   }
-
-   DEXIT;
-   return;
-}

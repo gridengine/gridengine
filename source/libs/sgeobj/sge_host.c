@@ -47,6 +47,9 @@
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
+#include "sge_cqueueL.h" 
+#include "sge_hgroup.h"
+#include "sge_hrefL.h"
 
 lList *Master_Exechost_List = NULL;
 lList *Master_Adminhost_List = NULL;
@@ -93,28 +96,31 @@ host_list_locate(const lList *host_list, const char *hostname)
 *
 *  FUNCTION
 *     This function returns true if the given "host" is referenced
-*     in a queue contained in "queue_list". If this is the case than
-*     a corresponding message will be added to the "answer_list". 
+*     in a cqueue contained in "queue_list" or in a host group. 
+*     If this is the case than a corresponding message will be added 
+*     to the "answer_list". 
 *
 *  INPUTS
 *     const lListElem *host   - EH_Type, AH_Type or SH_Type object 
 *     lList **answer_list     - AN_Type list 
-*     const lList *queue_list - QU_Type list 
+*     const lList *queue_list - CQ_Type list 
+*     const lList *hgrp_list  - HGRP_Type list (Master list)
 *
 *  RESULT
 *     int - true (1) or false (0) 
 ******************************************************************************/
 bool host_is_referenced(const lListElem *host, 
                         lList **answer_list,
-                        const lList *queue_list)
+                        const lList *queue_list,
+                        const lList *hgrp_list)
 {
    bool ret = false;
 
    if (host != NULL) {
+      lListElem *cqueue = NULL;
       lListElem *queue = NULL;
       const char *hostname = NULL;
       int nm = NoName;
-      int pos = -1;
 
       if (object_has_type(host, EH_Type)) {
          nm = object_get_primary_key(EH_Type);
@@ -123,17 +129,45 @@ bool host_is_referenced(const lListElem *host,
       } else if (object_has_type(host, SH_Type)) {
          nm = object_get_primary_key(SH_Type);
       }
-      pos = lGetPosViaElem(host, nm);
-      hostname = lGetPosHost(host, pos);
-      queue = lGetElemHost(queue_list, QU_qhostname, hostname); 
+      hostname = lGetHost(host, nm);
 
-      if (queue != NULL) {
-         const char *queuename = lGetString(queue, QU_qname);
+      /* look at all the queue instances and figure out, if one still references
+         the host we are looking for */
+      for_each(cqueue, queue_list) { 
+         queue = lGetSubHost(cqueue, QU_qhostname, hostname, CQ_qinstances); 
 
-         sprintf(SGE_EVENT, MSG_HOSTREFINQUEUE_SS, hostname, queuename);
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                         ANSWER_QUALITY_INFO);
-         ret = true;
+         if (queue != NULL) {
+            const char *queuename = lGetString(cqueue, CQ_name);
+
+            sprintf(SGE_EVENT, MSG_HOSTREFINQUEUE_SS, hostname, queuename);
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                            ANSWER_QUALITY_INFO);
+            ret = true;
+            break;
+         }
+      }
+
+      /* if we have not found a reference yet, we keep looking in the host groups, if
+         we have an exec host */
+      if (!ret && object_has_type(host, EH_Type)) {
+         lListElem *hgrp_elem = NULL;
+         lList *host_list;
+
+         for_each (hgrp_elem, hgrp_list) {
+            hgroup_find_all_references(hgrp_elem, NULL, hgrp_list, &host_list, NULL);
+            if (host_list != NULL) {
+               if (lGetElemHost(host_list, HR_name, hostname) != NULL) {
+                  const char *hgrp_name = lGetHost(hgrp_elem, HGRP_name);
+
+                  sprintf(SGE_EVENT, MSG_HOSTREFINHGRP_SS, hostname, hgrp_name);
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                            ANSWER_QUALITY_INFO);
+
+                  ret = true;
+                  break;
+               }
+            }
+         }
       }
    }
    return ret;
@@ -167,11 +201,12 @@ const char *host_get_load_value(lListElem *host, const char *name)
    lListElem *load;
    const char *value = NULL;
 
-   load = lGetSubStr(host, HL_name, name, EH_load_list);
-   if(load != NULL) {
-      value = lGetString(load, HL_value);
-   }
-   
+   if (host != NULL) {
+      load = lGetSubStr(host, HL_name, name, EH_load_list);
+      if(load != NULL) {
+         value = lGetString(load, HL_value);
+      }
+   }   
    return value;
 }
 

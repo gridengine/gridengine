@@ -839,13 +839,13 @@ void answer_list_append_list(lList **answer_list, lList **new_list)
    DEXIT;
 }
 
-/****** sgeobj/answer/answer_list_output() ****************************
+/****** sgeobj/answer/answer_list_log() ****************************
 *  NAME
-*     answer_list_print_err_warn() -- output and free answer_list
+*     answer_list_log() -- output and free answer_list
 *
 *  SYNOPSIS
 *     bool
-*     answer_list_print_err_warn(lList **answer_list)
+*     answer_list_log(lList **answer_list, bool is_free_list)
 *
 *  FUNCTION
 *     Prints all messages contained in "answer_list". 
@@ -857,16 +857,18 @@ void answer_list_append_list(lList **answer_list, lList **new_list)
 *     If there is no error contained in 'answer_list' then this function 
 *     will return with a value of false. 
 *
-*     "*answer_list" will be freed and set to NULL.
+*     "*answer_list" will only be freed and set to NULL, if is_free_list is
+*     true.
 *
 *  INPUTS
 *     lList **answer_list     - AN_Type list 
+*     bool is_free_list       - if true, frees the answer list
 *
 *  NOTES
 *     MT-NOTE: answer_list_print_err_warn() is MT safe
 ******************************************************************************/
-bool answer_list_output(lList **answer_list)
-{
+bool answer_list_log(lList **answer_list, bool is_free_list) {
+
    bool ret = false;
    lListElem *answer;   /* AN_Type */
 
@@ -889,11 +891,42 @@ bool answer_list_output(lList **answer_list)
                break;
          }
       }
-
-      *answer_list = lFreeList(*answer_list);
+      if (is_free_list) {
+         *answer_list = lFreeList(*answer_list);
+      }
    }
 
    DEXIT;
    return ret;
 }
 
+/****** sgeobj/answer/answer_list_output() ****************************
+*  NAME
+*     answer_list_output() -- output and free answer_list
+*
+*  SYNOPSIS
+*     bool
+*     answer_list_output(lList **answer_list)
+*
+*  FUNCTION
+*     Prints all messages contained in "answer_list". 
+*     The ERROR, WARNING and INFO macros will be used for output.
+*
+*     If the "answer_list" contains at least one error then this
+*     function will return true.
+*
+*     If there is no error contained in 'answer_list' then this function 
+*     will return with a value of false. 
+*
+*     "*answer_list" will be freed and set to NULL.
+*
+*  INPUTS
+*     lList **answer_list     - AN_Type list 
+*
+*  NOTES
+*     MT-NOTE: answer_list_output() is MT safe
+******************************************************************************/
+
+bool answer_list_output(lList **answer_list) {
+   return answer_list_log(answer_list, true);
+}

@@ -1,3 +1,8 @@
+SG-2004-07-30-0: Enhancem.: added a feature to filter the jobs in the
+                            scheduler based on their category.
+                 Changed:   schedler, schedd.conf(5)
+                 Review:    AD
+
 SG-2004-07-29-0: Bugfix:    Resending queue signals broken
                  Changed:   exed, qmaster
                  Issue:     1178

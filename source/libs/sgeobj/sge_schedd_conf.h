@@ -155,6 +155,8 @@ bool sconf_get_share_functional_shares(void);
 
 bool sconf_get_report_pjob_tickets(void);
 
+bool sconf_is_job_category_filtering(void);
+
 u_long32 sconf_get_flush_submit_sec(void);
    
 u_long32 sconf_get_flush_finish_sec(void);

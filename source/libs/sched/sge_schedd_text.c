@@ -337,6 +337,9 @@ int nr
       case SCHEDD_INFO_MAX_AJ_INSTANCES:
          return MSG_SCHEDD_INFO_MAX_AJ_INSTANCES;
 
+      case SCHEDD_INFO_JOB_CATEGORY_FILTER:
+         return MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER;
+
       default:
          return "";
    }

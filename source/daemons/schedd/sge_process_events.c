@@ -91,7 +91,8 @@ extern int shut_me_down;
 extern int start_on_master_host;
 extern int new_global_config;
 
-bool rebuild_categories = true;
+static bool rebuild_categories = true;
+static bool is_fc_filtering = false;
 
 const lCondition 
       *where_queue = NULL,
@@ -146,7 +147,6 @@ int event_handler_my_scheduler()
 
 int event_handler_default_scheduler() 
 {
-   int ret;
    sge_Sdescr_t copy;
    dstring ds;
    char buffer[128];
@@ -174,10 +174,7 @@ int event_handler_default_scheduler()
       rebuild_categories = 0;   
    }
 
-   if ((ret=sge_before_dispatch())) {
-      DEXIT;
-      return ret;
-   }
+   sge_before_dispatch();
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_init = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -186,8 +183,6 @@ int event_handler_default_scheduler()
    memset(&copy, 0, sizeof(copy));
 
    ensure_valid_what_and_where();
-
-   copy.job_list = lCopyList("", Master_Job_List);                           
 
    /* the scheduler functions have to work with a reduced copy .. */
    copy.host_list = lSelect("", Master_Exechost_List,
@@ -221,6 +216,13 @@ int event_handler_default_scheduler()
          }
       }
    }
+
+   if (sconf_is_job_category_filtering()) {
+      copy.job_list = sge_category_job_copy(Master_Job_List, copy.queue_list); 
+   }
+   else {
+      copy.job_list = lCopyList("test", Master_Job_List);                         
+   }   
 
    copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
    copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
@@ -335,8 +337,8 @@ int event_handler_default_scheduler()
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s)\n",
-               prof_event, prof_init, prof_copy, prof_run, prof_free));
+      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d)\n",
+               prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count() ));
 
       log_state_set_log_level(saved_logginglevel);
    }
@@ -666,6 +668,10 @@ void cleanup_default_scheduler(void)
 bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
                                          lListElem *event, void *clientdata){
    sconf_print_config();
+
+   /* do we have to rebuild the job categories? */
+   rebuild_categories |=  (is_fc_filtering != sconf_is_job_category_filtering());
+
    return true;
 }
 
@@ -681,6 +687,8 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
 
    old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
+
+   is_fc_filtering = sconf_is_job_category_filtering();
 
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));

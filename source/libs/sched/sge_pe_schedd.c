@@ -173,7 +173,7 @@ lList *acl_list
    DENTER(TOP_LAYER, "pe_match_static");
 
    total_slots = (int)lGetUlong(pe, PE_slots);
-   if (total_slots == 0 /* || !num_in_range(total_slots, lGetList(job, JB_pe_range)) this is not relevant */  ) { 
+   if (total_slots == 0) { 
       /* because there are not enough PE slots in total */
       DPRINTF(("total slots %d of PE \"%s\" not in range of job "u32"\n",
             total_slots, lGetString(pe, PE_name), lGetUlong(job, JB_job_number)));

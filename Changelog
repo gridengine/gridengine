@@ -1,3 +1,9 @@
+AH-2004-05-14-1: Bugfix:    qstat -j shows wrong message for parallel jobs 
+                            which can't be dispatched
+                            Partial fix.
+                 Issue:     814
+                 Review:    SG
+
 JG-2004-05-14-1: Testsuite: test functional/migration was broken due to changed
                             qstat queue output.
 

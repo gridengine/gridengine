@@ -1160,6 +1160,8 @@ static void qmaster_shutdown(void)
 
    sge_event_shutdown();
 
+   sge_clean_lists();
+
    sge_shutdown();
 
    DEXIT;

@@ -305,8 +305,7 @@ static int        eventclient_subscribed(const lListElem *, ev_event, const char
 static int        purge_event_list(lList* aList, ev_event anEvent); 
 static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*, bool);
 static void       add_list_event_direct(lListElem *event_client,
-                                        lListElem *event, bool select_list,
-                                        bool copy_event);
+                                        lListElem *event, bool copy_event);
 static void       total_update_event(lListElem*, ev_event);
 static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
@@ -1511,7 +1510,9 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    lSetUlong (evp, EV_id, aClientID);
    lSetString (evp, EV_session, session);
    lSetList (evp, EV_events, etlp);
+
    lAppendElem (etlp, etp);
+
    lSetUlong (etp, ET_type, type);
    lSetUlong(etp, ET_timestamp, timestamp);
    lSetUlong (etp, ET_intkey, intkey);
@@ -1687,7 +1688,7 @@ static void process_sends ()
 /* This is the default, non-optimized way of doing things. */
 #if 1
                if (eventclient_subscribed(event_client, type, session)) {
-                  add_list_event_direct (event_client, event, true, true);
+                  add_list_event_direct (event_client, event, true);
                }
                
                unlock_client (ec_id);
@@ -1761,10 +1762,10 @@ static void process_sends ()
                       (Master_Control.clients_indices[count] == 0)) {
                      /* If this is the first element, and there is no next
                       * element, just reuse the event. */
-                     add_list_event_direct (ev_buffer, et_buffer, true, false);
+                     add_list_event_direct (ev_buffer, et_buffer, false);
                   }
                   else {
-                     add_list_event_direct (ev_buffer, et_buffer, true, true);
+                     add_list_event_direct (ev_buffer, et_buffer, true);
                   }
                }
                
@@ -1780,7 +1781,7 @@ static void process_sends ()
             if (ev_buffer != NULL) {
                ec_id = id_buffer;
                lock_client (ec_id, true);
-               add_list_event_direct (ev_buffer, et_buffer, true, false);
+               add_list_event_direct (ev_buffer, et_buffer, false);
                unlock_client (ec_id);
 
                /* We can't free the event when we're done because it now belongs
@@ -1792,7 +1793,7 @@ static void process_sends ()
                et_buffer = NULL;
             }
 #endif
-            
+            event = lFreeElem(event);
             event = lFirst (event_list);
          } /* while */
       } /* if */
@@ -1841,7 +1842,7 @@ static void process_sends ()
                   ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), SGE_FUNC));
                }
                else if (eventclient_subscribed(event_client, type, session)) {
-                  add_list_event_direct (event_client, event, true, false);
+                  add_list_event_direct (event_client, event, false);
 
                   /* We can't free the event when we're done because it now belongs
                    * to send_events(). */
@@ -3113,8 +3114,8 @@ static int purge_event_list(lList* aList, ev_event anEvent)
    return purged;
 } /* remove_events_from_client() */
 
-static void add_list_event_direct(lListElem *event_client, lListElem *event,
-                                  bool select_list, bool copy_event)
+static void add_list_event_direct(lListElem *event_client, lListElem *event, 
+                                  bool copy_event)
 {
    lList *lp = NULL;
    lList *clp = NULL;
@@ -3125,6 +3126,9 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    char buffer[1024];
    dstring buffer_wrapper;
    u_long32 i = 0;
+   const lCondition *selection = NULL;
+   const lEnumeration *fields = NULL;
+   const lDescr *descr = NULL;
    
    DENTER(TOP_LAYER, "add_list_event_direct"); 
 
@@ -3132,93 +3136,79 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   if (select_list) {
-      const lCondition *selection = NULL;
-      const lEnumeration *fields = NULL;
-      const lDescr *descr = NULL;
-      
-      /* Pull out payload for selecting */
-      lXchgList (event, ET_new_version, &lp);
+   /* Pull out payload for selecting */
+   lXchgList (event, ET_new_version, &lp);
 
-      /* If the list is NULL, no need to bother with any of this.  Plus, if we
-       * did do this part with a NULL list, the check for a clp with no
-       * elements would kick us out. */
-      if (lp != NULL) {
-         subscription = lGetRef(event_client, EV_sub_array);
-         selection = subscription[type].where;
-         fields = subscription[type].what;
+   /* If the list is NULL, no need to bother with any of this.  Plus, if we
+    * did do this part with a NULL list, the check for a clp with no
+    * elements would kick us out. */
+   if (lp != NULL) {
+      subscription = lGetRef(event_client, EV_sub_array);
+      selection = subscription[type].where;
+      fields = subscription[type].what;
 
-         DPRINTF(("deliver event: %d with where filter=%s and what filter=%s\n", 
-                  type, selection?"true":"false", fields?"true":"false"));
+      DPRINTF(("deliver event: %d with where filter=%s and what filter=%s\n", 
+               type, selection?"true":"false", fields?"true":"false"));
 
-         if (fields) {
-            descr = getDescriptorL(subscription, lp, type);
+      if (fields) {
+         descr = getDescriptorL(subscription, lp, type);
 
-            DPRINTF (("Reducing event data\n"));
-            
-            if (!list_select(subscription, type, &clp, lp, selection, fields,
-                             descr)){
-               clp = lSelectD("updating list", lp, selection, descr, fields);
-            }
-
-            /* no elements in the event list, no need for an event */
-            if (!SEND_EVENTS[type] && lGetNumberOfElem(clp) == 0) {
-               if (clp != NULL) {
-                  lFreeList(clp);
-               }
-
-               DPRINTF (("Skipping event because it has no content for this client.\n"));
-               return;
-            }
-
-            /* If we're not making a copy, we have to free the original list.  If
-             * we are making a copy, freeing the list is the responsibility of the
-             * calling function. */
-            if (!copy_event) {
-               lp = lFreeList (lp);
-            }
-         } /* if */
-         /* If there's no what clause, and we want a copy, we copy the list */
-         else if (copy_event) {
-            DPRINTF (("Copying event data\n"));
-            clp = lCopyList (lGetListName (lp), lp);
+         DPRINTF (("Reducing event data\n"));
+         
+         if (!list_select(subscription, type, &clp, lp, selection, fields,
+                          descr)){
+            clp = lSelectD("updating list", lp, selection, descr, fields);
          }
-         /* If there's no what clause, and we don't want to copy, we just reuse
-          * the original list. */
-         else {
-            clp = lp;
+
+         /* no elements in the event list, no need for an event */
+         if (!SEND_EVENTS[type] && lGetNumberOfElem(clp) == 0) {
+            if (clp != NULL) {
+               clp = lFreeList(clp);
+            }
+
+            DPRINTF (("Skipping event because it has no content for this client.\n"));
+            return;
+         }
+
+         /* If we're not making a copy, we have to free the original list.  If
+          * we are making a copy, freeing the list is the responsibility of the
+          * calling function. */
+         if (!copy_event) {
+            lp = lFreeList (lp);
          }
       } /* if */
-
-      /* If we're making a copy, copy the event and swap the orignial list
-       * back into the original event */
-      if (copy_event) {
-         DPRINTF (("Copying event\n"));
-         ep = lCopyElem (event);
-         
-         if (lp != NULL) {
-            lXchgList (event, ET_new_version, &lp);
-         }
+      /* If there's no what clause, and we want a copy, we copy the list */
+      else if (copy_event) {
+         DPRINTF (("Copying event data\n"));
+         clp = lCopyList (lGetListName (lp), lp);
       }
-      /* If we're not making a copy, reuse the original event. */
+      /* If there's no what clause, and we don't want to copy, we just reuse
+       * the original list. */
       else {
-         ep = event;
-      }
-
-      /* Swap the new list into the working event. */
-      if (clp != NULL) {
-         lXchgList (ep, ET_new_version, &clp);
+         clp = lp;
       }
    } /* if */
-   /* If we're making a copy, but not selecting, copy the whole event. */
-   else if (copy_event) {
+
+   /* If we're making a copy, copy the event and swap the orignial list
+    * back into the original event */
+   if (copy_event) {
       DPRINTF (("Copying event\n"));
       ep = lCopyElem (event);
+      
+      if (lp != NULL) {
+         lXchgList (event, ET_new_version, &lp);
+      }
    }
-   /* If we're not selecting and not copying, just reuse the original event. */
+   /* If we're not making a copy, reuse the original event. */
    else {
       ep = event;
    }
+
+   /* Swap the new list into the working event. */
+   if (clp != NULL) {
+      lXchgList (ep, ET_new_version, &clp);
+   }
+
    
    /* Make sure lp is clear for the next part. */
    lp = NULL;

@@ -86,6 +86,8 @@ int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_
 
 void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
+void sge_clean_lists(void); 
+
 int verify_request_version(lList **alpp, u_long32 version, char *host, char *commproc, int id);
 
 #endif /* __SGE_C_GDI_H */

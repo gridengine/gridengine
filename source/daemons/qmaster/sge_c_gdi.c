@@ -139,6 +139,18 @@ static gdi_object_t gdi_object[] = {
 };
 /* *INDENT-ON* */
 
+void sge_clean_lists(void) {
+   int i = 0;
+
+   for(;i < gdi_object[i].target != 0 ; i++) {
+      if (gdi_object[i].master_list != NULL) {
+         *gdi_object[i].master_list = lFreeList(*gdi_object[i].master_list);
+      }   
+   }
+   
+}
+
+
 int verify_request_version(
 lList **alpp,
 u_long32 version,

@@ -1,3 +1,11 @@
+SG-2004-04-22-0: Bugfix:    - fixed memory leak in sge_event_master
+                            - added a cleanup method for all lists on qmaster
+                              shutdown
+                            - scheduler would exit, if the qmaster is gone for
+                              a while
+                 Changed:   qmaster, schedd
+                 Review:    CR, AD
+
 MD-2004-04-22-0: Bugfix:    LD_LIBRARY_PATH was wrong. -> wrong ARCH string
                             job check during uninstall, if rescheduled or no
                  Review:    JG

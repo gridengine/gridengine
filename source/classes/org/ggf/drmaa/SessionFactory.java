@@ -33,6 +33,7 @@ package org.ggf.drmaa;
 
 import java.io.*;
 import java.util.Properties;
+import java.security.*;
 
 /** <p>This class is used to retrieve a Session object tailored to the
  * DRM in use.  The factory will use the org.ggf.drmaa.SessionFactory
@@ -62,11 +63,13 @@ public abstract class SessionFactory {
     * @return a SessionFactory object appropriate for the DRM in use
     */	
 	public static SessionFactory getFactory () {
-		if (thisFactory == null) {
-			thisFactory = newFactory ();
-		}
+      synchronized (SessionFactory.class) {
+         if (thisFactory == null) {
+            thisFactory = (SessionFactory)AccessController.doPrivileged (new NewFactoryAction ());
+         }
+      }
 		
-		return thisFactory;
+      return thisFactory;
    }
 	
 	/** Creates a SessionFactory object appropriate for the DRM in use.  This
@@ -79,18 +82,21 @@ public abstract class SessionFactory {
     * property still has not been found, the method throws an Error.
     * @return a DRMAASession object appropriate for the DRM in use
     */	
-	private static SessionFactory newFactory () {
+	private static SessionFactory newFactory () throws ConfigurationError {
 		ClassLoader classLoader = findClassLoader ();
+		Exception e = null;
 		
 		// Use the system property first
 		try {
 			String systemProp = System.getProperty (SESSION_PROPERTY);
+         
 			if (systemProp != null) {
 				return (SessionFactory)newInstance (systemProp, classLoader);
 			}
 		}
 		catch (SecurityException se) {
 			//If we get a security exception, treat it as failure and try the next method
+			e = se;
 		}
 		
 		// try to read from $java.home/lib/drmaa.properties
@@ -107,9 +113,11 @@ public abstract class SessionFactory {
 		}
 		catch (SecurityException se ) {
 			//If we get a security exception, treat it as failure and try the next method
+			e = se;
 		}
       catch (IOException ie) {
 			//If we get an I/O exception, treat it as failure and try the next method
+			e = ie;
       }      
 		
 		String serviceId = "META-INF/services/" + SESSION_PROPERTY;
@@ -136,9 +144,10 @@ public abstract class SessionFactory {
 		}
 		catch (Exception ex) {
          //Ignore exceptions here and let the config error be thrown
+			e = ex;
       }
 		
-		throw new ConfigurationError ("Provider for " + SESSION_PROPERTY + " cannot be found", null);
+		throw new ConfigurationError ("Provider for " + SESSION_PROPERTY + " cannot be found", e);
 	}
    	
 	/** Figure out which ClassLoader to use.  For JDK 1.2 and later use the
@@ -149,8 +158,8 @@ public abstract class SessionFactory {
 	 * @throws ConfigurationError thrown if the classloader cannot be found or loaded
 	 * @return an appropriate ClassLoader
 	 */
-	private static ClassLoader findClassLoader () throws ConfigurationError {
-		ClassLoader classLoader;
+	private static ClassLoader findClassLoader () {
+		ClassLoader classLoader = null;
 		
 		try {
 			// Construct the name of the concrete class to instantiate
@@ -216,4 +225,10 @@ public abstract class SessionFactory {
 			return exception;
 		}
 	}
+
+   private static class NewFactoryAction implements PrivilegedAction {
+      public Object run () {
+         return newFactory ();
+      }
+   }
 }

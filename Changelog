@@ -1,3 +1,14 @@
+DT-2005-03-04-0: Bugfix:    o Cleaned up JAPI locking
+                            o Cleaned up JAPI session handling
+                            o Cleaned up DRMAA-J JNI code
+                            o Fixed security bugs in DRMAA-J
+                            o Fixed segfault in profiling
+                            o Fixed various DRMAA-J bugs
+                 Changed:   DRMAA-J, JAPI, profiling
+                 Issue:     1470, 1472, 1422, 1076, 1479
+                 BugTraq    6236475, 6236476, 6236472, 6236469, 6236479
+                 Review:    SG, pending
+
 SG-2005-03-04-0: Enhancem.: - added async-gdi handling
                             - enhanced the job class scheduler
                             - cleanup in the order handling 

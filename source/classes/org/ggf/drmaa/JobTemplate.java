@@ -73,8 +73,9 @@ import java.util.*;
  * @since 0.4.2
  */
 public class JobTemplate {
-   /** The names of all the required properties */   
-   private static final String[] attributeNames = new String[] {
+   /* The value for this field is set in the constructor. */
+   /** The names of all the required properties */
+   private static final List attributeNames = Arrays.asList (new String[] {
       "args",
       "blockEmail",
       "email",
@@ -90,7 +91,8 @@ public class JobTemplate {
       "remoteCommand",
       "startTime",
       "workingDirectory"
-   };
+   });
+   private List allAttributeNames = null;
 
 	/** jobSubmissionState which means the job has been queued but it is not
     * eligible to run
@@ -305,7 +307,10 @@ public class JobTemplate {
     */
    public void setWorkingDirectory (String wd) throws DrmaaException {
       if (wd.indexOf (HOME_DIRECTORY) > 0) {
-         throw new InvalidAttributeFormatException ("$drmaa_hd_ph$ may only appear at the beginning of the path.");
+         throw new InvalidAttributeFormatException (HOME_DIRECTORY + " may only appear at the beginning of the path.");
+      }
+      else if (wd.indexOf (WORKING_DIRECTORY) >= 0) {
+         throw new InvalidAttributeFormatException (WORKING_DIRECTORY + " may not be used in the workingDirectory path.");
       }
       
       this.wd = wd;
@@ -913,15 +918,18 @@ public class JobTemplate {
     * @return the list of supported property names
     */	
 	public List getAttributeNames () {
-      ArrayList allNames = null;
-      List requiredNames = Arrays.asList (attributeNames);
-      List optionalNames = this.getOptionalAttributeNames ();
+      synchronized (this) {
+         if (allAttributeNames == null) {
+            List optionalNames = this.getOptionalAttributeNames ();
+
+            allAttributeNames = new ArrayList (attributeNames.size () +
+                                               optionalNames.size ());
+            allAttributeNames.addAll (attributeNames);
+            allAttributeNames.addAll (optionalNames);
+         }
+      }
       
-      allNames = new ArrayList (requiredNames.size () + optionalNames.size ());
-      allNames.addAll (requiredNames);
-      allNames.addAll (optionalNames);
-      
-      return allNames;
+      return allAttributeNames;
    }
    
    /** This method returns the names of all optional and implementation-specific
@@ -948,11 +956,11 @@ public class JobTemplate {
       }
       
       if (path.indexOf (HOME_DIRECTORY) > 0) {
-         throw new IllegalArgumentException ("$drmaa_hd_ph$ may only appear at the beginning of the path.");
+         throw new IllegalArgumentException (HOME_DIRECTORY + " may only appear at the beginning of the path.");
       }
       
       if (path.indexOf (WORKING_DIRECTORY) > 0) {
-         throw new IllegalArgumentException ("$drmaa_wd_ph$ may only appear at the beginning of the path.");
+         throw new IllegalArgumentException (WORKING_DIRECTORY + " may only appear at the beginning of the path.");
       }
    }
 
@@ -1179,28 +1187,5 @@ public class JobTemplate {
       }
       
       return out.toString ();
-   }
-   
-   /** Tests whether this JobTemplate has the same property values as the
-    *  given object.
-    * @param obj the object against which to compare
-    * @return whether the the given object has the same properties as this
-    * object
-    */
-   public boolean equals (Object obj) {
-      if (obj instanceof JobTemplate) {
-         return this.toString ().equals (obj.toString ());
-      }
-      else {
-         return false;
-      }
-   }
-   
-   /** Returns a hash code based on the properties set in this
-    *  JobTemplateImpl.
-    * @return the has code
-    */
-   public int hashCode () {
-      return this.toString ().hashCode ();
    }
 }

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa;
 
+import java.security.*;
 import java.util.*;
 
 import org.ggf.drmaa.*;
@@ -52,7 +53,12 @@ public class SessionImpl implements Session {
    private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.5 -- SGE 6.0";
 	
 	static {
-		System.loadLibrary ("drmaa");
+		AccessController.doPrivileged (new PrivilegedAction () {
+			public Object run () {
+				System.loadLibrary ("drmaa");
+				return null;
+			}
+		});
 	}
 		
 	/** Creates a new instance of SessionImpl */

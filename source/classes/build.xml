@@ -25,7 +25,7 @@
 
    <target depends="init,compile" description="Compile test classes." name="compile.test">
       <mkdir dir="${classes.dir.test}"/>
-      <javac debug="true" deprecation="true" destdir="${classes.dir.test}">
+      <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}">
          <src path="${src.dir.test}"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/drmaa/*.java"/>
@@ -46,7 +46,7 @@
       </jar>
    </target>
 
-   <target depends="init,compile.test" description="Build stand-alone test jar." name="test">
+   <target depends="init,compile.test" description="Build stand-alone test jar." name="test.all">
       <jar compress="true" jarfile="${test.jar}">
          <fileset dir="${classes.dir}">
             <include name="org/ggf/drmaa/*.class"/>
@@ -64,7 +64,7 @@
       </jar>
    </target>
 
-   <target depends="init,compile.test" description="Build test jar." name="test.only">
+   <target depends="init,compile.test" description="Build test jar." name="test">
       <jar compress="true" jarfile="${test.jar}">
          <fileset dir="${classes.dir.test}">
             <include name="org/ggf/drmaa/*.class"/>

@@ -54,9 +54,11 @@ public class SessionFactoryImpl extends SessionFactory {
     * @return a SessionImpl object
     */	
 	public Session getSession () {
-		if (thisSession == null) {
-			thisSession = new SessionImpl ();
-		}
+      synchronized (this) {
+         if (thisSession == null) {
+            thisSession = new SessionImpl ();
+         }
+      }
 		
 		return thisSession;
 	}

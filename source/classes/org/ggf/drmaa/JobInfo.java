@@ -110,16 +110,13 @@ public abstract class JobInfo implements java.io.Serializable {
 	/** Creates a new instance of JobInfo
 	 * @param jobId the id of the job
 	 * @param status the status code of the job
-	 * @param resourceUsage the resource usage data for the job
+	 * @param resourceUsage the resource usage data for the job.  No copy will be
+    * made.
 	 */
 	protected JobInfo (String jobId, int status, Map resourceUsage) {
 		this.jobId = jobId;
 		this.status = status;
-		this.resourceUsage = new HashMap ();
-      
-      if (resourceUsage != null) {
-         this.resourceUsage.putAll (resourceUsage);
-      }
+		this.resourceUsage = resourceUsage;
 	}
 	
 	/** Get the job id.

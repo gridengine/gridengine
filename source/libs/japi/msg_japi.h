@@ -47,6 +47,7 @@ extern "C" {
 #define MSG_JAPI_QMASTER_DOWN   _MESSAGE(45506, _("The qmaster has gone down.  Waiting to reconnect.\n"))
 #define MSG_JAPI_NO_HANDLE_S    _MESSAGE(45507, _("Unable to open a connection to the qmaster: "SFN"\n"))
 #define MSG_JAPI_NEGATIVE_TIMEOUT  _MESSAGE(45508, _("Negative timeout values are not allowed.\n"))
+#define MSG_JAPI_EC_THREAD_NOT_STARTED_S  _MESSAGE(45509, _("Couldn't create event client thread: "SFN"\n"))
 
 #ifdef	__cplusplus
 }

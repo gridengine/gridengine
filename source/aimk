@@ -619,7 +619,7 @@ while ($#argv >= 1 && $?found)
    case "-qmake"
       set USE_QMAKE    = 1
       set MAKE     = "qmake"
-      set MAKEOPT = "-pe make 2-100 -now n -- $MAKEOPT"
+      set MAKEOPT = "-cwd -v PATH -pe make 2-100 -now n -- $MAKEOPT"
       breaksw
    case "-secure":
       set SEC    = 1

@@ -334,7 +334,7 @@ int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_di
  * The job identifier 'job_id' is a printable, NULL terminated string,
  * identical to that returned by the underlying DRM system.
  */
-int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);
+int drmaa_run_job(char *job_id, size_t job_id_len, const drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);
 
 /* 
  * Submit a set of parametric jobs, dependent on the implied loop index, each
@@ -349,7 +349,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, cha
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int drmaa_run_bulk_jobs( drmaa_job_ids_t **jobids, drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
+int drmaa_run_bulk_jobs( drmaa_job_ids_t **jobids, const drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job control routines ------------------- */
 

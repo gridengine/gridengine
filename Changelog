@@ -1,3 +1,6 @@
+AH-2003-11-19-0: Bugfix.: The drmaa_run_job()/drmaa_run_bulk_jobs() 
+                          drmaa_job_template_t * input arguments must be const.
+
 DT-2003-11-18-1: Bugfix.:		Made changes from code review.  Mostly stylisitic.
 								 Changed:		DRMAA & read_defaults.c
 

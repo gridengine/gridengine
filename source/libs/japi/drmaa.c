@@ -90,13 +90,13 @@ static const char *session_shutdown_mode_env_var = "SGE_KEEP_SESSION";
 static int drmaa_is_supported(const char *name, const char *supported_list[]);
 static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
-static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
+static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
-static int japi_drmaa_path2path_opt(lList *attrs, lList **args,
+static int japi_drmaa_path2path_opt(const lList *attrs, lList **args,
    int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag);
-static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk, 
+static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
    dstring *diag);
-static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
+static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
    const char *attribute_key, int do_wd, const char **new_path, dstring *diag);
 static void prune_arg_list (lList *args);
 static void opt_list_append_default_drmaa_opts (lList **opts);
@@ -104,8 +104,8 @@ static void merge_drmaa_options (lList **opts_all, lList **opts_default,
                                  lList **opts_defaults, lList **opts_scriptfile,
                                  lList **opts_job_cat, lList **opts_native,
                                  lList **opts_drmaa);
-static int opt_list_append_opts_from_drmaa_attr (lList **args, lList *attrs,
-   lList *vattrs, int is_bulk, dstring *diag);
+static int opt_list_append_opts_from_drmaa_attr (lList **args, const lList *attrs,
+   const lList *vattrs, int is_bulk, dstring *diag);
 char *drmaa_time2sge_time (const char *drmaa_time, dstring *diag);
 
 /****** DRMAA/-DRMAA_Session_state *******************************************
@@ -889,7 +889,7 @@ int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_di
 *     drmaa_run_job() -- Submit a job
 *
 *  SYNOPSIS
-*     int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, 
+*     int drmaa_run_job(char *job_id, size_t job_id_len, const drmaa_job_template_t *jt, 
 *                char *error_diagnosis, size_t error_diag_len)
 *
 *  FUNCTION
@@ -914,7 +914,7 @@ int drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_di
 *  NOTES
 *      MT-NOTE: drmaa_run_job() is MT safe
 *******************************************************************************/
-int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, 
+int drmaa_run_job(char *job_id, size_t job_id_len, const drmaa_job_template_t *jt, 
     char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag, *diagp = NULL;
@@ -963,7 +963,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt,
 *     drmaa_run_bulk_jobs() -- Submit a bulk of jobs
 *
 *  SYNOPSIS
-*     int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, drmaa_job_template_t *jt, 
+*     int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, const drmaa_job_template_t *jt, 
 *           int start, int end, int incr, char *error_diagnosis, size_t error_diag_len)
 *
 *  FUNCTION
@@ -998,7 +998,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt,
 *  NOTES
 *      MT-NOTE: drmaa_run_bulk_jobs() is MT safe
 *******************************************************************************/
-int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, drmaa_job_template_t *jt, 
+int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, const drmaa_job_template_t *jt, 
       int start, int end, int incr, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag, *diagp = NULL;
@@ -1799,7 +1799,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
 *                            qsub style -wd option
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2wd_opt (lList *attrs, lList **args, int is_bulk,
+*     static int japi_drmaa_path2wd_opt (const lList *attrs, lList **args, int is_bulk,
 *                                        dstring *diag)
 *
 *  FUNCTION
@@ -1825,7 +1825,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
 *  NOTES
 *     MT-NOTE: japi_drmaa_path2wd_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk,
+static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
                                   dstring *diag)
 {
    const char *new_path = NULL;
@@ -1860,7 +1860,7 @@ static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk,
 *                             path option
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2path_opt (lList *attrs, lList **args,
+*     static int japi_drmaa_path2path_opt (const lList *attrs, lList **args,
 *                                          int is_bulk, const char *attribute_key,
 *                                          const char *sw, int opt, dstring *diag)
 *
@@ -1891,7 +1891,7 @@ static int japi_drmaa_path2wd_opt(lList *attrs, lList **args, int is_bulk,
 *  NOTES
 *     MT-NOTE: japi_drmaa_path2path_opt() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2path_opt(lList *attrs, lList **args, int is_bulk,
+static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
                                     const char *attribute_key, const char *sw,
                                     int opt, dstring *diag)
 {
@@ -1957,7 +1957,7 @@ static int japi_drmaa_path2path_opt(lList *attrs, lList **args, int is_bulk,
 *                             counterpart
 *
 *  SYNOPSIS
-*     static int japi_drmaa_path2sge_path (lList *attrs, int is_bulk,
+*     static int japi_drmaa_path2sge_path (const lList *attrs, int is_bulk,
 *                                          const char *attribute_key, int do_wd,
 *                                          const char **new_path, dstring *diag)
 *
@@ -1987,7 +1987,7 @@ static int japi_drmaa_path2path_opt(lList *attrs, lList **args, int is_bulk,
 *  NOTES
 *     MT-NOTE: japi_drmaa_path2sge_path() is MT safe
 *******************************************************************************/
-static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
+static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
                                     const char *attribute_key, int do_wd,
                                     const char **new_path, dstring *diag)
 {
@@ -2045,7 +2045,7 @@ static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
 *                                 Engine counterpart 
 *
 *  SYNOPSIS
-*     int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t 
+*     int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t 
 *     *drmaa_jt, int is_bulk, int start, int end, int step, dstring *diag) 
 *
 *  FUNCTION
@@ -2068,7 +2068,7 @@ static int japi_drmaa_path2sge_path(lList *attrs, int is_bulk,
 *     MT-NOTE: drmaa_job2sge_job() is MT safe
 *
 *******************************************************************************/
-static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt, 
+static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
                              int is_bulk, int start, int end, int step,
                              dstring *diag)
 {
@@ -2349,8 +2349,8 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
 *                                               lList.
 *
 *  SYNOPSIS
-*     int opt_list_append_opts_from_drmaa_attr(lList **args, lList *attrs,
-*                                              lList *vattrs, int is_bulk,
+*     int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs,
+*                                              const lList *vattrs, int is_bulk,
 *                                              dstring *diag)
 *
 *  FUNCTION
@@ -2371,8 +2371,8 @@ static int drmaa_job2sge_job(lListElem **jtp, drmaa_job_template_t *drmaa_jt,
 *     MT-NOTE: opt_list_append_opts_from_drmaa_attr() is MT safe
 *
 *******************************************************************************/
-static int opt_list_append_opts_from_drmaa_attr(lList **args, lList *attrs,
-                                                lList *vattrs, int is_bulk,
+static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs,
+                                                const lList *vattrs, int is_bulk,
                                                 dstring *diag)
 {
    int drmaa_errno;

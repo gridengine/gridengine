@@ -118,7 +118,7 @@ extern int main(int argc, char** argv)
         printf("cl_commlib_get_endpoint_status() returned %s\n", cl_get_error_text(ret));
      }
      if (status != NULL) {
-        printf("endpoint is up since %ld seconds\n", status->runtime);
+        printf("endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status);
         cl_com_free_sirm_message(&status);
         break;
      }

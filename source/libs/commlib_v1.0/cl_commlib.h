@@ -84,6 +84,9 @@ int cl_com_get_max_connections (cl_com_handle_t* handle, int* value);
 int cl_com_enable_max_connection_close(cl_com_handle_t* handle);
 int cl_com_disable_max_connection_close(cl_com_handle_t* handle);
 
+int cl_com_set_status_func(cl_app_status_func_t status_func);
+
+
 
 
 

@@ -199,12 +199,13 @@ typedef struct cl_com_handle_statistic_type {
    unsigned long    new_connections;           /* nr of new connections since last_update */
    unsigned long    access_denied;             /* nr of connections, where access was denied */
    unsigned long    nr_of_connections;         /* nr of open connections */
-   unsigned long    bytes_sent ;                 /* bytes send since last_update */
-   unsigned long    bytes_received;               /* bytes received since last_update */
-   unsigned long    real_bytes_sent ;                 /* bytes send since last_update */
-   unsigned long    real_bytes_received;               /* bytes received since last_update */
-   unsigned long    unsend_message_count;        /* nr of messages to send */
-   unsigned long    unread_message_count;        /* nr of buffered received messages, waiting for application to pick it up */
+   unsigned long    bytes_sent ;               /* bytes send since last_update */
+   unsigned long    bytes_received;            /* bytes received since last_update */
+   unsigned long    real_bytes_sent ;          /* bytes send since last_update */
+   unsigned long    real_bytes_received;       /* bytes received since last_update */
+   unsigned long    unsend_message_count;      /* nr of messages to send */
+   unsigned long    unread_message_count;      /* nr of buffered received messages, waiting for application to pick it up */
+   unsigned long    application_status;        /* status of application */
 } cl_com_handle_statistic_t;
 
 typedef struct cl_com_connection_type cl_com_connection_t;
@@ -215,8 +216,8 @@ typedef struct cl_com_handle {
    int service_provider;            /* if true this component will provide a service for clients (server port) */
    int connect_port;                /* used port number to connect to other service */
    int service_port;                /* local used service port */
-   cl_com_endpoint_t* local;              /* local endpoint id of this handle */
-   cl_com_handle_statistic_t* statistic;
+   cl_com_endpoint_t* local;        /* local endpoint id of this handle */
+   cl_com_handle_statistic_t* statistic; /* statistic data of handle */
 
 /* Threads */
    cl_thread_condition_t* read_condition;  /* condition variable for data write */
@@ -247,10 +248,10 @@ typedef struct cl_com_handle {
    int synchron_receive_timeout;
    
    /* service specific */
-   int do_shutdown;  /* set when this handle wants to shutdown */
-   int max_connection_count_reached;  /* set when max connection count is reached */
-   long shutdown_timeout;  /* used when shutting down handle */
-   cl_com_connection_t* service_handler; /* service handler of this handle */
+   int do_shutdown;                        /* set when this handle wants to shutdown */
+   int max_connection_count_reached;       /* set when max connection count is reached */
+   long shutdown_timeout;                  /* used when shutting down handle */
+   cl_com_connection_t* service_handler;   /* service handler of this handle */
    struct timeval start_time;
 
 } cl_com_handle_t;
@@ -338,6 +339,7 @@ typedef struct cl_com_SIRM_type {
    unsigned long    application_messages_brm;
    unsigned long    application_messages_bwm;
    unsigned long    application_connections_noc;
+   unsigned long    application_status;
    char*            info;
 } cl_com_SIRM_t;
 

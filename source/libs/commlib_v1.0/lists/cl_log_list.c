@@ -565,6 +565,7 @@ int cl_log_list_flush(void) {        /* CR check */
 }
    
 
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif

@@ -97,6 +97,7 @@ typedef enum cl_log_list_flush_method_type {
 } cl_log_list_flush_method_t;
 
 typedef int (*cl_log_func_t)(cl_raw_list_t* log_list);
+typedef unsigned long (*cl_app_status_func_t)(void);
 
 typedef struct cl_log_list_data_type {                      /* list specific data */
    int                         current_log_level;           /* current log level */

@@ -1,3 +1,7 @@
+CR-2004-01-20-1: Enhancem.: communication lib: status information response
+                            message reports application status. 
+                 Changed:   ngc lib
+
 JM-2004-01-20-3: Bugfix:    The aimk configurations for AIX4[123] and AIX51
                             are changed to use CC=xlc_r and CXX=xlC_r.
                             SHAREDLD (for AIX51) is also set to 'xlc_r'.

@@ -64,6 +64,9 @@ int sig
    do_shutdown = 1;
 }
 
+unsigned long my_application_status(void) {
+   return (unsigned long)1;
+}
 
 extern int main(int argc, char** argv)
 {
@@ -93,7 +96,9 @@ extern int main(int argc, char** argv)
   printf("commlib setup ...\n");
   cl_com_setup_commlib(CL_ONE_THREAD, atoi(argv[1]),   NULL );
 
-  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, 5001, "server", 1, 1, 0 );
+  cl_com_set_status_func(my_application_status); 
+
+  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, 5001, "server", 1, 2, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);

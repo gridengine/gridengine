@@ -1653,6 +1653,10 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    unsigned long application_connections_noc_begin = 0;
    unsigned long application_connections_noc_end = 0;
 
+   unsigned long application_status_begin = 0;
+   unsigned long application_status_end = 0;
+
+
    unsigned long info_begin = 0;
    unsigned long info_end = 0;
 
@@ -1765,6 +1769,16 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
                   buf_pointer++;
                   continue;
                }
+               if (strcmp(help_buf,"status") == 0 ) {
+                  application_status_begin = tag_end + 2;
+                  buf_pointer++;
+                  continue;
+               }
+               if (strcmp(help_buf,"/status") == 0) {
+                  application_status_end = tag_begin - 2;
+                  buf_pointer++;
+                  continue;
+               }
                if (strcmp(help_buf,"info") == 0 ) {
                   info_begin = tag_end + 2;
                   buf_pointer++;
@@ -1863,6 +1877,16 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
       (*message)->application_connections_noc = cl_util_get_ulong_value(help_buf);
    }
 
+   /* get application_connections_noc */
+   if (application_status_begin > 0 && application_status_end > 0 && application_status_end >= application_status_begin) {
+      help_buf_pointer = 0;
+      for (i=application_status_begin;i<=application_status_end && help_buf_pointer < 254 ;i++) {
+         help_buf[help_buf_pointer++] = buffer[i];
+      }
+      help_buf[help_buf_pointer] = 0;
+      (*message)->application_status = cl_util_get_ulong_value(help_buf);
+   }
+
 
    CL_LOG_STR(CL_LOG_WARNING,"version:   ", (*message)->version);
    CL_LOG_INT(CL_LOG_WARNING,"mid:       ", (*message)->mid);
@@ -1871,6 +1895,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    CL_LOG_INT(CL_LOG_WARNING,"brm:       ", (*message)->application_messages_brm);
    CL_LOG_INT(CL_LOG_WARNING,"bwm:       ", (*message)->application_messages_bwm);
    CL_LOG_INT(CL_LOG_WARNING,"noc:       ", (*message)->application_connections_noc);
+   CL_LOG_INT(CL_LOG_WARNING,"status:    ", (*message)->application_status);
    CL_LOG_STR(CL_LOG_WARNING,"info:      ", (*message)->info);
 
    return CL_RETVAL_OK;

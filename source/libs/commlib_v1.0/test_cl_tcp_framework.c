@@ -75,9 +75,9 @@ extern int main(int argc, char** argv)
   printf("\nstrlen(CL_SIM_MESSAGE) = %d\n",strlen(help));
   printf(help);
   printf("sizeof CL_SIRM_MESSAGE: %d\n", CL_SIRM_MESSAGE_SIZE);
-  sprintf(help,CL_SIRM_MESSAGE,"",(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,"");
-  printf("\nstrlen(CL_SIRM_MESSAGE) = %d\n",strlen(help)- 6);
-  printf(help);
+  sprintf(help,CL_SIRM_MESSAGE,"",(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,(unsigned long)0,"");
+  printf("\nstrlen(CL_SIRM_MESSAGE) = %d\n",strlen(help)- 7);
+  printf("|%s|\n",help);
 
   exit(1);
 #endif

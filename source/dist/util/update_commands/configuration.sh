@@ -210,10 +210,3 @@ else
    grep '^max_u_jobs'           $2 >> $3
 fi
 
-grep '^max_jobs' $2 2>&1 >/dev/null
-if [ $? != 0 ]; then
-   echo "max_jobs                  0" >> $3
-else
-   grep '^max_jobs'           $2 >> $3
-fi
-

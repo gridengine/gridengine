@@ -1,3 +1,9 @@
+EB-2002-09-04-0  Bugfix:    qmod help output is incomplete
+                 Issue:     #354
+                 Bugtraq:   #4741230
+                 Review:    AH
+                 Changed:   qmod
+
 CR-2002-09-03-0  Testsuite: duplicate hostnames in configuration should be 
                             detected
                  Issue:     #300
@@ -47,8 +53,8 @@ AA-2002-08-28-0  Bugfix:    OK without hostname in host_configuration kill
 
 AH-2002-08-28-1  Doc:       man page typo for sge_aliases
                  Issue:     #347
-                 Doc:       access_list(5) man page does not describe file format
-                            for SGEEE mode
+                 Doc:       access_list(5) man page does not describe file 
+                            format for SGEEE mode
                  Issue:     #357
                  Doc:       Output of prolog/epilog for interactive jobs not
                             mentioned
@@ -61,7 +67,7 @@ SD-2002-08-23-1  Enhancem.  Updated MPI/Myrinet integration for latest release
 EB-2002-08-23-0  Bugfix:    scheduler crashes if defaultuser has 0 shares in 
                             sharetree
                  Issues:    #363
-                 Bigtraq:   #4735972
+                 Bugtraq:   #4735972
                  Review:    AS
                  Changed:   sge_schedd
 
@@ -114,7 +120,7 @@ EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is
                             not reached
                  Issue:     #345
                  Bugtraq:   #4727515
-                 Review:    AS
+                 Review:    AH, AS
                  Changed:   sge_schedd
 
 CR-2002-08-02-0: Testsuite: delete_job: when wait_for_end is specified, delete

@@ -143,7 +143,7 @@ static XtResource sc_resources[] = {
 };
 
 
-static tSCEntry data = {NULL, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
+static tSCEntry data = {NULL, NULL, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
 
 
 static Widget qmon_sconf = 0;

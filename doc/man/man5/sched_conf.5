@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2003/11/13 16:57:14 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/01/30 18:58:42 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2003/11/13 16:57:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/01/30 18:58:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -177,24 +177,6 @@ waits for event reports otherwise.
 \fBSchedule_interval\fP is a time value (see
 .M queue_conf 5
 for a definition of the syntax of time values).
-.SS "\fBuser_sort\fP"
-xxQS_NAMExx usually schedules user jobs corresponding to a first-come-first-served
-policy. In case a user submits a large amount of jobs in very short time,
-this can lead to a rather unfair situation, because all users submitting
-afterwards are blocked until most of the first user's jobs are completed.
-Therefore, xxQS_NAMExx allows to change this policy to the so called
-equal share sort: As soon as a user has a job running his other jobs
-are sorted to the end of the pending jobs list. Thus, the first jobs of all
-other users have comparable chances to find a queue. \fBNote:\fP The
-equal share sort only applies within the same job priority category
-(refer to the \fImp\fP option of the
-.M qsub 1
-and
-.M qalter 1
-commands for more information).
-.PP
-The default for \fBuser_sort\fP is \fBFALSE\fP.
-.\"
 .SS "\fBqueue_sort_method\fP"
 This parameter determines in which order several criteria are taken into
 account to product a sorted queue list. Currently, two settings are valid:

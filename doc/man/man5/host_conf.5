@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/01/30 18:58:42 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2004/01/30 18:58:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -199,50 +199,6 @@ for Memory consumption aggregated over the life-time of jobs and
 .B io
 for data transferred via any I/O devices. The default NONE means
 "no scaling", i.e. all scaling factors are 1.
-.IP "\fBresource_capability_factor\fP"
-This entry is only present in a xxQS_NAME_EExx system. It is not available in xxQS_NAME_Cxx.
-.sp 1
-The resource capability factor is used by xxQS_NAME_EExx when assigning jobs to 
-execution hosts. The resource capability factor tells xxQS_NAME_EExx how the 
-resources (CPU, memory, I/O, etc.) of one execution host compare to the 
-resources of other execution hosts. This helps to ensure that a job 
-requiring a large percentage of resources (i.e. lots of tickets) gets placed 
-on an execution host containing a large percentage of the available 
-resources. The load situation on the execution hosts is taken into account 
-in addition, to guarantee that the selected host is both powerful enough and 
-lightly loaded.
-.sp 1
-For example, you might consider setting your resource capability factors 
-for each execution host based on the number of CPUs, the speed of the 
-CPUs and the installed main memory:
-.sp 1
-.nf
-.ta \w'xxx'u
-	#_of_CPUs * (MHz/200) + GB_of_memory
-.fi
-.sp 1
-This would give an execution host with 32 200 MHz CPUs and 10 
-gigabytes of memory a resource capability factor of 42, while an 
-execution host with 24 200 MHz CPUs and 40 gigabytes of memory 
-would get a resource capability factor of 64, i.e. memory has a significant 
-impact in this example.
-.sp 1
-Other factors that you might want to consider in setting the resource 
-capability factor are:
-.sp 1
-.nf
-.ta \w'xxx'u \w'available disk spacexxxx'u
-	job mix	- CPU or memory bound jobs
-	CPU benchmarks	- comparison by CPU vendor
-	megaflops (MFLOPS)	- for number crunching
-	I/O capabilities	- disk/network speed
-	available disk space	- at the execution host
-.fi
-.sp 1
-The resource capability factor is stored as a floating point double value. 
-The range of values used is not important. xxQS_NAME_EExx only looks at the relation 
-between values of different hosts.
-.\"
 .IP "\fBuser_lists\fP"
 The \fBuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in

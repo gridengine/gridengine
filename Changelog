@@ -1,3 +1,24 @@
+SD-2004-01-30-2: Bugfix:    Fixed compile problem
+                 Changed:   qmon
+
+SD-2004-01-30-1: Enhancem.: Removed user_sort from sched_conf(5)
+                 Changed:   sched_conf(5)
+                 Issue:     636
+
+SD-2004-01-30-0: Bugfix:    - Removed sort_by_share option from the
+                              queue_sort_method
+                            - Removed resource_capability_factor from host
+                              configuration
+                            - Removed oticket and fshare from queue
+                              configuration
+                 Changed:   qmaster, schedd
+                 Issue:     643
+
+SG-2004-01-30-0: Bugfix:  - fixed qstat -j usage output for pe jobs
+                          - fixed qacct -j output. It parsed the acc. file
+                            wrong.
+                 Changed:   qstat, qacct
+
 AS-2004-01-30-1: Change:    Change architecture names according to Issue #644
                  Issue:     #644
 

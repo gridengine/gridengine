@@ -1060,7 +1060,8 @@ lListElem *lGetObject(const lListElem *ep, int name)
 *  RESULT
 *     lList* - CULL list pointer 
 ******************************************************************************/
-lList *lGetList(const lListElem *ep, int name) 
+lList *
+lGetList(const lListElem *ep, int name) 
 {
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetList");

@@ -1,9 +1,13 @@
-CR-2004-06-18-1: Testsuite: - new check for CR-2004-06-18-0 ( issues 1096 and 1098)
-                            - new configuration parameter: reserved_port
-                            - fixed testsuite problem on shutdown of multi threaded 
-                              qmaster process(es!) on linux systems.
+EB-2004-06-22-0: Cleanup:   Added ADOC commets
 
-CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as "root"
+CR-2004-06-18-1: Testsuite: - new check for CR-2004-06-18-0 (issues 1096 and 
+                              1098)
+                            - new configuration parameter: reserved_port
+                            - fixed testsuite problem on shutdown of multi 
+                              threaded qmaster process(es!) on linux systems.
+
+CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as 
+                              "root"
                             o qmaster cannot bind port below 1024 on Linux
                  Changed:   qmaster
                  Issue:     1096, 1098

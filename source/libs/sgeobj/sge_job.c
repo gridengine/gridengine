@@ -1704,7 +1704,7 @@ error:
 *
 *     Please note: The "*_O_*" env variables get their final
 *                  name shortly before job execution. Find more 
-*                  information in the ADOC comment of
+*                  information in the comment of
 *                  job_initialize_env()
 *
 *  INPUTS
@@ -1742,7 +1742,7 @@ const char *job_get_env_string(const lListElem *job, const char *variable)
 *
 *     Please note: The "*_O_*" env variables get their final
 *                  name shortly before job execution. Find more 
-*                  information in the ADOC comment of
+*                  information in the comment of
 *                  job_initialize_env()
 *
 *  INPUTS
@@ -2470,8 +2470,28 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
       return STATUS_OK;
 }
 
-/* EB: ADOC: add commets */
-
+/****** sgeobj/job/job_get_request() ******************************************
+*  NAME
+*     job_get_request() -- Returns the requested centry name 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     job_get_request(const lListElem *this_elem, const char **centry_name) 
+*
+*  FUNCTION
+*     Returns the requested centry name if it is requested by the give
+*     job (JB_Type). 
+*
+*  INPUTS
+*     const lListElem *this_elem - JB_Type element 
+*     const char *centry_name    - name 
+*
+*  RESULT
+*     lListElem * - CE_Type element
+*
+*  NOTES
+*     MT-NOTE: job_get_request() is MT safe 
+*******************************************************************************/
 lListElem *
 job_get_request(const lListElem *this_elem, const char *centry_name) 
 {
@@ -2489,6 +2509,8 @@ job_get_request(const lListElem *this_elem, const char *centry_name)
    DEXIT;
    return ret;
 }
+
+/* EB: ADOC: add commets */
 
 bool
 job_get_contribution(const lListElem *this_elem, lList **answer_list,

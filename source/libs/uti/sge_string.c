@@ -472,11 +472,29 @@ void sge_strip_blanks(char *str)
    return;
 }
 
-/* EB: ADOC: add commets */
-
+/****** uti/string/sge_strip_white_space_at_eol() ******************************
+*  NAME
+*     sge_strip_white_space_at_eol() -- truncate white space at EOL 
+*
+*  SYNOPSIS
+*     void sge_strip_white_space_at_eol(char *str) 
+*
+*  FUNCTION
+*     Truncate white space from the end of the string 
+*
+*  INPUTS
+*     char *str - string to be modified 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: sge_strip_white_space_at_eol() is MT safe 
+*******************************************************************************/
 void sge_strip_white_space_at_eol(char *str) 
 {
    DENTER(BASIS_LAYER, "sge_strip_white_space_at_eol");
+
    if (str != NULL) {
       size_t length = strlen(str);
 
@@ -1179,9 +1197,27 @@ sge_strerror(int errnum, dstring *buffer)
    return ret;
 }
 
-
-/* EB: ADOC: add commets */
-
+/****** uti/string/sge_str_is_number() *****************************************
+*  NAME
+*     sge_str_is_number() -- represents the given string a number 
+*
+*  SYNOPSIS
+*     bool sge_str_is_number(const char *string) 
+*
+*  FUNCTION
+*     This function returns true if the given string represents a number. 
+*
+*  INPUTS
+*     const char *string - string 
+*
+*  RESULT
+*     bool - result
+*        true  - string represents a number
+*        false - string is not a number 
+*
+*  NOTES
+*     MT-NOTE: sge_str_is_number() is MT safe 
+*******************************************************************************/
 bool sge_str_is_number(const char *string)
 {
    char *end = NULL;

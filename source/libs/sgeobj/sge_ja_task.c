@@ -376,9 +376,37 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    return ret;
 }
 
-/* EB: ADOC: add commets */
-
-bool
+/****** sgeobj/ja_task/ja_task_message_add() **********************************
+*  NAME
+*     ja_task_message_add() -- add a message to the message list of a task 
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_message_add(lListElem *this_elem, u_long32 type, 
+*                         const char *message) 
+*
+*  FUNCTION
+*     Adds a message in the "JAT_message_list"-message list of "this_elem"
+*     "type" will be the message type. "message" is the text string stored
+*     int the new element of the sublist.  
+*
+*  INPUTS
+*     lListElem *this_elem - JAT_Type element 
+*     u_long32 type        - message type id 
+*     const char *message  - message 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: ja_task_message_add() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/ja_task/ja_task_message_trash_all_of_type_X()
+*******************************************************************************/
+bool 
 ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
 {
    bool ret = true;
@@ -389,6 +417,32 @@ ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
    return ret;
 }
 
+/****** sgeobj/ja_task/ja_task_message_trash_all_of_type_X() ******************
+*  NAME
+*     ja_task_message_trash_all_of_type_X() -- Trash messages of certain type 
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_message_trash_all_of_type_X(lListElem *this_elem, 
+*                                         u_long32 type) 
+*
+*  FUNCTION
+*     Trash all messages from the sublist of JAT_message_list which are of
+*     the given "type". 
+*     
+*
+*  INPUTS
+*     lListElem *this_elem - JAT_Type element 
+*     u_long32 type        - type id 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: ja_task_message_trash_all_of_type_X() is MT safe 
+*******************************************************************************/
 bool
 ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
 {

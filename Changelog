@@ -1,3 +1,16 @@
+CR-2003-01-14-2  Testsuite: modified file procedures:
+                            - get_tmp_file_name(): returned same file
+                              name when calling two times in a row.
+                            - convert_spool_file_to_html(): new option
+                              to return only html content without
+                              creating a file.
+                            - create_html_table(): new parameters
+                              to set border and align in tables
+                            new procedures:
+                            - read_array_from_file_data()
+                            - create_html_target()
+                            - create_html_image()
+
 JG-2003-01-14-0  Testsuite: Fixed and improved sharetree test.
 
 CR-2003-01-14-1  Testsuite: New command line parameter for testsuite:

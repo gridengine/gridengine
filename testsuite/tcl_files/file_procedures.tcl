@@ -195,11 +195,22 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
       set hostname $CHECK_HOST
    }
 
-   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
-     set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
-   } else {
-     set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+
+   while { 1 } {
+      if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
+        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+      } else {
+        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+      }
+    
+      # break loop when file is not existing ( when timestamp has increased )  
+      if { [ file isfile $file_name] != 1 } {
+         break
+      }
+      sleep 1
    }
+
+
    delete_file_at_startup $file_name
  
    return $file_name
@@ -238,15 +249,17 @@ proc dump_array_data { obj_name obj } {
 #     convert_spool_file_to_html() -- convert array data in spool file to html 
 #
 #  SYNOPSIS
-#     convert_spool_file_to_html { spoolfile htmlfile } 
+#     convert_spool_file_to_html { spoolfile htmlfile { just_return_content 0 }} 
 #
 #  FUNCTION
 #     This procedure generates a html output file from an array spool file.
 #     Use the procedure spool_array_to_file() to generate a array spool file.
 #
 #  INPUTS
-#     spoolfile - spool file directory path
-#     htmlfile  - output file directory path
+#     spoolfile                 - spool file directory path
+#     htmlfile                  - output file directory path
+#     { just_return_content 0 } - if 1: return just html content
+#                               - if 0: create file and return html content
 #
 #  SEE ALSO
 #     file_procedures/generate_html_file()
@@ -254,7 +267,7 @@ proc dump_array_data { obj_name obj } {
 #     file_procedures/create_html_link()
 #     file_procedures/create_html_text()
 #*******************************************************************************
-proc convert_spool_file_to_html { spoolfile htmlfile } {
+proc convert_spool_file_to_html { spoolfile htmlfile { just_return_content 0 }} {
    global CHECK_OUTPUT
 
    set content ""
@@ -275,7 +288,9 @@ proc convert_spool_file_to_html { spoolfile htmlfile } {
          set spec_data [unpack_data_line $file_dat($i)]
          set obj_data($spec) $spec_data
       }
-      append content [create_html_text "Object name: $obj" ]
+      if { $just_return_content == 0 } {
+         append content [create_html_text "Object name: $obj" ]
+      }
       set obj_names [array names obj_data]
       set obj_names [lsort $obj_names]
       set obj_names_count [llength $obj_names]
@@ -295,7 +310,11 @@ proc convert_spool_file_to_html { spoolfile htmlfile } {
       dump_array_data $obj obj_data
       unset obj_data
    }
-   return [generate_html_file $htmlfile "Object Dump" $content 1]
+   if { $just_return_content == 0 } {
+      return [generate_html_file $htmlfile "Object Dump" $content 1]
+   } else {
+      return $content
+   }
 }
 
 #****** file_procedures/spool_array_to_file() **********************************
@@ -770,6 +789,73 @@ proc read_array_from_file { filename obj_name array_name { enable_washing_machin
 }
 
 
+#****** file_procedures/read_array_from_file_data() ****************************
+#  NAME
+#     read_array_from_file_data() -- read array data from file data array
+#
+#  SYNOPSIS
+#     read_array_from_file_data { file_data obj_name array_name 
+#     { enable_washing_machine 0 } } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     file_data                    - file data object name
+#     obj_name                     - object to read from file data
+#     array_name                   - array name to store object
+#     { enable_washing_machine 0 } - optional: display washing machine
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc read_array_from_file_data { file_data obj_name array_name { enable_washing_machine 0 } } {
+  global CHECK_OUTPUT
+  upvar $array_name data
+  upvar $file_data file_dat
+
+  set obj_start [search_for_obj_start file_dat $obj_name]
+  if { $obj_start < 0 } {
+     return -1
+  }
+  set obj_end   [search_for_obj_end file_dat $obj_name]
+  if { $obj_end < 0 } {
+     return -1
+  }
+  set wcount 0
+  set time 0
+  for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
+     incr i 1
+     set spec [unpack_data_line $file_dat($i)]
+     incr i 1
+     set spec_data [unpack_data_line $file_dat($i)]
+     set data($spec) $spec_data
+     if { $enable_washing_machine != 0 && $wcount > 20 } {
+        puts -nonewline $CHECK_OUTPUT "\r reading ...    \r reading ... [washing_machine $time 1]\r"
+        flush $CHECK_OUTPUT
+        set wcount 0
+        incr time 1
+     }
+     incr wcount 1
+  }
+  return 0
+}
+
+
+
+
 
 #****** file_procedures/get_all_subdirectories() *******************************
 #  NAME
@@ -975,15 +1061,19 @@ proc generate_html_file { file headliner content { return_text 0 } } {
 #     file_procedures/create_html_link()
 #     file_procedures/create_html_text()
 #*******************************************************************************
-proc create_html_table { array_name } {
+proc create_html_table { array_name { border 0 } { align LEFT } } {
    upvar $array_name table
 
    set back ""
-   append back "\n<center><table BORDER=0 COLS=${table(COLS)} WIDTH=\"80%\" NOSAVE >\n" 
+   append back "\n<center><table BORDER=$border COLS=${table(COLS)} WIDTH=\"80%\" NOSAVE >\n" 
    for {set row 1} { $row <= $table(ROWS) } { incr row 1 } {
-      append back "<tr ALIGN=CENTER VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
+      append back "<tr ALIGN=$align VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
       for {set col 1} { $col <= $table(COLS) } { incr col 1 } {
-         append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+         if { [ info exists table($row,$col,FNCOLOR) ] } {
+            append back "<td NOSAVE><b><font color=\"$table($row,$col,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+         } else {
+            append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+         }
       }
       append back "</tr>\n"
    }
@@ -1022,6 +1112,58 @@ proc create_html_link { linktext linkref } {
    return $back
 }
 
+#****** file_procedures/create_html_image() ************************************
+#  NAME
+#     create_html_image() -- integrate html image
+#
+#  SYNOPSIS
+#     create_html_image { alternative_text path } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     alternative_text - alternative text of image
+#     path             - path or link to image
+#
+#  RESULT
+#     html output
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc create_html_image { alternative_text path } {
+
+   set back ""
+   append back "<center><img SRC=\"$path\" ALT=\"$alternative_text\" NOSAVE></center>"
+   return $back
+}
+
+#****** file_procedures/create_html_target() ***********************************
+#  NAME
+#     create_html_target() -- append html target
+#
+#  SYNOPSIS
+#     create_html_target { target_name } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     target_name - link, name of target
+#
+#  RESULT
+#     html output
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc create_html_target { target_name } {
+   set back ""
+   append back "<p><a NAME=\"$target_name\"></a>"
+   return $back
+}
+
 #****** file_procedures/create_html_text() *************************************
 #  NAME
 #     create_html_text() -- create html text
@@ -1047,6 +1189,10 @@ proc create_html_link { linktext linkref } {
 #*******************************************************************************
 proc create_html_text { content { center 0 } } {
    set back ""
+
+   if { $content == "" }  {
+      set content "<br>"
+   }
 
    if { $center != 0 } {
       append back "<center>\n"
@@ -2232,5 +2378,6 @@ if { [info exists argc ] != 0 } {
       puts $result 
       flush $CHECK_OUTPUT
    }
-}
+} 
+
 

@@ -34,36 +34,61 @@
 
 #include "basis_types.h"
 
-extern bool profiling_started;
+#include "sge_dstring.h"
 
-void profiling_start(void);
-void profiling_stop(void);
+typedef enum {
+   SGE_PROF_NONE = -1,
+   SGE_PROF_OTHER = 0,
+   SGE_PROF_COMMUNICATION,
+   SGE_PROF_EVENTCLIENT,
+   SGE_PROF_EVENTMASTER,
+   SGE_PROF_MIRROR,
+   SGE_PROF_SPOOLING,
+   SGE_PROF_GDI,
+   SGE_PROF_CUSTOM0,
+   SGE_PROF_CUSTOM1,
+   SGE_PROF_CUSTOM2,
+   SGE_PROF_CUSTOM3,
+   SGE_PROF_CUSTOM4,
+   SGE_PROF_CUSTOM5,
+   SGE_PROF_CUSTOM6,
+   SGE_PROF_CUSTOM7,
+   SGE_PROF_CUSTOM8,
+   SGE_PROF_CUSTOM9,
+   SGE_PROF_ALL
+} prof_level;
 
-void profiling_start_measurement(void);
-void profiling_stop_measurement(void);
+bool prof_set_level_name(prof_level level, const char *name, dstring *error);
 
-#define PROFILING_START_MEASUREMENT \
-   if(profiling_started) {\
-      profiling_start_measurement();\
+bool prof_is_active(void);
+
+bool prof_start(dstring *error);
+bool prof_stop(dstring *error);
+
+bool prof_start_measurement(prof_level level, dstring *error);
+bool prof_stop_measurement(prof_level level, dstring *error);
+
+#define PROF_START_MEASUREMENT(level) \
+   if(prof_is_active()) {\
+      prof_start_measurement(level, NULL);\
    }   
 
-#define PROFILING_STOP_MEASUREMENT \
-   if(profiling_started) {\
-      profiling_stop_measurement();\
+#define PROF_STOP_MEASUREMENT(level) \
+   if(prof_is_active()) {\
+      prof_stop_measurement(level, NULL);\
    }   
 
-void profiling_reset(void);
+bool prof_reset(dstring *error);
 
-double profiling_get_measurement_wallclock(void);
-double profiling_get_measurement_utime(void);
-double profiling_get_measurement_stime(void);
+double prof_get_measurement_wallclock(prof_level level, bool with_sub, dstring *error);
+double prof_get_measurement_utime(prof_level level, bool with_sub, dstring *error);
+double prof_get_measurement_stime(prof_level level, bool with_sub, dstring *error);
 
-double profiling_get_total_wallclock(void);
-double profiling_get_total_busy(void);
-double profiling_get_total_utime(void);
-double profiling_get_total_stime(void);
+double prof_get_total_wallclock(dstring *error);
+double prof_get_total_busy(prof_level level, bool with_sub, dstring *error);
+double prof_get_total_utime(prof_level level, bool with_sub, dstring *error);
+double prof_get_total_stime(prof_level level, bool with_sub, dstring *error);
 
-const char *profiling_get_info_string(void);
-
+const char *prof_get_info_string(prof_level level, bool with_sub, dstring *error);
 
 #endif /* __SGE_PROFILING_H */

@@ -41,30 +41,52 @@ int main(int argc, char *argv[])
 {
    int i;
    double x, y;
+   dstring error = DSTRING_INIT;
 
    /* initialize */
-   profiling_start();
-   printf("after start:    %s\n", profiling_get_info_string());
+   if(!prof_start(&error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+
+   if(!prof_set_level_name(SGE_PROF_CUSTOM1, "test", &error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+   printf("after start:\n");
+
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
    /* sleep and measure time */
-   PROFILING_START_MEASUREMENT;
+   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
    sleep(5);
-   PROFILING_STOP_MEASUREMENT;
-   printf("after sleep(5): %s\n", profiling_get_info_string());
+   PROF_STOP_MEASUREMENT(SGE_PROF_MIRROR);
+   printf("after sleep(5):\n");
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
    /* work and measure time */
-   PROFILING_START_MEASUREMENT;
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    for(i = 0; i < 1000000; i++) {
       x = sin(i % 10);
       y = cos(i % 10);
    }
-   PROFILING_STOP_MEASUREMENT;
-   printf("after working:  %s\n", profiling_get_info_string());
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   printf("after working: \n");
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+   printf("with subusage: \n");
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, true, &error));
 
    /* reset profiling, verify data */
-   profiling_reset();
-   printf("after reset:    %s\n", profiling_get_info_string());
+   if(!prof_reset(&error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+   printf("after reset: \n");
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
-   profiling_stop();
+   if(!prof_stop(&error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
    return EXIT_SUCCESS;
 }

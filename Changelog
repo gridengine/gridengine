@@ -1,3 +1,9 @@
+JG-2002-02-27-0  Enhancem.: Introduced multiple levels for profiling in
+                            sge_profiling.
+                 Bugfix:    Scheduler did not get notified about global config
+                            changes.
+                 Review:    EB
+
 EB-2002-02-27-0  Enhancem.: removed dependencies between libgdi and libsgeobj
 
 AH-2003-02-27-1  Bugfix:    overriding queue limits with job request limits

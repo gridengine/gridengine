@@ -1973,7 +1973,7 @@ ec_get(lList **event_list)
    u_long32 wrong_number;
 
    DENTER(TOP_LAYER, "ec_get");
- 
+
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;

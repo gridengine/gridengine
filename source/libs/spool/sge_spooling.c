@@ -33,6 +33,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_profiling.h"
+
 #include "msg_spoollib.h"
 
 #include "sge_spooling.h"
@@ -747,8 +749,9 @@ int spool_read_list(const lListElem *context, lList **list, const sge_object_typ
       return false;
    }
 
-
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
    ret = func(type, rule, list, event_type);
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
 
    DEXIT;
    return ret;
@@ -824,7 +827,9 @@ lListElem *spool_read_object(const lListElem *context, const sge_object_type eve
       return false;
    }
 
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
    result = func(type, rule, key, event_type);
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
 
    DEXIT;
    return result;
@@ -914,11 +919,13 @@ bool spool_write_object(const lListElem *context, const lListElem *object, const
          return false;
       }
 
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
       if(!func(type, rule, object, key, event_type)) {
          WARNING((SGE_EVENT, MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
                   lGetString(rule, SPR_name), lGetString(context, SPC_name)));
          ret = false;
       }
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    }
   
    DEXIT;
@@ -998,11 +1005,13 @@ bool spool_delete_object(const lListElem *context, const sge_object_type event_t
          return false;
       }
 
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
       if(!func(type, rule, key, event_type)) {
          WARNING((SGE_EVENT, MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
                   lGetString(rule, SPR_name), lGetString(context, SPC_name)));
          ret = false;
       }
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    }
   
    DEXIT;

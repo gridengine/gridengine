@@ -35,6 +35,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
 
 #include "sge_unistd.h"
 #include "sge_all_listsL.h"
@@ -70,7 +71,8 @@
 #include "msg_clients_common.h"
 
 #include "sge_mirror.h"
-#include "sge_spooling_classic.h"
+#include "sge_spooling.h"
+#include "sge_spooling_loader.h"
 #include "sge_event.h"
 
 /* JG: TODO: This should be a public interface in libspool
@@ -466,6 +468,7 @@ int main(int argc, char *argv[])
    dstring common_dir = DSTRING_INIT;
    dstring spool_dir  = DSTRING_INIT;
    lListElem *spooling_context;
+   time_t next_prof_output = 0;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
@@ -476,8 +479,8 @@ int main(int argc, char *argv[])
    }
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if ((cl_err = sge_gdi_setup(prognames[QEVENT], NULL))) {
+      ERROR((SGE_EVENT, "sge_gdi_setup failed: %s\n", cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
 
@@ -490,8 +493,7 @@ int main(int argc, char *argv[])
 #define defstring(str) #str
 
    /* initialize spooling */
-   spooling_context = spool_create_dynamic_context(SPOOL_NAME(SPOOLING_METHOD), 
-                                                   argv[1], argv[2]); 
+   spooling_context = spool_create_dynamic_context(argv[1], argv[2]); 
    if(spooling_context == NULL) {
       SGE_EXIT(EXIT_FAILURE);
    }
@@ -508,10 +510,18 @@ int main(int argc, char *argv[])
    /* initialize mirroring */
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
    sge_mirror_subscribe(SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL);
-   profiling_start();
+   prof_start(NULL);
 
    while(!shut_me_down) {
+      time_t now;
+      
       sge_mirror_process_events();
+
+      now = time(0);
+      if (now > next_prof_output) {
+         INFO((SGE_EVENT, "\n%s", prof_get_info_string(SGE_PROF_ALL, false, NULL)));
+         next_prof_output = now + 60;
+      }
    }
 
    sge_mirror_shutdown();

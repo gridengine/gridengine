@@ -143,7 +143,7 @@ int scheduler(sge_Sdescr_t *lists) {
    fpdjp = fopen("/tmp/sge_debug_job_place.out", "a");
 #endif
 
-   PROFILING_START_MEASUREMENT;
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
@@ -222,17 +222,18 @@ int scheduler(sge_Sdescr_t *lists) {
       return 0;
    }
 #endif
-   if(profiling_started) {
+   if(prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
-      PROFILING_STOP_MEASUREMENT;
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 
       log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(x), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
-         profiling_get_measurement_wallclock(),
-         profiling_get_measurement_utime(),
-         profiling_get_measurement_stime(),
-         profiling_get_measurement_utime() + profiling_get_measurement_stime(),
+         prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL),
+         prof_get_measurement_utime(SGE_PROF_CUSTOM1, true, NULL),
+         prof_get_measurement_stime(SGE_PROF_CUSTOM1, true, NULL),
+         prof_get_measurement_utime(SGE_PROF_CUSTOM1, true, NULL) + 
+         prof_get_measurement_stime(SGE_PROF_CUSTOM1, true, NULL),
          scheduled_fast_jobs,
          scheduled_complex_jobs,
          lGetNumberOfElem(orderlist), 

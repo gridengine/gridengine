@@ -75,6 +75,9 @@
 
 #include "sge_mirror.h"
 
+/* for profiling output, number of processed events */
+int num_events = 0;
+
 /* Static functions for internal use */
 static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
                                               sge_mirror_callback callback_before, 
@@ -744,6 +747,8 @@ sge_mirror_error sge_mirror_process_events(void)
 
    DENTER(TOP_LAYER, "sge_mirror_process_events");
 
+   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
+
    now = sge_get_gmt();
 
    if(ec_get(&event_list) == 0) {
@@ -759,6 +764,15 @@ sge_mirror_error sge_mirror_process_events(void)
          ret = SGE_EM_TIMEOUT;
       }
    }
+
+   if(prof_is_active()) {
+      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
+
+      INFO((SGE_EVENT, "processed %d requests, %s", 
+            num_events, prof_get_info_string(SGE_PROF_MIRROR, false, NULL)
+          ));
+   }
+
    
    DEXIT;
    return SGE_EM_OK;
@@ -818,13 +832,11 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
 { 
    lListElem *event;
    sge_mirror_error function_ret;
-   int num_events = 0;
 
    DENTER(TOP_LAYER, "sge_mirror_process_event_list");
 
-   PROFILING_START_MEASUREMENT;
-
    function_ret = SGE_EM_OK;
+   num_events = 0;
 
    for_each(event, event_list) {
       sge_mirror_error ret = SGE_EM_OK;
@@ -1138,15 +1150,6 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
       if(ret != SGE_EM_OK) {
          function_ret = SGE_EM_PROCESS_ERRORS;
       }
-   }
-
-
-   if(profiling_started) {
-      profiling_stop_measurement();
-
-      INFO((SGE_EVENT, "processed %d requests, %s\n", 
-            num_events, profiling_get_info_string()
-          ));
    }
 
    DEXIT;

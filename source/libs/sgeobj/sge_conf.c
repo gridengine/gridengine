@@ -832,11 +832,11 @@ int merge_configuration(lListElem *global, lListElem *local,
       }
 
       /* post process schedd config: profiling */
-      if(do_profiling && !profiling_started) {
-         profiling_start();
+      if(do_profiling && !prof_is_active()) {
+         prof_start(NULL);
       }
-      if(!do_profiling && profiling_started) {
-         profiling_stop();
+      if(!do_profiling && prof_is_active()) {
+         prof_stop(NULL);
       }
       
    }

@@ -226,6 +226,14 @@
 #define MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS        _MESSAGE(49089, _("Error! numerical value near %20s invalid.\n>%20s< contains no valid decimal or fixed float number\n"))
 #define MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS  _MESSAGE(49090, _("Error! numerical value near "SFN" invalid.\n'"SFN"' contains no valid hex or octal number\n"))
 
+/*
+ * sge_profiling.c
+ */
+#define MSG_PROF_INVALIDLEVEL_SD                _MESSAGE(49091, _(SFN": invalid profiling level %d\n"))
+#define MSG_PROF_ALREADYACTIVE_S                _MESSAGE(49092, _(SFN": profiling is already active\n"))
+#define MSG_PROF_NOTACTIVE_S                    _MESSAGE(49093, _(SFN": profiling is not active\n"))
+#define MSG_PROF_CYCLICNOTALLOWED_SD            _MESSAGE(49094, _(SFN": cyclic measurement for level %d requested - disabling profiling\n"))
+#define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49094, _(SFN": cannot reset profiling while a measurement is active\n"))
 
 #endif /* __MSG_UTILIB_H */
 

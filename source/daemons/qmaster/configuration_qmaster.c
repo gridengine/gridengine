@@ -292,6 +292,11 @@ char *rhost
       lSetUlong(ep, CONF_version, old_conf_version + 1);
       lSetUlong(confp, CONF_version, old_conf_version + 1);
    }
+
+   if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
+      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
+   }
+   
    spool_write_object(spool_get_default_context(), confp, 
                       lGetHost(confp, CONF_hname), SGE_TYPE_CONFIG);
    /*

@@ -370,7 +370,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
                           submission_time, REPORTING_DELIMITER,
                           job_number, REPORTING_DELIMITER,
                           -1, REPORTING_DELIMITER, /* means: no ja_task yet */
-                          "none", REPORTING_DELIMITER,
+                          NONE_STR, REPORTING_DELIMITER,
                           job_name, REPORTING_DELIMITER,
                           owner, REPORTING_DELIMITER,
                           group, REPORTING_DELIMITER,
@@ -409,7 +409,7 @@ reporting_create_job_log(lList **answer_list,
 
       u_long32 job_id = 0;
       int ja_task_id = -1;
-      const char *pe_task_id = "none";
+      const char *pe_task_id = NONE_STR;
       u_long32 state_time = 0, jstate;
       const char *event;
       char state[20];

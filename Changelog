@@ -1,3 +1,13 @@
+JG-2004-07-27-0: Bugfix:    Fixes in reporting file:
+                            - pe_task_id for non pe jobs were inconsistend (in 
+                              some cases "none", in others "NONE").
+                            - Intermediate accounting records contained invalid
+                              data for submission_time and start_time.
+                 Changed:   sge_qmaster
+                 Bugtraq:   5078872
+                 Bugfix:    Fixed a memory leak when reading from Berkeley DB.
+                 Review:    RH
+
 RH-2004-07-26-1: Bugfix:    definition of wc_cqueue added to man page.              
                  Issue:     1103
                  Bugtraq:   Not defined

@@ -56,7 +56,7 @@
 /*
  * Define the semaphore operation arrays for the semop() calls.
  */
-#if defined(bsd4_2) || defined(MACH) || defined(__hpux) || defined(_AIX) || defined(SOLARIS) || defined(SINIX) || (defined(LINUX) && defined(_SEM_SEMUN_UNDEFINED))
+#if defined(bsd4_2) || defined(MACH) || defined(__hpux) || defined(_AIX) || defined(SOLARIS) || defined(SINIX) || (defined(LINUX) && defined(_SEM_SEMUN_UNDEFINED)) || defined(NETBSD)
 union semun {
    int val;                     /* value for SETVAL */
    struct semid_ds *buf;        /* buffer for IPC_STAT & IPC_SET */

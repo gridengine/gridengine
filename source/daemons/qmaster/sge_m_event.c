@@ -55,6 +55,116 @@
 #include "qidl_c_gdi.h"
 #endif
 
+/****** Eventclient/Server/--Introduction *****************************************
+*  NAME
+*     Event Client Interface -- Server Functionality
+*
+*  SYNOPSIS
+*
+*  FUNCTION
+*     The server module of the event client interface is used to integrate
+*     the capability to server event clients into server daemons.
+*     
+*     It is used in the Grid Engine qmaster but should be capable to handle
+*     any event client server integration.
+*
+*  NOTES
+*     The module still contains code specific to one event client, the scheduler.
+*     A further cleanup step should be done as suggested in 
+*     Eventclient/--Introduction
+*
+*  SEE ALSO
+*     Eventclient/--Introduction
+*******************************************************************************/
+static void total_update(lListElem *event_client);
+
+static void sge_total_update_event(lListElem *event_client, u_long32 type);
+
+static void sge_add_event_( lListElem *event_client, u_long32 type, 
+                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
+                     lListElem *element );
+
+static int sge_add_list_event_(lListElem *event_client,
+                               u_long32 type, u_long32 intkey, 
+                               u_long32 intkey2, const char *strkey, 
+                               lList *list, int need_copy_elem);
+
+static void sge_flush_events_(lListElem *event_client, int cmd, int now);
+void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, uid_t uid, sge_gdi_request *answer);
+static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
+                                           lListElem *event_client, int event);
+
+/****** Eventclient/Server/-Defines *****************************************
+*  NAME
+*     Defines -- Constants used in the module
+*
+*  SYNOPSIS
+*     #define FLUSH_INTERVAL 15
+*     #define EVENT_ACK_MIN_TIMEOUT 600
+*     #define EVENT_ACK_MAX_TIMEOUT 1200
+*
+*  FUNCTION
+*     FLUSH_INTERVAL is the default event delivery interval, if the client
+*     would not set a correct interval.
+*
+*     EVENT_ACK_MIN/MAX_TIMEOUT is the minimum/maximum timeout value for an event
+*     client sending the acknowledge for the delivery of events.
+*     The real timeout value depends on the event delivery interval for the 
+*     event client (10 * event delivery interval).
+*
+*******************************************************************************/
+#define FLUSH_INTERVAL 15
+#define EVENT_ACK_MIN_TIMEOUT 600
+#define EVENT_ACK_MAX_TIMEOUT 1200
+
+/****** Eventclient/Server/-Global_Variables *****************************************
+*  NAME
+*     sge_flush_events() -- ??? 
+*
+*  SYNOPSIS
+*     extern lList *Master_Adminhost_List;
+*     extern lList *Master_Calendar_List;
+*     extern lList *Master_Ckpt_List;
+*     extern lList *Master_Complex_List;
+*     extern lList *Master_Config_List;
+*     extern lList *Master_Exechost_List;
+*     extern lList *Master_Job_List;
+*     extern lList *Master_Job_Schedd_Info_List;
+*     extern lList *Master_Manager_List;
+*     extern lList *Master_Operator_List;
+*     extern lList *Master_Pe_List;
+*     extern lList *Master_Project_List;
+*     extern lList *Master_Queue_List;
+*     extern lList *Master_Sched_Config_List;
+*     extern lList *Master_Sharetree_List;
+*     extern lList *Master_Submithost_List;
+*     extern lList *Master_User_List;
+*     extern lList *Master_Userset_List;
+*     
+*     static int schedule_interval = FLUSH_INTERVAL;
+*     
+*     int last_seq_no = -1; 
+*     int scheduler_busy = 0; 
+*     
+*     lList *EV_Clients = NULL;
+*     
+*  FUNCTION
+*     The extern lList's reference all object lists that can be used
+*     in a Grid Engine event client interface.
+*
+*     schedule_interval, last_seq_no and scheduler_busy are used
+*     for scheduler specific handling.
+*
+*     EV_Clients is a list of all event clients to the event server.
+*
+*  NOTES
+*     The scheduler specific handling (schedule_interval, last_seq_no and
+*     scheduler_busy) should be eliminated. The mechanisms implemented with
+*     these variables should be generally available for all event clients.#
+*     The same applies to the global variables flush_finish_sec and 
+*     flush_submit_sec used in sge_flush_events.
+*
+*******************************************************************************/
 extern lList *Master_Adminhost_List;
 extern lList *Master_Calendar_List;
 extern lList *Master_Ckpt_List;
@@ -74,30 +184,6 @@ extern lList *Master_Submithost_List;
 extern lList *Master_User_List;
 extern lList *Master_Userset_List;
 
-static void total_update(lListElem *event_client);
-
-static void sge_total_update_event(lListElem *event_client, u_long32 type);
-
-static void sge_add_event_( lListElem *event_client, u_long32 type, 
-                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                     lListElem *element );
-
-static int sge_add_list_event_(lListElem *event_client,
-                               u_long32 type, u_long32 intkey, 
-                               u_long32 intkey2, const char *strkey, 
-                               lList *list, int need_copy_elem);
-
-static void sge_flush_events_(lListElem *event_client, int cmd, int now);
-void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, uid_t uid, sge_gdi_request *answer);
-static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
-                                           lListElem *event_client, int event);
-
-#define FLUSH_INTERVAL 15
-
-/* Minimum and maximum timeout values when waiting for acknowledge */
-#define EVENT_ACK_MIN_TIMEOUT 600
-#define EVENT_ACK_MAX_TIMEOUT 1200
-
 static int schedule_interval = FLUSH_INTERVAL;
 
 int last_seq_no = -1; 
@@ -109,33 +195,40 @@ lList *EV_Clients = NULL;
 u_long32 qidl_event_count = 0;
 #endif
 
-/*----------------------------------------------------------------*
- * sge_flush_events
- *    problem of this function is that it assumes only one event client
- *    the event flush interval of this client is a copy of 
- *    the scheduler timeout
- * global variables used:
- *    schedule_interval = a copy of the scheduler interval
- *                        get regularly updated
- *    next_flush        = the next time when events should be flushed
- *    last_flushed      = the time events where flusehd the last time
- *    flush_events      = bool flag which indicates if events should be flushed
- *                        may not be set to 0 in this function
- *    flush_submit_sec  = global variable which says how long after
- *                        a submission events should be flushed
- *    flush_finish_sec  = global variable which says how long after
- *                        a job finish events should be flushed
- *     
- * FLUSH_EVENTS_JOB_FINISHED  
- * FLUSH_EVENTS_JOB_SUBMITTED
- * FLUSH_EVENTS_SET
- *    same as FLUSH_EVENTS_DELAYED, but uses the corresponding variables
- *    "flush_finish_sec" or "flush_submit_sec" (if >=0) or 0 (SET)
- *    instead of scheduling interval
- *
- *----------------------------------------------------------------*/
-
-
+/****** Eventclient/Server/sge_flush_events() *****************************************
+*  NAME
+*     sge_flush_events() -- set the flushing time for events
+*
+*  SYNOPSIS
+*     void sge_flush_events(lListElem *event_client, int cmd) 
+*
+*  FUNCTION
+*     Sets the timestamp for the next flush of events for all or a specific
+*     event client.
+*     When events will be next sent to an event client is stored in its
+*     event client object in the variable EV_next_send_time.
+*
+*  INPUTS
+*     lListElem *event_client - the event client for which to define flushing,
+*                               or NULL (flush all event clients)
+*     int cmd                 - how to flush:
+*                               FLUSH_EVENTS_SET: flush immediately; send events
+*                               when the server triggers the next sending
+*                               FLUSH_EVENTS_JOB_FINISHED: flush after the
+*                               interval defined in flush_finish_sec
+*                               FLUSH_EVENTS_JOB_SUBMITTED: flush after the
+*                               interval defined in flush_submit_sec
+*
+*  NOTES
+*     The global variables flush_finish_sec and flush_submit_sec should be
+*     eliminated and replaced by a more general mechanism, where each event
+*     client can define individually, which event will trigger which flushing
+*     behaviour.
+*
+*  SEE ALSO
+*     Eventclient/Server/ck_4_deliver_events()
+*
+*******************************************************************************/
 void sge_flush_events(lListElem *event_client, int cmd) {
    int now = sge_get_gmt();
 
@@ -148,7 +241,7 @@ void sge_flush_events(lListElem *event_client, int cmd) {
    }
 }
  
-void sge_flush_events_(lListElem *event_client, int cmd, int now)
+static void sge_flush_events_(lListElem *event_client, int cmd, int now)
 {
    int interval = 0;
    u_long32 next_send;
@@ -184,18 +277,25 @@ void sge_flush_events_(lListElem *event_client, int cmd, int now)
             lGetString(event_client, EV_name), flush_finish_sec, flush_submit_sec, now, next_send)); 
 }
 
-/*----------------------------------------------------------------*
- * sge_next_flush
- * return the time when next events should be sent to scheduler
- * weakness of this function is that it only uses the global   
- * stored scheduler interval of the scheduler event client     
- *
- * problem is that we should not return an indication of flushing
- * if the scheduler event client is unknown or has a timeout
- * return
- *    0 in case our event client is unknown or has a timeout
- *    next time time flush otherwise
- *----------------------------------------------------------------*/
+/****** Eventclient/Server/sge_next_flush() *******************************************
+*  NAME
+*     sge_next_flush() -- when will be the next flush of events?
+*
+*  SYNOPSIS
+*     int sge_next_flush(int now) 
+*
+*  FUNCTION
+*     Returns the timestamp of the next required flush to any event client 
+*     (the minimum of EV_next_send_time for all event clients).
+*
+*  INPUTS
+*     int now - actual timestamp
+*
+*  RESULT
+*     int - the timestamp of the next flush or
+*           0, if no event client is connected and up.
+*
+*******************************************************************************/
 int sge_next_flush(
 int now 
 ) {
@@ -218,7 +318,25 @@ int now
    return 0;
 }   
 
-/*----------------------------------------------------------------*/
+/****** Eventclient/Server/reinit_schedd() ********************************************
+*  NAME
+*     reinit_schedd() -- do a total update for the scheduler
+*
+*  SYNOPSIS
+*     void reinit_schedd() 
+*
+*  FUNCTION
+*     Does a total update (send all lists) to the scheduler and output
+*     an error message.
+*
+*  NOTES
+*     This function should not be part of the core event client interface, it
+*     should perhaps be a commodity function or in qmaster itself.
+*
+*  SEE ALSO
+*     Eventclient/Server/total_update()
+*
+*******************************************************************************/
 void reinit_schedd()
 {
    static int reinits = 0;
@@ -234,7 +352,24 @@ void reinit_schedd()
    DEXIT;
 }
 
-/* build events for total update of schedd */
+/****** Eventclient/Server/total_update() *********************************************
+*  NAME
+*     total_update() -- send all data to eventclient
+*
+*  SYNOPSIS
+*     static void total_update(lListElem *event_client) 
+*
+*  FUNCTION
+*     Sends all complete lists it subscribed to an eventclient.
+*     If the event client receives a complete list instead of single events,
+*     it should completely update it's database.
+*
+*  INPUTS
+*     lListElem *event_client - the event client to update
+*
+*  SEE ALSO
+*
+*******************************************************************************/
 static void total_update(
 lListElem *event_client 
 ) {
@@ -271,21 +406,39 @@ lListElem *event_client
    return;
 }
 
-/* 
- 
-   sge_add_event_client is used by the scheduler 
-   for it's initial registration at qmaster AND
-   for requesting a total update of the schedulers 
-   data in case of a protocol error in the 
-   event handling. So there is no difference 
-   between add and mod.
-
-   The only difference is a message logging
-   to see that the scheduler has reregistered.
-   In ideal case there should be no total update
-   necessary.
-
-*/ 
+/****** Eventclient/Server/sge_add_event_client() *************************************
+*  NAME
+*     sge_add_event_client() -- register a new event client
+*
+*  SYNOPSIS
+*     int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
+*     char *ruser, char *rhost) 
+*
+*  FUNCTION
+*     Registeres a new event client. 
+*     If it requested a dynamic id, a new id is created and assigned.
+*     If the registration succees, the event client is sent all data
+*     (sgeE*_LIST events) according to its subscription.
+*
+*  INPUTS
+*     lListElem *clio - the event client object used as registration data
+*     lList **alpp    - answer list pointer for answer to event client
+*     lList **eclpp   - list pointer to return new event client object
+*     char *ruser     - user that tries to register an event client
+*     char *rhost     - host on which the event client runs
+*
+*  RESULT
+*     int - AN_status value. STATUS_OK on success, else error code
+*
+*  NOTES
+*     Special handling for scheduler should be generalized in some way.
+*
+*  SEE ALSO
+*     Eventclient/Server/sge_mod_event_client()
+*     Eventclient/Server/sge_gdi_kill_eventclient()
+*     Eventclient/Server/total_update()
+*
+*******************************************************************************/
 int sge_add_event_client(
 lListElem *clio,
 lList **alpp,
@@ -383,6 +536,35 @@ char *rhost
    return STATUS_OK;
 }
 
+/****** Eventclient/Server/sge_mod_event_client() *************************************
+*  NAME
+*     sge_mod_event_client() -- modify event client
+*
+*  SYNOPSIS
+*     int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
+*     char *ruser, char *rhost) 
+*
+*  FUNCTION
+*     An event client object is modified.
+*     It is possible to modify the event delivery time and
+*     the subscription.
+*     If the subscription is changed, and new sgeE*_LIST events are subscribed,
+*     these lists are sent to the event client.
+*
+*  INPUTS
+*     lListElem *clio - object containing the data to change
+*     lList **alpp    - answer list pointer
+*     lList **eclpp   - list pointer to return changed object
+*     char *ruser     - user that triggered the modify action
+*     char *rhost     - host that triggered the modify action
+*
+*  RESULT
+*     int - AN_status code. STATUS_OK on success, else error code
+*
+*  SEE ALSO
+*     Eventclient/Server/check_send_new_subscribed_list()
+*
+*******************************************************************************/
 int sge_mod_event_client(
 lListElem *clio,
 lList **alpp,
@@ -475,6 +657,28 @@ char *rhost
    return STATUS_OK;
 }
 
+/****** Eventclient/Server/check_send_new_subscribed_list() ***************************
+*  NAME
+*     check_send_new_subscribed_list() -- check suscription for new list events
+*
+*  SYNOPSIS
+*     static void check_send_new_subscribed_list(const char *old_subscription, 
+*     const char *new_subscription, lListElem *event_client, int event) 
+*
+*  FUNCTION
+*     Checks, if sgeE*_LIST events have been added to the subscription of a
+*     certain event client. If yes, send these lists to the event client.
+*
+*  INPUTS
+*     const char *old_subscription - former subscription
+*     const char *new_subscription - new subscription
+*     lListElem *event_client      - the event client object
+*     int event                    - the event to check
+*
+*  SEE ALSO
+*     Eventclient/Server/sge_total_update_event()
+*
+*******************************************************************************/
 static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
                                     lListElem *event_client, int event)
 {
@@ -485,6 +689,26 @@ static void check_send_new_subscribed_list(const char *old_subscription, const c
 
 
 
+/****** Eventclient/Server/sge_event_client_exit() ************************************
+*  NAME
+*     sge_event_client_exit() -- event client deregisters
+*
+*  SYNOPSIS
+*     void sge_event_client_exit(const char *host, const char *commproc, 
+*     sge_pack_buffer *pb) 
+*
+*  FUNCTION
+*     Deregistration of an event client.
+*     The event client tells qmaster that it will wants to deregister - usually before
+*     it exits.
+*     The event client is removed from the list of all event clients.
+*
+*  INPUTS
+*     const char *host     - host that sent the exit message
+*     const char *commproc - commproc of the sender
+*     sge_pack_buffer *pb  - packbuffer containing information about event client
+*
+*******************************************************************************/
 void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb)
 {
    u_long32 ec_id;
@@ -512,6 +736,24 @@ void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buff
    DEXIT;
 }
 
+/****** Eventclient/Server/sge_eventclient_subscribed() *******************************
+*  NAME
+*     sge_eventclient_subscribed() -- has event client subscribed a certain event?
+*
+*  SYNOPSIS
+*     int sge_eventclient_subscribed(const lListElem *event_client, int event) 
+*
+*  FUNCTION
+*     Checks if the given event client has a certain event subscribed.
+*
+*  INPUTS
+*     const lListElem *event_client - event client to check
+*     int event                     - event to check
+*
+*  RESULT
+*     int - 0 = not subscribed, 1 = subscribed
+*
+*******************************************************************************/
 int sge_eventclient_subscribed(const lListElem *event_client, int event)
 {
    const char *subscription = NULL;
@@ -533,14 +775,34 @@ int sge_eventclient_subscribed(const lListElem *event_client, int event)
    return 0;
 }
 
-/* 
-
-   RETURN
-   0 normally 
-   1 event client needs to be trashed 
-     since shutdown event was acked 
- 
-*/
+/****** Eventclient/Server/sge_ack_event() ********************************************
+*  NAME
+*     sge_ack_event() -- process acknowledge to event delivery
+*
+*  SYNOPSIS
+*     int sge_ack_event(lListElem *event_client, u_long32 event_number) 
+*
+*  FUNCTION
+*     After the server sent events to an event client, it has to acknowledge
+*     their receipt. 
+*     Acknowledged events are deleted from the list of events to deliver, otherwise
+*     they will be resent after the next event delivery interval.
+*
+*  INPUTS
+*     lListElem *event_client - event client sending acknowledge
+*     u_long32 event_number   - serial number of the last event to acknowledge
+*
+*  RESULT
+*     int - always 0
+*
+*  NOTES
+*     Returncode makes no sense anymore. Either improve error handling or
+*     make function return void.
+*
+*  SEE ALSO
+*     Eventclient/Server/sge_get_next_event_number()
+*
+*******************************************************************************/
 int sge_ack_event(
 lListElem *event_client,
 u_long32 event_number 
@@ -586,17 +848,29 @@ u_long32 event_number
 }
 
 
-/* --------------------------------------------
-
-   event delivery can be triggerd on two different ways
-
-   - an event is delivered if someone called sge_flush_events(SET)
-   - if nobody calls sge_flush_events() the events are delivered
-     every EV_d_time (set by event client)
-
-*/
-     
-
+/****** Eventclient/Server/ck_4_deliver_events() **************************************
+*  NAME
+*     ck_4_deliver_events() -- deliver events if necessary
+*
+*  SYNOPSIS
+*     void ck_4_deliver_events(u_long32 now) 
+*
+*  FUNCTION
+*     Checks delivery time of each event client - if it has been reached, deliver
+*     all events for that client.
+*
+*     In addition, timed out event clients are removed. An event client times out,
+*     if it doesn't acknowledge events within 10 * EV_ed_time 
+*     (respecting EVENT_ACK_MIN_TIMEOUT and EVENT_ACK_MAX_TIMEOUT).
+*
+*  INPUTS
+*     u_long32 now - actual timestamp
+*
+*  SEE ALSO
+*     Eventclient/Server/-Global_Variables
+*     Eventclient/Server/sge_ack_event()
+*
+*******************************************************************************/
 void ck_4_deliver_events(
 u_long32 now 
 ) {
@@ -651,15 +925,6 @@ u_long32 now
          continue;
       }
 
-#if 0
-      if (last_flush > lGetUlong(event_client, EV_last_heard_from)) {
-         DPRINTF(("no flush because no ack to last flush yet: now-last_flush: %d -- last_flush-last_heard_from: %d\n",
-                 sge_get_gmt() - last_flush, last_flush - lGetUlong(event_client, EV_last_heard_from)));
-         event_client = lNext(event_client);
-         continue;
-      }            
-#endif
-      
       /* do we have to deliver events ? */
       if ((now >= lGetUlong(event_client, EV_next_send_time))
          && !((lGetUlong(event_client, EV_id) == EV_ID_SCHEDD) && scheduler_busy)) {
@@ -712,6 +977,34 @@ u_long32 now
    return;
 }
 
+/****** Eventclient/Server/sge_add_list_event() ***************************************
+*  NAME
+*     sge_add_list_event() -- add a list as event
+*
+*  SYNOPSIS
+*     void sge_add_list_event(lListElem *event_client, u_long32 type, u_long32 
+*     intkey, u_long32 intkey2, const char *strkey, lList *list) 
+*
+*  FUNCTION
+*     Adds a list of objects to the list of events to deliver, e.g. the sgeE*_LIST 
+*     events.
+*
+*  INPUTS
+*     lListElem *event_client - the event client to receive the event, if NULL,
+*                               all event clients will receive the event
+*     u_long32 type           - the event id
+*     u_long32 intkey         - additional data
+*     u_long32 intkey2        - additional data
+*     const char *strkey      - additional data
+*     lList *list             - the list to deliver as event
+*
+*  NOTES
+*     Do we need the additional data fields?
+*
+*  SEE ALSO
+*     Eventclient/Server/sge_add_event()
+*
+*******************************************************************************/
 void sge_add_list_event(
 lListElem *event_client,
 u_long32 type,
@@ -731,79 +1024,6 @@ lList *list
          }
       }
    }
-}
-
-void sge_add_event(
-lListElem *event_client,
-u_long32 type,
-u_long32 intkey,
-u_long32 intkey2,
-const char *strkey,
-lListElem *element 
-) {
-
-   DENTER(TOP_LAYER, "sge_add_event"); 
-   
-#ifndef QIDL
-   if (!EV_Clients) {
-      DEXIT;
-      return;
-   }
-#endif
-
-   if(event_client != NULL) {
-      if(sge_eventclient_subscribed(event_client, type)) {
-         sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
-      }   
-   } else {
-      for_each(event_client, EV_Clients) {
-         if(sge_eventclient_subscribed(event_client, type)) {
-            sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
-         }
-      }
-   }
-
-   DEXIT;
-}
-
-static void sge_add_event_(
-lListElem *event_client,
-u_long32 type,
-u_long32 intkey,
-u_long32 intkey2,
-const char *strkey,
-lListElem *element 
-) {
-   const lDescr *dp;
-   lList *lp = NULL;
-
-   /* build a list from the element */
-   if (element) {
-      dp = lGetElemDescr(element);
-      lp = lCreateList("changed element", dp);
-      lAppendElem(lp, lCopyElem(element));
-   }
-
-   if (!sge_add_list_event_(event_client, type, intkey, intkey2, strkey, lp, 0)) {
-      lp = lFreeList(lp); 
-   }
-
-   return;
-}
-
-u_long32 sge_get_next_event_number(u_long32 client_id) {
-   lListElem *event_client;
-   u_long32 ret = 0;
-
-   DENTER(TOP_LAYER, "sge_get_next_event_number");
-
-   event_client = lGetElemUlong(EV_Clients, EV_id, client_id);
-   if(event_client != NULL) {
-      ret = lGetUlong(event_client, EV_next_number);
-   }
-
-   DEXIT;
-   return ret;
 }
 
 static int sge_add_list_event_(
@@ -1044,8 +1264,144 @@ int need_copy_list  /* to reduce overhead */
    return EV_Clients?consumed:1;
 }
 
+/****** Eventclient/Server/sge_add_event() ********************************************
+*  NAME
+*     sge_add_event() -- add an object as event
+*
+*  SYNOPSIS
+*     void sge_add_event(lListElem *event_client, u_long32 type, u_long32 
+*     intkey, u_long32 intkey2, const char *strkey, lListElem *element) 
+*
+*  FUNCTION
+*     Adds an object to the list of events to deliver. Called, if an event occurs to 
+*     that object, e.g. it was added to Grid Engine, modified or deleted.
+*  
+*     Internally, a list with that single object is created and passed to 
+*     sge_add_list_event().
+*
+*  INPUTS
+*     lListElem *event_client - the event client to receive the event, if NULL,
+*                               all event clients will receive the event
+*     u_long32 type           - the event id
+*     u_long32 intkey         - additional data
+*     u_long32 intkey2        - additional data
+*     const char *strkey      - additional data
+*     lListElem *element      - the object to deliver as event
+*
+*  NOTES
+*     Do we need the additional data fields?
+*
+*  SEE ALSO
+*     Eventclient/Server/sge_add_list_event()
+*
+*******************************************************************************/
+void sge_add_event(
+lListElem *event_client,
+u_long32 type,
+u_long32 intkey,
+u_long32 intkey2,
+const char *strkey,
+lListElem *element 
+) {
+
+   DENTER(TOP_LAYER, "sge_add_event"); 
+   
+#ifndef QIDL
+   if (!EV_Clients) {
+      DEXIT;
+      return;
+   }
+#endif
+
+   if(event_client != NULL) {
+      if(sge_eventclient_subscribed(event_client, type)) {
+         sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+      }   
+   } else {
+      for_each(event_client, EV_Clients) {
+         if(sge_eventclient_subscribed(event_client, type)) {
+            sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+         }
+      }
+   }
+
+   DEXIT;
+}
+
+static void sge_add_event_(
+lListElem *event_client,
+u_long32 type,
+u_long32 intkey,
+u_long32 intkey2,
+const char *strkey,
+lListElem *element 
+) {
+   const lDescr *dp;
+   lList *lp = NULL;
+
+   /* build a list from the element */
+   if (element) {
+      dp = lGetElemDescr(element);
+      lp = lCreateList("changed element", dp);
+      lAppendElem(lp, lCopyElem(element));
+   }
+
+   if (!sge_add_list_event_(event_client, type, intkey, intkey2, strkey, lp, 0)) {
+      lp = lFreeList(lp); 
+   }
+
+   return;
+}
+
+/****** Eventclient/Server/sge_get_next_event_number() ********************************
+*  NAME
+*     sge_get_next_event_number() -- next event number for an event client
+*
+*  SYNOPSIS
+*     u_long32 sge_get_next_event_number(u_long32 client_id) 
+*
+*  FUNCTION
+*     Retrieves the next serial event number for an event client.
+*
+*  INPUTS
+*     u_long32 client_id - id of the event client
+*
+*  RESULT
+*     u_long32 - serial number for next event to deliver
+*
+*******************************************************************************/
+u_long32 sge_get_next_event_number(u_long32 client_id) {
+   lListElem *event_client;
+   u_long32 ret = 0;
+
+   DENTER(TOP_LAYER, "sge_get_next_event_number");
+
+   event_client = lGetElemUlong(EV_Clients, EV_id, client_id);
+   if(event_client != NULL) {
+      ret = lGetUlong(event_client, EV_next_number);
+   }
+
+   DEXIT;
+   return ret;
+}
 
 
+/****** Eventclient/Server/sge_total_update_event() ***********************************
+*  NAME
+*     sge_total_update_event() -- create a total update event
+*
+*  SYNOPSIS
+*     static void sge_total_update_event(lListElem *event_client, u_long32 
+*     type) 
+*
+*  FUNCTION
+*     Creates an event delivering a certain list of objects for an event client.
+*
+*  INPUTS
+*     lListElem *event_client - event client to receive the list
+*     u_long32 type           - event describing the list to update
+*
+*******************************************************************************/
 static void sge_total_update_event(
 lListElem *event_client,
 u_long32 type
@@ -1151,6 +1507,29 @@ u_long32 type
 }
 
 
+/****** Eventclient/Server/sge_locate_scheduler() *************************************
+*  NAME
+*     sge_locate_scheduler() -- search for the scheduler
+*
+*  SYNOPSIS
+*     lListElem* sge_locate_scheduler() 
+*
+*  FUNCTION
+*     Searches an event client of type scheduler (EV_ID_SCHEDD).
+*     Returns a pointer to the scheduler event client object or
+*     NULL, if no scheduler is registered as event client.
+*
+*  INPUTS
+*
+*  RESULT
+*     lListElem* - scheduler event client object or NULL.
+*
+*  NOTES
+*     Should not be part of the core event client interface.
+*     Might be provided in a more general form (for any special event client)
+*     as commodity function.
+*
+*******************************************************************************/
 lListElem* sge_locate_scheduler()
 {
    lListElem *ep;
@@ -1163,6 +1542,33 @@ lListElem* sge_locate_scheduler()
    return ep;
 }
 
+/****** Eventclient/Server/sge_gdi_kill_eventclient() *********************************
+*  NAME
+*     sge_gdi_kill_eventclient() -- kill an event client
+*
+*  SYNOPSIS
+*     void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, 
+*     sge_gdi_request *answer) 
+*
+*  FUNCTION
+*     Kills one or all dynamic event clients.
+*     If a certain event client id is contained in the request, an event client
+*     with that id is killed.
+*     If the requested id is EC_ID_ANY (0), all event clients with dynamic ids
+*     are killed.
+*     Killing an event client is done by sending it the special event
+*     sgeE_SHUTDOWN and flushing immediately.
+*
+*  INPUTS
+*     const char *host         - host that sent the kill request
+*     sge_gdi_request *request - request containing the event client id
+*     sge_gdi_request *answer  - answer structure to return an answer to the 
+*                                client issuing the kill command (usually qconf)
+*
+*  SEE ALSO
+*     qconf  -kec
+*
+*******************************************************************************/
 void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gdi_request *answer) 
 {
    uid_t uid;
@@ -1240,6 +1646,29 @@ void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const 
    DEXIT;
 }
 
+/****** Eventclient/Server/sge_gdi_tsm() **********************************************
+*  NAME
+*     sge_gdi_tsm() -- trigger scheduling
+*
+*  SYNOPSIS
+*     void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request 
+*     *answer) 
+*
+*  FUNCTION
+*     Triggers a scheduling run for the scheduler as special event client.
+*
+*  INPUTS
+*     char *host               - host that triggered scheduling
+*     sge_gdi_request *request - request structure
+*     sge_gdi_request *answer  - answer structure to return to client
+*
+*  NOTES
+*     This function should not be part of the core event client interface.
+*
+*  SEE ALSO
+*     qconf -tsm
+*
+*******************************************************************************/
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
 {
    uid_t uid;

@@ -54,23 +54,141 @@
 #include "msg_schedd.h"
 #include "sge_exit.h"
 
+/****** Eventclient/--Introduction **********************************
+*  NAME
+*     Evenclient -- The Grid Engine Event Client Interface
+*
+*  FUNCTION
+*     The Grid Engine Event Client Interface provides a means to connect 
+*     to the Grid Engine qmaster and receive information about objects 
+*     (actual object properties and changes).
+*     It provides a subscribe/unsubscribe mechanism allowing fine grained
+*     selection of objects per object types (e.g. jobs, queues, hosts)
+*     and event types (e.g. add, modify, delete).
+*     It should have much less impact on qmaster performance than polling
+*     the same data in regular intervals.
+*
+*  NOTES
+*     The current implementation is a generalized form of the event client
+*     interface that already existed in Codine/GRD.
+*     It still contains code handling scheduler specific behavior, like
+*     the flushing of certain events. 
+*     A further cleanup and generalization step should be done.
+*     The code should also be extracted from qmaster, scheduler and libsched
+*     directories and could either form a new event client library or 
+*     be integrated into another lib, e.g. the libgdi.
+*
+*  SEE ALSO
+*     Eventclient/Client/--Introduction
+*     Eventclient/Server/--Introduction
+*******************************************************************************/
+
+/****** Eventclient/Client/--Introduction **********************************
+*  NAME
+*     Event Client Interface -- Client Functionality 
+*
+*  SYNOPSIS
+*     int ec_prepare_registration(u_long32 id, const char *name);
+*     int ec_register(void);
+*     int ec_deregister(void);
+*     
+*     int ec_subscribe(int event);
+*     int ec_subscribe_all(void);
+*     
+*     int ec_unsubscribe(int event);
+*     int ec_unsubscribe_all(void);
+*     
+*     int ec_set_edtime(int intval);
+*     int ec_get_edtime(void);
+*     
+*     int ec_commit(void);
+*     
+*     int ec_get(lList **);
+*     
+*     void ec_mark4registration(void);
+*     int ec_need_new_registration(void);
+*
+*  FUNCTION
+*     The client side of the event client interface provides functions
+*     to register and deregister (before registering, you have to call
+*     ec_prepare_registration to set an id and client name).
+*  
+*     The subscribe / unsubscribe mechanism allows to select the data
+*     (object types and events) an event client shall be sent.
+*
+*     It is possible to set the interval in which qmaster will send
+*     new events to an event client.
+*
+*  EXAMPLE
+*     clients/qevent/qevent.c can serve as a simple example.
+*     The scheduler (daemons/schedd/sge_schedd.c) is also implemented
+*     as event client and uses all mechanisms of the event client 
+*     interface.
+*
+*  SEE ALSO
+*     Eventclient/--Introduction
+*******************************************************************************/
 
 static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number);
 static int get_event_list(int sync, lList **lp);
 static void ec_config_changed(void);
 
+/****** Eventclient/Client/-Global_Variables **********************************
+*  NAME
+*     Global_Variables -- global variables in the client 
+*
+*  SYNOPSIS
+*     static int config_changed = 0;
+*     static int need_register  = 1;
+*     static lListElem *ec      = NULL;
+*     static u_long32 ec_reg_id = 0;
+*
+*  FUNCTION
+*     config_changed - the configuration changed (subscription or event interval)
+*     need_register  - the client is not registered at the server
+*     ec             - event client object holding configuration data
+*     ec_reg_id      - the id used to register at the qmaster
+*
+*  NOTES
+*     These global variables should be part of the event client object.
+*     The only remaining global variable would be a list of event client objects,
+*     allowing one client to connect to multiple event client servers.
+*
+*******************************************************************************/
 static int config_changed = 0;
-
-/*---------------------------------------- 
- *  this flag is used to control 
- *  registering and reregistering 
- *  at qmaster in case of error 
- *----------------------------------------*/
-static int need_register = 1;
-
-static lListElem *ec;
+static int need_register  = 1;
+static lListElem *ec      = NULL;
 static u_long32 ec_reg_id = 0;
 
+/****** Eventclient/Client/ec_prepare_registration() **********************************
+*  NAME
+*     ec_prepare_registration() -- prepare registration at server
+*
+*  SYNOPSIS
+*     int ec_prepare_registration(u_long32 id, const char *name) 
+*
+*  FUNCTION
+*     Initializes necessary data structures and sets the data needed for
+*     registration at an event server.
+*     The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN are subscribed.
+*
+*     For valid id's see ....
+*     The name is informational data that will be included in messages
+*     (errors, warnings, infos) and will be shown in the command line tool
+*     qconf -sec.
+*
+*  INPUTS
+*     u_long32 id      - id used to register
+*     const char *name - name of the event client
+*
+*  RESULT
+*     int - 1,if the function succeeded, else 0 
+*
+*  SEE ALSO
+*     qconf manpage
+*     list of events
+*     list of ids
+*******************************************************************************/
 int ec_prepare_registration(u_long32 id, const char *name)
 {
    char subscription[sgeE_EVENTSIZE + 1];
@@ -113,7 +231,25 @@ int ec_prepare_registration(u_long32 id, const char *name)
    return 1;
 }
 
-/*-------------------------------------------------------------*/
+/****** Eventclient/Client/ec_mark4registration() *************************************
+*  NAME
+*     ec_mark4registration() -- new registration is required
+*
+*  SYNOPSIS
+*     void ec_mark4registration(void) 
+*
+*  FUNCTION
+*     Tells the event client mechanism, that the connection to the server
+*     is broken and it has to reregister.
+*
+*  NOTES
+*     Should be no external interface. The event client mechanism should itself
+*     detect such situations and react accordingly.
+*     Should not reference a global variable from scheduler (new_global_config)!
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_need_new_registration()
+*******************************************************************************/
 void ec_mark4registration(void)
 {
    extern int new_global_config;
@@ -123,6 +259,20 @@ void ec_mark4registration(void)
    DEXIT;
 }
 
+/****** Eventclient/Client/ec_need_new_registration() *********************************
+*  NAME
+*     ec_need_new_registration() -- is a reregistration neccessary
+*
+*  SYNOPSIS
+*     int ec_need_new_registration(void) 
+*
+*  FUNCTION
+*     Function to check, if a new registration at the server is neccessary.
+*
+*  RESULT
+*     int - 1, if the client has to (re)register, else 0 
+*
+*******************************************************************************/
 int ec_need_new_registration(void)
 {
    return need_register;
@@ -130,6 +280,30 @@ int ec_need_new_registration(void)
 
 /* return 1 if parameter has changed 
           0 otherwise                */
+/****** Eventclient/Client/ec_set_edtime() ********************************************
+*  NAME
+*     ec_set_edtime() -- set the event delivery interval
+*
+*  SYNOPSIS
+*     int ec_set_edtime(int interval) 
+*
+*  FUNCTION
+*     Set the interval qmaster will use to send events to the client.
+*     Any number > 0 is a valid interval in seconds.
+*
+*  INPUTS
+*     int interval - interval [s]
+*
+*  RESULT
+*     int - 1, if the value was changed, else 0
+*
+*  NOTES
+*     The maximum interval should be limited. A too big interval makes 
+*     qmaster spool lots of events and consume a lot of memory.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_get_edtime()
+*******************************************************************************/
 int ec_set_edtime(int interval) {
    int ret;
 
@@ -152,6 +326,22 @@ int ec_set_edtime(int interval) {
    return ret;
 }
 
+/****** Eventclient/Client/ec_get_edtime() ********************************************
+*  NAME
+*     ec_get_edtime() -- get the current event delivery interval
+*
+*  SYNOPSIS
+*     int ec_get_edtime(void) 
+*
+*  FUNCTION
+*     Get the interval qmaster will use to send events to the client.
+*
+*  RESULT
+*     int - the interval in seconds
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_set_edtime()
+*******************************************************************************/
 int ec_get_edtime(void) {
    int interval;
 
@@ -168,15 +358,28 @@ int ec_get_edtime(void) {
    return interval;
 }
 
-/*---------------------------------------------------------
- * ec_register
- *
- *  this has also be done in case the
- *  qmaster was down and the scheduler
- *  reenrolls at qmaster 
- *  return 1 if success  
- *         0 in case of failure
- *---------------------------------------------------------*/
+/****** Eventclient/Client/ec_register() **********************************************
+*  NAME
+*     ec_register() -- register at the event server
+*
+*  SYNOPSIS
+*     int ec_register(void) 
+*
+*  FUNCTION
+*     Registers the event client at the event server (usually the qmaster). 
+*     This function can be called explicitly in the event client at startup
+*     or when the connection to qmaster is down.
+*
+*     It will be called implicitly by ec_get, whenever it detects the neccessity
+*     to (re)register the client.
+*
+*  RESULT
+*     int - 1, if the registration succeeded, else 0
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_deregister()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 int ec_register(void)
 {
    int success = 0;
@@ -265,6 +468,27 @@ int ec_register(void)
    return 0;
 }      
 
+/****** Eventclient/Client/ec_deregister() ********************************************
+*  NAME
+*     ec_deregister() -- deregister from the event server
+*
+*  SYNOPSIS
+*     int ec_deregister(void) 
+*
+*  FUNCTION
+*     Deregister from the event server (usually the qmaster).
+*     This function should be called when an event client exits. 
+*
+*     If an event client does not deregister, qmaster will spool events for this
+*     client until it times out (it did not acknowledge events sent by qmaster).
+*     After the timeout, it will be deleted.
+*
+*  RESULT
+*     int - 1, if the deregistration succeeded, else 0
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_register()
+*******************************************************************************/
 int ec_deregister(void)
 {
    int ret;
@@ -301,6 +525,33 @@ int ec_deregister(void)
    return 1;
 }
 
+/****** Eventclient/Client/ec_subscribe() *********************************************
+*  NAME
+*     ec_subscribe() -- Subscribe an event
+*
+*  SYNOPSIS
+*     int ec_subscribe(int event) 
+*
+*  FUNCTION
+*     Subscribe a certain event.
+*     See ... for a list of all events.
+*     The subscription will be in effect after calling ec_commit or ec_get.
+*     It is possible / sensible to subscribe all events wanted and then call
+*     ec_commit.
+*
+*  INPUTS
+*     int event - the event number
+*
+*  RESULT
+*     int - 1 on success, else 0
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_subscribe_all()
+*     Eventclient/Client/ec_unsubscribe()
+*     Eventclient/Client/ec_unsubscribe_all()
+*     Eventclient/Client/ec_commit()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 int ec_subscribe(int event)
 {
    char *subscription;
@@ -347,11 +598,70 @@ int ec_subscribe(int event)
    return 1;
 }
 
+/****** Eventclient/Client/ec_subscribe_all() *****************************************
+*  NAME
+*     ec_subscribe_all() -- subscribe all events
+*
+*  SYNOPSIS
+*     int ec_subscribe_all(void) 
+*
+*  FUNCTION
+*     Subscribe all possible event.
+*     The subscription will be in effect after calling ec_commit or ec_get.
+*
+*  RESULT
+*     int - 1 on success, else 0
+*
+*  NOTES
+*     Subscribing all events can cause a lot of traffic and may decrease performance
+*     of qmaster.
+*     Only subscribe all events, if you really need them.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_subscribe()
+*     Eventclient/Client/ec_unsubscribe()
+*     Eventclient/Client/ec_unsubscribe_all()
+*     Eventclient/Client/ec_commit()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 int ec_subscribe_all(void)
 {
    return ec_subscribe(sgeE_ALL_EVENTS);
 }
 
+/****** Eventclient/Client/ec_unsubscribe() *******************************************
+*  NAME
+*     ec_unsubscribe() -- unsubscribe an event
+*
+*  SYNOPSIS
+*     int ec_unsubscribe(int event) 
+*
+*  FUNCTION
+*     Unsubscribe a certain event.
+*     See ... for a list of all events.
+*     The change will be in effect after calling ec_commit or ec_get.
+*     It is possible / sensible to unsubscribe all events 
+*     no longer needed and then call ec_commit.
+*
+*  INPUTS
+*     int event - the event to unsubscribe
+*
+*  RESULT
+*     int - 1 on success, else 0
+*
+*  NOTES
+*     The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN cannot
+*     be unsubscribed. ec_unsubscribe will output an error message if
+*     you try to unsubscribe sgeE_QMASTER_GOES_DOWN or sgeE_SHUTDOWN
+*     and return 0.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_subscribe()
+*     Eventclient/Client/ec_subscribe_all()
+*     Eventclient/Client/ec_unsubscribe_all()
+*     Eventclient/Client/ec_commit()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 int ec_unsubscribe(int event)
 {
    char *subscription;
@@ -407,16 +717,86 @@ int ec_unsubscribe(int event)
    return 1;
 }
 
+/****** Eventclient/Client/ec_unsubscribe_all() ***************************************
+*  NAME
+*     ec_unsubscribe_all() -- unsubscribe all events
+*
+*  SYNOPSIS
+*     int ec_unsubscribe_all(void) 
+*
+*  FUNCTION
+*     Unsubscribe all possible event.
+*     The change will be in effect after calling ec_commit or ec_get.
+*
+*  RESULT
+*     int - 1 on success, else 0
+*
+*  NOTES
+*     The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN will not be 
+*     unsubscribed.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_subscribe()
+*     Eventclient/Client/ec_subscribe_all()
+*     Eventclient/Client/ec_unsubscribe()
+*     Eventclient/Client/ec_commit()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 int ec_unsubscribe_all(void)
 {
    return ec_unsubscribe(sgeE_ALL_EVENTS);
 }
 
-void ec_config_changed(void) 
+/****** Eventclient/Client/ec_config_changed() ****************************************
+*  NAME
+*     ec_config_changed() -- has the configuration changed?
+*
+*  SYNOPSIS
+*     static void ec_config_changed(void) 
+*
+*  FUNCTION
+*     Checkes whether the configuration has changes.
+*     Configuration changes can either be changes in the subscription
+*     or change of the event delivery interval.
+*
+*  RESULT
+*     static void - 1, if the config has been changed, else 0
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_subscribe()
+*     Eventclient/Client/ec_subscribe_all()
+*     Eventclient/Client/ec_unsubscribe()
+*     Eventclient/Client/ec_unsubscribe_all()
+*     Eventclient/Client/ec_set_edtime()
+*******************************************************************************/
+static void ec_config_changed(void) 
 {
    config_changed = 1;
 }
 
+/****** Eventclient/Client/ec_commit() ************************************************
+*  NAME
+*     ec_commit() -- commit configuration changes
+*
+*  SYNOPSIS
+*     int ec_commit(void) 
+*
+*  FUNCTION
+*     Configuration changes (subscription and/or event delivery time) will be
+*     sent to the event server.
+*     The function should be called after (multiple) configuration changes 
+*     have been made.
+*     If it is not explicitly called by the event client program, the next 
+*     call of ec_get will commit configuration changes before looking for new
+*     events.
+*
+*  RESULT
+*     int - 1 on success, else 0
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_config_changed()
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 int ec_commit(void) 
 {
    int success;
@@ -476,6 +856,41 @@ int ec_commit(void)
  *    0 ok got events or got empty event list or got no message
  *   <0 commlib error
  *-------------------------------------------------------------------*/
+/****** Eventclient/Client/ec_get() ***************************************************
+*  NAME
+*     ec_get() -- look for new events
+*
+*  SYNOPSIS
+*     int ec_get(lList **event_list) 
+*
+*  FUNCTION
+*     ec_get looks for new events. 
+*     If new events have arrived, they are passed back to the caller in the
+*     parameter event_list.
+*     
+*     If the event client is not yet registered at the event server, 
+*     the registration will be done before looking for events.
+*
+*     If the configuration changed since the last call of ec_get and has
+*     not been committed, ec_commit will be called before looking for
+*     events.
+*
+*  INPUTS
+*     lList **event_list - pointer to an event list to hold arriving events
+*
+*  RESULT
+*     int - 0, if events or an empty event list was received, or
+*              if no data was received within a certain time period
+*          <0 (commlib error code), if an error occured
+*
+*  NOTES
+*     The event_list has to be freed by the calling function.
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_register()
+*     Eventclient/Client/ec_commit()
+*
+*******************************************************************************/
 int ec_get(
 lList **event_list
 ) {  
@@ -556,40 +971,38 @@ lList **event_list
 }
 
 
-/*----------------------------------------------------------------------
- * ck_event_number()
- *
- *   tests list of events if it
- *  contains right numbered events
- *
- *  events with lower numbers get trashed 
- *
- *  In cases the master has added no
- *  new events in the event list 
- *  and the acknowledge we sent was lost
- *  also a list with events lower 
- *  than "waiting_for" is correct.
- *  But the number of the last event must be 
- *  at least "waiting_for"-1.
- *
- *  in extreme cases it may be possible 
- *  that 
- *  if at least the last event in the event 
- *  list is in the right range
- *
- *  on success *waiting_for will
- *  contain the next number we wait for
- *
- *  on failure *waiting_for gets not 
- *  changed and if wrong_number is not
- *  NULL *wrong_number contains the
- *  wrong number we got
- *
- *
- *  
- *  0 success
- *  -1 failure
- *----------------------------------------------------------------------*/
+/****** Eventclient/Client/ck_event_number() ******************************************
+*  NAME
+*     ck_event_number() -- test event numbers
+*
+*  SYNOPSIS
+*     static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, 
+*                                     u_long32 *wrong_number) 
+*
+*  FUNCTION
+*     Tests list of events if it contains right numbered events.
+*
+*     Events with numbers lower than expected get trashed.
+*
+*     In cases the master has added no new events to the event list 
+*     and the acknowledge we sent was lost also a list with events lower 
+*     than "waiting_for" is correct. 
+*     But the number of the last event must be at least "waiting_for"-1.
+*
+*     On success *waiting_for will contain the next number we wait for.
+*
+*     On failure *waiting_for gets not changed and if wrong_number is not
+*     NULL *wrong_number contains the wrong number we got.
+*
+*  INPUTS
+*     lList *lp              - event list to check
+*     u_long32 *waiting_for  - next number to wait for
+*     u_long32 *wrong_number - event number that causes a failure
+*
+*  RESULT
+*     static u_long32 - 0 on success, else -1
+*
+*******************************************************************************/
 static u_long32 ck_event_number(
 lList *lp,
 u_long32 *waiting_for,
@@ -682,6 +1095,28 @@ u_long32 *wrong_number
  * returns   0 on success
  *           commlib error (always positive)
  *-----------------------------------------------------------------------*/
+/***i** Eventclient/Client/get_event_list() *******************************************
+*  NAME
+*     get_event_list() -- get event list via gdi call
+*
+*  SYNOPSIS
+*     static int get_event_list(int sync, lList **report_list) 
+*
+*  FUNCTION
+*     Tries to retrieve the event list.
+*     Returns the incoming data and the commlib status/error code.
+*     This function is used by ec_get.
+*
+*  INPUTS
+*     int sync            - synchronous transfer
+*     lList **report_list - pointer to returned list
+*
+*  RESULT
+*     static int - commlib status/error code
+*
+*  SEE ALSO
+*     Eventclient/Client/ec_get()
+*******************************************************************************/
 static int get_event_list(
 int sync,
 lList **report_list 

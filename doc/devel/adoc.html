@@ -95,7 +95,11 @@ homedirectory and add the following line:
 <p>If you place the cursor on a C function prototype&nbsp; and press F11,
 a new partly filled out autodoc header for the function will be inserted
 into the source file.
-<br>&nbsp;
+<p>Newer vim versions (beginning with 6.0?) seem to use another syntax
+in the .vimrc file. Add the following line to your .vimrc file (install
+macro on F9, F11 as in the previous example didn't work for some reason:
+<p><tt>map &lt;unique> &lt;F9> :-r !doc_tool mode C output stdout no_warnings
+func &lt;cword> %:p^M</tt>
 <h3>
 Choosing a function identifier</h3>
 The current structure of the source code documentation provides 3 individual
@@ -239,6 +243,15 @@ Interactive/qmake</li>
 
 <li>
 Interactive/qrsh</li>
+
+<li>
+Eventclient</li>
+
+<li>
+Eventclient/Client</li>
+
+<li>
+Eventclient/Server</li>
 </ul>
 
 <h4>

@@ -343,6 +343,7 @@
 #define MSG_JOB_DELETEPERMS_SU        _("%s - you do not have the necessary privileges to delete the job \"" U32CFormat "\"\n")
 #define MSG_JOB_DELETETASK_SUU        _("%s has deleted job-array task "U32CFormat"."U32CFormat"\n")
 #define MSG_JOB_DELETEJOB_SU          _("%s has deleted job "U32CFormat"\n")
+#define MSG_JOB_DISCONTINUEDTRANS_SU  _("Discontinued delete transaction of user "SFQ" after job "u32"\n")
 #define MSG_JOB_UNABLE2FINDQOFJOB_S   _("can't locate the queue "SFQ" associated with this job\n")
 #define MSG_MAIL_TASKKILLEDSUBJ_UUS   "Job-array task "U32CFormat"."U32CFormat" ("SFN") Killed"
 #define MSG_MAIL_TASKKILLEDBODY_UUSSS _("Job-array task "U32CFormat"."U32CFormat" ("SFN") was killed by %s@%s")

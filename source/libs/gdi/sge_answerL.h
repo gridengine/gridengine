@@ -70,7 +70,11 @@ enum {
                               * GDI version */
    STATUS_ERROR1,            /* general error 1 */
    STATUS_ERROR2,            /* general error 2 */
-   STATUS_ERROR3             /* general error 3 */
+   STATUS_ERROR3,            /* general error 3 */
+   STATUS_OK_DOAGAIN         /* 
+                              * everything was fine but transaction
+                              * was not completly finished. 
+                              */
 };
 
 /*

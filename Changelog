@@ -1,3 +1,6 @@
+EB-2002-01-15-0: Enhancem.: 'qdel all' and 'qdel -uall' requests will
+                            be split up into multiple requests
+
 JG-2002-01-15-1: Bugfix:   qconf -mattr only handled string attributes, changing
                            attributes of other datatypes made qconf dump core.
 

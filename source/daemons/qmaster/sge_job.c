@@ -536,6 +536,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          }
       }
    }
+   /* 
+      here we have to fill in user 
+      and group into the job 
+      values filled in by the 
+      submitter may get overwritten 
+
+   */
+   lSetString(jep, JB_owner, ruser);
 
    /* verify schedulability */
    {
@@ -761,6 +769,8 @@ int sub_command
    lCondition *where = NULL; 
    int ret, njobs = 0;
    u_long32 deleted_tasks = 0;
+   u_long32 time;
+   u_long32 start_time;
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -813,6 +823,8 @@ int sub_command
          }
       }
    }
+
+   start_time = sge_get_gmt();
    nxt = lFirst(Master_Job_List);
    while ((job=nxt)) {
       u_long32 task_number;
@@ -973,6 +985,15 @@ int sub_command
          get_rid_of_schedd_job_messages(job_number);
          INFO((SGE_EVENT, MSG_JOB_DELETEJOB_SU, ruser, u32c(job_number)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+      }
+   
+      time = sge_get_gmt();
+      if (time - start_time > 2) {
+         INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
+               u32c(job_number)));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, NUM_AN_INFO); 
+         lFreeWhere(where);
+         return STATUS_OK;
       }
    }
 

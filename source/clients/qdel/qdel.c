@@ -60,10 +60,7 @@ extern char **environ;
 int main(int argc, char *argv[]);
 
 /************************************************************************/
-int main(
-int argc,
-char **argv 
-) {
+int main(int argc, char **argv) {
    /* lListElem *rep, *nxt_rep, *jep, *aep, *jrep, *idep; */
    lListElem *aep, *idep;
    lList *jlp = NULL, *alp = NULL, *pcmdline = NULL, *ref_list = NULL, *user_list=NULL;
@@ -75,6 +72,7 @@ char **argv
    const char* jobName = NULL;
    int have_master_privileges;
    int cl_err = 0;
+   int delete_mode;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
@@ -112,10 +110,7 @@ char **argv
       for_each(aep, alp) {
          fprintf(stdout, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
-      lFreeList(ref_list);
-      SGE_EXIT(1);
+      goto error_exit;
    } 
    
    if (user_list) {
@@ -127,125 +122,144 @@ char **argv
    if (all_users) {
       lAddElemStr(&ref_list, ID_str, "0", ID_Type);
    }
-   for_each(idep, ref_list) {
-      lSetUlong(idep, ID_force, force);
-   }
 
    if (verify) {
       for_each(idep, ref_list) {
          printf(MSG_JOB_XDELETIONOFJOBY_SS,force?MSG_FORCED:"",lGetString(idep, ID_str));
       }
-      SGE_EXIT(0);
+      goto default_exit;
    }
 
    /* set timeout */
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);   
 
-   /* del */
+   /* prepare gdi request for 'all' and '-uall' parameters */
    cmd = SGE_GDI_DEL;
-   if (all_users)
+   if (all_users) {
       cmd |= SGE_GDI_ALL_USERS;
-   if (all_jobs)
+   }
+   if (all_jobs) {
       cmd |= SGE_GDI_ALL_JOBS;
+   }
 
-   if (ref_list) {
-      if (force != 1) {
-         /* standard request without force */
-         alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
-      } else {
-         /* request with force flag */
-         DPRINTF(("force is specified\n"));
-         if ( (have_master_privileges = sge_gdi_check_permission(MANAGER_CHECK)) == TRUE) {
-            /* manager is making the request, old behaviour */
-            DPRINTF(("manager can do force\n"));
-         alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
-         } else {
-            /* no connection to qmaster */
-            if (have_master_privileges == -10) {   
-               fprintf(stderr, MSG_SGETEXT_NOQMASTER);
-               lFreeList(alp);
-               lFreeList(jlp);
-               lFreeList(ref_list);
-               sge_gdi_shutdown();
-               SGE_EXIT(1);
-            }
-
-            /* ordinary user has secified the force flag */
-            DPRINTF(("user call with force flag\n"));
-
-            /* set force flag to 0 (no force in first call) */
-            for_each(idep, ref_list) {
-               lSetUlong(idep, ID_force, 0);
-            }
-            alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
-        
-            /* AN_status can have following states:
-               STATUS_EEXIST - element does not exist (job deleted)
-               STATUS_OK     - everything was fine 
-            */
-            lFreeList(alp); 
-            alp = NULL;        
-           
-            /* wait for qmaster and execd to remove job */ 
-            printf("%s ",MSG_ANSWER_SUCCESSCHECKWAIT);
-            for(wait=12;wait>0;wait--) {
-               printf(".");
-               fflush(stdout);
-               sleep(5); 
-            }  
-            printf( "\n"); 
-            /* set force flag for second call */ 
-            for_each(idep, ref_list) {
-               lSetUlong(idep, ID_force, force);
-            }       
-            alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
-            
-            ref_elem = lFirst(ref_list);
-            for_each(aep , alp) {
-               status = lGetUlong(aep, AN_status);
-               if (ref_elem != NULL) {
-                  jobName = lGetString(ref_elem, ID_str);
-                  ref_elem = lNext(ref_elem);
-               } else {
-                  jobName = MSG_ANSWER_UNKNOWN;
-               }
-               if ( (status == STATUS_OK) || (status == STATUS_EEXIST) ) {
-                       
-                  printf( MSG_ANSWER_JOBXREMOVED_S , jobName);
-               } else {
-                  fprintf(stderr, MSG_ANSWER_CANTDELETEJOB_S , jobName);
-                  lFreeList(alp);
-                  lFreeList(jlp);
-                  lFreeList(ref_list);
-                  sge_gdi_shutdown();
-                  SGE_EXIT(1);
-               }
-            }
-
-            lFreeList(alp);
-            lFreeList(jlp);
-            lFreeList(ref_list);
-            sge_gdi_shutdown();
-            SGE_EXIT(0);
-            /* here stops the ordinary user call */
-         }
-      }
-   } else {
+   /* Are there jobs which should be deleted? */
+   if (!ref_list) {
       printf(MSG_PARSE_NOOPTIONARGUMENT);
       qdel_usage(stderr, NULL);
-      SGE_EXIT(1);
+      goto error_exit;
    }
-   for_each(aep, alp) 
-      printf("%s", lGetString(aep, AN_text) );
 
+   /* Has the user the permission to use the the '-f' (forced) flag */
+   have_master_privileges = FALSE;
+   if (force == 1) {
+      have_master_privileges = sge_gdi_check_permission(MANAGER_CHECK);
+      if (have_master_privileges == -10) {
+         fprintf(stderr, MSG_SGETEXT_NOQMASTER);
+         goto error_exit;
+      }  
+   }
+
+   /* delete the job */
+   {
+      int delete_mode;
+
+      /* 
+       * delete_mode:
+       *    1 => admin user used '-f'     
+       *         -> forced deletion
+       *    7 => non admin user used '-f' 
+       *         -> first try normal deletion
+       *         -> wait a minute
+       *         -> forced deletion (delete_mode==5)
+       *    3 => normal qdel
+       *         -> normal deletion
+       */
+      if (force == 1) {
+         if (have_master_privileges == TRUE) {
+            delete_mode = 1;
+         } else {
+            delete_mode = 7;
+         }
+      } else {
+         delete_mode = 3;
+      }
+      while (delete_mode) {
+         int no_forced_deletion = delete_mode & 2;
+         int combined_deletion = delete_mode & 4;
+         int do_again;
+         int error_occured;
+         int first_try = 1;
+
+         for_each(idep, ref_list) {
+            lSetUlong(idep, ID_force, !no_forced_deletion);
+         } 
+
+         /*
+          * Send delete request to master. If the master is not able to
+          * execute the whole request when the 'all' or '-uall' flag was
+          * specified, then the master may discontinue the 
+          * transaction (STATUS_OK_DOAGAIN). In this case the client has 
+          * to redo the transaction.
+          */ 
+         do {
+            do_again = 0;
+            error_occured = 0;
+            alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
+            for_each(aep, alp) {
+               status = lGetUlong(aep, AN_status);
+
+               if (delete_mode != 5 && 
+                   ((first_try == 1 && status != STATUS_OK_DOAGAIN) ||
+                    (first_try == 0 && status == STATUS_OK))) {
+                  printf("%s", lGetString(aep, AN_text) );
+               }
+               if (status != STATUS_OK && 
+                   status != STATUS_OK_DOAGAIN) {
+                  error_occured = 1;
+               }
+               if (status == STATUS_OK_DOAGAIN) {
+                  do_again = 1;
+               }
+            }
+            first_try = 0;
+         } while ((all_users || all_jobs) && do_again && !error_occured);
+
+         if (delete_mode == 7) {
+            /* 
+             * loop for one minute
+             * this should prevent non-admin-users from using the '-f'
+             * option regularly
+             */
+            for(wait = 12; wait > 0; wait--) {
+               printf(".");
+               fflush(stdout);
+               sleep(5);
+            } 
+            printf("\n");
+
+            delete_mode = 5;
+         } else {
+            delete_mode = 0;
+         } 
+      }
+   }
+
+default_exit:
    lFreeList(alp);
    lFreeList(jlp);
    lFreeList(ref_list);
    sge_gdi_shutdown();
-   exit(0);
+   SGE_EXIT(0);
    return 0;
-   /* SGE_EXIT(0); */
+
+error_exit:
+   lFreeList(alp);
+   lFreeList(jlp);
+   lFreeList(ref_list);
+   sge_gdi_shutdown();
+   SGE_EXIT(1); 
+   return 1;
 }
 
 /****

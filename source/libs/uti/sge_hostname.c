@@ -76,14 +76,34 @@ static host *hostlist = NULL;
 /* MT-NOTE: localhost used only in commd */
 static host *localhost = NULL;
 
+static pthread_mutex_t get_qmaster_port_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t get_execd_port_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#define SGE_MAXNISRETRY 10
+#define SGE_MAXNISRETRY 5
+#define SGE_PORT_CACHE_TIMEOUT 60*10   /* 10 Min. */
 int sge_get_qmaster_port(void) {
    char* port = NULL;
    int int_port = -1;
    struct servent *se = NULL;
 
+   struct timeval now;
+   static long next_timeout = 0;
+   static int cached_port = -1;
    DENTER(TOP_LAYER, "sge_get_qmaster_port");
+
+   sge_mutex_lock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
+
+   /* check for reresolve timeout */
+   gettimeofday(&now,NULL);
+
+   DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
+      int_port = cached_port;
+      DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));
+      sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
+      return int_port;
+   }
+
    port = getenv("SGE_QMASTER_PORT");   
    if (port != NULL) {
       int_port = atoi(port);
@@ -92,17 +112,38 @@ int sge_get_qmaster_port(void) {
    /* get port from services file */
    if (int_port < 0) {
       int nisretry = SGE_MAXNISRETRY;
-      while (nisretry-- && !((se = getservbyname("sge_qmaster", "tcp"))));
-      if (se != NULL) {
-         int_port = ntohs(se->s_port);
+      while (nisretry--) {
+         se = getservbyname("sge_qmaster", "tcp");
+         if (se != NULL) {
+            int_port = ntohs(se->s_port);
+            break;
+         } else {
+            sleep(1);
+         }
       }
    }
 
    if (int_port < 0 ) {
-      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT or service \"sge_qmaster\"\n"));
-      SGE_EXIT(1);
-   } 
+      ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_QMASTER_PORT", "sge_qmaster"));
+      if ( cached_port >= 0 ) {
+         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_qmaster", cached_port ));
+         int_port = cached_port; 
+      } else {
+         sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
+         SGE_EXIT(1);
+      }
+   } else {
+      DPRINTF(("returning port value: "U32CFormat"\n", u32c(int_port)));
+      /* set new timeout time */
+      gettimeofday(&now,NULL);
+      next_timeout = now.tv_sec + SGE_PORT_CACHE_TIMEOUT;
 
+      /* set new port value */
+      cached_port = int_port;
+   }
+
+   sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
+   
    DEXIT;
    return int_port;
 }
@@ -112,7 +153,25 @@ int sge_get_execd_port(void) {
    int int_port = -1;
    struct servent *se = NULL;
 
+   struct timeval now;
+   static long next_timeout = 0;
+   static int cached_port = -1;
+
    DENTER(TOP_LAYER, "sge_get_execd_port");
+
+   sge_mutex_lock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);
+   
+   /* check for reresolve timeout */
+   gettimeofday(&now,NULL);
+
+   DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
+      int_port = cached_port;
+      DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));
+      sge_mutex_unlock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);
+      return int_port;
+   }
+
    port = getenv("SGE_EXECD_PORT");   
    if (port != NULL) {
       int_port = atoi(port);
@@ -121,16 +180,37 @@ int sge_get_execd_port(void) {
    /* get port from services file */
    if (int_port < 0) {
       int nisretry = SGE_MAXNISRETRY;
-      while (nisretry-- && !((se = getservbyname("sge_execd", "tcp"))));
-      if (se != NULL) {
-         int_port = ntohs(se->s_port);
+      while (nisretry--) {
+         se = getservbyname("sge_execd", "tcp");
+         if (se != NULL) {
+            int_port = ntohs(se->s_port);
+            break;
+         } else {
+            sleep(1);
+         }
       }
    }
 
    if (int_port < 0 ) {
-      ERROR((SGE_EVENT, "could not get environment variable SGE_EXECD_PORT or service \"sge_execd\"\n"));
-      SGE_EXIT(1);
+      ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_EXECD_PORT" , "sge_execd"));
+      if ( cached_port >= 0 ) {
+         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_execd", cached_port ));
+         int_port = cached_port; 
+      } else {
+         sge_mutex_unlock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);
+         SGE_EXIT(1);
+      }
+   } else {
+      DPRINTF(("returning port value: "U32CFormat"\n", u32c(int_port)));
+      /* set new timeout time */
+      gettimeofday(&now,NULL);
+      next_timeout = now.tv_sec + SGE_PORT_CACHE_TIMEOUT;
+
+      /* set new port value */
+      cached_port = int_port;
    } 
+
+   sge_mutex_unlock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);
 
    DEXIT;
    return int_port;

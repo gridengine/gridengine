@@ -246,5 +246,8 @@
 #define MSG_UTI_DIRECTORYNOTEXIST_S                      _MESSAGE(49111, _("directory doesn't exist: "SFN"\n"))
 #define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(49112, _("cell directory "SFQ" doesn't exist\n"))
 
+#define MSG_UTI_CANT_GET_ENV_OR_PORT_SS        _MESSAGE(49113, _("could not get environment variable "SFN" or service "SFQ"\n"))
+#define MSG_UTI_USING_CACHED_PORT_SU           _MESSAGE(49114, _("using cached "SFQ" port value "U32CFormat"\n"))
+
 #endif /* __MSG_UTILIB_H */
 

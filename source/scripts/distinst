@@ -1006,11 +1006,11 @@ if [ $instcommon = true ]; then
 
    if [ $instjavadoc = true ]; then
       if [ -d ../doc/javadocs ]; then
-         Execute rm -rf $DEST_SGE_ROOT/javadocs
-         MakeDir javadocs
-         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT
-         Execute chmod -R a+r $DEST_SGE_ROOT/javadocs
-         Cleanup javadocs
+         Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
+         MakeDir doc/javadocs
+         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT/doc
+         Execute chmod -R a+r $DEST_SGE_ROOT/doc/javadocs
+         Cleanup doc/javadocs
       fi
    fi
 

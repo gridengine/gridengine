@@ -1,3 +1,6 @@
+AS-2005-01-19-0: CVS        Created V60u3_TAG
+---------------------------------------------
+
 DT-2005-01-16-0: Enhancem.: o aimk can now build javadocs with or without
                               protected fields and methods.
                  Bugfix:    o Changed Session.getVersion() to return the binding

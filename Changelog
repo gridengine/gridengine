@@ -1,3 +1,11 @@
+CR-2004-03-02-1  Bugfix:    - client will close it's own connection after closing 
+                              connection timeout. Before this fix only the server
+                              closed the connection.
+                            - setting read, write and ack timeout (on tcp layer)
+                              back to 15 seconds.
+                            - cl_get_error_text() now return real error messages.
+                 Changed:   commlib
+
 AS-2004-03-01-2  Enhancem.: make all test binaries for commlib and japi by default
                             - needed for testsuite
 

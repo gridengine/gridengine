@@ -3272,6 +3272,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                gettimeofday(&now,NULL);
                if (connection->shutdown_timeout <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_WARNING,"got timeout while waiting for connection close");
+                  connection->connection_state = CL_COM_CLOSING;
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
                   /* unlock connection list */

@@ -357,7 +357,6 @@ SG-2003-07-16-0  Optim.:    - Optimized functional ticket computation with
                  Review:    AH
                  Changed:   sge_schedd
 
->>>>>>> 1.309.2.523
 MD-2003-07-15-2  Bugfix:    Added 3rdparty/qmake/IA64LINUX/glob
                             + Makefile
 

@@ -1,3 +1,10 @@
+JG-2003-07-01-0: Bugfix:    Slave tasks of tightly integrated parallel jobs 
+                            exceeding wall clock time were not killed.
+                 Bugtraq:   4881949
+                 Issue:     575
+                 Review:    AS
+                 Changed:   sge_execd
+
 CR-2003-06-30-0: Testsuite: qevent -ts option was not working for sge system
                  Changed:   qevent
 

@@ -535,11 +535,12 @@ const char *petask
       direct_signal = 0;        /* communication has to be done via file */
    }
 
-   DPRINTF(("signalling pid "pid_t_fmt" with %d\n", pid, sig));
    if (petask)
       sprintf(task_job, u32"."u32"/%s", jobid, jataskid, petask);
    else 
       sprintf(task_job, u32"."u32, jobid, jataskid);
+
+   DPRINTF(("signalling %s with pid "pid_t_fmt", signal %d\n", task_job, pid, sig));
 
    if (!direct_signal) {
       sprintf(fname, "%s/%s/signal", ACTIVE_DIR, task_job);

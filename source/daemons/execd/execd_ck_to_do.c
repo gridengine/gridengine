@@ -86,6 +86,11 @@ extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
 
+static int 
+sge_execd_job_is_tightly_integrated(const lListElem *job);
+static int
+sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
+
 static int sge_start_jobs(void);
 static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *slave_jep, lListElem *slave_jatep);
 
@@ -437,10 +442,15 @@ int answer_error
                 (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
                     u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
-               sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
-                        lGetUlong(jep, JB_job_number),
-                        lGetUlong(jatep, JAT_task_number),
-                        NULL);     
+               if (sge_execd_job_is_tightly_integrated(jep)) {
+                  sge_kill_petasks(jep, jatep);
+               }
+               if (lGetUlong(jatep, JAT_pid) != 0) {
+                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
+                           lGetUlong(jep, JB_job_number),
+                           lGetUlong(jatep, JAT_task_number),
+                           NULL);     
+               }         
                lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);
             }    
             continue;
@@ -451,10 +461,15 @@ int answer_error
                 (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
                     u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
-               sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
-                        lGetUlong(jep, JB_job_number),
-                        lGetUlong(jatep, JAT_task_number),
-                        NULL);
+               if (sge_execd_job_is_tightly_integrated(jep)) {
+                  sge_kill_petasks(jep, jatep);
+               }
+               if (lGetUlong(jatep, JAT_pid) != 0) {
+                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
+                           lGetUlong(jep, JB_job_number),
+                           lGetUlong(jatep, JAT_task_number),
+                           NULL);
+               }
                lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);         
             }
             continue;
@@ -547,6 +562,50 @@ int answer_error
    }
 }
 
+static int 
+sge_execd_job_is_tightly_integrated(const lListElem *job)
+{
+   int ret = 0;
+
+   if (job != NULL) {
+      const lListElem *pe;
+
+      pe = lFirst(lGetList(job, JB_pe_object));
+      if (pe != NULL) {
+         if (lGetUlong(pe, PE_control_slaves) != 0) {
+            ret = 1;
+         }
+      }
+   }
+
+   return ret;
+}
+
+static int
+sge_kill_petasks(const lListElem *job, const lListElem *ja_task)
+{
+   int ret = 0;
+
+   if (job != NULL && ja_task != NULL) {
+      lListElem *pe_job;
+
+      for_each(pe_job, lGetList(ja_task, JAT_task_list)) {
+         lListElem *pe_ja_task;
+
+         pe_ja_task = lFirst(lGetList(pe_job, JB_ja_tasks));
+         if (pe_ja_task != NULL) {
+            if (sge_kill(lGetUlong(pe_ja_task, JAT_pid), SGE_SIGKILL,
+                         lGetUlong(job, JB_job_number),
+                         lGetUlong(ja_task, JAT_task_number),
+                         lGetString(pe_job, JB_pe_task_id_str)) == 0) {
+               ret = 1;
+            }
+         }
+      }
+   }
+
+   return ret;
+}
 
 /*****************************************************************************/
 static int sge_start_jobs()

@@ -1403,11 +1403,11 @@ proc qrsh_qsub_gid {} {
       if {[info exists config(execd_params)]} {
          set execd_params $config(execd_params)
       } else {
-         set execd_params "NONE"
+         set execd_params ""
       }
 
       unset config
-      if { [string compare -nocase $execd_params "NONE"] == 0 } {
+      if { [string length $execd_params] == 0 } {
          set config(execd_params) "USE_QSUB_GID=true"
       } else {
          set config(execd_params) "$execd_params,USE_QSUB_GID=true"

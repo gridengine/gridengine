@@ -1333,7 +1333,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
    
      if {[info exists old_values($elem)]} {
         if { $newVal == "" } {
-          lappend vi_commands ":%s/^$elem .*$//\n"
+          lappend vi_commands ":%s/^$elem .*$/#/\n"
         } else {
           set newVal1 [split $newVal {/}]
           set newVal [join $newVal1 {\/}]
@@ -2027,6 +2027,28 @@ proc add_pe { change_array { version_check 1 } } {
   if {$result != 0  } { add_proc_error "add_pe" -1 "could not add parallel environment \"[set chgar(pe_name)]\"" }
 
   return $result
+}
+
+proc get_pe {pe_name change_array} {
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sp" "$pe_name"} result ]
+  if { $catch_result != 0 } {
+     add_proc_error "get_config" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
+     return
+  } 
+
+  # split each line as listelement
+  set help [split $result "\n"]
+  foreach elem $help {
+     set id [lindex $elem 0]
+     set value [lrange $elem 1 end]
+     if { [string compare $value ""] != 0 } {
+       set chgar($id) $value
+     }
+  }
 }
 
 

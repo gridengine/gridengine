@@ -1,3 +1,5 @@
+JG-2003-03-17-1: Testsuite: Cleanup and workaround for issue 884
+
 EB-2004-03-17-1: Bugfix:    qstat shows queue in A state although 
                             suspend_threshold is disabled
                  Issue:     832

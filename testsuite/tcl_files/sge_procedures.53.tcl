@@ -80,7 +80,12 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
       }
    }
 
-   set my_change(queue_list) $q_list
+   get_pe $pe_obj curr_pe
+   if { $curr_pe(queue_list) == "all" } {
+      set my_change(queue_list) $q_list
+   } else {
+      set my_change(queue_list) "$curr_pe(queue_list) $q_list"
+   }
    set_pe $pe_obj my_change
 }
 

@@ -47,6 +47,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <netinet/in.h>
 
 #include "basis_types.h"
 #include "symbols.h"

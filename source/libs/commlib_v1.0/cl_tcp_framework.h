@@ -33,6 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <netinet/in.h>
 #include "cl_lists.h"
 #include "cl_data_types.h"
 
@@ -45,7 +46,7 @@ typedef struct cl_com_tcp_private_type {
    int           server_port;         /* used port for server setup */
    int           connect_port;        /* port to connect to */
    int           sockfd;              /* socket file descriptor */
-   struct sockaddr_in client_addr;    /* used in connect for storing client addr of connection partner */
+   struct sockaddr_in client_addr;    /* used in connect for storing client addr of connection partner */ 
 } cl_com_tcp_private_t;
 
 

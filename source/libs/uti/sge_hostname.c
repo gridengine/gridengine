@@ -41,6 +41,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+
 #if defined(SGE_MT)
 #include <pthread.h>
 #endif
@@ -380,8 +381,13 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
    /* Copy the entries */
    count = 0;
    for (p = orig->h_addr_list; *p != 0; p++) {
+
+#ifndef in_addr_t
+      int tmp_size = sizeof (uint32_t); /* POSIX definition for AF_INET */
+#else 
       int tmp_size = sizeof (in_addr_t);
-      
+#endif
+      /* struct in_addr */
       copy->h_addr_list[count] = (char *)malloc (tmp_size);
       memcpy (copy->h_addr_list[count++], *p, tmp_size);
    }

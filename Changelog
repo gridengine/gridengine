@@ -1,3 +1,6 @@
+CR-2004-01-26-0: Bugfix:    Fixed build for ALINUX
+                 Review:    AD
+
 AD-2004-01-26-2: Bugfix:    Did remove redundant 'sge_switch2admin_user()' and
                             'sge_switch2start_user()' calls.
                  Changed:   qmaster

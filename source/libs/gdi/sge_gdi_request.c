@@ -862,7 +862,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    *commlib_error = ret;
 
 
-   INFO((SGE_EVENT,"send request with id %ld\n", gdi_request_mid ));
+   INFO((SGE_EVENT,"send request with id "U32CFormat"\n", u32c(gdi_request_mid) ));
    if (ret != CL_RETVAL_OK) {
       if (( *commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          DEXIT;

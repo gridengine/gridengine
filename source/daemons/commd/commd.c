@@ -69,6 +69,7 @@
 #include "sge_feature.h"
 #include "setup_commd_path.h"
 #include "sge_exit.h"
+#include "sge_arch.h"
 
 void init_send(message *mp, int reserved_port, int commdport);
 static char *fdsetstr(fd_set *fds, char *);
@@ -84,7 +85,6 @@ int build_write_fd_set(fd_set *writefds, message *mp);
 void sighandler(int sig);
 void log_state_transition_too_many_fds_open(u_long t);
 int seek_badfd(int nfds, fd_set *rfds, fd_set *wfds);
-char *get_alias_path(char *);
 int main(int argc, char **argv);
 
 static int memorylack = 0;
@@ -157,6 +157,7 @@ char **argv
 
    /* temporary logfile until we are daemonized */
    error_file = logfile;
+   trace_func = trace;
    
    /* initialize me-struct */
    sge_getme(COMMD);
@@ -256,7 +257,8 @@ char **argv
 
    if (aliasfile == NULL) {
       /* expect alias file at default location */
-      aliasfile = get_alias_path(me.default_cell);
+      aliasfile = get_alias_path();
+
    }   
    if (actmasterfile == NULL) {
       /* expect act_master file at default location */
@@ -273,8 +275,9 @@ char **argv
       if (SGE_STAT(aliasfile, &stat_dummy))
          INFO((SGE_EVENT, MSG_COMMD_STATHOSTALIASFILEFAILED_SS, 
                aliasfile, strerror(errno)));
-      else
+      else {
          read_aliasfile(aliasfile);
+      }
    }
 
    if (message_logging)
@@ -940,7 +943,6 @@ u_long now
          if (MESSAGE_STATUS(mp) == S_RDY_4_SND &&
              (!(mp->flags & (COMMD_RECEIVE | COMMD_LEAVE | COMMD_CNTL)))) {
             DEBUG((SGE_EVENT, "rescheduling message mid=%d", (int)mp->mid));
-            trace(SGE_EVENT);
             init_send(mp, reserved_port, commdport);
          }
          mp = next;
@@ -1035,45 +1037,3 @@ fd_set *wfds
 
    return -1;
 }
-
-/*-----------------------------------------------------------------------
- * get_alias_path
- *-----------------------------------------------------------------------*/
-char *get_alias_path(
-char *sge_cell 
-) {
-   char *sge_root, *cp;
-   int len;
-   SGE_STRUCT_STAT sbuf;
-      
-   DENTER(TOP_LAYER, "get_alias_path");
-   
-   sge_root = getenv("SGE_ROOT");
-
-   if (!sge_root || strlen(sge_root) == 0) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTSET));
-      SGE_EXIT(1); 
-   }
-
-   if (sge_root[strlen(sge_root)-1] == '/')  /*get rid of trailing slash*/
-      sge_root[strlen(sge_root)-1] = '\0';
-
-   if (SGE_STAT(sge_root, &sbuf)) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
-      SGE_EXIT(1);
-   }
-
-   len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ALIAS_FILE) + 5;
-
-   if (!(cp = malloc(len))) {
-      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE ));
-      SGE_EXIT(1);
-   }
-
-   sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE); 
-   return cp;
-}
-
-
-
-

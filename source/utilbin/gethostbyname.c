@@ -39,6 +39,9 @@
 #include <stdlib.h>
 #include "basis_types.h"
 #include "msg_utilbin.h"
+#include "sge_string.h"
+#include "host.h"
+#include "sge_arch.h"
 
 #ifndef h_errno
 extern int h_errno;
@@ -46,7 +49,7 @@ extern int h_errno;
 
 void usage(void)
 {
-  fprintf(stderr, "%s gethostbyname [-name] <name>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "%s gethostbyname [-name|-aname] <name>\n",MSG_UTILBIN_USAGE);
   exit(1);
 }
 
@@ -55,7 +58,7 @@ int main(int argc, char *argv[])
   struct hostent *he;
   char **tp,**tp2;
   int name_only = 0;
-  
+  int sge_aliasing = 0;
 
   if (argc < 2)
     usage();
@@ -64,6 +67,12 @@ int main(int argc, char *argv[])
      if (argc != 3)
         usage(); 
      name_only = 1;
+  }   
+  if (!strcmp(argv[1], "-aname")) {
+     if (argc != 3)
+        usage(); 
+     name_only = 1;
+     sge_aliasing = 1;
   }   
      
   he = gethostbyname(argv[1+name_only]);
@@ -79,9 +88,13 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  if (name_only)
-     printf("%s\n", he->h_name);
-  else {
+  if (name_only) {
+      const char *s;
+      if (sge_aliasing && (s=resolve_hostname_local(he->h_name)))
+         printf("%s\n", s);
+      else /* no aliased name */
+         printf("%s\n", he->h_name);
+  } else {
      printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
      printf(MSG_SYSTEM_ALIASES );
 

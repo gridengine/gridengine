@@ -478,7 +478,6 @@ int commdport
           for the file descriptor but we didn't read ... */
       DEBUG((SGE_EVENT, "readfromfd did not read fd=%d message is in state %s",
          fd, message_status_string(mp)));
-      trace(SGE_EVENT);
       if (MESSAGE_STATUS(mp) == S_CONNECTING) {
          i = read(fd, &chr, 1);
          if (!i) {
@@ -866,7 +865,7 @@ int commdport
          mp->ackchar = COMMD_CACK;
       }
       else {
-         if (mp->to.host == localhost) {
+         if (!strcasecmp(get_mainname(localhost), get_mainname(mp->to.host))) {
             /* The commproc isnot enrolled on this host, but this is the
                target host -> reply negative */
             answer = 1;
@@ -885,7 +884,7 @@ int commdport
 
    /* look whether receiver is a local registered commproc or receiver is
       expected to be on the local host */
-   if (commp || mp->to.host == localhost) {
+   if (commp || !strcasecmp(get_mainname(localhost), get_mainname(mp->to.host))) {
       /* deliver direct */
       if (commp && commp->w_fd != -1) {
          DEBUG((SGE_EVENT, "receiver commproc is waiting for message (w_fd=%d, w_name=%s, w_id=%d, w_host=%s, w_tag=%d)",
@@ -893,6 +892,15 @@ int commdport
                commp->w_host ? commp->w_host->mainname : "any",
                commp->w_tag));
       }
+
+#if 0
+      if (!commp && (mp->flags & COMMD_SYNCHRON)) {
+         DEBUG((SGE_EVENT, "target of synchronous message mid=%d is not enrolled", (int)mp->mid));
+/*          mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER; */
+/*          SET_MESSAGE_STATUS(mp, S_WRITE_ACK); */
+      }
+#endif
+
       if (commp && (commp->w_fd != -1) && 
           ((commp->w_name[0] == '\0') ||
           !strncmp(mp->from.name, commp->w_name, MAXHOSTLEN)) &&
@@ -922,7 +930,6 @@ int commdport
       return;                   /* we have to wait another select; 
                                    look into open_connection() */
    }
-   /* no DEXIT; statement not reached */
 }
 
 /**************************************************************
@@ -937,7 +944,6 @@ const char *str
    DENTER(TOP_LAYER, "reset_message");
    
    DEBUG((SGE_EVENT, "reset message: mid=%d %s", (int)mp->mid, str));
-   trace(SGE_EVENT);
 
    SET_MESSAGE_STATUS(mp, S_RDY_4_SND);
    if (mp->tofd != -1) {

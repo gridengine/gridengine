@@ -217,7 +217,6 @@
 #define MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION  _("changed scheduler configuration\n")
 #define MSG_USER_XISNOKNOWNUSER_S                 _("%s is not known as user\n")
 #define MSG_PROJECT_XISNOKNWOWNPROJECT_S          _("%s is not known as project\n")
-#define MSG_ANSWER_CANTRESOLVEHOSTNAME_SS         _("can't resolve hostname "SFQ": %s\n")
 #define MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG     _("Need hostname to delete local configuration\n")
 #define MSG_ANSWER_INVALIDOPTIONARGX_S            _("invalid option argument \"%s\"")
 #define MSG_SRC_X_HELP_USAGE_S                    _("Usage: %s -help\n")

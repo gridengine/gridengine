@@ -47,6 +47,11 @@
 extern stringT SGE_EVENT;
 extern char *error_file;
 
+/* hook for commd trace() */
+typedef void (*trace_func_type)(char *);
+extern trace_func_type trace_func;
+
+
 void sge_log_as_admin_user(void);
 void sge_log_verbose(int i);
 int sge_is_verbose(void);

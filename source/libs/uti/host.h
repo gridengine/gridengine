@@ -56,13 +56,13 @@ typedef struct host {
 
 extern host *localhost;
 
-int matches_name(struct hostent *he, char *name);
+int matches_name(struct hostent *he, const char *name);
 void host_initialize(void);
 host *newhost_addr(const struct in_addr *addr);
-host *newhost_name(char *name, int *not_really_new);
+host *newhost_name(const char *name, int *not_really_new);
 host *create_host(void);
 void delete_host(host *h);
-host *search_host(char *name, char *addr);
+host *search_host(const char *name, char *addr);
 int alias_host(host *h1, host *h2);
 int alias_hoststr(char *host1, char *host2);
 void print_host(host *, FILE *fp);
@@ -70,6 +70,8 @@ void print_hostlist(FILE *fp);
 int read_aliasfile(char *fname);
 void refresh_hostlist(void);
 char *get_mainname(host *h);
+const char *get_aliased_name(const char *name);
 
+const char *resolve_hostname_local(const char *unresolved);
 
 #endif /* __HOST_H */

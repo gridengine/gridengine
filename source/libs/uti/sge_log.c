@@ -58,6 +58,9 @@ static int log_as_admin_user = 0;
 static int verbose = 1;
 static int qmon_log = 0;
 
+/* to unify commd trace() concept with sge_log() */
+trace_func_type trace_func = NULL;
+
 void sge_qmon_log(int i)
 {
    qmon_log = i;
@@ -104,6 +107,10 @@ int line__
       strcpy(newline, "\0");
 
    DPRINTF(("%s %d %s%s", file__, line__, mesg, newline));
+
+   /* commd remote monitoring is in effect independently of the current logginglevel */
+   if (me.who == COMMD && trace_func && log_level >= LOG_DEBUG) 
+      trace_func(mesg);
 
    /* quick exit if nothing to log */
 #ifndef WIN32NATIVE

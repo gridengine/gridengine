@@ -3052,7 +3052,7 @@ DPRINTF(("ep: %s %s\n",
                SGE_EXIT(1);
                break;
             default:
-               fprintf(stderr, MSG_ANSWER_CANTRESOLVEHOSTNAME_SS, 
+               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_SS, 
                      lGetHost(hep, EH_name), cl_errstr(ret));
                FREE(host_list);
                lFreeElem(hep);

@@ -33,12 +33,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "sgermon.h"
 #include "rmon.h"
 #include "sge_log.h"
 #include "sge.h"
 #include "sge_arch.h"
 #include "msg_utilib.h"
+#include "sge_stat.h"
 #include "sgermon.h"
+#include "msg_common.h"
+#include "msg_commd.h"
+#include "sge_exit.h"
 
 const char *sge_arch()
 {
@@ -118,6 +123,36 @@ const char *sge_default_cell(void)
       cp = DEFAULT_CELL;
    if (cp[strlen(cp)-1] == '/')
       cp[strlen(cp)-1] = '\0';
+   return cp;
+}
+
+/*-----------------------------------------------------------------------
+ * get_alias_path
+ *-----------------------------------------------------------------------*/
+char *get_alias_path(void) {
+   const char *sge_root, *sge_cell;
+   char *cp;
+   int len;
+   SGE_STRUCT_STAT sbuf;
+
+   DENTER(TOP_LAYER, "get_alias_path");
+
+   sge_root = sge_sge_root();
+   sge_cell = sge_default_cell();
+
+   if (SGE_STAT(sge_root, &sbuf)) {
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
+      SGE_EXIT(1);
+   }
+
+   len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ALIAS_FILE) + 5;
+   if (!(cp = malloc(len))) {
+      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE ));
+      SGE_EXIT(1);
+   }
+
+   sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE);
+   DEXIT;
    return cp;
 }
 

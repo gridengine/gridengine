@@ -182,7 +182,6 @@ int fd
 
    DEBUG((SGE_EVENT, "receive timeout disconnects commproc %s by closing fd=%d", 
       cop->name, fd));
-   trace(SGE_EVENT);
    reset_messages_for_commproc(cop);
    shutdown(cop->fd, 2);
    close(cop->fd);
@@ -214,7 +213,6 @@ char *str
       disconnect_commproc_using_fd(cop->fd); 
       if (cop->fd != -1) {
          ERROR((SGE_EVENT, "commproc to be reconnected via %s fd=%d is still connected to fd=%d", str, fd, cop->fd));
-         trace(SGE_EVENT);
 
          DEXIT;
          return -1;
@@ -223,7 +221,6 @@ char *str
 
    DEBUG((SGE_EVENT, "reconnecting commproc %s %s %d with fd=%d",
       cop->name, cop->host->mainname, cop->id, fd));
-   trace(SGE_EVENT);
 
    cop->fd = fd;
 
@@ -435,7 +432,6 @@ u_long now
       if (now - commp->lastaction > commproc_timeout) {
          ERROR((SGE_EVENT, MSG_COMMPROC_INACTIVEFOR_SIU ,
                 commp->name, (int) commp->id, u32c((now - commp->lastaction)) ));
-         trace(SGE_EVENT);
          next = commp->next;
          delete_commproc(commp);
          commp = next;

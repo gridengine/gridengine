@@ -542,7 +542,7 @@ const char *queue
          pe = NULL;
 
       if (lGetUlong(jatep, JAT_start_time)) {
-         ERROR((SGE_EVENT, MSG_JOB_DELIVER2Q_UUS, 
+         WARNING((SGE_EVENT, MSG_JOB_DELIVER2Q_UUS, 
                 u32c(jobid), u32c(jataskid), 
                 lGetString(jatep, JAT_master_queue)));
       }

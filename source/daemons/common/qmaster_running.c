@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <netdb.h>
 
 #include "sge_log.h"
@@ -52,6 +53,8 @@
 #include "msg_daemons_common.h"
 #include "sge_string.h"
 #include "sge_feature.h"
+
+#include "host.h"
 
 #define ENROLL_ERROR_DO_RETRY -50
 static int qmaster_running(char *, int *);
@@ -75,6 +78,7 @@ int *enrolled
    pid_t pid;
    char pidfile[SGE_PATH_MAX], *cp;
    int ret, alive;
+   const char *s;
 
    DENTER(TOP_LAYER, "qmaster_running");
 
@@ -84,15 +88,11 @@ int *enrolled
       DEXIT;
       return 0;
    }
-   { /* resolve master name - there is no commd at this time so 
-        host name resolving must be accomplished without commd */ 
-      struct hostent *he;
-      if ((he = gethostbyname(master))) {
-         DPRINTF(("gethostbyname(%s) returns %s\n", master, he->h_name));
-         if (strcasecmp(master, he->h_name))
-            strcpy(master, he->h_name);
-      }
-   }
+
+   /* resolve master name - there is no commd at this time so 
+      host name resolving must be accomplished without commd */ 
+   if ((s=resolve_hostname_local(master)) && strcasecmp(master, s))
+      strcpy(master, s);
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
    if (!hostcmp(master, me.qualified_hostname)) {
@@ -116,11 +116,10 @@ int *enrolled
    if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
       set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
    }   
-      
 
    ret = enroll();
 
-   DPRINTF(("return of enroll(): %d - qmasterhost %s\n", ret, master));
+   DPRINTF(("return of enroll(): %s - qmasterhost %s\n", cl_errstr(ret), master));
 
    switch (ret) {
    case 0:

@@ -40,6 +40,9 @@
 #include <string.h>
 #include "basis_types.h"
 #include "msg_utilbin.h"
+#include "sge_string.h"
+#include "host.h"
+#include "sge_arch.h"
 
 #if defined(SOLARIS)
 int gethostname(char *, int);
@@ -47,7 +50,7 @@ int gethostname(char *, int);
 
 int usage(void)
 {
-  fprintf(stderr, "%s\n gethostname [-name]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
+  fprintf(stderr, "%s\n gethostname [-name|-aname]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
   exit(1);
   return 0;
 }
@@ -58,12 +61,16 @@ int main(int argc,char *argv[])
   char **tp,**tp2;
   char buf[128];
   int name_only = 0;
+  int sge_aliasing = 0;
   
 
   if (argc == 2) {
      if (!strcmp(argv[1], "-name"))
         name_only = 1;
-     else   
+     else if (!strcmp(argv[1], "-aname")) {
+        name_only = 1;
+        sge_aliasing = 1;
+     } else
         usage();
   }
   else if (argc > 2)
@@ -80,10 +87,15 @@ int main(int argc,char *argv[])
     perror(MSG_SYSTEM_GETHOSTBYNAMEFAILED );
     exit(1);
   }
+  strcpy(buf, he->h_name);
 
-  if (name_only)
-      printf("%s\n", he->h_name);
-  else {    
+  if (name_only) {
+     const char *s;
+     if (sge_aliasing && (s=resolve_hostname_local(buf)))
+        printf("%s\n", s);
+     else /* no aliased name */
+        printf("%s\n", buf);
+  } else {    
      printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
      printf(MSG_SYSTEM_ALIASES );
 

@@ -50,6 +50,8 @@
 #include "sge_stat.h" 
 #include "sge_time.h" 
 
+#include "sge_arch.h" 
+
 #ifndef h_errno
 extern int h_errno;
 #endif
@@ -68,12 +70,12 @@ void host_initialize(void);
 /* cpp functions */
 static char **copy_cpp(char **cpp, int n);
 static void free_cpp(char **cpp);
-static char **cpp_casecmp(char *cp, char **cpp);
-static char **cpp_memncmp(char *cp, char **cpp, int n);
+static char **cpp_casecmp(const char *cp, char **cpp);
+static char **cpp_memncmp(const char *cp, char **cpp, int n);
 
 /* resolver library wrappers */
-static struct hostent *commd_gethostbyname(const char *name);
-static struct hostent *commd_gethostbyaddr(const struct in_addr *addr);
+static struct hostent *sge_gethostbyname(const char *name);
+static struct hostent *sge_gethostbyaddr(const struct in_addr *addr);
 
 #if defined(SOLARIS)
 int gethostname(char *name, int namelen);
@@ -81,13 +83,14 @@ int gethostname(char *name, int namelen);
 
 #define MAX_RESOLVER_BLOCKING 15
 
-static struct hostent *commd_gethostbyname(const char *name)
+/* should use gethostbyname_r() instead */
+static struct hostent *sge_gethostbyname(const char *name)
 {
    struct hostent *he;
    time_t now;
    int time;
 
-   DENTER(TOP_LAYER, "commd_gethostbyname");
+   DENTER(TOP_LAYER, "sge_gethostbyname");
 
    now = sge_get_gmt();
    he = gethostbyname(name);
@@ -102,20 +105,20 @@ static struct hostent *commd_gethostbyname(const char *name)
           (h_errno == NO_RECOVERY)?"NO_RECOVERY":
           (h_errno == NO_DATA)?"NO_DATA":
           (h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
-      trace(SGE_EVENT);
    }
 
    DEXIT;
    return he;
 }
 
-static struct hostent *commd_gethostbyaddr(const struct in_addr *addr)
+/* should use gethostbyaddr_r() instead */
+static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 {
    struct hostent *he;
    time_t now;
    int time;
 
-   DENTER(TOP_LAYER, "commd_gethostbyaddr");
+   DENTER(TOP_LAYER, "sge_gethostbyaddr");
 
    now = sge_get_gmt();
 #if defined(CRAY)
@@ -134,7 +137,6 @@ static struct hostent *commd_gethostbyaddr(const struct in_addr *addr)
           (h_errno == NO_RECOVERY)?"NO_RECOVERY":
           (h_errno == NO_DATA)?"NO_DATA":
           (h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
-      trace(SGE_EVENT);
    }
 
    DEXIT;
@@ -158,6 +160,7 @@ void host_initialize()
       DEXIT;
       return;
    }
+   DPRINTF(("adding localhost %s\n", localname));
 
    localhost = (host *) 1;      /* avoid recursion */
    localhost = newhost_name(localname, NULL);
@@ -228,7 +231,7 @@ host *newhost_addr( const struct in_addr *addr)
    if (!new)
       return NULL;
 
-   he = commd_gethostbyaddr(addr);
+   he = sge_gethostbyaddr(addr);
    
    if (!he) {
       delete_host(new);
@@ -248,7 +251,7 @@ host *newhost_addr( const struct in_addr *addr)
 /*   be careful with resolving anomalies.        */
 /*************************************************/
 host *newhost_name(
-char *name,
+const char *name,
 int *not_really_new 
 ) {
    host *new, *h;
@@ -257,7 +260,7 @@ int *not_really_new
 
    DENTER(TOP_LAYER, "newhost_name");
 
-   he = commd_gethostbyname(name);
+   he = sge_gethostbyname(name);
    if (!he) {
       DEXIT;
       return NULL;
@@ -286,6 +289,7 @@ int *not_really_new
       return NULL;
    }
 
+   DPRINTF(("adding host object %s\n", name));
    DEXIT;
    return new;
 }
@@ -347,7 +351,7 @@ char *host2
 /**********************************************************************/
 int matches_name(
 struct hostent *he,
-char *name 
+const char *name 
 ) {
    if (!name)
       return 1;
@@ -379,7 +383,7 @@ char *addr
 /* If addr is aliased return hostname of first alias (main name)        */
 /************************************************************************/
 host *search_host(
-char *name,
+const char *name,
 char *addr 
 ) {
    host *hl = hostlist, *h1;
@@ -387,6 +391,7 @@ char *addr
 
    while (hl) {
       he = &hl->he;
+
       if (((name && !strcasecmp(hl->mainname, name)) || 
             matches_name(he, name)) && matches_addr(he, addr)) {
          while ((h1 = search_pred_alias(hl)))   /* start of alias chain */
@@ -395,6 +400,7 @@ char *addr
       }
       hl = hl->next;
    }
+
    return NULL;
 }
 
@@ -515,7 +521,7 @@ int n
 /* matched character pointer. Case sensitive.                         */
 /**********************************************************************/
 static char **cpp_casecmp(
-char *cp,
+const char *cp,
 char **cpp 
 ) {
    while (*cpp) {
@@ -531,7 +537,7 @@ char **cpp
 /* matched character pointer. Case insensitive. Compare exactly n chars */
 /************************************************************************/
 static char **cpp_memncmp(
-char *cp,
+const char *cp,
 char **cpp,
 int n 
 ) {
@@ -574,17 +580,28 @@ char *fname
    host *h1, *h2;
    SGE_STRUCT_STAT sb;
 
-   if (!fname)                  /* saves work if aliasfile not specified */
-      return 0;
+   DENTER(TOP_LAYER, "read_aliasfile");
 
-   if (SGE_STAT(fname, &sb))
+   if (!fname) {                 /* saves work if aliasfile not specified */
+      DEXIT;
+      return 0;
+   }
+
+   if (SGE_STAT(fname, &sb)) {
+      DEXIT;
       return -1;      
+   }
 
    fp = fopen(fname, "r");
-   if (!fp)
+   if (!fp) {
+      DEXIT;
       return -1;
+   }
 
    while (fgets(buf, sizeof(buf), fp)) {
+      if (buf[0] == '#')
+         continue;
+
       mainname = strtok(buf, ALIAS_DELIMITER);
       if (!mainname)
          continue;
@@ -594,6 +611,7 @@ char *fname
          h1 = newhost_name(mainname, NULL);
       if (!h1) {
          fclose(fp);
+         DEXIT;
          return -1;             /* main hostname could not be resolved */
       }
 
@@ -602,6 +620,7 @@ char *fname
 
       /* iterate on aliases */
       while ((name = strtok(NULL, ALIAS_DELIMITER))) {
+
          h2 = search_host(name, NULL);
          if (!h2)
             h2 = newhost_name(name, NULL);
@@ -616,8 +635,22 @@ char *fname
    }
 
    fclose(fp);
+   DEXIT;
    return 0;
 }
+
+/*******************************************************
+ return mainname to be used 
+ add host to internal host list if necessary
+ *******************************************************/
+const char *get_aliased_name(const char *name)
+{
+   host *h = search_host(name, NULL);
+   if (!h)
+      h = newhost_name(name, NULL);
+   return h?get_mainname(h):NULL;
+}
+
 
 /*******************************************************
  refresh hostlist. This function looks for changes 
@@ -629,7 +662,7 @@ void refresh_hostlist()
    struct hostent *he;
 
    while (hl) {
-      he = commd_gethostbyname(hl->he.h_name);
+      he = sge_gethostbyname(hl->he.h_name);
       if (!he) {
          hl->deleted = 1;
          continue;
@@ -658,72 +691,22 @@ host *h
    return (char *) h1->he.h_name;
 }
 
+/*****************************************************************************/
+/* used by qmaster, shadowd and some utilities in cases when commd resolving */
+/* is needed to comply with SGE host aliasing but not available              */
+/*****************************************************************************/
+const char *resolve_hostname_local(const char *unresolved)
+{  
+   const char *s;
+   char *apath;
+   apath = get_alias_path();
+   read_aliasfile(apath);
+   free(apath);
+   s = get_aliased_name(unresolved);
+   if (s)
+     DPRINTF(("%s as aliased from %s\n", s, unresolved));
+   else
+     DPRINTF(("no aliased name from %s\n", unresolved));
 
-/********************************************************/
-#ifdef TEST
-
-int main(
-int argc,
-char **argv 
-) {
-   char buf[1024];
-   host *h, *h1;
-   unsigned long inetaddr;
-   int first;
-#ifdef __SGE_COMPILE_WITH_GETTEXT__  
-   /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
-                         (setlocale_func_type)      setlocale,
-                         (bindtextdomain_func_type) bindtextdomain,
-                         (textdomain_func_type)     textdomain);
-   sge_init_language(NULL,NULL);   
-#endif /* __SGE_COMPILE_WITH_GETTEXT__  */
-
-   printf("Input hostnames then type 'x'\n");
-   while (gets(buf) && strcasecmp(buf, "x"))
-      newhost_name(buf, NULL);
-   print_hostlist(stdout);
-
-   printf("Input hosts to search for then type 'x'\n");
-   while (gets(buf) && strcasecmp(buf, "x")) {
-      h = search_host(buf, NULL);
-      if (h)
-         print_host(h, stdout);
-      else
-         printf("not in list\n");
-   }
-
-   printf("Input hostaddresses to search for then type 'x'\n");
-   while (gets(buf) && strcasecmp(buf, "x")) {
-      inetaddr = inet_addr(buf);
-      if (inetaddr == -1) {
-         printf("malformed input\n");
-         continue;
-      }
-      h = search_host(NULL, (char *) &inetaddr);
-      if (h)
-         print_host(h, stdout);
-      else
-         printf("not in list\n");
-   }
-
-   printf("Input hostnames (one at a line) to alias then type 'x'\n");
-   first = 1;
-   while (gets(buf) && strcasecmp(buf, "x")) {
-      h = search_host(buf, NULL);
-      if (!h)
-         printf("not in list\n");
-      if (first) {
-         h1 = h;
-         first = 0;
-      }
-      else {
-         alias_hoststr(h1->he.h_name, h->he.h_name);
-         first = 1;
-      }
-   }
-   print_hostlist(stdout);
-
-   return 0;
+   return s;
 }
-#endif

@@ -42,6 +42,7 @@ UTILIB_SRC = sge_afsutil.c \
          sge_chdir.c \
          sge_copy_append.c \
          sge_crc.c \
+         host.c \
          sge_daemonize.c \
          sge_dir.c \
          sge_exit.c \
@@ -118,6 +119,9 @@ include $(UTILIB_DIR)/uti_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
+host.o:	$(UTILIB_DIR)/host.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/host.c
+
 sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
 		$(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
 

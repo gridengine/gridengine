@@ -38,5 +38,8 @@ const char *sge_sge_root(void);
 
 const char *sge_default_cell(void); 
 
+char *get_alias_path(void);
+
+
 #endif /* __SGE_ARCH_H */
 

@@ -165,10 +165,10 @@ char *reason
       DEXIT;
       return;
    }
-
-   DEBUG((SGE_EVENT, "deleting message mid=%d: %s", (int)m->mid, reason?reason:"delivered"));
-   if (reason)
-      trace(SGE_EVENT);
+   
+   if (reason) {
+      DEBUG((SGE_EVENT, "deleting message mid=%d: %s", (int)m->mid, reason));
+   }
 
    if (!keep_fromfd && m->fromfd != -1)
       fd_close(m->fromfd, "deleting fromfd");

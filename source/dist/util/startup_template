@@ -374,7 +374,7 @@ if [ "$utilbin_dir" = "none" ]; then
    exit 1
 fi
 
-HOST=`$utilbin_dir/gethostname -name`
+HOST=`$utilbin_dir/gethostname -aname`
 shadow_host=`CheckIfShadowMasterHost $HOST`
 
 if [ "$startup" = true ]; then
@@ -447,7 +447,7 @@ if [ "$startup" = true ]; then
       $bin_dir/QSYST_SHADOWD_NAME
    fi
 else
-   UQHOST=`$utilbin_dir/gethostname -name | cut -f1 -d.`
+   UQHOST=`$utilbin_dir/gethostname -aname | cut -f1 -d.`
    qmaster_spool_dir=`QmasterSpoolDir`
 
    # Send SIGTERM to shadowd

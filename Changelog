@@ -1,3 +1,6 @@
+AH-2001-12-14-0: Bugfix:    SGE's hostaliasing can prevent qmaster restart
+                 Issue:     #95
+
 AA-2001-12-14-1: Bugfix:    got a X protocol error, fixed -> AA-2001-12-14-0:
 
 AA-2001-12-14-0: Bugfix:    Sharetree did not show the correct user data after

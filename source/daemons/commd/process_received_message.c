@@ -124,7 +124,6 @@ int commdport
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
       DEBUG((SGE_EVENT, "message denied cause of unsecure port"));
-      trace(SGE_EVENT);
 
       DEXIT;
       return 0;
@@ -142,7 +141,6 @@ int commdport
          if (!h) {
             DEBUG((SGE_EVENT, "message from unknown host %s",
                   inet_ntoa(mp->fromaddr)));
-            trace(SGE_EVENT);
 
             mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -166,7 +164,6 @@ int commdport
          if (commp) {           /* allready enrolled -> NACK_CONFLICT */
             DEBUG((SGE_EVENT, "Commproc tries to enroll with same host, name and id: %s:%s:%d",
                   get_mainname(h), newname, id));
-            trace(SGE_EVENT);
 
             mp->ackchar = COMMD_NACK_CONFLICT;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -193,7 +190,6 @@ int commdport
          mp->ackchar = COMMD_NACK_COMMD_NOT_READY;
          
          ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_OUTOFCOMMPROCIDS ));
-         trace(SGE_EVENT);
 
          delete_commproc(new);
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -213,7 +209,6 @@ int commdport
               new->tag_priority_list[4], new->tag_priority_list[5],
               new->tag_priority_list[6], new->tag_priority_list[7],
               new->tag_priority_list[8], new->tag_priority_list[9]));
-      trace(SGE_EVENT);
 
       /* reassemble message as acknowledge message */
 
@@ -249,7 +244,6 @@ int commdport
          if (!h) {
             DEBUG((SGE_EVENT, "control message from unknown host %s",
                     inet_ntoa(mp->fromaddr)));
-            trace(SGE_EVENT);
 
             mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -265,7 +259,6 @@ int commdport
 
       DEBUG((SGE_EVENT, "CNTL OPERATION %d:"u32":%s from host %s", 
             operation, op_arg, op_carg, get_mainname(h)));
-      trace(SGE_EVENT);
   
       /* secure tests for critical commd commands (only when started as root)*/ 
       
@@ -285,18 +278,14 @@ int commdport
          effective_user_id = geteuid();
 
          DEBUG((SGE_EVENT, "real_user_id     : %d", real_user_id));
-         trace(SGE_EVENT);
 
          DEBUG((SGE_EVENT, "effective_user_id: %d", effective_user_id)); 
-         trace(SGE_EVENT);
 
 
          if (real_user_id == 0 || effective_user_id == 0) {
             DEBUG((SGE_EVENT, "my process was started by root"));
-            trace(SGE_EVENT);
          } else {
             DEBUG((SGE_EVENT, "my process was started NOT from root"));
-            trace(SGE_EVENT);
          }
        
  
@@ -304,7 +293,6 @@ int commdport
          if ((!mp->reserved_port) && ((real_user_id == 0) || (effective_user_id == 0) )) {
    
             DEBUG((SGE_EVENT, "message rejected because from of unreserved port"));
-            trace(SGE_EVENT);
    
             mp->ackchar = COMMD_NACK_PERM;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -317,71 +305,31 @@ int commdport
          
          if (read_qmaster_name_from_file(master_name,actmasterfile ) == 0) {
             DEBUG((SGE_EVENT, "master file host name is %s", master_name )); 
-            trace(SGE_EVENT);
             master_host = search_host( master_name ,NULL);
             if (master_host == NULL) {
                  int i = 0;
   
                  DEBUG((SGE_EVENT, "adding master host name %s", master_name ));  
-                 trace(SGE_EVENT);
                  read_aliasfile(aliasfile);
                  master_host = newhost_name( master_name ,&i);
-                 if (i == 0) {
-                    DEBUG((SGE_EVENT, "added new host!"));  
-                    trace(SGE_EVENT);
-                 } else {
-                    DEBUG((SGE_EVENT, "host allready known!"));  
-                    trace(SGE_EVENT);
-                 }
             }
          }
 
-         DEBUG((SGE_EVENT, "checking whether host %s is qmaster or localhost", get_mainname(h)));  /* sender host */
-         trace(SGE_EVENT);
-         if (master_host != NULL) {
-            DEBUG((SGE_EVENT, "master host is %s", get_mainname(master_host))); /* master host */
-            trace(SGE_EVENT);
-         } else {
-            DEBUG((SGE_EVENT, "master host can't be resolved")); 
-            trace(SGE_EVENT);
-         }
-         DEBUG((SGE_EVENT, "local host is %s", get_mainname(localhost)));   /* local host*/
-         trace(SGE_EVENT);
- 
-         if (master_host != NULL) {
-            if ( matches_name(&master_host->he , get_mainname(h))  ) {
-               sender_ok = 1;
-               DEBUG((SGE_EVENT, "sender host is qmaster!"));
-               trace(SGE_EVENT);
-   
-            } else {
-               DEBUG((SGE_EVENT, "sender host is not qmaster!" ));
-               trace(SGE_EVENT);
-               
-            }
-         }
-
-         if ( matches_name(&localhost->he, get_mainname(h))  ) {
+         if (master_host && !strcasecmp(get_mainname(master_host), get_mainname(h))) 
             sender_ok = 1;
-            DEBUG((SGE_EVENT, "sender host is localhost!" ));
-            trace(SGE_EVENT);
-         } else {
-            DEBUG((SGE_EVENT, "sender host is not localhost!" ));
-            trace(SGE_EVENT);
-         }
+
+         if (!strcasecmp(get_mainname(localhost), get_mainname(h)))
+            sender_ok = 1;
         
          if (sender_ok != 1) {
-            DEBUG((SGE_EVENT, "message denied, not from qmaster or localhost"));
-            trace(SGE_EVENT);
-   
+            DEBUG((SGE_EVENT, "message denied, sender host %s is neither qmaster host %s nor local host %s", 
+               get_mainname(h), master_host?get_mainname(master_host):"<unresolvable>", get_mainname(localhost)));
             mp->ackchar = COMMD_NACK_PERM;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             DEXIT;
             return 0;
          }
       }
-       
-
 
       if (operation == O_KILL)
          termination_message = mp;      /* life until message is acknowledged */
@@ -486,7 +434,6 @@ int commdport
    }
    if (!h) {
       WARNING((SGE_EVENT, "can't resolve host address %s", inet_ntoa(mp->fromaddr)));
-      trace(SGE_EVENT);
 
       mp->ackchar = COMMD_NACK_ENROLL;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -506,7 +453,6 @@ int commdport
       commp = match_commproc(&mp->from);
       NOTICE((SGE_EVENT, "LEAVE: %s:%d from %s%s", mp->from.name, mp->from.id,
               get_mainname(h), commp ? "" : " (not enrolled)"));
-      trace(SGE_EVENT);
 
       if (commp) {
          if (mp->new_connection && reconnect_commproc_with_fd(commp, mp->fromfd, "LEAVE")) {
@@ -553,11 +499,13 @@ int commdport
          read_aliasfile(aliasfile);
 
       h = search_host(hostname, NULL);
+      if (!h && !refresh_aliases) {
+         read_aliasfile(aliasfile);
+         h = search_host(hostname, NULL);
+      }
+
       if (!h)
          h = newhost_name(hostname, NULL);
-
-      if (!h && !refresh_aliases)
-         read_aliasfile(aliasfile);
 
       if (h)
          uhostname = get_mainname(h);
@@ -566,13 +514,11 @@ int commdport
 
       DEBUG((SGE_EVENT, "UNIQUE HOST: asked host=%s returning %s",
             hostname, uhostname));
-      trace(SGE_EVENT);
 
       /* look for asking commproc */
       if (!(commp = match_commproc(&from))) {
          DEBUG((SGE_EVENT, "unique host query: commproc not enrolled: %s:%s",
                from.name, get_mainname(from.host)));
-         trace(SGE_EVENT);
 
          mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -653,7 +599,6 @@ int commdport
          if (!fhost) {
             ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_RECEIVEQUERYMESSFROMUNOWNHOST_S ,
                   fromhost));
-            trace(SGE_EVENT);
 
             mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -672,7 +617,6 @@ int commdport
       if (!commp) {
          DEBUG((SGE_EVENT, "receive query: receiver not enrolled: %s:%s",
                to.name, get_mainname(to.host)));
-         trace(SGE_EVENT);
 
          mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -702,7 +646,6 @@ int commdport
             tag,
             m ? "found " : "not found",
             m ? mid2str(m->mid):""));
-      trace(SGE_EVENT);
 
       if (m) {
          /* we can deliver immediately -> activate message which can be 
@@ -744,7 +687,6 @@ int commdport
             /* in case of an asynchron request send NACK immediately because
                receiver doesn't want to wait for a message */
             DEBUG((SGE_EVENT, "receive query: no message available for receiver"));
-            trace(SGE_EVENT);
 
             mp->ackchar = COMMD_NACK_NO_MESSAGE;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -785,7 +727,6 @@ int commdport
 
    if (!thost) {
       ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNRECEIVERHOST_S , tohost));
-      trace(SGE_EVENT);
 
       mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -801,7 +742,6 @@ int commdport
          tohost, mp->to.name, mp->to.id,
          ((mp->flags & COMMD_SCOMMD) ? fromhost : get_mainname(h)), mp->from.name,
          mp->from.id, mp->tag, mp->buflen, (int)mp->mid));
-   trace(SGE_EVENT);
 
    /* If the message came direct from the sender 'fromhost' is the host we got
       from accept(). If not we have to rely on the commd who is sending */
@@ -812,7 +752,6 @@ int commdport
          fhost = newhost_name(fromhost, NULL);
          if (!fhost) {
             ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S , fromhost));
-            trace(SGE_EVENT);
 
             mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -894,7 +833,6 @@ const char *master_file
 
    if (stat(master_file, &file_info) || !(fp=fopen(master_file,"r"))) {
       DEBUG((SGE_EVENT, "fopen("SFQ") failed!", master_file ));
-      trace(SGE_EVENT);
       DEXIT;
       return -1;
    }    
@@ -921,7 +859,6 @@ const char *master_file
    if (len == 0) {
       fclose(fp); 
       DEBUG((SGE_EVENT, "no qmaster hostname in file" ));
-      trace(SGE_EVENT);
 
       DEXIT;
       return -1;
@@ -930,7 +867,6 @@ const char *master_file
    if (len > MAXHOSTLEN - 1) {
       fclose(fp);
       DEBUG((SGE_EVENT, "qmaster hostname to long" ));
-      trace(SGE_EVENT);
       DEXIT;
       return -1;
    }
@@ -971,7 +907,9 @@ char *str
          shutdown(message_tracefd, 2);
          close(message_tracefd);
          message_tracefd = -1;
+         trace_func = NULL;
          DEBUG((SGE_EVENT, "broken pipe to trace module->closing my side of connection"));
+         trace_func = trace;
       }
    }
    DEXIT;

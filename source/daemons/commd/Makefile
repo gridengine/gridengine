@@ -36,7 +36,7 @@ COMMD_DIR = $(SDIR)/daemons/commd
 
 COMMD_TARGETS = sge_commd commdcntl tstsnd tstrcv
 
-COMMD_SRC   = commd.c message.c rwfd.c commproc.c host.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c setup_commd_path.c version.c commd_io.c
+COMMD_SRC   = commd.c message.c rwfd.c commproc.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c setup_commd_path.c version.c commd_io.c
 
 COMMD_ADD_SRC = 
 
@@ -113,9 +113,6 @@ rwfd.o:	$(COMMD_DIR)/rwfd.c
 
 commproc.o:	$(COMMD_DIR)/commproc.c
 	$(CC) $(CFLAGS) -c $(COMMD_DIR)/commproc.c
-
-host.o:	$(COMMD_DIR)/host.c
-	$(CC) $(CFLAGS) -c $(COMMD_DIR)/host.c
 
 process_received_message.o:	$(COMMD_DIR)/process_received_message.c
 	$(CC) $(CFLAGS) -c $(COMMD_DIR)/process_received_message.c

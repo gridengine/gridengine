@@ -106,6 +106,8 @@
 #include "sge_security.h"
 #include "read_write_host.h"
 #include "complex_history.h"
+#include "host.h"
+#include "sge_arch.h"
 
 #ifdef PW
 /* The license key - to be replaced when serialized */
@@ -201,6 +203,8 @@ char **argv
 #ifdef PW   
    int mode_guess;
 #endif
+   const char *s;
+
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
@@ -229,6 +233,12 @@ char **argv
 #endif
 
    sge_setup(QMASTER, NULL);
+
+   /* to ensure SGE host_aliasing is considered resolve me.qualified_hostname 
+      before commd might be available */
+   if ((s=resolve_hostname_local(me.qualified_hostname)))
+      me.qualified_hostname = sge_strdup(me.qualified_hostname, s);
+
    memset(priority_tags, 0, sizeof(priority_tags));
    priority_tags[0] = TAG_ACK_REQUEST;
    priority_tags[1] = TAG_GDI_REQUEST;

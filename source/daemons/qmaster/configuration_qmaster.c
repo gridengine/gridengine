@@ -749,7 +749,7 @@ lListElem **cepp
 
       ret = sge_resolve_host(hep, EH_name);
       if (ret) {
-         DPRINTF(("get_configuration: error %d resolving host %s\n", ret, config_name));
+         DPRINTF(("get_configuration: error %s resolving host %s\n", cl_errstr(ret), config_name));
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
          lFreeElem(hep);
          DEXIT;

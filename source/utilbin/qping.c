@@ -68,7 +68,7 @@ static void qping_general_communication_error(int cl_err,const char* error_messa
 
 static void usage(void)
 {
-  fprintf(stderr, "Version: %s\n", GDI_VERSION);
+  fprintf(stderr, "%s %s\n", GE_SHORTNAME, GDI_VERSION);
   fprintf(stderr, "%s qping [-help] [-i <interval>] [-info] [-f] [-noalias] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
   fprintf(stderr, "   -i       : set ping interval time\n");
   fprintf(stderr, "   -info    : show full status information and exit\n");

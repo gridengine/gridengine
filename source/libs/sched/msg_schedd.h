@@ -335,6 +335,7 @@
 
 
 
+
 /* 
 ** schedd/sge_update_lists.c
 */ 
@@ -514,5 +515,11 @@
 */ 
 #define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47372, _("Group \"%s\" already contained in userset \"%s\"\n"))
 #define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47373, _("User \"%s\" already contained in userset \"%s\"\n"))
+
+/* 
+** schedd/sge_select_queue.c
+*/ 
+#define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47374, _("no load adjustment"))
+
 
 #endif /* __MSG_SCHEDD_H */

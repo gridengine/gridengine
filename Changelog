@@ -1,3 +1,6 @@
+JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the 
+                            necessity to use the options -v PATH and -cwd.
+
 JG-2002-03-11-1  Doc:       - Updated adoc description: Some new categories,
                               replacement of the --Introduction categories,
                               an example how to document cull objects.

@@ -524,7 +524,7 @@ int sge_setup_qmaster()
          }
       }
       lFreeList(direntries);
-      queue_list_set_to_unknown(Master_Queue_List); 
+      queue_list_set_state_to_unknown(Master_Queue_List, NULL, 0);
    }
    
 

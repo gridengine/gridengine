@@ -93,39 +93,6 @@ static void queue_clear_unknown(lListElem *qep);
 
 static u_long32 queue_get_queue_number(void);
 
-/****** daemon/queue/queue_list_set_to_unknown() ******************************
-*  NAME
-*     queue_list_set_to_unknown() -- set all given queues to u state 
-*
-*  SYNOPSIS
-*     void queue_list_set_to_unknown(lList *queue_list) 
-*
-*  FUNCTION
-*     Sets all queues in "queue_list" into the unknown state.
-*     This might be necessary during startup. 
-*
-*  INPUTS
-*     lList *queue_list - QU_Type list 
-*
-*  RESULT
-*     void - NONE
-*******************************************************************************/
-void queue_list_set_to_unknown(lList *queue_list)
-{
-   u_long32 state;
-   lListElem *qep;
-
-   DENTER(TOP_LAYER, "queue_list_set_to_unknown");
-
-   for_each(qep, queue_list) {
-      state = lGetUlong(qep, QU_state);
-      SETBIT(QUNKNOWN, state);
-      lSetUlong(qep, QU_state, state);
-   }
-
-   DEXIT;
-   return;
-}        
 
 /****** qmaster/queue/queue_clear_unknown() ***********************************
 *  NAME
@@ -218,31 +185,6 @@ static u_long32 queue_get_queue_number(void)
          DEXIT;
          return 0; 
       }
-   }
-}
-
-/****** qmaster/queue/queue_list_clear_tags() *********************************
-*  NAME
-*     queue_list_clear_tags() -- clear the QU_tagged field 
-*
-*  SYNOPSIS
-*     void queue_list_clear_tags(lList *queue_list) 
-*
-*  FUNCTION
-*     Clear the QU_tagged field of all queues contained in "queue_list". 
-*
-*  INPUTS
-*     lList *queue_list - QU_Type list 
-*
-*  RESULT
-*     void - None
-*******************************************************************************/
-void queue_list_clear_tags(lList *queue_list)
-{
-   lListElem *qep;
-
-   for_each(qep, queue_list) {
-      lSetUlong(qep, QU_tagged, 0);
    }
 }
 
@@ -1297,6 +1239,64 @@ lListElem *qep
    return 0;
 }
 
+/****** qmaster/queue/queue_list_set_state_to_unknown() ***********************
+*  NAME
+*     queue_list_set_state_to_unknown() -- set (all) queues to u state 
+*
+*  SYNOPSIS
+*     void queue_list_set_state_to_unknown(lList *queue_list, 
+*                                          const char *hostname, 
+*                                          int send_events) 
+*
+*  FUNCTION
+*     Sets all queues in "queue_list" which reside on host "hostname"
+*     into the unknown state. If "hostname" is NULL than all queues
+*     mentioned in "queue_list" will get set to the unknown state.
+*     Modify events for all modified queues will be generated if 
+*     "send_events" is 1 (true).
+*
+*  INPUTS
+*     lList *queue_list    - QU_Type list 
+*     const char *hostname - valid hostname or NULL 
+*     int send_events      - 0 or 1 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void queue_list_set_state_to_unknown(lList *queue_list, 
+                                     const char *hostname,
+                                     int send_events)
+{
+   const void *iterator = NULL;
+   lListElem *queue = NULL;
+   lListElem *next_queue = NULL;
+
+   if (hostname != NULL) {
+      next_queue = lGetElemHostFirst(queue_list, QU_qhostname, 
+                                     hostname, &iterator);
+   } else {
+      next_queue = lFirst(queue_list);
+   }
+   while ((queue = next_queue)) {
+      u_long32 state;
+
+      if (hostname != NULL) {
+         next_queue = lGetElemHostNext(queue_list, QU_qhostname, 
+                                       hostname, &iterator);
+      } else {
+         next_queue = lNext(queue);
+      }
+      state = lGetUlong(queue, QU_state);
+      if (!ISSET(state, QUNKNOWN)) {
+         SETBIT(QUNKNOWN, state);
+         lSetUlong(queue, QU_state, state);
+
+         if (send_events) {
+            sge_add_queue_event(sgeE_QUEUE_MOD, queue);
+         }
+      }
+   }
+} 
 
 void sge_add_queue_event(
 u_long32 type,

@@ -562,19 +562,7 @@ const char *target    /* prognames[QSTD|EXECD] */
       }
    }    
 
-
-
-   /* set all queues residing at this host to QUNKNOWN */
-   qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, host, &iterator); 
-   while (qep != NULL) {
-      if ( !ISSET(lGetUlong(qep, QU_state), QUNKNOWN) ) {
-         state = lGetUlong(qep, QU_state);
-         SETBIT(QUNKNOWN, state);
-         lSetUlong(qep, QU_state, state);
-         sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-      }
-      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, host, &iterator); 
-   }
+   queue_list_set_state_to_unknown(Master_Queue_List, host, 1);
 
    DEXIT;
    return;
@@ -675,14 +663,7 @@ lList *lp
 
 
             tmp_hostname = lGetHost(host_ep, EH_name);
-            qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
-            while (qep != NULL) {
-               state = lGetUlong(qep, QU_state);
-               CLEARBIT(QUNKNOWN, state);
-               lSetUlong(qep, QU_state, state);
-               sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-               qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
-            }
+            queue_list_set_state_to_unknown(Master_Queue_List, tmp_hostname, 1);
          }
 
          sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
@@ -768,14 +749,7 @@ lList *lp
 
 
       tmp_hostname = lGetHost(host_ep, EH_name);
-      qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
-      while (qep != NULL) {
-         state = lGetUlong(qep, QU_state);
-         CLEARBIT(QUNKNOWN, state);
-         lSetUlong(qep, QU_state, state);
-         sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-         qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
-      }
+      queue_list_set_state_to_unknown(Master_Queue_List, tmp_hostname, 1);
    }
 
    if (global_ep) {

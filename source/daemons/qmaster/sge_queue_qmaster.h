@@ -34,8 +34,6 @@
 
 #include "sge_c_gdi.h"
 
-void queue_list_set_to_unknown(lList *queue_list);
-
 int sge_gdi_add_mod_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost, int add, int sub_command);
 
 int sge_gdi_delete_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost);
@@ -56,7 +54,9 @@ int verify_project_list(lList **alpp, char *obj_name, char *qname, lList *projec
 
 int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
 
-void queue_list_clear_tags(lList *queue_list);
+void queue_list_set_state_to_unknwon(lList *queue_list, 
+                                     const char *hostname,
+                                     int send_events);
 
 #endif /* __SGE_QUEUE_QMASTER_H */
 

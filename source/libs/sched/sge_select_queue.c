@@ -1641,8 +1641,7 @@ int host_order_changed) {
       const char *eh_name, *qname;
 
       /* untag all queues */
-      for_each(qep, queues)
-         lSetUlong(qep, QU_tagged, 0);
+      queue_list_clear_tags(queues);
 
       global_hep = host_list_locate(host_list, "global");
 

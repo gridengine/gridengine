@@ -72,6 +72,7 @@
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_complex.h"
+#include "sge_queue.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -255,10 +256,7 @@ char **argv
 
    DPRINTF(("------- selecting queues -----------\n"));
    /* all queues are selected */
-   for_each(qep, queue_list) {
-      if (strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME))
-         lSetUlong(qep, QU_tagged, TAG_SHOW_IT);
-   }
+   queue_list_set_tag(queue_list, QUEUE_TAG_IGNORE_TEMPLATE, TAG_SHOW_IT);
 
    /* unseclect all queues not selected by a -q (if exist) */
    if (lGetNumberOfElem(queueref_list)>0) {

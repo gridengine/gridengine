@@ -31,12 +31,15 @@
 /*___INFO__MARK_END__*/
 
 #include "sgermon.h"
+#include "sge_string.h"
 #include "sge_log.h"
 #include "def.h"
 #include "cull_list.h"
 #include "symbols.h"
+#include "sge.h"
 #include "sge_job.h"
 #include "sge_queue.h"
+#include "sge_event.h"
 
 lList *Master_Queue_List = NULL;
 
@@ -160,4 +163,65 @@ lListElem *queue_list_locate(lList *queue_list, const char *queue_name)
 {
    return lGetElemStr(queue_list, QU_qname, queue_name);
 }
+
+/****** gdi/queue/queue_list_set_tag() *****************************************
+*  NAME
+*     queue_list_set_tag() -- change the QU_tagged of (all) queues 
+*
+*  SYNOPSIS
+*     void queue_list_set_tag(lList *queue_list, 
+*                             queue_tag_t flags, 
+*                             u_long32 tag_value) 
+*
+*  FUNCTION
+*     Change the value of the QU_tagged attribute for all queues contained 
+*     in "queue_list" to the value "tag_value". "flags" might be specified 
+*     to ignore certain queues.
+*
+*  INPUTS
+*     lList *queue_list  - QU_Type list 
+*     queue_tag_t flags  - e.g. QUEUE_TAG_IGNORE_TEMPLATE 
+*     u_long32 tag_value - new value for the attribute 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void queue_list_set_tag(lList *queue_list,
+                        queue_tag_t flags,
+                        u_long32 tag_value)
+{
+   int ignore_template = flags & QUEUE_TAG_IGNORE_TEMPLATE;
+   lListElem *queue = NULL;
+
+   for_each(queue, queue_list) {
+      const char *queue_name = lGetString(queue, QU_qname);
+
+      if (ignore_template && !strcmp(queue_name, SGE_TEMPLATE_NAME)) {
+         continue;
+      }
+
+      lSetUlong(queue, QU_tagged, tag_value);
+   }
+}
+
+/****** gdi/queue/queue_list_clear_tags() *************************************
+*  NAME
+*     queue_list_clear_tags() -- clear the QU_tagged field
+*
+*  SYNOPSIS
+*     void queue_list_clear_tags(lList *queue_list)
+*
+*  FUNCTION
+*     Clear the QU_tagged field of all queues contained in "queue_list".
+*
+*  INPUTS
+*     lList *queue_list - QU_Type list
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void queue_list_clear_tags(lList *queue_list)
+{
+   queue_list_set_tag(queue_list, QUEUE_TAG_DEFAULT, 0);
+} 
 

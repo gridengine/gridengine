@@ -35,6 +35,11 @@
 
 #include "sge_queueL.h"
 
+typedef enum {
+   QUEUE_TAG_DEFAULT         = 0x0000,
+   QUEUE_TAG_IGNORE_TEMPLATE = 0x0001
+} queue_tag_t;
+
 extern lList *Master_Queue_List;
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op);
@@ -42,5 +47,11 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op);
 void queue_get_state_string(char *str, u_long32 op);
 
 lListElem *queue_list_locate(lList *queue_list, const char *queue_name);
+
+void queue_list_set_tag(lList *queue_list,
+                        queue_tag_t flags,
+                        u_long32 tag_value);
+
+void queue_list_clear_tags(lList *queue_list);
 
 #endif /* __SGE_QUEUE_H */

@@ -1,3 +1,7 @@
+SG-2004-09-29-0: Bugfix:    the master spooled the user and projects in every scheduling run
+                 Review:    JG
+                 Changed:   qmaster
+
 JG-2004-09-28-0: Enhancem.: Cleanup in qrsh_starter.
                             Cleanup and speedup in load report processing.
                             Add hashtables on cluster queue and queue instance

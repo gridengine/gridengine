@@ -915,7 +915,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          const char *up_name;
          lList *tlp;
          u_long32 now = sge_get_gmt();
-         bool is_spool = true;
+         bool is_spool = false;
 
          
          sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);

@@ -1,3 +1,9 @@
+SG-2004-04-09-3: Bugfix:    The qmaster loged errors in case that a job in
+                            T state was deleted. 
+                 Review:    EB
+                 Bug:       954
+                 Changed:   qmaster
+
 SG-2004-04-09-2: Bugfix:    If the qmaster is killed while jobs are deleted,
                             timed_event_thread error messages are reported
                             when the qmaster is starting up again. The order

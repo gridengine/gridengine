@@ -127,7 +127,7 @@ u_long32 ack_ulong2
    lListElem *jep = NULL;
    lListElem *jatep = NULL;
    lList *answer_list = NULL;
-   const char *qinstance_name = NULL;
+/*   const char *qinstance_name = NULL; */
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
@@ -155,14 +155,20 @@ u_long32 ack_ulong2
          return;
 
       }
-      qinstance_name = lGetString(jatep, JAT_master_queue);
-      qinstance = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qinstance_name);
-      if (qinstance == NULL) {
-         ERROR((SGE_EVENT, MSG_COM_ACK_US, u32c(ack_ulong), 
-                qinstance_name ? qinstance_name : MSG_COM_NOQUEUE));
-         DEXIT;
-         return;
+
+      DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
+      lSetUlong(jatep, JAT_pending_signal, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
+      {
+         dstring buffer = DSTRING_INIT;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(lGetUlong(jep, JB_job_number), 
+                                        ack_ulong2, NULL, &buffer), 
+                            SGE_TYPE_JOB);
+         sge_dstring_free(&buffer);
       }
+      answer_list_output(&answer_list);
+      
       break;
 
    case TAG_SIGQUEUE:
@@ -184,16 +190,7 @@ u_long32 ack_ulong2
             return;
          }
       }
-      break;
-
-   default:
-      ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
-      DEXIT;
-      return;
-   }
-
-   switch (ack_tag) {
-   case TAG_SIGQUEUE:
+      
       DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_qname)));
                lSetUlong(qinstance, QU_pending_signal, 0);
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_qname));
@@ -201,20 +198,11 @@ u_long32 ack_ulong2
                          lGetString(qinstance, QU_qname), SGE_TYPE_QINSTANCE);
       answer_list_output(&answer_list);
       break;
-   case TAG_SIGJOB:
-      DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
-      lSetUlong(jatep, JAT_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
-      {
-         dstring buffer = DSTRING_INIT;
-         spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                            job_get_key(lGetUlong(jep, JB_job_number), 
-                                        ack_ulong2, NULL, &buffer), 
-                            SGE_TYPE_JOB);
-         sge_dstring_free(&buffer);
-      }
-      answer_list_output(&answer_list);
-      break;
+
+   default:
+      ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
+      DEXIT;
+      return;
    }
 
    DEXIT;

@@ -58,7 +58,7 @@ JDRMAA_JAVA   = AuthorizationException.java \
 JDRMAA_CLASS  = $(JDRMAA_JAVA:.java=.class)
 
 JDRMAALIB      = libjdrmaa$(SHAREDEXT)
-JDRMAALIB_SRC  = com_sun_grid_drmaa_SGESession.c
+JDRMAALIB_SRC  = com_sun_grid_drmaa_SessionImpl.c
 JDRMAALIB_OBJS = $(JDRMAALIB_SRC:.c=.o)
 
 ###############################################################################
@@ -84,15 +84,15 @@ jdrmaa_meta_clean:
 jdrmaa: jdrmaa_jar jdrmaa_lib
 
 jdrmaa_jar: jdrmaa_jar_clean jdrmaa_classes jdrmaa_meta
-	$(JAVA_HOME)/$(JAVA_BINDIR)/jar cvf drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class META-INF
+	$(JAVA_HOME)/$(JAVA_BINDIR)/jar cvf drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class DrmaaSuite.class META-INF
 
 jdrmaa_classes:
-	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath .:../classes/junit.jar -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java $(CLASSES_DIR)/DrmaaSuite.java
 
 jdrmaa_meta: jdrmaa_meta_clean
 	@mkdir META-INF
 	@mkdir META-INF/services
-	@echo com.sun.grid.drmaa.SGESessionFactory > META-INF/services/org.ggf.drmaa.DRMAASessionFactory
+	@echo com.sun.grid.drmaa.SessionFactoryImpl > META-INF/services/org.ggf.drmaa.SessionFactory
 
 ###############################################################################
 # rules to build library
@@ -103,8 +103,8 @@ jdrmaa_lib: $(JDRMAALIB_OBJS) drmaalib
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-com_sun_grid_drmaa_SGESession.o: $(SRC_DIR)/com_sun_grid_drmaa_SGESession.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SRC_DIR)/com_sun_grid_drmaa_SGESession.c
+com_sun_grid_drmaa_SessionImpl.o: $(SRC_DIR)/com_sun_grid_drmaa_SessionImpl.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SRC_DIR)/com_sun_grid_drmaa_SessionImpl.c
 
 ###############################################################################
 # rules to build classes

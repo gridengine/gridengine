@@ -39,8 +39,11 @@
 #include "sge_eventL.h"
 #include "sge_qmaster_timed_event.h"
 
-int sge_gdi_add_job(lListElem *jepp, lList **alpp, lList **lpp, char *ruser, char *rhost, uid_t uid, gid_t gid, char *group, sge_gdi_request *request);
-int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, uid_t uid, gid_t gid, char *group, sge_gdi_request *request);
+int sge_gdi_add_job(lListElem *jepp, lList **alpp, lList **lpp, char *ruser, char *rhost, 
+                    uid_t uid, gid_t gid, char *group, sge_gdi_request *request);
+                    
+int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
+                     uid_t uid, gid_t gid, char *group, sge_gdi_request *request);
 
 int sge_gdi_mod_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
 
@@ -50,6 +53,8 @@ void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
 
 bool job_has_valid_account_string(const char *name, lList **answer_list);
 
+bool is_pe_master_task_send(lListElem *jatep); 
+
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
 void job_suc_pre(lListElem *jep);
@@ -57,17 +62,12 @@ void job_suc_pre(lListElem *jep);
 void sge_init_job_number(void); 
 void sge_store_job_number(te_event_t anEvent);
 
-void job_ja_task_send_abort_mail(const lListElem *job,
-                                 const lListElem *ja_task,                                                       const char *ruser,
-                                 const char *rhost,                                                              const char *err_str);
+void job_ja_task_send_abort_mail(const lListElem *job, const lListElem *ja_task, const char *ruser,
+                                 const char *rhost,  const char *err_str);
 
-void get_rid_of_job_due_to_qdel(lListElem *j,
-                                lListElem *t,
-                                lList **answer_list,
-                                const char *ruser,
+void get_rid_of_job_due_to_qdel(lListElem *j, lListElem *t, lList **answer_list, const char *ruser,
                                 int force);
 
-void job_mark_job_as_deleted(lListElem *j,
-                             lListElem *t);
+void job_mark_job_as_deleted(lListElem *j, lListElem *t);
 
 #endif /* __SGE_JOB_QMASTER_H */

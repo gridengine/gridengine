@@ -501,23 +501,21 @@ sge_pack_buffer *pb
             pack_job_exit(pb, jobid, jataskid, pe_task_id_str);
          } else {
             /* must be ack for slave job */
-            lListElem *first_at_host, *gdil_ep;
+            lListElem *first_at_host;
 
             first_at_host = lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost);
             if (first_at_host) {
-               if (lGetUlong(first_at_host, JG_tag_slave_job)!=0) {
-                  int all_slaves_arrived = 1;
+               if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
+
                   DPRINTF(("slave job "u32" arrived at %s\n", jobid, rhost));
                   lSetUlong(first_at_host, JG_tag_slave_job, 0);
 
                   /* should trigger a fast delivery of the job to master execd 
                      script but only when all other slaves have also arrived */ 
-                  for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) 
-                     if (lGetUlong(gdil_ep, JG_tag_slave_job)!=0)
-                        all_slaves_arrived = 0;
-
-                  if (all_slaves_arrived) {
+                  if (is_pe_master_task_send(jatep)) {
                      /* triggers direct job delivery to master execd */
+                     lSetString(jatep, JAT_master_queue, lGetString( lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname));
+
                      DPRINTF(("trigger retry of job delivery to master execd\n"));
                      lSetUlong(jatep, JAT_start_time, 0);
                      cancel_job_resend(jobid, jataskid);

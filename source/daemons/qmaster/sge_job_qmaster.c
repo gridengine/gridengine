@@ -1204,7 +1204,7 @@ int sub_command
 
                   reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
 
-                  if (lGetString(tmp_task, JAT_master_queue)) {
+                  if (lGetString(tmp_task, JAT_master_queue) && is_pe_master_task_send(tmp_task)) {
                      job_ja_task_send_abort_mail(job, tmp_task, ruser,
                                                  rhost, NULL);
                      get_rid_of_job_due_to_qdel(job, tmp_task,
@@ -1288,6 +1288,44 @@ int sub_command
 
    DEXIT;
    return STATUS_OK;
+}
+
+/****** sge_job_qmaster/is_pe_master_task_send() *******************************
+*  NAME
+*     is_pe_master_task_send() -- figures out, if all salves are send
+*
+*  SYNOPSIS
+*     bool is_pe_master_task_send(lListElem *jatep) 
+*
+*  FUNCTION
+*     In case of tightly integrated pe jobs are the salves send first. Once
+*     all execds acknowledged the slaves, the master can be send. This function
+*     figures out, if all slaves are acknowledged.
+*
+*  INPUTS
+*     lListElem *jatep - ja task in question
+*
+*  RESULT
+*     bool - true, if all slaves are acknowledged
+*
+*  NOTES
+*     MT-NOTE: is_pe_master_task_send() is MT safe 
+*
+*******************************************************************************/
+bool
+is_pe_master_task_send(lListElem *jatep) 
+{
+   bool is_all_slaves_arrived = true;
+   lListElem *gdil_ep = NULL;
+   
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+      if (lGetUlong(gdil_ep, JG_tag_slave_job) != 0) {
+         is_all_slaves_arrived= false;
+         break;
+      }
+   }
+   
+   return is_all_slaves_arrived;
 }
 
 static void empty_job_list_filter(

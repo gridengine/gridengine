@@ -1,3 +1,9 @@
+SG-2005-02-18-0: Bugfix:    execd logs error mesage, when a tight pe job in "t" state is deleted
+                 Changed:   qmaster
+                 Bugtraq:   6230846
+                 Issue:     1465
+                 Review:    AA
+
 AH-2005-02-15-0: Bugfix:    qconf error diagnosis broken
                  Changed:   qconf
                  Bugtraq:   6186597

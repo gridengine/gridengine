@@ -3101,7 +3101,13 @@ DPRINTF(("ep: %s %s\n",
          if (ep != NULL) {
             lp = lCreateList("scheduler config", SC_Type);
             lAppendElem (lp, ep);
+            
+            if (!sconf_validate_config (&alp, lp)) {
+               lp = lFreeList (lp);
+               answer_list_output(&alp);
+            }
          }
+         
          /* else we let the check for lp != NULL catch the error below */
 #else
          lp = read_sched_configuration(NULL, *spp, 0, &alp);
@@ -5673,7 +5679,13 @@ lList *confl
       newconfl = lCreateList ("scheduler config", SC_Type);
       lAppendElem (newconfl, ep);
    }
-   else {
+   
+   if ((newconfl != NULL) && !sconf_validate_config (&alp, newconfl)) {
+      newconfl = lFreeList (newconfl);
+      answer_list_output(&alp);
+   }
+   
+   if (newconfl == NULL) {
       fprintf(stderr, MSG_QCONF_CANTREADCONFIG_S, "can't parse config");
 #else
    if (!(newconfl = read_sched_configuration(NULL, fname, 0, &alp))) {

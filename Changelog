@@ -1,3 +1,7 @@
+DT-2004-03-04-3  Bugfix:    o qconf now validates scheduler configuration
+                              settings
+                 Changed:   qconf
+
 AH-2004-03-04-0: Bugfix:    qselect/qstat -l selection wrongly considers 
                             load and utilization
                  Issue:     771

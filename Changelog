@@ -1,3 +1,10 @@
+CR-2005-01-07-0: Bugfix:    - master task will close connection to
+                              execd after job delivery
+                 Changed:   qsh, gdilib
+                 Issue:     1413
+                 Bugtraq:   n.a.
+                 Review:    SG
+
 CR-2005-01-07-0: Testsuite: enhanced tight integration check to report
                             errors for issue #1413
 

@@ -85,6 +85,17 @@ typedef struct {
    sge_task_ref_t *tref;
 } sge_ref_t;
 
+/*
+ * this allows to build a list from
+ * the the ref structure. This is need
+ * to build the functional categories
+ */
+typedef struct sge_ref_list_t{
+   sge_ref_t *ref;            /* ref reference */
+   struct sge_ref_list_t *next;        /* next list item */
+   struct sge_ref_list_t *prev;        /* previous list itme */
+}sge_ref_list_t;
+
 #define SGE_USAGE_INTERVAL 60
 
 int sge_calc_tickets (sge_Sdescr_t *lists,

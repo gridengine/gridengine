@@ -1424,8 +1424,21 @@ lRef lGetPosRef(const lListElem *ep, int pos)
 lRef lGetRef(const lListElem *ep, int name) 
 {
    int pos;
-   DENTER(CULL_BASIS_LAYER, "lGetRef");
+   DENTER(CULL_BASIS_LAYER, "lGetRef");   
+   
+   if (!ep) {
+      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETREF_NULLELEMENTFORX_S ,
+               lNm2Str(name)));
+      DEXIT;
+      abort();
+   }
+
    pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      /* someone has called lGetPosUlong() */
+      /* makro with an invalid nm        */
+      incompatibleType2(MSG_CULL_GETREF_NOSUCHNAMEXYINDESCRIPTOR_IS , name, lNm2Str(name));
+   }
 
    if (mt_get_type(ep->descr[pos].mt) != lRefT)
       incompatibleType2(MSG_CULL_GETREF_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 

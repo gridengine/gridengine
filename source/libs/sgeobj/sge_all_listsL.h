@@ -212,6 +212,7 @@ extern "C" {
       {ATIME_LOWERBOUND, ATIMES, ATIMEN},    /* CQ time limit sublist */
       {AMEM_LOWERBOUND, AMEMS, AMEMN},       /* CQ memory limit sublist */
       {AINTER_LOWERBOUND, AINTERS, AINTERN}, /* CQ interval sublist */
+      {FCAT_LOWERBOUND, FCATS, FCATN},   /* Functional category */
       {0, 0, NULL}
    };
 

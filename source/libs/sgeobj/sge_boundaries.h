@@ -355,7 +355,7 @@ enum NameSpaceBoundaries {
    JRL_UPPERBOUND = JRL_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* scheduler sge job sort element */
-   SGEJ_LOWERBOUND = CT_UPPERBOUND + 1,
+   SGEJ_LOWERBOUND = JRL_UPPERBOUND + 1,
    SGEJ_UPPERBOUND = SGEJ_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    ULNG_LOWERBOUND = SGEJ_UPPERBOUND + 1,
@@ -401,7 +401,7 @@ enum NameSpaceBoundaries {
    SU_UPPERBOUND = SU_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* security connection list  */
-   SEC_LOWERBOUND = FE_UPPERBOUND + 1,
+   SEC_LOWERBOUND = SU_UPPERBOUND + 1,
    SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* spooling framework */
@@ -449,8 +449,10 @@ enum NameSpaceBoundaries {
    AINTER_UPPERBOUND = AINTER_LOWERBOUND + 1 * BASIC_UNIT -1
 
    /* CHANGE LAST_UPPERBOUND below !!!!!!!!!!!!! */
-      
-#  define LAST_UPPERBOUND AINTER_UPPERBOUND
+   ,FCAT_LOWERBOUND = AINTER_UPPERBOUND + 1,
+   FCAT_UPPERBOUND = FCAT_LOWERBOUND + 1*BASIC_UNIT - 1     
+
+#  define LAST_UPPERBOUND FCAT_UPPERBOUND
 
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */

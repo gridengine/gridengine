@@ -20,7 +20,7 @@
  * LOST PROFITS OR OTHER INCIDENTAL OR CONSEQUENTIAL DAMAGES RELAT-
  * ING TO THE SOFTWARE.
  *
- * $Id: Draw.c,v 1.1 2001/07/18 11:05:59 root Exp $
+ * $Id: Draw.c,v 1.1.1.1.6.1 2003/10/17 11:30:08 joga Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -237,6 +237,7 @@ static void
 xbaeDrawCellString(mw, row, column, x, y, string, bg, fg)
 XbaeMatrixWidget mw;
 int row, column;
+int x, y;
 String string;
 Pixel bg, fg;
 {

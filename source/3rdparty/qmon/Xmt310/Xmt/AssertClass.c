@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: AssertClass.c,v 1.1 2001/07/18 11:06:01 root Exp $
+ * $Id: AssertClass.c,v 1.1.1.1.6.1 2003/10/17 11:30:07 joga Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,15 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: AssertClass.c,v $
- * Revision 1.1  2001/07/18 11:06:01  root
- * Initial revision
+ * Revision 1.1.1.1.6.1  2003/10/17 11:30:07  joga
+ * JG-2003-10-17-0: Bugfix:    Fixed the build for the new solaris x86 compiler.
+ * Issue number:
+ * Obtained from:
+ * Submitted by:
+ * Reviewed by:
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:01  root
+ * Initial checkin.
  *
  * Revision 1.1  2001/06/12 15:00:21  andre
  * AA-2001-06-12-0: replaced Xmt212 by Xmt310
@@ -20,6 +27,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <Xmt/Xmt.h>
 #include <X11/IntrinsicP.h>
 

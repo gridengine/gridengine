@@ -410,6 +410,7 @@ talk(nflag, omask, pid, rem, timeout)
 	long omask;
 	pid_t pid;
 	int rem;
+   int timeout;
 {
 	int cc, wc;
 	fd_set readfrom, ready, rembits;

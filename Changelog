@@ -1,3 +1,12 @@
+SG-2004-07-28-0: Bugfix:    - fixed the event master theading problem
+                            - fixed the job names and accouting string evaluation.
+                            - removed an abort in qmaster, when sched conf was not
+                              valid.
+                 Bugtraq:   5075849
+                 Issue:     1099
+                 Changed:   qmaster, submit.1
+                 Review:    JG
+
 DT-2004-07-27-0: Enhancem.: o Finished enhancing DRMAA Java language binding
                               docs
                             o Checked in JavaDocs for DRMAA Java lang. binding

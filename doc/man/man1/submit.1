@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/07/26 12:13:41 $     Revision: $Revision: 1.49 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/07/28 09:33:18 $     Revision: $Revision: 1.50 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/07/26 12:13:41 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/07/28 09:33:18 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -386,9 +386,8 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 Identifies the account to which the resource consumption of the job
 should be charged. The \fBaccount_string\fP
 may be any arbitrary ASCII alphanumeric string
-but may contain no blank, colon or separator characters. The
-underbar '_' is considered a non-separator. In the absence of this
-parameter xxQS_NAMExx 
+but may not contain  "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*", "?".
+In the absence of this parameter xxQS_NAMExx 
 will place the default account string "xxqs_name_sxx" in the accounting record
 of the job.
 .sp 1
@@ -945,7 +944,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 The name of the job. The name can be any printable set
-of characters except "\\n", "\\t", "\\r", "/", ":", "@", "\\" and it has to start with an alphabetic character.
+of characters except "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*", "?", and it has to start with an alphabetic character.
 .br
 If the \fB\-N\fP option is not present xxQS_NAMExx assigns
 the name of the job script to the job after 

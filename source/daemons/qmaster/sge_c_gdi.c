@@ -272,8 +272,6 @@ sge_gdi_request *answer
       return;
    }
 
-   sge_set_commit_required(true);
-
    if ((ao = get_gdi_object(request->target))) {
      target_name = ao->object_name;
    }
@@ -298,7 +296,7 @@ sge_gdi_request *answer
    all_jobs_flag = request->op / SGE_GDI_ALL_JOBS;
    request->op %= SGE_GDI_ALL_JOBS;
 
-   return_list_flag = request->op / SGE_GDI_RETURN_NEW_VERSION;
+   
    request->op %= SGE_GDI_RETURN_NEW_VERSION;
 #endif
 
@@ -403,10 +401,6 @@ sge_gdi_request *answer
    default:
      break;
    }
-
-   sge_commit();
-   /* enable event transaction handling */
-   sge_set_commit_required(false);
 
    DEXIT;
    return;

@@ -1,3 +1,10 @@
+SG-2005-03-04-0: Enhancem.: - added async-gdi handling
+                            - enhanced the job class scheduler
+                            - cleanup in the order handling 
+                 Changed:   qmaster, scheduler
+                 Review:    JG (async-gdi)
+                            DT (cleanup, job-classes)
+
 RD-2005-03-04-0: Enhancm.: BDB install on NFSv4 share
                            fstype now reports nfs4 on solaris
                            installation recognize nfs4 as valid

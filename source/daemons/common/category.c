@@ -66,12 +66,9 @@
 /*-------------------------------------------------------------------------*/
 /* build the category string                                               */
 /*-------------------------------------------------------------------------*/
-const char* sge_build_job_category(
-dstring *category_str,
-lListElem *job,
-lList *acl_list,
-bool is_resource_cat
-) {
+const char* 
+sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list) 
+{
    lList *cmdl = NULL;
    lListElem *ep;
    const char *owner, *group;
@@ -146,39 +143,9 @@ bool is_resource_cat
       goto ERROR;
    }
 
-/* new extension */
-   /* only needed, if jobs should be filtered by categories. */ 
-   if (is_resource_cat && sconf_is_job_category_filtering()) {
-      /* 
-       *  deadline
-       */
-      if (sge_unparse_ulong_option(job, JB_deadline, "-dl", &cmdl, NULL) != 0) {
-         goto ERROR;
-      }
-     
-      /*
-       * priority
-       */
-      if (sge_unparse_ulong_option(job, JB_priority, "-p", &cmdl, NULL) != 0) {
-         goto ERROR;
-      }
-    
-      if (sge_unparse_ulong_option(job, JB_override_tickets, "-ot", &cmdl, NULL) != 0) {
-         goto ERROR;
-      }
-
-      if (sge_unparse_ulong_option(job, JB_jobshare, "-js", &cmdl, NULL) != 0) {
-         goto ERROR;
-      }
-
-      if (sge_unparse_string_option(job, JB_owner, "-u", &cmdl, NULL) != 0) {
-         goto ERROR;
-      }
-    
-   }
    /*
-   ** create the category string
-   */
+    * create the category string
+    */
    lDelElemStr(&cmdl, SPA_switch, "-hard");
    first = true;
    for_each (ep, cmdl) {
@@ -211,4 +178,58 @@ ERROR:
    lFreeList(cmdl);
    DEXIT;
    return NULL;
+}
+
+/****** category/sge_build_job_cs_category() ***********************************
+*  NAME
+*     sge_build_job_cs_category() -- generates the category string for the sc
+*
+*  SYNOPSIS
+*     const char* sge_build_job_cs_category(dstring *category_str, lListElem 
+*     *job, lListElem *cat_obj) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     dstring *category_str - storage forthe c string
+*     lListElem *job        - job for which to create a category
+*     lListElem *cat_obj    - regular category for the job.
+*
+*  RESULT
+*     const char* - 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_build_job_cs_category() is MT safe 
+*
+*******************************************************************************/
+const char* 
+sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_obj) 
+{
+   DENTER(TOP_LAYER, "sge_build_job_category");
+
+   /* 
+    *  deadline
+    */
+   sge_dstring_sprintf_append(category_str, "-dl "u32, lGetUlong(job, JB_deadline));
+   /*
+    * priority
+    */
+   sge_dstring_sprintf_append(category_str, "-p "u32, lGetUlong(job, JB_priority));
+   sge_dstring_sprintf_append(category_str, "-ot "u32, lGetUlong(job, JB_override_tickets));
+   sge_dstring_sprintf_append(category_str, "-js "u32, lGetUlong(job, JB_jobshare));
+   sge_dstring_sprintf_append(category_str, "-u %s", lGetString(job, JB_owner));
+
+   /*
+    * id for the resource category
+    * I use teh address of the resource category as a hash value for its string.
+    */
+   sge_dstring_sprintf_append(category_str, " %x", cat_obj);
+
+   DEXIT;
+   return sge_dstring_get_string(category_str);
+
 }

@@ -461,7 +461,7 @@ void prepare_enroll(const char *name)
       switch(me_who) {
          case EXECD:
             /* add qmaster as known endpoint */
-            cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), 
+            cl_com_append_known_endpoint_from_name((char*)sge_get_master(true), 
                                                    (char*) prognames[QMASTER],
                                                    1 ,
                                                    sge_get_qmaster_port(),
@@ -667,7 +667,9 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
  * NOTES
  *    MT-NOTE: sge_get_any_request() is MT safe (assumptions)
  *----------------------------------------------------------*/
-int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron, u_long32 for_request_mid, u_long32* mid) 
+int 
+sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, 
+                    int *tag, int synchron, u_long32 for_request_mid, u_long32* mid) 
 {
    int i;
    ushort usid=0;
@@ -681,8 +683,9 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI);
 
-   if (id)
+   if (id) {
       usid = (ushort)*id;
+   }   
 
    if (!rhost) {
       ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORGETANYREQUEST ));
@@ -736,15 +739,16 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
       if (sender != NULL && id) {
          *id = sender->comp_id;
       }
-      if (tag) 
+      if (tag) {
         *tag = message->message_tag;
-      if (mid)
+      }  
+      if (mid) {
         *mid = message->message_id;
+      }  
 
 
       /* fill it in the packing buffer */
       i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length , 0);
-
 
       /* TODO: the packbuffer must be hold, not deleted !!! */
       message->message = NULL;

@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int remove_immediate_jobs(lList *pending_job_list, lList *running_job_list,
-                          lList **opp);
+#include "sge_orders.h"
 
-int order_remove_immediate(lListElem *job, lListElem *ja_task, lList **opp);
+int remove_immediate_jobs(lList *pending_job_list, lList *running_job_list,
+                          order_t *orders);
+
+int order_remove_immediate(lListElem *job, lListElem *ja_task, order_t *orders);
 
 #endif /* _INTERACTIVE_SCHED_H_ */

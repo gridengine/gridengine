@@ -72,7 +72,7 @@
 #define MSG_JOB_HOSTNAMERESOLVE_US    _MESSAGE(33032, _("failed starting job "U32CFormat" - probably hostname resolving problem with "SFQ"\n") ) 
 #define MSG_JOB_JOBDELIVER_UU         _MESSAGE(33033, _("failed delivering job "U32CFormat"."U32CFormat))
 #define MSG_JOB_UNABLE2FINDJOBORD_U   _MESSAGE(33034, _("unable to find job \""U32CFormat"\" in ticket order\n") )     
-#define MSG_JOB_CHANGETICKETS_UU      _MESSAGE(33035, _("scheduler tries to change tickets of a non running job "U32CFormat" task "U32CFormat"\n"))
+#define MSG_JOB_CHANGETICKETS_UUU     _MESSAGE(33035, _("scheduler tries to change tickets of a non running job "U32CFormat" task "U32CFormat"(state "U32CFormat")\n"))
 #define MSG_JOB_CHANGEPTICKETS_UU      _MESSAGE(33036, _("scheduler tries to change pending tickets of a non pending job "U32CFormat" task "U32CFormat"\n"))
 #define MSG_JOB_REMOVENOTFINISHED_U   _MESSAGE(33037, _("scheduler tried to remove job "U32CFormat" which is not in state JFINISHED\n"))
 #define MSG_JOB_REMOVENONINTERACT_U   _MESSAGE(33038, _("scheduler tried to remove non interactive job "U32CFormat" by use of a ORT_remove_immediate_job order\n"))

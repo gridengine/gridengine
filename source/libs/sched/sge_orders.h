@@ -35,10 +35,14 @@
 #include "cull.h"
 
 typedef struct {
-   lList *configOrderList; /* queue suspend and unsuspend orders */
-   lList *pendingOrderList; /* job pending orders, delete immediate job orders*/
-   lList *jobStartOrderList; /* job start orders, job info orders */
-   lList *sent_job_StartOrderList; /* already send job start orders */
+   lList *configOrderList;   /* Type: ORT_unsuspend_on_threshold, ORT_suspend_on_threshold */
+   lList *pendingOrderList;  /* Type: ORT_tickets, ORT_ptickets, ORT_remove_job, ORT_update_user_usage, 
+                                      ORT_update_project_usage, ORT_share_tree, ORT_sched_conf */
+   lList *jobStartOrderList; /* Type: ORT_remove_immediate_job, job start orders, job info orders */
+   lList *sentOrderList;     /* already send job start orders, need to get a correct order 
+                                amount for the profiling. It is also needed for a warring
+                                message, which informs about policy conflict:
+                                MSG_SUBORDPOLICYCONFLICT_UUSS */
 }order_t;
 
 #define ORDER_INIT {NULL,NULL,NULL, NULL}
@@ -46,7 +50,7 @@ typedef struct {
 lList *sge_add_schedd_info(lList *or_list, int *global_mes_count, int *job_mes_count);
 
 lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, 
-                         lList *queue_list, bool no_tickets, bool update_execd);
+                         lList *queue_list, bool update_execd);
 
 int sge_send_orders2master(lList **orders);
 

@@ -92,10 +92,12 @@ void sge_do_urgency(u_long32 now, lList *running_jobs, lList *pending_jobs,
          lists->centry_list, lists->pe_list);
 
    /* use min/max value to normalize static urgency */
-   if (pending_jobs)
+   if (pending_jobs) {
       sge_normalize_urgency(pending_jobs, min_urgency, max_urgency);
-   if (running_jobs)
+   }   
+   if (running_jobs) {
       sge_normalize_urgency(running_jobs, min_urgency, max_urgency);
+   }   
 }
 
 /****** sge_urgency/sge_urgency() ********************************
@@ -196,17 +198,19 @@ static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency,
       lSetDouble(jep, JB_dlcontr, dtc);
       lSetDouble(jep, JB_rrcontr, rrc);
       lSetDouble(jep, JB_wtcontr, wtc);
-      lSetDouble(jep, JB_urg,                      absolute_urgency);
+      lSetDouble(jep, JB_urg, absolute_urgency);
 
 /*      DPRINTF(("--- job "U32CFormat" (dtc %7f + wtc %7f + rrc %7f) = asu %7f\n", 
             lGetUlong(jep, JB_job_number), dtc, wtc, rrc, absolute_urgency));
 */            
       
       /* track min/max values */
-      if (min_urgency)
+      if (min_urgency) {
          *min_urgency = MIN(*min_urgency, absolute_urgency);
-      if (max_urgency)
+      }   
+      if (max_urgency) {
          *max_urgency = MAX(*max_urgency, absolute_urgency);
+      }   
    }
 
    DEXIT;

@@ -45,6 +45,10 @@
 #include <fnmatch.h>
 #include <unistd.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_profiling.h"
 #include "sge_conf.h"
 #include "sge_string.h"
@@ -124,18 +128,19 @@ prepare_resource_schedules(const lList *running_jobs, const lList *suspended_job
 *
 *  INPUTS
 *     sge_Sdescr_t *lists - all lists
+*     lList** orders - a list of orders, which needs to be send
 *
 *  RESULT
 *     0 success  
 *    -1 error  
 *******************************************************************************/
 #ifdef SCHEDULER_SAMPLES
-int my_scheduler(sge_Sdescr_t *lists)
+int my_scheduler(sge_Sdescr_t *lists, lList **order)
 {
    return scheduler(lists);
 }
 #endif
-int scheduler(sge_Sdescr_t *lists) {
+int scheduler(sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
    lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
@@ -155,9 +160,11 @@ int scheduler(sge_Sdescr_t *lists) {
 
    DENTER(TOP_LAYER, "scheduler");
 
-   serf_new_interval(sge_get_gmt());
-
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
+
+   serf_new_interval(sge_get_gmt());
+   orders.pendingOrderList = *order;
+   *order = NULL;
 
    prof_job_count = lGetNumberOfElem(lists->job_list);
 
@@ -237,7 +244,7 @@ int scheduler(sge_Sdescr_t *lists) {
    /**
     * post processing 
     */
-   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), *(splitted_job_lists[SPLIT_RUNNING]), &(orders.jobStartOrderList));
+   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), *(splitted_job_lists[SPLIT_RUNNING]), &orders);
 
    /* send job_start_orders */
    sge_send_job_start_orders(&orders);
@@ -257,21 +264,20 @@ int scheduler(sge_Sdescr_t *lists) {
       for (i = 0; i < max; i++) {
          /* clear SGEEE fields for queued jobs */
          for_each(job, *(splitted_job_lists[clean_jobs[i]])) {
-            sge_clear_job(job, true);         
+            orders.pendingOrderList = sge_create_orders(orders.pendingOrderList, 
+                                                        ORT_clear_pri_info, 
+                                                        job, NULL, NULL, false);
+
          }
-         
-         orders.pendingOrderList = sge_build_sgeee_orders(lists, NULL,
-                                                   *(splitted_job_lists[clean_jobs[i]]), NULL, 
-                                                    orders.pendingOrderList, false, 0,false);    
       }
                           
    }
    
-   orders.pendingOrderList = sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_PENDING]), NULL, 
-                                                    orders.pendingOrderList, false, 0, false); 
+   sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_PENDING]), NULL, 
+                          &orders, false, 0, false); 
    
-   orders.pendingOrderList = sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_NOT_STARTED]), NULL, 
-                                                    orders.pendingOrderList, false, 0, false); 
+   sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_NOT_STARTED]), NULL, 
+                          &orders, false, 0, false); 
  
    /* generated scheduler messages, thus we have to call it */
    trash_splitted_jobs(splitted_job_lists); 
@@ -506,10 +512,10 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
    unsuspend_job_in_queues(lists->queue_list, 
                            *(splitted_job_lists[SPLIT_SUSPENDED]), 
-                           &(orders->configOrderList)); 
+                           orders); 
    suspend_job_in_queues(none_avail_queues, 
                          *(splitted_job_lists[SPLIT_RUNNING]), 
-                         &(orders->configOrderList)); 
+                         orders); 
    none_avail_queues = lFreeList(none_avail_queues);
 
    /*---------------------------------------------------------------------
@@ -576,8 +582,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                     *(splitted_job_lists[SPLIT_RUNNING]),
                     *(splitted_job_lists[SPLIT_FINISHED]),
                     *(splitted_job_lists[SPLIT_PENDING]),
-                    &(orders->pendingOrderList)); 
+                    orders); 
 
+      /* TODO async gdi: put this in, when to enable async gdi */
+      /*sge_send_job_start_orders(orders); */
+   
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          u_long32 saved_logginglevel = log_state_get_log_level();
@@ -686,6 +695,12 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    /*
     * loop over the jobs that are left in priority order
     */
+   {
+   bool is_immediate_array_job = false;
+   struct timeval now, later;
+   float time;
+   gettimeofday(&now, NULL);
+
    while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
       dispatch_t result = DISPATCH_NEVER_CAT;
       u_long32 job_id; 
@@ -705,6 +720,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
       job_id = lGetUlong(orig_job, JB_job_number);
 
+      is_immediate_array_job = is_immediate_array_job || 
+                                 (JOB_TYPE_IS_ARRAY(lGetUlong(orig_job, JB_type)) && 
+                                  JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)));
       /* 
        * We don't try to get a reservation, if 
        * - reservation is generally disabled 
@@ -845,16 +863,31 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
        *------------------------------------------------------------------*/
 
       if (dispatched_a_job) {
-         sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING],
-                                   orders->pendingOrderList);
+         sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
       }
 
       /* no more free queues - then exit */
-      if (lGetNumberOfElem(lists->queue_list)==0)
+      if (lGetNumberOfElem(lists->queue_list)==0) {
          break;
+      }   
 
+      /* do not send job start orders inbetween, if we have an immediate array
+         job. */
+      if (!is_immediate_array_job) {
+         gettimeofday(&later, NULL);
+         time = later.tv_usec - now.tv_usec;
+         time = (time / 1000000) + (later.tv_sec - now.tv_sec);
+
+         if ((lGetNumberOfElem(orders->jobStartOrderList) > 0) && (time > 0.5)) {
+         /*TODO async gdi: enable this code, when async gdi should be enabled */
+         /*   if (sge_send_job_start_orders(orders)) {
+               gettimeofday(&now, NULL);
+            }*/
+         }
+      }
    } /* end of while */
-
+   }
+  
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
 
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
@@ -1041,7 +1074,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       /* failed scheduling this job */
       if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
          /* generate order for removing it at qmaster */
-         order_remove_immediate(job, ja_task, &(orders->jobStartOrderList));
+         order_remove_immediate(job, ja_task, orders);
       }   
       DEXIT;
       return result;
@@ -1077,7 +1110,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       }
 
       orders->jobStartOrderList = sge_create_orders(orders->jobStartOrderList, ORT_start_job, 
-            job, ja_task, a.gdil, false, true);
+            job, ja_task, a.gdil, true);
 
       /* increase the number of jobs a user/group has running */
       sge_inc_jc(user_list, lGetString(job, JB_owner), 1);

@@ -500,6 +500,112 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
    }    
       break;
 
+ /* ----------------------------------------------------------------------- 
+    * SET PRIORITY VALUES TO NULL
+    *
+    * modifications performed on the job are not spooled 
+    * ----------------------------------------------------------------------- */
+   case ORT_clear_pri_info:
+
+      DPRINTF(("ORDER ORT_ptickets\n"));
+      {
+         ja_task_pos_t *ja_pos = NULL;
+         job_pos_t   *job_pos = NULL;
+         lListElem *next_ja_task = NULL;
+
+         job_number = lGetUlong(ep, OR_job_number);
+         if(job_number == 0) {
+            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return -2;
+         }
+         
+         task_number = lGetUlong(ep, OR_ja_task_number);
+
+         DPRINTF(("ORDER : job("u32")->pri/tickets reset"));
+
+         jep = job_list_locate(Master_Job_List, job_number);
+         if(jep == NULL) {
+            WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, u32c(job_number)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return 0; /* it's ok - job has exited - forget about him */
+         }
+       
+         next_ja_task = lFirst(lGetList(jep, JB_ja_tasks));
+         
+         /* we have to iterate over the ja-tasks and the template */
+         jatp = job_get_ja_task_template_pending(jep, 0);
+         if (jatp == NULL) {
+            ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
+                  u32c(0), u32c(job_number)));
+            DEXIT;
+            return -2;
+         }
+      
+         sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
+         
+         if (Follow_Control.cull_order_pos != NULL) { /* do we have the positions cached? */
+            ja_pos =        &(Follow_Control.cull_order_pos->ja_task);
+            job_pos =       &(Follow_Control.cull_order_pos->job);
+            
+            while(jatp != NULL) {
+               lSetPosDouble(jatp, ja_pos->JAT_tix_pos, 0);
+               lSetPosDouble(jatp, ja_pos->JAT_oticket_pos, 0);
+               lSetPosDouble(jatp, ja_pos->JAT_fticket_pos, 0);
+               lSetPosDouble(jatp, ja_pos->JAT_sticket_pos, 0);
+               lSetPosDouble(jatp, ja_pos->JAT_share_pos,   0);
+               lSetPosDouble(jatp, ja_pos->JAT_prio_pos,    0);
+               lSetPosDouble(jatp, ja_pos->JAT_ntix_pos,    0);
+               if (task_number != 0) { /* if task_number == 0, we only change the */
+                  jatp = next_ja_task; /* pending tickets, otherwise all */
+                  next_ja_task = lNext(next_ja_task);
+               }
+               else {
+                  jatp = NULL;
+               }
+            }
+
+            lSetPosDouble(jep, job_pos->JB_nppri_pos,   0);
+            lSetPosDouble(jep, job_pos->JB_nurg_pos,    0);
+            lSetPosDouble(jep, job_pos->JB_urg_pos,     0);
+            lSetPosDouble(jep, job_pos->JB_rrcontr_pos, 0);
+            lSetPosDouble(jep, job_pos->JB_dlcontr_pos, 0);
+            lSetPosDouble(jep, job_pos->JB_wtcontr_pos, 0);
+         }
+         else {   /* we do not have the positions cached.... */
+            while(jatp != NULL) {
+               lSetDouble(jatp, JAT_tix,     0);
+               lSetDouble(jatp, JAT_oticket, 0);
+               lSetDouble(jatp, JAT_fticket, 0);
+               lSetDouble(jatp, JAT_sticket, 0);
+               lSetDouble(jatp, JAT_share,   0);
+               lSetDouble(jatp, JAT_prio,    0);
+               lSetDouble(jatp, JAT_ntix,    0);
+               if (task_number != 0) {   /* if task_number == 0, we only change the */
+                  jatp = next_ja_task;   /* pending tickets, otherwise all */
+                  next_ja_task = lNext(next_ja_task);
+               }
+               else {
+                  jatp = NULL;
+               }
+            }
+
+            lSetDouble(jep, JB_nppri,   0);
+            lSetDouble(jep, JB_nurg,    0);
+            lSetDouble(jep, JB_urg,     0);
+            lSetDouble(jep, JB_rrcontr, 0);
+            lSetDouble(jep, JB_dlcontr, 0);
+            lSetDouble(jep, JB_wtcontr, 0);
+            
+         }
+         
+         sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);         
+         
+      } /* just ignore them being not in SGEEE mode */
+      break;
+      
    /* ----------------------------------------------------------------------- 
     * CHANGE TICKETS OF PENDING JOBS
     *
@@ -684,9 +790,11 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
              lGetUlong(jatp, JAT_status) != JTRANSFERING) {
 
             if (lGetUlong(jatp, JAT_status) != JFINISHED) {
-               WARNING((SGE_EVENT, MSG_JOB_CHANGETICKETS_UU, 
+               WARNING((SGE_EVENT, MSG_JOB_CHANGETICKETS_UUU, 
                         u32c(lGetUlong(jep, JB_job_number)), 
-                        u32c(lGetUlong(jatp, JAT_task_number))));
+                        u32c(lGetUlong(jatp, JAT_task_number)),
+                        u32c(lGetUlong(jatp, JAT_status))
+                        ));
                answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                DEXIT;
                return 0;
@@ -1229,9 +1337,6 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
    default:
       break;
    }
-
-  /* order sucessfully executed */
-  answer_list_add(alpp, "OK\n", STATUS_OK, ANSWER_QUALITY_INFO);
 
   DEXIT;
   return STATUS_OK;

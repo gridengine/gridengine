@@ -34,6 +34,10 @@
 #include <string.h>
 #include <strings.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "cull.h"
 #include "sge_gdi.h"
 #include "sgermon.h"
@@ -230,7 +234,7 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
    }
 
    /* create and send order */
-   order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted, false, true);
+   order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted, true);
    sge_send_orders2master(&order_list);
 
    if (order_list != NULL) {

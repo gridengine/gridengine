@@ -66,6 +66,8 @@
 #include "sge_qinstance_state.h"
 #include "schedd_message.h"
 #include "sge_schedd_text.h"
+#include "sge_orders.h"
+#include "sge_orderL.h"
 
 #include "msg_schedd.h"
 
@@ -104,7 +106,20 @@
 
 
 /* Categories of the job are managed here */
-lList *CATEGORY_LIST = NULL;
+lList *CATEGORY_LIST = NULL;   /* Category list, which contains the categories referenced
+                                * in the job structure. It is used for the resource matching 
+                                * type = CT_Type
+                                */  
+lList *CS_CATEGORY_LIST = NULL;/* Category list, which contains the categories for the
+                                * category scheduler. The categories are not referenced in
+                                * the job and only used at the beginning, before a scheduling
+                                * run, when the jobs are copied. The flag JC_FILTER=true has
+                                * to be set to make use of it.
+                                */
+
+static bool is_job_pending(lListElem *job); 
+
+/*-------------------------------------------------------------------------*/
 
 void sge_print_categories(void) {
    lListElem *cat;
@@ -125,31 +140,39 @@ void sge_print_categories(void) {
 /*    add jobs' category to the´global category list, if it doesn´t        */
 /*    already exist, and reference the category in the job element         */
 /*    The category_list is recreated for every scheduler run               */
+/*                                                                         */
+/*  NOTE: this function is not MT-Safe, because it uses global variables   */
+/*                                                                         */
+/*  TODO SG: split this into seperate functions                            */
 /*-------------------------------------------------------------------------*/
 int sge_add_job_category( lListElem *job, lList *acl_list ) {
 
    lListElem *cat = NULL;
-   const char *cstr;
+   const char *cstr = NULL;
    u_long32 rc = 0;
    static char no_requests[] = "no-requests";
    dstring category_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_add_job_category");
+  
+   /* First part:
+      Builds the category for the resource matching
+   */   
    
-   cstr = sge_build_job_category(&category_str, job, acl_list, true);
+   cstr = sge_build_job_category(&category_str, job, acl_list);
 
-   if (!cstr)  {
+   if (cstr == NULL)  {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
    }   
 
-   if (!CATEGORY_LIST) {
+   if (CATEGORY_LIST == NULL) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
    }   
    else {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
    }
 
-   if (!cat) {
+   if (cat == NULL) {
        cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
    }
 
@@ -159,9 +182,53 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
    lSetRef(job, JB_category, cat);
 
    /* 
-   ** free cstr
+   ** free category_str
    */
    sge_dstring_free(&category_str);
+
+   /* Second part:
+      Builds the category for the category scheduler. We need the
+      resource category for it. All variables are reused.
+   */
+   {
+      lListElem *job_ref = NULL; 
+      lList *job_ref_list = NULL;
+      
+      cstr = sge_build_job_cs_category(&category_str, job, cat);
+
+      cat = NULL; 
+      if (cstr == NULL)  {
+         cstr = sge_dstring_copy_string(&category_str, no_requests);
+      }   
+      if (CS_CATEGORY_LIST == NULL) {
+         CS_CATEGORY_LIST = lCreateList("new category list", SCT_Type);
+      }   
+      else {
+         cat = lGetElemStr(CS_CATEGORY_LIST, SCT_str, cstr);
+      }
+
+      if (cat == NULL) {
+          cat = lAddElemStr(&CS_CATEGORY_LIST, SCT_str, cstr, SCT_Type);
+          lSetList(cat, SCT_job_pending_ref, lCreateList("pending jobs", REF_Type));
+          lSetList(cat, SCT_job_ref, lCreateList("jobs", REF_Type));
+      }
+
+      if (is_job_pending(job))  {
+         job_ref_list = lGetList(cat, SCT_job_pending_ref);
+      }
+      else {
+         job_ref_list = lGetList(cat, SCT_job_ref);
+      }
+
+      job_ref = lCreateElem(REF_Type);
+      lSetRef(job_ref, REF_ref, job);
+      lAppendElem(job_ref_list, job_ref);
+      
+      /* 
+      ** free category_str
+      */
+      sge_dstring_free(&category_str);
+   }
 
    DEXIT;
    return 0;
@@ -178,6 +245,8 @@ lListElem *job
 
    DENTER(TOP_LAYER, "sge_delete_job_category");
    
+   /* First part */
+   
    cat = (lListElem *)lGetRef(job, JB_category);
    if (CATEGORY_LIST && cat) {
       rc = lGetUlong(cat, CT_refcount);
@@ -191,9 +260,72 @@ lListElem *job
       }
    }
    lSetRef(job, JB_category, NULL);
-   
+  
+   /* Second part */
+   /* Removes a job from the category scheduler categories. */
+   {
+      lListElem *ref = NULL;
+      bool found = false;
+      int i;
+      int max=2;
+      lList *refs[2] = {NULL, NULL};
+      bool is_job_pending_ = is_job_pending(job);
+      
+      for_each(cat, CS_CATEGORY_LIST) {
+         if (is_job_pending_) {
+            refs[0] = lGetList(cat, SCT_job_pending_ref);
+            refs[1] = lGetList(cat, SCT_job_ref);
+         }
+         else {
+            refs[0] = lGetList(cat, SCT_job_ref);
+            refs[1] = lGetList(cat, SCT_job_pending_ref);
+         }
+
+         for(i=0; (i < max && !found); i++) {
+            for_each(ref, refs[i]) {
+               if (lGetRef(ref, REF_ref) == job) {
+                  lRemoveElem(refs[i], ref);
+                  found = true;
+                  break;
+               }
+            }
+            
+            if (found) { /* is category empty? */
+               if ((lGetNumberOfElem(lGetList(cat, SCT_job_pending_ref)) == 0) &&
+                   (lGetNumberOfElem(lGetList(cat, SCT_job_ref)) == 0)) {
+                  lRemoveElem(CS_CATEGORY_LIST, cat);
+               }
+               break;
+            }
+         }
+         if (found) {
+            break;
+         }
+      }
+   }
    DEXIT;
    return 0;
+}
+
+/*-------------------------------------------------------------------------*/
+
+
+static bool
+is_job_pending(lListElem *job) {
+         /* TODO SG:
+         this is a very simple evaluation of the job state. It is not accurat
+         and should be addopted to the real state model, but for now it is good
+         enough to go with the ja_task as an identifier, if we have a pending job
+         or not. Jobs, which need to be rescheduled break the accouting here, because
+         they have a ja_task and they are pending....
+         
+         We have also a problem with array jobs, one of them might be running, but not
+         all, which means that there is a JB_ja_tasks list....
+
+         We can do this simple check here, because all we loos is a bit of performance, but
+         no wrong decissions will be made later... 
+       */  
+   return (lFirst(lGetList(job, JB_ja_tasks)) == NULL); 
 }
 
 /*-------------------------------------------------------------------------*/
@@ -240,6 +372,8 @@ int sge_rebuild_job_category( lList *job_list, lList *acl_list) {
    DENTER(TOP_LAYER, "sge_rebuild_job_category");
 
    CATEGORY_LIST = lFreeList(CATEGORY_LIST);
+   CS_CATEGORY_LIST = lFreeList(CS_CATEGORY_LIST);
+
    for_each (job, job_list) {
       sge_add_job_category(job, acl_list);
    } 
@@ -250,6 +384,12 @@ int sge_rebuild_job_category( lList *job_list, lList *acl_list) {
 int sge_category_count(void) {
    return lGetNumberOfElem(CATEGORY_LIST);
 }
+
+int sge_cs_category_count(void) {
+   return lGetNumberOfElem(CS_CATEGORY_LIST);
+}
+
+
 
 /****** sge_category/sge_reset_job_category() **********************************
 *  NAME
@@ -306,8 +446,8 @@ int sge_reset_job_category()
 *     jobs for each category.
 *
 *  INPUT
-*     lList *job_list = a list with all jobs
 *     lList *queue_list = a list with all queue instances.
+*     lList **orders = (out) contains a order list to remove priority info
 *
 *  RESULT
 *     int - a reduced job list
@@ -316,20 +456,22 @@ int sge_reset_job_category()
 *     MT-NOTE: sge_reset_job_category() is not MT safe 
 *
 *******************************************************************************/
-lList *sge_category_job_copy(lList *job_list, lList *queue_list) {
-   lListElem *queue;
-   lListElem *job;
+lList *sge_category_job_copy(lList *queue_list, lList **orders) {
    const int minJobPerCategory = 5;
    const int maxJobPerCategory = 300;
-   int jobPerCategory = 0;
-   lList *jobListCopy = lCreateListHash("copy_job_list", lGetListDescr(job_list),false);
-
+   
+   lList *jobListCopy = NULL;
+   lListElem *queue = NULL;
+   lListElem *category = NULL;
+   int jobPerCategory = 0; 
+   
    DENTER(TOP_LAYER, "sge_category_job_copy");
 
    INFO((SGE_EVENT, "the job category filter is enabled"));
 
    for_each (queue, queue_list) {
       u_long32 state = lGetUlong(queue, QU_state);
+          
       switch (state) {
          case QI_UNKNOWN :   
          case QI_ERROR :      
@@ -339,7 +481,6 @@ lList *sge_category_job_copy(lList *job_list, lList *queue_list) {
          case QI_DISABLED :
          case QI_CAL_DISABLED:
                                  continue;
-            break;                                 
          default:
             jobPerCategory+= (lGetUlong(queue, QU_job_slots) - qinstance_slots_used(queue)); 
       }
@@ -351,96 +492,56 @@ lList *sge_category_job_copy(lList *job_list, lList *queue_list) {
    else if (jobPerCategory > maxJobPerCategory) {
       jobPerCategory = maxJobPerCategory;
    }
- 
-   for_each (job, job_list) {
-      lList *ja_task_list = lGetList(job, JB_ja_tasks);
-      bool isCopy = true;
-      bool isCount = true;
-      int category_count = 0;
-      lListElem *category = lGetRef(job, JB_category); 
-      lListElem *next_ja_task;
-/*      lListElem *ja_task; */
+  
+   for_each(category, CS_CATEGORY_LIST) {
+      lList *job_ref_list = NULL;
+      lListElem *job_ref = NULL;
+      int copy_counter = 0;
 
-      next_ja_task = lFirst(ja_task_list);
-      if (next_ja_task) {
-
-/* we might need some more sopfisticated accounting for array jobs, but
-   as long, as that is not proven, we ignore it. */
-#if 0      
-         while ((ja_task = next_ja_task)) {
-            u_long32 ja_task_status = lGetUlong(ja_task, JAT_status);
-            u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);
-            u_long32 ja_task_hold = lGetUlong(ja_task, JAT_hold);
-
-            next_ja_task = lNext(ja_task);
-
-
-            /*
-             * Check the state of the task
-             * (ORDER IS IMPORTANT!)
-             */
-            if ((ja_task_status & JFINISHED)|| 
-                (ja_task_state & JERROR))  {
-                  isCopy = true;
-                  isCount = false;
-                  break;
-            }
-            else if ((ja_task_status == JIDLE) && 
-                     ((lGetUlong(job, JB_execution_time) > sge_get_gmt()) ||
-                      ((lGetList(job, JB_jid_predecessor_list) != NULL))
-                    )) {
-                  isCopy = true;
-                  isCount = false;
-                  break;           
-            }
-            else if ((ja_task_status == JIDLE) && /* pending jobs */
-                !(ja_task_hold & MINUS_H_TGT_ALL)) {
-                  isCount = true;
-                  /* only copy, when there are still job slots available or we want a reservation */
-                  category_count = lGetInt(category, CT_count);
-                  isCopy = ((category_count < jobPerCategory) || lGetBool(job, JB_reserve)) ;
-            } 
-            else {
-               isCopy = true;
-               isCount = false;
-               break;            
-            }
-            
+      /* copy running jobs and others maybe pending */   
+      job_ref_list = lGetList(category, SCT_job_ref);
+      for_each(job_ref, job_ref_list) {
+         lListElem *job = lGetRef(job_ref, REF_ref);
+         if (jobListCopy == NULL) {
+            jobListCopy = lCreateListHash("copy_job_list", lGetElemDescr(job), false);
          }
-#else
-         isCopy = true;
-         isCount = false;
-   
-#endif
+         lAppendElem(jobListCopy, lCopyElem(job));
       }
-      else {
-         isCount = true;
-         /* only copy, when there are still job slots available or we want a reservation */
-         category_count = lGetInt(category, CT_count);
-         isCopy = ((category_count < jobPerCategory) || lGetBool(job, JB_reserve)) ;
-      }
-      
-      if (isCopy) {
-         lAppendElem(jobListCopy, lCopyElemHash(job, false));      
-         if (isCount) {
-            lList *pe_range = NULL;
+
+      /* copy pending jobs, only pending till max is reached */
+      job_ref_list = lGetList(category, SCT_job_pending_ref);
+      for_each(job_ref, job_ref_list) {
+         lListElem *job = lGetRef(job_ref, REF_ref); 
+
+         /* only copy, if we have free slots left, or the jobs needs a reservation */
+         if ((copy_counter < jobPerCategory)  || (lGetBool(job, JB_reserve))) {   
+            
             lListElem *ja_structure = lFirst(lGetList(job, JB_ja_structure)); /* get array job size */
             int amount = lGetUlong(ja_structure, RN_max); 
+            lList *pe_range = lGetList(job, JB_pe_range); /* get pe requests */
+
+            if (jobListCopy == NULL) {
+               jobListCopy = lCreateListHash("copy_job_list", lGetElemDescr(job), false);
+            }
             
+            /*compute array job size */ 
             if (amount != 1) {
                amount = ((amount  - lGetUlong( ja_structure, RN_min)) / lGetUlong(ja_structure, RN_step)) + 1;
             }
          
-            pe_range = lGetList(job, JB_pe_range); /* get pe requests */
+            /* compute pe job size (puting the array size into account) */
             if (pe_range != NULL) {
                lListElem *pe = lFirst(pe_range);
-               amount *= ((lGetUlong(pe, RN_max) / lGetUlong(pe, RN_step)));
+               amount *= lGetUlong(pe, RN_min); 
             }
-            lSetInt(category, CT_count, category_count + amount);
+             
+            lAppendElem(jobListCopy, lCopyElem(job));
+            copy_counter+=amount;
          }
-      }
-      else {
-         schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
+         else {
+             schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
+             *orders = sge_create_orders(*orders, ORT_clear_pri_info, job, NULL, NULL, false);
+         }
       }
    }
    schedd_mes_commit(NULL, false, NULL); 

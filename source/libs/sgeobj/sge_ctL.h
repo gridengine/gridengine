@@ -46,9 +46,46 @@ extern "C" {
    the skip host, queue and the soft violations */
 #define MIN_JOBS_IN_CATEGORY 1
 
+/*
+ * this date structures describe the schduler category list
+ */
+  
+enum {
+   SCT_str = SCT_LOWERBOUND, /* category string */
+   SCT_job_pending_ref,      /* contains only pending jobs */
+   SCT_job_ref               /* contains all other jobs, could also be pending ones */
+};
 
+ILISTDEF(SCT_Type, SCategories, SGE_SCT_LIST)
+   SGE_STRING(SCT_str, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(SCT_job_pending_ref, REF_Type, CULL_DEFAULT)
+   SGE_LIST(SCT_job_ref, REF_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(SCTN)
+   NAME("SCT_str")
+   NAME("SCT_job_pending_ref")
+   NAME("SCT_job_ref")
+NAMEEND
+
+#define SCTS sizeof(SCTN)/sizeof(char*)
+      
+enum {
+   REF_ref = REF_LOWERBOUND /*reference to an object */
+};
+
+ILISTDEF(REF_Type, references, SGE_REF_LIST)
+   SGE_REF(REF_ref, JB_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(REFN)
+   NAME("REF_ref")
+NAMEEND
+
+#define REFS sizeof(REFN)/sizeof(char*)
+   
 /* 
- * this data structures describes the category list 
+ * this data structures describe the category list 
  */
 enum {
    CT_str = CT_LOWERBOUND,   /* string of category */

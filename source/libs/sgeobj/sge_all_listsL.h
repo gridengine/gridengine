@@ -237,7 +237,7 @@ extern "C" {
 
 /* this would generate a cycle in the dependencies between lib cull and lib obj. Therefor
    we ignore the names here and live with the fact, that lWriteList or lWriteElem will
-   not print the CULL_names. */
+   not print the CULL_names for the PACK structure. */
 /*      {PACK_LOWERBOUND, PACKS, PACKN},   */       /* a cull version of the pack buffer */
 
       {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* XML-Attribute */
@@ -255,6 +255,10 @@ extern "C" {
       {CCT_LOWERBOUND, CCTS, CCTN},
 
       {CQU_LOWERBOUND, CQUS, CQUN},             /* queue state changes structure */
+      
+      {SCT_LOWERBOUND, SCTS, SCTN},             /* scheduler categories */
+
+      {REF_LOWERBOUND, REFS, REFN},             /* a simple ref object */
       
       {0, 0, NULL}
    };

@@ -156,6 +156,7 @@ int event_handler_default_scheduler()
    sge_Sdescr_t copy;
    dstring ds;
    char buffer[128];
+   lList *orders = NULL;
    double prof_copy=0, prof_event=0, prof_init=0, prof_free=0, prof_run=0;
    DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
@@ -220,7 +221,7 @@ int event_handler_default_scheduler()
 
 
    if (sconf_is_job_category_filtering()) {
-      copy.job_list = sge_category_job_copy(Master_Job_List, copy.queue_list); 
+      copy.job_list = sge_category_job_copy(copy.queue_list, &orders); 
    }
    else {
       copy.job_list = lCopyList("test", Master_Job_List);                         
@@ -294,7 +295,7 @@ int event_handler_default_scheduler()
       rmon_mlcpy(&tmp, &DEBUG_ON);
       rmon_mlclr(&DEBUG_ON);
 #endif
-      ((default_scheduler_alg_t) sched_funcs[current_scheduler].alg)(&copy);
+      ((default_scheduler_alg_t) sched_funcs[current_scheduler].alg)(&copy, &orders);
 #ifdef DONT_TRACE_SCHEDULING
       rmon_mlcpy(&DEBUG_ON, &tmp);
    }
@@ -305,12 +306,6 @@ int event_handler_default_scheduler()
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
    
-   if (getenv("SGE_ND")) {
-      printf("--------------STOP-SCHEDULER-RUN-------------\n");
-   } else {
-      SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
-   }
-
    monitor_next_run = 0;
 
    /* .. which gets deleted after using */
@@ -340,11 +335,18 @@ int event_handler_default_scheduler()
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d)\n",
-               prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count() ));
+      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)\n",
+            prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count(), sge_cs_category_count() ));
 
       log_state_set_log_level(saved_logginglevel);
    }
+
+   if (getenv("SGE_ND") != NULL) {
+      printf("--------------STOP-SCHEDULER-RUN-------------\n");
+   } else {
+      SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
+   }
+   
    DEXIT;
    return 0;
 }
@@ -711,8 +713,6 @@ bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action 
                                          lListElem *event, void *clientdata){
    sconf_print_config();
 
-   /* do we have to rebuild the job categories? */
-   rebuild_categories |=  (is_fc_filtering != sconf_is_job_category_filtering());
    return true;
 }
 
@@ -995,10 +995,6 @@ bool sge_process_ja_task_event_after(sge_object_type type,
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
          return false;
-      }   
-
-      if (job_get_ja_tasks(job) == 0) {
-         sge_delete_job_category(job);
       }   
    }
    else

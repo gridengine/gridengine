@@ -35,6 +35,7 @@
 /* may be this should be included by the gdi user */
 #include "cull.h"
 #include "gdi_setup.h"
+#include "sge_hostname.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -138,12 +139,35 @@ typedef struct {
 /* to be used for initializing state_gdi_multi */
 #define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
 
-lList *sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
+lList 
+*sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
 
-int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state, bool do_copy);
+int 
+sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, 
+              lCondition *cp, lEnumeration *enp, lList **malpp, 
+              state_gdi_multi *state, bool do_copy);
+int 
+sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, 
+              lCondition *cp, lEnumeration *enp, lList **malpp, 
+              state_gdi_multi *state, bool do_copy, bool do_sync);
 
+bool
+gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync);
 
-lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
+lList 
+*sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
+
+/**
+ * This struct stores the basic information for a async GDI
+ * request. We need this data, to identify the answer...
+ */
+typedef struct {
+   char rhost[CL_MAXHOSTLEN+1];       
+   char commproc[CL_MAXHOSTLEN+1];
+   u_short id;
+   u_long32 gdi_request_mid; /* message id of the send, used to identify the answer*/
+   state_gdi_multi out;
+} gdi_send_t;
 
 #ifdef  __cplusplus
 }

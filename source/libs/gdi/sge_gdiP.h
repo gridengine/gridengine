@@ -58,12 +58,12 @@ extern "C" {
 #define GRM_GDI_VERSION 0x10001000
 
 u_long32 gdi_state_get_request_id(void);
+u_long32 gdi_state_get_next_request_id(void);
 int gdi_state_get_daemon_first(void);
 int gdi_state_get_first_time(void);
 int gdi_state_get_commd_state(void);
 int gdi_state_get_program_id(void);
 int gdi_state_get_isalive(void);
-int gdi_state_get_reread_qmaster_file(void);
 int gdi_state_get_sec_initialized(void);
 char *gdi_state_get_cached_master_name(void);
 
@@ -74,8 +74,13 @@ void gdi_state_set_first_time(int i);
 void gdi_state_set_commd_state(int i);
 void gdi_state_set_program_id(int i);
 void gdi_state_set_isalive(int i);
-void gdi_state_set_reread_qmaster_file(int i);
 void gdi_state_set_sec_initialized(int i);
+
+gdi_send_t* gdi_state_get_last_gdi_request(void); 
+void        gdi_state_clear_last_gdi_request(void);
+void        gdi_free_request(gdi_send_t **async_gdi); 
+bool        gdi_set_request(const char* rhost, const char* commproc, u_short id, 
+                            state_gdi_multi *out, u_long32 gdi_request_mid); 
 
 #ifdef  __cplusplus
 }

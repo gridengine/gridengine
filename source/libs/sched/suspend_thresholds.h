@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void suspend_job_in_queues(lList *susp_queues, lList *job_list, lList **orderlist);
+#include "sge_orders.h"
 
-void unsuspend_job_in_queues(lList *queue_list, lList *job_list, lList **orderlist);
+void suspend_job_in_queues(lList *susp_queues, lList *job_list, order_t *orders);
+
+void unsuspend_job_in_queues(lList *queue_list, lList *job_list, order_t *orders);
 
 #endif /* __SUSPEND_THRESHOLDS_H */
 

@@ -55,11 +55,9 @@ static int select4unsuspension(lList *job_list, lListElem *queues, lListElem **j
 /*
    select and suspend jobs in susp_queues 
 */
-void suspend_job_in_queues(
-lList *susp_queues,
-lList *job_list,
-lList **orderlist 
-) {
+void 
+suspend_job_in_queues( lList *susp_queues, lList *job_list, order_t *orders) 
+{
    u_long32 now;
    int i, found;
    lListElem *jep, *qep, *ja_task;
@@ -96,20 +94,20 @@ lList **orderlist
 
          /* generate suspend order for found job */
          found = 1;
-         *orderlist = sge_create_orders(*orderlist, 
-            ORT_suspend_on_threshold, jep, ja_task, NULL, false, true);
+         orders->configOrderList = sge_create_orders(orders->configOrderList, 
+                                                     ORT_suspend_on_threshold, 
+                                                     jep, ja_task, NULL, true);
 
          DPRINTF(("++++ suspending job "u32"/"u32" on threshold\n", 
-            lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
+                  lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
 
          /* prevent multiple selection of this job */
-         lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) 
-            | JSUSPENDED_ON_THRESHOLD);
+         lSetUlong(ja_task, JAT_state, 
+                   lGetUlong(ja_task, JAT_state) | JSUSPENDED_ON_THRESHOLD);
       }
 
       if (i==0 && !found) {
-         DPRINTF(("found no jobs for sot in queue %s\n", 
-            lGetString(qep, QU_full_name)));
+         DPRINTF(("found no jobs for sot in queue %s\n", lGetString(qep, QU_full_name)));
       }
    }
    
@@ -118,11 +116,9 @@ lList **orderlist
 }
 
 
-void unsuspend_job_in_queues(
-lList *queue_list,
-lList *job_list,
-lList **orderlist 
-) {
+void 
+unsuspend_job_in_queues( lList *queue_list, lList *job_list, order_t *orders) 
+{
    u_long32 now;
    int i, found;
    lListElem *jep, *qep, *ja_task;
@@ -165,13 +161,15 @@ lList **orderlist
            i++) {
          found = 0;
          /* find one running job in suspend queue */
-         if (select4unsuspension(job_list, qep, &jep, &ja_task))
+         if (select4unsuspension(job_list, qep, &jep, &ja_task)) {
             break;
+         }   
 
          /* generate unsuspend order for found job */
          found = 1;
-         *orderlist = sge_create_orders(*orderlist, ORT_unsuspend_on_threshold, 
-            jep, ja_task, NULL, false, true);
+         orders->configOrderList = sge_create_orders(orders->configOrderList, 
+                                                        ORT_unsuspend_on_threshold, 
+                                                        jep, ja_task, NULL, true);
 
          DPRINTF(("---- unsuspending job "u32"/"u32" on threshold\n", 
             lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));

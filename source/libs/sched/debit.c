@@ -204,7 +204,7 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
                      }
                   }
                   
-                  for_each (order, orders->sent_job_StartOrderList) {
+                  for_each (order, orders->sentOrderList) {
                      if (lGetUlong(order, OR_type) != ORT_start_job) {
                         continue;
                      }  

@@ -36,6 +36,7 @@
 #include "cull.h"
 #include "sge_schedd.h"
 #include "scheduler.h"
+#include "sge_orders.h"
 
 
 #define SGE_USAGE_INTERVAL 60
@@ -44,8 +45,9 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,
                     lList *pending_jobs,
-                    lList **orderlist);
-void sgeee_resort_pending_jobs(lList **job_list, lList *order_list); 
+                    order_t *orders);
+
+void sgeee_resort_pending_jobs(lList **job_list); 
  
 int calculate_host_tickets( lList **running, lList **hosts );
 int  sort_host_list_by_share_load ( lList *host_list,       /* EH_Type */
@@ -53,14 +55,10 @@ int  sort_host_list_by_share_load ( lList *host_list,       /* EH_Type */
 
 void sge_clear_job( lListElem *job, bool is_clear_all);
 
-lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
-                      lList *running_jobs,
-                      lList *queued_jobs,
-                      lList *finished_jobs,
-                      lList *order_list,
-                      bool update_usage_and_configuration,
-                      int seqno,
-                      bool update_execd);
+void 
+sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_jobs,
+                      lList *finished_jobs, order_t *orders,
+                      bool update_usage_and_configuration, int seqno, bool update_execd);
 
 void sge_do_priority(lList *running_jobs, lList *pending_jobs);
 void sge_do_priority_job(lListElem *jep);

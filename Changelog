@@ -1,3 +1,13 @@
+AH-2002-12-12-0  Bugfix     conflicting policies can cause job being started and 
+                            immediately suspended
+                 IZ:        #437
+                 Bugtraq:   #4790592 
+                 Bugfix     failover to shadow master leaves sge_schedd on the  
+                            original qmaster host
+                 IZ:        #441
+                 Bugtraq:   #4787623 
+                 Review:    AS
+
 AH-2002-12-11-0  Bugfix     job arguments larger than 10k crash qmaster
                  IZ:        #440
                  Bugtraq:   #4792036

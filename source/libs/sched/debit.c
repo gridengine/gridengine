@@ -97,7 +97,10 @@ lList *queue_list,   /* in this queue list the job gets debited */
 lListElem *pe,       /* in this pe the job gets debited */
 lList *host_list,    /* in this host list the job gets debited */
 lList *complex_list, /* needed for interpretation of jobs resource request */
-int *sort_hostlist   /* do we have to resort the hostlist? */
+int *sort_hostlist,  /* do we have to resort the hostlist? */
+lList *orders_list   /* needed to warn on jobs that were dispatched into 
+                        queues and get suspended on subordinate in the very 
+                        same interval */
 ) {
    u_long32 pe_slots;
 
@@ -109,7 +112,7 @@ int *sort_hostlist   /* do we have to resort the hostlist? */
    }
 
    debit_job_from_hosts(job, granted, host_list, complex_list, sort_hostlist);
-   debit_job_from_queues(job, granted, queue_list, complex_list, &pe_slots);
+   debit_job_from_queues(job, granted, queue_list, complex_list, &pe_slots, orders_list);
 
    if (pe)
       sge_debit_job_from_pe(pe, job, pe_slots);

@@ -988,7 +988,7 @@ int *sort_hostlist
    sge_inc_jc(user_list, lGetString(job, JB_owner), 1);
 
    debit_scheduled_job(job, granted, *queue_list, pe, host_list, 
-         complex_list, sort_hostlist);
+         complex_list, sort_hostlist, *orders_list);
 
    /*------------------------------------------------------------------
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING

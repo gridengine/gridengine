@@ -50,6 +50,7 @@
 #include "sge_pe_schedd.h"
 #include "slots_used.h"
 
+#include "sge_orderL.h"
 #include "sge_requestL.h"
 #include "sge_queueL.h"
 #include "sge_hostL.h"
@@ -2767,7 +2768,9 @@ lListElem *job,
 lList *granted,
 lList *global_queue_list,
 lList *complex_list,
-u_long32 *total_slotsp 
+u_long32 *total_slotsp,
+lList *orders_list   /* needed to warn on jobs that get dispatched and suspended 
+                        on subordinate in the very same interval */
 ) {
    int pe_slots = 0;
    int qslots, total;
@@ -2800,6 +2803,20 @@ u_long32 *total_slotsp
             if (!tst_sos(qslots,        total, 0, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, 0, so)) {   /* but now                */
                ret |= sos_schedd(lGetString(so, SO_qname), global_queue_list);
+
+               /* warn on jobs that were dispatched into that queue in 
+                  the same scheduling interval based on the orders list */
+               {
+                  lListElem *order;
+                  for_each (order, orders_list) {
+                     if (lGetUlong(order, OR_type) != ORT_start_job)
+                        continue;
+                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_qname), OR_queuelist)) {
+                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, lGetUlong(job, JB_job_number), lGetUlong(order, OR_job_number), 
+                           qname, lGetString(so, SO_qname)));
+                     }
+                  }
+               }
             }
          }
 

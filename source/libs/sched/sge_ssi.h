@@ -72,6 +72,9 @@
 *     With a task_map a jobs structure is described.
 *     A job can be spawned over an arbitrary number of hosts.
 *     A job has an arbitrary number of tasks per host.
+*     An array of task_map is used to pass information to ssi functions.
+*     It can contain any number of entries, the last entry has to contain
+*     0 as procs.
 *
 *  SEE ALSO
 *     schedlib/ssi/--Simple-Scheduler-Interface

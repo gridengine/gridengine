@@ -75,16 +75,6 @@
 				disable load adjustments set <B>job_load_adjustments</B> to <B>none</B>
 				and <B>load_adjustment_decay_time</B> to <B>0</B> in the
 				scheduler configuration <B>sched_conf(5)</B><SPAN STYLE="font-weight: medium">.</SPAN></P>
-				<LI><P><B>load formula</B></P>
-				<P STYLE="font-weight: medium">The load formula is a potential
-				bottlenleck during a scheduler run.  After every job placment
-				during one scheduler run the queues must be re-sorted if a load
-				value in the <B>load_formula</B> has a corresponding
-				<B>load_adjustment</B> or if it is a consumable resource. It is
-				possible to set the <B>load_formula</B> to <B>none</B> to avoid
-				this calculation altogether.  This is an appropriate solution for
-				throughput clusters where jobs are dispatched strictly based on
-				open slots and no other load balancing is needed.</P>
 				<LI><P><B>scheduling-on-demand</B></P>
 				<P>The default for Grid Engine is to start scheduling runs in a
 				fixed schedule interval (see <B>schedule_interval</B> in

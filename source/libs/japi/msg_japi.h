@@ -40,7 +40,7 @@ extern "C" {
 #include "basis_types.h"
    
 #define MSG_JAPI_NO_EVENT_CLIENT   _MESSAGE(45501, _("The event client has not been started.\n"))
-#define MSG_JAPI_EVENT_CLIENT_ALREADY_STARTED   _MESSAGE(45501, _("The event client has already been started.\n"))
+#define MSG_JAPI_EVENT_CLIENT_ALREADY_STARTED   _MESSAGE(45502, _("The event client has already been started.\n"))
 
 #ifdef	__cplusplus
 }

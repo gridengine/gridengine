@@ -897,9 +897,6 @@
 #define MSG_GDI_USAGE_S_OPT_PATH_LIST                    "[-S path_list]"
 #define MSG_GDI_UTEXT_S_OPT_PATH_LIST                    _MESSAGE(23454, _("command interpreter to be used"))
 
-#define MSG_GDI_USAGE_sync_OPT_YN                        "[-sync y[es]|n[o]]"
-#define MSG_GDI_UTEXT_sync_OPT_YN                        _MESSAGE(23455, _("wait for job to end and return exit code"))
-
 #define MSG_GDI_USAGE_t_OPT_TASK_ID_RANGE                "[-t task_id_range]"
 #define MSG_GDI_UTEXT_t_OPT_TASK_ID_RANGE                _MESSAGE(23455, _("create a job-array with these tasks"))
 
@@ -986,6 +983,9 @@
 
 #define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
 /* #define MSG_GDI_UTEXT_show_license_OPT                   _message(23484, _("show license information")) __TS Removed automatically from testsuite!! TS__*/
+
+#define MSG_GDI_USAGE_sync_OPT_YN                        "[-sync y[es]|n[o]]"
+#define MSG_GDI_UTEXT_sync_OPT_YN                        _MESSAGE(23484, _("wait for job to end and return exit code"))
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
@@ -1097,7 +1097,7 @@
 #define MSG_GDI_UTEXT_shgrp_resolved_OPT   _MESSAGE(60611, _("show host group with resolved hostlist"))  
 
 #define MSG_GDI_USAGE_sick_OPT             "[-sick]"
-#define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60611, _("show deficient configurations"))
+#define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show deficient configurations"))
 
 /*
  * Objects and components

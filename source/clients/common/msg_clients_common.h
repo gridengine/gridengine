@@ -73,9 +73,9 @@
 #define MSG_CQUEUE_FILENOTCORRECT_S   _MESSAGE(5015, _("Cluster queue file "SFQ" is not correct\n"))
 #define MSG_CQUEUE_NOQMATCHING_S      _MESSAGE(5016, _("No cluster queue or queue instance matches the phrase "SFQ"\n"))
 
-#define MSG_QSTAT_HELP_WCCQ           _MESSAGE(1024, _("wildcard expression matching a cluster queue"))
-#define MSG_QSTAT_HELP_WCHOST         _MESSAGE(1025, _("wildcard expression matching a host"))
-#define MSG_QSTAT_HELP_WCHG           _MESSAGE(1026, _("wildcard expression matching a hostgroup"))
+#define MSG_QSTAT_HELP_WCCQ           _MESSAGE(1030, _("wildcard expression matching a cluster queue"))
+#define MSG_QSTAT_HELP_WCHOST         _MESSAGE(1031, _("wildcard expression matching a host"))
+#define MSG_QSTAT_HELP_WCHG           _MESSAGE(1032, _("wildcard expression matching a hostgroup"))
 
 
 #endif /* __MSG_CLIENTS_COMMON_H */

@@ -451,7 +451,7 @@
 /*
 ** sge_qmod_qmaster.c
 */
-#define MSG_LOG_JOBUNKNOWNQMODCMD_U      _MESSAGE(33377, _("unknown job command type\n" U32CFormat))
+#define MSG_LOG_JOBUNKNOWNQMODCMD_U   _MESSAGE(33373, _("unknown job command type\n" U32CFormat))
 #define MSG_QUEUE_INVALIDQ_S          _MESSAGE(33374, _("invalid queue "SFQ"\n"))
 #define MSG_QUEUE_INVALIDQORJOB_S     _MESSAGE(33375, _("invalid queue or job "SFQ"\n"))
 #define MSG_QUEUE_NOCHANGEQPERMS_SS   _MESSAGE(33376, _(SFN" - you have no permission to modify queue "SFQ"\n"))

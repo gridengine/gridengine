@@ -1,3 +1,9 @@
+AA-2004-11-09-0: Bugfix:    openssl-0.9.7e broke sge_ssl_template.cnf
+                            configuration file parsing changed
+                            fix in sge_ca and sge_ssl_template.cnf
+                 Changed:   util/sgeCA/{sge_ca,sge_ssl_template.cnf}
+                 Review:    CR
+                      
 JG-2004-11-09-0: Testsuite: Fixed test system_tests/clients/qsub.
 
 AA-2004-11-08-0: Bugfix:    - openssl-0.9.7e upgrade

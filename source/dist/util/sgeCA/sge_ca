@@ -316,6 +316,7 @@ MakeCAcert()
          echo userId=CA >> $TMPFILE
          echo emailAddress=$CA_EMAIL >> $TMPFILE
 
+         export CATOP
          Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
          umask 077

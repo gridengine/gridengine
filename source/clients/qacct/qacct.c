@@ -179,9 +179,6 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
-   calc_column_sizes(NULL, &column_sizes);
-
-
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
 /*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QACCT]))) {
@@ -203,6 +200,16 @@ char **argv
    memset(complexes, 0, sizeof(complexes));
    memset(job_name, 0, sizeof(job_name));
    memset(&totals, 0, sizeof(totals));
+
+   column_sizes.host       = strlen(MSG_HISTORY_HOST)+1;
+   column_sizes.queue      = strlen(MSG_HISTORY_QUEUE)+1;
+   column_sizes.group      = strlen(MSG_HISTORY_GROUP)+1;
+   column_sizes.owner      = strlen(MSG_HISTORY_OWNER)+1;
+   column_sizes.project    = strlen(MSG_HISTORY_PROJECT)+1;
+   column_sizes.department = strlen(MSG_HISTORY_DEPARTMENT)+1;  
+   column_sizes.granted_pe = strlen(MSG_HISTORY_PE)+1;
+   column_sizes.slots      = 7;
+
 
    /*
    ** Read in the command line arguments.
@@ -403,7 +410,6 @@ char **argv
             }
             else {
                strcpy(project, argv[++ii]);
-               column_sizes.project = strlen(project)+1;
             }
          }
          else
@@ -1132,6 +1138,28 @@ char **argv
    /*
    ** assorted output of statistics
    */
+   if ( host[0] ) {
+      column_sizes.host = strlen(host) + 1;
+   } 
+   if ( queue[0] ) {
+      column_sizes.queue = strlen(queue) + 1;
+   } 
+   if ( group[0] ) {
+      column_sizes.group = strlen(group) + 1;
+   } 
+   if ( owner[0] ) {
+      column_sizes.owner = strlen(owner) + 1;
+   } 
+   if ( project[0] ) {
+      column_sizes.project = strlen(project) + 1;
+   } 
+   if ( department[0] ) {
+      column_sizes.department = strlen(department) + 1;
+   } 
+   if ( granted_pe[0] ) {
+      column_sizes.granted_pe = strlen(granted_pe) + 1;
+   } 
+   
    calc_column_sizes(lFirst(sorted_list), &column_sizes);
    {
       lListElem *ep = NULL;
@@ -1356,15 +1384,32 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
    column_size_data->department = 20;  
    column_size_data->granted_pe = 15;
    column_size_data->slots = 6; */
-   column_size_data->host       = strlen(MSG_HISTORY_HOST)+1;
-   column_size_data->queue      = strlen(MSG_HISTORY_QUEUE)+1;
-   column_size_data->group      = strlen(MSG_HISTORY_GROUP)+1;
-   column_size_data->owner      = strlen(MSG_HISTORY_OWNER)+1;
-   column_size_data->project    = strlen(MSG_HISTORY_PROJECT)+1;
-   column_size_data->department = strlen(MSG_HISTORY_DEPARTMENT)+1;  
-   column_size_data->granted_pe = strlen(MSG_HISTORY_PE)+1;
-   column_size_data->slots      = 7;
-  
+
+   if ( column_size_data->host < strlen(MSG_HISTORY_HOST)+1  ) {
+      column_size_data->host = strlen(MSG_HISTORY_HOST)+1;
+   } 
+   if ( column_size_data->queue < strlen(MSG_HISTORY_QUEUE)+1  ) {
+      column_size_data->queue = strlen(MSG_HISTORY_QUEUE)+1;
+   } 
+   if ( column_size_data->group < strlen(MSG_HISTORY_GROUP)+1  ) {
+      column_size_data->group = strlen(MSG_HISTORY_GROUP)+1;
+   } 
+   if ( column_size_data->owner < strlen(MSG_HISTORY_OWNER)+1  ) {
+      column_size_data->owner = strlen(MSG_HISTORY_OWNER)+1;
+   } 
+   if ( column_size_data->project < strlen(MSG_HISTORY_PROJECT)+1  ) {
+      column_size_data->project = strlen(MSG_HISTORY_PROJECT)+1;
+   } 
+   if ( column_size_data->department < strlen(MSG_HISTORY_DEPARTMENT)+1  ) {
+      column_size_data->department = strlen(MSG_HISTORY_DEPARTMENT)+1;
+   } 
+   if ( column_size_data->granted_pe < strlen(MSG_HISTORY_PE)+1  ) {
+      column_size_data->granted_pe = strlen(MSG_HISTORY_PE)+1;
+   } 
+   if ( column_size_data->slots <7  ) {
+      column_size_data->slots = 7;
+   } 
+
    if ( ep != NULL) {
       char tmp_buf[100];
       int tmp_length = 0;

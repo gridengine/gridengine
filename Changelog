@@ -1,3 +1,7 @@
+CR-2002-03-01-2: Bugfix:    error in CR-2002-03-01-1 when showing only one 
+                            long project/dep/...  by using 
+                            e.g. -P LONG_PROJECT_NAME  - fixed
+
 CR-2002-03-01-1: Bugfix:    qacct truncates project/department/... names to
                  Enhancem.: x chars. -> calculate column with by searching
                             for largest element

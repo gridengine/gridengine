@@ -1,3 +1,6 @@
+MD-2004-06-01-0: Bugfix:    Db reinitialized during restore
+                 Changed:   inst_sge
+
 JG-2004-06-01-0: Testsuite: Don't set file permissions when installing zip 
                             packages. 
                             Fixed qmaster size test.

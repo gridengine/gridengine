@@ -1245,7 +1245,8 @@ RestoreConfig()
    $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \
                 "previously.\n\n"
 
-   $INFOTEXT -wait "Make sure that your sge_qmaster is not running during restore!"
+   $INFOTEXT -wait -n "Make sure that your sge_qmaster is not running during restore!\n" \
+                      "Hit, <ENTER> to continue!"
    $CLEAR
                 SGE_ROOT=`pwd`
    $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT
@@ -1258,8 +1259,8 @@ RestoreConfig()
 
 
    if [ $? = 0 ]; then
-      $INFOTEXT -n "\nPlease enter the full path and name of your backup file."
-      $INFOTEXT -n "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz
+      $INFOTEXT -n "\nPlease enter the full path and name of your backup file." \
+                   "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz
       bup_file=`Enter $SGE_ROOT/$SGE_CELL/spool/backup/backup.tar.gz`
       Makedir /tmp/bup_tmp
       $INFOTEXT -n "\nCopiing backupfile to /tmp/bup_tmp\n"
@@ -1275,6 +1276,14 @@ RestoreConfig()
       $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
       $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >>"
       db_home=`Enter $db_home`
+
+      #reinitializing berkeley db
+      for f in `ls $db_home`; do
+         if [ $f != "sge_job" ]; then
+            ExecuteAsAdmin rm $db_home/$f
+         fi
+      done
+      #ExecuteAsAdmin touch $db_home/sge
       
       $SGE_UTILBIN/db_load -f /tmp/bup_tmp/*.dump -h $db_home sge
 
@@ -1310,17 +1319,34 @@ RestoreConfig()
       $INFOTEXT -n "\nYour configuration has been restored\n"
       rm -fR /tmp/bup_tmp
    else
-      $INFOTEXT -n "\nPlease enter the full path to your backup files."
+      $INFOTEXT -n "\nPlease enter the full path to your backup files." \
+                   "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/default/spool/backup
       bup_file=`Enter $SGE_ROOT/$SGE_CELL/default/spool/backup`
-      db_home=`cat bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
-      ADMINUSER=`cat /tmp/bup_tmp/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-      master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+
+      if [ -f $bup_file/bootstrap ]; then
+         db_home=`cat $bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+         ADMINUSER=`cat $bup_file/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+         master_spool=`cat $bup_file/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+      else
+         $INFOTEXT "The boostrap file could not be found, please check to path to\n" \
+                   "your backup file. If this is correct, the backup was not made or \n" \
+                   "not complete!\n\n Exiting restore procedure"
+         exit 1
+      fi
    
       $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
       $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >> "
       db_home=`Enter $db_home`
+
+      #reinitializing berkeley db
+      for f in `ls $db_home`; do
+         if [ $f != "sge_job" ]; then
+            ExecuteAsAdmin rm $db_home/$f
+         fi
+      done
+      #ExecuteAsAdmin touch $db_home/sge
       
-      $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge
+      $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge 
 
          if [ -d $SGE_ROOT/$SGE_CELL ]; then
             if [ -d $SGE_ROOT/$SGE_CELL/common ]; then

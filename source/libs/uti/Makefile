@@ -66,7 +66,7 @@ UTILIB_DRMAA_SRC = \
          sge_tmpnam.c \
          sge_edit.c \
          sge_uidgid$(QIDLEXT).c 
-UTILIB_SRC = sge_loadmem.c sge_getloadavg.c $(UTILIB_DRMAA_SRC)
+UTILIB_SRC = sge_loadmem.c sge_getloadavg.c sge_hostname.c sge_uidgid.c $(UTILIB_DRMAA_SRC)
 
 UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)

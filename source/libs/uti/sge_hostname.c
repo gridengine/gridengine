@@ -53,6 +53,7 @@
 #include "sge_unistd.h"
 #include "sge_string.h"
 #include "sge_prog.h"
+#include "sge_uidgid.h"
 
 
 #include "msg_utilib.h"
@@ -76,15 +77,15 @@ static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom);
 static int matches_addr(struct hostent *he, char *addr);
 static host *sge_host_search_pred_alias(host *h);
 
-/* resolver library wrappers */
-static struct hostent *sge_gethostbyname(const char *name);
-static struct hostent *sge_gethostbyaddr(const struct in_addr *addr);
-
 static int matches_name(struct hostent *he, const char *name);    
 static host *sge_host_create(void);
 static void sge_host_delete(host *h);
 static int sge_host_alias(host *h1, host *h2);
-
+#ifndef GETHOSTBYNAME
+#ifndef GETHOSTBYNAME_M
+static struct hostent *sge_copy_hostent (struct hostent *orig);
+#endif
+#endif
 
 /* this globals are used for profiling */
 unsigned long gethostbyname_calls = 0;
@@ -93,7 +94,7 @@ unsigned long gethostbyaddr_calls = 0;
 unsigned long gethostbyaddr_sec = 0;
 
 
-#if defined(SOLARIS)
+#if 0 /*defined(SOLARIS)*/
 int gethostname(char *name, int namelen);
 #endif
 
@@ -115,6 +116,47 @@ host *uti_state_get_localhost(void)
 
 #define MAX_RESOLVER_BLOCKING 15
 
+/****** uti/host/sge_gethostbyname_retry() *************************************
+*  NAME
+*     sge_gethostbyname_retry() -- gethostbyname() wrapper
+*
+*  SYNOPSIS
+*     struct hostent *sge_gethostbyname_retry(const char *name)
+*
+*  FUNCTION
+*     Wraps sge_gethostbyname() function calls, and retries if the host is not
+*     found.
+*
+*  NOTES
+*     MT-NOTE: sge_gethostbyname_retry() is MT safe
+*******************************************************************************/
+struct hostent *sge_gethostbyname_retry(
+const char *name 
+) {
+   int i;
+   struct hostent *he;
+
+   DENTER(TOP_LAYER, "sge_gethostbyname_retry");
+
+   if (!name || name[0] == '\0') {
+      DPRINTF(("hostname to resolve is NULL or has zero length\n"));
+      DEXIT;
+      return NULL;
+   }
+
+   he = sge_gethostbyname(name);
+   if (he == NULL) {
+      for (i = 0; i < MAX_NIS_RETRIES && he == NULL; i++) {
+         DPRINTF(("Couldn't resolve hostname %s\n", name));
+         sleep(1);
+         he = sge_gethostbyname(name);
+      }
+   }
+
+   DEXIT;
+   return he;
+}
+
 /****** uti/host/sge_gethostbyname() ****************************************
 *  NAME
 *     sge_gethostbyname() -- gethostbyname() wrapper
@@ -127,21 +169,123 @@ host *uti_state_get_localhost(void)
 *     in gethostbyname() and logs when very much time has passed.
 *
 *  NOTES
-*     MT-NOTE: sge_gethostbyname() is not MT safe
-*     MT-NOTE: to make it MT safe gethostbyname_r() interface must be used
-*     MT-NOTE: and it must have same interface as gethostbyname_r()
+*     MT-NOTE: sge_gethostbyname() is MT safe
 *******************************************************************************/
-static struct hostent *sge_gethostbyname(const char *name)
+struct hostent *sge_gethostbyname(const char *name)
 {
    struct hostent *he;
    time_t now;
    int time;
-
+   int l_errno;
+   
    DENTER(TOP_LAYER, "sge_gethostbyname");
 
+   /* This method goes to great lengths to slip a reentrant gethostbyname into
+    * the code without making changes to the rest of the source base.  That
+    * basically means that we have to make some redundant copies to
+    * return to the caller.  This method doesn't appear to be highly utilized,
+    * so that's probably ok.  If it's not ok, the interface can be changed
+    * later. */
+   
    now = sge_get_gmt();
    gethostbyname_calls++;       /* profiling */
+   
+#ifdef GETHOSTBYNAME_R6
+   /* This is for Linux */
+   DPRINTF (("Getting host by name - Linux\n"));
+   {
+      struct hostent re;
+      char buffer[4096];
+
+      /* No need to malloc he because it will end up pointing to re. */
+      gethostbyname_r (name, &re, buffer, 4096, &he, &l_errno);
+      
+      /* Since re contains pointers into buffer, and both re and the buffer go
+       * away when we exit this code block, we make a deep copy to return. */
+      /* Yes, I do mean to check if he is NULL and then copy re!  No, he
+       * doesn't need to be freed first. */
+      if (he != NULL) {
+         he = sge_copy_hostent (&re);
+      }
+   }
+#endif
+#ifdef GETHOSTBYNAME_R5
+   /* This is for Solaris */
+   DPRINTF (("Getting host by name - Solaris\n"));
+   {
+      char buffer[4096];
+      
+      he = (struct hostent *)malloc (sizeof (struct hostent));
+      /* On Solaris, this function returns the pointer to my struct on success
+       * and NULL on failure. */
+      he = gethostbyname_r (name, he, buffer, 4096, &l_errno);
+      
+      /* Since he contains pointers into buffer, and buffer goes away when we
+       * exit this code block, we make a deep copy to return. */
+      if (he != NULL) {
+         struct hostent *new_he = sge_copy_hostent (he);
+         FREE (he);
+         he = new_he;
+      }
+   }
+#endif
+#ifdef GETHOSTBYNAME_R3
+   DPRINTF (("Getting host by name - 3 arg\n"));
+   /* This is for AIX < 4.3, HPUX < 11, and Tru64 */
+   {
+      struct hostent_data he_data;
+      
+      he = (struct hostent *)malloc (sizeof (struct hostent));
+      if (gethostbyname_r (name, he, &he_data) < 0) {
+         /* If this function fails, free he so that we can test if it's NULL
+          * later in the code. */
+         FREE (he);
+         he = NULL;
+      }
+      /* The location of the error code is actually undefined.  I'm just
+       * assuming that it's in h_errno since that's where it is in the unsafe
+       * version.  I'll look into this a little deeper.
+       * h_errno is, of course, not thread safe, but if there's an error we're
+       * already screwed, so we won't worry to much about it.
+       * An alternative would be to set errno to HOST_NOT_FOUND. */
+      l_errno = h_errno;
+      
+      /* Since he contains pointers into he_data, and he_data goes away when we
+       * exit this code block, we make a deep copy to return. */
+      if (he != NULL) {
+         struct hostent *new_he = sge_copy_hostent (he);
+         FREE (he);
+         he = new_he;
+      }
+   }
+#endif
+#ifdef GETHOSTBYNAME
+   /* This is for AIX >= 4.3, HPUX >= 11, and Mac OS X >= 10.2 */
+   DPRINTF (("Getting host by name - Thread safe\n"));
    he = gethostbyname(name);
+   /* The location of the error code is actually undefined.  I'm just
+    * assuming that it's in h_errno since that's where it is in the unsafe
+    * version.  I'll look into this a little deeper.
+    * h_errno is, of course, not thread safe, but if there's an error we're
+    * already screwed, so we won't worry to much about it.
+    * An alternative would be to set errno to HOST_NOT_FOUND. */
+   l_errno = h_errno;
+#endif
+#ifdef GETHOSTBYNAME_M
+   /* This is for Mac OS < 10.2, IRIX, and everyone else
+    *  - Actually, IRIX 6.5.17 supports a reentrant getaddrinfo(), but it's not
+    *    worth the effort. */
+   DPRINTF (("Getting host by name - Not thread safe\n"));
+
+   /*** INSERT MUTEX HERE ***/
+
+   he = gethostbyname(name);
+   l_errno = h_errno;
+
+   /*** INSERT MUTEX HERE ***/
+
+#endif
+
    time = sge_get_gmt() - now;
    gethostbyname_sec += time;   /* profiling */
 
@@ -149,16 +293,90 @@ static struct hostent *sge_gethostbyname(const char *name)
    if (time > MAX_RESOLVER_BLOCKING) {
       WARNING((SGE_EVENT, "gethostbyname(%s) took %d seconds and returns %s\n", 
             name, time, he?"success":
-          (h_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
-          (h_errno == TRY_AGAIN)?"TRY_AGAIN":
-          (h_errno == NO_RECOVERY)?"NO_RECOVERY":
-          (h_errno == NO_DATA)?"NO_DATA":
-          (h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
+          (l_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
+          (l_errno == TRY_AGAIN)?"TRY_AGAIN":
+          (l_errno == NO_RECOVERY)?"NO_RECOVERY":
+          (l_errno == NO_DATA)?"NO_DATA":
+          (l_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>"));
    }
 
    DEXIT;
    return he;
 }
+
+/* This function is only needed on architectures where gethostbyname_r() is used. */
+#ifndef GETHOSTBYNAME
+#ifndef GETHOSTBYNAME_M
+/****** uti/host/sge_copy_hostent() ****************************************
+*  NAME
+*     sge_copy_hostent() -- make a deep copy of a struct hostent
+*
+*  SYNOPSIS
+*     struct hostent *sge_copy_hostent (struct hostent *orig)
+*
+*  FUNCTION
+*     Makes a deep copy of a struct hostent so that sge_gethostbyname() can
+*     free it's buffer for the gethostbyname_r() calls on Linux and Solaris.
+*
+*  NOTES
+*     MT-NOTE: sge_copy_hostent() is MT safe
+*******************************************************************************/
+static struct hostent *sge_copy_hostent(struct hostent *orig)
+{
+   struct hostent *copy = (struct hostent *)malloc (sizeof (struct hostent));
+   char **p = NULL;
+   int count = 0;
+
+   DENTER (TOP_LAYER, "sge_copy_hostent");
+   
+   /* Easy stuff first */
+   copy->h_name = strdup (orig->h_name);
+   copy->h_addrtype = orig->h_addrtype;
+   copy->h_length = orig->h_length;
+   
+   /* Count the number of entries */
+   count = 0;
+   for (p = orig->h_addr_list; *p != 0; p++) {
+      count++;
+   }
+   
+   DPRINTF (("%d names in h_addr_list\n", count));
+   
+   copy->h_addr_list = (char **) malloc (sizeof (char *) * (count + 1));
+   
+   /* Copy the entries */
+   count = 0;
+   for (p = orig->h_addr_list; *p != 0; p++) {
+      copy->h_addr_list[count] = (char *)malloc (sizeof (struct in_addr));
+      memcpy (copy->h_addr_list[count++], *p, sizeof (struct in_addr));
+   }
+   
+   copy->h_addr_list[count] = NULL;
+   
+   /* Count the number of entries */
+   count = 0;
+   for (p = orig->h_aliases; *p != 0; p++) {
+      count++;
+   }
+   
+   DPRINTF (("%d names in h_aliases\n", count));
+   
+   copy->h_aliases = (char **) malloc (sizeof (char *) * (count + 1));
+   
+   /* Copy the entries */
+   count = 0;
+   for (p = orig->h_aliases; *p != 0; p++) {
+      copy->h_aliases[count] = (char *)malloc (sizeof (struct in_addr));
+      memcpy (copy->h_aliases[count++], *p, sizeof (struct in_addr));
+   }
+   
+   copy->h_aliases[count] = NULL;
+   
+   DEXIT;
+   return copy;
+}
+#endif
+#endif
 
 /****** uti/host/sge_gethostbyaddr() ****************************************
 *  NAME
@@ -176,7 +394,7 @@ static struct hostent *sge_gethostbyname(const char *name)
 *     MT-NOTE: to make it MT safe gethostbyaddr_r() interface must be used
 *     MT-NOTE: and it must have same interface as gethostbyaddr_r()
 *******************************************************************************/
-static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
+struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 {
    struct hostent *he;
    time_t now;
@@ -186,11 +404,17 @@ static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 
    gethostbyaddr_calls++;      /* profiling */
    now = sge_get_gmt();
+
+   /*** INSERT MUTEX HERE ***/
+
 #if defined(CRAY)
    he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
 #else   
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
 #endif
+
+   /*** INSERT MUTEX HERE ***/
+
    time = sge_get_gmt() - now;
    gethostbyaddr_sec += time;   /* profiling */
 

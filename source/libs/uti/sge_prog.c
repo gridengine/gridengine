@@ -42,6 +42,7 @@
 
 #include "sge.h"
 #include "sgermon.h"
+#include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_stdlib.h"
 #include "sge_string.h"
@@ -366,7 +367,7 @@ void sge_getme(u_long32 program_number)
 
    /* Fetch hostnames */
    SGE_ASSERT((gethostname(tmp_str, sizeof(tmp_str)) == 0));
-   SGE_ASSERT(((hent = gethostbyname(tmp_str)) != NULL));
+   SGE_ASSERT(((hent = sge_gethostbyname(tmp_str)) != NULL));
 
    DTRACE;
 
@@ -383,7 +384,7 @@ void sge_getme(u_long32 program_number)
  
       memcpy(tmp_addr, hent->h_addr, hent->h_length);
       DTRACE;
-      SGE_ASSERT(((hent2 = gethostbyaddr(tmp_addr, hent->h_length, AF_INET)) != NULL));
+      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr)) != NULL));
       DTRACE;
       uti_state_set_qualified_hostname(hent->h_name);
       s = sge_dirname(hent->h_name, '.');

@@ -1,3 +1,22 @@
+DT-2003-11-28-0: Enhancem.: Made sge_gethostbyname() reentrant in four of the
+                            five possible ways depending on the architecture.
+                            I'll let AD do the fifth way: mutex locking.
+                            I changed sge_getme() to use sge_gethostbyname()
+                            and sge_gethostbyaddr().
+                            I removed the misplaced daemons/shadowd/gethostbyname.*
+                            files and replaced them with a sge_gethostbyname_retry()
+                            function in sge_hostname.c.
+                            I fixed a minor DRMAA bug when passing in a NULL
+                            rusage pointer, and narrowed the scope of the event
+                            client using SG's new interface.
+                            I also fixed the build on HPUX-11.
+                            I still need AD to add mutex locking to
+                            sge_gethostbyname() default case and sge_gethostbyaddr().
+                            I also need to apply platform specific gethostbyaddr_r()
+                            synamtecs to sge_gethostbyaddr().
+                 Changed:   sge_hostname.*, sge_prog.c, gethostbyname.*, aimk,
+                            shadowd.c, DRMAA, and lots of Makefiles.
+
 AA-2003-12-01-0: Enhancem.: Scheduler configuration adaptions in qmon
                             Removal of obsolete dialog fields in cluster conf
                  

@@ -36,8 +36,7 @@ SHADOWD_DIR = $(SDIR)/daemons/shadowd
 
 SHADOWD_TARGETS = sge_shadowd
 
-SHADOWD_SRC =   shadowd.c \
-                sge_gethostbyname.c 
+SHADOWD_SRC =   shadowd.c 
 
 SHADOWD_ADD_SRC = sig_handlers.c qmaster_running.c qmaster_heartbeat.c \
                startprog.c lock.c rw_configuration.c \
@@ -86,6 +85,3 @@ include $(SHADOWD_DIR)/shadowd_dependencies
 shadowd.o:	$(SHADOWD_DIR)/shadowd.c
 		$(CC) $(CFLAGS) -c $(SHADOWD_DIR)/shadowd.c
 	echo $(SHADOWD_OBJS)
-
-sge_gethostbyname.o:	$(SHADOWD_DIR)/sge_gethostbyname.c
-		$(CC) $(CFLAGS) -c $(SHADOWD_DIR)/sge_gethostbyname.c

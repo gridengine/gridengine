@@ -50,7 +50,7 @@
 #include "qmaster_heartbeat.h"
 #include "lock.h"
 #include "startprog.h"
-#include "sge_gethostbyname.h"
+#include "sge_hostname.h"
 #include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -474,7 +474,7 @@ const char *shadow_master_file
    }
 
    /* we can't resolve hostname of old qmaster */
-   hp = sge_gethostbyname(oldqmaster);
+   hp = sge_gethostbyname_retry(oldqmaster);
    if (hp == (struct hostent *) NULL) {
       WARNING((SGE_EVENT, MSG_SHADOWD_CANTRESOLVEHOSTNAMEFROMACTQMASTERFILE_SS, 
               path_state_get_act_qmaster_file(), oldqmaster));
@@ -546,7 +546,7 @@ const char *file
 
    while (fgets(buf, sizeof(buf), fp)) {
       for (cp = strtok(buf, " \t\n,"); cp; cp = strtok(NULL, " \t\n,")) {
-         hp = sge_gethostbyname(cp);
+         hp = sge_gethostbyname_retry(cp);
          if (hp && hp->h_name) {
             if (!sge_hostcmp(host, hp->h_name)) {
                fclose(fp);

@@ -843,9 +843,14 @@ case AIX43:
       set OFLAG = "-O3 -qstrict"
    endif   
    
+   set MT_FLAGS = ""
+   if ( $BUILDARCH == AIX43 ) then
+      set MT_FLAGS = "-DGETHOSTBYNAME"
+   endif
+
    set CXX      = xlC
    set MAKE     = make
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $MT_FLAGS $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
@@ -874,7 +879,7 @@ case AIX51:
 
    set CXX      = xlC
    set MAKE     = make
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
@@ -918,7 +923,7 @@ case ALINUX:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX -DGETHOSTBYNAME_R6 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -970,7 +975,7 @@ case ALPHA5:
    endif
 
    if ( $CC == gcc ) then
-      set CFLAGS   = "$OFLAG -Wall -Wstrict-prototypes -Wno-error -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS   = "$OFLAG -Wall -Wstrict-prototypes -Wno-error -O -DALPHA -D$BUILDARCH -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS"
    else
       set CFLAGS   = "$OFLAG $WFLAG -std1 -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -Olimit 2000"
    endif
@@ -1041,7 +1046,7 @@ case DARWIN:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1090,7 +1095,7 @@ case FREEBSD_*:
    set DLLIB	= ""
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
-   set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
+   set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
@@ -1142,7 +1147,7 @@ case IRIX6*:
       set OFLAG = "-O2"
    endif   
 
-   set CFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -D$IRIX_ARCHDEF -DGETHOSTBYNAME_M $IRIX_ABI $DEBUG_FLAG $CFLAGS"
    if ( $CC == gcc ) then
       set CFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CFLAGS -Wall -Wstrict-prototypes -Werror"
    endif
@@ -1190,12 +1195,12 @@ case HP10:
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
       endif
-      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS"
    else
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
-      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -1237,13 +1242,13 @@ case HP11:
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
       endif
-      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
    else
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
       set CXX = "aCC"
-      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -1287,13 +1292,13 @@ case HP1164:
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
       endif
-      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
    else
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
       set CXX = "aCC"
-      set CFLAGS = "-Ae $OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae $OFLAG -DHP11 -D$BUILDARCH -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
    endif
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1358,7 +1363,7 @@ case LINUX6:
       set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
    endif
 
-   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
+   set CFLAGS = "-DLINUX -D$BUILDARCH -DGETHOSTBYNAME_R6 $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD = $CC
@@ -1411,7 +1416,7 @@ case NECSX4:
    set INTERACTTARGETS = ""
    set COMPILE_DC = 1
    set MAKE = make
-   set CFLAGS = "-DNECSX4 -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "-DNECSX4 -DGETHOSTBYNAME_M -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "-hfloat0 $DEBUG_FLAG $LFLAGS"
@@ -1437,7 +1442,7 @@ case NECSX5:
       set MAKEFNMATCH = 1
    endif
    set MAKE = make
-   set CFLAGS = "-DNECSX5 -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "-DNECSX5 -DGETHOSTBYNAME_M -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
@@ -1472,7 +1477,7 @@ case SLINUX:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX -DGETHOSTBYNAME_R6 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1564,7 +1569,7 @@ case SOLARIS86:
       set CFLAGS = "$CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes"
    endif
 
-   set CFLAGS = "-Xc -v $OFLAG $SOL64BITFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
+   set CFLAGS = "-Xc -v $OFLAG $SOL64BITFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 $DEBUG_FLAG"
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
@@ -1603,13 +1608,13 @@ case UNICOS*:
    set ARFLAGS = rcv
    switch ($BUILDARCH)
       case UNICOS_TS:
-         set CFLAGS   = "-DCRAY -DCRAYTS $DEBUG_FLAG $CFLAGS"
+         set CFLAGS   = "-DCRAY -DCRAYTS -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS"
          breaksw
       case UNICOS_TS_IEEE:
-         set CFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE $DEBUG_FLAG $CFLAGS"
+         set CFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS"
          breaksw
       default:
-         set CFLAGS   = "-DCRAY $DEBUG_FLAG $CFLAGS"
+         set CFLAGS   = "-DCRAY -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS"
    endsw
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = ""

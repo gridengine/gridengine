@@ -74,7 +74,7 @@ qstat_printing.o:     $(CLIENTS_COMMON_DIR)/qstat_printing.c
 	   $(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/qstat_printing.c
 
 read_defaults.o : $(CLIENTS_COMMON_DIR)/read_defaults.c
-		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/read_defaults.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/read_defaults.c
 
 show_job.o : $(CLIENTS_COMMON_DIR)/show_job.c
 		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/show_job.c

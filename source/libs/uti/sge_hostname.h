@@ -99,4 +99,9 @@ void sge_hostcpy(char *dst, const char *raw);
 
 bool sge_is_hgroup_ref(const char *string);
 
+/* resolver library wrappers */
+struct hostent *sge_gethostbyname(const char *name);
+struct hostent *sge_gethostbyname_retry(const char *name);
+struct hostent *sge_gethostbyaddr(const struct in_addr *addr);
+
 #endif /* __HOST_H */

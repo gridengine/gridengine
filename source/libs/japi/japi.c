@@ -1,3 +1,34 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2281,7 +2312,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
 
    DEXIT;
    
-   if (!got_usage_info) {
+   if ((rusage != NULL) && !got_usage_info) {
       japi_standard_error (DRMAA_ERRNO_NO_RUSAGE, diag);
       return DRMAA_ERRNO_NO_RUSAGE;
    }
@@ -3425,7 +3456,7 @@ static void *japi_implementation_thread(void *p)
    
 {
    lCondition *where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key );
-   lEnumeration *what = lWhat("%T(ALL)", JB_Type);
+   lEnumeration *what = lWhat("%T(%I)", JB_Type, JB_job_number);
    /* TODO: SG: need what / where */
    lListElem *where_el = lWhereToElem(where);
    lListElem *what_el = lWhatToElem(what);

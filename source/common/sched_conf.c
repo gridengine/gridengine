@@ -543,7 +543,7 @@ static lListElem *create_default_sched_conf()
     */
    if (feature_is_enabled(FEATURE_SGEEE)) {
       lSetString(ep, SC_sgeee_schedule_interval, SGEEE_SCHEDULE_TIME);
-      lSetUlong(ep, SC_halftime, 24);
+      lSetUlong(ep, SC_halftime, 168);
 
       added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, 
                            SC_usage_weight_list, UA_Type);

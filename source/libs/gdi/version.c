@@ -36,11 +36,16 @@ const char GDI_VERSION[] = "5.3beta1";
 #  include "copyright.h"
 #endif
 
-#ifndef ADD_SUN_COPYRIGHT
+#if !(ADD_COPYRIGHT || ADD_SUN_COPYRIGHT)
+char SFLN_ELN[] = "hallo";
 
 const char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\
 Florida State University in creating the DQS program.\n";
+
+#endif
+
+#ifndef ADD_SUN_COPYRIGHT
 
 const char SISSL[] = "\n\
 The Contents of this file are made available subject to the terms of\n\

@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+# Set file permissions of Grid Engine distribution
+#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -31,8 +33,7 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-
-# The following files and directories will be set by this procedure
+#
 #
 # The $OPTFILES are not mandatory for a distribution and will be set only if
 # they exist
@@ -42,7 +43,8 @@
 # 
 # It is not necessary to run this script if the distribtuon has been
 # installed with pkgadd, since pkgadd takes care about the correct
-# permissions
+# permissions.
+#
 
 PATH=/bin:/usr/bin
 
@@ -86,7 +88,7 @@ instresport=false
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo 
    echo ERROR: Please set your \$SGE_ROOT environment variable
-   echo and start this script again.
+   echo and start this script again. Exit.
    echo 
    exit 1
 fi
@@ -94,7 +96,7 @@ fi
 if [ ! -f "$SGE_ROOT/util/arch" ]; then
    echo 
    echo ERROR: The shell script \"$SGE_ROOT/util/arch\" does not exist.
-   echo Please verify your distribution and restart this script.
+   echo Please verify your distribution and restart this script. Exit.
    echo
    exit 1
 fi
@@ -102,7 +104,7 @@ fi
 if [ ! -f $SGE_ROOT/util/arch_variables ]; then
    echo
    echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".
-   echo Please verify your distribution and restart this script.
+   echo Please verify your distribution and restart this script. Exit.
    echo
    exit 1
 fi
@@ -140,7 +142,7 @@ if [ $3 = / -o $3 = /etc ]; then
    exit 1
 fi
 
-if [ `echo $3 | cut -c1` != / ]; then
+if [ `echo $3 | env LC_ALL=C cut -c1` != / ]; then
    echo
    echo ERROR: Please give an absolute path for the distribution.
    echo
@@ -197,8 +199,8 @@ for f in $FILELIST; do
       $ECHO
       $ECHO "Missing file or directory: $f"
       $ECHO
-      $ECHO "Your file permissions will not be set. Exiting."
-      $ECHO ""
+      $ECHO "Your file permissions will not be set. Exit."
+      $ECHO
       exit 1
    fi
 done

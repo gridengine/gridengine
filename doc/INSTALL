@@ -2,6 +2,9 @@
                   ------------------------------------
 
 
+Content
+-------
+
 1. Review the following installation instructions
 2. Download the current distribution
 3. Create a Grid Engine administrator account and set up service port
@@ -16,13 +19,22 @@
 1) Review the following installation instructions
 -------------------------------------------------
 
-   Please read through this entire installation procedure before beginning.
+   Please read through this entire installation procedure before beginning
+   with the installation of Grid Engine.
 
 
-2) Download the current distribution from our FTP site
-------------------------------------------------------
+2) Download the current distribution
+------------------------------------
 
-   Please see our web page at http://XXX
+   Grid Engine is available from the following download servers:
+
+   From Sun Microsystems:
+
+      http://www.sun.com/gridware
+
+   From the Grid engine Open Source site:
+
+      http://gridengine.sunsource.net
 
 
 3) Create a Grid Engine administrator account and set up service port
@@ -232,7 +244,7 @@
 
 9) Copyright
 ------------
-
+___INFO__MARK_BEGIN__
    This following copyright statement applies to this file only. It does not
    imply that this statement covers other files of a Grid Engine
    distribution. See the directory '<sge_root>/3rdparty' for a summary of
@@ -263,3 +275,4 @@
    Copyright: 2001 by Sun Microsystems, Inc.
  
    All Rights Reserved.
+___INFO__MARK_END__

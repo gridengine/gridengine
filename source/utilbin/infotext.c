@@ -112,7 +112,7 @@ static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
          }
       }
 
-      if ((line > 65 && text[h] == ' ') ) {
+      if ((line > 80 && text[h] == ' ') ) {
          line = 0;
          sge_dstring_append(buffer,"\"\n\"");
       }

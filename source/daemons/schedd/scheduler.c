@@ -723,6 +723,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                dont_reserve);
       
       }
+
       switch (result) {
       case 0: /* now assignment */
          /* here the job got an assignment that will cause it be started immediately */
@@ -907,7 +908,7 @@ bool dont_reserve /* don't try to find a reservation assignment */
             if (result == 0)
                result = 1; /* this job got a reservation */
          } else
-            result = -2; /* this particular job couldn't be assigned but got no reservation either */
+            result = -1;
       }
 
    } else {
@@ -923,7 +924,7 @@ bool dont_reserve /* don't try to find a reservation assignment */
          a.start = DISPATCH_TIME_NOW;
 
          result = sge_sequential_assignment(&a, &ignore_queues, &ignore_hosts);
-          
+         
          DPRINTF(("sge_sequential_assignment(immediate) returned %d\n", result));
 
          if (result == -1) {
@@ -945,7 +946,7 @@ bool dont_reserve /* don't try to find a reservation assignment */
             if (result == 0)
                result = 1; /* this job got a reservation */
          } else 
-            result = -2; /* this particular job can't be assigned but got no reservation either */
+            result = -1;
       } 
    }
 

@@ -1,3 +1,10 @@
+AH-2004-02-23-0: Bugfix:    Fix broken reservation for parallel jobs.
+                            Refresh CE_doubleval in JB_hard_resource_list
+                            after qmaster restart.
+                            Fix broken category optimization.
+                            Fix problem with handling default requests.
+                 Issue:     700
+
 AA-2004-02-21-0: Enhancem.: qmon CQ changes and fixes
                             partial fix of bool, lBool casting
                             RR dialogue changes

@@ -414,7 +414,7 @@ static int rc_time_by_slots(lList *requested, lList *load_attr, lList *config_at
             parse_ulong_val(&dval, NULL, valtype, def_req, NULL, 0);
 
             /* ignore default request if the value is 0 */
-            if(def_req != NULL) {
+            if(def_req != NULL && dval != 0.0) {
                char tmp_reason[2048];
                tmp_reason[0] = '\0';
 
@@ -2068,7 +2068,7 @@ static int sge_tag_queues_suitable4job_comprehensively(sge_assignment_t *a)
       DPRINTF(("-------------->      BINGO %d slots %s at specified time <--------------\n", 
             a->slots, need_master_host?"plus master host":""));
       best_result = 0;
-   } else if (accu_host_slots >= a->slots && (!need_master_host || 
+   } else if (accu_host_slots_qend >= a->slots && (!need_master_host || 
                (need_master_host && have_master_host))) {
       DPRINTF(("-------------->            %d slots %s later             <--------------\n", 
             a->slots, need_master_host?"plus master host":""));
@@ -3881,7 +3881,6 @@ static int ri_slots_by_time(u_long32 start, u_long32 duration, int *slots, int *
    } else {
       used = lGetDouble(lGetElemStr(rue_list, RUE_name, name), RUE_utilized_now);
    }
-
 
    request_val = lGetDouble(request, CE_doubleval);
    *slots      = (int)((total - used) / request_val);

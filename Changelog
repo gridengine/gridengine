@@ -1,14 +1,21 @@
-SG-2004-05-12-0: Cleanup:   cleaned the xml schema and the qstat xml output to be consitent.
+JG-2004-05-12-0: Testsuite: Fixed test system_tests/clients/qmod/reschedule.
+                            Worked around parsing unfriendly output of 
+                            qstat -g t for parallel jobs.
+
+SG-2004-05-12-0: Cleanup:   cleaned the xml schema and the qstat xml output to 
+                            be consitent.
                  Changed:   qstat, qstat.xsd
                  Review:    MD
 
 DT-2004-05-11-0: Enhancem.: o Finished DRMAA Howto
                  Changed:   howto
 
-SG-2004-05-11-1: Bugfix:    qstat prints queue names with a max length of 30 per default.
-                            SGE_LONG_QNAMES can be used to set a custom length (min 10)
-                            or -1. In case of -1 qstat computes the length for the queue
-                            names. The man pages are still missing.
+SG-2004-05-11-1: Bugfix:    qstat prints queue names with a max length of 30 per
+                            default.
+                            SGE_LONG_QNAMES can be used to set a custom length 
+                            (min 10) or -1. In case of -1 qstat computes the 
+                            length for the queue names. The man pages are still 
+                            missing.
                  Issue:     1016
                  Changed:   qstat
                  Review:    AA
@@ -25,10 +32,11 @@ CR-2004-05-11-2: Bugfix:    o L10N for sge_get_qmaster_port() and
 SG-2004-05-11-0: Bugfix:    - fixed that user are spooled after every scheduling
                               run, when the sharetree is used. The usage in the
                               user are updated every 2 min now.
-                            - reseted the ticket amount for jobs, which are in hold,
-                              or error state. These jobs are not scheduled and should
-                              not keep their old tickets.
-                            - If a immediate array job was not scheduled, qsub returned
+                            - reseted the ticket amount for jobs, which are in 
+                              hold, or error state. These jobs are not scheduled
+                              and should not keep their old tickets.
+                            - If a immediate array job was not scheduled, qsub 
+                              returned
                               that the job was scheduled. 
                  Issue:     980, 604
                  Review:    DT
@@ -38,7 +46,8 @@ JG-2004-05-11-1: Testsuite: Fixed test system_tests/config/file_parsing.
 
 AA-2004-05-11-0: Bugfix:    - Startup logging contains 'none'
                             - qhost does not print overwritten ARCH
-                            - qmon policy dialog, missing show pending job tickets
+                            - qmon policy dialog, missing show pending job 
+                              tickets
                  Issue:     861, 813
                  Review:    EB
                  Changed:   qhost, qstat, qmon

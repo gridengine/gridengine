@@ -648,9 +648,6 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    set qrsh_id2   [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -now no -q $rerun_queue sleep 10000" ]
    set qsh_id     [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh -now no -q $rerun_queue" ]
      
-#   have_root_passwd
-
-   
    set qlogin_out_file [get_tmp_file_name "" "qlogin" "txt" ]
 
    puts $CHECK_OUTPUT "try to $CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue"
@@ -687,13 +684,14 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
 
    set result ""
    set my_timeout [timestamp]
-   incr my_timeout 60
+   incr my_timeout 120
    set timeout 0
    while { [ string first "assword:" $result] < 0 } {     
       sleep 2
       catch { eval exec "cat $qlogin_out_file" } result
       puts $CHECK_OUTPUT $result
       if { $my_timeout < [timestamp] } {
+         add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "timeout waiting for qlogin password question"
          break;
       } 
    }
@@ -702,7 +700,6 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
        add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error, connection closed"
    }
 
-if {0} {
    set end_time [expr ( [timestamp] + 60 )]
    set ru_jobs 0
    while { $ru_jobs != $no_jobs } {
@@ -714,11 +711,12 @@ if {0} {
       foreach elem $running_jobs {
          set jobid [ string trim $elem ]
          if { $jobid >= 0 } {
-            if { [ string first [string trim $job_info($jobid,queue)] $rerun_queue ] >= 0 } {
+            puts $CHECK_OUTPUT $job_info($jobid,queue)
+#            if { [ string first [string trim $job_info($jobid,queue)] $rerun_queue ] >= 0 } {
                lappend jobs $jobid
                append jobs_string "$jobid "
                lappend job_names "$job_info($jobid,name)"
-            }
+#            }
             puts $CHECK_OUTPUT "job: $jobid, name: $job_info($jobid,name), $job_info($jobid,queue)"
          }
       }
@@ -732,12 +730,6 @@ if {0} {
          break
       }
    }
-} else {
-   wait_for_jobstart $qrsh_id "QLOGIN" 30
-   wait_for_jobstart $qrsh_id2 "sleep" 30
-   wait_for_jobstart $qsh_id "INTERACTIV" 30
-   set jobs_string "$qrsh_id $qrsh_id2 $qsh_id"
-}
 
    puts $CHECK_OUTPUT "disabling queue $rerun_queue"
    disable_queue [get_queue_instance $rerun_queue $rerun_host]
@@ -766,11 +758,9 @@ if {0} {
    close_spawn_process $qrsh_id 1
    close_spawn_process $qrsh_id2 1
    close_spawn_process $qsh_id 1
-   if { [have_root_passwd] != -1 } {
-      if { $qlogin_id != -1 } {
-         send -i $qlogin_id "\003"
-         close_spawn_process $qlogin_id 1
-      }
+   if { $qlogin_id != -1 } {
+      send -i $qlogin_id "\003"
+      close_spawn_process $qlogin_id 1
    }
    set_error 0 "ok"
 }
@@ -840,7 +830,7 @@ proc reschedule_pe_jobs {} {
              }
           }
           puts $CHECK_OUTPUT "-----------" 
-          if { [llength $job_info] == 2 } {
+          if { $master_queue != "" && $slave_queue != "" } {
              puts $CHECK_OUTPUT "MASTER and SLAVE task are running!"
              set run 0
           }
@@ -853,13 +843,13 @@ proc reschedule_pe_jobs {} {
        }
 
 
-       if { [string compare $master_queue $rerun_queue] != 0 } {
+       if { [string first $rerun_queue $master_queue] != 0 } {
           puts $CHECK_OUTPUT "\"$master_queue\"\n\"$rerun_queue\""
           add_proc_error "reschedule_pe_jobs" "-1" "job $job: master task is not on queue $rerun_queue, pe $pe"
        }
       
        if { [string compare $pe "reschpe_1"] == 0 } {
-          if { [string compare $slave_queue $rerun_queue2] != 0 } {
+          if { [string first $rerun_queue2 $slave_queue] != 0 } {
              puts $CHECK_OUTPUT "\"$slave_queue\"\n\"$rerun_queue2\""
              add_proc_error "reschedule_pe_jobs" "-1" "job $job: slave task is not on queue $rerun_queue2, pe $pe"
           }
@@ -924,7 +914,7 @@ proc reschedule_pe_jobs {} {
                    puts $CHECK_OUTPUT "slave runs on queue $slave_queue"
                 }
              } 
-             if { [llength $job_info] == 2 } {
+             if { $master_queue != "" && $slave_queue != "" } {
                 puts $CHECK_OUTPUT "MASTER and SLAVE task are running!"
                 set run 0
              }

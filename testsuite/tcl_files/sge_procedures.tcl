@@ -4523,6 +4523,12 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
             puts $CHECK_OUTPUT "adding empty job lines" 
             continue
          }
+
+         if { [llength $line] == 2 } {
+            lappend back "-1 0 x x x x x $line"
+            puts $CHECK_OUTPUT "adding empty job lines" 
+            continue
+         }
       }
       if { $get_all != 0 } {
          lappend back $line

@@ -2514,6 +2514,7 @@ int is_daemon
 	char *ca_local_root = NULL;
    char *sge_cakeyfile = NULL;
    char *sge_keyfile = NULL;
+   char *sge_certfile = NULL;
    int len;
    char *cp = NULL;
 

@@ -243,4 +243,6 @@ int job_check_qsh_display(const lListElem *job,
 
 int job_check_owner(const char *user_name, u_long32 job_id);
 
+bool job_has_valid_account_string(const lListElem *job, lList **answer_list);
+
 #endif /* __SGE_JOB_H */    

@@ -2352,7 +2352,7 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
 *            1, if the user is not the job owner
 *
 *******************************************************************************/
-int job_check_owner( const char *user_name, u_long32 job_id) 
+int job_check_owner(const char *user_name, u_long32 job_id) 
 {
    lListElem *job;
 
@@ -2457,4 +2457,35 @@ int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
    }
 
    return TRUE;
+}
+
+/****** gdi/job/job_has_valid_account_string() ********************************
+*  NAME
+*     job_has_valid_account_string() -- is job account string valid 
+*
+*  SYNOPSIS
+*     bool job_has_valid_account_string(const lListElem *job, 
+*                                       lList **answer_list) 
+*
+*  FUNCTION
+*     Returns true if the account string contained in "job" does not
+*     contain any colon (':'). 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     lList **answer_list  - AN_Type element 
+*
+*  RESULT
+*     bool - true if account string is valid 
+*******************************************************************************/
+bool job_has_valid_account_string(const lListElem *job, lList **answer_list)
+{
+   int ret = true;
+
+   if (strchr(lGetString(job, JB_account), ':')) {
+      answer_list_add(answer_list, MSG_COLONNOTALLOWED, STATUS_EUNKNOWN, 
+                      ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   return ret;
 }

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/11/14 14:30:59 $     Revision: $Revision: 1.23 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/01/22 14:39:26 $     Revision: $Revision: 1.24 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/11/14 14:30:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/01/22 14:39:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -386,7 +386,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 Identifies the account to which the resource consumption of the job
 should be charged. The \fBaccount_string\fP
 may be any arbitrary ASCII alphanumeric string
-but may contain no blank or separator characters. The
+but may contain no blank, colon or separator characters. The
 underbar '_' is considered a non-separator. In the absence of this
 parameter xxQS_NAMExx 
 will place the default account string "xxqs_name_sxx" in the accounting record

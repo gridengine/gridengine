@@ -471,10 +471,11 @@
 /*
  * libs/gdi/sge_answer.c
  */
-#define MSG_ANSWER_NOANSWERLIST           _MESSAGE(43294, _("no answer list - gdi request failed\n")) 
+#define MSG_ANSWER_NOANSWERLIST       _MESSAGE(43294, _("no answer list - gdi request failed\n")) 
 
 
-#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(43295, _("no valid checkpoint interface "SFN"\n") )   
+#define MSG_SGETEXT_NO_INTERFACE_S    _MESSAGE(43295, _("no valid checkpoint interface "SFN"\n") )   
+#define MSG_COLONNOTALLOWED           _MESSAGE(43296, _("Colon (\':\') not allowed in account string\n") )
 
 
 #endif /* __MSG_GDILIB_H */

@@ -577,8 +577,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lSetString(jep, JB_exec_file, str);
    }
 
-   if (!lGetString(jep, JB_account))
+   if (!lGetString(jep, JB_account)) {
       lSetString(jep, JB_account, DEFAULT_ACCOUNT);
+   } else {
+      if (!job_has_valid_account_string(jep, alpp)) {
+         return STATUS_EUNKNOWN;
+      }
+   }
+
 
    if (!lGetString(jep, JB_job_name)) {        /* look for job name */
       ERROR((SGE_EVENT, MSG_JOB_NOJOBNAME_U, u32c(job_number)));
@@ -2314,6 +2320,9 @@ int *trigger
    /* ---- JB_account */
    if ((pos=lGetPosViaElem(jep, JB_account))>=0) {
       DPRINTF(("got new JB_account\n")); 
+      if (!job_has_valid_account_string(jep, alpp)) {
+         return STATUS_EUNKNOWN;
+      }
       lSetString(new_job, JB_account, lGetString(jep, JB_account));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_ACCOUNT, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

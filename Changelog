@@ -1,3 +1,10 @@
+SG-2005-02-07-2: Bugfix:    suspend_internal is ignored when enabling jobs 
+                            due to suspend_thresholds change
+                 Changed:   qmaster
+                 Issue:     1436
+                 Bugtraq:   6226085
+                 Review:    DT
+
 SG-2005-02-07-1: Bugfix:    init variables in the execd
                  Changed:   execd
                  Review:    DT

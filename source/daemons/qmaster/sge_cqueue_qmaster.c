@@ -38,6 +38,10 @@
 #include <errno.h>
 #include <limits.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_time.h"
@@ -676,6 +680,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
     * Handle jobs which were supended due to suspend threshold
     */
    qinstances = lGetList(cqueue, CQ_qinstances);
+
    for_each(qinstance, qinstances) {
       if (lGetUlong(qinstance, QU_gdi_do_later) == GDI_DO_LATER) {
          bool is_qinstance_mod = false;
@@ -685,38 +690,46 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
 
          lSetUlong(qinstance, QU_gdi_do_later, 0);
 
-         for_each(job, master_job_list) {
-            lList *ja_tasks = lGetList(job, JB_ja_tasks);
-            lListElem *ja_task;
+         /* in case the thresholds are set to none, we have to unsuspend all jobs because
+            the scheduler is not able to do that. If the suspend threshold is still set; 
+            just changed, the scheduler can easily deal with it.*/
+         if (lGetList(qinstance, QU_suspend_thresholds) == NULL) { 
+            for_each(job, master_job_list) {
+               lList *ja_tasks = lGetList(job, JB_ja_tasks);
+               lListElem *ja_task;
 
-            for_each(ja_task, ja_tasks) {
-               u_long32 state = lGetUlong(ja_task, JAT_state);
+               for_each(ja_task, ja_tasks) {
+                  u_long32 state = lGetUlong(ja_task, JAT_state);
 
-               if (ISSET(state, JSUSPENDED_ON_THRESHOLD)) {
-                  const char *queue_name = lGetString(lFirst(lGetList(ja_task,
-                              JAT_granted_destin_identifier_list)), JG_qname);
+                  if (ISSET(state, JSUSPENDED_ON_THRESHOLD)) {
+                     /* this does most likely not work with pe jobs, which run in different queues.
+                        Issue: 831*/
+                     const char *queue_name = lGetString(lFirst(lGetList(ja_task,
+                                 JAT_granted_destin_identifier_list)), JG_qname);
 
-                  if (!strcmp(queue_name, full_name)) {
+                     if (!strcmp(queue_name, full_name)) {
 
-                     if (!ISSET(state, JSUSPENDED)) {
-                        sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task);
-                        SETBIT(JRUNNING, state); 
-                        is_qinstance_mod = true;
+                        if (!ISSET(state, JSUSPENDED)) {
+                           sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task);
+                           SETBIT(JRUNNING, state); 
+                           is_qinstance_mod = true;
+                        }
+
+                        CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
+                        
+                        lSetUlong(ja_task, JAT_state, state);
+
+                        sge_event_spool(NULL, 0, sgeE_JATASK_MOD,
+                                        lGetUlong(job,JB_job_number), 
+                                        lGetUlong(ja_task, JAT_task_number), NULL, NULL, NULL,
+                                        job, ja_task, NULL, true, true);
+                        
                      }
-
-                     CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
-                     
-                     lSetUlong(ja_task, JAT_state, state);
-
-                     sge_event_spool(NULL, 0, sgeE_JATASK_MOD,
-                                     lGetUlong(job,JB_job_number), 
-                                     lGetUlong(ja_task, JAT_task_number), NULL, NULL, NULL,
-                                     job, ja_task, NULL, true, true);
-                     
                   }
                }
             }
          }
+         
          if (is_qinstance_mod) {
                const char *hostname = lGetHost(qinstance, QU_qhostname);
                const char *cqueue_name = lGetString(qinstance, QU_qname);         

@@ -34,7 +34,7 @@
 
 #include "sge_eventL.h"
 
-#define DEFAULT_EVENT_DELIVERY_INTERVAL (4)
+#define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
 int ec_prepare_registration(ev_registration_id id, const char *name);
 int ec_register(void);

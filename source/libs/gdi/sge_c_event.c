@@ -58,13 +58,20 @@
 *     The Grid Engine Event Client Interface provides a means to connect 
 *     to the Grid Engine qmaster and receive information about objects 
 *     (actual object properties and changes).
+*
 *     It provides a subscribe/unsubscribe mechanism allowing fine grained
 *     selection of objects per object types (e.g. jobs, queues, hosts)
 *     and event types (e.g. add, modify, delete).
+*
 *     Flushing triggered by individual events can be set.
+*
 *     Policies can be set how to handle busy event clients.
-*     It should have much less impact on qmaster performance than polling
-*     the same data in regular intervals.
+*     Clients that receive large numbers of events or possibly take some
+*     time for processing the events (e.g. depending on other components
+*     like databases), should in any case make use of the busy handling.
+*
+*     The event client interface should have much less impact on qmaster 
+*     performance than polling the same data in regular intervals.
 *
 *  NOTES
 *     The current implementation is a generalized form of the event client
@@ -1430,8 +1437,7 @@ lList **event_list
    lList *report_list = NULL;
    static u_long32 next_event = 1;
    u_long32 wrong_number;
-   int sync;
-   
+
    DENTER(TOP_LAYER, "ec_get");
  
    if(ec == NULL) {
@@ -1453,17 +1459,16 @@ lList **event_list
    if(config_changed) {
       ec_commit();
    }
-      
-   /* receive_message blocks in the first loop */
-   for (sync = 1; !(ret = get_event_list(sync, &report_list)); sync = 0) {
-      
+   
+   /* receive event message */
+   if((ret = get_event_list(1, &report_list)) == 0) {
       lList *new_events = NULL;
       lXchgList(lFirst(report_list), REP_list, &new_events);
       report_list = lFreeList(report_list);
 
       if (ck_event_number(new_events, &next_event, &wrong_number)) {
          /*
-          *  may be got an old event, that was sent before
+          *  may be we got an old event, that was sent before
           *  reregistration at qmaster
           */
          lFreeList(*event_list);
@@ -1473,29 +1478,20 @@ lList **event_list
          return -1;
       }
 
-      DPRINTF(("got events till "u32"\n", next_event-1));
+      DPRINTF(("got %d events till "u32"\n", lGetNumberOfElem(new_events), next_event-1));
 
-      /* append new_events to event_list */
-      if (*event_list) 
-         lAddList(*event_list, new_events);
-      else 
-         *event_list = new_events;
-   }
+      *event_list = new_events;
 
-   /* commlib error during first synchronous get_event_list() */
-   if (sync && ret) {
-      DEXIT;
-      return ret;
-   }
-      
-   /* send an ack to the qmaster for all received events */
-   if (!sync) {
+      /* send an ack to the qmaster for all received events */
       if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1, lGetUlong(ec, EV_id))) {
          WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
-      }
-      else
-         DPRINTF(("Sent ack for all events lower or equal %d\n",
-                 (next_event-1)));
+      } else {
+         DPRINTF(("Sent ack for all events lower or equal %d\n", (next_event-1)));
+      }           
+   } else {
+      DPRINTF(("no events received\n"));
+      DEXIT;
+      return ret;
    }
 
    DEXIT;
@@ -1552,6 +1548,7 @@ u_long32 *wrong_number
 
    if (!lp || !lGetNumberOfElem(lp)) {
       /* got a dummy event list for alive protocol */
+      DPRINTF(("received empty event list\n"));
       DEXIT;
       return 0;
    }
@@ -1598,7 +1595,7 @@ u_long32 *wrong_number
       skipped++;
    }
    if (skipped)
-      DPRINTF(("Skipped %d events\n", skipped));
+      DPRINTF(("Skipped %d events, still %d in list\n", skipped, lGetNumberOfElem(lp)));
 
    /* ensure number of events increase */
    for_each (ep, lp) {
@@ -1617,7 +1614,7 @@ u_long32 *wrong_number
  
    /* that's the new number we wait for */
    *waiting_for = i;
-
+DPRINTF(("check complete, %d events in list\n", lGetNumberOfElem(lp)));
    DEXIT;
    return 0;
 }

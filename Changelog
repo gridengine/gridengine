@@ -1,3 +1,7 @@
+JG-2002-10-08-2  Bugfix:    An eventclient processing events slower than
+                            the event delivery interval could get into
+                            an endless loop.
+
 AH-2002-10-08-1  Bugfix:    Commd read the host alias file each time when
                             a hostname was not found in commd's host list.
                             Now host alias file is read only at commd 

@@ -85,7 +85,9 @@ int main(int argc, char *argv[])
    while(!shut_me_down) {
       sge_mirror_process_events();
    }
-   
+
+   sge_mirror_shutdown();
+
    DEXIT;
    return EXIT_SUCCESS;
 }

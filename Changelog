@@ -1,3 +1,10 @@
+AH-2004-03-09-1: Bugfix:    Fixed qsub -w v to print more than one single 
+                            reason. 
+                            Fix problem with qstat -j scheduling info being
+                            truncated.
+                 Issues:    811, 812
+                 Review:    EB
+
 JG-2004-03-09-2: Bugfix:    path of output file for pe start proc was incorrect.
                  Issue:     808
                  Bugfix:    fixed buffer overflow in shepherd.

@@ -1335,7 +1335,7 @@ static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,l
 
    DENTER(TOP_LAYER, "sge_soft_violations");
 
-   sge_dstring_init(&reason, reason_buf, sizeof(reason));
+   sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
    soft_requests = lGetList(job, JB_soft_resource_list);
    clear_resource_tags(soft_requests, QUEUE_TAG);
@@ -3458,7 +3458,7 @@ lList *acl_list)
 
    DENTER(TOP_LAYER, "queue_time_by_slots");
 
-   sge_dstring_init(&reason, reason_buf, sizeof(reason));
+   sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
    if (queue_match_static(qep, job, pe, ckpt, centry_list, acl_list)!=0) {
       DEXIT;
@@ -3652,7 +3652,7 @@ lList *acl_list)
   
    DENTER(TOP_LAYER, "host_time_by_slots");
 
-   sge_dstring_init(&reason, reason_buf, sizeof(reason));
+   sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
    if ((result=host_match_static(job, ja_task, hep, centry_list, acl_list))) {
       DEXIT;
@@ -3728,7 +3728,7 @@ lList *acl_list)
 
    DENTER(TOP_LAYER, "global_time_by_slots");
 
-   sge_dstring_init(&reason, reason_buf, sizeof(reason));
+   sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
 
    if (!slots) {
       DEXIT;

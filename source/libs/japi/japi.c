@@ -1389,6 +1389,7 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
 {
    lList *job_lp, *alp;
    lListElem *aep, *job;
+   int result = DRMAA_ERRNO_SUCCESS;
 
    DENTER(TOP_LAYER, "japi_send_job");
 
@@ -1411,33 +1412,41 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
-   
-   {
+
+   /* 
+    *  We simply put all answer messages into the diag buffer.
+    *  Each single answer message is at first added without newline 
+    *  characters. Then a newline is added to delimit two messages.
+    */
+   for_each(aep, alp) {
       u_long32 quality;
       quality = lGetUlong(aep, AN_quality);
       if (quality == ANSWER_QUALITY_ERROR) {
          u_long32 answer_status = lGetUlong(aep, AN_status);
-         answer_to_dstring(aep, diag);
-         alp = lFreeList(alp);
 
          switch (answer_status) {
          case STATUS_NOQMASTER:
          case STATUS_NOCOMMD:
-            DEXIT;
-            return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
+            result = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
+            break;
          case STATUS_NOTOK_DOAGAIN:
-            DEXIT;
-            return DRMAA_ERRNO_TRY_LATER;
+            result = DRMAA_ERRNO_TRY_LATER;
+            break;
          default:
-            DEXIT;
-            return DRMAA_ERRNO_DENIED_BY_DRM;
+            result = DRMAA_ERRNO_DENIED_BY_DRM;
+            break;
          }
       }
-      alp = lFreeList(alp);
+
+      answer_to_dstring(aep, diag);
+      if (lNext(aep)) {
+         sge_dstring_append(diag, "\n");
+      }
    }
+   alp = lFreeList(alp);
 
    DEXIT;
-   return DRMAA_ERRNO_SUCCESS;
+   return result;
 }
 
 

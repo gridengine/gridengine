@@ -1,3 +1,6 @@
+EB-2001-08-30-0: Removed help output from qconf concerning 'meattr'
+                 and 'Meattr' (Issue# 50)  
+
 AA-2001-08-28-0: Fixed task array job handling in qmon submit dialogue (Issue# 48)
 
 EB-2001-08-27-0: Fixed segmentation fault in qstat, qhost, qmon (Issue# 48)

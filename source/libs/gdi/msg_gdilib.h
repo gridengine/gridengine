@@ -556,12 +556,6 @@
 #define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq [queue]]"
 #define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _("modify a queue")
 
-#define MSG_GDI_USAGE_meattr_OPT_ATTR_NAME_VALUE_HOST_LIST   "[-meattr attr_name value host_id_list]"
-#define MSG_GDI_UTEXT_meattr_OPT_ATTR_NAME_VALUE_HOST_LIST   _("modify particular exec server attributes")
-
-#define MSG_GDI_USAGE_Meattr_OPT_FNAME_HOST_LIST   "[-Meattr fname host_id_list]"
-#define MSG_GDI_UTEXT_Meattr_OPT_FNAME_HOST_LIST   _("modify particular exec server attributes from file")
-
 #define MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   "[-mqattr attr_name value destin_id_list]"
 #define MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   _("modify particular queue attributes")
 

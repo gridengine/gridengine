@@ -1658,6 +1658,13 @@ if ( "$GCC_NOERR_CFLAGS" == "" ) then
    set GCC_NOERR_CFLAGS = "$CFLAGS"
 endif
 
+# suppress gcc 3.3 warnings
+if ( $CC == gcc ) then
+   if ( `gcc -dumpversion` == "3.3") then
+      set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
+   endif
+endif
+
 if ( $COMPILE_DC == 1 ) then
    set CFLAGS = "$CFLAGS -DCOMPILE_DC"
 endif

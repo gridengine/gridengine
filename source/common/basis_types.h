@@ -221,10 +221,12 @@ typedef char stringT[MAX_STRING_SIZE];
 #define GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \
    if(!pthread_getspecific(key)) { \
+      int ret; \
       variable = (type *)malloc(sizeof(type)); \
       init_func(variable); \
-      if (pthread_setspecific(key, (void*)variable)) { \
-         fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(errno)); \
+      ret = pthread_setspecific(key, (void*)variable); \
+      if (ret != 0) { \
+         fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(ret)); \
          abort(); \
       } \
    } \

@@ -45,7 +45,7 @@
 #define MSG_BERKELEY_PUTERROR_SS _MESSAGE(70006, _("error writing object with key "SFQ" into berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_QUERYERROR_SS _MESSAGE(70007, _("error retrieving data ("SFQ") from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_DELETEERROR_SS _MESSAGE(70008, _("error deleting record with key "SFQ" from berkeley database: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n"))
+/* #define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n")) */
 #define MSG_BERKELEY_NULLVALUEASKEY _MESSAGE(70010, _("null value given as object primary key\n"))
 #define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70012, _("database directory "SFN" doesn't exist\n"))
 #define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70013, _("couldn't create database environment: "SFN"\n"))

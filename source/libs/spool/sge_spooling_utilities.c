@@ -505,21 +505,21 @@ spool_default_validate_func(lList **answer_list,
                      ret = false;
                   }
                }
-            }
-            if (ret) {
-               qinstance_state_set_unknown(object, true);
-               qinstance_state_set_cal_disabled(object, false);
-               qinstance_state_set_cal_suspended(object, false);
-               qinstance_set_slots_used(object, 0);
+               if (ret) {
+                  qinstance_state_set_unknown(qinstance, true);
+                  qinstance_state_set_cal_disabled(qinstance, false);
+                  qinstance_state_set_cal_suspended(qinstance, false);
+                  qinstance_set_slots_used(qinstance, 0);
 
-               if (host_list_locate(Master_Exechost_List,
-                                    lGetHost(object, QU_qhostname)) == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                          ANSWER_QUALITY_ERROR,
-                                          MSG_FLATFILE_HOSTNOTEXISTS_SS,
-                                          lGetString(object, QU_qname),
-                                          lGetHost(object, QU_qhostname));
-                  ret = false;
+                  if (host_list_locate(Master_Exechost_List,
+                                       lGetHost(qinstance, QU_qhostname)) == NULL) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                             ANSWER_QUALITY_ERROR,
+                                             MSG_FLATFILE_HOSTNOTEXISTS_SS,
+                                             lGetString(qinstance, QU_qname),
+                                             lGetHost(qinstance, QU_qhostname));
+                     ret = false;
+                  }
                }
             }
          }

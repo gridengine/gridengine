@@ -1,3 +1,11 @@
+JG-2003-12-18-1: Enhancem.: Made Berkeley DB spooling thread safe.
+                            Cleanup.
+                 Review:    AD
+
+JG-2003-12-18-0: Bugfix:    Fixed spooling of cluster queues in Berkeley DB.
+                            Fixed some make dependencies.
+                 Review:    EB
+
 AD-2003-12-18-0: Bugfix:    Fixed the build
 
 JG-2003-12-17-1: Testsuite: Fixed testsuite problem with empty queue list.

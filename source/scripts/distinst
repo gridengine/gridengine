@@ -76,7 +76,7 @@ SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti libspool 
 QMON_SHARED_LIBRARIES="libXbae libXicon libXltree libXmt libXspin libXtab"
 ZLIB_SHARED_LIBRARIES="libz"
 OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
-BERKELEYDB_SHARED_LIBRARIES="libdb-4.1"
+BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"

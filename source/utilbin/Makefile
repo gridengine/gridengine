@@ -181,14 +181,14 @@ infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
 
 #---------------------------------------------------------------------
-spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcom -luti -llck -lrmon  $(SLIBS) $(LIBS)
 
 spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooldefaults.c
 
 #---------------------------------------------------------------------
-spoolinit:   spoolinit.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+spoolinit:   spoolinit.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 		$(CC) -o $@ spoolinit.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcom -luti -llck -lrmon  $(SLIBS) $(LIBS)
 
 spoolinit.o: $(UTILBIN_DIR)/spoolinit.c

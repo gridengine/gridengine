@@ -1085,6 +1085,14 @@
 #define MSG_GDI_UTEXT_SCRIPT_OPR_ARGS                    _("arguments to be used")
 #define MSG_GDI_UTEXT_ATTACH__u_OPT_USERLISTORUALL       _("(not allowed in combination with job_task_list)")
 
+/* 
+ * sge_processes_irix.c
+ */ 
+#define MSG_FILE_OPENFAILED_SS                  _("failed opening "SFN": "SFN"")
+#define MSG_SYSTEM_GETPIDSFAILED_S              _("getpidsOfJob: ioctl("SFN", PIOCSTATUS) failed\n")
+#define MSG_PROC_KILL_IIS                       _("kill(%d, %d): "SFN"")
+#define MSG_PROC_KILLISSUED_II                  _("kill(%d, %d) issued")
+
 /*
  * used by various modules
  */

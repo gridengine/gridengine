@@ -129,15 +129,6 @@
 
 
 /* 
-** utilib/sge_processes_irix.c
-*/ 
-#define MSG_FILE_OPENFAILED_SS                  _("failed opening "SFN": "SFN"")
-#define MSG_SYSTEM_GETPIDSFAILED_S              _("getpidsOfJob: ioctl("SFN", PIOCSTATUS) failed\n")
-#define MSG_PROC_KILL_IIS                       _("kill(%d, %d): "SFN"")
-#define MSG_PROC_KILLISSUED_II                  _("kill(%d, %d) issued")
-
-
-/* 
 ** utilib/sge_put_get_file.c
 */ 
 #define MSG_FILE_WRITEOPENFAILED_SS             _("couldn't open "SFN" for writing: "SFN"\n")

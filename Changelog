@@ -1,3 +1,7 @@
+CR-2002-03-22-0  Bugfix:    Reopend issue: Wrong error message when service sge_commd 
+                            is not available 
+                 Issue:     #158
+
 AH-2002-03-22-0  Bugfix:    Ensure shepherd mapping signals do not hit shepherd itself
                             because of signal handler not installed when signals
                             are released by sigprocmask(2) 

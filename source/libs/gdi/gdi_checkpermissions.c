@@ -188,6 +188,7 @@ int buflen
 /* option is one of : MANAGER_CHECK  
    return is TRUE or FALSE on failure */
 int sge_gdi_check_permission(
+lList **alpp,
 int option 
 ) {
   int access_status = FALSE;
@@ -203,8 +204,9 @@ int option
 
   if (permList == NULL) {
      DPRINTF(("Permlist is NULL\n"));
-     lFreeList(alp);
-     alp = NULL;
+     alpp = &alp;
+/*     lFreeList(alp);   do not free answer list, client must do that !
+     alp = NULL; */
      failed_checks++;
      return -10;
   } else {

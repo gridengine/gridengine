@@ -182,7 +182,7 @@ unsigned int ask_commproc(const char *host, const char *commprocname, u_short co
 const char *cl_errstr(int n);
 
 int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases);
-void generate_commd_port_and_service_status_message(char* buffer);
+void generate_commd_port_and_service_status_message(int commlib_error, char* buffer);
 
 int remove_pending_messages(char *fromcommproc, u_short fromid, char *fromhost, int tag);
 

@@ -6338,6 +6338,7 @@ static int sge_gdi_is_manager(
 char *user 
 ) {
    int perm_return;
+   lList *alp = NULL; 
    DENTER(TOP_LAYER, "sge_gdi_is_manager");
 
    
@@ -6346,8 +6347,13 @@ char *user
       DEXIT;
       return -1;
    }
-   if ((perm_return = sge_gdi_check_permission(MANAGER_CHECK)) == TRUE) {
+   perm_return = sge_gdi_check_permission(&alp, MANAGER_CHECK);
+   if (perm_return == TRUE) {
      /* user is manager */
+     if (alp != NULL) {
+        lFreeList(alp);
+        alp = NULL;
+     }
      DEXIT;
      return 1;
    }
@@ -6357,11 +6363,21 @@ char *user
    */
    if (perm_return == -10 ) {
       /* fills SGE_EVENT with diagnosis information */
-      generate_commd_port_and_service_status_message(SGE_EVENT);
-      fprintf(stderr, SGE_EVENT );
+      if (alp != NULL) {
+         lListElem *aep;
+         if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+         }
+      }
    } else {
       fprintf(stderr, MSG_SGETEXT_MUSTBEMANAGER_S , user);
    }
+
+   if (alp != NULL) {
+      lFreeList(alp);
+      alp = NULL;
+   }
+
    SGE_EXIT(1);
    return 0;
 }

@@ -66,9 +66,8 @@
 #include "sge_security.h"
 #include "msg_common.h"
 
-static int sge_send_receive_gdi_request(char *rhost, char *commproc, u_short id, sge_gdi_request *out, sge_gdi_request **in);
-
-static int sge_get_gdi_request(char *rhost, char *commproc, u_short *id, sge_gdi_request **arp);
+static int sge_send_receive_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short id, sge_gdi_request *out, sge_gdi_request **in);
+static int sge_get_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short *id, sge_gdi_request **arp);
 
 #ifdef QIDL
 static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **in);
@@ -306,6 +305,7 @@ lList **malpp
    char username[128];
    char groupname[128];
    int status = 0;
+   int commlib_error = CL_OK;
 
    DENTER(GDI_LAYER, "sge_gdi_multi");
 
@@ -404,6 +404,7 @@ lList **malpp
 #endif
          /* FIX_CONST */
          status = sge_send_receive_gdi_request(
+            &commlib_error, 
             (char*)sge_get_master(reread_qmaster_file), 
             (char*)prognames[QMASTER], 
             0, first, &answer);
@@ -435,7 +436,7 @@ lList **malpp
                break;
             case -4:
                /* fills SGE_EVENT with diagnosis information */
-               generate_commd_port_and_service_status_message(SGE_EVENT);
+               generate_commd_port_and_service_status_message(commlib_error, SGE_EVENT);
                break;
             case -5:
                sprintf(SGE_EVENT, MSG_GDI_SIGNALED );
@@ -585,8 +586,12 @@ lList **olpp
  *     -3 failed receiving gdi request
  *     -4 check_isalive() failed
  *     -5 failed due to a received signal
+ *
+ * The commlib call return value is stored into commlib_error
+ *
  *-----------------------------------------------------*/
-static int sge_send_receive_gdi_request(char *rhost, 
+static int sge_send_receive_gdi_request(int *commlib_error, 
+                                        char *rhost, 
                                         char *commproc, 
                                         u_short id, sge_gdi_request *out,
                                         sge_gdi_request **in)
@@ -608,12 +613,14 @@ static int sge_send_receive_gdi_request(char *rhost,
       return -1;
    }   
    
+   ret = sge_send_gdi_request(1, rhost, commproc, id, out);
+   *commlib_error = ret;
 
-   if ((ret = sge_send_gdi_request(1, rhost, commproc, id, out))) {
+   if (ret) {
       if (ret == CL_INTR) {
          DEXIT;
          return -5;
-      } else if (check_isalive(rhost)) {
+      } else if (( *commlib_error = check_isalive(rhost))) {
          DEXIT;
          return -4;
       } else {
@@ -622,7 +629,7 @@ static int sge_send_receive_gdi_request(char *rhost,
       }   
    }
 
-   while (!(ret = sge_get_gdi_request(rhost, commproc, &id, in))) {
+   while (!(ret = sge_get_gdi_request(commlib_error, rhost, commproc, &id, in))) {
       DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
             (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
       DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
@@ -732,9 +739,11 @@ sge_gdi_request *ar
  *     -3 format error while unpacking
  *     -4 no commd
  *     -5 no peer enrolled
+ *     
+ *     The commlib call return value is stored into commlib_error
  *
  *-----------------------------------------------------------------*/
-static int sge_get_gdi_request(char *host, char *commproc, 
+static int sge_get_gdi_request(int *commlib_error, char *host, char *commproc, 
                                u_short *id, sge_gdi_request** arp)
 {
    sge_pack_buffer pb;
@@ -743,10 +752,11 @@ static int sge_get_gdi_request(char *host, char *commproc,
 
    DENTER(GDI_LAYER, "sge_get_gdi_request");
 
-   if (sge_get_any_request(host, commproc, id, &pb, &tag, 1)) {
+   if ( (*commlib_error = sge_get_any_request(host, commproc, id, &pb, &tag, 1))) {
       DEXIT;
       return -1;
    }
+
 
    ret = sge_unpack_gdi_request(&pb, arp);
    switch (ret) {

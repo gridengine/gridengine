@@ -64,11 +64,9 @@ int main(int argc, char **argv)
 
    tmp_cl_err = reresolve_me_qualified_hostname();
    if (tmp_cl_err != CL_OK) {
-      if (tmp_cl_err == CL_CONNECT) {
-         /* fills SGE_EVENT with diagnosis information */
-         generate_commd_port_and_service_status_message(SGE_EVENT);
-         fprintf(stderr, SGE_EVENT);
-      } 
+      /* fills SGE_EVENT with diagnosis information */
+      generate_commd_port_and_service_status_message(tmp_cl_err, SGE_EVENT);
+      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }   
 

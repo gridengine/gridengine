@@ -1687,6 +1687,7 @@ int send2commd(unsigned char *buffer, int buflen
                case -1:
                   /* select error */
                   DPRINTF(("select returns %d: %s\n", si, strerror(errno)));
+                  DPRINTF(("now closing connection with closeconnection(1)\n"));
                   closeconnection(1);
                   DEXIT;
                   return CL_CONNECT;
@@ -2153,27 +2154,39 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 
 /****** commlib/generate_commd_port_and_service_status_message() ***************
 *  NAME
-*     generate_commd_port_and_service_status_message() -- check connection error 
+*     generate_commd_port_and_service_status_message() -- master failure error
 *
 *  SYNOPSIS
-*     void generate_commd_port_and_service_status_message(char* buffer) 
+*     void generate_commd_port_and_service_status_message(int commlib_error, 
+*     char* buffer) 
 *
 *  FUNCTION
 *     This function is used to generate an error message when the qmaster 
 *     is unreachable. The error message is copied into a static buffer.
 *     The buffer have a length of MAX_STRING_SIZE byte.
-*     
+*
+*     if commlib_error is negative, the default output is 
+*     "qmaster not reachable"
+*     if commlib_error is 0 the function will try to create the correct answer
+*     if commlib_error is > 0 the function will report the commlib error
+*
 *  INPUTS
-*     char* buffer - buffer for error message 
+*     int commlib_error - if negative: output is "qmaster not reachable"
+*                         if zero    : try to create correct answer
+*                         if positive: report commlib error
+*
+*     char* buffer      - buffer for error message 
 *
 *******************************************************************************/
-void generate_commd_port_and_service_status_message(char* buffer) {
+void generate_commd_port_and_service_status_message(int commlib_error, char* buffer) {
    int port             = 0;
    char *service        = NULL;
    char *commdhost      = NULL;
    char *commd_port_env = NULL;
 
    DENTER(TOP_LAYER, "generate_commd_port_and_service_status_message");
+
+   DPRINTF(("commlib_error =  %d\n",commlib_error));
 
    port           = get_commlib_state_commdport();
    service        = get_commlib_state_commdservice();
@@ -2188,15 +2201,30 @@ void generate_commd_port_and_service_status_message(char* buffer) {
    }
 
    if (buffer != NULL) {
-      if ( port < 0 ) {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,commdhost, service);
-      } else if ( commd_port_env != NULL ) { 
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SI,commdhost,port);
-      } else if ( commd_port_env == NULL ) {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS,commdhost,port,service);
-      } else {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER);
+      /* commlib error is negative, we don't know why we can't reach qmaster*/
+      if ( commlib_error < 0 ) {
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE );
       }
+
+      /* commlib error is 0 (CL_OK), there was no commlib error */
+      if ( commlib_error == CL_OK || 
+           commlib_error == CL_CONNECT || 
+           commlib_error == CL_SERVICE ||
+           ( commlib_error >= CL_FIRST_FREE_EC && commlib_error != COMMD_NACK_UNKNOWN_RECEIVER) ) {
+         if ( port < 0 ) {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,commdhost, service);
+         } else if ( commd_port_env != NULL ) { 
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SI,commdhost,port);
+         } else {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS,commdhost,port,service);
+         } 
+      } else {
+         if (commlib_error == COMMD_NACK_UNKNOWN_RECEIVER) {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_SUBSCR_AT_COMMD_S, commdhost );
+         } else {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_S , cl_errstr(commlib_error) );
+         }
+      } 
    }
    DEXIT;
 }

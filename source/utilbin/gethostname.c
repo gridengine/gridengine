@@ -44,10 +44,12 @@
 #include "sge_arch.h"
 #include "sge_hostname.h"
 #include "cl_commlib.h"
+#include "version.h"
 
 int usage(void)
 {
-  fprintf(stderr, "%s\n gethostname [-name|-aname|-all]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
+  fprintf(stderr, "Version: %s\n", GDI_VERSION);
+  fprintf(stderr, "%s\n gethostname [-help|-name|-aname|-all]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
   exit(1);
   return 0;
 }
@@ -66,6 +68,9 @@ int main(int argc,char *argv[]) {
       usage();
    } 
    if (argc >= 2) {
+      if (!strcmp(argv[1], "-help")) {
+         usage();
+      }
       if (!strcmp(argv[1], "-name")) {
          if (argc != 2) {
             usage(); 

@@ -38,6 +38,7 @@
 #include "sge_time.h"
 #include "cl_commlib.h"
 #include "sge_arch.h"
+#include "version.h"
 
 static void sighandler_ping(int sig);
 static int pipe_signal = 0;
@@ -58,11 +59,13 @@ static void sighandler_ping(int sig) {
 
 void usage(void)
 {
-  fprintf(stderr, "%s qping [-i <interval>] [-info] [-f] [-noalias] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "Version: %s\n", GDI_VERSION);
+  fprintf(stderr, "%s qping [-help] [-i <interval>] [-info] [-f] [-noalias] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
   fprintf(stderr, "   -i       : set ping interval time\n");
   fprintf(stderr, "   -info    : show full status information and exit\n");
   fprintf(stderr, "   -f       : show full status information on each ping interval\n");
   fprintf(stderr, "   -noalias : ignore $SGE_ROOT/SGE_CELL/common/host_aliases file\n");
+  fprintf(stderr, "   -help    : show this info\n");
   fprintf(stderr, "   host     : host name of running component\n");
   fprintf(stderr, "   port     : port number of running component\n");
   fprintf(stderr, "   name     : name of running component (e.g.: \"qmaster\" or \"execd\")\n");
@@ -138,7 +141,9 @@ int main(int argc, char *argv[]) {
              parameter_count++;
              parameter_start++;
          }
-
+         if (strcmp( argv[i] , "-help") == 0) {
+             usage();
+         }
       } else {
          break;
       }

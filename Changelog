@@ -1,8 +1,16 @@
-JG-2004-08-25-0  Bugfix:     Fixed build on AIX
+CR-2004-08-25-0: Bugfix:     - added man pages for qping, gethostname, 
+                               gethostbyname, gethostbyaddr, getservbyname
+                             - the binaries now support -help option and show
+                               also the GE version number.
+                 Review:     SG, DT
+                 Issue:      1132
+                 Bugtraq:    5071878
 
-CR-2004-08-23-0  Testsuite:  Fixed mail report error in tight_integration_test
+JG-2004-08-25-0: Bugfix:     Fixed build on AIX
 
-MD-2004-08-20-0  Bugfix:     merged bugfix from FCS_Branch
+CR-2004-08-23-0: Testsuite:  Fixed mail report error in tight_integration_test
+
+MD-2004-08-20-0: Bugfix:     merged bugfix from FCS_Branch
                  Review:     AS
                  Changed:    inst_sge, inst_common.sh, rc_templates
 

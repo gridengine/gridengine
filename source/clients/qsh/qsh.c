@@ -1872,7 +1872,7 @@ static void delete_job(u_long32 job_id, lList *jlp)
 
 static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, int error)
 {
-   lListElem *ep;
+   lListElem *ep, *next;
 
    DENTER(TOP_LAYER, "remove_unknown_opts");
 
@@ -1885,7 +1885,6 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
    /* loop over all options and remove the ones that are not allowed */
    next = lFirst(lp);
    while ((ep = next) != NULL) {
-      lListElem *next;
       const char *cp;
       
       next = lNext(ep);
@@ -1921,7 +1920,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             if(strcmp(cp, "-display") == 0 ||
                strcmp(cp, "-cwd") == 0 ||
                strcmp(cp, "-v") == 0 ||
-               strcmp(cp, "-V") == 0 ||
+               strcmp(cp, "-V") == 0
               ) {
                if(error) {
                   ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));

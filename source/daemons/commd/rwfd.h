@@ -35,5 +35,8 @@ message* mknewconnect(int sockfd);
 void readfromfd(int fd, message *mp, int port_security, int commdport);
 void write2fd(message *mp, int reserved_port, int commdport);
 void fd_close(int fd, char *comment);
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+int init_connections(int reserved_port, int commdport); 
+#endif
 
 #endif /* __RWFD_H */

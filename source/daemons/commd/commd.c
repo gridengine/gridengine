@@ -70,6 +70,9 @@
 #include "setup_commd_path.h"
 #include "sge_unistd.h"
 #include "sge_os.h"
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+#  include "connection.h"
+#endif
 
 void init_send(message *mp, int reserved_port, int commdport);
 static char *fdsetstr(fd_set *fds, char *);
@@ -152,6 +155,9 @@ char **argv
    char tmpstr1[1024], tmpstr2[1024], *cp;
    time_t now;
    time_t last_loop_time = 0;         /* profiling */
+#ifdef ENABLE_COMMD_MESSAGE_DEBUG
+   time_t last_loop_time2 = 0;       
+#endif /* ENABLE_COMMD_MESSAGE_DEBUG */ 
    SGE_STRUCT_STAT stat_dummy;
    struct servent *se = NULL;
    int nisretry;
@@ -401,7 +407,15 @@ char **argv
       /* look for messages which couldn't be sent to remote commds -> try it 
          again */
 
+      /* look in each interval for messages which couldn't be sent to remote commds 
+         - try it again but only for the first message per remote host 
+         - add entries for each message in question to the connection list */
       schedule_resends(port_security, port, now);
+#ifdef ENABLE_COMMD_FIFO_BUGFIX  
+      /* in-between interval open connection for the first message of 
+         each remote commd based on connection list */
+      init_connections(port_security, port);
+#endif
 
       /* look for changes in host names and aliases */
       if (hostname_refresh) {
@@ -639,12 +653,12 @@ char **argv
                         WARNING((SGE_EVENT, MSG_NET_SELECTIGNCOMMPROCRCVANDEOF_I, i));
 #if 0
                         dump();
+#endif
 
                         if(delete_commproc_using_fd(i) == 0)
                            /* this is the dead commd case */
                            while((mp = search_message(i, 0)))
                               delete_message(mp, "receive and EOF");
-#endif
                         FD_CLR(i, &writefds);
                         nfd--;
                      }
@@ -693,6 +707,41 @@ char **argv
             }
          }
       }
+#ifdef ENABLE_COMMD_MESSAGE_DEBUG
+      if ( now != last_loop_time2 ) {
+#ifdef ENABLE_COMMD_FIFO_BUGFIX 
+      connection* con = NULL;
+      printf("------\n");
+      con = get_first_connection();
+      while (con) { 
+         printf("%ld connection request(s) for host %s\n", get_con_member_count(con), con->toHost);
+         con = con->next;
+      } 
+#endif /* ENABLE_COMMD_FIFO_BUGFIX */
+      last_loop_time2 = now;
+
+      printf("------\n");
+
+      printf("S_RECEIVE_PROLOG messages = %ld\n",count_messages_state(S_RECEIVE_PROLOG));
+      printf("S_ALLOC messages = %ld\n",count_messages_state(S_ALLOC));
+      printf("S_RECEIVE messages = %ld\n",count_messages_state(S_RECEIVE));
+      printf("S_PROCESS messages = %ld\n",count_messages_state(S_PROCESS));
+      printf("S_RDY_4_SND messages = %ld\n",count_messages_state(S_RDY_4_SND)); 
+      printf("S_CONNECTING messages = %ld\n",count_messages_state(S_CONNECTING)); 
+      printf("S_CONNECTED messages = %ld\n",count_messages_state(S_CONNECTED));
+      printf("S_NOTUSED1 messages = %ld\n",count_messages_state(S_NOTUSED1));
+      printf("S_NOTUSED2 messages = %ld\n",count_messages_state(S_NOTUSED2));
+      printf("S_ACK messages = %ld\n",count_messages_state(S_ACK));
+      printf("S_NOTUSED3 messages = %ld\n",count_messages_state(S_NOTUSED3));
+      printf("S_ACK_THEN_PROLOG messages = %ld\n",count_messages_state(S_ACK_THEN_PROLOG));
+      printf("S_WRITE_PROLOG messages = %ld\n",count_messages_state(S_WRITE_PROLOG));
+      printf("S_WRITE messages = %ld\n",count_messages_state(S_WRITE));
+      printf("S_WRITE_ACK messages = %ld\n",count_messages_state(S_WRITE_ACK));
+      printf("S_WRITE_ACKE messages = %ld\n",count_messages_state(S_WRITE_ACKE));
+      printf("S_WRITE_ACK_SND messages = %ld\n",count_messages_state(S_WRITE_ACK_SND));
+      printf("S_SENDER_TIMEOUT messages = %ld\n",count_messages_state(S_SENDER_TIMEOUT)); 
+      } 
+#endif /* ENABLE_COMMD_MESSAGE_DEBUG */
       memorylack = 0;           /* retry getting memory every second */
 
 

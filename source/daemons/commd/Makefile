@@ -36,7 +36,7 @@ COMMD_DIR = $(SDIR)/daemons/commd
 
 COMMD_TARGETS = sge_commd commdcntl tstsnd tstrcv testsuite_snd testsuite_rcv
 
-COMMD_SRC   = commd.c message.c rwfd.c commproc.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c setup_commd_path.c version.c commd_io.c
+COMMD_SRC   = commd.c message.c connection.c rwfd.c commproc.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c setup_commd_path.c version.c commd_io.c
 
 COMMD_ADD_SRC = 
 
@@ -121,6 +121,9 @@ testsuite_rcv.o:	$(COMMD_DIR)/testsuite_rcv.c
 
 message.o:	$(COMMD_DIR)/message.c
 	$(CC) $(CFLAGS) -c $(COMMD_DIR)/message.c
+
+connection.o:	$(COMMD_DIR)/connection.c
+	$(CC) $(CFLAGS) -c $(COMMD_DIR)/connection.c
 
 rwfd.o:	$(COMMD_DIR)/rwfd.c
 	$(CC) $(CFLAGS) -c $(COMMD_DIR)/rwfd.c

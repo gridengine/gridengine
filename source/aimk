@@ -208,6 +208,7 @@ usage:
    echo "-no-qtcsh         -> don't compile qtcsh"
    echo "-no-remote        -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
    echo "-no-rmon          -> disable rmon debug output"
+   echo "-no-commd-fifo    -> disable commd fifo bugfix"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-mt           -> build only mutlithreaded components of the core system"
@@ -431,6 +432,8 @@ setenv RMONLIB     "librmon.a"
 set COMPILE_DC = 0
 unset nomk
 
+set COMMD_FIFO_BUGFIX_FLAG = 1
+
 set found
 while ($#argv >= 1 && $?found)
    switch ("$argv[1]")
@@ -618,6 +621,9 @@ while ($#argv >= 1 && $?found)
       set CXXFLAGS  = "-DNO_SGE_COMPILE_DEBUG $CXXFLAGS"
       setenv RMONINC  ""
       setenv RMONLIB  ""
+      breaksw
+   case "-no-commd-fifo":
+      set COMMD_FIFO_BUGFIX_FLAG = 0
       breaksw
    case "-only-core":
       set CORE   = 1
@@ -1751,6 +1757,10 @@ endif
 #
 if ( $WITH_USERMAPPING == 0 ) then
    set CFLAGS = "$CFLAGS -D__SGE_NO_USERMAPPING__"
+endif
+
+if ( $COMMD_FIFO_BUGFIX_FLAG == 1 ) then
+   set CFLAGS = "$CFLAGS -DENABLE_COMMD_FIFO_BUGFIX"
 endif
 
 echo making in $COMPILE_ARCH/ for $COMPILE_ARCH

@@ -155,6 +155,9 @@ void print_message(message *mp, FILE *fp);
 void print_messages(FILE *fp);
 void look4timeouts_messages(u_long now);
 unsigned long count_messages(void);                /* used for profiling */
+#ifdef ENABLE_COMMD_MESSAGE_DEBUG
+unsigned long count_messages_state(int state);
+#endif /* ENABLE_COMMD_MESSAGE_DEBUG */
 /* char* count_different_file_descriptors(void); */ /* used for debugging */
 
 #endif /* __MESSAGE_H */

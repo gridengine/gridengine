@@ -46,6 +46,9 @@
 #include "sge_time.h"
 #include "commproc.h"
 #include "rwfd.h"
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+#   include "connection.h"
+#endif
 
 #ifdef KERBEROS
 #include "sge_gdiP.h"
@@ -163,6 +166,9 @@ char *reason
    }
 
    if (!m) {
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+      del_connection_request(m);   /* remove message from connection list */
+#endif
       DPRINTF(("found no message to delete\n"));
       DEXIT;
       return;
@@ -197,6 +203,9 @@ char *reason
 
    if (m->bufstart)
       free(m->bufstart);
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+   del_connection_request(m);   /* remove message from connection list */
+#endif
    free(m);
 
    m = NULL;
@@ -217,6 +226,19 @@ unsigned long count_messages(void) {
    return counter;
 }
 
+#ifdef ENABLE_COMMD_MESSAGE_DEBUG
+unsigned long count_messages_state(int state) {
+   message *messages = message_list;
+   unsigned long counter = 0;
+   while (messages) {
+      if ( MESSAGE_STATUS(messages) == state ) {
+         counter++;
+      } 
+      messages = messages->next;
+   }
+   return counter;
+}
+#endif /* ENABLE_COMMD_MESSAGE_DEBUG */
 
 /* this function returns a string with information
    about the used file descriptors in the message 
@@ -281,14 +303,14 @@ int makenew
    message *messages = message_list;
 
    DENTER(TOP_LAYER, "search_message");
-
-   while (messages) {
-      if (fd >= 0)
+   if (fd >= 0) {
+      while (messages) {
          if (messages->fromfd == fd || messages->tofd == fd) {
             DEXIT;
             return messages;
          }
-      messages = messages->next;
+         messages = messages->next;
+      }
    }
    /* if no existing message for this fd was found, check if there
       is a commproc using this fd and create a new message for
@@ -471,9 +493,15 @@ void look4timeouts_messages(
 u_long now 
 ) {
    message *mp = message_list, *next;
+   static u_long lasttime = 0;
 
    DENTER(TOP_LAYER, "look4timeouts_messages");
 
+   if (now - lasttime < 10 ) {
+      DEXIT;
+      return; 
+   }
+   lasttime = now;
    while (mp) {
       next = mp->next;
       if ((MESSAGE_STATUS(mp) == S_RDY_4_SND) &&

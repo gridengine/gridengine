@@ -52,6 +52,9 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_commd.h"
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+#   include "connection.h"
+#endif
 
 /* from reset_messages_for_commproc.c */
 void reset_messages_for_commproc(commproc *commp);
@@ -87,8 +90,11 @@ extern int rresvport(int *port);
 
 /* local defined */
 void init_send(message *mp, int reserved_port, int commdport);
-
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+static void open_connection(message *mp, int reserved_port, int commdport, int check_connection_list);
+#else
 static void open_connection(message *mp, int reserved_port, int commdport);
+#endif
 static int write_message(message *mp);
 static int read_message(message *mp);
 void reset_message(message *mp, const char *str);
@@ -211,10 +217,6 @@ int commdport
       return;
    }
 
-   if (MESSAGE_STATUS(mp) == S_CONNECTED) {
-      /* connection is done we can start delivering message */
-      deliver_message(mp, 0);
-   }
 
    if (MESSAGE_STATUS(mp) == S_ACK_THEN_PROLOG) {
       /* first send the receiver an acknowledge, then follows the message 
@@ -698,6 +700,31 @@ int sockfd
    return mp;
 }
 
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+/* for each message scheduled for each remote commd 
+   open connection if message the next one for this remote host */
+int init_connections(int reserved_port, int commdport) {
+   connection *con = NULL;
+   connection *next = NULL;
+   int calls = 0;
+
+   con = get_first_connection();
+   while(con) {
+      con_member *cm = con->member_list;
+      next = con->next;
+      if(cm) {
+         if ( MESSAGE_STATUS(cm->mp) == S_RDY_4_SND ) {
+            if ( (!(cm->mp->flags & (COMMD_RECEIVE | COMMD_LEAVE | COMMD_CNTL))) ) {
+               open_connection(cm->mp, reserved_port, commdport, 0); 
+               calls++;
+            } 
+         }
+      }
+      con = next;
+   }
+   return calls;
+}
+#endif
 /**********************************************************************
   A message has been received. Try to make a connection to the remote
   commd (clients always initiate connections, so we never connect to a client).
@@ -708,12 +735,27 @@ int sockfd
   mp             message for which to open the connection
   reserved_port  use reserved port (other side may test it)
   commdport      port under which remote commd resides
+  check_connection_list 
+                          1 just add message to open connection list 
+                            open real connection if this is the first  
+                            message for the host
+                          0 open connection for message
  **********************************************************************/
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
 static void open_connection(
 message *mp,
 int reserved_port,
-int commdport 
-) {
+int commdport,
+int check_connection_list 
+) 
+#else
+static void open_connection(
+message *mp,
+int reserved_port,
+int commdport
+) 
+#endif
+   {
    int port = IPPORT_RESERVED - 1, i, errorcode;
    struct sockaddr_in addr;
    struct hostent *he;
@@ -721,9 +763,32 @@ int commdport
    u_long now;
    char *tohostname;
    int sso;
-   
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+   connection* con = NULL;   
+#endif
    DENTER(TOP_LAYER, "open_connection");
-
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+   /* open a connection only if this message is 
+      the first message for this host */
+   if (check_connection_list) {
+      int is_first = 0;
+      /* do not open a connection if message isn't the first for a remote commd connection */
+      if ( !add_connection_request(mp)) {
+         for (con = get_first_connection(); con; con = con->next) {
+            if (con->member_list) {
+               if (con->member_list->mp == mp) {
+                  is_first = 1;
+                  break;
+               }
+            }
+         }
+         if (!is_first) {
+            DEXIT;
+            return;
+         }
+      }
+   }
+#endif
    if (mp->tofd == -1) {
       /* create socket */
       if (reserved_port)
@@ -800,8 +865,14 @@ int commdport
                mp->ackchar = COMMD_NACK_DELIVERY;
                SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             }
-            else
+            else {
+               /* don't try to open connections also for all other messages
+                  for this remote commd */
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+               delete_connection(search_con_member_in_connections(mp));
+#endif
                delete_message(mp, "connection refused");
+            }
             DEXIT;   
             return;
          }
@@ -814,8 +885,12 @@ int commdport
                   mp->ackchar = COMMD_NACK_DELIVERY;
                   SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
                }
-               else
+               else {
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+                  delete_connection(search_con_member_in_connections(mp));
+#endif
                   delete_message(mp, "max deliver time exceeded");
+               }
             }
          }
          else
@@ -934,7 +1009,11 @@ int commdport
    }
    else {
       /* deliver to remote commd */
+#ifdef ENABLE_COMMD_FIFO_BUGFIX
+      open_connection(mp, reserved_port, commdport,1);
+#else
       open_connection(mp, reserved_port, commdport);
+#endif
       DEXIT;
       return;                   /* we have to wait another select; 
                                    look into open_connection() */

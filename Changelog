@@ -1,3 +1,5 @@
+JG-2003-02-24-0  Enhancem.: Use spooling framework for qmaster spooling
+
 EB-2003-02-21-1  Cleanup:   Moved functions from sgeobjlib to utilib
 
 AH-2003-02-21-0  Enhancem.: Initial step to JAPI job API that will be used

@@ -53,6 +53,8 @@
 #include "sge_complex.h"
 #include "sge_utility.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -115,7 +117,8 @@ gdi_object_t *object
 ) {
    DENTER(TOP_LAYER, "calendar_spool");
 
-   if (write_cal(1, 2, cep)==NULL) {
+   if (!spool_write_object(spool_get_default_context(), cep,
+                          lGetString(cep, CAL_name), SGE_EMT_CALENDAR)) {
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
@@ -176,7 +179,7 @@ char *rhost
    /* remove timer for this calendar */
    te_delete(TYPE_CALENDAR_EVENT, cal_name, 0, 0);
 
-   sge_unlink(CAL_DIR, cal_name);
+   spool_delete_object(spool_get_default_context(), SGE_EMT_CALENDAR, cal_name);
    lDelElemStr(&Master_Calendar_List, CAL_name, cal_name);
 
 #ifdef QIDL

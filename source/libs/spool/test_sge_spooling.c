@@ -36,11 +36,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <dlfcn.h>
-#ifdef SOLARIS
-#include <link.h>
-#endif
-
 #include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
@@ -465,78 +460,19 @@ bool spool_event_after(sge_event_type type, sge_event_action action,
    return true;
 }
 
-static bool init_spooling(int argc, char *argv[])
-{
-   const char *shlib_name;
-   void *shlib_handle;
-
-   const char *spooling_name;
-   dstring create_context_func_name = DSTRING_INIT;
-
-   spooling_get_method_func get_spooling_method;
-   spooling_create_context_func create_context;
-
-   lListElem *context;
-
-   DENTER(TOP_LAYER, "init_spooling");
-  
-   shlib_name = argv[1];
-   shlib_handle = dlopen(shlib_name, RTLD_LAZY);
-   if(shlib_handle == NULL) {
-      ERROR((SGE_EVENT, "error opening shared lib "SFQ": "SFN"\n", shlib_name, dlerror()));
-      return false;
-   }
-
-   get_spooling_method = (spooling_get_method_func)dlsym(shlib_handle, "get_spooling_method");
-   if(get_spooling_method == NULL) {
-      ERROR((SGE_EVENT, SFQ" is not a valid Grid Engine spooling library: "SFN"\n", shlib_name, dlerror()));
-      dlclose(shlib_handle);
-      return false;
-   }
-
-   spooling_name = get_spooling_method();
-
-   INFO((SGE_EVENT, "loading spooling method "SFQ" from shared lib "SFQ"\n", spooling_name, shlib_name));
-
-   sge_dstring_sprintf(&create_context_func_name, "spool_%s_create_context", spooling_name);
-
-   create_context = (spooling_create_context_func)dlsym(shlib_handle, sge_dstring_get_string(&create_context_func_name));
-   if(create_context == NULL) {
-      ERROR((SGE_EVENT, SFQ" is not a valid Grid Engine spooling library: "SFN"\n", shlib_name, dlerror()));
-      dlclose(shlib_handle);
-      return false;
-   }
-
-   context = create_context(argc - 2, &argv[2]);
-   if(context == NULL) {
-      ERROR((SGE_EVENT, "error creating a "SFQ" spooling context\n", spooling_name));
-      dlclose(shlib_handle);
-      return false;
-   }
-
-   spool_set_default_context(context);
-
-   DEXIT;
-   return true;
-#if 0
-   /* for classic spooling we need directories spool and common */
-   sge_mkdir(COMMON_DIR, 0755, true);
-   sge_mkdir(SPOOL_DIR, 0755, true);
-#endif
-}
-
 int main(int argc, char *argv[])
 {
    int cl_err = 0;
    char *cwd;
    dstring common_dir = DSTRING_INIT;
    dstring spool_dir  = DSTRING_INIT;
+   lListElem *spooling_context;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    /* parse commandline parameters */
-   if(argc < 2) {
-      ERROR((SGE_EVENT, "usage: test_sge_spooling <shared lib> <arg1> ... <argn>\n"));
+   if(argc != 3) {
+      ERROR((SGE_EVENT, "usage: test_sge_spooling <shared lib> <arguments>\n"));
       SGE_EXIT(1);
    }
 
@@ -552,12 +488,18 @@ int main(int argc, char *argv[])
       SGE_EXIT(1);
    }   
 
+#define defstring(str) #str
+
    /* initialize spooling */
-   if(!init_spooling(argc, argv)) {
+   spooling_context = spool_create_dynamic_context(SPOOL_NAME(SPOOLING_METHOD), 
+                                                   argv[1], argv[2]); 
+   if(spooling_context == NULL) {
       SGE_EXIT(EXIT_FAILURE);
    }
 
-   if(!spool_startup_context(spool_get_default_context())) {
+   spool_set_default_context(spooling_context);
+
+   if(!spool_startup_context(spooling_context)) {
       SGE_EXIT(EXIT_FAILURE);
    }
    

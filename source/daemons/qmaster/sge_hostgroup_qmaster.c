@@ -57,6 +57,8 @@
 #include "sge_unistd.h"
 #include "sge_hostgroup.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -189,7 +191,7 @@ int sub_command
       lSetList(modp, GRP_subgroup_list, subgroupList);
    } /* if (add == 1) */ 
 
-   /* a guilty GRP_group_list exists */         
+   /* a valid GRP_group_list exists */         
 
   
    if (sge_verify_host_group_entry(alpp, NULL ,ep, groupName) != true) {
@@ -437,7 +439,9 @@ gdi_object_t *object
    /*char fname[1000];*/
    DENTER(TOP_LAYER, "hostgrp_spool");
  
-   if (write_host_group( 1 , 2 , upe ) == NULL) {
+   if (!spool_write_object(spool_get_default_context(), upe, 
+                           lGetString(upe, GRP_group_name), 
+                           SGE_EMT_HOSTGROUP)) {
       const char* groupName = NULL;
       groupName = lGetString(upe, GRP_group_name); 
       ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, groupName ));

@@ -38,6 +38,7 @@
 #include "sge_log.h"
 
 #include "sge_unistd.h"
+#include "sge_string.h"
 #include "sge_dstring.h"
 #include "sge_hostname.h"
 
@@ -129,7 +130,7 @@ const char *get_spooling_method(void)
 *
 *  SYNOPSIS
 *     lListElem* 
-*     spool_classic_create_context(int argc, char *argv[])
+*     spool_classic_create_context(const char *args)
 *
 *  FUNCTION
 *     Create a spooling context for the classic spooling.
@@ -144,13 +145,13 @@ const char *get_spooling_method(void)
 *        - for SGE_EMT_ALL (default for all object types), referencing the rule
 *          for the spool directory
 *
-*     The function expects to get as arguments (in argv) two absolute paths:
+*     The function expects to get as argument two absolute paths:
 *        1. The path of the common directory
 *        2. The path of the spool directory
+*     The format of the input string is "<common_dir>;<spool_dir>"
 *
 *  INPUTS
-*     int argc     - number of arguments in argv
-*     char *argv[] - argument vector
+*     const char *args - arguments to classic spooling
 *
 *  RESULT
 *     lListElem* - on success, the new spooling context, else NULL
@@ -160,7 +161,7 @@ const char *get_spooling_method(void)
 *     spool/classic/--Classic-Spooling
 *******************************************************************************/
 lListElem *
-spool_classic_create_context(int argc, char *argv[])
+spool_classic_create_context(const char *args)
 {
    lListElem *context, *rule, *type;
    char *common_dir, *spool_dir;
@@ -168,13 +169,13 @@ spool_classic_create_context(int argc, char *argv[])
    DENTER(TOP_LAYER, "spool_classic_create_context");
 
    /* check parameters - both must be set and be absolute paths */
-   if (argc < 2) {
+   if (args == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
       return NULL;
    }
 
-   common_dir = argv[0];
-   spool_dir  = argv[1];
+   common_dir = sge_strtok(args, ";");
+   spool_dir  = sge_strtok(NULL, ";");
    
    if (common_dir == NULL || spool_dir == NULL ||
       *common_dir != '/' || *spool_dir != '/') {
@@ -428,12 +429,18 @@ spool_classic_default_list_func(const lListElem *type, const lListElem *rule,
          {
             lListElem *ep;
             char err_str[1024];
-            ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
+      
+            /* remove old sharetree */
             if (*list != NULL) {
                *list = lFreeList(*list);
             }
-            *list = lCreateList("share tree", STN_Type);
-            lAppendElem(*list, ep);
+
+            /* read sharetree from disk */
+            ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
+            if (ep != NULL) {
+               *list = lCreateList("share tree", STN_Type);
+               lAppendElem(*list, ep);
+            }
          }
          break;
       case SGE_EMT_PE:
@@ -636,6 +643,7 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
                                  const sge_event_type event_type)
 {
    static dstring file_name = DSTRING_INIT;
+   static dstring real_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_classic_default_write_func");
    switch (event_type) {
@@ -649,19 +657,31 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_ckpt(1, 2, object);
          break;
       case SGE_EMT_COMPLEX:
-         sge_dstring_sprintf(&file_name, "%s/%s", COMPLEX_DIR, lGetString(object, CX_name));
-         write_cmplx(1, sge_dstring_get_string(&file_name), lGetList(object, CX_entries), NULL, NULL);
+         sge_dstring_sprintf(&file_name, "%s/.%s", COMPLEX_DIR, key);
+         sge_dstring_sprintf(&real_name, "%s/%s", COMPLEX_DIR, key);
+         if(write_cmplx(1, sge_dstring_get_string(&file_name), lGetList(object, CX_entries), NULL, NULL) == 0) {
+            rename(sge_dstring_get_string(&file_name), 
+                   sge_dstring_get_string(&real_name));
+         }
          break;
       case SGE_EMT_CONFIG:
          if (sge_hostcmp(lGetHost(object, CONF_hname), "global") == 0) {
-            sge_dstring_sprintf(&file_name, "%s/%s",
+            sge_dstring_sprintf(&file_name, "%s/.%s",
+                                lGetString(rule, SPR_url), CONF_FILE);
+            sge_dstring_sprintf(&real_name, "%s/%s",
                                 lGetString(rule, SPR_url), CONF_FILE);
          } else {
-            sge_dstring_sprintf(&file_name, "%s/%s/%s", 
+            sge_dstring_sprintf(&file_name, "%s/%s/.%s", 
                                 lGetString(rule, SPR_url), LOCAL_CONF_DIR,
-                                lGetHost(object, CONF_hname));
+                                key);
+            sge_dstring_sprintf(&real_name, "%s/%s/%s", 
+                                lGetString(rule, SPR_url), LOCAL_CONF_DIR,
+                                key);
          }
-         write_configuration(1, NULL, sge_dstring_get_string(&file_name), object, NULL, FLG_CONF_SPOOL);
+         if (write_configuration(1, NULL, sge_dstring_get_string(&file_name), object, NULL, FLG_CONF_SPOOL) == 0) {
+            rename(sge_dstring_get_string(&file_name), 
+                   sge_dstring_get_string(&real_name));
+         }
          break;
       case SGE_EMT_EXECHOST:
          write_host(1, 2, object, EH_name, NULL);
@@ -676,7 +696,6 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
    
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
-            /* JG: TODO: why does job spooling not take a const lListElem? */
             job_write_spool_file((lListElem *)object, ja_task_id, pe_task_id, SPOOL_DEFAULT);
             free(dup);
          }
@@ -694,11 +713,11 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_pe(1, 2, object);
          break;
       case SGE_EMT_PROJECT:
-         sge_dstring_sprintf(&file_name, "%s/%s", PROJECT_DIR, lGetString(object, UP_name));
+         sge_dstring_sprintf(&file_name, "%s/%s", PROJECT_DIR, key);
          write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 0);
          break;
       case SGE_EMT_QUEUE:
-         sge_dstring_sprintf(&file_name, "%s", lGetString(object, QU_qname));
+         sge_dstring_sprintf(&file_name, "%s", key);
          cull_write_qconf(1, 0, QUEUE_DIR, sge_dstring_get_string(&file_name), NULL, object);
          break;
       case SGE_EMT_SCHEDD_CONF:
@@ -708,12 +727,16 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_host(1, 2, object, SH_name, NULL);
          break;
       case SGE_EMT_USER:
-         sge_dstring_sprintf(&file_name, "%s/%s", USER_DIR, lGetString(object, UP_name));
+         sge_dstring_sprintf(&file_name, "%s/%s", USER_DIR, key);
          write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 0);
          break;
       case SGE_EMT_USERSET:
-         sge_dstring_sprintf(&file_name, "%s/%s", USERSET_DIR, lGetString(object, US_name));
-         write_userset(NULL, object, sge_dstring_get_string(&file_name), NULL, 1);
+         sge_dstring_sprintf(&file_name, "%s/.%s", USERSET_DIR, key);
+         sge_dstring_sprintf(&real_name, "%s/%s", USERSET_DIR, key);
+         if(write_userset(NULL, object, sge_dstring_get_string(&file_name), NULL, 1) == 0) {
+            rename(sge_dstring_get_string(&file_name), 
+                   sge_dstring_get_string(&real_name));
+         }
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_EMT_USERMAPPING:
@@ -821,7 +844,7 @@ spool_classic_default_delete_func(const lListElem *type, const lListElem *rule,
          write_manop(1, SGE_OPERATOR_LIST);
          break;
       case SGE_EMT_SHARETREE:
-         sge_unlink(NULL, key);
+         sge_unlink(NULL, SHARETREE_FILE);
          break;
       case SGE_EMT_PE:
          sge_unlink(PE_DIR, key);

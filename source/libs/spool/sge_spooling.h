@@ -74,7 +74,6 @@
 *
 ****************************************************************************
 */
-
 /****** spool/-Spooling-Typedefs ***************************************
 *
 *  NAME
@@ -134,7 +133,7 @@
 
 typedef const char *(*spooling_get_method_func)(void);
 
-typedef lListElem *(*spooling_create_context_func)(int argc, char *argv[]);
+typedef lListElem *(*spooling_create_context_func)(const char *args);
 
 typedef bool (*spooling_startup_func)(const lListElem *rule); 
 typedef bool (*spooling_shutdown_func)(const lListElem *rule); 

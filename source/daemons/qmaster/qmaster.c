@@ -104,6 +104,8 @@
 #include "sge_usermap.h"
 #endif
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -740,14 +742,15 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
    if (processors != old_processors) {
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
-      write_host(1, 2, hep, EH_name, NULL);
+      spool_write_object(spool_get_default_context(), hep, 
+                         lGetHost(hep, EH_name), SGE_EMT_EXECHOST);
       if (!is_nohist()) {
          write_host_history(hep);
       }
    }
    DEXIT;
    return 0;
-}       
+}
 
 /*-------------------------------------------------------------------------*/
 static void sge_c_report(

@@ -60,11 +60,11 @@
 #include "sge_todo.h"
 #include "symbols.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-/* #include "pw_def.h" */
-/* #include "pw_proto.h"  */
 #include "sge_parse_num_par.h"
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
@@ -234,7 +234,8 @@ int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
 {
    DENTER(TOP_LAYER, "ckpt_spool");
 
-   if (!write_ckpt(1, 2, ep)) {
+   if (!spool_write_object(spool_get_default_context(), ep, 
+                           lGetString(ep, CK_name), SGE_EMT_CKPT)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(ep, CK_name)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -376,7 +377,8 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove ckpt file 1st */
-   if (sge_unlink(CKPTOBJ_DIR, ckpt_name)) {
+   if (!spool_delete_object(spool_get_default_context(), SGE_EMT_CKPT, 
+                            ckpt_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -413,8 +415,8 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
       q_name = lGetString(qrep, QR_name);
       if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
          sge_change_queue_version(qep, 0, 0);
-         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
-            qep);
+         spool_write_object(spool_get_default_context(), qep, 
+                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
          DPRINTF(("increasing version of queue \"%s\" because %s"
             " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
       }
@@ -429,8 +431,8 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
       if (!lGetElemStr(nq, QR_name, q_name) 
           && (qep = queue_list_locate(Master_Queue_List, q_name))) {
          sge_change_queue_version(qep, 0, 0);
-         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
-            qep);
+         spool_write_object(spool_get_default_context(), qep, 
+                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
          DPRINTF(("increasing version of queue \"%s\" because %s"
                " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
       }

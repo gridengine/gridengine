@@ -57,6 +57,8 @@
 #include "sge_userset.h"
 #include "sge_utility.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -184,7 +186,8 @@ gdi_object_t *object
 ) {
    DENTER(TOP_LAYER, "pe_spool");
 
-   if (!write_pe(1, 2, pep)) {
+   if (!spool_write_object(spool_get_default_context(), pep, 
+                           lGetString(pep, PE_name), SGE_EMT_PE)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(pep, PE_name)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -273,7 +276,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove host file */
-   if (sge_unlink(PE_DIR, pe)) {
+   if (!spool_delete_object(spool_get_default_context(), SGE_EMT_PE, pe)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;

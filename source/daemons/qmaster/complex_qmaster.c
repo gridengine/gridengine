@@ -66,6 +66,8 @@
 #include "sge_complex.h"
 #include "sge_utility.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -324,25 +326,17 @@ lList **alpp,
 lListElem *cep,
 gdi_object_t *object 
 ) {
-   char fname[256], real_fname[256];
-
    DENTER(TOP_LAYER, "complex_spool");
 
-   sprintf(fname, "%s/.%s", COMPLEX_DIR, lGetString(cep, CX_name));
-   sprintf(real_fname, "%s/%s", COMPLEX_DIR, lGetString(cep, CX_name));
-   if (write_cmplx(1, fname, lGetList(cep, CX_entries), NULL, alpp)) {
+   if (!spool_write_object(spool_get_default_context(), cep, 
+                           lGetString(cep, CX_name), SGE_EMT_COMPLEX)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CPLX, 
                lGetString(cep, CX_name)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return 1;
-   } else {
-      if (rename(fname, real_fname) == -1) {
-         DEXIT;
-         return 1;
-      }  
-   }
-
+   } 
+   
    DEXIT;
    return 0;
 }
@@ -464,12 +458,7 @@ char *rhost
    }
 
    /* If this is the qmaster we delete the complex from disk */
-   if (sge_unlink(COMPLEX_DIR, cmplxname)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELCMPLXDISK_S, cmplxname));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, 0);
-      DEXIT;
-      return STATUS_EDISK;
-   }
+   spool_delete_object(spool_get_default_context(), SGE_EMT_COMPLEX, cmplxname);
    sge_add_event(NULL, 0, sgeE_COMPLEX_DEL, 0, 0, cmplxname, NULL);
 
    /* change versions of corresponding queues */ 
@@ -503,7 +492,8 @@ const char *cmplx_name
 
    for_each(ep, Master_Queue_List) {
       sge_change_queue_version(ep, 0, 0);
-      cull_write_qconf(1, 0, QUEUE_DIR, lGetString(ep, QU_qname), NULL, ep);
+      spool_write_object(spool_get_default_context(), ep, 
+                         lGetString(ep, QU_qname), SGE_EMT_QUEUE);
       sge_add_event(NULL, 0, sgeE_QUEUE_MOD, 0, 0, lGetString(ep, QU_qname), ep);
    }
    for_each(ep, Master_Exechost_List)

@@ -64,6 +64,8 @@
 #include "sge_sharetree.h"
 #include "sge_utility.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -222,17 +224,14 @@ lList **alpp,
 lListElem *upe,
 gdi_object_t *object 
 ) {
-   char fname[1000];
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
 
    DENTER(TOP_LAYER, "userprj_spool");
 
    /* write user or project to file */
-   sprintf(fname , "%s/%s", 
-      user_flag?USER_DIR : PROJECT_DIR, 
-      lGetString(upe, object->key_nm));
-
-   if (write_userprj(alpp, upe, fname, NULL, 1, user_flag)) {
+   if (!spool_write_object(spool_get_default_context(), upe, 
+                           lGetString(upe, object->key_nm), 
+                           user_flag ? SGE_EMT_USER : SGE_EMT_PROJECT)) {
       /* answer list gets filled in write_userprj() */
       DEXIT;
       return 1;
@@ -255,7 +254,6 @@ char *rhost,
 int user        /* =1 user, =0 project */
 ) {
    const char *name;
-   char fname[SGE_PATH_MAX];
    lListElem *ep;
    lListElem *myep;
 
@@ -353,10 +351,8 @@ int user        /* =1 user, =0 project */
    lRemoveElem(*upl, ep);
 
    /* delete user or project file */
-   sprintf(fname , "%s/%s", user ? USER_DIR : PROJECT_DIR, name);
-   if (unlink(fname)) {
-      ERROR((SGE_EVENT, MSG_FILE_RM_S, fname));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+   if (!spool_delete_object(spool_get_default_context(), 
+                            user ? SGE_EMT_USER : SGE_EMT_PROJECT, name)) {
       DEXIT;
       return STATUS_EDISK;
    }

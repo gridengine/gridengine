@@ -46,6 +46,8 @@
 #include "sge_answer.h"
 #include "sge_complex.h"
 
+#include "sge_spooling.h"
+
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
@@ -63,7 +65,6 @@ char *ruser,
 char *rhost 
 ) {
    u_long32 si;
-/*    lListElem *schedd = NULL; */
    u_long32 old_SC_weight_tickets_deadline_active, old_SC_weight_tickets_override;
 
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
@@ -99,16 +100,11 @@ char *rhost
       old_SC_weight_tickets_override);
    lAppendElem(*confl, lCopyElem(confp));
 
-   {
-      char common_dir[SGE_PATH_MAX];
-      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path_state_get_cell_root(), COMMON_DIR);
-      if (write_sched_configuration(1, 2, common_dir, lFirst(*confl)) == NULL) {
-         answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
+   if (!spool_write_object(spool_get_default_context(), lFirst(*confl), NULL, SGE_EMT_SCHEDD_CONF)) {
+      answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return -1;
    }
-
 
    sge_add_event(NULL, 0, sgeE_SCHED_CONF, 0, 0, NULL, confp);
 

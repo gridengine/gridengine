@@ -95,13 +95,13 @@ get_spooling_method(void)
 *        - for SGE_EMT_ALL (default for all object types), referencing the rule
 *          for the spool directory
 *
-*     The function expects to get as arguments (in argv) two absolute paths:
+*     The function expects to get as argument two absolute paths:
 *        1. The path of the common directory
 *        2. The path of the spool directory
+*     The format of the input string is "<common_dir>;<spool_dir>"
 *
 *  INPUTS
-*     int argc     - number of arguments in argv
-*     char *argv[] - argument vector
+*     const char *args - arguments to classic spooling
 *
 *  RESULT
 *     lListElem* - on success, the new spooling context, else NULL
@@ -111,7 +111,7 @@ get_spooling_method(void)
 *     spool/flatfile/--Flatfile-Spooling
 *******************************************************************************/
 lListElem *
-spool_flatfile_create_context(int argc, char *argv[])
+spool_flatfile_create_context(const char *args)
 {
    lListElem *context, *rule, *type;
    char *common_dir, *spool_dir;
@@ -119,13 +119,13 @@ spool_flatfile_create_context(int argc, char *argv[])
    DENTER(TOP_LAYER, "spool_flatfile_create_context");
 
    /* check parameters - both must be set and be absolute paths */
-   if (argc < 2) {
+   if (args == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR));
       return NULL;
    }
 
-   common_dir = argv[0];
-   spool_dir  = argv[1];
+   common_dir = sge_strtok(args, ";");
+   spool_dir  = sge_strtok(NULL, ";");
    
    if (common_dir == NULL || spool_dir == NULL ||
       *common_dir != '/' || *spool_dir != '/') {

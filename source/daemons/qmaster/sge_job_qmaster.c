@@ -93,6 +93,8 @@
 #include "sge_userprj.h"
 #include "sge_complex.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
@@ -638,7 +640,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    job_suc_pre(jep);
 
-   if (job_write_spool_file(jep, 0, NULL, SPOOL_DEFAULT)) {
+   if (!spool_write_object(spool_get_default_context(), jep, 
+                           job_get_key(job_number, 0, NULL), SGE_EMT_JOB)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -952,11 +955,13 @@ int sub_command
 
                zombie = job_list_locate(Master_Zombie_List, job_number);
                if (zombie) { 
-                  job_write_spool_file(zombie, 0, NULL, SPOOL_HANDLE_AS_ZOMBIE);
+/*                   job_write_spool_file(zombie, 0, NULL, SPOOL_HANDLE_AS_ZOMBIE); */
                }
             }
             if (existing_tasks > deleted_tasks) {
-               job_write_common_part(job, 0, SPOOL_DEFAULT);
+               spool_write_object(spool_get_default_context(), job, 
+                                  job_get_key(job_number, 0, NULL), 
+                                  SGE_EMT_JOB);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
             }
@@ -1459,8 +1464,10 @@ void job_mark_job_as_deleted(lListElem *j,
 
       SETBIT(JDELETED, state);
       lSetUlong(t, JAT_state, state);
-      job_write_spool_file(j, lGetUlong(t, JAT_task_number), 
-                           NULL, SPOOL_DEFAULT);
+      spool_write_object(spool_get_default_context(), j,
+                         job_get_key(lGetUlong(j, JB_job_number),
+                                     lGetUlong(t, JAT_task_number), NULL),
+                         SGE_EMT_JOB);
    }
    DEXIT;
 }
@@ -1600,7 +1607,8 @@ int sub_command
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
-         if (job_write_spool_file(new_job, 0, NULL, SPOOL_DEFAULT)) {
+         if (!spool_write_object(spool_get_default_context(), new_job, 
+                                job_get_key(jobid, 0, NULL), SGE_EMT_JOB)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             lFreeList(tmp_alp);

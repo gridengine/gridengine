@@ -67,6 +67,8 @@
 #include "sge_userset.h"
 #include "sge_host.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -141,15 +143,8 @@ char *rhost
 #endif   
 
     
-
-   if (sge_unlink(path_state_get_local_conf_dir(), config_name)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DEL_CONFIG_DISK_SS, config_name, strerror(errno)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EDISK;
-   }
-  
-
+   spool_delete_object(spool_get_default_context(), SGE_EMT_CONFIG, 
+                       config_name);
     
    /* now remove it from our internal list*/
    lRemoveElem(Master_Config_List, ep);
@@ -183,8 +178,6 @@ char *rhost
    const char *config_name;
    const char *cp;
    bool added;
-   char fname[SGE_PATH_MAX];
-   char real_fname[SGE_PATH_MAX];
    u_long32 old_conf_version = 0;
    int reschedule_unknown_changed = 1;
    int ret;
@@ -300,31 +293,8 @@ char *rhost
       lSetUlong(ep, CONF_version, old_conf_version + 1);
       lSetUlong(confp, CONF_version, old_conf_version + 1);
    }
-    
-   if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
-      strcpy(fname, path_state_get_cell_root());
-      strcat(fname, "/common");
-      strcat(fname, "/.");
-      strcat(fname, "configuration");
-      strcpy(real_fname, path_state_get_conf_file());
-      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
-   } else {
-      sprintf(fname, "%s/.%s", path_state_get_local_conf_dir(), config_name);
-      sprintf(real_fname, "%s/%s", path_state_get_local_conf_dir(), config_name);
-   }
-   
-   DPRINTF(("path.conf_file: %s\n", fname));   
-   if ((ret=write_configuration(1, alpp, fname, confp, NULL, FLG_CONF_SPOOL))) {
-      /* answer list gets filled in write_configuration() */
-      DEXIT;
-      return ret;
-   } else {
-      if (rename(fname, real_fname) == -1) {
-         DEXIT;
-         return 1;
-      }
-   }
-
+   spool_write_object(spool_get_default_context(), confp, 
+                      lGetHost(confp, CONF_hname), SGE_EMT_CONFIG);
    /*
    ** is the configuration change relevant for the qmaster itsself?
    ** if so, initialise conf struct anew

@@ -111,11 +111,22 @@
 #include "sge_hostgroup.h"
 #include "sge_usermap.h"
 
+#include "sge_spooling.h"
+#include "sge_spooling_loader.h"
+
 #include "msg_common.h"
 
-static int remove_invalid_job_references(int user);
+static int 
+remove_invalid_job_references(int user);
 
-static int debit_all_jobs_from_qs(void);
+static int 
+debit_all_jobs_from_qs(void);
+
+static bool 
+init_spooling_params(const char **shlib, const char **args);
+
+static bool
+init_admin_user(void);
 
 /*------------------------------------------------------------*/
 int sge_setup_qmaster()
@@ -124,13 +135,13 @@ int sge_setup_qmaster()
    static bool first = true;
    int ret;
    lListElem *lep = NULL;
-   lList *alp=NULL;
    char err_str[1024];
    u_long32 state;
 #ifdef PW   
    extern u_long32 pw_num_submit;
 #endif   
    extern int new_config;
+   lListElem *spooling_context = NULL;
 
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
@@ -142,23 +153,56 @@ int sge_setup_qmaster()
       return -1;
    }   
 
+   if (!init_admin_user()) {
+      CRITICAL((SGE_EVENT, "cannot determine admin_user\n"));
+      SGE_EXIT(1);
+   }
+
+   if (sge_switch2admin_user()) {
+      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+      SGE_EXIT(1);
+   }
+
    /* register our error function for use in replace_params() */
    config_errfunc = error;
-
 
    /*
     * Initialize Master lists and hash tables, if necessary 
     */
-   if(Master_Job_List == NULL) {
+   if (Master_Job_List == NULL) {
       Master_Job_List = lCreateList("Master_Job_List", JB_Type);
    }
    cull_hash_new(Master_Job_List, JB_owner, 0);
 
+   /* create spooling context */
+   {
+      const char *shlib;
+      const char *args;
+
+      if (!init_spooling_params(&shlib, &args)) {
+         CRITICAL((SGE_EVENT, "unable to initialize spooling\n"));
+         SGE_EXIT(1);
+      }
+      
+      spooling_context = spool_create_dynamic_context(shlib, args);
+      if (spooling_context == NULL) {
+         CRITICAL((SGE_EVENT, "unable to create spooling context\n"));
+         SGE_EXIT(1);
+      }
+
+      if (!spool_startup_context(spooling_context)) {
+         CRITICAL((SGE_EVENT, "unable to startup spooling context\n"));
+         SGE_EXIT(1);
+      }
+
+      spool_set_default_context(spooling_context);
+   }
+
    /*
    ** get cluster configuration
    */
-   read_all_configurations(&Master_Config_List, 
-                           path_state_get_conf_file(), path_state_get_local_conf_dir());
+   spool_read_list(spooling_context, &Master_Config_List, SGE_EMT_CONFIG);
+
    ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
    if (ret) {
       if (ret == -3)
@@ -177,10 +221,6 @@ int sge_setup_qmaster()
    sge_show_conf();         
    new_config = 1;
 
-   if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-      SGE_EXIT(1);
-   }
    /* pass max unheard to commlib */
    set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
 
@@ -226,42 +266,15 @@ int sge_setup_qmaster()
    }
 
    /*
-   ** create directory tree needed in master spool dir
-   */
-   sge_mkdir(JOB_DIR,  0755, 1);
-   sge_mkdir(ZOMBIE_DIR, 0755, 1);
-   sge_mkdir(QUEUE_DIR,  0755, 1);
-   sge_mkdir(EXECHOST_DIR, 0755, 1);
-   sge_mkdir(SUBMITHOST_DIR, 0755, 1);
-   sge_mkdir(ADMINHOST_DIR, 0755, 1);
-   sge_mkdir(COMPLEX_DIR, 0755, 1);
-   sge_mkdir(EXEC_DIR, 0755, 1);
-   sge_mkdir(PE_DIR, 0755, 1);
-   sge_mkdir(CKPTOBJ_DIR, 0755, 1);
-   sge_mkdir(USERSET_DIR, 0755, 1);
-   sge_mkdir(CAL_DIR, 0755, 1);
-   sge_mkdir(HOSTGROUP_DIR, 0755, 1);
-#ifndef __SGE_NO_USERMAPPING__
-   sge_mkdir(UME_DIR, 0755, 1);
-#endif
-
-
-   /*
    ** read in all objects and check for correctness
    */
    DPRINTF(("Complexes-------------------------------\n"));
-   if (read_all_complexes()) {
-      DEXIT;
-      return -1;
-   }
+   spool_read_list(spooling_context, &Master_Complex_List, SGE_EMT_COMPLEX);
 
    DPRINTF(("host_list----------------------------\n"));
-   if (sge_read_host_list_from_disk()) {
-      DEXIT;
-      return -1;
-   }
-
-   
+   spool_read_list(spooling_context, &Master_Exechost_List, SGE_EMT_EXECHOST);
+   spool_read_list(spooling_context, &Master_Adminhost_List, SGE_EMT_ADMINHOST);
+   spool_read_list(spooling_context, &Master_Submithost_List, SGE_EMT_SUBMITHOST);
 
    if (!host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
@@ -302,11 +315,11 @@ int sge_setup_qmaster()
 #endif
 
    DPRINTF(("manager_list----------------------------\n"));
-   read_manop(SGE_MANAGER_LIST);
+   spool_read_list(spooling_context, &Master_Manager_List, SGE_EMT_MANAGER);
    if (!manop_is_manager("root")) {
-      lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
+      ep = lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
-      if (write_manop(1, SGE_MANAGER_LIST)) {
+      if (!spool_write_object(spooling_context, ep, "root", SGE_EMT_MANAGER)) {
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
          return -1;
       }
@@ -315,17 +328,14 @@ int sge_setup_qmaster()
       DPRINTF(("%s\n", lGetString(ep, MO_name)));
 
    DPRINTF(("host group definitions-----------\n"));
-   if (sge_read_host_group_entries_from_disk()) {
-     DEXIT;
-     return -1;
-   }
+   spool_read_list(spooling_context, &Master_Host_Group_List, SGE_EMT_HOSTGROUP);
 
    DPRINTF(("operator_list----------------------------\n"));
-   read_manop(SGE_OPERATOR_LIST);
+   spool_read_list(spooling_context, &Master_Operator_List, SGE_EMT_OPERATOR);
    if (!manop_is_operator("root")) {
-      lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
+      ep = lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
-      if (write_manop(1, SGE_OPERATOR_LIST)) {
+      if (!spool_write_object(spooling_context, ep, "root", SGE_EMT_OPERATOR)) {
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEOPERATORLIST)); 
          return -1;
       }
@@ -335,61 +345,29 @@ int sge_setup_qmaster()
 
 
    DPRINTF(("userset_list------------------------------\n"));
-   if (sge_read_userset_list_from_disk()) {
-      DEXIT;
-      return -1;
-   }
+   spool_read_list(spooling_context, &Master_Userset_List, SGE_EMT_USERSET);
 
    DPRINTF(("calendar list ------------------------------\n"));
-   if (sge_read_cal_list_from_disk()) {
-      DEXIT;
-      return -1;
-   }
-
+   spool_read_list(spooling_context, &Master_Calendar_List, SGE_EMT_CALENDAR);
 
 #ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("administrator user mapping-----------\n"));
-   if (sge_read_user_mapping_entries_from_disk()) {
-     DEXIT;
-     return -1;
-   }
+   spool_read_list(spooling_context, &Master_Usermapping_Entry_List, SGE_EMT_USERMAPPING);
 #endif
 
    DPRINTF(("queue_list---------------------------------\n"));
-   if (sge_read_queue_list_from_disk()) {
-     DEXIT;
-     return -1;
-   }
+   spool_read_list(spooling_context, &Master_Queue_List, SGE_EMT_QUEUE);
    queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
 
 
    DPRINTF(("pe_list---------------------------------\n"));
-   if (sge_read_pe_list_from_disk()) {
-      DEXIT;
-      return -1;
-   }
+   spool_read_list(spooling_context, &Master_Pe_List, SGE_EMT_PE);
 
    DPRINTF(("ckpt_list---------------------------------\n"));
-   if (sge_read_ckpt_list_from_disk()) {
-      DEXIT;
-      return -1;
-   }
+   spool_read_list(spooling_context, &Master_Ckpt_List, SGE_EMT_CKPT);
 
    DPRINTF(("job_list-----------------------------------\n"));
-   if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 1,
-                               SPOOL_DEFAULT, NULL)) {
-      DEXIT;
-      return -1;
-   }
-
-   if (conf.zombie_jobs > 0) {
-      DPRINTF(("zombie_list--------------------------------------\n"));
-      if (job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
-                                  SPOOL_HANDLE_AS_ZOMBIE, NULL)) {
-         DEXIT;
-         return -1;
-      }
-   }
+   spool_read_list(spooling_context, &Master_Job_List, SGE_EMT_JOB);
 
    for_each(jep, Master_Job_List) {
       DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
@@ -445,45 +423,26 @@ int sge_setup_qmaster()
    rebuild_signal_events();
 
    /* scheduler configuration stuff */
-   if (!sge_silent_get()) 
-      printf(MSG_CONFIG_READINGINSCHEDULERCONFIG);
-    
-   {
-      char common_dir[SGE_PATH_MAX];
-      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path_state_get_cell_root(), COMMON_DIR); 
-      Master_Sched_Config_List = read_sched_configuration(common_dir, path_state_get_sched_conf_file(), 1, &alp);
-   }
-   if (!Master_Sched_Config_List) {
-      ERROR((SGE_EVENT, "%s\n", lGetString(lFirst(alp), AN_text)));
-      DEXIT;
-      return -1;
-   }
+   DPRINTF(("scheduler config -----------------------------------\n"));
+   spool_read_list(spooling_context, &Master_Sched_Config_List, SGE_EMT_SCHEDD_CONF);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
 
-      sge_mkdir(USER_DIR, 0755, 1);
-      sge_mkdir(PROJECT_DIR, 0755, 1);
-
       /* SGEEE: read user list */
-      if (sge_read_user_list_from_disk()) {
-         DEXIT;
-         return -1;
-      }
+      spool_read_list(spooling_context, &Master_User_List, SGE_EMT_USER);
 
       remove_invalid_job_references(1);
 
       /* SGE: read project list */
-      if (sge_read_project_list_from_disk()) {
-         DEXIT;
-         return -1;
-      }
+      spool_read_list(spooling_context, &Master_Project_List, SGE_EMT_PROJECT);
 
       remove_invalid_job_references(0);
    }
    
    if (feature_is_enabled(FEATURE_SGEEE)) {
       /* SGEEE: read share tree */
-      ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
+      spool_read_list(spooling_context, &Master_Sharetree_List, SGE_EMT_SHARETREE);
+      ep = lFirst(Master_Sharetree_List);
       if (ep) {
          lList *alp = NULL;
          lList *found = NULL;
@@ -491,19 +450,6 @@ int sge_setup_qmaster()
                NULL, &found);
          found = lFreeList(found);
          alp = lFreeList(alp); 
-
-         Master_Sharetree_List = lCreateList("sharetree list", STN_Type);
-         lAppendElem(Master_Sharetree_List, ep);
-      }
-      else {
-         Master_Sharetree_List = NULL;
-         if ((err_str != NULL) && (err_str[0] != '\0')) {
-            int pos = strlen(err_str)-1;
-            if (err_str[pos] == '\n') {
-               err_str[pos] = '\0';
-            }
-         }
-         WARNING((SGE_EVENT, MSG_CONFIG_CANTLOADSHARETREEXSTARTINGUPWITHEMPTYSHARETREE_S, err_str));
       }
    }
 
@@ -540,7 +486,6 @@ int user
 ) {
    lListElem *up, *upu, *next;
    u_long32 jobid;
-   char fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "remove_invalid_job_references");
 
@@ -561,66 +506,15 @@ int user
       }
 
       if (spool_me) {
-         sprintf(fname , "%s/%s", user?USER_DIR:PROJECT_DIR, lGetString(up, UP_name));
-         write_userprj(NULL, up, fname, NULL, 1, user);
+         spool_write_object(spool_get_default_context(), up, 
+                            lGetString(up, UP_name), user ? SGE_EMT_USER : 
+                                                            SGE_EMT_PROJECT);
       }
    }
 
    DEXIT;
    return 0;
 }
-#if 0
-static int sge_read_object_dir(
-char *obj_dir,
-char *obj_name,
-lList **obj_list,
-lDescr *obj_dp,
-char *obj_title 
-) {
-   int ret = 0;
-   lList *direntries = NULL;
-   lListElem *ep, *direntry;
-
-   DENTER(TOP_LAYER, "sge_read_object_dir");
-
-   if (!obj_list) {
-      DEXIT;
-      return -1;
-   }
-
-   if (!*obj_list)
-      *obj_list = lCreateList(obj_name, dp);
-
-   direntries = sge_get_dirents(obj_dir);
-   
-   if (obj_title)
-      printf("%s", obj_title);
-      
-   for_each(direntry, direntries) {
-      if (obj_title)
-         printf("\t%s\n", lGetString(direntry, STR));
-   
-      ep = obj_read_func();
-
-      if (!ep) {
-         ret = -1;
-         break;
-      }
-      if (obj_validate_func && obj_validate_func(ep, NULL) != STATUS_OK) {
-         ret = -1;
-         break;
-      }
-      lAppendElem(obj_list, ep);
-   }
-
-   direntries = lFreeList(direntries);
-
-   DEXIT;
-   return ret;
-}
-
-#endif
-   
 
 static int debit_all_jobs_from_qs()
 {
@@ -682,3 +576,54 @@ static int debit_all_jobs_from_qs()
    return ret;
 }
 
+static bool 
+init_spooling_params(const char **shlib, const char **args)
+{
+   static dstring args_out = DSTRING_INIT;
+   const char *name[1] = { "qmaster_spool_dir" };
+   char value[1][1025];
+
+   DENTER(TOP_LAYER, "init_spooling_params");
+
+   if (sge_get_confval_array(path_state_get_conf_file(), 1, name, value)) {
+      ERROR((SGE_EVENT, "cannot read spooling parameters\n"));
+      DEXIT;
+      return false;
+   }
+
+   sge_dstring_sprintf(&args_out, "%s/%s;%s", 
+                       path_state_get_cell_root(), COMMON_DIR, value[0]);
+   
+   *shlib = "none";
+   *args  = sge_dstring_get_string(&args_out);
+
+   DEXIT;
+   return true;
+}
+
+static bool
+init_admin_user(void)
+{
+   const char *name[1] = { "admin_user" };
+   char value[1][1025];
+   int ret;
+   char err_str[MAX_STRING_SIZE];
+
+   DENTER(TOP_LAYER, "init_admin_user");
+
+   if (sge_get_confval_array(path_state_get_conf_file(), 1, name, value)) {
+      ERROR((SGE_EVENT, "cannot read admin_user parameter\n"));
+      DEXIT;
+      return false;
+   }
+
+   ret = sge_set_admin_username(value[0], err_str);
+   if (ret == -1) {
+      ERROR((SGE_EVENT, err_str));
+      DEXIT;
+      return false;
+   }
+
+   DEXIT;
+   return true;
+}

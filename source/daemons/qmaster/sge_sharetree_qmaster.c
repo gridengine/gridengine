@@ -54,6 +54,8 @@
 #include "sge_userprj.h"
 #include "read_write_sharetree.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -136,7 +138,8 @@ char *rhost
    lAppendElem(*lpp, lCopyElem(ep));
   
    /* write sharetree to file */
-   if ((ret=write_sharetree(alpp, ep, SHARETREE_FILE, NULL, 1, 1, 1))) {
+   if (!spool_write_object(spool_get_default_context(), ep, NULL, 
+                           SGE_EMT_SHARETREE)) {
       /* answer list gets filled in write_sharetree() */
       DEXIT;
       return ret;
@@ -175,8 +178,11 @@ char *rhost
       return STATUS_EEXIST;
    }
 
+   spool_delete_object(spool_get_default_context(), SGE_EMT_SHARETREE, NULL);
+
    lFreeList(*lpp);
    *lpp = NULL;
+   
    sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));

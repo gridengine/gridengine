@@ -867,12 +867,15 @@ bool spool_write_object(const lListElem *context, const lListElem *object, const
 
    DENTER(TOP_LAYER, "spool_write_object");
 
+#if 0
    /* we cannot spool free objects */
+   /* JG: TODO: why?? */
    if(object->status == FREE_ELEM) {
       ERROR((SGE_EVENT, MSG_SPOOL_CANNOTSPOOLFREEOBJECT));
       DEXIT;
       return false;
    }
+#endif
 
    if(context == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOL_NOVALIDCONTEXT_S, "spool_write_object"));

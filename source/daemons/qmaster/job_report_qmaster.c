@@ -62,6 +62,7 @@
 #include "sge_job.h"
 #include "sge_report.h"
 
+#include "sge_spooling.h"
 
 static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, const char *task_str);
 
@@ -288,7 +289,10 @@ sge_pack_buffer *pb
                         if ((ep=lAddSubHost(petask, JG_qhostname, rhost, PET_granted_destin_identifier_list, JG_Type))) {
                            lSetString(ep, JG_qname, queue_name);
                         }   
-                        job_write_spool_file(jep, jataskid, pe_task_id_str, SPOOL_DEFAULT);
+                        spool_write_object(spool_get_default_context(), jep,
+                                           job_get_key(jobid, jataskid, 
+                                                       pe_task_id_str), 
+                                           SGE_EMT_JOB);
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -523,8 +527,10 @@ sge_pack_buffer *pb
                         }
 
                         /* remove pe task from job/jatask */
-                        job_remove_spool_file(jobid, jataskid, pe_task_id_str,
-                                              SPOOL_DEFAULT);
+                        spool_delete_object(spool_get_default_context(), 
+                                            SGE_EMT_JOB, 
+                                            job_get_key(jobid, jataskid, 
+                                                        pe_task_id_str));
                         lRemoveElem(lGetList(jatep, JAT_task_list), petask);
                         sge_add_event(NULL, 0, sgeE_PETASK_DEL, jobid, jataskid, 
                                       pe_task_id_str, NULL);

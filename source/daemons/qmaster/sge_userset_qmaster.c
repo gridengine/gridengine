@@ -54,6 +54,8 @@
 #include "sge_host.h"
 #include "sge_utility.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -78,7 +80,6 @@ char *rhost
    const char *userset_name;
    int pos, ret;
    lListElem *found;
-   char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_add_acl");
 
@@ -149,20 +150,10 @@ char *rhost
    }
 
    /* update on file */
-   sprintf(fname , "%s/.%s", USERSET_DIR, userset_name);
-   sprintf(real_fname , "%s/%s", USERSET_DIR, userset_name);
-   if ((ret= write_userset(alpp, ep, fname, 0, 1))) {
-      /* answer list gets filled in write_userset() */
+   if (!spool_write_object(spool_get_default_context(), ep, userset_name, SGE_EMT_USERSET)) {
       DEXIT;
-      return ret;
-   } else {
-      if (rename(fname, real_fname) == -1) {
-         DEXIT;
-         return 1;
-      } else {
-         strcpy(fname, real_fname);
-      }      
-   }
+      return STATUS_EUNKNOWN;
+   }   
    /* change queue versions */
    /* isn't this unnecessary? since the userset hast just been created
     * it CANNOT by used by any queue in its (x)acl.  (Archie)
@@ -246,7 +237,8 @@ char *rhost
 
    lFreeElem(lDechainElem(*userset_list, found));
    /* remove userset file */
-   sge_unlink(USERSET_DIR, userset_name);
+   spool_delete_object(spool_get_default_context(), SGE_EMT_USERSET, 
+                       userset_name);
    sge_add_event(NULL, 0, sgeE_USERSET_DEL, 0, 0, userset_name, NULL);
 
    /* change queue versions */
@@ -389,7 +381,8 @@ const char *acl_name
       if (lGetElemStr(lGetList(qep, QU_acl), US_name, acl_name) ||
           lGetElemStr(lGetList(qep, QU_xacl), US_name, acl_name)) {
          sge_change_queue_version(qep, 0, 0);
-         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
+         spool_write_object(spool_get_default_context(), qep, 
+                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
          DPRINTF(("increasing version of queue "SFQ" because acl "
                        SFQ" changed\n", lGetString(qep, QU_qname), acl_name));
       }

@@ -48,6 +48,8 @@
 #include "sge_job.h"
 #include "sge_queue.h"
 
+#include "sge_spooling.h"
+
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
 static void sge_c_event_ack(char *, char *, u_long32, u_long32, u_long32);
@@ -179,13 +181,16 @@ u_long32 ack_ulong2
       DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qep, QU_qname)));
       lSetUlong(qep, QU_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, lGetString(qep, QU_qname), 0, 0);
-      cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
+      spool_write_object(spool_get_default_context(), qep, 
+                         lGetString(qep, QU_qname), SGE_EMT_QUEUE);
       break;
    case TAG_SIGJOB:
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
-      job_write_spool_file(jep, ack_ulong2, NULL, SPOOL_DEFAULT); 
+      spool_write_object(spool_get_default_context(), jep, 
+                         job_get_key(lGetUlong(jep, JB_job_number), ack_ulong2, 
+                                     NULL), SGE_EMT_JOB);
       break;
    }
 

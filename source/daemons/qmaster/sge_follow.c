@@ -80,6 +80,8 @@
 #include "sge_sharetree.h"
 #include "sge_todo.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_evmlib.h"
 #include "msg_qmaster.h"
@@ -867,7 +869,6 @@ lList **topp  /* ticket orders ptr ptr */
          int pos;
          const char *up_name;
          lList *tlp;
-         char fname[SGE_PATH_MAX];
 
          DPRINTF(("%sORDER #%d: update %d users/prjs\n", 
             force?"FORCE ":"", 
@@ -979,10 +980,9 @@ lList **topp  /* ticket orders ptr ptr */
             }
 
             /* spool */
-            sprintf(fname , "%s/%s", or_type==ORT_update_project_usage 
-               ? PROJECT_DIR:USER_DIR, up_name);
-            write_userprj(alpp, up, fname, NULL, 1, 
-               or_type==ORT_update_user_usage);
+            spool_write_object(spool_get_default_context(), up, up_name, 
+                               or_type == ORT_update_user_usage ? 
+                               SGE_EMT_USER : SGE_EMT_PROJECT);
             sge_add_event(NULL, 0,
                or_type==ORT_update_user_usage?sgeE_USER_MOD:sgeE_PROJECT_MOD,
                0, 0, up_name, up);
@@ -1072,7 +1072,10 @@ lList **topp  /* ticket orders ptr ptr */
             lSetUlong(jatp, JAT_state, state);
 
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            job_write_spool_file(jep, task_number, NULL, SPOOL_DEFAULT);
+            spool_write_object(spool_get_default_context(), jep, 
+                               job_get_key(jobid, task_number, NULL),
+                               SGE_EMT_JOB);
+          
 
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
@@ -1119,8 +1122,9 @@ lList **topp  /* ticket orders ptr ptr */
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(jatp, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatp);
-            job_write_spool_file(jep, task_number, NULL, SPOOL_DEFAULT);
-
+            spool_write_object(spool_get_default_context(), jep, 
+                               job_get_key(jobid, task_number, NULL),
+                               SGE_EMT_JOB);
             /* update queues time stamp in schedd */
             lSetUlong(queueep, QU_last_suspend_threshold_ckeck, sge_get_gmt());
             sge_add_queue_event(sgeE_QUEUE_MOD, queueep);

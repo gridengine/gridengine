@@ -207,6 +207,9 @@ usage:
    echo "-secure           -> enable ssl security"
    echo "-shared           -> link shared (default)"
    echo "-shared-libs      -> create libraries as shared libs"
+   echo "-spool-classic    -> use classic flatfile spooling (default)"
+#   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
+#   echo "-spool-flatfile   -> use new flatfile spooling"
    echo "-static           -> link static"
    echo "-static-libs      -> create libraries as static libs (default)"
    echo "-umap             -> compile with usermapping and hostgroup feature"
@@ -232,8 +235,7 @@ endif
 
 set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
-set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/spool -I../libs/spool/classic -I../libs/spool/flatfile -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
-
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/spool -I../libs/spool/classic -I../libs/spool/dynamic -I../libs/spool/flatfile -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
 set   ADOC              = 0
@@ -328,6 +330,11 @@ set   KLFLAGS      = ""
 set PERLGUI = ""
 set PERLGUI_CLEAN = ""
 # end PERLGUI
+# SPOOLING
+set SPOOLING_METHOD = "classic"
+set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
+set SPOOLING_DEPS   = "spooldlib spoolclib spoollib"
+#end SPOOLING
 
 # Compile with gettext and libintl
 # we have platform dependent defaults
@@ -737,7 +744,22 @@ while ($#argv >= 1 && $?found)
    case "-shared-libs":
       set SHAREDLIBS = 1
       breaksw
-   case "-static":
+   case "-spool-classic":
+      set SPOOLING_METHOD = "classic"
+      set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
+      set SPOOLING_DEPS   = "spooldlib spoolclib spoollib"
+      breaksw
+#   case "-spool-dynamic":
+#      set SPOOLING_METHOD = "dynamic"
+#      set SPOOLING_LIBS   = "-lspoold -lspool"
+#      set SPOOLING_DEPS   = "spooldlib spoollib"
+#      breaksw
+#   case "-spool-flatfile":
+#      set SPOOLING_METHOD = "classic"
+#      set SPOOLING_LIBS   = "-lspoold -lspoolf -lspool"
+#      set SPOOLING_DEPS   = "spooldlib spoolflib spoollib"
+#      breaksw
+#   case "-static":
       set STATIC = 1
       breaksw
    case "-static-libs":
@@ -760,6 +782,14 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
+# spooling
+if ( $SPOOLING_METHOD == "dynamic" && $SHAREDLIBS == 0 ) then
+   echo "dynamic spooling can only be used when building with shared libs"
+   exit 1
+endif
+
+set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD"
+# end spooling
 
 #----------------------------------------------------------------------
 
@@ -1800,6 +1830,7 @@ if ( "$CORE" == 1 ) then
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
        "DLLIB=$DLLIB" \
        "MEMCFLAG=$MEMCFLAG" \
        "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 

@@ -56,6 +56,8 @@
 #include "sge_hostgroup.h"
 #include "sge_usermap.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -351,10 +353,9 @@ lList **alpp,
 lListElem *upe,
 gdi_object_t *object 
 ) {  
-   /*char fname[1000];*/
    DENTER(TOP_LAYER, "usermap_spool");
  
-   if (write_ume( 1 , 2 , upe ) == NULL) {
+   if (!spool_write_object(spool_get_default_context(), upe, lGetString(upe, UME_cluster_user), SGE_EMT_USERMAPPING)) {
       const char* clusterUser = NULL;
       clusterUser = lGetString(upe, UME_cluster_user); 
       ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));

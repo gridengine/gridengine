@@ -130,7 +130,7 @@ const char *
 get_spooling_method(void);
 
 lListElem *
-spool_flatfile_create_context(int argc, char *argv[]);
+spool_flatfile_create_context(const char *args);
 
 bool 
 spool_flatfile_default_startup_func(const lListElem *rule);

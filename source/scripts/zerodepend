@@ -61,6 +61,7 @@ files=" \
        libs/mir/mir_dependencies  \
        libs/spool/spool_dependencies  \
        libs/spool/classic/spoolc_dependencies  \
+       libs/spool/dynamic/spoold_dependencies  \
        libs/spool/flatfile/spoolf_dependencies  \
        libs/comm/comm_dependencies  \
        libs/cull/cull_dependencies  \

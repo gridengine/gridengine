@@ -44,6 +44,8 @@
 #include "sge_answer.h"
 #include "sge_manop.h"
 
+#include "sge_spooling.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -121,7 +123,9 @@ DTRACE;
    added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
 
    /* update on file */
-   if (write_manop(1, target)) {
+   if(!spool_write_object(spool_get_default_context(), added, manop_name,
+                          target == SGE_MANAGER_LIST ? SGE_EMT_MANAGER : 
+                                                       SGE_EMT_OPERATOR)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
@@ -219,7 +223,10 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lDechainElem(*lpp, found);
 
    /* update on file */
-   if (write_manop(1, target)) {
+      if (!spool_delete_object(spool_get_default_context(), 
+                               target == SGE_MANAGER_LIST ? SGE_EMT_MANAGER :
+                                                            SGE_EMT_OPERATOR,
+                               manop_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    

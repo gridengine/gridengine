@@ -71,6 +71,8 @@
 #include "sge_userset.h"
 #include "sge_todo.h"
 
+#include "sge_spooling.h"
+
 /************************************************************************
  Master routine for job exit
 
@@ -247,7 +249,8 @@ lListElem *jatep
          state = lGetUlong(queueep, QU_state);
          SETBIT(QERROR, state);
          lSetUlong(queueep, QU_state, state);
-         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(queueep, QU_qname), NULL, queueep);
+         spool_write_object(spool_get_default_context(), queueep, 
+                            lGetString(queueep, QU_qname), SGE_EMT_QUEUE);
          ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid)));    
       }
       /*
@@ -267,8 +270,8 @@ lListElem *jatep
 /*                   DPRINTF(("queue %s marked QERROR\n", lGetString(qep, QU_qname))); */
                   ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qep, QU_qname), u32c(jobid), host));    
                   
-                  cull_write_qconf(1, 0, QUEUE_DIR, 
-                                    lGetString(qep, QU_qname), NULL, qep);
+                  spool_write_object(spool_get_default_context(), qep, 
+                            lGetString(qep, QU_qname), SGE_EMT_QUEUE);
                   sge_add_queue_event(sgeE_QUEUE_MOD, qep);
                }
             }

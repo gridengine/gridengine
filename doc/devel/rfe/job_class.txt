@@ -1,0 +1,154 @@
+JOB CLASS (JC)
+==============
+
+- JCs simplyfy the way to describe/setup job runtime environments
+- Several attributes so far used to describe queues (Q) are part of JCs
+- Each JC may relate to one or more Qs
+- Each Q may be assigned to one or more JCs
+- Each job (J) has exact one JC which may be defined during job submittion
+- Js will have a "default JC" if no one was specified
+- Each "default Q" will be assigned to the "default JC"
+
+
+                         j          -----          1
+                        : +-------> | J | <-------+ :
+                       i  |         -----         |  1
+                          |                       |
+                          |                       | 
+                          |                       |
+                          v                       v
+                        -----        n:m        ------
+                        | Q | <---------------> | JC |
+                        -----                   ------
+
+
+- Client application (qsub, qrsh, ...) can overwrite corresponding
+  attributes as defined in JCs.
+- The JC object allows the admin to specify which of the attributes can be 
+  overwritten by the command-line and which can't
+- Attributes of Qs and the relations between Qs and other objects
+  like parallel environments (PE) and checkpointing objects (CKPT)
+  define the maximum amount of resources a Q can offer.
+- Attributes of JCs the relation between JC and J defines
+  the minimum requirements a job has, to be executed successfully.
+
+
+Client Interface 
+================
+
+Visible Attributes
+------------------
+
+- Fields below are new JC attributes:
+
+   jcname               <usual naming convention for objects>
+   queue_list           'all' (or list of queue names)
+   slots                number of processes being allowed to
+                        run in total under this JC evironment concurrently
+   command_line         'none' or a commandline similar to
+                        qsub/qalter-commandlines which will be 
+                        used to modify submitted jobs:
+
+                        The first letter of each used option indicates
+                        whether an attribute of the JC specification
+                        may be overwritten or not. 
+
+                        -   ===> option might be overwritten by the user
+                        !   ===> option can't be overwritten. If a user
+                                 tries this he will get an error
+                        +   ===> The submitter of a jobs has to use this
+                                 option to overwrite the specification
+
+                        e.g "!pe nodeXY 4 -ckpt ckpt1 +l a=solaris64"
+
+                        Options not used in the JC commandline might
+                        be used by the user (similar to -).
+                        
+- Following Attributes will be moved from the Q object definition into the JC.
+  Corresponding values are default values for new JCs and default values for
+  the "default JC":
+
+   rerun                FALSE
+   shell                /bin/csh
+   shell_start_mode     NONE
+   prolog               NONE
+   epilog               NONE 
+   starter_method       NONE
+   suspend_method       NONE
+   resume_method        NONE
+   terminate_method     NONE
+   notify               00:00:60
+   fshare               0
+   oticket              0
+
+- Following Attributes will be copied from the Q object definition into the JC.
+  Corresponding values are default values for new JCs and default values for
+  the "default JC":                                
+   s_rt                 NONE
+   h_rt                 NONE
+   s_cpu                NONE
+   h_cpu                NONE
+   s_fsize              NONE
+   h_fsize              NONE
+   s_data               NONE
+   h_data               NONE
+   s_stack              NONE
+   h_stack              NONE
+   s_core               NONE
+   h_core               NONE
+   s_rss                NONE
+
+qconf
+-----
+
+-aattr job_class <attr_name> <val> <jc_name>,... 
+-Aattr job_class <attr_name> <val> <jc_name>,... 
+-dattr job_class <attr_name> <val> <jc_name>,...
+-Dattr job_class <attr_name> <val> <jc_name>,...
+-mattr job_class <attr_name> <val> <jc_name>,...
+-Mattr job_class <attr_name> <val> <jc_name>,...
+-rattr job_class <attr_name> <val> <jc_name>,...
+-Rattr job_class <attr_name> <val> <jc_name>,...
+-ajc <jc_name>
+-Ajc <jc_name>
+-djc <jc_name>
+-Djc <jc_name>
+-mjc <jc_name>
+-Mjc <jc_name>
+-sjc <jc_name>
+-sjcl
+
+qsub, qalter, qsh, qrsh, qacct, qlogin
+--------------------------------------
+
+-jc <jc_name>        specify JC during submittion/modification/queries
+
+qmod 
+----
+
+-r <jc_name>         reschedule all jobs of a certain JC
+
+qmon
+----
+
+- new entry for job classes in the main window
+
+- new "Job Class Control" dialog
+   * similar to "Queue Control" dialog
+   * List of available JCs
+   * Add/Modify/Delete 
+   * Refresh/Done/Help Button
+   * Button to "Ticket Overview Dialog"
+   * Reschedule Button
+    
+- new "Job Class Configuration" to add and modify JCs
+   * similar to "Queue Configuration" dialog
+     (name, queue_list, Tab control)
+   * General Configuration Tab
+     (Slots, Shell, Start mode, Notify Time, Rerun Flag)
+   * Execution Method Tab
+     (Prolog, Epilog, *Method)
+   * Limits Tab
+      
+- modification of the "Queue Configuration" dialog
+   * removal of moved attributes 

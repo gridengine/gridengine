@@ -154,6 +154,14 @@ CheckLocalFilesystem()
             return 0
          fi
          ;;
+      lx24-amd64)
+         df -T $FS | grep "nfs" >/dev/null 2>&1
+         if [ $? -eq 0 ]; then
+            return 0
+         else
+            return 1
+         fi
+         ;;
       lx*)
          df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then

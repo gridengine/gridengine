@@ -1,3 +1,7 @@
+MD-2004-03-11-0: Bugfix:    check for local filesystem on lx24-amd64
+                            was broken
+                 Changed:   inst_sge
+
 AS-2004-03-11-0: Enhancem.: Merged HPCT changes from 5.3
 
 AS-2004-03-10-0: CVS        Created V60_beta1_target_{BRANCH,TAG}

@@ -185,10 +185,12 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
                                           double sum_adjusted_proportion,
                                           double sum_last_interval_usage,
                                           double *min_share,
-                                          double *max_share);
+                                          double *max_share,
+                                          double *max_ticket_share);
 
 static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
-                                             double max_share);
+                                             double max_share,
+                                             double max_ticket_share);
 
 static void ptf_get_usage_from_data_collector(void);
 
@@ -761,27 +763,61 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 
 #  if defined(NECSX4) || defined(NECSX5)
 
-   /*
-    * NEC nice values range from 0 to 39.
-    * According to the nicej(2) man page, nicej returns the new
-    * nice value minus 20, so -1 is a valid return code. Errno
-    * is not set upon a successful call, so we can't tell the
-    * difference between success and failure if we are setting
-    * the nice value to 19. We don't generate an error message
-    * if the nicej(2) call fails and we are trying to set the
-    * nice value to 19 (no big deal).
-    */ 
+   {
+      int timesliced = 0;
 
-   nice = nicej(ptf_get_osjobid(osjob), 0);
-   if (nice != -1 || pri == 19) {
-      if (nicej(ptf_get_osjobid(osjob), pri - (nice+20)) == -1 && pri != 19) {
-	 if (errno != ESRCH) {
-	    ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
-		   u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+      /*
+       * If the timeslice value is set then set the timeslice
+       * scheduling parameter. This gives nice proportional
+       * scheduling for SX jobs. PTF_MIN_PRIORITY and
+       * PTF_MAX_PRIORITY define the time slice range to use.
+       * Values are in 1/HZ seconds, where HZ is 200.
+       *
+       *      1000 = 5 seconds
+       *	    200 = 1 seconds
+       */
+
+      if (lGetDouble(job, JL_timeslice) > 0 && lGetUlong(job, JL_interactive) == 0) {
+	 dispset2_t attr;
+	 int timeslice;
+	 osjobid_t jobid = ptf_get_osjobid(osjob);
+
+	 if (dispcntl(SG_JID, jobid, DCNTL_GET2, &attr) != -1) {
+	    attr.tmslice = (int) lGetDouble(job, JL_timeslice);
+	    if (dispcntl(SG_JID, jobid, DCNTL_SET2, &attr) == -1) {
+	       ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
+		      u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+	    } else {
+               timesliced = 1;
+            }
+
 	 }
-      } else {
-	 DPRINTF(("NICEJ(" u32 ", " u32 ")\n",
-		  (u_long32) ptf_get_osjobid(osjob), (u_long32) pri));
+      }
+
+      /*
+       * NEC nice values range from 0 to 39.
+       * According to the nicej(2) man page, nicej returns the new
+       * nice value minus 20, so -1 is a valid return code. Errno
+       * is not set upon a successful call, so we can't tell the
+       * difference between success and failure if we are setting
+       * the nice value to 19. We don't generate an error message
+       * if the nicej(2) call fails and we are trying to set the
+       * nice value to 19 (no big deal).
+       */ 
+
+      if (!timesliced) {
+	 nice = nicej(ptf_get_osjobid(osjob), 0);
+	 if (nice != -1 || pri == 19) {
+	    if (nicej(ptf_get_osjobid(osjob), pri - (nice+20)) == -1 && pri != 19) {
+	       if (errno != ESRCH) {
+		  ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
+			 u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+	       }
+	    } else {
+	       DPRINTF(("NICEJ(" u32 ", " u32 ")\n",
+			(u_long32) ptf_get_osjobid(osjob), (u_long32) pri));
+	    }
+	 }
       }
    }
 
@@ -1366,6 +1402,7 @@ static void ptf_calc_job_proportion_pass1(lListElem *job,
    share = ((double) lGetUlong(job, JL_tickets) / sum_of_job_tickets) *
       1000.0 + 1.0;
    lSetDouble(job, JL_share, share);
+   lSetDouble(job, JL_ticket_share, (double) lGetUlong(job, JL_tickets) / sum_of_job_tickets);
 
    /*
     * Calculate each jobs proportion value based on the job's tickets
@@ -1425,7 +1462,8 @@ static void ptf_calc_job_proportion_pass2(lListElem *job,
 static void ptf_calc_job_proportion_pass3(lListElem *job,
                                           double sum_adjusted_proportion,
                                           double sum_last_interval_usage,
-                                          double *min_share, double *max_share)
+                                          double *min_share, double *max_share,
+                                          double *max_ticket_share)
 {
    double job_adjusted_current_proportion = 0;
 
@@ -1441,6 +1479,7 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
 
    *max_share = MAX(*max_share, job_adjusted_current_proportion);
    *min_share = MIN(*min_share, job_adjusted_current_proportion);
+   *max_ticket_share = MAX(*max_ticket_share, lGetDouble(job, JL_ticket_share));
 
 #if 0
     DPRINTF(("XXXXXXX  minshare: %f, max_share: %f XXXXXXX\n", *min_share, 
@@ -1453,7 +1492,8 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
  *--------------------------------------------------------------------*/
 
 static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
-                                             double max_share)
+                                             double max_share,
+                                             double max_ticket_share)
 {
    lListElem *job;
    static long pri_range, pri_min = 1000, pri_max = -1000;
@@ -1528,6 +1568,14 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
       }
 
 #endif
+
+      if (pri_min > 50 && pri_max > 50)
+         if (max_ticket_share > 0)
+	    lSetDouble(job, JL_timeslice, 
+                       MAX(pri_max, lGetDouble(job, JL_ticket_share) *
+                                    pri_min / max_ticket_share));
+         else
+            lSetDouble(job, JL_timeslice, pri_min);
 
       lSetLong(job, JL_pri, pri);
       ptf_set_job_priority(job);
@@ -1750,6 +1798,7 @@ int ptf_adjust_job_priorities(void)
    double sum_adjusted_proportion = 0;
    double min_share = 100.0;
    double max_share = 0;
+   double max_ticket_share = 0;
    double sum_interval_usage = 0;
    double sum_of_last_usage = 0;
 
@@ -1803,7 +1852,7 @@ int ptf_adjust_job_priorities(void)
       for_each(job, job_list) {
          ptf_calc_job_proportion_pass3(job, sum_proportion,
                                        sum_interval_usage, &min_share,
-                                       &max_share);
+                                       &max_share, &max_ticket_share);
       }
 
 #ifdef PTF_NEW_ALGORITHM
@@ -1872,7 +1921,8 @@ int ptf_adjust_job_priorities(void)
       /*
        * Set the O.S. scheduling parameters for the jobs
        */
-      ptf_set_OS_scheduling_parameters(job_list, min_share, max_share);
+      ptf_set_OS_scheduling_parameters(job_list, min_share, max_share,
+                                       max_ticket_share);
    }
    next = now + PTF_SCHEDULE_TIME;
 
@@ -2047,6 +2097,14 @@ int ptf_init(void)
          }
       }
    }
+#elif defined(NECSX5) || defined(NECSX6)
+
+   if (getuid() == 0) {
+      if (nicex(0, -10) == -1) {
+	 ERROR((SGE_EVENT, MSG_PRIO_NICEMFAILED_S, strerror(errno)));
+      }
+   }
+
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
    if (getuid() == 0) {
       if (setpriority(PRIO_PROCESS, getpid(), PTF_MAX_PRIORITY) < 0) {

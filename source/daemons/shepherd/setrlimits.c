@@ -320,7 +320,7 @@ int *resource_type
       {RLIMIT_TMPF,      "RLIMIT_TMPF",             {RES_JOB,  RES_PROC}},
       {RLIMIT_MTDEV,     "RLIMIT_MTDEV",            {RES_JOB,  RES_PROC}},
       {RLIMIT_NOFILE,    "RLIMIT_NOFILE",           {RES_BOTH, RES_PROC}},
-      {RLIMIT_PROC,      "RLIMIT_PROC",             {RES_BOTH, RES_PROC}},
+      {RLIMIT_PROC,      "RLIMIT_PROC",             {RES_JOB,  RES_PROC}},
       {RLIMIT_RLG0,      "RLIMIT_RLG0",             {RES_JOB,  RES_PROC}},
       {RLIMIT_RLG1,      "RLIMIT_RLG1",             {RES_JOB,  RES_PROC}},
       {RLIMIT_RLG2,      "RLIMIT_RLG2",             {RES_JOB,  RES_PROC}},

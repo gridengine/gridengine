@@ -92,6 +92,10 @@
 #  define DELAY_TIME          600 
 #endif
 
+static int check_interval = CHECK_INTERVAL;
+static int get_active_interval = GET_ACTIVE_INTERVAL;
+static int delay_time = DELAY_TIME;
+
 char binpath[SGE_PATH_MAX];
 char oldqmaster[SGE_PATH_MAX];
 
@@ -188,6 +192,21 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
+   /* initialize recovery control variables */
+   {
+      char *s;
+      int val;
+      if ((s=getenv("SGE_CHECK_INTERVAL")) &&
+          sscanf(s, "%d", &val) == 1)
+         check_interval = val;
+      if ((s=getenv("SGE_GET_ACTIVE_INTERVAL")) &&
+          sscanf(s, "%d", &val) == 1)
+         get_active_interval = val;
+      if ((s=getenv("SGE_DELAY_TIME")) &&
+          sscanf(s, "%d", &val) == 1)
+         delay_time = val;
+   }
+         
    /* This needs a better solution */
    umask(022);
 
@@ -288,7 +307,7 @@ char **argv
 
    delay = 0;
    while (TRUE) {
-      sleep(CHECK_INTERVAL);
+      sleep(check_interval);
 
       if (shut_me_down) {
          extern u_long32 logginglevel;
@@ -311,12 +330,12 @@ char **argv
       /* We could read two times the heartbeat */
       if (last_heartbeat != -1 && 
           heartbeat != -1 && 
-          (now - last >= (GET_ACTIVE_INTERVAL + delay))) {
+          (now - last >= (get_active_interval + delay))) {
          delay = 0;
          if ((last_heartbeat - heartbeat) == 0) {
             DPRINTF(("heartbeat not changed since seconds: %d\n", 
                (int) (now - last)));
-            delay = DELAY_TIME;
+            delay = delay_time;
             if (!(ret = check_if_valid_shadow(path.shadow_masters_file))) {
                if (qmaster_lock(QMASTER_LOCK_FILE)) {
                   ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));

@@ -53,6 +53,8 @@ enum {
    JL_state,
    JL_tickets,
    JL_share,
+   JL_ticket_share,
+   JL_timeslice,
    JL_usage,
    JL_old_usage_value,
    JL_adjusted_usage,
@@ -76,6 +78,8 @@ LISTDEF(JL_Type)
    SGE_ULONG(JL_state)        /* job state (JL_JOB_*) */
    SGE_ULONG(JL_tickets)      /* job tickets */
    SGE_DOUBLE(JL_share)       /* ptf interval share */
+   SGE_DOUBLE(JL_ticket_share) /* ptf job ticket share */
+   SGE_DOUBLE(JL_timeslice)   /* ptf calculated timeslice (SX) */
    SGE_DOUBLE(JL_usage)       /* ptf interval combined usage */
    SGE_DOUBLE(JL_old_usage_value)     /* ptf interval combined usage */
    SGE_DOUBLE(JL_adjusted_usage)      /* ptf interval adjusted usage */
@@ -99,6 +103,8 @@ NAMEDEF(JLN)
    NAME("JL_state")
    NAME("JL_tickets")
    NAME("JL_share")
+   NAME("JL_ticket_share")
+   NAME("JL_timeslice")
    NAME("JL_usage")
    NAME("JL_old_usage_value")
    NAME("JL_adjusted_usage")

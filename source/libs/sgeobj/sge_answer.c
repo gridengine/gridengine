@@ -353,10 +353,12 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
       } else {
          const char *s, *t;
          s = lGetString(answer, AN_text);
-         if ((t=strchr(s, '\n')))
-            sge_dstring_sprintf_append(diag, "%.*s", t-s, s);
-         else
+         if ((t=strchr(s, '\n'))) {
+            sge_dstring_sprintf_append(diag, "%.*s", t-s, s); 
+         }
+         else {
             sge_dstring_append(diag, s);
+         }   
       }
    }
 }

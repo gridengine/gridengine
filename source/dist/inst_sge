@@ -355,24 +355,6 @@ AskIfDefaultOkAndSetVariables()
    fi
 }
 
-#---------------------------------------------------
-# SetFilePerm
-# set file permissions to 644 and dirs. to 755 and change owner to admin
-# user
-#
-SetFilePerm()
-{
-   f="$1"
-   $INFOTEXT "Verifying and setting file permissions in >%s<" "$f"
-   chmod -R go+r $f
-   find $f -type d -exec chmod 755 {} \;
-   find $f -type f -perm -100 -exec chmod go+x {} \;
-
-   if [ $ADMINUSER != default ]; then
-        chown -R $ADMINUSER $f
-   fi
-}
-
 #-------------------------------------------------------------------------
 # Makedir: make directory, chown/chgrp/chmod it. Exit if failure
 #

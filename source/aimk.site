@@ -118,9 +118,6 @@ switch ($BUILDARCH)
 endsw
 
 
-if ( ! $?JAVA_HOME ) then
-   set JAVA_HOME = /usr/lib/java
-endif   
 switch($buildarch)
    case "lx24-x86":
    case "lx26-x86":

@@ -1,3 +1,37 @@
+DT-2004-12-30-3: Docs:      o Updated JavaDocs
+                            - merged from maintruck DT-2004-12-30-2
+                 Changed:   javadocs, DRMAA
+
+DT-2004-12-30-3: Bugfix:    o Fixed broken Java build
+                            - merged from maintruck DT-2004-12-30-1
+                 Changed:   aimk, DRMAA
+                 Review:    AS
+
+DT-2004-12-30-3: Bugfix:    o Fixed minor bug in aimk
+                            o Fixed minor bug in distinst
+                            o Backed out part of DT-2004-12-29-0
+                            o un-DOS'ed JobTemplateImplTest.java
+                            o Fixed typos in README.aimk
+                            - merged from maintruck DT-2004-12-30-0
+                 Changed:   DRMAA, aimk, zerodepend, distinst, README.aimk
+                 Review:    AS
+
+DT-2004-12-30-3: Bugfix:    o Restructured DRMAA build proceedure
+                            o Fixed minor bug in findcheckin script
+                            - merged from maintruck DT-2004-12-29-0
+                 Changed:   DRMAA, aimk, distinst, zerodepend
+                 Issue:     1405
+                 Review:    AS
+
+DT-2004-12-30-3: Bugfix:    o Added missing files from previous checkins
+                            o Fixed bugs in DRMAA-J test suite
+                            o Fixed packaging for DrmaaExample and TestDrmaa
+                            o Fixed DRMAA-J cloning issue
+                            - Still need to test new clone() methods
+                            - merged from maintruck DT-2004-12-28-0
+                 Changed:   DRMAA
+                 Issue:     1404
+
 CR-2004-12-23-1: Bugfix:    error in commlib read/write timeout handling
                             - merged from maintrunk
                               (CR-2004-12-07-0)

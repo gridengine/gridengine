@@ -69,8 +69,7 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-JDRMAA_SHARED_LIBRARIES="libjdrmaa"
-JDRMAA_FILES="drmaa.jar"
+DRMAAJ_FILES="../CLASSES/drmaa.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -925,7 +924,7 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instdrmaa = true ]; then
-      echo Installing \"DRMAA\"
+      echo Installing DRMAA include files
       Execute rm -rf $DEST_SGE_ROOT/include
       MakeDir include
 
@@ -1284,16 +1283,22 @@ for i in $ARCH; do
             fi
          done
 
-         for lib in $JDRMAA_SHARED_LIBRARIES; do
-            libname=$lib.$jnilibext
-            if [ -f $libname ]; then
-               InstallProg $libname
-            fi
-         done
+# On MacOS X, the JVM expects a special JNI extension for shared libraries
+         if [ $shlibext != $jnilibext ]; then
+            echo Linking $lib.$jnilibext to $lib.$shlibext
 
-         for filename in $JDRMAA_FILES; do
+            if [ -f $DEST_SGE_ROOT/lib/$DSTARCH/4lib.$jnilibext ]; then
+               rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+            fi
+
+            ln $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+         fi
+
+         for filename in $DRMAAJ_FILES; do
             if [ -f $filename ]; then
-                Install 0.0 755 $filename $DEST_SGE_ROOT/${UTILPREFIX}/`basename $filename`
+                echo Installing `basename $filename`
+                Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
+                Install 0.0 755 $filename $DEST_SGE_ROOT/lib
             fi
          done
       fi

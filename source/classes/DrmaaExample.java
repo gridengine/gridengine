@@ -29,8 +29,6 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package source.classes;
-
 import java.util.*;
 
 import org.ggf.drmaa.*;

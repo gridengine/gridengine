@@ -310,13 +310,15 @@ usage:
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks)"
    echo "-intl             -> compile with internationalization library (libintl)"
-   echo "-java             -> compile Java sources such as DRMAA Java binding"
-   echo "-javadoc          -> create JavaDoc for Java sources such as DRMAA Java binding"
+   echo "-java             -> compile Java[TM] class files"
+   echo "-javadoc          -> create source code documentation in Javadoc[TM] tool format"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
    echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
+   echo "-no-java          -> don't compile Java[TM] class files"
+   echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
    echo "-no-opt           -> compile with low optimization"
@@ -328,6 +330,7 @@ usage:
    echo "-no-secure        -> diable ssl security (enabled by default)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
+   echo "-only-java        -> only compile Java[TM] class files"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
@@ -399,6 +402,8 @@ set JAVA             = 0
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
+set JNI              = 1
+set DRMAA_TARGET     = "ALL"
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -687,6 +692,12 @@ while ($#argv >= 1 && $?found)
    case "-no-core":
       set CORE = 0
       breaksw
+   case  "-no-java"
+      set JAVA = 0
+      breaksw
+   case  "-no-jni"
+      set JNI = 0
+      breaksw
    case  "-no-intl"
       set WITH_GETTEXT = 0
       breaksw
@@ -737,6 +748,9 @@ while ($#argv >= 1 && $?found)
       set QTCSH      = 0
       set REMOTE     = 0
       set SGE_DEPEND = 1
+      breaksw
+   case  "-only-java"
+      set JAVA = 2
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -872,7 +886,7 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
-if ( $JAVA == 1 || $BUILDJAVADOC == 1 ) then
+if ( $JAVA > 0 || $BUILDJAVADOC == 1 || $JNI == 1 ) then
    # Make sure we can find JAVA_HOME
    if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
@@ -1593,11 +1607,14 @@ default:
    exit 1
 endsw
 
-if ($JAVA == 1) then
+if ($JNI == 1) then
    set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
+
    if ("$JAVA_ARCH" != "") then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
    endif
+else
+   set DRMAA_TARGET = "NJ"
 endif
 
 if ($JAVA_SHAREDEXT == "") then
@@ -1743,21 +1760,16 @@ endif
 if ( "$BUILDJAVADOC" == 1 ) then
    echo _________J_A_V_A_D_O_C_S__________________
 
-   cd $SOURCE/$COMPILE_ARCH
+   cd $SOURCE/classes
 
-   if ( ! -d ../../doc/javadocs ) then
-      echo " INFO: JavaDoc directory does not exist. Creating"
-      mkdir ../../doc/javadocs
-   else
-      echo " INFO: clearing old JavaDoc directory."
-      rm -Rf ../../doc/javadocs/*
-   endif
-
-   $JAVA_HOME/$JAVA_BINDIR/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadocs -version -subpackages org.ggf.drmaa com.sun.grid.drmaa -exclude com.sun.grid.drmaa.howto
+   ant -f build.xml javadoc
 
    if ( $status != 0 ) then
       echo not done
       exit 1
+   else
+      echo done
+      exit 0
    endif
 
    cd $SOURCE
@@ -1900,7 +1912,7 @@ else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
    set CFLAGS = "-DADD_COPYRIGHT -DADD_SUN_COPYRIGHT -I$SUN_COPYRIGHT_DIR $CFLAGS"
 endif
 
-if ( "$CORE" == 1 ) then
+if ( "$CORE" == 1 && "$JAVA" != 2 ) then
    if ( "$COMPILE_DIR" == "" ) then
       cd $COMPILE_ARCH
    else
@@ -1965,46 +1977,32 @@ if ( "$CORE" == 1 ) then
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
-			"JNI_INCLUDES=$JNI_INCLUDES" \
+         "JNI_INCLUDES=$JNI_INCLUDES" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
+         "DRMAA_TARGET=$DRMAA_TARGET" \
          $argv
    if ( $status != 0 ) then
       echo not done
       exit 1
    endif
 
-   if ( $JAVA == 1 ) then
-      echo _________D_R_M_A_A__J A_V_A_______________
-      $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
-            "LD_WRAPPER=$LD_WRAPPER" \
-            "CFLAGS=$CFLAGS $CORE_INCLUDE" \
-            "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-            "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
-            "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-            "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
-            "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-            "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
-            "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
-            "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-            "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
-            "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-            "NOERR_PROTO=$NOERR_PROTO" \
-            "NOERR_CFLAG=$NOERR_CFLAG" \
-            "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
-            "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
-            "INTERACTTARGETS=$INTERACTTARGETS" \
-            "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
-            "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
-            "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
-            "SPOOLLIBEXT=$SPOOLLIBEXT" \
-            "DLLIB=$DLLIB" "MEMCFLAG=$MEMCFLAG" "CORE_INCLUDE=$CORE_INCLUDE" \
-            "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
-            classes_all
-      if ( $status != 0 ) then
-         echo not done
-         exit 1
-      endif
+   cd $SOURCE
+endif
+
+if ( "$JAVA" > 0 ) then
+   echo _________J_A_V_A__C_L_A_S_S__F_I_L_E_S____
+
+   cd classes
+
+   ant -f build.xml $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   else if ( $JAVA == 2 ) then
+      echo done
+      exit 0
    endif
 
    cd $SOURCE
@@ -2139,7 +2137,7 @@ if ( "$QTCSH" == 1) then
 
    # with shared libs: qtcsh requires finding libsge.so during build
    # for AIX, we have to pass special options to make
-   set SGE_COPTS = ""
+   set SGE_COPTS = "$DEBUG_FLAG"
    set SGE_LOPTS = ""
 
 

@@ -1,0 +1,66 @@
+<iwt:Att name="iwtDesktop-userSelectedProviders"
+    userConfigurable="true"
+    >
+    <Val>iwtAppProvider</Val>
+    <Val>iwtBookmarkProvider</Val>
+    <Val>iwtIPInfoProvider</Val>
+    <Val>iwtNetletProvider</Val>
+    <Val>iwtSampleJSP</Val>
+    <Val>iwtSampleRss</Val>
+    <Val>iwtUserInfoProvider</Val>
+    <Val>suntcpApplicationList</Val>
+    <Val>suntcpJobList</Val>
+    <Val>suntcpJobControl</Val>
+    <Val>suntcpProjectList</Val>
+</iwt:Att>
+<iwt:Att name="iwtNetlet-rules"
+    userConfigurable="true"
+    >
+    <Val>Citrix|/third_party/citrix_start.html|true|1494|TARGET|1494</Val>
+    <Val>Graphon|/third_party/xsession_start.html|true|10491|TARGET|491</Val>
+    <Val>RemoteControl|/third_party/pca_start.htm|true|5631|TARGET|5631|5632|TARGET|5632</Val>
+    <Val>Telnet|telnet://localhost:30000|false|30000|TARGET|23</Val>
+    <Val>Xvnc:1|http://localhost:5801/portal.vnc|5801:scserv220:5801|5901|scserv220|5901</Val>
+    <Val>Xvnc:2|http://localhost:5802/portal.vnc|5802:scserv220:5802|5902|scserv220|5902</Val>
+    <Val>Xvnc:3|http://localhost:5803/portal.vnc|5803:scserv220:5803|5903|scserv220|5903</Val>
+    <Val>Xvnc:4|http://localhost:5804/portal.vnc|5804:scserv220:5804|5904|scserv220|5904</Val>
+    <Val>Xvnc:5|http://localhost:5805/portal.vnc|5805:scserv220:5805|5905|scserv220|5905</Val>
+</iwt:Att>
+<iwt:Att name="iwtAuth-authMenu"
+    userConfigurable="true"
+    >
+    <Val>Unix</Val>
+</iwt:Att>
+<iwt:Att name="iwtNetlet-portWarn"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+</iwt:Att>
+<iwt:Att name="iwtPlatform-adminRoles"
+    userConfigurable="true"
+    >
+</iwt:Att>
+<iwt:Att name="iwtDesktop-allProviders"
+    userConfigurable="true"
+    >
+    <Val>iwtUserInfoProvider|com.iplanet.portalserver.providers.userinfo.UserInfoProvider</Val>
+    <Val>iwtSampleRss|com.iplanet.portalserver.providers.rss.RSSProvider</Val>
+    <Val>iwtIPInfoProvider|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>iwtAppProvider|com.iplanet.portalserver.providers.app.AppProvider</Val>
+    <Val>iwtBookmarkProvider|com.iplanet.portalserver.providers.bookmark.BookmarkProvider</Val>
+    <Val>iwtPostitProvider|com.iplanet.portalserver.providers.postit.PostitProvider</Val>
+    <Val>iwtMailCheckProvider|com.iplanet.portalserver.providers.mailcheck.MailCheckProvider</Val>
+    <Val>iwtNetletProvider|com.iplanet.portalserver.providers.netlet.NetletProvider</Val>
+    <Val>iwtSampleJSP|com.iplanet.portalserver.providers.jsp.JSPProvider</Val>
+    <Val>iwtTabProvider|com.iplanet.portalserver.providers.tab.TabProvider</Val>
+    <Val>suntcpJobList|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>suntcpJobControl|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>suntcpProjectList|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>suntcpApplicationList|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+</iwt:Att>
+<iwt:Att name="iwtBookmarkProvider-targets"
+    userConfigurable="true"
+    >
+    <Val>Launch Xvnc server|/SunTCP?action=launchvncserver</Val>
+    <Val>Kill Xvnc server|/SunTCP?action=launchvncserver&amp;kill=yes</Val>
+</iwt:Att>

@@ -1,0 +1,298 @@
+<iwt:Component name="suntcpApplicationList"
+    ver="1.0"
+    idx="a100" >
+<iwt:Att name="suntcpApplicationList-helpLink"
+    type="string"
+    desc="Help Page"
+    idx="X-x104"
+    userConfigurable="true"
+    >
+    <Val>user_help/desktop/desktopTOC.html</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-resourceBundle"
+    type="string"
+    idx=""
+    userConfigurable="false"
+    >
+    <Val>iwtURLScraperProvider</Val>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-editType"
+    type="singlechoice"
+    desc="Edit Form Type"
+    idx=""
+    userConfigurable="true"
+    >
+    <Val>edit_subset</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+    <CVal>edit_subset</CVal>
+    <CVal>edit_complete</CVal>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-isDetached"
+    type="boolean"
+    desc="Detached?"
+    idx="X-x101"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-isMinimized"
+    type="boolean"
+    desc="Minimized?"
+    idx="X-x102"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-row"
+    type="string"
+    desc="Row"
+    idx="X-x110"
+    userConfigurable="true"
+    >
+    <Val>1</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-debug"
+    type="boolean"
+    desc="Debugging Output?"
+    idx=""
+    userConfigurable="false"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-templateKeys"
+    type="stringlist"
+    desc="Template Keys"
+    idx=""
+    userConfigurable="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-useGateway"
+    type="boolean"
+    desc="Use Gateway?"
+    idx="a202"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-column"
+    type="string"
+    desc="Column"
+    idx="X-x109"
+    userConfigurable="true"
+    >
+    <Val>1</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-timeout"
+    type="string"
+    desc="Content Timeout"
+    idx="a201"
+    userConfigurable="true"
+    >
+    <Val>5</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-hasFrame"
+    type="boolean"
+    desc="Framed?"
+    idx="X-x108"
+    userConfigurable="true"
+    >
+    <Val>true</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-templateFiles"
+    type="stringlist"
+    desc="Template Files"
+    idx=""
+    userConfigurable="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-description"
+    type="string"
+    idx=""
+    userConfigurable="false"
+    >
+    <Val>Application List</Val>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-url"
+    type="string"
+    desc="Content URL"
+    idx="a200"
+    userConfigurable="true"
+    >
+    <Val>/SunTCP?action=applicationList</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-backgroundColor"
+    type="string"
+    desc="Background Color"
+    idx="a106"
+    userConfigurable="true"
+    >
+    <Val>#DDDDDD</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-title"
+    type="string"
+    desc="Title"
+    idx="a101"
+    userConfigurable="true"
+    >
+    <Val>Application List</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-refreshTime"
+    type="string"
+    desc="Refresh Time"
+    idx="X-x105"
+    userConfigurable="true"
+    >
+    <Val>0</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpApplicationList-width"
+    type="singlechoice"
+    desc="Width"
+    idx="X-x100"
+    userConfigurable="true"
+    >
+    <Val>thick</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+    <CVal>thin</CVal>
+    <CVal>thick</CVal>
+    <CVal>full_top</CVal>
+    <CVal>full_bottom</CVal>
+</iwt:Att>
+<iwt:Priv name="suntcpApplicationList-isMovable"
+    type="boolean"
+    desc="Movable?"
+    idx="a107"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-isMinimizable"
+    type="boolean"
+    desc="Minimizable?"
+    idx="a102"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-isRemovable"
+    type="boolean"
+    desc="Removable?"
+    idx="a105"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-isEditable"
+    type="boolean"
+    desc="Editable?"
+    idx="X-x107"
+    val="false"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-hasHelp"
+    type="boolean"
+    desc="Help?"
+    idx="X-x106"
+    val="false"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-isDetachable"
+    type="boolean"
+    desc="Detachable?"
+    idx="a103"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-cookiesToForward"
+    type="list"
+    desc="Cookies to Forward"
+    idx="a203"
+    >
+    <Alst>*</Alst>
+    <Dlst></Dlst>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpApplicationList-hasBorder"
+    type="boolean"
+    desc="Border?"
+    idx="a104"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+</iwt:Component>

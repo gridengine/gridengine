@@ -1,0 +1,8 @@
+#!/bin/sh
+
+sleep 15
+echo "Interest rate = $1"
+echo "Strike price = $2"
+echo "Days to maturity = $3"
+echo "Stock Price = $4"
+echo "Volatity = $5"

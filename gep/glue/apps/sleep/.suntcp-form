@@ -1,0 +1,40 @@
+<HTML><TITLE>Sleeper Demo Application Form</TITLE>
+<BODY bgcolor="#9999CC">
+To learn more about the Sleeper application go to the 
+<a href="http://www.yahoo.com">Search The Internet</a> link.
+<p>
+NOTE: Once you
+select a value and click continue, the value you
+selected will automatically appear on the input line.
+</BODY>
+
+
+
+<script language=javascript>
+
+function concat() {
+  var form = document.forms[0];
+  var project = form.elements[0].value;
+
+  for ( var i = 0; i < form.elements[1].options.length; i++ )
+      if ( form.elements[1].options[i].selected )
+          input = form.elements[1].options[i].value;
+
+  var url = opener.location.href;
+  opener.location.href = url + "&project=" + project + "&input=" + input;
+  window.close();
+}
+
+</script>
+<table>
+<tr><td>Select the number of seconds you would like the processor to sleep:</td>
+<td><select name=database>
+    <option value="10">10
+    <option value="20">20
+    <option value="30">30
+    <option value="60">60
+    </select></td></tr>
+</table>
+<input type=button name=button value=Continue onClick=concat()>
+
+</HTML>

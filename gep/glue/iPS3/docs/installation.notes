@@ -1,0 +1,108 @@
+1. Installation of IPlanet Portal Server/Gateway
+================================================
+
+Go to http://wwws.sun.com/software/product_categories/portal_servers.html and get iPlanet Portal Server
+
+iPS3.0SP4-01.tar.gz was used.
+
+Unpack to a temporary directory and install the required patches.
+
+% mkdir /space/iPS3.0SP4
+% cd /space/iPS3.0SP4
+% gtar xvzf iPS3.0SP4-01.tar.gz
+
+
+As root
+% cd patches/<OS-Version>
+% ./install_cluster
+% cd ..
+
+Install iPS
+% ./ipsinstall
+
+Ports:
+
+-  primary server:   9090
+-  directory server: 389
+-  gateway server:   9443
+-  admin port:       9099
+
+Passphrase:
+toedel123
+
+Server settings
+Installation Directory : /opt
+Server List            : http://bilbo.Germany.Sun.COM:9090
+Gateway List           : bilbo.Germany.Sun.COM:9443
+Primary Profile Server : http://bilbo.Germany.Sun.COM:9090
+Profile Role Tree Root : gridware
+Profile Role Tree User : root
+LDAP Port              : 389
+LDAP Admin Port        : 8900
+Web Server Admin Port  : 9099
+Start Server           : y
+
+Installing server.
+Installing SUNWwtsdd...
+Installing SUNWwtws...
+Installing SUNWwtsvd...
+Installing SUNWwtdt...
+Installing SUNWwtnm...
+Installing SUNWwtnf...
+Installing SUNWwtrw...
+Installing SUNWwtdoc...
+Installing SUNWwtsam...
+Installing SUNWwtds...
+
+Starting server.
+
+Select which component to install:
+1) iPlanet(TM) Portal Server
+2) iPlanet(TM) Portal Server: Secure Remote Access Pack (Gateway)
+3) Exit
+Choice? [3] 2
+
+Gateway settings
+Installation Directory : /opt
+Gateway                : bilbo.germany.Sun.COM:9443
+Gateway IP Address     : 129.157.141.37
+Profile Server         : http://bilbo.germany.Sun.COM:9090
+Profile Role Tree Root : Sun.COM
+Profile Role Tree User : root
+Install Firewall       : n
+Start Gateway          : y
+Are these settings correct? [y]/n 
+
+Self-signed certificate for a SSL connection.
+What is the name of your organization? [MyCompany] Sun     
+What is the name of your organizational unit? [MyDivision] Gridware
+What is the name of your city or locality? [MyCity] Regensburg
+What is the name of your state or province? [MyState] Bavaria
+What is the two-letter country code? [us] DE
+
+Installing gateway.
+Installing SUNWwtgwd...
+
+
+
+THERE SEEM TO BE PROBLEMS AFTER INSTALLATION OF THE GATEWAY. THE GATEWAY 
+DOES NOT CONTACT THE REST CORRECTLY. 
+A REBOOT HELPS, BUT IS OBVIOUSLY THE WORST SOLUTION.
+
+
+!!!!!! FIXME !!!!!!!!!!
+
+
+
+2. Glue Code
+============
+
+separated oreilly-servlet code from the rest and changed Makefile to take it
+into account.
+
+1. Fetch newest oreilly-servlet from website:
+   http://www.servlets.com/cos/index.html
+
+   unzip it in a temporary directory and copy lib/cos.jar to the glue directory
+   
+   

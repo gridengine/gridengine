@@ -1,0 +1,41 @@
+<iwt:Att name="iwtPlatform-adminRoles"
+    userConfigurable="true"
+    >
+</iwt:Att>
+<iwt:Att name="iwtDesktop-allProviders"
+    userConfigurable="true"
+    >
+    <Val>iwtTabProvider|com.iplanet.portalserver.providers.tab.TabProvider</Val>
+    <Val>iwtUserInfoProvider|com.iplanet.portalserver.providers.userinfo.UserInfoProvider</Val>
+    <Val>iwtSampleRss|com.iplanet.portalserver.providers.rss.RSSProvider</Val>
+    <Val>iwtIPInfoProvider|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>iwtAppProvider|com.iplanet.portalserver.providers.app.AppProvider</Val>
+    <Val>iwtSampleJSP|com.iplanet.portalserver.providers.jsp.JSPProvider</Val>
+    <Val>iwtBookmarkProvider|com.iplanet.portalserver.providers.bookmark.BookmarkProvider</Val>
+    <Val>iwtPostitProvider|com.iplanet.portalserver.providers.postit.PostitProvider</Val>
+    <Val>iwtMailCheckProvider|com.iplanet.portalserver.providers.mailcheck.MailCheckProvider</Val>
+    <Val>iwtNetletProvider|com.iplanet.portalserver.providers.netlet.NetletProvider</Val>
+    <Val>suntcpProjectList|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>suntcpJobList|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+    <Val>suntcpApplicationList|com.iplanet.portalserver.providers.urlscraper.URLScraperProvider</Val>
+</iwt:Att>
+<iwt:Att name="iwtDesktop-userSelectedProviders"
+    userConfigurable="true"
+    >
+    <Val>iwtUserInfoProvider</Val>
+    <Val>suntcpProjectList</Val>
+    <Val>suntcpApplicationList</Val>
+    <Val>suntcpJobList</Val>
+    <Val>iwtAppProvider</Val>
+    <Val>iwtBookmarkProvider</Val>
+    <Val>iwtIPInfoProvider</Val>
+    <Val>iwtNetletProvider</Val>
+    <Val>iwtSampleJSP</Val>
+    <Val>iwtSampleRss</Val>
+</iwt:Att>
+<iwt:Att name="iwtBookmarkProvider-targets"
+    userConfigurable="true"
+    >
+    <Val>Launch Xvnc server|/SunTCP?action=launchvncserver</Val>
+    <Val>Kill Xvnc server|/SunTCP?action=launchvncserver&amp;kill=yes</Val>
+</iwt:Att>

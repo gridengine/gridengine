@@ -1,0 +1,39 @@
+#!/bin/sh
+
+if [ "$SGP_ROOT" = "" ]; then
+   echo "\$SGP_ROOT environment variable not set"
+   exit 1
+fi   
+
+FASTA_ROOT=$SGP_ROOT/apps/Fasta/FastaRoot
+FASTA_DATA=$FASTA_ROOT/data
+
+FASTA_SSEARCH33=$FASTA_ROOT/bin/ssearch33
+FASTA_FASTA33=$FASTA_ROOT/bin/fasta33
+GZIP=/usr/bin/gzip
+
+cd $FASTA_DATA 
+
+prog=$FASTA_FASTA33
+case "$1" in
+    sw )
+        prog=$FASTA_SSEARCH33
+        ;;
+esac
+
+case "$2" in
+    mt )
+        prog=${prog}_t
+        ;;
+esac
+
+query="$3"
+
+shift 3
+
+$GZIP -dc "$@" > /tmp/select$$.faa
+
+$prog -q "$FASTA_DATA/$query" /tmp/select$$.faa 
+
+rm -f /tmp/select$$.faa
+

@@ -1,0 +1,11 @@
+
+This code was modified from the previous version in two ways:
+
+First, a dependency on home directory paths was removed.
+
+Second, the environment variable windows have now been generalized to
+allow whatever the users type to be directly inserted into the script that
+TCP submits to SGE. Whereas previously the line Option=5, would be
+added as an environment variable only (i.e. export Option=5). The line is 
+now inserted verbatum. Hence it can be SGE variables, or additional
+commands.

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE Requests
+    PUBLIC "-//iPlanet//iDSAME 5.1 Admin CLI DTD//EN"
+    "jar://com/iplanet/am/admin/cli/amAdmin.dtd"
+>
+
+<!--  CREATE REQUESTS -->
+
+<Requests>
+<OrganizationRequests DN="o=isp">
+    <CreateRole createDN="GEPUserRole,o=Germany.Sun.COM"/>
+    <CreateRole createDN="GEPAdminRole,o=Germany.Sun.COM"/>
+</OrganizationRequests>
+
+</Requests>	
+

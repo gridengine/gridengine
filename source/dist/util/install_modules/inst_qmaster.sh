@@ -752,22 +752,16 @@ PrintConf()
 #
 AddLocalConfiguration()
 {
-   useold=false
-
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
 
-   if [ $useold = false ]; then
-#      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
-#      PrintLocalConf 1 >> $LCONFDIR/$HOST
-#      SetPerm $LCONFDIR/$HOST
-      mkdir /tmp/$$
+      ExecuteAsAdmin mkdir /tmp/$$
       TMPH=/tmp/$$/$HOST
-      rm -f $TMPH
-      PrintLocalConf 1 > $TMPH
+      ExecuteAsAdmin rm -f $TMPH
+      ExecuteAsAdmin touch $TMPH
+      PrintLocalConf 1 >> $TMPH
       ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
-      rm -rf /tmp/$$
-   fi
+      ExecuteAsAdmin rm -rf /tmp/$$
 }
 
 

@@ -1,3 +1,9 @@
+MD-2004-06-16-0: Bugfix:    Install script fails when sgeadmin is selected 
+                            as install user
+                 Changed:   inst_qmaster.sh
+                 Review:    JG
+                 Issue:     1090
+
 SG-2004-06-16-0: Bugfix:    This bugfix is related to SG-2004-06-09-2. The
                             prefious one did not fix all aspects of the growing
                             scheduler and master. The implementation of the

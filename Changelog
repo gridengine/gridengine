@@ -1,3 +1,5 @@
+CR-2003-01-15-1  Testsuite: new performance test: throughput
+
 CR-2003-01-15-0  Testsuite: new procedure: create_gnuplot_xy_gif()
                             - generate gnuplot xy charts (only if gnuplot
                               is installed and in user binary path)

@@ -306,7 +306,12 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_PROTOCOL_ERROR: {
          return MSG_CL_RETVAL_PROTOCOL_ERROR;
       }
-      
+      case CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE: {
+         return MSG_CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE;
+      } 
+      case CL_RETVAL_TO_LESS_FILEDESCRIPTORS: {
+         return MSG_CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

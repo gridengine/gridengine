@@ -96,7 +96,9 @@ int sge_get_qmaster_port(void) {
    /* check for reresolve timeout */
    gettimeofday(&now,NULL);
 
-   DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   if (next_timeout > 0 ) {
+      DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   }
    if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));
@@ -164,7 +166,9 @@ int sge_get_execd_port(void) {
    /* check for reresolve timeout */
    gettimeofday(&now,NULL);
 
-   DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   if ( next_timeout > 0 ) {
+      DPRINTF(("reresolve port timeout in "U32CFormat"\n", u32c( next_timeout - now.tv_sec)));
+   }
    if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));

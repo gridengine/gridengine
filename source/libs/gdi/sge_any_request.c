@@ -255,6 +255,8 @@ void prepare_enroll(const char *name)
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
+   /* reresolve qualified hostname with use of host aliases */
+   reresolve_me_qualified_hostname();
 
    ret_val = cl_com_set_error_func(general_communication_error);
    if (ret_val != CL_RETVAL_OK) {
@@ -267,6 +269,7 @@ void prepare_enroll(const char *name)
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
       int execd_port = 0;
+      int commlib_error = CL_RETVAL_OK;
       if ( me_who == QMASTER ||
            me_who == EXECD   ||
            me_who == SCHEDD  || 
@@ -277,46 +280,80 @@ void prepare_enroll(const char *name)
       switch(me_who) {
          case EXECD:
             /* add qmaster as known endpoint */
-            cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), (char*)prognames[QMASTER], 1 ,sge_get_qmaster_port(),CL_CM_AC_DISABLED ,1);
+            cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), 
+                                                   (char*) prognames[QMASTER],
+                                                   1 ,
+                                                   sge_get_qmaster_port(),
+                                                   CL_CM_AC_DISABLED ,
+                                                   1);
             execd_port = sge_get_execd_port(); 
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,execd_port ,
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 1,execd_port ,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT, MSG_GDI_CANT_GET_EXECD_HANDLE_SUU, 
-                         (char*) prognames[uti_state_get_mewho()],
-                          u32c(my_component_id), 
-                          u32c(execd_port)));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(execd_port),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE,                              /* message based tcp communication                */
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE,                              /* message based tcp communication                */
                                           1, sge_get_qmaster_port(),                                /* create service on qmaster port,                */
                                                                                                     /* use execd port to connect to endpoints         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
                                           1 , 0 );                                                  /* select timeout is set to 1 second 0 usec       */
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(sge_get_qmaster_port()),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(sge_get_qmaster_port()),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
 
          default:
             /* this is for "normal" gdi clients of qmaster */
             DPRINTF(("creating GDI handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
-               CRITICAL((SGE_EVENT,MSG_GDI_CANT_CREATE_COM_HANDLE));
+               switch (commlib_error) {
+                  default:
+                     ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
+                                          uti_state_get_qualified_hostname(),
+                                          (char*) prognames[uti_state_get_mewho()],
+                                          u32c(my_component_id), 
+                                          u32c(sge_get_qmaster_port()),
+                                          cl_get_error_text(commlib_error)));
+               }
             }
             break;
       }
@@ -335,8 +372,6 @@ void prepare_enroll(const char *name)
       sleep(15);   
    }
 
-   /* reresolve qualified hostname with use of host aliases */
-   reresolve_me_qualified_hostname();
 
    DEXIT;
 }

@@ -53,7 +53,8 @@ int cl_com_cleanup_commlib(void);
 
 
 /* local handle functions */
-cl_com_handle_t* cl_com_create_handle(int           framework,
+cl_com_handle_t* cl_com_create_handle(int*          commlib_error,
+                                      int           framework,
                                       int           data_flow_type ,
                                       int           service_provider ,
                                       int           port,

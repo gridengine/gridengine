@@ -232,7 +232,6 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-#ifdef ENABLE_NGC
 int gdi_send_message(
 int synchron,
 const char *tocomproc,
@@ -290,9 +289,14 @@ int compressed
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
+         int commlib_error = CL_RETVAL_OK;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
+         if (handle == NULL) {
+            ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, tocomproc));
+            ERROR((SGE_EVENT,cl_get_error_text(commlib_error)));
+         }
       }
    }
 
@@ -326,54 +330,6 @@ int compressed
    DEXIT;
    return ret;
 }
-#else
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
-   int ret;
-
-   DENTER(TOP_LAYER, "gdi_send_message");
-   /*
-   ** handle the selection of the send_message func to use here
-   ** available are krb_send_message and sec_send_message
-   **
-   ** !!! this function returns if the corresponding feature is enabled
-   ** !!! otherwise send_message() is called
-   */
-#ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_send_message(synchron, tocomproc, toid, tohost, tag, 
-                         buffer, buflen, mid, compressed);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-   
-#ifdef KERBEROS
-   if (feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      ret = krb_send_message(synchron, tocomproc, toid, tohost, tag, 
-                         buffer, buflen, mid, compressed);
-
-      DEXIT;
-      return ret;
-   }
-#endif   
-
-   ret = send_message(synchron, tocomproc, toid, tohost, tag, 
-                      buffer, buflen, mid, compressed);
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 
 /* 
@@ -382,7 +338,6 @@ int compressed
  *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
-#ifdef ENABLE_NGC
 int gdi_receive_message(
 char *fromcommproc,
 u_short *fromid,
@@ -438,9 +393,14 @@ u_short *compressed
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
+         int commlib_error = CL_RETVAL_OK;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
+         if (handle == NULL) {
+            ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, fromcommproc));
+            ERROR((SGE_EVENT,cl_get_error_text(commlib_error)));
+         }
       }
    } 
 
@@ -490,52 +450,6 @@ u_short *compressed
    DEXIT;
    return ret;
 }
-#else
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-) {
-   int ret;
-
-   DENTER(TOP_LAYER, "gdi_receive_message");
-   /*
-   ** handle the selection of the receive_message func to use here
-   ** available are krb_receive_message and sec_receive_message
-   **
-   ** !!! this function returns if the corresponding feature is enabled
-   ** !!! otherwise receive_message() is called
-   */
-#ifdef SECURE   
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      ret = sec_receive_message(fromcommproc, fromid, fromhost, tag, 
-                         buffer, buflen, synchron, compressed);
-      DEXIT;
-      return ret;
-   }                      
-#endif
-
-#ifdef KERBEROS   
-   if (feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      ret = krb_receive_message(fromcommproc, fromid, fromhost, tag, 
-                         buffer, buflen, synchron, compressed);
-      DEXIT;
-      return ret;
-   }   
-#endif   
-
-   ret = receive_message(fromcommproc, fromid, fromhost, tag, 
-                         buffer, buflen, synchron, compressed);
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 
 /****** gdi/security/set_sec_cred() *******************************************

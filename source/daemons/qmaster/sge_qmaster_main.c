@@ -186,11 +186,15 @@ int main(int argc, char* argv[])
    uti_state_set_exit_func(exit_func);
 
    start_heartbeat();
-   
-   sge_setup_qmaster(argv);
+
    setup_lock_service();
+
+   sge_setup_qmaster(argv);
+
    start_periodic_tasks();
-   
+
+   sge_setup_job_resend();
+
    create_and_join_threads();
 
    teardown_lock_service();

@@ -226,6 +226,84 @@ int sge_qmaster_thread_init(void)
    return 0;
 } /* sge_qmaster_thread_init() */
 
+/****** qmaster/setup_qmaster/sge_setup_job_resend() ***************************
+*  NAME
+*     sge_setup_job_resend() -- Setup job resend events.
+*
+*  SYNOPSIS
+*     void sge_setup_job_resend(void) 
+*
+*  FUNCTION
+*     Register a job resend event for each job or array task which does have a
+*     'JTRANSFERING' status.
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_setup_job_resend() is not MT safe 
+*
+*******************************************************************************/
+void sge_setup_job_resend(void)
+{
+   lListElem *job = NULL;
+
+   DENTER(TOP_LAYER, "sge_setup_job_resend");
+
+   job = lFirst(Master_Job_List);
+
+   while (NULL != job)
+   {
+      lListElem *task;
+      u_long32 job_num;
+
+      job_num = lGetUlong(job, JB_job_number);
+
+      task = lFirst(lGetList(job, JB_ja_tasks));
+      
+      while (NULL != task)
+      {
+         if (lGetUlong(task, JAT_status) == JTRANSFERING)
+         {
+            lListElem *granted_queue, *qinstance, *host;
+            const char *qname;
+            u_long32 task_num, when;
+            te_event_t ev;
+
+            task_num = lGetUlong(task, JAT_task_number);
+
+            granted_queue = lFirst(lGetList(task, JAT_granted_destin_identifier_list));
+
+            qname = lGetString(granted_queue, JG_qname);
+
+            qinstance = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname);
+
+            host = host_list_locate(Master_Exechost_List, lGetHost(qinstance, QU_qhostname)); 
+
+            when = lGetUlong(task, JAT_start_time);
+
+            when += MAX(load_report_interval(host), MAX_JOB_DELIVER_TIME);
+
+            ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, job_num, task_num, "job-resend_event");           
+            te_add_event(ev);
+            te_free_event(ev);
+
+            DPRINTF(("Did add job resend for "u32"/"u32" at %d\n", job_num, task_num, when)); 
+         }
+
+         task = lNext(task);
+      }
+
+      job = lNext(job);
+   }
+
+   DEXIT;
+   return;
+} /* sge_setup_job_resend() */
+
 /****** qmaster/setup_qmaster/process_cmdline() ********************************
 *  NAME
 *     process_cmdline() -- Handle command line arguments 
@@ -1018,7 +1096,7 @@ static int debit_all_jobs_from_qs()
    u_long32 slots, jid, tid;
    const char *queue_name;
    lListElem *hep = NULL;
-   lListElem *master_hep, *next_jep, *jep, *qep, *next_jatep, *jatep;
+   lListElem *next_jep, *jep, *qep, *next_jatep, *jatep;
    int ret = 0;
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
@@ -1038,7 +1116,6 @@ static int debit_all_jobs_from_qs()
          /* don't look at states - we only trust in 
             "granted destin. ident. list" */
 
-         master_hep = NULL;
          for_each (gdi, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
             queue_name = lGetString(gdi, JG_qname);
@@ -1057,14 +1134,6 @@ static int debit_all_jobs_from_qs()
                         Master_CEntry_List, slots);
                qinstance_debit_consumable(qep, jep, Master_CEntry_List, slots);
             }
-            if (!master_hep)
-               master_hep = hep;
-         }
-
-         /* check for resend jobs */
-         if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
-            trigger_job_resend(lGetUlong(jatep, JAT_start_time), master_hep, 
-                  jid, tid);
          }
       }
    }

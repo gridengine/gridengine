@@ -363,13 +363,14 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
       lListElem *user = NULL;
       lListElem *next_user = NULL;
-
+#if 0
 #ifndef CULL_NO_HASH
       /* 
        * create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
        */
       cull_hash_new_check(*(job_lists[SPLIT_PENDING]), JB_owner, 0);
+#endif      
 #endif      
 
       if (user_name == NULL) {

@@ -1,3 +1,9 @@
+JG-2004-05-04-0: Enhancem.: spooldefaults handles additional objects required 
+                            for the update procedure (adminhosts, calendars, 
+                            ckpts, cqueues, exechosts, projects, submithosts, 
+                            users)
+                 Review:    MD 
+
 EB-2004-05-04-0: Bugfix:    qstat -g c slot counting broken
                  Changed:   qstat, qmon
                  Issue:     975

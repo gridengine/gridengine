@@ -130,42 +130,50 @@
  * utilbin/spooldefaults.c
  */
 
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57040,         _("create default entries during installation process\n"))
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57041,         _("following are the valid commands:\n"))
-#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57042,         _("test                          test the spooling framework\n"))
-#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57043,         _("managers <mgr1> [<mgr2> ...]  create managers\n"))
-#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57044,         _("operators <op1> [<op2> ...]   create operators\n"))
-#define MSG_SPOOLDEFAULTS_PES             _MESSAGE(57045,         _("pes <template_dir>            create parallel environments\n"))
-#define MSG_SPOOLDEFAULTS_CONFIGURATION          _MESSAGE(57047,  _("configuration <template>      create the global configuration\n"))
-#define MSG_SPOOLDEFAULTS_LOCAL_CONF          _MESSAGE(57048,     _("local_conf <template> <name>  create a local configuration\n"))
-#define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57049,     _("usersets <template_dir>       create usersets\n"))
-#define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57051, _("cannot create spooling context\n"))
-#define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57052, _("cannot startup spooling context\n"))
-#define MSG_SPOOLDEFAULTS_COMPLEXES             _MESSAGE(57053,         _("complexes <template_dir>      create complexes\n"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57100,         _("create default entries during installation process\n"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57101,         _("following are the valid commands:\n"))
+#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57102,         _("test                          test the spooling framework\n"))
+#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57103,         _("managers <mgr1> [<mgr2> ...]  create managers\n"))
+#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57104,         _("operators <op1> [<op2> ...]   create operators\n"))
+#define MSG_SPOOLDEFAULTS_PES             _MESSAGE(57105,         _("pes <template_dir>            create parallel environments\n"))
+#define MSG_SPOOLDEFAULTS_CONFIGURATION          _MESSAGE(57106,  _("configuration <template>      create the global configuration\n"))
+#define MSG_SPOOLDEFAULTS_LOCAL_CONF          _MESSAGE(57107,     _("local_conf <template> <name>  create a local configuration\n"))
+#define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57108,     _("usersets <template_dir>       create usersets\n"))
+#define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57109, _("cannot create spooling context\n"))
+#define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57110, _("cannot startup spooling context\n"))
+#define MSG_SPOOLDEFAULTS_COMPLEXES             _MESSAGE(57111,         _("complexes <template_dir>      create complexes\n"))
+#define MSG_SPOOLDEFAULTS_ADMINHOSTS            _MESSAGE(57112,         _("adminhosts <template_dir>     create admin hosts\n"))
+#define MSG_SPOOLDEFAULTS_SUBMITHOSTS           _MESSAGE(57113,         _("submithosts <template_dir>    create submit hosts\n"))
+#define MSG_SPOOLDEFAULTS_CALENDARS             _MESSAGE(57114,         _("calendars <template_dir>      create calendars\n"))
+#define MSG_SPOOLDEFAULTS_CKPTS                 _MESSAGE(57115,         _("ckpts <template_dir>          create checkpoint environments\n"))
+#define MSG_SPOOLDEFAULTS_EXECHOSTS             _MESSAGE(57116,         _("exechosts <template_dir>      create execution hosts\n"))
+#define MSG_SPOOLDEFAULTS_PROJECTS              _MESSAGE(57117,         _("projects <template_dir>       create projects\n"))
+#define MSG_SPOOLDEFAULTS_CQUEUES               _MESSAGE(57118,         _("cqueues <template_dir>        create cluster queues\n"))
+#define MSG_SPOOLDEFAULTS_USERS                 _MESSAGE(57119,         _("users <template_dir>          create users\n"))
 
 /*
  * utilbin/spoolinit.c
  */
 
-#define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57060, _("method shlib libargs command [args]"))
-#define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57061, _("database maintenance\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57062, _("following are the valid commands\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57063, _("init [history]    initialize the database [with history enabled]\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO4   _MESSAGE(57064, _("history on|off    switch spooling with history on or off\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO5   _MESSAGE(57065, _("backup path       backup the database to path\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57066, _("purge days        remove historical data older than days\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57067, _("vacuum            compress database, update statistics\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57068, _("info              output information about the database\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57069, _("method            output the compiled in spooling method\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57200, _("method shlib libargs command [args]"))
+#define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57201, _("database maintenance\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57202, _("following are the valid commands\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57203, _("init [history]    initialize the database [with history enabled]\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO4   _MESSAGE(57204, _("history on|off    switch spooling with history on or off\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO5   _MESSAGE(57205, _("backup path       backup the database to path\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57206, _("purge days        remove historical data older than days\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57207, _("vacuum            compress database, update statistics\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57208, _("info              output information about the database\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57209, _("method            output the compiled in spooling method\n"))
 
 /*
  * utilbin/dbstat
  */
-#define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57070,         _("database query and maintenance\n"))
-#define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57071,         _("following are the valid commands:\n"))
-#define MSG_DBSTAT_LIST            _MESSAGE(57072,         _("list [object type]  list all objects [matching object type]\n"))
-#define MSG_DBSTAT_DUMP            _MESSAGE(57073,         _("dump key            dump the objects matching key\n"))
-#define MSG_DBSTAT_DELETE          _MESSAGE(57074,         _("delete key          delete the objects matching key\n"))
+#define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57300,         _("database query and maintenance\n"))
+#define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57301,         _("following are the valid commands:\n"))
+#define MSG_DBSTAT_LIST            _MESSAGE(57302,         _("list [object type]  list all objects [matching object type]\n"))
+#define MSG_DBSTAT_DUMP            _MESSAGE(57303,         _("dump key            dump the objects matching key\n"))
+#define MSG_DBSTAT_DELETE          _MESSAGE(57304,         _("delete key          delete the objects matching key\n"))
 
 
 #endif /* __MSG_UTILBIN_H */

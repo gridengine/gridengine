@@ -92,7 +92,7 @@ bool
 cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list);
 
 bool
-cqueue_list_add_cqueue(lListElem *queue);
+cqueue_list_add_cqueue(lList *this_list, lListElem *queue);
 
 bool
 cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list);

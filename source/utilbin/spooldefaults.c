@@ -61,18 +61,31 @@
 #include "msg_utilbin.h"
 
 
+static int spool_object_list(const char *directory, 
+                             int (*read_func)(lList **list, const char *dir),
+                             sge_object_type obj_type, 
+                             int nm, enum _enum_lMultiType cull_type);
+
 static void usage(const char *argv0)
 {
    fprintf(stderr, "%s\n %s command\n\n", MSG_UTILBIN_USAGE, argv0);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO1);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO2);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_TEST);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_ADMINHOSTS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CALENDARS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CKPTS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMPLEXES);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIGURATION);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CQUEUES);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_EXECHOSTS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_LOCAL_CONF);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_MANAGERS);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_OPERATORS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIGURATION);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_LOCAL_CONF);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMPLEXES);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PES);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PROJECTS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SUBMITHOSTS);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERS);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
 }
 
@@ -229,45 +242,104 @@ static int spool_local_conf(int argc, char *argv[])
 
 static int spool_complexes(int argc, char *argv[])
 {
-   int ret = EXIT_SUCCESS;
-   lList **centry_list;
-   lListElem *centry;
-   lList *answer_list = NULL;
+   return spool_object_list(argv[2], read_all_centries, SGE_TYPE_CENTRY, 
+                            CE_name, lStringT);
+}
 
-   DENTER(TOP_LAYER, "spool_complexes");
+static int spool_adminhosts(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_adminhost_list_from_disk, 
+                            SGE_TYPE_ADMINHOST, 
+                            AH_name, lHostT);
+}
 
-   read_all_centries(argv[2]);
+static int spool_calendars(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_cal_list_from_disk, 
+                            SGE_TYPE_CALENDAR, 
+                            CAL_name, lStringT);
+}
 
-   centry_list = centry_list_get_master_list();
+static int spool_ckpts(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_ckpt_list_from_disk, 
+                            SGE_TYPE_CKPT, 
+                            CK_name, lStringT);
+}
 
-   for_each(centry, *centry_list) {
-      if (!spool_write_object(&answer_list, spool_get_default_context(), centry,
-                              lGetString(centry, CE_name), SGE_TYPE_CENTRY)) {
-         /* error output has been done in spooling function */
-         ret = EXIT_FAILURE;
-         answer_list_output(&answer_list);
-         break;
-      }
-   }
+static int spool_cqueues(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_cqueue_list_from_disk, 
+                            SGE_TYPE_CQUEUE, 
+                            CQ_name, lStringT);
+}
 
-   DEXIT;
-   return ret;
+static int spool_exechosts(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_exechost_list_from_disk, 
+                            SGE_TYPE_EXECHOST, 
+                            EH_name, lHostT);
+}
+
+static int spool_projects(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_project_list_from_disk, 
+                            SGE_TYPE_PROJECT, 
+                            UP_name, lStringT);
+}
+
+static int spool_submithosts(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_submithost_list_from_disk, 
+                            SGE_TYPE_SUBMITHOST, 
+                            SH_name, lHostT);
+}
+
+static int spool_users(int argc, char *argv[])
+{
+   return spool_object_list(argv[2], sge_read_user_list_from_disk, 
+                            SGE_TYPE_USER, 
+                            UP_name, lStringT);
 }
 
 static int spool_pes(int argc, char *argv[])
 {
+   return spool_object_list(argv[2], sge_read_pe_list_from_disk, 
+                            SGE_TYPE_PE, 
+                            PE_name, lStringT);
+}
+
+static int spool_object_list(const char *directory, 
+                             int (*read_func)(lList **list, const char *dir),
+                             sge_object_type obj_type, 
+                             int nm, enum _enum_lMultiType cull_type)
+{
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
-   lList *pe_list;
-   lListElem *pe;
+   lList *list = NULL;
+   lListElem *ep;
 
-   DENTER(TOP_LAYER, "spool_pes");
+   DENTER(TOP_LAYER, "spool_object_list");
 
-   sge_read_pe_list_from_disk(argv[2]);
+   read_func(&list, directory);
 
-   pe_list = *(object_type_get_master_list(SGE_TYPE_PE));
-   for_each(pe, pe_list) {
-      if (!spool_write_object(&answer_list, spool_get_default_context(), pe, lGetString(pe, PE_name), SGE_TYPE_PE)) {
+   for_each(ep, list) {
+      const char *key;
+
+      switch (cull_type) {
+         case lStringT:
+            key = lGetString(ep, nm);
+            break;
+         case lHostT:
+            key = lGetHost(ep, nm);
+            break;
+         default:
+            key = NULL;
+            ERROR((SGE_EVENT, "can't read key of object - unknown type\n"));
+            return EXIT_FAILURE;
+      }
+      if (!spool_write_object(&answer_list, spool_get_default_context(), ep, 
+                              key, obj_type)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
          answer_list_output(&answer_list);
@@ -281,30 +353,9 @@ static int spool_pes(int argc, char *argv[])
 
 static int spool_usersets(int argc, char *argv[])
 {
-   int ret = EXIT_SUCCESS;
-   lList *answer_list = NULL;
-   lList **userset_list;
-   lListElem *userset;
-
-   DENTER(TOP_LAYER, "spool_usersets");
-
-   sge_read_userset_list_from_disk(argv[2]);
-
-   userset_list = userset_list_get_master_list();
-
-   for_each(userset, *userset_list) {
-      if (!spool_write_object(&answer_list, spool_get_default_context(), 
-                              userset, lGetString(userset, US_name), 
-                              SGE_TYPE_USERSET)) {
-         /* error output has been done in spooling function */
-         ret = EXIT_FAILURE;
-         answer_list_output(&answer_list);
-         break;
-      }
-   }
-
-   DEXIT;
-   return ret;
+   return spool_object_list(argv[2], sge_read_userset_list_from_disk, 
+                            SGE_TYPE_USERSET, 
+                            US_name, lStringT);
 }
 
 int main(int argc, char *argv[])
@@ -343,18 +394,34 @@ int main(int argc, char *argv[])
                if (argc < 3) {
                   usage(argv[0]);
                   ret = EXIT_FAILURE;
+               } else if (strcmp(argv[1], "adminhosts") == 0) {
+                  ret = spool_adminhosts(argc, argv);
+               } else if (strcmp(argv[1], "calendars") == 0) {
+                  ret = spool_calendars(argc, argv);
+               } else if (strcmp(argv[1], "ckpts") == 0) {
+                  ret = spool_ckpts(argc, argv);
+               } else if (strcmp(argv[1], "complexes") == 0) {
+                  ret = spool_complexes(argc, argv);
+               } else if (strcmp(argv[1], "configuration") == 0) {
+                  ret = spool_configuration(argc, argv);
+               } else if (strcmp(argv[1], "cqueues") == 0) {
+                  ret = spool_cqueues(argc, argv);
+               } else if (strcmp(argv[1], "exechosts") == 0) {
+                  ret = spool_exechosts(argc, argv);
+               } else if (strcmp(argv[1], "local_conf") == 0) {
+                  ret = spool_local_conf(argc, argv);
                } else if (strcmp(argv[1], "managers") == 0) {
                   ret = spool_manops(SGE_TYPE_MANAGER, argc, argv);
                } else if (strcmp(argv[1], "operators") == 0) {
                   ret = spool_manops(SGE_TYPE_OPERATOR, argc, argv);
                } else if (strcmp(argv[1], "pes") == 0) {
                   ret = spool_pes(argc, argv);
-               } else if (strcmp(argv[1], "complexes") == 0) {
-                  ret = spool_complexes(argc, argv);
-               } else if (strcmp(argv[1], "configuration") == 0) {
-                  ret = spool_configuration(argc, argv);
-               } else if (strcmp(argv[1], "local_conf") == 0) {
-                  ret = spool_local_conf(argc, argv);
+               } else if (strcmp(argv[1], "projects") == 0) {
+                  ret = spool_projects(argc, argv);
+               } else if (strcmp(argv[1], "submithosts") == 0) {
+                  ret = spool_submithosts(argc, argv);
+               } else if (strcmp(argv[1], "users") == 0) {
+                  ret = spool_users(argc, argv);
                } else if (strcmp(argv[1], "usersets") == 0) {
                   ret = spool_usersets(argc, argv);
                } else {

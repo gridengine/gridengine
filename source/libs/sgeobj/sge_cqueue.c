@@ -770,11 +770,10 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
 *        false - error
 *******************************************************************************/
 bool
-cqueue_list_add_cqueue(lListElem *queue)
+cqueue_list_add_cqueue(lList *this_list, lListElem *queue)
 {
    bool ret = false;
    static lSortOrder *so = NULL;
-   lList **master_list = object_type_get_master_list(SGE_TYPE_CQUEUE);
 
    DENTER(TOP_LAYER, "cqueue_list_add_cqueue");
 
@@ -783,11 +782,7 @@ cqueue_list_add_cqueue(lListElem *queue)
          so = lParseSortOrderVarArg(CQ_Type, "%I+", CQ_name);
       }
 
-      if (*master_list== NULL) {
-         *master_list = lCreateList("", CQ_Type);
-      }
-
-      lInsertSorted(so, queue, *master_list);
+      lInsertSorted(so, queue, this_list);
       ret = true;
    } 
    DEXIT;

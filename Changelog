@@ -1,3 +1,7 @@
+RH-2004-07-26-0: Bugfix:    man page indicated that qsub accepts "-r yes|no"
+                 Issue:     1103
+                 Bugtraq:   ????
+
 SG-2004-07-26-0: Bugfix:    - first part of the event_master changes. The total
                             update of a event client is now thread save.
                             - excluded the flowwing character from a job name: "\"

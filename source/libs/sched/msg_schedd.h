@@ -297,7 +297,7 @@
 #define MSG_SCHEDD_NOHOSTFORQUEUE                           _MESSAGE(47218, _("\terror: no host defined for queue\n"))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN"\n"))
 #define MSG_SCHEDD_NOLOADVALUEFORTHRESHOLD_S                _MESSAGE(47220, _("\terror: no load value for threshold "SFN"\n"))
-#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47286, _("Jobs "u32" & "u32" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 
 /* 

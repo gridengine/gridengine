@@ -2807,8 +2807,8 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
                      if (lGetUlong(order, OR_type) != ORT_start_job)
                         continue;
                      if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_qname), OR_queuelist)) {
-                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, lGetUlong(job, JB_job_number), lGetUlong(order, OR_job_number),
-                           qname, lGetString(so, SO_qname)));
+                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
+                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_qname)));
                      }
                   }
                }

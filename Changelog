@@ -1,3 +1,9 @@
+RH-2004-07-26-2: Bugfix:    definition of wc_cqueue added to man page.              
+                 Issue:     1103
+                 Bugtraq:   Not defined
+                 Changed:   sge_types(1)
+                 Review:    AH
+
 RH-2004-07-26-1: Bugfix:    man page indicated that qsub accepts "-r yes|no"
                  Issue:     1103
                  Bugtraq:   ????

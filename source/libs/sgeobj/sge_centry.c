@@ -64,7 +64,7 @@ static int
 centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
                       bool allow_neg_consumable);
 
-   const int max_host_resources=24;/* specifies the number of elements in the host_resource array */
+   const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
    const struct queue2cmplx host_resource[] = {
       {"arch",           0, TYPE_STR},
       {"cpu",            0, TYPE_DOUBLE},
@@ -86,7 +86,6 @@ centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
       {"swap_rsvd",      0, TYPE_MEM},
       {"swap_total",     0, TYPE_MEM},
       {"swap_used",      0, TYPE_MEM},
-      {"tmpdir",         0, TYPE_STR},
       {"virtual_free",   0, TYPE_MEM},
       {"virtual_total",  0, TYPE_MEM},
       {"virtual_used",   0, TYPE_MEM}
@@ -1075,7 +1074,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
       for ( i=0; i< max_queue_resources; i++){
          if (strcmp(queue_resource[i].name, attrname) == 0 &&
             queue_resource[i].type != type){
-            if ((host_resource[i].type != TYPE_STR && host_resource[i].type != TYPE_CSTR && host_resource[i].type != TYPE_RESTR ) ||
+            if ((queue_resource[i].type != TYPE_STR && queue_resource[i].type != TYPE_CSTR && queue_resource[i].type != TYPE_RESTR ) ||
                 (type != TYPE_CSTR && type != TYPE_RESTR && type != TYPE_STR)){            
 
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 

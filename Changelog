@@ -1,3 +1,7 @@
+SG-2004-03-05-1: Bugfix:    fixed a bug in changing build-in centries
+                            from strings to an other string type
+                 Issue:     759
+                 Changed:   qmaster
 
 SG-2004-03-05-0: Enhancem.: - updated the qstat schema files. 
                             - fixed a xml string encoding problem

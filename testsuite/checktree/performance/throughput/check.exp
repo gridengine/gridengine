@@ -419,6 +419,8 @@ proc cleanup_queues {} {
       puts $CHECK_OUTPUT $host
       enable_queue [get_queue_instance "all.q" $host]
    }
+
+   del_queue interactive "@allhosts" 0 1
    
    set_error 0 "ok"
 }

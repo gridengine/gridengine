@@ -127,7 +127,7 @@ lListElem *lCopyElem(const lListElem *ep)
 {
    lListElem *new;
    int index;
-   int max = lCountDescr(ep->descr); 
+   int max;
 
    DENTER(CULL_LAYER, "lCopyElem");
 
@@ -136,6 +136,8 @@ lListElem *lCopyElem(const lListElem *ep)
       DEXIT;
       return NULL;
    }
+
+   max = lCountDescr(ep->descr); 
 
    if (!(new = lCreateElem(ep->descr))) {
       LERROR(LECREATEELEM);

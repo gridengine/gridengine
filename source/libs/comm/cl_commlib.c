@@ -911,7 +911,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                trigger_write = CL_TRUE;
                elem->connection->connection_sub_state = CL_COM_SENDING_CCM;
             }
-            CL_LOG_STR(CL_LOG_ERROR,"waiting for ccrm, current connection state is", cl_com_get_connection_state(elem->connection));
+            CL_LOG_STR(CL_LOG_ERROR,"wait for connection removal, current state is", 
+                       cl_com_get_connection_state(elem->connection));
             if ( ignore_timeout == CL_TRUE ) {
                CL_LOG(CL_LOG_WARNING,"we are connected, don't ignore timeouts");
                ignore_timeout = CL_FALSE;
@@ -2551,7 +2552,6 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
 #endif
 #define __CL_FUNCTION__ "cl_commlib_check_connection_count()"
 static int cl_commlib_check_connection_count(cl_com_handle_t* handle) {
-   int real_open_connections = 0;
    cl_connection_list_elem_t* elem = NULL;
 
    if (handle == NULL) {
@@ -2564,28 +2564,8 @@ static int cl_commlib_check_connection_count(cl_com_handle_t* handle) {
       /* first lock the connection list */
       cl_raw_list_lock(handle->connection_list);
 
-      /* get number of connections ( all kind of connections) */
-      real_open_connections = cl_raw_list_get_elem_count(handle->connection_list);
-#if 0
-      /* This setup will only count connections of type MESSAGE which are really connected */
-
-      /* It is save to limit the number of elements in the connection_list to the max open
-         connection count, because it is possible that a connection which is not in state
-         CL_COM_CONNECTED uses a file descriptor */
-
-      real_open_connections = 0;
-      elem = cl_connection_list_get_first_elem(handle->connection_list);
-      while(elem) {
-         if (elem->connection->data_flow_type       == CL_CM_CT_MESSAGE   &&
-             elem->connection->connection_state     == CL_COM_CONNECTED   &&    
-             elem->connection->connection_sub_state == CL_COM_WORK          ) {
-            real_open_connections++;
-         }
-         elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
-      }
-#endif
       /* check if we exceed the max. connection count */
-      if ( real_open_connections >= handle->max_open_connections ) {
+      if ( cl_raw_list_get_elem_count(handle->connection_list) >= handle->max_open_connections ) {
 
          /* we have reached max connection count, set flag */
          if ( handle->max_connection_count_reached == 0) {
@@ -2601,14 +2581,10 @@ static int cl_commlib_check_connection_count(cl_com_handle_t* handle) {
                /* try to find the oldest connected connection of type CL_CM_CT_MESSAGE */
                elem = cl_connection_list_get_first_elem(handle->connection_list);
                while(elem) {
-                  unsigned long receive_messages_count = 0;
-
-                  receive_messages_count = cl_raw_list_get_elem_count(elem->connection->received_message_list);
                   if (elem->connection->data_flow_type       == CL_CM_CT_MESSAGE                       &&
                       elem->connection->connection_state     == CL_COM_CONNECTED                       &&    
                       elem->connection->connection_sub_state == CL_COM_WORK                            &&
                       elem->connection->auto_close_type      == CL_CM_AC_ENABLED                       && 
-                      receive_messages_count                 == 0                                      && 
                       elem->connection                       != handle->last_receive_message_connection   ) {
                   
                      /* we haven't selected an elem till now, take the first one */
@@ -3287,7 +3263,10 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                         /* never return a message with response id  when response_mid is 0 */
                         if (message_elem->message->message_response_id != 0) {
                            CL_LOG_INT(CL_LOG_ERROR,"message response id is set for this message:", message_elem->message->message_response_id);
-                           match = 0;
+                           if ( handle->do_shutdown == 0 ) {
+                              CL_LOG(CL_LOG_ERROR,"return message without request, because handle goes down:");
+                              match = 0;
+                           }
                         }
                      }
    
@@ -3315,6 +3294,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                         /* send acknowledge for CL_MIH_MAT_ACK type (application removed message from buffer) */
                         if ( (*message)->message_mat == CL_MIH_MAT_ACK) {
                            cl_commlib_send_ack_message(connection, *message );
+                           message_sent = 1; 
                         } 
 
                            
@@ -3889,22 +3869,16 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          the application don't have to take care about any error messages. But for now
          it should be ok to let the application hande those kind of problems. (gdi) */
 
-#if 0 
-      /* TODO: CHECK THIS !!!! */
-
-      /* if we don't return here the connect call will fail later. This is more
-         intuitive, because we just want to wait for the shutdown of an old connection
-         here. The error occurs when trying to re-connect */ 
-
       /* we don't have a port to connect to, re open would fail, return now */
       if (handle->connect_port <= 0) {
-         CL_LOG(CL_LOG_ERROR,"no port to connect");
-         /* unlock connection list */
-         pthread_mutex_unlock(handle->connection_list_mutex);
-
-         return CL_RETVAL_NO_PORT_ERROR;
+         int tcp_port = 0;
+         if ( cl_com_get_known_endpoint_port(&receiver, &tcp_port) != CL_RETVAL_OK) {
+            CL_LOG(CL_LOG_ERROR,"no port to connect");
+            /* unlock connection list */
+            pthread_mutex_unlock(handle->connection_list_mutex);
+            return CL_RETVAL_NO_PORT_ERROR;
+         }
       }
-#endif
 
       while (still_in_list == 1) {
          int message_sent = 0;
@@ -4038,6 +4012,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id) {
    int closed = 0;
    int return_value = CL_RETVAL_OK;
+   cl_bool_t trigger_write = CL_FALSE;
    char* unique_hostname = NULL;
    cl_com_endpoint_t receiver;
    cl_connection_list_elem_t* elem = NULL;
@@ -4077,6 +4052,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                 connection->connection_sub_state == CL_COM_WORK  &&
                 connection->ccm_received         == 0) {
                cl_commlib_send_ccm_message(connection);
+               trigger_write = CL_TRUE;
                connection->connection_sub_state = CL_COM_SENDING_CCM;
                CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
                CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
@@ -4099,6 +4075,19 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    cl_raw_list_unlock(handle->connection_list);
    free(unique_hostname);
    unique_hostname = NULL;
+   if ( trigger_write == CL_TRUE ) {
+      switch(cl_com_create_threads) {
+            case CL_NO_THREAD:
+               CL_LOG(CL_LOG_INFO,"no threads enabled");
+               /* we just want to trigger write , no wait for read*/
+               cl_commlib_trigger(handle);
+               break;
+            case CL_ONE_THREAD:
+               /* we just want to trigger write , no wait for read*/
+               cl_thread_trigger_event(handle->write_thread);
+               break;
+      }
+   }
    if (closed == 1) {
       return CL_RETVAL_OK;
    }

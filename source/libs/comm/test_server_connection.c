@@ -143,7 +143,7 @@ extern int main(int argc, char** argv)
                                 &mid, message->message_id,0, 
                                 0,0);
         if (ret_val != CL_RETVAL_OK) {
-           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
+/*           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val)); */
            if (ret_val == CL_RETVAL_PROTOCOL_ERROR) { 
            }
         } else {

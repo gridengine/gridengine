@@ -321,7 +321,7 @@ int cl_endpoint_list_get_autoclose_mode(cl_raw_list_t* list_p, cl_com_endpoint_t
 #endif
 #define __CL_FUNCTION__ "cl_endpoint_list_get_service_port()"
 int cl_endpoint_list_get_service_port(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int* service_port) {
-int back = CL_RETVAL_UNKNOWN_ENDPOINT;
+   int back = CL_RETVAL_UNKNOWN_ENDPOINT;
    int ret_val = CL_RETVAL_OK;
    cl_endpoint_list_elem_t* elem = NULL;
    
@@ -339,7 +339,8 @@ int back = CL_RETVAL_UNKNOWN_ENDPOINT;
    elem = cl_endpoint_list_get_first_elem(list_p);
    while ( elem != NULL) { 
 
-      if (cl_com_compare_endpoints(endpoint, elem->endpoint )) {
+      if (cl_com_compare_endpoints(endpoint, elem->endpoint) && 
+          elem->service_port != 0 ) {
          /* found matching endpoint */
          back = CL_RETVAL_OK;
          *service_port = elem->service_port;

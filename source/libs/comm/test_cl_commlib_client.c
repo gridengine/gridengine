@@ -130,7 +130,7 @@ extern int main(int argc, char** argv)
   CL_LOG_STR(CL_LOG_INFO,"component is","client");
   CL_LOG_INT(CL_LOG_INFO,"id ist",atoi(argv[3]));
 #define SELECT_TIMEOUT 1
-#if 1
+#if 0
 #define CREATE_SERVICE
 #endif
 
@@ -140,6 +140,10 @@ extern int main(int argc, char** argv)
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
+  } else {
+     int my_port;
+     cl_com_get_service_port(handle,&my_port);
+     printf("I'm reachable at port %d!\n", my_port);
   }
 #else
   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
@@ -196,7 +200,15 @@ extern int main(int argc, char** argv)
 
 #if 1
      if (my_sent_error != CL_RETVAL_OK) {
-        printf("cl_commlib_send_message() returned %s\n", cl_get_error_text(my_sent_error));
+        printf("cl_commlib_send_message() returned %s\n", cl_get_error_text(my_sent_error)); 
+#ifdef CREATE_SERVICE
+        cl_com_get_known_endpoint_port_from_name(argv[1], "server", 1, &i);
+        printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[1]);
+#else
+        cl_com_get_connect_port(handle, &i);
+        printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[1]);
+#endif
+
         /* exit(1); */
 #if CL_DO_SLOW
         sleep(atoi(argv[5]));
@@ -365,6 +377,10 @@ extern int main(int argc, char** argv)
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);
+        } else {
+           int my_port;
+           cl_com_get_service_port(handle,&my_port);
+           printf("I'm reachable at port %d!\n", my_port);
         }
 #else
         handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );

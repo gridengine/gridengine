@@ -279,7 +279,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.schedd_job_info = lGetPosViaElem(config, SC_schedd_job_info)) != -1;
          ret &= (pos.flush_submit_sec = lGetPosViaElem(config, SC_flush_submit_sec)) != -1;
          ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec)) != -1;
-         ret != (pos.params = lGetPosViaElem(config, SC_params)) != -1;
+         ret &= (pos.params = lGetPosViaElem(config, SC_params)) != -1;
 
 /* SGEEE */
          ret &= (pos.sgeee_schedule_interval = lGetPosViaElem(config, SC_sgeee_schedule_interval)) != -1;

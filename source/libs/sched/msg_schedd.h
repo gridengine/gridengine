@@ -365,7 +365,7 @@
 /* 
 ** schedd/schedd_message.c
 */ 
-#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47262, _("can not create schedd_job_info for message "U32CFormat"\n"))
+#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "U32CFormat"\n"))
 
 
 
@@ -375,70 +375,70 @@
 /* 
 ** schedd/slots_used.c
 */ 
-#define MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S      _MESSAGE(47261, _("missing \"slots\" entry in consumable actual list of queue "SFQ"\n"  ) )  
+#define MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S      _MESSAGE(47280, _("missing \"slots\" entry in consumable actual list of queue "SFQ"\n"  ) )  
 
 /* 
 ** schedd/sort_hosts.c
 */   
-#define MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS           _MESSAGE(47262, _("no attribute "SFQ" in complex list from "SFQ" \n"))
+#define MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS           _MESSAGE(47290, _("no attribute "SFQ" in complex list from "SFQ" \n"))
 
 /* 
 ** schedd/valid_queue_user.c
 */ 
-#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47263, _("Group "SFQ" already contained in userset "SFQ"\n"))
-#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47264, _("User "SFQ" already contained in userset "SFQ"\n"))
+#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47300, _("Group "SFQ" already contained in userset "SFQ"\n"))
+#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47301, _("User "SFQ" already contained in userset "SFQ"\n"))
 
 
 /* 
 ** schedd/sge_select_queue.c
 */
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47265, _("invalid load value "SFQ" for theshold "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47266, _("invalid threshold value "SFN"="SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47267, _("invalid load adjustment value "SFN"="SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47268, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47269, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS          _MESSAGE(47270, _(SFN"="SFN" "SFN" "SFN))
-#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47271, _("unknown complex attribute type for threshold "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47272, _("no such host "SFN" for that queue\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47273, _("no such complex attribute for threshold "SFQ"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47311, _("invalid threshold value "SFN"="SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47312, _("invalid load adjustment value "SFN"="SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47313, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47314, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS          _MESSAGE(47315, _(SFN"="SFN" "SFN" "SFN))
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ"\n"))
 
-#define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47274, _(SFN" * %f with nproc=%d"))
-#define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47275, _(SFN" * %f"))
-#define MSG_SCHEDD_LCDIAGGLOBAL_SF                    _MESSAGE(47276, _(SFN" * %f global"))
-#define MSG_SCHEDD_LCDIAGPOSITIVE_SS                  _MESSAGE(47277, _("= "SFN" + "SFN))
-#define MSG_SCHEDD_LCDIAGNEGATIVE_SS                  _MESSAGE(47278, _("= "SFN" - "SFN))
-#define MSG_SCHEDD_LCDIAGNONE                         _MESSAGE(47279, _("no load adjustment"))
-#define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47280, _("no load value"))
+#define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47330, _(SFN" * %f with nproc=%d"))
+#define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47331, _(SFN" * %f"))
+#define MSG_SCHEDD_LCDIAGGLOBAL_SF                    _MESSAGE(47332, _(SFN" * %f global"))
+#define MSG_SCHEDD_LCDIAGPOSITIVE_SS                  _MESSAGE(47333, _("= "SFN" + "SFN))
+#define MSG_SCHEDD_LCDIAGNEGATIVE_SS                  _MESSAGE(47334, _("= "SFN" - "SFN))
+#define MSG_SCHEDD_LCDIAGNONE                         _MESSAGE(47335, _("no load adjustment"))
+#define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47336, _("no load value"))
 
 /* 
  * libs/sched/sge_ssi.c
  */
-#define MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S           _MESSAGE(47281, _("error parsing job identifier "SFQ"\n"))
-#define MSG_SSI_MISSINGHOSTNAMEINTASKLIST             _MESSAGE(47282, _("missing hostname in task list\n"))
-#define MSG_SSI_COULDNOTFINDQUEUEFORHOST_S            _MESSAGE(47283, _("could not find a queue for host "SFQ"\n"))
+#define MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S           _MESSAGE(47350, _("error parsing job identifier "SFQ"\n"))
+#define MSG_SSI_MISSINGHOSTNAMEINTASKLIST             _MESSAGE(47351, _("missing hostname in task list\n"))
+#define MSG_SSI_COULDNOTFINDQUEUEFORHOST_S            _MESSAGE(47352, _("could not find a queue for host "SFQ"\n"))
 
 /*
  * daemons/sched/sge_process_events.c
  */
-#define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47284, _("could not find job "SFQ" in master list\n")) 
-#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47285, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
-#define MSG_NODATAINEVENT                             _MESSAGE(47286, _("event contains no data"))
+#define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47360, _("could not find job "SFQ" in master list\n")) 
+#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47361, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
+#define MSG_NODATAINEVENT                             _MESSAGE(47362, _("event contains no data"))
 
 /* 
  * libs/sched/sge_complex_schedd.c
  */
-#define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47289, _("denied: attribute "SFQ" is no complex attribute\n"))
+#define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47370, _("denied: attribute "SFQ" is no complex attribute\n"))
 
 /*
  *  
  */
-#define MSG_SCHEDD_NOVALUEFORATTR_S                       _MESSAGE(47290, _("no value for complex attribute "SFQ))
+#define MSG_SCHEDD_NOVALUEFORATTR_S                       _MESSAGE(47380, _("no value for complex attribute "SFQ))
 
 /*
  * daemons/sched/sge_process_events.c
  */
-#define MSG_INVALID_LOAD_FORMULA                      _MESSAGE(47291, _("invalid load formula "SFQ))
-#define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47292, _("The scheduler configuration is incomplete"))
-#define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47293, _("Using the scheduler default configuration"))
-#define MSG_INVALID_PARAM_SETTING_S                     _MESSAGE(47294, _("Invalid scheduler param setting: "SFQ)) 
+#define MSG_INVALID_LOAD_FORMULA                      _MESSAGE(47390, _("invalid load formula "SFQ))
+#define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47391, _("The scheduler configuration is incomplete"))
+#define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47392, _("Using the scheduler default configuration"))
+#define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47393, _("Invalid scheduler param setting: "SFQ)) 
 #endif /* __MSG_SCHEDD_H */

@@ -1,3 +1,5 @@
+AD-2003-10-25-0: Bugfix:    fixed the build
+
 AD-2003-10-24-1: Enhancem.: Added call to 'sge_mt_init()'.
                  Changed:   qstat
 

@@ -1,3 +1,8 @@
+JG-2002-07-02-0: Bugfix:    qrsh -inherit failed with error 
+                            "COMMPROC ALREADY REGISTERED"
+                 Issue:     #303
+                 Changed:   qsh
+
 AH-2002-07-02-0: Bugfix:    Added missing newline character to error msg.
                  Changed:   qstat, qconf
                             

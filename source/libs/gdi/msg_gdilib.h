@@ -46,7 +46,7 @@
 #define MSG_QSH_CANTGETCREDENTIALS    _MESSAGE(43004, _("warning: could not get credentials\n"))
 #define MSG_SEC_NOCRED_USSI           _MESSAGE(43005, _("could not get credentials for job " U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(43006, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
-#define MSG_SEC_NOAUTH_U              _MESSAGE(43007, _("job "U32CFormat" rejected because authentication failed\n"))
+#define MSG_SEC_NOAUTH_U              _MESSAGE(43007, _("job "U32CFormat" rejected because authentication failed (no credentials supplied)\n"))
 #define MSG_SEC_NOSTORECRED_USI       _MESSAGE(43008, _("could not store credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_NOSTORECREDNOBIN_US   _MESSAGE(43009, _("could not store client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
 #define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(43010, _("delete_cred stderr: "SFN""))

@@ -72,7 +72,8 @@ PeHostfile2MachineFile()
 	 i=1
 	 while [ $i -le $nslots ]; do
 	    # add code here to map regular hostnames into ATM hostnames
-            host_list="${host_list}$host $port\n"
+            host_list="${host_list}$host $port
+"
 	    i=`expr $i + 1`
             mpi_tasks=`expr $mpi_tasks + 1`
 	 done

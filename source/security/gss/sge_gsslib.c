@@ -437,6 +437,13 @@ gsslib_put_credentials(gss_cred_id_t server_creds,
       goto error; */
    }
 
+   maj_stat = gss_display_name(&min_stat, client, &client_name, &doid);
+   if (maj_stat != GSS_S_COMPLETE) {
+      gsslib_display_status(MSG_GSS_DISPLAYSTATUS_DISPLAYINGNAME, maj_stat, min_stat);
+      cc = -1;
+      goto error;
+   }
+
 #ifdef KERBEROS
 #ifdef KRB5_EXPORTVAR /* this is required for later Kerberos versions */
 
@@ -449,8 +456,13 @@ gsslib_put_credentials(gss_cred_id_t server_creds,
 #endif
    }
 
-   if (username && (ret_flags & GSS_C_DELEG_FLAG))
-      put_creds_in_ccache(username, delegated_cred);
+   if (username && (ret_flags & GSS_C_DELEG_FLAG)) {
+      char *principal = malloc(client_name.length + 1);
+      strncpy(principal, client_name.value, client_name.length);
+      principal[client_name.length] = 0;
+      put_creds_in_ccache(principal, delegated_cred);
+      free(principal);
+   }
 
 #endif
 #endif
@@ -458,13 +470,6 @@ gsslib_put_credentials(gss_cred_id_t server_creds,
    /* display the flags */
    if (verbose)
       gsslib_display_ctx_flags(ret_flags);
-
-   maj_stat = gss_display_name(&min_stat, client, &client_name, &doid);
-   if (maj_stat != GSS_S_COMPLETE) {
-      gsslib_display_status(MSG_GSS_DISPLAYSTATUS_DISPLAYINGNAME, maj_stat, min_stat);
-      cc = -1;
-      goto error;
-   }
 
    if (verbose)
       printf("client: \"%.*s\"\n",
@@ -513,7 +518,7 @@ gsslib_put_credentials(gss_cred_id_t server_creds,
          so we manually compare the user names */
       if (!str_equal) {
          char *s;
-         if (s=strchr((char *)client_name.value, '@'))
+         if ((s=strchr((char *)client_name.value, '@')))
             str_equal = !strncmp(username, (char *)client_name.value, 
                                  s-(char *)client_name.value);
       }

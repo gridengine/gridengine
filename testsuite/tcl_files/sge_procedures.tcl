@@ -1411,12 +1411,12 @@ proc set_queue { q_name change_array } {
 #*******************************
 proc add_queue { change_array {fast_add 0} } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
+  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
 
   upvar $change_array chgar
   set values [array names chgar]
 
-    if { [ string compare $fast_add "0"] != 0 } {
+    if { $fast_add != 0 } {
      # add queue from file!
      set default_array(qname)                "queuename"
      set default_array(hostname)             "hostname"
@@ -1470,7 +1470,14 @@ proc add_queue { change_array {fast_add 0} } {
      set default_array(h_rss)                "INFINITY"
      set default_array(s_vmem)               "INFINITY"
      set default_array(h_vmem)               "INFINITY"
-   
+  
+     if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+       set default_array(projects)           "NONE"
+       set default_array(xprojects)          "NONE"
+       set default_array(fshare)             "0"
+       set default_array(oticket)            "0"
+     }
+  
      foreach elem $values {
         set value [set chgar($elem)]
         puts $CHECK_OUTPUT "--> setting \"$elem\" to \"$value\""

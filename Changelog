@@ -1,3 +1,6 @@
+JG-2001-07-31-0: (Issue# 28): performance tests "cluster" and "scheduler" 
+                 failed in sgeee systems
+
 JG-2001-07-27-0: (Issue# 22): qdel to non existent job output inaccurate
                  error message
 

@@ -1477,7 +1477,6 @@ XtPointer cld, cad;
    if (cbs->input && cbs->input[0]!='\0' && name && strcmp(name, "template")) {
       ret = sge_resolve_hostname((char*)cbs->input, unique, EH_name);
 
-#ifdef ENABLE_NGC
       switch ( ret ) {
          case CL_RETVAL_GETHOSTNAME_ERROR:
 /*             cbs->okay = False; */
@@ -1489,19 +1488,6 @@ XtPointer cld, cad;
          default:
             DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
       }
-#else
-      switch ( ret ) {
-         case COMMD_NACK_UNKNOWN_HOST:
-/*             cbs->okay = False; */
-/*             qmonMessageShow(w, True, "Can't resolve host '%s'\n",  */
-/*                               cbs->input);   */
-            break;
-         case CL_OK:
-            cbs->input = unique;
-         default:
-            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_errstr(ret)));
-      }
-#endif
    }
 
    DEXIT;

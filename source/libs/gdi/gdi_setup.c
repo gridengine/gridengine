@@ -413,11 +413,7 @@ int sge_gdi_param(int param, int intval, char *strval)
 static void default_exit_func(int i) 
 {
    sge_security_exit(i); 
-#ifdef ENABLE_NGC
    cl_com_cleanup_commlib();
-#else
-   leave_commd();  /* tell commd we're going */
-#endif
 }
 
 /****** gdi/setup/sge_gdi_shutdown() ******************************************

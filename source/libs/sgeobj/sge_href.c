@@ -741,12 +741,8 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list)
          if (!sge_is_hgroup_ref(name)) {
             char resolved_name[MAXHOSTLEN+1];
             int back = getuniquehostname(name, resolved_name, 0);
-#ifdef ENABLE_NGC
-            if (back == CL_RETVAL_OK)
-#else
-            if (back == 0)
-#endif
-            {
+
+            if (back == CL_RETVAL_OK) {
                lSetHost(href, HR_name, resolved_name);
             } else {
                INFO((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));

@@ -547,19 +547,11 @@ static bool register_scheduler()
    /* setup signal handlers */
    sge_setup_sig_handlers(QSCHED);
 
-#ifdef ENABLE_NGC
    /* hostname resolving check */
    if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
       DEXIT;
       return false;
    }
-#else
-   /* hostname resolving check */
-   if (reresolve_me_qualified_hostname() != CL_OK) {
-      DEXIT;
-      return false;
-   } 
-#endif  
 
    /* initialize mirroring interface */
    sge_mirror_initialize(EV_ID_SCHEDD, "simple_scheduler");

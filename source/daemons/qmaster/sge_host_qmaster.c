@@ -288,11 +288,7 @@ u_long32 target
    else {
       /* may be host was not the unique hostname.
          Get the unique hostname and try to find it again. */
-#ifdef ENABLE_NGC
       if (getuniquehostname(host, unique, 0)!=CL_RETVAL_OK)
-#else
-      if (getuniquehostname(host, unique, 0)!=CL_OK)
-#endif
       {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1134,11 +1130,7 @@ sge_gdi_request *answer
       
       /* walk over list with execd's to kill */
       for_each(rep, request->lp) {
-#ifdef ENABLE_NGC
          if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_RETVAL_OK)
-#else
-         if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_OK)
-#endif
          {
             WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(rep, ID_str)));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);

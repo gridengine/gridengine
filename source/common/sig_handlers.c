@@ -192,12 +192,9 @@ static void sge_alarmclock(int dummy)
 static void sge_terminate(int dummy)
 {
    if (!in_main_loop) {
-#ifdef ENABLE_NGC
       cl_com_ignore_timeouts(CL_TRUE);
       cl_com_cleanup_commlib();
-#else
-      leave_commd();
-#endif
+      /* leave_commd() */
       exit(1);
    }
    else {

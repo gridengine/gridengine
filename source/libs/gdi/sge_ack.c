@@ -69,11 +69,7 @@ int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val,
 
    /* send an ack to the qmaster for the events */
    if(init_packbuffer(&pb, 3*sizeof(u_long32), 0) != PACK_SUCCESS) {
-#ifdef ENABLE_NGC
       return CL_RETVAL_MALLOC;
-#else
-      return CL_MALLOC;
-#endif
    }
 
    packint(&pb, type);

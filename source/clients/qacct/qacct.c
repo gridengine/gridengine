@@ -275,22 +275,12 @@ char **argv
                int ret;
                prepare_enroll("qacct", id, NULL);
                ret = getuniquehostname(argv[++ii], host, 0);
-#ifdef ENABLE_NGC
                if (ret != CL_RETVAL_OK) {
                   fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
                        argv[ii], cl_get_error_text(ret));
                   show_the_way(stderr);
                   return 1;
                }
-#else
-               leave_commd();
-               if (ret) {
-                  fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
-                       argv[ii], cl_errstr(ret));
-                  show_the_way(stderr);
-                  return 1;
-               }
-#endif
             }
          }
          else

@@ -1228,11 +1228,6 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(my_who);
 
-#ifdef ENABLE_NGC
-#else
-   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
-   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
-#endif
 
    /*
    ** begin to work
@@ -1538,13 +1533,12 @@ int main(int argc, char **argv)
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
-#ifdef ENABLE_NGC
-      cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
-#else
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
-      leave_commd();
-      set_commlib_param(CL_P_ID, 0, NULL, NULL);
-#endif
+      /* leave_commd() for old commlib */
+      cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                 (char*) sge_get_master(0),
+                                 (char*) prognames[QMASTER],
+                                 1);
    
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 
@@ -1660,14 +1654,12 @@ int main(int argc, char **argv)
 
          DPRINTF(("random polling set to %d\n", random_poll));
 
-#ifdef ENABLE_NGC
-         cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
-#else
-         /* leave commd while waiting for connection / sleeping while polling */
-         leave_commd();
-         /* next enroll will _not_ ask commd to get same client id as before  */
-         set_commlib_param(CL_P_ID, 0, NULL, NULL);
-#endif
+         /* leave commd while waiting for connection / sleeping while polling (CR -> old commlib comment) */
+         /* next enroll will _not_ ask commd to get same client id as before (CR -> old commlib comment) */
+         cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                     (char*) sge_get_master(0),
+                                     (char*) prognames[QMASTER],
+                                     1);
    
          if(is_qlogin) {
             /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */

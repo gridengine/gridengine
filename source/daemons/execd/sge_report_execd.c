@@ -104,15 +104,8 @@ report_source *report_sources
        *  so let him send this empty list for having an alive protocol
        */
       /* send load report asynchron to qmaster */
-#ifdef ENABLE_NGC
       ret = report_list_send(report_list, sge_get_master(0), 
                              prognames[QMASTER], 1, 0, NULL);
-
-#else
-      ret = report_list_send(report_list, sge_get_master(0), 
-                             prognames[QMASTER], 0, 0, NULL);
-#endif
-
       lFreeList(report_list);
    }
    DEXIT;

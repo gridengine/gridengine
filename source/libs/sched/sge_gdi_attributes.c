@@ -128,21 +128,12 @@ const char *attr_name
       return -1;
    }
 
-#ifdef ENABLE_NGC
    /* resolve hostname */
    if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return -1;
    }
-#else
-   /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name)) {
-      fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
-      DEXIT;
-      return -1;
-   }
-#endif
 
    /* request host entry */
    what = lWhat("%T(%I%I)", EH_Type, EH_name, EH_scaling_list);
@@ -205,21 +196,12 @@ const char *attr_name
       return NULL;
    }
 
-#ifdef ENABLE_NGC
    /* resolve hostname */
    if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return NULL;
    }
-#else
-   /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name)) {
-      fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
-      DEXIT;
-      return NULL;
-   }
-#endif
 
    global = !strcmp("global", unique);
 
@@ -331,21 +313,12 @@ u_long32 jobid
       return 0;
    }
 
-#ifdef ENABLE_NGC
    /* resolve hostname */
    if (sge_resolve_hostname(hostname, unique, EH_name) != CL_RETVAL_OK) {
       fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
       DEXIT;
       return 0;
    }
-#else
-   /* resolve hostname */
-   if (sge_resolve_hostname(hostname, unique, EH_name)) {
-      fprintf(stderr, MSG_NET_UNKNOWNHOSTNAME_S , hostname);
-      DEXIT;
-      return 0;
-   }
-#endif
 
    /* get this job from qmaster */
    what = lWhat("%T(%I %I))", JB_Type, JB_job_number, JB_ja_tasks);

@@ -457,7 +457,6 @@ int tag
 
    host[0] = '\0';
    from_id = 1;
-#ifdef ENABLE_NGC
    do {
       /* FIX_CONST */
       ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, &tag, 
@@ -473,24 +472,6 @@ int tag
       DEXIT;
       return 1;
    }
-#else
-   do {
-      /* FIX_CONST */
-      ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, &tag, 
-                                &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0, &compressed);
-  
-      if ( ret != 0 && ret!=COMMD_NACK_TIMEOUT) {
-         sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , 
-               cl_errstr(ret), ret);
-         DEXIT;
-         return -1;
-      }
-   } while (options&OPT_SYNCHRON && ret == COMMD_NACK_TIMEOUT);
-   if (ret==COMMD_NACK_TIMEOUT) {
-      DEXIT;
-      return 1;
-   }
-#endif
 
    ret = init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
    if(ret != PACK_SUCCESS) {

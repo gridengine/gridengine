@@ -517,17 +517,10 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-#ifdef ENABLE_NGC
    if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(1);
    }
-#else
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(1);
-   } 
-#endif  
 
    /* ok, start over ... */
 

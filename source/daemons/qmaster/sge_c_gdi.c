@@ -1627,11 +1627,7 @@ int sub_command
    if ( object->key_nm == EH_name || 
         object->key_nm == AH_name || 
         object->key_nm == SH_name ) {
-#ifdef ENABLE_NGC
       if ( sge_resolve_host(instructions, object->key_nm) != CL_RETVAL_OK )
-#else
-      if ( sge_resolve_host(instructions, object->key_nm) ) 
-#endif
       {
          const char *host = lGetHost(instructions, object->key_nm);    
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host ? host : "NULL"));

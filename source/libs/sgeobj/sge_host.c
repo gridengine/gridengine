@@ -212,12 +212,7 @@ int sge_resolve_host(lListElem *ep, int nm)
    }
    ret = sge_resolve_hostname(hostname, unique, nm);
 
-#ifdef ENABLE_NGC
-   if (ret == CL_RETVAL_OK)
-#else
-   if (ret == CL_OK)
-#endif
-   {
+   if (ret == CL_RETVAL_OK) {
       switch (dataType) {
        case lStringT:
           lSetPosString(ep, pos, unique);
@@ -232,7 +227,6 @@ int sge_resolve_host(lListElem *ep, int nm)
    return ret;
 }
 
-#ifdef ENABLE_NGC
 int sge_resolve_hostname(const char *hostname, char *unique, int nm) 
 {
    int ret = CL_RETVAL_OK;
@@ -276,48 +270,6 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
    DEXIT;
    return ret;
 }
-#else
-int sge_resolve_hostname(const char *hostname, char *unique, int nm) 
-{
-   int ret = 0;
-
-   DENTER(TOP_LAYER, "sge_resolve_hostname");
-
-   if (hostname != NULL) {
-      /* 
-       * these "spezial" names are resolved:
-       *    "global", "unknown", "template")
-       */
-      switch (nm) {
-      case CE_stringval:
-         if (!strcmp(hostname, SGE_UNKNOWN_NAME)) {
-            strcpy(unique, hostname);
-            ret = 0;
-         } else {
-            ret = getuniquehostname(hostname, unique, 0);
-         }
-         break;
-      case EH_name:
-         if (!strcmp(hostname, SGE_GLOBAL_NAME) || 
-             !strcmp(hostname, SGE_TEMPLATE_NAME)) {
-            strcpy(unique, hostname);
-            ret = 0;
-         } else {
-            ret = getuniquehostname(hostname, unique, 0);
-         }
-         break;
-      default:
-         ret = getuniquehostname(hostname, unique, 0);
-         break;
-      }
-   } else {
-      ret = CL_RANGE;
-   }
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 bool
 host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)

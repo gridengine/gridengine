@@ -386,14 +386,8 @@ bool spool_default_validate_func(lList **answer_list,
             if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
                cl_ret = sge_resolve_host(object, key_nm);
 
-#ifdef ENABLE_NGC
                /* if hostname resolving failed: create error */
-               if (cl_ret != CL_RETVAL_OK) 
-#else
-               /* if hostname resolving failed: create error */
-               if (cl_ret != CL_OK) 
-#endif
-               {
+               if (cl_ret != CL_RETVAL_OK) {
 #ifdef ENABLE_NGC
                   if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -565,14 +559,8 @@ bool spool_default_validate_func(lList **answer_list,
             /* try hostname resolving */
             if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
                cl_ret = sge_resolve_host(object, CONF_hname);
-#ifdef ENABLE_NGC
                /* if hostname resolving failed: create error */
-               if (cl_ret != CL_RETVAL_OK) 
-#else
-               /* if hostname resolving failed: create error */
-               if (cl_ret != CL_OK) 
-#endif
-               {
+               if (cl_ret != CL_RETVAL_OK) {
 #ifdef ENABLE_NGC
                   if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

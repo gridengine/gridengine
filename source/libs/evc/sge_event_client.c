@@ -816,11 +816,7 @@ int ec_set_edtime(int interval)
    } else {
       ret = (lGetUlong(ec, EV_d_time) != interval);
       if (ret > 0) {
-#ifdef ENABLE_NGC
          lSetUlong(ec, EV_d_time, MIN(interval, CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5));
-#else
-         lSetUlong(ec, EV_d_time, MIN(interval, COMMPROC_TIMEOUT-5));
-#endif
          ec_config_changed();
       }
    }
@@ -1185,7 +1181,6 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       lAppendElem(lp, lCopyElem(ec));
 
 
-#ifdef ENABLE_NGC
       /* closing actual connection to qmaster and reopen new connection. This will delete all
          buffered messages  - CR */
       com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
@@ -1204,12 +1199,6 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
             ERROR((SGE_EVENT, "error opening new connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
          }
       }
-#else
-      /* remove possibly pending messages */
-      remove_pending_messages(NULL, 0, 0, TAG_REPORT_REQUEST);
-      /* commlib call to mark all commprocs as unknown */
-      reset_last_heard();
-#endif
 
       /*
        *  to add may also means to modify
@@ -1313,12 +1302,8 @@ ec_deregister(void)
          send_ret = sge_send_any_request(0, NULL, sge_get_master(0), prognames[QMASTER], 1, &pb, TAG_EVENT_CLIENT_EXIT,0);
          
          clear_packbuffer(&pb);
-#ifdef ENABLE_NGC
-         if (send_ret == CL_RETVAL_OK) 
-#else
-         if (send_ret == CL_OK) 
-#endif
-         {
+
+         if (send_ret == CL_RETVAL_OK) {
             /* error message is output from sge_send_any_request */
             /* clear state of this event client instance */
             ec = lFreeElem(ec);

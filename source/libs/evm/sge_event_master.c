@@ -1671,12 +1671,8 @@ static void send_events(void)
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
          /* on failure retry is triggered automatically */
-#ifdef ENABLE_NGC
          if (ret == CL_RETVAL_OK) {
-#else
-         if (ret == 0) {
-#endif
-/*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
+            /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
             switch (busy_handling) {
             case EV_THROTTLE_FLUSH:
                /* increase busy counter */

@@ -172,12 +172,6 @@ char **argv
       SGE_EXIT(1);
    }
 
-#ifdef ENABLE_NGC
-#else
-   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
-   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL); 
-#endif
-
    if (all_jobs)
       gdi_cmd |= SGE_GDI_ALL_JOBS;
    if (all_users)

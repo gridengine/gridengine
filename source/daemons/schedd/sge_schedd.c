@@ -351,17 +351,8 @@ static int sge_ck_qmaster(const char *former_master_host)
                   MO_Type,
                   MO_name, uti_state_get_user_name());
                   
-#ifdef ENABLE_NGC
-#else
-   old_timeout = commlib_state_get_timeout_ssnd();
-   set_commlib_param(CL_P_TIMEOUT_SRCV, 20, NULL, NULL);
-#endif
                         
    alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
-#ifdef ENABLE_NGC
-#else
-   set_commlib_param(CL_P_TIMEOUT_SRCV, old_timeout, NULL, NULL);
-#endif
    
    where = lFreeWhere(where);
    what = lFreeWhat(what);

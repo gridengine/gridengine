@@ -50,12 +50,6 @@
 #include "msg_gdilib.h"
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
-#ifdef ENABLE_NGC
-#else
-static void sge_log_commd_state_transition(int cl_err);
-static int commd_monitor(int cl_err);
-#endif
-
 
 /* setup a communication error callback */
 static void general_communication_error(int cl_err);
@@ -296,71 +290,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    DEXIT;
 }
 
-/*----------------------------------------------------------
- * sge_log_commd_state_transition
- *
- * NOTES
- *    MT-NOTE: sge_log_commd_state_transition() is MT safe
- *----------------------------------------------------------*/
-#ifdef ENABLE_NGC
-#else
-static void sge_log_commd_state_transition(int cl_err) 
-{
-   DENTER(BASIS_LAYER, "sge_log_commd_state_transition");
 
-   switch (commd_monitor(cl_err)) {
-   case COMMD_UP:
-      WARNING((SGE_EVENT, MSG_GDI_COMMDUP ));
-      break;
-   case COMMD_DOWN:
-      ERROR((SGE_EVENT, MSG_GDI_COMMDDOWN_S, cl_errstr(cl_err)));
-      break;
-   default:
-      break;
-   }
-     
-   DEXIT;
-   return;
-}
-#endif
-
-/*----------------------------------------------------------
- *  commd_monitor()
- *  returns 
- *     0          commd did not change his state
- *     COMMD_UP   commd gone up
- *     COMMD_DOWN commd gone down
- *
- * NOTES
- *    MT-NOTE: commd_monitor() is MT safe
- *----------------------------------------------------------*/
-#ifdef ENABLE_NGC
-#else
-static int commd_monitor(int cl_err) 
-{
-   int state = gdi_state_get_commd_state();
-
-   /* initial setup of state - only down commd is reported */
-   if (state==COMMD_UNKNOWN && cl_err==CL_CONNECT) {
-         gdi_state_set_commd_state(COMMD_DOWN);
-         return COMMD_DOWN;
-   }
-
-   /* commd is now down but was up before */
-   if (cl_err==CL_CONNECT && state == COMMD_UP)  {
-      gdi_state_set_commd_state(COMMD_DOWN);
-      return COMMD_DOWN;
-   }
-
-   /* commd is now up but was down before */
-   if (cl_err!=CL_CONNECT && state == COMMD_DOWN)  {
-      gdi_state_set_commd_state(COMMD_UP);
-      return COMMD_UP;
-   }
-
-   return 0;
-}
-#endif
 
 /*---------------------------------------------------------
  *  sge_send_any_request

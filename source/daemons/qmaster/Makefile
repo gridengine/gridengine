@@ -77,7 +77,6 @@ QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               execution_states.c \
               lock.c \
               mail.c \
-              opt_history.c \
               qmaster_heartbeat.c \
               qmaster_running.c \
               sge_dirent.c \

@@ -1,3 +1,13 @@
+EB-2003-05-20-0: Enhancem.: Got rid of 'history'
+                              
+                            Removed history as described in section qacct(1)
+                            and sge_qmaster(8) in specification for Cluster
+                            Queues (#14)
+
+                 IZ:        #14
+                 Changed:   all 
+                 Review:    AH
+
 JG-2003-05-20-0  Enhancem.: Database spooling (PostgreSQL):
                             - spooling framework implementation (not for all
                               objects yet)
@@ -9,8 +19,8 @@ JG-2003-05-20-0  Enhancem.: Database spooling (PostgreSQL):
                             shut_me_down. Exit will be done by the application.
                  Review:    EB
 
-CR-2003-05-20-0: Testsuite: - fixed error when installing without root permission
-                              in test init_core_system()
+CR-2003-05-20-0: Testsuite: - fixed error when installing without root 
+                              permission in test init_core_system()
                             - reading macro messages file at testsuite startup
 
 CR-2003-05-19-0: Testsuite: - enhancments to make testsuite compatible with
@@ -22,9 +32,10 @@ CR-2003-05-15-0: Testsuite: - new method to cleanup remote spooldirs in
                             - new function startup_execd_raw() to start an execd
                               without startup script 
 
-AD-2003-05-15-0: Bugfix:    aimk (Arch LINUX5/6): added '-lXmu' to XLIBS. Otherwise
-                            the '_XEditRes*' functions could not be resolved or linked.
-		 Changed:   aimk
+AD-2003-05-15-0: Bugfix:    aimk (Arch LINUX5/6): added '-lXmu' to XLIBS. 
+                            Otherwise the '_XEditRes*' functions could not 
+                            be resolved or linked.
+                 Changed:   aimk
 
 JG-2003-05-15-0: Bugfix:    - Installation of SGE(EE) as non root user failed,
                               as an admin user called "none" was created instead

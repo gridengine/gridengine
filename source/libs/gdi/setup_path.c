@@ -63,7 +63,6 @@ struct path_state_t {
     char       *acct_file;
     char       *stat_file;
     char       *local_conf_dir;
-    char       *history_dir;
     char       *shadow_masters_file;
     char       *product_mode_file;
 };
@@ -72,7 +71,7 @@ struct path_state_t {
 static pthread_key_t   path_state_key;
 #else
 static struct path_state_t path_state_opaque = {
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 struct path_state_t *path_state = &path_state_opaque;
 #endif
 
@@ -90,7 +89,6 @@ static void path_state_destroy(void* state) {
    FREE(((struct path_state_t*)state)->acct_file);
    FREE(((struct path_state_t*)state)->stat_file);
    FREE(((struct path_state_t*)state)->local_conf_dir);
-   FREE(((struct path_state_t*)state)->history_dir);
    FREE(((struct path_state_t*)state)->shadow_masters_file);
    FREE(((struct path_state_t*)state)->product_mode_file);
    free(state);
@@ -140,11 +138,6 @@ const char *path_state_get_local_conf_dir(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_local_conf_dir");
    return path_state->local_conf_dir;
-}
-const char *path_state_get_history_dir(void)
-{
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_history_dir");
-   return path_state->history_dir;
 }
 const char *path_state_get_shadow_masters_file(void)
 {
@@ -199,11 +192,6 @@ void path_state_set_local_conf_dir(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_local_conf_dir");
    path_state->local_conf_dir = sge_strdup(path_state->local_conf_dir, path);
-}
-void path_state_set_history_dir(const char *path)
-{
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_history_dir");
-   path_state->history_dir = sge_strdup(path_state->history_dir, path);
 }
 void path_state_set_shadow_masters_file(const char *path)
 {
@@ -353,9 +341,6 @@ lList **alpp
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, LOCAL_CONF_DIR);
    path_state_set_local_conf_dir(sge_dstring_get_string(&bw));
 
-   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, HISTORY_DIR);
-   path_state_set_history_dir(sge_dstring_get_string(&bw));
-
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SHADOW_MASTERS_FILE);
    path_state_set_shadow_masters_file(sge_dstring_get_string(&bw));
 
@@ -370,7 +355,6 @@ lList **alpp
    DPRINTF(("acct_file           >%s<\n", path_state_get_acct_file()));
    DPRINTF(("stat_file           >%s<\n", path_state_get_stat_file()));
    DPRINTF(("local_conf_dir      >%s<\n", path_state_get_local_conf_dir()));
-   DPRINTF(("history_dir         >%s<\n", path_state_get_history_dir()));
    DPRINTF(("shadow_masters_file >%s<\n", path_state_get_shadow_masters_file()));
    DPRINTF(("product_mode_file   >%s<\n", path_state_get_product_mode_file()));
    
@@ -390,7 +374,6 @@ void sge_delete_paths()
 	FREE(path_state->acct_file);
 	FREE(path_state->stat_file);
 	FREE(path_state->local_conf_dir);
-	FREE(path_state->history_dir);
 	FREE(path_state->shadow_masters_file);
 	FREE(path_state->product_mode_file);
 }

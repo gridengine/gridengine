@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2002/07/04 09:50:11 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/05/20 12:58:15 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2002/07/04 09:50:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2003/05/20 12:58:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -50,13 +50,9 @@ qacct \- report and account for xxQS_NAMExx usage
 ] [
 .B \-help
 ] [
-.B \-history HistoryPath
-] [
 .B \-j [JobId|JobName]
 ] [
 .B \-l attr=val,...
-] [
-.B \-nohist
 ] [
 .B \-o [Owner]
 ] [
@@ -133,12 +129,6 @@ Display help information for the
 .I qacct
 command.
 .\"
-.IP "\fB\-history HistoryPath\fP"
-The directory path where the \fIhistorical\fP queue and complexes
-configuration data is located, which is used for resource requirement
-matching in conjunction with the \fB\-l\fP switch.
-If the latter is not set, this option is ignored.
-.\"
 .IP "\fB\-j\fP [[\fBJobName\fP|\fBJobId\fP]]"
 The name or ID of the job during execution for which accounting information
 is printed. If neither a name nor an ID is given all jobs are enlisted.
@@ -152,28 +142,9 @@ for an explanation of the displayed information.
 .\"
 .IP "\fB\-l attr=val,...\fP"
 A resource requirement specification which must be met by the queues
-in which the jobs being accounted were executing. The matching is
-performed with \fIhistorical\fP data, i.e. it reflects the situation
-of the queue and complexes configuration at the time of the job start.
-.sp 1
-The resource request is very similar to the one described in
+in which the jobs being accounted were executing. The resource request 
+is very similar to the one described in
 .M qsub 1 .
-The main difference is that ever changing load information may not
-be requested as it is not contained in the historical configuration
-data being used.
-.\"
-.IP "\fB\-nohist\fP"
-Only useful together with the \fB\-l\fP option. It forces
-.I qacct
-not to use \fIhistorical\fP queue and complexes configuration data
-for resource requirement matching but instead retrieve actual
-queue and complexes configuration from
-.M xxqs_name_sxx_qmaster 8 .
-\fBNote\fP, that this may lead to confusing statistical results, as the
-current queue and complexes configuration may differ significantly
-from the situation being valid for past jobs.
-\fBNote also\fP, that all hosts being referenced in the accounting file
-have to be up and running in order to get results.
 .\"
 .IP "\fB\-o\fP [\fBOwner\fP]"
 The name of the owner of the jobs for which accounting statistics
@@ -267,8 +238,6 @@ Per default the local host is used.
 .ta \w'<xxqs_name_sxx_root>/     'u
 \fI<xxqs_name_sxx_root>/<cell>/common/accounting\fP
 	xxQS_NAMExx default accounting file
-\fI<xxqs_name_sxx_root>/<cell>/common/history\fP
-	xxQS_NAMExx default history database
 \fI<xxqs_nam_sexx_root>/<cell>/common/act_qmaster\fP
 	xxQS_NAMExx master host file
 .fi

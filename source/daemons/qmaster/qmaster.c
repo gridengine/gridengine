@@ -1017,10 +1017,6 @@ lList *alp = NULL;
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
          continue;
 
-      /* -nohist */
-      if ((rp = parse_noopt(sp, "-nohist", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -nostart-commd */
       if ((rp = parse_noopt(sp, "-nostart-commd", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -1081,10 +1077,6 @@ char *filename;
          usageshowed = 1;
          sge_usage(stdout);
          break;
-      }
-      /* -nohist */
-      if(parse_flag(ppcmdline, "-nohist", &alp, &flag)) {
-         continue;
       }
 
       /* -nostart-commd */

@@ -936,10 +936,10 @@ int sub_command
 
                   tmp_task = job_get_ja_task_template_pending(job, task_number);
                   deleted_tasks++;
-                  sge_commit_job(job, tmp_task, 3, COMMIT_NO_SPOOLING |
-                     COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK);
                   sge_add_event(NULL, start_time, sgeE_JATASK_DEL, job_number, task_number,
                                 NULL, lGetString(job, JB_session), NULL);
+                  sge_commit_job(job, tmp_task, 3, COMMIT_NO_SPOOLING |
+                     COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK);
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
                   if (!alltasks) {

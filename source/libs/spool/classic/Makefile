@@ -38,8 +38,6 @@ SPOOLCLIB = libspoolc$(QIDLEXT)$(LIBEXT)
 
 SPOOLCLIB_SRC = \
          sge_spooling_classic.c \
-         opt_history.c \
-         complex_history.c \
          read_write_sharetree.c \
          read_write_complex.c \
          read_list.c \
@@ -98,12 +96,6 @@ include $(SPOOLCLIB_DIR)/spoolc_dependencies
 ###############################################################################
 sge_spooling_classic.o: $(SPOOLCLIB_DIR)/sge_spooling_classic.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/sge_spooling_classic.c
-
-complex_history.o:	$(SPOOLCLIB_DIR)/complex_history.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/complex_history.c
-   
-opt_history.o: 	$(SPOOLCLIB_DIR)/opt_history.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/opt_history.c
 
 read_write_sharetree.o: $(SPOOLCLIB_DIR)/read_write_sharetree.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_sharetree.c

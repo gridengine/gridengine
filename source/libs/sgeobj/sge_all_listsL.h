@@ -38,7 +38,6 @@
 #include "sge_answerL.h"
 #include "sge_ckptL.h"
 #include "sge_eventL.h"
-#include "sge_histdirL.h"
 #include "sge_identL.h"
 #include "sge_jobL.h"
 #include "sge_job_refL.h"
@@ -87,6 +86,7 @@
 #include "sge_japiL.h"
 #include "sge_hrefL.h"
 #include "sge_attrL.h"
+#include "sge_helperL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -142,10 +142,6 @@ extern "C" {
       {JG_LOWERBOUND, JGS, JGN},        /* jobs sublist of granted destinatin 
                                          * identifiers */
       {SO_LOWERBOUND, SOS, SON},        /* subordinate configuration list */
-      {HD_LOWERBOUND, HDS, HDN},        /* list of history version
-                                         * subdirectories */
-      {HF_LOWERBOUND, HFS, HFN},        /* list of history files in a
-                                         * subdirectory */
       {QAJ_LOWERBOUND, QAJS, QAJN},     /* list for qacct special purpose */
       {SPA_LOWERBOUND, SPAS, SPAN},     /* option parse struct */
       {REP_LOWERBOUND, REPS, REPN},     /* report list */

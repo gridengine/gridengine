@@ -956,9 +956,6 @@
 #define MSG_GDI_USAGE_AT_OPT_FILE                        "[-@ file]"
 #define MSG_GDI_UTEXT_AT_OPT_FILE                        _MESSAGE(23463, _("read commandline input from file"))
 
-#define MSG_GDI_USAGE_nohist_OPT                         "[-nohist]"
-#define MSG_GDI_UTEXT_nohist_OPT                         _MESSAGE(23464, _("do not write history" ))
-
 #define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
 /* #define MSG_GDI_UTEXT_noread_argfile_OPT                 _message(23465, _("do not read \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/
 

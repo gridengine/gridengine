@@ -46,7 +46,6 @@
 #define ACCT_FILE                 "accounting"
 #define STAT_FILE                 "statistics"
 #define LOCAL_CONF_DIR            "local_conf"
-#define HISTORY_DIR               "history"
 #define SHADOW_MASTERS_FILE       "shadow_masters"
 
 #ifndef WIN32NATIVE
@@ -69,7 +68,6 @@ const char *path_state_get_act_qmaster_file(void);
 const char *path_state_get_acct_file(void);
 const char *path_state_get_stat_file(void);
 const char *path_state_get_local_conf_dir(void);
-const char *path_state_get_history_dir(void);
 const char *path_state_get_shadow_masters_file(void);
 const char *path_state_get_product_mode_file(void);
 
@@ -81,7 +79,6 @@ void path_state_set_act_qmaster_file(const char *path);
 void path_state_set_acct_file(const char *path);
 void path_state_set_stat_file(const char *path);
 void path_state_set_local_conf_dir(const char *path);
-void path_state_set_history_dir(const char *path);
 void path_state_set_shadow_masters_file(const char *path);
 void path_state_set_product_mode_file(const char *path);
 

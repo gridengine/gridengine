@@ -67,7 +67,6 @@
 #include "msg_qmaster.h"
 
 static void sge_change_queue_version_complex(const char *cmplx_name);
-static int verify_complex_deletion(lList **alpp, const char *userset_name);
 
 /* ------------------------------------------------------------ */
 
@@ -402,7 +401,6 @@ char *rhost
 ) {
    lListElem *ep;
    const char *cmplxname;
-   int ret;
 
    DENTER(TOP_LAYER, "sge_del_complex");
 
@@ -428,14 +426,6 @@ char *rhost
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;
       return STATUS_EEXIST;
-   }
-
-   /* ensure there are no complex lists in
-      a queue/host refering to this complex */
-   if ((ret=verify_complex_deletion(alpp, cmplxname))!=STATUS_OK) {
-      /* answerlist gets filled by complex_list_verify() in case of errors */
-      DEXIT;
-      return ret;
    }
 
    /* check if someone tries to delete queue/host/global complexes */
@@ -502,36 +492,5 @@ const char *cmplx_name
 
    DEXIT;
    return;
-}
-
-static int verify_complex_deletion(
-lList **alpp,
-const char *complex_name 
-) {
-   int ret = STATUS_OK;
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "verify_userset_deletion");
-
-   for_each (ep, Master_Queue_List) {
-      if (lGetElemStr(lGetList(ep, QU_complex_list), CX_name, complex_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
-               complex_name, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         ret = STATUS_EUNKNOWN;
-      }
-   }
-
-   for_each (ep, Master_Exechost_List) {
-      if (lGetElemStr(lGetList(ep, EH_complex_list), CX_name, complex_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS, 
-               complex_name, MSG_OBJ_EH, lGetHost(ep, EH_name)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         ret = STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return ret;
 }
 

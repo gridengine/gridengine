@@ -1130,10 +1130,6 @@ FILE *fp
       }
    }
 
-   if (VALID_OPT(nohist_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_nohist_OPT , MSG_GDI_UTEXT_nohist_OPT );
-   }
-
    if (VALID_OPT(nostart_commd_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_nostart_commd_OPT, MSG_GDI_UTEXT_nostart_commd_OPT );
    }

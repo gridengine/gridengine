@@ -35,7 +35,6 @@
 
 #include "sge.h"
 #include "cull.h"
-#include "complex_history.h"
 #include "read_write_queue.h"
 #include "read_write_host.h"
 #include "config.h"
@@ -53,6 +52,7 @@
 #include "sge_userset.h"
 #include "sge_complex.h"
 #include "sge_host.h"
+#include "sge_static_load.h"
 
 static intprt_type intprt_as_scaling[] = { HS_name, HS_value, 0 };
 static intprt_type intprt_as_load[] = { HL_name, HL_value, 0 };
@@ -285,7 +285,6 @@ _Insight_set_option("unsuppress", "PARM_NULL");
       0 use stdout
       1 write into tmpfile
       2 write into spoolfile
-      3 write into history
 
    file:
       filename
@@ -346,15 +345,6 @@ char *file
       fp = fopen(filename, "w");
       if (!fp) {
          CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, 
-            strerror(errno)));
-         DEXIT;
-         return NULL;
-      }
-      break;
-   case 3:
-      fp = fopen(file, "w");
-      if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, file, 
             strerror(errno)));
          DEXIT;
          return NULL;

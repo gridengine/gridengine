@@ -38,7 +38,6 @@
  * libs/spool/read_list.c
  */
 #define MSG_CONFIG_READINGINEXECUTIONHOSTS      _MESSAGE(61000, _("Reading in execution hosts.\n"))
-#define MSG_CONFIG_CANTWRITEHISTORYFORHOSTX_S   _MESSAGE(61001, _("cannot write history for host "SFQ"\n"))
 #define MSG_CONFIG_READINGINADMINHOSTS          _MESSAGE(61002, _("Reading in administrative hosts.\n"))
 #define MSG_CONFIG_READINGINSUBMITHOSTS         _MESSAGE(61003, _("Reading in submit hosts.\n"))
 #define MSG_CONFIG_READINGINGPARALLELENV        _MESSAGE(61004, _("Reading in parallel environments:\n"))
@@ -55,7 +54,6 @@
 #define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED _MESSAGE(61015, _("obsolete queue template file deleted\n"))
 #define MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT    _MESSAGE(61016, _("found queue 'template', but not in file 'template'; ignoring it!\n"))
 #define MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
-#define MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S  _MESSAGE(61018, _("can't write history for queue "SFQ"\n"))
 #define MSG_CONFIG_READINGINPROJECTS            _MESSAGE(61019, _("Reading in projects:\n"))
 #define MSG_SETUP_PROJECT_S                     _MESSAGE(61020, _("\tProject "SFQ".\n"))
 #define MSG_CONFIG_READINGINUSERSETS            _MESSAGE(61021, _("Reading in usersets:\n"))
@@ -68,7 +66,6 @@
 #define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61028, _("can't open directory "SFQ))
 #define MSG_CONFIG_READINGINCOMPLEXES           _MESSAGE(61029, _("Reading in complexes:\n"))
 #define MSG_SETUP_COMPLEX_S                     _MESSAGE(61030, _("\tComplex "SFQ".\n"))
-#define MSG_FILE_NOWRITEHIST_S                  _MESSAGE(61031, _("can't write history for complex "SFQ))
 
 /*
  * libs/spool/read_write_manop.c

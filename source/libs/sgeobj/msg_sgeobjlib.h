@@ -41,8 +41,6 @@
 #define MSG_GDI_CORRUPTPRODMODFILE_S         _MESSAGE(64006, _("product mode file "SFQ" is incorrect\n"))
 #define MSG_GDI_SWITCHFROMTO_SS              _MESSAGE(64007, _("switching from "SFQ" to "SFQ" feature set\n"))
 #define MSG_HOSTREFINQUEUE_SS                _MESSAGE(64008, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
-#define MSG_SGETEXT_UNKNOWNQUEUE_SSSS        _MESSAGE(64009, _("denied: queue "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n"))
-#define MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS        _MESSAGE(64010, _("queuenames and keyword "SFQ" are not allowed in "SFQ" of "SFQ" "SFQ"\n"))
 #define MSG_QUEUE_NULLPTR             _MESSAGE(64011, _("NULL ptr passed to sge_add_queue()\n"))
 #define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _MESSAGE(64012, _("no argument given in config option: "SFN"\n"))
 #define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _MESSAGE(64013, _("missing configuration attribute "SFQ""))

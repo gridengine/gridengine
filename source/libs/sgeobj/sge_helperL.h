@@ -1,5 +1,5 @@
-#ifndef __SGE_HISTDIRL_H
-#define __SGE_HISTDIRL_H
+#ifndef __SGE_HELPER_H
+#define __SGE_HELPER_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -39,57 +39,6 @@
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-/*
- * this list is used to cache the names of the complexes' history
- * directory in memory
- * the list should be identical to the complex list
- */
-
-/* *INDENT-OFF* */ 
-
-enum {
-   HD_name = HD_LOWERBOUND,
-   HD_files,                 /* HF_Type */
-   HD_oldest,                /* date of oldest file in dir as ulong */
-   HD_latest
-};
-
-LISTDEF(HD_Type)
-   SGE_STRING(HD_name, CULL_DEFAULT)
-   SGE_LIST(HD_files, HF_Type, CULL_DEFAULT)
-   SGE_ULONG(HD_oldest, CULL_DEFAULT)
-   SGE_ULONG(HD_latest, CULL_DEFAULT)
-LISTEND 
-
-NAMEDEF(HDN)
-   NAME("HD_name")
-   NAME("HD_files")
-   NAME("HD_oldest")
-   NAME("HD_latest")
-NAMEEND
-
-#define HDS sizeof(HDN)/sizeof(char*)
-
-/*
-** list for history files, each describing one version of a complex
-*/
-enum {
-   HF_name = HF_LOWERBOUND,
-   HF_entries                /* CE_Type */
-};
-
-LISTDEF(HF_Type)
-   SGE_STRING(HF_name, CULL_DEFAULT)
-   SGE_LIST(HF_entries, CULL_ANY_SUBTYPE, CULL_DEFAULT)
-LISTEND 
-
-NAMEDEF(HFN)
-   NAME("HF_name")
-   NAME("HF_entries")
-NAMEEND
-
-#define HFS sizeof(HFN)/sizeof(char*)
 
 /*
 ** list for sorted output of job sums for QACCT
@@ -134,7 +83,8 @@ LISTDEF(QAJ_Type)
    SGE_DOUBLE(QAJ_io, CULL_DEFAULT)
    SGE_DOUBLE(QAJ_iow, CULL_DEFAULT)
    SGE_DOUBLE(QAJ_maxvmem, CULL_DEFAULT)
-LISTEND 
+LISTEND
+
 
 NAMEDEF(QAJN)
    NAME("QAJ_host")
@@ -163,4 +113,6 @@ NAMEEND
 #ifdef  __cplusplus
 }
 #endif
-#endif                          /* __SGE_HISTDIRL_H */
+
+#endif /* __SGE_HELPER_H */
+

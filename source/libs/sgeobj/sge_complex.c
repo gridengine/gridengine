@@ -85,9 +85,10 @@ lList *Master_Complex_List = NULL;
 *       -1 on error
 *        an error message will be written into SGE_EVENT
 *******************************************************************************/
-int sge_fill_requests(lList *re_entries, lList *complex_list, 
-                      int allow_non_requestable, int allow_empty_boolean,  
-                      int allow_neg_consumable) 
+int 
+sge_fill_requests(lList *re_entries, lList *complex_list, 
+                  int allow_non_requestable, int allow_empty_boolean,  
+                  int allow_neg_consumable) 
 {
    lListElem *c, *entry, *cep;
    const char *name;
@@ -162,13 +163,13 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
 *             consumable resources with a negative value
 *
 *  RESULT
-
 *        0 on success
 *       -1 on error
 *        an error message will be written into SGE_EVENT
 ******************************************************************************/
-int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
-                             int allow_neg_consumable) 
+int 
+fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
+                         int allow_neg_consumable) 
 {
    static char tmp[1000];
    const char *name, *s;
@@ -265,7 +266,8 @@ int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
 *  INPUTS
 *     lList *cl - complex list 
 ******************************************************************************/
-void complex_list_init_double_attr(lList *cl) 
+void 
+complex_list_init_double_attr(lList *cl) 
 {
    lListElem *cle, *cattr;
 
@@ -300,7 +302,8 @@ void complex_list_init_double_attr(lList *cl)
 *  RESULT
 *     lListElem* - found element or NULL
 *******************************************************************************/
-lListElem* complex_list_locate_attr(lList *complex_list, const char* name)
+lListElem * 
+complex_list_locate_attr(lList *complex_list, const char* name)
 {
    lListElem *cep = NULL;
    lListElem *ret = NULL;
@@ -344,8 +347,9 @@ lListElem* complex_list_locate_attr(lList *complex_list, const char* name)
 *        STATUS_EUNKNOWN - error in 'complex_list'.
 *                          reason might be found in 'alpp' 
 *******************************************************************************/
-int complex_list_verify(lList *complex_list, lList **alpp,
-                        const char *obj_name, const char *qname) 
+int 
+complex_list_verify(lList *complex_list, lList **alpp,
+                    const char *obj_name, const char *qname) 
 {
    lListElem *cep;
    const char *s;
@@ -411,9 +415,9 @@ centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
    and string form of it 
 
 */
-const char *map_op2str(
-u_long32 op 
-) {
+const char *
+map_op2str(u_long32 op) 
+{
    static char *opv[] = {
       "??",
       "==", /* CMPLXEQ_OP */
@@ -424,8 +428,9 @@ u_long32 op
       "!="  /* CMPLXNE_OP */
    };
 
-   if (op<CMPLXEQ_OP || op>CMPLXNE_OP)
+   if (op < CMPLXEQ_OP || op > CMPLXNE_OP) {
       op = 0;
+   }
    return opv[op];
 }
 
@@ -434,9 +439,9 @@ u_long32 op
    used to map from type (numeric) to type (string)
 
 */
-const char *map_type2str(
-u_long32 type 
-) {
+const char *
+map_type2str(u_long32 type) 
+{
    static char *typev[] = {
       "??????",
       "INT",     /* TYPE_INT */
@@ -453,9 +458,9 @@ u_long32 type
       "TYPE_LOF" /* TYPE_LOF */
    };
 
-   if (type<TYPE_FIRST || type>TYPE_LAST)
+   if (type < TYPE_FIRST || type > TYPE_LAST) {
       type = 0;
+   }
    return typev[type];
 }
-
 

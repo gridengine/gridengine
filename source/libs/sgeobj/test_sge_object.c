@@ -41,7 +41,6 @@
 #include "sge_object.h"
 #include "sge_queue.h"
 #include "sge_job.h"
-#include "sge_histdirL.h"
 
 static void 
 check_result_bool(bool value, bool target, const char *function)
@@ -91,20 +90,17 @@ int main(int argc, char *argv[])
    const char *ret_string;
    const void *ret_pointer;
    
-   lListElem *queue, *hist;
+   lListElem *queue;
    dstring buffer = DSTRING_INIT;
 
    lInit(nmv);
 
    queue = lCreateElem(QU_Type);
-   hist  = lCreateElem(HD_Type);
 
    /* object_has_type */
    ret_bool = object_has_type(queue, QU_Type);
    check_result_bool(ret_bool, true, "object_has_type");
    ret_bool = object_has_type(queue, JB_Type);
-   check_result_bool(ret_bool, false, "object_has_type");
-   ret_bool = object_has_type(queue, HD_Type);
    check_result_bool(ret_bool, false, "object_has_type");
 
    ret_bool = object_has_type(NULL, JB_Type);
@@ -115,8 +111,6 @@ int main(int argc, char *argv[])
    /* object_get_type */
    ret_pointer = object_get_type(queue);
    check_result_pointer(ret_pointer, QU_Type, "object_get_type");
-   ret_pointer = object_get_type(hist);
-   check_result_pointer(ret_pointer, NULL, "object_get_type");
    ret_pointer = object_get_type(NULL);
    check_result_pointer(ret_pointer, NULL, "object_get_type");
 
@@ -131,8 +125,6 @@ int main(int argc, char *argv[])
    /* object_get_primary_key */
    ret_int = object_get_primary_key(JB_Type);
    check_result_int(ret_int, JB_job_number, "object_get_primary_key");
-   ret_int = object_get_primary_key(HD_Type);
-   check_result_int(ret_int, NoName, "object_get_primary_key");
 
    ret_int = object_get_primary_key(NULL);
    check_result_int(ret_int, NoName, "object_get_primary_key");
@@ -142,8 +134,6 @@ int main(int argc, char *argv[])
    check_result_string(ret_string, "QU_", "object_get_name_prefix");
    ret_string = object_get_name_prefix(JB_Type, &buffer);
    check_result_string(ret_string, "JB_", "object_get_name_prefix");
-   ret_string = object_get_name_prefix(HD_Type, &buffer);
-   check_result_string(ret_string, NULL, "object_get_name_prefix");
 
    ret_string = object_get_name_prefix(NULL, &buffer);
    check_result_string(ret_string, NULL, "object_get_name_prefix");
@@ -155,7 +145,6 @@ int main(int argc, char *argv[])
    /* object_[gs]et_field_contents is tested in test_sge_spooling_utilities */
    
    queue = lFreeElem(queue);
-   queue = lFreeElem(hist);
 
    return EXIT_SUCCESS;
 }

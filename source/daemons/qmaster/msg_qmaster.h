@@ -641,13 +641,6 @@
 #define MSG_ATTRSTILLREFINHOST_SS     _MESSAGE(33536, _("attribute "SFQ" still referenced in host "SFQ" - complex not modified"))
 #define MSG_ATTRSTILLREFINSCHED_S     _MESSAGE(33537, _("attribute "SFQ" still referenced in scheduler configuration - complex not modified"))
 #define MSG_SGETEXT_CANTDELCMPLX_S              _MESSAGE(33538, _("can't delete complex "SFQ" from list\n"))
-#define MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS        _MESSAGE(33540, _("denied: complex "SFQ" is still referenced in complex_list of "SFN" "SFQ"\n"))
-
-
-
-
-
-
 
 /*
 ** configuration_qmaster.c
@@ -743,7 +736,6 @@
 #define MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST    _MESSAGE(33620, _("adding host global to exechost_list\n"))
 #define MSG_CONFIG_CANTWRITEMANAGERLIST       _MESSAGE(33621, _("can't write manager list\n"))
 #define MSG_CONFIG_CANTWRITEOPERATORLIST      _MESSAGE(33622, _("can't write operator list\n"))
-#define MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S       _MESSAGE(33630, _("can't write history for queue "SFQ"\n"))
 /* #define MSG_CONFIG_CANTRESOLVEEXECHOSTNAMEX_S       _message(33636, _("cannot resolve exechost name "SFQ)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 /* #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _message(33649, _("failed removing bad jobfile (reason: "SFN"): please delete "SFQ" manually\n")) __TS Removed automatically from testsuite!! TS__*/

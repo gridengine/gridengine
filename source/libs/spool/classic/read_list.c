@@ -55,9 +55,6 @@
 #include "sge_complex_schedd.h"  /* JG: TODO: dito */
 #include "slots_used.h"          /* JG: TODO: dito */
 #include "sge_select_queue.h"    /* JG: TODO: dito */
-#include "opt_history.h"
-#include "complex_history.h"
-#include "path_history.h"
 
 #include "sge_answer.h"
 #include "sge_calendar.h"
@@ -282,21 +279,6 @@ int sge_read_exechost_list_from_disk()
             }
 
             lAppendElem(Master_Exechost_List, ep);
-            /*
-            ** make a start for the history when Sge first starts up
-            ** or when history has been deleted
-            */
-            if (!is_nohist() && lGetHost(ep, EH_name) &&
-                !is_object_in_history(STR_DIR_EXECHOSTS, 
-                   lGetHost(ep, EH_name))) {
-               int ret;
-            
-               ret = write_host_history(ep);
-               if (ret) {
-                  WARNING((SGE_EVENT, MSG_CONFIG_CANTWRITEHISTORYFORHOSTX_S,
-                           lGetHost(ep, EH_name)));
-               }
-            }
          } else {
             sge_unlink(EXECHOST_DIR, host);
          }
@@ -679,21 +661,6 @@ int sge_read_queue_list_from_disk()
                   return -1;
 #endif
                } 
-
-               /*
-               ** make a start for the history when Sge first starts up
-               ** or when history has been deleted
-               */
-               if (!is_nohist() && lGetString(qep, QU_qname) &&
-                   !is_object_in_history(STR_DIR_QUEUES, lGetString(qep, QU_qname))) {
-                  int ret;
-                  
-                  ret = sge_write_queue_history(qep);
-                  if (ret) {
-                     WARNING((SGE_EVENT, MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S,
-                        lGetString(qep, QU_qname)));
-                  }
-               }
             }
          } else {
             sge_unlink(QUEUE_DIR, queue_str);
@@ -971,21 +938,6 @@ int read_all_complexes(void)
       }
       if (el) {
          lAppendElem(Master_Complex_List, el);
-         /*
-         ** make a start for the history when Sge first starts up
-         ** or when history has been deleted
-         */
-         if (!is_nohist() && lGetString(el, CX_name) &&
-             !is_object_in_history(STR_DIR_COMPLEXES, 
-                lGetString(el, CX_name))) {
-            int ret;
-            
-            ret = write_complex_history(el);
-            if (ret) {
-               WARNING((SGE_EVENT, MSG_FILE_NOWRITEHIST_S, lGetString(el, CX_name)));
-            }
-         }
-
       }
    }
 

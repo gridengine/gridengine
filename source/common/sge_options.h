@@ -142,7 +142,6 @@ enum {
    spl_OPT, /* show pe object list */
    sconfl_OPT,  /* show list of local configurations */
    dconf_OPT,   /* delete local configuration */
-   nohist_OPT,  /* do not write history */
    starthist_OPT,  /* flush history */
 
    Mq_OPT,

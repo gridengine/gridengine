@@ -38,13 +38,11 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_any_request.h"
-#include "spool/classic/path_history.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
 #include "sge_resource.h"
-#include "spool/classic/complex_history.h"
 #include "sge_sched.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -91,11 +89,6 @@ static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexecho
 */
 static FILE *fp = NULL;
 
-/*
-** REMOVE THIS BY SPLITTING complex_history.c to resolve link dependencies
-*/
-lList *Master_Complex_List;
-
 int main(int argc, char *argv[]);
 
 /*
@@ -135,8 +128,6 @@ char **argv
    u_long32 slots;
    char cell[SGE_PATH_MAX + 1];
    stringT complexes;
-   char history_path[SGE_PATH_MAX + 1];
-
    u_long32 job_number = 0;
    stringT job_name;
    int jobfound=0;
@@ -153,8 +144,6 @@ char **argv
    int hostflag=0;
    int jobflag=0;
    int complexflag=0;
-   int historyflag=0;
-   int nohistflag=0;
    int beginflag=0;
    int endflag=0;
    int daysflag=0;
@@ -172,10 +161,8 @@ char **argv
    int ii, i_ret;
    lList *complex_options = NULL;
    lList *complex_list, *queue_list, *exechost_list;
-   lList *complex_dirs, *queue_dirs, *exechost_dirs;
    lList *sorted_list = NULL;
    lList *alp = NULL;
-   lListElem *queue_host, *global_host;
    int is_path_setup = 0;   
    u_long32 line = 0;
    dstring ds;
@@ -462,17 +449,7 @@ char **argv
          }
          else
             slotsflag = 1;
-      }
-      
-      /*
-      ** -nohist does not use history data
-      ** for evaluation of -l criteria
-      ** problem: -history and -nohist results
-      ** in strange initialisation
-      */
-      else if (!strcmp("-nohist",argv[ii])) {
-         nohistflag = 1;
-      }
+      } 
       /*
       ** complex attributes
       ** option syntax is described as
@@ -494,19 +471,7 @@ char **argv
          else {
             show_the_way(stderr);
          }
-      }
-      /*
-      ** alternative path to history directory
-      */
-      else if (!strcmp("-history",argv[ii])) {
-         if (argv[ii+1]) {
-            strcpy(history_path, argv[++ii]);
-            historyflag = 1;
-         }
-         else {
-            show_the_way(stderr);
-         }
-      }
+      } 
       /*
       ** alternative accounting file
       */
@@ -544,23 +509,19 @@ char **argv
    */
    if (!acctfile[0]) {
      const char *acct_file = path_state_get_acct_file();
+
      DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
      strcpy(acctfile, acct_file);
-     if (historyflag) {
-        path_state_set_history_dir(history_path);
+     prepare_enroll(prognames[QACCT], 0, NULL);
+     if (!sge_get_master(1)) {
+        SGE_EXIT(1);
      }
-     else if (nohistflag) {
-        prepare_enroll(prognames[QACCT], 0, NULL);
-        if (!sge_get_master(1)) {
-           SGE_EXIT(1);
-        }
-        DPRINTF(("checking if qmaster is alive ...\n"));
-        if (check_isalive(sge_get_master(0))) {
-           ERROR((SGE_EVENT, MSG_HISTORY_QMASTERISNOTALIVE ));
-           SGE_EXIT(1);
-        }
-       sge_setup_sig_handlers(QACCT);
+     DPRINTF(("checking if qmaster is alive ...\n"));
+     if (check_isalive(sge_get_master(0))) {
+        ERROR((SGE_EVENT, MSG_HISTORY_QMASTERISNOTALIVE ));
+        SGE_EXIT(1);
      }
+     sge_setup_sig_handlers(QACCT);
      is_path_setup = 1;
    }
 
@@ -610,8 +571,6 @@ char **argv
    ** parsing complex flags and initialising complex list
    */
    if (complexflag) {
-      char *c_dir, *q_dir, *e_dir;
-
       complex_options = sge_parse_resources(NULL, complexes, complexes  + 1, "hard");
       if (!complex_options) {
          /*
@@ -621,90 +580,24 @@ char **argv
       }
       /* lDumpList(stdout, complex_options, 0); */
       if (!is_path_setup) {
-         if (historyflag) {
-            path_state_set_history_dir(history_path);
+         prepare_enroll(prognames[QACCT], 0, NULL);
+         if (!sge_get_master(1)) {
+            SGE_EXIT(1);
          }
-         else {
-            if (nohistflag) {
-               prepare_enroll(prognames[QACCT], 0, NULL);
-               if (!sge_get_master(1)) {
-                  SGE_EXIT(1);
-               }
-               DPRINTF(("checking if qmaster is alive ...\n"));
-               if (check_isalive(sge_get_master(0))) {
-                  ERROR((SGE_EVENT, "qmaster is not alive"));
-                  SGE_EXIT(1);
-               }
-               sge_setup_sig_handlers(QACCT);
-            }
+         DPRINTF(("checking if qmaster is alive ...\n"));
+         if (check_isalive(sge_get_master(0))) {
+            ERROR((SGE_EVENT, "qmaster is not alive"));
+            SGE_EXIT(1);
          }
+         sge_setup_sig_handlers(QACCT);
          is_path_setup = 1;
       }
       
-      if (!nohistflag) {
-         c_dir = malloc(strlen(path_state_get_history_dir()) + strlen(STR_DIR_COMPLEXES) + 3);
-         if (!c_dir) {
-            ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
-            SGE_EXIT(1);
-         }
-         q_dir = malloc(strlen(path_state_get_history_dir()) + strlen(STR_DIR_QUEUES) + 3);
-         if (!q_dir) {
-            ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
-            FREE(c_dir);
-            SGE_EXIT(1);
-         }
-         e_dir = malloc(strlen(path_state_get_history_dir()) + strlen(STR_DIR_EXECHOSTS) + 3);
-         if (!e_dir) {
-            ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
-            FREE(c_dir);
-            FREE(q_dir);
-            SGE_EXIT(1);
-         }
-         strcpy(c_dir, path_state_get_history_dir());
-         if (*c_dir && c_dir[strlen(c_dir) - 1] != '/') {
-            strcat(c_dir, "/");
-         }
-         strcpy(q_dir, c_dir);
-         strcpy(e_dir, c_dir);
-         strcat(c_dir, STR_DIR_COMPLEXES);
-         strcat(q_dir, STR_DIR_QUEUES);
-         strcat(e_dir, STR_DIR_EXECHOSTS);
-    
-         i_ret = init_history_subdirs(c_dir, &complex_dirs);
-         if (i_ret) {
-            ERROR((SGE_EVENT, MSG_HISTORY_QACCTERRORXREADHISTORYSUBDIRFORCOMPLEXES_I, i_ret));
-            FREE(c_dir);
-            FREE(q_dir);
-            FREE(e_dir);
-            SGE_EXIT(1);
-         }
-         i_ret = init_history_subdirs(q_dir, &queue_dirs);
-         if (i_ret) {
-            ERROR((SGE_EVENT, MSG_HISTORY_QACCTERRORXREADHISTORYSUBDIRFORQUEUES_I, i_ret));
-            FREE(c_dir);
-            FREE(q_dir);
-            FREE(e_dir);
-            SGE_EXIT(1);
-         }
-         i_ret = init_history_subdirs(e_dir, &exechost_dirs);
-         if (i_ret) {
-            ERROR((SGE_EVENT, MSG_HISTORY_QACCTERRORXREADHISTORYSUBDIRFOREXECHOSTS_I, i_ret));
-            FREE(c_dir);
-            FREE(q_dir);
-            FREE(e_dir);
-            SGE_EXIT(1);
-         }
-         FREE(c_dir);
-         FREE(q_dir);
-         FREE(e_dir);
-      }
-      else {
-         get_qacct_lists(&complex_list, &queue_list, &exechost_list);
-         DPRINTF(("got 3 current lists: \n"));
-         lWriteList(complex_list);
-         lWriteList(queue_list);
-         lWriteList(exechost_list);
-      } /* endif !nohistflag */
+      get_qacct_lists(&complex_list, &queue_list, &exechost_list);
+      DPRINTF(("got 3 current lists: \n"));
+      lWriteList(complex_list);
+      lWriteList(queue_list);
+      lWriteList(exechost_list);
    } /* endif complexflag */
 
    fp = fopen(acctfile,"r");
@@ -807,58 +700,12 @@ char **argv
          lList *complex_filled;
          int selected;
       
-         if (!nohistflag) {
-            DPRINTF(("job_no: %ld, start_time: %ld\n", dusage.job_number, dusage.start_time));
-            i_ret = make_complex_list(complex_dirs, dusage.start_time, &complex_list);
-            if (i_ret) {
-               ERROR((SGE_EVENT, MSG_HISTORY_COMPLEXSTRUCTUREREFTOXCANTBEASSEMBLEDY_SI , 
-                  sge_ctime32(&dusage.start_time, &ds), i_ret));
-               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
-               SGE_EXIT(1);
-            }
-            i_ret = find_queue_version_by_name(queue_dirs, dusage.qname, 
-                  dusage.start_time, &queue, 0);
-            if (i_ret || !queue) {
-               ERROR((SGE_EVENT, MSG_HISTORY_QUEUECONFIGFORXREFTOYCANTBEASSEMBLEDY_SSI , \
-                  dusage.qname, sge_ctime32(&dusage.start_time, &ds), i_ret));
-               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
-               lFreeList(complex_list);
-               SGE_EXIT(1);         
-            }
-
-            i_ret = find_host_version_by_name(exechost_dirs, dusage.hostname,
-                  dusage.start_time, &queue_host, FLG_BY_NAME_NOCASE);
-
-            if (i_ret || !queue_host) {
-               ERROR((SGE_EVENT, MSG_HISTORY_HOSTCONFIGFORHOSTXREFTOYCANTBEASSEMBLEDYFORJOBZ_SSIU, 
-                     dusage.hostname, sge_ctime32(&dusage.start_time, &ds), 
-                     i_ret, u32c(dusage.job_number)));
-               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
-               SGE_EXIT(1);
-            }
-
-            i_ret = find_host_version_by_name(exechost_dirs, "global",
-                  dusage.start_time, &global_host, FLG_BY_NAME_NOCASE);
-
-            if (i_ret || !global_host) {
-               ERROR((SGE_EVENT, MSG_HISTORY_GLOBALHOSTCONFIGFORGLOBALHOSTXREFTOYCANTBEASSEMBLEDYFORJOBZ_SSID , \
-                     dusage.hostname, sge_ctime32(&dusage.start_time, &ds), i_ret, u32c(dusage.job_number)));
-               ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
-               SGE_EXIT(1);
-            }
-
-            exechost_list = lCreateList("Execution Host List", EH_Type);
-            lAppendElem(exechost_list, queue_host);
-            lAppendElem(exechost_list, global_host);
-         }
-         else {
-            queue = queue_list_locate(queue_list, dusage.qname);
-            if (!queue) {
-               WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
-                         (int)dusage.job_number, dusage.qname));
-               continue;
-            } 
-         }
+         queue = queue_list_locate(queue_list, dusage.qname);
+         if (!queue) {
+            WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
+                      (int)dusage.job_number, dusage.qname));
+            continue;
+         } 
          complex_filled = NULL;
    
          set_qs_state(QS_STATE_EMPTY);
@@ -1535,8 +1382,6 @@ FILE *fp
    fprintf(fp, " [-d days]                    %s", MSG_HISTORY_d_OPT_USAGE );
    fprintf(fp, " [-j [[jobid|jobname]]]       %s", MSG_HISTORY_j_OPT_USAGE);
    fprintf(fp, " [-t taskid[-taskid[:step]]]  %s", MSG_HISTORY_t_OPT_USAGE );
-   fprintf(fp, " [-history path]              %s", MSG_HISTORY_history_OPT_USAGE);
-   fprintf(fp, " [-nohist]                    %s", MSG_HISTORY_nohist_OPT_USAGE);
    fprintf(fp, " [[-f] acctfile]              %s", MSG_HISTORY_f_OPT_USAGE );
    fprintf(fp, " begin_time, end_time         %s", MSG_HISTORY_beginend_OPT_USAGE );
   

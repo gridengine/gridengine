@@ -1,3 +1,6 @@
+CR-2002-12-06-1  Testsuite: Fixed bug in access_lists test for sge systems
+                 Bugfix:
+
 CR-2002-12-06-0  Testsuite: - Setting shared library path in start_remote_prog()
                             - Changed parameter settings for some tests
 

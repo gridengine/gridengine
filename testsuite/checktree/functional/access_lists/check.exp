@@ -98,6 +98,7 @@ global access_lists_cluster_conf
 global access_lists_schedd_conf
 
 proc access_lists_setup  {} {
+   global ts_config
    global CHECK_GROUP
    global access_lists_queue
    global access_lists_host
@@ -127,7 +128,10 @@ proc access_lists_setup  {} {
    get_schedd_config                      access_lists_schedd_conf
 
    set my_schedd_config(schedule_interval)       "0:0:01"
-   set my_schedd_config(sgeee_schedule_interval) "0:0:02"
+   if { [ string compare $ts_config(product_type) sgeee] == 0 } {
+      set my_schedd_config(sgeee_schedule_interval) "0:0:02"
+   }
+  
    set_schedd_config my_schedd_config
 
    set group1 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0]

@@ -1,3 +1,7 @@
+JG-2003-03-18-0  Bugfix:    Fixed too small buffer in sge logging.
+                 Review:    CR
+                 Changed:   all
+
 EB-2003-03-17-0  Bugfix:    qsh/qrsh/qlogin might core with segementation 
                             violation
                  Issue:     #508

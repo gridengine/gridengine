@@ -181,7 +181,7 @@ char *err_str,
 char *newline 
 ) {
    int fd;
-   char msg2log[1024], date[256], tmp_date[256];
+   char msg2log[4*MAX_STRING_SIZE], date[256], tmp_date[256];
    time_t now;
    char *tmp_ctime;
    int switch_back = 0;

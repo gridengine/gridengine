@@ -1766,6 +1766,9 @@ char *err_str
    CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTSHEPHERD));
 
    exit(1);
+
+   /* just to please insure */
+   return -1;
 }
 
 /*****************************************************

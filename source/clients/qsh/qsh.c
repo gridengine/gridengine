@@ -795,6 +795,9 @@ static int start_client_program(const char *client_name,
       DEXIT;
       exit(EXIT_FAILURE);
    }
+
+   /* should never be reached */
+   return -1;
 }
 
 /****** Interactive/qsh/get_client_server_context() ***************************************

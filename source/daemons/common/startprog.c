@@ -135,8 +135,7 @@ int startprog(char *argv0, char *path, char *name, ...)
     execvp(prog_path, argv);
     DEXIT;
     exit(8);
- } 
- else {
+ } else {
     /* parent */
     ret = do_wait(pid);
     if (ret == -1)
@@ -146,6 +145,8 @@ int startprog(char *argv0, char *path, char *name, ...)
     DEXIT;
     return ret;
  }
+ /* should never be reached */
+ return -1;
 } 
 
 /*-----------------------------------------------------------------------

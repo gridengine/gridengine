@@ -648,8 +648,12 @@ int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
 
    JAPI_LOCK_SESSION();
    /* JAPI_SESSION_INITIALIZING if we're called from japi_init() or
-    * JAPI_SESSION_ACTIVE is we're called from the client code directly. */
-   if (!((japi_session == JAPI_SESSION_INITIALIZING) || (japi_session == JAPI_SESSION_ACTIVE))) {
+    * JAPI_SESSION_ACTIVE if we're called from the client code directly. */
+   /* DT: TODO: There's a potential synchronization bug here.  Calling
+    * japi_enable_job_wait() at the same time as japi_init() will cause two
+    * event client threads to be started. */
+   if (!((japi_session == JAPI_SESSION_INITIALIZING) ||
+         (japi_session == JAPI_SESSION_ACTIVE))) {
       JAPI_UNLOCK_SESSION();
       japi_standard_error(DRMAA_ERRNO_NO_ACTIVE_SESSION, diag);
       DEXIT;
@@ -4497,7 +4501,9 @@ static void *japi_implementation_thread(void *p)
    JAPI_LOCK_EC_STATE();
    /* We have to check here whether the event client ever got the first job list
     * event.  If not, being here counts as a failure. */
-   if (japi_ec_state == JAPI_EC_UP) {
+   /* The only non-error states here are JAPI_EC_UP="success" and
+    * JAPI_EC_FINISHING="aborted by main thread." */
+   if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_FINISHING)) {
       japi_ec_state = JAPI_EC_DOWN;
    }
    else {

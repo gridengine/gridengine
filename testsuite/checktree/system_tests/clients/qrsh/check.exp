@@ -1186,7 +1186,7 @@ proc qrsh_batch {} {
             add_proc_error "qrsh_batch" -1 "qrsh -now yes failed without error message on host $host"
          }
       }
-      close_spawn_process $qrsh_id
+      close_spawn_process $qrsh_id 1
  
       if { $error } {
          set_error -1 "skipping test on host $host"

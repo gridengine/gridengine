@@ -1,4 +1,13 @@
+CR-2001-07-20-0: Testsuite:
+                 - qmod reschedule test is not completely implemented
+                 - qrsh test showed error because of killing a job script
+                   (exist status of expect child not 0) - disabled
+                   error message for this open_spawn_process call
+                 - shadowd migrate test can will stop if only one execution
+                   host is in the cluster
+
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
+
 

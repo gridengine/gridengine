@@ -245,8 +245,15 @@ proc shadowd_setup {} {
 proc shadowd_startup {} {
 
    global CHECK_OUTPUT shadowd_hostname CHECK_PRODUCT_ROOT
-   global shadowd_pid
-   
+   global shadowd_pid CHECK_CORE_EXECD
+  
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      add_proc_error "shadowd_setup" "-3" "Need at least 2 execution hosts"
+      set_error 0 "ok"
+      return 
+   }
+
+ 
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "starting up shadowd daemon ..."
    startup_shadowd $shadowd_hostname
@@ -312,7 +319,14 @@ proc shadowd_startup {} {
 #     ???/???
 #*******************************
 proc shadowd_kill_all_shadowd {} {
-   global shadowd_hostname
+   global shadowd_hostname CHECK_CORE_EXECD
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      add_proc_error "shadowd_setup" "-3" "Need at least 2 execution hosts"
+      set_error 0 "ok"
+      return 
+   }
+
 
    set nr [ shutdown_all_shadowd $shadowd_hostname ]
    set nr [ shutdown_all_shadowd $shadowd_hostname ]
@@ -353,7 +367,14 @@ proc shadowd_kill_all_shadowd {} {
 #     ???/???
 #*******************************
 proc shadowd_kill_master_and_sheduler {} {
-   global CHECK_CORE_MASTER shadowd_master_spool_dir
+   global CHECK_CORE_MASTER shadowd_master_spool_dir CHECK_CORE_EXECD
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      add_proc_error "shadowd_setup" "-3" "Need at least 2 execution hosts"
+      set_error 0 "ok"
+      return 
+   }
+
 
    shutdown_master_and_scheduler $CHECK_CORE_MASTER $shadowd_master_spool_dir
    set_error 0 "ok"
@@ -390,7 +411,14 @@ proc shadowd_kill_master_and_sheduler {} {
 #*******************************
 proc shadowd_wait_for_startup {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT shadowd_hostname CHECK_CORE_MASTER
-   global CHECK_USER CHECK_TCL_SCRIPTFILE_DIR shadowd_master_spool_dir
+   global CHECK_USER CHECK_TCL_SCRIPTFILE_DIR shadowd_master_spool_dir CHECK_CORE_EXECD
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      add_proc_error "shadowd_setup" "-3" "Need at least 2 execution hosts"
+      set_error 0 "ok"
+      return 
+   }
+
 
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "removing qmasters lock ..."
@@ -450,7 +478,13 @@ proc shadowd_wait_for_startup {} {
 #     ???/???
 #*******************************
 proc shadowd_kill_shadowd_master_and_shadowd_sheduler {} {
-   global shadowd_hostname shadowd_master_spool_dir
+   global shadowd_hostname shadowd_master_spool_dir CHECK_CORE_EXECD
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      add_proc_error "shadowd_setup" "-3" "Need at least 2 execution hosts"
+      set_error 0 "ok"
+      return 
+   }
 
    shutdown_master_and_scheduler $shadowd_hostname $shadowd_master_spool_dir
    set_error 0 "ok"
@@ -487,8 +521,15 @@ proc shadowd_kill_shadowd_master_and_shadowd_sheduler {} {
 #*******************************
 proc shadowd_cleanup {} {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT shadowd_file shadowd_pid 
-   global shadowd_hostname CHECK_CORE_MASTER CHECK_USER
+   global shadowd_hostname CHECK_CORE_MASTER CHECK_USER CHECK_CORE_EXECD
    global shadowd_original_master_spool_dir shadowd_moved_master_dir
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      add_proc_error "shadowd_setup" "-3" "Need at least 2 execution hosts"
+      set_error 0 "ok"
+      return 
+   }
+
 
    if { $shadowd_pid > 0  } {
       set nr [ shutdown_all_shadowd $shadowd_hostname  ]

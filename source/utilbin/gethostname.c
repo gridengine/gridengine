@@ -42,6 +42,7 @@
 #include "msg_utilbin.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_mt_init.h"
 
 #if defined(SOLARIS)
 int gethostname(char *, int);
@@ -62,6 +63,8 @@ int main(int argc,char *argv[])
   int name_only = 0;
   int sge_aliasing = 0;
   
+
+  sge_mt_init();
 
   if (argc == 2) {
      if (!strcmp(argv[1], "-name"))

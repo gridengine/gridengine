@@ -38,7 +38,8 @@ LCKLIB_DIR = $(SDIR)/libs/lck
 LCKLIB = liblck$(LIBEXT)
 
 LCKLIB_SRC = \
-              sge_lock.c
+              sge_lock.c \
+              sge_mtutil.c
 
 LCKLIB_OBJS = $(LCKLIB_SRC:.c=.o)
 
@@ -94,6 +95,9 @@ include $(LCKLIB_DIR)/lck_dependencies
 ###############################################################################
 sge_lock.o:	$(LCKLIB_DIR)/sge_lock.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(LCKLIB_DIR)/sge_lock.c
+
+sge_mtutil.o:	$(LCKLIB_DIR)/sge_mtutil.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(LCKLIB_DIR)/sge_mtutil.c
 
 ###############################################################################
 # rules to build object codes

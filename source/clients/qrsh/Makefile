@@ -44,9 +44,9 @@ QRSH_OBJS = $(QRSH_SRC:.c=.o)
 
 QRSH_ADD_OBJS = $(QRSH_ADD_SRC:.c=.o) 
 
-QRSH_ADD_LIBS = -luti -lrmon
+QRSH_ADD_LIBS = -luti -llck -lrmon
 
-QRSH_LIB_DEPENDS = $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+QRSH_LIB_DEPENDS = $(UTILIB) $(LCKLIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

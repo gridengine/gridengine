@@ -70,6 +70,13 @@
 #include "setup_commd_path.h"
 #include "sge_unistd.h"
 #include "sge_os.h"
+#include "sge_uidgid.h"
+#include "setup_path.h"
+#include "cull_state.h"
+#include "sge_bootstrap.h"
+#include "sge_feature.h"
+
+
 #ifdef ENABLE_COMMD_FIFO_BUGFIX
 #  include "connection.h"
 #endif
@@ -178,6 +185,14 @@ char **argv
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
+
+   prog_mt_init();
+   log_mt_init();
+   uidgid_mt_init();
+   path_mt_init();
+   cull_mt_init();
+   bootstrap_mt_init();
+   feature_mt_init();
 
    /* increase filedescriptor limit to max. */
    {

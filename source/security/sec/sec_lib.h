@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SGE_MT
-void sec_init_mt(void);
-#endif
+void sec_mt_init(void);
 
 int sec_init(const char *progname);
 int sec_exit(void);

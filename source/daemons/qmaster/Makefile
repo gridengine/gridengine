@@ -85,18 +85,19 @@ QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               qmaster_running.c \
               sge_dirent.c \
               sig_handlers.c \
-              unparse_job_cull.c
+              unparse_job_cull.c \
+              sge_mt_init.c
 
 QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lspool -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lspool -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
 
 QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
                       $(SPOOLING_DEPS) $(SPOOLLIB) $(SGEOBJDLIB) \
                       $(SECLIBS) $(KRBLIBS) \
-                      $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
+                      $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
                       $(ZLIB) $(TPLIB)
 
 ###############################################################################

@@ -197,12 +197,10 @@ usage:
    echo "-pr-sge           -> generate man pages for 'Sun Grid Engine'"
    echo "-pr-sgeee         -> generate man pages for 'Sun Grid Engine, Enterprise Edition'"
    echo "-mo               -> generate the message catalogues (Solaris only)"
-   echo "-mt               -> compile make targets with multi threading"
    echo "-n32              -> irix: generate n32 objects"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
-   echo "-no-mt            -> don't compile multithreaded componenets of the core system"
    echo "-no-qmake         -> don't compile qmake"
    echo "-no-qmon          -> don't compile qmon 3rdparty libs and qmon client"
    echo "-no-qtcsh         -> don't compile qtcsh"
@@ -211,7 +209,6 @@ usage:
    echo "-no-commd-fifo    -> disable commd fifo bugfix"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
-   echo "-only-mt           -> build only mutlithreaded components of the core system"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
@@ -258,7 +255,7 @@ endif
 
 set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
-set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
 set   ADOC              = 0
@@ -306,7 +303,7 @@ set   ARFLAGS     = rscv
 set   MAKE        = make
 set   PARALLEL    = ""
 set   USE_QMAKE   = 0
-set   MT          = 0
+set   MT          = 1 
 set   MESSAGES    = "../dist/locale/gridenginenotuniq.pot"
 set   MESSAGES_BIN = "gridengine.mo"
 set   SGE_DEPEND  = 0
@@ -375,22 +372,6 @@ switch ($BUILDARCH)
       breaksw
 endsw      
 # end Compile with gettext and libintl
-
-# Compile with mutlithreading 
-# we have platform dependent defaults
-switch ($BUILDARCH) 
-   case LINUX6:
-   case SOLARIS:
-   case SOLARIS64:
-   case SOLARIS86:
-      set MT = 1
-      breaksw
-   default:
-      set MT = 0
-      breaksw
-endsw      
-
-# end Compile with mutlithreading
 
 # Compile with usermapping feature
 set WITH_USERMAPPING = 0
@@ -607,9 +588,6 @@ while ($#argv >= 1 && $?found)
    case "-no-mk":
       set nomk
       breaksw
-   case "-no-mt":
-      set MT = 0
-      breaksw
    case "-no-qmake":
       set QMAKE = 0
       breaksw
@@ -638,17 +616,6 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
-      set MT = 0
-      breaksw
-   case "-only-mt":
-      set MT = 1
-      set CORE   = 0
-      set MAKEZLIB = 0
-      set QMAKE  = 0
-      set QMON   = 0
-      set QTCSH  = 0
-      set REMOTE = 0
-      breaksw
       breaksw
    case "-only-depend":
       set CORE       = 0
@@ -667,7 +634,6 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
-      set MT = 0
       breaksw
    case "-only-qmon":
       set CORE   = 0
@@ -676,7 +642,6 @@ while ($#argv >= 1 && $?found)
       set QMON   = 1
       set QTCSH  = 0
       set REMOTE = 0
-      set MT = 0
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
@@ -685,7 +650,6 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 1
       set REMOTE = 0
-      set MT = 0
       breaksw
    case "-only-remote":
       set CORE   = 0
@@ -694,7 +658,6 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 1
-      set MT = 0
       breaksw
    case "-only-zlib":
       set CORE   = 0
@@ -1465,7 +1428,7 @@ case LINUX6:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
 
-   set MTCFLAGS = "${MTCFLAGS} -pthread"
+   set MTCFLAGS = "${MTCFLAGS}"
    set MTLFLAGS = "-lpthread"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
@@ -2016,49 +1979,7 @@ if ( "$CORE" == 1 ) then
    cd $COMPILE_ARCH
 
    echo ________C_O_R_E__S_Y_S_T_E_M_________
-   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-       "SDIR=$SDIR" "SOURCE=$SOURCE" \
-       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-       "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
-       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS $LINK_ZLIB" \
-       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
-       "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-       "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
-       "GCC_NOSP=$GCC_NOSP" \
-       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
-       "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
-       "INTERACTTARGETS=$INTERACTTARGETS" \
-       "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
-       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-       "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
-       "DLLIB=$DLLIB" \
-       "MEMCFLAG=$MEMCFLAG" \
-       "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   cd $SOURCE
-endif
-
-if ( "$MT" == 1 ) then
-
-   set COMPILE_ARCH_MT = "${COMPILE_ARCH}_MT"
-
-   echo making in $COMPILE_ARCH_MT/ for $COMPILE_ARCH
-
-   if ( ! -d $COMPILE_ARCH_MT ) then
-      echo " INFO: Architecture dir $COMPILE_ARCH_MT not existing. Making"
-      mkdir $COMPILE_ARCH_MT
-   endif
-
-   cd $COMPILE_ARCH_MT
-
-   echo ________C_O_R_E__S_Y_S_T_E_M___M_T________
-   $MAKE $MAKEOPT -f $SOURCE/libs/japi/Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
@@ -2074,6 +1995,7 @@ if ( "$MT" == 1 ) then
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
        "DLLIB=$DLLIB" \
        "MEMCFLAG=$MEMCFLAG" \
        "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
@@ -2100,7 +2022,7 @@ if ( "$QMON" == 1) then
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" \
       "CFLAGS=$CFLAGS" "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" "KRBLIBS=$KRBLIBS" \
-      "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
       "MEMCFLAG=$MEMCFLAG" \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
@@ -2125,7 +2047,7 @@ if ( "$QMON" == 1) then
        "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS $LINK_ZLIB" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
        "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
        "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
@@ -2157,7 +2079,7 @@ if ( "$REMOTE" == 1) then
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
       "CFLAGS=$CFLAGS" "LIBS=$LIBS" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" \
-      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv
 
@@ -2208,7 +2130,7 @@ if ( "$QTCSH" == 1) then
       setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}:${ZLIBBASE}/${COMPILE_ARCH}
    endif
 
-   set SGE_LIBS = "-lsge"
+   set SGE_LIBS = "-lsge -lpthread"
 
    if ( "$BUILDARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"

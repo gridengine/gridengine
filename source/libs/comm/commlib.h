@@ -163,9 +163,7 @@ typedef int (*sge_log_ftype)(int, const char*, const char*, const char*, int);
       } \
    }     
 
-#if defined(SGE_MT)
-void commlib_init_mt(void);
-#endif
+void commlib_mt_init(void);
 
 int set_commlib_param(int param, int intval, const char *strval, int *intval_array);
 

@@ -30,27 +30,24 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_prog.h"
+
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pwd.h>
 #include <errno.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>  
 
-#if defined(SGE_MT)
-#include <pthread.h>
-#endif
-
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_prog.h"
 #include "sge_log.h"
 #include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_unistd.h"
 
-#include "sge_uti_state.h"
 
 /* Must match Qxxx defines in sge_prog.h */
 const char *prognames[] =
@@ -97,45 +94,26 @@ const char *prognames[] =
    "spoolinit"         /* 39  */
 };
  
-#if defined(SGE_MT)
-/* MT-NOTE: uti_state_key is used to create per thread instances of struct uti_state_t */
-static pthread_key_t   uti_state_key;
-#else
-static struct uti_state_t uti_state_opaque = {
-  NULL, NULL, NULL, QUSERDEFINED, 0, 0, 0, NULL, NULL, NULL, 1 };
-struct uti_state_t *uti_state = &uti_state_opaque;
-#endif
+struct prog_state_t {
+   char*           sge_formal_prog_name;  /* taken from prognames[] */
+   char*           qualified_hostname;
+   char*           unqualified_hostname;
+   u_long32        who;                   /* Qxxx defines  QUSERDEFINED  */
+   u_long32        uid;
+   u_long32        gid;
+   int             daemonized;
+   char*           user_name;
+   char*           default_cell;
+   sge_exit_func_t exit_func;
+   int             exit_on_error;
+};
 
-#if defined(SGE_MT)
+static pthread_once_t prog_once = PTHREAD_ONCE_INIT;
+static pthread_key_t  prog_state_key;
 
-static void uti_state_destroy(void* state) {
-   FREE(((struct uti_state_t*)state)->sge_formal_prog_name);
-   FREE(((struct uti_state_t*)state)->sge_formal_prog_name);
-   FREE(((struct uti_state_t*)state)->qualified_hostname);
-   FREE(((struct uti_state_t*)state)->unqualified_hostname);
-   FREE(((struct uti_state_t*)state)->user_name);
-   FREE(((struct uti_state_t*)state)->default_cell);
-   free(state);
-}
-
-void uti_init_mt(void) {
-   pthread_key_create(&uti_state_key, &uti_state_destroy);
-} 
-  
-void uti_state_init(struct uti_state_t* state) {
-   state->sge_formal_prog_name = NULL;
-   state->qualified_hostname = NULL;
-   state->unqualified_hostname = NULL;
-   state->who = QUSERDEFINED;
-   state->uid = 0;
-   state->gid = 0;
-   state->daemonized = 0;
-   state->user_name = NULL;
-   state->default_cell = NULL;
-   state->exit_func = NULL;
-   state->exit_on_error = 1;
-}
-#endif
+static void prog_once_init(void);
+static void prog_state_destroy(void *theState);
+static void prog_state_init(struct prog_state_t *theState);
 
 static void sge_show_me(void); 
 static void uti_state_set_sge_formal_prog_name(const char *s);
@@ -143,6 +121,38 @@ static void uti_state_set_uid(u_long32 uid);
 static void uti_state_set_gid(u_long32 gid);
 static void uti_state_set_user_name(const char *s);
 static void uti_state_set_default_cell(const char *s);
+
+
+/****** sge_prog/prog_mt_init() ************************************************
+*  NAME
+*     prog_mt_init() -- Initialize executable information for multi threading
+*                       use.
+*
+*  SYNOPSIS
+*     void prog_mt_init(void) 
+*
+*  FUNCTION
+*     Set up executable state. This function must be called at least once
+*     before any of the functions which do influence executable state can be
+*     used. This function is idempotent, i.e. it is safe to call it multiple
+*     times.
+*
+*     Thread local storage for the executable state information is reserved. 
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: prog_mt_init() is MT safe 
+*
+*******************************************************************************/
+void prog_mt_init(void)
+{
+   pthread_once(&prog_once, prog_once_init);
+} 
 
 /****** libs/uti/uti_state_get_????() ************************************
 *  NAME
@@ -154,62 +164,62 @@ static void uti_state_set_default_cell(const char *s);
 ******************************************************************************/
 const char *uti_state_get_sge_formal_prog_name(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_sge_formal_prog_name");
-   return uti_state->sge_formal_prog_name;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_sge_formal_prog_name");
+   return prog_state->sge_formal_prog_name;
 }
 
 const char *uti_state_get_qualified_hostname(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
-   return uti_state->qualified_hostname;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_qualified_hostname");
+   return prog_state->qualified_hostname;
 }
 
 const char *uti_state_get_unqualified_hostname(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_unqualified_hostname");
-   return uti_state->unqualified_hostname;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_unqualified_hostname");
+   return prog_state->unqualified_hostname;
 }
 
 u_long32 uti_state_get_mewho(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_mewho");
-   return uti_state->who;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_mewho");
+   return prog_state->who;
 }
 
 u_long32 uti_state_get_uid(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_uid");
-   return uti_state->uid;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_uid");
+   return prog_state->uid;
 }
 
 u_long32 uti_state_get_gid(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_gid");
-   return uti_state->gid;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_gid");
+   return prog_state->gid;
 }
 
 int uti_state_get_daemonized(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_daemonized");
-   return uti_state->daemonized;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_daemonized");
+   return prog_state->daemonized;
 }
 
 const char *uti_state_get_user_name(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_user_name");
-   return uti_state->user_name;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_user_name");
+   return prog_state->user_name;
 }
 
 const char *uti_state_get_default_cell(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_default_cell");
-   return uti_state->default_cell;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_default_cell");
+   return prog_state->default_cell;
 }
 
 int uti_state_get_exit_on_error(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_exit_on_error");
-   return uti_state->exit_on_error;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_exit_on_error");
+   return prog_state->exit_on_error;
 }
 
 /****** libs/uti/uti_state_set_????() ************************************
@@ -220,65 +230,64 @@ int uti_state_get_exit_on_error(void)
 *     Provides access to either global variable or per thread global variable.
 *
 ******************************************************************************/
-
 static void uti_state_set_sge_formal_prog_name(const char *s)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_sge_formal_prog_name");
-   uti_state->sge_formal_prog_name = sge_strdup(uti_state->sge_formal_prog_name, s);
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_sge_formal_prog_name");
+   prog_state->sge_formal_prog_name = sge_strdup(prog_state->sge_formal_prog_name, s);
 }
 
 void uti_state_set_qualified_hostname(const char *s)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_qualified_hostname");
-   uti_state->qualified_hostname = sge_strdup(uti_state->qualified_hostname, s);
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_qualified_hostname");
+   prog_state->qualified_hostname = sge_strdup(prog_state->qualified_hostname, s);
 }
 
 void uti_state_set_unqualified_hostname(const char *s)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_unqualified_hostname");
-   uti_state->unqualified_hostname = sge_strdup(uti_state->unqualified_hostname, s);
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_unqualified_hostname");
+   prog_state->unqualified_hostname = sge_strdup(prog_state->unqualified_hostname, s);
 }
 
 void uti_state_set_daemonized(int daemonized)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_daemonized");
-   uti_state->daemonized = daemonized;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_daemonized");
+   prog_state->daemonized = daemonized;
 }
 
 void uti_state_set_mewho(u_long32 who)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_mewho");
-   uti_state->who = who;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_mewho");
+   prog_state->who = who;
 }
 
 static void uti_state_set_uid(u_long32 uid)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_uid");
-   uti_state->uid = uid;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_uid");
+   prog_state->uid = uid;
 }
 
 static void uti_state_set_gid(u_long32 gid)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_gid");
-   uti_state->gid = gid;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_gid");
+   prog_state->gid = gid;
 }
 
 static void uti_state_set_user_name(const char *s)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_user_name");
-   uti_state->user_name = sge_strdup(uti_state->user_name, s);
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_user_name");
+   prog_state->user_name = sge_strdup(prog_state->user_name, s);
 }
 
 static void uti_state_set_default_cell(const char *s)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_default_cell");
-   uti_state->default_cell = sge_strdup(uti_state->default_cell, s);
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_default_cell");
+   prog_state->default_cell = sge_strdup(prog_state->default_cell, s);
 }
 
 void uti_state_set_exit_on_error(int i)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_exit_on_error");
-   uti_state->exit_on_error = i;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_exit_on_error");
+   prog_state->exit_on_error = i;
 }
 
 /****** uti/unistd/uti_state_get_exit_func() ************************************
@@ -300,8 +309,8 @@ void uti_state_set_exit_on_error(int i)
 ******************************************************************************/
 sge_exit_func_t uti_state_get_exit_func(void)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_exit_func");
-   return uti_state->exit_func;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_get_exit_func");
+   return prog_state->exit_func;
 }
 
 /****** uti/unistd/uti_state_set_exit_func() ************************************
@@ -322,8 +331,8 @@ sge_exit_func_t uti_state_get_exit_func(void)
 ******************************************************************************/
 void uti_state_set_exit_func(sge_exit_func_t f)
 {
-   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_set_exit_func");
-   uti_state->exit_func = f;
+   GET_SPECIFIC(struct prog_state_t, prog_state, prog_state_init, prog_state_key, "uti_state_set_exit_func");
+   prog_state->exit_func = f;
 }
 
 /****** uti/prog/sge_getme() *************************************************
@@ -344,16 +353,9 @@ void uti_state_set_exit_func(sge_exit_func_t f)
 ******************************************************************************/
 void sge_getme(u_long32 program_number)
 {
-#ifdef WIN32NATIVE
-   char *envs;
-#endif /* WIN32NATIVE */
    char *s;
    stringT tmp_str;
- 
-#ifndef WIN32
    struct passwd *paswd;
-#endif
- 
    struct hostent *hent, *hent2;
  
    DENTER(TOP_LAYER, "sge_getme");
@@ -380,14 +382,9 @@ void sge_getme(u_long32 program_number)
       char tmp_addr[8];
  
       memcpy(tmp_addr, hent->h_addr, hent->h_length);
- 
       DTRACE;
-
-      SGE_ASSERT(((hent2 = gethostbyaddr(tmp_addr, hent->h_length, AF_INET)) !=
-NULL));
-
+      SGE_ASSERT(((hent2 = gethostbyaddr(tmp_addr, hent->h_length, AF_INET)) != NULL));
       DTRACE;
-
       uti_state_set_qualified_hostname(hent->h_name);
       s = sge_dirname(hent->h_name, '.');
       uti_state_set_unqualified_hostname(s);
@@ -395,30 +392,12 @@ NULL));
    }
 
    DTRACE;
- 
- 
+
    /* SETPGRP; */
-                                  
-#ifndef WIN32NATIVE
    uti_state_set_uid(getuid());
    uti_state_set_gid(getgid());
-#else
-   /* TODO: Errorhandling !! id = 0 when envs not set */
-   if(envs=getenv("UID")) {
-      uti_state_set_uid(atol(envs));
-   }
-   if(envs=getenv("GID")) {
-      uti_state_set_gid(atol(envs));
-   }
-#endif
-
-#ifdef WIN32 /* getpwuid not called */
-   uti_state_set_user_name(sge_getenv("USERNAME"));
-#else
    SGE_ASSERT(((paswd = (struct passwd *) getpwuid(uti_state_get_uid())) != NULL));
    uti_state_set_user_name(paswd->pw_name);
-#endif
- 
    uti_state_set_default_cell(sge_get_default_cell());
  
    sge_show_me();
@@ -426,7 +405,6 @@ NULL));
    DEXIT;
    return;
 }
- 
 
 /****** uti/prog/sge_show_me() ************************************************
 *  NAME
@@ -448,14 +426,10 @@ static void sge_show_me(void)
 #ifdef NO_SGE_COMPILE_DEBUG
    return;
 #else
- 
-#ifndef WIN32NATIVE
    if (!TRACEON) {
       DEXIT;
       return;
    }
-#endif
- 
 #endif
  
    DPRINTF(("me.who                      >%d<\n", (int) uti_state_get_mewho()));
@@ -469,4 +443,101 @@ static void sge_show_me(void)
    DPRINTF(("me.default_cell             >%s<\n", uti_state_get_default_cell()));
  
    DEXIT;
+   return;
 }     
+
+/****** sge_prog/prog_once_init() ********************************************
+*  NAME
+*     prog_once_init() -- One-time executable state initialization.
+*
+*  SYNOPSIS
+*     static prog_once_init(void) 
+*
+*  FUNCTION
+*     Create access key for thread local storage. Register cleanup function.
+*
+*     This function must be called exactly once.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: prog_once_init() is MT safe. 
+*
+*******************************************************************************/
+static void prog_once_init(void)
+{
+   pthread_key_create(&prog_state_key, &prog_state_destroy);
+}
+
+
+/****** sge_prog/prog_state_destroy() ****************************************
+*  NAME
+*     prog_state_destroy() -- Free thread local storage
+*
+*  SYNOPSIS
+*     static void prog_state_destroy(void* theState) 
+*
+*  FUNCTION
+*     Free thread local storage.
+*
+*  INPUTS
+*     void* theState - Pointer to memroy which should be freed.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: prog_state_destroy() is MT safe.
+*
+*******************************************************************************/
+static void prog_state_destroy(void *theState)
+{
+   struct prog_state_t* s = (struct prog_state_t *)theState;
+
+   FREE(s->sge_formal_prog_name);
+   FREE(s->sge_formal_prog_name);
+   FREE(s->qualified_hostname);
+   FREE(s->unqualified_hostname);
+   FREE(s->user_name);
+   FREE(s->default_cell);
+   free(s);
+}
+
+/****** sge_prog/prog_state_init() *******************************************
+*  NAME
+*     prog_state_init() -- Initialize executable state.
+*
+*  SYNOPSIS
+*     static void prog_state_init(struct prog_state_t* theState) 
+*
+*  FUNCTION
+*     Initialize executable state.
+*
+*  INPUTS
+*     struct prog_state_t* theState - Pointer to executable state structure.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: prog_state_init() in MT safe. 
+*
+*******************************************************************************/
+static void prog_state_init(struct prog_state_t* theState)
+{
+   theState->sge_formal_prog_name = NULL;
+   theState->qualified_hostname = NULL;
+   theState->unqualified_hostname = NULL;
+   theState->who = QUSERDEFINED;
+   theState->uid = 0;
+   theState->gid = 0;
+   theState->daemonized = 0;
+   theState->user_name = NULL;
+   theState->default_cell = NULL;
+   theState->exit_func = NULL;
+   theState->exit_on_error = 1;
+}

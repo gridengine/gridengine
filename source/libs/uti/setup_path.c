@@ -29,15 +29,15 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include "setup_path.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/types.h>
-
-#if defined(SGE_MT)
 #include <pthread.h>
-#endif
+#include <sys/types.h>
 
 #include "sgermon.h"
 #include "basis_types.h"
@@ -48,102 +48,122 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_dstring.h"
-
 #include "msg_utilib.h"
 #include "msg_common.h"
 
-#include "setup_path.h"
 
 struct path_state_t {
-    char       *sge_root;      
-    char       *cell_root;
-    char       *bootstrap_file;
-    char       *conf_file;
-    char       *sched_conf_file;
-    char       *act_qmaster_file;
-    char       *acct_file;
-    char       *stat_file;
-    char       *local_conf_dir;
-    char       *shadow_masters_file;
+    char* sge_root;      
+    char* cell_root;
+    char* bootstrap_file;
+    char* conf_file;
+    char* sched_conf_file;
+    char* act_qmaster_file;
+    char* acct_file;
+    char* stat_file;
+    char* local_conf_dir;
+    char* shadow_masters_file;
 };
 
-#if defined(SGE_MT)
-static pthread_key_t   path_state_key;
-#else
-static struct path_state_t path_state_opaque = {
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-struct path_state_t *path_state = &path_state_opaque;
-#endif
+static pthread_once_t path_once = PTHREAD_ONCE_INIT;
+static pthread_key_t path_state_key;
 
-#if defined(SGE_MT)
-static void path_state_init(struct path_state_t* state) {
-   memset(state, 0, sizeof(struct path_state_t));
-}
+static void path_once_init(void);
+static void path_state_destroy(void* theState);
+static void path_state_init(struct path_state_t* theState);
 
-static void path_state_destroy(void* state) {
-   FREE(((struct path_state_t*)state)->sge_root);
-   FREE(((struct path_state_t*)state)->cell_root);
-   FREE(((struct path_state_t*)state)->bootstrap_file);
-   FREE(((struct path_state_t*)state)->conf_file);
-   FREE(((struct path_state_t*)state)->sched_conf_file);
-   FREE(((struct path_state_t*)state)->act_qmaster_file);
-   FREE(((struct path_state_t*)state)->acct_file);
-   FREE(((struct path_state_t*)state)->stat_file);
-   FREE(((struct path_state_t*)state)->local_conf_dir);
-   FREE(((struct path_state_t*)state)->shadow_masters_file);
-   free(state);
-}
  
-void path_init_mt(void) {
-   pthread_key_create(&path_state_key, &path_state_destroy);
-} 
-#endif
+/****** uti/path/path_mt_init() ************************************************
+*  NAME
+*     path_mt_init() -- Initialize global SGE path state for multi threading use.
+*
+*  SYNOPSIS
+*     void path_mt_init(void) 
+*
+*  FUNCTION
+*     Set up global SGE path state. This function must be called at least once
+*     before any of the path oriented functions can be used. This function is
+*     idempotent, i.e. it is safe to call it multiple times.
+*
+*     Thread local storage for the path state information is reserved. 
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: path_mt_init() is MT safe 
+*
+*******************************************************************************/
+void path_mt_init(void)
+{
+   pthread_once(&path_once, path_once_init);
+}
 
+/****** uti/path/path_state_get_????() ************************************
+*  NAME
+*     path_state_get_????() - read access to SGE path state.
+*
+*  FUNCTION
+*     Provide access to thread local storage.
+*
+******************************************************************************/
 const char *path_state_get_sge_root(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sge_root");
    return path_state->sge_root;
 }
+
 const char *path_state_get_cell_root(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_cell_root");
    return path_state->cell_root;
 }
+
 const char *path_state_get_bootstrap_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_bootstrap_file");
    return path_state->bootstrap_file;
 }
+
 const char *path_state_get_conf_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_conf_file");
    return path_state->conf_file;
 }
+
 const char *path_state_get_sched_conf_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sched_conf_file");
    return path_state->sched_conf_file;
 }
+
 const char *path_state_get_act_qmaster_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_act_qmaster_file");
    return path_state->act_qmaster_file;
 }
+
 const char *path_state_get_acct_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_acct_file");
    return path_state->acct_file;
 }
+
 const char *path_state_get_stat_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_stat_file");
    return path_state->stat_file;
 }
+
 const char *path_state_get_local_conf_dir(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_local_conf_dir");
    return path_state->local_conf_dir;
 }
+
 const char *path_state_get_shadow_masters_file(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_shadow_masters_file");
@@ -151,68 +171,88 @@ const char *path_state_get_shadow_masters_file(void)
 }
 
 
+/****** uti/path/path_state_set_????() ************************************
+*  NAME
+*     path_state_get_????() - write access to SGE path state.
+*
+*  FUNCTION
+*     Provide access to thread local storage.
+*
+******************************************************************************/
 void path_state_set_sge_root(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_sge_root");
    path_state->sge_root = sge_strdup(path_state->sge_root, path);
 }
+
 void path_state_set_cell_root(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_cell_root");
    path_state->cell_root = sge_strdup(path_state->cell_root, path);
 }
+
 void path_state_set_bootstrap_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_conf_file");
    path_state->bootstrap_file = sge_strdup(path_state->conf_file, path);
 }
+
 void path_state_set_conf_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_conf_file");
    path_state->conf_file = sge_strdup(path_state->conf_file, path);
 }
+
 void path_state_set_sched_conf_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_sched_conf_file");
    path_state->sched_conf_file = sge_strdup(path_state->sched_conf_file, path);
 }
+
 void path_state_set_act_qmaster_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_act_qmaster_file");
    path_state->act_qmaster_file = sge_strdup(path_state->act_qmaster_file, path);
 }
+
 void path_state_set_acct_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_acct_file");
    path_state->acct_file = sge_strdup(path_state->acct_file, path);
 }
+
 void path_state_set_stat_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_stat_file");
    path_state->stat_file = sge_strdup(path_state->stat_file, path);
 }
+
 void path_state_set_local_conf_dir(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_local_conf_dir");
    path_state->local_conf_dir = sge_strdup(path_state->local_conf_dir, path);
 }
+
 void path_state_set_shadow_masters_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_shadow_masters_file");
    path_state->shadow_masters_file = sge_strdup(path_state->shadow_masters_file, path);
 }
 
-/****** setup_path/sge_setup_paths() *******************************************
+/****** uti/path/sge_setup_paths() *******************************************
 *  NAME
-*     sge_setup_paths() -- setup global pathes 
+*     sge_setup_paths() -- setup global paths 
 *
 *  SYNOPSIS
 *     bool sge_setup_paths(const char *sge_cell, dstring *error_dstring) 
 *
 *  FUNCTION
 *     Set SGE_ROOT and SGE_CELL dependent path components. The spool 
-*     directory may later be overridden by global configuration.
-*     This routine may be called as often as is is necessary.
+*     directory may later be overridden by global configuration. 
+*
+*     This function calls 'path_mt_init()' to initialize thread local
+*     storage. This function is idempotent, i.e. it is safe to inovke
+*     it multiple times.
 *
 *  INPUTS
 *     const char *sge_cell - the SGE cell to be used
@@ -239,6 +279,7 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    
    DENTER(TOP_LAYER, "sge_setup_paths");
   
+   path_mt_init();
    sge_dstring_init(&bw, buffer, sizeof(buffer)); 
 
    if (!(sge_root = sge_get_root_dir(error_dstring == NULL ? 1 : 0, 
@@ -362,21 +403,91 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    
    DEXIT;
    return true;
+} /* sge_setup_path() */
+
+/****** uit/path/path_once_init() *********************************************
+*  NAME
+*     path_once_init() -- One-time SGE path state initialization.
+*
+*  SYNOPSIS
+*     static path_once_init(void) 
+*
+*  FUNCTION
+*     Create access key for thread local storage. Register cleanup function.
+*
+*     This function must be called exactly once.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: path_once_init() is MT safe. 
+*
+*******************************************************************************/
+static void path_once_init(void)
+{
+   pthread_key_create(&path_state_key, &path_state_destroy);
 }
 
-#ifdef WIN32NATIVE
-void sge_delete_paths()
+/****** uti/path/path_state_destroy() *****************************************
+*  NAME
+*     path_state_destroy() -- Free thread local storage
+*
+*  SYNOPSIS
+*     static void path_state_destroy(void* theState) 
+*
+*  FUNCTION
+*     Free thread local storage.
+*
+*  INPUTS
+*     void* theState - Pointer to memory which should be freed.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: path_state_destroy() is MT safe.
+*
+*******************************************************************************/
+static void path_state_destroy(void* theState)
 {
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sge_root");
-	FREE(path_state->sge_root);
-	FREE(path_state->cell_root);
-	FREE(path_state->bootstrap_file);
-	FREE(path_state->conf_file);
-	FREE(path_state->sched_conf_file);
-	FREE(path_state->act_qmaster_file);
-	FREE(path_state->acct_file);
-	FREE(path_state->stat_file);
-	FREE(path_state->local_conf_dir);
-	FREE(path_state->shadow_masters_file);
+   FREE(((struct path_state_t*)theState)->sge_root);
+   FREE(((struct path_state_t*)theState)->cell_root);
+   FREE(((struct path_state_t*)theState)->bootstrap_file);
+   FREE(((struct path_state_t*)theState)->conf_file);
+   FREE(((struct path_state_t*)theState)->sched_conf_file);
+   FREE(((struct path_state_t*)theState)->act_qmaster_file);
+   FREE(((struct path_state_t*)theState)->acct_file);
+   FREE(((struct path_state_t*)theState)->stat_file);
+   FREE(((struct path_state_t*)theState)->local_conf_dir);
+   FREE(((struct path_state_t*)theState)->shadow_masters_file);
+   free(theState);
 }
-#endif /* WIN32NATIVE */
+
+/****** uti/path/path_state_init() *********************************************
+*  NAME
+*     path_state_init() -- Initialize SGE path state.
+*
+*  SYNOPSIS
+*     static void path_state_init(struct path_state_t* theState) 
+*
+*  FUNCTION
+*     Initialize SGE path state.
+*
+*  INPUTS
+*     struct path_state_t* theState - Pointer to SGE path state structure.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: path_state_init() is MT safe. 
+*
+*******************************************************************************/
+static void path_state_init(struct path_state_t* theState)
+{
+   memset(theState, 0, sizeof(struct path_state_t));
+}

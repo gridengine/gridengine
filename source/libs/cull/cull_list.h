@@ -41,10 +41,6 @@
 extern "C" {
 #endif
 
-#if defined(SGE_MT)
-void cull_init_mt(void);
-#endif
-
 #define NoName -1
 
 typedef struct _lDescr lDescr;

@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <pthread.h>
 #include <sys/types.h>
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__

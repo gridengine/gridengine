@@ -106,38 +106,8 @@ int gethostname(char *name, int namelen);
 #include "sge_log.h"
 #endif
 
-#if defined(QIDL) || defined(SGE_MT)
+static pthread_once_t commlib_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  commlib_state_key; 
-#else
-static struct commlib_state_t commlib_state_opaque =
-   { 0,                       /* enrolled */
-     0,                       /* ever_enrolled */ 
-     {0,0,0,0,0,0,0,0,0,0},   /* stored_tag_priority_list */ 
-     {'\0'},                  /* componentname */ 
-     0,                       /* componentid */ 
-     -1,                      /* commdport */ 
-     {'\0'},                  /* commdservice */ 
-     0,                       /* commdaddr_length */
-     {0},                     /* commdaddr */ 
-     -1,                      /* sfd */ 
-     0,                       /* lastmid */ 
-     0,                       /* lastgc */ 
-     0,                       /* reserved_port */ 
-     {'\0'},                  /* commdhost */
-     60,                      /* timeout */ 
-     TIMEOUT_SYNC_RCV,        /* timeout_srcv */ 
-     TIMEOUT_SYNC_SND,        /* timeout_ssnd */ 
-     0,                       /* offline_receive */ 
-     5*60,                    /* lt_heard_from_timeout */ 
-     0,                       /* closefd */ 
-     0,                       /* list */
-     NULL,                    /* sge_log */
-     0                        /* changed_flag */
-   };
-
-static struct commlib_state_t* commlib_state = &commlib_state_opaque;
-
-#endif
 
 #ifdef KERBEROS
 #   include "sge_gdiP.h"
@@ -2357,13 +2327,8 @@ int val
 
 
 /* state access functions */
-#if defined(QIDL) || defined(SGE_MT)
 static void commlib_state_destroy(void* state) {
    free(state);
-}
-
-void commlib_init_mt() {
-   pthread_key_create(&commlib_state_key, &commlib_state_destroy);
 }
 
 static void commlib_state_init(struct commlib_state_t* state) {
@@ -2393,8 +2358,16 @@ static void commlib_state_init(struct commlib_state_t* state) {
    state->sge_log = NULL;
    state->changed_flag = 0;
 }
-#endif
 
+static void commlib_once_init(void)
+{
+   pthread_key_create(&commlib_state_key, commlib_state_destroy);
+}
+
+void commlib_mt_init()
+{
+   pthread_once(&commlib_once, commlib_once_init);
+}
 
 
 

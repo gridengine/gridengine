@@ -1,5 +1,6 @@
-#ifndef __CULL_LERRNOP_H
-#define __CULL_LERRNOP_H
+#ifndef _SGE_MT_INIT_H_
+#define _SGE_MT_INIT_H_
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,17 +26,13 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_lerrno.h"
-#include "cull_state.h"
+void sge_mt_init(void);
 
-#define LERROR(x) cull_state_set_lerrno(x);
-
-
-#endif /* __CULL_LERRNOP_H */
+#endif /* _SGE_MT_INIT_H_ */

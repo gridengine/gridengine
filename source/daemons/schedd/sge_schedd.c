@@ -77,6 +77,8 @@
 #include "sge_os.h"
 #include "sge_answer.h"
 #include "sge_profiling.h"
+#include "sge_mt_init.h"
+
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
@@ -118,6 +120,8 @@ char *argv[]
    time_t next_prof_output = 0;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
+
+   sge_mt_init();
 
    /* set profiling parameters */
    prof_set_level_name(SGE_PROF_EVENTMASTER, NULL, NULL);

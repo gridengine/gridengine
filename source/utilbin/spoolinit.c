@@ -36,26 +36,22 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
-
 #include "sge_unistd.h"
 #include "sge_dstring.h"
 #include "sge_spool.h"
 #include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_prog.h"
-
 #include "sge_answer.h"
-
 #include "sge_all_listsL.h"
 #include "sge_manop.h"
-
+#include "sge_mt_init.h"
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
-
 #include "msg_utilbin.h"
+
 
 static void usage(const char *argv0)
 {
@@ -111,6 +107,8 @@ int main(int argc, char *argv[])
    lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+
+   sge_mt_init();
 
    lInit(nmv);
 

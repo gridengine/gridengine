@@ -51,39 +51,31 @@
 #   define MAX_NIS_RETRIES 10
 #endif    
 
-#if defined(SGE_MT)
-void uidgid_init_mt(void);
-#endif
+void uidgid_mt_init(void);
 
 int sge_set_admin_username(const char *username, char *err_str);
- 
 int sge_switch2admin_user(void);
- 
 int sge_switch2start_user(void);
- 
 int sge_run_as_user(void);
-
 int sge_user2uid(const char *user, uid_t *uidp, int retries);  
-
 int sge_group2gid(const char *gname, gid_t *gidp, int retries);
-
 int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries); 
-
 int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries);
-
+int sge_add_group(gid_t newgid, char *err_str); 
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
  
-int sge_add_group(gid_t newgid, char *err_str); 
+struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen);
+ 
+/*
+ * Deprecated functions. Do not use anymore!
+ */
+int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
+                           int min_gid, int min_uid, int add_grp, 
+                           char *err_str, int use_qsub_gid, gid_t qsub_gid);
 
 struct passwd *sge_getpwnam(const char *name); 
 
-#ifdef HAS_GETPWNAM_R
-struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen);
-#endif
-
-bool sge_get_home_dir(dstring *path, const char *user);
- 
 #endif /* __SGE_UIDGID_H */
 

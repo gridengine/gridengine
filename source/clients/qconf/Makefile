@@ -44,13 +44,14 @@ QCONF_SRC = qconf.c \
 
 QCONF_ADD_SRC = \
                usage.c sge_options.c sig_handlers.c \
-               sge_hgroup_qconf.c sge_centry_qconf.c
+               sge_hgroup_qconf.c sge_centry_qconf.c \
+               sge_mt_init.c
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 
 
 QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o)
 
-QCONF_ADD_LIBS = -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon $(DLLIB)
+QCONF_ADD_LIBS = -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon $(DLLIB)
 
 QCONF_LIB_DEPENDS = $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 

@@ -29,12 +29,12 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include "sge_feature.h"         
+
 #include <string.h>
 #include <errno.h>
-
-#ifdef SGE_MT
 #include <pthread.h>
-#endif
 
 #include "sge.h"
 #include "basis_types.h"
@@ -46,95 +46,9 @@
 #include "sge_log.h"
 #include "sge_utility.h"
 #include "sge_answer.h"
-#include "sge_feature.h"         
 #include "version.h"
-
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
-struct feature_state_t {
-    int        already_read_from_file;
-    lList     *Master_FeatureSet_List;
-};
-
-#if defined(SGE_MT)
-static pthread_key_t   feature_state_key;
-#else
-static struct feature_state_t feature_state_opaque = {
-  0, NULL };
-struct feature_state_t *feature_state = &feature_state_opaque;
-#endif
-
-#if defined(SGE_MT)
-static void feature_state_init(struct feature_state_t* state) {
-   memset(state, 0, sizeof(struct feature_state_t));
-}
-
-static void feature_state_destroy(void* state) {
-   ((struct feature_state_t*)state)->Master_FeatureSet_List 
-      = lFreeList(((struct feature_state_t*)state)->Master_FeatureSet_List);
-   free(state);
-}
-
-static pthread_once_t feature_once_control = PTHREAD_ONCE_INIT;
-void feature_once_init(void) {
-   pthread_key_create(&feature_state_key, &feature_state_destroy);
-} 
-void feature_init_mt(void) {
-   pthread_once(&feature_once_control, feature_once_init);
-} 
-
-#endif
-
-/****** sge_feature/feature_set_already_read_from_file() ***********************
-*  NAME
-*     feature_set_already_read_from_file()
-*
-*  SYNOPSIS
-*     void feature_set_already_read_from_file(int i)
-*
-*  FUNCTION
-*     Set per thread global variable already_read_from_file.
-*******************************************************************************/
-void feature_set_already_read_from_file(int i)
-{
-   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_set_already_read_from_file");
-   feature_state->already_read_from_file = i;
-}
-
-/****** sge_feature/feature_get_already_read_from_file() ***********************
-*  NAME
-*     feature_get_already_read_from_file()
-*
-*  SYNOPSIS
-*     void feature_get_already_read_from_file(int i)
-*
-*  RESULT
-*     Returns value of per thread global variable already_read_from_file.
-*******************************************************************************/
-int feature_get_already_read_from_file(void)
-{
-   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
-   return feature_state->already_read_from_file;
-}
-
-
-/****** sge_feature/feature_get_already_read_from_file() ***********************
-*  NAME
-*     feature_get_master_featureset_list()
-*
-*  SYNOPSIS
-*     lList **feature_get_master_featureset_list(void)
-*
-*  RESULT
-*     Returns pointer to location where per thread global list 
-*     Master_FeatureSet_List is stored.
-*******************************************************************************/
-lList **feature_get_master_featureset_list(void)
-{
-   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
-   return &(feature_state->Master_FeatureSet_List);
-}
 
 
 #define FEATURESET_DEFAULT FEATURESET_SGE
@@ -150,10 +64,14 @@ lList **feature_get_master_featureset_list(void)
 #define GEEE_SHORTNAME "SGEEE"
 #define GE_SHORTNAME "SGE"
 
-/* *INDENT-OFF* */
+struct feature_state_t {
+    int    already_read_from_file;
+    lList* Master_FeatureSet_List;
+};
 
+/* *INDENT-OFF* */
 static const int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
-/*  FEATURE_UNINITIALIZED                                          */
+/*  FEATURE_UNINITIALIZED                                       */
 /*  |  FEATURE_REPRIORISATION                                   */
 /*  |  |  FEATURE_REPORT_USAGE                                  */
 /*  |  |  |  FEATURE_SPOOL_ADD_ATTR                             */
@@ -213,8 +131,93 @@ static const featureset_names_t featureset_list[] = {
    {FEATURESET_SGEEE_CSP,           "sgeee-csp"},
    {0, NULL}
 };
-
 /* *INDENT-ON* */
+
+static pthread_once_t feature_once = PTHREAD_ONCE_INIT;
+static pthread_key_t feature_state_key;
+
+static void feature_once_init(void);
+static void feature_state_destroy(void* theState);
+static void feature_state_init(struct feature_state_t* theState);
+
+
+/****** sgeobj/sge_feature/feature_mt_init() ***********************************
+*  NAME
+*     feature_mt_init() -- Initialize feature code for multi threading use.
+*
+*  SYNOPSIS
+*     void feature_mt_init(void) 
+*
+*  FUNCTION
+*     Set up feature code. This function must be called at least once before
+*     any of the feature oriented functions can be used. This function is
+*     idempotent, i.e. it is safe to call it multiple times.
+*
+*     Thread local storage for the feature code state information is reserved. 
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: feature_mt_init() is MT safe 
+*
+*******************************************************************************/
+void feature_mt_init(void)
+{
+   pthread_once(&feature_once, feature_once_init);
+}
+
+/****** sge_feature/feature_set_already_read_from_file() ***********************
+*  NAME
+*     feature_set_already_read_from_file()
+*
+*  SYNOPSIS
+*     void feature_set_already_read_from_file(int i)
+*
+*  FUNCTION
+*     Set per thread global variable already_read_from_file.
+*******************************************************************************/
+void feature_set_already_read_from_file(int i)
+{
+   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_set_already_read_from_file");
+   feature_state->already_read_from_file = i;
+}
+
+/****** sge_feature/feature_get_already_read_from_file() ***********************
+*  NAME
+*     feature_get_already_read_from_file()
+*
+*  SYNOPSIS
+*     void feature_get_already_read_from_file(int i)
+*
+*  RESULT
+*     Returns value of per thread global variable already_read_from_file.
+*******************************************************************************/
+int feature_get_already_read_from_file(void)
+{
+   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
+   return feature_state->already_read_from_file;
+}
+
+/****** sge_feature/feature_get_already_read_from_file() ***********************
+*  NAME
+*     feature_get_master_featureset_list()
+*
+*  SYNOPSIS
+*     lList **feature_get_master_featureset_list(void)
+*
+*  RESULT
+*     Returns pointer to location where per thread global list 
+*     Master_FeatureSet_List is stored.
+*******************************************************************************/
+lList **feature_get_master_featureset_list(void)
+{
+   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
+   return &(feature_state->Master_FeatureSet_List);
+}
 
 /****** sgeobj/feature/feature_initialize() ***********************************
 *  NAME
@@ -680,5 +683,85 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    }
    DEXIT;
    return ret;
+}
+
+/****** sgeobj/sge_feature/feature_once_init() *********************************
+*  NAME
+*     feature_once_init() -- One-time feature code initialization.
+*
+*  SYNOPSIS
+*     static feature_once_init(void) 
+*
+*  FUNCTION
+*     Create access key for thread local storage. Register cleanup function.
+*
+*     This function must be called exactly once.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: feature_once_init() is MT safe. 
+*
+*******************************************************************************/
+static void feature_once_init(void)
+{
+   pthread_key_create(&feature_state_key, feature_state_destroy);
+}
+
+/****** sgeobj/sge_feature/feature_state_destroy() *****************************
+*  NAME
+*     feature_state_destroy() -- Free thread local storage
+*
+*  SYNOPSIS
+*     static void feature_state_destroy(void* theState) 
+*
+*  FUNCTION
+*     Free thread local storage.
+*
+*  INPUTS
+*     void* theState - Pointer to memory which should be freed.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: feature_state_destroy() is MT safe.
+*
+*******************************************************************************/
+static void feature_state_destroy(void* theState)
+{
+   struct feature_state_t* state = (struct feature_state_t *)theState;
+
+   state->Master_FeatureSet_List = lFreeList(state->Master_FeatureSet_List);
+   free(state);
+}
+
+/****** sgeobj/sge_feature/feature_state_init() *******************************************
+*  NAME
+*     feature_state_init() -- Initialize feature code state.
+*
+*  SYNOPSIS
+*     static void feature_state_init(struct feature_state_t* theState) 
+*
+*  FUNCTION
+*     Initialize feature code state.
+*
+*  INPUTS
+*     struct feature_state_t* theState - Pointer to feature state structure.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: feature_state_init() is MT safe. 
+*
+*******************************************************************************/
+static void feature_state_init(struct feature_state_t* theState)
+{
+   memset(theState, 0, sizeof(struct feature_state_t));
 }
 

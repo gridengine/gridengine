@@ -54,7 +54,6 @@
 #include "sge_string.h"
 #include "sge_prog.h"
 
-#include "sge_uti_state.h"
 
 #include "msg_utilib.h"
 

@@ -38,15 +38,15 @@ COMMD_TARGETS = sge_commd commdcntl tstsnd tstrcv testsuite_snd testsuite_rcv
 
 COMMD_SRC   = commd.c message.c connection.c rwfd.c commproc.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c setup_commd_path.c version.c commd_io.c
 
-COMMD_ADD_SRC = 
+COMMD_ADD_SRC =
 
 COMMD_OBJS = $(COMMD_SRC:.c=.o)
 
 COMMD_ADD_OBJS = $(COMMD_ADD_SRC:.c=.o)
 
-COMMD_ADD_LIBS = -luti -lrmon 
+COMMD_ADD_LIBS =  -lsgeobjd -lcull -lsec -luti -lrmon -llck
 
-COMMD_LIB_DEPENDS =  $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+COMMD_LIB_DEPENDS =  $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(ZLIB)
 
 COMMD_TARGETS_OBJS = commdcntl.o tstsnd.o tstrcv.o testsuite_snd.o testsuite_rcv.o
 
@@ -74,19 +74,19 @@ sge_commd:	$(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_LIB_DEPENDS)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
 
 commdcntl:	commdcntl.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB)  $(COMMLIB) $(RMONLIB) $(COMMD_ADD_OBJS) $(UTILIB) $(SLIBS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(RMONLIB) $(COMMD_ADD_OBJS) $(UTILIB) $(LCKLIB) $(SLIBS) $(LIBS)
 
 tstsnd:	tstsnd.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ tstsnd.o $(COMMD_ADD_OBJS) -lcom -luti -lrmon $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ tstsnd.o $(COMMD_ADD_OBJS) -lcom $(COMMD_ADD_LIBS) $(LIBS)
 
 tstrcv: tstrcv.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ tstrcv.o $(COMMD_ADD_OBJS) -lcom -luti -lrmon $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ tstrcv.o $(COMMD_ADD_OBJS) -lcom $(COMMD_ADD_LIBS) $(LIBS)
 
 testsuite_snd:	testsuite_snd.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ testsuite_snd.o $(COMMD_ADD_OBJS) -lcom -luti -lrmon $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ testsuite_snd.o $(COMMD_ADD_OBJS) -lcom $(COMMD_ADD_LIBS) $(LIBS)
 
 testsuite_rcv: testsuite_rcv.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ testsuite_rcv.o $(COMMD_ADD_OBJS) -lcom -luti -lrmon $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) $(LFLAGS) -o $@ testsuite_rcv.o $(COMMD_ADD_OBJS) -lcom $(COMMD_ADD_LIBS) $(LIBS)
 
 
 

@@ -39,10 +39,7 @@
 #include <errno.h>
 #include <string.h>
 #include <pwd.h>
-
-#ifdef SGE_MT
 #include <pthread.h>
-#endif
 
 #include "commlib.h"
 #include "sge.h"
@@ -62,10 +59,8 @@
 
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
-
-#ifdef SGE_MT
 #include "sge_mtutil.h"
-#endif
+
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
@@ -114,15 +109,8 @@ struct sec_state_t {
    char unique_identifier[BUFSIZ];   /* per thread unique identifier */
 };
 
-#if defined(SGE_MT)
 static pthread_key_t   sec_state_key;
-#else
-static struct sec_state_t sec_state_opaque = {
-   NULL, 0, 0, 0, 0, 0, NULL, "" };
-struct sec_state_t *sec_state = &sec_state_opaque;
-#endif
 
-#if defined(SGE_MT)
 static void sec_state_init(struct sec_state_t* state) {
    state->key_mat              = NULL;
    state->key_mat_len          = 0;
@@ -144,10 +132,9 @@ static pthread_once_t sec_once_control = PTHREAD_ONCE_INIT;
 void sec_once_init(void) {
    pthread_key_create(&sec_state_key, &sec_state_destroy);
 }
-void sec_init_mt(void) {
+void sec_mt_init(void) {
    pthread_once(&sec_once_control, sec_once_init);
 }
-#endif
 
 #define c4TOl(c,l)      (l =((unsigned long)(*((c)++)))<<24, \
                          l|=((unsigned long)(*((c)++)))<<16, \
@@ -168,13 +155,10 @@ void sec_init_mt(void) {
 /*
 ** prototypes needed to make openssl library MT safe
 */
-
-#ifdef SGE_MT
 static unsigned long sec_crypto_thread_id(void);
 static void sec_crypto_locking_callback(int mode, int type, char *file, int line);
 static void sge_thread_setup(void);
 static void sec_thread_cleanup(void);
-#endif /* SGE_MT */
 
 static int sec_alloc_key_mat(void);
 #ifdef SEC_RECONNECT
@@ -395,20 +379,14 @@ static int sec_initialized = 0;
 ** MT-NOTE: that must be synchronized in case of any MT program using sec lib
 */
 
-#ifdef SGE_MT
 static pthread_mutex_t sec_initialized_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define SEC_LOCK_INITIALIZED()   sge_mutex_lock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
 #define SEC_UNLOCK_INITIALIZED() sge_mutex_unlock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
-#else
-#define SEC_LOCK_INITIALIZED()
-#define SEC_UNLOCK_INITIALIZED()
-#endif
 
 /* ---- sec_connid_counter -- a consecutive number for connections -- */
 
 static u_long32 sec_connid_counter = 0;
 
-#ifdef SGE_MT
 
 /* 
 ** MT-NOTE: sec_connid_counter_mutex guards access to sec_connid_counter 
@@ -418,15 +396,9 @@ static u_long32 sec_connid_counter = 0;
 static pthread_mutex_t sec_connid_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define SEC_LOCK_CONNID_COUNTER()   sge_mutex_lock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
 #define SEC_UNLOCK_CONNID_COUNTER() sge_mutex_unlock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
-#else
-#define SEC_LOCK_CONNID_COUNTER()
-#define SEC_UNLOCK_CONNID_COUNTER()
-#endif
 /* ---- sec_conn_list --------------------------------- */
 
 static lList *sec_conn_list = NULL;
-
-#ifdef SGE_MT
 
 /* 
 ** MT-NOTE: sec_conn_list_mutex guards access to sec_conn_list 
@@ -436,10 +408,6 @@ static pthread_mutex_t sec_conn_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define SEC_LOCK_CONN_LIST()      sge_mutex_lock("sec_conn_list_mutex", SGE_FUNC, __LINE__, &sec_conn_list_mutex)
 #define SEC_UNLOCK_CONN_LIST()    sge_mutex_unlock("sec_conn_list_mutex", SGE_FUNC, __LINE__, &sec_conn_list_mutex)
-#else
-#define SEC_LOCK_CONN_LIST()
-#define SEC_UNLOCK_CONN_LIST()
-#endif
 
 /* ---- *_file --------------------------------- */
 
@@ -454,9 +422,6 @@ static char *rand_file;
 ** MT-NOTE: no mutex needed for all *_file global variables as long as write access 
 ** MT-NOTE: is done only in MT safe sec_init() 
 */
-
-
-#ifdef SGE_MT
 
 /* 
 ** Two callback functions are needed for making -lcrypto MT safe 
@@ -489,7 +454,7 @@ static long *lock_count = NULL;
 *******************************************************************************/
 static unsigned long sec_crypto_thread_id(void)
 {
-   return pthread_self();
+   return (unsigned long)pthread_self();
 }
 
 /****** sec_lib/sec_crypto_locking_callback() **********************************
@@ -605,7 +570,6 @@ static void sec_thread_cleanup(void)
    DEXIT;
    return;
 }
-#endif
 
 
 /****** sec_lib/sec_alloc_key_mat() ********************************************
@@ -808,9 +772,7 @@ int sec_init(const char *progname)
 
    /* use -lcrypto threads(3) interface here to allow OpenSSL 
       safely be used by multiple threads */
-#ifdef SGE_MT
    sge_thread_setup();
-#endif
 
    /*
    ** set everything to zero
@@ -956,9 +918,7 @@ int sec_exit(void)
       sec_write_data2hd();
 #endif
 
-#ifdef SGE_MT
    sec_thread_cleanup();
-#endif
 
    sec_initialized = 0;   
    SEC_LOCK_INITIALIZED();

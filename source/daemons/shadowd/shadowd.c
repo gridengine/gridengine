@@ -69,6 +69,7 @@
 #include "sge_io.h"
 #include "sge_spool.h"
 #include "sge_hostname.h"
+#include "sge_mt_init.h"
 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
@@ -193,6 +194,8 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
+   sge_mt_init();
+
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    /* initialize recovery control variables */
    {

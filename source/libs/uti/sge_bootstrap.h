@@ -37,9 +37,7 @@
 
 #include "sge_dstring.h"
 
-#if defined(SGE_MT)
-void bootstrap_init_mt(void);
-#endif
+void bootstrap_mt_init(void);
 
 const char *bootstrap_get_admin_user(void);
 const char *bootstrap_get_default_domain(void);
@@ -61,10 +59,6 @@ void bootstrap_set_binary_path(const char *value);
 void bootstrap_set_qmaster_spool_dir(const char *value);
 void bootstrap_set_product_mode(const char *value);
 
-int sge_bootstrap(dstring *error_dstring);
-
-#ifdef WIN32NATIVE
-void sge_delete_bootstrap ();
-#endif /* WIN32NATIVE */
+bool sge_bootstrap(dstring *error_dstring);
 
 #endif /* __SGE_BOOTSTRAP_H */

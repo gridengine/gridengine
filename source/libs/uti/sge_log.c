@@ -29,83 +29,74 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#ifndef WIN32NATIVE
-#	include <unistd.h>
-#	include <sys/time.h>
-#	include <time.h>
-#  include <stdlib.h>
-#  include <errno.h>
-#endif /* WIN32NATIVE */
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "sge_log.h"
+
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
-
-#if defined (SGE_MT)
+#include <errno.h>
 #include <pthread.h>
-#endif
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "sge.h"
-#include "sge_log.h"
 #include "sge_time.h"
 #include "sge_dstring.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_uidgid.h"
-
-#include "sge_uti_state.h"
-
 #include "msg_utilib.h"
 
-
-static void sge_do_log(int log_level, int levelchar, const char *err_str, 
-                       const char *newline);
 
 struct log_state_t {
     u_long32         log_level;
     char             log_buffer[4*MAX_STRING_SIZE]; /* formerly known as SGE_EVENT */
-    char            *log_file;
+    char*            log_file;
     int              log_as_admin_user;
     int              verbose;
     int              gui_log;
     trace_func_type  trace_func;
 };
 
-#if defined(SGE_MT)
-static pthread_key_t   log_state_key;
-#else
-static struct log_state_t log_state_opaque = {
-   LOG_WARNING, "", TMP_ERR_FILE_SNBU, 0, 1, 1, NULL };
-struct log_state_t *log_state = &log_state_opaque;
-#endif
+static pthread_once_t log_once = PTHREAD_ONCE_INIT;
+static pthread_key_t log_state_key;
+
+static void log_once_init(void);
+static void log_state_destroy(void* theState);
+static void log_state_init(struct log_state_t* theState);
+
+static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline); 
 
 
-#if defined(SGE_MT)
-static void log_state_init(struct log_state_t* state) {
-   state->log_level      = LOG_WARNING;
-   strcpy(state->log_buffer, "");
-   state->log_file          = TMP_ERR_FILE_SNBU;
-   state->log_as_admin_user = 0;
-   state->verbose           = 1;
-   state->gui_log           = 1;
-   state->trace_func        = NULL;
+/****** uti/log/log_mt_init() ************************************************
+*  NAME
+*     log_mt_init() -- Initialize logging for multi threading use.
+*
+*  SYNOPSIS
+*     void log_mt_init(void) 
+*
+*  FUNCTION
+*     Set up logging. This function must be called at least once before any of
+*     the logging functions is used. This function is idempotent, i.e. it is
+*     safe to call it multiple times.
+*
+*     Thread local storage for the logging state information is reserved. 
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: log_mt_init() is MT safe 
+*
+*******************************************************************************/
+void log_mt_init(void)
+{
+   pthread_once(&log_once, log_once_init);
 }
-
-static void log_state_destroy(void* state) {
-   free(state);
-}
- 
-static pthread_once_t log_once_control = PTHREAD_ONCE_INIT;
-void log_once_init(void) {
-   pthread_key_create(&log_state_key, &log_state_destroy);
-} 
-void log_init_mt(void) {
-   pthread_once(&log_once_control, log_once_init);
-} 
-
-#endif
 
 /****** uti/log/log_state_get_log_buffer() ******************************************
 *  NAME
@@ -393,74 +384,11 @@ void log_state_set_log_trace_func(trace_func_type func)
 *     uti/uidgid/sge_switch2admin_user
 *     uti/uidgid/sge_switch2start_user
 ******************************************************************************/
-void log_state_set_log_as_admin_user(int i) {
+void log_state_set_log_as_admin_user(int i)
+{
    GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_as_admin_user");
    log_state->log_as_admin_user = i;
 }
-
-
-#ifndef WIN32NATIVE
-
-/****** sge_log/sge_do_log() ***************************************************
-*  NAME
-*     sge_do_log() -- SGE logging function
-*
-*  SYNOPSIS
-*     static void sge_do_log(int log_level, int levelchar, const char *err_str, 
-*     const char *newline) 
-*
-*  INPUTS
-*     int log_level       - ??? 
-*     int levelchar       - ??? 
-*     const char *err_str - ??? 
-*     const char *newline - ??? 
-*
-*  NOTES
-*     MT-NOTE: sge_do_log() is not MT safe due to sge_switch2admin_user()
-*     MT-NOTE: sge_do_log() can be used however in MT applications if no 
-*     MT-NOTE: admin user switching takes place
-*******************************************************************************/
-static void sge_do_log(int log_level, int levelchar, const char *err_str, 
-                       const char *newline) 
-{
-   int fd;
-   int switch_back = 0;
-
-   /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
-
-   if (log_state_get_log_as_admin_user() && geteuid() == 0) {
-      sge_switch2admin_user();
-      switch_back = 1;
-   }
-
-   if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
-      char msg2log[4*MAX_STRING_SIZE];
-      char date[256], tmp_date[256], time_buf[256];
-      dstring ds, msg;
-      sge_dstring_init(&ds, time_buf, sizeof(time_buf));
-      sge_dstring_init(&msg, msg2log, sizeof(msg2log));
-      sprintf(tmp_date, "%s", sge_ctime(0, &ds));
-      sscanf(tmp_date, "%[^\n]", date);
-
-      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s%s",
-              date,
-              uti_state_get_sge_formal_prog_name(),
-              uti_state_get_unqualified_hostname(),
-              levelchar,
-              err_str,
-              newline);
-      write(fd, msg2log, strlen(msg2log));
-      close(fd);
-   }
-
-   if (log_state_get_log_as_admin_user() && switch_back) {
-      sge_switch2start_user();
-   }
-
-   return;
-}
-#endif
-
 
 /****** uti/log/sge_log() *****************************************************
 *  NAME
@@ -500,8 +428,7 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
 *     MT-NOTE: sge_log() can be used if DENTER_MAIN() is called only by one 
 *     MT-NOTE: thread
 ******************************************************************************/
-int sge_log(int log_level, const char *mesg, const char *file__, 
-            const char *func__, int line__) 
+int sge_log(int log_level, const char *mesg, const char *file__, const char *func__, int line__) 
 {
    char buf[128*4];
    char newline[2*4];
@@ -532,15 +459,9 @@ int sge_log(int log_level, const char *mesg, const char *file__,
       t(mesg);
 
    /* quick exit if nothing to log */
-#ifndef WIN32NATIVE
    if (log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
       return 0;
    }
-#else /* WIN32NATIVE */
-   if ((u_long32)log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
-	   return 0;
-   }
-#endif /* WIN32NATIVE */
 
    if (!log_state_get_log_gui()) {
       return 0;
@@ -577,7 +498,6 @@ int sge_log(int log_level, const char *mesg, const char *file__,
          break;
    }
 
-#ifndef WIN32NATIVE
    /* avoid double output in debug mode */
    if (!uti_state_get_daemonized() && !rmon_condition(LAYER, INFOPRINT) && 
        (log_state_get_log_verbose() || log_level == LOG_ERR || log_level == LOG_CRIT)) {
@@ -587,8 +507,148 @@ int sge_log(int log_level, const char *mesg, const char *file__,
        uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
       sge_do_log(log_level, levelchar, mesg, newline);
    }
-#endif /* WIN32NATIVE */
 
    return 0;
+} /* sge_log() */
+
+/****** sge_log/sge_do_log() ***************************************************
+*  NAME
+*     sge_do_log() -- SGE logging function
+*
+*  SYNOPSIS
+*     static void sge_do_log(int log_level, int levelchar, const char *err_str, 
+*     const char *newline) 
+*
+*  INPUTS
+*     int log_level       - ??? 
+*     int levelchar       - ??? 
+*     const char *err_str - ??? 
+*     const char *newline - ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_do_log() is not MT safe due to sge_switch2admin_user()
+*     MT-NOTE: sge_do_log() can be used however in MT applications if no 
+*     MT-NOTE: admin user switching takes place
+*******************************************************************************/
+static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline) 
+{
+   int fd;
+   int switch_back = 0;
+
+   /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
+
+   if (log_state_get_log_as_admin_user() && geteuid() == 0) {
+      sge_switch2admin_user();
+      switch_back = 1;
+   }
+
+   if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
+      char msg2log[4*MAX_STRING_SIZE];
+      char date[256], tmp_date[256], time_buf[256];
+      dstring ds, msg;
+      sge_dstring_init(&ds, time_buf, sizeof(time_buf));
+      sge_dstring_init(&msg, msg2log, sizeof(msg2log));
+      sprintf(tmp_date, "%s", sge_ctime(0, &ds));
+      sscanf(tmp_date, "%[^\n]", date);
+
+      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s%s",
+              date,
+              uti_state_get_sge_formal_prog_name(),
+              uti_state_get_unqualified_hostname(),
+              levelchar,
+              err_str,
+              newline);
+      write(fd, msg2log, strlen(msg2log));
+      close(fd);
+   }
+
+   if (log_state_get_log_as_admin_user() && switch_back) {
+      sge_switch2start_user();
+   }
+
+   return;
+} /* sge_do_log() */
+
+/****** uti/log/log_once_init() ********************************************
+*  NAME
+*     log_once_init() -- One-time logging initialization.
+*
+*  SYNOPSIS
+*     static log_once_init(void) 
+*
+*  FUNCTION
+*     Create access key for thread local storage. Register cleanup function.
+*
+*     This function must be called exactly once.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: log_once_init() is MT safe. 
+*
+*******************************************************************************/
+static void log_once_init(void)
+{
+   pthread_key_create(&log_state_key, &log_state_destroy);
+}
+
+/****** uti/log/log_state_destroy() ****************************************
+*  NAME
+*     log_state_destroy() -- Free thread local storage
+*
+*  SYNOPSIS
+*     static void log_state_destroy(void* theState) 
+*
+*  FUNCTION
+*     Free thread local storage.
+*
+*  INPUTS
+*     void* theState - Pointer to memroy which should be freed.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: log_state_destroy() is MT safe.
+*
+*******************************************************************************/
+static void log_state_destroy(void* theState)
+{
+   free((struct log_state_t *)theState);
+}
+
+/****** uti/log/log_state_init() *******************************************
+*  NAME
+*     log_state_init() -- Initialize logging state.
+*
+*  SYNOPSIS
+*     static void log_state_init(struct log_state_t* theState) 
+*
+*  FUNCTION
+*     Initialize logging state.
+*
+*  INPUTS
+*     struct log_state_t* theState - Pointer to logging state structure.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: log_state_init() in MT safe. 
+*
+*******************************************************************************/
+static void log_state_init(struct log_state_t* theState)
+{
+   strcpy(theState->log_buffer, "");
+   theState->log_level         = LOG_WARNING;
+   theState->log_file          = TMP_ERR_FILE_SNBU;
+   theState->log_as_admin_user = 0;
+   theState->verbose           = 1;
+   theState->gui_log           = 1;
+   theState->trace_func        = NULL;
 }
 

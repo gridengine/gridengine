@@ -43,6 +43,8 @@
 #include "msg_clients_common.h"
 #include "msg_common.h"
 #include "sge_answer.h"
+#include "sge_mt_init.h"
+
 
 extern char **environ;
 
@@ -55,6 +57,8 @@ int main(int argc, char **argv)
    lList *alp = NULL;
    
    DENTER_MAIN(TOP_LAYER, "qconf");
+
+   sge_mt_init();
 
    lInit(nmv);
 

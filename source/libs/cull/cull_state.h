@@ -1,5 +1,6 @@
-#ifndef __CULL_LERRNOP_H
-#define __CULL_LERRNOP_H
+#ifndef _CULL_STATE_H_
+#define _CULL_STATE_H_
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,17 +26,28 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_lerrno.h"
-#include "cull_state.h"
-
-#define LERROR(x) cull_state_set_lerrno(x);
+#include "cull_list.h"
 
 
-#endif /* __CULL_LERRNOP_H */
+void cull_mt_init(void);
+
+void cull_state_set_lerrno(int i);
+void cull_state_set_noinit(char *s);
+void cull_state_set_global_sort_order(const lSortOrder *so);
+void cull_state_set_chunk_size(int chunk_size);
+void cull_state_set_name_space(const lNameSpace *ns);
+
+int               cull_state_get_lerrno(void);
+const char *      cull_state_get_noinit(void);
+const lSortOrder *cull_state_get_global_sort_order(void);
+int               cull_state_get_chunk_size(void);
+const lNameSpace *cull_state_get_name_space(void);
+
+#endif  /* _CULL_STATE_H_ */

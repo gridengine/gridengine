@@ -50,6 +50,7 @@
 #include "sge_gdiP.h"
 #include "commlib.h"
 #include "cull_list.h"
+#include "cull_state.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
@@ -103,24 +104,24 @@ static void gdi_init_mt(void) {
   
 void gdi_once_init(void) {
    /* uti */
-   uti_init_mt();
-   log_init_mt();
-   uidgid_init_mt();
+   prog_mt_init();
+   log_mt_init();
+   uidgid_mt_init();
 
    /* cull */
-   cull_init_mt();
+   cull_mt_init();
 
    /* commlib */
-   commlib_init_mt();
+   commlib_mt_init();
 
    /* sec */
 #ifdef SECURE
-   sec_init_mt();
+   sec_mt_init();
 #endif
 
    /* gdi */
    gdi_init_mt();
-   path_init_mt();
+   path_mt_init();
 }
 
 static void gdi_state_init(struct gdi_state_t* state) {
@@ -138,6 +139,34 @@ static void gdi_state_init(struct gdi_state_t* state) {
 
 
 
+/****** gid/gdi_setup/gdi_mt_init() ************************************************
+*  NAME
+*     gdi_mt_init() -- Initialize GDI state for multi threading use.
+*
+*  SYNOPSIS
+*     void gdi_mt_init(void) 
+*
+*  FUNCTION
+*     Set up GDI. This function must be called at least once before any of the
+*     GDI functions is used. This function is idempotent, i.e. it is safe to
+*     call it multiple times.
+*
+*     Thread local storage for the GDI state information is reserved. 
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: gdi_mt_init() is MT safe 
+*
+*******************************************************************************/
+void gdi_mt_init(void)
+{
+   pthread_once(&gdi_once_control, gdi_once_init);
+}
 
 /****** libs/gdi/gdi_state_get_????() ************************************
 *  NAME

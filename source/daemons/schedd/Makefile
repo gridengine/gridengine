@@ -54,7 +54,8 @@ SCHEDD_ADD_SRC = job_log.c \
              shutdown.c \
              sig_handlers.c \
              unparse_job_cull.c \
-             usage.c
+             usage.c \
+             sge_mt_init.c
 
 SMON_SRC    = sge_share_mon.c
 
@@ -64,18 +65,18 @@ SCHEDD_OBJS = $(SCHEDD_SRC:.c=.o)
 
 SCHEDD_ADD_OBJS = $(SCHEDD_ADD_SRC:.c=.o) 
 
-SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
+SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck
 
 SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) \
                      $(SGEOBJLIB) $(SGEOBJDLIB) \
                      $(SECLIBS) $(KRBLIBS) \
-                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
+                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(ZLIB) $(TPLIB)
 
 SMON_OBJS = $(SMON_SRC:.c=.o)
 
 SMON_ADD_OBJS = $(SMON_ADD_SRC:.c=.o) 
 
-SMON_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
+SMON_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti -llck
 
 SMON_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB)
 

@@ -74,6 +74,7 @@
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sge_job.h"
+#include "sge_mt_init.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -137,7 +138,6 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
-
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
    sge_init_language_func((gettext_func_type)        gettext,
@@ -146,6 +146,8 @@ char **argv
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
+
+   sge_mt_init();
 
 #ifdef PW
    if ((mode_guess = product_mode_guess(argv[0])) == M_INVALID) {

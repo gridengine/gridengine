@@ -276,7 +276,7 @@ static void japi_once_init(void)
 {
    /* enable rmon monitoring */
    rmon_mopen(NULL, 0, "japilib");
-   feature_init_mt();
+   feature_mt_init();
 }
 
 
@@ -327,10 +327,11 @@ int japi_init_mt(dstring *diag)
    lList *alp = NULL;
   
    /* never print errors to console always return them only in diag */
-   log_init_mt();
+   log_mt_init();
    log_state_set_log_gui(0);
 
-   feature_init_mt();
+   feature_mt_init();
+
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
    gdi_errno = sge_gdi_setup("japi", &alp);
    if (gdi_errno!=AE_OK && gdi_errno != AE_ALREADY_SETUP) {

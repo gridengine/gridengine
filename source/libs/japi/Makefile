@@ -33,15 +33,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-SHELL = /bin/sh
-RM    = rm -f
-STRIP = strip
-DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
-
 JAPILIB_DIR   = $(SDIR)/libs/japi
 
 JAPILIB 	     = libjapi$(LIBEXT)
-JAPILIB_SRC   = japi.c sge_mtutil.c
+JAPILIB_SRC   = japi.c
 JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB 	  = libdrmaa$(SHAREDEXT)
@@ -55,30 +50,19 @@ DRMAA_DEPEND_OBJS = $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
 
 all: $(JAPI_ALL)
 
-include $(SDIR)/common/Makefile   
-include $(SDIR)/libs/comm/Makefile
-include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/gdi/Makefile
-include $(SDIR)/security/sec/Makefile
-include $(SDIR)/libs/rmon/Makefile
-include $(SDIR)/libs/uti/Makefile
-include $(SDIR)/libs/evc/Makefile
-include $(SDIR)/libs/sgeobj/Makefile
-include $(SDIR)/libs/lck/Makefile
-
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
 japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 	
-clean: 
+japilib_clean: 
 	$(RM) $(JAPI_ALL) $(JAPILIB_OBJS) $(DRMAA_DEPEND_OBJS) libjapi.a libjapi$(SHAREDEXT) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) test_drmaa.o test_drmaa example.o example sge_sub_object.c
 
-depend:
+japilib_depend:
 	$(DEPEND) -f$(JAPILIB_DIR)/japi_dependencies $(JAPILIB_DIR)/*.c
 
-messages:
+japilib_messages:
 	@echo Creating $@
 	@for i in `ls $(JAPILIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -110,10 +94,6 @@ drmaa.o: $(JAPILIB_DIR)/drmaa.c
 
 japi.o: $(JAPILIB_DIR)/japi.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
-
-sge_mtutil.o: $(JAPILIB_DIR)/sge_mtutil.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/sge_mtutil.c
-
 
 #---------------------------------------------------------------------
 

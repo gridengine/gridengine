@@ -70,17 +70,18 @@ EXECD_ADD_SRC =  usage.c \
               sig_handlers.c \
               job_log.c \
               startprog.c \
-              shutdown.c 
+              shutdown.c  \
+              sge_mt_init.c
               
 EXECD_OBJS    = $(EXECD_SRC:.c=.o)
 
 EXECD_ADD_OBJS = $(EXECD_ADD_SRC:.c=.o)  
 
-EXECD_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+EXECD_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
 
 EXECD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
-                    $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
+                    $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
                     $(ZLIB) $(TPLIB)
 
 ###############################################################################

@@ -56,7 +56,8 @@ COMMON_SRC = \
             parse_job_cull.c \
             parse_qsub.c \
             sig_handlers.c \
-            usage.c
+            usage.c \
+            sge_mt_init.c
 
 COMMON_OBJS = $(COMMON_SRC:.c=.o)
 
@@ -86,3 +87,5 @@ sig_handlers.o   : $(COMMON_DIR)/sig_handlers.c
 usage.o: 	$(COMMON_DIR)/usage.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/usage.c
 
+sge_mt_init.o: 	$(COMMON_DIR)/sge_mt_init.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_mt_init.c

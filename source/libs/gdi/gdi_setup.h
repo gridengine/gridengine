@@ -53,6 +53,8 @@ enum {
    AE_QMASTER_DOWN
 };
 
+void gdi_mt_init(void);
+
 int sge_gdi_setup(const char *programname, lList **alpp);
 int sge_gdi_param(int, int, char *);
 int sge_gdi_shutdown(void);

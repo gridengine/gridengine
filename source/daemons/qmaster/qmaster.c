@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <string.h>
+
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sig_handlers.h"
@@ -70,11 +71,11 @@
 #include "sge_manop.h"
 #include "qmaster_heartbeat.h"
 #include "sge_cuser.h"
-
+#include "sge_mt_init.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_persistence_qmaster.h"
-
 #include "spool/sge_spooling.h"
+
 
 static void qmaster_init(char **anArgv);
 static void communication_setup(char **anArgv);
@@ -114,6 +115,9 @@ int main(int argc, char **argv)
    sge_init_language_func((gettext_func_type)gettext, (setlocale_func_type)setlocale, (bindtextdomain_func_type)bindtextdomain, (textdomain_func_type)textdomain);
    sge_init_language(NULL,NULL);   
 #endif 
+
+   sge_mt_init();
+   commlib_mt_init(); /* shall be removed with new comm system */
 
    uti_state_set_exit_func(qmaster_shutdown);
 

@@ -98,31 +98,23 @@ typedef struct {
    char *name;
 } featureset_names_t;            
 
-#if defined(SGE_MT)
-void feature_init_mt(void);
-#endif
+void feature_mt_init(void);
 
-void feature_initialize(void);
- 
-int feature_initialize_from_string(const char *mode);
- 
-void feature_activate(featureset_id_t id);
+void    feature_set_already_read_from_file(int i);
+int     feature_get_already_read_from_file(void);
+lList** feature_get_master_featureset_list(void);
 
-bool feature_is_active(featureset_id_t id);
- 
-const char *feature_get_featureset_name(featureset_id_t id);
- 
+void            feature_initialize(void);
+int             feature_initialize_from_string(const char *mode);
+void            feature_activate(featureset_id_t id);
+bool            feature_is_active(featureset_id_t id);
+const char*     feature_get_featureset_name(featureset_id_t id);
 featureset_id_t feature_get_featureset_id(const char *name);
- 
 featureset_id_t feature_get_active_featureset_id(void);
- 
-bool feature_is_enabled(feature_id_t id);
- 
-const char *feature_get_name(feature_id_t id);
- 
-feature_id_t feature_get_id(const char *name);
-
-const char *feature_get_product_name(featureset_product_name_id_t style, dstring *buffer);
+bool            feature_is_enabled(feature_id_t id);
+const char*     feature_get_name(feature_id_t id);
+feature_id_t    feature_get_id(const char *name);
+const char*     feature_get_product_name(featureset_product_name_id_t style, dstring *buffer);
  
 #ifdef  __cplusplus
 }

@@ -51,17 +51,10 @@
 #define LOCAL_CONF_DIR            "local_conf"
 #define SHADOW_MASTERS_FILE       "shadow_masters"
 
-#ifndef WIN32NATIVE
-#  define PATH_SEPARATOR "/"
-#  define PATH_SEPARATOR_CHAR '/'
-#else
-#  define PATH_SEPARATOR "\\"
-#  define PATH_SEPARATOR_CHAR '\\'
-#endif      
+#define PATH_SEPARATOR "/"
+#define PATH_SEPARATOR_CHAR '/'
 
-#if defined(SGE_MT)
-void path_init_mt(void);
-#endif
+void path_mt_init(void);
 
 const char *path_state_get_sge_root(void);
 const char *path_state_get_cell_root(void);
@@ -85,9 +78,5 @@ void path_state_set_local_conf_dir(const char *path);
 void path_state_set_shadow_masters_file(const char *path);
 
 bool sge_setup_paths(const char *cell, dstring *error_dstring);
-
-#ifdef WIN32NATIVE
-void sge_delete_paths ();
-#endif /* WIN32NATIVE */
 
 #endif /* __SETUP_PATH_H */

@@ -33,33 +33,15 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <syslog.h>
 
-#ifndef WIN32NATIVE
-#	include <syslog.h>
-#else 
-#	include "win32nativetypes.h"
-#endif 
-
-#ifndef __BASIS_TYPES_H
-#   include "basis_types.h"
-#endif
-
+#include "basis_types.h"
 #include "msg_utilib.h"
+
 
 typedef void (*trace_func_type)(const char *);
 
-#if defined(SGE_MT)
-void log_init_mt(void);
-#endif
-
-
-char *log_state_get_log_buffer(void);
-u_long32 log_state_get_log_level(void);
-const char*log_state_get_log_file(void);
-int log_state_get_log_verbose(void);
-int log_state_get_log_gui(void);
-trace_func_type log_state_get_log_trace_func(void);
-int log_state_get_log_as_admin_user(void);
+void log_mt_init(void);
 
 void log_state_set_log_level(u_long32);
 void log_state_set_log_file(char *file);
@@ -67,6 +49,14 @@ void log_state_set_log_verbose(int i);
 void log_state_set_log_gui(int i);
 void log_state_set_log_trace_func(trace_func_type );
 void log_state_set_log_as_admin_user(int i);
+
+char*           log_state_get_log_buffer(void);
+u_long32        log_state_get_log_level(void);
+const char*     log_state_get_log_file(void);
+int             log_state_get_log_verbose(void);
+int             log_state_get_log_gui(void);
+trace_func_type log_state_get_log_trace_func(void);
+int             log_state_get_log_as_admin_user(void);
 
 /* extern stringTlong SGE_EVENT; */
 #define SGE_EVENT log_state_get_log_buffer()
@@ -76,13 +66,6 @@ void log_state_set_log_as_admin_user(int i);
 #endif
 
 #define SGE_LOG(level,msg) sge_log(level, msg, __FILE__, SGE_FUNC, __LINE__ );
-
-#ifdef WIN32NATIVE
-#undef ERROR
-/* One windows header file defines ERROR as 0. This haeder is included by
-   winsock2.h. Until we do not need this constant it is save to make an undef 
-   here. */
-#endif 
 
 #if defined(__INSURE__)
 #   define CRITICAL(x) (sprintf x,sge_log(LOG_CRIT,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0

@@ -40,13 +40,14 @@ QSUB_SRC = qsub.c
 
 QSUB_ADD_SRC = parse_job_cull.c parse_qsub.c \
                sig_handlers.c read_defaults.c \
-               show_job.c usage.c sge_options.c
+               show_job.c usage.c sge_options.c \
+               sge_mt_init.c
 
 QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
 
-QSUB_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QSUB_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
 
 QSUB_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(SECLIBS) $(KRBLIBS) \

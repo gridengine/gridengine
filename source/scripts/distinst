@@ -790,7 +790,7 @@ if [ $instcommon = true ]; then
    
    if [ $instexamples = true ]; then
       echo Installing \"examples/jobs\"
-      Execute rm -rf $DEST_SGE_ROOT/examples
+      Execute rm -rf $DEST_SGE_ROOT/examples/jobs
       MakeDir examples
       MakeDir examples/jobs      
       Execute cp dist/examples/jobs/*.sh $DEST_SGE_ROOT/examples/jobs

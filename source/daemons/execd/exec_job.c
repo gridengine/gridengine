@@ -597,7 +597,6 @@ char *err_str
    var_list_set_u32(&environmentList, "JOB_ID", job_id);
   
    /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
-lWriteListTo(environmentList, stderr);
    if (job_is_array(jep)) {
       u_long32 start, end, step;
 

@@ -1,3 +1,6 @@
+JG-2002-01-14-1: Bugfix:    Removed duplicated code that caused the Insure++
+                            debugger to (falsely) detect a READ_DANGLING error.
+
 JG-2002-01-14-0: Enhancem.: execd_param SET_[SGE|COD|GRD]_ENV: If all types of
                             job environments are configured to be off, the 
                             default SGE is used.

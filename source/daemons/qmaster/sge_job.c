@@ -174,16 +174,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EUNKNOWN;
    }
 
-   lSetString(jep, JB_owner, user);
-   lSetString(jep, JB_group, group);
-   if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
-         conf.user_lists, conf.xuser_lists, Master_Userset_List)) {
-      ERROR((SGE_EVENT, MSG_JOB_NOPERMS_SS, ruser, rhost));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
    /* check conf.min_uid */
    if (uid < conf.min_uid) {
       ERROR((SGE_EVENT, MSG_JOB_UID2LOW_II, (int)uid, (int)conf.min_uid));
@@ -217,6 +207,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    lSetString(jep, JB_group, group);
    lSetUlong(jep, JB_gid, gid);
+
+   if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
+         conf.user_lists, conf.xuser_lists, Master_Userset_List)) {
+      ERROR((SGE_EVENT, MSG_JOB_NOPERMS_SS, ruser, rhost));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
 
    {
       int field[] = { 
@@ -538,15 +536,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          }
       }
    }
-   /* 
-
-      here we have to fill in user 
-      and group into the job 
-      values filled in by the 
-      submitter may get overwritten 
-
-   */
-   lSetString(jep, JB_owner, ruser);
 
    /* verify schedulability */
    {

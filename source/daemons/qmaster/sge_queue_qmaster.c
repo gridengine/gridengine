@@ -569,9 +569,9 @@ int sub_command
          qinstance_state_set_cal_disabled(new_queue, false);
          qinstance_state_set_cal_suspended(new_queue, false);
          cal_state = calendar_get_current_state_and_end(new_cal, NULL);
-         if (cal_state == QCAL_SUSPENDED) {
+         if (cal_state == QI_DO_CAL_SUSPEND) {
             qinstance_state_set_cal_suspended(new_queue, true);
-         } else if (cal_state == QCAL_DISABLED) {
+         } else if (cal_state == QI_DO_CAL_DISABLE) {
             qinstance_state_set_cal_disabled(new_queue, true);
          }
       }

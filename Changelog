@@ -1,3 +1,9 @@
+AD-2004-11-03-0: Bugfix:    '-m a' qsub option did leave a zombie process
+                 Review:    EB
+                 Changed:   qmaster
+                 Issue:     1277
+                 Bugtraq:   5104789
+                 
 CR-2004-11-02-1: Bugfix:    - fixed build
 
 CR-2004-11-02-0: Enhancm.:  - added new commlib test binary: test_debug_client

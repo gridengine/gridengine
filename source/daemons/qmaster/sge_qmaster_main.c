@@ -80,6 +80,9 @@
 #include "sge_profiling.h"
 
 
+static void init_sig_action_and_mask(void);
+
+
 /****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
 *  NAME
 *     sge_qmaster_application_status() -- commlib status callback function  
@@ -272,7 +275,6 @@ unsigned long sge_qmaster_application_status(char** info_message) {
 *******************************************************************************/
 int main(int argc, char* argv[])
 {
-   sigset_t sig_set;
    int max_enroll_tries;
    int ret_val;
 
@@ -289,7 +291,10 @@ int main(int argc, char* argv[])
 
    /* qmaster doesn't support any commandline anymore,
       but we should show version string and -help option */
-   if (argc != 1) {
+   if (argc != 1)
+   {
+      sigset_t sig_set;
+      
       sge_mt_init();
       sigfillset(&sig_set);
       pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
@@ -302,9 +307,7 @@ int main(int argc, char* argv[])
 
    sge_mt_init();
 
-   sigfillset(&sig_set);
-   pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
-
+   init_sig_action_and_mask();
 
    /* init qmaster threads without becomming admin user */
    sge_qmaster_thread_init(false);
@@ -371,4 +374,40 @@ int main(int argc, char* argv[])
    return 0;
 } /* main() */
 
+/****** qmaster/sge_qmaster_main/init_sig_action_and_mask() *******************
+*  NAME
+*     init_sig_action_and_mask() -- initialize signal action and mask 
+*
+*  SYNOPSIS
+*     static void init_sig_action_and_mask(void)
+*
+*  FUNCTION
+*     Initialize signal action and mask.
+*
+*     NOTE: We ignore SIGCHLD. This, together with the 'SA_NOCLDWAIT' flag,
+*     does make sure, that an unwaited for child process will not become
+*     a zombie process.
+*
+*  INPUTS
+*     none 
+*
+*  RESULT
+*     none
+*
+*******************************************************************************/
+static void init_sig_action_and_mask(void)
+{
+   struct sigaction sa;
+   sigset_t sig_set;
+   
+   sa.sa_handler = SIG_IGN;
+   sigemptyset(&sa.sa_mask);
+   sa.sa_flags = SA_NOCLDWAIT;
+   sigaction(SIGCHLD, &sa, NULL);
+   
+   sigfillset(&sig_set);
+   pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
+   
+   return;
+}
 

@@ -136,10 +136,11 @@ lListElem *jatep
    }
 
    if (failed) {        /* a problem occured */
-      WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, u32c(jobid), u32c(jataskid), 
-             queueep ? lGetHost(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST,
-             general_failure ? MSG_GENERAL : "",
-             get_sstate_description(failed), err_str));
+      WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, u32c(jobid), 
+               u32c(jataskid), 
+               queueep ? lGetHost(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST,
+               general_failure ? MSG_GENERAL : "",
+               get_sstate_description(failed), err_str));
    }
    else
       INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  u32c(jobid), u32c(jataskid), 

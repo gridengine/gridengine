@@ -180,15 +180,6 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -1;
       }
-      jatp = job_search_task(jep, NULL, task_number, 1);
-      if (!jatp) {
-         WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
-                  u32c(job_number)));
-         /* try to repair schedd data */
-         sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
-         DEXIT;
-         return -1;
-      }
 
       DPRINTF(("ORDER to start Job %ld Task %ld\n", (long) job_number, 
                (long) task_number));      
@@ -199,6 +190,18 @@ lList **topp  /* ticket orders ptr ptr */
                u32c(lGetUlong(ep, OR_job_version)), u32c(job_number), 
                u32c(task_number)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         DEXIT;
+         return -1;
+      }
+
+      /* search and enroll task */
+      jatp = job_search_task(jep, NULL, task_number, 1);
+      if (!jatp) {
+         WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
+                  u32c(job_number)));
+         /* try to repair schedd data */
+         sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, 
+                       NULL, NULL);
          DEXIT;
          return -1;
       }

@@ -177,7 +177,7 @@ proc throughput_set_share_tree {} {
 
 proc throughput_setup_sharetree {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_HOST
+   global CHECK_HOST ts_config
 
    puts $CHECK_OUTPUT "setup sharetree ..."
 
@@ -218,9 +218,17 @@ proc throughput_setup_sharetree {} {
    }
 
    get_schedd_config my_config 
+
+   if { $ts_config(gridengine_version) == 53 } {
+  
+   } else {
+      set my_config(weight_ticket) "1.0"
+      set my_config(weight_waiting_time) "0.0"
+   }
+
    set my_config(weight_tickets_share) "10000"
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
-   set my_config(job_load_adjustments) "np_load_avg=0.0"
+   set my_config(job_load_adjustments) "none"
    set_schedd_config my_config
 
 }
@@ -301,6 +309,9 @@ proc setup_queues {} {
       if { $FLUSH_FINISH_SEC > 0} {
          set my_schedd_config(flush_finish_sec) "$FLUSH_FINISH_SEC"
       }
+      set my_schedd_config(load_adjustment_decay_time) "0:0:0"
+      set my_schedd_config(job_load_adjustments) "none"
+#      set my_schedd_config(report_pjob_tickets) "false"
    } 
    
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
@@ -1179,6 +1190,7 @@ proc compare_dump_directory { dir } {
    }
 }
 
+# directory of file1 is used to save results
 proc compare_dump_data_file { file1 file2 } {
 
    global CHECK_OUTPUT 

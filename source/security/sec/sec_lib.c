@@ -1595,7 +1595,7 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
       if ( sec_handle_announce(cl_handle, *sender, 
                            (char*) (*message)->message, (*message)->message_length, (*message)->message_id) ) {
 
-         ERROR((SGE_EVENT, MSG_SEC_HANDLEANNOUNCEFAILED_SSI, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
+         ERROR((SGE_EVENT, MSG_SEC_HANDLEANNOUNCEFAILED_SSU, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
          DEXIT;
          return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
       }
@@ -1606,7 +1606,7 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
       tmp_buf_len = (*message)->message_length;
       tmp_buf_pp = (char*) ((*message)->message);
       if (sec_decrypt(&tmp_buf_pp, &tmp_buf_len, *sender)) {
-         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSI, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
+         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSU, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
          (*message)->message_length = tmp_buf_len;
          (*message)->message = (cl_byte_t*)tmp_buf_pp;
          if (sec_handle_announce(cl_handle, *sender,NULL,0,(*message)->message_id))
@@ -2113,7 +2113,7 @@ const cl_com_endpoint_t *sender
    ngc_error = cl_commlib_receive_message(cl_handle, (char*)sender->comp_host, (char*)sender->comp_name, sender->comp_id, 
                                           1, dummymid, &message, &local_sender);
    if (ngc_error != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SISIS,(char*)sender->comp_name, sender->comp_id,(char*)sender->comp_host , 0, cl_get_error_text(ngc_error)));
+      ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SUSUS,(char*)sender->comp_name, sender->comp_id,(char*)sender->comp_host ,(long int) 0, cl_get_error_text(ngc_error)));
       i = -1;
       goto error;
    }
@@ -2529,7 +2529,7 @@ u_long32 response_id)
 
 
    if (ngc_error != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, MSG_SEC_SENDRESPONSEFAILED_SIS, sender->comp_name, sender->comp_id, sender->comp_host));
+      ERROR((SGE_EVENT, MSG_SEC_SENDRESPONSEFAILED_SUS, sender->comp_name, sender->comp_id, sender->comp_host));
       i = -1;
       goto error;
    }
@@ -2748,7 +2748,7 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
          ** someone wants to announce to master
          */
          if (sec_respond_announce(cl_handle, sender, buffer,buflen,response_id )) {
-            ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SIS, sender->comp_name, sender->comp_id, sender->comp_host));
+            ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SUS, sender->comp_name, sender->comp_id, sender->comp_host));
             i = -1;
             goto error;
          }
@@ -3504,7 +3504,7 @@ static int sec_set_secdata(const cl_com_endpoint_t *sender)
    element = lFindFirst(sec_conn_list, where);
    where = lFreeWhere(where);
    if (!element) {
-      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI, sender->comp_host, sender->comp_name, sender->comp_id));
+      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSU, sender->comp_host, sender->comp_name, sender->comp_id));
       DEXIT;
       return -1;
    } 

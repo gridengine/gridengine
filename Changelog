@@ -1,3 +1,6 @@
+SG-2004-03-03-5: Bugfix:    fixed error message for wrong security mode string.
+                 Changed:   all
+
 SG-2004-03-03-4: Bugfix:    fixed several bugs in the qstat -xml output. The
                             update for the XML schema file is still pending.
                  Changed:   qstat

@@ -413,6 +413,7 @@ SetSpoolingOptions()
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
+         $INFOTEXT -log "\nUnknown spooling method. Exit."
          exit 1
          ;;
    esac
@@ -909,6 +910,15 @@ StartQmaster()
    $INFOTEXT -u "\nGrid Engine qmaster and scheduler startup"
    $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
    $SGE_STARTUP_FILE -qmaster
+   CheckRunningDaemon
+   run=$?
+   if [ $run -ne 0 ]; then
+      $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \
+                "configuration! Installation failed!"
+      $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
+                     "autoinstall configuration file! Installation failed!"
+      exit 1
+   fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
@@ -1091,7 +1101,7 @@ GetQmasterPort()
                    "   \$SGE_QMASTER_PORT=%s\n\n" \
                      "as port for communication.\n\n" $SGE_QMASTER_PORT
                       export SGE_QMASTER_PORT
-                      $INFOTEXT -log "Using port >%s<." $SGE_QMASTER_PORT
+                      $INFOTEXT -log "Using SGE_QMASTER_PORT >%s<." $SGE_QMASTER_PORT
          if [ $ret = 0 ]; then
             $INFOTEXT "This overrides the preset TCP/IP service >sge_qmaster<.\n"
          fi

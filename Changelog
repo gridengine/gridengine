@@ -1,3 +1,14 @@
+MD-2004-04-06-0: Bugfix:    - Improper variable comparison
+                            - autoinstall does not work
+                            - changed logfile dir
+                            - startup scripts on aix
+                            - nr of slots for host during execd inst
+                            - changed usage
+                            - typo, log text
+                 Issue:     629, 847, 897, 934, 937, 947
+                 Changed    inst_sge, install_modules, create_settings.sh
+                            rc_templates
+
 SG-2004-04-06-2: Bugfix:    Finished the implementation for consumables
                             as queue load_thresholds. It is working for
                             parallel jobs now. (SG-2004-03-31-0)

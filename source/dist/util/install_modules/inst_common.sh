@@ -188,6 +188,7 @@ ExecuteAsAdmin()
       Translate 1 "Probably a permission problem. Please check file access permissions."
       Translate 1 "Check read/write permission. Check if SGE daemons are running."
       $ECHO >&2
+      $INFOTEXT -log "Command failed: %s" $*
       exit 1
    fi
    return 0
@@ -343,12 +344,12 @@ ErrUsage()
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \
              "                     (A templete can be found in:\n" \
-             "                     util/install_modules/inst_sgeee_template.conf)\n" \
+             "                     util/install_modules/inst_template.conf)\n" \
              "   inst_sge -ux -host hostname\n" \
              "                     Uninstalls execd on given executionhost\n" \
              "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
              "   inst_sge -sm      Install a Shadow Master Host on local host" $myname 
-
+   $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
    exit 1
 }
 
@@ -526,6 +527,17 @@ CheckForLocalHostResolving()
       $INFOTEXT "\nThe current hostname is resolved as follows:\n\n"
       $SGE_UTILBIN/gethostname
       $INFOTEXT -wait -auto $AUTO -n \
+                "\nIt is not supported for a Grid Engine installation that the local hostname\n" \
+                "contains the hostname \"localhost\" and/or the IP address \"127.0.x.x\" of the\n" \
+                "loopback interface.\n" \
+                "The \"localhost\" hostname should be reserved for the loopback interface\n" \
+                "(\"127.0.0.1\") and the real hostname should be assigned to one of the\n" \
+                "physical or logical network interfaces of this machine.\n\n" \
+                "Installation failed.\n\n" \
+                "Press <RETURN> to exit the installation procedure >> "
+      $INFOTEXT -log "\nThe current hostname is resolved as follows:\n\n"
+      $SGE_UTILBIN/gethostname
+      $INFOTEXT -log -wait -auto $AUTO -n \
                 "\nIt is not supported for a Grid Engine installation that the local hostname\n" \
                 "contains the hostname \"localhost\" and/or the IP address \"127.0.x.x\" of the\n" \
                 "loopback interface.\n" \
@@ -915,14 +927,18 @@ AddSGEStartUpScript()
       grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
       status=$?
       if [ $status != 0 ]; then
+         cat $RC_FILE | sed -e "s/exit 0//g" > $RC_FILE.new.1 2>/dev/null
+         cp $RC_FILE $RC_FILE.save_sge
+         cp $RC_FILE.new.1 $RC_FILE
          $INFOTEXT "Adding application startup to %s" $RC_FILE
          # Add the procedure
          #------------------
          $ECHO "" >> $RC_FILE
-         $ECHO "" >> $RC_FILE
          $ECHO "# Grid Engine start up" >> $RC_FILE
          $ECHO "#-$LINE---------" >> $RC_FILE
          $ECHO $SGE_STARTUP_FILE >> $RC_FILE
+         $ECHO "exit 0" >> $RC_FILE
+         rm $RC_FILE.new.1
       else
          $INFOTEXT "Found a call of %s in %s. Replacing with new call.\n" \
                    "Your old file %s is saved as %s" $STARTUP_FILE_NAME $RC_FILE $RC_FILE $RC_FILE.org.1
@@ -979,9 +995,9 @@ AddDefaultOperator()
 MoveLog()
 {
    if [ $EXECD = "uninstall" ]; then
-      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/common/uninstall$DATE.log 2>&1
+      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/spool/uninstall_`hostname`_$DATE.log 2>&1
    else
-      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/common/install$DATE.log 2>&1
+      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/spool/install_`hostname`_$DATE.log 2>&1
    fi
 
    rm /tmp/$LOGNAME 2>&1
@@ -1000,3 +1016,39 @@ else
 fi
 }
 
+
+#-------------------------------------------------------------------------
+# CheckRunningDaemon
+#
+CheckRunningDaemon()
+{
+   daemon_name=$1
+
+   case $daemon_name in
+
+      sge_qmaster )
+       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/qmaster.pid`
+       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       return $?      
+      ;;
+
+      sge_schedd )
+       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/schedd/schedd.pid`
+       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       return $?
+      ;;
+
+      sge_execd )
+       h=`hostname`
+       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/$h/execd.pid`
+       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
+       return $?      
+      ;;
+
+      sge_shadowd )
+
+      ;;
+   esac
+
+
+}

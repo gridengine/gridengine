@@ -99,9 +99,12 @@ CheckQmasterInstallation()
    if [ ! -f $COMMONDIR/act_qmaster -o ! -f $COMMONDIR/bootstrap ]; then
       $INFOTEXT "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
                   "on the machine which shall run the Grid Engine qmaster\n"
+      $INFOTEXT -log "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
+                  "on the machine which shall run the Grid Engine qmaster\n"
       exit 1
    else
       $INFOTEXT "\nUsing cell: >%s<\n" $SGE_CELL_VAL
+      $INFOTEXT -log "\nUsing cell: >%s<\n" $SGE_CELL_VAL
    fi
 
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
@@ -121,11 +124,17 @@ CheckQmasterInstallation()
       if [ "$user" = default ]; then
          $INFOTEXT "The admin user >%s< is different than the default user >root<\n" \
                    "in the global cluster configuration.\n" $ADMINUSER
+         $INFOTEXT -log "The admin user >%s< is different than the default user >root<\n" \
+                   "in the global cluster configuration.\n" $ADMINUSER
+
       else
          $INFOTEXT "The admin user >%s< doesn't match the admin username >%s<\n" \
                    "in the global cluster configuration.\n" $ADMINUSER $user
+         $INFOTEXT -log "The admin user >%s< doesn't match the admin username >%s<\n" \
+                   "in the global cluster configuration.\n" $ADMINUSER $user
       fi
       $INFOTEXT "Installation failed. Exit."
+      $INFOTEXT -log "Installation failed. Exit."
       exit 1
    fi
 }
@@ -144,13 +153,6 @@ CheckCellDirectory()
       check_cell_error=1
    fi
 
-#   if [ ! -f $COMMONDIR/configuration ]; then
-#      if [ $check_cell_error = 0 ]; then
-#         error_text=2
-#      fi
-#      check_cell_error=1
-#   fi
-
    if [ ! -f $COMMONDIR/act_qmaster ]; then
       if [ $check_cell_error = 0 ]; then
          error_text=3
@@ -164,14 +166,17 @@ CheckCellDirectory()
 
       if [ $error_text = 1 ]; then
          $INFOTEXT ">common directory not found: %s<\n" $COMMONDIR
+         $INFOTEXT -log ">common directory not found: %s<\n" $COMMONDIR
       fi
 
       if [ $error_text = 2 ]; then
          $INFOTEXT ">configuration file not found: %s<\n" $COMMONDIR/configuration
+         $INFOTEXT -log ">configuration file not found: %s<\n" $COMMONDIR/configuration
       fi
 
       if [ $error_text = 3 ]; then
          $INFOTEXT ">%s file not found: %s<\n" act_qmaster $COMMONDIR/act_qmaster
+         $INFOTEXT -log ">%s file not found: %s<\n" act_qmaster $COMMONDIR/act_qmaster
       fi
 
       $INFOTEXT "\nPlease make sure that you have installed the qmaster host before\n" \
@@ -244,10 +249,17 @@ CheckHostNameResolving()
                      "The error message was:\n\n" \
                      "   %s\n\n" \
                      "$SGE_BIN/qconf -sh" "$errmsg"
+         $INFOTEXT -log "\nCannot contact qmaster. The command failed:\n\n" \
+                     "   %s\n\n" \
+                     "The error message was:\n\n" \
+                     "   %s\n\n" \
+                     "$SGE_BIN/qconf -sh" "$errmsg"
+
          $INFOTEXT "You can fix the problem now or abort the installation procedure.\n"
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Contact qmaster again (y/n) ('n' will abort) [y] >> " 
          if [ $? != 0 ]; then
             $INFOTEXT "Installation failed"
+            $INFOTEXT -log "Installation failed"
             exit 1
          fi
       else
@@ -309,7 +321,7 @@ CheckHostNameResolving()
                         $myrealname $myaname $default_domain $ignore_fqdn $myname
 
             if [ $AUTO = true ]; then
-               $INFOTEXT "Installation failed"
+               $INFOTEXT -log "Installation failed!\nThis hostname is not known at qmaster as an administrative host."
                exit 1
             fi
            
@@ -351,12 +363,15 @@ AddLocalConfiguration_With_Qconf()
    rm -f $TMPL
    if [ -f $TMPL ]; then
       $INFOTEXT "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
+      $INFOTEXT -log "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
    else
       $INFOTEXT "\nCreating local configuration for host >%s<" $HOST
+      $INFOTEXT -log "\nCreating local configuration for host >%s<" $HOST
       PrintLocalConf 0 > /tmp/$HOST
       ExecuteAsAdmin $SGE_BIN/qconf -Aconf /tmp/$HOST
       rm -f /tmp/$HOST
       $INFOTEXT "Local configuration for host >%s< created." $HOST
+      $INFOTEXT -log "Local configuration for host >%s< created." $HOST
    fi
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
 }
@@ -426,8 +441,9 @@ GetLocalExecdSpoolDir()
    fi
 
    if [ $AUTO = "true" ]; then
-      if [ $EXECD_SPOOL_DIR_LOCAL != "" ]; then
+      if [ "$EXECD_SPOOL_DIR_LOCAL" != "" ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
+         $INFOTEXT -log "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
       fi
    fi
 }

@@ -85,9 +85,9 @@ else
 fi
 
 
-   echo "setenv QMASTER_SPOOL_DIR $QMDIR"                            >> $SP_CSH
+#   echo "setenv QMASTER_SPOOL_DIR $QMDIR"                            >> $SP_CSH
 
-   echo "setenv EXECD_SPOOL_DIR $CFG_EXE_SPOOL"                      >> $SP_CSH
+#   echo "setenv EXECD_SPOOL_DIR $CFG_EXE_SPOOL"                      >> $SP_CSH
 
 
 echo ""                                                          >> $SP_CSH
@@ -131,9 +131,9 @@ else
 fi
 
 
-   echo "QMASTER_SPOOL_DIR=$QMDIR; export QMASTER_SPOOL_DIR"           >> $SP_SH
+#   echo "QMASTER_SPOOL_DIR=$QMDIR; export QMASTER_SPOOL_DIR"           >> $SP_SH
 
-   echo "EXECD_SPOOL_DIR=$CFG_EXE_SPOOL; export EXECD_SPOOL_DIR"       >> $SP_SH
+#   echo "EXECD_SPOOL_DIR=$CFG_EXE_SPOOL; export EXECD_SPOOL_DIR"       >> $SP_SH
 
 
 echo ""                                                          >> $SP_SH

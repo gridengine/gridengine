@@ -88,8 +88,6 @@ SGE_EXECD_PORT=GENSGE_EXECD_PORT; export SGE_EXECD_PORT
 
 unset CODINE_ROOT GRD_ROOT COD_CELL GRD_CELL
 
-. $SGE_ROOT/$SGE_CELL/common/settings.sh
-
 shlib_path_name=`$SGE_ROOT/util/arch -lib`
 old_value=`eval echo '$'$shlib_path_name`
 if [ x$old_value = x ]; then
@@ -187,6 +185,19 @@ GetPathToUtilbin()
 
 
 #---------------------------------------------------------------------------
+# GetExecdSpoolDir
+# get the execution daemon spooling dir from configuration
+GetExecdSpoolDir()
+{
+   EXECD_SPOOL_DIR=`$bin_dir/qconf -sconf $UQHOST | grep execd_spool_dir | awk '{ print $2 }'`
+   if [ "$EXECD_SPOOL_DIR" = "" ]; then
+      EXECD_SPOOL_DIR=`$bin_dir/qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   fi
+
+
+}
+
+#---------------------------------------------------------------------------
 usage()
 {
    echo "Grid Engine start/stop script. Valid parameters are:"
@@ -259,6 +270,7 @@ if [ "$startup" = true ]; then
 else
    if [ $execd = true ]; then
       # Shutdown execution daemon
+      GetExecdSpoolDir
       execd_spool_dir=$EXECD_SPOOL_DIR/$UQHOST
 
       # Send SIGTERM to execd

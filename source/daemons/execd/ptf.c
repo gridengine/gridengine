@@ -46,7 +46,6 @@
 #include "sge_log.h"
 #include "sge_switch_user.h"
 #include "sge.h"
-#include "job.h"
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sge_conf.h"

@@ -85,7 +85,6 @@
 #include "sge_messageL.h"
 #include "sge_rangeL.h"
 #include "sge_identL.h"
-#include "job.h"
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
@@ -644,10 +643,10 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EDISK;
    }
 
-   if (!is_array(jep)) {
+   if (!job_is_array(jep)) {
       DPRINTF(("Added Job "u32"\n", lGetUlong(jep, JB_job_number)));
    } else {
-      job_get_ja_task_ids(jep, &start, &end, &step);
+      job_get_submit_task_ids(jep, &start, &end, &step);
       DPRINTF(("Added JobArray "u32"."u32"-"u32":"u32"\n", 
                 lGetUlong(jep, JB_job_number), start, end, step));
    }
@@ -716,7 +715,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
       }
    }
-   if (!is_array(jep)) {
+   if (!job_is_array(jep)) {
       sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
             u32c(lGetUlong(jep, JB_job_number)), 
             lGetString(jep, JB_job_name), str);
@@ -1281,7 +1280,7 @@ char *commproc
    mail_options = lGetUlong(j, JB_mail_options);
    
    if (VALID(MAIL_AT_ABORT, mail_options) && !(lGetUlong(t, JAT_state) & JDELETED)) {
-      if (is_array(j)) {
+      if (job_is_array(j)) {
          sprintf(sge_mail_subj, MSG_MAIL_TASKKILLEDSUBJ_UUS, 
                   u32c(job_number), u32c(task_number), job_name);
          sprintf(sge_mail_body, MSG_MAIL_TASKKILLEDBODY_UUSSS, 
@@ -1328,7 +1327,7 @@ char *commproc
    else {
       if (qep && sge_signal_queue(SGE_SIGKILL, qep, j, t)) {
          if (force) {
-            if (is_array(j)) {
+            if (job_is_array(j)) {
                ERROR((SGE_EVENT, MSG_JOB_FORCEDDELTASK_SUU, 
                         ruser, u32c(job_number), u32c(task_number)));
             } else {
@@ -1348,7 +1347,7 @@ char *commproc
       }
       else {
          if (force) {
-            if (is_array(j)) {
+            if (job_is_array(j)) {
                ERROR((SGE_EVENT, MSG_JOB_FORCEDDELTASK_SUU, 
                         ruser, u32c(job_number), u32c(task_number)));
             } else {
@@ -1372,7 +1371,7 @@ char *commproc
             **    deleted from master lists
             */
 
-            if (is_array(j)) 
+            if (job_is_array(j)) 
                INFO((SGE_EVENT, MSG_JOB_REGDELTASK_SUU, 
                         ruser, u32c(job_number), u32c(task_number)));
             else
@@ -1894,7 +1893,7 @@ int *trigger
    if ((pos=lGetPosViaElem(jep, JB_ja_tasks))>=0) {
       lList *ja_task_list = lGetPosList(jep, pos);
       lListElem *ja_task = lFirst(ja_task_list);
-      int new_job_is_array = is_array(new_job);
+      int new_job_is_array = job_is_array(new_job);
       u_long32 jep_ja_task_number = lGetNumberOfElem(ja_task_list);
    
       /* 
@@ -1957,7 +1956,7 @@ int *trigger
 
                      mod_task_attributes(new_job, dst_ja_task, ja_task, 
                                          alpp, ruser, rhost, trigger, 
-                                         is_array(new_job), 0);
+                                         job_is_array(new_job), 0);
                   }
                }
                range_list = lFreeList(range_list);
@@ -1968,7 +1967,7 @@ int *trigger
             for_each (dst_ja_task, lGetList(new_job, JB_ja_tasks)) {
                mod_task_attributes(new_job, dst_ja_task, ja_task, alpp,
                                    ruser, rhost, trigger, 
-                                   is_array(new_job), 1);
+                                   job_is_array(new_job), 1);
             }
          } else {
             for_each (ja_task, ja_task_list) {
@@ -1988,7 +1987,7 @@ int *trigger
                   }
                   mod_task_attributes(new_job, dst_ja_task, ja_task, alpp,
                                       ruser, rhost, trigger, 
-                                      is_array(new_job), is_enrolled);
+                                      job_is_array(new_job), is_enrolled);
                } else {
                   ; /* Ignore silently */
                }
@@ -3094,7 +3093,7 @@ sge_gdi_request *request
       u_long32 start, end, step;
       lList *jat_list = NULL;
 
-      job_get_ja_task_ids(new_jep, &start, &end, &step);
+      job_get_submit_task_ids(new_jep, &start, &end, &step);
       for (; start<=end; start+=step) {
          lAddElemUlong(&jat_list, JAT_task_number, start, JAT_Type);
       }

@@ -75,7 +75,6 @@
 #include "qmon_matrix.h"
 #include "sge_range.h"
 #include "parse.h"
-#include "job.h"
 #include "sge_string_append.h"
 #include "sge_schedd_text.h"
 #include "sgeee.h"
@@ -1075,7 +1074,7 @@ lDescr *dp;
                                     atol(lGetString(idp, ID_str)), dp);
                            lSetList(jep, JB_ja_structure, 
                                  lCopyList("", lGetList(idp, ID_ja_structure)));
-                           job_get_ja_task_ids(jep, &start, &end, &step); 
+                           job_get_submit_task_ids(jep, &start, &end, &step); 
                            for_each(ip, lGetList(idp, ID_ja_structure)) {
                               start = lGetUlong(ip, RN_min);
                               end = lGetUlong(ip, RN_max);
@@ -1238,7 +1237,7 @@ XtPointer cld, cad;
          new_hold = job_get_ja_task_hold_state(job, selected_ja_task_id);
       }
 
-      if (lGetNumberOfElem(jl) == 1 && is_array(job)) {
+      if (lGetNumberOfElem(jl) == 1 && job_is_array(job)) {
          get_taskrange_str(lGetList(selected_job, JB_ja_tasks), &dyn_tasks);
          sge_string_append(&dyn_oldtasks, dyn_tasks.s);
       }

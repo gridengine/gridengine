@@ -42,7 +42,6 @@
 #include "sge_eventL.h"
 #include "sge_job_reportL.h"
 #include "sge_job_refL.h"
-#include "job.h"
 #include "sge_job.h"
 #include "sge_queue_qmaster.h"
 #include "sge_pe_qmaster.h"

@@ -41,9 +41,9 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_job_schedd.h"
-#include "job.h"
 #include "sge_schedd.h"
 #include "sge_spoolmsg.h"
+#include "sge_job_jatask.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define ARCH_COLUMN ":%s"
@@ -225,7 +225,7 @@ char *category_str
           lGetString(jep, JB_department) ? lGetString(jep, JB_department) : "none",
           (s = lGetString(jatp, JAT_granted_pe)) ? s : "none",
           sge_granted_slots(lGetList(jatp, JAT_granted_destin_identifier_list)),
-          is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0,
+          job_is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0,
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_CPU_ACCT, ep, 0),
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_MEM_ACCT, ep, 0),
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IO_ACCT, ep, 0),

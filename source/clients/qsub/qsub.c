@@ -53,7 +53,6 @@
 #include "sge_copy_append.h"
 #include "sge_arch.h"
 #include "sge_afsutil.h"
-#include "job.h"
 #include "setup_path.h"
 #include "qm_name.h"
 

@@ -65,7 +65,7 @@
 #include "msg_common.h"
 #include "jb_now.h"
 #include "sge_range.h"
-#include "job.h"
+#include "sge_job_jatask.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -202,7 +202,7 @@ lListElem **pjob
          range_list = lGetList(ep, SPA_argval_lListT);
          lSetList(*pjob, JB_ja_structure, lCopyList("range list", range_list)); 
       } else {
-         job_set_ja_task_ids(*pjob, 1, 1, 1);
+         job_set_submit_task_ids(*pjob, 1, 1, 1);
          range_list = lGetList(*pjob, JB_ja_structure);
       }
       n_h_list = lCopyList("range list", range_list);

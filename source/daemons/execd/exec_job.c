@@ -84,7 +84,6 @@
 #include "pdc.h"
 #include "sge_afsutil.h"
 #include "sge_switch_user.h"
-#include "job.h"
 #include "sge_prognames.h"
 #include "setup_path.h"
 #include "qm_name.h"
@@ -952,21 +951,21 @@ char *err_str
    add_or_replace_env_u32(environmentList, "JOB_ID", lGetUlong(job_jep, JB_job_number));
   
    if (set_sge_environment) { 
-      if (is_array(job_jep)) {
+      if (job_is_array(job_jep)) {
          add_or_replace_env_u32(environmentList, "SGE_TASK_ID", lGetUlong(jatep, JAT_task_number));
       } else {
          add_or_replace_env(environmentList, "SGE_TASK_ID", "undefined");
       }
    }
    if (set_cod_environment) { 
-      if (is_array(job_jep)) {
+      if (job_is_array(job_jep)) {
          add_or_replace_env_u32(environmentList, "COD_TASK_ID", lGetUlong(jatep, JAT_task_number));
       } else {
          add_or_replace_env(environmentList, "COD_TASK_ID", "undefined");
       }
    }
    if (set_grd_environment) { 
-      if (is_array(job_jep)) {
+      if (job_is_array(job_jep)) {
          add_or_replace_env_u32(environmentList, "GRD_TASK_ID", lGetUlong(jatep, JAT_task_number));
       } else {
          add_or_replace_env(environmentList, "GRD_TASK_ID", "undefined");
@@ -1041,7 +1040,7 @@ char *err_str
                 lGetString(job_jep, JB_owner),
                 lGetString(job_jep, JB_job_name), 
                 lGetUlong(job_jep, JB_job_number), 
-                is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
                 SGE_SHELL, shell_path);
 
    if (!shell_path[0])
@@ -1177,13 +1176,13 @@ char *err_str
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 lGetUlong(jep, JB_job_number),
-                is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
                 SGE_STDOUT, stdout_path);
    sge_get_path(lGetList(jep, JB_stderr_path_list), cwd,
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 lGetUlong(jep, JB_job_number), 
-                is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
                 SGE_STDERR, stderr_path);
 
    fprintf(fp, "stdout_path=%s\n", stdout_path);
@@ -1279,7 +1278,7 @@ char *err_str
                    lGetString(jep, JB_owner), 
                    lGetString(jep, JB_job_name), 
                    lGetUlong(jep, JB_job_number), 
-                   is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                   job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
                    SGE_PAR_STDOUT, pe_stdout_path);
       fprintf(fp, "pe_stdout_path=%s\n", pe_stdout_path);
 
@@ -1288,7 +1287,7 @@ char *err_str
                    lGetString(jep, JB_owner), 
                    lGetString(jep, JB_job_name), 
                    lGetUlong(jep, JB_job_number), 
-                   is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
+                   job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
                    SGE_PAR_STDERR, pe_stderr_path);
       fprintf(fp, "pe_stderr_path=%s\n", pe_stderr_path);
    }
@@ -1320,7 +1319,7 @@ char *err_str
    fprintf(fp, "\n");
    fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
    fprintf(fp, "job_id="u32"\n", lGetUlong(jep, JB_job_number));
-   fprintf(fp, "ja_task_id="u32"\n", is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0);
+   fprintf(fp, "ja_task_id="u32"\n", job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0);
    fprintf(fp, "account=%s\n", (lGetString(job_jep, JB_account) ? lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
    fprintf(fp, "submission_time=" u32 "\n", lGetUlong(job_jep, JB_submission_time));
 
@@ -1617,7 +1616,7 @@ char *err_str
    mail_options = lGetUlong(jep, JB_mail_options);
    strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
    if (VALID(MAIL_AT_BEGINNING, mail_options)) {
-      if (is_array(jep)) {
+      if (job_is_array(jep)) {
          sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(lGetUlong(jep, JB_job_number)),
                  u32c(lGetUlong(jatep, JAT_task_number)), lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,

@@ -91,13 +91,13 @@
 #include "sge_copy_append.h"
 #include "sge_arch.h"
 #include "sge_range.h"
-#include "job.h"
 #include "path_aliases.h"
 #include "jb_now.h"
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_stat.h" 
 #include "sge_security.h" 
+#include "sge_job_jatask.h"
 
 extern char **environ;
 
@@ -1702,7 +1702,7 @@ char *prefix
    else
       data->job_script = NULL;
 
-   if (is_array(jep))
+   if (job_is_array(jep))
       get_taskrange_str(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
    if (dyn_job_tasks.s && (dyn_job_tasks.s)[0] != '\0')
       data->job_tasks = XtNewString(dyn_job_tasks.s);
@@ -1813,7 +1813,7 @@ char *prefix
       data->cwd = 0;
       
 #if FIXME
-   if (is_array(jep)) {
+   if (job_is_array(jep)) {
       data->task_range = lCopyList("JB_ja_structure", 
                                  lGetList(jep, JB_ja_structure));
    }
@@ -2073,7 +2073,7 @@ int save
          lList *ja_tasks = lGetList(jep, JB_ja_tasks);
 
          if (ja_tasks) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                if (data->task_range) {
                   lListElem *range;
                   u_long32 start, end, step;

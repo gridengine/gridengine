@@ -71,7 +71,6 @@
 #include "job_exit.h" 
 #include "sge_give_jobs.h"
 #include "read_write_job.h"
-#include "job.h"
 #include "sge_host_qmaster.h"
 #include "sge_host.h"
 #include "sge_pe_qmaster.h"

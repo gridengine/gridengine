@@ -57,10 +57,9 @@
 #include "resolve_host.h"
 #include "path_aliases.h"
 #include "msg_common.h"
-#include "job.h"
 #include "sge_rangeL.h"
 #include "sge_job_refL.h"
-
+#include "sge_job_jatask.h"
 #include "jb_now.h"
 
 /*
@@ -274,7 +273,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    lList *range_list;
    lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
 
-   job_set_ja_task_ids(*pjob, 1, 1, 1);
+   job_set_submit_task_ids(*pjob, 1, 1, 1);
    range_list = lGetList(*pjob, JB_ja_structure);
 
    n_h_list = lCopyList("range list", range_list);

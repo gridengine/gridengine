@@ -1,3 +1,7 @@
+EB-2002-02-18-1: Cleanup:   Integarte common/job.c functions into 
+                            libs/gdi/sge_job_jatask.c
+                 Issue:     #142
+
 SD-2002-02-18-2: Bugfix:    - Set resource limits after setting the OS
                               job id in builtin_starter.c so that job
                               resource limits will work on the SX-6.

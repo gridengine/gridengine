@@ -44,7 +44,6 @@ QHOST_ADD_SRC = \
                show_job.c \
                sge_conf.c \
                sig_handlers.c \
-               job.c \
                usage.c sge_options.c
 
 QHOST_OBJS = $(QHOST_SRC:.c=.o)

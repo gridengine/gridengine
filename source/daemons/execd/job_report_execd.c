@@ -45,7 +45,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "job.h"
 #include "msg_execd.h"
 #include "sge_job_jatask.h"
 

@@ -42,7 +42,6 @@ QACCT_ADD_SRC = \
             sge_rusage.c \
             sge_complex.c \
             complex_history.c \
-            job.c \
             read_object.c \
             read_write_host.c \
             read_write_queue.c \

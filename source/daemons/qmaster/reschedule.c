@@ -44,7 +44,6 @@
 #include "sge_host_qmaster.h"
 #include "sge_parse_num_par.h"
 #include "execution_states.h"
-#include "job.h"
 #include "mail.h"
 #include "time_event.h"
 #include "symbols.h"
@@ -56,6 +55,7 @@
 #include "msg_qmaster.h"
 #include "sge_conf.h"
 #include "sge_string.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -324,7 +324,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
 
       task_number = lGetUlong(this_jatep, JAT_task_number);
 
-      if (is_array(jep)) {
+      if (job_is_array(jep)) {
          sprintf(mail_ids, U32CFormat"."U32CFormat,
             u32c(job_number), u32c(task_number));
          sprintf(mail_type, MSG_RU_TYPEJOBARRAY);

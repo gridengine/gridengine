@@ -59,7 +59,6 @@
 #include "read_write_job.h"
 #include "sge_me.h"
 #include "sge_time.h"
-#include "job.h"
 #include "time_event.h"
 #include "reschedule.h"
 #include "msg_daemons_common.h"

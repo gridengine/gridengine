@@ -42,7 +42,6 @@
 #include "sge_range.h"
 #include "msg_gdilib.h"
 #include "sge_hash.h"
-#include "job.h"
 #include "read_write_job.h"
 
 /****** gdi/job_jatask/job_get_ja_task_template_pending() **********************
@@ -440,6 +439,7 @@ int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number)
 *     gdi/job_jatask/job_get_ja_tasks() 
 *     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*     gdi/job_jatask/job_get_submit_ja_tasks() 
 *******************************************************************************/
 u_long32 job_get_ja_tasks(const lListElem *job) 
 {  
@@ -473,6 +473,7 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 *     gdi/job_jatask/job_get_ja_tasks() 
 *     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*     gdi/job_jatask/job_get_submit_ja_tasks() 
 *******************************************************************************/
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
 {
@@ -511,10 +512,41 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
 *     gdi/job_jatask/job_get_ja_tasks() 
 *     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
 *     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*     gdi/job_jatask/job_get_submit_ja_tasks() 
 *******************************************************************************/
 u_long32 job_get_enrolled_ja_tasks(const lListElem *job) 
 {
    return lGetNumberOfElem(lGetList(job, JB_ja_tasks));
+}
+
+/****** gdi/job_jatask/job_get_submit_ja_tasks() ******************************
+*  NAME
+*     job_get_submit_ja_tasks() -- returns array size during job submittion 
+*
+*  SYNOPSIS
+*     u_long32 job_get_submit_ja_tasks(const lListElem *job) 
+*
+*  FUNCTION
+*     The function returns the ammount of tasks the job had during
+*     it's submittion 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type 
+*
+*  RESULT
+*     u_long32 - number of tasks
+*  SEE ALSO
+*     gdi/job_jatask/job_get_ja_tasks() 
+*     gdi/job_jatask/job_get_enrolled_ja_tasks_ja_tasks() 
+*     gdi/job_jatask/job_get_not_enrolled_ja_tasks() 
+*     gdi/job_jatask/job_get_submit_ja_tasks() 
+******************************************************************************/
+u_long32 job_get_submit_ja_tasks(const lListElem *job)
+{
+   u_long32 start, end, step;
+ 
+   job_get_submit_task_ids(job, &start, &end, &step);
+   return ((end - start) / step + 1); 
 }
  
 /****** gdi/job_jatask/job_enroll() ********************************************
@@ -966,26 +998,143 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 
    DEXIT;
    return 0;
-}    
+}     
+
+/****** gdi/job_jatask/job_is_array() *****************************************
+*  NAME
+*     job_is_array() -- Is "job" an array job or not? 
+*
+*  SYNOPSIS
+*     int job_is_array(const lListElem *job) 
+*
+*  FUNCTION
+*     The function returns true (1) if "job" is an array job with more than
+*     one task. 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*
+*  RESULT
+*     int - 1 -> array job
+*           0 -> non array job
+******************************************************************************/
+int job_is_array(const lListElem *job)
+{
+   u_long32 start, end, step;
+
+   job_get_submit_task_ids(job, &start, &end, &step);
+   return (start != 1 || end != 1 || step != 1);
+}   
+
+/****** gdi/job_jatask/job_get_submit_task_ids() ******************************
+*  NAME
+*     job_get_submit_task_ids() -- Return submit time task specification 
+*
+*  SYNOPSIS
+*     void job_get_submit_task_ids(const lListElem *job, u_long32 *start, 
+*                                  u_long32 *end, u_long32 *step) 
+*
+*  FUNCTION
+*     The function returns the "start", "end" and "step" numbers 
+*     which where used to create "job" (qsub -t <range>).
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     u_long32 *start      - first id 
+*     u_long32 *end        - last id 
+*     u_long32 *step       - step size (>=1)
+******************************************************************************/
+void job_get_submit_task_ids(const lListElem *job, u_long32 *start, 
+                             u_long32 *end, u_long32 *step)
+{
+   lListElem *range_elem = NULL; /* RN_Type */
+ 
+   range_elem = lFirst(lGetList(job, JB_ja_structure));
+   if (range_elem) {
+      u_long32 tmp_step;
+ 
+      *start = lGetUlong(range_elem, RN_min);
+      *end = lGetUlong(range_elem, RN_max);
+      tmp_step = lGetUlong(range_elem, RN_step);
+      *step = tmp_step ? tmp_step : 1;
+   } else {
+      *start = *end = *step = 1;
+   }
+}      
+
+/****** gdi/job_jatask/job_set_submit_task_ids() ******************************
+*  NAME
+*     job_set_submit_task_ids() -- store the initial range ids in "job"
+*
+*  SYNOPSIS
+*     int job_set_submit_task_ids(lListElem *job, u_long32 start, 
+*                                 u_long32 end, u_long32 step) 
+*
+*  FUNCTION
+*     The function stores the initial range id values ("start", "end" and
+*     "step") in "job". It should only be used in functions initializing
+*     new jobs.
+*
+*  INPUTS
+*     lListElem *job - JB_Type job 
+*     u_long32 start - first id 
+*     u_long32 end   - last id 
+*     u_long32 step  - step size 
+*
+*  RESULT
+*     int - 0 -> OK
+*           1 -> no memory
+******************************************************************************/
+int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
+                            u_long32 step)
+{
+   lListElem *range_elem;  /* RN_Type */
+   int ret = 0;
+ 
+   range_elem = lFirst(lGetList(job, JB_ja_structure));
+   if (range_elem == NULL) {
+      lList *range_list;
+ 
+      range_elem = lCreateElem(RN_Type);
+      range_list = lCreateList("task id range", RN_Type);
+      if (range_elem == NULL || range_list == NULL) {
+         range_elem = lFreeElem(range_elem);
+         range_list = lFreeList(range_list);
+
+         /* No memory */
+         ret = 1;
+      } else {
+         lAppendElem(range_list, range_elem);
+         lSetList(job, JB_ja_structure, range_list);
+      }
+   }
+   if (range_elem != NULL) {
+      lSetUlong(range_elem, RN_min, start);
+      lSetUlong(range_elem, RN_max, end);
+      lSetUlong(range_elem, RN_step, step);
+   }
+
+   return ret;
+}          
 
 /****** gdi/job_jatask/job_get_smallest_task_id() ******************************
 *  NAME
 *     job_get_smallest_task_id() -- return the smallest un/enrolled task id 
 *
 *  SYNOPSIS
-*     u_long32 job_get_smallest_task_id(lListElem *job) 
+*     u_long32 job_get_smallest_task_id(const lListElem *job) 
 *
 *  FUNCTION
 *     returns the smallest task id currently existing in a job independent
 *     whether it is enrolled or unenrolled
 *
 *  INPUTS
-*     lListElem *job - JB_Type element 
+*     const lListElem *job - JB_Type element 
 *
 *  RESULT
 *     u_long32 - task id
 *******************************************************************************/
-u_long32 job_get_smallest_task_id(lListElem *job)
+u_long32 job_get_smallest_task_id(const lListElem *job)
 {
    lListElem *first;
    u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
@@ -1011,19 +1160,19 @@ u_long32 job_get_smallest_task_id(lListElem *job)
 *     job_get_biggest_task_id() -- return the biggest un/enrolled task id 
 *
 *  SYNOPSIS
-*     u_long32 job_get_biggest_task_id(lListElem *job) 
+*     u_long32 job_get_biggest_task_id(const lListElem *job) 
 *
 *  FUNCTION
 *     returns the biggest task id currently existing in a job independent
 *     whether it is enrolled or unenrolled 
 *
 *  INPUTS
-*     lListElem *job - JB_Type element 
+*     const lListElem *job - JB_Type element 
 *
 *  RESULT
 *     u_long32 - task id
 *******************************************************************************/
-u_long32 job_get_biggest_task_id(lListElem *job)
+u_long32 job_get_biggest_task_id(const lListElem *job)
 {
    lListElem *last;
    u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
@@ -1043,4 +1192,3 @@ u_long32 job_get_biggest_task_id(lListElem *job)
    } 
    return ret;
 }
-

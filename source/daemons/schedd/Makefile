@@ -47,7 +47,6 @@ SCHEDD_SRC  = sge_schedd.c \
 SCHEDD_ADD_SRC = job_log.c \
              category.c \
              sge_complex.c \
-             job.c \
              parse_job_cull.c \
              parse_qsub.c \
              path_aliases.c \

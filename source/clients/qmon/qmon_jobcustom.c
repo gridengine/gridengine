@@ -71,7 +71,6 @@
 #include "parse_range.h"
 #include "sge_hash.h"
 #include "sge_range.h"
-#include "job.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
 #include "utility.h"
@@ -917,7 +916,7 @@ int nm
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
    sge_string_printf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
-   if (is_array(ep)) {
+   if (job_is_array(ep)) {
       StringBufferT dyn_buf2 = {NULL, 0};
 
       if (jat) {

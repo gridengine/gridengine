@@ -82,7 +82,6 @@
 #include "sge_qexec.h"
 #include "sge_string.h"
 #include "sge_switch_user.h"
-#include "job.h"
 #include "sge_arch.h"
 #include "sge_afsutil.h"
 #include "sge_peopen.h"
@@ -263,7 +262,7 @@ void sge_reap_children_execd()
 
          lSetUlong(tep ? lFirst(lGetList(tep, JB_ja_tasks)):jatep, JAT_status, JEXITING);
 
-         clean_up_job(jr, failed, exit_status, is_array(jep));
+         clean_up_job(jr, failed, exit_status, job_is_array(jep));
 
          flush_jr = 1; /* trigger direct sending of job reports */ 
 
@@ -1108,7 +1107,7 @@ int failed
 
    lSetUlong(jr, JR_state, JEXITING);
 
-   job_related_adminmail(jr, is_array(jep));
+   job_related_adminmail(jr, job_is_array(jep));
 
    DEXIT;
    return jr;
@@ -1363,7 +1362,7 @@ int npids
             jr = add_job_report(jobid, jataskid, NULL);
          }
          lSetUlong(jr, JR_state, JEXITING);
-         clean_up_job(jr, ESSTATE_NO_PID, 0, is_array(jep));  /* failed before execution */
+         clean_up_job(jr, ESSTATE_NO_PID, 0, job_is_array(jep));  /* failed before execution */
       }
       DEXIT;
       return;
@@ -1431,7 +1430,7 @@ int npids
       return;
    }
 
-   clean_up_job(jr, 0, 0, is_array(jep));  
+   clean_up_job(jr, 0, 0, job_is_array(jep));  
    lSetUlong(jr, JR_state, JEXITING);
    
    flush_jr = 1;  /* trigger direct sending of job reports */
@@ -1805,7 +1804,7 @@ lListElem *jr
       resource_descr(ru_utime, TYPE_TIM, utime);
       resource_descr(ru_stime, TYPE_TIM, stime);
       resource_descr(ru_wallclock, TYPE_TIM, wallclock);
-      if (is_array(jep)) {
+      if (job_is_array(jep)) {
          sprintf(sge_mail_subj, "Job-array task "u32"."u32" ("SFN") Complete", 
             jobid, taskid, lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, 
@@ -1891,7 +1890,7 @@ lListElem *jr
       else 
          task_text[0] = '\0';
       sprintf(exitstr, "%d", exit_status);
-      if (is_array(jep)) {
+      if (job_is_array(jep)) {
          sprintf(sge_mail_subj, "%sJob-array task "u32"."u32" ("SFN") %s", 
             task_text, jobid, taskid, lGetString(jep, JB_job_name), action);
          sprintf(sge_mail_body, 

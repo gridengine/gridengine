@@ -42,6 +42,8 @@ u_long32 job_get_ja_tasks(const lListElem *job);
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job);
 
 u_long32 job_get_enrolled_ja_tasks(const lListElem *job);
+
+u_long32 job_get_submit_ja_tasks(const lListElem *job);
  
 void job_enroll(lListElem *job, lList **answer_list, 
                 u_long32 task_number);  
@@ -97,8 +99,16 @@ const char *job_get_shell_start_mode(const lListElem *job,
                                      const lListElem *queue,
                                      const char *conf_shell_start_mode);
 
-u_long32 job_get_smallest_task_id(lListElem *job);
+int job_is_array(const lListElem *job); 
 
-u_long32 job_get_biggest_task_id(lListElem *job);
+void job_get_submit_task_ids(const lListElem *job, u_long32 *start, 
+                             u_long32 *end, u_long32 *step); 
+
+int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
+                            u_long32 step);
+
+u_long32 job_get_smallest_task_id(const lListElem *job);
+
+u_long32 job_get_biggest_task_id(const lListElem *job);
 
 #endif /* __SGE_JOB_JATASK_H */    

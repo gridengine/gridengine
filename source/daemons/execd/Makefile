@@ -62,7 +62,6 @@ EXECD_ADD_SRC =  usage.c \
               admin_mail.c \
               config_file.c \
               job_report.c \
-				  job.c \
               mail.c \
               path_aliases.c \
               read_object.c \

@@ -57,7 +57,6 @@ COMMON_SRC = sge_conf.c \
             sge_complex.c \
             complex_history.c \
             execution_states.c \
-            job.c \
             parse_job_cull.c \
             parse_qsub.c \
             path_aliases.c \
@@ -106,9 +105,6 @@ complex_history.o:	$(COMMON_DIR)/complex_history.c
    
 execution_states.o: $(COMMON_DIR)/execution_states.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/execution_states.c
-
-job.o      : $(COMMON_DIR)/job.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/job.c
 
 parse_job_cull.o    : $(COMMON_DIR)/parse_job_cull.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/parse_job_cull.c

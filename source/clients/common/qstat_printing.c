@@ -66,7 +66,6 @@
 #include "sge_string_append.h"
 #include "qstat_printing.h"
 #include "sge_range.h"
-#include "job.h"
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
 #include "sge_job_jatask.h"
@@ -1160,7 +1159,7 @@ char *indent
    else
       printf("        ");
 
-   if (dyn_task_str->s && is_array(job))
+   if (dyn_task_str->s && job_is_array(job))
       printf("%s", dyn_task_str->s); 
    else
       printf("       ");

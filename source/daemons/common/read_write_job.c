@@ -56,7 +56,6 @@
 #include "opt_silent.h"
 #include "sge_washing_machine.h"
 #include "sge_stat.h"
-#include "job.h"
 #include "msg_common.h"
 #include "sge_suser.h"
 #include "sge_conf.h"
@@ -277,7 +276,7 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    DENTER(TOP_LAYER, "job_write_spool_file");
 
    spool_single_task_files = (!handle_as_zombie && !within_execd && 
-      job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
+      job_get_submit_ja_tasks(job) > sge_get_ja_tasks_per_file());
    if (spool_single_task_files) {
       ret = job_write_common_part(job, ja_taskid, flags);
       if (!ret && !ignore_instances) {
@@ -440,7 +439,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    DENTER(TOP_LAYER, "job_remove_spool_file");
 
    spool_single_task_files = (!handle_as_zombie && !within_execd && 
-      job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
+      job_get_submit_ja_tasks(job) > sge_get_ja_tasks_per_file());
 
    if (ja_taskid != 0 && spool_single_task_files) {
       stringT task_spool_dir;

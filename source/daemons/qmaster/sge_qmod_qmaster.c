@@ -64,7 +64,6 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_rangeL.h"
-#include "job.h"
 #include "time_event.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -354,13 +353,13 @@ lList **answer
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
             job_write_spool_file(jep, task_id, SPOOL_DEFAULT);
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
             } else {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORJOB_SSU, user, host, u32c(job_id)));
             }
          } else {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_NOERRORSTATETASK_UU, u32c(job_id), u32c(task_id)));
             } else {
                INFO((SGE_EVENT, MSG_JOB_NOERRORSTATEJOB_UU, u32c(job_id)));
@@ -876,7 +875,7 @@ char *host
             this can only be done if we know the queue this job
             runs in */
          if (sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatep)) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDJOB_SU, user, u32c(jobid)));
@@ -884,7 +883,7 @@ char *host
             sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
          }
          else {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, u32c(jobid)));
@@ -893,7 +892,7 @@ char *host
          }
       }
       else {
-         if (is_array(jep)) {
+         if (job_is_array(jep)) {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SUU, user, u32c(jobid), u32c(jataskid)));
          } else {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SU, user, u32c(jobid)));
@@ -915,7 +914,7 @@ char *host
    else {   /* job wasn't suspended yet */
       if (queueep) {
          if ((i = sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatep))) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDJOB_SU, user, u32c(jobid)));
@@ -929,7 +928,7 @@ char *host
       if (force) {
          /* set jobs state to suspend in all cases */
          if (!i) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, u32c(jobid)));
@@ -946,7 +945,7 @@ char *host
       }
       else {
          if (!i) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_SUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                INFO((SGE_EVENT, MSG_JOB_SUSPENDJOB_SU, user, u32c(jobid)));
@@ -989,7 +988,7 @@ char *host
    /* admin suspend may not override suspend from threshold */ 
    if (VALID(JSUSPENDED_ON_THRESHOLD, lGetUlong(jatep, JAT_state))) {
       if (VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
-         if (is_array(jep)) {
+         if (job_is_array(jep)) {
             INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDTASK_SSUU, user, host, u32c(jobid), u32c(jataskid)));
          } else {
             INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, u32c(jobid)));
@@ -1006,7 +1005,7 @@ char *host
       } 
       else {
          /* guess admin tries to remove threshold suspension by qmon -us <jobid> */
-         if (is_array(jep)) {
+         if (job_is_array(jep)) {
             WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
          } else {
             WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDJOB_SU, user, u32c(jobid)));
@@ -1026,7 +1025,7 @@ char *host
          ** runs in 
          */
          if (sge_signal_queue(SGE_SIGCONT, queueep, jep, jatep)) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLETASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLEJOB_SU, user, u32c(jobid)));
@@ -1034,7 +1033,7 @@ char *host
             sge_add_answer(answer, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_WARNING);
          }
          else {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                WARNING((SGE_EVENT, MSG_JOB_FORCEENABLETASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                WARNING((SGE_EVENT, MSG_JOB_FORCEENABLEJOB_SU, user, u32c(jobid)));
@@ -1043,7 +1042,7 @@ char *host
          }
       }
       else {
-         if (is_array(jep)) {
+         if (job_is_array(jep)) {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SUU, user, u32c(jobid), u32c(jataskid)));
          } else {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SU, user, u32c(jobid))); 
@@ -1057,7 +1056,7 @@ char *host
    else {   /* job wasn't suspended till now */
       if (queueep) {
          if ((i = sge_signal_queue(SGE_SIGCONT, queueep, jep, jatep))) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDJOB_SU, user, u32c(jobid)));
@@ -1071,7 +1070,7 @@ char *host
       if (force) {
          /* set jobs state to suspend in all cases */
          if (!i) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPTASK_SSUU, user, host, u32c(jobid), u32c(jataskid)));
             } else {
                INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPJOB_SSU, user, host, u32c(jobid)));
@@ -1089,7 +1088,7 @@ char *host
       else {
          /* set job state only if communication works */
          if (!i) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_UNSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
             } else {
                INFO((SGE_EVENT, MSG_JOB_UNSUSPENDJOB_SU, user, u32c(jobid)));

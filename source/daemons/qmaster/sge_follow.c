@@ -50,7 +50,6 @@
 #include "sge_schedconfL.h"
 #include "sgermon.h"
 #include "commlib.h"
-#include "job.h"
 #include "sge_host.h"
 #include "sge_signal.h"
 #include "sge_job.h"

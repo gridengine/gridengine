@@ -57,7 +57,6 @@
 #include "sge_me.h"
 #include "symbols.h"
 #include "sge_time.h"
-#include "job.h"
 #include "job_report_execd.h"
 #include "sge_stat.h" 
 #include "msg_execd.h"

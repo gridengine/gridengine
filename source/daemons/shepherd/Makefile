@@ -47,7 +47,6 @@ SHEPHERD_ADD_SRC = \
            config_file.c \
            err_trace.c \
            execution_states.c \
-           job.c \
            qlogin_starter.c \
            setenv.c \
            setosjobid.c \

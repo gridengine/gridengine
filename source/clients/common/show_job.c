@@ -43,10 +43,10 @@
 #include "utility.h"
 #include "parse_range.h"
 #include "get_path.h"
-#include "job.h"
 #include "sge_parse_num_par.h"
 #include "sge_feature.h"
 #include "msg_clients_common.h"
+#include "sge_job_jatask.h"
 
 void cull_show_job(
 lListElem *job,
@@ -479,8 +479,8 @@ DTRACE;
    if (lGetPosViaElem(job, JB_ja_structure)>=0) {
       u_long32 start, end, step;
 
-      job_get_ja_task_ids(job, &start, &end, &step);
-      if (is_array(job))
+      job_get_submit_task_ids(job, &start, &end, &step);
+      if (job_is_array(job))
          printf("job-array tasks:            "u32"-"u32":"u32"\n", start, end, step);
    }
 

@@ -64,7 +64,6 @@
 #include "sge_string_append.h"
 #include "sge_range.h"
 #include "sge_schedd_text.h"
-#include "job.h"
 
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
                               StringBufferT *dyn_taskrange_str);

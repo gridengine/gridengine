@@ -66,7 +66,6 @@
 #include "complex_history.h"
 #include "path_history.h"
 #include "opt_history.h"
-#include "job.h"
 #include "sge_job.h"
 #include "configuration_qmaster.h"
 #include "qmaster_heartbeat.h"

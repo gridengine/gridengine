@@ -10,7 +10,6 @@ SG-2005-02-14-0: Bugfix:    Long delay when submitting large pe jobs
                  Bagtraq:   6228786
                  Review:    DT
 
->>>>>>> 1.2523
 HP-2005-02-14-0: Bugfix:    Set arch_variables for Windows
                  Changed:   dist/util/arch_variables
 

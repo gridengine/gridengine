@@ -1,3 +1,8 @@
+AD-2004-06-01-0: Bugfix:    Did add workaround for non POSIX compliant
+                            behaviour of LinuxThreads regarding propagation
+                            of UID/EUID to new threads.
+                 Changed:   qmaster
+
 MD-2004-06-01-1: Bugfix:    - permission problem, rc-scripts creation
                  Changed:   inst_sge, inst_berkeley.sh
 

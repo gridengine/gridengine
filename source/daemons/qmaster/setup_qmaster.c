@@ -220,6 +220,24 @@ int sge_qmaster_thread_init(void)
 
    DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, uti_state_get_qualified_hostname()));
 
+#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64)
+   {
+      char str[1024];
+
+      uidgid_mt_init();
+
+      if (sge_set_admin_username(bootstrap_get_admin_user(), str) == -1) {
+         CRITICAL((SGE_EVENT, str));
+         SGE_EXIT(1);
+      }
+
+      if (sge_switch2admin_user()) {
+         CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+         SGE_EXIT(1);
+      }
+   }
+#endif
+
    DEXIT;
    return 0;
 } /* sge_qmaster_thread_init() */

@@ -1138,7 +1138,12 @@ case HP1164:
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
    set LIBS     = "-lnsl $LIBS"
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   if ($BUILDARCH == HP11) then
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32"
+   else
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64"
+   endif
 
    set XMTDEF   = "-DNO_EDITRES"
    set XINCD    = "$XMTINCD $XINCD"

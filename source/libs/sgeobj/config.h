@@ -103,6 +103,18 @@ bool set_conf_inter_attr_list(lList **alpp, lList **clpp, int fields[],
                               const char *key, lListElem *ep, int name_nm,
                               lDescr *descr, int sub_name_nm);
 
+bool set_conf_strlist_attr_list(lList **alpp, lList **clpp, int fields[],
+                                const char *key, lListElem *ep, int name_nm,
+                                lDescr *descr, int sub_name_nm);
+
+bool set_conf_usrlist_attr_list(lList **alpp, lList **clpp, int fields[],
+                                const char *key, lListElem *ep, int name_nm,
+                                lDescr *descr, int sub_name_nm);
+
+bool set_conf_prjlist_attr_list(lList **alpp, lList **clpp, int fields[],
+                                const char *key, lListElem *ep, int name_nm,
+                                lDescr *descr, int sub_name_nm);
+
 bool set_conf_centry_type(lList **alpp, lList **clpp, int fields[], 
                           const char *key, lListElem *ep, int name_nm);
 

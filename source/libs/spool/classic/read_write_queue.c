@@ -233,7 +233,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
    
-   /* --------- QU_pe_list */
+   /* --------- QU_ckpt_list */
    if (!set_conf_list(alpp, clpp, fields, "ckpt_list", ep, 
             QU_ckpt_list, ST_Type, ST_name)) {
       DEXIT;

@@ -145,7 +145,7 @@ NAMEEND
 #define AINTERS sizeof(AINTERN)/sizeof(char*)
 
 enum {
-   ASTRING_href = AINTER_LOWERBOUND,
+   ASTRING_href = ASTRING_LOWERBOUND,
    ASTRING_value                    
 };
 
@@ -160,6 +160,57 @@ NAMEDEF(ASTRINGN)
 NAMEEND
 
 #define ASTRINGS sizeof(ASTRINGN)/sizeof(char*)
+
+enum {
+   ASTRLIST_href = ASTRLIST_LOWERBOUND,
+   ASTRLIST_value
+};
+
+LISTDEF(ASTRLIST_Type)
+   SGE_HOST(ASTRLIST_href, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(ASTRLIST_value, ST_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(ASTRLISTN)
+   NAME("ASTRLIST_href")
+   NAME("ASTRLIST_value")
+NAMEEND
+
+#define ASTRLISTS sizeof(ASTRLISTN)/sizeof(char*)
+
+enum {
+   AUSRLIST_href = AUSRLIST_LOWERBOUND,
+   AUSRLIST_value
+};
+
+LISTDEF(AUSRLIST_Type)
+   SGE_HOST(AUSRLIST_href, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(AUSRLIST_value, US_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(AUSRLISTN)
+   NAME("AUSRLIST_href")
+   NAME("AUSRLIST_value")
+NAMEEND
+
+#define AUSRLISTS sizeof(AUSRLISTN)/sizeof(char*)
+
+enum {
+   APRJLIST_href = APRJLIST_LOWERBOUND,
+   APRJLIST_value
+};
+
+LISTDEF(APRJLIST_Type)
+   SGE_HOST(APRJLIST_href, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(APRJLIST_value, UP_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(APRJLISTN)
+   NAME("APRJLIST_href")
+   NAME("APRJLIST_value")
+NAMEEND
+
+#define APRJLISTS sizeof(APRJLISTN)/sizeof(char*)
 
 /* *INDENT-ON* */  
 

@@ -389,6 +389,83 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       }
    }
    
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_pe_list);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_pe_list, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_ckpt_list);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_ckpt_list, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_owner_list);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_owner_list, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_acl);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_acl, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_xacl);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_xacl, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_projects);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cqueue, CQ_projects, lCopyList("", list));
+      }
+   }
+
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_xprojects);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+   
+         lSetList(cqueue, CQ_xprojects, lCopyList("", list));
+      }
+   }
+   
    DEXIT;
    if (ret) {
       return 0;

@@ -547,7 +547,9 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
             }
 
             /* remove all blanks from token */
+#if 0 /* EB: space separated list will not be possible then */
             sge_strip_blanks(token);
+#endif
             length = strlen(token);
             if (length >= 1) {
                char *href_name = NULL;
@@ -806,8 +808,13 @@ TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, AULNG_Type, AULNG_href, AULNG_value)
 TEMPLATE_ATTR_IMPL(bool_attr, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
 
 TEMPLATE_ATTR_IMPL(time_attr, const char *, ATIME_Type, ATIME_href, ATIME_value) 
-
 TEMPLATE_ATTR_IMPL(mem_attr, const char *, AMEM_Type, AMEM_href, AMEM_value) 
 
 TEMPLATE_ATTR_IMPL(inter_attr, const char *, AINTER_Type, AINTER_href, AINTER_value) 
+
+TEMPLATE_ATTR_IMPL(strlist_attr, const char *, ASTRLIST_Type, ASTRLIST_href, ASTRLIST_value) 
+
+TEMPLATE_ATTR_IMPL(usrlist_attr, const char *, AUSRLIST_Type, AUSRLIST_href, AUSRLIST_value) 
+
+TEMPLATE_ATTR_IMPL(prjlist_attr, const char *, APRJLIST_Type, APRJLIST_href, APRJLIST_value) 
 

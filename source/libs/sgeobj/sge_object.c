@@ -416,6 +416,48 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          result = userset_get_type_string(object, answer_list, &tmp_dstring);
          quote_special_case = true;
          break;
+      case ASTRLIST_value:
+         {
+            lList *list = lGetList(object, nm);
+            lListElem *elem = NULL;
+
+            for_each(elem, list) { 
+               sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, ST_name));
+               if (lNext(elem)) {
+                  sge_dstring_sprintf_append(&tmp_dstring, " ");
+               }
+            }
+            result = sge_dstring_get_string(&tmp_dstring);
+         }
+         break;
+      case AUSRLIST_value:
+         {
+            lList *list = lGetList(object, nm);
+            lListElem *elem = NULL;
+
+            for_each(elem, list) { 
+               sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, US_name));
+               if (lNext(elem)) {
+                  sge_dstring_sprintf_append(&tmp_dstring, " ");
+               }
+            }
+            result = sge_dstring_get_string(&tmp_dstring);
+         }
+         break;
+      case APRJLIST_value:
+         {
+            lList *list = lGetList(object, nm);
+            lListElem *elem = NULL;
+
+            for_each(elem, list) { 
+               sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, UP_name));
+               if (lNext(elem)) {
+                  sge_dstring_sprintf_append(&tmp_dstring, " ");
+               }
+            }
+            result = sge_dstring_get_string(&tmp_dstring);
+         }
+         break;
    }
 
    /* we had a special case - append to result dstring */
@@ -696,6 +738,18 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          break;
       case AINTER_value:
          ret = object_parse_inter_from_string(object, answer_list, nm, value);
+         break;
+      case ASTRLIST_value:
+         ret = object_parse_list_from_string(object, answer_list, nm, value,
+                                             ST_Type, ST_name);
+         break;
+      case AUSRLIST_value:
+         ret = object_parse_list_from_string(object, answer_list, nm, value,
+                                             US_Type, US_name);
+         break;
+      case APRJLIST_value:
+         ret = object_parse_list_from_string(object, answer_list, nm, value,
+                                             UP_Type, UP_name);
          break;
       default:
          ret = object_parse_raw_field_from_string(object, answer_list, nm, 
@@ -1187,6 +1241,46 @@ object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
 
       if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
+                              int name, const char *string, 
+                              const lDescr *descr, int nm)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_strlist_from_string");
+   if (this_elem != NULL && string != NULL) {
+      lList *tmp_list = NULL;
+      int pos = lGetPosViaElem(this_elem, name);
+
+      lString2List(string, &tmp_list, descr, nm, "\t \v\r,");
+      if (tmp_list != NULL) {
+         lListElem *first_elem = lFirst(tmp_list);
+         const char *first_string = lGetString(first_elem, nm);
+
+         if (strcasecmp("NONE", first_string)) {
+            lSetPosList(this_elem, pos, tmp_list);
+         } else {
+            tmp_list = lFreeList(tmp_list);
+         }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,

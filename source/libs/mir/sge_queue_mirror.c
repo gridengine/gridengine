@@ -141,7 +141,6 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       if (!is_list) {
          lSetList(cqueue, CQ_qinstances, list);
       }
-printf("new elements: %d\n", lGetNumberOfElem(list));      
    } else {
       ERROR((SGE_EVENT, MSG_CQUEUE_CANTFINDFORUPDATEIN_SS, name, SGE_FUNC));
       ret = false;

@@ -2665,7 +2665,6 @@ get_event_list(int sync, lList **report_list)
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   init_packbuffer(&pb, 0, 0);
    id = 0;
    tag = TAG_REPORT_REQUEST;
    /* FIX_CONST */

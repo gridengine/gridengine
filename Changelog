@@ -1,3 +1,9 @@
+EB-2002-07-23-0: Bugfix:    qsub/qalter -l <shortcut_name>... might select 
+                            wrong resource.
+                 Issue:     #328
+                 Bugtraq:   #4718880
+                 Changed:   sge_qmaster
+
 CR-2002-07-22-4: Bugfix:    (merge) Junk messages in installation
                  Bugtraq:   #4705066
 

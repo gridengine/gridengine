@@ -1,3 +1,8 @@
+AH-2002-06-05-0: Bugfix:    Fix problem with notify mechanism causing actual 
+                            termination/suspension signal being delayed endlessly
+                 Issue:     #231
+                 Bugtraq:   #4697491
+
 JG-2002-06-05-2: Bugfix:    qsub allowed submission of binary files
                  Issue:     #247
                  Bugtraq:   #4696768

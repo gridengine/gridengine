@@ -43,6 +43,7 @@
 #define MSG_QRSH_STARTER_CANNOTGETLOGIN_S    _("qrsh_starter: cannot get login name: %s\n")
 #define MSG_QRSH_STARTER_CANNOTGETUSERINFO_S _("qrsh_starter: cannot get user information: %s\n")
 #define MSG_QRSH_STARTER_CANNOTDETERMSHELL_S _("qrsh_starter: cannot determine login shell, using \"%s\"\n")
+#define MSG_QRSH_STARTER_EMPTY_WRAPPER               _("qrsh_starter: environment variable QRSH_WRAPPER has no value\n")
 #define MSG_QRSH_STARTER_EXECCHILDFAILED_S   _("qrsh_starter: executing child process %s failed: %s\n")
 #define MSG_QRSH_STARTER_INVALIDCOMMAND      _("qrsh_starter: received invalid command to execute\n")
 

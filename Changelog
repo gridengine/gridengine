@@ -1,5 +1,5 @@
-JG-2003-07-02-0: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment of 
-                            tightly integrated tasks
+JG-2003-07-02-0: Bugfix:    NSLOTS and NHOSTS incorrectly set in environment
+                            of tightly integrated tasks
                  Bugtraq:   4885906
                  Issue:     578
                  Review:    EB
@@ -24,6 +24,7 @@ EB-2003-06-25-0: Bugfix:    SGEEE: qmaster crashed on qdel of tightly
 
 CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
                             not set.
+                 Bugtraq:   4885719
                  Review:    AS
                  Bugtraq:   4885719
                  Issue:     577
@@ -40,7 +41,7 @@ AS-2003-02-17-0: CVS        Created V53prep4_TAG --> SGE 5.3prep4
 
 AS-2003-06-17-2: Bugfix:    Fix for JG-2003-06-10-0 which broke "qstat -F"
 
-AS-2003-06-17-1: Bugfix     removed references to CODINE/GRD in ckpt
+AS-2003-06-17-1: Bugfix:    removed references to CODINE/GRD in ckpt
                             template scripts and README
                  Changed:   Files in ckpt/
 
@@ -76,7 +77,7 @@ EB-2003-06-06-0  Bugfix:    Impossible to disable qmaster profiling
                  Changed:   sge_qmaster
                  Review:    AS 
 
-SG-2003-06-04-0  Bugfix     the queue name was truncated to 10 chars
+SG-2003-06-04-0  Bugfix:    the queue name was truncated to 10 chars
                             - the "-r" option got an extra info-line: 
                               "master queue:", which displayes the full queue 
                               name 

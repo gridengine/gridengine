@@ -91,9 +91,6 @@
 /*
 ** parse.c
 */
-#define MSG_PARSE_XISNOTAVALIDOPTION_S      _MESSAGE(43038, _("\"%s\" is not a valid option\n"))
-#define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _MESSAGE(43039, _("no option argument provided to \"%s\""))
-#define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _MESSAGE(43040, _("ERROR! %s option must have argument\n"))
 #define MSG_JOB_XISINVALIDJOBTASKID_S       _MESSAGE(43041, _("ERROR! %s is a invalid job-task identifier\n"))
 
 
@@ -113,18 +110,12 @@
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43046, _("failed initialize security data\n"))
 #define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _MESSAGE(43047, _("failed initialize Kerberos security data\n"))
-#define MSG_GDI_ENROLLTOCOMMDFAILED_S                 _MESSAGE(43048, _("can't enroll to commd: %s\n"))
 #define MSG_GDI_COMMDUP                               _MESSAGE(43049, _("commd is up"))
 #define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43050, _("commd is down: %s"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43051, _("parameter rhost = NULL for sge_send_any_request()"))
 #define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43052, _("can't send %ssynchronous message to commproc (%s:%d) on host \"%s\": %s"))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43053, _("parameter rhost = NULL for sge_get_any_request()"))
 #define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43054, _("can't receive message from commproc (%s:%d) on host \"%s\": %s"))
-
-/* 
-** gdilib/exec_wrapper.c
-*/ 
-#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _MESSAGE(43055, _("reading config file: specifier \"%s\" given twice for \"%s\"\n"))
 
 
 /* 

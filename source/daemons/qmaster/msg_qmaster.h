@@ -232,8 +232,6 @@
 #define MSG_COM_NOTENROLLEDONHOST_SSU _MESSAGE(33136, _("target \"%s\" not enrolled on host \"%s\" for delivering job \""U32CFormat"\"\n"))
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33137, _("can't find checkpointing object \"%s\"\n"))
 #define MSG_OBJ_UNABLE2CREATECKPT_SU  _MESSAGE(33138, _("can't create checkpointing object \"%s\" for job " U32CFormat "\n"))
-#define MSG_SEC_NOCRED_USSI           _MESSAGE(33139, _("could not get credentials for job " U32CFormat " for execution host %s - command \"%s\" failed with return code %d\n"))
-#define MSG_SEC_NOCREDNOBIN_US        _MESSAGE(33140, _("could not get client credentials for job " U32CFormat" - %s binary does not exist\n"))
 #define MSG_COM_SENDJOBTOHOST_US      _MESSAGE(33141, _("can't send job \"" U32CFormat"\" to host \"%s\""))
 #define MSG_COM_RESENDUNKNOWNJOB_UU   _MESSAGE(33142, _("cannot resend unknown job "U32CFormat"."U32CFormat"\n"))
 #define MSG_JOB_UNKNOWNGDIL4TJ_UU     _MESSAGE(33143, _("transfering job "U32CFormat"."U32CFormat" has an invalid gdi list --- deleting"))
@@ -241,10 +239,6 @@
 #define MSG_JOB_NOHOST4TJ_SUU         _MESSAGE(33145, _("execution host \"%s\" for transfering job "U32CFormat"."U32CFormat" doesn't exist. deleting task"))
 #define MSG_JOB_NOPE4TJ_SUU           _MESSAGE(33146, _("parallel environment \"%s\" for transfering job "U32CFormat"." U32CFormat" doesn't exist. deleting job"))
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33147, _("failed to deliver job "U32CFormat"."U32CFormat" to queue \"%s\""))
-#define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(33148, _("can't start command \"%s\" for job " U32CFormat " to delete credentials\n"))
-#define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(33149, _("delete_cred stderr: %s"))
-#define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(33150, _("could not delete credentials for job " U32CFormat" - command \"%s\" failed with return code %d\n"))
-#define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(33151, _("could not delete credentials for job "U32CFormat" - %s binary does not exist\n"))
 #define MSG_LOG_SENT2EXECD            _MESSAGE(33152, _("sent to execd"))
 #define MSG_LOG_EXITED                _MESSAGE(33153, _("job exited"))
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33154, _("job waits for schedds deletion"))
@@ -330,11 +324,6 @@
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33225, _("job "U32CFormat" was rejected cause there is no job_name in the request\n"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33226, _("job "U32CFormat" was rejected cause it can't be written: %s\n"))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33227, _("job "U32CFormat" was rejected cause it couldn't be written\n"))
-#define MSG_SEC_NOAUTH_U              _MESSAGE(33228, _("job "U32CFormat" rejected because authentication failed\n"))
-#define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(33229, _("can't start command \"%s\" for job " U32CFormat " to get credentials\n"))
-#define MSG_SEC_PUTCREDSTDERR_S       _MESSAGE(33230, _("put_cred stderr: %s"))
-#define MSG_SEC_NOSTORECRED_USI       _MESSAGE(33231, _("could not store credentials for job " U32CFormat" - command \"%s\" failed with return code %d\n"))
-#define MSG_SEC_NOSTORECREDNOBIN_US   _MESSAGE(33232, _("could not store client credentials for job " U32CFormat" - %s binary does not exist\n"))
 #define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33233, _("your job "U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33234, _("your job-array "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_LOG_NEWJOB                _MESSAGE(33235, _("new job"))
@@ -407,7 +396,6 @@
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33301, _("verification: found suitable queue(s)\n"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33302, _("verification: found possible assignment with %d slots\n"))
 #define MSG_OBJ_PE                    _MESSAGE(33303, _("parallel environment"))
-#define MSG_OBJ_CKPT                  _MESSAGE(33304, _("checkpointing environment"))
 
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33305, _("denied: soft requests on consumables like "SFQ" are not supported\n"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33306, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request\n"))
@@ -442,11 +430,6 @@
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33334, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
 
 
-#define MSG_SGETEXT_SPECIFYUSERORJID            _MESSAGE(33335, _("You have to specify a username or job ids\n"))
-#define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33336, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
-#define MSG_SGETEXT_THEREARENOJOBS              _MESSAGE(33337, _("There are no jobs registered\n"))
-#define MSG_SGETEXT_NOJOBSDELETED               _MESSAGE(33338, _("No jobs deleted\n"))
-#define MSG_SGETEXT_NOJOBSMODIFIED              _MESSAGE(33339, _("No jobs modified\n"))
 
 /*
 ** sge_m_event.c

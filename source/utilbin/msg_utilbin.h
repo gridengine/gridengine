@@ -93,7 +93,6 @@
 */ 
 #define MSG_COMMAND_USAGE_GETHOSTNAME        _MESSAGE(57024, _("get resolved hostname of this host\n"))
 #define MSG_SYSTEM_GETHOSTNAMEFAILED         _MESSAGE(57025, _("gethostname() failed"))
-#define MSG_SYSTEM_GETHOSTBYNAMEFAILED       _MESSAGE(57026, _("gethostbyname() failed"))
 
 
 /* 

@@ -219,7 +219,6 @@
 #define MSG_SGETEXT_SHOULD_BE_ROOT_S            _MESSAGE(49079, _("should be root to start "SFN"\n"))
 /* 
 #define MSG_SGETEXT_INVALIDHOSTINQUEUE_S        _MESSAGE(49080, _("invalid hostname "SFQ" associated with queue\n"))
-#define MSG_SGETEXT_MODIFIEDINLIST_SSUS         _MESSAGE(49081, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
 #define MSG_SGETEXT_CANTRESOLVEUSER_S           _MESSAGE(49082, _("unknown user name "SFQ"\n") )   
 #define MSG_SGETEXT_CANTRESOLVEGROUP_S          _MESSAGE(49083, _("unknown group name "SFQ"\n") )  
 #define MSG_SGETEXT_NOCOMMD_SS                  _MESSAGE(49084, _("unable to contact commd at host "SFN" using service "SFN"\n"))
@@ -230,7 +229,6 @@
 #define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _MESSAGE(49089, _("denied: missing security level for "SFN"\n"))
 #define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _MESSAGE(49090, _("may not change host of queue "SFQ"\n"))
 #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _MESSAGE(49091, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )   
-#define MSG_SGETEXT_NO_PROJECT                        _MESSAGE(49092, _("job rejected: no project assigned to job\n") )     
 #define MSG_SGETEXT_UNABLETORETRIEVE_I                _MESSAGE(49093, _("unable to retrieve value for system limit (%d)\n") )     
 
 #define MSG_SYSTEM_INVALIDERRORNUMBER                 _MESSAGE(49094, _("invalid error number"))

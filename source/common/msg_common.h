@@ -120,11 +120,8 @@
 /*
 ** parse.c
 */
-#define MSG_PARSE_XISNOTAVALIDOPTION_S      _MESSAGE(23063, _("\"%s\" is not a valid option\n"))
 #define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _MESSAGE(23064, _("no option argument provided to \"%s\""))
-#define MSG_SMALLNULL                       _MESSAGE(23065, _("(null)"))
 #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _MESSAGE(23066, _("ERROR! %s option must have argument\n"))
-#define MSG_JOB_XISINVALIDJOBTASKID_S       _MESSAGE(23067, _("ERROR! %s is a invalid job-task identifier\n"))
 
 
 /*
@@ -177,7 +174,6 @@
 #define MSG_PARSE_COULDNOTPARSEENVIRIONMENT              _MESSAGE(23107, _("ERROR! Could not parse environment\n"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTWX_S              _MESSAGE(23108, _("invalid option argument \"-w %s\"\n"))
 #define MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT       _MESSAGE(23109, _("ERROR! -@ option must have file argument\n"))
-#define MSG_PARSE_INVALIDOPTIONARGUMENTX_S              _MESSAGE(23110, _("ERROR! invalid option argument \"%s\"\n"))
 #define MSG_PARSE_NOJOBIDGIVENBEFORESEPARATOR              _MESSAGE(23111, _("ERROR! no job id given before -- separator\n"))
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23112, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23113, _("ERROR! Wrong job id list format \"%s\" specified\n"))
@@ -217,7 +213,6 @@
 #define MSG_EXEC_XISNOTANEXECUTIONHOST_S       _MESSAGE(23142, _("%s is not an execution host\n"))
 #define MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S     _MESSAGE(23143, _("changed entry of host %s in execution host list\n"))
 #define MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S     _MESSAGE(23144, _("%s is not a parallel environment\n"))
-#define MSG_QUEUE_XISNOTAQUEUENAME_S           _MESSAGE(23145, _("%s is not a queuename\n"))
 #define MSG_QUEUE_UNABLETOWRITEOLDQUEUE        _MESSAGE(23146, _("unable to write old queue"))
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23147, _("%s: missing filename as option argument\n"))
 #define MSG_QCONF_XISNOTAOBJECTATTRIB_SSS         _MESSAGE(23148, _("%s: \"%s\" is not a %s attribute\n"))
@@ -387,11 +382,6 @@
 #define MSG_FILE_ERRORWRITING_SS    _MESSAGE(23271, _("error writing %s, %s\n"))
 #define MSG_FILE_ERRORWRITINGHOSTNAME    _MESSAGE(23272, _("error writing hostname\n"))
 
-
-/*
-** read_write_manop.c
-*/
-#define MSG_FILE_ERROROPENINGX_S    _MESSAGE(23273, _("error opening %s\n"))
 
 /*
 ** read_write_queue.c

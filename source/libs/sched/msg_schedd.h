@@ -103,7 +103,6 @@
 ** schedd/sge_schedd_text.c
 */ 
 #define MSG_SGETEXT_INVALIDHOSTINQUEUE_S        _MESSAGE(47040, _("invalid hostname "SFQ" associated with queue\n"))
-#define MSG_SGETEXT_MODIFIEDINLIST_SSUS         _MESSAGE(47041, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
 #define MSG_SGETEXT_CANTRESOLVEUSER_S           _MESSAGE(47042, _("unknown user name "SFQ"\n") )   
 #define MSG_SGETEXT_CANTRESOLVEGROUP_S          _MESSAGE(47043, _("unknown group name "SFQ"\n") )  
 #define MSG_SGETEXT_NOCOMMD_SS                  _MESSAGE(47044, _("unable to contact commd at host "SFN" using service "SFN"\n"))
@@ -114,7 +113,6 @@
 #define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _MESSAGE(47049, _("denied: missing security level for "SFN"\n"))
 #define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _MESSAGE(47050, _("may not change host of queue "SFQ"\n"))
 #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _MESSAGE(47051, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )   
-#define MSG_SGETEXT_NO_PROJECT                        _MESSAGE(47052, _("job rejected: no project assigned to job\n") )     
 /* #define MSG_SGETEXT_UNABLETORETRIEVE_I                _MESSAGE(47053, _("unable to retrieve value for system limit (%d)\n") )   */  
 
 

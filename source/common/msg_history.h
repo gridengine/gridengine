@@ -61,7 +61,6 @@
 #define MSG_HISTORY_CANTFINDQUEUEVERSIONFORQUEUEXREFTOYZ_SSI    _MESSAGE(25022, _("can't find queue version for queue \"%s\" referring to \"%s\": %d"               ))
 #define MSG_POINTER_COMPLEXNAMEISNULLINFINDCOMPLEXVERSIONBYNAME   _MESSAGE(25023, _("complex_name == NULL in find_complex_version_by_name()"))
 #define MSG_HISTORY_NOCOMPLEXNAMEGIVENINFINDCOMPLEXVERSIONBYNAME  _MESSAGE(25024, _("no complex name given in find_complex_version_by_name()"))
-#define MSG_HISTORY_SUBDIRHASNONAME                               _MESSAGE(25025, _("subdirectory has no name"))
 #define MSG_HISTORY_FINDCOMPLEXVERSIONBYNAMEERRORXRETRIEVENCOMPLEXVERSIONFORY_IS _MESSAGE(25026, _("find_complex_version_by_name: error %d retrieving complex version for %s\n"))
 #define MSG_MEMORY_HOSTNAMEISNULLINFINDHOSTVERSIONBYNAME    _MESSAGE(25027, _("host_name == NULL in find_host_version_by_name()"))
 #define MSG_HISTORY_NOHOSTNAMEGIVENINFINDHOSTVERSIONBYNAME  _MESSAGE(25028, _("no host name given in find_host_version_by_name()"))

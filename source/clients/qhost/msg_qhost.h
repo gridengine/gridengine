@@ -54,7 +54,6 @@
 #define MSG_QHOST_l_OPT_USAGE        _MESSAGE(9004, _("request the given resources\n"))
 #define MSG_QHOST_F_OPT_USAGE        _MESSAGE(9005, _("show (selected) resources\n"))
 #define MSG_QHOST_u_OPT_USAGE        _MESSAGE(9006, _("show only jobs for user\n"))
-#define MSG_GDI_JOBSGEGDIFAILED              _MESSAGE(9007, _("job: sge_gdi failed\n"))
 
 #endif /* __MSG_QHOST_H */
 

@@ -131,7 +131,6 @@
 #define MSG_MAIL_SUBJECT_SUU       "%s: Job-array task "U32CFormat"."U32CFormat" failed"
 #define MSG_MAIL_SUBJECT_SU        "%s: Job " U32CFormat " failed"
 #define MSG_MAIL_BODY_USSSSSSSS    "Job " U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
-#define MSG_MAIL_PARSE_S           _MESSAGE(27054, _("Error parsing mail list >%s<\n"))
 #define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue \"%s\" set to ERROR"))
 #define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host \"%s\" set to ERROR"))
 #define MSG_GFSTATE_JOB_UU         _MESSAGE(27057, _("Job-array task "U32CFormat"."U32CFormat" set to ERROR"))

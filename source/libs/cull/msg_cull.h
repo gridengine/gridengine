@@ -106,7 +106,6 @@
 #define MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPEERROR_S      _MESSAGE(41058, _("error: lDelElemHost(%s): run time type error\n"))
 #define MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S            _MESSAGE(41059, _("error: lGetSubStr(%s): run time type error\n"))
 #define MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S           _MESSAGE(41060, _("error: lGetElemStr(%s): run time type error\n"))
-#define MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S           _MESSAGE(41061, _("error: lGetElemStr(%s): run time type error\n"))
 #define MSG_CULL_ADDSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41062, _("error: lAddSubUlong(%s): run time type error\n"))
 #define MSG_CULL_ADDELEMULONGERRORXRUNTIMETYPE_S         _MESSAGE(41063, _("error: lAddElemUlong(%s): run time type error\n"))
 #define MSG_CULL_DELSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41064, _("error: lDelSubUlong(%s): run time type error\n"))

@@ -1007,8 +1007,9 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
                ret = false;
          }
       }
-      else if ( (temp = lGetString(centry, CE_urgency_weight)) ) {
-      
+
+      /* verify urgency always */
+      if ((temp = lGetString(centry, CE_urgency_weight)) ) {
          switch(type){
             case TYPE_INT:
             case TYPE_TIM:
@@ -1032,6 +1033,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
          }
       }
    }
+
 
    /* check if its a build in value and if the type is correct */
    {

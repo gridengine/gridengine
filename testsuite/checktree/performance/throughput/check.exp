@@ -348,8 +348,14 @@ proc setup_queues {} {
          lappend queue_list [get_queue_instance $qname $host]
       }
    }
-   # show queue list:
 
+   # Create an additional interactive only queue.
+   # This verifies IZ 1087 (and is a more realistic scenario)
+   unset change_array
+   set change_array(qtype) INTERACTIVE
+   add_queue interactive "@allhosts" change_array 1
+   
+   # show queue list:
    puts $CHECK_OUTPUT "using [llength $queue_list] queues to submit jobs"
 
    if { $throughput_sharetree == 1 } {

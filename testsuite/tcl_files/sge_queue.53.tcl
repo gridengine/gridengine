@@ -241,7 +241,7 @@ proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
       lappend queue_list $q_name
    } else {
       # we get a cluster queue name and a hostlist
-      if { $hostlist == "" } {
+      if { $hostlist == "" || $hostlist == "@allhosts" } {
          set hostlist $CHECK_CORE_EXECD
       }
       foreach host $hostlist {

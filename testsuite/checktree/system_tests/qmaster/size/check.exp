@@ -63,7 +63,7 @@ lappend check_functions {check_flood}                  ;# flood of qsub's (sleep
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 # JG: TODO: check setup with zombies in an additional runlevel
 # lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
-lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+#lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
@@ -252,6 +252,10 @@ proc restart_system {} {
      return
    }
 
+   # create an additional interactive only queue
+   # This verifies IZ 1087
+   set queue_conf(qtype) INTERACTIVE
+   add_queue interactive "@allhosts" queue_conf 1
 
    # get qmaster spool dir
    set qmaster_spool_dir [ get_qmaster_spool_dir ]
@@ -1340,6 +1344,8 @@ proc check_size_cleanup {} {
 
    set default_array(finished_jobs)   0
    set_config default_array
+
+   del_queue interactive "" 0 1
 
    monitor_size [get_job_count] "reset initial parameters"
 

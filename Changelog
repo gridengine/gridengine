@@ -1,3 +1,8 @@
+JG-2004-06-14-0: QA:        Updated review template and doc.
+                 Cleanup:   Removed unused I18N messages.
+                 Testsuite: Make checks performance/throughput and 
+                            system_tests/qmaster/size check for IZ 1087
+
 DT-2004-06-08-0: Bugfix:    o Backed out AS-2004-06-03-0 for DRMAA README.
                  Changed:   docs
 

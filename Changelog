@@ -1,4 +1,7 @@
-DT-2005-03-29-1: Bugfix:    o Fixed broken build
+DT-2005-03-29-2: Bugfix:    o Fixed broken build on MacOS X & HP-UX
+                 Changed:   profiling
+
+DT-2005-03-29-1: Bugfix:    o Fixed broken build on Linux
                  Review:    CR
                  Changed:   profiling
 

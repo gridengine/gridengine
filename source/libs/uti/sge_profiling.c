@@ -185,8 +185,8 @@ static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...)
 static sge_prof_info_t **theInfo = NULL;
 static sge_thread_info_t *thrdInfo = NULL;
 
-pthread_mutex_t thrdInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_key_t thread_id_key;
+static pthread_mutex_t thrdInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_key_t thread_id_key;
 
 static bool profiling_enabled = true;
 

@@ -130,8 +130,8 @@ proc test {m p} {
 #
 proc resolve_version { { internal_number -100 } } {
 
-   global CHECK_PRODUCT_VERSION_NUMBER
-
+   global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT
+   global CHECK_PRODUCT_TYPE
    
    if { [ string compare "system not running - run install test first" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
       get_version_info
@@ -159,6 +159,8 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGEEE_5.3beta2)      2
    set versions(SGE_5.3beta2)        2
 
+   
+    
 
    if { $internal_number == -100 } {
       if { $CHECK_PRODUCT_VERSION_NUMBER == "" } {
@@ -5261,6 +5263,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
 #*******************************
 proc get_version_info {} {
    global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_TYPE CHECK_OUTPUT
     
    if { [file isfile "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"] == 1 } {
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-help" } result
@@ -5273,7 +5276,37 @@ proc get_version_info {} {
       set CHECK_PRODUCT_VERSION_NUMBER [ lindex $help 0]
       if { [ string first "exit" $CHECK_PRODUCT_VERSION_NUMBER ] >= 0 } {
          set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
-      }   
+      } else {
+         set product_mode_file [ open "$CHECK_PRODUCT_ROOT/default/common/product_mode" "r" ]
+         gets $product_mode_file line
+         if { $CHECK_PRODUCT_FEATURE == "secure" } {
+             if { [ string first "csp" $line ] < 0 } {
+                 puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
+                 puts $CHECK_OUTPUT "testsuite setup error - stop"
+                 exit -1
+             } 
+         } else {
+             if { [ string first "csp" $line ] >= 0 } {
+                 puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
+                 puts $CHECK_OUTPUT "testsuite setup error - stop"
+                 exit -1
+             } 
+         }
+         if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+             if { [ string first "sgeee" $line ] < 0 } {
+                 puts $CHECK_OUTPUT "resolve_version - no sgeee system"
+                 puts $CHECK_OUTPUT "testsuite setup error - stop"
+                 exit -1
+             } 
+         } else {
+             if { [ string first "sgeee" $line ] >= 0 } {
+                 puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
+                 puts $CHECK_OUTPUT "testsuite setup error - stop"
+                 exit -1
+             } 
+         }
+         close $product_mode_file
+      }  
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    set CHECK_PRODUCT_VERSION_NUMBER "system not installed - run compile option first"

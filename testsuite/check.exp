@@ -101,6 +101,8 @@ set CHECK_SETTINGS_VERSION "undefined"
 global CHECK_PRODUCT_VERSION_NUMBER ;# version string of qstat -help of tested system
 set CHECK_PRODUCT_VERSION_NUMBER "unknown"
 global CHECK_PRODUCT_TYPE           ;# "sgeee" or "sge" 
+global CHECK_PRODUCT_FEATURE       ;# product feature e.g. secure
+set CHECK_PRODUCT_FEATURE "none"
 global CHECK_START_SCRIPT_NAME     ;# rcsge
 set CHECK_START_SCRIPT_NAME "rcsge"
 global CHECK_COMMD_PORT            ;# commd port
@@ -367,7 +369,7 @@ global CHECK_SETUP_NAMES
 
 
 global CHECK_CURRENT_SETTINGS_VERSION
-set CHECK_CURRENT_SETTINGS_VERSION "5"
+set CHECK_CURRENT_SETTINGS_VERSION "6"
 set CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION
 
 set CHECK_SETUP_NAMES(index) "settings_version"
@@ -402,6 +404,9 @@ set CHECK_SETUP_NAMES(commd_portnumber) "CHECK_COMMD_PORT"
 
 lappend CHECK_SETUP_NAMES(index) "product_type"
 set CHECK_SETUP_NAMES(product_type) "CHECK_PRODUCT_TYPE"
+
+lappend CHECK_SETUP_NAMES(index) "product_feature"
+set CHECK_SETUP_NAMES(product_feature) "CHECK_PRODUCT_FEATURE"
 
 lappend CHECK_SETUP_NAMES(index) "product_root_directory"
 set CHECK_SETUP_NAMES(product_root_directory) "CHECK_PRODUCT_ROOT"
@@ -1120,7 +1125,8 @@ proc save_defaults {} {
   global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD 
   global CHECK_CORE_PROCESSORS CHECK_SUBMIT_ONLY_HOSTS 
   global CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
-  global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
+  global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
+  global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
@@ -1143,6 +1149,7 @@ proc save_defaults {} {
   lappend data $CHECK_COMMD_PORT
   lappend data $CHECK_MAIN_RESULTS_DIR
   lappend data $CHECK_PRODUCT_TYPE
+  lappend data $CHECK_PRODUCT_FEATURE
   lappend data $CHECK_PRODUCT_ROOT 
   lappend data $CHECK_SOURCE_DIR 
   lappend data $CHECK_SOURCE_HOSTNAME
@@ -1326,7 +1333,8 @@ proc read_edit_defaults_file { filename } {
    global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION
    global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS
    global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
-   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
+   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
+   global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
    global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
    global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
@@ -1432,6 +1440,12 @@ proc read_edit_defaults_file { filename } {
    if { ([string compare "sgeee" $CHECK_PRODUCT_TYPE ] != 0) &&
            ([string compare "sge" $CHECK_PRODUCT_TYPE ] != 0) } {
         puts $CHECK_OUTPUT "product_type can only be \"sge\" or \"sgeee\""
+        return -1
+   }
+
+   if { ([string compare "none"   $CHECK_PRODUCT_FEATURE ] != 0) &&
+        ([string compare "secure" $CHECK_PRODUCT_FEATURE ] != 0) } {
+        puts $CHECK_OUTPUT "product_feature can only be \"none\" or \"secure\""
         return -1
    }
  
@@ -1590,7 +1604,8 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   global CHECK_SETTINGS_VERSION
   global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS 
   global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
-  global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
+  global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
+  global CHECK_PRODUCT_FEATURE  CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
@@ -1656,7 +1671,8 @@ proc load_defaults {} {
   global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION CHECK_OUTPUT
   global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD 
   global CHECK_CORE_PROCESSORS CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT
-  global CHECK_MAIN_RESULTS_DIR env CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE CHECK_TESTSUITE_ROOT
+  global CHECK_MAIN_RESULTS_DIR env CHECK_PRODUCT_TYPE 
+  global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE CHECK_TESTSUITE_ROOT
   global CHECK_PROTOCOL_DIR CHECK_CURRENT_WORKING_DIR
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1692,6 +1708,7 @@ proc load_defaults {} {
   }
   set CHECK_PROTOCOL_DIR ""
   set CHECK_PRODUCT_TYPE "sge"
+  set CHECK_PRODUCT_FEATURE "none"
   set CHECK_PRODUCT_ROOT "unknown"
 
   set old_dir [pwd]
@@ -1967,6 +1984,56 @@ proc load_defaults {} {
             puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
             exit -1
         }
+        if { $CHECK_SETTINGS_VERSION == 5 } {
+            puts $CHECK_OUTPUT "this settings file has version number 5 -> upgrading to version 6"
+            set CHECK_SETTINGS_VERSION "6"
+            set CHECK_TESTSUITE_ROOT                   [lindex $data 1]
+            set CHECK_CHECKTREE_ROOT                   [lindex $data 2]
+            set CHECK_CORE_MASTER                      [lindex $data 3]
+            set CHECK_CORE_EXECD                       [lindex $data 4]
+            set CHECK_CORE_PROCESSORS                  [lindex $data 5]
+            set CHECK_SUBMIT_ONLY_HOSTS                [lindex $data 6]      ;# added for version 3
+            set CHECK_COMMD_PORT                       [lindex $data 7]
+            set CHECK_MAIN_RESULTS_DIR                 [lindex $data 8]
+            set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
+            set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
+          
+            set CHECK_PRODUCT_TYPE                     [lindex $data 9]
+            set CHECK_PRODUCT_ROOT                     [lindex $data 10]
+            set CHECK_SOURCE_DIR                       [lindex $data 11]
+            set CHECK_SOURCE_HOSTNAME                  [lindex $data 12]
+            set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 13]
+            set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 14]
+            set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
+            set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
+            set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
+            set CHECK_DNS_DOMAINNAME                   [lindex $data 18]      ;# added for version 4
+            set CHECK_REMOTE_ENVIRONMENT               [lindex $data 19]      ;# added for version 4
+            set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 20]
+            set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 21]
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 22]
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 23]
+            set CHECK_DEFAULT_DOMAIN                   [lindex $data 24]
+            set CHECK_MAILX_HOST                       [lindex $data 25]
+            set CHECK_REPORT_EMAIL_TO                  [lindex $data 26]
+            set CHECK_REPORT_EMAIL_CC                  [lindex $data 27]
+            set CHECK_SEND_ERROR_MAILS                 [lindex $data 28]
+            set CHECK_MAX_ERROR_MAILS                  [lindex $data 29]
+            set CHECK_USE_SSH                          [lindex $data 30]
+            set CHECK_SOURCE_CVS_RELEASE               [lindex $data 31]
+            set CHECK_CONFIG_DIR                       [lindex $data 32]
+                      
+            puts $CHECK_OUTPUT "updating new configuration parameter \"product_feature\" ..."
+            set CHECK_PRODUCT_FEATURE "none"
+            wait_for_enter
+            source_procedures
+            save_defaults 
+            set CHECK_DO_SETUP 1
+            setup 
+            puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
+            exit -1
+        }
+        
         
         exit -1
       } else {
@@ -1990,29 +2057,30 @@ proc load_defaults {} {
   set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
 
   set CHECK_PRODUCT_TYPE                     [lindex $data 9]
-  set CHECK_PRODUCT_ROOT                     [lindex $data 10]
-  set CHECK_SOURCE_DIR                       [lindex $data 11]
-  set CHECK_SOURCE_HOSTNAME                  [lindex $data 12]
-  set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 13]
-  set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 14]
-  set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
-  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
-  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
-  set CHECK_DNS_DOMAINNAME                   [lindex $data 18]      ;# added for version 4
-  set CHECK_REMOTE_ENVIRONMENT               [lindex $data 19]      ;# added for version 4
-  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 20]
-  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 21]
-  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 22]
-  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 23]
-  set CHECK_DEFAULT_DOMAIN                   [lindex $data 24]
-  set CHECK_MAILX_HOST                       [lindex $data 25]
-  set CHECK_REPORT_EMAIL_TO                  [lindex $data 26]
-  set CHECK_REPORT_EMAIL_CC                  [lindex $data 27]
-  set CHECK_SEND_ERROR_MAILS                 [lindex $data 28]
-  set CHECK_MAX_ERROR_MAILS                  [lindex $data 29]
-  set CHECK_USE_SSH                          [lindex $data 30]
-  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 31]
-  set CHECK_CONFIG_DIR                       [lindex $data 32]
+  set CHECK_PRODUCT_FEATURE                  [lindex $data 10]      ;# added for version 6
+  set CHECK_PRODUCT_ROOT                     [lindex $data 11]
+  set CHECK_SOURCE_DIR                       [lindex $data 12]
+  set CHECK_SOURCE_HOSTNAME                  [lindex $data 13]
+  set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 14]
+  set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 15]
+  set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 16]
+  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 17]      ;# added for version 2
+  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 18]      ;# added for version 2
+  set CHECK_DNS_DOMAINNAME                   [lindex $data 19]      ;# added for version 4
+  set CHECK_REMOTE_ENVIRONMENT               [lindex $data 20]      ;# added for version 4
+  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 21]
+  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 22]
+  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 23]
+  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 24]
+  set CHECK_DEFAULT_DOMAIN                   [lindex $data 25]
+  set CHECK_MAILX_HOST                       [lindex $data 26]
+  set CHECK_REPORT_EMAIL_TO                  [lindex $data 27]
+  set CHECK_REPORT_EMAIL_CC                  [lindex $data 28]
+  set CHECK_SEND_ERROR_MAILS                 [lindex $data 29]
+  set CHECK_MAX_ERROR_MAILS                  [lindex $data 30]
+  set CHECK_USE_SSH                          [lindex $data 31]
+  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 32]
+  set CHECK_CONFIG_DIR                       [lindex $data 33]
 
 
   source_procedures
@@ -2170,8 +2238,9 @@ proc set_users_environment {{variable_name env}} {
 #*******************************
 proc setup { {do_only_hostname_resolving 0} } {
 
-  global CHECK_SETTINGS_VERSION
-  global CHECK_CHECKTREE_ROOT CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE env 
+  global CHECK_SETTINGS_VERSION CHECK_JOB_OUTPUT_DIR
+  global CHECK_CHECKTREE_ROOT CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE 
+  global CHECK_PRODUCT_FEATURE env 
   global CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS argv 
   global CHECK_SUBMIT_ONLY_HOSTS
   global CHECK_PRODUCT_VERSION_NUMBER CHECK_USER CHECK_ARCH CHECK_HOST CHECK_COMMD_PORT
@@ -2391,6 +2460,7 @@ proc setup { {do_only_hostname_resolving 0} } {
 
   if { $be_quiet == 0 } { 
      puts "       product type:         $CHECK_PRODUCT_TYPE";
+     puts "       product feature:      $CHECK_PRODUCT_FEATURE";
      puts "       product version:      $CHECK_PRODUCT_VERSION_NUMBER";
      puts "       product root dir:     $CHECK_PRODUCT_ROOT";
      puts "       commd port:           $CHECK_COMMD_PORT";
@@ -2398,6 +2468,7 @@ proc setup { {do_only_hostname_resolving 0} } {
      puts "       testsuite config dir: $CHECK_CONFIG_DIR";
      puts "       checktree is:         $CHECK_CHECKTREE_ROOT";
      puts "       check results dir:    $CHECK_MAIN_RESULTS_DIR";
+     puts "       check job output dir: $CHECK_JOB_OUTPUT_DIR";
      puts "       check protocols:      $CHECK_PROTOCOL_DIR";
      puts "       master host:          $CHECK_CORE_MASTER";
      puts "       execution hosts:      $CHECK_CORE_EXECD";
@@ -3690,6 +3761,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
      }
    }  
 
+
    # get lock  
    lock_testsuite
 
@@ -3734,6 +3806,8 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          set CHECK_CUR_PROC_RESULTS "" 
          set CHECK_CUR_PROC_NAME $elem
          set set_error_proc_called 0  
+
+         
 
          # this starts the test procedure
          set catch_return [ catch { $elem } errMsg ]
@@ -3944,6 +4018,7 @@ proc check_root_access {path} {
   return -1
 }
 
+
 # run test
 #                                                             max. column:     |
 #****** check/run_test() ******
@@ -3977,7 +4052,7 @@ proc check_root_access {path} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc run_test {path runcompleted {run_single_test "all"}} {
+proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } } {
   
 
   global CHECK_INFORMATION_FILE check_needs CHECK_RESULT_DIR check_name CHECK_ACTUAL_TEST_PATH
@@ -3985,6 +4060,7 @@ proc run_test {path runcompleted {run_single_test "all"}} {
   global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS check_root_access_needs
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
+  global CHECK_PRODUCT_FEATURE
 
   set del_file_name "$CHECK_TESTSUITE_ROOT/.testsuite_delete"
   if { [ file isfile $del_file_name ] == 1 } {
@@ -4126,12 +4202,17 @@ proc run_test {path runcompleted {run_single_test "all"}} {
   if { $nr_allready_done == $no_level_calls } {
      return 1  ;# was done time before
   }
+  
+  if { $send_mail_report != 1 } {
+     set do_send_mail 0
+  }
 
   if { $nr_errors == 0 && $nr_warnings == 0 } {
      if { $do_send_mail == 1 } {
         set mail_body "Successfully performed check $check_name in directory\n$path\n"
         set mail_body "${mail_body}Date: [ exec date ]\n\n"
         set mail_body "${mail_body}product type:     $CHECK_PRODUCT_TYPE\n"
+        set mail_body "${mail_body}product feature:  $CHECK_PRODUCT_FEATURE\n"
         set mail_body "${mail_body}product version:  $CHECK_PRODUCT_VERSION_NUMBER\n"
         set mail_body "${mail_body}product root:     $CHECK_PRODUCT_ROOT\n"
         set mail_body "${mail_body}runlevel:         [get_run_level_name $my_current_runlevel]\n"
@@ -4666,6 +4747,7 @@ proc print_menu_header {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
+  global CHECK_PRODUCT_FEATURE
 
   
   clear_screen
@@ -4673,6 +4755,7 @@ proc print_menu_header {} {
   puts "===============================================================================" 
 
   puts " system version    :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version])"
+  puts " product feature   :  $CHECK_PRODUCT_FEATURE"
   puts " current dir       :  [ format_output "                      " 55 $CHECK_ACT_PATH ]"
 
   set dirs [ get_dir_names $CHECK_ACT_PATH ]
@@ -4848,6 +4931,7 @@ proc compile_source {} {
 
    global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
+   global CHECK_PRODUCT_FEATURE
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR
@@ -5602,7 +5686,7 @@ set do_compile        0
 set do_not_update     0
 set do_all            0
 set do_nomain         0
-set do_only_test_perm 0
+set do_only_reset_config 0
 set be_quiet          0
 set CHECK_CUR_PROC_NAME "main"
 set check_name "main"
@@ -5659,7 +5743,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "" 
       puts "no_main               don't run main part (usefull for sourceing this file)"
       puts ""
-      puts "test_perm             test remote shell and user permissions on each cluster host"
+      puts "reset_conf            reset test cluster"
       puts ""
       puts "debug LEVEL           run testsuite in debuglevel 0,1 or 2"
       puts "                      0=no debug, 1=more output, 2=1+user response"
@@ -5769,8 +5853,9 @@ for { set i 0 } { $i < $argc } { incr i } {
 
    
    
-   if { ( [string compare [lindex $argv $i] "--test_perm"] == 0 ) || ([string compare [lindex $argv $i] "test_perm"] == 0 ) } {
-      set do_only_test_perm 1
+   if { ( [string compare [lindex $argv $i] "--reset_conf"] == 0 ) || ([string compare [lindex $argv $i] "reset_conf"] == 0 ) } {
+      set do_only_reset_config 1
+      set check_use_installed_system 1
       continue
    }
   
@@ -5954,13 +6039,21 @@ if { $do_kill } {
    exit 0   
 }
 
-if { $do_only_test_perm == 1 } {
+if { $do_only_reset_config == 1 } {
   set result 1
  
   set CHECK_ACT_PATH "$CHECK_ACT_PATH/install_core_system"
-  run_test $CHECK_ACT_PATH 1 "setup_check_user_permissions" 
+  run_test $CHECK_ACT_PATH 1 "setup_queues" 0
+  run_test $CHECK_ACT_PATH 1 "setup_testcheckpointobject" 0
+  run_test $CHECK_ACT_PATH 1 "setup_conf" 0
+  run_test $CHECK_ACT_PATH 1 "setup_mytestproject" 0
+  run_test $CHECK_ACT_PATH 1 "setup_mytestpe" 0
+  run_test $CHECK_ACT_PATH 1 "setup_deadlineuser" 0
+  run_test $CHECK_ACT_PATH 1 "setup_schedconf" 0
+  run_test $CHECK_ACT_PATH 1 "setup_default_calendars" 0
+  run_test $CHECK_ACT_PATH 1 "setup_inhouse_cluster" 0
  
-  puts "end of permission test" 
+  puts "configuration reset done" 
   exit $result
 }
 

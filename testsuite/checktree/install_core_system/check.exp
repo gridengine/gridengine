@@ -279,8 +279,8 @@ proc install_qmaster {} {
  global CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
  global open_spawn_buffer CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set
  global check_use_installed_system CHECK_ADMIN_USER_SYSTEM CHECK_DEFAULT_DOMAIN
- global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS
-
+ global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT
+ global CHECK_REPORT_EMAIL_TO
 
  puts $CHECK_OUTPUT "install qmaster ($CHECK_PRODUCT_TYPE system) on host $CHECK_CORE_MASTER ..."
 
@@ -308,16 +308,22 @@ proc install_qmaster {} {
 
  set prod_type_var "SGE_ROOT"
 
+ set feature_install_options ""
+ if { $CHECK_PRODUCT_FEATURE == "secure" } {
+    append feature_install_options "-csp"
+ }
+
  if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" $CHECK_QMASTER_INSTALL_OPTIONS ]
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
  } else {
     puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" $CHECK_QMASTER_INSTALL_OPTIONS ]
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
  }
  set sp_id [ lindex $id 1 ] 
  
 
-
+ log_user 1
+ puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
  set timeout 100 
  set hostcount 0
 
@@ -328,6 +334,8 @@ proc install_qmaster {} {
 
  while {1} {
  if {$do_log_output == 1} {
+   flush stdout
+   flush $CHECK_OUTPUT
    puts "press RETURN"
    gets stdin anykey
  }
@@ -400,6 +408,92 @@ proc install_qmaster {} {
           send -i $sp_id "\n"
           continue;
        }
+
+       -i $sp_id "o you want to recreate your SGE CA infrastructure" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+
+       -i $sp_id "enter your two letter country code" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >DE<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "DE\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter your state" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Bavaria<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "Bavaria\n"
+          continue;
+       }
+ 
+       -i $sp_id "lease enter your location" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Regensburg<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "Regensburg\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter the name of your organization" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Sun Microsystems<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "Sun Microsystems\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter your organizational unit" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Testsystem at port $CHECK_COMMD_PORT<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "Testsystem at port $CHECK_COMMD_PORT\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter the email address of the CA administrator" { 
+          if { $CHECK_REPORT_EMAIL_TO == "none" } {
+             set CA_admin_mail "$CHECK_USER@sun.com"
+          } else {
+             set CA_admin_mail $CHECK_REPORT_EMAIL_TO
+          }
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$CA_admin_mail<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "$CA_admin_mail\n"
+          continue;
+       }
+       -i $sp_id "o you want to use these data" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
 
        -i $sp_id -gl "You requested -resport" {
          set_error "-1" "install_qmaster: Configuration error: System with reserved port security requested, but port is configured to $CHECK_COMMD_PORT"
@@ -597,6 +691,19 @@ proc install_qmaster {} {
           send -i $sp_id "n\n"
           continue;
        }
+       
+       -i $sp_id "is started at machine boot" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          send -i $sp_id "n\n"
+          continue;
+       }
+
+
        -i $sp_id "Do you want to create a new configuration" {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
           if {$do_log_output == 1} {
@@ -747,6 +854,8 @@ proc install_execd {} {
    global check_use_installed_system CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_DEBUG_LEVEL CHECK_GROUP CHECK_EXECD_INSTALL_OPTIONS
+   global CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT CHECK_CORE_MASTER
+   global CHECK_MAIN_RESULTS_DIR
 
    set CORE_INSTALLED "" 
    read_install_list
@@ -803,15 +912,96 @@ proc install_execd {} {
       cd "$CHECK_PRODUCT_ROOT"
 
       set prod_type_var "SGE_ROOT"
+  
+      set feature_install_options ""
+      if { $CHECK_PRODUCT_FEATURE == "secure" && ( $exec_host != $CHECK_CORE_MASTER ) } {
+         append feature_install_options "-csp"
 
-      if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-         set id [open_remote_spawn_process "$exec_host" "root"  "cd $$prod_type_var;./install_execd" $CHECK_EXECD_INSTALL_OPTIONS ]
-      } else {
-         puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-         set id [open_remote_spawn_process "$exec_host" "$CHECK_USER"  "cd $$prod_type_var;./install_execd" $CHECK_EXECD_INSTALL_OPTIONS ]
+         puts $CHECK_OUTPUT "installing CA keys"
+         puts $CHECK_OUTPUT "=================="
+         puts $CHECK_OUTPUT "host:         $exec_host"
+         puts $CHECK_OUTPUT "architecture: $remote_arch"
+         puts $CHECK_OUTPUT "port:         $CHECK_COMMD_PORT"
+         puts $CHECK_OUTPUT "source:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $CHECK_CORE_MASTER"
+         puts $CHECK_OUTPUT "target:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $exec_host"
+
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+             puts $CHECK_OUTPUT "we have root access, fine !"
+             set CA_ROOT_DIR "/var/sgeCA/"
+
+             puts $CHECK_OUTPUT "removing evtl. existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+             puts $CHECK_OUTPUT $result
+
+             puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$CA_ROOT_DIR; tar -cvf port${CHECK_COMMD_PORT}.tar ./port${CHECK_COMMD_PORT}/*" ]
+             puts $CHECK_OUTPUT $result
+
+             if { $prg_exit_state != 0 } {
+                 add_proc_error "install_execd" -2 "could not tar Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
+             } else {
+                 puts $CHECK_OUTPUT "changing permissions for tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+                 set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "chmod" "700 $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                 puts $CHECK_OUTPUT $result
+                 if { $prg_exit_state != 0 } {
+                    add_proc_error "install_execd" -2 "could not change file permissions for \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
+                 } else {
+                    puts $CHECK_OUTPUT "copy tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cp" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+                    
+                    puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."
+                    set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+
+                    puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
+                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; tar -xvf port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+                    if { $prg_exit_state != 0 } {
+                       add_proc_error "install_execd" -2 "could not untar \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host"
+                    } 
+
+                    puts $CHECK_OUTPUT "removing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."
+                    set result [ start_remote_prog "$exec_host" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+
+                    puts $CHECK_OUTPUT "removing tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+
+                 }
+                  
+             }
+             
+             puts $CHECK_OUTPUT "removing existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+             puts $CHECK_OUTPUT $result
+
+
+#            set arguments "$sensor_file $CHECK_PRODUCT_ROOT/bin/$remote_arch/qloadsensor"
+#            set result [ start_remote_prog "$exec_host" "root" "cp" "$arguments" ] 
+#            puts $CHECK_OUTPUT "result: $result"
+#            puts $CHECK_OUTPUT "copy exit state: $prg_exit_state" 
+         } else {
+            puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
+            puts $CHECK_OUTPUT "installation error"
+            add_proc_error "install_execd" -2 "exec host: $exec_host"
+            continue
+         }
+
       }
 
 
+      if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+         set id [open_remote_spawn_process "$exec_host" "root"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
+      } else {
+         puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
+         set id [open_remote_spawn_process "$exec_host" "$CHECK_USER"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
+      }
+
+
+      log_user 1
+      puts $CHECK_OUTPUT "cd $$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options"
 
       set sp_id [ lindex $id 1 ] 
 
@@ -825,6 +1015,8 @@ proc install_execd {} {
      # set do_log_output 1
       set do_stop 0
       while {$do_stop == 0} {
+         flush stdout
+         flush $CHECK_OUTPUT
          if {$do_log_output == 1} {
              puts "press RETURN"
              gets stdin anykey
@@ -939,6 +1131,20 @@ proc install_execd {} {
                send -i $sp_id "n\n"
                continue;
             }
+
+            -i $sp_id "is started at machine boot" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    gets stdin anykey
+               }
+     
+               send -i $sp_id "n\n"
+               continue;
+            }
+
+
+
             -i $sp_id "Do you want to add a default queue for this host" { 
                puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
                if {$do_log_output == 1} {
@@ -1219,7 +1425,6 @@ proc setup_queues {} {
         add_queue "q_param" 
      }
   }
-
   # for each execd - standard - queue do:
   # set load_avg to 5.0
   # set slots * 10

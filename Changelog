@@ -1,3 +1,11 @@
+CR-2002-01-29-0: Testsuite: - new settings file version "6" (new parameter
+                              product_feature)
+                 Enhancem.: - added support for secure SGE/EE system
+                            - removed command line parameter test_perm
+                            - added command line parameter reset_conf
+                            - updated changes from install script
+                            - testing product feature file on startup
+
 AH-2002-01-29-0: Bugfix:    - scheduler had problems with iterating over PE slots range
                               from max to min in case of $pe_slots alloc rule
 

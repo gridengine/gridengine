@@ -1,3 +1,7 @@
+EB-2003-12-22-0: Bugfix:    fixed bug
+                            * memory access error in libs/uti/sge_hostname.c
+                 Review:    CR
+
 EB-2003-12-20-0: Bugfix:    fixed bug
                             * honour initial state correctly
                             * object_spec for ?attr options for CQs is "queue"

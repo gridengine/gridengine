@@ -366,8 +366,15 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
    /* Copy the entries */
    count = 0;
    for (p = orig->h_aliases; *p != 0; p++) {
+#if 0 /* EB: dbx memory access */
       copy->h_aliases[count] = (char *)malloc (sizeof (struct in_addr));
       memcpy (copy->h_aliases[count++], *p, sizeof (struct in_addr));
+#else
+      int tmp_size = (strlen(*p) + 1) * sizeof(char);
+
+      copy->h_aliases[count] = (char *)malloc (tmp_size);
+      memcpy (copy->h_aliases[count++], *p, tmp_size);
+#endif
    }
    
    copy->h_aliases[count] = NULL;

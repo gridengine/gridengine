@@ -952,8 +952,8 @@ AH-2004-09-06-0: Bugfix:    Effect of -p priority and weight_priority not
                  Review:    JG
 
 AA-2004-09-06-1: Bugfix:    parsing of repeated job arguments fixed
-                 Bugtraq:   5097479
-                 Issue:     1263
+                 Bugtraq:   5097479, 6185208
+                 Issue:     1263, 1302
                  Review:    RH
                  Changed:   qmon
 

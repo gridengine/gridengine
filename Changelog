@@ -1,3 +1,8 @@
+SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
+                            execd to run out of file descriptors
+                 Changed:   execd
+                 Issue:     713
+
 AH-2004-02-25-0: Enhanc.:   Added 'default_duration' to sched_conf(5).
                  Doc:       Man pages changes for reservation scheduling.
                  Bugfix:    Wrong error message for qsub -R 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/03/01 08:58:16 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/03/30 14:31:36 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2005/03/01 08:58:16 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2005/03/30 14:31:36 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -97,7 +97,8 @@ Requires root or manager privileges.
 Add the cluster configurations (see
 .M xxqs_name_sxx_conf 5 )
 specified in the files
-enlisted in the comma separated \fBfile_list\fP.
+enlisted in the comma separated \fBfile_list\fP. The configuration
+is added for the host that is identical to the file name.
 .br
 Requires root or manager privileges.
 .\"

@@ -1,3 +1,13 @@
+AH-2005-03-30-0: Doc:       Fixes with man pages:
+                            o mismatch of man page for host_aliases
+                            o bad example in man page for complex
+                            o "qconf -Aconf <file>" error
+                            o sge_shadowd(8) man page should be improved
+                 Issue:     932, 925, 890, 497
+                 BugTraq:   4820420
+                 Changed:   man
+                 Review:    CR
+
 CR-2005-03-30-0: Bugfix:    o Increased GDI version (new ssl layer)
                             o After shadowd takes over there is a long 
                               delay before execd connects to new qmaster

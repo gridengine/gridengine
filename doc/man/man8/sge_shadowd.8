@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2005/03/30 14:31:38 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2005/03/30 14:31:38 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -99,6 +99,12 @@ is expected to listen for communication requests.
 Most installations will use a services map entry for the
 service "sge_qmaster" instead to define that port.
 .\"
+.IP "\fBxxQS_NAME_Sxx_DELAY_TIME\fP" 1.5i
+If set, overrides the 600 seconds default minimum delay before before a new
+.M xxqs_name_sxx_qmaster 8
+is started by 
+.I xxqs_name_sxx_shadowd .
+.\"
 .\"
 .SH "FILES"
 .nf
@@ -109,6 +115,8 @@ service "sge_qmaster" instead to define that port.
 	Shadow master hostname file.
 \fI<xxqs_name_sxx_root>/<cell>/spool/qmaster\fP
 	Default master daemon spool directory
+\fI<xxqs_name_sxx_root>/<cell>/spool/qmaster/heartbeat\fP
+	The heartbeat file.
 .fi
 .\"
 .\"

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/11/12 15:40:06 $     Revision: $Revision: 1.12 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2005/03/30 14:31:37 $     Revision: $Revision: 1.13 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2004/11/12 15:40:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2005/03/30 14:31:37 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -265,12 +265,12 @@ The syntax follows the following rules:
            level and cannot be escaped.
 
 Examples:
- -l arch="*linux|solaris*"  : 
-      results in "arch=linux" OR "arch=glinux" 
-         OR "arch=alinus" OR "arch=solaris" OR
-         "arch=solaris64" OR "arch=solaris86" OR ...
- -l arch="[linux|solaris]"  : 
-      results in "arch=[linux" OR "arch=solaris]"  
+ -l arch="*x24*|sol*"  : 
+      results in "arch=lx24-x86" OR "arch=lx24-amd64" 
+         OR "arch=sol-sparc" OR "arch=sol-sparc64" 
+         OR "arch=sol-x86" OR ...
+ -l arch="[lx24-x86|sol-sparc]"  : 
+      results in "arch=[lx24-x86" OR "arch=sol-sparc]"  
 .RE
 .fi
                                

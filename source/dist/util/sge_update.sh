@@ -2,37 +2,7 @@
 #
 # Update CODINE/GRD/SGE(EE) file to version 5.3
 #
-#___INFO__MARK_BEGIN__
-##########################################################################
-#
-#  The Contents of this file are made available subject to the terms of
-#  the Sun Industry Standards Source License Version 1.2
-#
-#  Sun Microsystems Inc., March, 2001
-#
-#
-#  Sun Industry Standards Source License Version 1.2
-#  =================================================
-#  The contents of this file are subject to the Sun Industry Standards
-#  Source License Version 1.2 (the "License"); You may not use this file
-#  except in compliance with the License. You may obtain a copy of the
-#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
-#
-#  Software provided under this License is provided on an "AS IS" basis,
-#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
-#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
-#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
-#  See the License for the specific provisions governing your rights and
-#  obligations concerning the Software.
-#
-#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
-#
-#  Copyright: 2001 by Sun Microsystems, Inc.
-#
-#  All Rights Reserved. 
-#
-##########################################################################
-#___INFO__MARK_END__
+# (c) 2002 Sun Microsystems, Inc. Use is subject to license terms.  
 #
 # set -x   
 
@@ -140,7 +110,7 @@ WelcomeTheUser()
    $INFOTEXT "   CODINE versions 5.0.x and 5.1.x"
    $INFOTEXT "   GRD versions 5.0.x and 5.1.x"
    $INFOTEXT "   SGE 5.2.x"
-   $INFOTEXT "   SGE(EE) 5.3beta1"
+   $INFOTEXT "   SGE(EE) 5.3betax"
    $ECHO
    $INFOTEXT "Please read the upgrade documentation"
    $ECHO
@@ -506,7 +476,7 @@ CheckUpgradeType()
       echo
       $INFOTEXT "Your old Grid Engine installation is a GRD or SGEEE system."
       echo
-      $INFOTEXT "We will update your system to >%s<" "SGEEE 5.3beta2"
+      $INFOTEXT "We will update your system to >%s<" "SGEEE 5.3"
    fi
 
    $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "  
@@ -850,21 +820,23 @@ else
       Execute $RM -f $MSPOOLdir/queues/*
       
       for i in `ls $BACKUP_DIR_QUEUES`; do
-         if [ $i = template ]; then
-            $INFOTEXT "   Skipping pseudo queue \"template\""
-         else   
-            $INFOTEXT "   updating queue: %s" $i
+         $INFOTEXT "   updating queue: %s" $i
+         if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
+            env LC_ALL=C grep "^projects" $BACKUP_DIR_QUEUES/$i 2>&1 > /dev/null
+            if [ $? = 0 ]; then
+               $INFOTEXT "      queue is already updated - skipping"
+               Execute cp $BACKUP_DIR_QUEUES/$i $MSPOOLdir/queues
+            else
+               Execute sed -f $CMD_DIR/sge2sgeee-queues.sed $BACKUP_DIR_QUEUES/$i > $MSPOOLdir/queues/$i
+            fi   
+         else
             env LC_ALL=C grep "^max_migr_time" $BACKUP_DIR_QUEUES/$i 2>&1 > /dev/null
             if [ $? != 0 ]; then
                $INFOTEXT "      queue is already updated - skipping"
                Execute cp $BACKUP_DIR_QUEUES/$i $MSPOOLdir/queues
             else
-               if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
-                  Execute sed -f $CMD_DIR/sge2sgeee-queues.sed $BACKUP_DIR_QUEUES/$i > $MSPOOLdir/queues/$i
-               else
-                  Execute sed -f $CMD_DIR/queues.sed $BACKUP_DIR_QUEUES/$i > $MSPOOLdir/queues/$i
-               fi
-            fi
+               Execute sed -f $CMD_DIR/queues.sed $BACKUP_DIR_QUEUES/$i > $MSPOOLdir/queues/$i
+            fi   
          fi
       done
    fi
@@ -889,12 +861,11 @@ else
          if [ $? != 0 ]; then
             $INFOTEXT "      exec host is already updated - skipping"
             Execute cp $BACKUP_DIR_EXEC_HOSTS/$i $MSPOOLdir/exec_hosts
+         fi
+         if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
+            Execute sed -e '/^reschedule_unknown_list/d' -f $CMD_DIR/sge2sgeee-exec_hosts.sed $BACKUP_DIR_EXEC_HOSTS/$i > $MSPOOLdir/exec_hosts/$i
          else
-            if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
-               Execute sed -e '/^reschedule_unknown_list/d' -f $CMD_DIR/sge2sgeee-exec_hosts.sed $BACKUP_DIR_EXEC_HOSTS/$i > $MSPOOLdir/exec_hosts/$i
-            else
-               Execute sed -e '/^reschedule_unknown_list/d' -f $CMD_DIR/exec_hosts.sed $BACKUP_DIR_EXEC_HOSTS/$i > $MSPOOLdir/exec_hosts/$i
-            fi
+            Execute sed -e '/^reschedule_unknown_list/d' -f $CMD_DIR/exec_hosts.sed $BACKUP_DIR_EXEC_HOSTS/$i > $MSPOOLdir/exec_hosts/$i
          fi
       done
    fi

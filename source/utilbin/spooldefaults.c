@@ -231,13 +231,25 @@ static int spool_local_conf(int argc, char *argv[])
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
          ret = EXIT_FAILURE;
       } else {
-         /* put config into a list - we can't spool free objects */
-         lList *list = lCreateList("list", CONF_Type);
-         lAppendElem(list, conf);
-         if (!spool_write_object(&answer_list, spool_get_default_context(), 
+         lList *list;
+         lListElem *context = spool_create_dynamic_context(NULL, 
+                              bootstrap_get_spooling_method(),
+                              bootstrap_get_spooling_lib(), 
+                              bootstrap_get_spooling_params());
+
+         /* check if a config is already there */
+         lListElem *le = spool_read_object(NULL, context, SGE_TYPE_CONFIG, argv[3]); 
+         if ( le == NULL) { 
+            /* put config into a list - we can't spool free objects */
+            list = lCreateList("list", CONF_Type);
+            lAppendElem(list, conf);
+            if (!spool_write_object(&answer_list, spool_get_default_context(), 
                                  conf, argv[3], SGE_TYPE_CONFIG)) {
-            /* error output has been done in spooling function */
-            ret = EXIT_FAILURE;
+               /* error output has been done in spooling function */
+               ret = EXIT_FAILURE;
+            } 
+         } else {
+            fprintf(stderr, "config already there!\n");
          }
          answer_list_output(&answer_list);
       }
@@ -420,6 +432,8 @@ int main(int argc, char *argv[])
    lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+
+   log_state_set_log_gui(0);
 
    sge_prof_setup();
 

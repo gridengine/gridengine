@@ -539,6 +539,26 @@ if [ $SHADOW = "install" ]; then
          SHADOW_HOST=`$SGE_UTILBIN/gethostname -aname`
       fi
 
+      #check if spooling is supported!
+      spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_method" | awk '{ print $2 }'`
+      db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_params" | awk '{ print $2 }' | cut -d";" -f1`
+      fstype=`$SGE_UTILBIN/fstype $db_home`
+      if [ $? != 0 ]; then
+         $INFOTEXT "\n Shadow master can not access spool directory at %s! \n" $db_home 
+         $INFOTEXT "Check if the spool directory is mounted and have read/write permissions.\n"
+         exit 1
+      elif [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
+         if [ "$spooling_method" = "berkeleydb" ]; then
+            if [ `echo $fstype | grep "nfs" | wc -l` -gt 0 ]; then
+               if [ "$fstype" != "nfs4" ]; then
+                  $INFOTEXT "Spooling directory exported as $s is not supported!\n" $fstype
+                  $INFOTEXT "\nPlease install the database directory on a NFSv4 ileserver or use the RPC Client/Server mechanism"
+                  exit 1;
+               fi
+            fi
+         fi
+      fi
+
       #creating the local_conf now!
       AddLocalConfiguration
 

@@ -779,7 +779,7 @@ AddLocalConfiguration()
       ExecuteAsAdmin rm -f $TMPH
       ExecuteAsAdmin touch $TMPH
       PrintLocalConf 1 >> $TMPH
-      ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
+      ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST 2>/dev/null >/dev/null
       ExecuteAsAdmin rm -rf /tmp/$$
 }
 

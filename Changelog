@@ -1,3 +1,5 @@
+EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
+
 CR-2002-03-21-3  Testsuite: - used wrong path in path_alias test
                  Bugfix:    - don't use shepherd wrapper script (code is
                               just out commented for later reuse)

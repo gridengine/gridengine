@@ -325,7 +325,7 @@ lListElem *jatep
                   reporting_create_queue_record(NULL, qinstance, timestamp);
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), u32c(jobid), host);
-                  qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error)); 
+                  qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
                   ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
                   if (qinstance != queueep) {
                      sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 

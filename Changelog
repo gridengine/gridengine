@@ -1,3 +1,9 @@
+SG-2005-03-29-0: Bugfix:    qstat -explain E does not print queue errors correctly
+                 Bugtraq:   6247211
+                 Issue:     1525
+                 Changed:   qmaster
+                 Review:    DT
+
 CR-2005-03-25-0: Bugfix:    Fixed broken sge_ca (CSP mode) script
 
 AA-2005-03-23-0: Bugfix:    Certificate renewal in CSP mode broken

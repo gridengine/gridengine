@@ -40,7 +40,6 @@
 #include <string.h>
 #include <pwd.h>
 
-
 #include "commlib.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -52,18 +51,19 @@
 #include "sge_gdi_intern.h"
 #include "sge_stat.h"
 #include "sge_secL.h"
-#include "utility.h"
 #include "sge_getpwnam.h"
 #include "sge_arch.h"
 #include "sge_exit.h"
+#include "utility.h"
 #include "msg_sec.h"
 #include "msg_gdilib.h"
+#include "msg_utilib.h"
 
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
 
 #define CHALL_LEN       16
-#define ValidMinutes    1          /* expiry of connection        */
+#define ValidMinutes    10          /* expiry of connection        */
 #define SGESecPath      ".sge"
 #define CaKey           "cakey.pem"
 #define CaCert          "cacert.pem"
@@ -126,6 +126,7 @@ static int sec_encrypt(sge_pack_buffer *pb, const char *buf, int buflen);
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id);
 static int sec_verify_certificate(X509 *cert);
 
+/* #define SEC_RECONNECT */
 #ifdef SEC_RECONNECT
 
 static int sec_dump_connlist(void);
@@ -137,13 +138,17 @@ static int sec_pack_reconnect(sge_pack_buffer *pb,
                               u_long32 seq_send, 
                               u_long32 seq_receive, 
                               u_char *key_mat, 
-                              u_long32 key_mat_len);
+                              u_long32 key_mat_len,
+                              u_char *refreshtime, 
+                              u_long32 refreshtime_len);
 static int sec_unpack_reconnect(sge_pack_buffer *pb, 
                                 u_long32 *connid, 
                                 u_long32 *seq_send, 
                                 u_long32 *seq_receive, 
                                 u_char **key_mat, 
-                                u_long32 *key_mat_len);
+                                u_long32 *key_mat_len,
+                                u_char **refreshtime, 
+                                u_long32 *refreshtime_len);
 
 #endif
 
@@ -162,8 +167,8 @@ static void sec_setup_path(int is_daemon);
 
 static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
 
-static int sec_pack_announce(int len, u_char *buf, u_char *chall, sge_pack_buffer *pb);
-static int sec_unpack_announce(int *len, u_char **buf, u_char **chall, sge_pack_buffer *pb);
+static int sec_pack_announce(u_long32 len, u_char *buf, u_char *chall, sge_pack_buffer *pb);
+static int sec_unpack_announce(u_long32 *len, u_char **buf, u_char **chall, sge_pack_buffer *pb);
 static int sec_pack_response(u_long32 len, u_char *buf, 
                       u_long32 enc_chall_len, u_char *enc_chall, 
                       u_long32 connid, 
@@ -191,6 +196,7 @@ static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
    printf("\n");
 }   
    
+/* #define SEC_DEBUG    */
 #ifdef SEC_DEBUG
 static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 {
@@ -207,14 +213,6 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
    printf("------------------------------------------------------\n");
 }
 
-static void debug_print_ASN1_UTCTIME(ASN1_UTCTIME *time)
-{
-   BIO *out;
-   out = BIO_new_fp(stdout, BIO_NOCLOSE);
-   ASN1_UTCTIME_print(out, time);   
-   BIO_free(out);
-}   
-   
 #  define DEBUG_PRINT(x, y)              printf(x,y)
 #  define DEBUG_PRINT_BUFFER(x,y,z)      debug_print_buffer(x,y,z)
 #else
@@ -305,13 +303,10 @@ int sec_init(const char *progname)
    /* 
    ** FIXME: am I a sge daemon? -> is_daemon() should be implemented
    */
-   if (sec_is_daemon(progname))
-      gsd.is_daemon = 1;
-   else
-      gsd.is_daemon = 0;
+   gsd.is_daemon = sec_is_daemon(progname);
 
    /* 
-   ** setup the filenames of certificates, keys, etc.
+   ** setup the filenames of randfile, certificates, keys, etc.
    */
    sec_setup_path(gsd.is_daemon);
 
@@ -546,8 +541,8 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
       if (sec_decrypt(buffer,buflen,fromhost,fromcommproc,*fromid)) {
          ERROR((SGE_EVENT,"failed decrypt message (%s:%s:%d)\n",
                   fromhost,fromcommproc,*fromid));
-/*          if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0)) */
-/*             ERROR((SGE_EVENT,"failed handle decrypt error\n")); */
+         if (sec_handle_announce(fromcommproc,*fromid,fromhost,NULL,0))
+            ERROR((SGE_EVENT,"failed handle decrypt error\n"));
          DEXIT;
          return SEC_RECEIVE_FAILED;
       }
@@ -988,7 +983,7 @@ const char *tohost
    ** read x509 certificate from buffer
    */
    tmp = x509_master_buf;
-   x509_master = d2i_X509(&x509_master, &tmp, x509_master_len);
+   x509_master = d2i_X509(NULL, &tmp, x509_master_len);
    if (!x509_master) {
       ERROR((SGE_EVENT, MSG_SEC_MASTERCERTREADFAILED));
       sec_error();
@@ -1085,6 +1080,8 @@ const char *tohost
       free(iv);
    if (enc_key_mat) 
       free(enc_key_mat);
+   if (master_key)
+      EVP_PKEY_free(master_key);
 
    DEXIT;
    return i;
@@ -1115,8 +1112,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
                          char *buffer, u_long32 buflen)
 {
    EVP_PKEY *public_key[1];
-   int i, x509_len, enc_key_mat_len;
-   unsigned int chall_enc_len;
+   u_long32 i = 0, x509_len = 0, enc_key_mat_len = 0;
+   u_long32 chall_enc_len = 0;
    unsigned char *x509_buf = NULL, *tmp = NULL;
    u_char *enc_key_mat=NULL, *challenge=NULL, *enc_challenge=NULL;
    X509 *x509 = NULL;
@@ -1135,10 +1132,10 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** prepare packbuffer pb for unpacking message
    */
-   pb.head_ptr = buffer;
-   pb.cur_ptr = pb.head_ptr;
-   pb.bytes_used = 0;
-   pb.mem_size = buflen;
+   if ((i=init_packbuffer_from_buffer(&pb, buffer, buflen, 0))) {
+      ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
+      goto error;
+   }
 
    /* 
    ** prepare packbuffer for sending message
@@ -1164,7 +1161,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** read x509 certificate
    */
    tmp = x509_buf;
-   x509 = d2i_X509(&x509, &tmp, x509_len);
+   x509 = d2i_X509(NULL, &tmp, x509_len);
    free(x509_buf);
    x509_buf = NULL;
 
@@ -1201,6 +1198,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** extract public key 
    */
    public_key[0] = X509_get_pubkey(x509);
+
+   X509_free(x509);
+   x509 = NULL;
    
    if(!public_key[0]){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTGETPUBKEYFAILED));
@@ -1243,7 +1243,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    EVP_SignInit(&ctx, gsd.digest);
    EVP_SignUpdate(&ctx, challenge, CHALL_LEN);
-   if (!EVP_SignFinal(&ctx, enc_challenge, &chall_enc_len, gsd.private_key)) {
+   if (!EVP_SignFinal(&ctx, enc_challenge, (unsigned int*) &chall_enc_len, gsd.private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTCHALLENGEFAILED));
       sec_error();
       sec_send_err(commproc, id, host, &pb_respond,
@@ -1257,6 +1257,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    RAND_pseudo_bytes(gsd.key_mat, gsd.key_mat_len);
    DEBUG_PRINT_BUFFER("Sent key material", gsd.key_mat, gsd.key_mat_len);
+   DEBUG_PRINT_BUFFER("Sent enc_challenge", enc_challenge, chall_enc_len);
    
    /*
    ** seal secret key with client's public key
@@ -1270,7 +1271,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       i = -1;
       goto error;
    }
-   if (!EVP_EncryptUpdate(&ectx, enc_key_mat, &enc_key_mat_len, gsd.key_mat, gsd.key_mat_len)) {
+   if (!EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, gsd.key_mat, gsd.key_mat_len)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
@@ -1278,7 +1279,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       i = -1;
       goto error;
    }
-   EVP_SealFinal(&ectx, enc_key_mat, &enc_key_mat_len);
+   EVP_SealFinal(&ectx, enc_key_mat, (int*) &enc_key_mat_len);
 
    enc_key_mat_len = gsd.key_mat_len;
 
@@ -1341,6 +1342,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
          free(ekey[0]);
       if (x509) 
          X509_free(x509);
+      if (public_key[0]) 
+         EVP_PKEY_free(public_key[0]);
+
       DEXIT;   
       return i;
 }
@@ -1807,7 +1811,9 @@ static int sec_reconnect()
    sge_pack_buffer pb;
    SGE_STRUCT_STAT file_info;
    char *ptr;
-   unsigned char time_str[64];
+   u_char *time_str = NULL;
+   u_long32 len;
+   BIO *bio = NULL;
 
    DENTER(GDI_LAYER,"sec_reconnect");
 
@@ -1816,51 +1822,25 @@ static int sec_reconnect()
       goto error;
    }
 
-   /* 
-   ** open reconnect file
-   */
-   fp = fopen(reconnect_file, "r");
-   if (!fp) {
-      i = -1;
-      ERROR((SGE_EVENT,"can't open file '%s': %s\n",
-            reconnect_file, strerror(errno)));
-      goto error;
-   }
-
-   /* read time of connection validity            */
-   memset(time_str, '\0', sizeof(time_str));
-   for (i=0; i<63; i++) {
-      c = getc(fp);
-      if (c == EOF) {
-         ERROR((SGE_EVENT,"can't read time from reconnect file\n"));
-         i = -1;
-         goto error;
-      }
-      time_str[i] = (char) c;
-   }      
-
-   d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char **)&time_str, sizeof(time_str));
-      
    /* prepare packing buffer                                       */
-   if ((i=init_packbuffer(&pb, 0, 0))) {
+   if ((i=init_packbuffer(&pb, file_info.st_size, 0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer\n"));
       goto error;
    }
-
-   ptr = pb.head_ptr;               
-
-   for (i=0; i<((SGE_OFF_T)file_info.st_size-63); i++) {
-      c = getc(fp);
-      if (c == EOF){
-         ERROR((SGE_EVENT,"can't read data from reconnect file\n"));
-         i = -1;
-         goto error;
-      }
-      *(ptr++) = (char) c;
+   /* 
+   ** read encrypted buffer from file
+   */
+   bio = BIO_new_file(reconnect_file, "rb");
+   i = BIO_read(bio, pb.head_ptr, file_info.st_size);
+   if (!i) {
+      ERROR((SGE_EVENT,"can't read from file\n"));
+      i = -1;
+      goto error;
    }
+   BIO_free(bio);
 
    /* decrypt data with own rsa privat key            */
-   nbytes = RSA_private_decrypt((SGE_OFF_T)file_info.st_size-63, 
+   nbytes = RSA_private_decrypt((SGE_OFF_T)file_info.st_size, 
                                 (u_char*) pb.cur_ptr, (u_char*) pb.cur_ptr, 
                                  gsd.private_key->pkey.rsa, RSA_PKCS1_PADDING);
    if (nbytes <= 0) {
@@ -1871,11 +1851,17 @@ static int sec_reconnect()
    }
 
    i = sec_unpack_reconnect(&pb, &gsd.connid, &gsd.seq_send, &gsd.seq_receive,
-                              &gsd.key_mat, &gsd.key_mat_len);
+                              &gsd.key_mat, &gsd.key_mat_len, &time_str, &len);
    if (i) {
       ERROR((SGE_EVENT,"failed read reconnect from buffer\n"));
       goto error;
    }
+
+   ptr = time_str;
+   d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char **)&time_str, len);
+   free((char*) ptr);
+
+debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd.refresh_time);
 
    gsd.connect = 1;
    i = 0;
@@ -1907,11 +1893,14 @@ static int sec_reconnect()
 */
 static int sec_write_data2hd()
 {
-   FILE   *fp=NULL;
-   int   i,nbytes;
+   FILE *fp=NULL;
+   int i, nbytes;
    sge_pack_buffer pb;
    EVP_PKEY *evp = NULL;
    BIO *bio = NULL;
+   unsigned char time_str[50]; 
+   unsigned char *tmp;
+   int len;
 
    DENTER(GDI_LAYER,"sec_write_data2hd");
 
@@ -1922,11 +1911,16 @@ static int sec_write_data2hd()
       goto error;
    }
    
+   tmp = time_str;
+   len = i2d_ASN1_UTCTIME(gsd.refresh_time, &tmp);
+   time_str[len] = '\0';
+   
    /* 
    ** write data to packing buffer
    */
    if (sec_pack_reconnect(&pb, gsd.connid, gsd.seq_send, gsd.seq_receive,
-                           gsd.key_mat, gsd.key_mat_len)) {
+                           gsd.key_mat, gsd.key_mat_len, 
+                           time_str, len)) {
       ERROR((SGE_EVENT,"failed write reconnect to buffer\n"));
       i = -1;
       goto error;
@@ -1947,44 +1941,26 @@ static int sec_write_data2hd()
    }
 
    /* 
-   ** open reconnect file
+   ** write encrypted buffer to file
    */
-   if (!(fp = fopen(reconnect_file,"w"))) {
+   bio = BIO_file_new(reconnect_file, "w");
+   if (!bio) {
       ERROR((SGE_EVENT,"can't open file '%s': %s\n",
                reconnect_file, strerror(errno)));
       i = -1;
       goto error;
    }
-   
-   bio = BIO_new_fp(fp, BIO_NOCLOSE);
-
-#if 1
-   /* 
-   ** write time of refresh_time to file
-   */
-   i = ASN1_TIME_print(bio, gsd.refresh_time);
-   if (!i) {
-      ERROR((SGE_EVENT,"can't write refresh_time to file\n"));
-      i = -1;
-      goto error;
-   }
-#endif
-   /* 
-   ** write encrypted buffer to file
-   */
    i = BIO_write(bio, pb.head_ptr, nbytes);
    if (!i) {
       ERROR((SGE_EVENT,"can't write to file\n"));
       i = -1;
       goto error;
    }
-   BIO_free(bio);
 
    i=0;
 
    error:
-      if (fp) 
-         fclose(fp);
+      BIO_free(bio);
       clear_packbuffer(&pb);   
       DEXIT;
       return i;
@@ -2474,17 +2450,20 @@ int is_daemon
       ca_key_file = sge_malloc(strlen(sge_cakeyfile));
       strcpy(ca_key_file, sge_cakeyfile);
    } else {
-      len = strlen(CA_LOCAL_DIR) + 
-            (cp ? strlen(cp)+4:strlen(SGE_COMMD_SERVICE)) +
-            strlen(sge_get_default_cell()) + 3;
-      ca_local_root = sge_malloc(len);
-      if (cp)
-         sprintf(ca_local_root, "%s/port%s/%s", CA_LOCAL_DIR, cp, 
-                  sge_get_default_cell());
-      else
-         sprintf(ca_local_root, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, 
-                  sge_get_default_cell());
-         
+      if (getenv("SGE_NO_CA_LOCAL_ROOT")) {
+         ca_local_root = ca_root;
+      } else {
+         len = strlen(CA_LOCAL_DIR) + 
+               (cp ? strlen(cp)+4:strlen(SGE_COMMD_SERVICE)) +
+               strlen(sge_get_default_cell()) + 3;
+         ca_local_root = sge_malloc(len);
+         if (cp)
+            sprintf(ca_local_root, "%s/port%s/%s", CA_LOCAL_DIR, cp, 
+                     sge_get_default_cell());
+         else
+            sprintf(ca_local_root, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, 
+                     sge_get_default_cell());
+      }   
       if (is_daemon && SGE_STAT(ca_local_root, &sbuf)) { 
          CRITICAL((SGE_EVENT, MSG_SEC_CALOCALROOTNOTFOUND_S, ca_local_root));
          SGE_EXIT(1);
@@ -2600,7 +2579,9 @@ int is_daemon
     
    free(userdir);
    free(ca_root);
-   free(ca_local_root);
+   if (!getenv("SGE_NO_CA_LOCAL_ROOT")) {
+      free(ca_local_root);
+   }   
 }
 
 static sec_exit_func_type install_sec_exit_func(
@@ -2630,13 +2611,13 @@ sec_exit_func_type new
 **      0       on success
 **      <>0     on failure
 */
-static int sec_pack_announce(int certlen, u_char *x509_buf, u_char *challenge, sge_pack_buffer *pb)
+static int sec_pack_announce(u_long32 certlen, u_char *x509_buf, u_char *challenge, sge_pack_buffer *pb)
 {
    int   i;
 
-   if((i=packint(pb,(u_long32) certlen))) 
+   if((i=packint(pb, certlen))) 
       goto error;
-   if((i=packbuf(pb,(char *) x509_buf,(u_long32) certlen))) 
+   if((i=packbuf(pb,(char *) x509_buf, certlen))) 
       goto error;
    if((i=packbuf(pb,(char *) challenge, CHALL_LEN))) 
       goto error;
@@ -2645,13 +2626,13 @@ static int sec_pack_announce(int certlen, u_char *x509_buf, u_char *challenge, s
       return(i);
 }
 
-static int sec_unpack_announce(int *certlen, u_char **x509_buf, u_char **challenge, sge_pack_buffer *pb)
+static int sec_unpack_announce(u_long32 *certlen, u_char **x509_buf, u_char **challenge, sge_pack_buffer *pb)
 {
    int i;
 
-   if((i=unpackint(pb,(u_long32 *) certlen))) 
+   if((i=unpackint(pb, certlen))) 
       goto error;
-   if((i=unpackbuf(pb, (char **) x509_buf, (u_long32) *certlen))) 
+   if((i=unpackbuf(pb, (char **) x509_buf, *certlen))) 
       goto error;
    if((i=unpackbuf(pb, (char **) challenge, CHALL_LEN))) 
       goto error;
@@ -2670,29 +2651,28 @@ static int sec_pack_response(u_long32 certlen, u_char *x509_buf,
 {
    int i;
 
-   if((i=packint(pb,(u_long32) certlen))) 
+   if((i=packint(pb, certlen))) 
       goto error;
-   if((i=packbuf(pb,(char *) x509_buf,(u_long32) certlen))) 
+   if((i=packbuf(pb,(char *) x509_buf, certlen))) 
       goto error;
-   if((i=packint(pb,(u_long32) chall_enc_len))) 
+   if((i=packint(pb, chall_enc_len))) 
       goto error;
-   if((i=packbuf(pb,(char *) enc_challenge,(u_long32) chall_enc_len)))
+   if((i=packbuf(pb,(char *) enc_challenge, chall_enc_len)))
       goto error;
-   if((i=packint(pb,(u_long32) connid))) 
+   if((i=packint(pb, connid))) 
       goto error;
-   if((i=packint(pb,(u_long32) enc_key_len))) 
+   if((i=packint(pb, enc_key_len))) 
       goto error;
-   if((i=packbuf(pb,(char *) enc_key,(u_long32) enc_key_len))) 
+   if((i=packbuf(pb,(char *) enc_key, enc_key_len))) 
       goto error;
-   if((i=packint(pb,(u_long32) iv_len))) 
+   if((i=packint(pb, iv_len))) 
       goto error;
-   if((i=packbuf(pb,(char *) iv,(u_long32) iv_len))) 
+   if((i=packbuf(pb, (char *) iv, iv_len))) 
       goto error;
-   if((i=packint(pb,(u_long32) enc_key_mat_len))) 
+   if((i=packint(pb, enc_key_mat_len))) 
       goto error;
-   if((i=packbuf(pb,(char *) enc_key_mat,(u_long32) enc_key_mat_len))) 
+   if((i=packbuf(pb, (char *) enc_key_mat, enc_key_mat_len))) 
       goto error;
-
 
    error:
       return(i);
@@ -2708,27 +2688,27 @@ static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf,
 {
    int i;
 
-   if((i=unpackint(pb,(u_long32 *) certlen))) 
+   if((i=unpackint(pb, certlen))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) x509_buf,(u_long32) *certlen))) 
+   if((i=unpackbuf(pb, (char **) x509_buf, *certlen))) 
       goto error;
-   if((i=unpackint(pb,(u_long32 *) chall_enc_len))) 
+   if((i=unpackint(pb, chall_enc_len))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) enc_challenge,(u_long32) *chall_enc_len)))
+   if((i=unpackbuf(pb,(char **) enc_challenge, *chall_enc_len)))
       goto error;
-   if((i=unpackint(pb,(u_long32 *) connid))) 
+   if((i=unpackint(pb, connid))) 
       goto error;
-   if((i=unpackint(pb,(u_long32 *) enc_key_len))) 
+   if((i=unpackint(pb, enc_key_len))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) enc_key,(u_long32) *enc_key_len)))
+   if((i=unpackbuf(pb,(char **) enc_key, *enc_key_len)))
       goto error;
-   if((i=unpackint(pb,(u_long32 *) iv_len))) 
+   if((i=unpackint(pb, iv_len))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) iv,(u_long32) *iv_len)))
+   if((i=unpackbuf(pb, (char **) iv, *iv_len)))
       goto error;
-   if((i=unpackint(pb,(u_long32 *) enc_key_mat_len))) 
+   if((i=unpackint(pb, enc_key_mat_len))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) enc_key_mat,(u_long32) *enc_key_mat_len)))
+   if((i=unpackbuf(pb,(char **) enc_key_mat, *enc_key_mat_len)))
       goto error;
 
 
@@ -2776,7 +2756,8 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
 
 #ifdef SEC_RECONNECT
 
-static int sec_pack_reconnect(sge_pack_buffer *pb, u_long32 connid, u_long32 seq_send, u_long32 seq_receive, u_char *key_mat, u_long32 key_mat_len)
+static int sec_pack_reconnect(sge_pack_buffer *pb, u_long32 connid, u_long32 seq_send, u_long32 seq_receive, u_char *key_mat, u_long32 key_mat_len,
+u_char *refreshtime, u_long32 refreshtime_len)
 {
    int i;
 
@@ -2788,26 +2769,36 @@ static int sec_pack_reconnect(sge_pack_buffer *pb, u_long32 connid, u_long32 seq
       goto error;
    if ((i=packint(pb, key_mat_len))) 
       goto error;
-   if ((i=packbuf(pb,(char *) key_mat, key_mat_len)))
+   if ((i=packbuf(pb, (char *) key_mat, key_mat_len)))
       goto error;
+   if ((i=packint(pb, refreshtime_len))) 
+      goto error;
+   if ((i=packbuf(pb, (char *) refreshtime, refreshtime_len)))
+      goto error;
+
 
    error:
         return(i);
 }
 
-static int sec_unpack_reconnect(sge_pack_buffer *pb, u_long32 *connid, u_long32 *seq_send, u_long32 *seq_receive, u_char **key_mat, u_long32 *key_mat_len)
+static int sec_unpack_reconnect(sge_pack_buffer *pb, u_long32 *connid, u_long32 *seq_send, u_long32 *seq_receive, u_char **key_mat, u_long32 *key_mat_len,
+u_char **refreshtime, u_long32 *refreshtime_len)
 {
    int i;
 
-   if((i=unpackint(pb,(u_long32 *) connid))) 
+   if ((i=unpackint(pb, connid))) 
       goto error;
-   if((i=unpackint(pb,(u_long32 *) seq_send))) 
+   if ((i=unpackint(pb, seq_send))) 
       goto error;
-   if((i=unpackint(pb,(u_long32 *) seq_receive))) 
+   if ((i=unpackint(pb, seq_receive))) 
       goto error;
-   if((i=unpackint(pb,(u_long32 *) key_mat_len))) 
+   if ((i=unpackint(pb, key_mat_len))) 
       goto error;
-   if((i=unpackbuf(pb,(char **) key_mat, (*key_mat_len))))
+   if ((i=unpackbuf(pb, (char **) key_mat, *key_mat_len)))
+      goto error;
+   if ((i=unpackint(pb, refreshtime_len))) 
+      goto error;
+   if ((i=unpackbuf(pb, (char **) refreshtime, *refreshtime_len)))
       goto error;
 
    error:

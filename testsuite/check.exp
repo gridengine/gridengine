@@ -14684,9 +14684,14 @@ if { $no_action == 1 } {
 
 if { $do_prog_start == 1 } {
    puts $CHECK_OUTPUT "starting $exec_args ..."
-      
 
-   exit [ eval $exec_args  ]
+   set exit_value [ eval $exec_args  ]
+
+   if { $exit_value == "" } {
+      exit 0
+   } else {
+      exit [ eval $exec_args  ]
+   }
 }
 
 if { $check_reinit_on_tcl_error == 1 } {

@@ -50,10 +50,12 @@
 #include "sge_profiling.h"
 
 
+
 void usage(void);
 int main(int argc, char **argv);
-void run_server_test(int port);
+void run_server_test(int port,int repeat);
 void start_server_handling(int sockfd);
+void start_server_handling2(int sockfd,int repeat);
 int get_open_connections(int *open_connections);
 void handle_new_connect(int sockfd, int *open_connections);
 int read_data(int fd, char* data);
@@ -84,6 +86,7 @@ void usage()
    exit(1);
 }
 
+int tcp_closefd_flag = 0;
 int main(
 int argc,
 char **argv 
@@ -102,21 +105,19 @@ char **argv
    int no_tcp_flag = 0;
    int no_commd_flag = 0;
    int first_message;  
-   int tcp_closefd_flag = 0;
    int repetitions;
    u_long32 nr_bytes;
    double bytes_per_second;
    double run_time;
 
    int port = 0;
-
    int datasize = 1024;
    int repeat = 5000;
 
-   
 
    DENTER_MAIN(TOP_LAYER, "testsuite_snd"); 
-#ifdef __SGE_COMPILE_WITH_GETTEXT__  
+
+#ifdef __SGE_COMPILE_WITH_GETTEXT__
    /* init language output for gettext() , it will use the right language */
    sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
@@ -186,8 +187,6 @@ char **argv
          synchron_send = 1;
       }
    }
-
-
    strcpy(mydata,"");
    for (i=1;i<datasize;i++) {
       strcat(mydata,"_");
@@ -293,43 +292,15 @@ char **argv
    }
    if (no_tcp_flag) {
       return 0;
-   }
 
-   if ( tcp_closefd_flag ) {
-      int is_receiver_ready = 0;
-      repetitions = repeat;
-      prof_start(NULL);
-      nr_bytes = 0;
-      while (repetitions-- > 0 ) {
-         int back = 0; 
-         while( (back=run_client_test2(host, port,1)) < 0 );
-         if (!is_receiver_ready) {
-            is_receiver_ready = 1;
-            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
-         }
-         nr_bytes = nr_bytes + back;
-      }
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
-      run_time = prof_get_measurement_wallclock(SGE_PROF_CUSTOM0,true,NULL);
-      printf("TCP/IP: %ld bytes send in %.3f seconds\n", nr_bytes,run_time);
-      if ( run_time > 0) {
-         bytes_per_second = (double)nr_bytes / (double)run_time / 1024.0 * 8.0;
-         printf("TCP/IP: %.3f KBit/s\n",bytes_per_second);
-         fflush(stdout);
-      }
-   } else {
-   
-      while ( run_client_test(host, port,repeat) != 0) {
-         printf("waiting for connect ...\n");
-         sleep(1);
-      } 
    }
+   run_server_test(port,repeat);
    fflush(stdout);
    return 0;
+
 }
 
-
-void run_server_test(int port) {
+void run_server_test(int port, int repeat) {
    int sockfd = 0;
    int on = 1;
    struct sockaddr_in serv_addr;
@@ -356,8 +327,14 @@ void run_server_test(int port) {
 
    /* make socket listening for incoming connects */
    listen(sockfd, 5);
+   if (!tcp_closefd_flag) {
+      printf("starting server handling 1\n");
+      start_server_handling(sockfd);
+   } else {
+      printf("starting server handling 2 - closing fds\n");
 
-   start_server_handling(sockfd);
+      start_server_handling2(sockfd,repeat);
+   }
 }
 
 int run_client_test(char* host, int port, int repeat) {
@@ -404,7 +381,6 @@ int run_client_test(char* host, int port, int repeat) {
       if (i == -1) {
          if (errno == ECONNREFUSED || errno == EADDRNOTAVAIL ) {
             printf("connection refused or not available\n");
-            sleep(1);
             shutdown(sockfd, 2);
             close(sockfd);
             return -1;
@@ -454,15 +430,12 @@ int run_client_test(char* host, int port, int repeat) {
       int select_back = 0;
       
 
-      
-
       FD_ZERO(&writefds);
       maxfd = MAX(maxfd,sockfd);
       FD_SET(sockfd, &writefds); 
       
       timeout.tv_sec = 2; 
       timeout.tv_usec = 0;
-
 #if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
       select_back = select(FD_SETSIZE, NULL, (int *) &writefds, NULL, &timeout);
 #else
@@ -477,7 +450,7 @@ int run_client_test(char* host, int port, int repeat) {
              }
          }
          nr_bytes = nr_bytes + help;
-      } 
+      }
       if (select_back == -1) {
          if (errno == EBADF) {
             printf("error for select, errno = EBADF\n");
@@ -491,7 +464,7 @@ int run_client_test(char* host, int port, int repeat) {
    run_time = prof_get_measurement_wallclock(SGE_PROF_CUSTOM0,true,NULL);
 
    printf("TCP/IP: "u32" bytes send in %.3f seconds\n", nr_bytes,run_time);
-   if ( run_time > 0) {
+   if ( run_time > 0.0) {
       bytes_per_second = (double)nr_bytes / (double)run_time / 1024.0 * 8.0;
       printf("TCP/IP: %.3f KBit/s\n",bytes_per_second);
       fflush(stdout);
@@ -542,9 +515,9 @@ int run_client_test2(char* host, int port, int repeat) {
          if (errno == ECONNREFUSED || errno == EADDRNOTAVAIL ) {
             printf("connection refused or not available\n");
             fflush(stdout); 
-            sleep(1);
             shutdown(sockfd, 2);
             close(sockfd);
+            sleep(1);
             return -10;
          }
          
@@ -579,7 +552,6 @@ int run_client_test2(char* host, int port, int repeat) {
       int maxfd = -1;
       int select_back;
 
-      
 
       FD_ZERO(&writefds);
       maxfd = MAX(maxfd,sockfd);
@@ -625,23 +597,23 @@ void start_server_handling(int sockfd) {
 
    int select_back;
    int i,nfd;
-   int open_connections[10];
+   int open_connections[1000];
    char data_buffer[30000];
    char send_buffer[30000];
    u_long32 nr_bytes = 0;
-   u_long32 start_time = 0;
-   u_long32 end_time = 0;
    double bytes_per_second;
-   u_long32 run_time;
+   double run_time;
 
 
 
-   for (i=0;i<10;i++) {
+   for (i=0;i<1000;i++) {
       open_connections[i] = -1;
    }
 
    strcpy(send_buffer,"");
    strcpy(data_buffer,"");
+
+   prof_start(NULL);
 
 
    while(1) {
@@ -709,12 +681,13 @@ void start_server_handling(int sockfd) {
                if (bread == -1) {
                   /* close connection */
                   close_open_connection(i,open_connections);
-                  end_time = sge_get_gmt();
-                  run_time = end_time - start_time;
-                  printf(u32" bytes received in "u32" seconds\n", nr_bytes,run_time);
-                  if ( run_time > 0) {
-                     bytes_per_second = (double)nr_bytes / (double)run_time / 1024.0 * 8.0;
-                     printf("%.3f KBit/s\n",bytes_per_second);
+                  PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
+                  run_time = prof_get_measurement_wallclock(SGE_PROF_CUSTOM0,true,NULL);
+
+                  printf("TCP/IP: "u32" bytes received in %.3f seconds\n", nr_bytes,run_time);
+                  if ( run_time > 0.0) {
+                     bytes_per_second = (double)nr_bytes / run_time / 1024.0 * 8.0;
+                     printf("TCP/IP: %.3f KBit/s\n",bytes_per_second);
                   }
 
                   exit(0);
@@ -731,7 +704,7 @@ void start_server_handling(int sockfd) {
             if (i == sockfd && read_set) {
                printf("new connection\n");
                handle_new_connect(sockfd,open_connections); 
-               start_time = sge_get_gmt();
+               PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
                nr_bytes = 0;
             }
          }
@@ -739,33 +712,172 @@ void start_server_handling(int sockfd) {
    }
 }
 
-int get_open_connections(int *open_connections) {
-   int i;
-   int open_con = 0;
+void start_server_handling2(int sockfd,int repeat) {
+   int maxfd=0;
+   fd_set readfds, writefds;
+   struct timeval timeout;
 
-   for (i=0;i<10;i++) {
-      if (open_connections[i] != -1) {
-         open_con++;
+   int select_back;
+   int i,nfd;
+   int open_connections[1000];
+   char data_buffer[30000];
+   char send_buffer[30000];
+   u_long32 nr_bytes = 0;
+   double bytes_per_second;
+   double run_time;
+   int messages = 0;
+   int mes_start = 0;
+
+
+   for (i=0;i<1000;i++) {
+      open_connections[i] = -1;
+   }
+
+   strcpy(send_buffer,"");
+   strcpy(data_buffer,"");
+
+   prof_start(NULL);
+
+
+   while(1) {
+   FD_ZERO(&readfds);
+   FD_ZERO(&writefds);
+
+   maxfd = MAX(maxfd,sockfd);
+   FD_SET(sockfd, &readfds);
+ 
+   /* set client filedescriptors */
+#if 0
+   for(i=get_open_connections(open_connections);i>0;i--) {
+      FD_SET(open_connections[i-1],&readfds);
+      maxfd = MAX(maxfd,open_connections[i-1]);
+      if (send_buffer[0] != 0) {
+         FD_SET(open_connections[i-1],&writefds);
       }
    }
-   return open_con;
+#endif
+#if 1 
+   for(i=0; i<1000 && open_connections[i] != -1 ;i++) {
+      FD_SET(open_connections[i],&readfds);
+      maxfd = MAX(maxfd,open_connections[i]);
+      if (send_buffer[0] != 0) {
+         FD_SET(open_connections[i],&writefds);
+      }
+   }
+#endif
+
+
+   timeout.tv_sec = 2; 
+   timeout.tv_usec = 0;
+#if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX)
+   select_back = select(FD_SETSIZE, (int *) &readfds, (int *) &writefds, NULL, &timeout);
+#else
+   select_back = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
+#endif
+      
+/*      printf("waiting for connections (select_back=%d)(open=%d)...\n",
+             select_back,
+             get_open_connections(open_connections)
+      ); */
+/*      for (i=0;i<10;i++) {
+         printf("%d ",open_connections[i]);
+      }
+      printf("\n"); */
+
+      if (select_back == -1) {
+         /* error handling */
+         if (errno == EBADF) {
+            printf("error for select, errno = EBADF\n");
+            printf("error for select, errno = %s\n", strerror(errno));
+         } else {
+            printf("error for select, errno = %s\n", strerror(errno));
+         }
+      } else {
+         /* select was ok */
+         nfd = select_back;
+         for(i=0; nfd && i <= maxfd  ; i++) {
+            int write_set = FD_ISSET(i, &writefds);
+            int read_set = FD_ISSET(i, &readfds);
+   
+            if (!write_set && !read_set) {
+               continue;
+            }
+   
+            if (i != sockfd && read_set) {
+               int bread = 0;
+               nfd--;
+
+               bread=read_data(i,data_buffer); 
+               if(bread > 0 ) {
+                  nr_bytes = nr_bytes + bread;
+
+               }
+               if (bread == -1) {
+                  /* close connection */
+                  close_open_connection(i,open_connections);
+                  messages++;
+
+                  if (messages == repeat) {
+                     PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
+                     run_time = prof_get_measurement_wallclock(SGE_PROF_CUSTOM0,true,NULL);
+
+                     printf("TCP/IP: %ld bytes received in %.3f seconds\n", (long)nr_bytes,run_time);
+                     if ( run_time > 0.0) {
+                        bytes_per_second = (double)nr_bytes / run_time / 1024.0 * 8.0;
+                        printf("TCP/IP: %.3f KBit/s\n",bytes_per_second);
+                     }
+
+                     exit(0);
+                  }
+               }
+               /* strcpy(send_buffer,data_buffer); */  /* to test write */
+            }   
+            if (write_set) {
+               if (write_data(i,send_buffer) == -1) {
+                  /* close connection */
+                  close_open_connection(i,open_connections);
+               }
+               nfd--;
+            }   
+            if (i == sockfd && read_set) {
+               /* printf("new connection\n"); */
+               handle_new_connect(sockfd,open_connections); 
+               if (mes_start == 0) {
+                  PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
+                  nr_bytes = 0;
+                  mes_start = 1;
+               }
+            }
+         }
+      }
+   }
+}
+
+
+
+
+int get_open_connections(int *open_connections) {
+   int i;
+
+   for (i=0 ; i<1000 && open_connections[i] != -1 ; i++); 
+   return i;
 }
 
 void close_open_connection(int fd, int *open_connections) {
+   int max_connection = get_open_connections(open_connections);
    int i;
    int b;
+   
+   max_connection++;
 
-   for (i=0;i<10;i++) {
+   for (i=0;i<max_connection;i++) {
       if (open_connections[i] == fd) {
-         printf("closing fd %d\n",fd);
          shutdown(fd, 2);
          close(fd);
-         for (b=i;b<=8;b++) {
+         for (b=i;b<=(max_connection-2);b++) {
             open_connections[b] = open_connections[b+1];
          }
-         open_connections[9] = -1;
-          
-         printf("closing done\n");
+         open_connections[(max_connection-1)] = -1;
          return;
       }
    }
@@ -787,9 +899,9 @@ void handle_new_connect(int sockfd, int *open_connections) {
    
    if (new_sfd == -1) {
       if (errno == EMFILE) { 
-         printf("to many open files\n");
+/*         printf("to many open files\n"); */
       }
-      printf("error for accept, errno = %s\n", strerror(errno));
+/*      printf("error for accept, errno = %s\n", strerror(errno)); */
       return;
    }
    fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
@@ -805,7 +917,7 @@ void handle_new_connect(int sockfd, int *open_connections) {
    /* ntohs(cli_addr.sin_port) ... */
    
    i = get_open_connections(open_connections);
-   if (i>=10) {
+   if (i>=1000) {
       printf("too much connections, try later\n");
       shutdown(new_sfd, 2);
       close(new_sfd);
@@ -818,9 +930,9 @@ int read_data(int fd, char* data) {
    int size;
 
    strcpy(data,"");
-   size = read(fd,data,999);
+   size = read(fd,data,29999);
    if (size == 0) {
-      printf("size is 0\n");
+      /* printf("size is 0\n"); */
       return -1;
    }
    if (size == -1) {
@@ -870,8 +982,6 @@ int write_data(int fd, char* data) {
 /*   printf("%d data bytes written\n",size);   */
    return size;
 }
-
-
 
 
 

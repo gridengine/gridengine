@@ -85,7 +85,7 @@ proc communication_setup {} {
    global send_binary
 
    global CHECK_CORE_EXECD CHECK_OUTPUT
-   global CHECK_SOURCE_DIR CHECK_USER
+   global CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
 
    
    set setup_ok 0
@@ -99,8 +99,8 @@ proc communication_setup {} {
        set_error -3 "test not supported for version [get_version_info]"
        return -3
    }
+   set remote_host2 $CHECK_CORE_MASTER
    set remote_host1 [lindex $CHECK_CORE_EXECD 1]
-   set remote_host2 [lindex $CHECK_CORE_EXECD 2]
 
    puts $CHECK_OUTPUT "host: $remote_host1"
    set up_arch [resolve_upper_arch $remote_host1]
@@ -231,8 +231,8 @@ proc update_html_file { html_file data_file } {
          puts $CHECK_OUTPUT "avg_receive : $avg_receive"
    
          set table(1,1) "date:"
-         set table(2,1) "avg. send (%)"
-         set table(3,1) "avg. receive (%)"
+         set table(2,1) "avg. send commd compared to tcp/ip (%)"
+         set table(3,1) "avg. receive commd compared to tcp/ip (%)"
          set table(4,1) "KBit/s chart"
          set table(5,1) "commd <-> TCPIP percentage chart"
          set table(6,1) "send host"
@@ -271,6 +271,8 @@ proc update_html_file { html_file data_file } {
     generate_html_file $html_file "commd communication test" $content
 }
 
+
+
 proc communication_run { } {
    global CHECK_OUTPUT setup_ok remote_host1 remote_host2
    global CHECK_PROTOCOL_DIR check_name CHECK_HOST
@@ -294,18 +296,28 @@ proc communication_run { } {
    
 
    set csize 1.5
-   set a 0
-   for {set i 1.5} { $csize < 12500.0 } { set i [ expr ( $i + 0.1 ) ] } {
-      set csize [expr ( pow ( 10 , $i ) ) ]
-      set size($a) [ expr ( round ( $csize ) ) ]  
+#   set a 0
+#   for {set i 1.5} { $csize < 12500.0 } { set i [ expr ( $i + 0.1 ) ] } {
+#      set csize [expr ( pow ( 10 , $i ) ) ]
+#      set size($a) [ expr ( round ( $csize ) ) ]  
 #      puts $CHECK_OUTPUT "$i $size($a)"
-      incr a 1
+#      incr a 1
+#   }
+   
+  
+   set a 20
+   set b 0
+   for {set i 0} { $i < $a } { incr i 1 } {
+      set size($i) $b
+      incr b 250
    }
-#   set a 3
+   set size(0) [expr ( $size(0) + 100 ) ]
+     
    set save_array(count) $a
    for {set i 0} { $i < $a } { incr i 1 } {
       puts $CHECK_OUTPUT "\nSending 2000 x $size($i) byte ..."
-      run_communication_test back 43001 0 0 2000 $size($i) 15
+      run_communication_test back 43001 0 1 2000 $size($i) 15
+
       puts $CHECK_OUTPUT "commd:  send     $back(snd_commd_kbits) kbit/s"
       puts $CHECK_OUTPUT "commd:  received $back(rcv_commd_kbits) kbit/s"
       puts $CHECK_OUTPUT "TCP/IP: send     $back(snd_tcpip_kbits) kbit/s"
@@ -432,6 +444,128 @@ proc communication_run { } {
 }
 
 
+proc communication_compare_data_files { data_file1 data_file2 } {
+
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR com_output_dir check_name
+
+   set com_output_dir $CHECK_PROTOCOL_DIR/communication
+   set output_gif_dir $com_output_dir/gif
+
+   read_array_from_file $data_file1 "content" mcount1
+   read_array_from_file $data_file2 "content" mcount2
+
+   if { [ info exists mcount1(runs) ] } {
+      set data_count1 $mcount1(runs)
+   } else {
+      set data_count1 ""
+   }
+   if { [ info exists mcount2(runs) ] } {
+      set data_count2 $mcount2(runs)
+   } else {
+      set data_count2 ""
+   }
+
+   
+   set elem1 [lindex $data_count1 0]
+   set elem2 [lindex $data_count2 0]
+   
+   set clock_format1 [ split [clock format $elem1 -format "%d.%m.%Y-%H:%M:%S"] "-"]
+   set clock_format2 [ split [clock format $elem2 -format "%d.%m.%Y-%H:%M:%S"] "-"]
+  
+   set test_date1 [lindex $clock_format1 0]
+   set test_date2 [lindex $clock_format2 0]
+
+   set test_time1 [lindex $clock_format1 1]
+   set test_time2 [lindex $clock_format2 1]
+
+   puts $CHECK_OUTPUT "data1: $test_date1 at $test_time1"
+   puts $CHECK_OUTPUT "data2: $test_date2 at $test_time2"
+
+   read_array_from_file $data_file1 $elem1 test_data1
+   read_array_from_file $data_file2 $elem2 test_data2
+
+   for {set i 0} { $i < $test_data1(count) } { incr i 1 } {
+      set size $test_data1($i,size)
+      if { $size != $test_data2($i,size) } {
+         puts $CHECK_OUTPUT "error: data size not equal"
+         return 1
+      }
+      puts $CHECK_OUTPUT "snd_commd : $test_data1($i,snd_commd_kbits) vs $test_data2($i,snd_commd_kbits)"
+      puts $CHECK_OUTPUT "rcv_commd : $test_data1($i,rcv_commd_kbits) vs $test_data2($i,rcv_commd_kbits)"
+      puts $CHECK_OUTPUT "snd_tcp/ip: $test_data1($i,snd_tcpip_kbits) vs $test_data2($i,snd_tcpip_kbits)"
+      puts $CHECK_OUTPUT "rcv_tcp/ip: $test_data1($i,rcv_tcpip_kbits) vs $test_data2($i,rcv_tcpip_kbits)"
+
+      # commd1 send data
+      set xydata(0,$i,x) $size
+      set xydata(0,$i,y) $test_data1($i,snd_commd_kbits)
+      # commd2 send data
+      set xydata(1,$i,x) $size
+      set xydata(1,$i,y) $test_data2($i,snd_commd_kbits)
+      # tcp/ip1 send data
+      set xydata(2,$i,x) $size
+      set xydata(2,$i,y) $test_data1($i,snd_tcpip_kbits)
+      # tcp/ip1 send data
+      set xydata(3,$i,x) $size
+      set xydata(3,$i,y) $test_data2($i,snd_tcpip_kbits)
+      # commd1 rcv data
+      set xydata(4,$i,x) $size
+      set xydata(4,$i,y) $test_data1($i,rcv_commd_kbits)
+      # commd2 rcv data
+      set xydata(5,$i,x) $size
+      set xydata(5,$i,y) $test_data2($i,rcv_commd_kbits)
+      # tcp/ip1 rcv data
+      set xydata(6,$i,x) $size
+      set xydata(6,$i,y) $test_data1($i,rcv_tcpip_kbits)
+      # tcp/ip2 rcv data
+      set xydata(7,$i,x) $size
+      set xydata(7,$i,y) $test_data2($i,rcv_tcpip_kbits)
+   }
+   set xydata(0,drawmode) "lines"
+   set xydata(1,drawmode) "lines"
+   set xydata(2,drawmode) "lines"
+   set xydata(3,drawmode) "lines"
+   set xydata(4,drawmode) "lines"
+   set xydata(5,drawmode) "lines"
+   set xydata(6,drawmode) "lines"
+   set xydata(7,drawmode) "lines"
+
+   set xydata(0,title) "commd1 send"
+   set xydata(1,title) "commd2 send"
+   set xydata(2,title) "TCP/IP1 send"
+   set xydata(3,title) "TCP/IP2 send"
+   set xydata(4,title) "commd1 receive"
+   set xydata(5,title) "commd2 receive"
+   set xydata(6,title) "TCP/IP1 receive"
+   set xydata(7,title) "TCP/IP2 receive"
+
+   set xydata(0,show) 1
+   set xydata(1,show) 1
+   set xydata(2,show) 1
+   set xydata(3,show) 1
+   set xydata(4,show) 1
+   set xydata(5,show) 1
+   set xydata(6,show) 1
+   set xydata(7,show) 1
+
+   set drawing(output_file) [get_tmp_file_name]
+   set drawing(xlabel)      "data size in byte"
+   set drawing(ylabel)      "KBit/s"
+   set drawing(title)       "test1 ($data_file1) vs test2 ($data_file2)"
+
+   create_gnuplot_xy_gif drawing xydata
+   set gif_file_name "KBit_[clock format $elem1 -format "%d.%m.%Y-%H:%M:%S"]_vs_[clock format $elem2 -format "%d.%m.%Y-%H:%M:%S"]" 
+   if { [file exists $output_gif_dir/$gif_file_name.gif ] } {
+      puts $CHECK_OUTPUT "deleting old file"
+      file delete $output_gif_dir/$gif_file_name.gif
+   }
+   file copy -- $drawing(output_file) $output_gif_dir/$gif_file_name.gif
+
+   puts $CHECK_OUTPUT "file saved as:\n$output_gif_dir/$gif_file_name.gif"
+   return 0
+}
+
+
+
 proc communication_run_message_count { } {
    global CHECK_OUTPUT setup_ok remote_host1 remote_host2
    global CHECK_PROTOCOL_DIR check_name CHECK_HOST
@@ -454,19 +588,27 @@ proc communication_run_message_count { } {
 #   return
    
 
-   set csize 3.0
-   set a 0
-   for {set i 3.0} { $csize < 9000.0 } { set i [ expr ( $i + 0.1 ) ] } {
-      set csize [expr ( pow ( 10 , $i ) ) ]
-      set size($a) [ expr ( round ( $csize ) ) ]  
+#   set csize 3.0
+#   set a 0
+#   for {set i 3.0} { $csize < 9000.0 } { set i [ expr ( $i + 0.1 ) ] } {
+#      set csize [expr ( pow ( 10 , $i ) ) ]
+#      set size($a) [ expr ( round ( $csize ) ) ]  
 #      puts $CHECK_OUTPUT "$i $size($a)"
-      incr a 1
-   }
+#      incr a 1
+#   }
 #   set a 3
+   set a 20
+   set b 0
+   for {set i 0} { $i < $a } { incr i 1 } {
+      set size($i) $b
+      incr b 250
+   }
+   set size(0) [expr ( $size(0) + 100 ) ]
+
    set save_array(count) $a
    for {set i 0} { $i < $a } { incr i 1 } {
       puts $CHECK_OUTPUT "\nSending $size($i) x 2000 byte ..."
-      run_communication_test back 43001 0 0 $size($i) 2000 15
+      run_communication_test back 43001 0 1 $size($i) 2000 15
       puts $CHECK_OUTPUT "commd:  send     $back(snd_commd_kbits) kbit/s"
       puts $CHECK_OUTPUT "commd:  received $back(rcv_commd_kbits) kbit/s"
       puts $CHECK_OUTPUT "TCP/IP: send     $back(snd_tcpip_kbits) kbit/s"
@@ -644,7 +786,7 @@ proc run_communication_test { results port sync closefd repeat datasize tcptime 
    }
 
 
-   set receiver_args " -host $remote_host1 -port $port $sync_arg $closefd_arg -repeat $repeat -tcp-closefd"
+   set receiver_args " -host $remote_host1 -port $port $sync_arg $closefd_arg -repeat $repeat -datasize $datasize -tcptime $tcptime -tcp-closefd"
    set receiver_sid [ open_remote_spawn_process $remote_host2 "ts_def_con2" $receive_remote_binary $receiver_args]
    set receiver_id [lindex $receiver_sid 1]
    set sender_sid "0 0 0"

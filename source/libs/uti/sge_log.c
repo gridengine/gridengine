@@ -420,7 +420,6 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
                        const char *newline) 
 {
    int fd;
-   char msg2log[1024], date[256], tmp_date[256];
    int switch_back = 0;
 
    /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
@@ -431,13 +430,15 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
    }
 
    if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
-      char time_buf[256];
-      dstring ds;
+      char msg2log[4*MAX_STRING_SIZE];
+      char date[256], tmp_date[256], time_buf[256];
+      dstring ds, msg;
       sge_dstring_init(&ds, time_buf, sizeof(time_buf));
+      sge_dstring_init(&msg, msg2log, sizeof(msg2log));
       sprintf(tmp_date, "%s", sge_ctime(0, &ds));
       sscanf(tmp_date, "%[^\n]", date);
 
-      sprintf(msg2log, "%s|%s|%s|%c|%s%s",
+      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s%s",
               date,
               uti_state_get_sge_formal_prog_name(),
               uti_state_get_unqualified_hostname(),
@@ -510,7 +511,6 @@ int sge_log(int log_level, const char *mesg, const char *file__,
               mesg ? MSG_LOG_ZEROLENGTH : MSG_POINTER_NULL);
       mesg = buf;
    }
-
    if (mesg[strlen(mesg)-1] != '\n') {
       strcpy(newline,"\n");
    } else {

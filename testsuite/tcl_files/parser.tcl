@@ -808,6 +808,8 @@ proc transform_cpu { s_cpu } {
       scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
       set cpu  [expr $days * 86400 + $hours * 3600 + $minutes * 60 + $seconds]
    }
+
+   return $cpu
 }
 
 #                                                             max. column:     |

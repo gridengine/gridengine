@@ -1,3 +1,6 @@
+JG-2001-12-03-0: Testsuite: parsing of qstat -ext output did not return
+                            correct cpu value.
+
 AA-2001-11-30-4: Feature:   Security changes:
                             - common/complex.[ch] -> sge_complex.[ch]
                               due to name conflict when compiling under

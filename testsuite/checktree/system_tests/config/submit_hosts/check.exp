@@ -52,7 +52,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "submit_hosts"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   1
 set check_description(0)  "checking submit host functionality without local configuration"
 set check_description(1)  "checking submit host functionality with local qsh_command"
@@ -98,7 +98,7 @@ proc submit_hosts_setup {} {
       if { $submit_hosts_use_local_conf != 0 } {
          puts $CHECK_OUTPUT "generating local cluster configuration for host $submit_host"
          set used_arch [resolve_arch $submit_host]
-         create_shell_script $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh "echo" "WRAPPER_SCRIPT ; $CHECK_PRODUCT_ROOT/utilbin/$used_arch/rsh \$\*"
+         create_shell_script $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh $submit_host "echo" "WRAPPER_SCRIPT ; $CHECK_PRODUCT_ROOT/utilbin/$used_arch/rsh \$\*"
          set new_conf(rsh_command) $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh
          set_config new_conf $submit_host 1 
       } else {
@@ -142,6 +142,7 @@ proc submit_hosts_test {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_hosts_use_local_conf
    global CHECK_CORE_MASTER CHECK_CORE_EXECD
+   global CHECK_HOST
    
 
    if {[ llength $CHECK_SUBMIT_ONLY_HOSTS ] <= 0 } {
@@ -179,8 +180,8 @@ proc submit_hosts_test {} {
       set output [ start_remote_prog $submit_host $CHECK_USER "qconf" "-mconf" ]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "qconf exit state: $prg_exit_state"
-#      if { $prg_exit_state == 0 } 
-      if { [ string first "neither submit nor admin host" $output ] < 0 } {
+      set NOR_SUBMIT_OR_ADMIN_HOST [ translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S] $submit_host] 
+      if { [ string first "neither submit nor admin host" $output ] < 0 && [ string first $NOR_SUBMIT_OR_ADMIN_HOST $output ] < 0 } {
          add_proc_error "submit_hosts_test" -1 "qconf -mconf on host $submit_host should not work here"
       }
    } 

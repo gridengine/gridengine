@@ -131,10 +131,6 @@ proc tight_integration_cleanup  {} {
 
    # workaround: in sgeee a job still exists in qmaster after it exited for some time
    #             therefore the pe cannot be deleted
-   if {$CHECK_PRODUCT_TYPE == "sgeee"} {
-      sleep 60
-   }
-
    del_pe tight
 
    set_error 0 "ok"
@@ -277,7 +273,7 @@ proc tight_integration_function {} {
 
    close_spawn_process $id
 
-   wait_for_jobend $jobid tightf 60 0
+   wait_for_jobend $jobid tightf 60 0 1
 
 
    set_error 0 "ok"
@@ -321,7 +317,7 @@ proc tight_integration_massive {} {
 
    close_spawn_process $id
 
-   wait_for_jobend $jobid tightm 300 0
+   wait_for_jobend $jobid tightm 300 0 1
 
    set_error 0 "ok"
 }

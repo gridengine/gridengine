@@ -108,24 +108,6 @@ proc submit_del_setup  {} {
    }
 
    
-#   foreach hostname $CHECK_CORE_EXECD {
-#      set arch [resolve_arch $hostname]
-#      set script_path "$tmp_shepherd_dir/${hostname}_sge_shepherd_wrapper_script" 
-#      set sge_shepherd_file "$CHECK_PRODUCT_ROOT/bin/$arch/sge_shepherd"
-#      if {[file isfile $script_path] == 1} {
-#         start_remote_prog $hostname "root" "rm" "$script_path"
-#      }
-#      create_shell_script $script_path "sleep" "5\nexec ${sge_shepherd_file}.tmp $*" "" "/bin/csh" 1
-#      start_remote_prog $hostname $CHECK_USER "touch" $script_path
-#      start_remote_prog $hostname "root" "ls" "${sge_shepherd_file}.tmp"
-#      if { $prg_exit_state != 0 } {
-#         start_remote_prog $hostname "root" "mv" "$sge_shepherd_file ${sge_shepherd_file}.tmp"
-#         start_remote_prog $hostname "root" "ln" "-s $script_path $sge_shepherd_file"
-#      } else {
-#         puts $CHECK_OUTPUT "will not mv sge_shepherd_file, old sge_shepherd_file.tmp exists"
-#      }
-#   }
-
    puts $CHECK_OUTPUT "waiting 15 seconds to give qmaster time to update configurations on execds ..."
    sleep 15
 
@@ -136,6 +118,7 @@ proc submit_del_test { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
+   global CHECK_L10N CHECK_HOST
 
    set arch [resolve_arch $CHECK_HOST]
    set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
@@ -157,6 +140,21 @@ proc submit_del_test { } {
 
    wait_for_end_of_all_jobs 100
 
+   if { $CHECK_L10N == 1 } {
+      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
+         set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
+         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+            add_proc_error "submit_del_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
+         }
+         incr job_id_pos -1
+         set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
+         set job_id_prefix_length [ string length $job_id_prefix]
+         puts $CHECK_OUTPUT "job id prefix is: \"$job_id_prefix\""
+   }
+
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
    set runs [ expr ( [llength $$CHECK_CORE_EXECD ] * 5 ) ]
@@ -165,21 +163,37 @@ proc submit_del_test { } {
          set arguments "-o /dev/null -e /dev/null -q $elem.q"
          set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
          puts $CHECK_OUTPUT $result
-         set job_id [lindex $result 2]    
+         if { $CHECK_L10N == 0 } {   
+            set job_id [lindex $result 2]    
+         } else {
+            set id_pos [string first $job_id_prefix $result]
+            incr id_pos $job_id_prefix_length
+            set job_id [string range $result $id_pos end]
+            set space_pos [ string first " " $job_id ]
+            set job_id [string range $job_id 0 $space_pos ]
+            set job_id [string trim $job_id]
+         }
+         puts $CHECK_OUTPUT "job id is: $job_id"
          catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$arch/qconf" "-tsm" } result
          wait_for_jobstart $job_id "leeper" 60
+         puts $CHECK_OUTPUT "job $job_id started, deleting it"
          set catch_return [ catch { eval exec "$qdel_program $job_id" } result ]
          puts $CHECK_OUTPUT $result
          incr runs -1
-
       }
    }
    set runs [ expr ( [llength $$CHECK_CORE_EXECD ] * 5 ) ]
 
+   
+   incr job_id 1  ;# prepare job_id for next job !!!
    while { $runs > 0 } { 
       foreach elem $CHECK_CORE_EXECD {
          set arguments "-o /dev/null -e /dev/null -q $elem.q"
-         start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"
+#         set result [start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"]
+
+         set result [start_remote_prog $CHECK_HOST $CHECK_USER "qsub" "$arguments $job_script \nqdel $job_id"]
+         puts $CHECK_OUTPUT $result 
+         incr job_id 1
          incr runs -1
       }
    }

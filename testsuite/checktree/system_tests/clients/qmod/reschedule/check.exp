@@ -339,8 +339,14 @@ proc reschedule_setup {} {
 #
 proc reschedule_submit_jobs {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
   
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
+
+
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
       return -3
@@ -495,8 +501,13 @@ proc reschedule_submit_jobs {} {
 #
 proc reschedule_checkpointing {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
- 
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
+   
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
+
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
@@ -597,8 +608,13 @@ proc reschedule_checkpointing {} {
 
 proc reschedule_checkpointing_forced {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
  
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
+
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
@@ -732,8 +748,13 @@ proc reschedule_checkpointing_forced {} {
 proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
-   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SCRIPT_FILE_DIR
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SCRIPT_FILE_DIR CHECK_CORE_EXECD
    
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
@@ -909,7 +930,13 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
 proc reschedule_pe_jobs {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
    global CHECK_CORE_EXECD stored_configuration rerun_queue2 pe_names
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
+
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
@@ -1086,8 +1113,13 @@ proc reschedule_deleted_job {} {
    global CHECK_CORE_EXECD stored_configuration rerun_queue2
    global pe_names pe_alloc_rule CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE CHECK_ARCH
-   global CHECK_ADMIN_USER_SYSTEM
+   global CHECK_ADMIN_USER_SYSTEM CHECK_CORE_EXECD
 
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
@@ -1175,8 +1207,13 @@ proc reschedule_cleanup {} {
 
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
    global CHECK_CORE_EXECD stored_configuration rerun_queue2
-   global pe_names pe_alloc_rule
+   global pe_names pe_alloc_rule CHECK_CORE_EXECD
  
+
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   }
 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"

@@ -178,7 +178,7 @@ proc job_environment_qsh_job { array arguments } {
    upvar $array job_env_array
 
    set script_name "$CHECK_PROTOCOL_DIR/temp_script.sh"
-   create_shell_script $script_name "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
+   create_shell_script $script_name $CHECK_HOST "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $CHECK_HOST.q -S $script_name"]
    puts $CHECK_OUTPUT $output
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array

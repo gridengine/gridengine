@@ -62,7 +62,7 @@ for {set i 0} { $i <= $check_highest_level } { incr i} {
 
 set check_init_level_procedure "select_queue"
 set check_name         "qsub"
-set check_category     "COMPATIBILITY SYSTEM"
+set check_category     "COMPATIBILITY SYSTEM L10N"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 set check_functions    ""
 lappend check_functions "check_setup_config"
@@ -430,11 +430,7 @@ proc check_hold {} {
 
    # release job 
    puts $CHECK_OUTPUT "check_hold - ok now we release the job"
-   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls" "$result" } qrls_result
-   if { [string first "modified hold of job" $qrls_result] < 0 } {
-      set_error -1 "check_hold - qrls doesn't work"
-      return
-   }
+   release_job $result
 
    # wait for job to start
    if { [wait_for_jobstart $result "leeper" 300] == -1 } {
@@ -471,9 +467,11 @@ proc check_qhold_jobname {} {
    set hold_job2 [submit_job $jobargs] 
 
 
+
    # wait for jobs to get in pending state
    wait_for_jobpending $hold_job1 "FIRST" 200
    wait_for_jobpending $hold_job2 "Sleeper" 200 
+
 
 
    # job 1 should not run within the next 60 seconds  
@@ -481,14 +479,21 @@ proc check_qhold_jobname {} {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should not run until yet(1)"
    } 
 
+
    # release job 1
    release_job $hold_job1 
    wait_for_jobstart $hold_job1 "FIRST" 100
+
+
+
 
    # job 2 should not run within the next minute 
    if { [wait_for_jobstart $hold_job2 "Sleeper" 60 0] != -1 } {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job2 should not run until yet(2)"
    } 
+
+
+   
 
    # job1 will stop in ca. 30 sec
    wait_for_jobend $hold_job1 "FIRST" 100
@@ -498,6 +503,9 @@ proc check_qhold_jobname {} {
 
    # job2 should run till end
    wait_for_jobend $hold_job2 "Sleeper" 100 
+
+
+
 
    set back [ del_job_files $hold_job1 $job_output_dir 2 ] 
    if { $back != 2 } {
@@ -509,11 +517,16 @@ proc check_qhold_jobname {} {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job2 did not produce error and output file"
    }
 
+
+   
+
    puts $CHECK_OUTPUT "Test wait for not existant job (job should immediately run)"
    set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
    set job_id [submit_job $jobargs] 
    wait_for_jobstart $job_id "Sleeper" 60
    wait_for_jobend $job_id "Sleeper" 60
+
+
 
    puts $CHECK_OUTPUT "additional job submit with same name test"
    set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
@@ -522,6 +535,7 @@ proc check_qhold_jobname {} {
    puts $CHECK_OUTPUT "additional job submit with same name test"
    set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
    set hold_job2 [submit_job $jobargs] 
+
 
    wait_for_jobpending $hold_job1 "FIRST" 60
    wait_for_jobpending $hold_job2 "FIRST" 60
@@ -535,6 +549,7 @@ proc check_qhold_jobname {} {
    } 
     
    delete_job $hold_job1
+
 
 
    puts $CHECK_OUTPUT "submitting hold job ..."
@@ -551,6 +566,7 @@ proc check_qhold_jobname {} {
    } else {
       puts $CHECK_OUTPUT "got violates reference unambiguousness error: $hold_job1 - correct"
    } 
+
 
    puts $CHECK_OUTPUT "submitting job with same name (FIRST) as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
    set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
@@ -582,6 +598,7 @@ proc check_qhold_jobname {} {
 
    wait_for_jobstart $hold_job3 "Sleeper" 75
    wait_for_jobend $hold_job3 "Sleeper" 75
+
 
 
    puts $CHECK_OUTPUT "additional job submit with same name test"

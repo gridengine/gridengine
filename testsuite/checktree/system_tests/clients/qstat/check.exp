@@ -41,7 +41,7 @@ global check_category check_root_access_needs
 set check_root_access_needs  "yes"
 
 set check_name           "qstat"
-set check_category       "COMPATIBILITY SYSTEM"
+set check_category       "COMPATIBILITY SYSTEM L10N"
 set check_description(0) "checking qstat functionality"
 set check_needs          "init_core_system"      ;# dependencies of this check (name of other check)
 set check_functions      "check_core_queues"     ;# functions to call (in order)

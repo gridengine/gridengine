@@ -256,7 +256,6 @@ proc error_states_no_default_queue_shell {} {
    set_queue $error_states_check_queue my_conf
 
    
-
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
    wait_for_jobpending $job_id "exit" 60
    set q_state [wait_for_queue_state $error_states_check_queue "E" 60]
@@ -268,17 +267,18 @@ proc error_states_no_default_queue_shell {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-c $error_states_check_queue" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
+
    wait_for_jobstart $job_id "exit" 60
    wait_for_jobend $job_id "exit" 60
 
+
+#   wait_for_enter
    set my_conf(shell_start_mode) "unix_behavior"
    set_queue $error_states_check_queue my_conf
-  
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
    wait_for_jobpending $job_id "exit" 60
    wait_for_jobstart $job_id "exit" 60
    wait_for_jobend $job_id "exit" 60 
-
    set my_conf(shell_start_mode) $org_conf(shell_start_mode)
    set_queue $error_states_check_queue my_conf
 
@@ -362,7 +362,6 @@ proc error_states_wrong_pe {} {
    }
 
 
-
    set job_id [submit_job "-pe wrong_stop_pe 1-4 $jobargs 5" ]
    wait_for_jobpending $job_id "leeper" 60
    wait_for_jobstart $job_id "leeper" 60
@@ -379,7 +378,7 @@ proc error_states_wrong_pe {} {
    if { $qacct_error != 12 } {
       add_proc_error "error_states_wrong_pe" -1 "failed not 12 (before pestop): $qacct_error"
    }
-
+   
  
    set jobargs "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh" 
    set job_id [submit_job "-pe error_start_pe 1-4 $jobargs 5" ]
@@ -417,16 +416,19 @@ proc error_states_wrong_pe {} {
       add_proc_error "error_states_wrong_pe" -1 "no in pestop error: $qacct_info(failed)"
    }
 
+
    # workaround: in sgeee a job still exists in qmaster after it exited for some time
    #             therefore the pe cannot be deleted
    if {$CHECK_PRODUCT_TYPE == "sgeee"} {
-      sleep 60
+      puts $CHECK_OUTPUT "waiting for qmaster to remove jobs from it's internal job list"
+      do_wait 60
    }
 
    del_pe "wrong_start_pe"
    del_pe "wrong_stop_pe"
    del_pe "error_start_pe"
    del_pe "error_stop_pe"
+
 
    set_error 0 "ok"
 }

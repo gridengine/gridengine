@@ -135,7 +135,6 @@ proc issue_141_check {} {
       add_proc_error "issue_141_check" -1 "no even task is running"
    }
 
-
    puts $CHECK_OUTPUT "Delete job array $job_id.1-100:3"
    delete_job "${job_id}.1-100:3"
 
@@ -156,7 +155,6 @@ proc issue_141_check {} {
          add_proc_error "issue_141_check" -1 "task $task should be in delete state (2)"
       }
    }
-
 
    wait_for_jobend $job_id "Sleeper" 60
 

@@ -87,18 +87,56 @@ set module_name "control_procedures.tcl"
 proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
+
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $expected_result]] >= 0 } {
+      set help1 [string last "*" $expected_result]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set expected_result [string range $expected_result 0 $help2 ]
+      } else {
+         break
+      }
+   }
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result]] >= 0 } {
+      set help1 [string last "*" $additional_expected_result]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result [string range $additional_expected_result 0 $help2 ]
+      } else {
+         break
+      }
+   }
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result2]] >= 0 } {
+      set help1 [string last "*" $additional_expected_result2]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result2 [string range $additional_expected_result2 0 $help2 ]
+      } else {
+         break
+      }
+   }
+
+
+
+   
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
 #  set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
-      puts $CHECK_OUTPUT "starting -> $prog_binary $prog_args"
+      debug_puts "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
          log_user 1
          set send_speed .05
          set send_line_speed 1
       } else {
-         log_user 0 
+         log_user 0 ;# reisi
          set send_speed .0001
          set send_line_speed .0001
       }
@@ -107,19 +145,30 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set timeout 60
 
       set start_time [ timestamp ] 
-      send -i $sp_id ""
+      send -i $sp_id "G"
       set timeout 1
+      set timeout_count 0
       while { $stop_line_wait == 0 } {
          expect {
             -i $sp_id full_buffer {
                add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set stop_line_wait 1
             }
-            -i $sp_id "line" {
+            -i $sp_id "100%" {
+               send -i $sp_id "1G"      ;# go to first line
                set stop_line_wait 1
             }
+
             -i $sp_id timeout {  
-               send -i $sp_id ""
+#               set stream [open /tmp/cr.txt "a"]              ;# debug
+#               puts -nonewline $stream $expect_out(buffer)  ;# debug $expect_out(buffer) 0,string 
+#               close $stream                                  ;# debug
+               send -i $sp_id "G"
+               incr timeout_count 1
+               if { $timeout_count > 60 } {
+                  add_proc_error "handle_vi_edit" -2 "vi doesn't respond! perhaps this is a \"terminal to wide\" error?"
+                  set stop_line_wait 1
+               }
             }
             -i $sp_id "erminal too wide" {
                add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
@@ -196,18 +245,23 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                -i $sp_id timeout {
                   set result -1
                   set doStop 1
-                  add_proc_error "handle_vi_edit" -1 "timeout error"
+                  add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
                }
                -i $sp_id eof {
+                  if { $result == -100 } {
+                     puts $CHECK_OUTPUT "$expect_out(buffer)"
+                  }
                   set doStop 1
                }
                -i $sp_id "_exit_status_" {
+                  if { $result == -100 } {
+                     puts $CHECK_OUTPUT "$expect_out(buffer)"
+                  }
                   set doStop 1
                }
            }
         }
      }
-  puts $CHECK_OUTPUT $expect_out(buffer)
   close_spawn_process $id
   log_user 1
   foreach elem $vi_command_sequence {

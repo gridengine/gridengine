@@ -114,6 +114,572 @@ proc get_dir_names { path } {
 }
 
 
+#****** file_procedures/dump_array_data() **************************************
+#  NAME
+#     dump_array_data() -- dump array data to $CHECK_OUTPUT
+#
+#  SYNOPSIS
+#     dump_array_data { obj_name obj } 
+#
+#  FUNCTION
+#     This procedure dumps all array data to $CHECK_OUTPUT
+#
+#  INPUTS
+#     obj_name - data object name (used for output)
+#     obj      - array name
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc dump_array_data { obj_name obj } {
+   global CHECK_OUTPUT
+   upvar $obj data
+
+   set names [array names data]
+   set names [lsort $names]
+   foreach elem $names {
+      puts $CHECK_OUTPUT "$obj_name->$elem=$data($elem)"
+   }
+}
+
+#****** file_procedures/convert_spool_file_to_html() ***************************
+#  NAME
+#     convert_spool_file_to_html() -- convert array data in spool file to html 
+#
+#  SYNOPSIS
+#     convert_spool_file_to_html { spoolfile htmlfile } 
+#
+#  FUNCTION
+#     This procedure generates a html output file from an array spool file.
+#     Use the procedure spool_array_to_file() to generate a array spool file.
+#
+#  INPUTS
+#     spoolfile - spool file directory path
+#     htmlfile  - output file directory path
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
+proc convert_spool_file_to_html { spoolfile htmlfile } {
+   global CHECK_OUTPUT
+
+   set content ""
+
+   # read in spool file
+   read_file $spoolfile file_dat
+   
+   # get all stored obj_names
+   set obj_names [get_all_obj_names file_dat]
+
+   foreach obj $obj_names {
+      set obj_start [search_for_obj_start file_dat $obj]
+      set obj_end   [search_for_obj_end file_dat $obj]
+      for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
+         incr i 1
+         set spec [unpack_data_line $file_dat($i)]
+         incr i 1
+         set spec_data [unpack_data_line $file_dat($i)]
+         set obj_data($spec) $spec_data
+      }
+      append content [create_html_text "Object name: $obj" ]
+      set obj_names [array names obj_data]
+      set obj_names [lsort $obj_names]
+      set obj_names_count [llength $obj_names]
+      set table(COLS) 2
+      set table(ROWS) $obj_names_count
+      for { set tb 1 } { $tb <= $obj_names_count } { incr tb 1 } {
+         set obj_name_index [ expr ( $tb - 1 ) ]
+         set obj_name [lindex $obj_names $obj_name_index]
+         set table($tb,BGCOLOR) "#3366FF"
+         set table($tb,FNCOLOR) "#66FFFF"    
+         set table($tb,1) $obj_name
+         set table($tb,2) [ format_output "" 75 $obj_data($obj_name)]
+      }
+      append content [create_html_table table]
+      unset table
+      
+      dump_array_data $obj obj_data
+      unset obj_data
+   }
+   return [generate_html_file $htmlfile "Object Dump" $content 1]
+}
+
+#****** file_procedures/spool_array_to_file() **********************************
+#  NAME
+#     spool_array_to_file() -- spool array data to array spool file
+#
+#  SYNOPSIS
+#     spool_array_to_file { filename obj_name array_name } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     filename   - file for data spooling
+#     obj_name   - file object name of error
+#     array_name - array to spool
+#
+#  RESULT
+#     number of changed values 
+#
+#  SEE ALSO
+#     file_procedures/read_array_from_file()
+#*******************************************************************************
+proc spool_array_to_file { filename obj_name array_name } {
+
+   global CHECK_OUTPUT 
+   upvar $array_name data
+
+   puts $CHECK_OUTPUT "saving object \"$obj_name\" ..."
+   set changes 0
+   
+
+   # read in file
+   read_file $filename file_dat
+   
+   # get all stored obj_names
+   set obj_names [get_all_obj_names file_dat]
+   set new_file_dat ""
+   unset new_file_dat 
+   set new_file_dat(0) 0
+   set act_line 1
+   # store all objects in file_array
+   foreach obj $obj_names {
+      if { [string compare $obj $obj_name] == 0 } {
+         # here we ignore old object data, but load it into an array
+         # puts $CHECK_OUTPUT "ignoring old \"$obj_name\" object data ..."
+         set obj_start [search_for_obj_start file_dat $obj]
+         set obj_end   [search_for_obj_end file_dat $obj]
+         for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
+            incr i 1
+            set spec [unpack_data_line $file_dat($i)]
+            incr i 1
+            set spec_data [unpack_data_line $file_dat($i)]
+            set old_data($spec) $spec_data
+         }     
+      } else {
+         # here we save all other objects    
+         # puts $CHECK_OUTPUT "saving \"$obj\" object data ..."
+         set obj_start [search_for_obj_start file_dat $obj]
+         set obj_end   [search_for_obj_end file_dat $obj]
+         incr obj_start -1
+         incr obj_end 1
+         for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
+            set new_file_dat($act_line) $file_dat($i)
+            set new_file_dat(0) $act_line
+            incr act_line 1
+         } 
+      }
+   }
+
+   # puts $CHECK_OUTPUT "saving new data ..."
+   # here we store the new data
+   set data_count [array names data]
+   set data_count [llength $data_count]
+   if { $data_count > 0 } {
+      set new_file_dat($act_line) "OBJ_START:$obj_name:"
+      incr act_line 1
+      set data_specs [array names data]
+      set data_specs [lsort $data_specs]
+      foreach spec $data_specs {
+         # puts $CHECK_OUTPUT "saving \"$obj_name->$spec\" ..."
+         set new_file_dat($act_line) "####### $spec #######"
+         incr act_line 1
+         set new_file_dat($act_line) [pack_data_line $spec]
+         incr act_line 1
+         set new_file_dat($act_line) [pack_data_line $data($spec)]
+         incr act_line 1
+      }
+      set new_file_dat($act_line) "OBJ_END:$obj_name:"
+      set new_file_dat(0) $act_line
+   }
+
+   # now write tmp new file_dat
+   save_file $filename.tmp new_file_dat
+
+   # shall we compare objects ? 
+   set new_elems ""
+   set removed_elems ""
+
+
+
+   if { [ info exists old_data] } {
+      set array_names_old [array names old_data]
+      set array_names_new [array names data]
+      set new_elems ""
+      set removed_elems ""
+
+      foreach new $array_names_new {
+         set found 0
+         foreach old $array_names_old {
+            if { [string compare $old $new] == 0 } {
+               set found 1
+            }
+         }
+         if { $found == 0 } {
+            lappend new_elems $new
+         }
+      }
+      foreach old $array_names_old {
+         set found 0
+         foreach new $array_names_new {
+            if { [string compare $old $new] == 0 } {
+               set found 1
+            }
+         }
+         if { $found == 0 } {
+            lappend removed_elems $old
+         }
+      }
+   } else {
+      set array_names_new [array names data]
+      foreach elem $array_names_new {
+         lappend new_elems $elem
+      }
+   }
+   
+#   puts $CHECK_OUTPUT "removed: $removed_elems"
+#   puts $CHECK_OUTPUT "added  : $new_elems"
+
+   incr changes [llength $removed_elems]
+   incr changes [llength $new_elems]
+
+
+
+   # delete old file, rename new file
+   if { [file isfile $filename.old] } {
+      file delete $filename.old
+   }
+   if { [file isfile $filename]} {
+      file rename $filename $filename.old
+   }
+   if { [file isfile $filename.tmp]} {
+      file rename $filename.tmp $filename
+      file delete $filename.tmp
+   }
+   return $changes
+}
+
+#****** file_procedures/save_file() ********************************************
+#  NAME
+#     save_file() -- saving array file data to file
+#
+#  SYNOPSIS
+#     save_file { filename array_name } 
+#
+#  FUNCTION
+#     This procedure saves the data in the array to the file
+#
+#  INPUTS
+#     filename   - filename
+#     array_name - name of array to save
+#
+#  EXAMPLE
+#     set data(0) 1
+#     set data(1) "the file will have this line"
+#     save_file myfile.txt data
+#
+#  SEE ALSO
+#     file_procedures/read_file()
+#*******************************************************************************
+proc save_file { filename array_name } {
+   global CHECK_OUTPUT
+   upvar  $array_name data
+
+   
+   set file [open $filename "w"]
+   set last_line $data(0)
+   puts $CHECK_OUTPUT "saving file \"$filename\""
+   for { set i 1 } { $i <= $last_line } { incr i 1 } {
+#      puts -nonewline $CHECK_OUTPUT [washing_machine $i]
+#      flush $CHECK_OUTPUT
+      puts $file $data($i)
+   }
+   close $file
+   puts $CHECK_OUTPUT "\ndone"
+}
+
+#****** file_procedures/read_file() ********************************************
+#  NAME
+#     read_file() -- read fill into array (line by line)
+#
+#  SYNOPSIS
+#     read_file { filename array_name } 
+#
+#  FUNCTION
+#     This procedure reads the content of the given file and saves the lines
+#     into the array
+#
+#  INPUTS
+#     filename   - file
+#     array_name - name of array to store file content
+#
+#  EXAMPLE
+#     read_file myfile.txt data
+#     set nr_of_lines $data(0)
+#     for { set i 0 } { $i != nr_of_lines } { incr i 1 } {
+#        puts $data($i)
+#     }
+#
+#  SEE ALSO
+#     file_procedures/save_file()
+#*******************************************************************************
+proc read_file { filename array_name } {
+
+   global CHECK_OUTPUT
+   upvar  $array_name data
+   
+   if { [file isfile $filename] != 1 } {
+      set data(0) 0
+      puts $CHECK_OUTPUT "\"$filename\" is not a file"
+      return
+   }
+   set file [open $filename "r"]
+   set x 1
+   while { [gets $file line] >= 0 } {
+#       puts -nonewline $CHECK_OUTPUT [washing_machine $x]
+#       flush $CHECK_OUTPUT
+       set data($x) $line
+       incr x 1
+   }
+   close $file
+   incr x -1
+   set data(0) $x
+   debug_puts "file \"$filename\" has $x lines"
+}
+
+
+#****** file_procedures/get_all_obj_names() ************************************
+#  NAME
+#     get_all_obj_names() -- return object(array) names from array spool file
+#
+#  SYNOPSIS
+#     get_all_obj_names { file_array } 
+#
+#  FUNCTION
+#     Returns all object (array) names from an array spool file
+#
+#  INPUTS
+#     file_array - array name of file data array (see read_file())
+#
+#  SEE ALSO
+#     file_procedures/read_file()
+#*******************************************************************************
+proc get_all_obj_names { file_array } {
+   global CHECK_OUTPUT
+   upvar $file_array file_dat
+
+   set obj_names "" 
+  
+   for { set i 1 } { $i <= $file_dat(0)  } { incr i 1 } {
+      set line $file_dat($i)
+      if { [string first "OBJ_START:" $line ] == 0 } {
+         set start [string first ":" $line ]
+         set end   [string last ":" $line ] 
+         incr start 1
+         incr end -1
+         set found_job_name [string range $line $start $end]
+         lappend obj_names $found_job_name
+      }
+  }
+  return $obj_names
+}
+
+#****** file_procedures/search_for_obj_start() *********************************
+#  NAME
+#     search_for_obj_start() --  search line of object start in file array
+#
+#  SYNOPSIS
+#     search_for_obj_start { file_array obj_name } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     file_array - name of file array (see save_file())
+#     obj_name   - name of object
+#
+#  RESULT
+#     line number or -1 on error
+#
+#  SEE ALSO
+#     file_procedures/search_for_obj_end()
+#     file_procedures/save_file()
+#*******************************************************************************
+proc search_for_obj_start { file_array obj_name } {
+   global CHECK_OUTPUT
+   upvar $file_array file_dat
+   
+   for { set i 1 } { $i <= $file_dat(0)  } { incr i 1 } {
+      set line $file_dat($i)
+      if { [string first "OBJ_START:" $line ] == 0 } {
+         set start [string first ":" $line ]
+         set end   [string last ":" $line ] 
+         incr start 1
+         incr end -1
+         set found_job_name [string range $line $start $end]
+         if { [string compare $obj_name $found_job_name] == 0 } {
+            incr i 1
+            return $i
+         }
+      }
+  }
+  return -1
+}
+
+#****** file_procedures/search_for_obj_end() ***********************************
+#  NAME
+#     search_for_obj_end() -- search line of object end in file array
+#
+#  SYNOPSIS
+#     search_for_obj_end { file_array obj_name } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     file_array - name of file array (see save_file())
+#     obj_name   - name of object 
+#
+#  RESULT
+#     line number or -1 on error
+#
+#  SEE ALSO
+#     file_procedures/search_for_obj_start()
+#     file_procedures/save_file()
+#*******************************************************************************
+proc search_for_obj_end { file_array obj_name } {
+   global CHECK_OUTPUT
+   upvar $file_array file_dat
+   
+   for { set i 1 } { $i <= $file_dat(0)  } { incr i 1 } {
+      set line $file_dat($i)
+      if { [string first "OBJ_END:" $line ] == 0 } {
+         set start [string first ":" $line ]
+         set end   [string last ":" $line ] 
+         incr start 1
+         incr end -1
+         set found_job_name [string range $line $start $end]
+         if { [string compare $obj_name $found_job_name] == 0 } {
+            incr i -1
+            return $i
+         }
+      }
+  }
+  return -1
+}
+
+#****** file_procedures/unpack_data_line() *************************************
+#  NAME
+#     unpack_data_line() -- convert file data line to orignial data
+#
+#  SYNOPSIS
+#     unpack_data_line { line } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     line - data line in file
+#
+#  SEE ALSO
+#     file_procedures/pack_data_line()
+#*******************************************************************************
+proc unpack_data_line { line } {
+   set start [string first ":" $line]
+   incr start 1
+   set end [string last ":" $line]
+   incr end -1
+   set data [string range $line $start $end]
+   set data [replace_string $data "_TS_NEW_LINE_TS_" "\n"]
+   set data [replace_string $data "_TS_CR_RETURN_TS_" "\r"]
+   return $data
+}
+
+#****** file_procedures/pack_data_line() ***************************************
+#  NAME
+#     pack_data_line() -- convert data line to file
+#
+#  SYNOPSIS
+#     pack_data_line { line } 
+#
+#  FUNCTION
+#     do transformation of data to ensure correct data saving
+#
+#  INPUTS
+#     line - data line in file
+#
+#  SEE ALSO
+#     file_procedures/unpack_data_line()
+#*******************************************************************************
+proc pack_data_line { line } {
+   set data ":$line:"
+   set data [replace_string $data "\n" "_TS_NEW_LINE_TS_"]
+   set data [replace_string $data "\r" "_TS_CR_RETURN_TS_"]
+   return $data
+}
+
+#****** file_procedures/read_array_from_file() *********************************
+#  NAME
+#     read_array_from_file() -- read array data from array spool file
+#
+#  SYNOPSIS
+#     read_array_from_file { filename obj_name array_name 
+#     { enable_washing_machine 0 } } 
+#
+#  FUNCTION
+#     This procedure will read the content of an array spool file and store it
+#     into a tcl array.
+#
+#  INPUTS
+#     filename                     - filename of array spool file
+#     obj_name                     - name of object in array spool file
+#     array_name                   - array name to store data
+#     { enable_washing_machine 0 } - show washing machine
+#
+#  RESULT
+#     0 on success, -1 on error
+#
+#  SEE ALSO
+#      file_procedures/spool_array_to_file()
+#*******************************************************************************
+proc read_array_from_file { filename obj_name array_name { enable_washing_machine 0 } } {
+  global CHECK_OUTPUT
+  upvar $array_name data
+
+  read_file $filename file_dat
+  set obj_start [search_for_obj_start file_dat $obj_name]
+  if { $obj_start < 0 } {
+     return -1
+  }
+  set obj_end   [search_for_obj_end file_dat $obj_name]
+  if { $obj_end < 0 } {
+     return -1
+  }
+  set wcount 0
+  set time 0
+  for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
+     incr i 1
+     set spec [unpack_data_line $file_dat($i)]
+     incr i 1
+     set spec_data [unpack_data_line $file_dat($i)]
+     set data($spec) $spec_data
+     if { $enable_washing_machine != 0 && $wcount > 20 } {
+        puts -nonewline $CHECK_OUTPUT "\r reading ...    \r reading ... [washing_machine $time 1]\r"
+        flush $CHECK_OUTPUT
+        set wcount 0
+        incr time 1
+     }
+     incr wcount 1
+  }
+  return 0
+}
+
+
+
 #****** file_procedures/get_all_subdirectories() *******************************
 #  NAME
 #     get_all_subdirectories() -- returns all subdirectories in path 
@@ -200,16 +766,17 @@ proc get_file_names { path {ext "*"} } {
 #     generate_html_file() -- generate html file
 #
 #  SYNOPSIS
-#     generate_html_file { file headliner content } 
+#     generate_html_file { file headliner content { return_text 0 } } 
 #
 #  FUNCTION
 #     This procedure creates the html file with the given headline and
 #     text content.
 #
 #  INPUTS
-#     file      - html file name to create
-#     headliner - headline text
-#     content   - html body
+#     file              - html file name to create
+#     headliner         - headline text
+#     content           - html body
+#     { return_text 0 } - if not 0: return file content
 #
 #  SEE ALSO
 #     file_procedures/generate_html_file()
@@ -217,9 +784,11 @@ proc get_file_names { path {ext "*"} } {
 #     file_procedures/create_html_link()
 #     file_procedures/create_html_text()
 #*******************************************************************************
-proc generate_html_file { file headliner content } {
+proc generate_html_file { file headliner content { return_text 0 } } {
 
    global CHECK_USER
+
+   set output ""
 
    set catch_return [ catch {
       set h_file [ open "$file" "w" ]
@@ -228,32 +797,39 @@ proc generate_html_file { file headliner content } {
       add_proc_error "generate_html_file" "-1" "could not open file $file for writing"
       return
    }
-
-   puts $h_file "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">"
-
-   puts $h_file "<html>"
-   puts $h_file "<head>"
-   puts $h_file "   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"
-   puts $h_file "   <meta name=\"Author\" content=\"Grid Engine Testsuite - user ${CHECK_USER}\">"
-   puts $h_file "   <meta name=\"GENERATOR\" content=\"unknown\">"
-   puts $h_file "</head>"
-   puts $h_file "<body text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#CCCCCC\" vlink=\"#999999\" alink=\"#993300\">"
-   puts $h_file ""
-   puts $h_file "<hr WIDTH=\"100%\">"
-   puts $h_file "<center><font size=+2>$headliner</font></center>"
-   puts $h_file ""
-   puts $h_file "<hr WIDTH=\"100%\">"
-   puts $h_file "<br>&nbsp;"
-   puts $h_file "<br>&nbsp;"
-   puts $h_file ""
-   puts $h_file "$content"
-   puts $h_file ""
-   puts $h_file "</body>"
-   puts $h_file "</html>"
-
+   lappend output "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">"
+   lappend output "<html>"
+   lappend output "<head>"
+   lappend output "   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"
+   lappend output "   <meta name=\"Author\" content=\"Grid Engine Testsuite - user ${CHECK_USER}\">"
+   lappend output "   <meta name=\"GENERATOR\" content=\"unknown\">"
+   lappend output "</head>"
+   lappend output "<body text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#CCCCCC\" vlink=\"#999999\" alink=\"#993300\">"
+   lappend output ""
+   lappend output "<hr WIDTH=\"100%\">"
+   lappend output "<center><font size=+2>$headliner</font></center>"
+   lappend output ""
+   lappend output "<hr WIDTH=\"100%\">"
+   lappend output "<br>&nbsp;"
+   lappend output "<br>&nbsp;"
+   lappend output ""
+   lappend output "$content"
+   lappend output ""
+   lappend output "</body>"
+   lappend output "</html>"
+   foreach line $output {
+      puts $h_file $line
+   }
    flush $h_file
    close $h_file
-
+   
+   if { $return_text != 0 } {
+      set return_value ""
+      foreach line $output {
+         append return_value "$line\n"
+      }
+      return $return_value
+   }
 }
 
 #****** file_procedures/create_html_table() ************************************
@@ -455,14 +1031,14 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 }
 
 
-#                                                             max. column:     |
-#****** file_procedures/create_shell_script() ******
-# 
+#****** file_procedures/create_shell_script() **********************************
 #  NAME
-#     create_shell_script -- create a /bin/sh script file 
+#     create_shell_script() -- create a /bin/sh script file 
 #
 #  SYNOPSIS
-#     create_shell_script { scriptfile exec_command exec_arguments {envlist ""}} 
+#     create_shell_script { scriptfile host exec_command exec_arguments 
+#     {envlist ""} { script_path "/bin/sh" } { no_setup 0 } 
+#     { source_settings_file 1 } } 
 #
 #  FUNCTION
 #     This procedure generates a script which will execute the given command. 
@@ -471,44 +1047,44 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     value from the started command. 
 #
 #  INPUTS
-#     scriptfile      - full path and name of scriptfile to generate 
-#     exec_command    - command to execute 
-#     exec_arguments  - command parameters 
-#     { envlist }     - array with environment settings to export
-#     { script_path } - path to script binary (default "/bin/sh")
-#     { no_setup }    - if 0 (default): full testsuite framework script
-#                                       initialization
-#                       if not 0:       no testsuite framework init.
-#     { source_settings_file 1 } - if 1 (default):
-#                                  source $SGE_ROOT/default/settings.csh
-#                                  if not 1: don't source settings file
+#     scriptfile                 - full path and name of scriptfile to generate
+#     host                       - host on which the script will run
+#     exec_command               - command to execute
+#     exec_arguments             - command parameters
+#     {envlist ""}               - array with environment settings to export
+#     { script_path "/bin/sh" }  - path to script binary (default "/bin/sh")
+#     { no_setup 0 }             - if 0 (default): full testsuite framework script
+#                                                  initialization
+#                                  if not 0:       no testsuite framework init.
 #
-#  RESULT
-#     no results 
+#     { source_settings_file 1 } - if 1 (default): source the file
+#                                                  $SGE_ROOT/default/settings.csh
+#                                  if not 1:       don't source settings file
 #
 #  EXAMPLE
 #     set envlist(COLUMNS) 500
 #     create_shell_script "/tmp/script.sh" "ps" "-ef" "envlist" 
 #
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
 #  SEE ALSO
 #     file_procedures/get_dir_names
 #     file_procedures/create_path_aliasing_file()
-#
-#*******************************
-proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} { script_path "/bin/sh" } { no_setup 0 } { source_settings_file 1 } } {
+#*******************************************************************************
+proc create_shell_script { scriptfile 
+                           host 
+                           exec_command 
+                           exec_arguments 
+                           { envlist ""} 
+                           { script_path "/bin/sh" } 
+                           { no_setup 0 } 
+                           { source_settings_file 1 } 
+                         } {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
  
    upvar $envlist users_env
 
     
-   set_users_environment users_env
+   set_users_environment $host users_env
 
    set script "no_script"
    set catch_return [ catch {
@@ -538,10 +1114,14 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
       puts $script "   unset CODINE_ROOT"
       puts $script "   unset GRD_CELL"
       puts $script "   unset CODINE_CELL"
-      puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
-      puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
-      puts $script "   export COMMD_PORT"
-      puts $script "   export SGE_ROOT"
+      if { [info exists CHECK_COMMD_PORT] } {
+         puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
+         puts $script "   export COMMD_PORT"
+      }
+      if { [info exists CHECK_PRODUCT_ROOT] } {
+         puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
+         puts $script "   export SGE_ROOT"
+      }
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
@@ -675,84 +1255,18 @@ proc get_file_content { host user file { file_a "file_array" } } {
 #     file_procedures/get_dir_names
 #*******************************
 proc get_binary_path { hostname binary } {
-   global CHECK_CONFIG_DIR CHECK_BINARY_DIR_CONFIG_FILE
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
+   global ts_host_config
 
-   set config "$CHECK_CONFIG_DIR/$CHECK_BINARY_DIR_CONFIG_FILE"  
-   set binary_path ""
+   if { [ info exists ts_host_config($hostname,$binary) ] } {
+      return $ts_host_config($hostname,$binary)
+   } 
 
-
-   if { [file exists $config] } {
-      set file_p [ open $config r ]
-      set line_no 0
-      while { [gets $file_p line] >= 0 } {
-         if { [string first "#" $line ] == 0 } {
-            debug_puts "found comment in line $line_no"
-            incr line_no 1
-            continue
-         }
-         set tmp_host [ lindex $line 0 ]
-         set tmp_bin  [ lindex $line 1 ]
-         set tmp_path [ lindex $line 2 ]
-         if { [ string compare $tmp_bin $binary] == 0 } {
-            debug_puts "found matching binary entry $tmp_bin"
-            debug_puts "LINE: $line"
-            set arch_start -1
-            set arch_end -1
-            set arch_start [ string first "\$ARCH" $tmp_path ] 
-            set arch_start [ expr ( $arch_start - 1 ) ]
-            set arch_end   [ expr ( $arch_start + 6 ) ]
-            if { $arch_start >= 0 } {
-               debug_puts "found ARCH variable match"
-               if { [string compare [resolve_arch $hostname] "unknown" ] == 0 } {
-                  add_proc_error "get_binary_path" -1 "can not resolve ARCH variable, please enter full pathname"
-                  incr line_no 1
-                  continue
-               }
-               set new_path "[ string range $tmp_path 0 $arch_start ][resolve_arch $hostname][string range $tmp_path $arch_end end]"
-               debug_puts "new path: $new_path"
-               set tmp_path $new_path
-            }
-
-            if { [ string compare $binary_path "" ] == 0 && [ string compare $tmp_host "all"] == 0 } {
-               debug_puts "found global entry for all hosts"
-               set binary_path $tmp_path
-            }
-            debug_puts "$tmp_host, $hostname" 
-            if { [ string compare $tmp_host $hostname ] == 0 } {
-               debug_puts "found entry for host $hostname"
-               set binary_path $tmp_path
-            }
-         }
-         incr line_no 1
-      }
-      close $file_p 
-   } else {
-     add_proc_error "get_binary_path" -1 "config file \"$config\" not found"
-     set binary_path $binary
-     if { $CHECK_DEBUG_LEVEL == 2 } {
-        wait_for_enter
-     }
-     return $binary_path
-   }
-
-   if { [ string compare $binary_path "" ] == 0 } {
-     add_proc_error "get_binary_path" -1 "config file \"$config\" has no entry for binary \"$binary\" on host \"$hostname\"."
-     set binary_path $binary
-   } else {
-      if { [file exists $binary_path] != 1 } {
-        add_proc_error "get_binary_path" -1 "binary file \"$binary_path\" not found (config file is \"$config\")"
-        set binary_path $binary
-      }
-   }
-
-   debug_puts "get_binary_path: $binary on host $hostname is: $binary_path"
-
-   if { $CHECK_DEBUG_LEVEL == 2 } {
+   add_proc_error "get_binary_path" -1 "no entry for binary \"$binary\" on host \"$hostname\" in host configuration"
+   if { $CHECK_DEBUG_LEVEL >= 2 } {
       wait_for_enter
    }
-
-   return $binary_path
+   return $binary
 }
 
 
@@ -1480,19 +1994,20 @@ proc close_logfile_wait { } {
 #     washing_machine() -- showing a washing machine ;-)
 #
 #  SYNOPSIS
-#     washing_machine { time } 
+#     washing_machine { time { small 0 } } 
 #
 #  FUNCTION
 #     This procedure returns "\r[/|\-] $time [/|\-]", depending on the 
 #     given time value.
 #
 #  INPUTS
-#     time - timout counter 
+#     time      - timout counter 
+#     { small } - if > 0 -> just return [/|\-], depending on $time
 #
 #  RESULT
 #     string, e.g. "/ 40 /"
 #*******************************************************************************
-proc washing_machine { time  } {
+proc washing_machine { time { small 0 } } {
    set ani [ expr ( $time % 4 ) ]
    switch $ani {
       0 { set output "-" }
@@ -1500,7 +2015,11 @@ proc washing_machine { time  } {
       2 { set output "|" }
       3 { set output "\\" }
    }
-   return "\r              \r$output $time $output"
+   if { $small != 0 } {
+      return "$output"
+   } else {
+      return "\r              \r$output $time $output\r"
+   }
 }
 
 #****** file_procedures/create_path_aliasing_file() ****************************

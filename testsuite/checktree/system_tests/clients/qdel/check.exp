@@ -52,7 +52,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qdel"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   3
 set check_description(0)  "checking all options in job pending state"
 set check_description(1)  "checking all options in job pending and hold state"
@@ -233,9 +233,24 @@ proc qdel_submit_delete_when_transfered { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_ACT_LEVEL
+   global CHECK_ACT_LEVEL CHECK_L10N
  
    if { $CHECK_ACT_LEVEL == 0 } {
+      if { $CHECK_L10N == 1 } {
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
+         set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
+         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+            add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
+         }
+         incr job_id_pos -1
+         set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
+         set job_id_prefix_length [ string length $job_id_prefix]
+         puts $CHECK_OUTPUT "job id prefix is: \"$job_id_prefix\""
+      }
+
       set arch [resolve_arch $CHECK_HOST]
       set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
       set qdel_program "$CHECK_PRODUCT_ROOT/bin/$arch/qdel"
@@ -248,7 +263,25 @@ proc qdel_submit_delete_when_transfered { } {
       #      start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"
             set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
             puts $CHECK_OUTPUT $result
-            set job_id [lindex $result 2]    
+            if { $CHECK_L10N == 0 } {      
+               set job_id [lindex $result 2]    
+            } else {
+#               if { [string first "\[" $result ] == 0  } {
+#                  #remove [xxxxx] message id
+#                  puts $CHECK_OUTPUT "removing message id from output ..."
+#                  set cut [string first "\]" $result ]
+#                  incr cut 2
+#                  set result [string range $result $cut end] 
+#                  puts $CHECK_OUTPUT "qsub result is: \"$result\""
+#               }
+               set id_pos [string first $job_id_prefix $result]
+               incr id_pos $job_id_prefix_length
+               set job_id [string range $result $id_pos end]
+               set space_pos [ string first " " $job_id ]
+               set job_id [string range $job_id 0 $space_pos ]
+               set job_id [string trim $job_id]
+            }
+            puts $CHECK_OUTPUT "submitted job $job_id"
             catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$arch/qconf" "-tsm" } result
             set job_state [ wait_for_jobstart $job_id "leeper" 120 ]
             if { $job_state == -1 } {
@@ -256,6 +289,7 @@ proc qdel_submit_delete_when_transfered { } {
             }
             set catch_return [ catch { eval exec "$qdel_program $job_id" } result ]
             puts $CHECK_OUTPUT $result
+            puts $CHECK_OUTPUT "deleted job $job_id"
          }
          incr runs -1
       }
@@ -368,7 +402,7 @@ proc are_jobs_deleted { job_list } {
 #*******************************
 proc submit_testjobs { { user "" } { additional_job_args "" }} {
   global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT 
-  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST
+  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_L10N CHECK_HOST
 
   set joblist ""
   set year [exec date "+%Y"] 
@@ -398,21 +432,51 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      # perform su to user and submit jobs as user $user
      
      set result [ run_command_as_user "$CHECK_HOST" "$user" "qsub" "$jobargs" 4]
-
+     if { $CHECK_L10N == 1 } {
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+         set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
+         set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
+         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+            add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
+         }
+         incr job_id_pos -1
+         set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
+         set job_id_prefix_length [ string length $job_id_prefix]
+         puts $CHECK_OUTPUT "job id prefix is: \"$job_id_prefix\""
+     }
+ 
      set test [ split $result "\n" ] 
      foreach elem $test {
-        set job_pos [string first "job" $elem]
-        set end_pos [string first "qdel_check" $elem]
-        if { $job_pos >= 0  } {
-           set line [ string range $elem $job_pos $end_pos]
-           set jobresult [ lindex $line 1 ]
-           if {$jobresult > 0} { 
-             lappend joblist $jobresult
+        if { $CHECK_L10N == 0 } { 
+           set job_pos [string first "job" $elem]
+           incr job_pos 3
+           set end_pos [string first "qdel_check" $elem]
+           incr end_pos -3
+           if { $job_pos >= 0 && $end_pos >= 0 } {
+              set line [ string range $elem $job_pos $end_pos]
+              set jobresult [ string trim $line ]
+              if {$jobresult > 0} { 
+                lappend joblist $jobresult
+              }
+           }
+        } else {
+           # l10n
+           set id_pos [string first $job_id_prefix $elem]
+           if { $id_pos >= 0 && [string first "qdel_check" $elem] >= 0 } {
+              incr id_pos $job_id_prefix_length
+              set job_id [string range $elem $id_pos end]
+              set space_pos [ string first " " $job_id ]
+              set job_id [string range $job_id 0 $space_pos ]
+              set jobresult [string trim $job_id]
+              if {$jobresult > 0} { 
+                 lappend joblist $jobresult
+              }
            }
         }
      }
   }
-
   if { $pending_state == 0 } {
      # wait for all job to run
      foreach elem $joblist {
@@ -431,6 +495,12 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
         wait_for_jobpending $elem "qdel_check" 400  
      }
   }
+
+#  puts $CHECK_OUTPUT "returning joblist:"
+#  foreach elem $joblist {
+#     puts $CHECK_OUTPUT $elem
+#  }
+#  wait_for_enter
 
   return $joblist
 }
@@ -697,7 +767,8 @@ proc qdel_verify {} {
 #
 #*******************************
 proc qdel_delete_unkown_jobid {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
+   global CHECK_L10N
 
    # submit jobs to delete
    set job_list [submit_testjobs]
@@ -705,7 +776,11 @@ proc qdel_delete_unkown_jobid {} {
    # add a unkown jobid
    set unknown_jobid [ expr ( [ lindex $job_list [ expr ( [ llength $job_list] - 1 ) ] ] + 1 ) ]
    lappend job_list $unknown_jobid 
-   set default_output "job \"$unknown_jobid\" does not exist"
+   if { $CHECK_L10N == 0 } {
+      set default_output "job \"$unknown_jobid\" does not exist"
+   } else {
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_SU] "job" $unknown_jobid ]  
+   }
 
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
 
@@ -717,8 +792,11 @@ proc qdel_delete_unkown_jobid {} {
       set last_jobid "[lindex $job_list end]"
       set unknown_taskid 5
       set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
-      set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
-
+      if { $CHECK_L10N == 0 } {
+         set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
+      } else {
+         set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_UU] $last_jobid $unknown_taskid ] 
+      } 
       qdel_delete_unknown_jobid_proc $job_list "$default_output"
       delete_job $last_jobid
 
@@ -729,12 +807,15 @@ proc qdel_delete_unkown_jobid {} {
       set last_jobid "[lindex $job_list end]"
       set empty_taskrange "5-10:2"
       set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
-      set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
-
+      if { $CHECK_L10N == 0 } {
+         set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
+      } else {
+         set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
+      }
       qdel_delete_unknown_jobid_proc $job_list "$default_output"
-      delete_job $last_jobid
+      delete_job $last_jobid 1
       # wait for job to leave queue
-      sleep 5
+#      sleep 5
    }
 }
 
@@ -745,6 +826,16 @@ proc qdel_delete_unknown_jobid_proc {job_list default_output} {
 
   puts $CHECK_OUTPUT "qdel_result = $result"
   puts $CHECK_OUTPUT "qdel_output = $qdel_output"
+
+  if { [string first "\[" $qdel_output ] == 0  } {
+     #remove [xxxxx] message id
+     puts $CHECK_OUTPUT "removing message id from output ..."
+     set cut [string first "\]" $qdel_output ]
+     incr cut 2
+     set qdel_output [string range $qdel_output $cut end] 
+     puts $CHECK_OUTPUT "qsub qdel_output is: \"$qdel_output\""
+  }
+ 
 
   if { $result != 0 } {
      set_error -1 "exit state is not 0"
@@ -762,6 +853,15 @@ proc qdel_delete_unknown_jobid_proc {job_list default_output} {
   }
 
   set last_job_output [ lindex $qd_out [ expr ( $nr_of_output_lines - 1 ) ] ]
+  if { [string first "\[" $last_job_output ] == 0  } {
+     #remove [xxxxx] message id
+     puts $CHECK_OUTPUT "removing message id from output ..."
+     set cut [string first "\]" $last_job_output ]
+     incr cut 2
+     set last_job_output [string range $last_job_output $cut end] 
+     puts $CHECK_OUTPUT "qsub last_job_output is: \"$last_job_output\""
+  }
+
   puts $CHECK_OUTPUT "last job output: \"$last_job_output\""
   puts $CHECK_OUTPUT "should be:       \"$default_output\""
 
@@ -871,9 +971,10 @@ proc qdel_all {} {
    set job_list_user1 [submit_testjobs] 
    puts $CHECK_OUTPUT "user 1 has jobs $job_list_user1"
  
+
    set job_list_user2 [submit_testjobs $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "user 2 has jobs $job_list_user2"
-    
+ 
    
    # now delete jobs of user 1
    set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel all" } qdel_output ] 
@@ -898,11 +999,15 @@ proc qdel_all {} {
        }
 
        set runtime [expr ( [timestamp] - $time ) ]
-       if { $runtime >= 300 } {
+       if { $runtime >= 60 } {
           set_error -1 "timeout while waiting for end of testjobs $job_list_user1"
           break  
        }
+       puts -nonewline $CHECK_OUTPUT "."
+       flush $CHECK_OUTPUT
+       sleep 1 
    }    
+
 
    # now check if user2 has still his jobs
    foreach job_id $job_list_user2 {
@@ -935,10 +1040,13 @@ proc qdel_all {} {
        }
 
        set runtime [expr ( [timestamp] - $time ) ]
-       if { $runtime >= 300 } {
+       if { $runtime >= 60 } {
           set_error -1 "timeout while waiting for end of testjobs $job_list_user2"
           break  
        }
+       puts -nonewline $CHECK_OUTPUT "."
+       flush $CHECK_OUTPUT
+       sleep 1
    }     
 
    # now check if user1 has still his jobs
@@ -972,10 +1080,13 @@ proc qdel_all {} {
        }
 
        set runtime [expr ( [timestamp] - $time ) ]
-       if { $runtime >= 300 } {
+       if { $runtime >= 60 } {
           set_error -1 "timeout while waiting for end of testjobs $job_list_user1"
           break  
        }
+       sleep 1
+       puts -nonewline $CHECK_OUTPUT "."
+       flush $CHECK_OUTPUT
    }   
 
 

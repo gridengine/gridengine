@@ -52,7 +52,7 @@ set check_init_level_procedure "access_lists_init_level"
 
 # define test's name and run level descriptions
 set check_name            "access_lists"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "Test (x)user_lists access for queue/cluster/pe"
 
@@ -221,6 +221,39 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    }
 }
 
+proc check_user_job_info { job_id } {
+  
+  global CHECK_OUTPUT  CHECK_HOST CHECK_L10N
+
+  if { $CHECK_L10N == 1 } {
+      set  HASNOPERMISSION [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*" ]
+      set  NOACCESSTOPE1   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOACCESSTOPE] ]
+      set  NOACCESSTOPE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOACCESSTOPE_S] "*" ]
+
+      set scheduling_info_text [get_scheduling_info $job_id]
+
+      set match1 [string match "*$HASNOPERMISSION*" $scheduling_info_text ]
+      set match2 [string match "*$NOACCESSTOPE1*"   $scheduling_info_text ]
+      set match3 [string match "*$NOACCESSTOPE2*"   $scheduling_info_text ]
+
+      puts $CHECK_OUTPUT $match1
+      puts $CHECK_OUTPUT $match2
+      puts $CHECK_OUTPUT $match2
+
+      if { $match1 != 1 && $match2 != 1 && $match3 != 1 } {
+         return 1
+      }
+      return 0
+  }
+
+
+  set schedd_info_text [get_scheduling_info $job_id]
+  if { [string first "no permission" $schedd_info_text ] < 0 && [string first "no access" $schedd_info_text ] < 0 } {
+     return 1
+  }
+  return 0
+}
+
 proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_host CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
@@ -244,8 +277,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
       if { $C_ok == 1 } {
          test_job_run "$id_string (C)" $job_id_C
       } else {
-         if { [string first "no permission" [get_scheduling_info $job_id_C] ] < 0 && 
-              [string first "no access"     [get_scheduling_info $job_id_C] ] < 0   } {
+         if { [check_user_job_info $job_id_C] == 1 } {
             add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_C (C) should not run"
          }
          wait_for_jobpending $job_id_C "leeper" 30
@@ -254,8 +286,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    }
 
    if { $A_ok == 0 } {
-      if { [string first "no permission" [get_scheduling_info $job_id_A] ] < 0 && 
-           [string first "no access"     [get_scheduling_info $job_id_A] ] < 0} {
+      if { [check_user_job_info $job_id_A] == 1 } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_A (A) should not run"
       }
       wait_for_jobpending $job_id_A "leeper" 30
@@ -263,8 +294,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    }
  
    if { $B_ok == 0 } {
-      if { [string first "no permission" [get_scheduling_info $job_id_B] ] < 0 && 
-           [string first "no access"     [get_scheduling_info $job_id_B] ] < 0   } {
+      if { [check_user_job_info $job_id_B] == 1 } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_B (B) should not run"
       }
       wait_for_jobpending $job_id_B "leeper" 30
@@ -295,7 +325,7 @@ proc access_lists_global_host {} {
       set my_global_host(xuser_lists) "$A_USER"
       set my_global_host(user_lists)  "NONE"
       set_exechost my_global_host "global"
-      run_user_jobs "case 1,$A_USER,$B_USER" "$jobargs" 0 1       ;# A = 0 (not running) B = 1 (should run)
+      run_user_jobs "case 1,$A_USER,$B_USER" "$jobargs" 0 1        ;# A = 0 (not running) B = 1 (should run)
    
       # case 2
       set my_global_host(xuser_lists) "NONE"

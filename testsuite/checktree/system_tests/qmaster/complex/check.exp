@@ -52,7 +52,7 @@ set check_init_level_procedure "complex_init_level"
 
 # define test's name and run level descriptions
 set check_name            "complex"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "Test host type complex with loadsensor and complex host"
 
@@ -117,7 +117,6 @@ proc complex_setup  {} {
    set queue_complex(test_time)     "tt    TIME   0:0:0      <=    YES    NO    0:0:0"
    set queue_complex(test_resolve)  "tr    HOST   unknown    ==    YES    NO    none"
    set_complex queue_complex "queue"
-
 
    set host_complex(test_hostname)  "th    HOST   unknown    ==    YES    NO    none"
    set host_complex(test_arch)      "ta    STRING none       ==    YES    NO    none"

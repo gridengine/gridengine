@@ -1,3 +1,7 @@
+CR-2002-11-20-0  Testsuite: Added l10n enhancements, new configuration files
+                            (new procedures for file spooling, gettext features,
+                             sge_macro (use macros from source code) ...)
+
 EB-2002-11-15-0  Testsuite: Added new tests which will find bug #126
                  IZ:        #427
 

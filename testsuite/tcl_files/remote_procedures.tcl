@@ -37,6 +37,7 @@ global rlogin_spawn_session_buffer
 set module_name "remote_procedures.tcl"
 global rlogin_max_open_connections
 set rlogin_max_open_connections 20
+global rlogin_in_use_buffer
 
 set descriptors [exec "/bin/sh" "-c" "ulimit -n"]
 puts "    *********************************************"
@@ -123,6 +124,8 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_TCL_SCRIPTFILE_DIR CHECK_DEFAULTS_FILE
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
  
+   log_user 1
+   puts "start_remote_tcl_prog!"
    set tcl_bin [ get_binary_path $host "expect"]
    set tcl_prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remote_tcl_command.sh"
    set tcl_testhome "$CHECK_TESTSUITE_ROOT"
@@ -137,6 +140,7 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
    set result ""
    debug_puts "prog: $tcl_prog"
    debug_puts "remote_args: $remote_args"
+   log_user 1
    set result [ start_remote_prog "$host" "$user" "$tcl_prog" "$remote_args" prg_exit_state 300 ]
    if { [string first "Error in procedure" $result] >= 0 } {
       add_proc_error "start_remote_tcl_prog" -2 "error in $tcl_file, proc $tcl_procedure $tcl_procargs"
@@ -200,7 +204,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    upvar $envlist users_env
    
    set back_exit_state -1
-
+   set tmp_exit_status_string ""
    if { [ llength $exec_command ] != 1 } {
       puts "= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ="
       puts "  WARNING     WARNING   WARNING  WARNING"
@@ -211,7 +215,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
          wait_for_enter 
      }
    }
-
+   
    if { $hostname != $CHECK_HOST && $do_file_check == 1 } {
       set is_ok 0
       set my_timeout [ expr ( [timestamp] + 60 ) ] 
@@ -223,12 +227,17 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
             set is_ok 1
             break;
          }
-         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state 60 0 "" 0]
+         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0]
+         if { $prg_exit_state == -255 } { 
+            # no connection
+            add_proc_error "start_remote_prog" -1 "no connection to host $hostname as user $user"
+            return ""
+         }
          if { $prg_exit_state == 0 } {
             set is_ok 1
             break
          } else {
-            set output [ start_remote_prog $hostname $user "ls" "$exec_command" prg_exit_state 60 0 "" 0]
+            set output [ start_remote_prog $hostname $user "ls" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0]
             if { $prg_exit_state == 0 } {
                set is_ok 1
                break
@@ -247,9 +256,10 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    }
 
 #   puts [array names users_env]
-   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file]
+   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file [ expr ( $mytimeout / 2 ) ] ]
    if { [string compare $id ""] == 0 } {
       add_proc_error "start_remote_prog" -1 "got no spawn id"
+      set back_exit_state -255
       return ""
    }
    set myspawn_id [ lindex $id 1 ]
@@ -257,7 +267,6 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 
    debug_puts "my SPAWN ID is: $myspawn_id"
    set output ""
-   set exit_status ""
    set do_stop 0
    log_user 0
    if { $CHECK_DEBUG_LEVEL != 0 } {
@@ -283,23 +292,23 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
            if { $real_start_found == 1 } {
               append output $buffer
               incr nr_of_lines 1
-#              puts $CHECK_OUTPUT "output has now $nr_of_lines lines."
+#              puts $CHECK_OUTPUT "output has now $nr_of_lines lines."    ;# debug
               if { $background == 1 } { 
                  set do_stop 1
               }
            }
-           
-#           set help_buffer [split $buffer "\r" ]
-#           set help_buffer [join $help_buffer "/r"] 
-#           set help_buffer [split $help_buffer "\n" ]
-#           set help_buffer [join $help_buffer "/n"] 
+#           set help_buffer [split $buffer "\r" ]                       ;# debug
+#           set help_buffer [join $help_buffer "/r"]                   ;# debug
+#           set help_buffer [split $help_buffer "\n" ]              ;# debug
+#           set help_buffer [join $help_buffer "/n"]                  ;# debug
+#           set help_buffer [string replace $help_buffer end end ]    ;#debug
+#           set help_buffer "$help_buffer\\r\\n"                    ;# debug
 
-#           set help_buffer [string replace $help_buffer end end ]
-#           set help_buffer "$help_buffer\\r\\n"
            if { $CHECK_DEBUG_LEVEL != 0 } {
               puts $CHECK_OUTPUT ""
            }
-#           puts $CHECK_OUTPUT "--> string is \"${help_buffer}\""
+#           puts $CHECK_OUTPUT "--> string is \"${help_buffer}\""   ;# debug
+
 
            if { [ string first "_start_mark_:" $buffer ] >= 0 } {
                if { [ string first "?" $buffer ] < 0 } {
@@ -308,10 +317,20 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
                   debug_puts "found programm output start"
                }
            }           
-           if { [ string first "_exit_status_:" $buffer ] >= 0 } {
-               if { [ string first "?" $buffer ] < 0 } {
+           set tmp_exit_status_start [string first "_exit_status_:" $buffer]
+           if { $tmp_exit_status_start >= 0 } {
+               # check if a ? is between _exit_status_:() - brackets
+               set tmp_exit_status_string [string range $buffer $tmp_exit_status_start end]
+               set tmp_exit_status_end [string first ")" $tmp_exit_status_string]
+               if {$tmp_exit_status_end >= 0 } {
+                  set tmp_exit_status_string [ string range $tmp_exit_status_string 0 $tmp_exit_status_end ]
+               } else {
+                  add_proc_error "start_remote_prog" -1 "unexpected error - did not get full exit status string"
+               }
+   
+#               puts $CHECK_OUTPUT "exit status string is: $tmp_exit_status_string"
+               if { [ string first "?" $tmp_exit_status_string ] < 0 } {
                   set do_stop 1
-                  set exit_status $buffer 
                   set real_end_found 1
                   debug_puts "found programm output end"
                }
@@ -325,7 +344,22 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 
         -i $myspawn_id timeout { 
            set do_stop 1 
-           add_proc_error "start_remote_prog" "-1" "timeout error(1):\n$expect_out(0,string)"
+           add_proc_error "start_remote_prog" "-1" "timeout error(1):\nmaybe the shell is expecting an interactive answer from user?\nexec commando was: \"$exec_command $exec_arguments\"\n$expect_out(buffer)\nmore information in next error message in 5 seconds!!!"
+           set timeout 5
+           expect {
+              -i $myspawn_id full_buffer {
+                 add_proc_error "start_remote_prog" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+              }
+              -i $myspawn_id timeout {
+                 add_proc_error "start_remote_prog" "-1" "no more output available"
+              }
+              -i $myspawn_id "*" {
+                 add_proc_error "start_remote_prog" "-1" "expect buffer:\n$expect_out(buffer)"
+              }
+              -i $myspawn_id default {
+                 add_proc_error "start_remote_prog" "-1" "default - no more output available"
+              }
+           }
         }
 
         -i $myspawn_id eof { 
@@ -342,42 +376,29 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    flush $CHECK_OUTPUT 
    close_spawn_process $id
 
-
    # parse output: cut leading sequence 
-   set help_str [ split $output "\n" ]
-   set index 0
-   set found_end 0
-   foreach elem $help_str {
-      if { [string first "_start_mark_" $elem ] >= 0 } {
-         set found_end $index
-      }
-      incr index 1
+   set found_start [string first "_start_mark_" $output]
+   if { $found_start >= 0 } {
+      incr found_start 13
+      set output [string range $output $found_start end]
    }
-   set output [lreplace $help_str 0 $found_end ]
- 
+
+   # parse output: find end of output and rest
+   if {$real_end_found == 1} {
+      set found_end [string first "_exit_status_:" $output]
+      if { $found_end >= 0 } {
+         incr found_end -1
+         set output [ string range $output 0 $found_end ] 
+      }
+   }
+
    # parse output: search exit status
    if {$real_end_found == 1} {
-      set index 0 
-      set found_end 0
-      foreach elem $output {
-        if { [string first "_exit_status_:" $elem ] >= 0 } {
-           set exit_status $elem
-           set found_end $index
-        }
-        incr index 1
-      }
-      set output [lreplace $output $found_end $index ]
-   }
-   
-   set output [ join $output "\n"]
-   if {$real_end_found == 1} {
-      # get exit status from exit status line
-
-      set first_index [string first "(" $exit_status ]
-      set first_index [ expr ( $first_index + 1 ) ]
-      set last_index [string first ")" $exit_status ]
-      set last_index [ expr ( $last_index - 1 ) ]
-      set exit_status [string range $exit_status $first_index $last_index]
+      set first_index [string first "(" $tmp_exit_status_string ]
+      incr first_index 1
+      set last_index [string first ")" $tmp_exit_status_string ]
+      incr last_index -1 
+      set exit_status [string range $tmp_exit_status_string $first_index $last_index]
    } else {
       set exit_status -1
    }
@@ -391,38 +412,51 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    }
 
    set back_exit_state $exit_status
+
+#   puts $CHECK_OUTPUT [eval exec "echo \"$output\" | /usr/bin/od -c"]
+#   puts $CHECK_OUTPUT "output:\n"
+#   set stream [open /tmp/cr.txt "w"]
+#   puts -nonewline $stream $output
+#   close $stream
+#   puts $CHECK_OUTPUT [eval exec "/usr/bin/od -c /tmp/cr.txt"]
+#   wait_for_enter
+
    return $output
 }
 
-#                                                             max. column:     |
-#****** remote_procedures/open_remote_spawn_process() ******
-# 
+#****** remote_procedures/open_remote_spawn_process() **************************
 #  NAME
-#     open_remote_spawn_process -- open spawn process on remote host
+#     open_remote_spawn_process() -- open spawn process on remote host
 #
 #  SYNOPSIS
-#     open_remote_spawn_process { hostname user exec_command exec_arguments { background 0 } } 
+#     open_remote_spawn_process { hostname user exec_command exec_arguments 
+#     { background 0 } {envlist ""} { source_settings_file 1 } 
+#     { nr_of_tries 15 } } 
 #
 #  FUNCTION
 #     This procedure creates a shell script with default settings for Grid
 #     Engine and starts it as spawn process on the given host.
 #
 #  INPUTS
-#     hostname         - remote host (can also be local host!)
-#     user             - user to start script
-#     exec_command     - command after script init
-#     exec_arguments   - arguments for command
-#     { background 0 } - if not 0 -> start command with "&" in background 
-#                        if 2 -> wait 30 seconds after starting background process
-#     { envlist "" }   - array with environment settings to export
-#                        before starting program
-#     { source_settings_file 1 } - if 1 (default):
-#                        source $SGE_ROOT/default/settings.csh
-#                        if not 1: don't source settings file
+#     hostname                   -  remote host (can also be local host!)
+#     user                       -  user to start script
+#     exec_command               -  command after script init
+#     exec_arguments             -  arguments for command
+#     { background 0 }           -  if not 0: 
+#                                      start command with "&" in background 
+#                                   if 2:
+#                                      wait 30 seconds after starting 
+#                                      background process
+#     {envlist ""}               -  array with environment settings to export
+#                                   before starting program
+#     { source_settings_file 1 } -  if 1 (default):
+#                                      source $SGE_ROOT/default/settings.csh
+#                                   if not 1:
+#                                      don't source settings file
+#     { nr_of_tries 15 }         -  timout value
 #
 #  RESULT
 #     spawn id of process (internal format, see close_spawn_process for details)
-#
 #
 #  EXAMPLE
 #     set id [open_remote_spawn_process "boromir" "testuser" "ls" "-la"]
@@ -450,14 +484,27 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 #  NOTES
 #     The spawn command is from the TCL enhancement EXPECT
 #
-#*******************************
-proc open_remote_spawn_process { hostname user exec_command exec_arguments { background 0 } {envlist ""} { source_settings_file 1 } } {
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc open_remote_spawn_process { hostname 
+                                 user 
+                                 exec_command 
+                                 exec_arguments 
+                                 { background 0 } 
+                                 { envlist "" } 
+                                 { source_settings_file 1 } 
+                                 { nr_of_tries 15 } 
+                               } {
 
   global open_spawn_buffer CHECK_OUTPUT CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
   global CHECK_MAIN_RESULTS_DIR CHECK_EXPECT_MATCH_MAX_BUFFER
+  global rlogin_in_use_buffer
 
   upvar $envlist users_env
-
 
   uplevel 1 { set remote_spawn_nr_of_shells 0 }
 
@@ -488,7 +535,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
   } else {
      set script_name "$CHECK_MAIN_RESULTS_DIR/temp_${hostname}_${type}_[timestamp].sh"
   }
-  create_shell_script "$script_name" "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file
+  create_shell_script "$script_name" $hostname "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file
   set open_spawn_buffer $script_name
   uplevel 1 { set open_remote_spawn__script_name $open_spawn_buffer }
  
@@ -507,6 +554,9 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
   set open_spawn_buffer $exec_arguments
   uplevel 1 { set open_remote_spawn__args "$open_spawn_buffer" }
 
+  set open_spawn_buffer $nr_of_tries
+  uplevel 1 { set open_remote_spawn__tries "$open_spawn_buffer" }
+ 
   
 
   uplevel 1 { 
@@ -526,11 +576,15 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
      set using_ts_def_con 1
   }
   if { $con_data(pid) != 0 } {
-     debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\"" 
+     debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\""
+
      set nr_of_shells $con_data(nr_shells)
      set back  $con_data(pid) 
      lappend back $con_data(spawn_id)
      set open_spawn_buffer $con_data(spawn_id)
+     if { [is_spawn_process_in_use $back ] == 1 } {
+        puts $CHECK_OUTPUT "open_remote_spawn_process($hostname $user $exec_command $exec_arguments):\nconnection already in use or an old process wasn't closed. Please use an other username or call close_spawn_process first."
+     }
      uplevel 1 { 
         set open_remote_spawn__id "$open_spawn_buffer" 
      }
@@ -586,8 +640,9 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                    }
                 }
              }
-   
-             set mytries 15
+#             puts $CHECK_OUTPUT "set mytries to $nr_of_tries"
+#             set mytries $nr_of_tries
+             set mytries $open_remote_spawn__tries
              debug_puts "waiting for shell response ..."
              set timeout 1
              set next_timeout 1
@@ -600,7 +655,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                       set ok 1
                    }
                    -i $spawn_id timeout {
-                      puts -nonewline $CHECK_OUTPUT "              \r$mytries\r"
+                      puts -nonewline $CHECK_OUTPUT "   \r$mytries\r"
                       
                       flush $CHECK_OUTPUT
                       send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
@@ -628,7 +683,15 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                       puts $CHECK_OUTPUT "--> ERROR <--"
                       puts $CHECK_OUTPUT "unexpected password question for user $open_remote_spawn__check_user on host $open_remote_spawn__hostname"
                       puts $CHECK_OUTPUT "please check .rhosts file"
-                      exit 1
+                      puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
+                      flush $CHECK_OUTPUT
+                          
+                      catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
+                      puts $CHECK_OUTPUT "closing spawn process ..."
+                      flush $CHECK_OUTPUT
+                      catch { close -i $spawn_id }
+                      puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
+                      return ""
                    }
                    -i $spawn_id -- "Terminal type?" {
                       send -i $spawn_id -- "vt100\n"
@@ -651,9 +714,9 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
              set timeout 60
              log_user 1
          }
-      } ]
+      } catch_error_message ]
       if { $catch_return != 0 } {
-         add_proc_error "open_remote_spawn_process" -2 "error starting shell" 
+         add_proc_error "open_remote_spawn_process" -2 "error starting shell:\n$catch_error_message" 
          return ""
       }
       catch {
@@ -840,6 +903,8 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
    debug_puts "number of open shells: $nr_of_shells"
    lappend back $nr_of_shells
 
+#   puts $CHECK_OUTPUT "adding [lindex $back 1] to used spawn id buffer" 
+   set rlogin_in_use_buffer([lindex $back 1]) 1
    return $back
 }
 
@@ -1323,7 +1388,6 @@ proc get_spawn_id_rlogin_session { id back_var {no_check 0}} {
          set back(user)     "0"
          set back(ltime)     0
          set back(nr_shells) 0
-
          return 0 
       } else {
          return 1
@@ -1346,6 +1410,7 @@ proc get_spawn_id_rlogin_session { id back_var {no_check 0}} {
 proc close_open_rlogin_sessions {} {
    global CHECK_OUTPUT rlogin_spawn_session_buffer
    global do_close_rlogin
+
 
    if { $do_close_rlogin != 0 } {
       puts $CHECK_OUTPUT "close_open_rlogin_sessions - open rlogin session mode not activated!"
@@ -1370,7 +1435,7 @@ proc close_open_rlogin_sessions {} {
       lappend id $back(spawn_id)
       lappend id $back(nr_shells)
       puts $CHECK_OUTPUT "close_open_rlogin_sessions - closing $id"
-      close_spawn_process $id 0 2
+      close_spawn_process $id 1 2  ;# don't check exit state
    }
 }
 
@@ -1459,6 +1524,45 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
    }
    return 0 ;# error
 }
+
+
+#****** remote_procedures/is_spawn_process_in_use() ****************************
+#  NAME
+#     is_spawn_process_in_use() -- check if spawn id is in use
+#
+#  SYNOPSIS
+#     is_spawn_process_in_use { id } 
+#
+#  FUNCTION
+#     Test if given spawn id is already in use
+#
+#  INPUTS
+#     id - internal spawn id number from open_remote_spawn_process()
+#
+#  RESULT
+#     0    : not in use
+#     not 0: this spawn id is not in use
+#
+#  SEE ALSO
+#     remote_procedures/open_remote_spawn_process()
+#*******************************************************************************
+proc is_spawn_process_in_use { id } {
+
+   global CHECK_OUTPUT rlogin_in_use_buffer
+
+   set sp_id  [lindex $id 1]
+   set sp_pid [lindex $id 0]
+#   puts $CHECK_OUTPUT "is spawn id $sp_id in use?"
+   if { [info exists rlogin_in_use_buffer($sp_id)] } {
+#      puts $CHECK_OUTPUT $rlogin_in_use_buffer($sp_id)
+
+      return $rlogin_in_use_buffer($sp_id)
+   }
+#   puts $CHECK_OUTPUT "no"
+   return 0
+}
+
+
 #                                                             max. column:     |
 #****** remote_procedures/close_spawn_process() ******
 # 
@@ -1501,18 +1605,20 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
 #*******************************
 proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
 
-   global CHECK_OUTPUT open_spawn_buffer CHECK_DEBUG_LEVEL
+   global CHECK_OUTPUT open_spawn_buffer CHECK_DEBUG_LEVEL rlogin_in_use_buffer
   
 #   catch { upvar $my_uplevel remote_spawn_nr_of_shells nr_of_shells }
 
    set sp_id  [lindex $id 1]
    set sp_pid [lindex $id 0]
    get_spawn_id_rlogin_session $sp_id con_data 1
+   set con_data(in_use) 0
    if { $con_data(pid) != 0 } {
       debug_puts "sending CTRL + C to spawn id $sp_id ..."
       send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
       debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
       debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
+      set rlogin_in_use_buffer($sp_id) 0
       return -1   
    }
 
@@ -1608,6 +1714,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
          }
    }
    flush $CHECK_OUTPUT
+   set rlogin_in_use_buffer($sp_id) 0
    return [lindex $wait_return 3] ;# return exit state
 }
 

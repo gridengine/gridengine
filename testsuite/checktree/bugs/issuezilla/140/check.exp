@@ -115,7 +115,6 @@ proc issue_140_check {} {
 
    wait_for_jobend $job_id "Sleeper" 60
 
-
    # test pending job array
    puts $CHECK_OUTPUT "test with pending jobs ..."
    puts $CHECK_OUTPUT "Starting job ..."

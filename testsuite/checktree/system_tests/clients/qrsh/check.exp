@@ -766,7 +766,7 @@ proc qrsh_accounting {} {
          }
       }
 
-      # wait for accounting file to be flushed (esp. for 6.0)
+      # wait for accounting file to be flushed (esp. for 6.0) and NFS
       sleep 30
 
       if { $job_id != "" } {
@@ -1403,11 +1403,11 @@ proc qrsh_qsub_gid {} {
       if {[info exists config(execd_params)]} {
          set execd_params $config(execd_params)
       } else {
-         set execd_params ""
+         set execd_params "NONE"
       }
 
       unset config
-      if { $execd_params == "" } {
+      if { [string compare -nocase $execd_params "NONE"] == 0 } {
          set config(execd_params) "USE_QSUB_GID=true"
       } else {
          set config(execd_params) "$execd_params,USE_QSUB_GID=true"

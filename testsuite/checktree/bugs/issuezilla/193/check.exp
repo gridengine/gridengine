@@ -555,7 +555,7 @@ proc issue193_pe_jobs {} {
        set master_queue ""
        set slave_queue ""
        while { $run == 1 } {
-          set job_info [get_standard_job_info $job 1]
+          set job_info [get_standard_job_info $job 1 1]
           foreach elem $job_info {
 puts $CHECK_OUTPUT [llength $job_info]
 puts $CHECK_OUTPUT $elem
@@ -616,7 +616,7 @@ puts $CHECK_OUTPUT $elem
 
        wait_for_jobpending $job "Sleeper" 100
        set run 1
-       set job_info [get_standard_job_info $job 1]
+       set job_info [get_standard_job_info $job 1 1]
        foreach elem $job_info {
           puts $CHECK_OUTPUT $elem
           if { [string first "MASTER" $elem ] >= 0 } {
@@ -637,7 +637,7 @@ puts $CHECK_OUTPUT $elem
           set master_queue ""
           set slave_queue ""
           while { $run == 1 } {
-             set job_info [get_standard_job_info $job 1]
+             set job_info [get_standard_job_info $job 1 1]
              foreach elem $job_info {
                 puts $CHECK_OUTPUT $elem
                 if { [string first "MASTER" $elem ] >= 0 } {

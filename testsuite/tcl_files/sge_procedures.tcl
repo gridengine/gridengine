@@ -3758,14 +3758,13 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set NOT_REQUESTABLE [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S] "*" ]
   set CAN_T_RESOLVE   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_CANTRESOLVEHOST_S] "*" ]
   set UNKNOWN_RESOURCE1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWN_RESOURCE_S] "*" ]
-  set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] "*" ]
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
   set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
 
   if { $ts_config(gridengine_version) == 60 } {
-     set COLON_NOT_ALLOWED "aöslfjaöskljf aöskljfaösdf"
+     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
@@ -4468,7 +4467,7 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
          }
       }
       if { $get_all != 0 } {
-            lappend back $line
+         lappend back $line
       }
    }
    return $back

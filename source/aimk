@@ -277,7 +277,7 @@ usage:
    echo "-debug            -> compile with debug information"
    echo "-efence           -> compile in debug mode and detect memory leaks"
    echo "-f                -> specify other Makefile instead of common/Makefile"
-   echo "-gcc              -> use gcc instead of system compiler (where supported)""
+   echo "-gcc              -> use gcc instead of system compiler (where supported)"
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
    echo "-gss              -> enable gss security"
@@ -782,6 +782,14 @@ while ($#argv >= 1 && $?found)
       set SECLIB_OBJS = ""
       set SECTARGETS  = ""
       set KLFLAGS     = ""
+      breaksw
+   case "-secure"
+      echo "___________W_A_R_N_I_N_G_____________"
+      echo "The -secure option is no longer supported as security is now enabled"
+      echo "by default.  Please remove the -secure option from your aimk.site and"
+      echo "aimk.private files.  To disable security, you may use the -no-secure"
+      echo "option."
+      echo
       breaksw
    case "-shared-libs":
       set SHAREDLIBS = 1
@@ -1842,7 +1850,7 @@ if ( "$CORE" == 1 ) then
    cd $SOURCE
 endif
 
-if ("$QMON" == 1) then
+if ( "$QMON" == 1 ) then
    echo __________Q_M_O_N____________
 
    cd $SOURCE/3rdparty/qmon

@@ -1,3 +1,8 @@
+JG-2001-12-06-0: Bugfix:    Cull hash implementation: When cull objects were 
+                            received and unpacked, all fields that did not 
+                            have a hash table in the original had a unique
+                            hash table created.
+
 EB-2001-12-06-0: Bugfix:    It was not possible to modify the hold state
                             of tasks without task id specification.
                             (e.g. qalter -h u <jobid> failed)

@@ -1,3 +1,6 @@
+HP-2005-01-04-1: Bugfix:    Fixed bug in aimk in code for Interix and Win32 
+                 Changed:   aimk
+
 HP-2005-01-04-0: Bugfix:    Improved "root" or "Administrator" detection
                             in Interix.
                  Changed:   libuti, shepherd

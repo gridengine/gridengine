@@ -1363,8 +1363,8 @@ case WIN32_X86:
    set SGE_DEPEND       = 0
    set QMON             = 0
 #   set CORE             = 1
-   set REMOTE           = 0
-   set QMAKE            = 0
+   set REMOTE           = 1
+   set QMAKE            = 1
    set QTCSH            = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
@@ -1392,13 +1392,13 @@ case WIN32_X86:
       touch $TOUCH_DIR/db_checkpoint
       touch $TOUCH_DIR/db_dump
       touch $TOUCH_DIR/db_load
-      touch $TOUCH_DIR/fstype
+#      touch $TOUCH_DIR/fstype
 #      touch $TOUCH_DIR/getservbyname
-      touch $TOUCH_DIR/loadcheck
+#      touch $TOUCH_DIR/loadcheck
       touch $TOUCH_DIR/openssl
-      touch ./3rdparty/remote/$COMPILE_ARCH/rlogin
-      touch ./3rdparty/remote/$COMPILE_ARCH/rsh
-      touch ./3rdparty/remote/$COMPILE_ARCH/rshd
+#      touch ./3rdparty/remote/$COMPILE_ARCH/rlogin
+#      touch ./3rdparty/remote/$COMPILE_ARCH/rsh
+#      touch ./3rdparty/remote/$COMPILE_ARCH/rshd
       touch $TOUCH_DIR/spooldefaults
       touch $TOUCH_DIR/spooledit
       touch $TOUCH_DIR/spoolinit
@@ -1407,7 +1407,7 @@ case WIN32_X86:
    
 
    set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
-   # set LIBS = "$LIBS -lwingrid"
+   set LIBS = "$LIBS -lwingrid"
 
    if ($OPTIMIZATION == 1) then
       set OFLAG = "-O3"
@@ -1441,7 +1441,7 @@ case WIN32_X86:
       endif
    endif
 
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS -L$SOURCE/$COMPILE_ARCH"
 
    set SHAREDLD = $CC
 #   set SHARED_CFLAGS = "-fPIC"
@@ -1919,12 +1919,20 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    set WINCC = cl.exe
 
-   set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /Gm /EHsc "
-   set WINCFLAGS = "${WINCFLAGS} /RTC1 /MLd /W3 /nologo /c /Wp64 /ZI /TC "
+   if ( $DEBUGGED == 1 ) then
+      set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /MTd /Zi"
+   else
+      set WINCFLAGS = "/MT"
+   endif
+   set WINCFLAGS = "${WINCFLAGS} /D "_CONSOLE" /W3 /WX /nologo /c /Wp64 /TC"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
 
-   set WINLFLAGS = "/INCREMENTAL /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /MACHINE:X86"
+   if ( $DEBUGGED == 1 ) then
+      set WINLFLAGS = "/DEBUG"
+   endif 
+   set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
+   set WINLFLAGS = "${WINLFLAGS} /SUBSYSTEM:CONSOLE /MACHINE:X86"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L1}'"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L2}'"
 
@@ -1978,8 +1986,7 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
       default:
          set param = wingridlib
          set DEPEND = ""
-# EB: TODO: INTERIX: Is rpclib needed?
-         set LIBS = "$LIBS -lwingrid -lrpclib" 
+         set LIBS = "$LIBS -lwingrid" 
       breaksw
    endsw
 

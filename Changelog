@@ -1,4 +1,8 @@
-JG-2004-01-11-0: Enhancem:  Reconnect to a BerkeleyDB RPC server after a 
+JG-2004-01-14-0: Enhancem.: Made the testprogram from JG-2004-01-13-0 available 
+                            for all spooling methods.
+                 Bugfix:    Fixed build dependencies.
+
+JG-2004-01-13-0: Enhancem:  Reconnect to a BerkeleyDB RPC server after a 
                             disconnect. Initialize BerkeleyDB connection in 
                             newly created threads.
                             Added a test program doing massive parallel spooling

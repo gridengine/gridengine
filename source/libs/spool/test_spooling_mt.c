@@ -77,6 +77,8 @@ static int delay = 0;
 pthread_mutex_t mtx;
 #endif
 
+extern lList *Master_Job_List;
+
 static bool add_job(int job_id)
 {
    bool write_ok;
@@ -89,8 +91,7 @@ static bool add_job(int job_id)
 
    sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
 
-   job = lCreateElem(JB_Type);
-   lSetUlong(job, JB_job_number, job_id);
+   job = lAddElemUlong(&Master_Job_List, JB_job_number, job_id, JB_Type);
    key = job_get_key(job_id, 0, NULL, &key_dstring);
 #if LOCAL_TRANSACTION
    spool_transaction(&answer_list, spool_get_default_context(),
@@ -110,8 +111,6 @@ static bool add_job(int job_id)
                      write_ok ? STC_commit : STC_rollback); 
    answer_list_output(&answer_list);
 #endif
-  
-   lFreeElem(job);
 
    return write_ok;
 }
@@ -136,6 +135,8 @@ static bool del_job(int job_id)
    del_ok = spool_delete_object(&answer_list, spool_get_default_context(),
                                SGE_TYPE_JOB, key);
    answer_list_output(&answer_list);
+
+   lDelElemUlong(&Master_Job_List, JB_job_number, job_id);
 
    if (delay > 0) {
       usleep(delay * 1000);

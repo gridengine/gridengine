@@ -35,12 +35,6 @@
 
 SPOOLLIB = libspool$(QIDLEXT)$(LIBEXT)
 
-include $(SDIR)/libs/spool/berkeleydb/Makefile
-include $(SDIR)/libs/spool/classic/Makefile
-include $(SDIR)/libs/spool/dynamic/Makefile
-include $(SDIR)/libs/spool/flatfile/Makefile
-include $(SDIR)/libs/spool/postgres/Makefile
-
 SPOOLLIB_DIR = $(SDIR)/libs/spool
 
 SPOOLLIB_SRC = \
@@ -121,3 +115,17 @@ test_sge_spooling_utilities: test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLI
 
 test_sge_spooling_utilities.o: $(SPOOLLIB_DIR)/test_sge_spooling_utilities.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling_utilities.c
+
+test_spooling_mt: test_spooling_mt.o $(SPOOLING_DEPS) $(SGEOBJLIB) $(SGEOBJDLIB) $(SCHEDLIB) $(LCKLIB) $(CULLLIB) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_spooling_mt $(LFLAGS) test_spooling_mt.o $(SPOOLING_LIBS) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(NGCLIB) $(NGCLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+
+test_spooling_mt.o: $(SPOOLLIB_DIR)/test_spooling_mt.c
+	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_spooling_mt.c
+
+#---------------------------------------------------------------------
+# include Makefiles for sublibs
+include $(SDIR)/libs/spool/berkeleydb/Makefile
+include $(SDIR)/libs/spool/classic/Makefile
+include $(SDIR)/libs/spool/dynamic/Makefile
+include $(SDIR)/libs/spool/flatfile/Makefile
+include $(SDIR)/libs/spool/postgres/Makefile

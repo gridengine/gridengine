@@ -90,9 +90,3 @@ sge_bdb_types.o: $(SPOOLBLIB_DIR)/sge_bdb_types.c
 
 #---------------------------------------------------------------------
 # test programs
-test_berkeleydb_mt: test_berkeleydb_mt.o $(SPOOLING_DEPS) $(SGEOBJLIB) $(SGEOBJDLIB) $(SCHEDLIB) $(LCKLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_berkeleydb_mt $(LFLAGS) test_berkeleydb_mt.o $(SPOOLING_LIBS) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
-
-test_berkeleydb_mt.o: $(SPOOLBLIB_DIR)/test_berkeleydb_mt.c
-	$(CC) $(CFLAGS) -c $(SPOOLBLIB_DIR)/test_berkeleydb_mt.c
-

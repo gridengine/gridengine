@@ -789,14 +789,14 @@ while ($#argv >= 1 && $?found)
    case "-spool-berkeleydb":
       set SPOOLING_METHOD = "berkeleydb"
       set SPOOLING_LIBS   = "-lspoold -lspoolb -lspool -ldb"
-      set SPOOLING_DEPS   = "libspoold libspoolb"
+      set SPOOLING_DEPS   = "libspool libspoold libspoolb"
       set CFLAGS  = "-I$BERKELEYDB_HOME/include $CFLAGS"
       set LFLAGS  = "-L$BERKELEYDB_HOME/lib $LFLAGS"
       breaksw
    case "-spool-classic":
       set SPOOLING_METHOD = "classic"
       set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
-      set SPOOLING_DEPS   = "libspoold libspoolc"
+      set SPOOLING_DEPS   = "libspool libspoold libspoolc"
       breaksw
 #   case "-spool-dynamic":
 #      set SPOOLING_METHOD = "dynamic"
@@ -806,12 +806,12 @@ while ($#argv >= 1 && $?found)
    case "-spool-flatfile":
       set SPOOLING_METHOD = "flatfile"
       set SPOOLING_LIBS   = "-lspoold -lspoolf -lspool"
-      set SPOOLING_DEPS   = "libspoold libspoolf"
+      set SPOOLING_DEPS   = "libspool libspoold libspoolf"
       breaksw
    case "-spool-postgres":
       set SPOOLING_METHOD = "postgres"
       set SPOOLING_LIBS   = "-lspoold -lspoolp -lspool -lpq"
-      set SPOOLING_DEPS   = "libspoold libspoolp"
+      set SPOOLING_DEPS   = "libspool libspoold libspoolp"
       set CFLAGS  = "-I$POSTGRES_HOME/include $CFLAGS"
       set LFLAGS  = "-L$POSTGRES_HOME/lib $LFLAGS"
       breaksw

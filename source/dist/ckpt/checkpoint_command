@@ -44,5 +44,5 @@ echo Myargs: $*				 >> $F 2>&1
 echo done				 >> $F 2>&1
 echo                                     >> $F 2>&1
 
-echo Checkpoint command: /usr/bin/checkpoint -U -c codine_$1 -$2 >> $F 2>&1
-/usr/bin/checkpoint -U -c codine_$1 -$2                          >> $F 2>&1
+echo Checkpoint command: /usr/bin/checkpoint -U -c sge_$1 -$2 >> $F 2>&1
+/usr/bin/checkpoint -U -c sge_$1 -$2                          >> $F 2>&1

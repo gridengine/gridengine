@@ -43,7 +43,6 @@ if [ ! -f $ckpt_dir/ckpt.log ]; then
    chmod 666 $ckpt_dir/ckpt.log
 fi
 
-SGE_TASK_ID=${SGE_TASK_ID:-${GRD_TASKID:-$COD_TASK_ID}}
 if [ "$SGE_TASK_ID" = "undefined" -o "$SGE_TASK_ID" = "" ]; then
    jobid=$JOB_ID
    jobdir=$JOB_ID.1

@@ -47,8 +47,8 @@ mkdir -p $tmpdir
 cd $tmpdir
 
 # change the path to your needs
-#F=$ckpt_dir/cray_clean.out
-#touch $F
+F=$ckpt_dir/cray_clean.out
+touch $F
 #echo -------------------------------------------------------------  >> $F 2>&1
 #echo `basename $0` called at `date`      >> $F 2>&1
 #echo called by: `id`			 >> $F 2>&1
@@ -59,7 +59,7 @@ cd $tmpdir
 
 job_id=`cat osjobid`
 
-if [ -z "$COD_LEAVE_CKPT_DIR" -a "$4" != "save" ]; then
+if [ -z "$SGE_LEAVE_CKPT_DIR" -a "$4" != "save" ]; then
    cd $ckpt_dir
    rm -rf $tmpdir
 fi

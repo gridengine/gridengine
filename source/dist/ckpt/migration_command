@@ -44,5 +44,5 @@ echo Myargs: $*				 >> $F 2>&1
 echo done				 >> $F 2>&1
 echo                                     >> $F 2>&1
 
-echo Migration command: /usr/bin/checkpoint -k -U -c codine_$1 -$2 >> $F 2>&1
-/usr/bin/checkpoint -k -U -c codine_$1 -$2                         >> $F 2>&1
+echo Migration command: /usr/bin/checkpoint -k -U -c sge_$1 -$2 >> $F 2>&1
+/usr/bin/checkpoint -k -U -c sge_$1 -$2                         >> $F 2>&1

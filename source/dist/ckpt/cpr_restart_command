@@ -69,9 +69,9 @@ print Restart command: cpr -r cpr_$1.$currcpr >> $F 2>&1
 cpr -r cpr_$1.$currcpr >> $F 2>&1
 
 # Now be careful: The restart command is the parent process of the restarted
-# job. Codine is the parent process of the restart command.
+# job. SGE is the parent process of the restart command.
 # If the job was killed (probably due to a migration request), we need to
-# tell our parent that by killing ourselves. Codine will also detect an 
+# tell our parent that by killing ourselves. SGE will also detect an 
 # exit status > 128 analogous to a KILL
 
 exit_status=$?

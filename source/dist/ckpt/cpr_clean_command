@@ -69,13 +69,13 @@ for ping in 1 2
 do
    if [ -d cpr_$1.$ping ]; then
       cpr -i cpr_$1.$ping >> $F 2>&1
-      if [ -z "$COD_LEAVE_CKPT_DIR" -a "$4" != "save" ]; then
+      if [ -z "$SGE_LEAVE_CKPT_DIR" -a "$4" != "save" ]; then
 	 cpr -D cpr_$1.$ping >> $F 2>&1
       fi
    fi
 done
 
-if [ -z "$COD_LEAVE_CKPT_DIR" -a "$4" != "save" ]; then
+if [ -z "$SGE_LEAVE_CKPT_DIR" -a "$4" != "save" ]; then
    cd $ckpt_dir
    rm -rf $tmpdir
 fi

@@ -83,12 +83,12 @@ proc share_tree_init_level {} {
   switch -- $CHECK_ACT_LEVEL {
      "0" { 
            set share_tree_job_counter       5 
-           set share_tree_percentage_variation  9
+           set share_tree_percentage_variation  10
            return 0    
      } 
      "100" {
            set share_tree_job_counter       30
-           set share_tree_percentage_variation  1
+           set share_tree_percentage_variation  2
            return 0    
      }
   } 
@@ -588,9 +588,10 @@ proc share_tree_cleanup  {} {
   del_prj "project2"
   del_prj "project3"
 
+  set job [ submit_job "-e /dev/null -o /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 60"]
+  wait_for_jobend $job "leeper" 120 0
 
   set_error 0 "ok"
-
 }
 
 

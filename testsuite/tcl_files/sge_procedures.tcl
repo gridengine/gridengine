@@ -694,7 +694,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 #     queue_sort_method           "share"
 #     user_sort                   "false"
 #     sgeee_schedule_interval     "00:01:00"
-#     halftime                    "24"
+#     halftime                    "168"
 #     usage_weight_list           "cpu=1,mem=0,io=0"
 #     compensation_factor         "5"
 #     weight_user                 "0.2"
@@ -727,7 +727,7 @@ proc reset_schedd_config {} {
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
      set default_array(queue_sort_method)          "share"
      set default_array(sgeee_schedule_interval)    "00:01:00"
-     set default_array(halftime)                   "24"
+     set default_array(halftime)                   "168"
      set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
      set default_array(compensation_factor)        "5"
      set default_array(weight_user)                "0.2"
@@ -1056,7 +1056,7 @@ proc set_config { change_array {host global} {do_add 0}} {
 #     In case of a SGEEE - System:
 #     
 #     sgeee_schedule_interval       "00:01:00"
-#     halftime                    "0"
+#     halftime                    "168"
 #     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
 #     compensation_factor         "5"
 #     weight_user                 "0"
@@ -1143,7 +1143,7 @@ proc set_schedd_config { change_array } {
 #     In case of a SGEEE - System:
 #     
 #     sgeee_schedule_interval       "00:01:00"
-#     halftime                    "0"
+#     halftime                    "168"
 #     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
 #     compensation_factor         "5"
 #     weight_user                 "0"
@@ -4377,13 +4377,13 @@ proc startup_qmaster {} {
 
    if { $master_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 1 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster" ""
    }
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 1 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
    }

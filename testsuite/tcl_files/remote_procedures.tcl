@@ -365,6 +365,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 #     exec_command     - ??? 
 #     exec_arguments   - ??? 
 #     { background 0 } - if not 0 -> start command with "&" in background 
+#                        if 2 -> wait 30 seconds after starting background process
 #
 #  RESULT
 #     ??? 
@@ -729,7 +730,8 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
       log_user 1
    }
 
-   if { $background != 0 } {
+   if { $background == 2 } {
+    
       set back_time 15 ;# let background process time to do his initialization
       while { $back_time > 0 } {
          puts -nonewline $CHECK_OUTPUT "."

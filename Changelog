@@ -1,4 +1,11 @@
 CR-2001-11-08-0: Testsuite:
+                    - adapted default haftime scheduler parameter from 24 to 168
+                    - new debug parameters chanched behaviour of performance 
+                      test when calling open_remote_spawn_process - fixed
+                    - changed deviation value for share tree check from 1% to 2%
+                      
+
+CR-2001-11-08-0: Testsuite:
                     - new debuging options:
                       menu -> new points 20 and 21 
                               (shutdown/restart scheduler and master)

@@ -128,7 +128,9 @@ proc project_access_lists_setup  {} {
    get_config                             project_access_lists_cluster_conf 
    get_schedd_config                      project_access_lists_schedd_conf
    set my_schedd_config(schedule_interval)       "0:0:01"
-   set my_schedd_config(sgeee_schedule_interval) "0:0:02"
+   if { [resolve_version] < 3 } {
+      set my_schedd_config(sgeee_schedule_interval) "0:0:02"
+   }
    set_schedd_config my_schedd_config
 
 

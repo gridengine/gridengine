@@ -1,3 +1,8 @@
+SG-2002-11-04-1: Enhancem.: updated the testsuite to reflect the latest schedd
+                            conf changes.
+                 Changed:   testsuite
+                 Review:    CR
+
 SG-2003-11-04-0: Bugfix:    scheduler configuration:
                             - param setting of NULL kills qmaster
                             - usage reporting was switched off

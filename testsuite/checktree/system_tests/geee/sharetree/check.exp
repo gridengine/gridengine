@@ -364,7 +364,9 @@ proc share_tree_setup  {} {
    set my_config(weight_tickets_share) "10000"
    set my_config(job_load_adjustments) "np_load_avg=0.0"
    set my_config(schedule_interval)    "2:0:0"
-# set my_config(sgeee_schedule_interval) "00:00:08"
+#  if { [resolve_version] < 3 } {
+#     set my_config(sgeee_schedule_interval) "00:00:08"
+#  }
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
    set my_config(halftime)             "10"
    set_schedd_config my_config

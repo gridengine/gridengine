@@ -1298,7 +1298,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 #     SGEEE differences:
 #     queue_sort_method           "share"
 #     user_sort                   "false"
-#     sgeee_schedule_interval     "00:01:00"
+#     reprioritize_interval       "00:01:00"
 #     halftime                    "168"
 #     usage_weight_list           "cpu=1,mem=0,io=0"
 #     compensation_factor         "5"
@@ -1335,7 +1335,12 @@ proc reset_schedd_config {} {
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
      set default_array(queue_sort_method)          "share"
-     set default_array(sgeee_schedule_interval)    "00:00:40"
+     if { [resolve_version] >= 3 } {
+        set default_array(reprioritize_interval)    "00:00:40"
+     }
+     else {
+        set default_array(sgeee_schedule_interval)    "00:00:40"
+     }
      set default_array(halftime)                   "168"
      set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
      set default_array(compensation_factor)        "5"
@@ -1849,7 +1854,7 @@ proc set_complex { change_array complex_list { create 0 } } {
 #     
 #     In case of a SGEEE - System:
 #     
-#     sgeee_schedule_interval       "00:01:00"
+#     reprioritize_interval       "00:01:00"
 #     halftime                    "168"
 #     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
 #     compensation_factor         "5"
@@ -1935,7 +1940,7 @@ proc set_schedd_config { change_array } {
 #     
 #     In case of a SGEEE - System:
 #     
-#     sgeee_schedule_interval       "00:01:00"
+#     reprioritize_interval       "00:01:00"
 #     halftime                    "168"
 #     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
 #     compensation_factor         "5"

@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
 <HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Win32)">
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
 	<META NAME="AUTHOR" CONTENT="Charu Chaubal">
 	<META NAME="CREATED" CONTENT="20021127;10251700">
-	<META NAME="CHANGED" CONTENT="20021127;12284133">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20021127;12524200">
 </HEAD>
 <BODY LANG="en-US">
 <H1 ALIGN=CENTER>A Prototype of a Multi-Clustering Implementation
@@ -14,7 +15,7 @@ using Transfer Queues</H1>
 <P ALIGN=CENTER>last updated: <SDFIELD TYPE=DATETIME SDNUM="1033;1033;MMMM D, YYYY">November 27, 2002</SDFIELD></P>
 <H2>Background</H2>
 <P>Multi-clustering can be defined as the sharing of compute jobs
-between two or more independently-controlled clustergrids. This could
+between two or more independently controlled clustergrids. This could
 be desirable, for example, if the owners of the clusters realize that
 there are times when one cluster is lightly-loaded while another has
 a large pending list. In this case, it makes sense to make use of the
@@ -26,7 +27,7 @@ cluster as the one to which jobs are dispatched (if deemed
 appropriate).</P>
 <P>One way to implement multi-clustering is with transfer queues. The
 idea is that jobs dispatched to a transfer queue get submitted to a
-remote cluster; this would happen transparently to the user.  To have
+remote cluster; this would happen transparently to the user. To have
 jobs going in both directions, simply use transfer queues on both
 sides.</P>
 <H2>Description</H2>
@@ -84,7 +85,7 @@ See the scripts for site-specific variables.</P>
 In practice, you would not submit jobs directly to this special
 queue. Rather, one of the following approaches would be taken:</P>
 <OL>
-	<LI><P STYLE="margin-bottom: 0cm">if all jobs are &ldquo;generic&rdquo;
+	<LI><P STYLE="margin-bottom: 0cm">if all jobs are &quot;generic&quot;
 	enough, then it might not matter if they run in the local or remote
 	cluster. In this case, jobs would just be submitted normally, and
 	those which happen to end up in the transfer queue will run remotely</P>
@@ -93,7 +94,7 @@ queue. Rather, one of the following approaches would be taken:</P>
 	data/binaries inaccessible remotely), then a user-defined complex
 	with a boolean resource (eg, &ldquo;remote&rdquo;) should be
 	attached to the transfer queue(s). Jobs which cannot be run remotely
-	could be submitted with a resource request &ldquo;-l remote=false&rdquo;.
+	could be submitted with a resource request &quot;-l remote=false&quot;.
 	This will prevent those jobs from being dispatched to the transfer
 	queue(s), and hence will not be dispatched remotely.</P>
 </OL>
@@ -151,7 +152,7 @@ Configuration</H2>
 	(large numbers of relatively short jobs, especially array jobs), the
 	load sensor will not be able to provide a very accurate measure of
 	the size of the pending list, and might unnecessarily prevent jobs
-	from being dispatched.  In this case, you might consider disabling
+	from being dispatched. In this case, you might consider disabling
 	the load threshold, and instead setting the number of slots to a
 	smaller number (eg, 1/10 the number of remote slots). This will
 	meter out the small jobs in a steady but limited stream, thus

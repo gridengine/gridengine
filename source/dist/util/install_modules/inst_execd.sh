@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_execd.sh
+# Scriptname: inst_execd.sh
 # Module: execd installation functions
 #
 #___INFO__MARK_BEGIN__
@@ -224,7 +224,7 @@ CheckHostNameResolving()
        done=false
        $CLEAR
        $INFOTEXT -u "\nChecking hostname resolving"
-
+       echo
        resolve_admin_hosts=`ExecuteAsAdmin $SGE_BIN/qconf -sh`
        resolve_this_hostname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
        resolve_default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}'`
@@ -315,7 +315,7 @@ CheckIfAdminHost()
 
        if [ $done = false ]; then
            $INFOTEXT -u "\nChecking for Adminhost"
-           $INFOTEXT "This host is unknown on the qmaster host.\n\n" \
+           $INFOTEXT "\nThis host is unknown on the qmaster host.\n\n" \
                      "Please make sure that you added this host as administrative host!\n" \
                      "If you did not, please add this host now with the command\n\n" \
                      "   # qconf -ah HOSTNAME\n\n" \
@@ -403,7 +403,7 @@ AddQueue()
 GetLocalExecdSpoolDir()
 {
    $INFOTEXT -u "\nLocal execd spool directory configuration"
-   $INFOTEXT "During the qmaster installation you've already entered " \
+   $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
              "spool directory is configured.\n\n Now you can enter a local spool " \
              "directory for this host.\n"
@@ -413,7 +413,7 @@ GetLocalExecdSpoolDir()
       $INFOTEXT -n "Please enter the local spool directory now! >> " 
       LOCAL_EXECD_SPOOL=`Enter`
       $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
-      $INFOTEXT -wait -auto $AUTO "Hit <RETURN> to continue >> "
+      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    else
       $CLEAR
    fi
@@ -423,5 +423,4 @@ GetLocalExecdSpoolDir()
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
       fi
    fi
-
 }

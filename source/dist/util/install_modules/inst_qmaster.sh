@@ -1,7 +1,7 @@
 #! /bin/sh 
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: inst_sgeee_qmaster.sh
+# Scriptname: inst_qmaster.sh
 # Module: qmaster installation functions
 #
 #___INFO__MARK_BEGIN__
@@ -45,20 +45,18 @@
 GetCellRoot()
 {
    if [ $AUTO = true ]; then
-    SGE_CELL_ROOT=$SGE_CELL_ROOT
-    $INFOTEXT -log "Using >%s< as SGE_CELL_ROOT." "$SGE_CELL_ROOT"
+      SGE_CELL_ROOT=$SGE_CELL_ROOT
+       $INFOTEXT -log "Using >%s< as SGE_CELL_ROOT." "$SGE_CELL_ROOT"
    else
-   $CLEAR
-   $INFOTEXT -u "\nGrid Engine cell root"
-   $INFOTEXT -n "Enter the cell root <<<"
-   INP=`Enter `
-   eval SGE_CELL_ROOT=$INP
-   $INFOTEXT -wait -auto $AUTO -n "\nUsing cell root >%s<. Hit <RETURN> to continue >> " $SGE_CELL_ROOT
-   $CLEAR
+      $CLEAR
+      $INFOTEXT -u "\nGrid Engine cell root"
+      $INFOTEXT -n "Enter the cell root <<<"
+      INP=`Enter `
+      eval SGE_CELL_ROOT=$INP
+      $INFOTEXT -wait -auto $AUTO -n "\nUsing cell root >%s<. Hit <RETURN> to continue >> " $SGE_CELL_ROOT
+      $CLEAR
    fi
 }
-
-
 
 #-------------------------------------------------------------------------
 # GetCell
@@ -83,29 +81,29 @@ GetCell()
                    "The environment variable\n\n" \
                    "   \$SGE_CELL=<your_cell_name>\n\n" \
                    "will be set for all further Grid Engine commands.\n\n" \
-                   "Enter cell name or hit <RETURN> to use default cell >default< >> "
+                   "Enter cell name [default] >> "
       INP=`Enter default`
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
       if [ $BERKELEY = "undef" ]; then
-         if [ -d $SGE_ROOT/$SGE_CELL ]; then
+         if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
             $CLEAR
-            $INFOTEXT "The cell name <%s> you have entered already exists!" $SGE_CELL_VAL
+            $INFOTEXT "\nThe \"common\" directory in cell >%s< already exists!" $SGE_CELL_VAL
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to select another cell name? (y/n) [y] >> "
             if [ $? = 0 ]; then
-               :
                is_done="false"
             else
-               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite,\nonly critical files " \
-                            "will be deleted (eg. bootstrap file).\nDelete - will delete the whole directory!\n"
-               $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite the directory? (y/n) [y] >> "
+               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite\n" \
+                            "(YES option) only the \"bootstrap\" file will be deleted).\n" \
+                            "Delete (NO option) - will delete the whole directory!\n"
+               $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite [y] or delete [n] the directory? (y/n) [y] >> "
                if [ $? = 0 ]; then
                   $INFOTEXT "Deleting bootstrap file!"
-                  `rm $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap`
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
                   is_done="true"
                else
-                  $INFOTEXT "Deleting %s directory now!" $SGE_ROOT/$SGE_CELL_VAL
-                  `rm -R $SGE_ROOT/$SGE_CELL_VAL`
+                  $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
+                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL/common
                   is_done="true"
                fi
             fi
@@ -283,7 +281,6 @@ SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
    SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
-   $INFOTEXT "The selected spooling method is: %s" $SPOOLING_METHOD
    $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
    case $SPOOLING_METHOD in 
       classic)
@@ -305,33 +302,32 @@ SetSpoolingOptions()
             fi
             SpoolingCheckParams
             params_ok=1
-            #TODO: exec rcrpc script
          fi
          if [ $QMASTER = "install" -a $AUTO = "false" ]; then
             $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
                          " 1) Local spooling:\n" \
-                         " The Berkely DB spools into a local directory on this host (qmaster host)\n" \
+                         " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
                          " This setup is faster, but you can't setup a shadow master host\n\n"
             $INFOTEXT -n " 2) Berkeley DB Spooling Server:\n" \
                          " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
-                         " In this case you have to choose a host with a configured rpc service.\nThe qmaster host" \
-                         " connects via rpc to the Berkeley DB. This setup is more\nfailsafe," \
-                         " but results in a clear potential security hole. Rpc communication\n" \
+                         " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
+                         " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
+                         " but results in a clear potential security hole. RPC communication\n" \
                          " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
                          " alternative if your site is secure or if you are not concerned about\n" \
                          " security. Check the installation guide for further advice on how to achieve\n" \
                          " failsafety without compromising security.\n\n"
  
-            $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
+            $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
             if [ $? = 0 ]; then
-               $INFOTEXT -u "Berkely DB Setup"
-               $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute < inst_sgeee -db >"
-               $INFOTEXT -auto $AUTO -wait "Please do not continue, before the Berkeley DB installation with \n" \
-                                           "< inst_sgeee -db > is completed, continue with <RETURN>"
+               $INFOTEXT -u "Berkeley DB Setup\n"
+               $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
+               $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
+                                              "\"inst_sge -db\" is completed, continue with <RETURN>"
                is_server="true"
             else
                is_server="false"
-               $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
+               $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
                $CLEAR
             fi
 
@@ -342,6 +338,7 @@ SetSpoolingOptions()
                is_spool="false"
 
                while [ $is_spool = "false" ] && [ $done = "false" ]; do
+                  $CLEAR
                   SpoolingQueryChange
                   if [ -d $SPOOLING_DIR ]; then
                      $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
@@ -363,8 +360,11 @@ SetSpoolingOptions()
                   CheckLocalFilesystem $SPOOLING_DIR
                   ret=$?
                   if [ $ret -eq 0 ]; then
-                     $INFOTEXT -e "\nThe database directory >%s<\n" \
-                                  "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+                     $INFOTEXT "\nThe database directory\n\n" \
+                                  "   %s\n\n" \
+                                  "is not on a local filesystem. Please choose a local filesystem or\n" \
+                                  "configure the RPC Client/Server mechanism." $SPOOLING_DIR
+                     $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
                   else
                      done="true" 
                   fi
@@ -400,15 +400,15 @@ SetSpoolingOptions()
          fi
 
          if [ $SPOOLING_SERVER = "none" ]; then
+            $ECHO
             Makedir $SPOOLING_DIR
             SPOOLING_ARGS="$SPOOLING_DIR"
          else
             SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
          fi
-
          ;;
       *)
-         $INFOTEXT -e "\nUnknown spooling method. Exit."
+         $INFOTEXT "\nUnknown spooling method. Exit."
          exit 1
          ;;
    esac
@@ -461,18 +461,6 @@ SelectHostNameResolving()
 #
 SetProductMode()
 {
-   #if [ $SGEEE = true ]; then
-   #   PRODUCT_PREFIX=sgeee
-   #else
-   #   PRODUCT_PREFIX=sge
-   #fi
-
-#if [ $RESPORT = true ]; then
-#      RESPORT_PREFIX=-reserved_port
-#   else
-#      RESPORT_PREFIX=""
-#   fi
-
    if [ $AFS = true ]; then
       AFS_PREFIX="afs"
    else
@@ -501,7 +489,6 @@ SetProductMode()
       else
          PRODUCT_MODE="${AFS_PREFIX}"
       fi
-
 }
 
 
@@ -511,6 +498,7 @@ SetProductMode()
 MakeDirsMaster()
 {
    $INFOTEXT -u "\nMaking directories"
+   $ECHO
    $INFOTEXT -log "Making directories"
    Makedir $SGE_CELL_VAL
    Makedir $COMMONDIR
@@ -528,13 +516,12 @@ MakeDirsMaster()
 AddBootstrap()
 {
    TOUCH=touch
-   $INFOTEXT -u "\nDumping bootstrapping information"
+   $INFOTEXT "Dumping bootstrapping information"
    $INFOTEXT -log "Dumping bootstrapping information"
    ExecuteAsAdmin $TOUCH $COMMONDIR/bootstrap
+   ExecuteAsAdmin chmod 666 $COMMONDIR/bootstrap
    PrintBootstrap >> $COMMONDIR/bootstrap
-   FILEPERM=444
-   SetPerm $COMMONDIR/bootstrap
-   FILEPERM=644
+   ExecuteAsAdmin chmod 444 $COMMONDIR/bootstrap
 }
 
 #-------------------------------------------------------------------------
@@ -565,11 +552,11 @@ PrintBootstrap()
 #
 InitSpoolingDatabase()
 {
-   $INFOTEXT -u "\nInitializing spooling database"
+   $INFOTEXT "Initializing spooling database"
    $INFOTEXT -log "Initializing spooling database"
    ExecuteAsAdmin $SPOOLINIT $SPOOLING_LIB "$SPOOLING_ARGS" init
 
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
 
@@ -871,7 +858,6 @@ CreateSettingsFile()
 {
    $INFOTEXT "Creating settings files for >.profile/.cshrc<"
 
-
    if [ -f $SGE_ROOT_VAL/$COMMONDIR/settings.sh ]; then
       ExecuteAsAdmin $RM $SGE_ROOT_VAL/$COMMONDIR/settings.sh
    fi
@@ -884,6 +870,8 @@ CreateSettingsFile()
 
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.sh
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.csh
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
 }
 
 
@@ -981,6 +969,7 @@ AddHosts()
    fi
 
    $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
+   echo
    $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
    TMPL=/tmp/hostqueue$$
    TMPL2=${TMPL}.q
@@ -1418,7 +1407,7 @@ SetScheddConfig()
 {
 
    $INFOTEXT -u "Scheduler Tuning"
-   $INFOTEXT -n "The details on the different options are described in the manual. \n"
+   $INFOTEXT -n "\nThe details on the different options are described in the manual. \n"
    done="false"
  
    while [ $done = "false" ]; do

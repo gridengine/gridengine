@@ -999,11 +999,12 @@ case DARWIN:
       set libext = ".a"
    endif   
    
-   if ( -r "/sw/lib/libxm$libext" ) then
-      set MOTIFHOME = /sw
-   else
-      set MOTIFHOME = /usr/local
-   endif   
+#   if ( -r "/sw/lib/libxm$libext" ) then
+#      set MOTIFHOME = /sw
+#   else
+#      set MOTIFHOME = /usr/local
+#   endif   
+   set MOTIFHOME = /usr/X11R6
 
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"

@@ -43,7 +43,7 @@
 #define MSG_MASTER                         _MESSAGE(27001, _("master"))
 #define MSG_STARTUP_STARTINGUP_S           _MESSAGE(27002, _("starting up "SFN))
 #define MSG_SHADOWD_CONTROLLEDSHUTDOWN_S   _MESSAGE(27003, _("controlled shutdown "SFN))
-#define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to amin_user"))
+#define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to admin_user"))
 
 /*
 ** path_aliases.c

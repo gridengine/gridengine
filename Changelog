@@ -1,3 +1,10 @@
+AA-2004-05-19-0: Bugfix:    - warning when execd is started as non-root user
+                            - make csp work with admin user daemons
+                            - change of motif lib for pippin
+                 Issue:     857
+                 Changed:   all bins
+                 Review:    pending
+                            
 CR-2004-05-19-0: Bugfix:    o Removed -lj Option for execd
                             o added/fixed help output to sge_execd, sge_qmaster
                               sge_shepherd and sge_coshepherd (IZ#1026).

@@ -1406,7 +1406,8 @@ int sec_send_message(cl_com_handle_t* cl_handle,
    */
    if (uti_state_get_mewho() != QMASTER) {
       if (sec_announce_connection(cl_handle,&gsd, destination)) {
-         ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED));
+/*          ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED)); */
+         DPRINTF((MSG_SEC_ANNOUNCEFAILED));
          cl_com_free_endpoint(&destination);
          DEXIT;
          return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
@@ -1482,7 +1483,8 @@ int compressed
    */
    if (uti_state_get_mewho() != QMASTER) {
       if (sec_announce_connection(&gsd, tocomproc,tohost)) {
-         ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED));
+/*          ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED)); */
+         DPRINTF((MSG_SEC_ANNOUNCEFAILED));
          DEXIT;
          return SEC_ANNOUNCE_FAILED;
       }
@@ -4202,14 +4204,14 @@ int sec_verify_user(const char *user, const char *commproc)
 {
    DENTER(GDI_LAYER,"sec_verify_user");
 
-/*    if (!sec_is_daemon(commproc)) { */
+   if (!sec_is_daemon(commproc)) {
       DPRINTF(("commproc = '%s' user = '%s', unique_identifier = '%s'\n", 
                commproc, user, sec_state_get_unique_identifier()));
       if (strcmp(user, sec_state_get_unique_identifier())) {
          DEXIT;
          return 0;
       }   
-/*    } */
+   }
       
 
    DEXIT;

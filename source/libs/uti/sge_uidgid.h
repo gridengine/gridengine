@@ -51,6 +51,7 @@ void uidgid_mt_init(void);
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);
+bool sge_is_start_user_root(void);
 int sge_run_as_user(void);
 int sge_user2uid(const char *user, uid_t *uidp, int retries);  
 int sge_group2gid(const char *gname, gid_t *gidp, int retries);

@@ -75,6 +75,7 @@
 #include "sge_language.h"
 #include "sge_job.h"
 #include "sge_mt_init.h"
+#include "sge_uidgid.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -215,6 +216,13 @@ char **argv
    /* first we have to report any reaped children that might exist */
 
    starting_up();
+   
+   /*
+   ** log a warning message if execd hasn't been started by root
+   */
+   if (sge_is_start_user_root()) {
+      WARNING((SGE_EVENT, MSG_SWITCH_USER_NOT_ROOT));
+   }   
 
 #ifdef COMPILE_DC
    if (ptf_init()) {

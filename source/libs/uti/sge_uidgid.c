@@ -1203,3 +1203,41 @@ static void uidgid_state_init(struct uidgid_state_t* theState)
 {
    memset(theState, 0, sizeof(struct uidgid_state_t));
 }
+
+/****** uti/uidgid/sge_is_start_user_root() **********************************
+*  NAME
+*     sge_is_start_user_root() -- return true/false if start user was root
+*
+*  SYNOPSIS
+*     bool sge_is_start_user_root(void)
+*
+*  FUNCTION
+*     return true/false if start user was root or not
+*
+*  RESULT
+*         true - root was start user
+*         false - otherwise
+*
+*  NOTES
+*     MT-NOTE: sge_is_start_user_root() is MT safe.
+*
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user()
+*     uti/uidgid/sge_set_admin_username()
+*     uti/uidgid/sge_switch2start_user()
+*     uti/uidgid/sge_run_as_user()
+******************************************************************************/
+bool sge_is_start_user_root(void)
+{
+   uid_t uid, start_uid;
+   gid_t gid, start_gid;
+   bool ret = false;
+
+   DENTER(UIDGID_LAYER, "sge_is_start_user_root");
+ 
+   start_uid = getuid();
+
+   DEXIT;
+   return start_uid ? true : false;
+   
+} /* sge_is_start_user_root() */ 

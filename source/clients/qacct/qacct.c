@@ -1162,13 +1162,9 @@ char **argv
    } 
    if ( granted_pe[0] ) {
       column_sizes.granted_pe = strlen(granted_pe) + 1;
-   } 
-   DPRINTF(("host culumn: %d\n", column_sizes.host ));
+   }
+ 
    calc_column_sizes(lFirst(sorted_list), &column_sizes);
-/*   lWriteListTo(sorted_list, stdout); */
-   DPRINTF(("host culumn: %d\n", column_sizes.host ));
-/*   exit(-1);  */
-
    {
       lListElem *ep = NULL;
       int dashcnt = 0;
@@ -1181,7 +1177,6 @@ char **argv
 #endif
 
       if (host[0] || hostflag) {
-         DPRINTF(("host culumn: %d\n", column_sizes.host ));
          print_full(column_sizes.host , MSG_HISTORY_HOST);
          dashcnt += column_sizes.host ;
       }
@@ -1399,7 +1394,6 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 
    if ( column_size_data->host < strlen(MSG_HISTORY_HOST)+1  ) {
       column_size_data->host = strlen(MSG_HISTORY_HOST)+1;
-      DPRINTF(("host size changed: %d\n", column_size_data->host ));
    } 
    if ( column_size_data->queue < strlen(MSG_HISTORY_QUEUE)+1  ) {
       column_size_data->queue = strlen(MSG_HISTORY_QUEUE)+1;
@@ -1429,10 +1423,8 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
       const char* tmp_string = NULL;
       lep = ep;
       while (lep) {
-         DPRINTF(("next element\n"));
          /* host  */
          tmp_string = lGetHost(lep, QAJ_host);
-         DPRINTF(("host: %s\n", tmp_string));
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->host < tmp_length) {

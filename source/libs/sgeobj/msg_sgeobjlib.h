@@ -287,6 +287,6 @@
 #define MSG_WEIGHTFACTNONUMB_S         _MESSAGE(64307, _("\"load_formula\" uses "SFQ" as weighting factor (only numbers are allowed)\n"))
 #define MSG_MULTIPLEWEIGHTFACT         _MESSAGE(64308, _("\"load_formula\" may not use multiple weighting factors\n"))
 
-#define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't creae queue "SFQ": host "SFQ" is not known\n"))
+#define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't create queue "SFQ": host "SFQ" is not known\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

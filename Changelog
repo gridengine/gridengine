@@ -1,3 +1,9 @@
+SG-2004-11-16-0: Bugfix:    a cluster queue can be deleted, even though it is referenced
+                 Changed:   qmaster
+                 Review:    pending
+                 Issue:     1316
+                 Bugtraq:   pending
+
 CR-2004-11-16-2: Enhancm.:  - updated qping man page for -dump option
                             - fixed usage output of qping
                  Changed:   qping, qping man page

@@ -1421,6 +1421,56 @@ cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/cqueue_is_used_in_subordinate() ****************************
+*  NAME
+*     cqueue_is_used_in_subordinate() -- checks for cqueue references
+*
+*  SYNOPSIS
+*     bool cqueue_is_used_in_subordinate(const char *cqueue_name, 
+*                                        lListElem *cqueue)
+*
+*  FUNCTION
+*     The function goes through all cq subordinate definition and looks
+*     for the cq_name handed in. If it is found, the function will return
+*     true.
+*
+*  INPUTS
+*     const char *cqueue_name - cq name to look for
+*     const lListElem *cqueue - cq to look in
+*     
+*
+*  RESULT
+*     bool - true - a reference was found     
+*
+*  NOTES
+*     MT-NOTE: cqueue_is_used_in_subordinate() is MT safe 
+*******************************************************************************/
+bool
+cqueue_is_used_in_subordinate(const char *cqueue_name, const lListElem *cqueue)
+{
+   bool ret = false;
+
+   DENTER(CQUEUE_LAYER, "cqueue_is_used_in_subordinate");
+
+   if (cqueue != NULL && cqueue_name != NULL) {
+      const lList *sub_list = lGetList(cqueue, CQ_subordinate_list);
+      const lListElem *sub_el;
+      const lListElem *so;
+
+      for_each(sub_el, sub_list) {
+         so = lGetSubStr(sub_el, SO_name, cqueue_name, ASOLIST_value);
+
+         if (so != NULL) { /* we found a reference */
+            ret = true;
+            break;
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
 bool 
 cqueue_verify_calendar(lListElem *cqueue, lList **answer_list, 
                        lListElem *attr_elem)

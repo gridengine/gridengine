@@ -1,0 +1,116 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sge_aliases - Grid Engine path aliases file format
+
+DESCRIPTION
+     The Grid Engine path aliasing facility provides  administra-
+     tors  and  users  with  the means to reflect complicated and
+     in-homogeneous  file  system   structures   in   distributed
+     environments  (such  as  user home directories mounted under
+     different paths on different hosts) and to ensure that  Grid
+     Engine is able to locate the appropriate working directories
+     for executing batch jobs.
+
+     There is a system global path aliasing file and a user local
+     file.  <I>sge</I>_<I>aliases</I> defines the format of both:
+
+     <B>o</B>  Blank lines and lines with a '#' sign in the first column
+        are skipped.
+
+     <B>o</B>  Each line other than a blank line or a line lead  by  '#'
+        has  to  contain  four strings separated by any number of
+        blanks or tabs.
+
+     <B>o</B>  The first string specifies a source-path,  the  second  a
+        submit-host,  the  third an execution-host and the fourth
+        the source-path replacement.
+
+     <B>o</B>  Both the submit- and the execution-host entries may  con-
+        sist of only a '*' sign which matches any host.
+
+     If the -<I>cwd</I> flag (and only if - otherwise  the  user's  home
+     directory  on  the execution host is selected to execute the
+     job) to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> was specified, the path  aliasing  mechanism
+     is activated and the files are processed as follows:
+
+     <B>o</B>  After <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> has retrieved the physical current  working
+        directory  path, the cluster global path aliasing file is
+        read if present. The  user  path  aliases  file  is  read
+        afterwards as if it were appended to the global file.
+
+     <B>o</B>  Lines not to be skipped are read from the top of the file
+        one  by  one  while  the  translations specified by those
+        lines are stored if necessary.
+
+     <B>o</B>  A translation is stored only  if  the  submit-host  entry
+        matches  the  host  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  is  executed  on  and if the
+        source-path forms the initial part either of the  current
+        working  directory  or  of  the  source-path replacements
+        already stored.
+
+     <B>o</B>  As soon as both files are read the stored  path  aliasing
+        information is passed along with the submitted job.
+
+     <B>o</B>  On the execution host, the aliasing information  will  be
+        evaluated. The leading part of the current working direc-
+        tory will be replaced by the source-path  replacement  if
+        the  execution-host  entry  of the path alias matches the
+        executing  host.  Note:  The  current  working  directory
+        string  will  be changed in this case and subsequent path
+        aliases must match the replaced working directory path to
+        be applied.
+
+EXAMPLES
+     The following is a simple example of a  path  aliasing  file
+     resolving problems with in-homogeneous paths if <B><A HREF="../htmlman8/automount.html">automount(8)</A></B>
+     is used:
+
+     =====================================================
+     # Path Aliasing File
+     # src-path   sub-host   exec-host   replacement
+     /tmp_mnt/    *          *           /
+     # replaces any occurrence of /tmp_mnt/ by /
+     # if submitting or executing on any host.
+     # Thus paths on nfs server and clients are the same
+     =====================================================
+
+
+FILES
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>aliases</I>
+                   global aliases file
+     $<I>HOME</I>/.<I>sge</I>_<I>aliases</I>   user local aliases file
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Adminis-</I>
+     <I>tration</I> <I>Guide</I>
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

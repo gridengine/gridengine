@@ -1,3 +1,8 @@
+RD-2005-04-07:0: Bugfix:    commlib deadlock with host aliasing
+                 Review:    CR
+                 Bugtraq:   6251943
+                 Changed:   commlib
+
 CR-2005-04-06-8: Testsuite: fixed testsuite test commlib/issues and commlib
                             test_issues module test
 

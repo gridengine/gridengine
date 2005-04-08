@@ -1742,13 +1742,11 @@ int cl_com_set_alias_file(char* alias_file) {
       return CL_RETVAL_PARAMS;
    }
    
-   pthread_mutex_lock(&cl_com_host_list_mutex);
    if (cl_com_host_list != NULL) {
-      ret_val = cl_host_list_set_alias_file(cl_com_host_list, alias_file );
+      ret_val = cl_host_list_set_alias_file(cl_com_get_host_list(), alias_file );
    } else {
       ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
    }
-   pthread_mutex_unlock(&cl_com_host_list_mutex);
    return ret_val;
 }
 
@@ -1759,13 +1757,11 @@ int cl_com_set_alias_file(char* alias_file) {
 int cl_com_set_alias_file_dirty(void) {
    int ret_val;
    
-   pthread_mutex_lock(&cl_com_host_list_mutex);
    if (cl_com_host_list != NULL) {
-      ret_val = cl_host_list_set_alias_file_dirty(cl_com_host_list);
+      ret_val = cl_host_list_set_alias_file_dirty(cl_com_get_host_list());
    } else {
       ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
    }
-   pthread_mutex_unlock(&cl_com_host_list_mutex);
    return ret_val;
 
 }

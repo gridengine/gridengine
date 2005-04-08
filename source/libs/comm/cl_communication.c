@@ -2437,6 +2437,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_read_alias_file()"
+/* hostlist must be locked */
 int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
    cl_host_list_data_t* ldata = NULL;
    SGE_STRUCT_STAT sb;
@@ -2456,24 +2457,20 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
       return CL_RETVAL_PARAMS;    
    }
 
-   cl_raw_list_lock(hostlist);
    ldata = (cl_host_list_data_t*) hostlist->list_data;
    
    ldata->alias_file_changed = 0;
 
    if (ldata->host_alias_file == NULL) {
-      cl_raw_list_unlock(hostlist);
       CL_LOG(CL_LOG_ERROR,"host alias file is not specified");
       return CL_RETVAL_NO_ALIAS_FILE;
    }
    if (SGE_STAT(ldata->host_alias_file, &sb)) {
-      cl_raw_list_unlock(hostlist);
       CL_LOG(CL_LOG_ERROR,"host alias file is not existing");
       return CL_RETVAL_ALIAS_FILE_NOT_FOUND;
    }
    fp = fopen(ldata->host_alias_file, "r");
    if (!fp) {
-      cl_raw_list_unlock(hostlist);
       CL_LOG(CL_LOG_ERROR,"can't open host alias file");
       return CL_RETVAL_OPEN_ALIAS_FILE_FAILED;
    }
@@ -2510,7 +2507,6 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
             if (main_name == NULL) {
                CL_LOG(CL_LOG_ERROR,"malloc() error");
                fclose(fp);
-               cl_raw_list_unlock(hostlist);
                return CL_RETVAL_MALLOC;
             }
          } else {
@@ -2532,7 +2528,6 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
    }
    fclose(fp);
 
-   cl_raw_list_unlock(hostlist);
 
    return CL_RETVAL_OK;
 }
@@ -2568,9 +2563,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 
    if (ldata->alias_file_changed != 0) {
       CL_LOG(CL_LOG_INFO,"host alias file dirty flag is set");
-      cl_raw_list_unlock(list_p);
       cl_com_read_alias_file(list_p);
-      cl_raw_list_lock(list_p);
       if (list_p->list_data == NULL) {
          cl_raw_list_unlock(list_p);
          CL_LOG( CL_LOG_ERROR, "hostlist not initalized");

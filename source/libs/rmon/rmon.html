@@ -34,21 +34,21 @@ DENTER and DEXIT. These macros are widely used in the source code.</P>
 <H2>Running daemons in monitoring mode</H2>
 <P>Usually, users don't start the daemons directly. Instead they use
 the <SPAN STYLE="font-style: normal">start-up script</SPAN> for this
-task. For puposes of a monitoring run, the daemon has to be started
+task. For purposes of a monitoring run, the daemon has to be started
 directly from a shell. Nevertheless, it is necessary to have the same
 environment in the shell as it is also set by the start-up script
-(SGE_ROOT, COMMD_PORT, ...). This can be easily achieved by sourcing
+(SGE_ROOT, SGE_QMASTER_PORT, ...). This can be easily achieved by sourcing
 the <SPAN STYLE="font-style: normal">settings file:</SPAN></P>
 <P STYLE="font-style: normal">% source $SGE_ROOT/util/dl.csh</P>
 <P STYLE="font-style: normal">The monitoring library allows to select
 8 different <I>categories </I>of messages and it supports also a
 concept of 8 different <I>layers</I>. The idea behind <I>layers</I>
 and <I>categories</I> is to provide the possibility to hide
-unneccessary debug output and display the pertinent one. All DPRINTF
+unnecessary debug output and display the pertinent one. All DPRINTF
 messages belong to the <I>category</I> of <I>info</I> messages, all
 DENTER/DEXIT messages are <SPAN STYLE="font-weight: medium"><I>trace</I></SPAN>
 messages. The layer of a function is passed as argument to the DENTER
-makro. To communicate to the daemon that it should run in monitoring
+macro. To communicate to the daemon that it should run in monitoring
 mode and to pass the information which <I>category </I>and which
 <I>layer</I> of messages is to be displayed the environment variable
 SGE_DEBUG_LEVEL is used. So SGE_DEBUG_LEVEL must be set before the
@@ -67,9 +67,9 @@ be used like a command to operate on SGE_DEBUG_LEVEL:</P>
 <P STYLE="font-style: normal">% echo $SGE_DEBUG_LEVEL</P>
 <P STYLE="font-style: normal">2 0 0 0 0 0 0 0</P>
 <P STYLE="font-style: normal">% dl 2</P>
-<P STYLE="font-style: normal">% echo $COD_DEBUG_LEVEL</P>
+<P STYLE="font-style: normal">% echo $SGE_DEBUG_LEVEL</P>
 <P STYLE="font-style: normal">3 0 0 0 0 0 0 0</P>
-<P STYLE="font-style: normal">The follwoing &quot;dl&quot; settings
+<P STYLE="font-style: normal">The following &quot;dl&quot; settings
 are supported (or provide some useful combinations of debug output):</P>
 <P STYLE="font-style: normal">dl 1 --&gt; 2 0 0 0 0 0 0 0 TOP_LAYER</P>
 <P STYLE="font-style: normal">dl 2 --&gt; 3 0 0 0 0 0 0 0 dto. +
@@ -118,7 +118,7 @@ developer via monitoring messages.</SPAN></P>
 library only the files rmon_macros.c rmon_semaph.c and
 rmon_monitoring_level.c are needed. The definition of monitoring
 levels can be found in rmon_monitoring_level.h. The definitions of
-the makros mentioned above are located in sgermon.h.</FONT></P>
+the macros mentioned above are located in sgermon.h.</FONT></P>
 <P ALIGN=CENTER STYLE="text-decoration: none">Copyright 2001 Sun
 Microsystems, Inc. All rights reserved.</P>
 </BODY>

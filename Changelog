@@ -1,3 +1,6 @@
+RC-2005-04-11-1: Enhancem.: Fixed some speaking mistakes
+                 Changed:   rmon.html
+
 RC-2005-04-11-0: Bugfix:    arch.dist is broken on *BSD
                  Review:    AH
                  Changed:   arch.dist

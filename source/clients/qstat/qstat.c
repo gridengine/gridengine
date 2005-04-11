@@ -1513,6 +1513,7 @@ u_long32 *isXML
       }   
       
       while (parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) {
+         qstat_filter_add_pe_attributes();
          continue;
       }   
       

@@ -38,6 +38,7 @@ void qstat_filter_add_pri_attributes(void);
 void qstat_filter_add_urg_attributes(void);
 void qstat_filter_add_l_attributes(void);
 void qstat_filter_add_q_attributes(void);
+void qstat_filter_add_pe_attributes(void);
 void qstat_filter_add_r_attributes(void);
 void qstat_filter_add_xml_attributes(void);
 void qstat_filter_add_t_attributes(void);

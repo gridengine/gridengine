@@ -358,6 +358,7 @@ proc init_ps {} {
       irix6 -
       irix65 -
       osf4 -
+      sol-amd64 -
       solaris -
       sol-sparc -
       solaris64 -

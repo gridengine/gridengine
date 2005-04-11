@@ -1,3 +1,9 @@
+SG-2005-04-11-0: Bugfix:    failed array tasks are rescheduled only one by one
+                 Review:    AH
+                 Bugtraq:   6253266 
+                 Issue:     1554
+                 Changed:   scheduler
+
 JG-2005-04-11-0: Testsuite: Fixed test system_tests/qmaster/size for sol-amd64
 
 AH-2005-04-11-0: Bugfix:    qstat -f -pe make breaks

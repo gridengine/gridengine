@@ -655,12 +655,12 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
    return ja_task;
 }  
 
-/****** sgeobj/job/job_has_tasks() ********************************************
+/****** sgeobj/job/job_has_pending_tasks() ********************************************
 *  NAME
-*     job_has_tasks() -- Returns true if there exist unenrolled tasks 
+*     job_has_pending_tasks() -- Returns true if there exist unenrolled tasks 
 *
 *  SYNOPSIS
-*     bool job_has_tasks(lListElem *job) 
+*     bool job_has_pending_tasks(lListElem *job) 
 *
 *  FUNCTION
 *     This function returns true (1) if there exists an unenrolled 
@@ -672,11 +672,12 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 *  RESULT
 *     bool - true or false 
 ******************************************************************************/
-bool job_has_tasks(lListElem *job) 
+bool job_has_pending_tasks(lListElem *job) 
 {
    bool ret = false;
 
-   DENTER(TOP_LAYER, "job_has_tasks");
+   DENTER(TOP_LAYER, "job_has_pending_tasks");
+
    if (job != NULL) {
       if (lGetList(job, JB_ja_n_h_ids) != NULL || 
           lGetList(job, JB_ja_u_h_ids) != NULL ||
@@ -685,6 +686,24 @@ bool job_has_tasks(lListElem *job)
          ret = true;
       }
    }
+
+   if (!ret) { /* we have to test the ja_tasks. There might be rescheduled tasks, which are pending */
+      lListElem *ja_task = NULL;
+      bool is_remove_job = true;
+      u_long32 state = 0;
+     
+      for_each(ja_task, lGetList(job, JB_ja_tasks)) {
+         
+         state = lGetUlong(ja_task, JAT_state);
+         if ((lGetUlong(ja_task, JAT_status) == JIDLE) &&
+             ((state & JQUEUED) != 0) &&
+             ((state & JWAITING) != 0)) {
+               ret = true;
+               break;
+         }
+      }
+   }
+   
    DEXIT;
    return ret;
 }
@@ -754,35 +773,6 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
    range_list_compress(z_ids);
    lXchgList(zombie, JB_ja_z_ids, &z_ids);    
    DEXIT;
-}
-
-/****** sgeobj/job/job_has_job_pending_tasks() ********************************
-*  NAME
-*     job_has_job_pending_tasks() -- Has the job unenrolled tasks? 
-*
-*  SYNOPSIS
-*     bool job_has_job_pending_tasks(lListElem *job) 
-*
-*  FUNCTION
-*     True (1) will be returned if the job has unenrolled pending tasks.
-*
-*  INPUTS
-*     lListElem *job - JB_Type 
-*
-*  RESULT
-*     bool - true or false 
-*******************************************************************************/
-bool job_has_job_pending_tasks(lListElem *job) 
-{
-   bool ret = false;
-
-   DENTER(TOP_LAYER, "job_has_job_pending_tasks");
-   if (lGetList(job, JB_ja_n_h_ids) || lGetList(job, JB_ja_u_h_ids) ||
-       lGetList(job, JB_ja_o_h_ids) || lGetList(job, JB_ja_s_h_ids)) {
-      ret = true;
-   }
-   DEXIT;
-   return ret;
 }
 
 /****** sgeobj/job/job_has_soft_requests() ********************************

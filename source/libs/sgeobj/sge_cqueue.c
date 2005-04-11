@@ -1763,6 +1763,9 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
             if (lDelElemHost(&sublist, HR_name, hgroup_or_hostname) == 1) {
                DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, SGE_ATTR_HOSTLIST ));
                ret = true;
+               if( sublist == NULL ) {
+                 lSetList(this_elem, CQ_hostlist , NULL );
+               }
             }
          }
          

@@ -1444,7 +1444,7 @@ lList *lCopyListHash(const char *name, const lList *src, bool hash)
    lList *dst = NULL;
    lListElem *sep;
 
-   DENTER(CULL_LAYER, "lCopyList");
+   DENTER(CULL_LAYER, "lCopyListHash");
 
    if (!src) {
       LERROR(LELISTNULL);

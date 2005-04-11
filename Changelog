@@ -1,3 +1,8 @@
+RD-2005-04-11-0: Bugfix:    qconf -purge core dump with last hostlist attribute
+                 Changed:   qconf
+                 Bugtraq:   6252522
+                 Review:    RH
+
 RC-2005-04-11-1: Enhancem.: Fixed some speaking mistakes
                  Changed:   rmon.html
 

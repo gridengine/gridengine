@@ -9,5 +9,13 @@ user!
 - execute the 6.0u2 upgrade script. This is a part of the inst_sge script
   to execute enter the following command: inst_sge -updatedb
 
+- To perform the Berkeley DB update, the script has to be executed on
+  this host, where the Database is located physically.
+
+  eg:
+  - Using Berkeley Local spooling: execute this script on the master host
+  - Using Berkeley DB RPC Server spooling, please execute this
+    script on the Berkeley DB RPC Server host.
+
 - after a successful update you can restart your cluster again.
 

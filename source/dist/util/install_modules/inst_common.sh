@@ -2027,19 +2027,19 @@ CheckServiceAndPorts()
       case $ARCH in
 
        win*)
-          `cat /etc/services | grep $check_val > /dev/null 2>&1`
+          `cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
           ret=$? 
           if [ "$ret" = 1 ]; then
-             `ypcat.exe services.byname | grep $check_val > /dev/null 2>&1`
+             `ypcat.exe services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
              ret=$?
           fi
        ;;
 
        lx*)
-          `cat /etc/services | grep $check_val > /dev/null 2>&1`
+          `cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
           ret=$? 
           if [ "$ret" = 1 ]; then
-             `ypcat services.byname | grep $check_val > /dev/null 2>&1`
+             `ypcat services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
              ret=$?
           fi
        ;;

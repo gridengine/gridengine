@@ -1,3 +1,10 @@
+MD-2005-04-11-1: Bugfix:    install_qmaster picks up commented out 
+                            service sge_qmaster
+                 Changed:   inst_common.sh 
+                 Bugtraq:   6251178
+                 Issue:     1540
+                 Review:    HP
+
 MD-2005-04-11-0: Bugfix:    berkeleydb server shutdown script failes
                  Changed:   sgebdb rc-template
                  Bugtraq:   6251175

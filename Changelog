@@ -1,3 +1,9 @@
+DT-2005-04-11-0: Bugfix:    o Removed static array from option file parsing
+                 Issue:     1551
+                 BugTraq:   6252465
+                 Changed:   parse_job_cull
+                 Review:    SG
+
 SG-2005-04-11-0: Bugfix:    failed array tasks are rescheduled only one by one
                  Review:    AH
                  Bugtraq:   6253266 
@@ -124,6 +130,13 @@ CR-2005-03-31-0: Cleanup:   o Using SSL_set_quiet_shutdown() to shutdown
                             o Added hostname into SSL accept error messages
                  Review:    MD
                  Changed:   commlib
+
+DT-2005-03-31-0: Bugfix:    o Fixed qsub -sync return codes
+                            o Added test suite tests
+                 Issue:     1433
+                 BugTraq:   6221231
+                 Changed:   qsub, man
+                 Review:    SG
 
 JG-2005-03-31-0: Bugfix:    Fixed qmaster profiling:
                             - profiling was not activated at qmaster startup

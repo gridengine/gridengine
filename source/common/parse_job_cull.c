@@ -741,7 +741,6 @@ u_long32 flags
    FILE *fp;
    char *filestrptr = NULL;
    int script_len;
-   int parsed_chars = 0;
    char **str_table;
    lList *alp, *answer = NULL; 
    lListElem *aep;
@@ -749,10 +748,8 @@ u_long32 flags
    int do_exit = 0;
    lListElem *ep_opt;
    lList *lp_new_opts = NULL;
-   char buffer[MAX_STRING_SIZE];
-   char *s;
-   char error_string[1024 + 1];
-
+   /* snprintf takes the NULL terminator into account. */
+   char error_string[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "parse_script_file");
 
@@ -768,7 +765,7 @@ u_long32 flags
       if (script_file && strcmp(script_file, "-")) {
          /* are we able to access this file? */
          if ((fp = fopen(script_file, "r")) == NULL) {
-            sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, 
+            snprintf(error_string, MAX_STRING_SIZE, MSG_FILE_ERROROPENINGXY_SS, script_file, 
                     strerror(errno));
             answer_list_add(&answer, error_string, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
@@ -782,7 +779,7 @@ u_long32 flags
          filestrptr = sge_file2string(script_file, &script_len);
 
          if (filestrptr == NULL) {
-            sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, 
+            snprintf(error_string, MAX_STRING_SIZE, MSG_ANSWER_ERRORREADINGFROMFILEX_S, 
                     script_file);
             answer_list_add(&answer, error_string, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -816,31 +813,85 @@ u_long32 flags
       }
 
       if (directive_prefix != NULL) {
+         char *parameters = NULL;
+         char *free_me = NULL;
+         char *s = NULL;
+         
          /* now look for job parameters in script file */
          s = filestrptr;
-         while(*s != 0) {
+
+         while (*s != '\0') {
             int length = 0;
-            char *parameters = NULL;
-            char *d = buffer;
+            char *newline = NULL;
+            char *nullterm = NULL;
+            int nl_index = -1;
+            int nt_index = -1;
 
-            /* copy MAX_STRING_SIZE bytes maximum */
-            while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
-               *d++ = *s++;
-               length++;
-               parsed_chars++;
+            newline = strchr (s, '\n');
+
+            if (newline != NULL) {
+               /* I'm doing this math very carefully because I'm not entirely
+                * certain how the compiler will interpret subtracting a pointer
+                * from a pointer.  Better safe than sorry. */
+               nl_index = (int)(((long)newline - (long)s) / sizeof (char));
             }
 
-            /* terminate target string */
-            *d = 0;
-            
-            /* skip linefeed */
-            if(*s == '\n') {
-               s++;
-               parsed_chars++;
+            nullterm = strchr (s, '\0');
+
+            if (nullterm != NULL) {
+               /* I'm doing this math very carefully because I'm not entirely
+                * certain how the compiler will interpret subtracting a pointer
+                * from a pointer.  Better safe than sorry. */
+               nt_index = (int)(((long)nullterm - (long)s) / sizeof (char));
+            }
+
+            if ((nl_index != -1) &&
+                ((nt_index == -1) || (nl_index < nt_index))) {
+               parameters = (char *)malloc (sizeof (char) * (nl_index + 1));
+               
+               if (parameters == NULL) {
+                  answer_list_add(&answer, MSG_SGETEXT_NOMEM, 
+                                  STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return answer;
+               }
+               
+               strncpy (parameters, s, nl_index);
+               parameters[nl_index] = '\0';
+               /* The newline counts as a parsed character even though it isn't
+                * included in the parameter string. */
+               length = nl_index + 1;
+            }
+            else if ((nt_index != -1) &&
+                     ((nl_index == -1) || (nt_index < nl_index))) {
+               parameters = (char *)malloc (sizeof (char) * (nt_index + 1));
+               
+               if (parameters == NULL) {
+                  answer_list_add(&answer, MSG_SGETEXT_NOMEM, 
+                                  STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return answer;
+               }
+               
+               /* strcpy copies everything up to and including the NULL
+                * termination. */
+               strcpy (parameters, s);
+               length = nt_index;
+            }
+            else /* if ((nl_index == -1) && (nt_index == -1)) */ {
+               /* This should never happen. */
+               answer_list_add(&answer, MSG_INCOMPLETE_OPTION_STRING, 
+                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return answer;
             }
             
-            parameters = buffer;
+            /* Advance the pointer past the string we just copied. */
+            s += length;
 
+            /* Store a copy of the memory pointer. */
+            free_me = parameters;
+            
             /*
             ** If directive prefix is zero string then all lines except
             ** comment lines are read, this makes it possible to parse
@@ -848,16 +899,17 @@ u_long32 flags
             ** If the line contains no SGE options, we set parameters to NULL.
             */
 
-            if(dpl == 0) {
+            if (dpl == 0) {
                /* we parse a settings file (e.g. sge_request): skip comment lines */
-               if(*parameters == '#') {
+               if (*parameters == '#') {
                   parameters = NULL;
                }
             } else {
                /* we parse a script file with special comments */
-               if(strncmp(parameters, directive_prefix, dpl) == 0) {
+               if (strncmp(parameters, directive_prefix, dpl) == 0) {
                   parameters += dpl;
-                  while(isspace(*parameters)) {
+
+                  while (isspace(*parameters)) {
                      parameters++;
                   }
                } else {
@@ -866,17 +918,26 @@ u_long32 flags
             }
 
             /* delete trailing garbage */
-            if(parameters != NULL) {
-               for(i = strlen(parameters) - 1; i >= 0; i--) {
-                  if(isspace(parameters[i])) {
-                     parameters[i] = 0;
-                  } else {
+            if (parameters != NULL) {
+               /* Start one character before the NULL terminator. */
+               i = strlen(parameters) - 1;
+               
+               while (i >= 0) {
+                  if (!isspace(parameters[i])) {
+                     /* We start one character before the NULL terminator, so
+                      * we are guaranteed to always be able to access the
+                      * character at i+1. */
+                     parameters[i + 1] = '\0';
                      break;
                   }
+
+                  i--;
                }
             }
 
-            if(parameters != NULL && *parameters != 0) {
+            if ((parameters != NULL) && (*parameters != '\0')) {
+               lListElem *ep = NULL;
+               
                DPRINTF(("parameter in script: %s\n", parameters));
 
                /*
@@ -887,11 +948,13 @@ u_long32 flags
                str_table = string_list(parameters, " \t\n", NULL);
                
                for (i=0; str_table[i]; i++) {
-                  DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+                  DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i])); 
                }
+
                sge_strip_quotes(str_table);
+
                for (i=0; str_table[i]; i++) {
-                  DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+                  DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));      
                }
 
                /*
@@ -899,12 +962,13 @@ u_long32 flags
                */
                alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
 
-               for_each(aep, alp) {
+               for_each (aep, alp) {
                   u_long32 quality;
                   u_long32 status = STATUS_OK;
 
                   status = lGetUlong(aep, AN_status);
                   quality = lGetUlong(aep, AN_quality);
+
                   if (quality == ANSWER_QUALITY_ERROR) {
                      DPRINTF(("%s", lGetString(aep, AN_text)));
                      do_exit = 1;
@@ -912,30 +976,33 @@ u_long32 flags
                   else {
                      DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
                   }
-                  answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
-               }
+                  answer_list_add(&answer, lGetString(aep, AN_text), status,
+                                  quality);
+               } /* for_each (aep in alp) */
 
-               lFreeList(alp);
+               FREE((char*) str_table);
+               alp = lFreeList(alp);
+               FREE (free_me);
+               parameters = NULL;
+               
                if (do_exit) {
                   FREE(filestrptr);
                   DEXIT;
                   return answer;
                }
 
-               free((char*) str_table);
-
                /*
                ** -C option is ignored in scriptfile - delete all occurences
                */
-               {
-                  lListElem *ep;
-                  
-                  while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
-                     lRemoveElem(lp_new_opts, ep);
-                  }
+               while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
+                  lRemoveElem(lp_new_opts, ep);
                }
+            } /* if (parameters is not empty) */
+            else {
+               FREE (free_me);
+               parameters = NULL;
             }
-         }
+         } /* while (*s != '\0') */
       }   
    }
 

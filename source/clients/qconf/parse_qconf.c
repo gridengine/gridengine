@@ -1111,8 +1111,8 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
+         fprintf(stderr, "%s", lGetString(aep, AN_text)); 
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
             SGE_EXIT(1);

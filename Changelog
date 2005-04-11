@@ -1,3 +1,9 @@
+JG-2005-04-11-0: Bugfix:    Missing success message with qconf -Aprj
+                 Changed:   qconf
+                 Review:    AD
+                 Issue:     1549
+                 Bugtraq:   6252524
+
 MD-2005-04-11-1: Bugfix:    install_qmaster picks up commented out 
                             service sge_qmaster
                  Changed:   inst_common.sh 

@@ -106,8 +106,9 @@ export $shlib_path_name
 #
 Shutdown()
 {
-  #kill -TERM `cat $SGE_ROOT/$SGE_CELL/spool/act_db`
-  db_pid=`ps -efa | grep berkeley_db_svc | grep -v "grep" | awk '{ print $2 }'`
+  if [ -f SPOOLING_DIR/bdb_messages ]; then
+     db_pid=`cat SPOOLING_DIR/bdb_messages | cut -d" " -f2`
+  fi
   kill -TERM $db_pid 
 }
 

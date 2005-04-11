@@ -1,3 +1,9 @@
+MD-2005-04-11-0: Bugfix:    berkeleydb server shutdown script failes
+                 Changed:   sgebdb rc-template
+                 Bugtraq:   6251175
+                 Issue:     1545
+                 Review:    HP
+
 RD-2005-04-11-0: Bugfix:    qconf -purge core dump with last hostlist attribute
                  Changed:   qconf
                  Bugtraq:   6252522

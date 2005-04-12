@@ -1966,6 +1966,8 @@ proc check_option_now_yes {} {
          break;
       } else {
          add_proc_error "check_option_now_yes" -3 "bugtraq id: 4938859 ->\nqsub -now yes returned job could not be scheduled, try later - error - trying again ... (try $i)"
+         puts $CHECK_OUTPUT "sleeping 5 sec ..."
+         sleep 5
       }
    }
    

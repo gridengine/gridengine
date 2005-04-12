@@ -141,7 +141,7 @@ proc tight_integration_parse_execd_messages { mode } {
          if { [string match "*|W|*" $file_array($i)] } {
             incr TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode) 1
             set TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode,$TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode)) $file_array($i)
-            puts $CHECK_OUTPUT $file_array($i)
+            puts $CHECK_OUTPUT "$execd,$mode,$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode) = $file_array($i)"
          }
       }
    }
@@ -174,19 +174,28 @@ proc tight_integration_check_messages { mode1 mode2 } {
       }
       if { $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) != $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2) } {
          puts $CHECK_OUTPUT "tight integration check produced execd waring messages at $execd:"
+         append error_text "$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) != $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2)\n"
          append error_text "tight integration check produced execd waring messages at $execd:\n"
 
          for { set i [expr ( $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) + 1 ) ] } { $i <= $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2) } { incr i 1 } {
-             puts $CHECK_OUTPUT $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)
-             set mstart [string last "|" $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)]
-             incr mstart 1 
-             append error_text [string range "$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)\n" $mstart end]
+             if { [info exists TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)] } {
+                puts $CHECK_OUTPUT $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)
+                set mstart [string last "|" $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)]
+                incr mstart 1 
+                append error_text [string range "$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)\n" $mstart end]
+             } else {
+                append error_text "can't read TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)\n"
+                foreach elem [array names TIGHT_INTEGRATION_WARNING_MESSAGES] {
+                   puts $CHECK_OUTPUT "TIGHT_INTEGRATION_WARNING_MESSAGES($elem) = $TIGHT_INTEGRATION_WARNING_MESSAGES($elem)"
+                }
+             }
          }
       }
    }
 
    if { $error_text != "" } {
-      add_proc_error "tight_integration_check_messages" -1 "$error_text"
+      add_proc_error "tight_integration_check_messages" -3 "$error_text"
+      puts $CHECK_OUTPUT "tight integration check produced error messages and/or warnings"
    } else {
       puts $CHECK_OUTPUT "tight integration check produced no execd errors or warnings"
    }

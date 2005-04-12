@@ -3280,6 +3280,12 @@ proc run_tests { path runcompleted } {
                             # no action
                             puts $CHECK_OUTPUT "run_tests - check allready done"
                          }
+
+                       2 {  
+                            # test has no valid test in this run level
+                            # no action
+                            puts $CHECK_OUTPUT "test does not support actual runlevel"
+                         }
                     -101 {
                             # check failed due to tcl error
                             lappend check_error_name  $check
@@ -3697,9 +3703,11 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    puts $CHECK_OUTPUT "starting test functions (runlevel is $CHECK_ACT_LEVEL)..."
  
    # call init_check_level procedure!
-   # JG: TODO: init_check_level is run twice (already in run_test.
+   # JG:       init_check_level is run twice (already in run_test.
    #           do we really have to call it twice?
    #           or call it here and return if it doesn't return 0
+   # CR:       This must be done, because a test can be started for a
+   #           specified runlevel
    if {[info exists check_init_level_procedure] == 1 } {
        if {[ string compare $check_init_level_procedure "--"] != 0 } {
           puts $CHECK_OUTPUT "\ncalling init level function \"$check_init_level_procedure\" ..."
@@ -4099,8 +4107,42 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   set my_current_runlevel 0
   set do_send_mail 0
   set no_level_calls 0 
+  set no_of_test_runs 0
 
    set immediate_return 0
+
+   # check if this test is enabled for the actual runlevel, test is already done, ...
+   for {set level 0} { $level <= $check_highest_level} {incr level 1} {
+
+      # check if this is a global enabled level
+      if {[is_level_enabled $level] == -1 } {
+         continue
+      } 
+
+      # check test's init level procedure return value
+      if { [string compare $check_init_level_procedure "--" ] != 0 } { 
+         set CHECK_ACT_LEVEL $level
+         if { [$check_init_level_procedure ]  != 0 } { 
+            continue 
+         }
+      }
+
+      # check if test was allready running
+      if { $runcompleted == 0 } {
+         if { ( [file isfile "$CHECK_RESULT_DIR/$check_name.res.$level"] == 1) } {
+            continue 
+         }
+         if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$check_name.res.$level"] == 1) } {
+            continue  
+         }
+      }
+      incr no_of_test_runs 1
+   }
+
+   if { $no_of_test_runs == 0 } {
+      # no active runlevel for this check, return 2
+      return 2 
+   }
 
    # if we have a specific setup function: execute it
    if { $check_setup_function != "" } {

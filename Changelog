@@ -1,3 +1,10 @@
+CR-2005-04-12-1: Testsuite: - cleanup function was called, even when test was
+                              not running
+                            - qsub test: retry to submit with qsub -now yes
+                              option due to bugtraq bug 4938859
+                              Each retry reports a warning message, test fails
+                              for more than 3 retries. 
+
 CR-2005-04-12-0: Testsuite: Modified tight integration test to report only
                             warning when there are messages logged into the
                             execd messages file.

@@ -1959,11 +1959,20 @@ proc check_option_now_yes {} {
    set option "-now yes"
    set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
-   set result [submit_job $jobargs 0]  
+
+   for { set i 1} { $i <= 3 } { incr i 1 } {
+      set result [submit_job $jobargs 0]
+      if { $result != -6 } {
+         break;
+      } else {
+         add_proc_error "check_option_now_yes" -3 "bugtraq id: 4938859 ->\nqsub -now yes returned job could not be scheduled, try later - error - trying again ... (try $i)"
+      }
+   }
+   
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
    if { $result < 0 } {
-      set_error -1 "could not submit job"
+      set_error -1 "could not submit job\n -> return value of submit_job: $result"
       return
    }
 

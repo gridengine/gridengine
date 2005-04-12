@@ -2,13 +2,13 @@ Source Code Review Form
 =======================
 (version 1.0)
 
-Date: 2005-03-30
+Date: 2005-04-11
 
 1 Identification
-1.1 Issue: 1433
-1.2 Bugtraq: 6247889
-1.3 Summary: qsub -sync y return code behaviour broken
-1.4 Changelog ID: DT-2005-03-30-0
+1.1 Issue: 1551
+1.2 Bugtraq: 6252465
+1.3 Summary: qsub option parameter string only supports 2048 character strings
+1.4 Changelog ID: DT-2005-04-11-0
 1.5 Developer(s): DT
 1.6 Reviewer(s): SG
 
@@ -46,7 +46,7 @@ Date: 2005-03-30
 4.1 [ ] no - comment:
 
 4.2 Memory leaks
-4.2 [x] yes
+4.2 [X] yes
 4.2 [ ] no - comment:
 
 4.3 Thread safe
@@ -55,7 +55,7 @@ Date: 2005-03-30
 
 5 Tests
 5.1 Manual tests
-Description: Ran qsub with exit.sh
+Description:  ran qsub with long script option line
 Successfull execution
 5.1 [X] yes
 5.1 [ ] no - comment: 
@@ -72,7 +72,7 @@ Successfull execution
 5.3 [ ] yes
 5.3 [X] no - comment:
 
-5.4 Testsuite run successfull
+5.4 Testsuite run successfully
 5.4 [X] yes
 5.4 [ ] no - comment:
 
@@ -80,7 +80,7 @@ Successfull execution
 6 Comments
 
 7 Accepted
-7 [X] yes
+7 [ ] yes
 7 [ ] no - comment:
   
 

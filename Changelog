@@ -1,3 +1,5 @@
+SG-2005-04-12-0: Bugfix:    fixed build for lx26-x86
+
 CR-2005-04-12-1: Testsuite: - cleanup function was called, even when test was
                               not running
                             - qsub test: retry to submit with qsub -now yes

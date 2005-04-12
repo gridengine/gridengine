@@ -980,7 +980,7 @@ u_long32 flags
                                   quality);
                } /* for_each (aep in alp) */
 
-               FREE((char*) str_table);
+               FREE(str_table);
                alp = lFreeList(alp);
                FREE (free_me);
                parameters = NULL;

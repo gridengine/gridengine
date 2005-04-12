@@ -1,3 +1,5 @@
+RD-2005-04-12-0: Bugfix:    Fixed broken build
+
 DT-2005-04-11-0: Bugfix:    o Removed static array from option file parsing
                  Issue:     1551
                  BugTraq:   6252465

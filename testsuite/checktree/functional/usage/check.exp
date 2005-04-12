@@ -398,19 +398,19 @@ proc usage_check {jobid qstat_j_info slots} {
    set result {}
    # online cpu
    if {[expr abs($online_cpu - $expected_cpu)] > [expr $expected_cpu / 10]} {
-      lappend result "online cpu usage ($online_cpu) differs more than 10% from expected usage ($expected_cpu)"
+      lappend result "online cpu usage ($online_cpu) differs more than 10% from expected usage ($expected_cpu) on host $qacct_info(hostname)"
    }
    # online mem
    if {[expr abs($online_mem - $expected_mem)] > [expr $expected_mem / 10]} {
-      lappend result "online memory usage ($online_mem) differs more than 10% from expected usage ($expected_mem)"
+      lappend result "online memory usage ($online_mem) differs more than 10% from expected usage ($expected_mem) on host $qacct_info(hostname)"
    }
    # accounting cpu
    if {[expr abs($acct_cpu - $expected_cpu)] > [expr $expected_cpu / 20]} {
-      lappend result "accounting cpu usage ($acct_cpu) differs more than 5% from expected usage ($expected_cpu)"
+      lappend result "accounting cpu usage ($acct_cpu) differs more than 5% from expected usage ($expected_cpu) on host $qacct_info(hostname)"
    }
    # accounting mem
    if {[expr abs($acct_mem - $expected_mem)] > [expr $expected_mem / 20]} {
-      lappend result "accounting memory usage ($acct_mem) differs more than 5% from expected usage ($expected_mem)"
+      lappend result "accounting memory usage ($acct_mem) differs more than 5% from expected usage ($expected_mem) on host $qacct_info(hostname)"
    }
 
    return $result

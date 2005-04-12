@@ -689,7 +689,6 @@ bool job_has_pending_tasks(lListElem *job)
 
    if (!ret) { /* we have to test the ja_tasks. There might be rescheduled tasks, which are pending */
       lListElem *ja_task = NULL;
-      bool is_remove_job = true;
       u_long32 state = 0;
      
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {

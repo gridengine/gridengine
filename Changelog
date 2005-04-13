@@ -1,3 +1,7 @@
+JG-2005-04-13-0: Testsuite: Check bugs/issuezilla/1473 failed with host 
+                            aliasing.
+                            Some cleanup in system_tests/clients/qsub.
+
 RC-2005-04-13-1: Enhancem.: Failed to compile on Cray unicos
                  Changed:   - sge_getloadavg.c (iolist instead of iolistr)
 

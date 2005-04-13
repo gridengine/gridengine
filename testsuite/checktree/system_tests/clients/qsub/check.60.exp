@@ -31,6 +31,9 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#lappend check_functions "check_option_sync"
+#lappend check_functions "check_option_sync_t"
+
 proc check_qhold_jobname {} {
  global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
  global CHECK_FIRST_FOREIGN_SYSTEM_USER

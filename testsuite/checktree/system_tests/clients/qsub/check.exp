@@ -115,8 +115,6 @@ lappend check_functions "check_option_w"
 lappend check_functions "check_option_@"
 lappend check_functions "check_huge_script"
 lappend check_functions "check_qhold_jobname"
-lappend check_functions "check_option_sync"
-lappend check_functions "check_option_sync_t"
 
 
 # test specific globals:

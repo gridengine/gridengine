@@ -144,9 +144,9 @@ proc modify_complex_from_file {filename {time_var dummy}} {
 
       # parse returned strings
       set MSG_CENTRY_NOTCHANGED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CENTRY_NOTCHANGED]]
-      set MSG_SGETEXT_ADDEDTOLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
-      set MSG_SGETEXT_REMOVEDFROMLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
-      set MSG_SGETEXT_MODIFIEDINLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+      set MSG_SGETEXT_ADDEDTOLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+      set MSG_SGETEXT_REMOVEDFROMLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*"]
+      set MSG_SGETEXT_MODIFIEDINLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
       set MSG_INVALID_CENTRY_DEL_S [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_INVALID_CENTRY_DEL_S] "*"]
       set output_list [split $output "\n"]
       set changed 0

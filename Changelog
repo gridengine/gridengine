@@ -1,3 +1,6 @@
+RC-2005-04-13-1: Enhancem.: Failed to compile on Cray unicos
+                 Changed:   - sge_getloadavg.c (iolist instead of iolistr)
+
 RC-2005-04-13-0: Enhancem.: - arch should use uname -p to determine NetBSD
                               platform
                             - identify DragonFly as FreeBSD (Joshua Coombs)

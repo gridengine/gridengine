@@ -105,11 +105,12 @@ CRSOS)
 Darwin)
    ARCH=darwin
    ;;
-FreeBSD)
+FreeBSD|DragonFly)
    ARCH=fbsd-$osmachine
    ;;
 NetBSD)
-    ARCH=nbsd-$osmachine
+    osprocessor="`$UNAME -p`"
+    ARCH=nbsd-$osprocessor
     ;;
 IRIX*)
    case $osrelease in

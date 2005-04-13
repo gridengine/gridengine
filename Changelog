@@ -1,3 +1,8 @@
+RC-2005-04-13-0: Enhancem.: - arch should use uname -p to determine NetBSD
+                              platform
+                            - identify DragonFly as FreeBSD (Joshua Coombs)
+                 Review   : BD, NJ
+
 CR-2005-04-12-2: Testsuite: enhanced usage test error output
 
 SG-2005-04-12-0: Bugfix:    fixed build for lx26-x86
@@ -59,7 +64,7 @@ RD-2005-04-11-0: Bugfix:    qconf -purge core dump with last hostlist attribute
                  Bugtraq:   6252522
                  Review:    RH
 
-RC-2005-04-11-1: Enhancem.: Fixed some speaking mistakes
+RC-2005-04-11-1: Enhancem.: Fixed some spelling mistakes
                  Changed:   rmon.html
 
 RC-2005-04-11-0: Bugfix:    arch.dist is broken on *BSD

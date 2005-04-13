@@ -1305,7 +1305,7 @@ proc open_remote_spawn_process { hostname
         log_user 1
       }
       set timeout 1
-      send -i $open_remote_spawn__id "/bin/sh -c 'ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"'\n"
+      send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
       set open_remote_spawn__tries 70
       while { $open_remote_spawn__tries > 0 } {
          expect {

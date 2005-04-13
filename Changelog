@@ -1,3 +1,6 @@
+CR-2005-04-13-0: Testsuite: o modified remote_procedures (can block shell)
+                            o modified timeout setting for submit_job
+
 JG-2005-04-13-0: Testsuite: Check bugs/issuezilla/1473 failed with host 
                             aliasing.
                             Some cleanup in system_tests/clients/qsub.

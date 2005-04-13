@@ -3765,6 +3765,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   }
 
   while { $do_again == 1 } {
+     set timeout $submit_timeout
+
      set do_again 0
      expect {
           -i $sp_id full_buffer {

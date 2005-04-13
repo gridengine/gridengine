@@ -142,7 +142,7 @@ public class PartialTimestampFormatTest extends TestCase {
       
       /* These should succeed. */
       PartialTimestamp pt = f.parse ("2004/11/13 21:39:22 +01:00");
-      this.checkPT (pt, 20, 04, 11, 13, 21, 39, 22, 60 * 60 * 1000);
+      this.checkPT (pt, 20, 04, 10, 13, 21, 39, 22, 60 * 60 * 1000);
       pt = f.parse ("04/11/13 21:39:21 +01:00");
       this.checkPT (pt, pt.UNSET, 04, 10, 13, 21, 39, 21, 60 * 60 * 1000);
       pt = f.parse ("11/13 21:39:21 +01:00");

@@ -47,7 +47,7 @@ import org.ggf.drmaa.*;
  * @author dan.templeton@sun.com
  */
 public class SessionImplJobTest extends TestCase {
-   private static final String SCRIPT = "sleeper.sh";
+   private static final String SCRIPT = "/tmp/drmaaj_sleeper.sh";
    private Session session = null;
    
    public SessionImplJobTest (java.lang.String testName) {
@@ -163,7 +163,7 @@ public class SessionImplJobTest extends TestCase {
             session.runBulkJobs (jt, -1, 2, 1);
             fail ("Allowed invalid start id");
          }
-         catch (DrmaaException e) {
+         catch (InvalidArgumentException e) {
             /* Don't care */
          }
 
@@ -171,7 +171,7 @@ public class SessionImplJobTest extends TestCase {
             session.runBulkJobs (jt, 1, -2, 1);
             fail ("Allowed invalid end id");
          }
-         catch (DrmaaException e) {
+         catch (InvalidArgumentException e) {
             /* Don't care */
          }
 
@@ -179,7 +179,7 @@ public class SessionImplJobTest extends TestCase {
             session.runBulkJobs (jt, 1, 2, -1);
             fail ("Allowed negative step when end > start");
          }
-         catch (DrmaaException e) {
+         catch (InvalidArgumentException e) {
             /* Don't care */
          }
 
@@ -187,7 +187,7 @@ public class SessionImplJobTest extends TestCase {
             session.runBulkJobs (jt, 3, 2, 1);
             fail ("Allowed end < start");
          }
-         catch (DrmaaException e) {
+         catch (InvalidArgumentException e) {
             /* Don't care */
          }
          

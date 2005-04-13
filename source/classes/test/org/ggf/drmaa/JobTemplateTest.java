@@ -199,7 +199,7 @@ public class JobTemplateTest extends TestCase {
          jt.setStartTime (pt);
          fail ("Allowed start time in the past");
       }
-      catch (IllegalArgumentException e) {
+      catch (InvalidArgumentException e) {
          /* Don't care. */
       }
    }
@@ -513,45 +513,6 @@ public class JobTemplateTest extends TestCase {
       
       assertEquals ("{args = \"arg1\", \"arg2\"} {blockEmail = false} {hardWallclockTimeLimit = 100ms} {jobCategory = myCategory} {jobEnvironment = [\"PATH\" = \"/tmp:/usr/bin\"], [\"SHELL\" = \"/usr/bin/csh\"]} {jobSubmissionState = HOLD} {joinFiles = true} {nativeSpecification = \"-l arch=sol-sparc64\"} {startTime = \"19:10:49\"} {transferFiles = \"input, error\"}",
                     jt.toString ());
-   }
-
-   /** Test of equals method, of class org.ggf.drmaa.JobTemplate. */
-   public void testEquals () throws DrmaaException {
-      System.out.println ("testEquals");
-
-      JobTemplate jt2 = new JobTemplateImpl ();
-      
-      assertTrue (jt.equals (jt2));
-      assertTrue (jt2.equals (jt));
-      jt.setBlockEmail (true);
-      assertFalse (jt.equals (jt2));
-      assertFalse (jt2.equals (jt));
-      jt2.setBlockEmail (true);
-      assertTrue (jt.equals (jt2));
-      assertTrue (jt2.equals (jt));
-      jt2.setDeadlineTime (new PartialTimestamp (10, 21, 01));
-      assertFalse (jt.equals (jt2));
-      assertFalse (jt2.equals (jt));
-      jt.setDeadlineTime (new PartialTimestamp (10, 21, 01));
-      assertTrue (jt.equals (jt2));
-      assertTrue (jt2.equals (jt));
-   }
-
-   /** Test of hashCode method, of class org.ggf.drmaa.JobTemplate. */
-   public void testHashCode () throws DrmaaException {
-      System.out.println ("testHashCode");
-
-      JobTemplate jt2 = new JobTemplateImpl ();
-      
-      assertEquals (jt.hashCode (), jt2.hashCode ());
-      jt.setBlockEmail (true);
-      assertFalse (jt.hashCode () == jt2.hashCode ());
-      jt2.setBlockEmail (true);
-      assertEquals (jt.hashCode (), jt2.hashCode ());
-      jt2.setDeadlineTime (new PartialTimestamp (10, 21, 01));
-      assertFalse (jt.hashCode () == jt2.hashCode ());
-      jt.setDeadlineTime (new PartialTimestamp (10, 21, 01));
-      assertEquals (jt.hashCode (), jt2.hashCode ());
    }
    
    /** Generated implementation of abstract class org.ggf.drmaa.JobTemplate. Please fill dummy bodies of generated methods. */

@@ -67,7 +67,7 @@ public class JobInfoTest extends TestCase {
       
       jiAll = new JobInfoImpl ("12345", 0x1f, resources);
       
-      jiNone = new JobInfoImpl ("67890", 0x00, null);
+      jiNone = new JobInfoImpl ("67890", 0x00, new HashMap ());
    }
    
    protected void tearDown () {

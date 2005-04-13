@@ -31,7 +31,8 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/**
+ * The input value for an argument is invalid.
  * @author dan.templeton@sun.com
  * @since 0.4.2
  */

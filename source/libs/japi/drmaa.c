@@ -1207,7 +1207,8 @@ int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, const drmaa_job_template_t *jt
       diagp = &diag;
    }
 
-   if (!jobids || !jt) {
+   if ((jobids == NULL) || (jt == NULL) || (start < 1) || (end < 1) ||
+       (incr < 1) || (end < start)) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
       DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;

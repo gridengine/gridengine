@@ -267,7 +267,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunBulk
    jt = get_from_list (id);
    
    if (jt == NULL) {
-      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
                                          MSG_JDRMAA_BAD_JOB_TEMPLATE);
 
       return NULL;
@@ -331,7 +331,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunJob
    jt = get_from_list (id);
    
    if (jt == NULL) {
-      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
                                          MSG_JDRMAA_BAD_JOB_TEMPLATE);
 
       return NULL;
@@ -508,7 +508,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSetAttributeVal
    const char *value = NULL;
    
    if (jt == NULL) {
-      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
                                          MSG_JDRMAA_BAD_JOB_TEMPLATE);
       
       return;
@@ -561,7 +561,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSetAttributeVal
    jt = get_from_list (id);
    
    if (jt == NULL) {
-      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
                                          MSG_JDRMAA_BAD_JOB_TEMPLATE);
 
       return;
@@ -699,7 +699,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    jstring tmp_str = NULL;
    
    if (jt == NULL) {
-      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
                                          MSG_JDRMAA_BAD_JOB_TEMPLATE);
 
       return NULL;
@@ -827,7 +827,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeDeleteJobTempla
    else {   
       pthread_mutex_unlock(&list_mutex);
       
-      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
                                          MSG_JDRMAA_BAD_JOB_TEMPLATE);
 
       return;
@@ -900,7 +900,7 @@ static char *get_exception_class_name (int errnum)
       case DRMAAJ_ERRNO_AUTH_FAILURE:
          return "org/ggf/drmaa/AuthorizationException";
       case DRMAAJ_ERRNO_INVALID_ARGUMENT:
-         return "java/lang/IllegalArgumentException";
+         return "org/ggf/drmaa/InvalidArgumentException";
       case DRMAAJ_ERRNO_NO_ACTIVE_SESSION:
          return "org/ggf/drmaa/NoActiveSessionException";
       case DRMAAJ_ERRNO_NO_MEMORY:

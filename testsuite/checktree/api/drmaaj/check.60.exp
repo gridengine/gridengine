@@ -44,8 +44,7 @@ global check_init_level_procedure
 global check_root_access_needs
 global env
 
-set check_root_access_needs "yes"
-
+set check_root_access_needs "no"
 
 # define a level initialization procedure:
 set check_init_level_procedure "drmaaj_init_level"
@@ -86,8 +85,10 @@ proc drmaaj_init_level {} {
 # here the actual test is done
 proc drmaaj_check {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+
+   set my_sleeper "/tmp/drmaaj_sleeper.sh"
 
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
    puts $CHECK_OUTPUT "host is $CHECK_HOST"
@@ -138,7 +139,19 @@ proc drmaaj_check {} {
          set options "-d64 $options"
       }
 
+      # Make sleeper script file available.  We have a problem in that JUnit
+      # doesn't allow arguments to be passed to the test program.  In order for
+      # the test program to find the sleeper script, it has to be in a
+      # predetermined location.  We have to use this special sleeper script
+      # because the test program requires that the script survive a suspend and
+      # resume.  On most architectures other than Solaris, /bin/sleep wakes up
+      # on SIGCONT.  This script notes the time before it sleeps and keeps
+      # sleeping until the given duration is reached.
+      start_remote_prog $host $CHECK_USER "/usr/bin/rm" $my_sleeper prg_exit_state 500
+      start_remote_prog $host $CHECK_USER "/usr/bin/ln" "-s $CHECK_ACTUAL_TEST_PATH/sleeper.sh $my_sleeper" prg_exit_state 500
       set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options -cp $classpath junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
+      # Remove script file
+      start_remote_prog $host $CHECK_USER "/usr/bin/rm" $my_sleeper prg_exit_state 500
 
       if { $prg_exit_state != 0 } {
          add_proc_error drmaa_check -1 "DRMAA-J JUnit test suite failed at host $host:\n$test_output"

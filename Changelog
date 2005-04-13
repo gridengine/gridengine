@@ -1,3 +1,8 @@
+DT-2005-04-13-0: Bugfix:    o Fixed DRMAA-J testsuite issues
+                 Testsuite: o Fixed minor DRMAA-J issues
+                 Changed:   DRMAA, Testsuite
+                 Review:    AH
+
 JG-2005-04-13-1: Doc:       Fixed typo in man page sge_conf.5
 
 CR-2005-04-13-0: Testsuite: o modified remote_procedures (can block shell)

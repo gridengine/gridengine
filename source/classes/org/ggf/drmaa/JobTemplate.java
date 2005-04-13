@@ -232,7 +232,7 @@ public class JobTemplate {
     */	
    public void setJobSubmissionState (int state) throws DrmaaException {
       if ((state != ACTIVE) && (state != HOLD)) {
-         throw new IllegalArgumentException ("Invalid state");
+         throw new InvalidArgumentException ("Invalid state");
       }
       
       this.state = state;
@@ -460,7 +460,7 @@ public class JobTemplate {
    public void setStartTime (PartialTimestamp startTime) throws DrmaaException {
       if (startTime != null) {
          if (startTime.getTimeInMillis () < System.currentTimeMillis ()) {
-            throw new IllegalArgumentException ("Start time is in the past.");
+            throw new InvalidArgumentException ("Start time is in the past.");
          }
 
          this.startTime = startTime;
@@ -945,22 +945,22 @@ public class JobTemplate {
       return Collections.EMPTY_LIST;
    }
    
-   /** Checks for a valid path.  Throws an IllegalArgumentException is the path
+   /** Checks for a valid path.  Throws an InvalidArgumentException is the path
     * is not valid.
     * @param path The path to validate
     */
-   private void checkPath (String path) {
+   private void checkPath (String path) throws InvalidArgumentException {
       /* On a null path, we just return because null paths are OK. */
       if (path == null) {
          return;
       }
       
       if (path.indexOf (HOME_DIRECTORY) > 0) {
-         throw new IllegalArgumentException (HOME_DIRECTORY + " may only appear at the beginning of the path.");
+         throw new InvalidArgumentException (HOME_DIRECTORY + " may only appear at the beginning of the path.");
       }
       
       if (path.indexOf (WORKING_DIRECTORY) > 0) {
-         throw new IllegalArgumentException (WORKING_DIRECTORY + " may only appear at the beginning of the path.");
+         throw new InvalidArgumentException (WORKING_DIRECTORY + " may only appear at the beginning of the path.");
       }
    }
 

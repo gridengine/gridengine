@@ -111,7 +111,8 @@ public abstract class JobInfo implements java.io.Serializable {
 	 * @param jobId the id of the job
 	 * @param status the status code of the job
 	 * @param resourceUsage the resource usage data for the job.  No copy will be
-    * made.
+    * made.  Because no copy is made, <code>null</code> should not be pass in,
+    * as this will cause getResourceUsage() to throw a NullPointer.
 	 */
 	protected JobInfo (String jobId, int status, Map resourceUsage) {
 		this.jobId = jobId;

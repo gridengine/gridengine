@@ -37,7 +37,7 @@ package org.ggf.drmaa;
  * @author  dan.templeton@sun.com
  * @since 0.4.2
  */
-public class UnsupportedAttributeException extends java.lang.RuntimeException {
+public class UnsupportedAttributeException extends DrmaaRuntimeException {
    
    /**
     * Creates a new instance of <code>UnsupportedAttributeException</code> without detail message.

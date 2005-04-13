@@ -1,3 +1,7 @@
+DT-2005-04-13-1: Bugfix:    o Fixed minor DRMAA-J issue
+                 Doc:       o Checked in current JavaDocs
+                 Changed:   DRMAA, doc
+
 DT-2005-04-13-0: Bugfix:    o Fixed DRMAA-J testsuite issues
                  Testsuite: o Fixed minor DRMAA-J issues
                  Changed:   DRMAA, Testsuite

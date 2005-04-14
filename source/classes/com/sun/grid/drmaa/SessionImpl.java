@@ -50,7 +50,7 @@ import org.ggf.drmaa.*;
 public class SessionImpl implements Session {
    /* String to return from getDRMAAImplementation() */
    /** The name of this DRMAA implementation. */   
-   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.5 -- SGE 6.0";
+   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java language binding 0.5 -- ";
 	
 	static {
 		AccessController.doPrivileged (new PrivilegedAction () {
@@ -443,6 +443,6 @@ public class SessionImpl implements Session {
     * @return DRMAA implementation information
     */
 	public String getDrmaaImplementation () {
-		return IMPLEMENTATION_STRING;
+		return IMPLEMENTATION_STRING + this.getDrmSystem ();
 	}
 }

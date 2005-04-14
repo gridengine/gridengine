@@ -107,8 +107,7 @@ public class SessionImplTest extends TestCase {
    
    /** Test of getDRMSystem method, of class com.sun.grid.drmaa.SessionImpl. */
    public void testGetDrmSystem () {
-      System.out.println ("testGetDrmSystem");
-      
+      System.out.println ("testGetDrmSystem");      
       
       assertTrue (session.getDrmSystem ().equals ("SGE maintrunk") ||
                   session.getDrmSystem ().equals ("N1GE maintrunk"));
@@ -125,13 +124,13 @@ public class SessionImplTest extends TestCase {
    public void testGetDrmaaImplementation () {
       System.out.println ("testGetDrmaaImplementation");
       
-      assertEquals ("DRMAA 1.0 Java Binding 0.5 -- SGE 6.0",
-                    session.getDrmaaImplementation ());
+      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- SGE maintrunk") ||
+                  session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- N1GE maintrunk"));
 
       this.initSession ();
       
-      assertEquals ("DRMAA 1.0 Java Binding 0.5 -- SGE 6.0",
-                    session.getDrmaaImplementation ());
+      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- SGE maintrunk") ||
+                  session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- N1GE maintrunk"));
       
       this.exitSession ();
    }

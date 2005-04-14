@@ -1017,8 +1017,8 @@ proc open_remote_spawn_process { hostname
              set timeout 1
 #            On some architectures it makes problems when trying to send
 #            to a just openend shell, so this line is not active
-#             send -i $spawn_id "echo \"hello\"\n"
-             set open_remote_spawn__tries 70
+             send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+             set open_remote_spawn__tries 30
              
              while { $open_remote_spawn__tries > 0 } {
                 expect {
@@ -1027,7 +1027,7 @@ proc open_remote_spawn_process { hostname
                      break
                   }
                   -i $spawn_id timeout {
-                      send -i $spawn_id "echo \"hello\"\n"
+                      send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
                       incr open_remote_spawn__tries -1
                   }  
                    -i $spawn_id "The authenticity of host*" {
@@ -1040,7 +1040,7 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id "Please type 'yes' or 'no'*" {
                       send -i $spawn_id "yes\n"
                    }
-                  -i $spawn_id "hello*\n" {
+                  -i $spawn_id "testsuite shell response" {
                      break
                   }
                   -i $spawn_id eof {
@@ -1066,7 +1066,7 @@ proc open_remote_spawn_process { hostname
              set ok 0
 #            On some architectures it makes problems when trying to send
 #            to a just openend shell, so this line is not active
-#             send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
+             send -i $spawn_id -- "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
              while { $ok != 1 } {
                 expect {
                    -i $spawn_id full_buffer {
@@ -1077,7 +1077,7 @@ proc open_remote_spawn_process { hostname
                       puts -nonewline $CHECK_OUTPUT "   \r$mytries\r"
                       
                       flush $CHECK_OUTPUT
-                      send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
+                      send -i $spawn_id -- "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
                       set timeout $next_timeout
                       if { $next_timeout < 6 } {
                          incr next_timeout 1
@@ -1265,6 +1265,7 @@ proc open_remote_spawn_process { hostname
         log_user 1
       }
       set timeout 1
+      send -i $open_remote_spawn__id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
       set open_remote_spawn__tries 30
       while { $open_remote_spawn__tries > 0 } {
          expect {
@@ -1273,11 +1274,10 @@ proc open_remote_spawn_process { hostname
                break
             }
             -i $open_remote_spawn__id timeout {
-                send -i $open_remote_spawn__id "echo \"hello\"\n"
+                send -i $open_remote_spawn__id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
                 incr open_remote_spawn__tries -1
-                set timeout 2
             }  
-            -i $open_remote_spawn__id "hello*\n" {
+            -i $open_remote_spawn__id "testsuite shell response" {
                break
             }
             -i $open_remote_spawn__id eof {
@@ -1305,6 +1305,7 @@ proc open_remote_spawn_process { hostname
         log_user 1
       }
       set timeout 1
+      send -i $open_remote_spawn__id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
       set open_remote_spawn__tries 30
       while { $open_remote_spawn__tries > 0 } {
          expect {
@@ -1313,11 +1314,10 @@ proc open_remote_spawn_process { hostname
                break
             }
             -i $open_remote_spawn__id timeout {
-                send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
+                send -i $open_remote_spawn__id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
                 incr open_remote_spawn__tries -1
-                set timeout 2
             }  
-            -i $open_remote_spawn__id ">>0<<" {
+            -i $open_remote_spawn__id "file exists" {
                debug_puts "file $open_remote_spawn__script_name exists"
                break
             }
@@ -1819,9 +1819,7 @@ proc close_open_rlogin_sessions {} {
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
 proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer CHECK_USER
-
-
+   global CHECK_OUTPUT rlogin_spawn_session_buffer CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
 
    if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
       set timeout 1
@@ -1833,8 +1831,9 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
       }      
 
       set timeout 1
-       set open_remote_spawn__tries 30
-       
+      set open_remote_spawn__tries 30
+      send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+
        while { $open_remote_spawn__tries > 0 } {
           expect {
             -i $spawn_id full_buffer {
@@ -1842,11 +1841,10 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                break
             }
             -i $spawn_id timeout {
-                send -i $spawn_id "echo \"hello\"\n"
+                send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
                 incr open_remote_spawn__tries -1
-                set timeout 2
             }  
-            -i $spawn_id "hello*\n" {
+            -i $spawn_id "testsuite shell response" {
                break
             }
             -i $spawn_id eof {
@@ -1864,7 +1862,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
           return ""
       }
 
-      send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
+      send -i $spawn_id -- "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
       while { $ok == 0 } {
          expect {
             -i $spawn_id full_buffer {
@@ -1882,8 +1880,8 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
             }
             -i $spawn_id default {
                flush $CHECK_OUTPUT
-               send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
-               set timeout 3
+               send -i $spawn_id -- "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+               set timeout 1
                puts $CHECK_OUTPUT "timeout counter: $mytries ..."
 
                incr mytries -1 ; 

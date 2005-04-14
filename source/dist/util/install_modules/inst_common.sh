@@ -261,7 +261,12 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
            testsuidroot uidgid infotext"
 
-THIRD_PARTY_FILES=openssl
+THIRD_PARTY_FILES="openssl"
+
+if [ $SGE_ARCH = "win32-x86" ]; then
+   WINBINFILES="qloadsensor.exe"
+   BINFILES="$BINFILES $WINBINFILES"
+fi
 
    missing=false
    for f in $BINFILES; do
@@ -1144,19 +1149,25 @@ AddDefaultOperator()
 
 MoveLog()
 {
-   master_spool_dir=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      master_spool_dir=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
 
-   if [ -d $master_spool_dir ]; then
-      if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
-         cp /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
+      if [ -d $master_spool_dir ]; then
+         if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+            cp /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
+         else
+            cp /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
+         fi
+         rm /tmp/$LOGSNAME 2>&1
       else
-         cp /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
+         RestoreStdout
+         $INFOTEXT "%s does not exist.\n Please check your installation!" $master_spool_dir
+         $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME
       fi
-      rm /tmp/$LOGSNAME 2>&1
    else
-      RestoreStdout
-      $INFOTEXT "%s does not exist.\n Please check your file permissions!" $master_spool_dir
-      $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME
+         RestoreStdout
+         $INFOTEXT "%s does not exist.\n Qmaster isn't installed, yet!\nPlease check your installation!" $SGE_ROOT/$SGE_CELL/common/bootstrap 
+         $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME 
    fi
 }
 
@@ -1185,7 +1196,7 @@ Stdout2Log()
 
 RestoreStdout()
 {
-   unset SGE_ND
+   unset SGE_NOMSG
    # close file logfile 
    exec 1>&-
    # make stdout a copy of FD 4 (reset stdout)
@@ -2025,7 +2036,7 @@ CheckServiceAndPorts()
    check_val=$2
 
    if [ "$to_check" = "service" ]; then
-      case $ARCH in
+      case $SGE_ARCH in
 
        win*)
           `cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
@@ -2052,7 +2063,7 @@ CheckServiceAndPorts()
 
       esac
    elif [ "$to_check" = "port" ]; then
-      case $ARCH in
+      case $SGE_ARCH in
 
        win*)
           `cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1`

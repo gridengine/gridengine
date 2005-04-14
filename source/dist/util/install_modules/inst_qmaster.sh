@@ -125,8 +125,8 @@ GetCell()
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
                   is_done="true"
                else
-                  $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL/common
-                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL/common
+                  $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
+                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
                   is_done="true"
                fi
             fi
@@ -309,7 +309,7 @@ SetSpoolingOptionsBerkeleyDB()
    SPOOLING_METHOD=berkeleydb
    SPOOLING_LIB=libspoolb
    SPOOLING_SERVER=none
-   SPOOLING_DIR="$QMDIR/spooldb"
+   SPOOLING_DIR="spooldb"
    params_ok=0
    if [ "$AUTO" = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
@@ -329,7 +329,7 @@ SetSpoolingOptionsBerkeleyDB()
       #SpoolingCheckParams
       params_ok=1
    fi
-   if [ "$QMASTER" = "install" -a "$AUTO" = "false" ]; then
+   if [ "$QMASTER" = "install" ]; then
       $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
                    " Local spooling:\n" \
                    " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
@@ -344,17 +344,25 @@ SetSpoolingOptionsBerkeleyDB()
                    " security. Check the installation guide for further advice on how to achieve\n" \
                    " failsafety without compromising security.\n\n"
 
-      $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
-      if [ $? = 0 ]; then
-         $INFOTEXT -u "Berkeley DB Setup\n"
-         $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
-         $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
-                                        "\"inst_sge -db\" is completed, continue with <RETURN>"
-         is_server="true"
+      if [ "$AUTO" = "true" ]; then
+         if [ "$DB_SPOOLING_SERVER" = "none" ]; then
+            is_server="false"
+         else
+            is_server="true"
+         fi
       else
-         is_server="false"
-         $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
-         $CLEAR
+         $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
+         if [ $? = 0 ]; then
+            $INFOTEXT -u "Berkeley DB Setup\n"
+            $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
+            $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
+                                        "\"inst_sge -db\" is completed, continue with <RETURN>"
+            is_server="true"
+         else
+            is_server="false"
+            $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
+            $CLEAR
+         fi
       fi
 
       if [ $is_server = "true" ]; then
@@ -367,7 +375,7 @@ SetSpoolingOptionsBerkeleyDB()
             $CLEAR
             SpoolingQueryChange
             if [ -d $SPOOLING_DIR ]; then
-               $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
+               $INFOTEXT -n -ask "y" "n" -def "n" -auto $AUTO "The spooling directory already exists! Do you want to delete it? [n] >> "
                ret=$?               
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
@@ -413,20 +421,19 @@ SetSpoolingOptionsBerkeleyDB()
       ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       if [ $ret -gt 1 ]; then
          $INFOTEXT "We found a running berkeley db server on this host!"
-         if [ $AUTO = true ]; then
+         if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
                   Makedir $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
+               else
+                  $INFOTEXT -log "We found a running berkeley db server on this host!"
+                  $INFOTEXT -log "Please, check this first! Exiting Installation!"
+                  MoveLog
                fi
-         else
-
-            $INFOTEXT -log "We found a running berkeley db server on this host!"
-            $INFOTEXT -log "Please, check this first! Exiting Installation!"
-            MoveLog
          fi
 
-         if [ $AUTO = "false" ]; then
+         if [ "$AUTO" = "false" ]; then
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
             if [ $? = 1 ]; then
                $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
@@ -439,7 +446,33 @@ SetSpoolingOptionsBerkeleyDB()
          fi 
       else
          while [ $params_ok -eq 0 ]; do
-            SpoolingQueryChange
+            do_loop="true"
+            while [ $do_loop = "true" ]; do
+               SpoolingQueryChange
+               if [ -d $SPOOLING_DIR ]; then
+                  $INFOTEXT -n -ask "y" "n" -def "n" -auto "$AUTO" "The spooling directory already exists! Do you want to delete it? (y/n) [n] >> "
+                  ret=$?               
+                  if [ "$AUTO" = true ]; then
+                     $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                     exit 1
+                  fi
+ 
+                  if [ $ret = 0 ]; then
+                        RM="rm -r"
+                        ExecuteAsAdmin $RM $SPOOLING_DIR
+                        if [ -d $SPOOLING_DIR ]; then
+                           $INFOTEXT "You are not the owner of this directory. You can't delete it!"
+                        else
+                           do_loop="false"
+                        fi
+                  else
+                     $INFOTEXT -wait "Please hit <ENTER>, to choose any other spooling directory!"
+                     SPOOLING_DIR="spooldb"
+                  fi
+                else
+                   do_loop="false"
+               fi
+            done
             SpoolingCheckParams
             params_ok=$?
          done
@@ -1050,7 +1083,7 @@ StartQmaster()
 #
 AddHosts()
 {
-   if [ $AUTO = "true" ]; then
+   if [ "$AUTO" = "true" ]; then
       for h in $ADMIN_HOST_LIST; do
         if [ -f $h ]; then
            $INFOTEXT -log "Adding ADMIN_HOSTS from file %s" $h

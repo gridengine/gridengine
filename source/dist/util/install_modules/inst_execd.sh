@@ -273,7 +273,11 @@ CheckHostNameResolving()
                      "   %s\n\n" \
                      "$SGE_BIN/qconf -sh" "$errmsg"
 
-         $INFOTEXT "You can fix the problem now or abort the installation procedure.\n"
+         $INFOTEXT "You can fix the problem now or abort the installation procedure.\n" \
+                   "The problem can be:\n\n" \
+                   "   - the qmaster is not running\n" \
+                   "   - the qmaster host is down\n" \
+                   "   - an active firewall blocks your request\n"
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Contact qmaster again (y/n) ('n' will abort) [y] >> " 
          if [ $? != 0 ]; then
             $INFOTEXT "Installation failed"
@@ -532,4 +536,68 @@ MakeLocalSpoolDir()
       #try as adminuser
       ExecuteAsAdmin mkdir -p $LOCAL_EXECD_SPOOL
    fi
+}
+
+#-------------------------------------------------------------------------
+# AddHostsAuto
+#
+AddHostsAuto()
+{
+   if [ "$AUTO" = "true" ]; then
+      for h in $ADMIN_HOST_LIST; do
+        if [ -f $h ]; then
+           $INFOTEXT -log "Adding ADMIN_HOSTS from file %s" $h
+           for tmp in `cat $h`; do
+             $INFOTEXT -log "Adding ADMIN_HOST %s" $tmp
+             $SGE_BIN/qconf -ah $tmp
+           done
+        else
+             $INFOTEXT -log "Adding ADMIN_HOST %s" $h
+             $SGE_BIN/qconf -ah $h
+        fi
+      done
+      
+      for h in $SUBMIT_HOST_LIST; do
+        if [ -f $h ]; then
+           $INFOTEXT -log "Adding SUBMIT_HOSTS from file %s" $h
+           for tmp in `cat $h`; do
+             $INFOTEXT -log "Adding SUBMIT_HOST %s" $tmp
+             $SGE_BIN/qconf -as $tmp
+           done
+        else
+             $INFOTEXT -log "Adding SUBMIT_HOST %s" $h
+             $SGE_BIN/qconf -as $h
+        fi
+      done  
+
+      for h in $SHADOW_HOST; do
+        if [ -f $h ]; then
+           $INFOTEXT -log "Adding SHADOW_HOSTS from file %s" $h
+           for tmp in `cat $h`; do
+             $INFOTEXT -log "Adding SHADOW_HOST %s" $tmp
+             $SGE_BIN/qconf -ah $tmp
+           done
+        else
+             $INFOTEXT -log "Adding SHADOW_HOST %s" $h
+             $SGE_BIN/qconf -ah $h
+        fi
+      done
+   fi
+}
+
+
+
+ExecdAlreadyInstalled()
+{
+   hostname=$1
+   ret="undef"
+
+   ret=`qhost | grep $hostname | awk '{ print $4 }'`
+   ret2=`qconf -sconf $hostname | head -1 | cut -d":" -f1`
+
+   if [ "$ret" = "-" -o "$ret" = "" -o "$ret2" != "$hostname" ]; then
+      return 0
+   else
+      return 1
+   fi 
 }

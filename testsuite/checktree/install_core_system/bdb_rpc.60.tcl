@@ -115,6 +115,7 @@ proc install_bdb_rpc {} {
       set RPC_SGE_CELL                 [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SGE_CELL] ]
       set RPC_SERVER                   [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SERVER] "*" ]
       set RPC_DIRECTORY                [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_DIRECTORY] "*" ]
+      set RPC_DIRECTORY_EXISTS         [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_DIRECTORY_EXISTS] ]
       set RPC_START_SERVER             [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_START_SERVER] ]
       set RPC_SERVER_STARTED           [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SERVER_STARTED] ]
       set RPC_INSTALL_RC_SCRIPT        [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_INSTALL_RC_SCRIPT] ]
@@ -269,6 +270,18 @@ proc install_bdb_rpc {} {
                send -i $sp_id $input
                continue;
             }
+
+            -i $sp_id $RPC_DIRECTORY_EXISTS { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(12)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "$ANSWER_YES\n"
+               continue;
+            }
+
 
             -i $sp_id $RPC_START_SERVER { 
                puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"

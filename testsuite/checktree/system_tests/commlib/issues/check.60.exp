@@ -76,6 +76,15 @@ proc commlib_issues_run  {} {
    
    set server_host [lindex $ts_config(execd_nodes) 0]
    set client_host [lindex $ts_config(execd_nodes) 1]
+ 
+   set execd_no 2
+   set client_up_arch [resolve_build_arch $client_host]
+   while { [string match "*AIX*" $client_up_arch] } {
+      add_proc_error "commlib_issues_run" -3 "skipping aix host because there may be a malloc() problem for this test"
+      set client_host [lindex $ts_config(execd_nodes) $execd_no]
+      set client_up_arch [resolve_build_arch $client_host]
+      incr execd_no 1
+   }
    
    puts $CHECK_OUTPUT "using server host $server_host"
    puts $CHECK_OUTPUT "using client host $client_host"
@@ -98,7 +107,7 @@ proc commlib_issues_run  {} {
 
    set in_loop 1
    while { $in_loop } {
-      set timeout 60
+      set timeout 240
       expect {
          -i $both_list full_buffer {
             add_proc_error "commlib_issues_run" -1 "expect full_buffer error"

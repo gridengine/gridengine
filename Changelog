@@ -1,3 +1,8 @@
+CR-2005-04-14-1: Testsuite: o midified commlib issues module test to be more
+                              error tolerant (when some hosts have to less
+                              memory (only 256 MB) this test fails, because
+                              they're starting to swap.
+
 CR-2005-04-14-0: Testsuite: o modified remote_procedures (can block shell)
                               (increased timeout)
 

@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 
 #include "cl_commlib.h"
 #include "cl_log_list.h"
@@ -82,6 +83,11 @@ extern int main(int argc, char** argv)
   int com_port = 0;
   char* com_host = NULL;
   int main_return = 0;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+  struct rlimit64 test_issues_limits;
+#else
+  struct rlimit test_issues_limits;
+#endif
 
   
   if (argc < 4) {
@@ -127,6 +133,136 @@ extern int main(int argc, char** argv)
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
+
+#if defined(RLIMIT_VMEM) 
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_VMEM, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_VMEM, &test_issues_limits);
+#endif 
+   test_issues_limits.rlim_max = RLIM_INFINITY;
+   test_issues_limits.rlim_cur = RLIM_INFINITY;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   setrlimit64(RLIMIT_VMEM, &test_issues_limits);
+#else
+   setrlimit(RLIMIT_VMEM, &test_issues_limits);
+#endif
+
+#else  /* if defined(RLIMIT_VMEM) */
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_AS, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_AS, &test_issues_limits);
+#endif 
+   test_issues_limits.rlim_max = RLIM_INFINITY;
+   test_issues_limits.rlim_cur = RLIM_INFINITY;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   setrlimit64(RLIMIT_AS, &test_issues_limits);
+#else
+   setrlimit(RLIMIT_AS, &test_issues_limits);
+#endif
+
+#endif /* if defined(RLIMIT_VMEM) */
+  
+#if defined(RLIMIT_VMEM) 
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_VMEM, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_VMEM, &test_issues_limits);
+#endif 
+   printf("vmem limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+#else  /* if defined(RLIMIT_VMEM) */
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_AS, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_AS, &test_issues_limits);
+#endif 
+   printf("vmem limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+#endif /* if defined(RLIMIT_VMEM) */
+ 
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_STACK, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_STACK, &test_issues_limits);
+#endif 
+   test_issues_limits.rlim_cur = test_issues_limits.rlim_max;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   setrlimit64(RLIMIT_STACK, &test_issues_limits);
+#else
+   setrlimit(RLIMIT_STACK, &test_issues_limits);
+#endif
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_STACK, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_STACK, &test_issues_limits);
+#endif 
+   printf("stacksize limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_DATA, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_DATA, &test_issues_limits);
+#endif 
+   test_issues_limits.rlim_max = RLIM_INFINITY;
+   test_issues_limits.rlim_cur = RLIM_INFINITY;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   setrlimit64(RLIMIT_DATA, &test_issues_limits);
+#else
+   setrlimit(RLIMIT_DATA, &test_issues_limits);
+#endif
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_DATA, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_DATA, &test_issues_limits);
+#endif 
+   printf("data size limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+
+
+#if defined(RLIMIT_RSS)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_RSS, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_RSS, &test_issues_limits);
+#endif 
+   test_issues_limits.rlim_cur = test_issues_limits.rlim_max;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   setrlimit64(RLIMIT_RSS, &test_issues_limits);
+#else
+   setrlimit(RLIMIT_RSS, &test_issues_limits);
+#endif
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_RSS, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_RSS, &test_issues_limits);
+#endif 
+   printf("residet set size limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+#endif
+
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_FSIZE, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_FSIZE, &test_issues_limits);
+#endif 
+   test_issues_limits.rlim_cur = test_issues_limits.rlim_max;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   setrlimit64(RLIMIT_FSIZE, &test_issues_limits);
+#else
+   setrlimit(RLIMIT_FSIZE, &test_issues_limits);
+#endif
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_FSIZE, &test_issues_limits);
+#else
+   getrlimit(RLIMIT_FSIZE, &test_issues_limits);
+#endif 
+   printf("file size size limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+
 
 
   printf("commlib setup ...\n");
@@ -247,7 +383,7 @@ extern int main(int argc, char** argv)
      while(runtime < 45 && do_shutdown == 0 && main_return == 0) {
         data = malloc(data_size * sizeof(char));
         if (data == NULL) {
-           printf("malloc() error\n");
+           printf("malloc() error: can't malloc(%ld)\n", data_size * sizeof(char) );
            printf("issue #1389 failed\n");
            main_return = 1;
            break;
@@ -283,7 +419,11 @@ extern int main(int argc, char** argv)
         gettimeofday(&now,NULL);
         runtime = now.tv_sec - start.tv_sec;
         printf("send/receive took %d seconds\n", runtime );
-        data_size = data_size * 2;
+        if (data_size < 60*1024*1024) {
+           data_size = data_size * 2;
+        } else {
+           data_size = data_size + 32*1024*1024;
+        }
      }
 
      

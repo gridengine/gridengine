@@ -741,7 +741,7 @@ u_long32 flags
    FILE *fp;
    char *filestrptr = NULL;
    int script_len;
-   char **str_table;
+   char **str_table = NULL;
    lList *alp, *answer = NULL; 
    lListElem *aep;
    int i;

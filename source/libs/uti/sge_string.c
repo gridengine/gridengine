@@ -1139,7 +1139,7 @@ char **string_list(char *str, char *delis, char **pstr)
    unsigned int i = 0, j = 0;
    int is_space = 0;
    int found_first_quote = 0;
-   char **head;
+   char **head = NULL;
 
    DENTER(BASIS_LAYER, "string_list");
 

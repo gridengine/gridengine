@@ -412,6 +412,7 @@ GetConfigFromFile()
   IFS="   
 "
    #CheckConfigFile
+   SGE_CELL=$CELL_NAME
 }
 
 
@@ -845,7 +846,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u2"
+      $ECHO "# Version: 6.0u4"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -859,13 +860,13 @@ PrintLocalConf()
    fi
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
-   if [ $LOCAL_EXECD_SPOOL != "undef" ]; then
+   if [ "$LOCAL_EXECD_SPOOL" != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
    fi
-   if [ $RSH_DAEMON != "undef" ]; then
+   if [ "$RSH_DAEMON" != "undef" ]; then
       $ECHO "rsh_daemon             $RSH_DAEMON"
    fi
-   if [ $LOADSENSOR_COMMAND != "undef" ]; then
+   if [ "$LOADSENSOR_COMMAND" != "undef" ]; then
       $ECHO "load_sensor            $LOADSENSOR_COMMAND"
    fi
 }

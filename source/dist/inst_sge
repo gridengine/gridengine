@@ -110,9 +110,9 @@ fi
 while [ $ARGC != 0 ]; do
    case $1 in
    -auto)
-     AUTO=true
-     FILE=$2
-     if [ ! -f $2 ]; then
+     AUTO="true"
+     FILE="$2"
+     if [ ! -f "$2" ]; then
         ErrUsage
      fi
      shift
@@ -136,7 +136,7 @@ while [ $ARGC != 0 ]; do
      EXECD="install"
      . ./util/install_modules/inst_execd.sh
      if [ "$2" = "-upd" ]; then
-         UPDATE=true
+         UPDATE="true"
          shift
          ARGC=`expr $ARGC - 1`
      fi
@@ -144,7 +144,7 @@ while [ $ARGC != 0 ]; do
    -ux)
      EXECD="uninstall"
      if [ "$2" = "all" ]; then
-        ALL_EXECDS=true
+        ALL_EXECDS="true"
         shift
         ARGC=`expr $ARGC - 1`
      fi
@@ -280,7 +280,7 @@ if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" -a "$EXE
    UpdateHints
 fi
 
-if [ $UPDATE = "true" -a $EXECD = "install" ]; then
+if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
       WelcomeTheUserExecHost
       CheckForLocalHostResolving
       ProcessSGERoot
@@ -295,14 +295,12 @@ if [ $UPDATE = "true" -a $EXECD = "install" ]; then
       GiveHints
 fi
  
-if [ $QMASTER = "install" -a $UPDATE != "true" ]; then
+if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
 
- if [ $AUTO = true ]; then
-  {
+ if [ "$AUTO" = "true" ]; then
     $INFOTEXT -log "Starting qmaster installation!"
     GetConfigFromFile
     CheckPath
-  }
  fi
 
  WelcomeTheUser
@@ -475,16 +473,17 @@ if [ $BERKELEY = "install" ]; then
 fi
 
 
-if [ $EXECD = "uninstall" ]; then
+if [ "$EXECD" = "uninstall" ]; then
 
    WelcomeUninstall 
 
-   if [ $AUTO = "true" ]; then
+   if [ "$AUTO" = "true" ]; then
       GetConfigFromFile
+      CheckPath
    fi
 
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
-      $INFOTEXT -wait "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
+      $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
                 "Please, enter SGE_ROOT and SGE_CELL in the following\n" \
                 "screens!\n\nHit, <ENTER> to continue!"
       $CLEAR
@@ -512,6 +511,26 @@ fi
 
 
 if [ $QMASTER = "uninstall" ]; then
+
+   if [ "$AUTO" = "true" ]; then
+      $INFOTEXT -log "Starting qmaster uninstallation!"
+      GetConfigFromFile
+      CheckPath
+   fi
+   
+   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+      $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
+                "Please, enter SGE_ROOT and SGE_CELL in the following\n" \
+                "screens!\n\nHit, <ENTER> to continue!"
+      $CLEAR
+      ProcessSGERoot
+
+      $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
+
+      SGE_CELL=`Enter default`
+      export SGE_CELL
+   fi
+
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
    RemoveQmaster
 fi

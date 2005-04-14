@@ -311,7 +311,7 @@ SetSpoolingOptionsBerkeleyDB()
    SPOOLING_SERVER=none
    SPOOLING_DIR="$QMDIR/spooldb"
    params_ok=0
-   if [ $AUTO = "true" ]; then
+   if [ "$AUTO" = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
       SPOOLING_DIR="$DB_SPOOLING_DIR"
 
@@ -321,15 +321,15 @@ SetSpoolingOptionsBerkeleyDB()
          exit 1
       fi
 
-      if [ -d $SPOOLING_DIR -a $SPOOLING_SERVER != "none" ]; then
-         $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
+      if [ -d "$SPOOLING_DIR" -a \( "$SPOOLING_SERVER" = "none" -o "$SPOOLING_SERVER" = "" \) ]; then
+         $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" "$SPOOLING_DIR"
          MoveLog
          exit 1 
       fi
       #SpoolingCheckParams
       params_ok=1
    fi
-   if [ $QMASTER = "install" -a $AUTO = "false" ]; then
+   if [ "$QMASTER" = "install" -a "$AUTO" = "false" ]; then
       $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
                    " Local spooling:\n" \
                    " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \

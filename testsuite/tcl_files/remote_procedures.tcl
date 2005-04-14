@@ -1265,8 +1265,7 @@ proc open_remote_spawn_process { hostname
         log_user 1
       }
       set timeout 1
-      send -i $open_remote_spawn__id "echo \"hello\"\n"
-      set open_remote_spawn__tries 70
+      set open_remote_spawn__tries 30
       while { $open_remote_spawn__tries > 0 } {
          expect {
             -i $open_remote_spawn__id full_buffer {
@@ -1276,6 +1275,7 @@ proc open_remote_spawn_process { hostname
             -i $open_remote_spawn__id timeout {
                 send -i $open_remote_spawn__id "echo \"hello\"\n"
                 incr open_remote_spawn__tries -1
+                set timeout 2
             }  
             -i $open_remote_spawn__id "hello*\n" {
                break
@@ -1305,8 +1305,7 @@ proc open_remote_spawn_process { hostname
         log_user 1
       }
       set timeout 1
-      send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
-      set open_remote_spawn__tries 70
+      set open_remote_spawn__tries 30
       while { $open_remote_spawn__tries > 0 } {
          expect {
             -i $open_remote_spawn__id full_buffer {
@@ -1316,6 +1315,7 @@ proc open_remote_spawn_process { hostname
             -i $open_remote_spawn__id timeout {
                 send -i $open_remote_spawn__id "ls -la $open_remote_spawn__script_name ; echo \">>\"\$?\"<<\"\n"
                 incr open_remote_spawn__tries -1
+                set timeout 2
             }  
             -i $open_remote_spawn__id ">>0<<" {
                debug_puts "file $open_remote_spawn__script_name exists"
@@ -1833,8 +1833,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
       }      
 
       set timeout 1
-       send -i $spawn_id "echo \"hello\"\n"
-       set open_remote_spawn__tries 70
+       set open_remote_spawn__tries 30
        
        while { $open_remote_spawn__tries > 0 } {
           expect {
@@ -1845,6 +1844,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
             -i $spawn_id timeout {
                 send -i $spawn_id "echo \"hello\"\n"
                 incr open_remote_spawn__tries -1
+                set timeout 2
             }  
             -i $spawn_id "hello*\n" {
                break

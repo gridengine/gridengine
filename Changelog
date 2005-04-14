@@ -1,3 +1,9 @@
+SG-2005-04-14-0: Bugfix:    qmaster does not store sharetree usage on shutdown
+                 Changed:   qmaster
+                 Issue:     1562
+                 Bugtraq:   6255329
+                 Review:    JG
+
 CR-2005-04-14-2: Testsuite: o modified remote_procedures (can block shell)
                               shift login calls/tests into testsuite script
                               files to have always a /bin/sh

@@ -67,10 +67,10 @@ set check_cleanup_function "qmake_cleanup"
 
 # define test's procedure order
 set check_functions ""
-#lappend check_functions "qmake_sequential"
-#lappend check_functions "qmake_parallel"
-#lappend check_functions "qmake_flags"
-#lappend check_functions "qmake_recursive"
+lappend check_functions "qmake_sequential"
+lappend check_functions "qmake_parallel"
+lappend check_functions "qmake_flags"
+lappend check_functions "qmake_recursive"
 lappend check_functions "qmake_rreq" ;# only for dynamic allocation mode
 
 proc qmake_init_level {} {
@@ -88,12 +88,12 @@ proc qmake_init_level {} {
       "0" { 
          set qmake_options ""
          set pe_options ""
-         return -1
+         return 0
       } 
       "1" {
          set qmake_options "-l a=$arch -cwd -v PATH --"
          set pe_options "-pe make"
-         return -1
+         return 0
       }
       "2" {
          # dynamic allocation mode is not supported in SGE 5.3

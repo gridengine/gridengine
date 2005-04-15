@@ -654,7 +654,7 @@ void sge_userprj_spool(void) {
 
    for_each(elem, Master_Project_List) {
       name = lGetString(elem, UP_name);
-      sge_event_spool(&answer_list, now, sge_E_PROJECT_MOD, 0, 0, name, NULL, NULL,
+      sge_event_spool(&answer_list, now, sgeE_PROJECT_MOD, 0, 0, name, NULL, NULL,
                       elem, NULL, NULL, false, true);   
    }
 

@@ -2039,6 +2039,7 @@ int start_remote_job (char **argv, char **envp,
    char addtl_env_pass[ADDTL_ENV_SIZE + 1];
    char envvar[ADDTL_ENV_SIZE + 1];
 
+   envvar[0] = '\0'; 
    addtl_env_pass[0] = '\0';
    {
       char **env = envp;
@@ -2189,7 +2190,7 @@ int start_remote_job (char **argv, char **envp,
       }
    } else {
       /* child */
-      int argc, no_args, i;
+      int argc, no_args, no_requests, i;
       char **args;
       char *resource_request = NULL;
 
@@ -2203,6 +2204,7 @@ int start_remote_job (char **argv, char **envp,
       argc = 0;
       i    = 0;
       no_args = 0;
+      no_requests = 0;
      
       /* count arguments */
       while(argv[no_args++]);
@@ -2215,11 +2217,11 @@ int start_remote_job (char **argv, char **envp,
                fprintf(stdout, "add SGE resource request for this rule: %s\n", 
                        resource_request);
             }
-            no_args += count_sge_resource_request(resource_request);
+            no_requests = count_sge_resource_request(resource_request);
          }
       }
   
-      args = (char **)malloc((no_args + sge_v_argc + 8 + pass_cwd + be_verbose) * sizeof(char *));
+      args = (char **)malloc((no_args + no_requests + sge_v_argc + 8 + pass_cwd + be_verbose) * sizeof(char *));
 
       if(exec_remote) {
          args[argc++] = "qrsh";
@@ -2292,7 +2294,7 @@ int start_remote_job (char **argv, char **envp,
          }
       }   
 
-      for(; i < no_args; i++) {
+      for(; i < no_args, argv[i] != NULL; i++) {
          args[argc++] = argv[i];
       }
 
@@ -2300,13 +2302,15 @@ int start_remote_job (char **argv, char **envp,
      
       if(be_verbose) {
          fprintf(stdout, "starting job: \n");
-         for(i = 0; args[i] != NULL; i++) {
-            fprintf(stdout, "args[%3d] = %s\n", i, args[i]);
+         for(i = 0; i < argc; i++) {
+            fprintf(stdout, "args[%3d] = %s\n", i, args[i] == NULL ? "NULL" : args[i]);
          }
       }
 
       /* set the RECURSIVE_QMAKE_OPTIONS environment variable */
-      putenv(envvar);
+      if ( envvar[0] != 0 ) {
+         putenv(envvar);
+      }
 
       /* set the additional environment variables */
       i = 0;

@@ -1345,7 +1345,7 @@ case LINUXPPC:
       set CFLAGS = "-Wno-error $CFLAGS"
       set OFLAG = "-O2"
       if ( $SEC ==  1 ) then
-         set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
+         set KLIBS = "-lssl -lcrypto"
       endif
       set LIBS = "$LIBS"
    endif

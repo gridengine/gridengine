@@ -1,3 +1,5 @@
+CR-2005-04-15-2: Testsuite: - thight integration test blocked killing of slave/master task
+
 SG-2005-04-15-2: Bugfix:    the usage in projects is never spooled while the qmaster
                             is alive.
                  Changed:   qmaster

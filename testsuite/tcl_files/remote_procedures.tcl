@@ -1017,9 +1017,8 @@ proc open_remote_spawn_process { hostname
              set timeout 1
 #            On some architectures it makes problems when trying to send
 #            to a just openend shell, so this line is not active
-             send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+#            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
              set open_remote_spawn__tries 30
-             
              while { $open_remote_spawn__tries > 0 } {
                 expect {
                   -i $spawn_id full_buffer {
@@ -1064,8 +1063,6 @@ proc open_remote_spawn_process { hostname
              set timeout 1
              set next_timeout 1
              set ok 0
-#            On some architectures it makes problems when trying to send
-#            to a just openend shell, so this line is not active
              send -i $spawn_id -- "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
              while { $ok != 1 } {
                 expect {

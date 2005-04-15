@@ -2290,7 +2290,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(my_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
             case EADDRNOTAVAIL: {
@@ -2299,7 +2299,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(my_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
             case EINPROGRESS:
@@ -2316,8 +2316,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(my_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
          }
@@ -2375,8 +2374,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(socket_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
          }

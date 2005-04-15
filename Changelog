@@ -1,3 +1,9 @@
+CR-2005-04-15-1: Enhancem.: - improved commlib error message output for 
+                              connection errors. (Now commlib calls strerror()
+                              to report system error message)
+                 Changed:   commlib (all binaries)
+                 Review:    JG
+
 CR-2005-04-15-0: Bugfix:    - fixed memory leak in commlib (SSL Framework)
                             - fixed memory leak in qstat
                  Changed:   commlib (all binaries), qstat

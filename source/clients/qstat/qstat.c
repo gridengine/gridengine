@@ -1254,9 +1254,9 @@ u_long32 show
       lListElem *local = NULL;
       merge_configuration(lFirst(conf_l), local, &conf, NULL);
    }
-   alp = lFreeList(alp);
-
-   mal = lFreeList(mal);
+   alp    = lFreeList(alp);
+   conf_l = lFreeList(conf_l);
+   mal    = lFreeList(mal);
 
    DEXIT;
    return;

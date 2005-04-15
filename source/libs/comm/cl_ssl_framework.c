@@ -3608,7 +3608,8 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
 
    /* unlock handle connection list */
    cl_raw_list_unlock(handle->connection_list);
-
+   free(unique_hostname);
+   unique_hostname = NULL;
    return function_return_value;
 }
 #else

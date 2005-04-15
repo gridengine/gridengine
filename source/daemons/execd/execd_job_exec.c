@@ -202,9 +202,7 @@ int answer_error;
 
    if (ret)  {
       lFreeElem(jelem);
-   } else { /* succsess - set some triggers */
-      sge_set_flush_jr_flag(true);
-   }
+   } 
 
    DEXIT;
    return 0;
@@ -420,7 +418,11 @@ int slave
       goto Error;
    }
 
-   add_job_report(jobid, jataskid, NULL, jelem);
+   { 
+      lListElem *report = NULL;
+      report = add_job_report(jobid, jataskid, NULL, jelem);
+      flush_job_report(report);
+   }   
 
    if (!jep_jatep) {
       /* put into job list */

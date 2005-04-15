@@ -875,8 +875,8 @@ lListElem *petep
       lListElem *jr = get_job_report(job_id, ja_task_id, pe_task_id);
       if (jr == NULL) {
          jr = add_job_report(job_id, ja_task_id, pe_task_id, jep);
+         flush_job_report(jr);
       }
-      flush_job_report(jr);
    }
 
    DEXIT;

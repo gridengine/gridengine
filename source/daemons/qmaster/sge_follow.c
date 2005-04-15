@@ -93,13 +93,61 @@
 #include "msg_qmaster.h"
 #include "sge_mtutil.h"
 
+typedef enum {
+   NOT_DEFINED = 0,
+   DO_SPOOL,
+   DONOT_SPOOL
+} spool_type;
+
 typedef struct {
    pthread_mutex_t last_update_mutex; /* gards the last_update access */
    u_long32 last_update;               /* used to store the last time, when the usage was stored */
+   spool_type is_spooling;             /* identifies, if spooling should happen */
+   u_long32   now;                     /* stores the time of the last spool computation */
    order_pos_t *cull_order_pos;        /* stores cull positions in the job, ja-task, and order structure */
 } sge_follow_t;
 
-static sge_follow_t Follow_Control = {PTHREAD_MUTEX_INITIALIZER, 0, NULL};
+static sge_follow_t Follow_Control = {PTHREAD_MUTEX_INITIALIZER, 0,NOT_DEFINED, 0, NULL};
+
+/****** sge_follow/sge_set_next_spooling_time() ********************************
+*  NAME
+*     sge_set_next_spooling_time() -- sets the next spooling time
+*
+*  SYNOPSIS
+*     void sge_set_next_spooling_time() 
+*
+*  FUNCTION
+*     works on the global sge_follow_t structure. It resets the values and
+*     computes the next spooling time.
+*
+*  NOTES
+*     MT-NOTE: sge_set_next_spooling_time() is MT safe 
+*
+*  SEE ALSO
+*     sge_follow_order
+*******************************************************************************/
+void sge_set_next_spooling_time()
+{
+   DENTER(TOP_LAYER, "sge_set_next_spooling_time");
+   
+   sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
+ 
+   if (Follow_Control.is_spooling != NOT_DEFINED) {
+      if (Follow_Control.now < Follow_Control.last_update) {
+         Follow_Control.last_update = Follow_Control.now;
+      }   
+      else if (Follow_Control.is_spooling == DO_SPOOL) {
+         Follow_Control.last_update = Follow_Control.now  + spool_time;
+      }
+      
+      Follow_Control.now = 0;
+      Follow_Control.is_spooling = NOT_DEFINED;
+   }
+        
+   sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
+
+   DEXIT;
+}
 
 /**********************************************************************
  Gets an order and executes it.
@@ -1043,19 +1091,30 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          int pos;
          const char *up_name;
          lList *tlp;
-         u_long32 now = sge_get_gmt();
+         u_long32 now = 0;
          bool is_spool = false;
 
          
          sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
-         if (now < Follow_Control.last_update) {
-            Follow_Control.last_update = now;
-         }   
-
-         if (now >= (Follow_Control.last_update + spool_time)) {
-            is_spool = true; 
+         
+         if (Follow_Control.is_spooling == NOT_DEFINED) {
+       
+            now = Follow_Control.now = sge_get_gmt();
+       
+            if (now >= Follow_Control.last_update) {
+               Follow_Control.is_spooling = DO_SPOOL;
+            }
+            else {
+               Follow_Control.is_spooling = DONOT_SPOOL;
+            }
             Follow_Control.last_update = now;
          }
+
+         now =  Follow_Control.now;
+         if (Follow_Control.is_spooling == DO_SPOOL) {
+            is_spool = true;
+         }
+        
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
 
          DPRINTF(("ORDER: update %d users/prjs\n", 
@@ -1153,7 +1212,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             {
                lList *answer_list = NULL;
                sge_event_spool(&answer_list, now,
-                               or_type == ORT_update_user_usage ? 
+                               (or_type == ORT_update_user_usage) ? 
                                           sgeE_USER_MOD:sgeE_PROJECT_MOD,
                                0, 0, up_name, NULL, NULL,
                                up, NULL, NULL, true, is_spool);

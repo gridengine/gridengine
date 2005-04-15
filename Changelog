@@ -1,3 +1,10 @@
+SG-2005-04-15-2: Bugfix:    the usage in projects is never spooled while the qmaster
+                            is alive.
+                 Changed:   qmaster
+                 Issue:     1567
+                 Bugtraw:   6255850
+                 Review:    JG
+
 DT-2005-04-15-0: Bugfix:    o Fixed qsub issue with parsing large scripts
                  Changed:   parse_job_cull
                  Review:    CR

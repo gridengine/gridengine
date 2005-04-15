@@ -39,4 +39,6 @@ sge_follow_order(lListElem *order, lList **alpp, char *ruser,
 int 
 distribute_ticket_orders(lList *ticket_orders);
 
+void 
+sge_set_next_spooling_time();
 #endif /* __SGE_FOLLOW_H */

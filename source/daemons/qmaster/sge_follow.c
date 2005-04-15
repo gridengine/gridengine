@@ -126,7 +126,7 @@ static sge_follow_t Follow_Control = {PTHREAD_MUTEX_INITIALIZER, 0,NOT_DEFINED, 
 *  SEE ALSO
 *     sge_follow_order
 *******************************************************************************/
-void sge_set_next_spooling_time()
+void sge_set_next_spooling_time(void)
 {
    DENTER(TOP_LAYER, "sge_set_next_spooling_time");
    

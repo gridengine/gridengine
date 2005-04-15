@@ -1,3 +1,9 @@
+SG-2005-04-15-0: Bugfix:    job in error state breaks qstat -f -xml
+                 Changed:   qstat
+                 Issue:     1566
+                 Bugtraq:   6255804
+                 Review:    CR
+
 CR-2005-04-15-1: Enhancem.: - improved commlib error message output for 
                               connection errors. (Now commlib calls strerror()
                               to report system error message)

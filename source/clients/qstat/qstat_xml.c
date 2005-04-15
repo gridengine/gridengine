@@ -362,7 +362,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
                   }
                } else {
                   if (!ja_task_list) {
-                     ja_task_list = lCreateList("", JAT_Type);
+                     ja_task_list = lCreateList("", lGetElemDescr(jatep));
                   }
                   lAppendElem(ja_task_list, lCopyElem(jatep));
                   FoundTasks = 1;
@@ -370,7 +370,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
             }
          }
       }
-      
+
       if ((full_listing & QSTAT_DISPLAY_PENDING)  && 
           (group_opt & GROUP_NO_TASK_GROUPS) == 0 && 
           FoundTasks && 
@@ -591,8 +591,9 @@ int slots_per_line  /* number of slots to be printed in slots column
 
    /* per job priority information */
    {
-      if (print_jobid)
+      if (print_jobid) {
          xml_append_Attr_D(attributeList, "JAT_prio", lGetDouble(jatep, JAT_prio));
+      }   
 
       if (sge_ext) {
          if (print_jobid)
@@ -636,7 +637,7 @@ int slots_per_line  /* number of slots to be printed in slots column
 
    /* move status info into state info */
    jstate = lGetUlong(jatep, JAT_state);
-   if (lGetUlong(jatep, JAT_status)==JTRANSFERING) {
+   if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
       jstate |= JTRANSFERING;
       jstate &= ~JRUNNING;
    }
@@ -694,10 +695,12 @@ int slots_per_line  /* number of slots to be printed in slots column
       lList *job_usage_list;
       const char *pe_name;
       
-      if (!master || !strcmp(master, "MASTER"))
+      if (!master || !strcmp(master, "MASTER")) {
          job_usage_list = lCopyList(NULL, lGetList(jatep, JAT_scaled_usage_list));
-      else
+      }   
+      else {
          job_usage_list = lCreateList("", UA_Type);
+      }   
 
       /* sum pe-task usage based on queue slots */
       if (job_usage_list) {
@@ -712,10 +715,12 @@ int slots_per_line  /* number of slots to be printed in slots column
                  ((qname=lGetString(ep, JG_qname))) &&
                  !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
                for_each(src, lGetList(task, PET_scaled_usage)) {
-                  if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name))))
+                  if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name)))) {
                      lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
-                  else
+                  }   
+                  else {
                      lAppendElem(job_usage_list, lCopyElem(src));
+                  }   
                }
             }
          }
@@ -800,8 +805,9 @@ int slots_per_line  /* number of slots to be printed in slots column
    }
 
    /* if not full listing we need the queue's name in each line */
-   if (!(full_listing & QSTAT_DISPLAY_FULL))
+   if (!(full_listing & QSTAT_DISPLAY_FULL)) {
       xml_append_Attr_S(attributeList, "queue_name", queue_name);
+   }   
 
    if ((group_opt & GROUP_NO_PETASK_GROUPS)) {
       /* MASTER/SLAVE information needed only to show parallel job distribution */
@@ -879,7 +885,6 @@ int slots_per_line  /* number of slots to be printed in slots column
                lListElem *centry = centry_list_locate(centry_list, name);
               
                if (centry == NULL) {
-printf("ignore: %s\n", name);                  
                   continue;
                }   
                   
@@ -997,7 +1002,8 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
       tstatus = lGetUlong(ja_task, JAT_status);
       usage_list = lGetList(ja_task, JAT_usage_list);
       scaled_usage_list = lGetList(ja_task, JAT_scaled_usage_list);
-   } else {
+   } 
+   else {
       tstatus = lGetUlong(pe_task, PET_status);
       usage_list = lGetList(pe_task, PET_usage);
       scaled_usage_list = lGetList(pe_task, PET_scaled_usage);
@@ -1011,13 +1017,15 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
 
    /* move status info into state info */
    tstate = lGetUlong(ja_task, JAT_state);
-   if (tstatus==JRUNNING) {
+   if (tstatus == JRUNNING) {
       tstate |= JRUNNING;
       tstate &= ~JTRANSFERING;
-   } else if (tstatus==JTRANSFERING) {
+   } 
+   else if (tstatus == JTRANSFERING) {
       tstate |= JTRANSFERING;
       tstate &= ~JRUNNING;
-   } else if (tstatus==JFINISHED) {
+   } 
+   else if (tstatus == JFINISHED) {
       tstate |= JEXITING;
       tstate &= ~(JRUNNING|JTRANSFERING);
    }
@@ -1036,7 +1044,7 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
    xml_append_Attr_S(attributeList, "state", task_state_string);
 
    {
-      lListElem *up;
+      lListElem *up = NULL;
 
       /* scaled cpu usage */
       if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) {
@@ -1049,18 +1057,21 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
       }
 
       /* scaled mem usage */
-      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) 
+      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) {
          xml_append_Attr_D(attributeList, "mem-usage", lGetDouble(up, UA_value));  
+      }   
 
       /* scaled io usage */
-      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_IO))) 
+      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_IO))) {
          xml_append_Attr_D(attributeList, "io-usage", lGetDouble(up, UA_value));  
+      }   
    }
 
    if (tstatus==JFINISHED) {
       ep=lGetElemStr(usage_list, UA_name, "exit_status");
-      if (ep)
+      if (ep) {
          xml_append_Attr_I(attributeList, "stat", (int)lGetDouble(ep, UA_value) );
+      }   
    }
 
    DEXIT;
@@ -1335,11 +1346,14 @@ lList **target_list
                   lines_to_print = 1;
 
                   /* always only show the number of job slots represented by the line */
-                  if ((full_listing & QSTAT_DISPLAY_FULL))
+                  if ((full_listing & QSTAT_DISPLAY_FULL)) {
                      slots_per_line = slots_in_queue;
-                  else
+                  }   
+                  else {
                      slots_per_line = sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
-               } else {
+                 }    
+               } 
+               else {
                   /* yes */
                   lines_to_print = (int)slots_in_queue+slot_adjust;
                   slots_per_line = 1;

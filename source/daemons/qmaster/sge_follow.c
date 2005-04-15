@@ -133,11 +133,13 @@ void sge_set_next_spooling_time(void)
    sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
  
    if (Follow_Control.is_spooling != NOT_DEFINED) {
-      if (Follow_Control.now < Follow_Control.last_update) {
+      if ((Follow_Control.now + spool_time) < Follow_Control.last_update) {
          Follow_Control.last_update = Follow_Control.now;
       }   
       else if (Follow_Control.is_spooling == DO_SPOOL) {
          Follow_Control.last_update = Follow_Control.now  + spool_time;
+         DPRINTF(("next spooling now:%ld next: %ld time:%d\n\n",Follow_Control.now, Follow_Control.last_update, spool_time));
+
       }
       
       Follow_Control.now = 0;
@@ -1099,15 +1101,18 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          
          if (Follow_Control.is_spooling == NOT_DEFINED) {
        
-            now = Follow_Control.now = sge_get_gmt();
-       
+            Follow_Control.now = sge_get_gmt();
+      
+            now = Follow_Control.now; 
+           
+            DPRINTF((">>next spooling now:%ld next: %ld\n",Follow_Control.now, Follow_Control.last_update));
+            
             if (now >= Follow_Control.last_update) {
                Follow_Control.is_spooling = DO_SPOOL;
             }
             else {
                Follow_Control.is_spooling = DONOT_SPOOL;
             }
-            Follow_Control.last_update = now;
          }
 
          now =  Follow_Control.now;

@@ -816,16 +816,17 @@ u_long32 flags
          char *parameters = NULL;
          char *free_me = NULL;
          char *s = NULL;
+         int nt_index = -1;
          
          /* now look for job parameters in script file */
          s = filestrptr;
 
+         nt_index = strlen (s);
+
          while (*s != '\0') {
             int length = 0;
             char *newline = NULL;
-            char *nullterm = NULL;
             int nl_index = -1;
-            int nt_index = -1;
 
             newline = strchr (s, '\n');
 
@@ -836,17 +837,7 @@ u_long32 flags
                nl_index = (int)(((long)newline - (long)s) / sizeof (char));
             }
 
-            nullterm = strchr (s, '\0');
-
-            if (nullterm != NULL) {
-               /* I'm doing this math very carefully because I'm not entirely
-                * certain how the compiler will interpret subtracting a pointer
-                * from a pointer.  Better safe than sorry. */
-               nt_index = (int)(((long)nullterm - (long)s) / sizeof (char));
-            }
-
-            if ((nl_index != -1) &&
-                ((nt_index == -1) || (nl_index < nt_index))) {
+            if (nl_index != -1) {
                parameters = (char *)malloc (sizeof (char) * (nl_index + 1));
                
                if (parameters == NULL) {
@@ -862,8 +853,7 @@ u_long32 flags
                 * included in the parameter string. */
                length = nl_index + 1;
             }
-            else if ((nt_index != -1) &&
-                     ((nl_index == -1) || (nt_index < nl_index))) {
+            else {
                parameters = (char *)malloc (sizeof (char) * (nt_index + 1));
                
                if (parameters == NULL) {
@@ -878,16 +868,12 @@ u_long32 flags
                strcpy (parameters, s);
                length = nt_index;
             }
-            else /* if ((nl_index == -1) && (nt_index == -1)) */ {
-               /* This should never happen. */
-               answer_list_add(&answer, MSG_INCOMPLETE_OPTION_STRING, 
-                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return answer;
-            }
             
             /* Advance the pointer past the string we just copied. */
             s += length;
+
+            /* Update the location of the NULL terminator. */
+            nt_index -= length;
 
             /* Store a copy of the memory pointer. */
             free_me = parameters;

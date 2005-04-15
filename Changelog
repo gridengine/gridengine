@@ -1,3 +1,7 @@
+DT-2005-04-15-0: Bugfix:    o Fixed qsub issue with parsing large scripts
+                 Changed:   parse_job_cull
+                 Review:    CR
+
 SG-2005-04-15-1: Bugfix:    execd does sends empty job report for a pe slave task
                  Changed:   execd
                  Issue:     1563

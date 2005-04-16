@@ -6,7 +6,7 @@ CR-2005-04-15-3: Bugfix:    qmake in dynamic allocation mode core dump
                  Changed:   qmake
                  Bugtraq:   6255902
                  Issue:     1568
-                 Review:    pending
+                 Review:    JG
 
 CR-2005-04-15-2: Testsuite: - thight integration test blocked killing of slave/master task
 

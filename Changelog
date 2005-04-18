@@ -1,3 +1,5 @@
+RC-2005-04-17-0: Enhancem.  - compile on Cray/UNICOS again
+
 MD-2005-03-31-0: Bugfix:    - load.sh returns wrong load values, if uptime 
                               higher than 1 hour
                  Issue:     1535

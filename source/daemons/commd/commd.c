@@ -149,6 +149,7 @@ char **argv
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
+#ifndef CRAY
    /* increase filedescriptor limit to max. */
    {
       struct rlimit limit;
@@ -159,7 +160,8 @@ char **argv
             setrlimit(RLIMIT_NOFILE, &limit);
          }
       }
-   }          
+   }
+#endif /* not CRAY */
 
    /* temporary logfile until we are daemonized */
    error_file = logfile;

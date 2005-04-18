@@ -946,10 +946,7 @@ int nelem
 
 #elif defined(CRAY)
 
-void KmemRead(iolist, size, k_fd)
-struct listreq *iolistr; 
-int size; 
-int k_fd;
+void KmemRead(struct listreq *iolist, int size, int k_fd)
 {
    struct listreq *lp;
    struct iosw *sp;

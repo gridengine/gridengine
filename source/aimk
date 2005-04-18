@@ -1726,7 +1726,7 @@ case UNICOS*:
          set CXXFLAGS   = "-DCRAY $DEBUG_FLAG $CXXFLAGS"
    endsw
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = ""
+   set LFLAGS   = "$LFLAGS"
    set XMTDEF   = ""
    switch (`/bin/uname -r`)
       case "[0-8].*":

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef WIN32NATIVE
+#if !defined(WIN32NATIVE) && !defined(CRAY)
 #	include <sys/time.h>
 #	include <sys/resource.h>
 #endif

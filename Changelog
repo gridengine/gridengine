@@ -1,3 +1,5 @@
+CR-2005-04-18-2: Cleanup:   removed unused message macro definition
+
 CR-2005-04-18-1: Cleanup:   o qmake cleanup
                  Testsuite: o removed warning messages for unexpected qmake output
                  Review:    JG

@@ -70,7 +70,6 @@
 #define MSG_PARSE_NULLPOINTERRECEIVED       _MESSAGE(23034, _("NULL pointer received\n"))
 #define MSG_MEM_MEMORYALLOCFAILED_S         _MESSAGE(23035, _("memory allocation failed "SFN"\n"))
 #define MSG_ANSWER_GETCWDFAILED             _MESSAGE(23036, _("getcwd() failed\n"))
-#define MSG_INCOMPLETE_OPTION_STRING        _MESSAGE(23037, _("Internal error: the option string is invalid.\n"))
 #define MSG_ANSWER_HELPNOTALLOWEDINCONTEXT  _MESSAGE(23038, _("-help not allowed in this context\n"))
 #define MSG_ANSWER_UNKOWNOPTIONX_S          _MESSAGE(23039, _("Unknown option "SFN))
 #define MSG_ANSWER_CANTPROCESSNULLLIST      _MESSAGE(23040, _("can't process NULL list"))

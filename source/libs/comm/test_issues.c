@@ -135,7 +135,6 @@ extern int main(int argc, char** argv)
   sigaction(SIGPIPE, &sa, NULL);
 
 #if defined(RLIMIT_VMEM) 
-
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    getrlimit64(RLIMIT_VMEM, &test_issues_limits);
 #else
@@ -150,6 +149,7 @@ extern int main(int argc, char** argv)
 #endif
 
 #else  /* if defined(RLIMIT_VMEM) */
+#if defined(RLIMIT_AS)
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    getrlimit64(RLIMIT_AS, &test_issues_limits);
 #else
@@ -162,7 +162,7 @@ extern int main(int argc, char** argv)
 #else
    setrlimit(RLIMIT_AS, &test_issues_limits);
 #endif
-
+#endif /* if defined(RLIMIT_AS) */
 #endif /* if defined(RLIMIT_VMEM) */
   
 #if defined(RLIMIT_VMEM) 
@@ -173,12 +173,14 @@ extern int main(int argc, char** argv)
 #endif 
    printf("vmem limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
 #else  /* if defined(RLIMIT_VMEM) */
+#if defined(RLIMIT_AS)
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    getrlimit64(RLIMIT_AS, &test_issues_limits);
 #else
    getrlimit(RLIMIT_AS, &test_issues_limits);
 #endif 
    printf("vmem limit is set to %ld\n", (unsigned long) test_issues_limits.rlim_cur);
+#endif /* if defined(RLIMIT_AS) */
 #endif /* if defined(RLIMIT_VMEM) */
  
 

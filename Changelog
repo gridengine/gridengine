@@ -1,3 +1,5 @@
+CR-2005-04-18-0: Bugfix:    Fixed broken build for commlib issues module test
+
 SG-2005-04-15-3: Bugfix:    fixed SG-2005-04-15-2
                  Changed:   qmaster
                  Review:    pending

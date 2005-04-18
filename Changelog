@@ -1,3 +1,7 @@
+CR-2005-04-18-1: Cleanup:   o qmake cleanup
+                 Testsuite: o removed warning messages for unexpected qmake output
+                 Review:    JG
+
 CR-2005-04-18-0: Bugfix:    Fixed broken build for commlib issues module test
 
 SG-2005-04-15-3: Bugfix:    fixed SG-2005-04-15-2

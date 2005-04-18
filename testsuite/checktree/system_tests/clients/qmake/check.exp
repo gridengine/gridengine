@@ -207,7 +207,7 @@ proc qmake_submit {slots target {variables ""}} {
                      }
                      default {
                         puts $CHECK_OUTPUT "qmake_submit: unexpected output: $line"
-                        add_proc_error "qmake_submit" -3 "submit host: $ts_config(master_host)($CHECK_USER)\ncd $CHECK_ACTUAL_TEST_PATH\nqmake $arguments\nunexpected output:\n$line"
+#                        add_proc_error "qmake_submit" -3 "submit host: $ts_config(master_host)($CHECK_USER)\ncd $CHECK_ACTUAL_TEST_PATH\nqmake $arguments\nunexpected output:\n$line"
                      }
                   }
                }
@@ -308,7 +308,7 @@ proc qmake_monitor {scenario id check_vars_name {parallel 0}} {
                      }
                      default {
                         puts $CHECK_OUTPUT "qmake_monitor: unexpected output: $line"
-                        add_proc_error "qmake_monitor" -3 "\nsubmit host: $ts_config(master_host)($CHECK_USER)\nqmake was started in $CHECK_ACTUAL_TEST_PATH\nunexpected output: $line"
+#                        add_proc_error "qmake_monitor" -3 "\nsubmit host: $ts_config(master_host)($CHECK_USER)\nqmake was started in $CHECK_ACTUAL_TEST_PATH\nunexpected output: $line"
                      }
                   }
                }

@@ -2294,7 +2294,7 @@ int start_remote_job (char **argv, char **envp,
          }
       }   
 
-      for(; i < no_args, argv[i] != NULL; i++) {
+      for(; argv[i] != NULL; i++) {
          args[argc++] = argv[i];
       }
 
@@ -2302,8 +2302,8 @@ int start_remote_job (char **argv, char **envp,
      
       if(be_verbose) {
          fprintf(stdout, "starting job: \n");
-         for(i = 0; i < argc; i++) {
-            fprintf(stdout, "args[%3d] = %s\n", i, args[i] == NULL ? "NULL" : args[i]);
+         for(i = 0; args[i] != NULL; i++) {
+            fprintf(stdout, "args[%3d] = %s\n", i, args[i]);
          }
       }
 

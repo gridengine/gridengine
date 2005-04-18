@@ -104,7 +104,7 @@ proc commlib_issues_run  {} {
    set server_id [lindex $server_sid 1]
    set client_id [lindex $client_sid 1]
    set both_list "$client_id $server_id"
-
+   set found_malloc_error 0
    set in_loop 1
    while { $in_loop } {
       set timeout 240
@@ -138,6 +138,9 @@ proc commlib_issues_run  {} {
             foreach line $output {
                set help [string trim $line]
                puts $CHECK_OUTPUT "client: $help"
+               if { [string match "*malloc() error*" $help] } {
+                  set found_malloc_error 1
+               }
                if { [string match "*_exit_status_:(*)*" $help] } {
                  
                   set st [string first "(" $help]
@@ -148,10 +151,15 @@ proc commlib_issues_run  {} {
                   puts $CHECK_OUTPUT "found exit status of client: ($exit_state)"
                   if { $exit_state != 0 } {
                      set known_exit_state 0
-                     if { $exit_state == 1 } {
+                     if { $exit_state == 1 && $found_malloc_error == 0 } {
                         add_proc_error "commlib_issues_run" -1 "issue #1389 is present"
                         set known_exit_state 1
                      } 
+                     if { $exit_state == 1 && $found_malloc_error != 0 } {
+                        add_proc_error "commlib_issues_run" -3 "can't test issue #1389 because of malloc error on host $client_host"
+                        set known_exit_state 1
+                     } 
+
                      if { $exit_state == 2 } {
                         add_proc_error "commlib_issues_run" -1 "issue #1400 is present"
                         set known_exit_state 1

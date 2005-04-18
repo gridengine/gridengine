@@ -6895,6 +6895,7 @@ proc menu {} {
     puts " (26) enter testsuite setup" 
     puts " (27) set command line options"
     puts " (28) restart cluster"
+    puts " (29) check spool directory content"
 
   set input [wait_for_enter 1]; 
 
@@ -6963,6 +6964,10 @@ proc menu {} {
     }
     "28" {
          startup_core_system
+    }
+    "29" {
+         check_local_spool_directories 1
+         wait_for_enter
     }
     "0" { select_runlevel }
     "1" { change_dir; }

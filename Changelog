@@ -1,3 +1,5 @@
+CR-2005-04-18-3: Testsuite: new menue parameter: "check spool directory content"
+
 AH-2005-04-18-0: Bugfix:    cqueues/all.q trashed after qmaster shutdown 
                             with 1362 hosts
                  Changed:   qmaster

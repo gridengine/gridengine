@@ -1841,6 +1841,61 @@ proc cleanup_spool_dir { topleveldir subdir } {
 }
 
 
+proc check_local_spool_directories { { do_delete 0 } } {
+   global ts_host_config ts_config CHECK_OUTPUT
+
+   if { [have_root_passwd] == -1 } {
+      puts $CHECK_OUTPUT "need root access ..."
+      set_root_passwd
+   }
+
+   foreach host $ts_config(execd_hosts) {
+       
+      puts $CHECK_OUTPUT "host ${host}:"
+      puts $CHECK_OUTPUT "checking testsuite spool root dir ..."
+      set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/"]
+      puts $CHECK_OUTPUT $result
+      set testsuite($host,spooldir_size) [lindex $result 0]
+      set testsuite($host,spooldir_size,state) $prg_exit_state
+
+      foreach dir "execd qmaster spooldb" {
+         puts $CHECK_OUTPUT "checking testsuite \"$dir\" spool dir for port \"$ts_config(commd_port)\" ..."
+         set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir/"]
+         puts $CHECK_OUTPUT $result
+         set testsuite($host,$dir,spooldir_size) [lindex $result 0]
+         set testsuite($host,$dir,spooldir_size,state) $prg_exit_state
+      }
+   }
+
+   foreach host $ts_config(execd_hosts) {
+      puts $CHECK_OUTPUT "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $ts_host_config($host,spooldir)"
+      if { $testsuite($host,spooldir_size) > 1000000 } {
+         add_proc_error "check_local_spool_directories" -3 "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $ts_host_config($host,spooldir)"
+      }
+
+      foreach dir "execd qmaster spooldb" {
+         if { $testsuite($host,$dir,spooldir_size,state) != 0 } {
+            puts $CHECK_OUTPUT "skipping \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" (no directory found)"
+            continue
+         }
+         puts $CHECK_OUTPUT "$host ($dir): spool dir size is $testsuite($host,$dir,spooldir_size)"
+         if { $do_delete != 0 && $testsuite($host,$dir,spooldir_size) > 10 } {
+            puts -nonewline $CHECK_OUTPUT "delete directory \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" (y/n)? "
+            set input [ wait_for_enter 1]
+            if { $input == "y" } {
+               puts $CHECK_OUTPUT "deleting \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" ..."
+               cleanup_spool_dir_for_host $host $ts_host_config($host,spooldir) $dir
+               set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir"]
+               if { [lindex $result 0] > 10 } {
+                  add_proc_error "check_local_spool_directories" -1 "could not delete \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" on host $host"
+               }
+            }
+         }
+      }
+   }
+}
+
+
 #****** file_procedures/cleanup_spool_dir_for_host() ***************************
 #  NAME
 #     cleanup_spool_dir_for_host() -- create or cleanup spool directory

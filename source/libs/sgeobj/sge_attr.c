@@ -569,7 +569,8 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
          found_default = true;
       } else if (sge_is_hgroup_ref(href)) {
          if (found_group) {
-            sge_dstring_sprintf_append(&group_string, "%s", comma);
+            sge_dstring_append(&group_string, comma);
+            
          }
          sge_dstring_sprintf_append(&group_string, "[%s=", href);
          object_append_field_to_dstring(attr, NULL, &group_string, value_nm, 
@@ -578,38 +579,36 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
          found_group = true;
       } else {
          if (found_host) {
-            sge_dstring_sprintf_append(&host_string, "%s", comma);
+            sge_dstring_append(&host_string, comma);
          }
          sge_dstring_sprintf_append(&host_string, "[%s=", href);
          object_append_field_to_dstring(attr, NULL, &host_string, value_nm,
                                         '\0');
-         sge_dstring_sprintf_append(&host_string, "]");
+         sge_dstring_append(&host_string, "]");
          found_host = true;
       }
    }
    if (found_default) {
       const char *s = sge_dstring_get_string(&default_string);
 
-      sge_dstring_sprintf_append(string, "%s", s);
+      sge_dstring_append(string, s);
    }
    if (found_group) {
       const char *s = sge_dstring_get_string(&group_string);
-
       if (found_default) {
-         sge_dstring_sprintf_append(string, "%s", comma);
+         sge_dstring_append(string, comma);
       }
-      sge_dstring_sprintf_append(string, "%s", s);
+      sge_dstring_append(string, s);
    }
    if (found_host) {
       const char *s = sge_dstring_get_string(&host_string);
-
       if (found_group || found_default) {
-         sge_dstring_sprintf_append(string, "%s", comma);
+         sge_dstring_append(string, comma);
       }
-      sge_dstring_sprintf_append(string, "%s", s);
+      sge_dstring_append(string, s);
    }
    if (!found_default && !found_group && !found_host) {
-      sge_dstring_sprintf_append(string, "NONE");
+      sge_dstring_append(string, "NONE");
    }
    sge_dstring_free(&default_string);
    sge_dstring_free(&group_string);

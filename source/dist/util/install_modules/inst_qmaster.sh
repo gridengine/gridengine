@@ -70,7 +70,7 @@ GetCell()
     SGE_CELL_VAL=$CELL_NAME
     $INFOTEXT -log "Using >%s< as CELL_NAME." "$CELL_NAME"
 
-    if [ -f $SGE_ROOT/$SGE_CELL/bootstrap ]; then
+    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap -a "$BERKELEY" = "undef" ]; then
        $INFOTEXT -log "The cell name you have used and the bootstrap already exists!"
        $INFOTEXT -log "It seems that you have already a installed system."
        $INFOTEXT -log "A installation may cause, that data can be lost!"
@@ -321,12 +321,18 @@ SetSpoolingOptionsBerkeleyDB()
          exit 1
       fi
 
+      if [ "$SPOOLING_SERVER" = "" ]; then
+         $INFOTEXT -log "Please enter a Berkeley DB spooling server!"
+         MoveLog
+         exit 1
+      fi
+
       if [ -d "$SPOOLING_DIR" -a \( "$SPOOLING_SERVER" = "none" -o "$SPOOLING_SERVER" = "" \) ]; then
          $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" "$SPOOLING_DIR"
          MoveLog
          exit 1 
       fi
-      #SpoolingCheckParams
+      SpoolingCheckParams
       params_ok=1
    fi
    if [ "$QMASTER" = "install" ]; then
@@ -479,7 +485,7 @@ SetSpoolingOptionsBerkeleyDB()
       fi
    fi
 
-   if [ $SPOOLING_SERVER = "none" ]; then
+   if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
       Makedir $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
@@ -497,7 +503,7 @@ SetSpoolingOptionsClassic()
 
 SetSpoolingOptionsDynamic()
 {
-   if [ $AUTO = "true" ]; then
+   if [ "$AUTO" = "true" ]; then
       if [ "$SPOOLING_METHOD" != "berkeleydb" -a "$SPOOLING_METHOD" != "classic" ]; then
          SPOOLING_METHOD="berkeleydb"
       fi
@@ -538,7 +544,7 @@ SetSpoolingOptions()
    $INFOTEXT -u "\nSetup spooling"
    COMPILED_IN_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
    $INFOTEXT -log "Setting spooling method to %s" $COMPILED_IN_METHOD
-   case $COMPILED_IN_METHOD in 
+   case "$COMPILED_IN_METHOD" in 
       classic)
          SetSpoolingOptionsClassic
          ;;

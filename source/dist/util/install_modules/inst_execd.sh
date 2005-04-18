@@ -595,7 +595,7 @@ ExecdAlreadyInstalled()
    ret=`qhost | grep $hostname | awk '{ print $4 }'`
    ret2=`qconf -sconf $hostname | head -1 | cut -d":" -f1`
 
-   if [ "$ret" = "-" -o "$ret" = "" -o "$ret2" != "$hostname" ]; then
+   if [ \( "$ret" = "-" -o "$ret" = "" \) -a "$ret2" != "$hostname" ]; then
       return 0
    else
       return 1

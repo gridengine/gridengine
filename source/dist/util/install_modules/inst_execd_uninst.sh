@@ -187,15 +187,7 @@ RemoveQueues()
      $INFOTEXT -log "Deleting queue %s!" $q
      
      for hgrp in `qconf -shgrpl`; do
-       `qconf -shgrp $hgrp >> /tmp/hgrp.tmp`
-       if [ `qconf -shgrp $hgrp | grep $exechost | wc -w` = 2 ]; then
-          `cat /tmp/hgrp.tmp | sed s/$exechost/NONE/ >> /tmp/hgrp2.tmp`
-       else
-          `cat /tmp/hgrp.tmp | sed s/$exechost// >> /tmp/hgrp2.tmp`
-       fi
-       `qconf -Mhgrp /tmp/hgrp2.tmp`
-       `rm /tmp/hgrp.tmp`
-       `rm /tmp/hgrp2.tmp`
+         $SGE_BIN/qconf -dattr hostgroup hostlist $exechost $hgrp
      done
 
    done
@@ -266,7 +258,7 @@ RemoveSpoolDir()
    SHELL_NAME=`Enter $SHELL_NAME`
  
 
-   $INFOTEXT "Removing local spool directory [%s]" $SPOOL_DIR
+   $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
    echo "rm -R $SPOOL_DIR/$HOST_DIR" | $SHELL_NAME $exechost /bin/sh 
    echo "rm -fR $SPOOL_DIR" | $SHELL_NAME $exechost /bin/sh 
 }

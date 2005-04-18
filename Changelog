@@ -1,3 +1,11 @@
+RD-2005-04-18-1: Bugfix:    autoinstall related bugs fixed
+                            bdb rpc auto installation and uninstallation,
+                            hostname resolving fixes, some cleanups
+                 Changed:   install scripts
+                 Bugtraq:   6253278, 6253291, 6253192
+                 Issue:     1573, 1574, 1575
+                 Review:    MD
+
 CR-2005-04-18-2: Cleanup:   removed unused message macro definition
 
 CR-2005-04-18-1: Cleanup:   o qmake cleanup
@@ -80,6 +88,7 @@ RD-2005-04-14-0: Bugfix:    auto_install fixes
                             BDB RPC NFS spooling recognized
                  Changed:   install scripts
                  Bugtraq:   6253313, 6253219
+                 Issue:     1559, 1560
                  Review:    MD 
 
 DT-2005-04-14-0: Bugfix:    o Updated version string for DRMAA-J

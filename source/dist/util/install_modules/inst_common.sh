@@ -111,7 +111,6 @@ SetUpInfoText()
 # set column break for automatic line break
 SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 
-
 # export locale directory
 if [ "$SGE_ROOT" = "" ]; then
    TMP_SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
@@ -136,7 +135,7 @@ fi
 #
 Enter()
 {
-   if [ "$AUTO" = true ]; then
+   if [ "$AUTO" = "true" ]; then
       $ECHO $1
    else
       read INP
@@ -347,7 +346,7 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-updatedb \\\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-udb|-updatedb \\\n" \
              "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] [-csp] \\\n" \
              "       [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
@@ -357,6 +356,7 @@ ErrUsage()
              "   -sm        install shadow host\n" \
              "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated spooling server\n" \
+             "   -udb       uninstall Berkeley DB RPC spooling server\n" \
              "   -bup       backup of your configuration (Berkeley DB spooling)\n" \
              "   -rst       restore configuration from backup (Berkeley DB spooling)\n" \
              "   -upd       upgrade cluster from 5.x to 6.0\n" \
@@ -394,7 +394,7 @@ ErrUsage()
 
    $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
 
-      if [ $AUTO = true ]; then
+      if [ "$AUTO" = true ]; then
          MoveLog
       fi
 
@@ -416,11 +416,39 @@ GetConfigFromFile()
   fi
   IFS="   
 "
-   #CheckConfigFile
-   SGE_CELL=$CELL_NAME
+  #CheckConfigFile
+  SGE_CELL=$CELL_NAME
+  DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
+  ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
+  SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
+  EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
+  SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
+  EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
+  
 }
 
-
+#--------------------------------------------------------------------------
+# Resolves the given hostname list to the names used by SGE
+#
+ResolveHosts()
+{
+   HOSTS=""
+   if [ $# -ge 1 ]; then
+      for host in $*; do
+         if [ "$host" = "none" ]; then
+            HOSTS="$HOSTS $host"
+         else
+            if [ -f $host ]; then
+               for fhost in `cat $host`; do
+                  HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`"
+               done
+            fi
+            HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`" 
+         fi
+      done
+   fi
+   echo $HOSTS
+}
 
 #--------------------------------------------------------------------------
 # Checking the configuration file, if valid (autoinstall mode)

@@ -122,6 +122,8 @@ while [ $ARGC != 0 ]; do
      export SGE_NOMSG
      CreateLog
      Stdout2Log
+     GetConfigFromFile
+     CheckPath
      ;;
    -m)
      QMASTER="install"
@@ -163,6 +165,12 @@ while [ $ARGC != 0 ]; do
      ;;
    -db)
      BERKELEY="install"
+     SPOOLING_SERVER=`hostname`
+     . ./util/install_modules/inst_qmaster.sh
+     . ./util/install_modules/inst_berkeley.sh
+     ;;
+   -udb)
+     BERKELEY="uninstall"
      SPOOLING_SERVER=`hostname`
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
@@ -294,13 +302,33 @@ if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
       AddQueue
       GiveHints
 fi
- 
+
+if [ $BERKELEY = "install" ]; then
+
+   if [ "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
+      BasicSettings
+      CheckWhoInstallsSGE
+      ProcessSGERoot
+      GetCell
+      COMMONDIR=$SGE_CELL/common
+      Makedir $SGE_CELL
+      Makedir $COMMONDIR 
+      SetSpoolingOptions
+      InstallServerScript $euid
+      GiveBerkelyHints
+   else
+      $INFOTEXT -log "remote berkeley rpc server installation on host %s" $DB_SPOOLING_SERVER
+      echo "cd $SGE_ROOT && ./inst_sge -db -auto $FILE -noremote" | $SHELL_NAME $DB_SPOOLING_SERVER /bin/sh &
+   wait 5
+   fi
+
+   BERKELEY="undef"
+fi
+
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
 
  if [ "$AUTO" = "true" ]; then
     $INFOTEXT -log "Starting qmaster installation!"
-    GetConfigFromFile
-    CheckPath
  fi
 
  WelcomeTheUser
@@ -345,8 +373,6 @@ fi
 
 if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
-    GetConfigFromFile
-    CheckPath
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
     AddHostsAuto
 
@@ -355,7 +381,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
        ExecdAlreadyInstalled $h
        installed=$?
    
-      if [ $h = `hostname` -a "$installed" = 0 ]; then
+      if [ $h = `$SGE_UTILBIN/gethostname -name` -a "$installed" = 0 ]; then
   
          WelcomeTheUserExecHost
          CheckForLocalHostResolving
@@ -462,30 +488,9 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  
 fi
 
-if [ $BERKELEY = "install" ]; then
- 
-   BasicSettings
-   CheckWhoInstallsSGE
-   ProcessSGERoot
-   GetCell
-   COMMONDIR=$SGE_CELL/common
-   Makedir $SGE_CELL
-   Makedir $COMMONDIR 
-   SetSpoolingOptions
-   InstallServerScript $euid
-   GiveBerkelyHints
-
-fi
-
-
 if [ "$EXECD" = "uninstall" ]; then
 
    WelcomeUninstall 
-
-   if [ "$AUTO" = "true" ]; then
-      GetConfigFromFile
-      CheckPath
-   fi
 
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
       $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
@@ -514,13 +519,30 @@ if [ "$EXECD" = "uninstall" ]; then
 
 fi
 
+if [ $BERKELEY = "uninstall" ]; then
+
+   if [ "$AUTO" = "true" ]; then
+      $INFOTEXT -log "Starting berekey rpc uninstallation!"
+   fi
+   if [ "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
+      ProcessSGERoot
+      GetCell
+      ADMINUSER=`$SGE_UTILBIN/filestat -owner . 2> /dev/null`
+      DeleteServerScript
+      DeleteSpoolingDir
+   else
+      $INFOTEXT -log "remote berkeley rpc server uninstallation on host %s" $DB_SPOOLING_SERVER
+      echo "cd $SGE_ROOT && ./inst_sge -udb -auto $FILE -noremote" | $SHELL_NAME $DB_SPOOLING_SERVER /bin/sh
+   fi
+
+   BERKELEY="undef"
+   
+fi
 
 if [ $QMASTER = "uninstall" ]; then
 
    if [ "$AUTO" = "true" ]; then
       $INFOTEXT -log "Starting qmaster uninstallation!"
-      GetConfigFromFile
-      CheckPath
    fi
    
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
@@ -623,7 +645,6 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
-      GetConfigFromFile
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
@@ -670,9 +691,6 @@ if [ $SHADOW = "uninstall" ]; then
 fi
 
 if [ $BACKUP = "true" ]; then
-   if [ $AUTO = "true" ]; then
-      GetConfigFromFile
-   fi
    BackupConfig
 fi
 

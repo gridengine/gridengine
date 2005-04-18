@@ -39,7 +39,7 @@
 
 SpoolingQueryChange()
 {
-   if [ $BERKELEY = "install" ]; then
+   if [ "$BERKELEY" = "install" ]; then
       $INFOTEXT -u "\nBerkeley Database spooling parameters"
       $INFOTEXT "\nYou are going to install a RPC Client/Server machanism!" \
                 "\nIn this case, qmaster will" \
@@ -56,9 +56,9 @@ SpoolingQueryChange()
    else
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
 
-     if [ $is_server = "true" ]; then
+     if [ "$is_server" = "true" ]; then
         $INFOTEXT -n "\nPlease enter the name of your Berkeley DB Spooling Server! >> "
-               SPOOLING_SERVER=`Enter`
+               SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
         $INFOTEXT -n "Please enter the Database Directory now!\n"
         $INFOTEXT -n "Default: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"
         SPOOLING_DIR="$SGE_ROOT/$SGE_CELL/spooldb" 
@@ -77,7 +77,7 @@ SpoolingQueryChange()
 SpoolingCheckParams()
 {
    # if we use local spooling, check if the database directory is on local fs
-   if [ $SPOOLING_SERVER = "none" ]; then
+   if [ "$SPOOLING_SERVER" = "none" ]; then
       CheckLocalFilesystem $SPOOLING_DIR
       ret=$?
       if [ $ret -eq 0 ]; then
@@ -101,15 +101,15 @@ SpoolingCheckParams()
       $INFOTEXT "the Database with the rc script now and continue with >NO<\n"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
-      if [ $? = 0 -a $AUTO = "false" ]; then
+      if [ $? = 0 ]; then
          $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
          $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
-         $SGE_ROOT/$COMMONDIR/sgebdb start &
+         ExecuteRPCServerScript start
          sleep 5
          $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
          $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
          $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
-         $INFOTEXT -wait -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
+         $INFOTEXT -wait -auto $AUTO -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
       else
          $INFOTEXT "Please start the rc script \n>%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
          $INFOTEXT "If your database is already running, then continue with <RETURN>\n"
@@ -163,14 +163,39 @@ CheckLocalFilesystem()
 
 }
 
+# Executes the RPC Startup Script
+# $1 is start or stop
+# The Script is either executed on the local host or on a remote host
+ExecuteRPCServerScript()
+{
+   ExecuteAsAdmin $SGE_ROOT/$SGE_CELL/common/sgebdb $1
+}
+
+DeleteServerScript()
+{
+   ExecuteRPCServerScript stop
+   rm $SGE_ROOT/$SGE_CELL/common/sgebdb   
+
+   # TODO: Delete startup script in /etc/init.d
+}
+
+DeleteSpoolingDir()
+{
+   QMDIR="$SGE_ROOT/$SGE_CELL/qmaster"
+   SpoolingQueryChange  
+
+   ExecuteAsAdmin rm -fr $SPOOLING_DIR
+   
+}
+
 
 InstallServerScript()
 {
    euid=$1
 
    $CLEAR
-      STARTUP_FILE_NAME=sgebdb
-      S95NAME=S95sgebdb
+   STARTUP_FILE_NAME=sgebdb
+   S95NAME=S95sgebdb
 
    SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
 

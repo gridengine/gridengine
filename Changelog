@@ -1,3 +1,5 @@
+JG-2005-04-18-0: Testsuite: fixed test functional/tight_integration
+
 CR-2005-04-18-3: Testsuite: new menue parameter: "check spool directory content"
 
 AH-2005-04-18-0: Bugfix:    cqueues/all.q trashed after qmaster shutdown 

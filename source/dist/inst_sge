@@ -305,7 +305,7 @@ fi
 
 if [ $BERKELEY = "install" ]; then
 
-   if [ "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
+   if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
       BasicSettings
       CheckWhoInstallsSGE
       ProcessSGERoot

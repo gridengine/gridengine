@@ -1,3 +1,8 @@
+RD-2005-04-19:1: Bugfix:    qconf -purge segfault on tru64
+                 Bugtraq:   6252522
+                 Issue:     1548
+                 Review:    AH
+
 CR-2005-04-19-1: Testsuite: o fixed cleanup function for issue test 1096 when
                               running in CSP mode (second fix)
 

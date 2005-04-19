@@ -1746,7 +1746,7 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
    bool ret = false;
    int index;
 
-   lList *sublist;
+   lList *sublist = NULL;
    lListElem *ep = NULL;
    const char *attr_name = NULL;
 
@@ -1759,14 +1759,13 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
       
          /* purge hostlist */ 
          if (!fnmatch(attr_name, SGE_ATTR_HOSTLIST,0)) {
-            sublist = lGetList(this_elem, CQ_hostlist ); 
+            sublist = NULL;
+            lXchgList(this_elem, CQ_hostlist, &sublist);
             if (lDelElemHost(&sublist, HR_name, hgroup_or_hostname) == 1) {
                DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, SGE_ATTR_HOSTLIST ));
                ret = true;
-               if( sublist == NULL ) {
-                 lSetList(this_elem, CQ_hostlist , NULL );
-               }
             }
+            lXchgList(this_elem, CQ_hostlist, &sublist);
          }
          
          /* purge attributes */ 

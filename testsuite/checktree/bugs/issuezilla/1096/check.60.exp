@@ -143,10 +143,9 @@ proc issue_1096_cleanup {} {
    global ts_config CHECK_OUTPUT
    if { $ts_config(product_feature) == "csp" } {
       set_error -3 "Warning: this is a csp system skipping this test"
-      set_error 0 "ok"
-      return
+   } else {
+      startup_core_system
    }
-   startup_core_system
    set_error 0 "ok"
 }
 

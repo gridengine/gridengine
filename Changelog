@@ -1,3 +1,6 @@
+CR-2005-04-19-1: Testsuite: o fixed cleanup function for issue test 1096 when
+                              running in CSP mode (second fix)
+
 RD-2005-04-19-0: Bugfix:    fixed broken manual bdb rpc installation
                  Review:    CR
 

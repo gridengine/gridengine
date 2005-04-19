@@ -25,7 +25,6 @@ AH-2005-04-18-0: Bugfix:    cqueues/all.q trashed after qmaster shutdown
                  Bugtraq:   6256530
                  Issue:     1572
 
->>>>>>> 1.2711
 RD-2005-04-18-1: Bugfix:    autoinstall related bugs fixed
                             bdb rpc auto installation and uninstallation,
                             hostname resolving fixes, some cleanups

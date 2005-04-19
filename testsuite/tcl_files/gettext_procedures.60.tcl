@@ -89,6 +89,7 @@ proc sge_macro { macro_name } {
       "DISTINST_CHOOSE_SPOOLING_METHOD" { set value "Your SGE binaries are compiled to link the spooling libraries\nduring runtime (dynamically). So you can choose between Berkeley DB \nspooling and Classic spooling method.\nPlease choose a spooling method (berkeleydb|classic) \[berkeleydb\] >> " }
       "DISTINST_ENTER_SPOOL_DIR" { set value "Please enter a qmaster spool directory now! >>" }
       "DISTINST_USING_GID_RANGE_HIT_RETURN" { set value "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " }
+      "DISTINST_WINDOWS_SUPPORT" { set value "\nAre you going to install Windows Execution Hosts? (y/n) \[n\] >> " }
       "DISTINST_EXECD_INSTALL_COMPLETE" { set value "Your execution daemon installation is now completed." }
       "DISTINST_LOCAL_CONFIG_FOR_HOST" { set value "Local configuration for host >%s< created." }
       "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nGrid Engine supports multiple cells.\n\nIf you are not planning to run multiple Grid Engine clusters or if you don't\nknow yet what is a Grid Engine cell it is safe to keep the default cell name\n\n   default\n\nIf you want to install multiple cells you can enter a cell name now.\n\nThe environment variable\n\n   \\\$SGE_CELL=<your_cell_name>\n\nwill be set for all further Grid Engine commands.\n\nEnter cell name \[%s\] >> " }

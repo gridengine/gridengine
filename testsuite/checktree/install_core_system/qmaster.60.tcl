@@ -133,6 +133,7 @@ proc install_qmaster {} {
  set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ] 
  set ENTER_SPOOL_DIR   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR] "*"]
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
+ set WINDOWS_SUPPORT              [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_WINDOWS_SUPPORT] ]
  set CREATING_ALL_QUEUE_HOSTGROUP [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ALL_QUEUE_HOSTGROUP] ]
  set EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER]]
  set EXECD_SPOOLING_DIR_NOROOT           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT] "*"]
@@ -451,6 +452,16 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $INSTALL_GE_NOT_AS_ROOT {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(4)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
+       -i $sp_id $WINDOWS_SUPPORT {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(4)"
           if {$do_log_output == 1} {
                puts "press RETURN"

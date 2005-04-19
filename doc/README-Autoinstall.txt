@@ -45,7 +45,7 @@ Content:
    your Berkeley DB is running on. On this host, rpc services have to be
    installed and configured.
 
-   For local spooling no special configuration have to done. It necessary,
+   For local spooling no special configuration have to be done. It necessary,
    that the directory, where Berkeley DB spools is local. It's not allowed
    to use a NFS mounted directory -> the spooling will fail! This is a
    limitation of Berkeley DB!
@@ -59,14 +59,37 @@ Content:
 -------------------------
 
    During the automatic installation, the user is not asked for any
-   question.  No message will be displayed on the terminal After the
-   installation you will find a log file in $SGE_ROOT/$SGE_CELL/spool. The
-   name is: install_hostname_<combination of date time>.log Here you can
+   question.  No message will be displayed on the terminal. After the
+   installation you will find a log file in $SGE_ROOT/$SGE_CELL/spool/qmaster. 
+   The name is: install_hostname_<combination of date time>.log Here you can
    find information about the used configuration and about errors during
    installation. In case of serious errors, it can be impossible for the
-   installation script to move the log file into the spool directory, then
-   please have a look into the /tmp/ dir. There you can also find the
-   install logs
+   installation script to move the log file into the spool directory (eg. the
+   qmaster spooling could not be created), then please have a look into the 
+   /tmp dir. There you can also find the install logs. The name of the
+   install.log file will be shown at the end of the autoinstallation.
+
+   Common Errors:
+
+   The auto installation mostly breaks on the following errors.
+
+   The <sge_cell> directory exists. This is a kind of security, because
+   during the autoinstall, the user can't stop the procedure in time,
+   if he has enterd the wrong <sge_cell>. So we can make sure, that
+   no necessary date will be lost.
+
+   The berkeley db spooling directory exists. This is the same like
+   <sge_cell>. Data of other SGE installations can be deleted.
+   -> the installations stops to make sure, no date will be lost. 
+
+   The execution host installation seems to run very well, but the
+   execution daemon is not started, or no load values are shown.
+   (eg. qhost). Please check, if user root is allowd to rsh/ssh
+   to the other host, without entering the password.
+   To use the autoinstallation without giving root the permissions
+   to rsh/ssh to any other host without a password use the installation
+   as described below. 
+
 
    For a automatic installation it is recommended, that root has the right
    to connect via rsh/ssh to the different hosts, without asking for a
@@ -100,88 +123,150 @@ Content:
 
    The template files looks like this:
 
-#-------------------------------------------------
-# SGE default configuration file
-#-------------------------------------------------
+      #-------------------------------------------------
+      # SGE default configuration file
+      #-------------------------------------------------
 
-# SGE_ROOT Path, this is basic information
-SGE_ROOT="Please enter path"
+      # Use always fully qualified pathnames, please
 
-# SGE_QMASTER_PORT is used by qmaster for communication
-SGE_QMASTER_PORT="Please enter port"
+      # SGE_ROOT Path, this is basic information
+      #(mandatory for qmaster and execd installation)
+      SGE_ROOT="Please enter path"
 
-# SGE_EXECD_PORT is used by execd for communication
-SGE_EXECD_PORT="Please enter port"
+      # SGE_QMASTER_PORT is used by qmaster for communication
+      # Please enter the port in this way: 1300
+      # Please do not this: 1300/tcp
+      #(mandatory for qmaster installation)
+      SGE_QMASTER_PORT="Please enter port"
 
-# CELL_NAME, will be a dir in SGE_ROOT, contains the common dir
-CELL_NAME="default"
+      # SGE_EXECD_PORT is used by execd for communication
+      # Please enter the port in this way: 1300
+      # Please do not this: 1300/tcp
+      #(mandatory for qmaster installation)
+      SGE_EXECD_PORT="Please enter port"
 
-# The dir, where qmaster spools this parts, which are not spooled by DB
-QMASTER_SPOOL_DIR="Please, enter spooldir"
+      # CELL_NAME, will be a dir in SGE_ROOT, contains the common dir
+      # Please enter only the name of the cell. No path, please
+      #(mandatory for qmaster and execd installation)
+      CELL_NAME="default"
 
-# The dir, where the execd spools (active jobs)
-EXECD_SPOOL_DIR="Please, enter spooldir"
+      # ADMIN_USER, if you want to use a different admin user than the owner,
+      # of SGE_ROOT, you have to enter the user name, here
+      # Leaving this blank, the owner of the SGE_ROOT dir will be used as admin user
+      ADMIN_USER=""
 
-# The dir, where the execd spools (local configuration)
-EXECD_SPOOL_DIR_LOCAL="Please, enter spooldir"
+      # The dir, where qmaster spools this parts, which are not spooled by DB
+      #(mandatory for qmaster installation)
+      QMASTER_SPOOL_DIR="Please, enter spooldir"
 
-# If SGE is compiled with -spool-dynamic, you have to enter here, which
-# spooling method should be used. (classic or berkeleydb)
-SPOOLING_METHOD="berkeleydb"
+      # The dir, where the execd spools (active jobs)
+      # This entry is needed, even if your are going to use
+      # berkeley db spooling. Only cluster configuration and jobs will
+      # be spooled in the database. The execution daemon still needs a spool
+      # directory  
+      #(mandatory for qmaster installation)
+      EXECD_SPOOL_DIR="Please, enter spooldir"
 
-# Name of the Server, where the Spooling DB is running on
-DB_SPOOLING_SERVER="none"
+      # For monitoring and accounting of jobs, every job will get
+      # unique GID. So you have to enter a free GID Range, which
+      # is assigned to each job running on a machine.
+      # If you want to run 100 Jobs at the same time on one host you
+      # have to enter a GID-Range like that: 16000-16100
+      #(mandatory for qmaster installation)
+      GID_RANGE="Please, enter GID range"
 
-# The dir, where the DB spools
-DB_SPOOLING_DIR="spooldb"
+      # If SGE is compiled with -spool-dynamic, you have to enter here, which
+      # spooling method should be used. (classic or berkeleydb)
+      #(mandatory for qmaster installation)
+      SPOOLING_METHOD="berkeleydb"
 
-# If true, the domain names will be ignored, during the hostname resolving
-HOSTNAME_RESOLVING="true"
+      # Name of the Server, where the Spooling DB is running on
+      # if spooling methode is berkeleydb, it must be "none", when
+      # using no spooling server and it must containe the servername
+      # if a server should be used. In case of "classic" spooling,
+      # can be left out
+      DB_SPOOLING_SERVER="none"
 
-# Shell, which should be used for remote installation (rsh/ssh)
-SHELL_NAME="ssh"
+      # The dir, where the DB spools
+      # If berkeley db spooling is used, it must contain the path to
+      # the spooling db. Please enter the full path. (eg. /tmp/data/spooldb)
+      # Remember, this directory must be local on the qmaster host or on the
+      # Berkeley DB Server host. No NSF mount, please
+      DB_SPOOLING_DIR="spooldb"
 
-# Enter your default domain, if you are using /etc/hosts or NIS configuration
-DEFAULT_DOMAIN="none"
+      # A List of Host which should become admin hosts
+      # If you do not enter any host here, you have to add all of your hosts
+      # by hand, after the installation. The autoinstallation works without
+      # any entry
+      ADMIN_HOST_LIST="host1 host2 host3 host4"
 
-# I don't know any description at the moment (eg. 16000-16100)
-GID_RANGE="Please, enter GID range"
+      # A List of Host which should become submit hosts
+      # If you do not enter any host here, you have to add all of your hosts
+      # by hand, after the installation. The autoinstallation works without
+      # any entry
+      SUBMIT_HOST_LIST="host1 host2 host3 host4"
 
-# If a job stops, fails, finish, you can send a mail to this address
-ADMIN_MAIL="none"
+      # A List of Host which should become exec hosts
+      # If you do not enter any host here, you have to add all of your hosts
+      # by hand, after the installation. The autoinstallation works without
+      # any entry
+      # (mandatory for execution host installation)
+      EXEC_HOST_LIST="host1 host2 host3 host4"
 
-# If true, the rc scripts (sgemaster, sgeexecd, sgebdb) will be added,
-# to start automatically during boot time
-ADD_TO_RC="false"
+      # The dir, where the execd spools (local configuration)
+      # If you want configure your execution daemons to spool in
+      # a local directory, you have to enter this directory here.
+      # If you do not want to configure a local execution host spool directory
+      # please leave this empty
+      EXECD_SPOOL_DIR_LOCAL="Please, enter spooldir"
 
-#If this is "true" the file permissions of executables will be set to 755
-#and of ordinary file to 644.  
-SET_FILE_PERMS="true"
+      # If true, the domainnames will be ignored, during the hostname resolving
+      # if false, the fully qualified domain name will be used for name resolving
+      HOSTNAME_RESOLVING="true"
 
-# This option is not fully implemented, yet.
-# When a exec host should be un-installed, the running jobs will be rescheduled
-RESCHEDULE_JOBS="wait"
+      # Shell, which should be used for remote installation (rsh/ssh)
+      # This is only supported, if your hosts and rshd/sshd is configured,
+      # not to ask for a password, or promting any message.
+      SHELL_NAME="ssh"
 
-# Enter a one of the three distributed scheduler tuning configuration sets
-# (1=normal, 2=high, 3=max)
-SCHEDD_CONF="1"
+      # Enter your default domain, if you are using /etc/hosts or NIS configuration
+      DEFAULT_DOMAIN="none"
 
-# A List of Host which should become admin hosts
-ADMIN_HOST_LIST="host1 host2 host3 host4"
+      # If a job stops, fails, finnish, you can send a mail to this adress
+      ADMIN_MAIL="none"
 
-# A List of Host which should become submit hosts
-SUBMIT_HOST_LIST="host1 host2 host3 host4"
+      # If true, the rc scripts (sgemaster, sgeexecd, sgebdb) will be added,
+      # to start automatically during boottime
+      ADD_TO_RC="false"
 
-# A List of Host which should become exec hosts
-EXEC_HOST_LIST="host1 host2 host3 host4"
+      #If this is "true" the file permissions of executables will be set to 755
+      #and of ordenary file to 644.  
+      SET_FILE_PERMS="true"
 
-# The name of the shadow host. This host must have read/write permission
-# to the qmaster spool directory
-SHADOW_HOST="hostname"
+      # This option is not implemented, yet.
+      # When a exechost should be uninstalled, the running jobs will be rescheduled
+      RESCHEDULE_JOBS="wait"
 
-# Remove this execution hosts in automatic mode
-EXEC_HOST_LIST_RM="host1 host2 host3 host4"
+      # Enter a one of the three distributed scheduler tuning configuration sets
+      # (1=normal, 2=high, 3=max)
+      SCHEDD_CONF="1"
 
+      # The name of the shadow host. This host must have read/write permission
+      # to the qmaster spool directory
+      # If you want to setup a shadow host, you must enter the servername
+      # (mandatory for shadowhost installation)
+      SHADOW_HOST="hostname"
+
+      # Remove this execution hosts in automatic mode
+      # (mandatory for unistallation of execution hosts)
+      EXEC_HOST_LIST_RM="host1 host2 host3 host4"
+
+      # This option is used for startup script removing. 
+      # If true, all rc startup scripts will be removed during
+      # automatic deinstallation. If false, the scripts won't
+      # be touched.
+      # (mandatory for unistallation of execution/qmaster hosts)
+      REMOVE_RC="false"
 
 
    After writing a valid configuration file you can start the installation

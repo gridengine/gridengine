@@ -1,3 +1,10 @@
+MD-2005-04-19-0: Enhancm.:  - Windows enhancement
+                            - testsuite (windows enhancement)
+                            - autoinstall error message enhancement 
+                            - clean up
+                            - autoinstall readme
+                 Review:    RD
+
 RD-2005-04-19:1: Bugfix:    qconf -purge segfault on tru64
                  Bugtraq:   6252522
                  Issue:     1548

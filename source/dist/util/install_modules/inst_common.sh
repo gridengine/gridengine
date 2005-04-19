@@ -2067,19 +2067,19 @@ CheckServiceAndPorts()
       case $SGE_ARCH in
 
        win*)
-          `cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
+          cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1
           ret=$? 
           if [ "$ret" = 1 ]; then
-             `ypcat.exe services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
+             ypcat.exe services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1
              ret=$?
           fi
        ;;
 
        lx*)
-          `cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
+          cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1
           ret=$? 
           if [ "$ret" = 1 ]; then
-             `ypcat services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1`
+             ypcat services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1
              ret=$?
           fi
        ;;
@@ -2094,19 +2094,19 @@ CheckServiceAndPorts()
       case $SGE_ARCH in
 
        win*)
-          `cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1`
+          cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1
           ret=$? 
           if [ "$res" = 1 ]; then
-             `ypcat.exe services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1`
+             ypcat.exe services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
              ret=$?
           fi
        ;;
 
        lx*)
-          `cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1`
+          cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1
           ret=$? 
           if [ "$res" = 1 ]; then
-             `ypcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1`
+             pcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
              ret=$?
           fi
        ;;
@@ -2118,5 +2118,4 @@ CheckServiceAndPorts()
 
       esac
    fi
-
 }

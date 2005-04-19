@@ -76,6 +76,7 @@ GetCell()
        $INFOTEXT -log "A installation may cause, that data can be lost!"
        $INFOTEXT -log "Please, check this directory and remove it, or use any other cell name"
        $INFOTEXT -log "Exiting installation now!"
+       MoveLog
        exit 1
     fi 
 
@@ -227,12 +228,22 @@ SetPermissions()
       $CLEAR
       return 0
    else
-      if [ $AUTO = "true" -a $SET_FILE_PERMS = "true" ]; then
+      if [ "$AUTO" = "true" -a "$SET_FILE_PERMS" = "true" ]; then
          :
       else
-         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                   "Did you install this version with >pkgadd< or did you already\n" \
-                   "verify and set the file permissions of your distribution (y/n) [y] >> "
+         if [ "$WINDOWS_SUPPORT" = true ]; then
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+                      "Did you install this version with >pkgadd< or did you already\n" \
+                      "verify and set the file permissions of your distribution (enter: y)\n\n" \
+                      "In some cases, eg: the binaries are stored on a NTFS or on any other\n" \
+                      "filesystem, which provides additional file permissions, the UNIX file\n" \
+                      "permissions can be wrong. In this case we would advise to verfiy and\n" \
+                      "to set the file permissions (enter: n) (y/n) [n] >> "
+         else
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                      "Did you install this version with >pkgadd< or did you already\n" \
+                      "verify and set the file permissions of your distribution (y/n) [y] >> "
+         fi
          if [ $? = 0 ]; then
             $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "
             $CLEAR
@@ -1041,19 +1052,17 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ $CSP = false ]; then
-      return
-   fi
+   if [ "$CSP" = true -o "$WINDOWS_SUPPORT" = true ]; then
+      # Initialize CA, make directories and get DN info
+      #
+      util/sgeCA/sge_ca -init -days 365
 
-   # Initialize CA, make directories and get DN info
-   #
-   util/sgeCA/sge_ca -init -days 365
-
-   if [ $? != 0 ]; then
-      CAErrUsage
+      if [ $? != 0 ]; then
+         CAErrUsage
+      fi
+      $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
+      $CLEAR
    fi
-   $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
-   $CLEAR
 }
 
 
@@ -1690,6 +1699,8 @@ SetScheddConfig()
          is_selected="High"
       elif [ $SCHEDD_CONF = "3" ]; then
          is_selected="Max"
+      else
+         is_selected="Normal"
       fi
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nWe're configuring the scheduler with >%s< settings!\n Do you agree? (y/n) [y] >> " $is_selected
@@ -1730,4 +1741,33 @@ GiveBerkelyHints()
             "It must be added to the crontab of the user (%s), who runs the\n" \
             "berkeley_db_svc on the server host. \n\n" \
             "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" $ADMINUSER
+}
+
+
+WindowsSupport()
+{
+   $CLEAR
+   $INFOTEXT -u "Windows Execution Host Support"
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "\nAre you going to install Windows Execution Hosts? (y/n) [n] >> "
+
+   if [ $? = 0 ]; then
+      WINDOWS_SUPPORT=true
+   fi
+}
+
+
+AddWindowsAdmin()
+{
+   if [ "$WINDOWS_SUPPORT" = "true" ]; then
+      $INFOTEXT -u "Windows Administrator Name"
+      $INFOTEXT "\nFor a later execution host installation it is recommended to add the\n" \
+                "Windows Administrator name to the SGE manager list\n"
+      $INFOTEXT -n "Please, enter the Windows Administrator name [Default: %s] >> " $WIN_ADMIN_NAME
+
+      WIN_ADMIN_NAME=`Enter $WIN_ADMIN_NAME`
+
+      $SGE_BIN/qconf -am $WIN_ADMIN_NAME
+      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+      $CLEAR
+   fi
 }

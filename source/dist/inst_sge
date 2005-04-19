@@ -95,6 +95,9 @@ CONFIG_FILE="undef"
 
 SGE_NOMSG="undef"
 
+WINDOWS_SUPPORT=false
+WIN_ADMIN_NAME=Administrator
+
 BasicSettings
 SetUpInfoText
 CheckBinaries
@@ -303,10 +306,10 @@ if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
       GiveHints
 fi
 
-if [ $BERKELEY = "install" ]; then
-
+if [ "$BERKELEY" = "install" ]; then
+   
    if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
-      BasicSettings
+      #BasicSettings
       CheckWhoInstallsSGE
       ProcessSGERoot
       GetCell
@@ -319,7 +322,7 @@ if [ $BERKELEY = "install" ]; then
    else
       $INFOTEXT -log "remote berkeley rpc server installation on host %s" $DB_SPOOLING_SERVER
       echo "cd $SGE_ROOT && ./inst_sge -db -auto $FILE -noremote" | $SHELL_NAME $DB_SPOOLING_SERVER /bin/sh &
-   wait 5
+      sleep 5
    fi
 
    BERKELEY="undef"
@@ -340,6 +343,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  GetCell
  GetQmasterSpoolDir $euid
  SetCellDependentVariables
+ WindowsSupport
  SetPermissions
  SelectHostNameResolving
  SetProductMode
@@ -360,6 +364,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  InitCA
  AddSGEStartUpScript $euid master
  StartQmaster
+ AddWindowsAdmin
  AddHosts
  SetScheddConfig
  GiveHints

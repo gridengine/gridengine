@@ -280,7 +280,7 @@ proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeo
          foreach line [ string trim [split $expect_out(0,string) "\n"]] {
             if {[string length [string trim $line]] > 0} {
                #puts $CHECK_OUTPUT "processing line: $line"
-               switch -glob $line {
+               switch -glob -- $line {
                   "starting with method *" {
                      incr started
                      puts $CHECK_OUTPUT "usage script started"

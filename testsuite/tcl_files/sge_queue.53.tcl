@@ -31,7 +31,8 @@
 #___INFO__MARK_END__
 
 proc get_queue_instance {queue host} {
-   return "${queue}_${host}"
+   set resolved_host [resolve_host $host]
+   return "${queue}_${resolved_host}"
 }
 
 #****** sge_procedures.53/queue/vdep_set_queue_defaults() **********************

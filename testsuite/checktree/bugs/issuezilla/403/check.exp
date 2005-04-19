@@ -101,16 +101,14 @@ proc issue_403_check {} {
    }
 
    if { $ts_config(gridengine_version) == 53 } {
-      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_PRIOSET_SSUI] "$CHECK_USER" "$the_hostname" "$job_id" "$priority"]
+      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_PRIOSET_SSUI] $CHECK_USER [resolve_host $the_hostname] $job_id $priority]
    } else {
-      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_PRIOSET_SSUU] "$CHECK_USER" "$the_hostname" "$job_id" "$priority"]
+      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_PRIOSET_SSUU] $CHECK_USER [resolve_host $the_hostname] $job_id $priority]
    }
    set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $p_option $job_id" } qalteroutput ]
-
-   if { ( [ string compare $qalterresult $EXPECTED_MESSAGE ] == 0 ) } {
+   if { ( [ string compare $qalterresult $EXPECTED_MESSAGE ] != 0 ) } {
       add_proc_error "issue_314_check" "-1" \
-                     "Success message of qalter -p <neg> priority shows wrong msg."
-      return
+                     "Success message of qalter -p <neg> priority shows wrong msg:\nExpected: $EXPECTED_MESSAGE\nbut got:  $qalteroutput"
    }
 
    # delete the submitted job

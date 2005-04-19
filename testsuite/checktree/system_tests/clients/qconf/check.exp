@@ -912,7 +912,7 @@ proc qconf_de_check {} {
    set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
    puts $CHECK_OUTPUT $result
    
-   set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $ts_config(master_host) $execd "execution host"]
+   set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host)] $execd "execution host"]
 
    if { [ string compare $result "$EXEC_HOST_REMOVED\n" ] != 0 } {
       add_proc_error "qconf_de_check" "-1" "could not delete live execd: $result"

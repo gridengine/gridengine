@@ -1379,26 +1379,34 @@ proc resolve_build_arch { host } {
 #     ???/???
 #*******************************
 proc resolve_host { name { long 0 } } {
+   global ts_config
+   global CHECK_OUTPUT
+   global resolve_host_cache
 
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER
+   if {[info exists resolve_host_cache($name)]} {
+      return $resolve_host_cache($name)
+   }
 
-  set remote_arch [ resolve_arch $name ]
+   set remote_arch [ resolve_arch $ts_config(master_host) ]
 
-  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" prg_exit_state 60 0 "" 0 ]
-  set result [ lindex $result 0 ]  ;# removing /r /n
+   set result [ start_remote_prog $ts_config(master_host) "ts_def_con_translate" "$ts_config(product_root)/utilbin/$remote_arch/gethostbyname" "-aname $name" prg_exit_state 60 0 "" 0 ]
 
   if { $prg_exit_state != 0 } {
-     puts $CHECK_OUTPUT "proc resolve_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
+     puts $CHECK_OUTPUT "proc resolve_host - gethostbyname error or file \"$ts_config(product_root)/utilbin/$remote_arch/gethostbyname\" not found: \n$result"
      return "unknown"
   }
 
-  set newname $result
+  set newname [string trim $result]
   if { $long == 0 } {
-     set result [split $result "."]
-     set newname [lindex $result 0]
+     set split_name [split $newname "."]
+     set newname [lindex $split_name 0]
   }
-  puts $CHECK_OUTPUT "\"$name\" resolved to \"$newname\""
+
+  puts $CHECK_OUTPUT "resolve_host: \"$name\" resolved to \"$newname\""
+
+  # cache result
+  set resolve_host_cache($name) $newname
+
   return $newname
 }
 

@@ -242,9 +242,14 @@ proc job_environment_amount {} {
    lappend known_variables "SGE_O_MAIL"
    lappend known_variables "SGE_O_PATH"
    lappend known_variables "SGE_O_SHELL"
-   if { [ info exists env(TZ)] } {
-      lappend known_variables "SGE_O_TZ"
-   }
+
+   # JG: TZ is only set by N1GE, if it is available in the 
+   # sge_execd's environment.
+   # So if we want to check for existence of SGE_O_TZ, we would have 
+   # to check first, if TZ is set on the exec host (root shell).
+   #if { [ info exists env(TZ)] } {
+   #   lappend known_variables "SGE_O_TZ"
+   #}
    lappend known_variables "SGE_O_WORKDIR"
    lappend known_variables "ARC"
    lappend known_variables "SGE_CKPT_ENV"
@@ -271,9 +276,6 @@ proc job_environment_amount {} {
    lappend known_variables "SHELL"
    lappend known_variables "TMPDIR"
    lappend known_variables "TMP"
-   if { [ info exists env(TZ)] } {
-      lappend known_variables "TZ"
-   }
    lappend known_variables "USER"
 
    puts $CHECK_OUTPUT "checking number of environment variables ..."

@@ -1,3 +1,8 @@
+JG-2005-04-19-0: Testsuite: Fixed testsuite for cluster with hostaliasing.
+                            Fixed test bugs/issuezilla/403 (now correctly 
+                            detects reopened issue 403).
+                            Cleanup qsub test.
+
 CR-2005-04-19-0: Testsuite: o fixed cleanup function for issue test 1096 when
                               running in CSP mode
                             o Enhancem.: Added new function: copy_certificates

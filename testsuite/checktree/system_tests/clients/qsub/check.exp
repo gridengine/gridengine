@@ -116,7 +116,6 @@ lappend check_functions "check_option_@"
 lappend check_functions "check_huge_script"
 lappend check_functions "check_qhold_jobname"
 
-
 # test specific globals:
 global job_output_dir
 global actual_host

@@ -87,103 +87,16 @@ proc install_execd {} {
          puts $CHECK_OUTPUT $result
       }
       if { $ts_config(product_feature) == "csp" } {
-            set feature_install_options "-csp"
-            set my_csp_host_list $ts_config(execd_nodes)
-            foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
-              lappend my_csp_host_list $elem
-            }
-            foreach exec_host $my_csp_host_list {
+         set feature_install_options "-csp"
+         set my_csp_host_list $ts_config(execd_nodes)
+         foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
+           lappend my_csp_host_list $elem
+         }
+         foreach exec_host $my_csp_host_list {
             if { $exec_host == $CHECK_CORE_MASTER } {
                continue;
             }
-            set remote_arch [resolve_arch $exec_host]    
-
-            puts $CHECK_OUTPUT "installing CA keys"
-            puts $CHECK_OUTPUT "=================="
-            puts $CHECK_OUTPUT "host:         $exec_host"
-            puts $CHECK_OUTPUT "architecture: $remote_arch"
-            puts $CHECK_OUTPUT "port:         $CHECK_COMMD_PORT"
-            puts $CHECK_OUTPUT "source:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $CHECK_CORE_MASTER"
-            puts $CHECK_OUTPUT "target:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $exec_host"
-
-            if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
-                puts $CHECK_OUTPUT "we have root access, fine !"
-                set CA_ROOT_DIR "/var/sgeCA"
-                set TAR_FILE "${CA_ROOT_DIR}/port${CHECK_COMMD_PORT}.tar"
-
-                puts $CHECK_OUTPUT "removing existing tar file \"$TAR_FILE\" ..."
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$TAR_FILE" ]
-                puts $CHECK_OUTPUT $result
-
-                puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$TAR_FILE\""
-                set tar_bin [get_binary_path $CHECK_CORE_MASTER "tar"]
-                set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf $TAR_FILE ./port${CHECK_COMMD_PORT}/*"
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$remote_command_param" ]
-                puts $CHECK_OUTPUT $result
-
-                if { $prg_exit_state != 0 } {
-                    add_proc_error "install_execd" -2 "could not tar Certificate Authority (CA) directory into \"$TAR_FILE\""
-                } else {
-                    puts $CHECK_OUTPUT "copy tar file \"$TAR_FILE\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cp" "$TAR_FILE $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" prg_exit_state 300 ]
-                    puts $CHECK_OUTPUT $result
-
-                     # tar file will be on nfs - wait for it to be visible
-                     wait_for_remote_file $exec_host $CHECK_USER "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar"
-                    
-                    puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$TAR_FILE\" on host $exec_host ..."
-                    set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $TAR_FILE" prg_exit_state 300 ]
-                    puts $CHECK_OUTPUT $result
-
-                    set tar_bin [get_binary_path $exec_host "tar"]
-
-                    puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
-                    start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR" 
-                    if { $prg_exit_state != 0 } { 
-                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
-                    }   
-                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" prg_exit_state 300 ]
-                    puts $CHECK_OUTPUT $result
-                    if { $prg_exit_state != 0 } {
-                       add_proc_error "install_execd" -2 "could not untar \"$TAR_FILE\" on host $exec_host;\ntar-bin:$tar_bin"
-                    } 
-
-                    puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" on host $exec_host ..."
-                    set result [ start_remote_prog "$exec_host" "root" "rm" "$TAR_FILE" ]
-                    puts $CHECK_OUTPUT $result
-
-                    puts $CHECK_OUTPUT "removing tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-                 }
-                
-                puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" ..."
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$TAR_FILE" ]
-                puts $CHECK_OUTPUT $result
-                set remote_host_arch [resolve_arch $exec_host]
-
-                set my_timeout [timestamp]
-                incr my_timeout 600
-                while { 1 } {
-                   set result [start_remote_prog $exec_host $CHECK_USER "$ts_config(product_root)/bin/$remote_host_arch/qstat" "-f"]
-                   puts $CHECK_OUTPUT $result
-                   if { $prg_exit_state == 0 } {
-                      puts $CHECK_OUTPUT "qstat -f works, fine"
-                      break
-                   }
-                   puts $CHECK_OUTPUT "waiting for qstat -f to work ..."
-                   puts $CHECK_OUTPUT "please check hosts for synchron clock times"
-                   sleep 15
-                   if { [timestamp] > $my_timeout } {
-                      add_proc_error "install_execd" -2 "exec host: $exec_host timeout while waiting for qstat to work"
-                   }
-                }
-            } else {
-               puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
-               puts $CHECK_OUTPUT "installation error"
-               add_proc_error "install_execd" -2 "exec host: $exec_host"
-               continue
-            }
+            copy_certificates $exec_host
          }
       }
    }

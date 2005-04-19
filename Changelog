@@ -1,3 +1,8 @@
+CR-2005-04-19-0: Testsuite: o fixed cleanup function for issue test 1096 when
+                              running in CSP mode
+                            o Enhancem.: Added new function: copy_certificates
+                              (copy CSP (SSL) certificates to a host)
+
 CR-2005-04-18-4: Testsuite: fixed test system_tests/commlib_issues when module
                             test binary can't malloc() enough memory
 

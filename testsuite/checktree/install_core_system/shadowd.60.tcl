@@ -75,88 +75,15 @@ proc install_shadowd {} {
 
    if {! $check_use_installed_system} {
       set feature_install_options ""
-      # JG: TODO: this code is duplicated in execd.??.tcl,
-      # create a function copy_certificates
+
       if { $ts_config(product_feature) == "csp" } {
-            set feature_install_options "-csp"
-            set my_csp_host_list $CHECK_CORE_SHADOWD
-            foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
-              lappend my_csp_host_list $elem
-            }
-            foreach shadow_host $my_csp_host_list {
+         set feature_install_options "-csp"
+         set my_csp_host_list $CHECK_CORE_SHADOWD
+         foreach shadow_host $my_csp_host_list {
             if { $shadow_host == $CHECK_CORE_MASTER } {
                continue;
             }
-            set remote_arch [resolve_arch $shadow_host]    
-
-            puts $CHECK_OUTPUT "installing CA keys"
-            puts $CHECK_OUTPUT "=================="
-            puts $CHECK_OUTPUT "host:         $shadow_host"
-            puts $CHECK_OUTPUT "architecture: $remote_arch"
-            puts $CHECK_OUTPUT "port:         $CHECK_COMMD_PORT"
-            puts $CHECK_OUTPUT "source:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $CHECK_CORE_MASTER"
-            puts $CHECK_OUTPUT "target:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $shadow_host"
-
-            if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
-                puts $CHECK_OUTPUT "we have root access, fine !"
-                set CA_ROOT_DIR "/var/sgeCA"
-                set TAR_FILE "${CA_ROOT_DIR}/port${CHECK_COMMD_PORT}.tar"
-
-                puts $CHECK_OUTPUT "removing existing tar file \"$TAR_FILE\" ..."
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$TAR_FILE" ]
-                puts $CHECK_OUTPUT $result
-
-                puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$TAR_FILE\""
-                set tar_bin [get_binary_path $CHECK_CORE_MASTER "tar"]
-                set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf $TAR_FILE ./port${CHECK_COMMD_PORT}/*"
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$remote_command_param" ]
-                puts $CHECK_OUTPUT $result
-
-                if { $prg_exit_state != 0 } {
-                    add_proc_error "inst_sge -sm" -2 "could not tar Certificate Authority (CA) directory into \"$TAR_FILE\""
-                } else {
-                    puts $CHECK_OUTPUT "copy tar file \"$TAR_FILE\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cp" "$TAR_FILE $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-                    
-                     # tar file will be on nfs - wait for it to be visible
-                     wait_for_remote_file $shadow_host $CHECK_USER "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar"
-                    
-                    puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$TAR_FILE\" on host $shadow_host ..."
-                    set result [ start_remote_prog "$shadow_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $TAR_FILE" ]
-                    puts $CHECK_OUTPUT $result
-
-                    set tar_bin [get_binary_path $shadow_host "tar"]
-
-                    puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
-                    start_remote_prog "$shadow_host" "root" "cd" "$CA_ROOT_DIR" 
-                    if { $prg_exit_state != 0 } { 
-                       set result [ start_remote_prog "$shadow_host" "root" "mkdir" "$CA_ROOT_DIR" ]
-                    }   
-                    set result [ start_remote_prog "$shadow_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" ]
-                    puts $CHECK_OUTPUT $result
-                    if { $prg_exit_state != 0 } {
-                       add_proc_error "inst_sge -sm" -2 "could not untar \"$TAR_FILE\" on host $shadow_host;\ntar-bin:$tar_bin"
-                    } 
-
-                    puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" on host $shadow_host ..."
-                    set result [ start_remote_prog "$shadow_host" "root" "rm" "$TAR_FILE" ]
-                    puts $CHECK_OUTPUT $result
-
-                    puts $CHECK_OUTPUT "removing tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-                 }
-                
-                puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" ..."
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$TAR_FILE" ]
-                puts $CHECK_OUTPUT $result
-            } else {
-               puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
-               puts $CHECK_OUTPUT "installation error"
-               add_proc_error "inst_sge -sm" -2 "shadow host: $shadow_host"
-               continue
-            }
+            copy_certificates $shadow_host
          }
       }
    }

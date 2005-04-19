@@ -6342,6 +6342,9 @@ proc shutdown_core_system {} {
    set do_ps_kill 0
    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" ]
 
+   # let qmaster time to go down before doing a ps to check whether he dies or not
+   after 3000
+
    puts $CHECK_OUTPUT "qconf -km returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
       puts $CHECK_OUTPUT $result

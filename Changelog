@@ -6,7 +6,7 @@ MD-2005-04-20-1: Bugfix:    changed README
 MD-2005-04-20-0: Bugfix:    - inst_sge -bup with rpc server destroy database
                             - README Autoinst, README Upgrade
                  Bugtraq:   6257389
-                 Issue:     
+                 Issue:     1576 
                  Changed:   inst_common.sh
                  Review:    RD
 

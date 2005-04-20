@@ -1305,6 +1305,7 @@ BackupConfig()
    $INFOTEXT -log "SGE_CELL: %s" $SGE_CELL
 
    BackupCheckBootStrapFile
+   CheckArchBins
    SetBackupDir
 
 
@@ -1371,6 +1372,7 @@ RestoreConfig()
 
       cd $SGE_ROOT
       RestoreCheckBootStrapFile "/tmp/bup_tmp_$DATE/"
+      CheckArchBins
 
       if [ "$spooling_method" = "berkeleydb" ]; then
          if [ $is_rpc = 0 ]; then
@@ -1387,8 +1389,8 @@ RestoreConfig()
          else
             ExecuteAsAdmin $MKDIR $db_home
          fi
-         DB_LOAD="$SGE_UTILBIN/db_load -f" 
-         ExecuteAsAdmin $DB_LOAD /tmp/bup_tmp_$DATE/*.dump -h $db_home sge
+
+         SwitchArchRst /tmp/bup_tmp_$DATE/
 
             if [ -d $SGE_ROOT/$SGE_CELL ]; then
                if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
@@ -1492,6 +1494,7 @@ RestoreConfig()
       done
 
       RestoreCheckBootStrapFile $bup_file
+      CheckArchBins
   
       if [ "$spooling_method" = "berkeleydb" ]; then 
          if [ "$is_rpc" = 0 ]; then
@@ -1509,8 +1512,7 @@ RestoreConfig()
             ExecuteAsAdmin $MKDIR $db_home
          fi
 
-         DB_LOAD="$SGE_UTILBIN/db_load -f" 
-         ExecuteAsAdmin $DB_LOAD $bup_file/*.dump -h $db_home sge
+         SwitchArchRst $bup_file
 
             if [ -d $SGE_ROOT/$SGE_CELL ]; then
                if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
@@ -1598,6 +1600,81 @@ RestoreConfig()
       $INFOTEXT -n "\nYour configuration has been restored\n"
    fi
 }
+
+
+
+SwitchArchBup()
+{
+      if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
+         OLD_LD_PATH=$LD_LIBRARY_PATH
+         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
+         export LD_LIBRARY_PATH
+         DUMPIT="$SGE_ROOT/utilbin/sol-sparc/db_dump -f"
+         ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
+         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
+         export LD_LIBRARY_PATH
+      else
+         DUMPIT="$SGE_UTILBIN/db_dump -f"
+         ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
+      fi
+
+}
+
+
+
+SwitchArchRst()
+{
+   dump_dir=$1
+
+         if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
+            OLD_LD_PATH=$LD_LIBRARY_PATH
+            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
+            export LD_LIBRARY_PATH
+            DB_LOAD="$SGE_ROOT/utilbin/sol-sparc/db_load -f"
+            ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
+            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
+            export LD_LIBRARY_PATH
+         else
+            DB_LOAD="$SGE_UTILBIN/db_load -f" 
+            ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
+         fi
+}
+
+
+
+CheckArchBins()
+{
+   if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
+      DB_BIN="$SGE_ROOT/utilbin/sol-sparc/db_load $SGE_ROOT/utilbin/sol-sparc/db_dump"
+      DB_LIB="$SGE_ROOT/lib/sol-sparc/libdb-4.2.so"
+      for db in $DB_BIN; do 
+         if [ -f $db ]; then
+            :
+         else
+            $INFOTEXT "32 bit version of db_load or db_dump not found. These binaries needs \n" \
+                      "to be installed to perform a backup/restore of your BDB RPC Server. \n" \
+                      "Exiting backup/restore now"
+            $INFOTEXT -log "32 bit version of db_load or db_dump not found. These binaries needs \n" \
+                           "to be installed to perform a backup/restore of your BDB RPC Server. \n" \
+                           "Exiting backup/restore now"
+
+            exit 1
+         fi
+      done
+      if [ -f $DB_LIB ]; then
+         :
+      else
+            $INFOTEXT "32 bit version of lib_db not found. These library needs \n" \
+                      "to be installed to perform a backup/restore of your BDB RPC Server. \n" \
+                      "Exiting backup/restore now"
+            $INFOTEXT -log "32 bit version of lib_db not found. These library needs \n" \
+                           "to be installed to perform a backup/restore of your BDB RPC Server. \n" \
+                           "Exiting backup/restore now"
+            exit 1
+      fi
+   fi
+}
+
 
 
 RemoveRcScript()
@@ -1883,8 +1960,8 @@ DoBackup()
    CPFR="cp -fR"
 
    if [ "$spooling_method" = "berkeleydb" ]; then
-      DUMPIT="$SGE_UTILBIN/db_dump -f"
-      ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
+
+      SwitchArchBup
 
       for f in $BUP_BDB_COMMON_FILE_LIST_TMP; do
          if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then

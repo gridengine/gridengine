@@ -31,7 +31,7 @@ Content:
    automatic). For automatic installation you have to configure a
    configuration file.
 
-   A template can be found in $SGE_ROOT/$SGE_CELL/util/install_modules. (For
+   A template can be found in $SGE_ROOT/util/install_modules. (For
    details see 3.1 Automatic Installation) If you want to use automatic
    installation, it is mandatory, that root has rsh or ssh access to the
    hosts, which should be installed, because during the installation, the
@@ -53,6 +53,12 @@ Content:
    If you are going to setup a separated Berkeley DB Spooling Server, please
    install the Server on the preferred host with ./inst.sge -db and than
    start the automatic installation.
+   In update 4 you can also install the Berkeley DB Spooling Server with auto-
+   installation. Starting the auto install with 
+   ./inst_sge -m -x -auto /path/to/config checks the SPOOLING_SERVER entry
+   within the config file and starts the Berkeley DB installation on Server
+   host. This requires a passwordless rsh/ssh connection for root, the 
+   BDB Server host.
 
 
 3. Automatic Installation

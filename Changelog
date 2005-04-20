@@ -1,3 +1,10 @@
+MD-2005-04-20-0: Bugfix:    - inst_sge -bup with rpc server destroy database
+                            - README Autoinst, README Upgrade
+                 Bugtraq:   6257389
+                 Issue:     
+                 Changed:   inst_common.sh
+                 Review:    RD
+
 MD-2005-04-19-0: Enhancm.:  - Windows enhancement
                             - testsuite (windows enhancement)
                             - autoinstall error message enhancement 

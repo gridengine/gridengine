@@ -179,14 +179,14 @@ Content
 
    18. Check your complexes 
 
-      Both the structure of complexes and the rules for configuring complexes have
-      changed. You can use qconf -sc to list your complexes.  Review the log file
-      that was generated during the master host upgrade, in qmaster spool
-      directory.  If necessary, you can use qconf -mc to reconfigure your
-      complexes.
+      Both the structure of complexes and the rules for configuring complexes 
+      have changed. You can use qconf -sc to list your complexes.  
+      Review the log file that was generated during the master host upgrade,
+      in qmaster spool directory.  
+      If necessary, you can use qconf -mc to reconfigure your complexes.
 
    19. Reconfigure your queues 
 
       During the upgrade process, a single default cluster queue is created. 
-      Within this queue you will find all of your installed execution hosts. It is
-      recommended that you reconfigure your queues.
+      Within this queue you will find all of your installed execution hosts. 
+      It is recommended that you reconfigure your queues.

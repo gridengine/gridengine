@@ -1,3 +1,6 @@
+RD-2005-04-20-0: CVS        Created V60u4rc1_TAG
+---------------------------------------------------------
+
 MD-2005-04-20-1: Bugfix:    changed README
 
 MD-2005-04-20-0: Bugfix:    - inst_sge -bup with rpc server destroy database

@@ -55,7 +55,7 @@ Content:
    start the automatic installation.
    In update 4 you can also install the Berkeley DB Spooling Server with auto-
    installation. Starting the auto install with 
-   ./inst_sge -m -x -auto /path/to/config checks the SPOOLING_SERVER entry
+   ./inst_sge -db -m -x -auto /path/to/config checks the SPOOLING_SERVER entry
    within the config file and starts the Berkeley DB installation on Server
    host. This requires a passwordless rsh/ssh connection for root, the 
    BDB Server host.

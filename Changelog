@@ -1,3 +1,6 @@
+HP-2005-04-21-0: Bugfix:    Created SGE_STAT Macro for Interix
+                 Changed:   libs/uti/sge_unistd.h
+
 RD-2005-04-21-0: Testsuite: - added new test: functional/backup_restore/
                               creates backup, removes cell directory 
                               and restores from backup.

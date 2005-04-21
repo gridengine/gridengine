@@ -1,3 +1,20 @@
+CR-2005-04-21-0: Testsuite: - added new test: functional/consumable_resources
+                            - handle_vi_edit():
+                                o function did not export env() to 
+                                  open_remote_spawn_process()
+                                o added TODO comment
+                                o fixed some missleading output
+                            - set/get_complex():
+                                o moved old (unverified) code to
+                                  sge_procedures.53.tcl
+                                o modified functions for 60 version
+                            - get_qstat_j_info():
+                                o schedd info string did not contain job
+                                  resource schedd message because this message
+                                  contains a ":" which evoke a parse error
+                 Issue:     1212 (not closed because there are still some
+                                  enhancments to implement)
+
 RD-2005-04-20-0: CVS        Created V60u4rc1_TAG
 ---------------------------------------------------------
 

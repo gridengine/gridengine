@@ -1211,56 +1211,6 @@ proc get_checkpointobj { ckpt_obj change_array } {
   }
 }
 
-#****** sge_procedures/get_complex() *******************************************
-#  NAME
-#     get_complex() -- get complex configuration settings
-#
-#  SYNOPSIS
-#     get_complex { change_array complex_list } 
-#
-#  FUNCTION
-#     Get the complex configuration for a specific complex list
-#
-#  INPUTS
-#     change_array - name of an array variable that will get set by 
-#                    get_config
-#     complex_list - name of a complex list
-#
-#  RESULT
-#     The change_array variable is build as follows:
-#
-#                      
-#     set change_array(mem_free) "mf MEMORY 0 <= YES NO 0"   
-#   
-#     index (mem_free) is the complex name
-#     value is "shortcut type value relop requestable consumable default"
-#    
-#*******************************************************************************
-proc get_complex { change_array complex_list } {
-  global ts_config
-  global CHECK_ARCH CHECK_OUTPUT
-  upvar $change_array chgar
-
-  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sc" "$complex_list"} result ]
-  if { $catch_result != 0 } {
-     add_proc_error "get_complex" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
-     return
-  } 
-
-  # split each line as listelement
-  set help [split $result "\n"]
-  foreach elem $help {
-     set id [lindex $elem 0]
-     if { [ string first "#" $id ]  != 0 } {
-        set value [lrange $elem 1 end]
-        if { [string compare $value ""] != 0 } {
-           set chgar($id) $value
-        }
-     }
-  }
-}
-
-
 
 #                                                             max. column:     |
 #****** sge_procedures/set_config() ******
@@ -1402,84 +1352,6 @@ proc compare_complex {a b} {
    return 0
 }
 
-#****** sge_procedures/set_complex() *******************************************
-#  NAME
-#     set_complex() -- change complex configuration for a complex list
-#
-#  SYNOPSIS
-#     set_complex { change_array complex_list } 
-#
-#  FUNCTION
-#     Set the complex configuration for a specific complex list
-#
-#  INPUTS
-#     change_array - name of an array variable that contains the new complex 
-#                    definition
-#     complex_list - name of the complex list to change
-#
-#  RESULT
-#     The change_array variable is build as follows:
-#
-#     set change_array(mem_free) "mf MEMORY 0 <= YES NO 0"   
-#   
-#     index (mem_free) is the complex name
-#     value is "shortcut type value relop requestable consumable default"
-#
-#  EXAMPLE
-#     set mycomplex(load_long) "ll DOUBLE 55.55 >= NO NO 0"
-#     set_complex mycomplex host
-#
-#*******************************************************************************
-proc set_complex { change_array complex_list { create 0 } } {
-  global ts_config
-  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
-  global CHECK_CORE_MASTER
-  upvar $change_array chgar
-  set values [array names chgar]
-
-  if { $create == 0 } {
-     get_complex old_values $complex_list
-  }
-
-  set vi_commands ""
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal $chgar($elem)
-     if {[info exists old_values($elem)]} {
-        # if old and new config have the same value, create no vi command,
-        # if they differ, add vi command to ...
-        if { [compare_complex $old_values($elem) $newVal] != 0 } {
-           if { $newVal == "" } {
-              # ... delete config entry (replace by comment)
-              lappend vi_commands ":%s/^$elem .*$/#/\n"
-           } else {
-              # ... change config entry
-              set newVal1 [split $newVal {/}]
-              set newVal [join $newVal1 {\/}]
-              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-           }
-        }
-     } else {
-        # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
-     }
-  } 
-  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
-  set MODIFIED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_MODIFIEDIN]]
-  set ADDED       [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_ADDEDTO]]
-
-
-  if { $create == 0 } {
-     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
-  } else {
-     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -ac $complex_list" $vi_commands $ADDED $EDIT_FAILED $MODIFIED ]
-  }
-  if { $result != 0  } {
-     add_proc_error "set_complex" -1 "could not modify complex $complex_list ($result)"
-  }
-  return $result
-}
 
 
 
@@ -3569,7 +3441,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
           }
           -i default {
              if { [info exists expect_out(buffer)] } {
-                puts $CHECK_OUTPUT $expect_out(buffer)
+#                puts $CHECK_OUTPUT $expect_out(buffer)
                 add_proc_error "delete_job" -1 "expect default switch\noutput was:\n>$expect_out(buffer)<"
              }
              set result -4 
@@ -4601,7 +4473,7 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
             set elem [ string trim $elem]
             debug_puts "removing message id: \"$elem\""
          }
-         if { [string first ":" $elem] >= 0 } {
+         if { [string first ":" $elem] >= 0 && [string first ":" $elem] < 30 } {
             append my_result "\n$elem" 
          } else {
             append my_result ",$elem"

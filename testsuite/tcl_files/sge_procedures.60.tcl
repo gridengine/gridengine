@@ -192,6 +192,86 @@ proc unassign_queues_with_ckpt_object { ckpt_obj } {
    }
 }
 
+
+proc get_complex { change_array } {
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sc" } result ]
+  if { $catch_result != 0 } {
+     add_proc_error "get_complex" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
+     return
+  } 
+
+  # split each line as listelement
+  set help [split $result "\n"]
+  foreach elem $help {
+     set id [lindex $elem 0]
+     if { [ string first "#" $id ]  != 0 } {
+        set value [lrange $elem 1 end]
+        if { [string compare $value ""] != 0 } {
+           set chgar($id) $value
+        }
+     }
+  }
+}
+
+proc set_complex { change_array } {
+  global ts_config CHECK_USER
+  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global CHECK_CORE_MASTER
+  upvar $change_array chgar
+  set values [array names chgar]
+
+  get_complex old_values
+
+#  set names [array names old_values]
+#  foreach name $names {
+#     puts $CHECK_OUTPUT "$name = $old_values($name)"
+#  }
+
+  set vi_commands {}
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal $chgar($elem)
+     if {[info exists old_values($elem)]} {
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [compare_complex $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$/#/\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
+        }
+     } else {
+        # if the config entry didn't exist in old config: append a new line
+        lappend vi_commands "A\n$elem  $newVal"
+        lappend vi_commands [format "%c" 27]
+     }
+  }
+
+#  foreach vi_com $vi_commands {
+#     puts $CHECK_OUTPUT "\"$vi_com\""
+#  }
+
+  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
+  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mc" $vi_commands $MODIFIED $REMOVED $ADDED ]
+  if { $result != 0 && $result != -2 && $result != -3 && $result != -4 } {
+     add_proc_error "set_complex" -1 "could not modify complex: ($result)"
+  }
+  return $result
+}
+
+
 proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH

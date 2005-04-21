@@ -1,0 +1,259 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+
+# define a level initialization procedure:
+set check_init_level_procedure "init_level"
+
+# define test's name and run level descriptions
+set check_name            "backup_restore"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_highest_level   0
+set check_description(0)  "Tests the backup and restore functionality"
+
+set check_root_access_needs  "yes"
+
+# define test's dependencies
+set check_needs           "init_core_system"
+
+# setup and cleanup functions
+set check_cleanup_function "backup_restore_cleanup"
+
+# define test's procedure order
+set check_fuctions   ""
+lappend check_functions "backup_restore_setup"
+set check_highest_level       0
+
+proc init_level {} {
+   global ts_config
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+
+   return -1
+}
+
+proc backup_restore_setup {} {
+   global ts_config
+   global CHECK_OUTPUT 
+   global CHECK_USER
+   global CHECK_PRODUCT_ROOT
+   global CHECK_TESTSUITE_ROOT 
+
+   # start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/backup"
+   
+   cd "$ts_config(product_root)"
+   set prod_type_var "SGE_ROOT"
+
+   # Backup Database
+   set id [ open_remote_spawn_process "$ts_config(master_host)" "$CHECK_USER" "cd" "$$prod_type_var;./inst_sge -bup" ]
+   set sp_id [ lindex $id 1 ]
+
+   while {1} {
+      set timeout 30
+      expect {
+         flush stdout
+         flush $CHECK_OUTPUT
+         -i $sp_id "Please enter your SGE_ROOT directory." {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(product_root)"
+            send -i $sp_id "$ts_config(product_root)\n"
+            continue;
+         }
+         -i $sp_id "Please enter your SGE_CELL name.*" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(cell)"
+            send -i $sp_id "$ts_config(cell)\n"
+            continue;
+         }
+         -i $sp_id "Where do you want to save the backupfiles?" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         -i $sp_id "Shall the backup function create a compressed tarpackage with your files?" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         -i $sp_id "Please enter a filename for your backupfile.*" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         -i $sp_id "Do you want to overwrite the existing backup directory?" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending y<"
+            send -i $sp_id "y\n"
+            continue;
+         }
+         
+         # Errors
+         -i $sp_id "ommand failed*\n" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id;
+            return;
+         }
+        -i $sp_id "No such file or directory*\n" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id;
+            return;
+         }
+         -i $sp_id "error:\n" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id
+            return;
+         }
+        
+         # End of loop
+         -i $sp_id "All information is saved in*" {
+            close_spawn_process $id
+            break;
+         } 
+
+         -i $sp_id default {
+            close_spawn_process $id
+            break;
+         }
+      }
+   }
+  
+   # TODO Try to restore the database with running master (should not be possible) 
+
+   shutdown_qmaster $ts_config(master_host) [get_qmaster_spool_dir]
+
+   # remove cell directory
+   puts $CHECK_OUTPUT [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "mv" "$ts_config(product_root)/$ts_config(cell) $ts_config(product_root)/$ts_config(cell)_backup" ]
+
+   # restore from backup 
+   set id [ open_remote_spawn_process "$ts_config(master_host)" "$CHECK_USER" "cd" "$$prod_type_var;./inst_sge -rst" ]
+   set sp_id [ lindex $id 1 ]
+
+   while {1} {
+      set timeout 30
+      expect {
+         flush stdout
+         flush $CHECK_OUTPUT
+         -i $sp_id "Hit, <ENTER> to continue!" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         -i $sp_id "Please enter your SGE_ROOT directory." {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(product_root)"
+            send -i $sp_id "$ts_config(product_root)\n"
+            continue;
+         }
+         -i $sp_id "Please enter your SGE_CELL name.*" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(cell)"
+            send -i $sp_id "$ts_config(cell)\n"
+            continue;
+         }
+         -i $sp_id "Is your backupfile in tar.gz*" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         -i $sp_id "Please enter the full path and name of your backup file." {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         -i $sp_id "If this is correct hit *" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
+            send -i $sp_id "\n"
+            continue;
+         }
+         
+         # Errors
+         -i $sp_id "ommand failed*\n" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id;
+            return;
+         }
+         -i $sp_id "No such file or directory*\n" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id;
+            return;
+         }
+         -i $sp_id "error:\n" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id
+            return;
+         }
+         -i $sp_id "does not exist*" {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id
+            return;
+         }
+         
+         # End of loop
+         -i $sp_id "Your configuration has been restored" {
+            close_spawn_process $id
+            break;
+         }
+         -i $sp_id default {
+            close_spawn_process $id
+            break;
+         }
+      }
+   }
+
+   startup_qmaster 0   
+   
+   set result [ wait_for_load_from_all_queues 60 ]
+
+   if { $result == 0 } {
+       puts $CHECK_OUTPUT "removing $ts_config(product_root)/$ts_config(cell)_backup"
+       puts $CHECK_OUTPUT [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/$ts_config(cell)_backup" ]
+   }
+
+   set_error 0 "ok"
+}
+
+proc backup_restore_cleanup {} {
+   global CHECK_USER ts_config
+
+   set result [ wait_for_load_from_all_queues 60 ]
+   if { $result != 0 } {
+      shutdown_qmaster $ts_config(master_host) [get_qmaster_spool_dir]
+
+       puts $CHECK_OUTPUT [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/$ts_config(cell)" ]
+       puts $CHECK_OUTPUT [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "mv" "$ts_config(product_root)/$ts_config(cell)_backup $ts_config(product_root)/$ts_config(cell)" ]
+      startup_qmaster 0   
+
+   }
+   set_error 0 "ok"
+}

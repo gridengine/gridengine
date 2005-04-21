@@ -1,3 +1,9 @@
+RD-2005-04-21-0: Testsuite: - added new test: functional/backup_restore/
+                              creates backup, removes cell directory 
+                              and restores from backup.
+                 Changed:   Testsuite
+                 Review:    CR
+
 SG-2005-04-21-0: Bugfix:    potential qmaster sec. fault.
                  Changed:   qmaster
                  Issue:     1579

@@ -1,3 +1,7 @@
+MD-2005-04-21-0: Bugfix:    - fixed windows execd loadsensor path
+                            - README
+                 Changed:   arch_variables, inst_common.sh, README-Autoinst
+
 JG-2005-04-21-0: Bugfix:    Fixed memory leak in scheduler.
                  Changed:   sge_schedd
                  Review:    SG

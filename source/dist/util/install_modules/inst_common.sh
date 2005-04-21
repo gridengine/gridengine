@@ -900,7 +900,7 @@ PrintLocalConf()
       $ECHO "rsh_daemon             $RSH_DAEMON"
    fi
    if [ "$LOADSENSOR_COMMAND" != "undef" ]; then
-      $ECHO "load_sensor            $LOADSENSOR_COMMAND"
+      $ECHO "load_sensor            $SGE_ROOT/$LOADSENSOR_COMMAND"
    fi
 }
 

@@ -1,3 +1,10 @@
+RH-2005-04-21-0: Testsuite: - added new test: system_tests/scheduler/tickets
+                              Checks the calculation of overwrite and
+                              functional ticket, the start order and the
+                              share of jobs
+                 Changed:   Testsuite
+                 Review:    CR
+                              
 MD-2005-04-21-0: Bugfix:    - fixed windows execd loadsensor path
                             - README
                  Changed:   arch_variables, inst_common.sh, README-Autoinst

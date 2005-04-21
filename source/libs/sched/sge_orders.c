@@ -582,7 +582,8 @@ int sge_send_job_start_orders(order_t *orders) {
                             &orders->pendingOrderList, NULL, NULL, &malp, &state, false, true);
    }
 
-   malp = lFreeList(malp); 
+   malp = lFreeList(malp);
+   alp = lFreeList(alp);
 
    DEXIT;
    return true;

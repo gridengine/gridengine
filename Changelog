@@ -1,3 +1,7 @@
+JG-2005-04-21-0: Bugfix:    Fixed memory leak in scheduler.
+                 Changed:   sge_schedd
+                 Review:    SG
+
 CR-2005-04-21-0: Testsuite: - added new test: functional/consumable_resources
                             - handle_vi_edit():
                                 o function did not export env() to 

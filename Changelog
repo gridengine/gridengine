@@ -1,3 +1,7 @@
+RD-2005-04-22-0: Testsuite: - functional/backup_restore enhancement
+                            works now with classic, local and rpc spooling
+                 Review:    CR
+
 HP-2005-04-22-1: Bugfix:    Added check for network path in execd-rc-script
                  Changed:   dist/util/rctemplates/sgeexecd_template
                  Review:    MD

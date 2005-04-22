@@ -2850,7 +2850,7 @@ proc wait_for_load_from_all_queues { seconds } {
          }
     
          if { $failed == 0 } {
-            return 
+            return 0
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"

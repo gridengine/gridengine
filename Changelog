@@ -1,3 +1,7 @@
+AA-2005-04-22-0: Bugfix:    qmon cluster queue modify cancel working incorrect
+                 Bugtraq:   6260024
+                 Changed:   qmon
+
 AS-2005-04-22-1: CVS        Created V60u4_TAG
 ---------------------------------------------
 

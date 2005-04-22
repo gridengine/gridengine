@@ -726,6 +726,7 @@ static int dont_close = 0;
 */
 static tQCEntry current_entry; 
 static lListElem *current_qep = NULL;
+static char *old_href = HOSTREF_DEFAULT;
 
 /*
 ** this depends on the order of the sub dialogs in the
@@ -819,6 +820,7 @@ XtPointer cld, cad;
    ** we open the qconf dialog with the template queue displayed 
    ** the Apply ad Reset buttons are set insensitive
    */
+   old_href = HOSTREF_DEFAULT;
    if (!qname) {
       qmonQCSetData(&current_entry, "template", HOSTREF_DEFAULT );
    } else {
@@ -1597,6 +1599,7 @@ StringConst href
    if (qmon_debug) {
       lWriteElemTo(current_qep, stdout);   
    }   
+
    qmonCullToCQ(current_qep, data, href);
 
    lFreeList(alp);
@@ -2734,7 +2737,6 @@ static void qmonCQHrefSelect(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *href;
-   static char *old_href = HOSTREF_DEFAULT;
    
    DENTER(GUI_LAYER, "qmonCQHrefSelect");
 
@@ -2748,9 +2750,7 @@ static void qmonCQHrefSelect(Widget w, XtPointer cld, XtPointer cad)
    XmtDialogGetDialogValues(cq_dialog, &current_entry);
    qmonCQToCull(&current_entry, current_qep, old_href);
 
-   if (qmon_debug) {
-      DPRINTF(("Save href entry for %s\nSwitching to %s\n", old_href, href));
-   }
+   DPRINTF(("Save href entry for %s\nSwitching to %s\n", old_href, href));
 
    qmonCullToCQ(current_qep, &current_entry, href);
    XmtDialogSetDialogValues(cq_dialog, &current_entry);

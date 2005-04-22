@@ -4454,6 +4454,7 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #  INPUTS
 #     jobid               - job identifaction number
 #     {variable job_info} - name of variable array to store the output
+#     {do_replace_NA}     - 1 : if not set, don't replace NA settings
 #
 #  RESULT
 #     0, if job was not found
@@ -4504,7 +4505,7 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #     sge_procedures/get_standard_job_info()
 #     sge_procedures/get_extended_job_info()
 #*******************************
-proc get_extended_job_info {jobid {variable job_info}} {
+proc get_extended_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
   global ts_config
    global CHECK_ARCH
    upvar $variable jobinfo
@@ -4518,7 +4519,7 @@ proc get_extended_job_info {jobid {variable job_info}} {
    }
 
    if { $exit_code == 0 } {
-      parse_qstat result jobinfo $jobid $ext
+      parse_qstat result jobinfo $jobid $ext $do_replace_NA
       return 1
    }
   

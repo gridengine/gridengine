@@ -1,3 +1,12 @@
+CR-2005-04-22-0: Testsuite: fixed test: system_tests/scheduler/tickets
+                            - test did not wait till all tickets are calculated
+                              from scheduler
+                            - new optional parameter for parse_qstat() and 
+                              get_extended_job_info():
+                              do_replace_NA will show NA for not availabe CPU
+                              load instead of 0
+                 Review:    pending
+
 RD-2005-04-22-0: Testsuite: - functional/backup_restore enhancement
                             works now with classic, local and rpc spooling
                  Review:    CR

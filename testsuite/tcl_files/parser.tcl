@@ -816,6 +816,9 @@ proc transform_cpu { s_cpu } {
       scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
       set cpu  [expr $days * 86400 + $hours * 3600 + $minutes * 60 + $seconds]
    }
+   if { [info exists cpu] == 0 } {
+      return "NA"
+   }
 
    return $cpu
 }
@@ -1093,6 +1096,7 @@ proc rule_max { a b } {
 #     output  - name of the array in which to return results
 #     [jobid] - jobid for filtering a certain job
 #     [ext]   - 0: qstat command, 1: qstat -ext command
+#     [do_replace_NA] - 1: if not set, don't replace NA settings
 #
 #  RESULT
 #     The TCL array output is filled with the processed data.
@@ -1102,7 +1106,7 @@ proc rule_max { a b } {
 #
 #***************************************************************************
 #
-proc parse_qstat {input output {jobid ""} {ext 0}} {
+proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
    global ts_config
    upvar $input  in
    upvar $output out
@@ -1154,8 +1158,13 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          set   position(6)  "65 74"             ; set    names(6)    department
          set   position(7)  "76 80"             ; set    names(7)    state
          set   position(8)  "82 91"             ; set    names(8)    cpu
-         set      rules(8)  rule_sum
-         set    replace(8,) 0:00:00:00          ; set    replace(8,NA) 0:00:00:00
+         if { $do_replace_NA == 1 } {
+           set      rules(8)  rule_sum
+         }
+         set    replace(8,) 0:00:00:00
+         if { $do_replace_NA == 1 } {
+            set    replace(8,NA) 0:00:00:00 
+         }
          set  transform(8)  transform_cpu
          set  position(9)  "93 99"              ; set    names(9)    mem
          set   replace(9,) 0                    ; set    replace(9,NA) 0

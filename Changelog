@@ -1,3 +1,10 @@
+MD-2005-04-22-0: Bugfix:    - adminrun didn't switch to adminuser under
+                              windows
+                            - global execd spooldir was not created
+                              during execd-install
+                 Changed:   adminrun.c, inst_execd.sh
+                 Review:    HP
+
 AS-2005-04-22-1: CVS        Created V60u4_TAG
 ---------------------------------------------
 

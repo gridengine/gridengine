@@ -1,3 +1,6 @@
+AS-2005-04-22-1: CVS        Created V60u4_TAG
+---------------------------------------------
+
 CR-2005-04-22-0: Testsuite: fixed test: system_tests/scheduler/tickets
                             - test did not wait till all tickets are calculated
                               from scheduler
@@ -18,8 +21,6 @@ HP-2005-04-22-1: Bugfix:    Added check for network path in execd-rc-script
 HP-2005-04-22-0: Bugfix:    Added correct include path
                  Changed:   libs/uti/sge_unistd.h
 
-AS-2005-04-22-1: CVS        Created V60u4_TAG
----------------------------------------------
 
 AS-2005-04-22-0  Bugfix:    fixed common package content
                  Changed:   source/scripts/mk_dist

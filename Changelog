@@ -1,5 +1,8 @@
-AS-2005-04-22-0: CVS        Created V60u4_TAG
+AS-2005-04-22-1: CVS        Created V60u4_TAG
 ---------------------------------------------
+
+AS-2005-04-22-0  Bugfix:    fixed common package content
+                 Changed:   source/scripts/mk_dist
 
 HP-2005-04-21-0: Bugfix:    Created SGE_STAT Macro for Interix
                  Changed:   libs/uti/sge_unistd.h

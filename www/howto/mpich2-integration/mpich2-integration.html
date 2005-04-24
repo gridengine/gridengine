@@ -1,0 +1,487 @@
+<HTML>
+<!--This file created 24.04.2005 22:05 Uhr by Claris Home Page version 3.0-->
+<HEAD>
+   <TITLE>Tight MPICH2 Integration in Grid Engine</TITLE>
+   <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+<P><FONT SIZE="+1"><B>Topic:</B></FONT></P>
+
+<P>Tight Integration of the MPICH2 library into SGE.</P>
+
+<P><FONT SIZE="+1"><B>Author:</B></FONT></P>
+
+<P>Reuti, <A HREF="mailto:reuti__at__staff.uni-marburg.de">reuti__at__staff.uni-marburg.de</A>;
+Philipps-University of Marburg, Germany</P>
+
+<P><FONT SIZE="+1"><B>Version:</B></FONT></P>
+
+<P>1.0 -- 2005-04-24 Initial release, comments and corrections are
+welcome</P>
+
+<P><FONT SIZE="+1"><B>Contents:</B></FONT></P>
+
+<UL>
+   <LI>Prerequisites</LI>
+   
+   <LI>Introduction to the MPICH2 family</LI>
+   
+   <LI>Tight Integration of the gforker startup method</LI>
+   
+   <LI>Tight Integration of the daemonsless smpd startup method</LI>
+   
+   <LI>Tight Integration of the daemon-based smpd startup method</LI>
+   
+   <LI>Nodes with more than one network interface</LI>
+   
+   <LI>References and Documents</LI>
+</UL>
+
+<P>
+
+<HR>
+
+<BR>
+<FONT SIZE="+1"><B>Prerequisites</B></FONT></P>
+
+<BLOCKQUOTE><B>Configuration of SGE with qconf or the GUI</B>
+   
+   <P>You should already know how to change settings in SGE, like to
+   setup and change a queue definition or the entries in the PE
+   configuration. Additional information about queues and parallel
+   interfaces you can get from the man pages "queue_conf" and
+   "sge_pe" of SGE (make sure the SGE man pages are defined in your
+   $MANPATH).</P>
+   
+   <P><B>Target platform</B></P>
+   
+   <P>This Howto targets the MPICH2 version 1.0.1 on SGE 6.0 on
+   Linux. Most likely it will work under other operating systems in
+   the same way. Some of the commands will in this case need slight
+   modifications. It will not work this way for MPICH2 version 1.0,
+   as some things were only adjusted in 1.0.1, which will allow an
+   easy Tight Integration.</P>
+   
+   <P><B>MPICH2</B></P>
+   
+   <P>The MPICH2 is a library from the Argonne National Laboratory
+   (<A HREF="http://www.anl.gov">http://www.anl.gov</A>) which is an
+   implementation of the MPI-2 standard. Before you start with the
+   integration of MPICH2 into SGE, you should already be familiar
+   with the operation of MPICH2 outside of SGE and know how to
+   compile a parallel program using MPICH2.</P>
+   
+   <P><B>Included setups and scripts</B></P>
+   
+   <P>The supplied archive in &#91;<A HREF="#[1] Archive sge-mpich2-integration">1</A>&#93;
+   contains the necessary scripts for the smpd startup methods, as
+   for the gforker method no scripts are needed at all. It contains
+   scripts and programs similar to the distribution of the PVM and
+   MPICH integration package in SGE. For installing it for common
+   usage in the whole cluster, you may like to untar it at $SGE_ROOT
+   to get the new directories $SGE_ROOT/mpich2_smpd and
+   $SGE_ROOT/mpich2_smpd_rsh.</P>
+   
+   <P>A short program is provided in &#91;<A HREF="#[2] Archive mpi_hello">2</A>&#93;,
+   which will allow you to observe the correct distribution of the
+   spawned tasks.</P></BLOCKQUOTE>
+
+<P>
+
+<HR>
+
+<BR>
+<FONT SIZE="+1"><B>Introduction to the MPICH2 family</B></FONT></P>
+
+<BLOCKQUOTE>This new MPICH2 implementation of the MPI-2 standard was
+   created to supersede the wide used MPICH implementation. Besides
+   implementing the MPI-2 standard, another goal was a faster
+   startup. To give the user a greater flexibility, there are (for
+   now) 3 startup methods implemented:
+   
+   <UL>
+      <LI><I>mpd</I>: As the primary startup method <I>mpd</I> is
+      introduced by MPICH2. It's based on the script language Python
+      to startup a so called <I>ring</I> of machines. Giving
+      <I>mpd</I> a list of nodes will startup daemons on the
+      requested machines, which can be used immediately for the
+      execution of parallel programs inside this <I>ring</I>. This is
+      convenient for the interactive use of a parallel program, as
+      the only thing which must be prepared is a list of to be used
+      nodes.<BR>
+      <BR>
+      There exists no way to convince MPICH2, not to create many new
+      processgroups on each machine. As a limitation to one
+      processgroup on each machine is essential for achieving a Tight
+      Integration into SGE on all platforms, this startup method is
+      not discussed in this Howto (although a Tight Integration is
+      possible on platforms, where the additional group ID is used to
+      take control of all slave tasks).<BR>
+      <BR>
+      </LI>
+      
+      <LI><I>smpd</I>: This startup method can be used in a daemon
+      based or daemonless mode. The daemon based startup is not
+      creating all the daemons on the nodes according to a nodelist
+      on its own (like it is done by the mpd startup method), but the
+      daemons have to be started before the execution of the main
+      program, e.g. by a script. In this Howto, a startup of the
+      daemons will be presented where they are started by the given
+      procedure to start_proc_args.<BR>
+      <BR>
+      A daemonless startup is very similar to the startup of the
+      tasks in the former MPICH. Although it includes the same
+      scripts from the original $SGE_ROOT/mpi, it's included here
+      (with some editing to the templates), so that it can easily be
+      used with a still installed $SGE_ROOT/mpi without any side
+      effects.<BR>
+      <BR>
+      </LI>
+      
+      <LI><I>gforker</I>. Programs started under <I>gforker</I> are
+      limited to one machine and supports only forks for additional
+      processes.</LI>
+   </UL>
+   
+   <P>Be aware, that for each startup method and chosen way to
+   compile them, you will get a set of <I>mpirun</I> and/or
+   <I>mpiexec</I> for each of them. They are not interchangeable!
+   Hence, once you installed <I>mpd</I> and compiled a program to run
+   in the <I>ring</I>, you <B>can't </B>switch to <I>smpd</I> simply
+   by using a different <I>mpirun</I> or <I>mpiexec</I>. Instead you
+   have to recompile (or at least relink) your program with the
+   intended libraries to be used with this specific startup method.
+   This means, that you have to plan carefully your set $PATH during
+   compilation and execution of the parallel program, to get a
+   correct behavior. Not doing so will result in strange error
+   messages, which will not point directly to the cause of trouble.
+   After compiling your application software, it may be advisable not
+   to rely on the set $PATH in your interactive shell for the
+   submission, but to set it explicitly in the submitted script to
+   SGE, as we will do it in this Howto for demonstration purpose.
+   Also note, that the preferred startup command in MPICH2 is
+   <I>mpiexec</I>, not <I>mpirun</I>.</P></BLOCKQUOTE>
+
+<P>
+
+<HR>
+
+<BR>
+<FONT SIZE="+1"><B>Tight Integration of the gforker startup
+method</B></FONT></P>
+
+<BLOCKQUOTE>First we discuss the integration of a startup method,
+   which is limited to one machine and hence need no network
+   communication at all. The command line to compile MPICH2 this way
+   is:
+   
+   <BLOCKQUOTE><PRE>$ ./configure --prefix=/home/reuti/local/mpich2_gforker --with-pm=gforker</PRE></BLOCKQUOTE>
+   
+   <P>After the usual <I>make</I> and <I>make install</I> we can
+   compile the short program which is supplied in &#91;<A HREF="#[2] Archive mpi_hello">2</A>&#93;
+   with:</P>
+   
+   <BLOCKQUOTE><PRE>$ mpicc -o mpihello mpihello.c</PRE></BLOCKQUOTE>
+   
+   <P>Although we will run only on one machine, we will use a
+   parallel environment (PE) inside SGE, to stay conform with the
+   idea of SGE to request more than one slot by requesting a parallel
+   environment in the submit command. This PE may look like:</P>
+   
+   <BLOCKQUOTE><PRE>$ qconf -sp mpich2_gforker 
+pe_name           mpich2_gforker
+slots             999
+user_lists        NONE
+xuser_lists       NONE
+start_proc_args   /bin/true
+stop_proc_args    /bin/true
+allocation_rule   $pe_slots
+control_slaves    FALSE
+job_is_first_task TRUE
+urgency_slots     min</PRE></BLOCKQUOTE>
+   
+   <P>Remember to add this PE to a cluster queue of your choice.</P>
+   
+   <BLOCKQUOTE><PRE>$ qsub -pe mpich2_gforker 2 mpich2_gforker.sh</PRE></BLOCKQUOTE>
+   
+   <P>And with:</P>
+   
+   <BLOCKQUOTE><PRE>$ rsh node11 ps -e f -o pid,ppid,pgrp,command 
+  PID  PPID  PGRP COMMAND
+...
+  787     1   787 /usr/sge/bin/glinux/sge_commd
+  789     1   789 /usr/sge/bin/glinux/sge_execd
+32146   789 32146  \_ sge_shepherd-11679 -bg
+32148 32146 32148      \_ /bin/sh /var/spool/sge/node11/job_scripts/11679
+32149 32148 32148          \_ mpiexec -n 2 ./mpihello
+32150 32149 32148              \_ ./mpihello
+32151 32149 32148              \_ ./mpihello</PRE></BLOCKQUOTE>
+   
+   <P>we already got the proper startup and Tight Integration of all
+   started processes.</P></BLOCKQUOTE>
+
+<P>
+
+<HR>
+
+<BR>
+<FONT SIZE="+1"><B>Tight Integration of the daemonless smpd startup
+method</B></FONT></P>
+
+<BLOCKQUOTE>To compile MPICH2 for a smpd-based startup, it must first
+   be configured (after a "make distclean", in case you just walked
+   through the gforker startup before):
+   
+   <BLOCKQUOTE><PRE>$ ./configure --prefix=/home/reuti/local/mpich2_smpd --with-pm=smpd --with-pmi=smpd</PRE></BLOCKQUOTE>
+   
+   <P>and to get a Tight Integration we need a PE like the following
+   (including a -catch_rsh to the start script of the PE):</P>
+   
+   <BLOCKQUOTE><PRE>$ qconf -sp mpich2_smpd_rsh
+pe_name           mpich2_smpd_rsh
+slots             999
+user_lists        NONE
+xuser_lists       NONE
+start_proc_args   /usr/sge/mpich2_smpd_rsh/startmpi.sh -catch_rsh $pe_hostfile
+stop_proc_args    /usr/sge/mpich2_smpd_rsh/stopmpi.sh
+allocation_rule   $round_robin
+control_slaves    TRUE
+job_is_first_task FALSE
+urgency_slots     min</PRE></BLOCKQUOTE>
+   
+   <P>Please lookup in the MPICH2 documentation, how to create a
+   .smpd file with a "phrase" in it. After submitting the job in
+   exact the same way as before (but this time taking the script
+   mpich2_smpd_rsh.sh in the qsub command):</P>
+   
+   <BLOCKQUOTE><PRE>$ qsub -pe mpich2_smpd_rsh 4 mpich2_smpd_rsh.sh</PRE></BLOCKQUOTE>
+   
+   <P>you should see a distribution on the head node of your job
+   like:</P>
+   
+   <BLOCKQUOTE><PRE>$ rsh node00 ps -e f -o pid,ppid,pgrp,command --cols=80
+  PID  PPID  PGRP COMMAND
+...
+  790     1   790 /usr/sge/bin/glinux/sge_commd
+  793     1   793 /usr/sge/bin/glinux/sge_execd
+12198   793 12198  \_ sge_shepherd-11691 -bg
+12230 12198 12230  |   \_ /bin/sh /var/spool/sge/node00/job_scripts/11691
+12231 12230 12230  |       \_ mpiexec -rsh -nopm -n 4 -machinefile /tmp/11691.1.
+12232 12231 12230  |           \_ mpiexec -rsh -nopm -n 4 -machinefile /tmp/1169
+12233 12231 12230  |           \_ /usr/sge/bin/glinux/qrsh -inherit node00 env P
+12265 12233 12230  |           |   \_ /usr/sge/utilbin/glinux/rsh -p 58120 node0
+12270 12265 12230  |           |       \_ /usr/sge/utilbin/glinux/rsh -p 58120 n
+12234 12231 12230  |           \_ /usr/sge/bin/glinux/qrsh -inherit node00 env P
+12266 12234 12230  |           |   \_ /usr/sge/utilbin/glinux/rsh -p 58122 node0
+12273 12266 12230  |           |       \_ /usr/sge/utilbin/glinux/rsh -p 58122 n
+12235 12231 12230  |           \_ /usr/sge/bin/glinux/qrsh -inherit node01 env P
+12267 12235 12230  |           |   \_ /usr/sge/utilbin/glinux/rsh -p 42956 node0
+12276 12267 12230  |           |       \_ /usr/sge/utilbin/glinux/rsh -p 42956 n
+12236 12231 12230  |           \_ /usr/sge/bin/glinux/qrsh -inherit node04 env P
+12268 12236 12230  |               \_ /usr/sge/utilbin/glinux/rsh -p 59836 node0
+12275 12268 12230  |                   \_ /usr/sge/utilbin/glinux/rsh -p 59836 n
+12261   793 12261  \_ sge_shepherd-11691 -bg
+12262 12261 12262  |   \_ /usr/sge/utilbin/glinux/rshd -l
+12269 12262 12269  |       \_ /usr/sge/utilbin/glinux/qrsh_starter /var/spool/sg
+12283 12269 12283  |           \_ /home/reuti/mpihello
+12263   793 12263  \_ sge_shepherd-11691 -bg
+12264 12263 12264      \_ /usr/sge/utilbin/glinux/rshd -l
+12271 12264 12271          \_ /usr/sge/utilbin/glinux/qrsh_starter /var/spool/sg
+12284 12271 12284              \_ /home/reuti/mpihello</PRE></BLOCKQUOTE>
+   
+   <P>The important thing is, that the started script including the
+   <I>mpiexec</I> and the program <I>mpihello</I> are under full SGE
+   control.</P>
+   
+   <P>(Side note: the default command compiled into MPICH2 this way
+   is "ssh -x". You may replace this by changing in the MPICH2 source
+   $MPICH2_ROOT/src/pm/smpd/mpiexec_rsh.c in the routine
+   <I>mpiexec_rsh()</I> the default value "ssh -x" to a plain "rsh",
+   or change it each time during execution of your application
+   program by setting the environment variable "MPIEXEC_RSH=rsh;
+   export MPIEXEC_RSH" to get access to a the rsh-wrapper, like in
+   the original MPICH implementation.)</P></BLOCKQUOTE>
+
+<P>
+
+<HR>
+
+<BR>
+<FONT SIZE="+1"><B>Tight Integration of the daemon-based smpd startup
+method</B></FONT></P>
+
+<BLOCKQUOTE>Similar to the PVM-Integration, we need a small helping
+   program to start the daemons as a task on the slave nodes using
+   the qrsh-command. In some way, this start_mpich2 can be seen as a
+   generic program extending SGE with the ability to run a
+   qrsh-command in the background, which can easily be modified for
+   similar startup methods.
+   
+   <P>If you installed the whole package like suggested in
+   $SGE_ROOT/mpich2_smpd, set the working directory to
+   $SGE_ROOT/mpich2_smpd/src and compile the included program
+   with:</P>
+   
+   <BLOCKQUOTE><PRE>$ ./aimk
+$ ./install.sh</PRE></BLOCKQUOTE>
+   
+   <P>The installation process will put the helping program
+   mpich2_smpd in a created directory $SGE_ROOT/mpich2_smpd/bin,
+   which is the default location of the included script
+   startmpich2.sh to look for this program. A parallel environment
+   for this startup method may look like:</P>
+   
+   <BLOCKQUOTE><PRE>$ qconf -sp mpich2_smpd
+pe_name           mpich2_smpd
+slots             999
+user_lists        NONE
+xuser_lists       NONE
+start_proc_args   /usr/sge/mpich2_smpd/startmpich2.sh -catch_rsh $pe_hostfile /home/reuti/local/mpich2_smpd
+stop_proc_args    /usr/sge/mpich2_smpd/stopmpich2.sh -catch_rsh /home/reuti/local/mpich2_smpd
+allocation_rule   $round_robin
+control_slaves    TRUE
+job_is_first_task FALSE
+urgency_slots     min</PRE></BLOCKQUOTE>
+   
+   <P>If we start the daemons on our own, we have to select a free
+   port. Although it maybe not safe in all cluster setups, the
+   included formula in startmpich2.sh, stopmpich2.sh and the
+   demonstration submit script mpich2_smpd.sh uses "$JOB_ID MOD 5000
+   + 20000" for the port. Depending on your job turnaround in your
+   cluster, you may modify it in all locations where it's defined. To
+   force the smpds not to fork themselves into daemon land, they are
+   started with the additional parameter "-d 0". According to the
+   MPICH2 team, this will not have any speed impact (because the
+   level of debugging is set to 0), but only prevent the daemons from
+   forking. Having this setup in a proper way, we can submit the
+   demonstration job:</P>
+   
+   <BLOCKQUOTE><PRE>$ qsub -pe mpich2_smpd 2 mpich2_smpd.sh</PRE></BLOCKQUOTE>
+   
+   <P>and observe the distributed tasks on the nodes, after looking
+   at the selected nodes:</P>
+   
+   <BLOCKQUOTE><PRE>$ qstat
+job-ID  prior name       user         state submit/start at     queue      master  ja-task-ID 
+---------------------------------------------------------------------------------------------
+  11804     0 mpich2_smp reuti        r     04/22/2005 01:23:29 para03     MASTER         
+            0 mpich2_smp reuti        r     04/22/2005 01:23:29 para03     SLAVE          
+  11804     0 mpich2_smp reuti        r     04/22/2005 01:23:29 para04     SLAVE </PRE></BLOCKQUOTE>
+   
+   <P>On the head node of the MPICH2 job, a process distribution like
+   the following can be observed:</P>
+   
+   <BLOCKQUOTE><PRE>$ rsh node03 ps -e f -o pid,ppid,pgrp,command --cols=80
+  PID  PPID  PGRP COMMAND
+...
+  789     1   789 /usr/sge/bin/glinux/sge_commd
+  792     1   792 /usr/sge/bin/glinux/sge_execd
+ 4125   792  4125  \_ sge_shepherd-11804 -bg
+ 4206  4125  4206  |   \_ /bin/sh /var/spool/sge/node03/job_scripts/11804
+ 4207  4206  4206  |       \_ mpiexec -n 2 -machinefile /tmp/11804.1.para03/mach
+ 4174   792  4174  \_ sge_shepherd-11804 -bg
+ 4175  4174  4175      \_ /usr/sge/utilbin/glinux/rshd -l
+ 4178  4175  4178          \_ /usr/sge/utilbin/glinux/qrsh_starter /var/spool/sg
+ 4190  4178  4190              \_ /home/reuti/local/mpich2_smpd/bin/smpd -port 2
+ 4208  4190  4190                  \_ /home/reuti/local/mpich2_smpd/bin/smpd -po
+ 4209  4208  4190                      \_ /home/reuti/mpihello
+ 4152     1  4126 /usr/sge/bin/glinux/qrsh -inherit node03 /home/reuti/local/mpi
+ 4177  4152  4126  \_ /usr/sge/utilbin/glinux/rsh -p 35024 node03 exec '/usr/sge
+ 4179  4177  4126      \_ &#91;rsh &lt;defunct&gt;&#93;
+ 4154     1  4126 /usr/sge/bin/glinux/qrsh -inherit node04 /home/reuti/local/mpi
+ 4185  4154  4126  \_ /usr/sge/utilbin/glinux/rsh -p 35871 node04 exec '/usr/sge
+ 4187  4185  4126      \_ &#91;rsh &lt;defunct&gt;&#93;</PRE></BLOCKQUOTE>
+   
+   <P>The forked-off qrsh-commands by the startmpich2.sh (and
+   start_mpich2 program) are no longer bound to the starting script
+   in start_proc_args, but they are not consuming any CPU time or
+   need to be shut down during a qdel (they are just waiting for the
+   shutdown of the spawned daemons on the slave nodes). Important is,
+   that the working tasks of the <I>mpihello</I> are bound to the
+   process chain, so that the accounting will be correct, and also a
+   controlled shutdown of the daemons is possible. To give some
+   feedback to the user of the started tasks, the *.po&lt;jobid&gt;
+   file will contain the check of the started MPICH2 universe:</P>
+   
+   <BLOCKQUOTE><PRE>$ cat mpich2_smpd.sh.po11804
+-catch_rsh /var/spool/sge/node03/active_jobs/11804.1/pe_hostfile /home/reuti/local/mpich2_smpd
+node03
+node04
+startmpich2.sh: check for smpd daemons (1 of 10)
+/usr/sge/bin/glinux/qrsh -inherit node04 /home/reuti/local/mpich2_smpd/bin/smpd -port 21804 -d 0
+/usr/sge/bin/glinux/qrsh -inherit node03 /home/reuti/local/mpich2_smpd/bin/smpd -port 21804 -d 0
+startmpich2.sh: missing smpd on node03
+startmpich2.sh: missing smpd on node04
+startmpich2.sh: check for smpd daemons (2 of 10)
+startmpich2.sh: found running smpd on node03
+startmpich2.sh: found running smpd on node04
+startmpich2.sh: got all 2 of 2 nodes
+-catch_rsh /home/reuti/local/mpich2_smpd</PRE></BLOCKQUOTE>
+   
+   <P>If all is running fine, you may comment out these lines to
+   shorten the output a little bit and avoid any confusion to the
+   user. Depending of your personal taste, you may put the definition
+   of your MPICH2 path in a file like .bashrc, which will be sourced
+   during a non-interactive login.</P></BLOCKQUOTE>
+
+<P>
+
+<HR>
+
+<BR>
+<FONT SIZE="+1"><B>Nodes with more than one network
+interface</B></FONT></P>
+
+<BLOCKQUOTE>For now, there is no way to direct the usage of a
+   secondary network interface to MPICH2 (except for running under
+   Windows). So it's advisable to prepare a network setup of the
+   cluster, where the primary interface is the one to be used for the
+   MPICH2 communication.</BLOCKQUOTE>
+
+<P>
+
+<HR>
+
+<A NAME="References and Documents"></A><FONT SIZE="+1"><B>References
+and Documents</B></FONT></P>
+
+<BLOCKQUOTE><B>SGE-MPICH2 Integration</B>
+   
+   <P><A NAME="[1] Archive sge-mpich2-integration"></A>&#91;1&#93;
+   Archive with all the scripts used in this Howto: <A HREF="mpich2-60.tgz">mpich2-60.tgz</A>
+   &#91;for older installations using SGE 5.3: <A HREF="mpich2-53.tgz">mpich2-53.tgz</A>&#93;.</P>
+   
+   <P><A NAME="[2] Archive mpi_hello"></A>&#91;2&#93; Archive with a
+   small MPICH2 program to check the correct distribution of all the
+   tasks: <A HREF="mpi_hello.tgz">mpi_hello.tgz</A>.<BR>
+   </P>
+   
+   <P><B>MPICH2</B></P>
+   
+   <P>The latest version of MPICH2 and build instructions can be
+   downloaded from (<A HREF="http://www-unix.mcs.anl.gov/mpi/mpich2/">http://www-unix.mcs.anl.gov/mpi/mpich2</A>).<BR>
+   </P>
+   
+   <P><B>MPI documentation in general and tutorials</B></P>
+   
+   <P>For some general introduction to MPI and MPI-Programming, you
+   can study the following documents:</P>
+   
+   <UL>
+      <LI><A HREF="http://www.mpi-forum.org/docs">http://www.mpi-forum.org/docs</A></LI>
+      
+      <LI><A HREF="http://www.netlib.org/utk/papers/mpi-book/mpi-book.html">http://www.netlib.org/utk/papers/mpi-book/mpi-book.html</A></LI>
+      
+      <LI><A HREF="http://www-unix.mcs.anl.gov/mpi/usingmpi/index.html">http://www-unix.mcs.anl.gov/mpi/usingmpi/index.html</A></LI>
+      
+      <LI><A HREF="http://www-unix.mcs.anl.gov/mpi/usingmpi2">http://www-unix.mcs.anl.gov/mpi/usingmpi2</A></LI>
+      
+      <LI><A HREF="ftp://math.usfca.edu/pub/MPI/mpi.guide.ps">ftp://math.usfca.edu/pub/MPI/mpi.guide.ps</A></LI>
+      
+      <LI><A HREF="http://www.science.uva.nl/research/scs/edu/pscs/guide.pdf">http://www.science.uva.nl/research/scs/edu/pscs/guide.pdf</A></LI>
+      
+      <LI><A HREF="http://www.science.uva.nl/research/scs/edu/distr/guide_to_the_practical_work.pdf">http://www.science.uva.nl/research/scs/edu/distr/guide_to_the_practical_work.pdf</A></LI>
+   </UL>
+</BLOCKQUOTE>
+</BODY>
+</HTML>

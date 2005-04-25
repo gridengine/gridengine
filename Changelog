@@ -1,3 +1,11 @@
+AS-2005-04-25-1: CVS        Created V60u4_TAG
+---------------------------------------------
+
+AS-2005-04-25-0: Bugfix:    changed base directory of Windows man pages
+                            to <sge_root>/catman/cat
+                 Changed:   scripts/distinst
+                            dist/util/arch
+
 MD-2005-04-22-0: Bugfix:    - adminrun didn't switch to adminuser under
                               windows
                             - global execd spooldir was not created
@@ -5,8 +13,6 @@ MD-2005-04-22-0: Bugfix:    - adminrun didn't switch to adminuser under
                  Changed:   adminrun.c, inst_execd.sh
                  Review:    HP
 
-AS-2005-04-22-1: CVS        Created V60u4_TAG
----------------------------------------------
 
 AA-2005-04-22-0: Bugfix:    qmon cluster queue modify cancel working incorrect
                  Bugtraq:   6260024

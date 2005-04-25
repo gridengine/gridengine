@@ -1,3 +1,8 @@
+RD-2005-04-25-0: Bugfix:    dbwriter install failed
+                            if clause used undefined variable
+                 Changed:   dist/util/inst_qmaster.sh
+                 Review:    MD
+
 AS-2005-04-25-1: CVS        Created V60u4_TAG
 ---------------------------------------------
 

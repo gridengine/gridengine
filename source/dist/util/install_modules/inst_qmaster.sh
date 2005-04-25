@@ -70,7 +70,7 @@ GetCell()
     SGE_CELL_VAL=$CELL_NAME
     $INFOTEXT -log "Using >%s< as CELL_NAME." "$CELL_NAME"
 
-    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap -a "$BERKELEY" = "undef" ]; then
+    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap -a "$QMASTER" = "install" ]; then
        $INFOTEXT -log "The cell name you have used and the bootstrap already exists!"
        $INFOTEXT -log "It seems that you have already a installed system."
        $INFOTEXT -log "A installation may cause, that data can be lost!"
@@ -109,7 +109,7 @@ GetCell()
       fi
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
-      if [ $BERKELEY = "undef" ]; then
+      if [ "$QMASTER" = "install" ]; then
          if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
             $CLEAR
             $INFOTEXT "\nThe \"common\" directory in cell >%s< already exists!" $SGE_CELL_VAL

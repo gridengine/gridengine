@@ -196,6 +196,8 @@ XtPointer cad)
    static lCondition *where = NULL;
    static lEnumeration *what = NULL; 
 
+   int show_slots = (int)cld;
+
    DENTER(GUI_LAYER, "qmonLoadNamesQueue");
 
    qmonMirrorMultiAnswer(CENTRY_T, &alp);
@@ -212,7 +214,10 @@ XtPointer cad)
    if(!what)
       what = lWhatAll();
 
-   entries = lSelect(lGetListName(cl), cl, where, what);
+   /*
+   ** slots are only excluded if load names are shown for queues
+   */
+   entries = lSelect(lGetListName(cl), cl, show_slots ? NULL : where, what);
 
 
    ShowLoadNames(w, entries);

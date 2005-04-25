@@ -1,3 +1,9 @@
+AA-2005-04-25-0: Bugfix:    Can't select 'slots' in select box when adding consumables for execution host
+                 Changed:   qmon
+                 Bugtraq:   6260729
+                 Issue:     1586
+                 Review:    AH
+
 DT-2005-04-25-0: Bugfix:    o Repaired japi_exit() locking
                  Changed:   JAPI
                  Review:    SG, AH

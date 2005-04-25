@@ -1031,7 +1031,7 @@ if [ $instcommon = true ]; then
 
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/man ]; then
          SOURCEDIR=MANSBUILD_$MANSRCDIR/ASCMAN/man
-         DESTDIR=$DEST_SGE_ROOT/man
+         DESTDIR=$DEST_SGE_ROOT/catman/cat
          for dir in `ls $SOURCEDIR`; do
             dir_num=`basename $dir | cut -d"n" -f2`
             for file in `ls $SOURCEDIR/$dir`; do

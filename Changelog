@@ -1,3 +1,6 @@
+AS-2005-04-25-1: CVS        Created V60u4_TAG
+---------------------------------------------
+
 HP-2005-04-25-0: Bugfix:    Fixed MANPATH for Interix
                  Review:    AS
 
@@ -15,8 +18,6 @@ RD-2005-04-25-0: Bugfix:    dbwriter install failed
                  Changed:   dist/util/inst_qmaster.sh
                  Review:    MD
 
-AS-2005-04-25-1: CVS        Created V60u4_TAG
----------------------------------------------
 
 AS-2005-04-25-0: Bugfix:    changed base directory of Windows man pages
                             to <sge_root>/catman/cat

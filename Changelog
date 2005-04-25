@@ -16,6 +16,7 @@ MD-2005-04-22-0: Bugfix:    - adminrun didn't switch to adminuser under
 
 AA-2005-04-22-0: Bugfix:    qmon cluster queue modify cancel working incorrect
                  Bugtraq:   6260024
+                 Issue:     1582
                  Changed:   qmon
 
 

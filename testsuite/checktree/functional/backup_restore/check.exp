@@ -79,7 +79,7 @@ proc backup_restore_setup {} {
    set spooling_method $ts_config(spooling_method)
    set master_spool_dir [get_spool_dir $CHECK_CORE_MASTER qmaster 0]
    if { $spooling_method == "berkeleydb" && $ts_config(bdb_server) != "none" } {
-      puts $CHECK_OUTPUT "\n berkeleydb rpc spooling detected"
+      puts $CHECK_OUTPUT "\nberkeleydb rpc spooling detected"
       set remote_host "$ts_config(bdb_server)"
       set spool_dir "$ts_config(bdb_dir)"
    } else {
@@ -101,6 +101,7 @@ proc backup_restore_setup {} {
 
    while {1} {
       set timeout 30
+      log_user 1
       expect {
          flush stdout
          flush $CHECK_OUTPUT
@@ -134,8 +135,18 @@ proc backup_restore_setup {} {
             send -i $sp_id "y\n"
             continue;
          }
+         -i $sp_id "Are all settings right" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending y<"
+            send -i $sp_id "y\n"
+            continue;
+         }
          
          # Errors
+         -i $sp_id timeout {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id;
+            return;
+         }
          -i $sp_id "ommand failed*\n" {
             set_error "-1" "backup_restore_setup - $expect_out(0,string)"
             close_spawn_process $id;
@@ -157,11 +168,6 @@ proc backup_restore_setup {} {
             close_spawn_process $id
             break;
          } 
-
-         -i $sp_id default {
-            close_spawn_process $id
-            break;
-         }
       }
    }
   
@@ -171,17 +177,25 @@ proc backup_restore_setup {} {
 
    # move cell and spool directory
    if { $spooling_method == "berkeleydb" } {
+      puts $CHECK_OUTPUT "mv $spool_dir $ts_config(product_root)/spooling_backup"
       puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "mv" "$spool_dir $ts_config(product_root)/spooling_backup" ]
    }
+   puts $CHECK_OUTPUT "mv $master_spool_dir $ts_config(product_root)/master_spooling_backup"
    puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "mv" "$master_spool_dir $ts_config(product_root)/master_spooling_backup" ]
+
+   puts $CHECK_OUTPUT "mv $ts_config(product_root)/$ts_config(cell) $ts_config(product_root)/$ts_config(cell)_backup"
    puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "mv" "$ts_config(product_root)/$ts_config(cell) $ts_config(product_root)/$ts_config(cell)_backup" ]
 
    # restore from backup 
    set id [ open_remote_spawn_process "$remote_host" "$CHECK_USER" "cd" "$$prod_type_var;./inst_sge -rst" ]
    set sp_id [ lindex $id 1 ]
 
+   log_user 1
+
+
    while {1} {
       set timeout 30
+      log_user 1
       expect {
          flush stdout
          flush $CHECK_OUTPUT
@@ -215,8 +229,18 @@ proc backup_restore_setup {} {
             send -i $sp_id "\n"
             continue;
          }
+         -i $sp_id "Are all settings right" {
+            puts $CHECK_OUTPUT "\n --> testsuite: sending y<"
+            send -i $sp_id "y\n"
+            continue;
+         }
          
          # Errors
+         -i $sp_id timeout {
+            set_error "-1" "backup_restore_setup - $expect_out(0,string)"
+            close_spawn_process $id;
+            return;
+         }
          -i $sp_id "ommand failed*\n" {
             set_error "-1" "backup_restore_setup - $expect_out(0,string)"
             close_spawn_process $id;
@@ -243,37 +267,41 @@ proc backup_restore_setup {} {
             close_spawn_process $id
             break;
          }
-         -i $sp_id default {
-            close_spawn_process $id
-            break;
-         }
       }
    }
    
    startup_core_system  
    
-   set result [ wait_for_load_from_all_queues 60 ]
-
-   if { $result == 0 } {
-       puts $CHECK_OUTPUT "removing $ts_config(product_root)/$ts_config(cell)_backup and other moved directories"
-       puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/$ts_config(cell)_backup" ]
-       puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/master_spooling_backup" ]
-       if { $spooling_method == "berkeleydb"} { 
-         puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/spooling_backup" ]
-       }
-   }
-
+   wait_for_load_from_all_queues 60
    set_error 0 "ok"
 }
 
 proc backup_restore_cleanup {} {
-   global CHECK_USER ts_config
+   global CHECK_USER ts_config CHECK_OUTPUT CHECK_CORE_MASTER
+
+   set spooling_method $ts_config(spooling_method)
+   set master_spool_dir [get_spool_dir $CHECK_CORE_MASTER qmaster 0]
+   if { $spooling_method == "berkeleydb" && $ts_config(bdb_server) != "none" } {
+      puts $CHECK_OUTPUT "\nberkeleydb rpc spooling detected"
+      set remote_host "$ts_config(bdb_server)"
+      set spool_dir "$ts_config(bdb_dir)"
+   } else {
+      set remote_host "$ts_config(master_host)"
+      set spool_dir [get_spool_dir $CHECK_CORE_MASTER spooldb 0]
+      if { $spooling_method == "classic" } {
+         puts $CHECK_OUTPUT "\n classic spooling detected"
+      } else {
+         puts $CHECK_OUTPUT "\n berkeleydb local spooling detected"
+      }
+   }
 
    set result [ wait_for_load_from_all_queues 60 ]
+
    if { $result != 0 } {
+       
+       set master_spool_dir [get_spool_dir $CHECK_CORE_MASTER qmaster 0]
 
        shutdown_core_system
-
        puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/$ts_config(cell)" ]
        puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "mv" "$ts_config(product_root)/$ts_config(cell)_backup $ts_config(product_root)/$ts_config(cell)" ]
        puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $master_spool_dir" ]
@@ -286,6 +314,17 @@ proc backup_restore_cleanup {} {
 
        startup_core_system
 
+   } else {
+      puts $CHECK_OUTPUT "no need to restore the backup - load values from all execds available"
+      puts $CHECK_OUTPUT "removing $ts_config(product_root)/$ts_config(cell)_backup and other moved directories"
+       puts $CHECK_OUTPUT "rm -rf $ts_config(product_root)/$ts_config(cell)_backup"
+       puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/$ts_config(cell)_backup" ]
+       puts $CHECK_OUTPUT "rm -rf -rf $ts_config(product_root)/master_spooling_backup"
+       puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/master_spooling_backup" ]
+       if { $spooling_method == "berkeleydb"} { 
+         puts $CHECK_OUTPUT "rm -rf -rf $ts_config(product_root)/spooling_backup"
+         puts $CHECK_OUTPUT [ start_remote_prog "$remote_host" "$CHECK_USER" "rm" "-rf $ts_config(product_root)/spooling_backup" ]
+       }
    }
    set_error 0 "ok"
 }

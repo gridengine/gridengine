@@ -1,3 +1,6 @@
+CR-2005-04-25-0: Testsuite: fixed backup_restore test for rpc spooling
+                 Review:    RD
+
 RH-2005-04-25-0: Testsuite: added new test: system_tests/scheduler/deadline
                  Review:    JG
 

@@ -1,3 +1,6 @@
+RH-2005-04-25-0: Testsuite: added new test: system_tests/scheduler/deadline
+                 Review:    JG
+
 RD-2005-04-25-0: Bugfix:    dbwriter install failed
                             if clause used undefined variable
                  Changed:   dist/util/inst_qmaster.sh

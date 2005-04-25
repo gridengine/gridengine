@@ -1,0 +1,370 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+#set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "deadline_calculation_init_level"
+
+# define test's name and run level descriptions
+set check_name            "deadline_calculation"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   2
+set check_description(0)  "check deadline calculation of the scheduler with deadline in the future"
+set check_description(1)  "check deadline calculation of the scheduler with deadline in the past"
+set check_description(2)  "check deadline permissions"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function deadline_calculation_setup
+set check_cleanup_function deadline_calculation_cleanup
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "deadline_jobs_test"
+lappend check_functions "deadline_test_permission"
+
+
+proc deadline_calculation_init_level {} {
+   global ts_config
+   global CHECK_ACT_LEVEL
+   
+   switch -exact -- $CHECK_ACT_LEVEL {
+      0 {  return 0 }  # test job with deadline in the future
+      1 {  return 0 }  # test job with deadline in the past
+      2 {  return 0 }  # test permission for deadline jobs
+      default { return -1 }      
+   }
+}
+
+# -------- local test procedures: initialization------------------------------
+
+global deadline_queue_name
+global deadline_job_name
+
+proc deadline_calculation_setup {  } {
+
+   global deadline_queue_name deadline_job_name
+   global ts_config
+   global CHECK_OUTPUT
+   
+   set deadline_job_name    "dljob"
+   
+   # setup the deadline test queue
+   set deadline_queue_name "deadline_queue"
+   set queue_conf(slots) 0
+
+   puts $CHECK_OUTPUT "Add queue $deadline_queue_name"
+   
+   add_queue $deadline_queue_name "@allhosts" queue_conf 1
+   
+   set queue_list {}
+   foreach host $ts_config(execd_nodes) {
+      lappend queue_list [get_queue_instance "all.q" $host]
+   }
+   disable_queue $queue_list   
+   
+   set_error 0 "setup OK"
+
+}
+
+proc deadline_calculation_cleanup {  } {
+
+   global deadline_queue_name
+   global ts_config
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+   
+   del_queue $deadline_queue_name "@allhosts" 0 1
+   
+   set queue_list {}
+   foreach host $ts_config(execd_nodes) {
+      lappend queue_list [get_queue_instance "all.q" $host]
+   }
+   enable_queue $queue_list   
+   
+   set_error 0 "clean OK"
+}
+
+proc deadline_test_permission { } {
+   global ts_config  deadline_queue_name
+   global CHECK_ACT_LEVEL CHECK_OUTPUT CHECK_USER
+
+
+   if { $CHECK_ACT_LEVEL != 2 } {
+      set_error 0 "Skip permission test for run level $CHECK_ACT_LEVEL"
+      return 0
+   }
+   
+   set non_deadline_user $CHECK_USER
+   
+   set del_user_result [del_user_from_access_list $non_deadline_user "deadlineusers"]
+   
+   set deadline [deadline_calc_deadline 1]
+   
+   set job_args "-e /dev/null -o /dev/null -q $deadline_queue_name -dl $deadline"
+   append job_args " $ts_config(product_root)/examples/jobs/sleeper.sh 3600"
+   
+   set result [ submit_job $job_args 0 60 "" $non_deadline_user ]
+   if { $result == -22 } {
+      set_error 0 "OK"
+      set result 0
+   } elseif { $result == 0 } {
+      add_proc_error "deadline_test_permission" -1 "user $non_deadline_user can submit jobs with deadline, despite it is not in the deadlineusers group"
+      set result -1
+   } else {
+      add_proc_error "deadline_test_permission" -1 "submit_job returns an unexpected error ($result)"
+      set result -1
+   }
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+   
+   if { $del_user_result == 0 } {
+      # user was removed from deadlineusers group
+      add_access_list $non_deadline_user "deadlineusers"
+   }
+   return $result
+}
+
+proc deadline_jobs_test {} {
+ 
+   global deadline_job_name
+   global CHECK_ACT_LEVEL
+   
+   switch -exact -- $CHECK_ACT_LEVEL {
+      0 {
+         # submit 9 high priority jobs
+         # submit 1 low priority job with dead line in the future
+         #  
+         set priorities "1 1 1 1 1 1 1 1 1 0"
+         set deadlines  "0 0 0 0 0 0 0 0 0 1"
+      }
+      1 {
+         # submit 9 high priority jobs
+         # submit 1 low priority job with dead line in the past
+         #  
+         set priorities "1 1 1 1 1 1 1 1 1 0"
+         set deadlines  "0 0 0 0 0 0 0 0 0 -10"
+      }
+      default {
+         set_error 0 "deadline_jobs_test skipped in run level $CHECK_ACT_LEVEL"
+         return 0 
+      }      
+   }
+   
+   set job_count [deadline_create_job_array jobs $priorities $deadlines]
+   if { $job_count <= 0 } {
+      add_proc_error "deadline_jobs_test" -1 "Invalid configuration"
+      return -1
+   }
+
+   deadline_set_slot_count 0
+   
+   set result [deadline_submit_jobs jobs $job_count]
+   
+   if { $result != 0 } {
+      add_proc_error "deadline_jobs_test" -1 "submit of jobs failed"
+      return -1
+   }
+   
+   # set slot count to 4
+   deadline_set_slot_count 4
+   
+   # 3 high priority jobs and the deadline job has been started
+   
+   set result [ wait_for_jobstart $jobs(9,id) $deadline_job_name 60 1 1 ]
+   if { $result != 0 } {      
+      add_proc_error "deadline_jobs_test" -1 "job with id $jobs(9,id) and deadline $jobs(9,deadline) is not running"
+      return -1
+   }
+   
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+   
+   set_error 0 "OK"
+   
+}
+
+proc deadline_calc_deadline { deadline } {
+   global CHECK_OUTPUT 
+   
+   set now [clock seconds]
+   set deadline_time [expr $now + ($deadline * 60)]
+   
+   set result [clock format $deadline_time -format "%m%d%H%M"] 
+   
+   puts $CHECK_OUTPUT "Deadline now + $deadline minutes = $result"
+   return $result
+}
+
+proc deadline_create_job_array { jobs priorities deadlines } {
+   
+   global CHECK_OUTPUT CHECK_USER
+   
+   upvar $jobs tmp_jobs
+   
+   set priority_count    [llength $priorities]
+   set deadline_count    [llength $deadlines]
+   
+   if { $priority_count > 0 } {
+      set job_count $priority_count
+   } elseif { $deadline_count > 0 } {
+      set job_count $deadline_count
+   } else {
+      add_proc_error "deadline_create_job_array" -1 "invalid arguments"
+      return -1
+   }
+   
+   if { $priority_count > 0 } {
+      if { $priority_count != $job_count } {
+         add_proc_error "deadline_create_job_array" -1 "Invalid number of priorities ($job_count expected)"
+         return -1
+      } else {
+         set i 0
+         foreach priority $priorities {
+           set tmp_jobs($i,priority) $priority 
+           incr i 1
+         }
+      }
+   } else {
+      for { set i 0 } { $i < $job_count } { incr i 1 } {
+         set tmp_jobs($i,priority) 0
+      }
+   }
+   
+   if { $deadline_count > 0 } {
+      if { $deadline_count != $job_count } {
+         add_proc_error "deadline_create_job_array"  -1 "Invalid number of deadlines ($job_count expected)"
+         return -1
+      } else {
+         set i 0
+         foreach deadline $deadlines {
+           set tmp_jobs($i,deadline) $deadline
+           incr i 1
+         }
+      }
+   } else {
+      for { set i 0 } { $i < $job_count } { incr i 1 } {
+         set tmp_jobs($i,deadline) 0
+      }
+   }
+   
+   return $job_count
+}
+
+proc deadline_submit_jobs { jobs job_count } {
+   
+   global ts_config
+   global deadline_queue_name deadline_job_name
+   global CHECK_USER CHECK_HOST CHECK_OUTPUT
+    
+   upvar $jobs tmp_jobs
+   
+   set pre_args  "-e /dev/null -o /dev/null -q $deadline_queue_name -N $deadline_job_name"
+   set post_args " $ts_config(product_root)/examples/jobs/sleeper.sh 3600" 
+   
+   for {set i 0} {$i < $job_count} { incr i 1 } {
+      
+      set job_args $pre_args
+      if { $tmp_jobs($i,deadline) != 0 } {
+         set deadline [deadline_calc_deadline $tmp_jobs($i,deadline)]
+         append job_args " -dl $deadline"
+      }
+      if { $tmp_jobs($i,priority) != 0 } {
+         append job_args " -p $tmp_jobs($i,priority)"
+      }
+      append job_args " $post_args"
+      set result [ submit_job $job_args 1 60 "" "" ]
+      if { $result <= 0 } {
+         add_proc_error "deadline_submit_jobs" -1 "submit_job failed ($result)"
+         return -1
+      }
+      set tmp_jobs($i,id) $result
+      
+      puts $CHECK_OUTPUT "job\($i\) has id $tmp_jobs($i,id)"
+   }
+   return 0
+}
+
+
+
+proc deadline_set_slot_count { slot_count } {
+
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST
+   global ts_config
+   global deadline_queue_name
+   
+   # setup the host list
+   
+   set first 1
+   set qconf_cmd "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   
+   foreach host $ts_config(execd_nodes) {
+      if { $first != 0 } {
+         set first 0
+         set qconf_args "-mattr queue slots $slot_count $deadline_queue_name\@$host"
+      } else {
+         set qconf_args "-mattr queue slots 0 $deadline_queue_name\@$host"
+      }
+      set result [ start_remote_prog $CHECK_HOST $CHECK_USER "$qconf_cmd" "$qconf_args" exit_state ]
+      if { $exit_state != 0 } {
+        add_proc_error "deadline_set_slot_count" -1 "qconf -mattr failed ($exit_state) ----\n $result \n -----"
+        return -1
+      }
+   }
+   puts $CHECK_OUTPUT "set slot count of queue $deadline_queue_name to $slot_count"
+   return 0
+}
+
+
+
+

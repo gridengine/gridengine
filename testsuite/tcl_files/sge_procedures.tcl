@@ -1681,6 +1681,67 @@ proc add_access_list { user_array list_name } {
   return 0
 }
 
+
+#****** sge_procedures/del_user_from_access_list() ***************************************
+#  NAME
+#     del_user_from_access_list() -- delete a user from an access list
+#
+#  SYNOPSIS
+#     del_user_from_access_list { user_name list_name } 
+#
+#  FUNCTION
+#     This procedure starts the qconf -du command to delete a user from a 
+#     access list
+#
+#  INPUTS
+#     user_name - name of the user
+#     list_name - name of access list
+#
+#  RESULT
+#      1  User was not in the access_list
+#      0  User deleted from the access_list
+#     -1 on error
+#
+#  EXAMPLE
+#
+#    set result [ del_user_from_access_list "codtest1" "deadlineusers" ]
+#
+#    if { $result == 0 } {
+#       puts $CHECK_OUTPUT "user codtest1 deleted from access list deadlineusers"
+#    } elseif { $result == 1 } {
+#       puts $CHECK_OUTPUT "user codtest1 did not exist on the access list deadlineusers"
+#    } else {
+#       set_error -1 "Can not delete user codtest1 from access list deadlineusers"
+#    }
+# 
+#  SEE ALSO
+# 
+#*******************************************************************************
+proc del_user_from_access_list { user_name list_name  } {
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
+  global CHECK_CORE_MASTER CHECK_USER
+
+  set result ""
+  set catch_return [ catch {  
+      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -du $user_name $list_name" 
+  } result ]
+  puts $CHECK_OUTPUT $result
+  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_USERNOTINACL_SS] $user_name $list_name]
+  set DELETED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_DELFROMACL_SS] $user_name $list_name]
+
+  if { $result == $NOT_EXISTS } {
+     return 1
+  } elseif { $result == $DELETED } {
+     return 0
+  } else {
+     add_proc_error "del_user_from_access_list" "-1" "Can not delete user $user_name from access list $list_name"
+     return -1
+  }
+  return 0
+}
+
+
 #****** sge_procedures/del_access_list() ***************************************
 #  NAME
 #     del_access_list() -- delete user access list
@@ -3610,6 +3671,8 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 #       -11   not allowed to submit jobs - error
 #       -12   no access to project - error
 #       -13   unkown option - error
+#       -22   user tries to submit a job with a deadline, but the user is not in
+#             the deadline user access list
 #      -100   on error 
 #     
 #
@@ -3649,11 +3712,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
-     set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+     set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
   }
 
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
+  set NO_DEADLINE_USER    [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NODEADLINEUSER_S] $user ]
 
 
   
@@ -4027,6 +4091,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
              set return_value -21
           }
+          -i $sp_id -- $NO_DEADLINE_USER {
+             set return_value -22
+          }
         }
      }
  
@@ -4061,6 +4128,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-19" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-20" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-22" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
@@ -4119,7 +4187,7 @@ proc get_submit_error { error_id } {
       "-19" { return "two files are specified for the same host" }
       "-20" { return "negative step in range is not allowed" }
       "-21" { return "-t step of range must be a decimal number" }
-
+      "-22" { return "user is not in access list deadlineusers" }
 
       default { return "unknown error" }
    }

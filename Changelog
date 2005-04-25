@@ -1,3 +1,10 @@
+RD-2005-04-25_1: Bugfix     inst_sge backup and restore issues
+                            shadow_masters not backuped
+                            running qmaster not recognized
+                 Bugster:   6259993
+                 Issue:     1585
+                 Review:    MD
+
 AS-2005-04-25-1: CVS        Created V60u4_TAG
 ---------------------------------------------
 

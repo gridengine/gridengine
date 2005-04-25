@@ -1002,7 +1002,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          for (i=0; i<NTHREADS; i++)
             pthread_create(&submitter_threads[i], NULL, submit_and_wait_thread, &job_chunk);
-         sleep(2);
+         sleep(20);
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;

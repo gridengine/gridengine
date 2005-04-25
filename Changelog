@@ -1,3 +1,8 @@
+DT-2005-04-25-0: Bugfix:    o Repaired japi_exit() locking
+                 Changed:   JAPI
+                 Review:    SG, AH
+                 Bugtraq:   6260704
+
 RD-2005-04-25_1: Bugfix     inst_sge backup and restore issues
                             shadow_masters not backuped
                             running qmaster not recognized

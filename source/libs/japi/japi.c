@@ -1066,7 +1066,6 @@ int japi_exit(bool close_session, int flag, dstring *diag)
 
    DPRINTF(("entering japi_exit() at "u32"\n", sge_get_gmt()));
 
-   
    JAPI_LOCK_SESSION();   
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
@@ -1075,6 +1074,7 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    }
    
    japi_session = JAPI_SESSION_SHUTTING_DOWN;
+   JAPI_UNLOCK_SESSION();
 
    /* do not destroy session state until last japi call 
       depending on it is finished */
@@ -1090,7 +1090,6 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    }
    
    JAPI_UNLOCK_REFCOUNTER();
-   JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
@@ -1109,14 +1108,14 @@ int japi_exit(bool close_session, int flag, dstring *diag)
 
    /* First we clean up the pending job(s). */
    ret = japi_clean_up_jobs (flag, diag);
-
-   JAPI_LOCK_EC_STATE();
+   
    /* 
     * notify event client about shutdown
     *
     * Currently this is done by using the sge_gsi_kill_eventclient() call.  As
     * a backup, we also set japi_ec_state accordingly.
     */
+   JAPI_LOCK_EC_STATE();
    DPRINTF(("Notify event client about shutdown\n"));
    if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_STARTING)) {
       int my_state = japi_ec_state;
@@ -1137,12 +1136,16 @@ int japi_exit(bool close_session, int flag, dstring *diag)
       pthread_join (japi_event_client_thread, (void *)&value);
       japi_ec_state = JAPI_EC_DOWN;
    }
+   else {
+      JAPI_UNLOCK_EC_STATE();
+   }
+   
    /* If it's down, we're fine.  It can't be finishing because only one
     * thread can be in japi_exit() at a time. */
    
    /* Make certain nothing is still hanging around. */
    pthread_cond_broadcast (&japi_ec_state_starting_cv);
-   
+
    /* 
     * Try to disconnect from commd
     * this will fail if the thread never made any commd communiction 
@@ -2440,11 +2443,11 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    while ((wait_result = japi_synchronize_jobids_retry(sync_job_ids, dispose) == JAPI_WAIT_UNFINISHED)) {
 
       /* must return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE when event client 
-         thread was shutdown during japi_wait() use japi_ec_state ?? */
+         thread was shutdown during japi_wait() use japi_session */
       /* has japi_exit() been called meanwhile ? */
-      JAPI_LOCK_EC_STATE();
-      if (japi_ec_state != JAPI_EC_UP) {
-         JAPI_UNLOCK_EC_STATE();
+      JAPI_LOCK_SESSION();
+      if (japi_session != JAPI_SESSION_ACTIVE) {
+         JAPI_UNLOCK_SESSION();
          JAPI_UNLOCK_JOB_LIST();
          japi_dec_threads(SGE_FUNC);
          japi_standard_error(DRMAA_ERRNO_EXIT_TIMEOUT, diag);
@@ -2462,7 +2465,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
          DEXIT;
          return DRMAA_ERRNO_EXIT_TIMEOUT;
       }
-      JAPI_UNLOCK_EC_STATE();
+      JAPI_UNLOCK_SESSION();
 
       if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
          if (pthread_cond_timedwait(&Master_japi_job_list_finished_cv, 
@@ -2749,16 +2752,16 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
                                           stat, event, &rusagep)) == JAPI_WAIT_UNFINISHED) {
 
          /* has japi_exit() been called meanwhile ? */
-         JAPI_LOCK_EC_STATE();
-         if (japi_ec_state != JAPI_EC_UP) {
-            JAPI_UNLOCK_EC_STATE();
+         JAPI_LOCK_SESSION();
+         if (japi_session != JAPI_SESSION_ACTIVE) {
+            JAPI_UNLOCK_SESSION();
             JAPI_UNLOCK_JOB_LIST();
             japi_dec_threads(SGE_FUNC);
             japi_standard_error(DRMAA_ERRNO_EXIT_TIMEOUT, diag);
             DEXIT;
             return DRMAA_ERRNO_EXIT_TIMEOUT; /* could also return something else here */
          }
-         JAPI_UNLOCK_EC_STATE();
+         JAPI_UNLOCK_SESSION();
 
          if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
             if (pthread_cond_timedwait(&Master_japi_job_list_finished_cv, 

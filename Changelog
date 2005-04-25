@@ -2,6 +2,8 @@ AS-2005-04-25-1: CVS        Created V60u4_TAG
 ---------------------------------------------
 
 HP-2005-04-25-0: Bugfix:    Fixed MANPATH for Interix
+                 Changed:   dist/util/arch
+                            dist/util/arch.dist
                  Review:    AS
 
 CR-2005-04-25-1: Testsuite: moved system_tests/geee/sharetree/check.exp

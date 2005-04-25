@@ -331,7 +331,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=/usr/share/man:/usr/dt/share/man:/usr/local/man
       ;;
    win32*)
-      DEFAULTMANPATH=/usr/man
+      DEFAULTMANPATH=/usr/share/man
       MANTYPE=catman/cat
       ;;
    esac

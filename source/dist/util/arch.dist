@@ -327,6 +327,10 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    tru64)
       DEFAULTMANPATH=/usr/share/man:/usr/dt/share/man:/usr/local/man
       ;;
+   win32*)
+      DEFAULTMANPATH=/usr/share/man
+      MANTYPE=catman/cat
+      ;;
    esac
 
    if [ "$1" = "-m" ]; then

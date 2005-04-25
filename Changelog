@@ -1,3 +1,6 @@
+HP-2005-04-25-0: Bugfix:    Fixed MANPATH for Interix
+                 Review:    AS
+
 CR-2005-04-25-1: Testsuite: moved system_tests/geee/sharetree/check.exp
                             to system_tests/scheduler/sharetree/check.exp
 

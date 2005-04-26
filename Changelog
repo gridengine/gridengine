@@ -1,4 +1,8 @@
-AA-2005-04-25-0: Bugfix:    Can't select 'slots' in select box when adding consumables for execution host
+AS-2005-04-26-0: CVS        Created V60u4_TAG
+---------------------------------------------
+
+AA-2005-04-25-0: Bugfix:    Can't select 'slots' in select box when adding 
+                            consumables for execution host
                  Changed:   qmon
                  Bugtraq:   6260729
                  Issue:     1586
@@ -16,8 +20,6 @@ RD-2005-04-25_1: Bugfix     inst_sge backup and restore issues
                  Issue:     1585
                  Review:    MD
 
-AS-2005-04-25-1: CVS        Created V60u4_TAG
----------------------------------------------
 
 HP-2005-04-25-0: Bugfix:    Fixed MANPATH for Interix
                  Changed:   dist/util/arch

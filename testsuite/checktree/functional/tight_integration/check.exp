@@ -707,7 +707,7 @@ proc tight_integration_massive {} {
          add_proc_error tight_integration_massive -1 "only $finished tasks out of $massive_slots ran through successfully"
       }
       set sp_id [lindex $id 1]
-      send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+      send -i $sp_id "\003" ;# send CTRL+C to stop poss. running processes in that shell
 
       close_spawn_process $id
 

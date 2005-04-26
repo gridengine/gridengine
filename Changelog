@@ -1,3 +1,7 @@
+JG-2005-04-26-0: Testsuite: Fixed testsuite startup for SGE(EE) 5.3 clusters.
+                            Added scripts to list all / verified tests.
+                            Some cleanup, fixed typos.
+
 CR-2005-04-26-0: Testsuite: enhanced functional/consumable_resources test
                             to install 2 load sensors
 

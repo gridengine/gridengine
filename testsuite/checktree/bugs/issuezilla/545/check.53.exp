@@ -46,7 +46,6 @@ global env
 
 # set check_root_access_needs "yes"
 
-
 # define a level initialization procedure:
 set check_init_level_procedure "issue_545_init_level"
 

@@ -1,5 +1,5 @@
 <HTML>
-<!--This file created 24.04.2005 22:14 Uhr by Claris Home Page version 3.0-->
+<!--This file created 26.04.2005 19:30 Uhr by Claris Home Page version 3.0-->
 <HEAD>
    <TITLE>Tight MPICH2 Integration in Grid Engine</TITLE>
    <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
@@ -242,8 +242,8 @@ pe_name           mpich2_smpd_rsh
 slots             999
 user_lists        NONE
 xuser_lists       NONE
-start_proc_args   /usr/sge/mpich2_smpd_rsh/startmpi.sh -catch_rsh $pe_hostfile
-stop_proc_args    /usr/sge/mpich2_smpd_rsh/stopmpi.sh
+start_proc_args   /usr/sge/mpich2_smpd_rsh/startmpich2.sh -catch_rsh $pe_hostfile
+stop_proc_args    /usr/sge/mpich2_smpd_rsh/stopmpich2.sh
 allocation_rule   $round_robin
 control_slaves    TRUE
 job_is_first_task FALSE

@@ -53,7 +53,7 @@ set check_init_level_procedure "consumable_resources_init_level"
 # define test's name and run level descriptions
 set check_name            "consumable_resources"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   7
+set check_highest_level   8
 set check_description(0)  "Consumable resources on global level"
 set check_description(1)  "Consumable resources on host level"
 set check_description(2)  "Consumable resources on queue level"
@@ -62,6 +62,7 @@ set check_description(4)  "Force request of consumable resource"
 set check_description(5)  "Consumable resources as load_thresholds"
 set check_description(6)  "Consumable resources and rescheduling"
 set check_description(7)  "Consumable resources and load sensors"
+set check_description(8)  "Consumable resources and 2 load sensor scripts"
 
 
 
@@ -111,6 +112,9 @@ proc consumable_resources_init_level {} {
          return 0
       }
       "7" {
+         return 0
+      }
+      "8" {
          return 0
       }
    } 
@@ -831,11 +835,177 @@ proc consumable_resources_test {} {
       set test1_complex(test1) ""
       set_complex test1_complex
 
+      catch {  eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link.sh" } output
+      puts $CHECK_OUTPUT $output
+
       puts $CHECK_OUTPUT "done"
    }
    
-  
+   if { $CHECK_ACT_LEVEL == 8 } {
 
+      # create complex
+      set test1_complex(test1) "t1 INT <= YES YES 0 1000"
+      set test1_complex(test2) "t2 INT <= YES YES 0 1000"
+      set_complex test1_complex
+  
+      # get original global host coniguration
+      get_exechost orig_global_host global
+      # modify complex_values of global host
+      set global_host(complex_values) "test1=15,test2=15"
+      set_exechost global_host global
+
+      set host_a [lindex $consumable_resources_test_hosts 0]
+      # get original host_a host coniguration
+      get_exechost orig_host_a_host $host_a
+       # modify complex_values of host_a host
+      set host_a_host(complex_values) "test1=10,test2=10"
+      set_exechost host_a_host $host_a
+
+      set queue_settings(complex_values) "test1=5,test2=5"
+      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+
+      # setup load script
+      get_config execd_config_a_host $host_a
+
+            
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link6.sh" } output
+      puts $CHECK_OUTPUT $output
+      catch {  eval exec "ln -s $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_test1_6_loadsensor.sh $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link6.sh" } output
+      puts $CHECK_OUTPUT $output
+
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link3.sh" } output
+      puts $CHECK_OUTPUT $output
+      catch {  eval exec "ln -s $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_test2_3_loadsensor.sh $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link3.sh" } output
+      puts $CHECK_OUTPUT $output
+
+
+
+      set load_sensor_script_path "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link6.sh,$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link3.sh"
+      if { [info exists execd_config_a_host(load_sensor)] } {
+         set new_config_a_host(load_sensor) "$execd_config_a_host(load_sensor),$load_sensor_script_path"
+      } else {
+         set new_config_a_host(load_sensor) "$load_sensor_script_path"
+         set execd_config_a_host(load_sensor) ""
+      }
+      if { [info exists execd_config_a_host(load_report_time)] == 0 } {
+         set execd_config_a_host(load_report_time) ""
+      }
+
+      set new_config_a_host(load_report_time) "00:00:05"
+      set_config new_config_a_host $host_a
+
+
+      # check for reported load value
+      set retries 30
+      set ok 0
+      while { $retries > 0 } {
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-l h=$host_a -F | grep test1" } test_grep
+         puts $CHECK_OUTPUT "waiting for test1=6 load value (retry count: $retries) ..."
+         puts $CHECK_OUTPUT $test_grep
+         if { [string match "*hc:test1=6*" $test_grep] } {
+            puts $CHECK_OUTPUT "resource test1 is set to value 6 - ok"
+            set ok 1
+            break
+         }
+         after 5000
+         incr retries -1
+      }
+      if { $ok != 1 } {
+         add_proc_error "consumable_resources_test" -1 "can't find load value hc:test1=6 by qstat -F on host $host_a"
+      }
+
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-se $host_a | grep test1" } test_grep
+      if { [string match "*test1=6*" $test_grep] == 0 } {
+         add_proc_error "consumable_resources_test" -1 "qconf -se doesn't show test1=6 load value"
+      }
+
+      # check for reported load value
+      set retries 30
+      set ok 0
+      while { $retries > 0 } {
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-l h=$host_a -F | grep test2" } test_grep
+         puts $CHECK_OUTPUT "waiting for test2=3 load value (retry count: $retries) ..."
+         puts $CHECK_OUTPUT $test_grep
+         if { [string match "*hc:test2=3*" $test_grep] } {
+            puts $CHECK_OUTPUT "resource test2 is set to value 3 - ok"
+            set ok 1
+            break
+         }
+         after 5000
+         incr retries -1
+      }
+      if { $ok != 1 } {
+         add_proc_error "consumable_resources_test" -1 "can't find load value hc:test2=3 by qstat -F on host $host_a"
+      }
+
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-se $host_a | grep test2" } test_grep
+      if { [string match "*test2=3*" $test_grep] == 0 } {
+         add_proc_error "consumable_resources_test" -1 "qconf -se doesn't show test2=3 load value"
+      }
+
+
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link6.sh" } output
+      puts $CHECK_OUTPUT $output
+
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link3.sh" } output
+      puts $CHECK_OUTPUT $output
+
+      wait_for_enter     
+
+      # restore execd config
+      set_config execd_config_a_host $host_a
+
+      set queue_settings(complex_values) "NONE"
+      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+
+      set host_a_host(complex_values) $orig_host_a_host(complex_values)
+      set_exechost host_a_host $host_a
+
+      set global_host(complex_values) $orig_global_host(complex_values)
+      set_exechost global_host global
+
+      set test_grep "test1" 
+      set retries 45
+      while { [string match "*test1*" $test_grep] && $retries > 0 } {
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-se $host_a | grep test1" } test_grep
+         puts $CHECK_OUTPUT "\nwaiting for test resource report to disappear (retry count: $retries) ..."
+         puts $CHECK_OUTPUT "$test_grep"
+         incr retries -1
+         sleep 5
+      }
+
+      if { [string match "*test1*" $test_grep] } {
+         add_proc_error "consumable_resources_test" -1 "load sensor report test1 does not disappear"
+      }
+
+      set test_grep "test2" 
+      set retries 45
+      while { [string match "*test2*" $test_grep] && $retries > 0 } {
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-se $host_a | grep test2" } test_grep
+         puts $CHECK_OUTPUT "\nwaiting for test resource report to disappear (retry count: $retries) ..."
+         puts $CHECK_OUTPUT "$test_grep"
+         incr retries -1
+         sleep 5
+      }
+
+      if { [string match "*test2*" $test_grep] } {
+         add_proc_error "consumable_resources_test" -1 "load sensor report test2 does not disappear"
+      }
+
+      
+      # remove test1 and test2 complex 
+      set test1_complex(test1) ""
+      set test1_complex(test2) ""
+      set_complex test1_complex
+
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link6.sh" } output
+      puts $CHECK_OUTPUT $output
+
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link3.sh" } output
+      puts $CHECK_OUTPUT $output
+
+      puts $CHECK_OUTPUT "done"
+   }
    
    set_error 0 "ok"
 }

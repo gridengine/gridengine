@@ -950,7 +950,6 @@ proc consumable_resources_test {} {
       catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link3.sh" } output
       puts $CHECK_OUTPUT $output
 
-      wait_for_enter     
 
       # restore execd config
       set_config execd_config_a_host $host_a

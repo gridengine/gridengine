@@ -195,17 +195,19 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
       set hostname $CHECK_HOST
    }
 
-
+   set timestamp_sub_index 0
    while { 1 } {
+      set timestamp_appendix "[timestamp]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
-        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_$timestamp_appendix.${file_ext}"
       } else {
-        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_$timestamp_appendix.${file_ext}"
       }
-      sleep 1
       # break loop when file is not existing ( when timestamp has increased )  
       if { [ file isfile $file_name] != 1 } {
          break
+      } else {
+         incr timestamp_sub_index 1
       }
    }
 
@@ -1549,8 +1551,12 @@ proc create_shell_script { scriptfile
    while { $file_size == 0 } {
       catch { set file_size [file size "$scriptfile"]}
       if { $file_size == 0 } { 
+         puts $CHECK_OUTPUT "===================================================================="
          puts $CHECK_OUTPUT "--> file size of \"$scriptfile\": $file_size ; waiting for filesize > 0"
-         after 1000
+         puts $CHECK_OUTPUT "===================================================================="
+         after 500
+      } else {
+         break
       }
 
       if { [clock seconds] > $timeout } {

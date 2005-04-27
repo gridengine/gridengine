@@ -870,7 +870,10 @@ proc open_remote_spawn_process { hostname
   debug_puts "exec_command:   $exec_command"
   debug_puts "exec_arguments: $exec_arguments"
 
-  if { [string compare $user $CHECK_USER] != 0 && [string compare $user "ts_def_con"] != 0  && [string compare $user "ts_def_con2"] != 0 && [string compare $user "ts_def_con_translate"] != 0} {
+  if { [string compare $user $CHECK_USER]            != 0 && 
+       [string compare $user "ts_def_con"]           != 0 && 
+       [string compare $user "ts_def_con2"]          != 0 && 
+       [string compare $user "ts_def_con_translate"] != 0} {
       if {[have_root_passwd] == -1} {
          add_proc_error "open_remote_spawn_process" -2 "root access required"
          return "" 
@@ -946,7 +949,7 @@ proc open_remote_spawn_process { hostname
      uplevel 1 { 
         set open_remote_spawn__id "$open_spawn_buffer" 
      }
-  } else { 
+  } else {
      uplevel 1 { debug_puts "opening connection to host $open_remote_spawn__hostname" }
      if { [have_ssh_access] == 0 } {
         set pid [ uplevel 1 { spawn "rlogin" "$open_remote_spawn__hostname" } ] 

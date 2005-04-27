@@ -1,3 +1,6 @@
+CR-2005-04-27-3: Testsuite: Enhancement:
+                               speedup in testsuite command execution
+
 CR-2005-04-27-2: Testsuite: modified testsuite menu to support subdirectory
                             names
 

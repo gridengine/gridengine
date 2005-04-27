@@ -101,8 +101,9 @@ proc issue_1334_setup {} {
    set queue_conf(starter_method)  "$CHECK_ACTUAL_TEST_PATH/jobstarter.sh"
    
    add_queue "iz_1334" "@allhosts" queue_conf 1
-   
-   after 2000
+
+   delete_file $issue_1334_job_stdout_file 0
+   delete_file $issue_1334_job_stderr_file 0
    
    set_error 0 "ok"
 }
@@ -119,8 +120,8 @@ proc issue_1334_cleanup  {} {
    del_queue "iz_1334" "@allhosts" 0 1
    
    # delete the job stdout and stderr file
-   file delete "$issue_1334_job_stdout_file"
-   file delete "$issue_1334_job_stderr_file"
+   delete_file $issue_1334_job_stdout_file 0
+   delete_file $issue_1334_job_stderr_file 0
    
    set_error 0 "ok"
 }
@@ -150,21 +151,21 @@ proc issue_1334_run {} {
       return
    }
    
+   puts $CHECK_OUTPUT "waiting for file $issue_1334_job_stdout_file"
    #
    # Hence the job starter had been invoked the stdout file must contain
    # the pattern SGE_STARTER_SHELL_PATH
    #
-   set grep_res [ catch { eval exec "grep \"SGE_STARTER_SHELL_PATH\" $issue_1334_job_stdout_file" } grepoutput ]
-   
-   puts $CHECK_OUTPUT "grep output is -------\n$grepoutput\n-------------"
-   if { $grep_res != 0 } {
-      set_error 1 "jobstarter was not invoked"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "cat" "$issue_1334_job_stdout_file"]
+   if { [string match "*SGE_STARTER_SHELL_PATH*" $output] != 1 } {
+      set_error 1 "jobstarter was not invoked (1)"
       return
    }
    
-   file delete "$issue_1334_job_stdout_file"
-   file delete "$issue_1334_job_stderr_file"
+   puts $CHECK_OUTPUT "content of job output file $issue_1334_job_stdout_file:\n$output\n"
    
+   delete_file $issue_1334_job_stdout_file
+   delete_file $issue_1334_job_stderr_file
    
    #
    #  Submit a binary job with a shell
@@ -182,20 +183,23 @@ proc issue_1334_run {} {
       return
    }
    
+   puts $CHECK_OUTPUT "waiting for file $issue_1334_job_stdout_file"
+
    #
    # Hence the job starter had been invoked the stdout file must contain
    # the pattern SGE_STARTER_SHELL_PATH
    #
-   set grep_res [ catch { eval exec "grep \"SGE_STARTER_SHELL_PATH\" $issue_1334_job_stdout_file" } grepoutput ]
-   
-   puts $CHECK_OUTPUT "grep output is -------\n$grepoutput\n-------------"
-   if { $grep_res != 0 } {
-      set_error 1 "jobstarter was not invoked"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "cat" "$issue_1334_job_stdout_file"]
+   if { [string match "*SGE_STARTER_SHELL_PATH*" $output] != 1 } {
+      set_error 1 "jobstarter was not invoked (2)"
       return
    }
+   puts $CHECK_OUTPUT "content of job output file $issue_1334_job_stdout_file:\n$output\n"
+
+
    
-   file delete "$issue_1334_job_stdout_file"
-   file delete "$issue_1334_job_stderr_file"
+   delete_file $issue_1334_job_stdout_file
+   delete_file $issue_1334_job_stderr_file
    
    
    

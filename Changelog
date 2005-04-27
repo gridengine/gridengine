@@ -1,3 +1,10 @@
+CR-2005-04-27-0: Testsuite: modified test bugs/issuezilla/1334:
+                            - using testsuite standard procedures to
+                              delete files and start programs
+                            - new optional parameter for delete_file()
+                              do_wait_for_file: waiting for file to appear
+                              is on (default), but can be switched off
+
 JG-2005-04-26-0: Testsuite: Fixed testsuite startup for SGE(EE) 5.3 clusters.
                             Added scripts to list all / verified tests.
                             Some cleanup, fixed typos.

@@ -2098,6 +2098,7 @@ proc delete_file_at_startup { filename } {
 #
 #  INPUTS
 #     filename - full path file name of file 
+#     { do_wait_for_file 1 } - optional wait for file before removing
 #
 #  RESULT
 #     no results 
@@ -2114,11 +2115,18 @@ proc delete_file_at_startup { filename } {
 #  SEE ALSO
 #     file_procedures/delete_directory
 #*******************************
-proc delete_file { filename } { 
+proc delete_file { filename { do_wait_for_file 1 } } { 
  
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
+   if { $do_wait_for_file == 1 } {
+      wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
+   } else {
+      if {[file isfile "$filename"] != 1} {
+         puts $CHECK_OUTPUT "delete_file - no such file: \"$filename\""
+         return      
+      }
+   }
 
    if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
       file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"

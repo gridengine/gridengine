@@ -1,3 +1,6 @@
+CR-2005-04-27-4: Testsuite: added a testsuite test template:
+                            checktree/test_template/check.60.exp
+
 CR-2005-04-27-3: Testsuite: Enhancement:
                                speedup in testsuite command execution
 

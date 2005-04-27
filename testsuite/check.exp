@@ -4811,9 +4811,9 @@ proc show_tests {path full} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc change_dir { } {
+proc change_dir { { have_input "" } } {
   global CHECK_ACT_PATH CHECK_CHECKTREE_ROOT 
-
+  set index_start 1
   print_menu_header
 
   set dirs [ get_dir_names $CHECK_ACT_PATH ]
@@ -4823,16 +4823,31 @@ proc change_dir { } {
   if {[string compare $CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT] != 0 } {
     puts "($count) - up"
     incr count 1
+    incr index_start 1
   }
   puts "($count) - stay"
   incr count 1
+  incr index_start 1
+
   foreach elem $dirs {
-     puts "($count) - go to \"$elem\""
+#     puts "($count) - go to \"$elem\""
      set newdir($count) $elem
      incr count 1
   }
 
-  set input [wait_for_enter 1] 
+  if { $have_input == "" } {
+     puts -nonewline "\nEnter number or a subdirectory name:\n> "
+     set input [wait_for_enter 1] 
+  } else {
+     set input $have_input
+  }
+  set nr_of_dirs [llength $dirs]
+  for { set i 0 } { $i < $nr_of_dirs } { incr i 1 } {
+     if { [lindex $dirs $i] == $input } {
+        set input $i 
+        incr input $index_start
+     }
+  }
   
   if { ($input == 1) && ([string compare $CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT] != 0)}  {
      puts "go to upper dir ..."
@@ -6897,6 +6912,8 @@ proc menu {} {
     puts " (28) restart cluster"
     puts " (29) check spool directory content"
 
+  puts -nonewline "\nEnter number or subdirectory name:\n> "
+
   set input [wait_for_enter 1]; 
 
   clear_screen
@@ -7047,7 +7064,11 @@ proc menu {} {
                } 
             }
          }
-
+     default {
+        if { $input != "" } {
+           change_dir $input
+        }
+     }
    }
   menu
 }

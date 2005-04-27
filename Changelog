@@ -1,3 +1,6 @@
+CR-2005-04-27-2: Testsuite: modified testsuite menu to support subdirectory
+                            names
+
 CR-2005-04-27-1: Testsuite: modified test bugs/issuezilla/1489:
                             - using testsuite standard procedures to
                               delete files

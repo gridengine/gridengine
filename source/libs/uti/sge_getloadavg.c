@@ -46,24 +46,11 @@
 #include "sge_getloadavg.h"
 
 #if defined(SOLARIS) 
-#  include <kvm.h>
 #  include <nlist.h> 
 #  include <sys/cpuvar.h>
+#  include <kstat.h>
 #  if defined(SOLARIS64)
 #     include <sys/loadavg.h> 
-#  endif
-#  define USE_KSTAT
-#  ifdef USE_KSTAT
-#     include <kstat.h>
-/*
- * Some kstats are fixed at 32 bits, these will be specified as ui32; some
- * are "natural" size (32 bit on 32 bit Solaris, 64 on 64 bit Solaris
- * we'll make those unsigned long)
- * Older Solaris doesn't define KSTAT_DATA_UINT32, those are always 32 bit.
- */
-#     ifndef KSTAT_DATA_UINT32
-#        define ui32 ul
-#     endif
 #  endif
 #elif defined(LINUX)
 #  include <ctype.h>
@@ -191,7 +178,7 @@
 #  define X_CP_TIME 0 
 #endif
 
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
+#if defined(FREEBSD)
 typedef kvm_t* kernel_fd_type;
 #else 
 typedef int kernel_fd_type;
@@ -231,7 +218,7 @@ static int kernel_initialized = 0;
 static kernel_fd_type kernel_fd;
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(HP10) || defined(FREEBSD)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(FREEBSD)
 
 static int sge_get_kernel_address(
 char *name,
@@ -311,7 +298,7 @@ char *refstr
 ) {
    kernel_fd_type kernel_fd;
 
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
+#if defined(FREEBSD)
    if (sge_get_kernel_fd(&kernel_fd)
        && kvm_read (kernel_fd, offset, (char *) ptr, size) != size) {
       if (*refstr == '!') {
@@ -340,22 +327,27 @@ char *refstr
    return 0;
 }
 
+#endif
 
 #if defined(SOLARIS)
+/* MT-NOTE kstat is not thread save */
 int get_freemem(
 long *freememp 
 ) {
-   kvm_t *kd;
-
-   long address_freemem;
-   if (sge_get_kernel_fd(&kd) && sge_get_kernel_address("freemem", &address_freemem)) {
-      getkval(address_freemem, (int *)freememp, sizeof(long), "freemem");
-      return 0;
-   } else
+   kstat_ctl_t   *kc;  
+   kstat_t       *ksp;  
+   kstat_named_t *knp;
+   kc = kstat_open();  
+   ksp = kstat_lookup(kc, "unix", 0, "system_pages");
+   if (kstat_read(kc, ksp, NULL) == -1) {
+      kstat_close(kc);
       return -1;
+   } 
+   knp = kstat_data_lookup(ksp, "freemem");
+   *freememp = (long)knp -> value.ul;
+   kstat_close(kc);
+   return 0;
 }
-#endif
-
 
 #elif defined(CRAY)
 
@@ -377,7 +369,6 @@ int Ncpus;
 
 #if defined(SOLARIS) || defined(SOLARIS64)
 
-#ifdef USE_KSTAT
 static kstat_ctl_t *kc = NULL;
 static kstat_t **cpu_ks;
 static cpu_stat_t *cpu_stat;
@@ -506,14 +497,9 @@ int kupdate(int avenrun[3])
    /* return the number of cpus found */
    return(ncpu);
 }
-#endif
 
 double get_cpu_load() {
-#ifndef USE_KSTAT
    static unsigned long *cpu_offset = NULL;
-#else
-   int avenrun[3];
-#endif
    kernel_fd_type kernel_fd;
    static long address_cpu = 0;
    static long address_ncpus = 0;
@@ -524,10 +510,10 @@ double get_cpu_load() {
    static long cpu_old[CPUSTATES]  = { 0L, 0L, 0L, 0L, 0L};
    static long cpu_diff[CPUSTATES] = { 0L, 0L, 0L, 0L, 0L}; 
    double cpu_states[CPUSTATES];
+   int avenrun[3];
 
    DENTER(CULL_LAYER, "get_cpu_load.solaris");
 
-#ifdef USE_KSTAT
    /* use kstat to update all processor information */
    if ((cpus_found = kupdate(avenrun)) < 0 ) {
       DEXIT;
@@ -566,62 +552,10 @@ double get_cpu_load() {
 #endif
 #endif
 
-#else /* !USE_KSTAT */
-   if (sge_get_kernel_fd(&kernel_fd)
-       && (address_cpu || sge_get_kernel_address("cpu", &address_cpu))
-       && (address_ncpus || sge_get_kernel_address("ncpus", &address_ncpus))) {
-
-      /* how many cpu's ? */
-      if (getkval(address_ncpus, &number_of_cpus, sizeof(number_of_cpus), 
-         "ncpus")) {
-         DEXIT;
-         return -1.0;
-      }
-
-      /* alloc adress array */
-      if (!cpu_offset) {
-         cpu_offset = (unsigned long*)malloc(
-                                     number_of_cpus * sizeof (unsigned long));
-      }
-      if (cpu_offset) {
-         for(i = cpus_found = 0; cpus_found < number_of_cpus; i++) {
-            if (getkval(address_cpu + i*sizeof(unsigned long), 
-               (int*)&cpu_offset[cpus_found], sizeof(unsigned long), "cpu")) {
-               DEXIT;
-               return -1.0;
-            }
-            if (cpu_offset[cpus_found] != 0) {
-               cpus_found++;
-            }
-         }  
-         for (i=0; i<CPUSTATES; i++) {
-            cpu_time[i] = 0;
-         }
-         for (i=0; i<number_of_cpus; i++) {
-            if (cpu_offset[i] != 0) {
-               struct cpu cpu;
-
-               if (getkval(cpu_offset[i], (int*)&cpu, sizeof(struct cpu), "cpu")) {
-                  DEXIT;
-                  return -1.0;
-               }
-               for (j=0; j < CPU_WAIT; j++) {
-                  cpu_time[j] += (long) cpu.cpu_stat.cpu_sysinfo.cpu[j];
-               }
-               cpu_time[CPUSTATE_IOWAIT] += (long) cpu.cpu_stat.cpu_sysinfo.wait[W_IO] 
-                  + (long) cpu.cpu_stat.cpu_sysinfo.wait[W_PIO];
-               cpu_time[CPUSTATE_SWAP] += (long) cpu.cpu_stat.cpu_sysinfo.wait[W_SWAP]; 
-            }
-         }
-         percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff); 
-         cpu_load = cpu_states[1] + cpu_states[2] + cpu_states[3] + cpu_states[4];
-      }
-   }
-#endif
-
    DEXIT;
    return cpu_load;
 }
+
 #elif defined(LINUX)
 
 static char* skip_token(
@@ -868,10 +802,44 @@ static int get_load_avg(
 double loadavg[],
 int nelem 
 ) {
+   int elements = 0;
+
+   #if defined(SOLARIS)
+   kstat_ctl_t   *kc;  
+   kstat_t       *ksp;  
+   kstat_named_t *knp;
+   if ((kc = kstat_open()) == NULL) {
+      return -1;
+   } else {
+      ksp = kstat_lookup(kc, "unix", 0, "system_misc");
+      if (kstat_read(kc, ksp, NULL) == -1) {
+         kstat_close(kc);
+         return -1;
+      } 
+
+      while(elements < nelem) {
+         if ( elements==0 ) {
+            knp = kstat_data_lookup(ksp, "avenrun_1min");
+            loadavg[elements]=(double)knp -> value.ul/256.0;
+         } else if ( elements == 1 ) {
+            knp = kstat_data_lookup(ksp, "avenrun_5min");
+            loadavg[elements]=(double)knp -> value.ul/256.0;
+         } else if (elements == 2 ) {
+            knp = kstat_data_lookup(ksp, "avenrun_15min");
+            loadavg[elements]=(double)knp -> value.ul/256.0;
+         } else {
+            loadavg[elements]=0;
+         }
+         elements++;
+      }
+   }
+
+   kstat_close(kc);
+
+   #else
    kernel_fd_type kernel_fd;
    long address;
    KERNEL_AVG_TYPE avg[3];
-   int elements = 0;
 
    if (sge_get_kernel_fd(&kernel_fd)
        && sge_get_kernel_address(KERNEL_AVG_NAME, &address)) {
@@ -885,6 +853,7 @@ int nelem
    } else {
       elements = -1;
    }
+   #endif
    return elements;
 }
 

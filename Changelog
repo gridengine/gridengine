@@ -1,3 +1,10 @@
+RD-2005-04-27-0: Enhancem.  Zones support on Solaris 10
+                            switched kvm usage to kstat interface
+                 Issue:     1403
+                 Bugtraq:   6218430
+                 Changed:   loadcheck
+                 Review:    JG
+
 JG-2005-04-26-0: Bugfix:    Fixed dist/util/arch for AIX, HP.
 
 RC-2005-04-17-0: Enhancem.  - compile on Cray/UNICOS again

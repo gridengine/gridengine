@@ -94,7 +94,7 @@ proc ts_source {filebase {extension tcl}} {
    }
 
    if {$sourced == 0} {
-      puts $CHECK_OUTPUT "no files sourced for filename \"$filebase.*\""
+      debug_puts "no files sourced for filename \"$filebase.*\""
    }
 
    return $sourced

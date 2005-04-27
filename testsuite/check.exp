@@ -33,6 +33,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+global last_debug_msec
+set last_debug_msec [clock clicks -milliseconds]
 global daemon_debug 
 set daemon_debug 0
 global master_debug
@@ -292,7 +294,7 @@ set CHECK_DEBUG_LEVEL 0
 #
 proc debug_puts { args } {
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
-   global CHECK_CUR_PROC_NAME CHECK_HOST
+   global CHECK_CUR_PROC_NAME CHECK_HOST last_debug_msec
    if { $CHECK_DEBUG_LEVEL == 0 } {
       return
    }
@@ -304,8 +306,13 @@ proc debug_puts { args } {
    if { [info exists CHECK_HOST ] == 0 } {
       set CHECK_HOST "unknown"
    }
+   set time [clock clicks -milliseconds]
+   incr time -$last_debug_msec
 
-   puts $CHECK_OUTPUT "\[host: $CHECK_HOST, debug/$CHECK_CUR_PROC_NAME\] $output" 
+   set last_debug_msec [clock clicks -milliseconds]
+
+   puts $CHECK_OUTPUT "\[$time $CHECK_HOST:$CHECK_CUR_PROC_NAME\] $output" 
+
 }
 
 #
@@ -5041,9 +5048,11 @@ proc print_menu_header {} {
      foreach test $CHECK_DIRECTORIES {
         if { [is_category_enabled $test] == 0 } {
            set run_test_ok 0
+           debug_puts "print_menu_header: get_check_levels"
            set tests_runlevels [get_check_levels $test]
             
            foreach tests_runlevel $tests_runlevels {
+              debug_puts "print_menu_header: is_level_enabled"
               if { [ is_level_enabled $tests_runlevel ] == 0 } {
                  set test_name [get_check_name $test]
                  if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {

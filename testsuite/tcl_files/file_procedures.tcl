@@ -146,10 +146,20 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
       set hostname $CHECK_HOST
    }
 
-   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
-     set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
-   } else {
-     set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
+   set timestamp_sub_index 0
+   while { 1 } {
+      set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
+      if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
+        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_${timestamp_appendix}_${dir_ext}"
+      } else {
+        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_${timestamp_appendix}_${dir_ext}"
+      }
+      # break loop when file is not existing ( when timestamp has increased )  
+      if { [ file isdirectory $file_name] != 1 } {
+         break
+      } else {
+         incr timestamp_sub_index 1
+      }
    }
    return $file_name
 }
@@ -197,7 +207,7 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
 
    set timestamp_sub_index 0
    while { 1 } {
-      set timestamp_appendix "[timestamp]_$timestamp_sub_index"
+      set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
         set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_$timestamp_appendix.${file_ext}"
       } else {
@@ -1546,8 +1556,9 @@ proc create_shell_script { scriptfile
    close $script
 
 
-   set file_size 0
-   set timeout [expr [clock seconds] + 60]
+   catch { set file_size [file size "$scriptfile"]}
+   set timeout [clock seconds]
+   incr timeout 60
    while { $file_size == 0 } {
       catch { set file_size [file size "$scriptfile"]}
       if { $file_size == 0 } { 
@@ -1564,13 +1575,6 @@ proc create_shell_script { scriptfile
          return
       }
    }
-
-#   catch { exec "touch" "$scriptfile" } result
-#   puts $CHECK_OUTPUT "touch result: $result"
-  
-#   catch { exec "chmod" "0755" "$scriptfile" } result
-#   puts $CHECK_OUTPUT "chmod result: $result"
-
 
    if { $CHECK_DEBUG_LEVEL != 0 } {
       set script  [ open "$scriptfile" "r" ]

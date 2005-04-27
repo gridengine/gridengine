@@ -1,3 +1,7 @@
+CR-2005-04-27-5: Testsuite: o performance cleanup
+                            o added new test to test testsuite performance
+                            o added debug messages
+
 DT-2005-04-27-0: Experim.:  o Added new "gridless" DRMAA Java implementation to
                               experimental packages
 

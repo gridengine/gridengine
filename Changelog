@@ -1,3 +1,6 @@
+DT-2005-04-27-0: Experim.:  o Added new "gridless" DRMAA Java implementation to
+                              experimental packages
+
 CR-2005-04-27-4: Testsuite: added a testsuite test template:
                             checktree/test_template/check.60.exp
 

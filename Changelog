@@ -1,3 +1,9 @@
+CR-2005-04-27-1: Testsuite: modified test bugs/issuezilla/1489:
+                            - using testsuite standard procedures to
+                              delete files
+                            - increased file wait timeout because
+                              NFS may cause timing problems
+
 RH-2005-04-27-0: Testsuite: added new test system_tests/scheduler/urgency
                  Review:    JG
 

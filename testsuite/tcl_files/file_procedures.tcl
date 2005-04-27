@@ -2090,7 +2090,7 @@ proc delete_file_at_startup { filename } {
 #     delete_file -- move/copy file to testsuite trashfolder 
 #
 #  SYNOPSIS
-#     delete_file { filename } 
+#     delete_file { filename { do_wait_for_file 1 } } 
 #
 #  FUNCTION
 #     This procedure will move/copy the file to the testsuite's trashfolder 

@@ -217,6 +217,49 @@ proc get_complex { change_array } {
   }
 }
 
+#****** sge_procedures.60/set_complex() **********************************
+#  NAME
+#     set_complex() -- set complexes with the qconf -mc commaned
+#
+#  SYNOPSIS
+#     set_complex { change_array } 
+#
+#  FUNCTION
+#     Modifies, adds or deletes complexes
+#
+#     If an complex in change_array already exits the complex will be changed
+#     If it not exists in will be added
+#     If the complex definition in the change_array is a empty string the
+#     complex will be deleted
+#
+#  INPUTS
+#     change_array - array with the complex definitions
+#
+#  RETURN:
+#
+#       -1  complex definition has been modified
+#       -2  complex definition has been added
+#       -3  complex definition has been removed
+#       -4  complex definition has not changed
+#     else  error
+#
+#  EXAMPLE:
+#
+#  1. add or modify a complexes
+#
+#      set tmp_complex(slots) "s   INT <= YES YES 1 1000"
+#      set tmp_complex(dummy) "du1 INT <= YES YES 0 500"
+#     
+#      set_complex tmp_complex
+#
+#   2. delete a complex
+#
+#      set tmp_complex(dummy) ""
+#      set_complex tmp_complex
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc set_complex { change_array } {
   global ts_config CHECK_USER
   global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
@@ -260,11 +303,12 @@ proc set_complex { change_array } {
 #     puts $CHECK_OUTPUT "\"$vi_com\""
 #  }
 
-  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
   set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mc" $vi_commands $MODIFIED $REMOVED $ADDED ]
+  set NOT_MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CENTRY_NOTCHANGED]]
+  
+  set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mc" $vi_commands $MODIFIED $REMOVED $ADDED $NOT_MODIFIED ]
   if { $result != 0 && $result != -2 && $result != -3 && $result != -4 } {
      add_proc_error "set_complex" -1 "could not modify complex: ($result)"
   }
@@ -520,5 +564,67 @@ proc startup_bdb_rpc { hostname } {
    }
    add_proc_error "startup_bdb_rpc" -1 "could not start berkeley_db_svc on host $hostname:\noutput:\"$output\""
    return -1
+}
+
+#                                                             max. column:     |
+#****** sge_procedures/get_urgency_job_info() ******
+# 
+#  NAME
+#     get_urgency_job_info -- get urgency job information (qstat -urg)
+#
+#  SYNOPSIS
+#     get_urgency_job_info { jobid {variable job_info} } 
+#
+#  FUNCTION
+#     This procedure is calling the qstat (qstat -urg if sgeee) and returns
+#     the output of the qstat in array form.
+#
+#  INPUTS
+#     jobid               - job identifaction number
+#     {variable job_info} - name of variable array to store the output
+#     {do_replace_NA}     - 1 : if not set, don't replace NA settings
+#
+#  RESULT
+#     0, if job was not found
+#     1, if job was found
+#     
+#     fills array $variable with info found in qstat output with the following symbolic names:
+#
+#     job-ID prior nurg urg rrcontr wtcontr  dlcontr name  user state submit/start at
+#     deadline queue slots ja-task-ID 
+
+#
+#  EXAMPLE
+#  proc testproc ... { 
+#     ...
+#     if {[get_urgency_job_info $job_id] } {
+#        if { $job_info(urg) < 10 } {
+#           ...
+#        }
+#     } else {
+#        add_proc_error "testproc" -1 "get_urgency_job_info failed for job $job_id on host $host"
+#     }
+#     ...
+#     set_error 0 "ok"
+#  }
+#
+#  SEE ALSO
+#     sge_procedures/get_job_info()
+#     sge_procedures/get_standard_job_info()
+#     sge_procedures/get_extended_job_info()
+#*******************************
+proc get_urgency_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
+  global ts_config
+   global CHECK_ARCH
+   upvar $variable jobinfo
+
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-urg"} result]
+
+   if { $exit_code == 0 } {
+      parse_qstat result jobinfo $jobid 2 $do_replace_NA
+      return 1
+   }
+  
+   return 0
 }
 

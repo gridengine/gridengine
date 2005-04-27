@@ -1,3 +1,6 @@
+RH-2005-04-27-0: Testsuite: added new test system_tests/scheduler/urgency
+                 Review:    JG
+
 CR-2005-04-27-0: Testsuite: modified test bugs/issuezilla/1334:
                             - using testsuite standard procedures to
                               delete files and start programs

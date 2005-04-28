@@ -196,7 +196,7 @@ proc ts_performance_test_test {} {
          incr run -1
       }
       set endtime [clock clicks -milliseconds]
-      incr endtime -$starttime
+      set endtime [expr $endtime - $starttime]
       set result [expr $endtime / $runs ]
       
       puts $CHECK_OUTPUT "average command execution time: $result milliseconds"

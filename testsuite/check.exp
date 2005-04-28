@@ -307,7 +307,7 @@ proc debug_puts { args } {
       set CHECK_HOST "unknown"
    }
    set time [clock clicks -milliseconds]
-   incr time -$last_debug_msec
+   set time [expr $time - $last_debug_msec]
 
    set last_debug_msec [clock clicks -milliseconds]
 

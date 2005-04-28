@@ -1,3 +1,6 @@
+CR-2005-04-28-1: Testsuite: o create_gnuplot_xy_gif() now uses png terminal when 
+                              gnuplot is not supporting gif terminal
+
 CR-2005-04-28-0: Testsuite: o replaced incr with expr, because for tcl 8.4/
                               expect 5.40.0 there is a problem with 
                               [clock -milliseconds] integer value (which is negative)

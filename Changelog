@@ -1,3 +1,7 @@
+DT-2005-04-29-0: Testsuite: o Added junit test for issue 1595
+                            - Note: 1595 hasn't been fixed yet, so the test will
+                                    fail
+
 JG-2005-04-29-0: Bugfix:    Fixed broken build.
 
 CR-2005-04-28-1: Testsuite: o create_gnuplot_xy_gif() now uses png terminal when 

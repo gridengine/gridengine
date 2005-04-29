@@ -1610,6 +1610,8 @@ public class SessionImplJobTest extends TestCase {
 
          String jobId = session.runJob (jt);
          
+         session.deleteJobTemplate (jt);
+         
          /* Take a nap so that we give the job time to get scheduled. */
          try {
             Thread.sleep (30000);
@@ -1687,8 +1689,109 @@ public class SessionImplJobTest extends TestCase {
          
          status = session.getJobProgramStatus (jobId);
          assertEquals (session.FAILED, status);
+      }
+      catch (DrmaaException e) {
+         fail ("Exception while trying to get job status: " + e.getMessage ());
+      }
+   }
+
+   public void testControlAll () {
+      System.out.println ("testControlAll");
+      
+      try {
+         JobTemplate jt = session.createJobTemplate ();
+
+         jt.setRemoteCommand (SCRIPT);
+         jt.setArgs (new String[] {"60000"});
+
+         String jobId1 = session.runJob (jt);
+         String jobId2 = session.runJob (jt);
+         String jobId3 = session.runJob (jt);
          
          session.deleteJobTemplate (jt);
+         
+         /* Take a nap so that we give the jobs time to get scheduled. */
+         try {
+            Thread.sleep (30000);
+         }
+         catch (InterruptedException e) {
+            fail ("Sleep was interrupted");
+         }
+         
+         /* Make sure the job is running. */
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId1));
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId2));
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId3));
+         
+         session.control (Session.JOB_IDS_SESSION_ALL, session.HOLD);
+         
+         /* Take a nap so that we give the jobs time to held. */
+         try {
+            Thread.sleep (30000);
+         }
+         catch (InterruptedException e) {
+            fail ("Sleep was interrupted");
+         }
+         
+         assertEquals (session.USER_ON_HOLD, session.getJobProgramStatus (jobId1));
+         assertEquals (session.USER_ON_HOLD, session.getJobProgramStatus (jobId2));
+         assertEquals (session.USER_ON_HOLD, session.getJobProgramStatus (jobId3));
+         
+         session.control (Session.JOB_IDS_SESSION_ALL, session.RELEASE);
+         
+         /* Take a nap so that we give the jobs time to released. */
+         try {
+            Thread.sleep (30000);
+         }
+         catch (InterruptedException e) {
+            fail ("Sleep was interrupted");
+         }
+         
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId1));
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId2));
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId3));
+         
+         session.control (Session.JOB_IDS_SESSION_ALL, session.SUSPEND);
+         
+         /* Take a nap so that we give the jobs time to suspended. */
+         try {
+            Thread.sleep (30000);
+         }
+         catch (InterruptedException e) {
+            fail ("Sleep was interrupted");
+         }
+         
+         assertEquals (session.USER_SUSPENDED, session.getJobProgramStatus (jobId1));
+         assertEquals (session.USER_SUSPENDED, session.getJobProgramStatus (jobId2));
+         assertEquals (session.USER_SUSPENDED, session.getJobProgramStatus (jobId3));
+         
+         session.control (Session.JOB_IDS_SESSION_ALL, session.RESUME);
+         
+         /* Take a nap so that we give the jobs time to resumed. */
+         try {
+            Thread.sleep (30000);
+         }
+         catch (InterruptedException e) {
+            fail ("Sleep was interrupted");
+         }
+         
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId1));
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId2));
+         assertEquals (session.RUNNING, session.getJobProgramStatus (jobId3));
+         
+         session.control (Session.JOB_IDS_SESSION_ALL, session.TERMINATE);
+         
+         /* Take a nap so that we give the jobs time to killed. */
+         try {
+            Thread.sleep (60000);
+         }
+         catch (InterruptedException e) {
+            fail ("Sleep was interrupted");
+         }
+         
+         assertEquals (session.FAILED, session.getJobProgramStatus (jobId1));
+         assertEquals (session.FAILED, session.getJobProgramStatus (jobId2));
+         assertEquals (session.FAILED, session.getJobProgramStatus (jobId3));
       }
       catch (DrmaaException e) {
          fail ("Exception while trying to get job status: " + e.getMessage ());

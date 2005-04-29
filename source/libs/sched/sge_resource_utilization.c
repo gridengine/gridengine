@@ -407,7 +407,7 @@ static void utilization_normalize(lList *diagram)
 
 /****** sge_resource_utilization/utilization_queue_end() ***********************
 *  NAME
-*     utilization_queue_end() -- Determine utilization at queue end time */
+*     utilization_queue_end() -- Determine utilization at queue end time
 *
 *  SYNOPSIS
 *     double utilization_queue_end(const lListElem *cr) 

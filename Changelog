@@ -1,3 +1,5 @@
+JG-2005-04-29-0: Bugfix:    Fixed broken build.
+
 CR-2005-04-28-1: Testsuite: o create_gnuplot_xy_gif() now uses png terminal when 
                               gnuplot is not supporting gif terminal
 

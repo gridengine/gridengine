@@ -1,3 +1,13 @@
+CR-2005-04-29-0: Testsuite: o Fixed resolve_host(): 
+                              - There was no cache for the optional long resolving
+                                parameter
+                            o Fixed set_cqueue_specific_values():  (for 6.0 GE)
+                              - procedure removed "=" from cluster queue instances:
+                                e.g.: "fangorn=test2=4" was modified to
+                                      "fangorn=test2 4"
+                              - procedure saved host specific entries without 
+                                resolving the names  
+
 DT-2005-04-29-0: Testsuite: o Added junit test for issue 1595
                             - Note: 1595 hasn't been fixed yet, so the test will
                                     fail

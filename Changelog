@@ -1,3 +1,10 @@
+CR-2005-05-02-1: Testsuite: o Fixed bug in testsuite test
+                              system_tests/clients/qconf:
+                              - message parsing for long host names was wrong
+                              - check did not re-add the execd on failure
+                              - check did unset the SGE_SINGLE_LINE environment variable
+                                which is already set from testsuite main
+
 CR-2005-05-02-0: Testsuite: o Fixed tcl error in throughput test
 
 CR-2005-04-29-0: Testsuite: o Fixed resolve_host(): 

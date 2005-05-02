@@ -1399,15 +1399,8 @@ proc resolve_host { name { long 0 } } {
    global CHECK_OUTPUT
    global resolve_host_cache
 
-   
-   if { $long != 0 } {
-      if {[info exists resolve_host_cache($name,long)]} {
-         return $resolve_host_cache($name,long)
-      }
-   } else {
-      if {[info exists resolve_host_cache($name,short)]} {
-         return $resolve_host_cache($name,short)
-      }
+   if {[info exists resolve_host_cache($name)]} {
+      return $resolve_host_cache($name)
    }
 
    set remote_arch [ resolve_arch $ts_config(master_host) ]
@@ -1425,15 +1418,11 @@ proc resolve_host { name { long 0 } } {
      set newname [lindex $split_name 0]
   }
 
+  puts $CHECK_OUTPUT "resolve_host: \"$name\" resolved to \"$newname\""
 
   # cache result
-  if { $long != 0 } {
-     set resolve_host_cache($name,long) $newname
-     puts $CHECK_OUTPUT "long resolve_host: \"$name\" resolved to \"$newname\""
-  } else {
-     set resolve_host_cache($name,short) $newname
-     puts $CHECK_OUTPUT "short resolve_host: \"$name\" resolved to \"$newname\""
-  }
+  set resolve_host_cache($name) $newname
+
   return $newname
 }
 

@@ -234,7 +234,7 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 
 /****** sge_resource_utilization/utilization_add() *****************************
 *  NAME
-*     utilization_add() -- Debit a jobs resource utilization
+*     utilization_add() -- ??? 
 *
 *  SYNOPSIS
 *     int utilization_add(lListElem *cr, u_long32 start_time, u_long32 
@@ -242,8 +242,7 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 *     u_long32 level, const char *object_name, const char *type) 
 *
 *  FUNCTION
-*     A jobs resource utilization is debited into the resource 
-*     utilization diagram at the given time for the given duration.
+*     ??? 
 *
 *  INPUTS
 *     lListElem *cr           - Resource utilization entry (RUE_Type)
@@ -405,26 +404,7 @@ static void utilization_normalize(lList *diagram)
    return;
 }
 
-/****** sge_resource_utilization/utilization_queue_end() ***********************
-*  NAME
-*     utilization_queue_end() -- Determine utilization at queue end time
-*
-*  SYNOPSIS
-*     double utilization_queue_end(const lListElem *cr) 
-*
-*  FUNCTION
-*     Determine utilization at queue end time. Jobs that last until 
-*     ever can cause a non-zero utilization.
-*
-*  INPUTS
-*     const lListElem *cr - Resource utilization entry (RUE_utilized)
-*
-*  RESULT
-*     double - queue end utilization
-*
-*  NOTES
-*     MT-NOTE: utilization_queue_end() is MT safe 
-*******************************************************************************/
+/* return the utilization at queue end time */
 double utilization_queue_end(const lListElem *cr)
 {
    const lListElem *ep = lLast(lGetList(cr, RUE_utilized));
@@ -436,28 +416,7 @@ double utilization_queue_end(const lListElem *cr)
 }
 
 
-/****** sge_resource_utilization/utilization_max() *****************************
-*  NAME
-*     utilization_max() -- Determine max utilization within timeframe
-*
-*  SYNOPSIS
-*     double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 
-*     duration) 
-*
-*  FUNCTION
-*     Determines the maximum utilization at the given timeframe.
-*
-*  INPUTS
-*     const lListElem *cr - Resource utilization entry (RUE_utilized)
-*     u_long32 start_time - Start time of the timeframe
-*     u_long32 duration   - Duration of timeframe
-*
-*  RESULT
-*     double - Maximum utilization
-*
-*  NOTES
-*     MT-NOTE: utilization_max() is MT safe 
-*******************************************************************************/
+/* return the maximum unitilization within the specified time frame */
 double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 duration)
 {
    const lListElem *rde;
@@ -502,29 +461,8 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
    return max; 
 }
 
-/****** sge_resource_utilization/utilization_below() ***************************
-*  NAME
-*     utilization_below() -- Determine earliest time util is below max_util
-*
-*  SYNOPSIS
-*     u_long32 utilization_below(const lListElem *cr, double max_util, const 
-*     char *object_name) 
-*
-*  FUNCTION
-*     Determine and return earliest time utilization is below max_util.
-*
-*  INPUTS
-*     const lListElem *cr     - Resource utilization entry (RUE_utilized)
-*     double max_util         - The maximum utilization we're asking
-*     const char *object_name - Name of the queue/host/global for monitoring 
-*                               purposes.
-*
-*  RESULT
-*     u_long32 - The earliest time or DISPATCH_TIME_NOW.
-*
-*  NOTES
-*     MT-NOTE: utilization_below() is MT safe 
-*******************************************************************************/
+/* return the earliest time when utilization is below 'max_util' starting
+   at the end of the utilization diagram */
 u_long32 utilization_below(const lListElem *cr, double max_util, const char *object_name)
 {
    const lListElem *rde;
@@ -561,29 +499,6 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
 }
 
 
-/****** sge_resource_utilization/add_job_utilization() *************************
-*  NAME
-*     add_job_utilization() -- Debit assignements' utilization to all schedules
-*
-*  SYNOPSIS
-*     int add_job_utilization(const sge_assignment_t *a, const char *type) 
-*
-*  FUNCTION
-*     The resouce utilization of an assignment is debited into the schedules 
-*     of global, host and queue instance resource containers. For parallel
-*     jobs debitation is made also with the parallel environement schedule.
-*
-*  INPUTS
-*     const sge_assignment_t *a - The assignement
-*     const char *type          - A string that is used to monitor assignment
-*                                 type
-*
-*  RESULT
-*     int - 
-*
-*  NOTES
-*     MT-NOTE: add_job_utilization() is MT safe 
-*******************************************************************************/
 int add_job_utilization(const sge_assignment_t *a, const char *type)
 {
    lListElem *gel, *qep, *hep; 

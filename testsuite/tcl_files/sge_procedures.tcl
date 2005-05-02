@@ -6688,7 +6688,7 @@ proc submit_with_method {submit_method options script args} {
          # initialize tail to logfile
          init_logfile_wait $CHECK_HOST $job_output_file
          # submit job
-         submit_job "-o $job_output_file -j y $options $script $job_args" 1 60
+         submit_job "-o $job_output_file -j y $options $script $job_args" 1 30
          # return global file handle
          set sid $file_procedure_logfile_wait_sp_id
       }

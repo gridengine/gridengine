@@ -146,20 +146,10 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
       set hostname $CHECK_HOST
    }
 
-   set timestamp_sub_index 0
-   while { 1 } {
-      set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
-      if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
-        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_${timestamp_appendix}_${dir_ext}"
-      } else {
-        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_${timestamp_appendix}_${dir_ext}"
-      }
-      # break loop when file is not existing ( when timestamp has increased )  
-      if { [ file isdirectory $file_name] != 1 } {
-         break
-      } else {
-         incr timestamp_sub_index 1
-      }
+   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
+     set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
+   } else {
+     set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
    }
    return $file_name
 }
@@ -205,19 +195,17 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
       set hostname $CHECK_HOST
    }
 
-   set timestamp_sub_index 0
+
    while { 1 } {
-      set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
-        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_$timestamp_appendix.${file_ext}"
+        set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
       } else {
-        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_$timestamp_appendix.${file_ext}"
+        set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
       }
+      sleep 1
       # break loop when file is not existing ( when timestamp has increased )  
       if { [ file isfile $file_name] != 1 } {
          break
-      } else {
-         incr timestamp_sub_index 1
       }
    }
 
@@ -325,21 +313,9 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
    }
 
 
-   # check gnuplot supporting gif terminals:
-   set terminal_type "gif"
-   set test_file [get_tmp_file_name "" "gnuplot_test"]
-   set test_file [open $command_file w]
-   puts $test_file "set terminal gif" 
-   close $test_file
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER gnuplot $test_file prg_exit_state 60 0 "" 1 0 0]
-   if { $prg_exit_state != 0 } {
-      puts $CHECK_OUTPUT "gnuplot does not support gif terminal, using png terminal ..."
-      set terminal_type "png"
-   }
-
    set command_file [get_tmp_file_name "" "cmd"]
    set cmd_file [open $command_file w]
-   puts $cmd_file "set terminal $terminal_type"
+   puts $cmd_file "set terminal gif"
    puts $cmd_file "set output \"$data(output_file)\""
 #   puts $cmd_file "set xtics (0,1,2,3,4,5,6,7,8,9,10)"
 #   puts $cmd_file "set ytics (0,5,10)"
@@ -1568,18 +1544,13 @@ proc create_shell_script { scriptfile
    close $script
 
 
-   catch { set file_size [file size "$scriptfile"]}
-   set timeout [clock seconds]
-   incr timeout 60
+   set file_size 0
+   set timeout [expr [clock seconds] + 60]
    while { $file_size == 0 } {
       catch { set file_size [file size "$scriptfile"]}
       if { $file_size == 0 } { 
-         puts $CHECK_OUTPUT "===================================================================="
          puts $CHECK_OUTPUT "--> file size of \"$scriptfile\": $file_size ; waiting for filesize > 0"
-         puts $CHECK_OUTPUT "===================================================================="
-         after 500
-      } else {
-         break
+         after 1000
       }
 
       if { [clock seconds] > $timeout } {
@@ -1587,6 +1558,13 @@ proc create_shell_script { scriptfile
          return
       }
    }
+
+#   catch { exec "touch" "$scriptfile" } result
+#   puts $CHECK_OUTPUT "touch result: $result"
+  
+#   catch { exec "chmod" "0755" "$scriptfile" } result
+#   puts $CHECK_OUTPUT "chmod result: $result"
+
 
    if { $CHECK_DEBUG_LEVEL != 0 } {
       set script  [ open "$scriptfile" "r" ]
@@ -2112,7 +2090,7 @@ proc delete_file_at_startup { filename } {
 #     delete_file -- move/copy file to testsuite trashfolder 
 #
 #  SYNOPSIS
-#     delete_file { filename { do_wait_for_file 1 } } 
+#     delete_file { filename } 
 #
 #  FUNCTION
 #     This procedure will move/copy the file to the testsuite's trashfolder 
@@ -2120,7 +2098,6 @@ proc delete_file_at_startup { filename } {
 #
 #  INPUTS
 #     filename - full path file name of file 
-#     { do_wait_for_file 1 } - optional wait for file before removing
 #
 #  RESULT
 #     no results 
@@ -2137,18 +2114,11 @@ proc delete_file_at_startup { filename } {
 #  SEE ALSO
 #     file_procedures/delete_directory
 #*******************************
-proc delete_file { filename { do_wait_for_file 1 } } { 
+proc delete_file { filename } { 
  
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   if { $do_wait_for_file == 1 } {
-      wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
-   } else {
-      if {[file isfile "$filename"] != 1} {
-         puts $CHECK_OUTPUT "delete_file - no such file: \"$filename\""
-         return      
-      }
-   }
+   wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
 
    if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
       file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"

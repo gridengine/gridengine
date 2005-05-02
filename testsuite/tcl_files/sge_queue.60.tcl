@@ -270,20 +270,16 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
          # copy host specific values to array
          for {set i 1} {$i < [llength $value_list]} {incr i} {
             set host_value [lindex $value_list $i]
-            set first_equal_position [string first "=" $host_value]
-            incr first_equal_position -1
-            set host  [string range $host_value 0 $first_equal_position]
-            incr first_equal_position 2
-            set value [string range $host_value $first_equal_position end]
+            set split_host_value [split $host_value "="]
+            set host [lindex $split_host_value 0]
+            set value [lrange $split_host_value 1 end]
             set value [string trimright $value ",\]\\"]
-            puts $CHECK_OUTPUT "--> \"$host\" = \"$value\""
+            puts $CHECK_OUTPUT "--> $host = $value"
             set host_values($host) $value
          }
       
          # change (or set) host specific values from chgar
-         foreach unresolved_host $hostlist {
-            set host [resolve_host $unresolved_host 1]
-            puts $CHECK_OUTPUT "--> setting host_values($host) = $chgar($attribute)"
+         foreach host $hostlist {
             set host_values($host) $chgar($attribute)
          }
 

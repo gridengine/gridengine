@@ -3190,8 +3190,7 @@ proc calculate_event_xy_rows { results_array_name row_array_name test_start star
    set idx 0
    for {set i 0} {$i < $event_data(count)} {incr i} {
       if {$i == 0} {
-         set interval 0
-         set events 0
+         set value 0
       } else {
          set last_i [expr $i - 1]
          set interval  [expr $event_data($i,time) - $event_data($last_i,time)]

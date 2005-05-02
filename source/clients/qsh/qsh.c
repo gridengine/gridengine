@@ -676,6 +676,7 @@ static int start_client_program(const char *client_name,
    }
 
    if(child_pid) {
+      sge_unblock_all_signals();
       signal(SIGINT,  forward_signal);
       signal(SIGQUIT, forward_signal);
       signal(SIGTERM, forward_signal);

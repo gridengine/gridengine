@@ -1,3 +1,9 @@
+AH-2005-05-02-0: Bugfix:    qrsh shouldn't block SIGTSTP
+                 Issue:     1464
+                 Review:    NJ
+                 Changes:   qsh, qrsh, qlogin
+
+
 AS-2005-05-92-0: CVS        Created V60u4win_{TAG,BRANCH}
 ---------------------------------------------------------
 

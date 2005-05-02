@@ -242,7 +242,7 @@ case $ARCH in
    GETTEXT=
    ROOTGROUP=wheel
    RSH_DAEMON=/usr/sbin/in.rshd
-   LOADSENSOR_COMMAND="/util/resources/loadsensors/interix-loadsensor.sh"
+   LOADSENSOR_COMMAND="${SGE_ROOT}/util/resources/loadsensors/interix-loadsensor.sh"
    ;;
  *)
    echo "Architecture $ARCH not supported by this procedure!"

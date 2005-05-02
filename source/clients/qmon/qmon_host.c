@@ -753,7 +753,7 @@ Widget parent
    XtAddCallback(complexes_ccl, XmNselectCellCallback,
                   qmonLoadSelectEntry, NULL);
    XtAddCallback(complexes_ccl, XmNlabelActivateCallback,
-                  qmonLoadNames, (XtPointer) 1);
+                  qmonLoadNames, NULL);
 
    XtAddCallback(access_toggle, XmtNvalueChangedCallback, 
                      qmonExecHostAccessToggle, NULL);

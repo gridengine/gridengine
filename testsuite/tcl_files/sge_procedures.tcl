@@ -1211,6 +1211,56 @@ proc get_checkpointobj { ckpt_obj change_array } {
   }
 }
 
+#****** sge_procedures/get_complex() *******************************************
+#  NAME
+#     get_complex() -- get complex configuration settings
+#
+#  SYNOPSIS
+#     get_complex { change_array complex_list } 
+#
+#  FUNCTION
+#     Get the complex configuration for a specific complex list
+#
+#  INPUTS
+#     change_array - name of an array variable that will get set by 
+#                    get_config
+#     complex_list - name of a complex list
+#
+#  RESULT
+#     The change_array variable is build as follows:
+#
+#                      
+#     set change_array(mem_free) "mf MEMORY 0 <= YES NO 0"   
+#   
+#     index (mem_free) is the complex name
+#     value is "shortcut type value relop requestable consumable default"
+#    
+#*******************************************************************************
+proc get_complex { change_array complex_list } {
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
+  upvar $change_array chgar
+
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sc" "$complex_list"} result ]
+  if { $catch_result != 0 } {
+     add_proc_error "get_complex" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
+     return
+  } 
+
+  # split each line as listelement
+  set help [split $result "\n"]
+  foreach elem $help {
+     set id [lindex $elem 0]
+     if { [ string first "#" $id ]  != 0 } {
+        set value [lrange $elem 1 end]
+        if { [string compare $value ""] != 0 } {
+           set chgar($id) $value
+        }
+     }
+  }
+}
+
+
 
 #                                                             max. column:     |
 #****** sge_procedures/set_config() ******
@@ -1352,6 +1402,84 @@ proc compare_complex {a b} {
    return 0
 }
 
+#****** sge_procedures/set_complex() *******************************************
+#  NAME
+#     set_complex() -- change complex configuration for a complex list
+#
+#  SYNOPSIS
+#     set_complex { change_array complex_list } 
+#
+#  FUNCTION
+#     Set the complex configuration for a specific complex list
+#
+#  INPUTS
+#     change_array - name of an array variable that contains the new complex 
+#                    definition
+#     complex_list - name of the complex list to change
+#
+#  RESULT
+#     The change_array variable is build as follows:
+#
+#     set change_array(mem_free) "mf MEMORY 0 <= YES NO 0"   
+#   
+#     index (mem_free) is the complex name
+#     value is "shortcut type value relop requestable consumable default"
+#
+#  EXAMPLE
+#     set mycomplex(load_long) "ll DOUBLE 55.55 >= NO NO 0"
+#     set_complex mycomplex host
+#
+#*******************************************************************************
+proc set_complex { change_array complex_list { create 0 } } {
+  global ts_config
+  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global CHECK_CORE_MASTER
+  upvar $change_array chgar
+  set values [array names chgar]
+
+  if { $create == 0 } {
+     get_complex old_values $complex_list
+  }
+
+  set vi_commands ""
+  foreach elem $values {
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal $chgar($elem)
+     if {[info exists old_values($elem)]} {
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [compare_complex $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$/#/\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
+        }
+     } else {
+        # if the config entry didn't exist in old config: append a new line
+        lappend vi_commands "A\n$elem  $newVal"
+        lappend vi_commands [format "%c" 27]
+     }
+  } 
+  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
+  set MODIFIED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_MODIFIEDIN]]
+  set ADDED       [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_ADDEDTO]]
+
+
+  if { $create == 0 } {
+     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
+  } else {
+     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -ac $complex_list" $vi_commands $ADDED $EDIT_FAILED $MODIFIED ]
+  }
+  if { $result != 0  } {
+     add_proc_error "set_complex" -1 "could not modify complex $complex_list ($result)"
+  }
+  return $result
+}
 
 
 
@@ -1542,100 +1670,9 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
       if { [timestamp] > $my_timeout } {
          return "timeout"
       }
-   }   
+   }
 }
 
-#                                                             max. column:     |
-#****** sge_procedures/add_user() ******
-# 
-#  NAME
-#     add_userset -- add a userset with qconf -Au
-#
-#  SYNOPSIS
-#     add_userset { change_array } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     change_array - Array with the values for the userset
-#               Values:
-#                  name    name of the userset (required)
-#                  type    ACL, DEPT
-#                  fshare  functional shares
-#                  oticket overwrite tickets
-#                  entries user list
-#
-#  RESULT
-#     0    userset added
-#     else error
-#
-#  EXAMPLE
-#     set  userset_conf(name)    "dep0"
-#     set  userset_conf(type)    "DEPT"
-#     set  userset_conf(oticket) "1000"
-#     set  userset_conf(entries) "codtest1"
-#     
-#     add_userset userset_conf
-#
-#  NOTES
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     tcl_files/sge_procedures/add_access_list
-#     tcl_files/sge_procedures/del_access_list
-#
-#*******************************
-proc add_userset { change_array } {
-   global ts_config
-   global CHECK_ARCH 
-   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
-   upvar $change_array chgar
-   set values [array names chgar]
-   
-   if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     add_proc_error "add_userset" -1 "not possible for sge systems"
-     return -3
-   }
-   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-   
-   set f_name [get_tmp_file_name]
-   set fd [open $f_name "w"]
-   set org_struct(name)    "template"
-   set org_struct(type)    "ACL DEPT"
-   set org_struct(oticket) "0"
-   set org_struct(fshare)  "0"
-   set org_struct(entries) "NONE"
-   foreach elem $values {
-     set org_struct($elem) $chgar($elem)
-   }
-   set ogr_struct_names [array names org_struct]
-   foreach elem  $ogr_struct_names {
-     puts $CHECK_OUTPUT "$elem $org_struct($elem)"
-     puts $fd "$elem $org_struct($elem)"
-   }
-   close $fd 
-   puts $CHECK_OUTPUT "using file $f_name"
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-Au $f_name"]
-   if { $prg_exit_state != 0 } {
-     add_proc_error "add_userset" -1 "error running qconf -Au"
-   }
-   set result [string trim $result]
-   puts $CHECK_OUTPUT "\"$result\""
-   #     puts $CHECK_OUTPUT "\"$ADDED\"" 
-   if { [ string match "*$ADDED" $result] } {
-     return 0
-   }
-   if { [ string match "*$ALREADY_EXISTS" $result] } {
-     add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists"
-     return -2
-   }
-   add_proc_error "add_user" -1 "\"error adding [set chgar(name)]\""
-   return -100
-}
 
 #****** sge_procedures/add_access_list() ***************************************
 #  NAME
@@ -1680,67 +1717,6 @@ proc add_access_list { user_array list_name } {
   }
   return 0
 }
-
-
-#****** sge_procedures/del_user_from_access_list() ***************************************
-#  NAME
-#     del_user_from_access_list() -- delete a user from an access list
-#
-#  SYNOPSIS
-#     del_user_from_access_list { user_name list_name } 
-#
-#  FUNCTION
-#     This procedure starts the qconf -du command to delete a user from a 
-#     access list
-#
-#  INPUTS
-#     user_name - name of the user
-#     list_name - name of access list
-#
-#  RESULT
-#      1  User was not in the access_list
-#      0  User deleted from the access_list
-#     -1 on error
-#
-#  EXAMPLE
-#
-#    set result [ del_user_from_access_list "codtest1" "deadlineusers" ]
-#
-#    if { $result == 0 } {
-#       puts $CHECK_OUTPUT "user codtest1 deleted from access list deadlineusers"
-#    } elseif { $result == 1 } {
-#       puts $CHECK_OUTPUT "user codtest1 did not exist on the access list deadlineusers"
-#    } else {
-#       set_error -1 "Can not delete user codtest1 from access list deadlineusers"
-#    }
-# 
-#  SEE ALSO
-# 
-#*******************************************************************************
-proc del_user_from_access_list { user_name list_name  } {
-  global ts_config
-  global CHECK_ARCH CHECK_OUTPUT
-  global CHECK_CORE_MASTER CHECK_USER
-
-  set result ""
-  set catch_return [ catch {  
-      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -du $user_name $list_name" 
-  } result ]
-  puts $CHECK_OUTPUT $result
-  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_USERNOTINACL_SS] $user_name $list_name]
-  set DELETED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_DELFROMACL_SS] $user_name $list_name]
-
-  if { $result == $NOT_EXISTS } {
-     return 1
-  } elseif { $result == $DELETED } {
-     return 0
-  } else {
-     add_proc_error "del_user_from_access_list" "-1" "Can not delete user $user_name from access list $list_name"
-     return -1
-  }
-  return 0
-}
-
 
 #****** sge_procedures/del_access_list() ***************************************
 #  NAME
@@ -2911,7 +2887,7 @@ proc wait_for_load_from_all_queues { seconds } {
          }
     
          if { $failed == 0 } {
-            return 0
+            return 
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"
@@ -3529,7 +3505,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    set DELETED2  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETEJOB_SU] "*" "*" ]
 
    if {$ts_config(gridengine_version) == 53} {
-      set UNABLETOSYNC "asldfja?sldkfj?ajf?ajf"
+      set UNABLETOSYNC "asldfjaösldkfjöajföajf"
    } else {
       set UNABLETOSYNC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COM_NOSYNCEXECD_SU] $CHECK_USER $jobid]
    }
@@ -3593,7 +3569,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
           }
           -i default {
              if { [info exists expect_out(buffer)] } {
-#                puts $CHECK_OUTPUT $expect_out(buffer)
+                puts $CHECK_OUTPUT $expect_out(buffer)
                 add_proc_error "delete_job" -1 "expect default switch\noutput was:\n>$expect_out(buffer)<"
              }
              set result -4 
@@ -3671,8 +3647,6 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 #       -11   not allowed to submit jobs - error
 #       -12   no access to project - error
 #       -13   unkown option - error
-#       -22   user tries to submit a job with a deadline, but the user is not in
-#             the deadline user access list
 #      -100   on error 
 #     
 #
@@ -3712,12 +3686,11 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
-     set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+     set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
   }
 
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
-  set NO_DEADLINE_USER    [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NODEADLINEUSER_S] $user ]
 
 
   
@@ -3734,7 +3707,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
       set NON_AMBIGUOUS   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU] "*" "*" "*" ]
    } else {
       # JG: TODO: jobnet handling completely changed - what are the messages?
-      set UNAMBIGUOUSNESS "a?sjfas?kjfa?jf"
+      set UNAMBIGUOUSNESS "aösjfasökjfaöjf"
       set NON_AMBIGUOUS   "aajapsoidfupoijpoaisdfup9"
    }
   set UNKNOWN_OPTION  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_ANSWER_UNKOWNOPTIONX_S] "*" ]
@@ -4091,9 +4064,6 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
              set return_value -21
           }
-          -i $sp_id -- $NO_DEADLINE_USER {
-             set return_value -22
-          }
         }
      }
  
@@ -4128,7 +4098,6 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-19" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-20" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-22" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
@@ -4187,7 +4156,7 @@ proc get_submit_error { error_id } {
       "-19" { return "two files are specified for the same host" }
       "-20" { return "negative step in range is not allowed" }
       "-21" { return "-t step of range must be a decimal number" }
-      "-22" { return "user is not in access list deadlineusers" }
+
 
       default { return "unknown error" }
    }
@@ -4522,7 +4491,6 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #  INPUTS
 #     jobid               - job identifaction number
 #     {variable job_info} - name of variable array to store the output
-#     {do_replace_NA}     - 1 : if not set, don't replace NA settings
 #
 #  RESULT
 #     0, if job was not found
@@ -4573,7 +4541,7 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #     sge_procedures/get_standard_job_info()
 #     sge_procedures/get_extended_job_info()
 #*******************************
-proc get_extended_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
+proc get_extended_job_info {jobid {variable job_info}} {
   global ts_config
    global CHECK_ARCH
    upvar $variable jobinfo
@@ -4587,7 +4555,7 @@ proc get_extended_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
    }
 
    if { $exit_code == 0 } {
-      parse_qstat result jobinfo $jobid $ext $do_replace_NA
+      parse_qstat result jobinfo $jobid $ext
       return 1
    }
   
@@ -4633,7 +4601,7 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
             set elem [ string trim $elem]
             debug_puts "removing message id: \"$elem\""
          }
-         if { [string first ":" $elem] >= 0 && [string first ":" $elem] < 30 } {
+         if { [string first ":" $elem] >= 0 } {
             append my_result "\n$elem" 
          } else {
             append my_result ",$elem"
@@ -6688,7 +6656,7 @@ proc submit_with_method {submit_method options script args} {
          # initialize tail to logfile
          init_logfile_wait $CHECK_HOST $job_output_file
          # submit job
-         submit_job "-o $job_output_file -j y $options $script $job_args" 1 60
+         submit_job "-o $job_output_file -j y $options $script $job_args" 1 30
          # return global file handle
          set sid $file_procedure_logfile_wait_sp_id
       }

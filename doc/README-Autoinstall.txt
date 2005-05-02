@@ -158,8 +158,7 @@ Content:
 
       # ADMIN_USER, if you want to use a different admin user than the owner,
       # of SGE_ROOT, you have to enter the user name, here
-      # Leaving this blank, the owner of the SGE_ROOT dir will be used as admin
-      # user
+      # Leaving this blank, the owner of the SGE_ROOT dir will be used as admin user
       ADMIN_USER=""
 
       # The dir, where qmaster spools this parts, which are not spooled by DB
@@ -287,11 +286,6 @@ Content:
       --> This installs a additional Shadow Master Host as configured in
           SHADOW_HOST
 
-   % inst_sge -db -m -x -auto path/to/configfile
-     --> This installs a Berkeley DB RPC Server (must be configured in
-         configfile) and qmaster host locally, execution host locally and 
-         remotely as configured in EXEC_HOST_LIST
-
 4. Un-installation
 ------------------
 
@@ -361,15 +355,6 @@ Content:
    This mode is the same as in interactive mode. But the user won't be asked
    anymore. If the uninstall process is started, it can't be stopped
    anymore.  All terminal output will be suppressed!
-
-4.3 Berkeley DB RPC Server uninstall
-------------------------------------
-
-   Starting the following command uninstalls the Berkeley DB RPC Server
-
-      % inst_sge -udb -auto /path/to/config
-
-
 
 5. Copyright
 ------------

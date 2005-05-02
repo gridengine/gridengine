@@ -113,8 +113,6 @@ proc issue_1489_setup {} {
    
    add_queue "iz_1489" "@allhosts" queue_conf 1
    
-   delete_file $issue_1489_lck_file 0
-   delete_file $issue_1489_log_file 0
    set_error 0 "ok"
 }
 
@@ -129,9 +127,13 @@ proc issue_1489_cleanup  {} {
    del_queue "iz_1489" "@allhosts" 0 1
   
    puts $CHECK_OUTPUT "cleaning up log and lck files"
-
-   delete_file $issue_1489_lck_file 0
-   delete_file $issue_1489_log_file 0
+   # delete the lck file   
+   if {[file exists $issue_1489_lck_file]} {
+      file delete $issue_1489_lck_file
+   }
+   if {[file exists $issue_1489_log_file]} {
+      file delete $issue_1489_log_file
+   }
 
    set_error 0 "ok"
 }
@@ -153,7 +155,6 @@ proc issue_1489_run {} {
      return
    }
    
-   puts $CHECK_OUTPUT "waiting for file $issue_1489_lck_file"
    set res [ wait_for_file $issue_1489_lck_file 10 0 ]
    
    if { $res == 0 } {
@@ -171,8 +172,8 @@ proc issue_1489_run {} {
    }
    
    # wait 30 seconds (notify is 20 seconds)  for the deletion of the lock file
-   # CR -> wait longer 70 seconds (because of NFS timeouts)
-   set res [ wait_for_file $issue_1489_lck_file 70 1 ]
+   
+   set res [ wait_for_file $issue_1489_lck_file 30 1 ]
 
    if { $res == 0 } {
       puts $CHECK_OUTPUT "lock file $issue_1489_lck_file has been deleted, job $my_job gots the TERM signal"

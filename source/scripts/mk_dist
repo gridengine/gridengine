@@ -184,11 +184,12 @@ done
 
 #--- END-OF-COMMANDLINE-PARSING------------------------------------------
 
-DOC_PACKAGE=""
-COMMON_DOCS="doc/README* doc/*.asc doc/javadocs"
-COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs \
-                examples/drmaa include inst_sge install_qmaster \
-                install_execd man mpi pvm qmon util lib/drmaa.jar"
+PVMCONTENT="pvm/README pvm/*.sh pvm/*.template pvm/src"
+DOC_PACKAGE="doc/README-Autoinstall.txt"
+COMMON_DOCS="doc/*.asc $ADD_COMMON_DOCS"
+COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs include \
+                inst_sge install_qmaster install_execd man $PVMCONTENT mpi \
+                qmon util"
 
 if [ "$VERSION" = "" -o "$VDIR" = "" ]; then
    ErrUsage

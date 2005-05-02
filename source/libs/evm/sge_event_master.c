@@ -578,7 +578,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       }
       /* Otherwise, pick the first free id from the clients array. */
       else {
-         id = assign_new_dynamic_id();
+         id = assign_new_dynamic_id ();
          
          if (id == 0) {
             unlock_all_clients ();
@@ -2578,6 +2578,8 @@ static int get_number_of_subscriptions(u_long32 event_type) {
 static void send_events(lListElem *report, lList *report_list) {
    u_long32 timeout, busy_handling;
    lListElem *event_client;
+   const char *host;
+   const char *commproc;
    int ret, id; 
    int deliver_interval;
    time_t now = time(NULL);
@@ -2587,8 +2589,6 @@ static void send_events(lListElem *report, lList *report_list) {
    DENTER(TOP_LAYER, "send_events");
 
    while (Master_Control.clients_indices[count] != 0) {
-      char *host = NULL;
-      char *commproc = NULL;
       ec_id = (u_long32)Master_Control.clients_indices[count++];
 
       if (!lock_client(ec_id, false)) {
@@ -2616,13 +2616,9 @@ static void send_events(lListElem *report, lList *report_list) {
          continue;
       }
      
-      /* extract address of event client      */
-      /*Important:                            */
-      /*   host and commproc have to be freed */
-      
-      host = strdup(lGetHost(event_client, EV_host));
-      commproc = strdup(lGetString(event_client, EV_commproc));
-      
+      /* extract address of event client */
+      host = lGetHost(event_client, EV_host);
+      commproc = lGetString(event_client, EV_commproc);
       id = lGetUlong(event_client, EV_commid);
 
       deliver_interval = lGetUlong(event_client, EV_d_time);
@@ -2656,8 +2652,6 @@ static void send_events(lListElem *report, lList *report_list) {
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, 
                (int) timeout, commproc, (int) id, host));
-         FREE(commproc);
-         FREE(host);
          remove_event_client(event_client, ec_id, true);      
          unlock_client(ec_id);
          continue; /* while */
@@ -2674,27 +2668,13 @@ static void send_events(lListElem *report, lList *report_list) {
          lXchgList(event_client, EV_events, &lp);
          lXchgList(report, REP_list, &lp);
 
-         /* SG: Issue 1579 
-          *  This unlock / lock sequence posses a memory missuage in case
-          *  that the event client registers itself to the event master.
-          *  There are two solutions to it:
-          *  1) removing the unlock / lock statements
-          *     Problem: the report_list_send might take a long time and certain
-          *              client commants will block, which will than later block
-          *              the entire master.
-          *  2) make a copy of host and commproc.
-          *     Problem: this slows down the event delivery process a bit to make
-          *              to handle a case, which happens very seldom.  
-          *
-          *  I take the second approach.
-          */
          unlock_client(ec_id);
 
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
          
-         lock_client(ec_id, true); 
+         lock_client(ec_id, true);      
 
-         event_client = get_event_client(ec_id); 
+         event_client = get_event_client (ec_id);
 
          /* Keep looking for a non-NULL client. */
          if (event_client != NULL) {
@@ -2746,9 +2726,7 @@ static void send_events(lListElem *report, lList *report_list) {
             }
          }
       } /* if */
-   
-      FREE(host);
-      FREE(commproc);
+      
       unlock_client(ec_id);      
    } /* while */
    

@@ -242,9 +242,8 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    debug_puts "handle_vi_edit(5)"
 
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
-   set env(SGE_SINGLE_LINE) 1
    set result -100
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" 0 env]
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
       debug_puts "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
@@ -426,17 +425,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          incr index1 -2
          set var [ string range $elem 5 $index1 ] 
         
-
-         # TODO: CR - the string last $var index1 position setting
-         #            is buggy, because it assumes that the value 
-         #            doesn't contain $var.
-         #
-         #       example: load_sensor /path/load_sensor_script.sh
-         #         this would return "_script.sh" as value
-         #
-         #       Value is only used for printing the changes to the user,
-         #       so this is not "really" a bug
-         #       
          set index1 [ string last "$var" $elem ]
          incr index1 [ string length $var]
          incr index1 2
@@ -447,17 +435,13 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set value [ string range $elem $index1 $index2 ]
          set value [ split $value "\\" ]
          set value [ join $value "" ]
-         if { [ string compare $value "*$/" ] == 0 || [ string compare $value "*$/#" ] == 0 } {
+         if { [ string compare $value "*$/" ] == 0 } {
             puts $CHECK_OUTPUT "--> removing \"$var\" entry"
          } else {
             if { [ string compare $var "" ] != 0 && [ string compare $value "" ] != 0  } {         
-               puts $CHECK_OUTPUT "--> setting \"$var\" to \"${value}\""
+               puts $CHECK_OUTPUT "--> setting \"$var\" to \"$value\""
             } else {
-               if { [string compare $elem [format "%c" 27]] == 0 } {
-                  puts $CHECK_OUTPUT "--> vi command: \"ESC\""    
-               } else {
-                  puts $CHECK_OUTPUT "--> vi command: \"$elem\"" 
-               }
+               puts $CHECK_OUTPUT "--> vi command: \"$elem\""    
             }
          }
       } else {
@@ -1399,15 +1383,8 @@ proc resolve_host { name { long 0 } } {
    global CHECK_OUTPUT
    global resolve_host_cache
 
-   
-   if { $long != 0 } {
-      if {[info exists resolve_host_cache($name,long)]} {
-         return $resolve_host_cache($name,long)
-      }
-   } else {
-      if {[info exists resolve_host_cache($name,short)]} {
-         return $resolve_host_cache($name,short)
-      }
+   if {[info exists resolve_host_cache($name)]} {
+      return $resolve_host_cache($name)
    }
 
    set remote_arch [ resolve_arch $ts_config(master_host) ]
@@ -1425,15 +1402,11 @@ proc resolve_host { name { long 0 } } {
      set newname [lindex $split_name 0]
   }
 
+  puts $CHECK_OUTPUT "resolve_host: \"$name\" resolved to \"$newname\""
 
   # cache result
-  if { $long != 0 } {
-     set resolve_host_cache($name,long) $newname
-     puts $CHECK_OUTPUT "long resolve_host: \"$name\" resolved to \"$newname\""
-  } else {
-     set resolve_host_cache($name,short) $newname
-     puts $CHECK_OUTPUT "short resolve_host: \"$name\" resolved to \"$newname\""
-  }
+  set resolve_host_cache($name) $newname
+
   return $newname
 }
 

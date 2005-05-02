@@ -816,9 +816,6 @@ proc transform_cpu { s_cpu } {
       scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
       set cpu  [expr $days * 86400 + $hours * 3600 + $minutes * 60 + $seconds]
    }
-   if { [info exists cpu] == 0 } {
-      return "NA"
-   }
 
    return $cpu
 }
@@ -1095,8 +1092,7 @@ proc rule_max { a b } {
 #     input   - name of the input string with data from qstat command
 #     output  - name of the array in which to return results
 #     [jobid] - jobid for filtering a certain job
-#     [ext]   - 0: qstat command, 1: qstat -ext command 2: qstat -urg command
-#     [do_replace_NA] - 1: if not set, don't replace NA settings
+#     [ext]   - 0: qstat command, 1: qstat -ext command
 #
 #  RESULT
 #     The TCL array output is filled with the processed data.
@@ -1106,12 +1102,12 @@ proc rule_max { a b } {
 #
 #***************************************************************************
 #
-proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
+proc parse_qstat {input output {jobid ""} {ext 0}} {
    global ts_config
    upvar $input  in
    upvar $output out
 
-   if { $ext == 1 } {
+   if { $ext } {
       if { $ts_config(gridengine_version) == 53 } {
          set   position(0)  "0 6"               ; set    names(0)    id
          set   position(1)  "8 12"              ; set    names(1)    prior
@@ -1158,13 +1154,8 @@ proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
          set   position(6)  "65 74"             ; set    names(6)    department
          set   position(7)  "76 80"             ; set    names(7)    state
          set   position(8)  "82 91"             ; set    names(8)    cpu
-         if { $do_replace_NA == 1 } {
-           set      rules(8)  rule_sum
-         }
-         set    replace(8,) 0:00:00:00
-         if { $do_replace_NA == 1 } {
-            set    replace(8,NA) 0:00:00:00 
-         }
+         set      rules(8)  rule_sum
+         set    replace(8,) 0:00:00:00          ; set    replace(8,NA) 0:00:00:00
          set  transform(8)  transform_cpu
          set  position(9)  "93 99"              ; set    names(9)    mem
          set   replace(9,) 0                    ; set    replace(9,NA) 0
@@ -1184,31 +1175,7 @@ proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
          set  position(18)  "183 end"           ; set   names(18)    jatask
          set     rules(18)  rule_list
       }
-   } elseif { $ext == 2 } { 
-      # qstat -urg
-      if { $ts_config(gridengine_version) == 53 } {
-         add_proc_error "parse_qstat" -1 "parse qstat -urg not implemented for 5.3"
-      }  else {
-         set   position(0)  "0 6"               ; set    names(0)    id
-         set   position(1)  "8 14"              ; set    names(1)    prior
-         set   position(2)  "16 23"             ; set    names(2)    nurg 
-         set   position(3)  "24 32"             ; set    names(3)    urg
-         set   position(4)  "33 41"             ; set    names(4)    rrcontr
-         set   position(5)  "42 50"             ; set    names(5)    wtcontr
-         set   position(6)  "51 59"             ; set    names(6)    dlcontr
-         set   position(7)  "60 70"             ; set    names(7)    name
-         set   position(8)  "71 83"             ; set    names(8)    user
-         set   position(9)  "84 89"             ; set    names(9)    state
-         set   position(10) "90 110"            ; set    names(10)   time
-         set  transform(10)  transform_date_time
-         set   position(11) "111 129"           ; set    names(11)   deadline
-         set   position(12) "130 160"           ; set    names(12)   queue
-         set      rules(12)  rule_list
-         set   position(13) "161 167"           ; set    names(13)   slots
-         set   position(14) "168 end"           ; set    names(14)   jatask
-         set      rules(14)  rule_list
-      }
-   } else { # normat qstat
+   } else {
       if { $ts_config(gridengine_version) == 53 } {
          set   position(0)  "0 6"               ; set    names(0)    id   
          set   position(1)  "8 12"              ; set    names(1)    prior

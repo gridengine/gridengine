@@ -502,10 +502,6 @@ GetLocalExecdSpoolDir()
       fi
    done
 
-   if [ "$ret" = 1 ]; then
-      MakeHostSpoolDir
-   fi
-
    if [ $AUTO = "true" ]; then
       if [ "$EXECD_SPOOL_DIR_LOCAL" != "" ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
@@ -514,25 +510,6 @@ GetLocalExecdSpoolDir()
       fi
    fi
 }
-
-MakeHostSpoolDir()
-{
-   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }'`
-   host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
-
-   mkdir -p $spool_dir/$host_dir
-   ret=$?
-
-   if [ $ret = 0 ]; then
-      group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
-      chown -R $ADMINUSER:$group $spool_dir/$host_dir 
-   else
-      MKDIR="mkdir -p"
-      ExecuteAsAdmin $MKDIR $spool_dir/$host_dir
-   fi
-}
-
-
 
 MakeLocalSpoolDir()
 {

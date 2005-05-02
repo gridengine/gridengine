@@ -1,3 +1,6 @@
+AS-2005-05-92-0: CVS        Created V60u4win_{TAG,BRANCH}
+---------------------------------------------------------
+
 CR-2005-05-02-1: Testsuite: o Fixed bug in testsuite test
                               system_tests/clients/qconf:
                               - message parsing for long host names was wrong

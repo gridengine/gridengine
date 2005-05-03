@@ -1,3 +1,7 @@
+CR-2005-05-03-2: Testsuite: modified module test for virtual event/gdi 
+                            clients to shutdown when not able to connect
+                            to virtual qmaster for more that 15 min.
+
 DT-2005-05-03-0: Bugfix:    o Fixed drmaa_control(ALL)
                  Cleanup:   o Removed redundant function declaration
                  Changed:   JAPI, cull_parse_util.h
@@ -5,7 +9,7 @@ DT-2005-05-03-0: Bugfix:    o Fixed drmaa_control(ALL)
                  Issue:     1595
                  Bugtraq:   6264592
 
-CR-2005-05-03-0: Testsuite: - added support for new message macro format:
+CR-2005-05-03-1: Testsuite: - added support for new message macro format:
                               sge_X32CFormat and sge_U32CFormat
 
 CR-2005-05-03-0: Testsuite: - moved some functions from main testsuite

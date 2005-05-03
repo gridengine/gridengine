@@ -44,6 +44,10 @@
 #include "cl_commlib.h"
 
 
+/* shutdown when test client can't connect for more than 15 min */
+#define SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT 15*60
+
+
 /* counters */
 static int rcv_messages = 0;
 static int snd_messages = 0;
@@ -85,6 +89,7 @@ extern int main(int argc, char** argv)
   struct sigaction sa;
   
   struct timeval now;
+  time_t shutdown_time = 0;
   time_t last_time = 0;
   int no_output = 0;
 
@@ -109,6 +114,9 @@ extern int main(int argc, char** argv)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
+  gettimeofday(&now,NULL);
+  shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
+
   printf("virtual gdi client is connecting to the virtual qmaster for each request.\n"); 
 
   while(do_shutdown == 0) {
@@ -117,6 +125,11 @@ extern int main(int argc, char** argv)
         printf("virtual gdi client message count[received |%d| / sent |%d|]...\n",rcv_messages,snd_messages);
         last_time = now.tv_sec;
      }
+     if (now.tv_sec > shutdown_time ) {
+        printf("shutting down test - timeout\n");
+        do_shutdown = 1;
+     }
+
      cl_com_setup_commlib(CL_NO_THREAD ,atoi(argv[1]), NULL );
    
      handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_gdi_client", 0, 1,0 );
@@ -147,6 +160,12 @@ extern int main(int argc, char** argv)
         cl_com_endpoint_t* sender  = NULL;
         char data[3000];
    
+        gettimeofday(&now,NULL);
+        if (now.tv_sec > shutdown_time ) {
+           printf("shutting down test - timeout\n");
+           do_shutdown = 1;
+        }
+
         sprintf(data,"gdi request");
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          CL_MIH_MAT_NAK,
@@ -159,6 +178,8 @@ extern int main(int argc, char** argv)
                                                &message, &sender );
            if ( retval == CL_RETVAL_OK) {
                  rcv_messages++;
+                 gettimeofday(&now,NULL);
+                 shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
                  cl_com_free_message(&message);
                  cl_com_free_endpoint(&sender);
                  break;

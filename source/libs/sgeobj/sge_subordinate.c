@@ -96,7 +96,7 @@ tst_sos(int used, int total, lListElem *so)
    }
 
    /* used slots greater or equal threshold */
-   DPRINTF(("TSTSOS: "u32" slots used (limit "u32") -> %ssuspended\n",
+   DPRINTF(("TSTSOS: "sge_u32" slots used (limit "sge_u32") -> %ssuspended\n",
       used, threshold, ( (u_long32)(used) >= threshold)?"":"not "));
    DEXIT;
    return ( (u_long32) (used) >= threshold);
@@ -119,7 +119,7 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
          
          sge_dstring_sprintf_append(string, "%s", lGetString(elem, SO_name));
          if (lGetUlong(elem, SO_threshold)) {
-            sge_dstring_sprintf_append(string, "="u32"%s",
+            sge_dstring_sprintf_append(string, "="sge_u32"%s",
                                        lGetUlong(elem, SO_threshold),
                                        lNext(elem) ? "," : "");
          }

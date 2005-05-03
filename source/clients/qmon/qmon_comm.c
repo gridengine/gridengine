@@ -34,10 +34,6 @@
 #include <sys/types.h>
 #include <sys/times.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xmt/Xmt.h>
 #include <Xmt/Dialogs.h>
 
@@ -509,7 +505,7 @@ lEnumeration *what
       for_each2(alep, alp, ep, *lpp) {
          if ( lGetUlong(alep, AN_status) == STATUS_OK) {
             u_long32 jid = atol(lGetString(ep, ID_str));
-            DPRINTF(("Job: " u32 "gets removed\n", jid));
+            DPRINTF(("Job: " sge_u32 "gets removed\n", jid));
             if (local) {
                job_list_locate(local, jid); 
             }

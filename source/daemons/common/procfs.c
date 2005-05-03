@@ -391,7 +391,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
                if (shepherd_trace) {
                   char err_str[256];
 
-                  sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI , u32c(pid), groups);
+                  sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI , sge_u32c(pid), groups);
                   shepherd_trace(err_str);
                }
 
@@ -402,7 +402,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
                   char err_str[256];
 
                   sprintf(err_str, MSG_SGE_DONOTKILLROOTPROCESSXY_UI ,
-                     u32c(atol(dent->d_name)), groups);
+                     sge_u32c(atol(dent->d_name)), groups);
                   shepherd_trace(err_str);
                }
             }

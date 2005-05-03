@@ -35,10 +35,6 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 
 #include "sgermon.h"
 #include "symbols.h"
@@ -339,7 +335,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
                    (group_opt & GROUP_NO_TASK_GROUPS) > 0) {
                   lListElem *elem = NULL;
                   
-                  sge_dstring_sprintf(&dyn_task_str, u32, 
+                  sge_dstring_sprintf(&dyn_task_str, sge_u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   elem = sge_job_to_XML(jep, jatep, NULL, 1, NULL,
                                 &dyn_task_str, full_listing, 0, 0, exechost_list, centry_list, 
@@ -499,7 +495,7 @@ static int xml_jobs_not_enrolled(lListElem *job, lListElem *qep,
                for (; start <= end; start += step) { 
                   lListElem *ja_task = (lListElem *)job_get_ja_task_template_hold( job, start, 
                                                                      hold_state[i]);
-                  sge_dstring_sprintf(&ja_task_id_string, u32, start);
+                  sge_dstring_sprintf(&ja_task_id_string, sge_u32, start);
                   elem = sge_job_to_XML(job, ja_task, NULL, 1, NULL,
                                 &ja_task_id_string, full_listing, 0, 0, 
                                 exechost_list, centry_list, pe_list, group_opt, 0);
@@ -1112,7 +1108,7 @@ static void xml_print_jobs_finished(lList *job_list, const lList *pe_list, const
                if (!lGetNumberOfElem(user_list) || (lGetNumberOfElem(user_list) && 
                      (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
                   
-                  sge_dstring_sprintf(&dyn_task_str, u32, 
+                  sge_dstring_sprintf(&dyn_task_str, sge_u32, 
                                     lGetUlong(jatep, JAT_task_number));
 
                   elem = sge_job_to_XML(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
@@ -1169,7 +1165,7 @@ static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const l
             if (!lGetNumberOfElem(user_list) || (lGetNumberOfElem(user_list) && 
                   (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
 
-               sge_dstring_sprintf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
+               sge_dstring_sprintf(&dyn_task_str, "sge_u32", lGetUlong(jatep, JAT_task_number));
                elem = sge_job_to_XML(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
                                 full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);  
 
@@ -1373,7 +1369,7 @@ lList **target_list
                         jid = lGetUlong(jlep, JB_job_number);
                         old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
-                        sge_dstring_sprintf(&dyn_task_str, u32, jataskid);
+                        sge_dstring_sprintf(&dyn_task_str, sge_u32, jataskid);
                         
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
                               (lGetUlong(jatep, JAT_state) & JRUNNING)) {

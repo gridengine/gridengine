@@ -40,10 +40,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/MsgLine.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"

@@ -37,7 +37,7 @@
 ** sge/pdc.c
 */ 
 #define MSG_SGE_TABINFOXFAILEDY_SS  _MESSAGE(31000, _("tabinfo("SFQ", ...) failed, "SFN"\n"))
-#define MSG_MEMORY_MALLOCXFAILED_D  _MESSAGE(31001, _("malloc("U32CFormat") failed"))
+#define MSG_MEMORY_MALLOCXFAILED_D  _MESSAGE(31001, _("malloc("sge_U32CFormat") failed"))
 #define MSG_SGE_SKIPPINGREADOFCORRUPTEDPACCTFILE   _MESSAGE(31002, _("skipping read of corrupted pacct file"))
 #define MSG_SGE_FREADOFHEADERFAILEDPACCTFILECORRUPTED _MESSAGE(31003, _("fread of header failed, pacct file corrupted"))
 #define MSG_SGE_FREADOFFLAGFAILEDPACCTFILECORRUPTED   _MESSAGE(31004, _("fread of flag failed, pacct file corrupted"))
@@ -91,8 +91,8 @@
 */ 
 #define MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY    _MESSAGE(31048, _("NGROUPS_MAX <= 0: os reconfiguration necessary\n"))
 #define MSG_SGE_PROCFSKILLADDGRPIDMALLOCFAILED           _MESSAGE(31049, _("procfs_kill_addgrpid(): malloc failed" ))
-#define MSG_SGE_KILLINGPIDXY_UI                          _MESSAGE(31050, _("killing pid "U32CFormat"/%d" ))
-#define MSG_SGE_DONOTKILLROOTPROCESSXY_UI                _MESSAGE(31051, _("do not kill root process "U32CFormat"/%d"   ))
+#define MSG_SGE_KILLINGPIDXY_UI                          _MESSAGE(31050, _("killing pid "sge_U32CFormat"/%d" ))
+#define MSG_SGE_DONOTKILLROOTPROCESSXY_UI                _MESSAGE(31051, _("do not kill root process "sge_U32CFormat"/%d"   ))
 #define MSG_SGE_PTDISPATCHPROCTOJOBMALLOCFAILED          _MESSAGE(31052, _("pt_dispatch_proc_to_job: malloc failed\n" ))
 /* #define MSG_SGE_PIOCPSINFOFAILED                         _message(31053, _("PIOCPSINFO failed\n")) __TS Removed automatically from testsuite!! TS__*/
 

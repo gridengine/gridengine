@@ -43,10 +43,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "ListTree.h"
 #include "Matrix.h"
 #include "Tab.h"
@@ -823,7 +819,7 @@ static ListTreeItem* cq_add_aulng(Widget tree, ListTreeItem *parent,
       char *hostref = (char*) lGetHost(ep, AULNG_href);
       u_long32 u = lGetUlong(ep, AULNG_value);
       dstring ds = DSTRING_INIT;
-      sge_dstring_sprintf(&ds, "%s " u32, hostref, u);
+      sge_dstring_sprintf(&ds, "%s " sge_u32, hostref, u);
       ListTreeAddLeaf(tree, item, ds.s);
       sge_dstring_free(&ds);
    }   

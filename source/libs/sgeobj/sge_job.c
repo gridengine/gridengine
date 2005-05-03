@@ -35,10 +35,6 @@
 
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif      
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "commlib.h"
@@ -491,10 +487,10 @@ u_long32 job_get_ja_tasks(const lListElem *job)
    DENTER(TOP_LAYER, "job_get_ja_tasks");
    n = job_get_not_enrolled_ja_tasks(job);
    ret += n;
-   DPRINTF(("Not enrolled ja_tasks: "u32"\n", n));
+   DPRINTF(("Not enrolled ja_tasks: "sge_u32"\n", n));
    n = job_get_enrolled_ja_tasks(job);
    ret += n;
-   DPRINTF(("Enrolled ja_tasks: "u32"\n", n));
+   DPRINTF(("Enrolled ja_tasks: "sge_u32"\n", n));
    DEXIT;
    return ret;
 }

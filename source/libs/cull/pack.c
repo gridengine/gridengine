@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "pack.h"
 
 #include <stdio.h>

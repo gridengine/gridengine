@@ -34,10 +34,6 @@
 #include <limits.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-
 #include "sge.h"
 #include "symbols.h"
 #include "sge_ja_task.h"
@@ -250,7 +246,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                   task_number = lGetUlong(tmp_task, JAT_task_number);
                   if ((task_number >= start && task_number <= end &&
                      ((task_number-start)%step) == 0) || alltasks) {
-                     DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                     DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                         task_number));
 
                      /* this specifies no queue, so lets probe for a job */
@@ -285,7 +281,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                      for (taskid=min; taskid<=max; taskid+= step) {
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
-                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                           DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
                                action, lGetUlong(dep, ID_force), &alp);   
@@ -300,7 +296,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                      for (taskid=min; taskid<=max; taskid+= step) {
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
-                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                           DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
                                action, lGetUlong(dep, ID_force), &alp);   
@@ -317,7 +313,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            continue;
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
-                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                           DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
                                action, lGetUlong(dep, ID_force), &alp);   
@@ -335,7 +331,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            continue;
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
-                           DPRINTF(("Modify job: "u32"."u32"\n", jobid,
+                           DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
                                action, lGetUlong(dep, ID_force), &alp);   
@@ -360,7 +356,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                if (!fnmatch(job_name, lGetString(job, JB_job_name), 0)) {
                   char job_id[40];
                   mod = lCopyElem(dep);
-                  sprintf(job_id, u32, lGetUlong(job, JB_job_number));
+                  sprintf(job_id, sge_u32, lGetUlong(job, JB_job_number));
                   lSetString(mod, ID_str, job_id);
                   lAppendElem(request->lp, mod);
                   found = true;
@@ -447,7 +443,7 @@ sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, 
          result = qmod_queue_weakclean(qep, force, answer, user, host, isoperator, isowner);
 	 break;
       default:
-         INFO((SGE_EVENT, MSG_LOG_QUNKNOWNQMODCMD_U, u32c(action)));
+         INFO((SGE_EVENT, MSG_LOG_QUNKNOWNQMODCMD_U, sge_u32c(action)));
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }
@@ -480,7 +476,7 @@ lList **answer
    job_id = lGetUlong(jep, JB_job_number);
 
    if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
-      WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, u32c(job_id)));
+      WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, sge_u32c(job_id)));
       answer_list_add(answer, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
@@ -489,9 +485,9 @@ lList **answer
    if (!jatep) {
       /* unenrolled tasks always are not-running pending/hold */
       if (task_id) 
-         WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_UU, u32c(job_id), u32c(task_id)));
+         WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_UU, sge_u32c(job_id), sge_u32c(task_id)));
       else 
-         WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_U, u32c(job_id)));
+         WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_U, sge_u32c(job_id)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
@@ -529,22 +525,22 @@ lWriteElemTo(jatep, stderr);
                             job_id, task_id, NULL, NULL, NULL,
                             jep, jatep, NULL, true, true);
             if (job_is_array(jep)) {
-               INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
+               INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, sge_u32c(job_id), sge_u32c(task_id)));
             } else {
-               INFO((SGE_EVENT, MSG_JOB_CLEARERRORJOB_SSU, user, host, u32c(job_id)));
+               INFO((SGE_EVENT, MSG_JOB_CLEARERRORJOB_SSU, user, host, sge_u32c(job_id)));
             }
          } else {
             if (job_is_array(jep)) {
-               INFO((SGE_EVENT, MSG_JOB_NOERRORSTATETASK_UU, u32c(job_id), u32c(task_id)));
+               INFO((SGE_EVENT, MSG_JOB_NOERRORSTATETASK_UU, sge_u32c(job_id), sge_u32c(task_id)));
             } else {
-               INFO((SGE_EVENT, MSG_JOB_NOERRORSTATEJOB_UU, u32c(job_id)));
+               INFO((SGE_EVENT, MSG_JOB_NOERRORSTATEJOB_UU, sge_u32c(job_id)));
             }
          }
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
          
       default:
-         INFO((SGE_EVENT, MSG_LOG_JOBUNKNOWNQMODCMD_U, u32c(action)));
+         INFO((SGE_EVENT, MSG_LOG_JOBUNKNOWNQMODCMD_U, sge_u32c(action)));
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }
@@ -694,26 +690,26 @@ char *host
             runs in */
          if (sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatep)) {
             if (job_is_array(jep)) {
-               WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDJOB_SU, user, u32c(jobid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOFORCESUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             if (job_is_array(jep)) {
-               WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, u32c(jobid)));
+               WARNING((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       else {
          if (job_is_array(jep)) {
-            WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SUU, user, u32c(jobid), u32c(jataskid)));
+            WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
          } else {
-            WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SU, user, u32c(jobid)));
+            WARNING((SGE_EVENT, MSG_JOB_ALREADYSUSPENDED_SU, user, sge_u32c(jobid)));
          }
          answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
@@ -736,9 +732,9 @@ char *host
       if (queueep) {
          if ((i = sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatep))) {
             if (job_is_array(jep)) {
-               WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDJOB_SU, user, u32c(jobid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOSUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
@@ -750,9 +746,9 @@ char *host
          /* set jobs state to suspend in all cases */
          if (!i) {
             if (job_is_array(jep)) {
-               INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, u32c(jobid)));
+               INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
          }
@@ -770,9 +766,9 @@ char *host
       else {
          if (!i) {
             if (job_is_array(jep)) {
-               INFO((SGE_EVENT, MSG_JOB_SUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               INFO((SGE_EVENT, MSG_JOB_SUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               INFO((SGE_EVENT, MSG_JOB_SUSPENDJOB_SU, user, u32c(jobid)));
+               INFO((SGE_EVENT, MSG_JOB_SUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
 
@@ -820,9 +816,9 @@ char *host
    if (VALID(JSUSPENDED_ON_THRESHOLD, lGetUlong(jatep, JAT_state))) {
       if (VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
          if (job_is_array(jep)) {
-            INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDTASK_SSUU, user, host, u32c(jobid), u32c(jataskid)));
+            INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDTASK_SSUU, user, host, sge_u32c(jobid), sge_u32c(jataskid)));
          } else {
-            INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, u32c(jobid)));
+            INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, sge_u32c(jobid)));
          }
          answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
 
@@ -839,9 +835,9 @@ char *host
       else {
          /* guess admin tries to remove threshold suspension by qmon -us <jobid> */
          if (job_is_array(jep)) {
-            WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+            WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
          } else {
-            WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDJOB_SU, user, u32c(jobid)));
+            WARNING((SGE_EVENT, MSG_JOB_NOADMSUSPENDJOB_SU, user, sge_u32c(jobid)));
          }
          answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          DEXIT;
@@ -859,26 +855,26 @@ char *host
          */
          if (sge_signal_queue(SGE_SIGCONT, queueep, jep, jatep)) {
             if (job_is_array(jep)) {
-               WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLETASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLETASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLEJOB_SU, user, u32c(jobid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOFORCEENABLEJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
          else {
             if (job_is_array(jep)) {
-               WARNING((SGE_EVENT, MSG_JOB_FORCEENABLETASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               WARNING((SGE_EVENT, MSG_JOB_FORCEENABLETASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               WARNING((SGE_EVENT, MSG_JOB_FORCEENABLEJOB_SU, user, u32c(jobid)));
+               WARNING((SGE_EVENT, MSG_JOB_FORCEENABLEJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
       else {
          if (job_is_array(jep)) {
-            WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SUU, user, u32c(jobid), u32c(jataskid)));
+            WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
          } else {
-            WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SU, user, u32c(jobid))); 
+            WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SU, user, sge_u32c(jobid))); 
          }
          answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
@@ -890,9 +886,9 @@ char *host
       if (queueep) {
          if ((i = sge_signal_queue(SGE_SIGCONT, queueep, jep, jatep))) {
             if (job_is_array(jep)) {
-               WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDJOB_SU, user, u32c(jobid)));
+               WARNING((SGE_EVENT, MSG_JOB_NOUNSUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
@@ -904,9 +900,9 @@ char *host
          /* set jobs state to suspend in all cases */
          if (!i) {
             if (job_is_array(jep)) {
-               INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPTASK_SSUU, user, host, u32c(jobid), u32c(jataskid)));
+               INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPTASK_SSUU, user, host, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPJOB_SSU, user, host, u32c(jobid)));
+               INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPJOB_SSU, user, host, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
          }
@@ -923,9 +919,9 @@ char *host
          /* set job state only if communication works */
          if (!i) {
             if (job_is_array(jep)) {
-               INFO((SGE_EVENT, MSG_JOB_UNSUSPENDTASK_SUU, user, u32c(jobid), u32c(jataskid)));
+               INFO((SGE_EVENT, MSG_JOB_UNSUSPENDTASK_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
             } else {
-               INFO((SGE_EVENT, MSG_JOB_UNSUSPENDJOB_SU, user, u32c(jobid)));
+               INFO((SGE_EVENT, MSG_JOB_UNSUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
             
@@ -1011,7 +1007,7 @@ void resend_signal_event(te_event_t anEvent)
    if (queue == NULL) {
       if (!(jep = job_list_locate(Master_Job_List, jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
       {
-         ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
+         ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
@@ -1137,7 +1133,7 @@ lListElem *jatep
    {
       te_event_t ev = NULL;
 
-      DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
+      DPRINTF(("JOB "sge_u32": %s signal %s (retry after "sge_u32" seconds) host: %s\n", 
             lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now, 
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
@@ -1153,7 +1149,7 @@ lListElem *jatep
    {
       te_event_t ev = NULL;
 
-      DPRINTF(("QUEUE %s: %s signal %s (retry after "u32" seconds) host %s\n", 
+      DPRINTF(("QUEUE %s: %s signal %s (retry after "sge_u32" seconds) host %s\n", 
             lGetString(qep, QU_full_name), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_full_name));
@@ -1223,11 +1219,11 @@ lListElem *qep
                /* search master queue - needed for signalling of a job */
                if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), mqname = lGetString(
                      lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname)))) {
-                  DPRINTF(("found slave job "u32" in queue %s master queue is %s\n", 
+                  DPRINTF(("found slave job "sge_u32" in queue %s master queue is %s\n", 
                      lGetUlong(jep, JB_job_number), qname, mqname));
                   sge_signal_queue(how, mq, jep, jatep);
                } else 
-                  ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, mqname, u32c(lGetUlong(jep, JB_job_number))));
+                  ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, mqname, sge_u32c(lGetUlong(jep, JB_job_number))));
                break;
             }
       }
@@ -1264,7 +1260,7 @@ lListElem *jatep
          !lGetBool(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
          if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname = lGetString(gdil_ep, JG_qname)))) {
-            DPRINTF(("found slave job "u32" in queue %s\n", 
+            DPRINTF(("found slave job "sge_u32" in queue %s\n", 
                lGetUlong(jep, JB_job_number), qname));
             sge_signal_queue(how, mq, jep, jatep);
          }

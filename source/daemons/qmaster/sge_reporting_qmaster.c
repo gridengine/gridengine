@@ -366,7 +366,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
+      sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"sge_U32CFormat"\n", 
                           submission_time, REPORTING_DELIMITER,
                           job_number, REPORTING_DELIMITER,
                           -1, REPORTING_DELIMITER, /* means: no ja_task yet */
@@ -460,7 +460,7 @@ reporting_create_job_log(lList **answer_list,
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c%s%c"U32CFormat"%c%d%c%s%c%s%c%s%c%s%c"U32CFormat"%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n", 
+      sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c%s%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c"sge_U32CFormat"%c"sge_U32CFormat"%c"sge_U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n", 
                           event_time, REPORTING_DELIMITER,
                           event, REPORTING_DELIMITER,
                           job_id, REPORTING_DELIMITER,
@@ -692,7 +692,7 @@ reporting_create_queue_record(lList **answer_list,
       queue_or_job_get_states(QU_state, state_buffer, 
                               lGetUlong(queue, QU_state));
 
-      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"U32CFormat"%c%s\n", 
+      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c%s\n", 
                           lGetString(queue, QU_qname),
                           REPORTING_DELIMITER,
                           lGetHost(queue, QU_qhostname),
@@ -760,7 +760,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
          queue_or_job_get_states(QU_state, state_buffer, 
                                  lGetUlong(queue, QU_state));
 
-         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetString(queue, QU_qname),
                              REPORTING_DELIMITER,
                              lGetHost(queue, QU_qhostname),
@@ -831,7 +831,7 @@ reporting_create_host_record(lList **answer_list,
        */
       if (sge_dstring_strlen(&load_dstring) > 0) {
          dstring host_dstring = DSTRING_INIT;
-         sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&host_dstring, "%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetHost(host, EH_name),
                              REPORTING_DELIMITER,
                              report_time,
@@ -897,7 +897,7 @@ reporting_create_host_consumable_record(lList **answer_list,
       if (sge_dstring_strlen(&consumable_dstring) > 0) {
          dstring host_dstring = DSTRING_INIT;
 
-         sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&host_dstring, "%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetHost(host, EH_name),
                              REPORTING_DELIMITER,
                              report_time,
@@ -961,7 +961,7 @@ reporting_create_sharelog_record(lList **answer_list)
          delim[1] = '\0';
 
          /* we need a prefix containing the reporting file std fields */
-         sge_dstring_sprintf(&prefix_dstring, U32CFormat"%csharelog%c",
+         sge_dstring_sprintf(&prefix_dstring, sge_U32CFormat"%csharelog%c",
                              sge_get_gmt(),
                              REPORTING_DELIMITER, REPORTING_DELIMITER);
 
@@ -1201,7 +1201,7 @@ reporting_create_record(lList **answer_list,
    DENTER(TOP_LAYER, "reporting_create_record");
 
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-   sge_dstring_sprintf_append(&(buf->buffer), U32CFormat"%c%s%c%s",
+   sge_dstring_sprintf_append(&(buf->buffer), sge_U32CFormat"%c%s%c%s",
                               sge_get_gmt(),
                               REPORTING_DELIMITER,
                               type,

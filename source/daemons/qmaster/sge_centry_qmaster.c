@@ -36,10 +36,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_c_gdi.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -134,7 +130,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             type = TYPE_INT;
          }
-         DPRINTF(("Got CE_valtype: "u32"\n", type));
+         DPRINTF(("Got CE_valtype: "sge_u32"\n", type));
          lSetUlong(centry, CE_valtype, type);
       }
    }
@@ -151,7 +147,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             relop = CMPLXLE_OP;
          }
-         DPRINTF(("Got CE_relop: "u32"\n", relop));
+         DPRINTF(("Got CE_relop: "sge_u32"\n", relop));
          lSetUlong(centry, CE_relop, relop);
       }
    }
@@ -168,7 +164,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             request = REQU_YES;
          }
-         DPRINTF(("Got CE_requestable: "u32"\n", request));
+         DPRINTF(("Got CE_requestable: "sge_u32"\n", request));
          lSetUlong(centry, CE_requestable, request);
       }
    }
@@ -185,7 +181,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             consumable = true;
          }
-         DPRINTF(("Got CE_consumable: "u32"\n", (u_long32)consumable));
+         DPRINTF(("Got CE_consumable: "sge_u32"\n", (u_long32)consumable));
          lSetBool(centry, CE_consumable, consumable);
       }
    }

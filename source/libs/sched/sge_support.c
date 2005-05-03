@@ -38,10 +38,6 @@
 #include <limits.h>
 #include <math.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #ifndef NO_SGE_COMPILE_DEBUG   
 #   define NO_SGE_COMPILE_DEBUG
 #endif
@@ -993,7 +989,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 1
-      DPRINTF(("JOB: "u32" PRIORITY: "u32"\n", 
+      DPRINTF(("JOB: "sge_u32" PRIORITY: "sge_u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
          lGetDouble(tmp_sge_job, SGEJ_priority)));
 #endif

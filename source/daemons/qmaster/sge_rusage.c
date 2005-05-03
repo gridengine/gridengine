@@ -55,16 +55,16 @@
 #endif
 
 #define ACTFILE_FPRINTF_FORMAT \
-"%s%c%s%c%s%c%s%c%s%c"u32"%c%s%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c" \
-u32"%c"u32"%c"u32"%c%f%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c%f%c" \
-u32"%c"u32"%c"u32"%c"u32"%c"u32"%c"u32"%c%s%c%s%c%s%c%d%c"u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f" \
+"%s%c%s%c%s%c%s%c%s%c"sge_u32"%c%s%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c" \
+sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c" \
+sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f" \
 ARCH_COLUMN \
 "\n"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define NECSX_ACTFILE_FPRINTF_FORMAT \
-"%s,"u32","u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"," \
-u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
+"%s,"sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32"," \
+sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32"\n"
 #endif 
 
 #define SET_STR_DEFAULT(jr, nm, s) if (!lGetString(jr, nm)) \

@@ -32,10 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "cull.h"
 #include "sge_report_execd.h"
 #include "sge_usageL.h"
@@ -86,9 +82,9 @@ void trace_jr()
       const char *s;
 
       if ((s=lGetString(jr, JR_pe_task_id_str))) {
-         DPRINTF(("Jobtask "u32"."u32" task %s\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number), s));
+         DPRINTF(("Jobtask "sge_u32"."sge_u32" task %s\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number), s));
       } else {
-         DPRINTF(("Jobtask "u32"."u32"\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number)));
+         DPRINTF(("Jobtask "sge_u32"."sge_u32"\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number)));
       }   
    }
    DEXIT;
@@ -185,7 +181,7 @@ u_long32 jataskid
           lGetUlong(jr, JR_ja_task_number) == jataskid) {
          const char *s = lGetString(jr, JR_pe_task_id_str);
 
-         DPRINTF(("!!!! removing jobreport for "u32"."u32" task %s !!!!\n",
+         DPRINTF(("!!!! removing jobreport for "sge_u32"."sge_u32" task %s !!!!\n",
             jobid, jataskid, s?s:"master"));
          lRemoveElem(jr_list, jr);
       }
@@ -242,7 +238,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
       parsed = strtod(val_as_str, &p);
       if (p==val_as_str) {
          ERROR((SGE_EVENT, MSG_PARSE_USAGEATTR_SSU, 
-                val_as_str, name, u32c(lGetUlong(jr, JR_job_number)))); 
+                val_as_str, name, sge_u32c(lGetUlong(jr, JR_job_number)))); 
          /* use default value */
          lSetDouble(usage, UA_value, val); 
          DEXIT;
@@ -307,14 +303,14 @@ execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb
             unpackint(pb, &jataskid);
             unpackstr(pb, &pe_task_id_str);
 
-            DPRINTF(("remove exiting job "u32"/"u32"/%s\n", 
+            DPRINTF(("remove exiting job "sge_u32"/"sge_u32"/%s\n", 
                     jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
                remove_acked_job_exit(jobid, jataskid, pe_task_id_str, jr);
             } 
             else {
-               DPRINTF(("acknowledged job "u32"."u32" not found\n", jobid, jataskid));
+               DPRINTF(("acknowledged job "sge_u32"."sge_u32" not found\n", jobid, jataskid));
             }
 
             if (pe_task_id_str)

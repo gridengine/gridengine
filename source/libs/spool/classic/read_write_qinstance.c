@@ -290,7 +290,7 @@ write_qinstance(int spool, int how, const lListElem *ep)
                   lGetBool(ep, QU_rerun) ? "TRUE" : "FALSE"));
       }
       {
-         FPRINTF((fp, "slots              "u32"\n",
+         FPRINTF((fp, "slots              "sge_u32"\n",
                   lGetUlong(ep, QU_job_slots)));
       }
       {
@@ -393,9 +393,9 @@ write_qinstance(int spool, int how, const lListElem *ep)
                   lGetString(ep, QU_initial_state)));
       }
 #if 0
-      FPRINTF((fp, "fshare             "u32"\n",
+      FPRINTF((fp, "fshare             "sge_u32"\n",
                lGetUlong(ep, QU_fshare)));
-      FPRINTF((fp, "oticket            "u32"\n",
+      FPRINTF((fp, "oticket            "sge_u32"\n",
                lGetUlong(ep, QU_oticket)));
       
 #endif

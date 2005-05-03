@@ -184,7 +184,7 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
 
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, MSG_PEREFINJOB_SU,
-                                    pe_name, u32c(job_id));
+                                    pe_name, sge_u32c(job_id));
             ret = true;
             break;
          }

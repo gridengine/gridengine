@@ -32,10 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "cull.h"
 #include "sge_gdi.h"
 #include "sge_client_access.h"

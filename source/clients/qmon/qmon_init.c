@@ -256,14 +256,14 @@ void qmonInitSge( char *progname)
              error == CL_RETVAL_CONNECTION_NOT_FOUND) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER], 
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(0)));
          }
          /* For unusual errors, give more detail */
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER], 
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(0), cl_get_error_text(error)));
          }
          
@@ -467,7 +467,7 @@ DTRACE;
       fprintf(stderr, "Wrong Version of Application Defaults file\n");
       DEXIT;
       qmonExitFunc(1);
-   }      
+   } 
 
    /* 
     * Register Xmt Pixmap and Bitmap converters 

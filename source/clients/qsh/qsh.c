@@ -1794,7 +1794,7 @@ int main(int argc, char **argv)
                exit_status = 1;
                break;
             default:
-               ERROR((SGE_EVENT, MSG_QSH_UNKNOWNJOBSTATUS_X, x32c(job_status)));
+               ERROR((SGE_EVENT, MSG_QSH_UNKNOWNJOBSTATUS_X, sge_x32c(job_status)));
                do_exit = 1;
                exit_status = 1;
                break;
@@ -1832,7 +1832,7 @@ static void delete_job(u_long32 job_id, lList *jlp)
       return;
    }
 
-   sprintf(job_str, u32, job_id);
+   sprintf(job_str, sge_u32, job_id);
    lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 
    sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);

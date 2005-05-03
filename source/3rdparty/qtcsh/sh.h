@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.10 2005/03/24 12:04:42 ron Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.11 2005/05/03 09:18:02 roland Exp $ */
 /*
  * sh.h: Catch it all globals and includes file!
  */
@@ -266,6 +266,10 @@ typedef int sigret_t;
 # include <sys/ttold.h>
 #endif /* sonyrisc */
 
+#ifdef REMOTEHOST
+# include <netdb.h>
+#endif /* REMOTEHOST */
+
 #if defined(POSIX) && !defined(WINNT)
 /*
  * We should be using setpgid and setpgid
@@ -529,10 +533,6 @@ extern void		DebugFree	__P((ptr_t, char *, int));
 #ifdef HESIOD
 # include <hesiod.h>
 #endif /* HESIOD */
-
-#ifdef REMOTEHOST
-# include <netdb.h>
-#endif /* REMOTEHOST */
 
 #ifndef MAXHOSTNAMELEN
 # if defined(SCO) && (SYSVREL > 3)

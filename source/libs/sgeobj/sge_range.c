@@ -1518,14 +1518,14 @@ void range_to_dstring(u_long32 start, u_long32 end, int step,
    }
 
    if (start == end) {
-      sprintf(tail, u32, start);
+      sprintf(tail, sge_u32, start);
    } else if (start + step == end) {
-      sprintf(tail, u32 "," u32, start, end);
+      sprintf(tail, sge_u32 "," sge_u32, start, end);
    } else {
       if (ignore_step) {
-         sprintf(tail, u32 "-" u32, start, end);
+         sprintf(tail, sge_u32 "-" sge_u32, start, end);
       } else {
-         sprintf(tail, u32 "-" u32 ":%d", start, end, step);
+         sprintf(tail, sge_u32 "-" sge_u32 ":%d", start, end, step);
       }
    }
    sge_dstring_append(dyn_taskrange_str, tail);

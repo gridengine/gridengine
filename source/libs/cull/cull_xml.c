@@ -387,9 +387,9 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
             break;
          case lUlongT:
             if (!fp) {
-               DPRINTF(( u32, lGetPosUlong(ep, i)));
+               DPRINTF(( sge_u32, lGetPosUlong(ep, i)));
             } else {
-               fprintf(fp, u32, lGetPosUlong(ep, i));
+               fprintf(fp, sge_u32, lGetPosUlong(ep, i));
             }
             break;
          case lStringT:

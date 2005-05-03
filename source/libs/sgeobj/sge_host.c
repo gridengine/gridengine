@@ -31,10 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sge_object.h"
 #include "sge_conf.h"

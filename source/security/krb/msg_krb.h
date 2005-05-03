@@ -114,11 +114,11 @@
 /* 
 ** krb/src/krb_util.c
 */
-#define MSG_KRB_COULDNOTDECRYPTTGTFORJOBXY_DS   _MESSAGE(53074, _("could not decrypt TGT for job "U32CFormat" - "SFN))
-#define MSG_KRB_COULDNOTRENEWTGTFORJOBXY_DS     _MESSAGE(53075, _("could not renew TGT for job "U32CFormat" - "SFN))
-#define MSG_KRB_COULDNOTECRYPTTGTFORJOBXY_DS    _MESSAGE(53076, _("could not encrypt TGT for job "U32CFormat" - "SFN))
-#define MSG_KRB_COULDNOTSTORERENEWEDTGTFORXJOBY_SD _MESSAGE(53077, _("could not store renewed TGT for "SFN" - job "U32CFormat"\n"))
-#define MSG_KRB_COULDNOTGETUSERIDFORXY_SD       _MESSAGE(53078, _("could not get user ID for "SFN" - job "U32CFormat"\n"))
+#define MSG_KRB_COULDNOTDECRYPTTGTFORJOBXY_DS   _MESSAGE(53074, _("could not decrypt TGT for job "sge_U32CFormat" - "SFN))
+#define MSG_KRB_COULDNOTRENEWTGTFORJOBXY_DS     _MESSAGE(53075, _("could not renew TGT for job "sge_U32CFormat" - "SFN))
+#define MSG_KRB_COULDNOTECRYPTTGTFORJOBXY_DS    _MESSAGE(53076, _("could not encrypt TGT for job "sge_U32CFormat" - "SFN))
+#define MSG_KRB_COULDNOTSTORERENEWEDTGTFORXJOBY_SD _MESSAGE(53077, _("could not store renewed TGT for "SFN" - job "sge_U32CFormat"\n"))
+#define MSG_KRB_COULDNOTGETUSERIDFORXY_SD       _MESSAGE(53078, _("could not get user ID for "SFN" - job "sge_U32CFormat"\n"))
 
 
 #endif /* __MSG_KRB_H  */ 

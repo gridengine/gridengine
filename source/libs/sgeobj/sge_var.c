@@ -69,7 +69,7 @@
 *     sgeobj/var/var_list_get_string()
 *     sgeobj/var/var_list_set_string()
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32()
+*     sgeobj/var/var_list_set_sge_u32()
 *     sgeobj/var/var_list_set_sharedlib_path()
 *     sgeobj/var/var_list_remove_prefix_vars()
 ******************************************************************************/
@@ -137,7 +137,7 @@ const char *var_get_sharedlib_path_name(void)
 *
 *  SEE ALSO
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
 void var_list_set_string(lList **varl, const char *name, const char *value) 
@@ -178,7 +178,7 @@ void var_list_set_string(lList **varl, const char *name, const char *value)
 *
 *  SEE ALSO
 *     sgeobj/var/var_list_set_string()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
 void var_list_set_int(lList **varl, const char *name, int value)
@@ -191,12 +191,12 @@ void var_list_set_int(lList **varl, const char *name, int value)
    DEXIT;
 }
 
-/****** sgeobj/var/var_list_set_u32() *****************************************
+/****** sgeobj/var/var_list_set_sge_u32() *****************************************
 *  NAME
-*     var_list_set_u32 -- add/change a variable
+*     var_list_set_sge_u32 -- add/change a variable
 *
 *  SYNOPSIS
-*     void var_list_set_u32(lList **varl, 
+*     void var_list_set_sge_u32(lList **varl, 
 *                           const char *name, 
 *                           u_long32 value);
 *
@@ -215,12 +215,12 @@ void var_list_set_int(lList **varl, const char *name, int value)
 *     sgeobj/var/var_list_set_int()
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
-void var_list_set_u32(lList **varl, const char *name, u_long32 value)
+void var_list_set_sge_u32(lList **varl, const char *name, u_long32 value)
 {
    char buffer[2048];
 
-   DENTER(TOP_LAYER, "var_list_set_u32");
-   sprintf(buffer, u32, value);
+   DENTER(TOP_LAYER, "var_list_set_sge_u32");
+   sprintf(buffer, sge_u32, value);
    var_list_set_string(varl, name, buffer);
    DEXIT;
 }
@@ -245,7 +245,7 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value)
 *     sgeobj/var/var_get_sharedlib_path_name()
 *     sgeobj/var/var_list_set_string()
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 ******************************************************************************/
 void var_list_set_sharedlib_path(lList **varl)
 {
@@ -347,7 +347,7 @@ void var_list_dump_to_file(const lList *varl, FILE *file)
 *  SEE ALSO
 *     sgeobj/var/var_list_set_string()
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
 const char* var_list_get_string(lList *varl, const char *variable)

@@ -34,10 +34,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_gdi_request.h"
 #include "rw_configuration.h"
@@ -97,9 +93,9 @@ u_long32 flags
    } 
 
    if (flags & FLG_CONF_SPOOL) {
-      FPRINTF((fp, "%-25s " u32"\n", "conf_version", 
+      FPRINTF((fp, "%-25s " sge_u32"\n", "conf_version", 
             lGetUlong(epc, CONF_version)));
-      DPRINTF(("writing conf %s version " u32 "\n", fname, 
+      DPRINTF(("writing conf %s version " sge_u32 "\n", fname, 
                lGetUlong(epc, CONF_version)));
    }
 
@@ -179,8 +175,8 @@ u_long32 flags
                DEXIT;
                return NULL;
             }
-            sscanf(value, u32, &conf_version);
-            DPRINTF(("read conf %s version " u32"\n", conf_name, conf_version));
+            sscanf(value, sge_u32, &conf_version);
+            DPRINTF(("read conf %s version " sge_u32"\n", conf_name, conf_version));
             continue;
          } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE));

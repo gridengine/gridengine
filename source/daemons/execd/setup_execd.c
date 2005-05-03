@@ -34,10 +34,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_bootstrap.h"
 
 #include "sgermon.h"
@@ -218,7 +214,7 @@ int job_initialize_job(lListElem *job)
             ret = register_at_ptf(job, ja_task, NULL);
             if (ret) {
                ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU,
-                     (ret == 1 ? MSG_DELAYED : MSG_FAILED), u32c(job_id)));
+                     (ret == 1 ? MSG_DELAYED : MSG_FAILED), sge_u32c(job_id)));
             }
          }
          for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
@@ -227,7 +223,7 @@ int job_initialize_job(lListElem *job)
                if (ret) {
                   ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS,
                      (ret == 1 ? MSG_DELAYED : MSG_FAILED),
-                     u32c(job_id), lGetString(pe_task, PET_id)));
+                     sge_u32c(job_id), lGetString(pe_task, PET_id)));
                }
             }
          }

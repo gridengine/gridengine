@@ -34,10 +34,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "cull.h"
 #include "sge_gdi.h"
 #include "sgermon.h"
@@ -128,7 +124,7 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
    }
 
    /* create id structure */
-   sprintf(job_id_str, U32CFormat, u32c(job_id));
+   sprintf(job_id_str, sge_U32CFormat, sge_u32c(job_id));
    ref_ep = lAddElemStr(&ref_list, ID_str, job_id_str, ID_Type);
    ref_ep = lAddSubUlong(ref_ep, RN_min, ja_task_id, ID_ja_structure, RN_Type);
    lSetUlong(ref_ep, RN_max, ja_task_id);

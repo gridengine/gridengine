@@ -41,10 +41,6 @@
 /* this timeout is in effect with SGE commprocs */
 #define SGE_COMMPROC_TIMEOUT 60*5
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "drmaa.h"
 #include "cull_list.h"
 #include "sge_gdi.h"

@@ -34,10 +34,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_gdi_request.h"
 #include "config.h"
 #include "read_object.h"

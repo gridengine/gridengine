@@ -35,10 +35,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 
 #include <Xm/Xm.h>
 #include <Xm/List.h>
@@ -557,7 +553,7 @@ XtPointer cld, cad;
       submit_mode_data.mode = data->mode;
       submit_mode_data.job_id = data->job_id;
       /* set dialog title */
-      sprintf(buf, "Alter job " u32, data->job_id);
+      sprintf(buf, "Alter job " sge_u32, data->job_id);
       xtitle = XmtCreateXmString(buf); 
       XtVaSetValues( qmon_submit,
                      XmNdialogTitle, xtitle,

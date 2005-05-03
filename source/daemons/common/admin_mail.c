@@ -216,22 +216,22 @@ int is_array
       }
       else if (general == GFSTATE_JOB) {
          if (is_array)
-            sprintf(str_general, MSG_GFSTATE_JOB_UU, u32c(jobid), u32c(jataskid));
+            sprintf(str_general, MSG_GFSTATE_JOB_UU, sge_u32c(jobid), sge_u32c(jataskid));
          else
-            sprintf(str_general, MSG_GFSTATE_JOB_U, u32c(jobid));
+            sprintf(str_general, MSG_GFSTATE_JOB_U, sge_u32c(jobid));
       }
       else {
          sprintf(str_general, MSG_NONE);
       }
       if (is_array)
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SUU, 
-                 feature_get_product_name(FS_SHORT_VERSION, &ds), u32c(jobid), u32c(jataskid));
+                 feature_get_product_name(FS_SHORT_VERSION, &ds), sge_u32c(jobid), sge_u32c(jataskid));
       else
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
-                 feature_get_product_name(FS_SHORT_VERSION, &ds), u32c(jobid));
+                 feature_get_product_name(FS_SHORT_VERSION, &ds), sge_u32c(jobid));
       sprintf(sge_mail_body,
               MSG_MAIL_BODY_USSSSSSSS,
-              u32c(jobid),
+              sge_u32c(jobid),
               str_general,
               job_owner, q, h, sge_mail_start, sge_mail_end,
               get_sstate_description(failed),
@@ -246,7 +246,7 @@ int is_array
       }
       for (i=0; i<num_files; i++) {
          /* JG: TODO (254): use function creating path */
-         sprintf(shepherd_files[i].filepath, "%s/" u32"."u32"/%s", ACTIVE_DIR, 
+         sprintf(shepherd_files[i].filepath, "%s/" sge_u32"."sge_u32"/%s", ACTIVE_DIR, 
                      jobid, jataskid, shepherd_filenames[i]);
          if (!SGE_STAT(shepherd_files[i].filepath, &shepherd_files[i].statbuf) 
              && (shepherd_files[i].statbuf.st_size > 0)) {

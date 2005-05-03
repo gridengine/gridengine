@@ -33,10 +33,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_c_ack.h"
 #include "sge.h"
 #include "sge_job_qmaster.h"
@@ -111,7 +107,7 @@ sge_pack_buffer *pb
          break;
 
       default:
-         WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, u32c(ack_tag)));
+         WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, sge_u32c(ack_tag)));
          break;
       }
    }
@@ -151,20 +147,20 @@ u_long32 ack_ulong2
       DPRINTF(("TAG_SIGJOB\n"));
       /* ack_ulong is the jobid */
       if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, u32c(ack_ulong) ));
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
       jatep = job_search_task(jep, NULL, ack_ulong2);
       if (jatep == NULL) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
 
-      DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
+      DPRINTF(("JOB "sge_u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
       {
@@ -193,7 +189,7 @@ u_long32 ack_ulong2
             }
          }
          if (qinstance == NULL) {
-            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, u32c(ack_ulong)));
+            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, sge_u32c(ack_ulong)));
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DEXIT;
             return;

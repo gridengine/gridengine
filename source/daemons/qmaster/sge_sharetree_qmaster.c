@@ -41,10 +41,6 @@
 #include <errno.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_usageL.h"
@@ -233,7 +229,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
    /* Check for dangling or circular references. */
    if (name == NULL) {
       ERROR((SGE_EVENT, MSG_STREE_NOVALIDNODEREF_U,
-             u32c(lGetUlong(node, STN_id))));
+             sge_u32c(lGetUlong(node, STN_id))));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

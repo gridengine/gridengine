@@ -41,10 +41,6 @@
 #include <float.h>
 #include <math.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_profiling.h"
 #include "sge_log.h"
 #include "sge.h"
@@ -315,8 +311,8 @@ static void task_ref_print_table_entry(sge_task_ref_t *tref)
 
    if (tref != NULL) {
       DPRINTF(("    @@@ "
-         "job: "u32" "
-         "ja_task: "u32" "
+         "job: "sge_u32" "
+         "ja_task: "sge_u32" "
          "t: %f "
          "st: %f "
          "s: %f "
@@ -567,7 +563,7 @@ void sgeee_resort_pending_jobs(lList **job_list)
             /*
              * Update pending tickets in template element
              */
-            DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", template_task = "u32")\n",
+            DPRINTF(("task_ref_copy_to_ja_task(tref = "sge_u32", template_task = "sge_u32")\n",
                tref->ja_task_number, lGetUlong(ja_task_template, JAT_task_number)));
             task_ref_copy_to_ja_task(tref, ja_task_template);
             recompute_prio(tref, ja_task_template, nurg, npri);
@@ -642,7 +638,7 @@ static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double nurg, d
    prio = weight_urgency * nurg + weight_priority * npri + weight_ticket * ntix;
    lSetDouble(task, JAT_prio, prio); 
 
-   DPRINTF(("%f tickets for task "u32": ntix = %f (min/max %f/%f), "
+   DPRINTF(("%f tickets for task "sge_u32": ntix = %f (min/max %f/%f), "
          "prio = %f\n",
          tref->ja_task_ticket, tref->ja_task_number,
          ntix, min_tix, max_tix, 
@@ -1264,21 +1260,21 @@ delete_debited_job_usage( sge_ref_t *ref,
    
    DENTER(TOP_LAYER, "delete_debited_job_usage");
 
-   DPRINTF(("DDJU (1) "u32"\n", lGetUlong(job, JB_job_number)));
+   DPRINTF(("DDJU (1) "sge_u32"\n", lGetUlong(job, JB_job_number)));
 
    if (user) {
       upu_list = lGetList(user, UP_debited_job_usage);
-      DPRINTF(("DDJU (2) "u32"\n", lGetUlong(job, JB_job_number)));
+      DPRINTF(("DDJU (2) "sge_u32"\n", lGetUlong(job, JB_job_number)));
       if (upu_list) {
          
          /* Note: In order to cause the qmaster to delete the
             usage for this job, we zero out UPU_old_usage_list
             for this job in the UP_debited_job_usage list */
-         DPRINTF(("DDJU (3) "u32"\n", lGetUlong(job, JB_job_number))); 
+         DPRINTF(("DDJU (3) "sge_u32"\n", lGetUlong(job, JB_job_number))); 
 
          if ((upu = lGetElemUlong(upu_list, UPU_job_number,
                              lGetUlong(job, JB_job_number)))) {
-            DPRINTF(("DDJU (4) "u32"\n", lGetUlong(job, JB_job_number)));
+            DPRINTF(("DDJU (4) "sge_u32"\n", lGetUlong(job, JB_job_number)));
             lSetList(upu, UPU_old_usage_list, NULL);
             lSetUlong(user, UP_usage_seqno, seqno);
          }
@@ -2952,7 +2948,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                  JAT_scaled_usage_list, UA_Type)))
                   lSetDouble(u, UA_value, 1.0);
                decay_and_sum_usage(&jref, decay_list, sge_scheduling_run, curr_time);
-               DPRINTF(("DDJU (0) "u32"."u32"\n",
+               DPRINTF(("DDJU (0) "sge_u32"."sge_u32"\n",
                   lGetUlong(job, JB_job_number),
                   lGetUlong(ja_task, JAT_task_number)));
                delete_debited_job_usage(&jref, sge_scheduling_run);
@@ -3138,7 +3134,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   lListElem *child;
 
                   job = jref->job;
-                  sprintf(tmpstr, u32"."u32, lGetUlong(job, JB_job_number),
+                  sprintf(tmpstr, sge_u32"."sge_u32, lGetUlong(job, JB_job_number),
                          REF_GET_JA_TASK_NUMBER(jref));
                   child = lAddSubStr(node, STN_name, tmpstr, STN_children, STN_Type);
                   lSetUlong(child, STN_jobid, lGetUlong(job, JB_job_number));
@@ -4494,7 +4490,7 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
    geee_priority = weight_urgency * nsu + weight_ticket * nta +
                    weight_priority * npri;
 /*
-   DPRINTF(("SGEEE priority (" u32 "."u32 ") %f = %f * %f + %f * %f + %f * %f\n",
+   DPRINTF(("SGEEE priority (" sge_u32 "."sge_u32 ") %f = %f * %f + %f * %f + %f * %f\n",
       jobid, lGetUlong(task, JAT_task_number), geee_priority, 
       weight_urgency, nsu, weight_ticket, nta, weight_priority, npri));
 */

@@ -701,7 +701,7 @@ print_host_field(FILE *out, item_t *item, format_t *format)
 
    switch(item->type) {
       case ULONG_T:
-        fprintf(out, u32, *(lUlong *)item->val);
+        fprintf(out, sge_u32, *(lUlong *)item->val);
         break;
       case DATE_T:
         {
@@ -713,7 +713,7 @@ print_host_field(FILE *out, item_t *item, format_t *format)
               fprintf(out, format->str_format, tc);
               if (tc) free(tc);
            } else {
-              fprintf(out, u32, (u_long32) t);
+              fprintf(out, sge_u32, (u_long32) t);
            }
         }
         break;

@@ -3912,10 +3912,10 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                         MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU, 
                         connection->local->comp_host,
                         connection->local->comp_name,
-                        u32c(connection->local->comp_id),
+                        sge_u32c(connection->local->comp_id),
                         connection->sender->comp_host,
                         connection->sender->comp_name,
-                        u32c(connection->sender->comp_id));
+                        sge_u32c(connection->sender->comp_id));
 
                cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, tmp_buffer );
 
@@ -3982,7 +3982,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
                            connection->receiver->comp_host,
                            connection->receiver->comp_name,
-                           u32c(connection->receiver->comp_id));
+                           sge_u32c(connection->receiver->comp_id));
 
                   cl_commlib_push_application_error(CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
 
@@ -4033,7 +4033,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                            connection->receiver->comp_host,
                            connection->receiver->comp_name,
-                           u32c(connection->receiver->comp_id));
+                           sge_u32c(connection->receiver->comp_id));
 
                      cl_commlib_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
 
@@ -4067,7 +4067,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS,
                            connection->receiver->comp_host,
                            connection->receiver->comp_name,
-                           u32c(connection->receiver->comp_id),
+                           sge_u32c(connection->receiver->comp_id),
                            connection->local->comp_host);
 
                      cl_commlib_push_application_error(CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
@@ -4128,7 +4128,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                               MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                               connection->receiver->comp_host,
                               connection->receiver->comp_name,
-                              u32c(connection->receiver->comp_id));
+                              sge_u32c(connection->receiver->comp_id));
                      cl_commlib_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;

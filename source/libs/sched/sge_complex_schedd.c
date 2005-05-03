@@ -34,10 +34,6 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #ifdef WIN32NATIVE
 #  include "win32nativetypes.h"
 #endif
@@ -409,7 +405,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
       switch(type) {
       case TYPE_INT:
          dval = (double)lGetUlong(queue, queue_resource[pos].field);
-         snprintf(as_str, 100, u32, lGetUlong(queue, queue_resource[pos].field));
+         snprintf(as_str, 100, sge_u32, lGetUlong(queue, queue_resource[pos].field));
          break;
 
       case TYPE_TIM:

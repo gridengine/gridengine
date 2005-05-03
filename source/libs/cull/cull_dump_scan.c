@@ -295,7 +295,7 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
                      space, lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i));
          break;
       case lUlongT:
-         ret = fprintf(fp, "%s/* %-20.20s */ " u32 "\n",
+         ret = fprintf(fp, "%s/* %-20.20s */ " sge_u32 "\n",
                    space, lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i));
          break;
       case lStringT:
@@ -1085,7 +1085,7 @@ static int fGetUlong(FILE *fp, lUlong *up)
       return -1;
    }
 
-   if (sscanf(s, u32, up) != 1) {
+   if (sscanf(s, sge_u32, up) != 1) {
       LERROR(LESSCANF);
       DEXIT;
       return -1;

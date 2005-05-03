@@ -44,10 +44,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_profiling.h"
 #include "sge.h"
 #include "sge_string.h"
@@ -886,10 +882,10 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             job_get_submit_task_ids(job, &start, &end, &step);
 
             if (job_is_array(job)) {
-               DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", 
+               DPRINTF(("Added job-array "sge_u32"."sge_u32"-"sge_u32":"sge_u32"\n", 
                         job_id, start, end, step));
             } else {
-               DPRINTF(("Added job "u32"\n", job_id));
+               DPRINTF(("Added job "sge_u32"\n", job_id));
             } 
          }
          break;
@@ -921,7 +917,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
 
                      if (ja_task == NULL) {
                         ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, 
-                               u32c(ja_task_id), u32c(job_id)));
+                               sge_u32c(ja_task_id), sge_u32c(job_id)));
                         DEXIT;
                         return false;
                      }

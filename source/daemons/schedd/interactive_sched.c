@@ -278,7 +278,7 @@ order_remove_immediate(lListElem *job, lListElem *ja_task, order_t *orders)
 {
    DENTER(TOP_LAYER, "order_remove_immediate");
 
-   DPRINTF(("JOB "u32"."u32" can't get dispatched - removing\n", 
+   DPRINTF(("JOB "sge_u32"."sge_u32" can't get dispatched - removing\n", 
       lGetUlong(job, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
    
    orders->jobStartOrderList = sge_create_orders(orders->jobStartOrderList, 

@@ -94,7 +94,7 @@ bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
 
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, MSG_CKPTREFINJOB_SU,
-                                    ckpt_name, u32c(job_id));
+                                    ckpt_name, sge_u32c(job_id));
             ret = true;
             break;
          }

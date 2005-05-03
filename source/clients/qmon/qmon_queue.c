@@ -1236,7 +1236,7 @@ XtPointer cld, cad;
                   bw + x, bw);
 
       /* draw a string into the pixmap */
-      sprintf(buf, "@f[SMALL]%s\nSlots: " u32 "("u32")", 
+      sprintf(buf, "@f[SMALL]%s\nSlots: " sge_u32 "("sge_u32")", 
                   qname, used, total);
                   
       str = XmtCreateXmString(buf);

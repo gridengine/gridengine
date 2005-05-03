@@ -45,10 +45,6 @@
 #include <fnmatch.h>
 #include <unistd.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_profiling.h"
 #include "sge_conf.h"
 #include "sge_string.h"
@@ -753,10 +749,10 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          }
 
          if (job_get_next_task(job, &ja_task, &ja_task_id)!=0) {
-            DPRINTF(("Found job "u32" with no job array tasks\n", job_id));
+            DPRINTF(("Found job "sge_u32" with no job array tasks\n", job_id));
          } 
          else { 
-            DPRINTF(("Found pending job "u32"."u32". Try %sto start and %sto reserve\n", 
+            DPRINTF(("Found pending job "sge_u32"."sge_u32". Try %sto start and %sto reserve\n", 
                   job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
             DPRINTF(("-----------------------------------------\n"));
 
@@ -823,7 +819,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       case DISPATCH_NEVER_CAT: /* never this category */
          /* before deleting the element mark the category as rejected */
          if ((cat = lGetRef(orig_job, JB_category))) {
-            DPRINTF(("SKIP JOB " u32 " of category '%s' (rc: "u32 ")\n", job_id, 
+            DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id, 
                         lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
             sge_reject_category(cat);
          }
@@ -984,7 +980,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       if (is_start) {
 
          DPRINTF(("### looking for immediate parallel assignment for job "
-                  U32CFormat"."U32CFormat" requesting pe \"%s\" duration "U32CFormat"\n", 
+                  sge_U32CFormat"."sge_U32CFormat" requesting pe \"%s\" duration "sge_U32CFormat"\n", 
                   a.job_id, a.ja_task_id, pe_name, a.duration)); 
          
          a.start = DISPATCH_TIME_NOW;
@@ -1004,7 +1000,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       if (result == DISPATCH_NOT_AT_TIME) {
          if (is_reserve) {
             DPRINTF(("### looking for parallel reservation for job "
-               U32CFormat"."U32CFormat" requesting pe \"%s\" duration "U32CFormat"\n", 
+               sge_U32CFormat"."sge_U32CFormat" requesting pe \"%s\" duration "sge_U32CFormat"\n", 
                   a.job_id, a.ja_task_id, pe_name, a.duration)); 
             is_computed_reservation = true;
             a.start = DISPATCH_TIME_QUEUE_END;
@@ -1032,7 +1028,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       if (is_start) {
 
          DPRINTF(("### looking for immediate sequential assignment for job "
-                  U32CFormat"."U32CFormat" duration "U32CFormat"\n", a.job_id, 
+                  sge_U32CFormat"."sge_U32CFormat" duration "sge_U32CFormat"\n", a.job_id, 
                   a.ja_task_id, a.duration)); 
          
          a.start = DISPATCH_TIME_NOW;
@@ -1054,7 +1050,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       if (result == DISPATCH_NOT_AT_TIME) {
          if (is_reserve) {
             DPRINTF(("### looking for sequential reservation for job "
-               U32CFormat"."U32CFormat" duration "U32CFormat"\n", 
+               sge_U32CFormat"."sge_U32CFormat" duration "sge_U32CFormat"\n", 
                   a.job_id, a.ja_task_id, a.duration)); 
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
@@ -1344,8 +1340,8 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
          a.queue_list = queue_list;
          a.centry_list = centry_list;
 
-         DPRINTF(("Adding job "U32CFormat"."U32CFormat" into schedule " "start "
-                  U32CFormat" duration "U32CFormat"\n", lGetUlong(jep, JB_job_number), 
+         DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
+                  sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
                   lGetUlong(ja_task, JAT_task_number), a.start, a.duration));
 
          /* only update resource utilization schedule  

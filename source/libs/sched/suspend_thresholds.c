@@ -98,7 +98,7 @@ suspend_job_in_queues( lList *susp_queues, lList *job_list, order_t *orders)
                                                      ORT_suspend_on_threshold, 
                                                      jep, ja_task, NULL, true);
 
-         DPRINTF(("++++ suspending job "u32"/"u32" on threshold\n", 
+         DPRINTF(("++++ suspending job "sge_u32"/"sge_u32" on threshold\n", 
                   lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
 
          /* prevent multiple selection of this job */
@@ -171,7 +171,7 @@ unsuspend_job_in_queues( lList *queue_list, lList *job_list, order_t *orders)
                                                         ORT_unsuspend_on_threshold, 
                                                         jep, ja_task, NULL, true);
 
-         DPRINTF(("---- unsuspending job "u32"/"u32" on threshold\n", 
+         DPRINTF(("---- unsuspending job "sge_u32"/"sge_u32" on threshold\n", 
             lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
 
          /* prevent multiple selection of this job */

@@ -42,14 +42,14 @@
 #define MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S    _MESSAGE(43002, _("can't start command "SFQ" to get token - qsub failed\n"))
 #define MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S    _MESSAGE(43003, _("can't start command "SFQ" to get credentials - qsub failed\n"))
 #define MSG_QSH_CANTGETCREDENTIALS    _MESSAGE(43004, _("warning: could not get credentials\n"))
-#define MSG_SEC_KRBAUTHFAILURE        _MESSAGE(43013, _("job "U32CFormat" rejected because authentication failed\n"))
-#define MSG_SEC_KRBAUTHFAILUREONHOST  _MESSAGE(43014, _("job "U32CFormat" rejected because authentication failed on host "SFN"\n"))
-#define MSG_SEC_NOCREDNOBIN_US        _MESSAGE(43017, _("could not get client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+#define MSG_SEC_KRBAUTHFAILURE        _MESSAGE(43013, _("job "sge_U32CFormat" rejected because authentication failed\n"))
+#define MSG_SEC_KRBAUTHFAILUREONHOST  _MESSAGE(43014, _("job "sge_U32CFormat" rejected because authentication failed on host "SFN"\n"))
+#define MSG_SEC_NOCREDNOBIN_US        _MESSAGE(43017, _("could not get client credentials for job " sge_U32CFormat" - "SFN" binary does not exist\n"))
 #define MSG_SEC_KRB_CRED_SSSI         _MESSAGE(43018, _("denied: request for user "SFQ" does not match Kerberos credentials for connection <"SFN","SFN",%d>\n") )         
-#define MSG_SEC_KRBDECRYPTTGT_US      _MESSAGE(43019, _("could not decrypt TGT for job " U32CFormat "- "SFN"\n"))
+#define MSG_SEC_KRBDECRYPTTGT_US      _MESSAGE(43019, _("could not decrypt TGT for job " sge_U32CFormat "- "SFN"\n"))
 #define MSG_SEC_KRBENCRYPTTGT_SSIS    _MESSAGE(43020, _("could not encrypt TGT for client <"SFN","SFN",%d> - "SFN"\n"))
-#define MSG_SEC_KRBENCRYPTTGTUSER_SUS _MESSAGE(43021, _("could not encrypt TGT for user "SFN", job "U32CFormat" - "SFN""))
-#define MSG_SEC_NOUID_SU              _MESSAGE(43022, _("could not get user ID for "SFN", job "U32CFormat"\n"))
+#define MSG_SEC_KRBENCRYPTTGTUSER_SUS _MESSAGE(43021, _("could not encrypt TGT for user "SFN", job "sge_U32CFormat" - "SFN""))
+#define MSG_SEC_NOUID_SU              _MESSAGE(43022, _("could not get user ID for "SFN", job "sge_U32CFormat"\n"))
 
 /* 
 ** gdilib/sge_any_request.c
@@ -62,7 +62,7 @@
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
 #define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43053, _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN""))
 #define MSG_GDI_NOCOMMHANDLE                          _MESSAGE(43054, _("can't get communication handle\n"))
-#define MSG_GDI_SENDINGMESSAGE_SIU                    _MESSAGE(43055, _("sending to id: "SFN",%d, size of message: " U32CFormat"\n" ))
+#define MSG_GDI_SENDINGMESSAGE_SIU                    _MESSAGE(43055, _("sending to id: "SFN",%d, size of message: " sge_U32CFormat"\n" ))
 
 /* 
 ** gdilib/sge_qexec.c
@@ -110,9 +110,9 @@
 ** gdilib/setup.c
 */
 #define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _MESSAGE(43109, _(""SFN" is not a valid SGE_COMPRESSION_LEVEL\n"))
-#define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _MESSAGE(43110, _("Setting compression level to "U32CFormat"\n"))
+#define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _MESSAGE(43110, _("Setting compression level to "sge_U32CFormat"\n"))
 #define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _MESSAGE(43111, _(""SFN" is not a valid SGE_COMPRESSION_THRESHOLD\n"))
-#define MSG_GDI_SETCOMPRESSIONTHRESHOLD_D                _MESSAGE(43112, _("Setting compression threshold to "U32CFormat"\n"))
+#define MSG_GDI_SETCOMPRESSIONTHRESHOLD_D                _MESSAGE(43112, _("Setting compression threshold to "sge_U32CFormat"\n"))
 
 
 /* 
@@ -120,9 +120,9 @@
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
-#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS   _MESSAGE(43121, _("unable to send message to "SFN" using port "U32CFormat" on host "SFQ": "SFN"\n"))
-#define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "U32CFormat" on host "SFQ"\n"))
-#define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43124, _("unable to resolve group name for group ID, "U32CFormat"\n"))
+#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS   _MESSAGE(43121, _("unable to send message to "SFN" using port "sge_U32CFormat" on host "SFQ": "SFN"\n"))
+#define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "sge_U32CFormat" on host "SFQ"\n"))
+#define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43124, _("unable to resolve group name for group ID, "sge_U32CFormat"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request\n"))
 #define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled\n"))
@@ -133,7 +133,7 @@
 #define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43132, _("format error while packing gdi request\n"))
 #define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43133, _("unexpected error while packing gdi request\n"))
 #define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43134, _("error unpacking gdi request: "SFN"\n"))
-#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D           _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
+#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D           _MESSAGE(43137, _("invalid value ("sge_U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                     _MESSAGE(43138, _("can't unpack gdi request"))
 #define MSG_GDI_GDI_ALREADY_SETUP                        _MESSAGE(43139, _("GDI already setup\n"))
 
@@ -142,7 +142,7 @@
  */
 #define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(43150, _("error unpacking: "SFN"\n"))
 #define MSG_PACK_INVALIDPACKDATA       _MESSAGE(43151, _("the pack string contained invalid characters\n"))
-#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(43152, _("wrong pack type (got: "U32CFormat" / expected %d\n"))
+#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(43152, _("wrong pack type (got: "sge_U32CFormat" / expected %d\n"))
  
 /*
  * common/usage.c
@@ -154,14 +154,14 @@
 
 #define MSG_GDI_MULTI_THREADED_STARTUP       _MESSAGE(43295, _("starting up multi thread communication\n"))
 #define MSG_GDI_SINGLE_THREADED_STARTUP      _MESSAGE(43296, _("starting up communication without threads\n"))
-#define MSG_GDI_CANT_GET_COM_HANDLE_SSUUS    _MESSAGE(43297, _("communication error for \""SFN"/"SFN"/"U32CFormat"\" running on port "U32CFormat": "SFQ"\n"))
-#define MSG_GDI_CANT_CONNECT_HANDLE_SSUUS    _MESSAGE(43298, _("communication error for \""SFN"/"SFN"/"U32CFormat"\" using connect port "U32CFormat": "SFQ"\n"))
+#define MSG_GDI_CANT_GET_COM_HANDLE_SSUUS    _MESSAGE(43297, _("communication error for \""SFN"/"SFN"/"sge_U32CFormat"\" running on port "sge_U32CFormat": "SFQ"\n"))
+#define MSG_GDI_CANT_CONNECT_HANDLE_SSUUS    _MESSAGE(43298, _("communication error for \""SFN"/"SFN"/"sge_U32CFormat"\" using connect port "sge_U32CFormat": "SFQ"\n"))
 #define MSG_GDI_HANDLE_CREATED_FOR_S         _MESSAGE(43300, _("created communication handle for component name "SFQ"\n"))
 #define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S   _MESSAGE(43301, _("alive check of qmaster failed for component "SFQ"\n"))
 #define MSG_GDI_QMASTER_STILL_RUNNING        _MESSAGE(43302, _("qmaster is still running\n"))
-#define MSG_GDI_ENDPOINT_UPTIME_UU           _MESSAGE(43303, _("endpoint is up since "U32CFormat" seconds and has status "U32CFormat"\n"))
-#define MSG_GDI_ALREADY_CONECTED_SSU         _MESSAGE(43304, _("there is already a client endpoint %s/%s/"U32CFormat" connected to qmaster service\n"))
-#define MSG_GDI_ACCESS_DENIED_SSU            _MESSAGE(43305, _("qmaster service denies access from local endpoint %s/%s/"U32CFormat"\n"))
+#define MSG_GDI_ENDPOINT_UPTIME_UU           _MESSAGE(43303, _("endpoint is up since "sge_U32CFormat" seconds and has status "sge_U32CFormat"\n"))
+#define MSG_GDI_ALREADY_CONECTED_SSU         _MESSAGE(43304, _("there is already a client endpoint %s/%s/"sge_U32CFormat" connected to qmaster service\n"))
+#define MSG_GDI_ACCESS_DENIED_SSU            _MESSAGE(43305, _("qmaster service denies access from local endpoint %s/%s/"sge_U32CFormat"\n"))
 #define MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S _MESSAGE(43306, _("can't create handle to execd \"%s\"\n"))
 
 

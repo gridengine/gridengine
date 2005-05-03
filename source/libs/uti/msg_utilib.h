@@ -49,7 +49,7 @@
 ** utilib/sge_arch.c
 */       
 #define MSG_SGEROOTNOTSET           _MESSAGE(49006, _("Please set the environment variable SGE_ROOT.\n"))
-#define MSG_UNKNOWNERRORINSGEROOT   _MESSAGE(49010, _("Unknown error in function sge_sge_root()\n"))
+#define MSG_UNKNOWNERRORINSGEROOT   _MESSAGE(49010, _("Unknown error in function sge_root()\n"))
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _MESSAGE(49011, _("can't malloc() for path to host alias file"))
 
 /* 
@@ -102,7 +102,7 @@
 */ 
 #define MSG_SYSTEM_NOPAGESIZEASSUME8192      _MESSAGE(49030, _("can't determine system page size - assuming 8192"))
 #define MSG_SYSTEM_TABINFO_FAILED_SS         _MESSAGE(49031, _("tabinfo("SFQ", ...) failed, "SFN"\n") )            
-#define MSG_MEMORY_MALLOCFAILED_D            _MESSAGE(49032, _("malloc("U32CFormat") failed" ))
+#define MSG_MEMORY_MALLOCFAILED_D            _MESSAGE(49032, _("malloc("sge_U32CFormat") failed" ))
 
 
 /* 
@@ -169,16 +169,16 @@
 /* 
 ** utilib/sge_uidgid.c
 */ 
-#define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49059, _("getpwuid("U32CFormat") failed: "SFN"\n"))
+#define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49059, _("getpwuid("sge_U32CFormat") failed: "SFN"\n"))
 #define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _MESSAGE(49061, _("tried to change uid/gid without being root"))
-#define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _MESSAGE(49062, _("gid of user "SFN" ("U32CFormat") less than minimum allowed in conf (%d)"))
-#define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _MESSAGE(49063, _("uid of user "SFN" ("U32CFormat") less than minimum allowed in conf (%d)"))
-#define MSG_SYSTEM_SETGIDFAILED_U               _MESSAGE(49064, _("setgid("U32CFormat") failed"))
-#define MSG_SYSTEM_SETUIDFAILED_U               _MESSAGE(49065, _("setuid("U32CFormat") failed"))
-#define MSG_SYSTEM_SETEGIDFAILED_U              _MESSAGE(49066, _("setegid("U32CFormat") failed"))
-#define MSG_SYSTEM_SETEUIDFAILED_U              _MESSAGE(49067, _("seteuid("U32CFormat") failed"))
+#define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _MESSAGE(49062, _("gid of user "SFN" ("sge_U32CFormat") less than minimum allowed in conf (%d)"))
+#define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _MESSAGE(49063, _("uid of user "SFN" ("sge_U32CFormat") less than minimum allowed in conf (%d)"))
+#define MSG_SYSTEM_SETGIDFAILED_U               _MESSAGE(49064, _("setgid("sge_U32CFormat") failed"))
+#define MSG_SYSTEM_SETUIDFAILED_U               _MESSAGE(49065, _("setuid("sge_U32CFormat") failed"))
+#define MSG_SYSTEM_SETEGIDFAILED_U              _MESSAGE(49066, _("setegid("sge_U32CFormat") failed"))
+#define MSG_SYSTEM_SETEUIDFAILED_U              _MESSAGE(49067, _("seteuid("sge_U32CFormat") failed"))
 #define MSG_SYSTEM_INITGROUPSFAILED_I           _MESSAGE(49068, _("initgroups() failed with errno %d\n"))
-#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS   _MESSAGE(49069, _("can't set additional group id (uid="U32CFormat", euid="U32CFormat"): "SFN"\n"))
+#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS   _MESSAGE(49069, _("can't set additional group id (uid="sge_U32CFormat", euid="sge_U32CFormat"): "SFN"\n"))
 #define MSG_SYSTEM_INVALID_NGROUPS_MAX          _MESSAGE(49070, _("invalid value for NGROUPS_MAX"))
 #define MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS       _MESSAGE(49071, _("the user already has too many group ids"))
 
@@ -233,7 +233,7 @@
 #define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(49112, _("cell directory "SFQ" doesn't exist\n"))
 
 #define MSG_UTI_CANT_GET_ENV_OR_PORT_SS        _MESSAGE(49113, _("could not get environment variable "SFN" or service "SFQ"\n"))
-#define MSG_UTI_USING_CACHED_PORT_SU           _MESSAGE(49114, _("using cached "SFQ" port value "U32CFormat"\n"))
+#define MSG_UTI_USING_CACHED_PORT_SU           _MESSAGE(49114, _("using cached "SFQ" port value "sge_U32CFormat"\n"))
 
 #endif /* __MSG_UTILIB_H */
 

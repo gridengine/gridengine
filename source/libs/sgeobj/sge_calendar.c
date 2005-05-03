@@ -36,10 +36,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "cull_list.h"
 #include "sge.h"
 #include "sge_log.h"
@@ -389,7 +385,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
       *next_event = temp_next_event;
    }   
   
-   DPRINTF(("got state %d from %s calendar. Now: "u32" Next event: "u32"\n", 
+   DPRINTF(("got state %d from %s calendar. Now: "sge_u32" Next event: "sge_u32"\n", 
          state, (w_is_active==-1)?"year":"week", now, next_event?*next_event:0));
 
    lFreeElem(tm);
@@ -706,7 +702,7 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
                   /* convert time_t format into struct tm format */
          tm_limit= localtime_r(&when, &res);
 
-         DPRINTF(("first change: state %d, time "u32", sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
+         DPRINTF(("first change: state %d, time "sge_u32", sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
             state,
             (u_long32) when,
             tm_limit->tm_sec,
@@ -721,7 +717,7 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
 
          tm_limit= localtime_r(&when2, &res);
 
-         DPRINTF(("second change: state %d, time "u32", sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
+         DPRINTF(("second change: state %d, time "sge_u32", sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
             state2,
             (u_long32) when2,
             tm_limit->tm_sec,
@@ -1039,7 +1035,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
 
       limit = mktime(&tm_limit);
 
-      DPRINTF(("limit: "u32"\n", (u_long32) limit)); 
+      DPRINTF(("limit: "sge_u32"\n", (u_long32) limit)); 
       if (end_of_day) {
          limit += 1;
       }

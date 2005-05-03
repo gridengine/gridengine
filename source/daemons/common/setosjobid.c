@@ -249,10 +249,10 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
             shepherd_trace(err_str);
          } else {
             jobid = getjid(0);
-            sprintf(err_str, "Created job with id: "u32, (u_long32) jobid);
+            sprintf(err_str, "Created job with id: "sge_u32, (u_long32) jobid);
             shepherd_trace(err_str);
          }  
-         sprintf(osjobid, u32, (u_long32) jobid); 
+         sprintf(osjobid, sge_u32, (u_long32) jobid); 
 
          /*
           * We will use limits for the whole job

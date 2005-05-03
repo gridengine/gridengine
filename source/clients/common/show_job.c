@@ -285,7 +285,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_jobshare)>=0) {
       printf("jobshare:                   ");
-      printf(u32"\n", lGetUlong(job, JB_jobshare));
+      printf(sge_u32"\n", lGetUlong(job, JB_jobshare));
    }
 
    if (lGetPosViaElem(job, JB_hard_queue_list)>=0)
@@ -395,7 +395,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_script_size)>=0)
       if (lGetUlong(job, JB_script_size))
-         printf("script_size:                "uu32"\n", lGetUlong(job, JB_script_size));
+         printf("script_size:                "sge_uu32"\n", lGetUlong(job, JB_script_size));
 
    if (lGetPosViaElem(job, JB_script_file)>=0)
       if (lGetString(job, JB_script_file))
@@ -485,7 +485,7 @@ void cull_show_job(lListElem *job, int flags)
 
       job_get_submit_task_ids(job, &start, &end, &step);
       if (job_is_array(job))
-         printf("job-array tasks:            "u32"-"u32":"u32"\n", start, end, step);
+         printf("job-array tasks:            "sge_u32"-"sge_u32":"sge_u32"\n", start, end, step);
    }
 
    if (lGetPosViaElem(job, JB_context)>=0)

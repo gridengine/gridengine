@@ -36,10 +36,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_event_master.h"
 #include "sge.h"
 #include "cull.h"
@@ -529,7 +525,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    
    /* EV_ID_ANY is 0, therefor the compare is always true (Irix complained) */
    if (id >= EV_ID_FIRST_DYNAMIC) { /* invalid request */
-      ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, u32c(id)));
+      ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, sge_u32c(id)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
       DEXIT;
@@ -566,7 +562,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
       if (ep != NULL) {
          ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
-                commproc, u32c(commproc_id)));
+                commproc, sge_u32c(commproc_id)));
 
          /* Reuse the old EV_id for simplicity's sake */
          id = lGetUlong (ep, EV_id);
@@ -582,7 +578,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
          
          if (id == 0) {
             unlock_all_clients ();
-            ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, u32c( Master_Control.max_event_clients)));
+            ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, sge_u32c( Master_Control.max_event_clients)));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
             DEXIT;
@@ -590,7 +586,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
          } 
 
          Master_Control.indices_dirty = true;
-         INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));         
+         INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, sge_u32c(id), sge_u32c(ed_time)));         
       }
 
       /* Set the new id for this client. */
@@ -616,13 +612,13 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       if ((ep = get_event_client(id)) != NULL) {
          /* we already have this special client */
          ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
-                commproc, u32c(commproc_id)));         
+                commproc, sge_u32c(commproc_id)));         
 
          /* delete old event client entry */
          remove_event_client(ep, id, false);
          ep = NULL;
       } else {
-         INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, u32c(id), u32c(ed_time)));
+         INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, sge_u32c(id), sge_u32c(ed_time)));
          Master_Control.indices_dirty = true;
       }   
    }
@@ -791,7 +787,7 @@ process_mod_event_client(void)
       if (event_client == NULL) {
          unlock_client(id);
 
-         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(id), "modify"));
+         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(id), "modify"));
          continue;
       }
 
@@ -803,7 +799,7 @@ process_mod_event_client(void)
       if (ev_d_time < 1) {
          unlock_client(id);
 
-         ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, u32c(ev_d_time)));
+         ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, sge_u32c(ev_d_time)));
          continue;         
       }
 
@@ -953,11 +949,11 @@ void sge_remove_event_client(u_long32 aClientID) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
                        &Master_Control.mutex);
       
-      ERROR ((SGE_EVENT, MSG_ARRAY_OUT_OF_SYNC_U, u32c(aClientID)));
+      ERROR ((SGE_EVENT, MSG_ARRAY_OUT_OF_SYNC_U, sge_u32c(aClientID)));
    }
    
    if (client == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), "remove"));
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "remove"));
       unlock_client (aClientID);
       
       return;
@@ -1026,7 +1022,7 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
 
          if ( max > max_allowed_value ) {
             max = max_allowed_value;
-            WARNING((SGE_EVENT, MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U, u32c(max) ));
+            WARNING((SGE_EVENT, MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U, sge_u32c(max) ));
          }
       }
 
@@ -1079,7 +1075,7 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
        * prevents new event clients in the upper range, but allows the old ones
        * there to drain off naturally. */
       Master_Control.max_event_clients = max;
-      INFO((SGE_EVENT, MSG_SET_MAXDYNEVENTCLIENT_U, u32c(max)));
+      INFO((SGE_EVENT, MSG_SET_MAXDYNEVENTCLIENT_U, sge_u32c(max)));
    } /* if */
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
    
@@ -1252,7 +1248,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
 
    if (aClientID <= EV_ID_ANY) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                        MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), "shutdown"));
+                        MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "shutdown"));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return EINVAL;
@@ -1293,7 +1289,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
    }
    else {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                        MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), "shutdown"));
+                        MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "shutdown"));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = EINVAL;
    }
@@ -1521,7 +1517,7 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
     * doing anything stupid.  The worst that can happen is that an event gets
     * created for a client that doesn't exist, which only wastes resources. */
    if (aClientID <= EV_ID_ANY) {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), "add an event"));
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "add an event"));
       DEXIT;
       return false;
    }
@@ -1855,7 +1851,7 @@ static void process_sends ()
                /* This has to come after the client is locked. */
                if ((event_client = get_event_client (ec_id)) == NULL) {
                   unlock_client(ec_id);
-                  ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), "send events"));
+                  ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "send events"));
                }
                else if (eventclient_subscribed(event_client, type, session)) {
                   add_list_event_direct (event_client, event, false);
@@ -1924,7 +1920,7 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
     * doing anything stupid.  The worst that can happen is that an ack gets
     * created for a client that doesn't exist, which only wastes resources. */
    if (aClientID <= EV_ID_ANY) {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), "add acknowledgements"));
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "add acknowledgements"));
       DEXIT;
       return;
    }
@@ -1974,7 +1970,7 @@ static void process_acks(void)
       
       if (client == NULL) {
          unlock_client(ec_id);
-         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), "process acknowledgements"));
+         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements"));
       }
       else {
          int res = 0;
@@ -2041,7 +2037,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
    lock_client(aClientID, true);
 
    if ((client = get_event_client (aClientID)) == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), "deliver events immediately"));
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "deliver events immediately"));
    }
    else {
       flush_events(client, 0);
@@ -2100,7 +2096,7 @@ int sge_resync_schedd(void)
       ret = 0;
    }
    else {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(EV_ID_SCHEDD),
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(EV_ID_SCHEDD),
              "resyncronize"));
       ret = -1;
    }
@@ -2460,7 +2456,7 @@ static void remove_event_client(lListElem *client, int aClientID, bool lock_even
    old_sub = lGetRef(client, EV_sub_array);
 
    INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(client, EV_name),
-         u32c(lGetUlong(client, EV_id))));
+         sge_u32c(lGetUlong(client, EV_id))));
 
    if (old_sub) {
 

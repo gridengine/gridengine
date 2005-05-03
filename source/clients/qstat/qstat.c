@@ -35,10 +35,6 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
@@ -469,7 +465,7 @@ char **argv
 
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if (!show_job && !(lGetUlong(jatep, JAT_status) == JRUNNING || (lGetUlong(jatep, JAT_status) == JTRANSFERING))) {
-               DPRINTF(("show task "u32"."u32"\n",
+               DPRINTF(("show task "sge_u32"."sge_u32"\n",
                        lGetUlong(jep, JB_job_number),
                        lGetUlong(jatep, JAT_task_number)));
                lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable) & ~TAG_SHOW_IT);
@@ -1097,11 +1093,11 @@ u_long32 show
          for_each(elem, *job_l) {
             lListElem *task = lFirst(lGetList(elem, JB_ja_tasks));
 
-            fprintf(stderr, "jid="u32" ", lGetUlong(elem, JB_job_number));
+            fprintf(stderr, "jid="sge_u32" ", lGetUlong(elem, JB_job_number));
             if (task) {
                dstring string = DSTRING_INIT;
 
-               fprintf(stderr, "state=%s status=%s job_restarted="u32"\n", sge_dstring_ulong_to_binstring(&string, lGetUlong(task, JAT_state)), sge_dstring_ulong_to_binstring(&string, lGetUlong(task, JAT_status)), lGetUlong(task, JAT_job_restarted));
+               fprintf(stderr, "state=%s status=%s job_restarted="sge_u32"\n", sge_dstring_ulong_to_binstring(&string, lGetUlong(task, JAT_state)), sge_dstring_ulong_to_binstring(&string, lGetUlong(task, JAT_status)), lGetUlong(task, JAT_job_restarted));
                sge_dstring_free(&string);
             } else {
                fprintf(stderr, "\n");
@@ -1638,7 +1634,7 @@ u_long32 isXML
       for_each(elem1, jlp) {
          char buffer[256];
  
-         sprintf(buffer, U32CFormat, u32c(lGetUlong(elem1, JB_job_number)));   
+         sprintf(buffer, sge_U32CFormat, sge_u32c(lGetUlong(elem1, JB_job_number)));   
          elem2 = lGetElemStr(jid_list, ST_name, buffer);     
          
          if (elem2) {
@@ -1873,7 +1869,7 @@ static int qstat_show_job_info(u_long32 isXML)
                         strcat(text, ",\n\t");
                   else
                      strcat(text, ",\t");
-                  sprintf(ltext, u32, jid);
+                  sprintf(ltext, sge_u32, jid);
                   strcat(text, ltext);
                   ids_per_line++;
                }

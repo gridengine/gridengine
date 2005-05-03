@@ -718,7 +718,7 @@ const lListElem *qep
          FPRINTF((fp, " %s", lGetString(ep, SO_name))); 
          t = lGetUlong(ep, SO_threshold);
          if (t) {
-            FPRINTF((fp, "="u32"%s", t, lNext(ep)?",":""));
+            FPRINTF((fp, "="sge_u32"%s", t, lNext(ep)?",":""));
          }
       }
       FPRINTF((fp, "\n"));
@@ -788,7 +788,7 @@ const lListElem *qep
    }
 
    if (write_2_stdout && getenv("MORE_INFO")) {
-      FPRINTF((fp, "suspended_on_subordinate "u32"\n", 
+      FPRINTF((fp, "suspended_on_subordinate "sge_u32"\n", 
          lGetUlong(qep, QU_suspended_on_subordinate)));
       ret = fprint_resource_utilizations(fp, "complex_values_actual  ", 
          lGetList(qep, QU_resource_utilization), 1);

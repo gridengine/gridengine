@@ -43,10 +43,6 @@
 #include <Xmt/Chooser.h>
 #include <Xmt/InputField.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "Matrix.h"
 #include "Tab.h"
 #include "qmon_rmon.h"
@@ -1347,7 +1343,7 @@ XtPointer cld, cad;
                 !strcmp(dyn_tasks.s, dyn_oldtasks.s)) {
                for_each (jatep, lGetList(jep, JB_ja_tasks)) {
                   lSetUlong(jatep, JAT_hold, new_hold | MINUS_H_CMD_SET);
-                  DPRINTF(("Hold for" u32 "." u32 " is " u32 "\n", 
+                  DPRINTF(("Hold for" sge_u32 "." sge_u32 " is " sge_u32 "\n", 
                               lGetUlong(jep, JB_job_number), 
                               lGetUlong(jatep, JAT_task_number),
                               new_hold | MINUS_H_CMD_SET));
@@ -1355,7 +1351,7 @@ XtPointer cld, cad;
             } else {
                for_each (jatep, lGetList(jep, JB_ja_tasks)) {
                   lSetUlong(jatep, JAT_hold, new_hold | MINUS_H_CMD_SET);
-                  DPRINTF(("Hold for" u32 "." u32 " is " u32 "\n",
+                  DPRINTF(("Hold for" sge_u32 "." sge_u32 " is " sge_u32 "\n",
                            lGetUlong(jep, JB_job_number),
                            lGetUlong(jatep, JAT_task_number),      
                            new_hold | MINUS_H_CMD_SET));
@@ -1507,7 +1503,7 @@ lListElem *jep
 
    DENTER(GUI_LAYER, "qmonJobShowBrowserInfo");
 
-   sge_dstring_sprintf(info, "%-30.30s"u32"\n", "Job:", lGetUlong(jep, JB_job_number));
+   sge_dstring_sprintf(info, "%-30.30s"sge_u32"\n", "Job:", lGetUlong(jep, JB_job_number));
    sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Full job name:", 
                               lGetString(jep, JB_job_name));
    sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Job Script:", 
@@ -1568,7 +1564,7 @@ lListElem *jep
       u_long32 pe_slots = 0;
       for_each (gdil_ep, lGetList(jep, JB_granted_destin_identifier_list))
          pe_slots += lGetUlong(gdil_ep, JG_slots);
-      sprintf(info, WIDTH"%s " u32 "\n", info, "Granted PE:", 
+      sprintf(info, WIDTH"%s " sge_u32 "\n", info, "Granted PE:", 
                lGetString(jep, JB_pe), pe_slots);
    }
 #endif
@@ -2058,7 +2054,7 @@ dstring *sb
                      strcat(text, ",\n\t");
                else
                   strcat(text, ",\t");
-               sprintf(ltext, u32, jid);
+               sprintf(ltext, sge_u32, jid);
                strcat(text, ltext);
                ids_per_line++;
             }

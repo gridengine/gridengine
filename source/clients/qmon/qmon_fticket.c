@@ -41,10 +41,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/MsgLine.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_util.h"
@@ -1108,7 +1104,7 @@ int nm1
       else
          name = lGetString(ep, nm0);
       tickets = lGetUlong(ep, nm1);
-      sprintf(buf, u32, tickets);
+      sprintf(buf, sge_u32, tickets);
       if (row == max_rows-1) {
          XbaeMatrixAddRows(matrix,
                            max_rows-1,

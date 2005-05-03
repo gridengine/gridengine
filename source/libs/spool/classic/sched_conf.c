@@ -34,10 +34,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -162,7 +158,7 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    /* conf values needed for both SGE & SGEEE */
    FPRINTF((fp, "algorithm                        %s\n", lGetString(ep, SC_algorithm)));
    FPRINTF((fp, "schedule_interval                %s\n", lGetString(ep, SC_schedule_interval)));
-   FPRINTF((fp, "maxujobs                         " u32 "\n", lGetUlong(ep, SC_maxujobs)));
+   FPRINTF((fp, "maxujobs                         " sge_u32 "\n", lGetUlong(ep, SC_maxujobs)));
    FPRINTF((fp, "queue_sort_method                %s\n", qsm2str(lGetUlong(ep, SC_queue_sort_method))));
    FPRINTF((fp, "job_load_adjustments             "));
    fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_job_load_adjustments), intprt_as_load_adjustment, delis, 0);
@@ -172,12 +168,12 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    FPRINTF((fp, "load_adjustment_decay_time       %s\n", lGetString(ep, SC_load_adjustment_decay_time)));
    FPRINTF((fp, "load_formula                     %s\n", lGetString(ep, SC_load_formula)));
    FPRINTF((fp, "schedd_job_info                  %s\n", lGetString(ep, SC_schedd_job_info)));
-   FPRINTF((fp, "flush_submit_sec                 " u32 "\n", lGetUlong(ep, SC_flush_submit_sec)));
-   FPRINTF((fp, "flush_finish_sec                 " u32 "\n", lGetUlong(ep, SC_flush_finish_sec)));
+   FPRINTF((fp, "flush_submit_sec                 " sge_u32 "\n", lGetUlong(ep, SC_flush_submit_sec)));
+   FPRINTF((fp, "flush_finish_sec                 " sge_u32 "\n", lGetUlong(ep, SC_flush_finish_sec)));
    FPRINTF((fp, "params                           %s\n", lGetString(ep, SC_params)));
    
    FPRINTF((fp, "reprioritize_interval            %s\n", lGetString(ep, SC_reprioritize_interval)));
-   FPRINTF((fp, "halftime                         " u32 "\n", lGetUlong(ep, SC_halftime)));
+   FPRINTF((fp, "halftime                         " sge_u32 "\n", lGetUlong(ep, SC_halftime)));
    FPRINTF((fp, "usage_weight_list                "));
    fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_usage_weight_list), intprt_as_usage, delis, 0);
    if (fret < 0) {
@@ -188,14 +184,14 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    FPRINTF((fp, "weight_project                   %.10g\n", lGetDouble(ep, SC_weight_project)));
    FPRINTF((fp, "weight_department                %.10g\n", lGetDouble(ep, SC_weight_department)));
    FPRINTF((fp, "weight_job                       %.10g\n", lGetDouble(ep, SC_weight_job)));
-   FPRINTF((fp, "weight_tickets_functional        " u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
-   FPRINTF((fp, "weight_tickets_share             " u32 "\n", lGetUlong(ep, SC_weight_tickets_share)));
+   FPRINTF((fp, "weight_tickets_functional        " sge_u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
+   FPRINTF((fp, "weight_tickets_share             " sge_u32 "\n", lGetUlong(ep, SC_weight_tickets_share)));
 
    FPRINTF((fp, "share_override_tickets           %s\n", lGetBool(ep, SC_share_override_tickets)?"true":"false"));
    FPRINTF((fp, "share_functional_shares          %s\n", lGetBool(ep, SC_share_functional_shares)?"true":"false"));
-   FPRINTF((fp, "max_functional_jobs_to_schedule  " u32 "\n", lGetUlong(ep, SC_max_functional_jobs_to_schedule)));
+   FPRINTF((fp, "max_functional_jobs_to_schedule  " sge_u32 "\n", lGetUlong(ep, SC_max_functional_jobs_to_schedule)));
    FPRINTF((fp, "report_pjob_tickets              %s\n", lGetBool(ep, SC_report_pjob_tickets)?"true":"false"));
-   FPRINTF((fp, "max_pending_tasks_per_job        " u32 "\n", lGetUlong(ep, SC_max_pending_tasks_per_job)));
+   FPRINTF((fp, "max_pending_tasks_per_job        " sge_u32 "\n", lGetUlong(ep, SC_max_pending_tasks_per_job)));
    FPRINTF((fp, "halflife_decay_list              %s\n", lGetString(ep, SC_halflife_decay_list)));
    FPRINTF((fp, "policy_hierarchy                 %s\n", lGetString(ep, SC_policy_hierarchy)));
    FPRINTF((fp, "weight_ticket                    %.10g\n", lGetDouble(ep, SC_weight_ticket)));
@@ -203,7 +199,7 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    FPRINTF((fp, "weight_deadline                  %.10g\n", lGetDouble(ep, SC_weight_deadline)));
    FPRINTF((fp, "weight_urgency                   %.10g\n", lGetDouble(ep, SC_weight_urgency)));
    FPRINTF((fp, "weight_priority                  %.10g\n", lGetDouble(ep, SC_weight_priority)));
-   FPRINTF((fp, "max_reservation                  " u32 "\n", lGetUlong(ep, SC_max_reservation)));
+   FPRINTF((fp, "max_reservation                  " sge_u32 "\n", lGetUlong(ep, SC_max_reservation)));
    FPRINTF((fp, "default_duration                 %s\n", lGetString(ep, SC_default_duration)));
 
    if (how != 0) {

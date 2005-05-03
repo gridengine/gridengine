@@ -38,10 +38,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge.h"
@@ -706,8 +702,8 @@ double utilization)
    }
 
    /* a new record */
-   fprintf(fp, U32CFormat":"U32CFormat":%s:"U32CFormat":"U32CFormat":%c:%s:%s:%f\n",
-      u32c(job_id), u32c(ja_taskid), state, u32c(start_time), u32c(end_time - start_time), 
+   fprintf(fp, sge_U32CFormat":"sge_U32CFormat":%s:"sge_U32CFormat":"sge_U32CFormat":%c:%s:%s:%f\n",
+      sge_u32c(job_id), sge_u32c(ja_taskid), state, sge_u32c(start_time), sge_u32c(end_time - start_time), 
          level_char, object_name, name, utilization);
    fclose(fp);
 

@@ -35,10 +35,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "uti/sge_string.h"
 #include "sge_all_listsL.h"
 #include "sge_bootstrap.h"

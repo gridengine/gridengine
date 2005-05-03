@@ -136,60 +136,60 @@ const char *event_text(const lListElem *event, dstring *buffer)
 
    /* -------------------- */
    case sgeE_JATASK_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDJATASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDJATASK_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JATASK_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELJATASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELJATASK_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JATASK_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODJATASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODJATASK_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 
    /* -------------------- */
    case sgeE_PETASK_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDPETASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDPETASK_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_PETASK_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELPETASK_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELPETASK_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 #if 0      
    /* JG: we'll have it soon ;-) */
    case sgeE_PETASK_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODPETASK_UUUS, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODPETASK_UUUS, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 #endif
 
    /* -------------------- */
    case sgeE_JOB_LIST:
-      sge_dstring_sprintf(buffer, MSG_EVENT_JOBLISTXELEMENTS_UI, u32c(number), n);
+      sge_dstring_sprintf(buffer, MSG_EVENT_JOBLISTXELEMENTS_UI, sge_u32c(number), n);
       break;
    case sgeE_JOB_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDJOB_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDJOB_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELJOB_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELJOB_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODJOB_US, u32c(number), job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODJOB_US, sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_MOD_SCHED_PRIORITY:
       sge_dstring_sprintf(buffer, MSG_EVENT_MODSCHEDDPRIOOFJOBXTOY_USI, 
-            u32c(number), 
+            sge_u32c(number), 
             job_get_id_string(intkey, intkey2, strkey),
             ((int)lGetUlong(lFirst(lp), JB_priority))-BASE_PRIORITY);
       break;
    case sgeE_JOB_USAGE:
       sge_dstring_sprintf(buffer, MSG_EVENT_JOBXUSAGE_US, 
-         u32c(number), job_get_id_string(intkey, intkey2, strkey));
+         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
    case sgeE_JOB_FINAL_USAGE:
       sge_dstring_sprintf(buffer, MSG_EVENT_JOBXFINALUSAGE_US, 
-         u32c(number), job_get_id_string(intkey, intkey2, strkey));
+         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 
    case sgeE_JOB_FINISH:
       sge_dstring_sprintf(buffer, MSG_EVENT_JOBXFINISH_US, 
-         u32c(number), job_get_id_string(intkey, intkey2, strkey));
+         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
       break;
 
    /* -------------------- */

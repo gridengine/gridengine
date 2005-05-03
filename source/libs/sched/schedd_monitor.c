@@ -168,7 +168,7 @@ u_long32 jobid
    static char descr[20];
 
    if (jobid) {
-      sprintf(descr, "Job "u32, jobid);
+      sprintf(descr, "Job "sge_u32, jobid);
       return descr;
    } else
       return "Job";

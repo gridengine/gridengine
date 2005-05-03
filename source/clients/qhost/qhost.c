@@ -36,10 +36,6 @@
 #include <math.h>
 #include <float.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "basis_types.h"
 #include "sge.h"
 

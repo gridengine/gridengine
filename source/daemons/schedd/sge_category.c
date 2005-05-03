@@ -34,10 +34,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_ja_task.h"
 #include "sge_job_schedd.h"
 #include "sge_job.h"
@@ -127,7 +123,7 @@ void sge_print_categories(void) {
    DENTER(TOP_LAYER, "sge_print_categories");
 
    for_each (cat, CATEGORY_LIST) {
-      DPRINTF(("PTR: %p CAT: %s REJECTED: "u32" REFCOUNT: "u32"\n", 
+      DPRINTF(("PTR: %p CAT: %s REJECTED: "sge_u32" REFCOUNT: "sge_u32"\n", 
          cat,
          lGetString(cat, CT_str), 
          lGetUlong(cat, CT_rejected), 
@@ -254,7 +250,7 @@ lListElem *job
          lSetUlong(cat, CT_refcount, --rc);
       }
       else {
-         DPRINTF(("############## Removing %s from category list (refcount: " u32 ")\n", 
+         DPRINTF(("############## Removing %s from category list (refcount: " sge_u32 ")\n", 
                   lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
          lRemoveElem(CATEGORY_LIST, cat);
       }

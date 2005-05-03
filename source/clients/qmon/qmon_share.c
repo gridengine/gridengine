@@ -41,10 +41,6 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "ListTree.h"
 #include "Matrix.h"
 
@@ -2132,7 +2128,7 @@ Cardinal *share
    /*
    ** preset with default values
    */
-   sprintf(buf, u32, (Cardinal) *share);
+   sprintf(buf, sge_u32, (Cardinal) *share);
    XmtInputFieldSetString(node_name, name);
    XmtInputFieldSetString(node_share, buf);
 

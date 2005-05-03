@@ -31,10 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif       
-
 #include "sge.h"
 #include "sge_conf.h"
 #include "symbols.h"
@@ -887,10 +883,10 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
       if ( (hep != global_host_elem )  && (now > last_heard_from + timeout)) {
          host_unheard = 1;
 #if 0
-         DPRINTF(("id = %d, comproc = %s, host = %s, timeout = "u32", "
-               "now = "u32", last_heard = "u32"\n", id, comproc, host, 
-               u32c(timeout), u32c(now), 
-               u32c(last_heard_from(comproc, &id, host))));
+         DPRINTF(("id = %d, comproc = %s, host = %s, timeout = "sge_u32", "
+               "now = "sge_u32", last_heard = "sge_u32"\n", id, comproc, host, 
+               sge_u32c(timeout), sge_u32c(now), 
+               sge_u32c(last_heard_from(comproc, &id, host))));
 #endif
       } else {
          host_unheard = 0;
@@ -982,7 +978,7 @@ u_long32 load_report_interval(lListElem *hep)
          lFreeElem(conf_entry);
       }
    
-      DPRINTF(("%s: load value timeout for host %s is "u32"\n", SGE_FUNC, host, timeout));
+      DPRINTF(("%s: load value timeout for host %s is "sge_u32"\n", SGE_FUNC, host, timeout));
       
       lSetUlong(hep, EH_load_report_interval, timeout);
    }
@@ -1014,7 +1010,7 @@ u_long32 sge_get_max_unheard_value(void)
       lFreeElem(conf_entry);
    }
       
-   DPRINTF(("%s: max unheard value is "u32"\n", SGE_FUNC, max_unheard_secs)); 
+   DPRINTF(("%s: max unheard value is "sge_u32"\n", SGE_FUNC, max_unheard_secs)); 
    
    DEXIT; 
    return max_unheard_secs;
@@ -1254,10 +1250,10 @@ int force
                      jep_JB_job_name   = lGetString(jep, JB_job_name);
 
                      sprintf(sge_mail_subj, MSG_MAIL_JOBKILLEDSUBJ_US, 
-                             u32c(jep_JB_job_number), 
+                             sge_u32c(jep_JB_job_number), 
                              jep_JB_job_name);
                      sprintf(sge_mail_body, MSG_MAIL_JOBKILLEDBODY_USS, 
-                             u32c(jep_JB_job_number), 
+                             sge_u32c(jep_JB_job_number), 
                              jep_JB_job_name, 
                              hostname);
                      cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job abortion");

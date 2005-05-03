@@ -49,10 +49,10 @@
 /*
 ** setup_execd.c
 */
-#define MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU    _MESSAGE(29002, _(SFN" registering job \""U32CFormat"\" at ptf during startup"))
+#define MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU    _MESSAGE(29002, _(SFN" registering job \""sge_U32CFormat"\" at ptf during startup"))
 #define MSG_FAILED    _MESSAGE(29003, _("failed"))
 #define MSG_DELAYED    _MESSAGE(29004, _("delayed"))
-#define MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS    _MESSAGE(29005, _(SFN" registering job \""U32CFormat"\" task "SFN" at ptf during startup"))
+#define MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS    _MESSAGE(29005, _(SFN" registering job \""sge_U32CFormat"\" task "SFN" at ptf during startup"))
 #define MSG_ANSWER_KEEPINGCHANNELFDXOPEN_I    _MESSAGE(29006, _("keeping channel fd #%d open\n"))
 
 /*
@@ -60,15 +60,15 @@
 */
 #define MSG_SLAVE    _MESSAGE(29008, _("slave "))
 #define MSG_COREDUMPED    _MESSAGE(29009, _("(core dumped) "))
-#define MSG_WAITPIDNOSIGNOEXIT_UI   _MESSAGE(29010, _("waitpid() returned for pid "U32CFormat" status %d unequal WIFSIGNALED/WIFEXITED\n"))
-#define MSG_SHEPHERD_VSHEPHERDOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI    _MESSAGE(29011, _(SFN"shepherd of job "U32CFormat"."U32CFormat" died through signal "SFN"= %d"))
-#define MSG_SHEPHERD_WSHEPHERDOFJOBXYEXITEDWITHSTATUSZ_SUUI    _MESSAGE(29012, _(SFN"shepherd of job "U32CFormat"."U32CFormat" exited with exit status = %d\n"))
-#define MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU    _MESSAGE(29013, _("missing job "U32CFormat"."U32CFormat" in job report for exiting job - adding it"))
+#define MSG_WAITPIDNOSIGNOEXIT_UI   _MESSAGE(29010, _("waitpid() returned for pid "sge_U32CFormat" status %d unequal WIFSIGNALED/WIFEXITED\n"))
+#define MSG_SHEPHERD_VSHEPHERDOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI    _MESSAGE(29011, _(SFN"shepherd of job "sge_U32CFormat"."sge_U32CFormat" died through signal "SFN"= %d"))
+#define MSG_SHEPHERD_WSHEPHERDOFJOBXYEXITEDWITHSTATUSZ_SUUI    _MESSAGE(29012, _(SFN"shepherd of job "sge_U32CFormat"."sge_U32CFormat" exited with exit status = %d\n"))
+#define MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU    _MESSAGE(29013, _("missing job "sge_U32CFormat"."sge_U32CFormat" in job report for exiting job - adding it"))
 #define MSG_STATUS_LOADSENSORDIEDWITHSIGNALXY_SI    _MESSAGE(29014, _("load sensor died through signal "SFN"= %d"))
 #define MSG_STATUS_LOADSENSOREXITEDWITHEXITSTATUS_I    _MESSAGE(29015, _("load sensor exited with exit status = %d\n"))
 #define MSG_STATUS_MAILERDIEDTHROUGHSIGNALXY_SI    _MESSAGE(29016, _("mailer died through signal "SFN" = %d"))
 #define MSG_STATUS_MAILEREXITEDWITHEXITSTATUS_I    _MESSAGE(29017, _("mailer exited with exit status = %d\n"))
-#define MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US    _MESSAGE(29018, _("reaping job \""U32CFormat"\" ptf complains: "SFN))
+#define MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US    _MESSAGE(29018, _("reaping job \""sge_U32CFormat"\" ptf complains: "SFN))
 #define MSG_JOB_CLEANUPJOBCALLEDWITHINVALIDPARAMETERS    _MESSAGE(29019, _("clean_up_job() called with invalid parameters"))
 #define MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS _MESSAGE(29020, _("can't find directory "SFN" for reaping job "SFN"\n"))
 #define MSG_JOB_CANTREADCONFIGFILEFORJOBXY_S    _MESSAGE(29021, _("can't read config file for job "SFN"\n"))
@@ -82,18 +82,18 @@
 #define MSG_JOB_WXDIEDTHROUGHSIGNALYZ_SSI    _MESSAGE(29029, _("job "SFN" died through signal "SFN" (%d)"))
 #define MSG_JOB_CANTREADUSEDRESOURCESFORJOB    _MESSAGE(29030, _("can't read used resources for job"))
 #define MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_S    _MESSAGE(29031, _("can't open \"job_pid\" file for job "SFN"\n"))
-#define MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U    _MESSAGE(29032, _("remove_acked_job_exit called with "U32CFormat".0"))
-#define MSG_JOB_XYHASNOTASKZ_UUS    _MESSAGE(29033, _("job "U32CFormat"."U32CFormat" has no task "SFQ))
-/* #define MSG_SHEPHERD_CANTSTARTXFORJOBY_SU    _message(29034, _("can't start command "SFQ" for job " U32CFormat " to delete credentials")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXCOMMANDYFAILEDWITHCODEZ_USI    _message(29035, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _message(29036, _("could not delete credentials for job " U32CFormat" - "SFN" binary does not exist")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U    _MESSAGE(29032, _("remove_acked_job_exit called with "sge_U32CFormat".0"))
+#define MSG_JOB_XYHASNOTASKZ_UUS    _MESSAGE(29033, _("job "sge_U32CFormat"."sge_U32CFormat" has no task "SFQ))
+/* #define MSG_SHEPHERD_CANTSTARTXFORJOBY_SU    _message(29034, _("can't start command "SFQ" for job " sge_U32CFormat " to delete credentials")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXCOMMANDYFAILEDWITHCODEZ_USI    _message(29035, _("could not delete credentials for job " sge_U32CFormat" - command "SFQ" failed with return code %d")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _message(29036, _("could not delete credentials for job " sge_U32CFormat" - "SFN" binary does not exist")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_CANTREMOVEDIRECTORY_SS    _MESSAGE(29037, _("can't remove directory "SFQ": "SFN))
-#define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS    _MESSAGE(29038, _("acknowledge for unknown job "U32CFormat"."U32CFormat"/"SFN))
-#define MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU    _MESSAGE(29040, _("can't find active jobs directory "SFQ" for reaping job "U32CFormat ))
-#define MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU    _MESSAGE(29041, _("incorrect config file for job "U32CFormat"."U32CFormat""))
-#define MSG_SHEPHERD_CANTSTARTJOBXY_US     _MESSAGE(29042, _("can't start job \""U32CFormat"\": "SFN))
-#define MSG_SHEPHERD_PROBLEMSAFTERSTART_DS _MESSAGE(29043, _("problems after job start \""U32CFormat"\": "SFN))
-#define MSG_SHEPHERD_JATASKXYISKNOWNREPORTINGITTOQMASTER    _MESSAGE(29044, _("ja-task \"" U32CFormat"."U32CFormat"\" is unknown - reporting it to qmaster"))
+#define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS    _MESSAGE(29038, _("acknowledge for unknown job "sge_U32CFormat"."sge_U32CFormat"/"SFN))
+#define MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU    _MESSAGE(29040, _("can't find active jobs directory "SFQ" for reaping job "sge_U32CFormat ))
+#define MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU    _MESSAGE(29041, _("incorrect config file for job "sge_U32CFormat"."sge_U32CFormat""))
+#define MSG_SHEPHERD_CANTSTARTJOBXY_US     _MESSAGE(29042, _("can't start job \""sge_U32CFormat"\": "SFN))
+#define MSG_SHEPHERD_PROBLEMSAFTERSTART_DS _MESSAGE(29043, _("problems after job start \""sge_U32CFormat"\": "SFN))
+#define MSG_SHEPHERD_JATASKXYISKNOWNREPORTINGITTOQMASTER    _MESSAGE(29044, _("ja-task \"" sge_U32CFormat"."sge_U32CFormat"\" is unknown - reporting it to qmaster"))
 #define MSG_SHEPHERD_CKECKINGFOROLDJOBS    _MESSAGE(29045, _("checking for old jobs"))
 #define MSG_SHEPHERD_NOOLDJOBSATSTARTUP    _MESSAGE(29046, _("no old jobs at startup"))
 #define MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND    _MESSAGE(29047, _("can't get processes from ps command"))
@@ -102,15 +102,15 @@
 #define MSG_SHEPHERD_CANTSTATXY_SS    _MESSAGE(29050, _("can't stat "SFQ": "SFN))
 #define MSG_FILE_XISNOTADIRECTORY_S    _MESSAGE(29051, _(SFQ" is not a directory"))
 #define MSG_SHEPHERD_FOUNDDIROFJOBX_S    _MESSAGE(29052, _("found directory of job "SFQ))
-#define MSG_SHEPHERD_CANTREADPIDFILEXFORJOBYSTARTTIMEZX_SSUS    _MESSAGE(29053, _("can't read pid file "SFQ" of shepherd for job "SFQ" - starttime: "U32CFormat" cleaning up: "SFN))
-#define MSG_SHEPHERD_MISSINGJOBXINJOBREPORTFOREXITINGJOB_U    _MESSAGE(29054, _("missing job \""U32CFormat"\" in job report for exiting job"))
+#define MSG_SHEPHERD_CANTREADPIDFILEXFORJOBYSTARTTIMEZX_SSUS    _MESSAGE(29053, _("can't read pid file "SFQ" of shepherd for job "SFQ" - starttime: "sge_U32CFormat" cleaning up: "SFN))
+#define MSG_SHEPHERD_MISSINGJOBXINJOBREPORTFOREXITINGJOB_U    _MESSAGE(29054, _("missing job \""sge_U32CFormat"\" in job report for exiting job"))
 #define MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS    _MESSAGE(29055, _("can't read pid from pid file "SFQ" of shepherd for job "SFN))
-#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS    _MESSAGE(29056, _("shepherd for job "SFN" has pid \""U32CFormat"\" and is "SFN" alive\n"))
+#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS    _MESSAGE(29056, _("shepherd for job "SFN" has pid \""sge_U32CFormat"\" and is "SFN" alive\n"))
 #define MSG_NOT    _MESSAGE(29057, _("not"))
-#define MSG_SHEPHERD_INCONSISTENTDATAFORJOBX_U    _MESSAGE(29058, _("inconsistent data for job \""U32CFormat"\""))
-#define MSG_SHEPHERD_MISSINGJOBXYINJOBREPORT_UU    _MESSAGE(29059, _("Missing job "U32CFormat"."U32CFormat" in job report"))
-#define MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU    _MESSAGE(29060, _("can't open pid file "SFQ" for job "U32CFormat"."U32CFormat))
-#define MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS    _MESSAGE(29061, _("can't open usage file "SFQ" for job "U32CFormat"."U32CFormat": "SFN))
+#define MSG_SHEPHERD_INCONSISTENTDATAFORJOBX_U    _MESSAGE(29058, _("inconsistent data for job \""sge_U32CFormat"\""))
+#define MSG_SHEPHERD_MISSINGJOBXYINJOBREPORT_UU    _MESSAGE(29059, _("Missing job "sge_U32CFormat"."sge_U32CFormat" in job report"))
+#define MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU    _MESSAGE(29060, _("can't open pid file "SFQ" for job "sge_U32CFormat"."sge_U32CFormat))
+#define MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS    _MESSAGE(29061, _("can't open usage file "SFQ" for job "sge_U32CFormat"."sge_U32CFormat": "SFN))
 #define MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART _MESSAGE(29062, _("execd went down during job start"))
 #define MSG_JR_ERRSTR_EXECDDONTKNOWJOB _MESSAGE(29068, _("execd doesn't know this job"))
 #define MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S _MESSAGE(29069, _("get exit ack for pe task "SFN" but task is not in state exiting"))
@@ -120,12 +120,12 @@
 ** ptf.c
 */
 #define MSG_SYSTEM_SYSINFO_SI_RELEASE_CALL_FAILED_S        _MESSAGE(29070, _("sysinfo(SI_RELEASE) call failed - "SFN))
-#define MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS            _MESSAGE(29071, _("job "U32CFormat" pid "U32CFormat" schedctl failure: "SFN"\n"))
-#define MSG_PRIO_JOBXPIDYSETPRIORITYFAILURE_UUS            _MESSAGE(29072, _("job "U32CFormat" pid "U32CFormat" setpriority failure: "SFN"\n"))
-#define MSG_SCHEDD_JOBXPIDYSCHEDSETSCHEDULERFAILURE_UUS    _MESSAGE(29073, _("job "U32CFormat" pid "U32CFormat" sched_setscheduler failure: "SFN"\n"))
-#define MSG_PRIO_JOBXNICEMFAILURE_S                        _MESSAGE(29074, _("job "U32CFormat" nicem failure: "SFN"\n"))
-#define MSG_PRIO_JOBXNICEJFAILURE_S                        _MESSAGE(29075, _("job "U32CFormat" nicej failure: "SFN"\n"))
-/* #define MSG_PRIO_JOBXSETPRIORITYFAILURE_US                 _message(29076, _("job "U32CFormat" setpriority failure: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS            _MESSAGE(29071, _("job "sge_U32CFormat" pid "sge_U32CFormat" schedctl failure: "SFN"\n"))
+#define MSG_PRIO_JOBXPIDYSETPRIORITYFAILURE_UUS            _MESSAGE(29072, _("job "sge_U32CFormat" pid "sge_U32CFormat" setpriority failure: "SFN"\n"))
+#define MSG_SCHEDD_JOBXPIDYSCHEDSETSCHEDULERFAILURE_UUS    _MESSAGE(29073, _("job "sge_U32CFormat" pid "sge_U32CFormat" sched_setscheduler failure: "SFN"\n"))
+#define MSG_PRIO_JOBXNICEMFAILURE_S                        _MESSAGE(29074, _("job "sge_U32CFormat" nicem failure: "SFN"\n"))
+#define MSG_PRIO_JOBXNICEJFAILURE_S                        _MESSAGE(29075, _("job "sge_U32CFormat" nicej failure: "SFN"\n"))
+/* #define MSG_PRIO_JOBXSETPRIORITYFAILURE_US                 _message(29076, _("job "sge_U32CFormat" setpriority failure: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_WHERE_FAILEDTOBUILDWHERECONDITION              _MESSAGE(29077, _("failed to build where-condition"))
 #define MSG_PRIO_PTFMINMAX_II                              _MESSAGE(29078, _("PTF_MAX_PRIORITY=%d, PTF_MIN_PRIORITY=%d\n"))
 #define MSG_PRIO_NICEMFAILED_S                             _MESSAGE(29079, _("nicem failed: "SFN"\n"))
@@ -151,7 +151,7 @@
 ** job_report_execd.c
 */
 #define MSG_JOB_TYPEMALLOC            _MESSAGE(29091, _("runtime type error or malloc failure in add_job_report"))
-#define MSG_PARSE_USAGEATTR_SSU       _MESSAGE(29092, _("failed parsing "SFQ" passed as usage attribute "SFQ" of job "U32CFormat) )      
+#define MSG_PARSE_USAGEATTR_SSU       _MESSAGE(29092, _("failed parsing "SFQ" passed as usage attribute "SFQ" of job "sge_U32CFormat) )      
 
 
 /*
@@ -178,7 +178,7 @@
 #define MSG_EXECD_NOSGID              _MESSAGE(29101, _("supplementary group ids could not be found in /proc"))
 #define MSG_EXECD_NOPARSEGIDRANGE     _MESSAGE(29102, _("can not parse gid_range"))
 #define MSG_EXECD_NOADDGID            _MESSAGE(29103, _("can not find an unused add_grp_id"))
-#define MSG_MAIL_MAILLISTTOOLONG_U    _MESSAGE(29104, _("maillist for job " U32CFormat " too long\n"))
+#define MSG_MAIL_MAILLISTTOOLONG_U    _MESSAGE(29104, _("maillist for job " sge_U32CFormat " too long\n"))
 #define MSG_EXECD_NOXTERM             _MESSAGE(29105, _("unable to find xterm executable for interactive job, not configured\n"))
 #define MSG_EXECD_NOSHEPHERD_SSS      _MESSAGE(29108, _("unable to find shepherd executable neither in architecture directory "SFN" nor in "SFN": "SFN))
 #define MSG_EXECD_NOSHEPHERDWRAP_SS   _MESSAGE(29109, _("unable to find shepherd wrapper command "SFN": "SFN))
@@ -192,16 +192,16 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-#define MSG_MAIL_STARTSUBJECT_UUS     "Job-array task "U32CFormat"."U32CFormat" ("SFN") Started" 
+#define MSG_MAIL_STARTSUBJECT_UUS     "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Started" 
 
-#define MSG_MAIL_STARTBODY_UUSSSSS    _MESSAGE(29116, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
+#define MSG_MAIL_STARTBODY_UUSSSSS    _MESSAGE(29116, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-#define MSG_MAIL_STARTSUBJECT_US      "Job "U32CFormat" ("SFN") Started"
+#define MSG_MAIL_STARTSUBJECT_US      "Job "sge_U32CFormat" ("SFN") Started"
 
-#define MSG_MAIL_STARTBODY_USSSSS     _MESSAGE(29117, _("Job "U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
+#define MSG_MAIL_STARTBODY_USSSSS     _MESSAGE(29117, _("Job "sge_U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
 #define MSG_FILE_CHDIR_SS             _MESSAGE(29118, _("can't change dir to "SFN": "SFN))
 #define MSG_EXECD_NOFORK_S            _MESSAGE(29119, _("fork failed: "SFN))
 #define MSG_EXECD_NOSTARTSHEPHERD     _MESSAGE(29120, _("unable to start shepherd process"))
@@ -214,45 +214,45 @@
 /*
 ** execd_ck_to_do.c
 */
-#define MSG_JOB_EXCEEDHLIM_USSFF      _MESSAGE(29126, _("job "U32CFormat" exceeds job hard limit "SFQ" of queue "SFQ" (%8.5f > limit:%8.5f) - sending SIGKILL\n"))
-#define MSG_JOB_EXCEEDSLIM_USSFF      _MESSAGE(29127, _("job "U32CFormat" exceeds job soft limit "SFQ" of queue "SFQ" (%8.5f > limit:%8.5f) - sending SIGXCPU\n"))
-#define MSG_EXECD_EXCEEDHWALLCLOCK_UU _MESSAGE(29128, _("job "U32CFormat"."U32CFormat" exceeded hard wallclock time - initiate terminate method"))
-#define MSG_EXECD_EXCEEDSWALLCLOCK_UU _MESSAGE(29129, _("job "U32CFormat"."U32CFormat" exceeded soft wallclock time - initiate soft notify method"))
+#define MSG_JOB_EXCEEDHLIM_USSFF      _MESSAGE(29126, _("job "sge_U32CFormat" exceeds job hard limit "SFQ" of queue "SFQ" (%8.5f > limit:%8.5f) - sending SIGKILL\n"))
+#define MSG_JOB_EXCEEDSLIM_USSFF      _MESSAGE(29127, _("job "sge_U32CFormat" exceeds job soft limit "SFQ" of queue "SFQ" (%8.5f > limit:%8.5f) - sending SIGXCPU\n"))
+#define MSG_EXECD_EXCEEDHWALLCLOCK_UU _MESSAGE(29128, _("job "sge_U32CFormat"."sge_U32CFormat" exceeded hard wallclock time - initiate terminate method"))
+#define MSG_EXECD_EXCEEDSWALLCLOCK_UU _MESSAGE(29129, _("job "sge_U32CFormat"."sge_U32CFormat" exceeded soft wallclock time - initiate soft notify method"))
 #define MSG_EXECD_NOADDGIDOPEN_SSS   _MESSAGE(29130, _("failed opening addgrpid file "SFN" of job "SFN": "SFN))
 #define MSG_JOB_NOREGISTERPTF_SS     _MESSAGE(29131, _("failed registering job "SFN" at ptf: "SFN))
 #define MSG_EXECD_NOOSJOBIDOPEN_SSS  _MESSAGE(29132, _("failed opening os jobid file "SFN" of job "SFN": "SFN))
-/* #define MSG_EXECD_NOOSJOBIDREAD_SUUS  _message(29133, _("failed reading os jobid file "SFN" of job "U32CFormat"."U32CFormat": "SFN)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EXECD_NOOSJOBIDREAD_SUUS  _message(29133, _("failed reading os jobid file "SFN" of job "sge_U32CFormat"."sge_U32CFormat": "SFN)) __TS Removed automatically from testsuite!! TS__*/
 /*
 ** execd_job_exec.c
 */
 #define MSG_COM_UNPACKFEATURESET      _MESSAGE(29134, _("unpacking featureset from job execution message\n"))
 #define MSG_COM_UNPACKJOB             _MESSAGE(29135, _("unpacking job from job execution message\n"))
 #define MSG_COM_UNPACKINGQ            _MESSAGE(29137, _("unpacking queue list from job execution message\n"))
-#define MSG_JOB_MISSINGQINGDIL_SU     _MESSAGE(29138, _("missing queue "SFQ" found in gdil of job "U32CFormat"\n"))
-#define MSG_EXECD_NOWRITESCRIPT_SIUS  _MESSAGE(29139, _("can't write script file "SFQ" wrote only %d of "U32CFormat" bytes: "SFN))
-#define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "U32CFormat" but this job is not here\n"))
-#define MSG_JOB_TASKNOTASKINJOB_UU    _MESSAGE(29141, _("received task belongs to job "U32CFormat" but this job is here but the JobArray task "U32CFormat" is not here\n"))
-#define MSG_JOB_TASKNOSUITABLEJOB_U   _MESSAGE(29142, _("received task belongs to job "U32CFormat" but this job is not suited for starting tasks\n"))
-/* #define MSG_JOB_TASKALREADYEXISTS_US  _message(29143, _("received task "U32CFormat"/"SFN" which is already here\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_NOTASKPASSINGIF_SU    _message(29144, _(SFN" does not fulfill task passing interface for job "U32CFormat"\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "U32CFormat" of user "SFN"@"SFN" (localhost = "SFN")\n"))
-/* #define MSG_JOB_NOSUCHQ_SUSS          _message(29146, _("no such queue "SFQ" as requested by job "U32CFormat" from user "SFN"@"SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_JOB_MISSINGQINGDIL_SU     _MESSAGE(29138, _("missing queue "SFQ" found in gdil of job "sge_U32CFormat"\n"))
+#define MSG_EXECD_NOWRITESCRIPT_SIUS  _MESSAGE(29139, _("can't write script file "SFQ" wrote only %d of "sge_U32CFormat" bytes: "SFN))
+#define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "sge_U32CFormat" but this job is not here\n"))
+#define MSG_JOB_TASKNOTASKINJOB_UU    _MESSAGE(29141, _("received task belongs to job "sge_U32CFormat" but this job is here but the JobArray task "sge_U32CFormat" is not here\n"))
+#define MSG_JOB_TASKNOSUITABLEJOB_U   _MESSAGE(29142, _("received task belongs to job "sge_U32CFormat" but this job is not suited for starting tasks\n"))
+/* #define MSG_JOB_TASKALREADYEXISTS_US  _message(29143, _("received task "sge_U32CFormat"/"SFN" which is already here\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_NOTASKPASSINGIF_SU    _message(29144, _(SFN" does not fulfill task passing interface for job "sge_U32CFormat"\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "sge_U32CFormat" of user "SFN"@"SFN" (localhost = "SFN")\n"))
+/* #define MSG_JOB_NOSUCHQ_SUSS          _message(29146, _("no such queue "SFQ" as requested by job "sge_U32CFormat" from user "SFN"@"SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_JOB_NOREQQONHOST_SSS      _message(29147, _("requested queue "SFQ" resides not at this host "SFN" but at host "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_JOB_REQQFULL_SII          _message(29148, _("requested queue "SFQ" is already full (%d/%d)\n")) __TS Removed automatically from testsuite!! TS__*/
 /*
 ** execd_kill_execd.c
 */
-#define MSG_JOB_INITCKPTSHUTDOWN_U    _MESSAGE(29149, _("initiate checkpoint at shutdown: job "U32CFormat""))
-#define MSG_JOB_KILLSHUTDOWN_U        _MESSAGE(29150, _("killing job at shutdown: job "U32CFormat""))
+#define MSG_JOB_INITCKPTSHUTDOWN_U    _MESSAGE(29149, _("initiate checkpoint at shutdown: job "sge_U32CFormat""))
+#define MSG_JOB_KILLSHUTDOWN_U        _MESSAGE(29150, _("killing job at shutdown: job "sge_U32CFormat""))
 
 /*
 ** execd_signal_queue.c
 */
-#define MSG_JOB_INITMIGRSUSPQ_U       _MESSAGE(29151, _("initiate migration at queue suspend for job "U32CFormat))
-#define MSG_JOB_SIGNALTASK_UUS        _MESSAGE(29152, _("SIGNAL jid: " U32CFormat " jatask: " U32CFormat " signal: "SFN"\n"))
+#define MSG_JOB_INITMIGRSUSPQ_U       _MESSAGE(29151, _("initiate migration at queue suspend for job "sge_U32CFormat))
+#define MSG_JOB_SIGNALTASK_UUS        _MESSAGE(29152, _("SIGNAL jid: " sge_U32CFormat " jatask: " sge_U32CFormat " signal: "SFN"\n"))
 #define MSG_EXECD_WRITESIGNALFILE_S   _MESSAGE(29153, _("error writing file "SFN" for signal transfer to shepherd"))
 #define MSG_JOB_DELIVERSIGNAL_ISSIS   _MESSAGE(29154, _("failed to deliver signal %d to job "SFN" for "SFN" (shepherd with pid %d): "SFN))
-#define MSG_JOB_INITMIGRSUSPJ_UU      _MESSAGE(29155, _("initiate migration at job suspend for job "U32CFormat" task "U32CFormat""))
+#define MSG_JOB_INITMIGRSUSPJ_UU      _MESSAGE(29155, _("initiate migration at job suspend for job "sge_U32CFormat" task "sge_U32CFormat""))
 
 
 

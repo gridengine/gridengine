@@ -616,7 +616,7 @@ int queue_name_length
                         jid = lGetUlong(jlep, JB_job_number);
                         old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
-                        sge_dstring_sprintf(&dyn_task_str, u32, jataskid);
+                        sge_dstring_sprintf(&dyn_task_str, sge_u32, jataskid);
                         different = (jid != old_jid) || (jataskid != old_jataskid);
 
                         if (different) 
@@ -754,7 +754,7 @@ int queue_name_length
 
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
                    (group_opt & GROUP_NO_TASK_GROUPS) > 0) {
-                  sge_dstring_sprintf(&dyn_task_str, u32, 
+                  sge_dstring_sprintf(&dyn_task_str, sge_u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL,
                                 &dyn_task_str, full_listing, 0, 0, ehl, centry_list, 
@@ -887,7 +887,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                for (; start <= end; start += step) { 
                   lListElem *ja_task = job_get_ja_task_template_hold(job,
                                                           start, hold_state[i]);
-                  sge_dstring_sprintf(&ja_task_id_string, u32, start);
+                  sge_dstring_sprintf(&ja_task_id_string, sge_u32, start);
                   sge_print_job(job, ja_task, NULL, 1, NULL,
                                 &ja_task_id_string, full_listing, 0, 0, 
                                 exechost_list, centry_list, pe_list, indent, group_opt, 0, queue_name_length);
@@ -943,7 +943,7 @@ int longest_queue_length) {
                      printf(MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING);
                      printf(  "################################################################################%s\n", sge_ext?hashes:"");
                   }
-                  sge_dstring_sprintf(&dyn_task_str, u32, 
+                  sge_dstring_sprintf(&dyn_task_str, sge_u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
                                 full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0, longest_queue_length);   
@@ -990,7 +990,7 @@ int longest_queue_length) {
                   printf(MSG_QSTAT_PRT_ERRORJOBS);
                   printf("################################################################################%s\n", sge_ext?hashes:"");
                }
-               sge_dstring_sprintf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
+               sge_dstring_sprintf(&dyn_task_str, "sge_u32", lGetUlong(jatep, JAT_task_number));
                sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0, longest_queue_length);
             }
          }
@@ -1547,7 +1547,7 @@ int queue_name_length
             u_long32 pe_slots = 0;
             for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list))
                pe_slots += lGetUlong(gdil_ep, JG_slots);
-            printf(QSTAT_INDENT "Granted PE:       %s "u32"\n", 
+            printf(QSTAT_INDENT "Granted PE:       %s "sge_u32"\n", 
                lGetString(jatep, JAT_granted_pe), pe_slots); 
          }
          if (lGetString(job, JB_checkpoint_name)) 
@@ -1632,7 +1632,7 @@ int queue_name_length
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");
             for_each(qrep, ql) {
-               printf(u32, lGetUlong(qrep, JRE_job_number));
+               printf(sge_u32, lGetUlong(qrep, JRE_job_number));
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }

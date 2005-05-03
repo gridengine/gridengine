@@ -206,12 +206,12 @@ const char *host
             s = t + sizeof("$HOME") - 1;
          }
          if (!strncmp(t, "$JOB_ID", sizeof("$JOB_ID") - 1)) {
-            sprintf(exp_path, "%s" u32, exp_path, job_id);
+            sprintf(exp_path, "%s" sge_u32, exp_path, job_id);
             s = t + sizeof("$JOB_ID") - 1;
          }
          if (ja_task_id) {
             if (!strncmp(t, "$TASK_ID", sizeof("$TASK_ID") - 1)) {
-               sprintf(exp_path, "%s" u32, exp_path, ja_task_id);
+               sprintf(exp_path, "%s" sge_u32, exp_path, ja_task_id);
                s = t + sizeof("$TASK_ID") - 1;
             }
          }
@@ -316,7 +316,7 @@ const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, u_lon
       return NULL;
    }
 
-   sge_dstring_sprintf(buffer, "%s/"u32"."u32, ACTIVE_DIR, job_id, ja_task_id);
+   sge_dstring_sprintf(buffer, "%s/"sge_u32"."sge_u32, ACTIVE_DIR, job_id, ja_task_id);
 
    if(pe_task_id != NULL) {
       sge_dstring_append(buffer, "/");

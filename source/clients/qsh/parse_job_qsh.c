@@ -34,10 +34,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "symbols.h"
 #include "sge_string.h"
 #include "sge_time.h"

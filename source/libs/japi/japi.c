@@ -38,10 +38,6 @@
 #include <pthread.h>
 #include <pwd.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_mtutil.h"
 #include "drmaa.h"
 #include "japi.h"
@@ -1064,7 +1060,7 @@ int japi_exit(bool close_session, int flag, dstring *diag)
 
    DENTER(TOP_LAYER, "japi_exit");
 
-   DPRINTF(("entering japi_exit() at "u32"\n", sge_get_gmt()));
+   DPRINTF(("entering japi_exit() at "sge_u32"\n", sge_get_gmt()));
 
    JAPI_LOCK_SESSION();   
    if (japi_session != JAPI_SESSION_ACTIVE) {
@@ -1786,7 +1782,7 @@ static int japi_user_hold_add_jobid(u_long32 gdi_action, lList **request_list,
    if (lGetSubUlong(jep, JAT_task_number, taskid, JB_ja_tasks)) {
       /* taskid is referenced twice */
       if (diag) 
-         sge_dstring_sprintf(diag, "task "U32CFormat" of jobid "U32CFormat" referenced twice\n", 
+         sge_dstring_sprintf(diag, "task "sge_U32CFormat" of jobid "sge_U32CFormat" referenced twice\n", 
                taskid, jobid);
       DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;
@@ -1890,14 +1886,14 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                   dstring job_task_specifier;
 
                   sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
-                  sge_dstring_sprintf(&job_task_specifier, u32, jobid);
+                  sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
                   lAddElemStr(&ref_list, ST_name, jobid_str, ST_Type);
                } else {
                   lListElem *range;
                   for_each (range, lGetList(japi_job, JJ_not_yet_finished_ids)) {
                      dstring job_task_specifier = DSTRING_INIT;
                      u_long32 start, end, step;
-                     sge_dstring_sprintf(&job_task_specifier, u32".", jobid);
+                     sge_dstring_sprintf(&job_task_specifier, sge_u32".", jobid);
                      range_get_all_ids(range, &start, &end, &step);
                      range_to_dstring(start, end, step, &job_task_specifier, false);
                      lAddElemStr(&ref_list, ST_name, jobid_str, ST_Type);
@@ -2067,7 +2063,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                while (japi_job != NULL) {
                   jobid = lGetUlong(japi_job, JJ_jobid);
                   /* This overwrites the previous contents of the dstring. */
-                  sge_dstring_sprintf(&job_task_specifier, u32, jobid);
+                  sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
 
                   id_entry = lAddElemStr(&id_list, ID_str, sge_dstring_get_string(&job_task_specifier), ID_Type);
                   if (JOB_TYPE_IS_ARRAY(lGetUlong(japi_job, JJ_type))) {
@@ -2142,7 +2138,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                return DRMAA_ERRNO_INVALID_ARGUMENT;
             }
 
-            sge_dstring_sprintf(&job_task_specifier, u32, jobid);
+            sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
             id_entry = lAddElemStr(&id_list, ID_str, sge_dstring_get_string(&job_task_specifier), ID_Type);
             if (array) {
                lList *tlp;
@@ -2416,7 +2412,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
                /* The largest number representable by 64 unsigned bits is 19
                 * characters long. */
                char_id = (char *)malloc (sizeof (char) * 40);
-               snprintf (char_id, 40, u32 "." u32, id, task_id);
+               snprintf (char_id, 40, sge_u32 "." sge_u32, id, task_id);
 
                DPRINTF (("Synchronize All: adding %s to id list\n", char_id));
                lAddElemStr (&sync_list, ST_name, char_id, ST_Type);
@@ -2551,24 +2547,24 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
 
       japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
       if (!japi_job) {
-         DPRINTF(("synchronized with "u32"."u32"\n", jobid, taskid));
+         DPRINTF(("synchronized with "sge_u32"."sge_u32"\n", jobid, taskid));
          continue;
       }
 
       not_yet_finished = lGetList(japi_job, JJ_not_yet_finished_ids);
       if (not_yet_finished && range_list_is_id_within(not_yet_finished, taskid)) {
-         DPRINTF(("job "u32"."u32" is a still unfinished task\n", jobid, taskid));
+         DPRINTF(("job "sge_u32"."sge_u32" is a still unfinished task\n", jobid, taskid));
          all_finished = false;
 
          DEXIT;
          return JAPI_WAIT_UNFINISHED;
       } 
 
-      DPRINTF(("synchronized with "u32"."u32"\n", jobid, taskid));
+      DPRINTF(("synchronized with "sge_u32"."sge_u32"\n", jobid, taskid));
       if (dispose) { 
          /* remove corresponding entry in JJ_finished_tasks */
          lDelSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks);
-         DPRINTF(("dispose job finish information for job "u32" task "u32"\n", jobid, taskid));
+         DPRINTF(("dispose job finish information for job "sge_u32" task "sge_u32"\n", jobid, taskid));
          if (!lGetList(japi_job, JJ_finished_tasks) && !not_yet_finished) {
             /* remove JAPI job if no longer needed */
             lRemoveElem(Master_japi_job_list, japi_job); 
@@ -3195,7 +3191,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       lListElem *japi_job = NULL;
       lListElem *japi_task = NULL;
 
-      DPRINTF (("Job " u32 "." u32 " is finished.\n", jobid, taskid));
+      DPRINTF (("Job " sge_u32 "." sge_u32 " is finished.\n", jobid, taskid));
    
       JAPI_LOCK_JOB_LIST();
       
@@ -3215,7 +3211,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
           */
          if (range_list_is_id_within(lGetList(japi_job, JJ_not_yet_finished_ids), taskid)) {
             JAPI_UNLOCK_JOB_LIST();
-            DPRINTF (("Job " u32 "." u32 " is actually in unknown state.\n", jobid, taskid));
+            DPRINTF (("Job " sge_u32 "." sge_u32 " is actually in unknown state.\n", jobid, taskid));
             *remote_ps = DRMAA_PS_UNDETERMINED;
             DEXIT;
             return DRMAA_ERRNO_SUCCESS;
@@ -3223,7 +3219,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
 
          japi_task = lGetSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks);
          wait_status = lGetUlong(japi_task, JJAT_stat);
-         DPRINTF(("wait_status("u32"/"u32") = "u32"\n", jobid, taskid, wait_status));
+         DPRINTF(("wait_status("sge_u32"/"sge_u32") = "sge_u32"\n", jobid, taskid, wait_status));
          
          if (SGE_GET_NEVERRAN(wait_status)) {
             *remote_ps = DRMAA_PS_FAILED;
@@ -3277,7 +3273,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);
       u_long32 ja_task_hold = lGetUlong(ja_task, JAT_hold);
 
-      DPRINTF (("Job " u32 "." u32 " status=%x state=%x hold=%x\n", jobid,
+      DPRINTF (("Job " sge_u32 "." sge_u32 " status=%x state=%x hold=%x\n", jobid,
                 taskid, ja_task_status, ja_task_state, ja_task_hold));
       
       /* ERROR */
@@ -3533,7 +3529,7 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
 
    /* parse jobid/taskid */
    if ((s=strchr(job_id_str, '.'))) {
-      if (sscanf(job_id_str, u32"."u32, &jobid, &taskid) != 2) {
+      if (sscanf(job_id_str, sge_u32"."sge_u32, &jobid, &taskid) != 2) {
          sge_dstring_sprintf(diag, "job id passed "SFQ" is not a valid bulk job id\n", job_id_str);
          DEXIT;
          return DRMAA_ERRNO_INVALID_ARGUMENT;
@@ -3541,7 +3537,7 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
 /*       DPRINTF(("parsing jobid.taskid: %ld.%ld\n", jobid, taskid)); */
       is_array_task = 1;
    } else {
-      if (sscanf(job_id_str, u32, &jobid) != 1) {
+      if (sscanf(job_id_str, sge_u32, &jobid) != 1) {
          sge_dstring_sprintf(diag, "job id passed "SFQ" is not a valid job id\n", job_id_str);
          DEXIT;
          return DRMAA_ERRNO_INVALID_ARGUMENT;
@@ -4300,7 +4296,7 @@ static void *japi_implementation_thread(void *p)
                         object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, taskid);
 
                         /* add entry to the finished tasks */
-                        DPRINTF(("adding finished task "u32" for job "u32" existing not any longer\n", taskid, jobid));
+                        DPRINTF(("adding finished task "sge_u32" for job "sge_u32" existing not any longer\n", taskid, jobid));
                         japi_task = lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
                         finished_tasks++;
 
@@ -4327,7 +4323,7 @@ static void *japi_implementation_thread(void *p)
                            lListElem *ja_task;
 
                            if ((ja_task=job_search_task(sge_job, NULL, taskid))) {
-                              DPRINTF(("task "u32"."u32" contained in enrolled task list\n", jobid, taskid));
+                              DPRINTF(("task "sge_u32"."sge_u32" contained in enrolled task list\n", jobid, taskid));
                               continue;
                            }
 
@@ -4335,15 +4331,15 @@ static void *japi_implementation_thread(void *p)
                                range_list_is_id_within(lGetList(sge_job, JB_ja_u_h_ids), taskid) ||
                                range_list_is_id_within(lGetList(sge_job, JB_ja_s_h_ids), taskid) ||
                                range_list_is_id_within(lGetList(sge_job, JB_ja_o_h_ids), taskid)) {
-                              DPRINTF(("task "u32"."u32" is still pending\n", jobid, taskid));
+                              DPRINTF(("task "sge_u32"."sge_u32" is still pending\n", jobid, taskid));
                               continue;
                            }
 
                            if (range_list_is_id_within(lGetList(sge_job, JB_ja_z_ids), taskid)) {
-                              DPRINTF(("task "u32"."u32" contained in zombie list taskid list\n", jobid, taskid));
+                              DPRINTF(("task "sge_u32"."sge_u32" contained in zombie list taskid list\n", jobid, taskid));
                            }
 
-                           DPRINTF(("task "u32"."u32" presumably has finished meanwhile\n", jobid, taskid));
+                           DPRINTF(("task "sge_u32"."sge_u32" presumably has finished meanwhile\n", jobid, taskid));
 
                            /* remove task from not yet finished job id list */
                            object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, taskid);
@@ -4429,7 +4425,7 @@ static void *japi_implementation_thread(void *p)
                   } /* if range_list_is_id_within() */
                } /* if japi_job != NULL */
                else {
-                  DPRINTF (("ignoring event on unknown job "u32"\n", intkey));
+                  DPRINTF (("ignoring event on unknown job "sge_u32"\n", intkey));
                }
 
                JAPI_UNLOCK_JOB_LIST();
@@ -4474,7 +4470,7 @@ static void *japi_implementation_thread(void *p)
                      }
                   } /* if japi_job != NULL */
                   else {
-                     DPRINTF(("ignoring event on unknown job "u32"\n", intkey));
+                     DPRINTF(("ignoring event on unknown job "sge_u32"\n", intkey));
                   }
 
                   JAPI_UNLOCK_JOB_LIST();
@@ -4634,7 +4630,7 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
 
             DPRINTF (("Stopping job %ld\n", jobid));
 
-            sge_dstring_sprintf(&job_task_specifier, u32, jobid);
+            sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
             id_entry = lAddElemStr(&id_list, ID_str,
                                    sge_dstring_get_string(&job_task_specifier),
                                    ID_Type);
@@ -4958,7 +4954,7 @@ static int japi_stop_event_client (void)
    DENTER(TOP_LAYER, "stop_event_client");
 
    DPRINTF (("Requesting that GDI kill our event client.\n"));
-   snprintf(id_string, sizeof(id_string)-1, u32, japi_ec_id);
+   snprintf(id_string, sizeof(id_string)-1, sge_u32, japi_ec_id);
    lAddElemStr(&id_list, ID_str, id_string, ID_Type);
    alp = gdi_kill(id_list, uti_state_get_default_cell(), 0, EVENTCLIENT_KILL);
    id_list = lFreeList(id_list);

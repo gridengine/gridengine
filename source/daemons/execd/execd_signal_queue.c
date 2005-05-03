@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_ja_task.h"
@@ -96,7 +92,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
    unpackstr(pb, &qname);       /* mallocs qname !! */
    unpackint(pb, &signal);
 
-   DPRINTF(("===>DELIVER_SIGNAL: %s >%s< Job(s) "u32"."u32" \n",
+   DPRINTF(("===>DELIVER_SIGNAL: %s >%s< Job(s) "sge_u32"."sge_u32" \n",
             sge_sig2str(signal), qname, jobid, jataskid));
 
    /* In real this is both a signal queue and a signal job request.
@@ -136,7 +132,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
                         qinstance_state_set_manual_suspended(master_q, true);
                         if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
                            if (lGetUlong(jep, JB_checkpoint_attr)& CHECKPOINT_SUSPEND) {
-                              INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, u32c(lGetUlong(jep, JB_job_number))));
+                              INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                               signal = SGE_MIGRATE;
                            }   
                            if( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
@@ -234,7 +230,7 @@ lListElem *jatep
    DENTER(TOP_LAYER, "sge_execd_deliver_signal");
 
    INFO((SGE_EVENT, MSG_JOB_SIGNALTASK_UUS,   
-         u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)), 
+         sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number)), 
          sge_sig2str(sig)));
 
    /* for simulated hosts do nothing */
@@ -249,11 +245,11 @@ lListElem *jatep
          jobid = lGetUlong(jep, JB_job_number);
          jataskid = lGetUlong(jatep, JAT_task_number);
          
-         DPRINTF(("Simulated job "u32"."u32" is killed\n", jobid, jataskid));
+         DPRINTF(("Simulated job "sge_u32"."sge_u32" is killed\n", jobid, jataskid));
 
          if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
-                   u32c(jobid), u32c(jataskid)));
+                   sge_u32c(jobid), sge_u32c(jataskid)));
             jr = add_job_report(jobid, jataskid, NULL, jep);
          }
 
@@ -409,13 +405,13 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
           if (job_is_array(jep)) {
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS,
-                      u32c(jobid), 
-                      u32c(taskid), 
+                      sge_u32c(jobid), 
+                      sge_u32c(taskid), 
                       job_name);
           } else {
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JOB_SUSP_US,
-                      u32c(jobid), 
+                      sge_u32c(jobid), 
                       job_name);
           }
           mail_type = MSG_MAIL_TYPE_SUSP;
@@ -424,13 +420,13 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
           if (job_is_array(jep)) {
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS,
-                      u32c(jobid), 
-                      u32c(taskid), 
+                      sge_u32c(jobid), 
+                      sge_u32c(taskid), 
                       job_name);
           } else {
               sprintf(mail_subject,
                       MSG_MAIL_SUBJECT_JOB_CONT_US,
-                      u32c(jobid), 
+                      sge_u32c(jobid), 
                       job_name);
           }
           mail_type = MSG_MAIL_TYPE_CONT;
@@ -642,7 +638,7 @@ u_long32 signal
    master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
                          JG_queue);
 
-   DPRINTF(("sending %s to job "u32"."u32"\n", 
+   DPRINTF(("sending %s to job "sge_u32"."sge_u32"\n", 
          sge_sig2str(signal), jobid, jataskid));
    if (signal == SGE_SIGCONT) {
       state = lGetUlong(jatep, JAT_state);
@@ -670,7 +666,7 @@ u_long32 signal
       if ((signal == SGE_SIGSTOP) && (lGetUlong(jep, JB_checkpoint_attr) & 
             CHECKPOINT_SUSPEND)) {
          INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPJ_UU, 
-               u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));
+               sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number))));
          signal = SGE_MIGRATE;
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
       }
@@ -700,7 +696,7 @@ u_long32 signal
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JDELETED, state);
             lSetUlong(jatep, JAT_state, state); 
-            DPRINTF(("SIGKILL of job "u32"\n", jobid)); 
+            DPRINTF(("SIGKILL of job "sge_u32"\n", jobid)); 
          }
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
       }
@@ -718,7 +714,7 @@ u_long32 signal
       }
 
    } else {
-      DPRINTF(("Job  "u32"."u32" is no longer running\n", jobid, jataskid));
+      DPRINTF(("Job  "sge_u32"."sge_u32" is no longer running\n", jobid, jataskid));
    }
    DEXIT;
    return getridofjob;

@@ -293,7 +293,7 @@ static void do_event_client_exit(const char *aHost, const char *aSender, sge_pac
       return;
    }
 
-   DPRINTF(("%s: remove client " u32 " - host %s - sender %s\n", SGE_FUNC, client_id, aHost, aSender));
+   DPRINTF(("%s: remove client " sge_u32 " - host %s - sender %s\n", SGE_FUNC, client_id, aHost, aSender));
 
    sge_remove_event_client(client_id);
 

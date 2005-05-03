@@ -421,7 +421,7 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
    nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
    if (nchars == -1) {
       ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
-         u32c(message_number)));
+         sge_u32c(message_number)));
       DEXIT;
       return;
    }
@@ -433,7 +433,7 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
       if (sconf_get_schedd_job_info() == SCHEDD_JOB_INFO_JOB_LIST) {
          if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
                                       job_number)) {
-            DPRINTF(("Job "u32" not in scheddconf.schedd_job_info_list\n", job_number));
+            DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
             return;
          }
       }
@@ -453,13 +453,13 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
       lAppendElem(jobs_ulng, jid_ulng);
 
       if (log_schedd_info) {
-         sprintf(msg_log, "Job "u32" %s", job_number, msg);
+         sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
          SCHED_MON((log_string, msg_log));
       }
    } else {
       if (log_schedd_info) {
          if (job_number)
-            sprintf(msg_log, "Job "u32" %s", job_number, msg);
+            sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
          else
              sprintf(msg_log, "Your job %s", msg);
          SCHED_MON((log_string, msg_log));
@@ -516,7 +516,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
    nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
    if (nchars == -1) {
       ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
-         u32c(message_number)));
+         sge_u32c(message_number)));
       DEXIT;
       return;
    }
@@ -528,7 +528,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
       if (sconf_get_schedd_job_info() == SCHEDD_JOB_INFO_JOB_LIST) {
          if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
                                       job_number)) {
-            DPRINTF(("Job "u32" not in scheddconf.schedd_job_info_list\n", job_number));
+            DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
             return;
          }
       }
@@ -555,13 +555,13 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
       lAppendElem(jobs_ulng, jid_ulng);
 
       if (log_schedd_info) {
-         sprintf(msg_log, "Job "u32" %s", job_number, msg);
+         sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
          SCHED_MON((log_string, msg_log));
       }
    } else {
       if (log_schedd_info) {
          if (job_number)
-            sprintf(msg_log, "Job "u32" %s", job_number, msg);
+            sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
          else
              sprintf(msg_log, "Your job %s", msg);
          SCHED_MON((log_string, msg_log));
@@ -609,7 +609,7 @@ void schedd_mes_add_global(u_long32 message_number, ...)
       nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
       if (nchars == -1) {
          ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
-            u32c(message_number)));
+            sge_u32c(message_number)));
          DEXIT;
          return;
       }

@@ -38,10 +38,6 @@
 #include <errno.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_time.h"
@@ -165,7 +161,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                                            is_ambiguous);
                if (old_value != new_value) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                  DPRINTF(("Changed "SFQ" from "u32" to "u32"\n",
+                  DPRINTF(("Changed "SFQ" from "sge_u32" to "sge_u32"\n",
                            lNm2Str(attribute_name), old_value, new_value));
 #endif
                   lSetUlong(this_elem, attribute_name, new_value);
@@ -521,7 +517,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                                             matching_group, is_ambiguous);
                   if (old_value != new_value) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                     DPRINTF(("Changed "SFQ" from "u32" to "u32"\n",
+                     DPRINTF(("Changed "SFQ" from "sge_u32" to "sge_u32"\n",
                               lNm2Str(attribute_name),
                               old_value, new_value));
 #endif

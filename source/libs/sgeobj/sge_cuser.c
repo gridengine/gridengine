@@ -32,10 +32,6 @@
 
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_log.h"

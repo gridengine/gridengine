@@ -34,10 +34,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_all_listsL.h"
 #include "cull.h"
 #include "sge.h"
@@ -216,7 +212,7 @@ int id
          host, commproc, id, client_version, feature_get_product_name(FS_VERSION, &ds)));
    else
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSIUS,
-         host, commproc, id, u32c(version), feature_get_product_name(FS_VERSION, &ds)));
+         host, commproc, id, sge_u32c(version), feature_get_product_name(FS_VERSION, &ds)));
    answer_list_add(alpp, SGE_EVENT, STATUS_EVERSION, ANSWER_QUALITY_ERROR);
 
    DEXIT;

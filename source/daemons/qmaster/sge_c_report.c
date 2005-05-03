@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_c_report.h"
 
 #include <string.h>
@@ -140,7 +136,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
       /* this must be an old report, log and then ignore it */
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       INFO((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
-               u32c(this_seqno), u32c(last_seqno), rhost));
+               sge_u32c(this_seqno), sge_u32c(last_seqno), rhost));
       DEXIT;
       return;
    }
@@ -267,7 +263,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
    if (processors != old_processors) {
       lList *answer_list = NULL;
 
-      DPRINTF(("%s has " u32 " processors\n",
+      DPRINTF(("%s has " sge_u32 " processors\n",
          lGetHost(hep, EH_name), processors));
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(hep, EH_name), NULL, NULL,

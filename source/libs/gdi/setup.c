@@ -35,10 +35,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_bootstrap.h"
 #include "sge_prog.h"
 #include "sge_gdiP.h"
@@ -187,7 +183,7 @@ lList **alpp
             compression_level = Z_DEFAULT_COMPRESSION;
          }
       }
-      DPRINTF((MSG_GDI_SETCOMPRESSIONLEVEL_D , u32c (compression_level)));
+      DPRINTF((MSG_GDI_SETCOMPRESSIONLEVEL_D , sge_u32c (compression_level)));
       
       cl = getenv("SGE_COMPRESSION_THRESHOLD");
       if(cl) {
@@ -199,7 +195,7 @@ lList **alpp
       }
       else
          compression_threshold = 10 * 1024;
-      DPRINTF((MSG_GDI_SETCOMPRESSIONTHRESHOLD_D , u32c(compression_threshold)));
+      DPRINTF((MSG_GDI_SETCOMPRESSIONTHRESHOLD_D , sge_u32c(compression_threshold)));
    }
 #endif
 

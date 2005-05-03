@@ -160,7 +160,7 @@ print_field(dstring *out, const item_t *item, const format_t *format)
 
    switch(item->type) {
       case ULONG_T:
-         sge_dstring_sprintf_append(out, U32CFormat, *(u_long32 *)item->val);
+         sge_dstring_sprintf_append(out, sge_U32CFormat, *(u_long32 *)item->val);
          break;
       case DATE_T:
          {
@@ -178,7 +178,7 @@ print_field(dstring *out, const item_t *item, const format_t *format)
                }
                sge_dstring_sprintf_append(out, format->str_format, tc);
             } else {
-               sge_dstring_sprintf_append(out, U32CFormat, t);
+               sge_dstring_sprintf_append(out, sge_U32CFormat, t);
             }
          }
          break;

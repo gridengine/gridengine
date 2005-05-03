@@ -35,10 +35,6 @@
 #include <string.h>
 #include <pthread.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-
 #ifdef WIN32NATIVE
 #  include "win32nativetypes.h"
 #endif /* WIN32NATIVE */

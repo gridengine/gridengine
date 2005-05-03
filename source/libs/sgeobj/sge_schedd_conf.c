@@ -1939,19 +1939,19 @@ void sconf_print_config(void){
 
    /* --- SC_maxujobs */
    uval = sconf_get_maxujobs();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US, u32c( uval), "maxujobs"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US, sge_u32c( uval), "maxujobs"));
 
    /* --- SC_queue_sort_method (was: SC_sort_seq_no) */
    uval = sconf_get_queue_sort_method();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "queue_sort_method"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "queue_sort_method"));
 
    /* --- SC_flush_submit_sec */
    uval = sconf_get_flush_submit_sec();
-   INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  u32c (uval) , "flush_submit_sec"));
+   INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval) , "flush_submit_sec"));
 
    /* --- SC_flush_finish_sec */
    uval = sconf_get_flush_finish_sec();
-   INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  u32c (uval) , "flush_finish_sec"));
+   INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval) , "flush_finish_sec"));
 
    /* --- SC_job_load_adjustments */
    lval = sconf_get_job_load_adjustments();
@@ -1978,7 +1978,7 @@ void sconf_print_config(void){
 
    /* --- SC_halftime */
    uval = sconf_get_halftime();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  u32c (uval), "halftime"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  sge_u32c (uval), "halftime"));
 
    /* --- SC_usage_weight_list */
    uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0);
@@ -2006,31 +2006,31 @@ void sconf_print_config(void){
 
    /* --- SC_weight_tickets_functional */
    uval = sconf_get_weight_tickets_functional();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_functional"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "weight_tickets_functional"));
 
    /* --- SC_weight_tickets_share */
    uval = sconf_get_weight_tickets_share();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "weight_tickets_share"));
 
    /* --- SC_share_override_tickets */
    uval = sconf_get_share_override_tickets();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "share_override_tickets"));
    
    /* --- SC_share_functional_shares */
    uval = sconf_get_share_functional_shares();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "share_functional_shares"));
 
    /* --- SC_max_functional_jobs_to_schedule */
    uval = sconf_get_max_functional_jobs_to_schedule();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_functional_jobs_to_schedule"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "max_functional_jobs_to_schedule"));
    
    /* --- SC_report_job_tickets */
    uval = sconf_get_report_pjob_tickets();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "report_pjob_tickets"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "report_pjob_tickets"));
    
    /* --- SC_max_pending_tasks_per_job */
    uval = sconf_get_max_pending_tasks_per_job();
-   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  sge_u32c (uval), "max_pending_tasks_per_job"));
 
    /* --- SC_halflife_decay_list_str */
    s = sconf_get_halflife_decay_list_str();

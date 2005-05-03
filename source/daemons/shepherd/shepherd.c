@@ -1116,44 +1116,44 @@ int ckpt_type
 
       /* the wait status is returned by japi_wait()
          see sge_reportL.h for bitmask and makro definition */
-      fprintf(fp, "wait_status="u32"\n", wait_status);
+      fprintf(fp, "wait_status="sge_u32"\n", wait_status);
 
       fprintf(fp, "exit_status=%d\n", exit_status);
       fprintf(fp, "signal=%d\n", child_signal);
 
       fprintf(fp, "start_time=%d\n", (int) start_time);
       fprintf(fp, "end_time=%d\n", (int) end_time);
-      fprintf(fp, "ru_wallclock="u32"\n", (u_long32) end_time-start_time);
+      fprintf(fp, "ru_wallclock="sge_u32"\n", (u_long32) end_time-start_time);
 
 #if defined(NEC_ACCOUNTING_ENTRIES)
       /* Additional accounting information for NEC SX-4 SX-5 */
 #if defined(NECSX4) || defined(NECSX5)
 #if defined(NECSX4)
-      fprintf(fp, "necsx_necsx4="u32"\n", 1);
+      fprintf(fp, "necsx_necsx4="sge_u32"\n", 1);
 #elif defined(NECSX5)
-      fprintf(fp, "necsx_necsx5="u32"\n", 1);
+      fprintf(fp, "necsx_necsx5="sge_u32"\n", 1);
 #endif
-      fprintf(fp, "necsx_base_prty="u32"\n", 0);
-      fprintf(fp, "necsx_time_slice="u32"\n", 0);
-      fprintf(fp, "necsx_num_procs="u32"\n", 0);
-      fprintf(fp, "necsx_kcore_min="u32"\n", 0);
-      fprintf(fp, "necsx_mean_size="u32"\n", 0);
-      fprintf(fp, "necsx_maxmem_size="u32"\n", 0);
-      fprintf(fp, "necsx_chars_trnsfd="u32"\n", 0);
-      fprintf(fp, "necsx_blocks_rw="u32"\n", 0);
-      fprintf(fp, "necsx_inst="u32"\n", 0);
-      fprintf(fp, "necsx_vector_inst="u32"\n", 0);
-      fprintf(fp, "necsx_vector_elmt="u32"\n", 0);
-      fprintf(fp, "necsx_vec_exe="u32"\n", 0);
-      fprintf(fp, "necsx_flops="u32"\n", 0);
-      fprintf(fp, "necsx_conc_flops="u32"\n", 0);
-      fprintf(fp, "necsx_fpec="u32"\n", 0);
-      fprintf(fp, "necsx_cmcc="u32"\n", 0);
-      fprintf(fp, "necsx_bccc="u32"\n", 0);
-      fprintf(fp, "necsx_mt_open="u32"\n", 0);
-      fprintf(fp, "necsx_io_blocks="u32"\n", 0);
-      fprintf(fp, "necsx_multi_single="u32"\n", 0);
-      fprintf(fp, "necsx_max_nproc="u32"\n", 0);
+      fprintf(fp, "necsx_base_prty="sge_u32"\n", 0);
+      fprintf(fp, "necsx_time_slice="sge_u32"\n", 0);
+      fprintf(fp, "necsx_num_procs="sge_u32"\n", 0);
+      fprintf(fp, "necsx_kcore_min="sge_u32"\n", 0);
+      fprintf(fp, "necsx_mean_size="sge_u32"\n", 0);
+      fprintf(fp, "necsx_maxmem_size="sge_u32"\n", 0);
+      fprintf(fp, "necsx_chars_trnsfd="sge_u32"\n", 0);
+      fprintf(fp, "necsx_blocks_rw="sge_u32"\n", 0);
+      fprintf(fp, "necsx_inst="sge_u32"\n", 0);
+      fprintf(fp, "necsx_vector_inst="sge_u32"\n", 0);
+      fprintf(fp, "necsx_vector_elmt="sge_u32"\n", 0);
+      fprintf(fp, "necsx_vec_exe="sge_u32"\n", 0);
+      fprintf(fp, "necsx_flops="sge_u32"\n", 0);
+      fprintf(fp, "necsx_conc_flops="sge_u32"\n", 0);
+      fprintf(fp, "necsx_fpec="sge_u32"\n", 0);
+      fprintf(fp, "necsx_cmcc="sge_u32"\n", 0);
+      fprintf(fp, "necsx_bccc="sge_u32"\n", 0);
+      fprintf(fp, "necsx_mt_open="sge_u32"\n", 0);
+      fprintf(fp, "necsx_io_blocks="sge_u32"\n", 0);
+      fprintf(fp, "necsx_multi_single="sge_u32"\n", 0);
+      fprintf(fp, "necsx_max_nproc="sge_u32"\n", 0);
 #endif
 #endif       
 
@@ -2487,7 +2487,7 @@ static int notify_tasker(u_long32 exit_status)
       char *job_owner;
       struct passwd *pw=NULL;
 
-      fprintf(fp, "%s "u32"\n", pvm_task_id, exit_status); 
+      fprintf(fp, "%s "sge_u32"\n", pvm_task_id, exit_status); 
       fclose(fp);
 
       /* sig_info_file has to be removed by tasker 

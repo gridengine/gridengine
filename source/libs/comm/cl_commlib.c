@@ -2402,7 +2402,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
                snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                         elem->connection->remote->comp_host,
                         elem->connection->remote->comp_name,
-                        u32c(elem->connection->remote->comp_id));
+                        sge_u32c(elem->connection->remote->comp_id));
                cl_commlib_push_application_error(return_value,tmp_string);
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
@@ -2433,7 +2433,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
                snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                         elem->connection->remote->comp_host,
                         elem->connection->remote->comp_name,
-                        u32c(elem->connection->remote->comp_id));
+                        sge_u32c(elem->connection->remote->comp_id));
                cl_commlib_push_application_error(return_value, tmp_string);
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
@@ -6402,7 +6402,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                         snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                                  elem->connection->remote->comp_host,
                                  elem->connection->remote->comp_name,
-                                 u32c(elem->connection->remote->comp_id));
+                                 sge_u32c(elem->connection->remote->comp_id));
                         cl_commlib_push_application_error(return_value, tmp_string);
                      }
                      if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
@@ -6719,7 +6719,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                               snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                                        elem->connection->remote->comp_host,
                                        elem->connection->remote->comp_name,
-                                       u32c(elem->connection->remote->comp_id));
+                                       sge_u32c(elem->connection->remote->comp_id));
                               cl_commlib_push_application_error(return_value, tmp_string);
                            }
                            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
@@ -6819,7 +6819,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
       if (strlen(resolved_host) >= CL_MAXHOSTLEN ) {
          char tmp_buffer[1024];
          snprintf(tmp_buffer, 1024, MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU,
-                  resolved_host, u32c(CL_MAXHOSTLEN));
+                  resolved_host, sge_u32c(CL_MAXHOSTLEN));
          cl_commlib_push_application_error(CL_RETVAL_HOSTNAME_LENGTH_ERROR, tmp_buffer);
          free(resolved_host);
          return CL_RETVAL_HOSTNAME_LENGTH_ERROR;

@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sgermon.h"
 #include "sge_parse_num_par.h"
 #include "dispatcher.h"
@@ -74,11 +70,11 @@ int answer_error;
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if (lGetUlong(jep, JB_checkpoint_attr) & CHECKPOINT_AT_SHUTDOWN) {
-               WARNING((SGE_EVENT, MSG_JOB_INITCKPTSHUTDOWN_U, u32c(lGetUlong(jep, JB_job_number))));
+               WARNING((SGE_EVENT, MSG_JOB_INITCKPTSHUTDOWN_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                sge_signal = SGE_MIGRATE;
             }
             else {
-               WARNING((SGE_EVENT, MSG_JOB_KILLSHUTDOWN_U, u32c(lGetUlong(jep, JB_job_number))));
+               WARNING((SGE_EVENT, MSG_JOB_KILLSHUTDOWN_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                sge_signal = SGE_SIGKILL;
             }
             sge_execd_deliver_signal(sge_signal, jep, jatep);

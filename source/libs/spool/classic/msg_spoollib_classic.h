@@ -76,8 +76,8 @@
 #define MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S       _MESSAGE(61034, _("removed script of bad jobfile "SFQ"\n"))
 #define MSG_CONFIG_READINGINX_S                       _MESSAGE(61035, _("Reading in "SFN".\n"))
 #define MSG_CONFIG_NODIRECTORY_S                      _MESSAGE(61036, _(SFQ" is no directory - skipping the entry\n"))
-#define MSG_CONFIG_CANTFINDSCRIPTFILE_U               _MESSAGE(61037, _("can't find script file for job " U32CFormat " - deleting\n"))
-#define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U _MESSAGE(61038, _("job file \""U32CFormat"\" has wrong file name - deleting\n"))
+#define MSG_CONFIG_CANTFINDSCRIPTFILE_U               _MESSAGE(61037, _("can't find script file for job " sge_U32CFormat " - deleting\n"))
+#define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U _MESSAGE(61038, _("job file \""sge_U32CFormat"\" has wrong file name - deleting\n"))
 
 /*
  * libs/spool/sge_spooling_classic.c
@@ -130,7 +130,7 @@
 #define MSG_PROJECT_FOUNDPROJECTXTWICE_S    _MESSAGE(61131, _("found project "SFN" twice"))
 #define MSG_PROJECT_INVALIDPROJECTX_S    _MESSAGE(61132, _("invalid project "SFN))
 #define MSG_JOB_FOUNDJOBWITHWRONGKEY_S    _MESSAGE(61133, _("found job with wrong key "SFQ""))
-#define MSG_JOB_FOUNDJOBXTWICE_U    _MESSAGE(61134, _("found job "U32CFormat" twice"))
+#define MSG_JOB_FOUNDJOBXTWICE_U    _MESSAGE(61134, _("found job "sge_U32CFormat" twice"))
 
 /*
  * read_write_userset.c

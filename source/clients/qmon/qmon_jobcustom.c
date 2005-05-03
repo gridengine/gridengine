@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/ToggleB.h>
@@ -525,7 +521,7 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, pred) {
-      sprintf(buf, "%s "u32, buf, lGetUlong(jep, JRE_job_number));
+      sprintf(buf, "%s "sge_u32, buf, lGetUlong(jep, JRE_job_number));
    }
    str = XtNewString(buf);
 
@@ -942,7 +938,7 @@ int nm
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
    if (jat) {
-      sprintf(buf, u32, lGetUlong(jat, JAT_task_number));
+      sprintf(buf, sge_u32, lGetUlong(jat, JAT_task_number));
    }
    else if (eleml) {
       buf[0] = '\0';
@@ -967,7 +963,7 @@ int nm
 
    DENTER(GUI_LAYER, "PrintJobId");
 
-   sprintf(buf, u32, lGetUlong(ep, JB_job_number));
+   sprintf(buf, sge_u32, lGetUlong(ep, JB_job_number));
 
    str = XtNewString(buf);
 
@@ -990,13 +986,13 @@ int nm
    /*
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
-   sge_dstring_sprintf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
+   sge_dstring_sprintf(&dyn_buf, sge_u32, lGetUlong(ep, JB_job_number));
    if (job_is_array(ep)) {
       dstring dyn_buf2 = DSTRING_INIT;
       const char* tmp_string = NULL;
 
       if (jat) {
-         sge_dstring_sprintf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
+         sge_dstring_sprintf(&dyn_buf2, sge_u32, lGetUlong(jat, JAT_task_number)); 
       } else if (eleml) {
          lListElem *first_elem = lFirst(eleml);
 

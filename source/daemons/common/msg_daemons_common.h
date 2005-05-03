@@ -67,7 +67,7 @@
 #define MSG_LIST_ERRORFORMATINGSHELLLIST       _MESSAGE(27016, _("Error formatting shell_list\n"))
 #define MSG_LIST_ERRORFORMATINGENVIRONMENTLISTASV       _MESSAGE(27017, _("Error formatting environment list as -v\n"))
 #define MSG_LIST_ERRORFORMATINGJOBARGUMENTS       _MESSAGE(27018, _("Error formatting job argumentents\n"))
-#define MSG_JOB_INVALIDVALUEFORCHECKPOINTATTRIBINJOB_U       _MESSAGE(27019, _("ERROR! invalid value for checkpoint attribute in job "U32CFormat"\n"))
+#define MSG_JOB_INVALIDVALUEFORCHECKPOINTATTRIBINJOB_U       _MESSAGE(27019, _("ERROR! invalid value for checkpoint attribute in job "sge_U32CFormat"\n"))
 #define MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL       _MESSAGE(27020, _("Error formatting hard_resource_list as -l\n"))
 #define MSG_JOB_JOBHASPEWITHNORANGES       _MESSAGE(27021, _("Job has parallel environment with no ranges\n"))
 #define MSG_LIST_ERRORFORMATINGRANGESINPE       _MESSAGE(27022, _("Error formatting ranges in -pe\n"))
@@ -121,15 +121,15 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-#define MSG_MAIL_SUBJECT_SUU       SFN": Job-array task "U32CFormat"."U32CFormat" failed"
-#define MSG_MAIL_SUBJECT_SU        SFN": Job " U32CFormat " failed"
+#define MSG_MAIL_SUBJECT_SUU       SFN": Job-array task "sge_U32CFormat"."sge_U32CFormat" failed"
+#define MSG_MAIL_SUBJECT_SU        SFN": Job " sge_U32CFormat " failed"
 
 
-#define MSG_MAIL_BODY_USSSSSSSS    "Job " U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
+#define MSG_MAIL_BODY_USSSSSSSS    "Job " sge_U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
 #define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue "SFQ" set to ERROR"))
 #define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host "SFQ" set to ERROR"))
-#define MSG_GFSTATE_JOB_UU         _MESSAGE(27057, _("Job-array task "U32CFormat"."U32CFormat" set to ERROR"))
-#define MSG_GFSTATE_JOB_U          _MESSAGE(27058, _("Job "U32CFormat" set to ERROR"))
+#define MSG_GFSTATE_JOB_UU         _MESSAGE(27057, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" set to ERROR"))
+#define MSG_GFSTATE_JOB_U          _MESSAGE(27058, _("Job "sge_U32CFormat" set to ERROR"))
 
 /*
 ** config_file.c
@@ -142,7 +142,7 @@
 /* 
  * sge_category.c
  */ 
-#define MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U  _MESSAGE(27063, _("failed building category string for job "U32CFormat"\n"))
+#define MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U  _MESSAGE(27063, _("failed building category string for job "sge_U32CFormat"\n"))
 
 /*
  * Additional messages
@@ -150,14 +150,14 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-/* #define MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS       _MESSAGE(27064, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") Suspended")) */
-#define MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS       "Job-array task "U32CFormat"."U32CFormat" ("SFN") Suspended"
-/* #define MSG_MAIL_SUBJECT_JOB_SUSP_US            _MESSAGE(27065, _("Job "U32CFormat" ("SFN") Suspended")) */
-#define MSG_MAIL_SUBJECT_JOB_SUSP_US            "Job "U32CFormat" ("SFN") Suspended"
-/* #define MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS       _MESSAGE(27066, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") Continued")) */
-#define MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS       "Job-array task "U32CFormat"."U32CFormat" ("SFN") Continued"
-/* #define MSG_MAIL_SUBJECT_JOB_CONT_US            _MESSAGE(27067, _("Job "U32CFormat" ("SFN") Continued")) */
-#define MSG_MAIL_SUBJECT_JOB_CONT_US            "Job "U32CFormat" ("SFN") Continued"
+/* #define MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS       _MESSAGE(27064, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Suspended")) */
+#define MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS       "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Suspended"
+/* #define MSG_MAIL_SUBJECT_JOB_SUSP_US            _MESSAGE(27065, _("Job "sge_U32CFormat" ("SFN") Suspended")) */
+#define MSG_MAIL_SUBJECT_JOB_SUSP_US            "Job "sge_U32CFormat" ("SFN") Suspended"
+/* #define MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS       _MESSAGE(27066, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Continued")) */
+#define MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS       "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Continued"
+/* #define MSG_MAIL_SUBJECT_JOB_CONT_US            _MESSAGE(27067, _("Job "sge_U32CFormat" ("SFN") Continued")) */
+#define MSG_MAIL_SUBJECT_JOB_CONT_US            "Job "sge_U32CFormat" ("SFN") Continued"
 
 
 
@@ -172,10 +172,10 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-/* #define MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS       _MESSAGE(27074, _("Job-array task "U32CFormat"."U32CFormat" ("SFN") Complete")) */
-#define MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS       "Job-array task "U32CFormat"."U32CFormat" ("SFN") Complete"
-/* #define MSG_MAIL_SUBJECT_JOB_COMP_US            _MESSAGE(27075, _("Job "U32CFormat" ("SFN") Complete")) */
-#define MSG_MAIL_SUBJECT_JOB_COMP_US            "Job "U32CFormat" ("SFN") Complete"
+/* #define MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS       _MESSAGE(27074, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Complete")) */
+#define MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS       "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Complete"
+/* #define MSG_MAIL_SUBJECT_JOB_COMP_US            _MESSAGE(27075, _("Job "sge_U32CFormat" ("SFN") Complete")) */
+#define MSG_MAIL_SUBJECT_JOB_COMP_US            "Job "sge_U32CFormat" ("SFN") Complete"
 
 
 
@@ -190,8 +190,8 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-#define MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS     "Job-array task "U32CFormat"."U32CFormat" ("SFN") "SFN
-#define MSG_MAIL_SUBJECT_JOB_STATE_USS          "Job "U32CFormat" ("SFN") "SFN
+#define MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS     "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") "SFN
+#define MSG_MAIL_SUBJECT_JOB_STATE_USS          "Job "sge_U32CFormat" ("SFN") "SFN
 
 #define MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS       _MESSAGE(27087, _(SFN"\n Exit Status      = "SFN"\n Signal           = "SFN"\n User             = "SFN"\n Queue            = "SFN"\n Host             = "SFN"\n Start Time       = "SFN"\n End Time         = "SFN"\n CPU              = "SFN"\n Max vmem         = "SFN"\nfailed "SFN" because:\n"SFN SFN))
 #define MSG_MAIL_TYPE_STATE                     _MESSAGE(27088, _("job abortion/end"))

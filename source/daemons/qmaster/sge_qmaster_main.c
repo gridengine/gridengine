@@ -37,10 +37,6 @@
 #include <fcntl.h>
 #include <sys/resource.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "basis_types.h"
 #include "sge_qmaster_main.h"
 #include "sgermon.h"
@@ -475,8 +471,8 @@ int main(int argc, char* argv[])
    sge_setup_qmaster(argv);
 
    if (file_descriptor_settings_result == 1) {
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, u32c(FD_SETSIZE)));
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, u32c(FD_SETSIZE - 20)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, sge_u32c(FD_SETSIZE)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, sge_u32c(FD_SETSIZE - 20)));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE2));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE3));
    }

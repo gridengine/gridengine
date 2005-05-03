@@ -40,10 +40,6 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi.h"
@@ -1211,7 +1207,7 @@ char *argv[]
          
          if (unspecified != NULL) {
             fprintf(stderr, MSG_STREE_NOVALIDNODEREF_U,
-                    u32c(lGetUlong(unspecified, STN_id)));
+                    sge_u32c(lGetUlong(unspecified, STN_id)));
 
             lFreeElem(ep);
             spp++;
@@ -1875,7 +1871,7 @@ char *argv[]
             case 'e':
                break;
             default:
-               ERROR((SGE_EVENT, MSG_ANSWER_XISNOTAVALIDOPTIONY_SU, *spp, u32c(uti_state_get_mewho())));
+               ERROR((SGE_EVENT, MSG_ANSWER_XISNOTAVALIDOPTIONY_SU, *spp, sge_u32c(uti_state_get_mewho())));
                sge_usage(stderr);
                SGE_EXIT(1);
          }
@@ -3235,7 +3231,7 @@ char *argv[]
          
          if (unspecified != NULL) {
             fprintf(stderr, MSG_STREE_NOVALIDNODEREF_U,
-                    u32c(lGetUlong(unspecified, STN_id)));
+                    sge_u32c(lGetUlong(unspecified, STN_id)));
 
             lFreeElem(ep);
             spp++;
@@ -6014,7 +6010,7 @@ static int show_processors()
          arch_elem = lGetSubStr(ep, HL_name, "arch", EH_load_list);
 
          printf("%-25.24s", ((cp = lGetHost(ep, EH_name)) ? cp : ""));
-         printf("%10"fu32, lGetUlong(ep, EH_processors));
+         printf("%10"sge_fu32, lGetUlong(ep, EH_processors));
          if (arch_elem) {
             printf("%12.11s", lGetString(arch_elem, HL_value));
          }
@@ -6022,8 +6018,8 @@ static int show_processors()
          sum += lGetUlong(ep, EH_processors);
       }
       printf("===============================================\n");
-/*      printf("%35"fu32"\r%-25.24s\n",sum, MSG_TABLE_SUM_F); */
-      printf("%-25.24s%10"fu32"\n",MSG_TABLE_SUM_F,sum);
+/*      printf("%35"sge_fu32"\r%-25.24s\n",sum, MSG_TABLE_SUM_F); */
+      printf("%-25.24s%10"sge_fu32"\n",MSG_TABLE_SUM_F,sum);
    }
    else
       fprintf(stderr,  MSG_QCONF_NOEXECUTIONHOSTSDEFINED );

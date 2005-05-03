@@ -33,10 +33,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Dialogs.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_gdi.h"
 #include "sge_str.h"
 #include "sge_centry.h"

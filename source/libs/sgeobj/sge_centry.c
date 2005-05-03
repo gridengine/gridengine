@@ -33,10 +33,6 @@
 #include <string.h>
 #include <float.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge.h"
 #include "sge_string.h"
 #include "sgermon.h"
@@ -242,7 +238,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          break;
 
       default:
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type)));
          DEXIT;
          return -1;
    }
@@ -967,7 +963,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
 
       default : /* error unknown type */
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
-                                    MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                                    MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
                   ret = false;
          break;
    } 
@@ -1045,7 +1041,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                break;
             default:
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
-                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
                ret = false;
          }
       }
@@ -1071,7 +1067,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
 
             default:
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
-                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
                ret = false;
          }
       }
@@ -1201,7 +1197,7 @@ centry_urgency_contribution(int slots, const char *name, double value,
       break;
 
    default:
-      ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(complex_type)));
+      ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(complex_type)));
       contribution = 0;
       break;
    }

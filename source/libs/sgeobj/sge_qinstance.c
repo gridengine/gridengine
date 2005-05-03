@@ -33,10 +33,6 @@
 #include <fnmatch.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -807,7 +803,7 @@ qinstance_set_conf_slots_used(lListElem *this_elem)
       dstring buffer = DSTRING_INIT;
       u_long32 slots_value = lGetUlong(this_elem, QU_job_slots);
 
-      sge_dstring_sprintf(&buffer, u32, slots_value);
+      sge_dstring_sprintf(&buffer, sge_u32, slots_value);
       lSetDouble(slots, CE_doubleval, slots_value);
       lSetString(slots, CE_stringval, sge_dstring_get_string(&buffer));
       sge_dstring_free(&buffer);

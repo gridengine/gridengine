@@ -38,10 +38,6 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif       
-
 #include "cull.h"
 #include "commlib.h"
 #include "commd_message_flags.h"
@@ -145,7 +141,7 @@ const char *s;
       return NULL;
    }
 
-   if(sscanf(s, u32, &jobid) != 1) {
+   if(sscanf(s, sge_u32, &jobid) != 1) {
       sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, "JOB_ID");
       DEXIT;
       return NULL;
@@ -155,7 +151,7 @@ const char *s;
       if(strcmp(s, "undefined") == 0) {
          jataskid = 1;
       } else {
-         if(sscanf(s, u32, &jataskid) != 1) {
+         if(sscanf(s, sge_u32, &jataskid) != 1) {
             sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, env_var_name);
             DEXIT;
             return NULL;

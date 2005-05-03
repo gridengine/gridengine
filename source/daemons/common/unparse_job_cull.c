@@ -31,10 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-
 #include "symbols.h"
 #include "sge_options.h"
 #include "sge_ja_task.h"
@@ -237,7 +233,7 @@ int flags
    ** -js
    */
    if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
-      sprintf(str, u32, ul);
+      sprintf(str, sge_u32, ul);
       ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
       lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
    }
@@ -669,14 +665,14 @@ lList **alpp
       }
       else {
          sprintf(str, MSG_JOB_INVALIDVALUEFORCHECKPOINTATTRIBINJOB_U, 
-            u32c(lGetUlong(job, JB_job_number)));
+            sge_u32c(lGetUlong(job, JB_job_number)));
          answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return -1;
       }
    }
    
    if ((ul = lGetUlong(job, JB_checkpoint_interval))) {
-      sprintf(str, uu32, ul);
+      sprintf(str, sge_uu32, ul);
       ep_opt = sge_add_arg(pcmdline, c_OPT, lLongT, "-c", str);
       lSetLong(ep_opt, SPA_argval_lLongT, (long) ul);
    }
@@ -722,7 +718,7 @@ lList **alpp
    
    if ((cp = lGetUlong(job, nm))) {
       char number[50];
-      snprintf(number, 49, u32, cp);
+      snprintf(number, 49, sge_u32, cp);
       ep_opt = sge_add_arg(pcmdline, 0, lUlongT, option, number);
       lSetUlong(ep_opt, SPA_argval_lUlongT, cp);
    }

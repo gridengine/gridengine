@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -547,7 +543,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
             result = sge_dstring_sprintf_append(buffer, "%lf", lGetPosDouble(object, pos));
             break;
          case lUlongT:
-            result = sge_dstring_sprintf_append(buffer, U32CFormat, lGetPosUlong(object, pos));
+            result = sge_dstring_sprintf_append(buffer, sge_U32CFormat, lGetPosUlong(object, pos));
             break;
          case lLongT:
             result = sge_dstring_sprintf_append(buffer, "%ld", lGetPosLong(object, pos));

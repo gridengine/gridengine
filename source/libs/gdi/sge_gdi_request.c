@@ -35,10 +35,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #ifndef WIN32NATIVE
 #	include <unistd.h>
 #endif
@@ -415,7 +411,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
-                             u32c(gid)));
+                             sge_u32c(gid)));
       goto error; 
    }
 
@@ -528,7 +524,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
    }
    *alpp = lFreeList (*alpp);
   
-   DPRINTF(("send request with id "U32CFormat"\n", u32c(gdi_request_mid)));
+   DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (commlib_error != CL_RETVAL_OK) {
       if (( commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          /* gdi error */
@@ -538,7 +534,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
              commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER],
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(false)));
          }
          /* For unusual errors, give more detail */
@@ -546,7 +542,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                    MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER],
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(false),
                                    cl_get_error_text(commlib_error)));
          }
@@ -655,7 +651,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false)));
             }
             /* For unusual errors, give more detail */
@@ -663,7 +659,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false),
                                       cl_get_error_text(commlib_error)));
             }
@@ -788,7 +784,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false)));
             }
             /* For unusual errors, give more detail */
@@ -796,7 +792,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false),
                                       cl_get_error_text(commlib_error)));
             }
@@ -984,7 +980,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    *commlib_error = ret;
 
 
-   DPRINTF(("send request with id "U32CFormat"\n", u32c(gdi_request_mid)));
+   DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (ret != CL_RETVAL_OK) {
       if (( *commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          DEXIT;
@@ -1315,7 +1311,7 @@ DTRACE;
          DPRINTF(("unpacking copy request\n"));
          break;
       default:
-         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, u32c(ar->op)));
+         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, sge_u32c(ar->op)));
          goto error;
       }
 
@@ -1395,7 +1391,7 @@ int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar)
          DPRINTF(("request denied\n"));
          break;
       default:
-         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D , u32c(ar->op)));
+         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D , sge_u32c(ar->op)));
          DEXIT;
          return PACK_FORMAT;
       }

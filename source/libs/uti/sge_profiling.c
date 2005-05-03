@@ -1427,19 +1427,19 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
 
 /****** uti/profiling/prof_info_init() ******************************
 *  NAME
-*     prof_info_init() -- initialize the sge_sge_prof_info_t struc array with default values 
+*     prof_info_init() -- initialize the sge_prof_info_t struc array with default values 
 *
 *  SYNOPSIS
 *     static void prof_info_init(prof_level level) 
 *
 *  FUNCTION
-*     initialize the sge_sge_prof_info_t struct array with default values
+*     initialize the sge_prof_info_t struct array with default values
 *
 *  INPUTS
 *     prof_level level 
 *
 *  RESULT
-*     initialized sge_sge_prof_info_t array for the given profiling level
+*     initialized sge_prof_info_t array for the given profiling level
 *
 *  EXAMPLE
 *
@@ -1470,20 +1470,20 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
 
 /****** uti/profiling/prof_info_level_init() ******************************
 *  NAME
-*     prof_info_level_init() -- initialize the sge_sge_prof_info_t struc array with default values 
+*     prof_info_level_init() -- initialize the sge_prof_info_t struc array with default values 
 *
 *  SYNOPSIS
 *     static void prof_info_level_init(prof_level level) 
 *
 *  FUNCTION
-*     initialize the sge_sge_prof_info_t struct array with default values
+*     initialize the sge_prof_info_t struct array with default values
 *
 *  INPUTS
 *     prof_level i
 *     int thread_num
 *
 *  RESULT
-*     initialized sge_sge_prof_info_t array for the given profiling level
+*     initialized sge_prof_info_t array for the given profiling level
 *
 *  EXAMPLE
 *
@@ -1573,13 +1573,13 @@ static void prof_info_level_init(prof_level i, int thread_num)
 
 /****** uti/profiling/init_array() ******************************
 *  NAME
-*     init_array() -- mallocs memory for the sge_sge_prof_info_t array 
+*     init_array() -- mallocs memory for the sge_prof_info_t array 
 *
 *  SYNOPSIS
 *     void init_array(pthread_t num) 
 *
 *  FUNCTION
-*     mallocs memory for sge_sge_prof_info_t array for the number
+*     mallocs memory for sge_prof_info_t array for the number
 *     of MAX_THREAD_NUM threads
 *     mallocs memory for each thread if nedded 
 *

@@ -332,7 +332,7 @@ void te_add_event(te_event_t anEvent)
 
    lInsertSorted(Event_Control.sort_order, le, Event_Control.list);
 
-   DPRINTF(("%s: (t:"u32" w:"u32" m:"u32" s:%s)\n", SGE_FUNC, anEvent->type,
+   DPRINTF(("%s: (t:"sge_u32" w:"sge_u32" m:"sge_u32" s:%s)\n", SGE_FUNC, anEvent->type,
       when, anEvent->mode, anEvent->str_key?anEvent->str_key:MSG_SMALLNULL));
    
    if ((Event_Control.next == 0) || (when < Event_Control.next))
@@ -395,7 +395,7 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
 
    pthread_once(&Timed_Event_Once, timed_event_once_init);
 
-   DPRINTF(("%s: (t:"u32" u1:"u32" u2:"u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey?strKey:MSG_SMALLNULL));
+   DPRINTF(("%s: (t:"sge_u32" u1:"sge_u32" u2:"sge_u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey?strKey:MSG_SMALLNULL));
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
@@ -877,7 +877,7 @@ static void* timed_event_thread(void* anArg)
          {
             int res = 0;
 
-            DPRINTF(("%s: time:"u32" next:"u32" --> will wait\n", SGE_FUNC, now, Event_Control.next));
+            DPRINTF(("%s: time:"sge_u32" next:"sge_u32" --> will wait\n", SGE_FUNC, now, Event_Control.next));
 
             res = pthread_cond_timedwait(&Event_Control.cond_var, &Event_Control.mutex, &ts);
             if (ETIMEDOUT == res) { break; }
@@ -885,7 +885,7 @@ static void* timed_event_thread(void* anArg)
 
          if ((Event_Control.next < te->when) || (Event_Control.delete == true))
          {
-            DPRINTF(("%s: event list changed - next:"u32" --> start over\n", SGE_FUNC, Event_Control.next));
+            DPRINTF(("%s: event list changed - next:"sge_u32" --> start over\n", SGE_FUNC, Event_Control.next));
 
             sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
@@ -1039,7 +1039,7 @@ static void scan_table_and_deliver(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "scan_table_and_deliver");
 
-   DPRINTF(("%s: event (t:"u32" w:"u32" m:"u32" s:%s)\n", EVENT_FRMT(anEvent)));
+   DPRINTF(("%s: event (t:"sge_u32" w:"sge_u32" m:"sge_u32" s:%s)\n", EVENT_FRMT(anEvent)));
 
    sge_mutex_lock("handler_table_mutex", SGE_FUNC, __LINE__, &Handler_Tbl.mutex);
 
@@ -1064,7 +1064,7 @@ static void scan_table_and_deliver(te_event_t anEvent)
    {
       anEvent->when = time(NULL) + anEvent->interval;
 
-      DPRINTF(("%s: reccuring event (t:"u32" w:"u32" m:"u32" s:%s)\n", EVENT_FRMT(anEvent)));
+      DPRINTF(("%s: reccuring event (t:"sge_u32" w:"sge_u32" m:"sge_u32" s:%s)\n", EVENT_FRMT(anEvent)));
 
       te_add_event(anEvent);
    }

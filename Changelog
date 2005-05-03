@@ -1,3 +1,10 @@
+RD-2005-05-03-0: Cleanup:   compile on solaris 10
+                            basic types renamed
+                 Changes:   all
+                 Issue:     1514
+                 Bugtraq:   6264567
+                 Review:    AA
+
 AH-2005-05-02-0: Bugfix:    qrsh shouldn't block SIGTSTP
                  Issue:     1464
                  Review:    NJ

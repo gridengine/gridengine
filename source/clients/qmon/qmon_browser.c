@@ -43,10 +43,6 @@
 #include <Xmt/Chooser.h>
 #include <Xmt/Dialogs.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 

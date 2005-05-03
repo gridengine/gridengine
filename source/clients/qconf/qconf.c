@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_unistd.h"
 #include "sge_all_listsL.h"
 #include "usage.h"

@@ -2118,9 +2118,9 @@ spool_postgres_default_write_func(lList **answer_list,
             fields = spool_database_get_fields(rule, SGE_TYPE_JOB);
             sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
             job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
-            DPRINTF(("write func called for job "U32CFormat"."U32CFormat"%s",
+            DPRINTF(("write func called for job "sge_U32CFormat"."sge_U32CFormat"%s",
                      job_id, ja_task_id, pe_task_id != NULL ? pe_task_id : "<null>"));
-            key = sge_dstring_sprintf(&key_dstring, U32CFormat, job_id);
+            key = sge_dstring_sprintf(&key_dstring, sge_U32CFormat, job_id);
             if (ja_task_id != 0) {
                spooling_field *parent_fields = fields;
 
@@ -2129,7 +2129,7 @@ spool_postgres_default_write_func(lList **answer_list,
                parent_key = strdup(key);
                parent_id  = spool_database_get_id(answer_list, parent_fields,
                                                      NULL, parent_key, false);
-               key = sge_dstring_sprintf(&key_dstring, U32CFormat"|"U32CFormat, job_id, ja_task_id);
+               key = sge_dstring_sprintf(&key_dstring, sge_U32CFormat"|"sge_U32CFormat, job_id, ja_task_id);
                if (pe_task_id != NULL) {
                   const char *grandparent_key = parent_key;
                   parent_fields = fields;
@@ -2562,7 +2562,7 @@ spool_postgres_default_delete_func(lList **answer_list,
             fields = spool_database_get_fields(rule, SGE_TYPE_JOB);
             sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
             job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
-            key = sge_dstring_sprintf(&key_dstring, U32CFormat, job_id);
+            key = sge_dstring_sprintf(&key_dstring, sge_U32CFormat, job_id);
 
             if (ja_task_id != 0) {
                spooling_field *parent_fields = fields;
@@ -2571,7 +2571,7 @@ spool_postgres_default_delete_func(lList **answer_list,
                parent_key = strdup(key);
                parent_id  = spool_database_get_id(answer_list, parent_fields,
                                                      NULL, parent_key, false);
-               key = sge_dstring_sprintf(&key_dstring, U32CFormat"|"U32CFormat, job_id, ja_task_id);
+               key = sge_dstring_sprintf(&key_dstring, sge_U32CFormat"|"sge_U32CFormat, job_id, ja_task_id);
                if (pe_task_id != NULL) {
                   const char *grandparent_key = parent_key;
                   parent_fields = fields;

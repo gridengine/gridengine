@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sge_conf.h"
 #include "gdi_conf.h"
 #include "dispatcher.h"

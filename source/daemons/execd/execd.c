@@ -34,10 +34,6 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi.h"
@@ -264,7 +260,7 @@ char **argv
       
    /* Initialize path for temporary logging until we chdir to spool */
    my_pid = getpid();
-   sprintf(tmp_err_file_name,"%s."U32CFormat"",TMP_ERR_FILE_EXECD,u32c(my_pid));
+   sprintf(tmp_err_file_name,"%s."sge_U32CFormat"",TMP_ERR_FILE_EXECD,sge_u32c(my_pid));
    log_state_set_log_file(tmp_err_file_name);
 
    /* exit func for SGE_EXIT() */
@@ -593,8 +589,8 @@ static void execd_register(void)
                ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                  uti_state_get_qualified_hostname(),
                                  (char*) prognames[uti_state_get_mewho()],
-                                 u32c(handle_local_comp_id), 
-                                 u32c(handle_service_port),
+                                 sge_u32c(handle_local_comp_id), 
+                                 sge_u32c(handle_service_port),
                                  cl_get_error_text(commlib_error)));
             }
          }

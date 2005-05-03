@@ -32,10 +32,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_gdi.h"
 #include "sge_unistd.h"
 #include "symbols.h"
@@ -724,7 +720,7 @@ int *all_users
                   jobid != 0*/) { 
          all_or_jidlist = JOB;
          (*all_jobs) = 0; 
-         DPRINTF(("got job " u32 " from parsing\n", jobid));
+         DPRINTF(("got job " sge_u32 " from parsing\n", jobid));
       } else {
          if (!strcmp(lGetString(ep, ID_str), "all") || (all_or_jidlist == ALL)) {
             answer_list_add(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 

@@ -35,10 +35,6 @@
 #include <float.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "basis_types.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -378,7 +374,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
 
    pe_request = lGetString(best->job, JB_pe);
 
-   DPRINTF(("handling parallel job "u32"."u32"\n", best->job_id, best->ja_task_id)); 
+   DPRINTF(("handling parallel job "sge_u32"."sge_u32"\n", best->job_id, best->ja_task_id)); 
 
    if (best->is_reservation) { /* reservation scheduling */
 
@@ -399,7 +395,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             /* determine earliest start time with that PE */
             result = parallel_reservation_max_time_slots(best);
             if (result != DISPATCH_OK) {
-               DPRINTF(("### first ### reservation in PE \"%s\" at "u32" with %d soft violations\n",
+               DPRINTF(("### first ### reservation in PE \"%s\" at "sge_u32" with %d soft violations\n",
                      lGetString(best->pe, PE_name), best->start, best->soft_violations));
                best_result = find_best_result(best_result, result);
                continue;
@@ -420,7 +416,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             if (tmp.start < best->start || 
                   (tmp.start == best->start && tmp.soft_violations < best->soft_violations)) {
                assignment_copy(best, &tmp, true);
-               DPRINTF(("### better ### reservation in PE \"%s\" at "u32" with %d soft violations\n",
+               DPRINTF(("### better ### reservation in PE \"%s\" at "sge_u32" with %d soft violations\n",
                      lGetString(best->pe, PE_name), best->start, best->soft_violations));
             }
          }
@@ -488,25 +484,25 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
 
    switch (best_result) {
    case DISPATCH_OK:
-      DPRINTF(("SELECT PE("u32"."u32") returns PE %s %d slots at "u32")\n", 
+      DPRINTF(("SELECT PE("sge_u32"."sge_u32") returns PE %s %d slots at "sge_u32")\n", 
             best->job_id, best->ja_task_id, lGetString(best->pe, PE_name), 
             best->slots, best->start));
       break;
    case DISPATCH_NOT_AT_TIME:
-      DPRINTF(("SELECT PE("u32"."u32") returns <later>\n", 
+      DPRINTF(("SELECT PE("sge_u32"."sge_u32") returns <later>\n", 
             best->job_id, best->ja_task_id)); 
       break;
    case DISPATCH_NEVER_CAT:
-      DPRINTF(("SELECT PE("u32"."u32") returns <category_never>\n", 
+      DPRINTF(("SELECT PE("sge_u32"."sge_u32") returns <category_never>\n", 
             best->job_id, best->ja_task_id)); 
       break;
    case DISPATCH_NEVER_JOB:
-      DPRINTF(("SELECT PE("u32"."u32") returns <job_never>\n", 
+      DPRINTF(("SELECT PE("sge_u32"."sge_u32") returns <job_never>\n", 
             best->job_id, best->ja_task_id)); 
       break;
    case DISPATCH_MISSING_ATTR:   
    default:
-      DPRINTF(("!!!!!!!! SELECT PE("u32"."u32") returns unexpected %d\n", 
+      DPRINTF(("!!!!!!!! SELECT PE("sge_u32"."sge_u32") returns unexpected %d\n", 
             best->job_id, best->ja_task_id, best_result));
       break;
    }
@@ -573,7 +569,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
   
    if (!qeti) {
       ERROR((SGE_EVENT, "could not allocate qeti object needed reservation "
-            "scheduling of parallel job "U32CFormat"\n", u32c(best->job_id)));
+            "scheduling of parallel job "sge_U32CFormat"\n", sge_u32c(best->job_id)));
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
@@ -593,7 +589,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
 
    old_logging = schedd_mes_get_logging(); /* store logging mode */  
    for (pe_time = first_time ; pe_time; pe_time = sge_qeti_next(qeti)) {
-      DPRINTF(("SELECT PE TIME(%s, "u32") tries at "u32"\n", 
+      DPRINTF(("SELECT PE TIME(%s, "sge_u32") tries at "sge_u32"\n", 
          lGetString(best->pe, PE_name), best->job_id, pe_time));
       tmp_assignment.start = pe_time;
 
@@ -612,12 +608,12 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
 
       if (result == DISPATCH_OK) {
          if (best->gdil) {
-            DPRINTF(("SELECT PE TIME: earlier assignment at "u32"\n", pe_time));
+            DPRINTF(("SELECT PE TIME: earlier assignment at "sge_u32"\n", pe_time));
          }
          assignment_copy(best, &tmp_assignment, true);
       } 
       else {
-         DPRINTF(("SELECT PE TIME: no earlier assignment at "u32"\n", pe_time));
+         DPRINTF(("SELECT PE TIME: no earlier assignment at "sge_u32"\n", pe_time));
          break;
       }
    }
@@ -631,7 +627,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
   
    switch (result) {
    case DISPATCH_OK:
-      DPRINTF(("SELECT PE TIME(%s, %d) returns "u32"\n", 
+      DPRINTF(("SELECT PE TIME(%s, %d) returns "sge_u32"\n", 
             lGetString(best->pe, PE_name), best->slots, best->start));
       break;
    case DISPATCH_NEVER_CAT:
@@ -730,7 +726,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best) {
    /* this limits max range number RANGE_INFINITY (i.e. -pe pe 1-) to reasonable number */
    max_slots = MIN(last, max_pe_slots);
 
-   DPRINTF(("MAXIMIZE SLOT FOR "u32" using \"%s\" FROM %d TO %d\n", 
+   DPRINTF(("MAXIMIZE SLOT FOR "sge_u32" using \"%s\" FROM %d TO %d\n", 
       best->job_id, pe_name, min_slots, max_slots));
 
    assignment_copy(&tmp, best, false);
@@ -776,7 +772,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best) {
 
    switch (result) {
    case DISPATCH_OK:
-      DPRINTF(("MAXIMIZE SLOT(%s, %d) returns "u32"\n", 
+      DPRINTF(("MAXIMIZE SLOT(%s, %d) returns "sge_u32"\n", 
             pe_name, best->slots, best->start));
       break;
    case DISPATCH_NOT_AT_TIME:
@@ -988,8 +984,8 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                        reason, allow_non_requestable, slots, layer, lc_factor, &tmp_start, object_name);
 
       if (ret == DISPATCH_OK && *start_time == DISPATCH_TIME_QUEUE_END) {
-         DPRINTF(("%s: \"slot\" request delays start time from "U32CFormat
-           " to "U32CFormat"\n", object_name, latest_time, MAX(latest_time, tmp_start)));
+         DPRINTF(("%s: \"slot\" request delays start time from "sge_U32CFormat
+           " to "sge_U32CFormat"\n", object_name, latest_time, MAX(latest_time, tmp_start)));
          latest_time = MAX(latest_time, tmp_start);
       }
 
@@ -1051,8 +1047,8 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                }
 
                if (*start_time == DISPATCH_TIME_QUEUE_END) {
-                  DPRINTF(("%s: default request \"%s\" delays start time from "U32CFormat 
-                        " to "U32CFormat"\n", object_name, name, latest_time, MAX(latest_time, tmp_start)));
+                  DPRINTF(("%s: default request \"%s\" delays start time from "sge_U32CFormat 
+                        " to "sge_U32CFormat"\n", object_name, name, latest_time, MAX(latest_time, tmp_start)));
                   latest_time = MAX(latest_time, tmp_start);
                }
             } 
@@ -1078,8 +1074,8 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                   
          case DISPATCH_OK : /* a match was found */
                if (*start_time == DISPATCH_TIME_QUEUE_END) {
-                  DPRINTF(("%s: explicit request \"%s\" delays start time from "U32CFormat 
-                           "to "U32CFormat"\n", object_name, attr_name, latest_time, 
+                  DPRINTF(("%s: explicit request \"%s\" delays start time from "sge_U32CFormat 
+                           "to "sge_U32CFormat"\n", object_name, attr_name, latest_time, 
                            MAX(latest_time, tmp_start)));
                   latest_time = MAX(latest_time, tmp_start);
                }
@@ -1455,7 +1451,7 @@ job_is_forced_centry_missing(const lListElem *job,
          if (is_forced && !is_requ) {
             u_long32 job_id = lGetUlong(job, JB_job_number);
 
-            DPRINTF(("job "u32" does not request 'forced' resource "SFQ" of "
+            DPRINTF(("job "sge_u32" does not request 'forced' resource "SFQ" of "
                      SFN"\n", job_id, name, object_name));
             if (is_qinstance) {
                schedd_mes_add(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, 
@@ -1705,7 +1701,7 @@ sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host,
       for_each(ruep, rulp) {
          if (lGetUlong(ruep, RU_job_number) == job_id 
              && lGetUlong(ruep, RU_task_number) == task_id) {
-            DPRINTF(("RU: Job "u32"."u32" Host "SFN"\n", job_id,
+            DPRINTF(("RU: Job "sge_u32"."sge_u32" Host "SFN"\n", job_id,
                task_id, eh_name));
             schedd_mes_add(job_id, SCHEDD_INFO_CLEANUPNECESSARY_S,
                eh_name);
@@ -2625,11 +2621,11 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             lSetUlong(qep, QU_tag, 1); /* tag number of slots per queue and time when it will be available */
             
             if (a->start == DISPATCH_TIME_QUEUE_END) {
-               DPRINTF(("    global "u32" host "u32" queue "u32"\n", tt_global, tt_host, tt_queue));
+               DPRINTF(("    global "sge_u32" host "sge_u32" queue "sge_u32"\n", tt_global, tt_host, tt_queue));
                tt_queue = MAX(tt_queue, MAX(tt_host, tt_global));
                lSetUlong(qep, QU_available_at, tt_queue);
             }
-            DPRINTF(("    set Q: %s number="u32" when="u32" violations="u32"\n", lGetString(qep, QU_full_name),
+            DPRINTF(("    set Q: %s number="sge_u32" when="sge_u32" violations="sge_u32"\n", lGetString(qep, QU_full_name),
                    lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at), lGetUlong(qep, QU_soft_violation)));
             best_queue_result = DISPATCH_OK;
 
@@ -2911,7 +2907,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
       if (rmon_condition(xaybzc, INFOPRINT)) {
          switch (best_result) {
          case DISPATCH_OK:
-            DPRINTF(("COMPREHSENSIVE ASSIGNMENT(%d) returns "u32"\n", 
+            DPRINTF(("COMPREHSENSIVE ASSIGNMENT(%d) returns "sge_u32"\n", 
                   a->slots, a->start));
             break;
          case DISPATCH_NOT_AT_TIME:
@@ -3372,7 +3368,7 @@ sge_sequential_assignment(sge_assignment_t *a)
 
       if (!a->is_reservation) {
          for_each (qep, a->queue_list) {
-            DPRINTF(("    Q: %s "u32" "u32" (jst: "u32")\n", lGetString(qep, QU_full_name), 
+            DPRINTF(("    Q: %s "sge_u32" "sge_u32" (jst: "sge_u32")\n", lGetString(qep, QU_full_name), 
                      lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at), job_start_time));
             if (lGetUlong(qep, QU_tag) != 0) {
                u_long32 temp_job_start_time = lGetUlong(qep, QU_available_at);
@@ -3390,7 +3386,7 @@ sge_sequential_assignment(sge_assignment_t *a)
             }
          }
          if (best_queue) {
-            DPRINTF(("earliest queue \"%s\" at "u32"\n", lGetString(best_queue, QU_full_name), job_start_time));
+            DPRINTF(("earliest queue \"%s\" at "sge_u32"\n", lGetString(best_queue, QU_full_name), job_start_time));
          } 
          else {
             DPRINTF(("no earliest queue found!\n"));
@@ -3424,7 +3420,7 @@ sge_sequential_assignment(sge_assignment_t *a)
          const char *qname = lGetString(best_queue, QU_full_name);
          const char *eh_name = lGetHost(best_queue, QU_qhostname);
 
-         DPRINTF((u32": 1 slot in queue %s@%s user %s %s for "u32"\n",
+         DPRINTF((sge_u32": 1 slot in queue %s@%s user %s %s for "sge_u32"\n",
             job_id, qname, eh_name, lGetString(job, JB_owner), 
                   !a->is_reservation?"scheduled":"reserved", job_start_time));
 
@@ -3447,24 +3443,24 @@ sge_sequential_assignment(sge_assignment_t *a)
 
    switch (result) {
    case DISPATCH_OK:
-      DPRINTF(("SEQUENTIAL ASSIGNMENT("u32"."u32") returns <time> "u32"\n", 
+      DPRINTF(("SEQUENTIAL ASSIGNMENT("sge_u32"."sge_u32") returns <time> "sge_u32"\n", 
             a->job_id, a->ja_task_id, a->start));
       break;
    case DISPATCH_NOT_AT_TIME:
-      DPRINTF(("SEQUENTIAL ASSIGNMENT("u32"."u32") returns <later>\n", 
+      DPRINTF(("SEQUENTIAL ASSIGNMENT("sge_u32"."sge_u32") returns <later>\n", 
             a->job_id, a->ja_task_id)); 
       break;
    case DISPATCH_NEVER_CAT:
-      DPRINTF(("SEQUENTIAL ASSIGNMENT("u32"."u32") returns <category_never>\n", 
+      DPRINTF(("SEQUENTIAL ASSIGNMENT("sge_u32"."sge_u32") returns <category_never>\n", 
             a->job_id, a->ja_task_id)); 
       break;
    case DISPATCH_NEVER_JOB:
-      DPRINTF(("SEQUENTIAL ASSIGNMENT("u32"."u32") returns <job_never>\n", 
+      DPRINTF(("SEQUENTIAL ASSIGNMENT("sge_u32"."sge_u32") returns <job_never>\n", 
             a->job_id, a->ja_task_id)); 
       break;
    case DISPATCH_MISSING_ATTR:    
    default:
-      DPRINTF(("!!!!!!!! SEQUENTIAL ASSIGNMENT("u32"."u32") returns unexpected %d\n", 
+      DPRINTF(("!!!!!!!! SEQUENTIAL ASSIGNMENT("sge_u32"."sge_u32") returns unexpected %d\n", 
             a->job_id, a->ja_task_id, result));
       break;
    }
@@ -3703,7 +3699,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
 
       /* should be impossible to reach here without a master host */
       if (!master_hep) { 
-         ERROR((SGE_EVENT, "no master host for job "u32"\n", 
+         ERROR((SGE_EVENT, "no master host for job "sge_u32"\n", 
             lGetUlong(a->job, JB_job_number)));
          DEXIT;
          return MATCH_LATER;
@@ -3721,7 +3717,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
 
       if (!qep) {
          ERROR((SGE_EVENT, MSG_SCHEDD_NOMASTERQUEUE_SU, master_eh_name, 
-               u32c(lGetUlong(a->job, JB_job_number))));
+               sge_u32c(lGetUlong(a->job, JB_job_number))));
          DEXIT;
          return MATCH_LATER;
       }
@@ -3783,7 +3779,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                total_soft_violations += slots * lGetUlong(qep, QU_soft_violation);
 
                /* build gdil for that queue */
-               DPRINTF((u32": %d slots in queue %s@%s user %s (host_slots = %d)\n", 
+               DPRINTF((sge_u32": %d slots in queue %s@%s user %s (host_slots = %d)\n", 
                   a->job_id, slots, qname, eh_name, lGetString(a->job, JB_owner), host_slots));
                if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
                   gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
@@ -4044,7 +4040,7 @@ sequential_queue_time( u_long32 *start, const sge_assignment_t *a,
 
    if (a->is_reservation && result == DISPATCH_OK) {
       *start = tmp_time;
-      DPRINTF(("queue_time_by_slots(%s) returns earliest start time "u32"\n", qname, *start));
+      DPRINTF(("queue_time_by_slots(%s) returns earliest start time "sge_u32"\n", qname, *start));
    } else if (result == DISPATCH_OK) {
       DPRINTF(("queue_time_by_slots(%s) returns <at specified time>\n", qname));
    } else {
@@ -4229,7 +4225,7 @@ sequential_host_time(u_long32 *start, const sge_assignment_t *a,
 
    if (a->is_reservation && result == DISPATCH_OK) {
       *start = tmp_time;
-      DPRINTF(("host_time_by_slots(%s) returns earliest start time "u32"\n", eh_name, *start));
+      DPRINTF(("host_time_by_slots(%s) returns earliest start time "sge_u32"\n", eh_name, *start));
    } else if (result == DISPATCH_OK) {
       DPRINTF(("host_time_by_slots(%s) returns <at specified time>\n", eh_name));
    } else {
@@ -4301,7 +4297,7 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
 
    if (a->is_reservation && result == DISPATCH_OK) {
       *start = tmp_time;
-      DPRINTF(("global_time_by_slots() returns earliest start time "u32"\n", *start));
+      DPRINTF(("global_time_by_slots() returns earliest start time "sge_u32"\n", *start));
    } 
    else if (result == DISPATCH_OK) {
       DPRINTF(("global_time_by_slots() returns <at specified time>\n"));
@@ -4717,7 +4713,7 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
 
    util = utilization_max(actual_el, ready_time, a->duration);
 
-DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "u32" plus "u32" seconds\n", 
+DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "sge_u32" plus "sge_u32" seconds\n", 
       object_name, attrname, total, util, ready_time, a->duration));
 
    /* ensure resource is sufficient from now until finish */
@@ -4838,7 +4834,7 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
          start = sconf_get_now();
       }   
       used = utilization_max(uep, start, a->duration);
-      DPRINTF(("\t\t%s: ri_slots_by_time: utilization_max("u32", "u32") returns %f\n", 
+      DPRINTF(("\t\t%s: ri_slots_by_time: utilization_max("sge_u32", "sge_u32") returns %f\n", 
             object_name, start, a->duration, used));
    } 
    else {
@@ -4856,7 +4852,7 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
       *slots_qend = INT_MAX;
    }   
 
-   DPRINTF(("\t\t%s: ri_slots_by_time: %s=%f has %d (%d) slots at time "U32CFormat"%s (avail: %f total: %f)\n", 
+   DPRINTF(("\t\t%s: ri_slots_by_time: %s=%f has %d (%d) slots at time "sge_U32CFormat"%s (avail: %f total: %f)\n", 
          object_name, lGetString(uep, RUE_name), request_val, *slots, *slots_qend, start,
            !a->is_reservation?" (= now)":"", total - used, total));
 
@@ -5481,7 +5477,7 @@ queue_match_cal_time(lListElem *queue, const sge_assignment_t *job_info, u_long3
    }
 
    if (result != DISPATCH_OK) {
-      schedd_mes_add(lGetUlong(job_info->job, JB_job_number), SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU, lGetString(queue, QU_full_name), u32c(job_info->duration));
+      schedd_mes_add(lGetUlong(job_info->job, JB_job_number), SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU, lGetString(queue, QU_full_name), sge_u32c(job_info->duration));
    }
 
    DPRINTF(("CAL evaluation: start time: %d, duration, %d, result %d\n",cal_time, job_info->duration, result));

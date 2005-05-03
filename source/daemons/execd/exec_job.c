@@ -39,10 +39,6 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #ifdef __sgi
 #   include <sys/schedctl.h>
 #endif
@@ -533,7 +529,7 @@ char *err_str
          } else {
             if (lGetString(jep, JB_script_file) != NULL) {
                /* JG: TODO: use some function to create path */
-               sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR,
+               sprintf(script_file, "%s/%s/" sge_u32, execd_spool_dir, EXEC_DIR,
                        job_id);
             } else {
                /* 
@@ -576,7 +572,7 @@ char *err_str
                token = sge_strtok(buffer, delim);
                while (token != NULL) {
                   if (is_first_token) { 
-                     sge_dstring_sprintf(&new_qrsh_command, "%s/%s/" u32, 
+                     sge_dstring_sprintf(&new_qrsh_command, "%s/%s/" sge_u32, 
                                          execd_spool_dir, EXEC_DIR, job_id); 
                      is_first_token = 0;
                   } else {
@@ -614,7 +610,7 @@ char *err_str
       var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
       var_list_set_string(&environmentList, "QUEUE", lGetString(master_q, QU_qname));
       /* JB: TODO (ENV): shouldn't we better have a SGE_JOB_ID? */
-      var_list_set_u32(&environmentList, "JOB_ID", job_id);
+      var_list_set_sge_u32(&environmentList, "JOB_ID", job_id);
      
       /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
       if (job_is_array(jep)) {
@@ -622,10 +618,10 @@ char *err_str
 
          job_get_submit_task_ids(jep, &start, &end, &step);
 
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
       } else {
          const char *udef = "undefined";
 
@@ -968,8 +964,8 @@ char *err_str
    fprintf(fp, "shell_path=%s\n", shell_path);
    fprintf(fp, "script_file=%s\n", script_file);
    fprintf(fp, "job_owner=%s\n", lGetString(jep, JB_owner));
-   fprintf(fp, "min_gid=" u32 "\n", conf.min_gid);
-   fprintf(fp, "min_uid=" u32 "\n", conf.min_uid);
+   fprintf(fp, "min_gid=" sge_u32 "\n", conf.min_gid);
+   fprintf(fp, "min_uid=" sge_u32 "\n", conf.min_uid);
    
    /* do path substitutions also for cwd */
    if ((cp = expand_path(cwd, job_id, job_is_array(jep) ? ja_task_id : 0,
@@ -1062,10 +1058,10 @@ char *err_str
    /* the following values are needed by the reaper */
    if (mailrec_unparse(lGetList(jep, JB_mail_list), 
             mail_str, sizeof(mail_str))) {
-      ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, u32c(job_id)));
+      ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, sge_u32c(job_id)));
    }
    fprintf(fp, "mail_list=%s\n", mail_str);
-   fprintf(fp, "mail_options=" u32 "\n", lGetUlong(jep, JB_mail_options));
+   fprintf(fp, "mail_options=" sge_u32 "\n", lGetUlong(jep, JB_mail_options));
    fprintf(fp, "forbid_reschedule=%d\n", forbid_reschedule);
    fprintf(fp, "forbid_apperror=%d\n", forbid_apperror);
    fprintf(fp, "queue=%s\n", lGetString(master_q, QU_qname));
@@ -1083,23 +1079,23 @@ char *err_str
    } else {
       fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
    }
-   fprintf(fp, "job_id="u32"\n", job_id);
-   fprintf(fp, "ja_task_id="u32"\n", job_is_array(jep) ? ja_task_id : 0);
+   fprintf(fp, "job_id="sge_u32"\n", job_id);
+   fprintf(fp, "ja_task_id="sge_u32"\n", job_is_array(jep) ? ja_task_id : 0);
    if(petep != NULL) {
       fprintf(fp, "pe_task_id=%s\n", pe_task_id);
    }
    fprintf(fp, "account=%s\n", (lGetString(jep, JB_account) ? lGetString(jep, JB_account) : DEFAULT_ACCOUNT));
    if(petep != NULL) {
-      fprintf(fp, "submission_time=" u32 "\n", lGetUlong(petep, PET_submission_time));
+      fprintf(fp, "submission_time=" sge_u32 "\n", lGetUlong(petep, PET_submission_time));
    } else {
-      fprintf(fp, "submission_time=" u32 "\n", lGetUlong(jep, JB_submission_time));
+      fprintf(fp, "submission_time=" sge_u32 "\n", lGetUlong(jep, JB_submission_time));
    }
 
    {
       u_long32 notify = 0;
       if (lGetBool(jep, JB_notify))
          parse_ulong_val(NULL, &notify, TYPE_TIM, lGetString(master_q, QU_notify), NULL, 0);
-      fprintf(fp, "notify=" u32 "\n", notify);
+      fprintf(fp, "notify=" sge_u32 "\n", notify);
    }
    
    /*
@@ -1233,7 +1229,7 @@ char *err_str
    fprintf(fp, "notify_susp_type=%d\n", notify_susp_type);
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
    if (use_qsub_gid)
-      fprintf(fp, "qsub_gid="u32"\n", lGetUlong(jep, JB_gid));
+      fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
    else
       fprintf(fp, "qsub_gid=%s\n", "no");
 
@@ -1417,21 +1413,21 @@ char *err_str
       strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
       if (VALID(MAIL_AT_BEGINNING, mail_options)) {
          if (job_is_array(jep)) {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(job_id),
-                    u32c(ja_task_id), lGetString(jep, JB_job_name));
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, sge_u32c(job_id),
+                    sge_u32c(ja_task_id), lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
-                u32c(job_id),
-                u32c(ja_task_id),
+                sge_u32c(job_id),
+                sge_u32c(ja_task_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner), 
                 lGetString(master_q, QU_qname),
                 lGetHost(master_q, QU_qhostname), sge_mail_start);
          } 
          else {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(job_id),
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, sge_u32c(job_id),
                lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,
-                u32c(job_id),
+                sge_u32c(job_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner),
                 lGetString(master_q, QU_qname),
@@ -1523,14 +1519,14 @@ char *err_str
        lGetString(jep, JB_cred)) {
 
       char ccname[1024];
-      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%s_" u32, "sge",
+      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%s_" sge_u32, "sge",
 	      job_id);
       putenv(ccname);
    }
 
    DPRINTF(("**********************CHILD*********************\n"));
    shepherd_name = SGE_SHEPHERD;
-   sprintf(ps_name, "%s-"u32, shepherd_name, job_id);
+   sprintf(ps_name, "%s-"sge_u32, shepherd_name, job_id);
 
    if (conf.shepherd_cmd && strlen(conf.shepherd_cmd) && 
       strcasecmp(conf.shepherd_cmd, "none")) {
@@ -1574,7 +1570,7 @@ char *err_str
 
    fp = fopen("error", "w");
    if (fp) {
-      fprintf(fp, "failed to exec shepherd for job" u32"\n", job_id);
+      fprintf(fp, "failed to exec shepherd for job" sge_u32"\n", job_id);
       fclose(fp);
    }
 

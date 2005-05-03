@@ -162,7 +162,7 @@ lList **pplist
             {
                lUlong ul;
 
-               if (sscanf(*pstrlist, u32, &ul) != 1) {
+               if (sscanf(*pstrlist, sge_u32, &ul) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting ulong: %s\n", *pstrlist));
                   lFreeList(list);
@@ -853,7 +853,7 @@ unsigned long flags
             break;
        
          case lUlongT:
-            sprintf(str, u32, lGetUlong(ep, *rule));
+            sprintf(str, sge_u32, lGetUlong(ep, *rule));
             break;
 
          case lLongT:

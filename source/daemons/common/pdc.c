@@ -399,7 +399,7 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
       if (*table) free(*table);
       *table = malloc(tsize);
       if (*table == NULL) {
-         sprintf(ps_errstr, MSG_MEMORY_MALLOCXFAILED_D , u32c(tsize));
+         sprintf(ps_errstr, MSG_MEMORY_MALLOCXFAILED_D , sge_u32c(tsize));
          return -1;
       }
       memset(*table, 0, tsize);

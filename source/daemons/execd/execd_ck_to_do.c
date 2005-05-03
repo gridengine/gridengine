@@ -37,10 +37,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-             
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_conf.h"
@@ -261,7 +257,7 @@ void force_job_rlimit()
 
          }
 
-         DPRINTF(("JOB "u32" %s %10.5f %s %10.5f\n", 
+         DPRINTF(("JOB "sge_u32" %s %10.5f %s %10.5f\n", 
             jobid,
             cpu_ep?USAGE_ATTR_CPU:"("USAGE_ATTR_CPU")",  
             cpu_val, 
@@ -271,7 +267,7 @@ void force_job_rlimit()
          if (h_cpu < cpu_val || h_vmem < vmem_val) {
             cpu_exceeded = (h_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDHLIM_USSFF, 
-                     u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
+                     sge_u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
                      q?lGetString(q, QU_full_name) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? h_cpu : h_vmem));
@@ -282,7 +278,7 @@ void force_job_rlimit()
          if (s_cpu < cpu_val || s_vmem < vmem_val) {
             cpu_exceeded = (s_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDSLIM_USSFF,
-                     u32c(jobid),
+                     sge_u32c(jobid),
                      cpu_exceeded ? "s_cpu" : "s_vmem",
                      q?lGetString(q, QU_full_name) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
@@ -419,7 +415,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                            responsible_queue(job, jatask, NULL);
                   priority = atoi(lGetString(master_queue, QU_priority));
 
-                  DPRINTF(("Set priority of job "u32"."u32" running in"
+                  DPRINTF(("Set priority of job "sge_u32"."sge_u32" running in"
                      " queue  %s to %d\n", 
                      lGetUlong(job, JB_job_number), 
                      lGetUlong(jatask, JAT_task_number),
@@ -434,7 +430,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                      master_queue = 
                            responsible_queue(job, jatask, petask);
                      priority = atoi(lGetString(master_queue, QU_priority));
-                     DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
+                     DPRINTF(("EB Set priority of task "sge_u32"."sge_u32"-%s running "
                         "in queue %s to %d\n", 
                         lGetUlong(job, JB_job_number), 
                         lGetUlong(jatask, JAT_task_number),
@@ -489,7 +485,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                   INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
-                       u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
+                       sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number)))); 
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
                   }
@@ -508,7 +504,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                   INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
-                       u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
+                       sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number))));  
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
                   }
@@ -549,11 +545,11 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                jobid = lGetUlong(jep, JB_job_number);
                jataskid = lGetUlong(jatep, JAT_task_number);
 
-               DPRINTF(("Simulated job "u32"."u32" is exiting\n", jobid, jataskid));
+               DPRINTF(("Simulated job "sge_u32"."sge_u32" is exiting\n", jobid, jataskid));
 
                if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
                   ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
-                         u32c(jobid), u32c(jataskid)));
+                         sge_u32c(jobid), sge_u32c(jataskid)));
                   jr = add_job_report(jobid, jataskid, NULL, jep);
                }
 
@@ -587,9 +583,9 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
          last_report_send = now;
          /* send all reports */
          was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
-         DPRINTF(("----> was_communication_error: "SFQ" ("U32CFormat")\n", 
+         DPRINTF(("----> was_communication_error: "SFQ" ("sge_U32CFormat")\n", 
                   cl_get_error_text(was_communication_error), 
-                  u32c(was_communication_error)));
+                  sge_u32c(was_communication_error)));
       }
    }
 
@@ -786,7 +782,7 @@ lListElem *petep
          lList *job_args;
          u_long32 duration = 60;
 
-         DPRINTF(("Simulating job "u32"."u32"\n", 
+         DPRINTF(("Simulating job "sge_u32"."sge_u32"\n", 
                   job_id, ja_task_id));
          lSetUlong(jatep, JAT_start_time, now);
          lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
@@ -857,7 +853,7 @@ lListElem *petep
       DEXIT;
       return 0;
    }
-   DTIMEPRINTF(("TIME IN EXECD FOR STARTING THE JOB: " u32 "\n",
+   DTIMEPRINTF(("TIME IN EXECD FOR STARTING THE JOB: " sge_u32 "\n",
                 sge_get_gmt()-now));
    
    if(petep != NULL) {
@@ -866,7 +862,7 @@ lListElem *petep
       lSetUlong(jatep, JAT_pid, pid);
    }
 
-   DPRINTF(("***EXECING "u32"."u32" on %s (tid = %s) (pid = %d)\n",
+   DPRINTF(("***EXECING "sge_u32"."sge_u32" on %s (tid = %s) (pid = %d)\n",
             job_id, ja_task_id, 
             uti_state_get_unqualified_hostname(), pe_task_id != NULL ? pe_task_id : "null", pid));
 

@@ -167,7 +167,7 @@
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S      _MESSAGE(47134, _("cannot run because total slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE        _MESSAGE(47135, _("Jobs can not run because total slots of pe are not in range of job") )
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_          _MESSAGE(47136, _("Job Filter: this job got ignored in the last scheduling run, because to many other jobs with the same resource request are in the pending list before this one."))
-#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "U32CFormat" sec. is too long") ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "sge_U32CFormat" sec. is too long") ) 
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
 
@@ -205,10 +205,10 @@
 #define MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED             _MESSAGE(47214, _("queues dropped because they are full: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED        _MESSAGE(47215, _("queues dropped because they are suspended: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED         _MESSAGE(47216, _("queues dropped because they are disabled: "))
-#define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "U32CFormat))
+#define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "sge_U32CFormat))
 #define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN))
-#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 
 /* 
@@ -267,7 +267,7 @@
 #define MSG_ATTRIB_USINGXASY_SS                 _MESSAGE(47253, _("using "SFQ" as "SFN"\n"))
 #define MSG_ATTRIB_XISNOTAY_SS                  _MESSAGE(47254, _("attribute "SFQ" is not a "SFN"\n"))
 #define MSG_ATTRIB_USINGXFORY_SS                _MESSAGE(47255, _("using "SFQ" for "SFN"\n"))
-#define MSG_ATTRIB_USINGXFORY_US                _MESSAGE(47256, _("using " U32CFormat " for "SFN"\n"))
+#define MSG_ATTRIB_USINGXFORY_US                _MESSAGE(47256, _("using " sge_U32CFormat " for "SFN"\n"))
 #define MSG_ATTRIB_USINGXFORY_6FS               _MESSAGE(47257, _("using %.6g for "SFN"\n"))
 #define MSG_TRUE                                _MESSAGE(47258, _("true"))
 #define MSG_FALSE                               _MESSAGE(47259, _("false"))
@@ -277,7 +277,7 @@
 /* 
 ** schedd/schedd_message.c
 */ 
-#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "U32CFormat"\n"))
+#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "sge_U32CFormat"\n"))
 
 /* 
 ** schedd/valid_queue_user.c
@@ -318,7 +318,7 @@
  * daemons/sched/sge_process_events.c
  */
 #define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47360, _("could not find job "SFQ" in master list\n")) 
-#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47361, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
+#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47361, _("could not find task "sge_U32CFormat" in job "sge_U32CFormat"\n")) 
 
 /* 
  * libs/sched/sge_complex_schedd.c

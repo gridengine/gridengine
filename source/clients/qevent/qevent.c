@@ -42,10 +42,6 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_string.h"
 #include "setup.h"
 #include "sge_unistd.h"
@@ -155,7 +151,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          int task_running = (job_status==JRUNNING || job_status==JTRANSFERING);
 
          if (task_running) {
-            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id ,task_id,u32c(timestamp));
+            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME="sge_U32CFormat")\n", job_id ,task_id,sge_u32c(timestamp));
             fflush(stdout);  
             Global_jobs_running++;
          }
@@ -168,7 +164,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          u_long job_id = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
          /* lWriteElemTo(event, stdout); */
-         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
+         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="sge_U32CFormat")\n", job_id, task_id,sge_u32c(timestamp));
          Global_jobs_running--;
          fflush(stdout);  
       }
@@ -181,14 +177,14 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          if (job_project == NULL) {
             job_project = "NONE";
          }
-         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME="U32CFormat":project=%s)\n", job_id, task_id, u32c(timestamp),job_project);
+         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME="sge_U32CFormat":project=%s)\n", job_id, task_id, sge_u32c(timestamp),job_project);
          Global_jobs_registered++;
          fflush(stdout);  
       }
       if (type == sgeE_JOB_DEL) { 
          u_long job_id  = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
-         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
+         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="sge_U32CFormat")\n", job_id, task_id,sge_u32c(timestamp));
          Global_jobs_registered--;
          fflush(stdout);  
       }
@@ -335,9 +331,9 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
 #endif
 
       if ( WEXITSTATUS(exit_status) == 0 ) {
-         INFO((SGE_EVENT,"exit status of script: "U32CFormat"\n", u32c(WEXITSTATUS(exit_status))));
+         INFO((SGE_EVENT,"exit status of script: "sge_U32CFormat"\n", sge_u32c(WEXITSTATUS(exit_status))));
       } else {
-         ERROR((SGE_EVENT,"exit status of script: "U32CFormat"\n", u32c(WEXITSTATUS(exit_status))));
+         ERROR((SGE_EVENT,"exit status of script: "sge_U32CFormat"\n", sge_u32c(WEXITSTATUS(exit_status))));
       }
       DEXIT;
       return;
@@ -345,8 +341,8 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       
       /*      SETPGRP;  */
       /*      sge_close_all_fds(NULL); */
-      sprintf(buffer  ,""U32CFormat"",u32c(jobid));
-      sprintf(buffer2 ,""U32CFormat"",u32c(taskid)); 
+      sprintf(buffer  ,""sge_U32CFormat"",sge_u32c(jobid));
+      sprintf(buffer2 ,""sge_U32CFormat"",sge_u32c(taskid)); 
       execlp( script_file , sge_basename( script_file, '/' ), event_name, buffer, buffer2, 0 );
    }
    exit(1);
@@ -400,8 +396,8 @@ static void qevent_parse_command_line(int argc, char **argv, qevent_options *opt
          int ok = 0;
          if (option_struct->trigger_option_count >= MAX_TRIGGER_SCRIPTS ) {
             sge_dstring_sprintf(option_struct->error_message,
-                                "option \"-trigger\": only "U32CFormat" trigger arguments supported\n",
-                                u32c(MAX_TRIGGER_SCRIPTS) );
+                                "option \"-trigger\": only "sge_U32CFormat" trigger arguments supported\n",
+                                sge_u32c(MAX_TRIGGER_SCRIPTS) );
             break; 
          }
 
@@ -710,8 +706,8 @@ void qevent_testsuite_mode(void)
 
       timestamp = sge_get_gmt();
 #ifndef QEVENT_SHOW_ALL
-      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",
-              Global_jobs_running,Global_jobs_registered,u32c(timestamp));
+      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="sge_U32CFormat")\n",
+              Global_jobs_running,Global_jobs_registered,sge_u32c(timestamp));
       fflush(stdout);  
 #endif
    }

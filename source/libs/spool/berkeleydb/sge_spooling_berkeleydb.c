@@ -34,10 +34,6 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "rmon/sgermon.h"
 
 #include "uti/config_file.h"

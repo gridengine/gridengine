@@ -36,10 +36,6 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG
@@ -279,9 +275,9 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
          break;
       case lUlongT:
          if (!fp) {
-            DPRINTF(("%s "u32"\n", out, cp->operand.cmp.val.ul));
+            DPRINTF(("%s "sge_u32"\n", out, cp->operand.cmp.val.ul));
          } else {
-            fprintf(fp, "%s "u32"\n", out, cp->operand.cmp.val.ul);
+            fprintf(fp, "%s "sge_u32"\n", out, cp->operand.cmp.val.ul);
          }
          break;
       case lStringT:
@@ -496,7 +492,7 @@ lCondition *lWhereFromElem(const lListElem *where){
       }
    }
    else {
-      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, u32c(lGetUlong(where, PACK_id)), SGE_WHERE));
+      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, sge_u32c(lGetUlong(where, PACK_id)), SGE_WHERE));
    }
    DEXIT;
    return cond;

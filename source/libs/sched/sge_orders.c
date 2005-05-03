@@ -34,10 +34,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_orders.h"
 #include "sge_all_listsL.h"
 #include "sge_feature.h"
@@ -398,7 +394,7 @@ lList *order_list
 
    for_each(job, finished_jobs) {
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-         DPRINTF(("DELETE JOB "u32"."u32"\n", lGetUlong(job, JB_job_number),
+         DPRINTF(("DELETE JOB "sge_u32"."sge_u32"\n", lGetUlong(job, JB_job_number),
             lGetUlong(ja_task, JAT_task_number)));
          order_list = sge_create_orders(order_list, ORT_remove_job, job, 
             ja_task, NULL, true);

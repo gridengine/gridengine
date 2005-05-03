@@ -39,10 +39,6 @@
 #include <pthread.h>
 #include <sys/resource.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_bootstrap.h"
 #include "sge.h"
 #include "sge_conf.h"
@@ -312,7 +308,7 @@ void sge_setup_job_resend(void)
             te_add_event(ev);
             te_free_event(ev);
 
-            DPRINTF(("Did add job resend for "u32"/"u32" at %d\n", job_num, task_num, when)); 
+            DPRINTF(("Did add job resend for "sge_u32"/"sge_u32" at %d\n", job_num, task_num, when)); 
          }
 
          task = lNext(task);
@@ -649,10 +645,10 @@ static void communication_setup(void)
 
       /* log startup info into qmaster messages file */
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, MSG_QMASTER_FD_HARD_LIMIT_SETTINGS_U, u32c(qmaster_rlimits.rlim_max)));
-      INFO((SGE_EVENT, MSG_QMASTER_FD_SOFT_LIMIT_SETTINGS_U, u32c(qmaster_rlimits.rlim_cur)));
-      INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, u32c(max_connections)));
-      INFO((SGE_EVENT, MSG_QMASTER_MAX_EVC_LIMIT_U, u32c( max_dynamic_event_clients)));
+      INFO((SGE_EVENT, MSG_QMASTER_FD_HARD_LIMIT_SETTINGS_U, sge_u32c(qmaster_rlimits.rlim_max)));
+      INFO((SGE_EVENT, MSG_QMASTER_FD_SOFT_LIMIT_SETTINGS_U, sge_u32c(qmaster_rlimits.rlim_cur)));
+      INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, sge_u32c(max_connections)));
+      INFO((SGE_EVENT, MSG_QMASTER_MAX_EVC_LIMIT_U, sge_u32c( max_dynamic_event_clients)));
       log_state_set_log_level(old_ll);
    }
 
@@ -930,7 +926,7 @@ static int setup_qmaster(void)
    }
 
    for_each(jep, Master_Job_List) {
-      DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
+      DPRINTF(("JOB "sge_u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
             (int)lGetUlong(jep, JB_priority) - BASE_PRIORITY));
 
       /* doing this operation we need the complete job list read in */
@@ -1065,7 +1061,7 @@ int user
          jobid = lGetUlong(upu, UPU_job_number);
          if (!job_list_locate(Master_Job_List, jobid)) {
             lRemoveElem(lGetList(up, UP_debited_job_usage), upu);
-            WARNING((SGE_EVENT, "removing reference to no longer existing job "u32" of %s "SFQ"\n",
+            WARNING((SGE_EVENT, "removing reference to no longer existing job "sge_u32" of %s "SFQ"\n",
                            jobid, user?"user":"project", lGetString(up, UP_name)));
             spool_me = 1;
          }
@@ -1117,7 +1113,7 @@ static int debit_all_jobs_from_qs()
             
             if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
-                      queue_name, u32c(lGetUlong(jep, JB_job_number))));
+                      queue_name, sge_u32c(lGetUlong(jep, JB_job_number))));
                lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);   
             } else {
                /* debit in all layers */

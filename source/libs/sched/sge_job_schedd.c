@@ -537,7 +537,7 @@ void split_jobs(lList **job_list, lList **answer_list,
        * Split enrolled tasks
        */
 #ifdef JOB_SPLIT_DEBUG
-      DPRINTF(("Split enrolled tasks for job "u32":\n", job_id));
+      DPRINTF(("Split enrolled tasks for job "sge_u32":\n", job_id));
 #endif
       next_ja_task = lFirst(ja_task_list);
       while ((ja_task = next_ja_task)) {
@@ -551,7 +551,7 @@ void split_jobs(lList **job_list, lList **answer_list,
          next_ja_task = lNext(ja_task);
 
 #ifdef JOB_SPLIT_DEBUG
-         DPRINTF(("Task "u32": status="u32" state="u32"\n", ja_task_id,
+         DPRINTF(("Task "sge_u32": status="sge_u32" state="sge_u32"\n", ja_task_id,
                      ja_task_status, ja_task_state));
 #endif
 
@@ -562,7 +562,7 @@ void split_jobs(lList **job_list, lList **answer_list,
          if (target == NULL && result_list[SPLIT_FINISHED] && 
              (ja_task_status & JFINISHED)) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in finished state\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is in finished state\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_FINISHED]);
          } 
@@ -570,7 +570,7 @@ void split_jobs(lList **job_list, lList **answer_list,
          if (target == NULL && result_list[SPLIT_ERROR] && 
              (ja_task_state & JERROR)) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in error state\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is in error state\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_ERROR]);
          } 
@@ -578,7 +578,7 @@ void split_jobs(lList **job_list, lList **answer_list,
              (lGetUlong(job, JB_execution_time) > sge_get_gmt()) &&
              (ja_task_status == JIDLE)) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is waiting due to time.\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is waiting due to time.\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_WAITING_DUE_TO_TIME]);
          }
@@ -586,7 +586,7 @@ void split_jobs(lList **job_list, lList **answer_list,
              (lGetList(job, JB_jid_predecessor_list) != NULL) &&
              (ja_task_status == JIDLE)) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is waiting due to pred.\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is waiting due to pred.\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_WAITING_DUE_TO_PREDECESSOR]);
          }
@@ -594,7 +594,7 @@ void split_jobs(lList **job_list, lList **answer_list,
              (ja_task_status == JIDLE) &&
              !(ja_task_hold & MINUS_H_TGT_ALL)) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in pending state\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is in pending state\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_PENDING]);
          } 
@@ -602,7 +602,7 @@ void split_jobs(lList **job_list, lList **answer_list,
             if ((ja_task_state & JSUSPENDED) ||
                 (ja_task_state & JSUSPENDED_ON_THRESHOLD)) {
 #ifdef JOB_SPLIT_DEBUG
-               DPRINTF(("Task "u32" is in suspended state\n", ja_task_id));
+               DPRINTF(("Task "sge_u32" is in suspended state\n", ja_task_id));
 #endif
                target = &(target_tasks[SPLIT_SUSPENDED]);
             } else {
@@ -614,7 +614,7 @@ void split_jobs(lList **job_list, lList **answer_list,
                         lGetList(ja_task, JAT_granted_destin_identifier_list),
                         queue_list)) {
 #ifdef JOB_SPLIT_DEBUG
-                  DPRINTF(("Task "u32" is in suspended state\n",ja_task_id));
+                  DPRINTF(("Task "sge_u32" is in suspended state\n",ja_task_id));
 #endif
                   target = &(target_tasks[SPLIT_SUSPENDED]);
                }
@@ -623,21 +623,21 @@ void split_jobs(lList **job_list, lList **answer_list,
          if (target == NULL && result_list[SPLIT_RUNNING] && 
              ja_task_status != JIDLE) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in running state\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is in running state\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_RUNNING]);
          } 
          if (target == NULL && result_list[SPLIT_HOLD] &&
              (ja_task_hold & MINUS_H_TGT_ALL)) {
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in hold state\n", ja_task_id));
+            DPRINTF(("Task "sge_u32" is in hold state\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_HOLD]);
          } 
 #ifdef JOB_SPLIT_DEBUG
          if (target == NULL) {
-            ERROR((SGE_EVENT, "Task "u32" has no known state: "
-                   "status="u32" state="u32"\n",
+            ERROR((SGE_EVENT, "Task "sge_u32" has no known state: "
+                   "status="sge_u32" state="sge_u32"\n",
                    ja_task_id, ja_task_status, ja_task_state));  
          }
 #endif
@@ -709,7 +709,7 @@ void split_jobs(lList **job_list, lList **answer_list,
             } 
             if (move_job == 1) {
 #ifdef JOB_SPLIT_DEBUG
-               DPRINTF(("Reuse job element "u32" for "SFN"-list\n", 
+               DPRINTF(("Reuse job element "sge_u32" for "SFN"-list\n", 
                         lGetUlong(job, JB_job_number), 
                         get_name_of_split_value(i)));
 #endif
@@ -718,14 +718,14 @@ void split_jobs(lList **job_list, lList **answer_list,
                target_job[i] = job;
             } else {
 #ifdef JOB_SPLIT_DEBUG
-               DPRINTF(("Copy job element "u32" for "SFN"-list\n", 
+               DPRINTF(("Copy job element "sge_u32" for "SFN"-list\n", 
                         lGetUlong(job, JB_job_number), 
                         get_name_of_split_value(i)));
 #endif
                target_job[i] = lCopyElem(job);
             }
 #ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Add job element "u32" into "SFN"-list\n",
+            DPRINTF(("Add job element "sge_u32" into "SFN"-list\n",
                      lGetUlong(target_job[i], JB_job_number),
                      get_name_of_split_value(i))); 
 #endif
@@ -940,7 +940,7 @@ void job_lists_print(lList **job_list[])
             ids += job_get_enrolled_ja_tasks(job);
             ids += job_get_not_enrolled_ja_tasks(job);
          }
-         DPRINTF(("job_list[%s] CONTAINES "u32" JOB(S) ("u32" TASK(S))\n",
+         DPRINTF(("job_list[%s] CONTAINES "sge_u32" JOB(S) ("sge_u32" TASK(S))\n",
             get_name_of_split_value(i),
             lGetNumberOfElem(*(job_list[i])), ids));
       }
@@ -1070,7 +1070,7 @@ lList *job_list
    DENTER(TOP_LAYER, "trace_job_sort");
 
    for_each (job, job_list) {
-      DPRINTF(("JOB "u32" %d %s %d "u32"\n",
+      DPRINTF(("JOB "sge_u32" %d %s %d "sge_u32"\n",
          lGetUlong(job, JB_job_number),
          (int)lGetUlong(job, JB_priority) - BASE_PRIORITY,
          lGetString(job, JB_owner),

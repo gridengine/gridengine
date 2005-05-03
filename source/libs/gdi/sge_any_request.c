@@ -32,10 +32,6 @@
 #include <sys/types.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "setup.h"
 #include "sge_gdiP.h"
 #include "sge_any_request.h"
@@ -477,8 +473,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(execd_port),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(execd_port),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -497,8 +493,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(sge_get_qmaster_port()),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -514,8 +510,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(sge_get_qmaster_port()),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -532,8 +528,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(sge_get_qmaster_port()),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -560,7 +556,7 @@ void prepare_enroll(const char *name)
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
       while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
          int retval = CL_RETVAL_OK;
-         DPRINTF(("timeout: "U32CFormat"\n",u32c(now.tv_sec - handle->start_time.tv_sec)));
+         DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
          retval = cl_commlib_trigger(handle);
          gettimeofday(&now,NULL);
       }
@@ -707,7 +703,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
       if ( commproc[0] != '\0' && rhost[0] != '\0' ) {
          /* The connection was closed, reopen it */
          i = cl_commlib_open_connection(handle,rhost,commproc,usid);
-         INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (2)\n", rhost, commproc, u32c(usid)));
+         INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (2)\n", rhost, commproc, sge_u32c(usid)));
          if (i == CL_RETVAL_OK) {
             INFO((SGE_EVENT,"reconnected successfully\n"));
             i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
@@ -761,7 +757,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
       } 
 
       if (sender != NULL ) {
-         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id) ));
+         DEBUG((SGE_EVENT,"received from: %s,"sge_U32CFormat"\n",sender->comp_host, sge_u32c(sender->comp_id) ));
          if (rhost[0] == '\0') {
             strcpy(rhost, sender->comp_host); /* If we receive from anybody return the sender */
          }
@@ -883,7 +879,7 @@ int check_isalive(const char *masterhost)
    }
 
    if (status != NULL) {
-      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, u32c( status->runtime) , u32c( status->application_status) ));
+      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c( status->runtime) , sge_u32c( status->application_status) ));
       cl_com_free_sirm_message(&status);
    }
  

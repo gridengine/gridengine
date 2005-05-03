@@ -35,10 +35,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "basis_types.h"
 #include "sge.h"
 #include "sge_log.h"
@@ -906,7 +902,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
                                  flags, job_id, 0, NULL);
                if (SGE_STAT(script_file, &stat_buffer)) {
                   ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDSCRIPTFILE_U,
-                         u32c(lGetUlong(job, JB_job_number))));
+                         sge_u32c(lGetUlong(job, JB_job_number))));
                   job_list_add_job(&Master_Job_List, "job list", job, 0);
                   job_remove_spool_file(job_id, 0, NULL, SPOOL_DEFAULT);
                   lRemoveElem(Master_Job_List, job);
@@ -917,7 +913,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
             /* check if filename has same name which is stored job id */
             if (lGetUlong(job, JB_job_number) != job_id) {
                ERROR((SGE_EVENT, MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U,
-                     u32c(job_id)));
+                     sge_u32c(job_id)));
                job_remove_spool_file(job_id, 0, NULL, flags);
                /* 
                 * script is not deleted here, 

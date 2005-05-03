@@ -133,17 +133,17 @@ int root_node
    }  
 
    if (recurse) 
-      FPRINTF((fp, "id=" u32 "\n", lGetUlong(ep, STN_id)));
+      FPRINTF((fp, "id=" sge_u32 "\n", lGetUlong(ep, STN_id)));
   
    if (root_node) {
       id_sharetree((lListElem *)ep, 0);   /* JG: TODO: spooling changes object! */
       if (spool)
-         FPRINTF((fp, "version=" u32 "\n", lGetUlong(ep, STN_version)));
+         FPRINTF((fp, "version=" sge_u32 "\n", lGetUlong(ep, STN_version)));
    }
 
    FPRINTF((fp, "name=%s\n", lGetString(ep, STN_name)));
-   FPRINTF((fp, "type=" u32 "\n", lGetUlong(ep, STN_type)));
-   FPRINTF((fp, "shares=" u32 "\n", lGetUlong(ep, STN_shares)));
+   FPRINTF((fp, "type=" sge_u32 "\n", lGetUlong(ep, STN_type)));
+   FPRINTF((fp, "shares=" sge_u32 "\n", lGetUlong(ep, STN_shares)));
    if (recurse) {
       int fret;
 
@@ -252,7 +252,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
          if (rootelem) {
             ep = search_nodeSN(rootelem, id);
             if (!ep) {
-               sprintf(errstr, MSG_STREE_NOFATHERNODE_U, u32c(id));
+               sprintf(errstr, MSG_STREE_NOFATHERNODE_U, sge_u32c(id));
                DEXIT;
                return NULL;
             }
@@ -348,7 +348,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
 
    /* check for a reference to a node which is not specified */
    if (!rootelem && (unspecified = sge_search_unspecified_node(ep))) {
-      sprintf(errstr, MSG_STREE_NOVALIDNODEREF_U, u32c(lGetUlong(unspecified, STN_id)));
+      sprintf(errstr, MSG_STREE_NOVALIDNODEREF_U, sge_u32c(lGetUlong(unspecified, STN_id)));
 
       lFreeElem(ep);
       DEXIT;

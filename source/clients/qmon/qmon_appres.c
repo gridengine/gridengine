@@ -79,6 +79,7 @@ Cardinal num_args
                               &QmonApplicationResources,
                               resources, XtNumber(resources),
                               args, num_args );
+   DPRINTF(("qmon_version: %d\n", QMON_VERSION));
    DPRINTF(("display_message_duration: %d\n", DISPLAY_MESSAGE_DURATION));
    DPRINTF(("fetch_time: %d\n", FETCH_TIME));
    DPRINTF(("multi_click_time: %d\n", MULTI_CLICK_TIME));

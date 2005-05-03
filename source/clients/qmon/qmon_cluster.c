@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/TextF.h>

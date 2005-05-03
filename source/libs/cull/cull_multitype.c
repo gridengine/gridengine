@@ -34,10 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG
@@ -445,7 +441,7 @@ void lWriteDescrTo(const lDescr *dp, FILE *fp)
       if (!fp)
          DPRINTF(("nm: %d(%-20.20s) mt: %d\n", dp[i].nm, lNm2Str(dp[i].nm), dp[i].mt));
       else
-         fprintf(fp, "nm: "U32CFormat"(%-20.20s) mt: "U32CFormat"\n", u32c( (dp[i].nm) ), lNm2Str(dp[i].nm), u32c(dp[i].mt));
+         fprintf(fp, "nm: "sge_U32CFormat"(%-20.20s) mt: "sge_U32CFormat"\n", sge_u32c( (dp[i].nm) ), lNm2Str(dp[i].nm), sge_u32c(dp[i].mt));
    }
 
    DEXIT;

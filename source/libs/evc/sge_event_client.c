@@ -35,10 +35,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sge_any_request.h"
 #include "sge_ack.h"
 #include "sge_unistd.h"
@@ -659,7 +655,7 @@ ec_prepare_registration(ev_registration_id id, const char *name)
 
    if (id >= EV_ID_FIRST_DYNAMIC || name == NULL || *name == 0) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, 
-               u32c(id), name != NULL ? name : "NULL" ));
+               sge_u32c(id), name != NULL ? name : "NULL" ));
    } else {
       ec = lCreateElem(EV_Type);
 
@@ -1144,7 +1140,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
 
          if (new_id != 0) {
             lSetUlong(ec, EV_id, new_id);
-            DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
+            DPRINTF(("REGISTERED with id "sge_U32CFormat"\n", new_id));
             lSetBool(ec, EV_changed, false);
             need_register = false;
             
@@ -2351,7 +2347,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
                continue;
             }
 
-            DPRINTF(("got %d events till "u32"\n", 
+            DPRINTF(("got %d events till "sge_u32"\n", 
                      lGetNumberOfElem(new_events), next_event-1));
 
             if (*event_list != NULL) {
@@ -2390,7 +2386,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
             DPRINTF(("SGE_EM_TIMEOUT reached\n"));
             ret = false;
          } else {
-            DPRINTF(("SGE_EM_TIMEOUT in "U32CFormat" seconds\n", u32c(last_fetch_ok_time + timeout - now) ));
+            DPRINTF(("SGE_EM_TIMEOUT in "sge_U32CFormat" seconds\n", sge_u32c(last_fetch_ok_time + timeout - now) ));
          }
 
          /* check for communicaton error */
@@ -2500,7 +2496,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
       /* got a dummy event list for alive protocol */
       DPRINTF(("received empty event list\n"));
    } else {
-      DPRINTF(("Checking %d events (" u32"-"u32 ") while waiting for #"u32"\n",
+      DPRINTF(("Checking %d events (" sge_u32"-"sge_u32 ") while waiting for #"sge_u32"\n",
             lGetNumberOfElem(lp), 
             lGetUlong(lFirst(lp), ET_number),
             lGetUlong(lLast(lp), ET_number),
@@ -2514,7 +2510,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
             *wrong_number = j;
 
          ERROR((SGE_EVENT, MSG_EVENT_HIGHESTEVENTISXWHILEWAITINGFORY_UU , 
-                     u32c(j), u32c(i)));
+                     sge_u32c(j), sge_u32c(i)));
       }
 
       /* ensure number of first event is lower or equal "waiting_for" */
@@ -2524,7 +2520,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
             *wrong_number = j;
          }   
          ERROR((SGE_EVENT, MSG_EVENT_SMALLESTEVENTXISGRTHYWAITFOR_UU,
-                  u32c(j), u32c(i)));
+                  sge_u32c(j), sge_u32c(i)));
          ret = false;
       } else {
 

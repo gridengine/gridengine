@@ -175,7 +175,7 @@ lList *acl_list
    total_slots = (int)lGetUlong(pe, PE_slots);
    if (total_slots == 0) { 
       /* because there are not enough PE slots in total */
-      DPRINTF(("total slots %d of PE \"%s\" not in range of job "u32"\n",
+      DPRINTF(("total slots %d of PE \"%s\" not in range of job "sge_u32"\n",
             total_slots, lGetString(pe, PE_name), lGetUlong(job, JB_job_number)));
          schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S,
             lGetString(pe, PE_name));

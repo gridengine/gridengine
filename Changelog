@@ -1,3 +1,6 @@
+CR-2005-05-03-4: Testsuite: install_core_system now supports load sensor
+                            installation on nosuid root mounted disks
+
 CR-2005-05-03-3: Testsuite: fixed bug in create_gnuplot_xy_gif() which
                             had the effect that png terminal was used
                             even when gif terminal is supported. 

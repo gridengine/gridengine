@@ -137,7 +137,7 @@ proc install_execd {} {
          puts $CHECK_OUTPUT "target:       $ts_config(product_root)/bin/$remote_arch/qloadsensor"
          if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
             set arguments "$sensor_file $ts_config(product_root)/bin/$remote_arch/qloadsensor"
-            set result [ start_remote_prog "$exec_host" "root" "cp" "$arguments" ] 
+            set result [ start_remote_prog $ts_config(master_host) "root" "cp" "$arguments" ] 
             puts $CHECK_OUTPUT "result: $result"
             puts $CHECK_OUTPUT "copy exit state: $prg_exit_state" 
          } else {

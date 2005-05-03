@@ -1457,6 +1457,9 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #                                  if not 1:       don't source settings file
 #     { set_shared_lib_path 1 }  - if 1 (default): set shared lib path
 #                                  if not 1:       don't set shared lib path
+#     { without_start_output 0 } - if 0 (default): put out start/end mark of output
+#                                  if not 0:       don't print out start/end marks
+#
 #
 #  EXAMPLE
 #     set envlist(COLUMNS) 500
@@ -1475,6 +1478,7 @@ proc create_shell_script { scriptfile
                            { no_setup 0 } 
                            { source_settings_file 1 } 
                            { set_shared_lib_path 1 }
+                           { without_start_output 0 }
                          } {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
@@ -1553,7 +1557,9 @@ proc create_shell_script { scriptfile
          puts $script "${u_env}=${u_val}"
          puts $script "export ${u_env}"
       }
-      puts $script "echo \"_start_mark_:(\$?)\""
+      if { $without_start_output == 0 } {
+         puts $script "echo \"_start_mark_:(\$?)\""
+      }
    }
 
    puts $script "$exec_command $exec_arguments"
@@ -1561,8 +1567,10 @@ proc create_shell_script { scriptfile
    if { $no_setup == 0 } { 
       puts $script "exit_val=\"\$?\""
       puts $script "trap 0"
-      puts $script "echo \"_exit_status_:(\$exit_val)\""
-      puts $script "echo \"script done.\""
+      if { $without_start_output == 0 } {
+         puts $script "echo \"_exit_status_:(\$exit_val)\""
+         puts $script "echo \"script done.\""
+      }
    }
    flush $script
    close $script
@@ -2305,7 +2313,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
       if { [timestamp] > $my_mytimeout } {
          break
       }
-      sleep 1
+      after 1000
    }
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"

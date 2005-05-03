@@ -128,7 +128,7 @@ proc get_version_info {} {
  
 
    if { [info exists CHECK_PRODUCT_ROOT] != 1 } {
-      set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
+      set CHECK_PRODUCT_VERSION_NUMBER "system not running"
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    
@@ -143,12 +143,12 @@ proc get_version_info {} {
            ([ string first "error" [ lindex $help 0] ] >= 0)        || 
            ([ string first "product_mode" [ lindex $help 0] ] >= 0) ||   
            ($qmaster_running != 0) } {
-          set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
+          set CHECK_PRODUCT_VERSION_NUMBER "system not running"
           return $CHECK_PRODUCT_VERSION_NUMBER
       }
       set CHECK_PRODUCT_VERSION_NUMBER [ lindex $help 0]
       if { [ string first "exit" $CHECK_PRODUCT_VERSION_NUMBER ] >= 0 } {
-         set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
+         set CHECK_PRODUCT_VERSION_NUMBER "system not running"
       } else {
          if {$ts_config(gridengine_version) == 53} {
             # SGE(EE) 5.x: we have a product mode file
@@ -194,7 +194,7 @@ proc get_version_info {} {
       }  
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
-   set CHECK_PRODUCT_VERSION_NUMBER "system not installed - run compile option first"
+   set CHECK_PRODUCT_VERSION_NUMBER "system not installed"
    return $CHECK_PRODUCT_VERSION_NUMBER
 }
 

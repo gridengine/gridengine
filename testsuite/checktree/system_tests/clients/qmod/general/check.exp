@@ -350,6 +350,7 @@ proc qmod_issue_1131 {} {
 proc qmod_check_default_status {} {
   global CHECK_OUTPUT test_queue
 
+  puts $CHECK_OUTPUT "try to get queue state of $test_queue"
   set status [ get_queue_state "$test_queue" ]
   puts $CHECK_OUTPUT $status
 

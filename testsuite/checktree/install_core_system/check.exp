@@ -853,11 +853,6 @@ proc setup_execd_conf {} {
      }
      set spool_dir_found 0
  
-# ???   
-#     if { [ string compare [resolve_arch $host] "irix6"] == 0 } {
-#        incr expected_entries 1 
-#     }
-
      foreach elem $elements {
         append output "$elem is set to $tmp_config($elem)\n" 
         incr counter 1

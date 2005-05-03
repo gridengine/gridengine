@@ -404,7 +404,7 @@ proc edit_setup { array_name verify_func mod_string } {
 #     show_config() -- show configuration settings
 #
 #  SYNOPSIS
-#     show_config { conf_array {short 1} } 
+#     show_config { conf_array {short 1} { output "not_set" } } 
 #
 #  FUNCTION
 #     This procedure will print the current configuration settings for the
@@ -413,14 +413,20 @@ proc edit_setup { array_name verify_func mod_string } {
 #  INPUTS
 #     conf_array - ts_config, ts_user_config or ts_host_config
 #     {short 1}  - if 0: show long parameter names
+#     {output "not_set"} - if set this string will contain the output
 #
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc show_config { conf_array {short 1}} {
+proc show_config { conf_array {short 1} { output "not_set" } } {
    global CHECK_OUTPUT
 
+   set do_standard_output 1
    upvar $conf_array config
+   if { $output != "not_set" } {
+      upvar $output output_string
+      set do_standard_output 0
+   }
 
    set max_pos [get_configuration_element_count config]
    set max_par_length 0
@@ -444,10 +450,18 @@ proc show_config { conf_array {short 1}} {
       set default_value   $config($par,default)
       set description     $config($par,desc)
       set value           $config($par)
-      if { $short == 0 } {
-         puts $CHECK_OUTPUT "$description:[get_spaces [expr ( $max_description_length - [ string length $description ] ) ]] \"$config($par)\""
+      if { $do_standard_output == 1 } {
+         if { $short == 0 } {
+            puts $CHECK_OUTPUT "$description:[get_spaces [expr ( $max_description_length - [ string length $description ] ) ]] \"$config($par)\""
+         } else {
+            puts $CHECK_OUTPUT "$par:[get_spaces [expr ( $max_par_length - [ string length $par ] ) ]] \"$config($par)\""
+         }
       } else {
-         puts $CHECK_OUTPUT "$par:[get_spaces [expr ( $max_par_length - [ string length $par ] ) ]] \"$config($par)\""
+         if { $short == 0 } {
+            append output_string "$description:[get_spaces [expr ( $max_description_length - [ string length $description ] ) ]] \"$config($par)\"\n"
+         } else {
+            append output_string "$par:[get_spaces [expr ( $max_par_length - [ string length $par ] ) ]] \"$config($par)\"\n"
+         }
       }
    }
 
@@ -2764,6 +2778,61 @@ proc config_dns_for_install_script { only_check name config_array } {
 }
 
 
+#****** config/config_mail_application() ***************************************
+#  NAME
+#     config_mail_application() -- ??? 
+#
+#  SYNOPSIS
+#     config_mail_application { only_check name config_array } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     only_check   - ??? 
+#     name         - ??? 
+#     config_array - ??? 
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_mail_application { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global CHECK_USER 
+   global CHECK_MAILX_HOST
+   global CHECK_HOST
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   if { $only_check == 0 } {
+      # do setup  
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please enter the name of the mail application used for sending"
+      puts $CHECK_OUTPUT "e-mails to the testsuite starter. The testsuite supports"
+      puts $CHECK_OUTPUT "mailx, sendmail and a path to a mail script. (see mail_application.sh"
+      puts $CHECK_OUTPUT "in testsuite/scripts directory for a mail wrapper script template)\n"
+      puts $CHECK_OUTPUT "Press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   }
+
+   return $value
+}
+
 
 #****** config/config_mailx_host() **********************************************
 #  NAME
@@ -2832,14 +2901,15 @@ proc config_mailx_host { only_check name config_array } {
          puts $CHECK_OUTPUT "echo \"hello $host\" doesn't work"
          return -1
       }
-      set result [ start_remote_prog $host $CHECK_USER "which" "mailx" prg_exit_state 60 0 "" 1 0 ]
+      set result [ start_remote_prog $host $CHECK_USER "which" $config(mail_application) prg_exit_state 60 0 "" 1 0 ]
       if { $prg_exit_state != 0 } {
          puts $CHECK_OUTPUT $result
-         puts $CHECK_OUTPUT "mailx not found on host $host. Please enhance your PATH envirnoment"
+         puts $CHECK_OUTPUT "$config(mail_application) not found on host $host. Please enhance your PATH envirnoment"
+         puts $CHECK_OUTPUT "or setup your mail application correctly."
          return -1
       } else {
          debug_puts $result
-         debug_puts "found mailx binary in path"
+         debug_puts "found $config(mail_application)"
       }
    }
 
@@ -3979,9 +4049,19 @@ proc config_build_ts_config {} {
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
 
+   set parameter "mail_application"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Name of mail application used for sending testsuite mails"
+   set ts_config($parameter,default)    "sendmail"
+   set ts_config($parameter,setup_func) "config_$parameter"
+   set ts_config($parameter,onchange)   ""
+   set ts_config($parameter,pos)        $ts_pos
+   incr ts_pos 1
+
+
    set parameter "mailx_host"
    set ts_config($parameter)            ""
-   set ts_config($parameter,desc)       "Name of host used for sending mails (mailx must work on this host)"
+   set ts_config($parameter,desc)       "Name of host used for sending mails (mailx/sendmail must work on this host)"
    set ts_config($parameter,default)    ""
    set ts_config($parameter,setup_func) "config_$parameter"
    set ts_config($parameter,onchange)   ""
@@ -4250,9 +4330,37 @@ proc config_build_ts_config_1_8 {} {
    set ts_config(version) "1.8"
 }
 
+proc config_build_ts_config_1_9 {} {
+   global ts_config
+
+   # insert new parameter after master_host parameter
+   set insert_pos $ts_config(dns_for_install_script,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   set parameter "mail_application"
+   set ts_config($parameter)            "mailx"
+   set ts_config($parameter,desc)       "Name of mail application used for sending testsuite mails"
+   set ts_config($parameter,default)    "sendmail"
+   set ts_config($parameter,setup_func) "config_$parameter"
+   set ts_config($parameter,onchange)   ""
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.8
+   set ts_config(version) "1.9"
+}
+
+
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.8"
+set actual_ts_config_version "1.9"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -4265,5 +4373,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_6
    config_build_ts_config_1_7
    config_build_ts_config_1_8
+   config_build_ts_config_1_9
 }
 

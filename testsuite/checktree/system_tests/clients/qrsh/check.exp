@@ -1234,6 +1234,7 @@ proc qrsh_qsub_gid {} {
    puts $CHECK_OUTPUT "check if qsub gid is propagated to qrsh job"
 
    foreach host $qrsh_hostlist {
+      puts $CHECK_OUTPUT "using host $host"
       # dump commandfile to file
       set f [open $CHECK_PROTOCOL_DIR/qrsh.sh w]
       switch -exact [resolve_arch $host] {

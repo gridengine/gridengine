@@ -713,9 +713,19 @@ proc start_remote_prog { hostname
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" } { replyto "" } { organisation "" } } {
-   global CHECK_HOST CHECK_USER CHECK_OUTPUT
+proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" } { replyto "" } { organisation "" } { force_mail 0 } } {
+   global CHECK_HOST CHECK_USER CHECK_OUTPUT ts_config CHECK_ENABLE_MAIL CHECK_MAILS_SENT CHECK_MAX_ERROR_MAILS
 
+   if { $CHECK_ENABLE_MAIL != 1 && $force_mail == 0 } {
+     puts $CHECK_OUTPUT "mail sending disabled, mails sent: $CHECK_MAILS_SENT"
+     puts $CHECK_OUTPUT "mail subject: $subject"
+     puts $CHECK_OUTPUT "mail body:"
+     puts $CHECK_OUTPUT "$body"
+     return -1
+   }
+
+
+   puts $CHECK_OUTPUT "--> sending mail to $to from host $ts_config(mailx_host) ...\n"
    # setup mail message    
    set mail_file [get_tmp_file_name]
    set file [open $mail_file "w"]
@@ -743,8 +753,17 @@ proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" }
    foreach elem $bcc {
       puts $file "Bcc: $elem"
    }
-   puts $file "Subject: $subject"
-   puts $file $body
+
+   set new_subject "[get_version_info] ($ts_config(cell)) - $subject"
+
+   puts $file "Subject: $new_subject"
+   puts $file ""
+   # after this line the mail begins
+   puts $file "Grid Engine Version: [get_version_info]"
+   puts $file "Subject            : $subject"
+   puts $file ""
+   puts $file "$body"
+   puts $file ""
    puts $file "."
    close $file
 
@@ -757,13 +776,152 @@ proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" }
    set command "/usr/lib/sendmail"
    set arguments "-B 8BITMIME -t < $mail_file"
 
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER $command $arguments prg_exit_state 60 0 "" 1 0]
+   set result [start_remote_prog $ts_config(mailx_host) $CHECK_USER $command $arguments prg_exit_state 60 0 "" 1 0]
    if { $prg_exit_state != 0 } {
+      puts $CHECK_OUTPUT "=================================="
       puts $CHECK_OUTPUT "COULD NOT SEND MAIL:\n$result"
+      puts $CHECK_OUTPUT "=================================="
       return -1
    }
+   incr CHECK_MAILS_SENT 1
+   if { $CHECK_MAILS_SENT == $CHECK_MAX_ERROR_MAILS } {
+      set CHECK_ENABLE_MAIL 0
+      sendmail $to "max mail count reached" "" 0 "" "" "" "" "" 1
+   }
+     
    return 0
 }
+
+
+proc sendmail_wrapper { address cc subject body } {
+   global CHECK_HOST CHECK_OUTPUT ts_config CHECK_USER
+
+#   set html_text ""
+#   foreach line [split $body "\n"] {
+#      append html_text [create_html_text $line]
+#   }
+#   return [sendmail $address $subject $html_text 1 $cc "" $address $address "Gridware"]
+
+   if { $ts_config(mail_application) == "mailx" } {
+      puts $CHECK_OUTPUT "using mailx to send mail ..."
+      return 1
+   }
+   if { $ts_config(mail_application) == "sendmail" } {
+      puts $CHECK_OUTPUT "using sendmail to send mail ..."
+      sendmail $address $subject $body 0 $cc "" $address $address "Gridware"
+      return 0
+   }
+
+   
+
+   puts $CHECK_OUTPUT "starting $ts_config(mail_application) on host $$ts_config(mailx_host) to send mail ..."
+   set tmp_file [get_tmp_file_name]
+   set script [ open "$tmp_file" "w" "0755" ]
+   puts $script "Grid Engine Version: [get_version_info]"
+   puts $script "Subject            : $subject"
+   puts $script ""
+   puts $script $body
+   puts $script ""
+   flush $script
+   close $script
+
+   set new_subject "[get_version_info] ($ts_config(cell)) - $subject"
+
+   wait_for_remote_file $ts_config(mailx_host) $CHECK_USER $tmp_file
+   set result [start_remote_prog $ts_config(mailx_host) $CHECK_USER $ts_config(mail_application) "\"$address\" \"$cc\" \"$new_subject\" \"$tmp_file\""]
+   puts $CHECK_OUTPUT "mail application returned exit code $prg_exit_state:"
+   puts $CHECK_OUTPUT $result
+   return 0
+}
+
+proc create_error_message { error_array} {
+  global CHECK_OUTPUT
+  set catch_return [catch {
+  set err_string [lindex $error_array 0]
+  #set err_string $error_array
+  } ]
+  if { $catch_return != 0 } {
+     set err_string "catch error: error reading error_array"
+  }
+  
+  set err_complete  [split $err_string "|"]
+  set err_procedure [ lindex $err_complete 0 ]
+  set err_text      [ lindex $err_complete 1 ]
+  set err_checkname [ lindex $err_complete 2 ]
+  set err_calledby  [ lindex $err_complete 3 ]
+  
+  append output "check       : $err_checkname\n"
+  append output "procedure   : $err_procedure\n"
+  if { [ string compare $err_calledby $err_procedure ] != 0 } {
+     append output "called from : $err_calledby\n"
+  }
+  append output "----------------------------------------------------------------\n"
+  append output "\"$err_text\"\n"
+  append output "----------------------------------------------------------------\n"
+
+  return $output
+}
+
+
+
+proc show_proc_error { result new_error } {
+   global CHECK_CUR_PROC_ERRORS CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_NAME CHECK_OUTPUT check_name CHECK_TESTSUITE_ROOT
+   global CHECK_ARCH CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL CHECK_CORE_MASTER CHECK_CORE_EXECD
+   global CHECK_SEND_ERROR_MAILS ts_config
+
+   if { $result != 0 } {
+      set category "error"
+      if { $result == -3 } {
+         set category "unsupported test warning"
+      }
+      puts $CHECK_OUTPUT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+      puts $CHECK_OUTPUT "$category"
+      puts $CHECK_OUTPUT "runlevel    : \"[get_run_level_name $CHECK_ACT_LEVEL]\", ($CHECK_ACT_LEVEL)"
+      puts $CHECK_OUTPUT ""
+      set error_output [ create_error_message $new_error ]
+      puts $CHECK_OUTPUT $error_output 
+      puts $CHECK_OUTPUT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
+
+
+      flush $CHECK_OUTPUT
+      if { $CHECK_SEND_ERROR_MAILS == 1 } {
+         append mail_body "\n"
+         append mail_body "Date            : [exec date]\n"
+         append mail_body "check_name      : $check_name\n"
+         append mail_body "category        : $category\n"
+         append mail_body "runlevel        : [get_run_level_name $CHECK_ACT_LEVEL] (level: $CHECK_ACT_LEVEL)\n"
+         append mail_body "check host      : $CHECK_HOST\n"
+         append mail_body "product version : [get_version_info]\n"
+         append mail_body "SGE_ROOT        : $CHECK_PRODUCT_ROOT\n"
+         append mail_body "master host     : $CHECK_CORE_MASTER\n"
+         append mail_body "execution hosts : $CHECK_CORE_EXECD\n\n"
+
+         append mail_body "$error_output"
+         catch {
+            foreach level "1 2 3 4" {
+               upvar $level expect_out out
+               if {[info exists out]} {
+                  append mail_body "----- expect buffer in upper level $level --------\n"
+                  foreach i [array names out] {
+                     append mail_body "$i:\t$out($i)\n"
+                  }
+               }
+            }
+         }
+       
+         append mail_body "\nTestsuite configuration (ts_config):\n"
+         append mail_body "====================================\n"
+         show_config ts_config 0 mail_body
+
+         mail_report "testsuite $category - $check_name" $mail_body
+      }
+    }
+}
+
+
+
+
 
 
 

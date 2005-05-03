@@ -1,3 +1,18 @@
+CR-2005-05-03-0: Testsuite: - moved some functions from main testsuite
+                              script to tcl_files directory
+                            - added new configuration paramter: mail_application
+                              (user can now select mailx, sendmail or a mail
+                               wrapper script)
+                            - /bugs/issuezilla/403:
+                              using string match to compare output of qalter
+                            - removed not active code added some output
+                            - fixed path_alias_test
+                            - new optional parameter for create_shell_script():
+                              set without_start_output 1 will not print out 
+                              start/end message
+                            - testmails now contain testsuite configuration  
+                            - setting default resolve_host() resolving to long  
+
 RD-2005-05-03-0: Cleanup:   compile on solaris 10
                             basic types renamed
                  Changes:   all

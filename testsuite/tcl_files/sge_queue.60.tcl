@@ -31,7 +31,7 @@
 #___INFO__MARK_END__
 
 proc get_queue_instance {queue host} {
-   set resolved_host [resolve_host $host]
+   set resolved_host [resolve_host $host 1]
    return "${queue}@${resolved_host}"
 }
 

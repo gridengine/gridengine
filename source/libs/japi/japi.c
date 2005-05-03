@@ -1887,7 +1887,9 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
                   sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
                   sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
-                  lAddElemStr(&ref_list, ST_name, jobid_str, ST_Type);
+                  lAddElemStr(&ref_list, ST_name,
+                              sge_dstring_get_string (&job_task_specifier),
+                              ST_Type);
                } else {
                   lListElem *range;
                   for_each (range, lGetList(japi_job, JJ_not_yet_finished_ids)) {
@@ -1896,11 +1898,13 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                      sge_dstring_sprintf(&job_task_specifier, sge_u32".", jobid);
                      range_get_all_ids(range, &start, &end, &step);
                      range_to_dstring(start, end, step, &job_task_specifier, false);
-                     lAddElemStr(&ref_list, ST_name, jobid_str, ST_Type);
+                     lAddElemStr(&ref_list, ST_name,
+                                 sge_dstring_get_string (&job_task_specifier),
+                                 ST_Type);
                   }
                }
             }
-            JAPI_UNLOCK_JOB_LIST();    
+            JAPI_UNLOCK_JOB_LIST();
          } else {
             /* just ensure jobid can be parsed */
             if (japi_parse_jobid(jobid_str, &jobid, &taskid, &array, diag)) {

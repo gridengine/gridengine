@@ -321,6 +321,8 @@ proc update_macro_messages_list {} {
            set line [replace_string $line "SFQ" "\"\\\"%-.100s\\\"\""]
            set line [replace_string $line "SFN2" "\"%-.200s\""]
            set line [replace_string $line "SFN" "\"%-.100s\""]
+           set line [replace_string $line "sge_U32CFormat" "\"%ld\""]
+           set line [replace_string $line "sge_X32CFormat" "\"%lx\""]
            set line [replace_string $line "U32CFormat" "\"%ld\""]
            set line [replace_string $line "X32CFormat" "\"%lx\""]
            set line [replace_string $line "SN_UNLIMITED" "\"%s\""]

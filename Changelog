@@ -1,3 +1,6 @@
+CR-2005-05-03-0: Testsuite: - added support for new message macro format:
+                              sge_X32CFormat and sge_U32CFormat
+
 CR-2005-05-03-0: Testsuite: - moved some functions from main testsuite
                               script to tcl_files directory
                             - added new configuration paramter: mail_application

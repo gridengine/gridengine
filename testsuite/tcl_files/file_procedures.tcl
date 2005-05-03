@@ -327,11 +327,12 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
 
    # check gnuplot supporting gif terminals:
    set terminal_type "gif"
-   set test_file [get_tmp_file_name "" "gnuplot_test"]
-   set test_file [open $command_file w]
+   set test_file_name [get_tmp_file_name "" "gnuplot_test"]
+   set test_file [open $test_file_name w]
    puts $test_file "set terminal gif" 
+   flush $test_file
    close $test_file
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER gnuplot $test_file prg_exit_state 60 0 "" 1 0 0]
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER gnuplot $test_file_name prg_exit_state 60 0 "" 1 0 0]
    if { $prg_exit_state != 0 } {
       puts $CHECK_OUTPUT "gnuplot does not support gif terminal, using png terminal ..."
       set terminal_type "png"

@@ -1,3 +1,8 @@
+CR-2005-05-03-3: Testsuite: fixed bug in create_gnuplot_xy_gif() which
+                            had the effect that png terminal was used
+                            even when gif terminal is supported. 
+                            (bug is from checking CR-2005-04-28-1)
+
 CR-2005-05-03-2: Testsuite: modified module test for virtual event/gdi 
                             clients to shutdown when not able to connect
                             to virtual qmaster for more that 15 min.

@@ -156,7 +156,7 @@ proc consumable_resources_setup  {} {
 
    set queue_settings(slots) 1000
    set queue_settings(load_thresholds) "np_load_avg=11.75"
-   set qname "resource.q"
+   set qname "res.q"
    add_queue $qname $consumable_resources_test_hosts queue_settings
    puts $CHECK_OUTPUT "added queue $qname for hosts $consumable_resources_test_hosts"
 
@@ -179,7 +179,7 @@ proc consumable_resources_cleanup  {} {
    puts $CHECK_OUTPUT "disabled $queue_list"
 
 
-   set qname "resource.q"
+   set qname "res.q"
    del_queue $qname $consumable_resources_test_hosts  0 1
 
    set_error 0 "ok"
@@ -409,7 +409,7 @@ proc consumable_resources_test {} {
       set_complex test3_complex
 
       set queue_settings(complex_values) "test3=5"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       # case a
@@ -444,7 +444,7 @@ proc consumable_resources_test {} {
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
 
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       # remove test3 complex 
@@ -477,7 +477,7 @@ proc consumable_resources_test {} {
       set_exechost host_a_host $host_a
 
       set queue_settings(complex_values) "test1=1"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       #case a
@@ -491,7 +491,7 @@ proc consumable_resources_test {} {
       #case b
       puts $CHECK_OUTPUT "\ncase b)"
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
       set job_arguments "-l test1=1,h=$host_a -o /dev/null -e /dev/null"
       set job_count 4
       set run_job_count 3
@@ -508,7 +508,7 @@ proc consumable_resources_test {} {
 
 
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
       
       set host_a_host(complex_values) $orig_host_a_host(complex_values)
       set_exechost host_a_host $host_a
@@ -532,7 +532,7 @@ proc consumable_resources_test {} {
       set_complex test1_complex
   
       set queue_settings(complex_values) "test1=1"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
       # case a
       puts $CHECK_OUTPUT "\ncase a)"
@@ -553,7 +553,7 @@ proc consumable_resources_test {} {
 
 
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
       # remove test1 complex 
       set test1_complex(test1) ""
@@ -584,7 +584,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test1=3"
       set queue_settings(load_thresholds) "np_load_avg=11.75,test1=2"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       # case a
@@ -594,7 +594,7 @@ proc consumable_resources_test {} {
       set job_count 1
       set run_job_count 1
       set queue_check {}
-      lappend queue_check "resource.q@$host_a"
+      lappend queue_check "res.q@$host_a"
       lappend queue_check "a"
       
       consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "" $queue_check
@@ -603,7 +603,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(load_thresholds) "np_load_avg=11.75"
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       set host_a_host(complex_values) $orig_host_a_host(complex_values)
@@ -641,7 +641,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test1=3"
       set queue_settings(load_thresholds) "np_load_avg=11.75,test1=2"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-F | grep test" } qstat_F_1
@@ -660,8 +660,8 @@ proc consumable_resources_test {} {
       puts $CHECK_OUTPUT $catch_result
 
       wait_for_jobpending $job_id "leeper" 60
-      set state [get_queue_state "resource.q@$host_a"]
-      puts $CHECK_OUTPUT "queue state of queue \"resource.q@$host_a\": \"$state\""
+      set state [get_queue_state "res.q@$host_a"]
+      puts $CHECK_OUTPUT "queue state of queue \"res.q@$host_a\": \"$state\""
       if { $state != "" } {
          add_proc_error "consumable_resources_test" -1 "queue did not free alarm state"
       }
@@ -683,7 +683,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(load_thresholds) "np_load_avg=11.75"
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
 
       set host_a_host(complex_values) $orig_host_a_host(complex_values)
@@ -720,7 +720,7 @@ proc consumable_resources_test {} {
       set_exechost host_a_host $host_a
 
       set queue_settings(complex_values) "test1=5"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
       # setup load script
       get_config execd_config_a_host $host_a
@@ -809,7 +809,7 @@ proc consumable_resources_test {} {
       set_config execd_config_a_host $host_a
 
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
       set host_a_host(complex_values) $orig_host_a_host(complex_values)
       set_exechost host_a_host $host_a
@@ -862,7 +862,7 @@ proc consumable_resources_test {} {
       set_exechost host_a_host $host_a
 
       set queue_settings(complex_values) "test1=5,test2=5"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
       # setup load script
       get_config execd_config_a_host $host_a
@@ -955,7 +955,7 @@ proc consumable_resources_test {} {
       set_config execd_config_a_host $host_a
 
       set queue_settings(complex_values) "NONE"
-      set_queue "resource.q" $consumable_resources_test_hosts queue_settings
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
 
       set host_a_host(complex_values) $orig_host_a_host(complex_values)
       set_exechost host_a_host $host_a

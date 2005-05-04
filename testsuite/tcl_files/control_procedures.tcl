@@ -1438,7 +1438,44 @@ proc resolve_host { name { long 1 } } {
 }
 
 
+#****** control_procedures/resolve_queue() *************************************
+#  NAME
+#     resolve_queue() -- resolve queue instance name
+#
+#  SYNOPSIS
+#     resolve_queue { queue } 
+#
+#  FUNCTION
+#     This function resolves the hostname of the queue instance and returns 
+#     the corresponding name
+#
+#  INPUTS
+#     queue - queue name e.g. "queue1@testhost"
+#
+#*******************************************************************************
+proc resolve_queue { queue } { 
+   global CHECK_OUTPUT
+   set at_sign [string first "@" $queue]
+   set new_queue_name $queue
+   if { $at_sign >= 0 } {
+      incr at_sign 1
+      set host_name  [string range $queue $at_sign end]
+      incr at_sign -2
+      set queue_name [string range $queue 0 $at_sign]
+      debug_puts "queue name:          \"$queue_name\""
+      debug_puts "host name:           \"$host_name\""
+      set resolved_host_name [resolve_host $host_name 1]
+      debug_puts "resolved host name:  \"$resolved_host_name\""
+      set new_queue_name "$queue_name@$resolved_host_name"
+   }
+   puts $CHECK_OUTPUT "queue \"$queue\" resolved to \"$new_queue_name\""
 
+   if { [string length $new_queue_name] > 30 } {
+      add_proc_error "resolve_queue" -3 "The length of the queue name \"$new_queue_name\" will exceed qstat queue name output"
+   }
+
+   return $new_queue_name 
+}
 
 # main
 #if { [info exists argc ] != 0 } {

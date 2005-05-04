@@ -1551,6 +1551,10 @@ proc create_shell_script { scriptfile
 
       puts $script "SGE_SINGLE_LINE=1"
       puts $script "export SGE_SINGLE_LINE"
+#      do not enable this without rework of qstat parsing routines
+#      puts $script "SGE_LONG_QNAMES=40"
+#      puts $script "export SGE_LONG_QNAMES"
+
    
       foreach u_env [ array names users_env ] {
          set u_val [set users_env($u_env)] 

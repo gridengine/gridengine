@@ -1,3 +1,9 @@
+CR-2005-05-04-0: Testsuite: - using shorter queue names. Long queue instances
+                              names break qstat parsing procedures()
+                            - new procedure: resolve_queue()
+                            - added queue resolving for add_queue() and
+                              get_queue_state() 
+
 CR-2005-05-03-4: Testsuite: install_core_system now supports load sensor
                             installation on nosuid root mounted disks
 
